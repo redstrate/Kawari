@@ -1,0 +1,15 @@
+image: archlinux
+packages:
+  - rsync
+  - rust
+secrets:
+  - b748582a-5d31-4fe8-94d6-4a63035e97aa
+sources:
+  - https://git.sr.ht/~redstrate/kawari
+tasks:
+  - build: |
+      cd kawari
+      cargo build --release
+  - upload: |
+      echo "StrictHostKeyChecking=no" >> ~/.ssh/config
+      rsync -e 'ssh -p 38901' -Wvr kawari/target/release/kawari-frontier deploy@ryne.moe:/opt/kawari/
