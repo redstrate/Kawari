@@ -26,7 +26,7 @@ async fn main() {
     let app = Router::new()
         .route("/worldStatus/gate_status.json", get(get_gate_status));
 
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    let addr = SocketAddr::from(([127, 0, 0, 1], 5857));
     tracing::info!("Frontier server started on {}", addr);
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
