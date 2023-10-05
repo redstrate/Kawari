@@ -20,7 +20,7 @@ codegen-units = 1
 panic = "abort"
 
 [dependencies]
-axum = { version = "0.6.20", features = ["json", "tokio", "http1", "form"], default-features = false }
+axum = { version = "0.6.20", features = ["json", "tokio", "http1", "form", "query"], default-features = false }
 serde_json = { version = "1.0.91", default-features = false }
 tokio = { version = "1.32.0", features = ["macros", "rt", "rt-multi-thread"], default-features = false }
 tracing = { version = "0.1.37", default-features = false }
