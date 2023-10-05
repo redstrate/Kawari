@@ -28,7 +28,7 @@ async fn main() {
     tracing_subscriber::fmt::init();
 
     let app = Router::new()
-        .route("/oauth/ffxivarr/login/top", post(top))
+        .route("/oauth/ffxivarr/login/top", get(top))
         .route("/oauth/ffxivarr/login/login.send", post(login_send));
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 6700));
