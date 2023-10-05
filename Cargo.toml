@@ -9,6 +9,9 @@ name = "kawari-frontier"
 [[bin]]
 name = "kawari-admin"
 
+[[bin]]
+name = "kawari-login"
+
 [profile.release]
 lto = true
 strip = true
