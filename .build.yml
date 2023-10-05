@@ -13,3 +13,4 @@ tasks:
   - upload: |
       echo "StrictHostKeyChecking=no" >> ~/.ssh/config
       rsync -e 'ssh -p 38901' -Wvr kawari/target/release/kawari-frontier deploy@ryne.moe:/opt/kawari/
+      rsync -e 'ssh -p 38901' -Wvr kawari/target/release/kawari-admin deploy@ryne.moe:/opt/kawari/
