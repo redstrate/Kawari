@@ -10,7 +10,7 @@ use axum::extract::Path;
 use axum::response::IntoResponse;
 use axum::http::HeaderMap;
 
-async fn verify_session(Path(game_version): Path<String>, Path(sid): Path<String>) -> impl IntoResponse {
+async fn verify_session(Path((game_version, sid)): Path<(String, String)>) -> impl IntoResponse {
     let mut headers = HeaderMap::new();
     headers.insert("X-Patch-Unique-Id", sid.parse().unwrap());
 
