@@ -19,7 +19,6 @@ async fn verify_session(Path(game_version): Path<String>, Path(sid): Path<String
 
 async fn verify_boot(Path(boot_version): Path<String>) -> impl IntoResponse {
     let mut headers = HeaderMap::new();
-    headers.insert("X-Patch-Unique-Id", sid.parse().unwrap());
 
     (headers)
 }
@@ -30,7 +29,7 @@ async fn main() {
 
     let app = Router::new()
         .route("/http/win32/ffxivneo_release_game/:game_version/:sid", post(verify_session))
-        .route("/http/win32/ffxivneo_release_boot/:boot_version", post(verify_boot));
+        .route("/http/win32/ffxivneo_release_boot/:boot_version", get(verify_boot));
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 6900));
     tracing::info!("Frontier server started on {}", addr);
