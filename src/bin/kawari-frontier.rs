@@ -31,12 +31,53 @@ async fn get_gate_status() -> Json<GateStatus> {
     })
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct Banner {
+    link: String,
+    lsb_banner: String
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct NewsItem {
+    date: String,
+    id: String,
+    tag: String,
+    title: String,
+    url: String
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct Headline {
+    banner: Vec<Banner>,
+    news: Vec<NewsItem>,
+    pinned: Vec<NewsItem>,
+    topics: Vec<NewsItem>,
+}
+
+async fn get_headline() -> Json<Headline> {
+    tracing::info!("Requesting headline...");
+
+    Json(Headline {
+        banner: vec![],
+        news: vec![NewsItem {
+            date: "".to_string(),
+            id: "".to_string(),
+            tag: "".to_string(),
+            title: "Test News Item".to_string(),
+            url: "".to_string(),
+        }],
+        pinned: vec![],
+        topics: vec![],
+    })
+}
+
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
 
     let app = Router::new()
-        .route("/worldStatus/gate_status.json", get(get_gate_status));
+        .route("/worldStatus/gate_status.json", get(get_gate_status))
+        .route("/news/headline.json", get(get_headline));
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 5857));
     tracing::info!("Frontier server started on {}", addr);
