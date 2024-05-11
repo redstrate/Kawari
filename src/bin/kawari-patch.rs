@@ -32,7 +32,7 @@ async fn main() {
         .route("/http/win32/ffxivneo_release_boot/:boot_version", get(verify_boot));
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 6900));
-    tracing::info!("Frontier server started on {}", addr);
+    tracing::info!("Patch server started on {}", addr);
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await

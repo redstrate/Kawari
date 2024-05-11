@@ -43,7 +43,7 @@ async fn main() {
         .route("/oauth/ffxivarr/login/login.send", post(login_send));
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 6700));
-    tracing::info!("Frontier server started on {}", addr);
+    tracing::info!("Login server started on {}", addr);
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await
