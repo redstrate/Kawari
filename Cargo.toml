@@ -30,3 +30,4 @@ tracing = { version = "0.1", default-features = false }
 serde = { version = "1.0", features = ["derive"], default-features = false }
 tracing-subscriber = { version = "0.3", features = ["fmt"], default-features = false }
 rand = "0.8"
+minijinja = "2.0"

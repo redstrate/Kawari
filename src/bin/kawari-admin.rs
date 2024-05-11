@@ -9,6 +9,8 @@ use serde::{Deserialize, Serialize};
 use axum::response::{Html, Redirect};
 use axum::routing::post;
 use kawari::config::{Config, get_config};
+use minijinja::{Environment, context};
+use kawari::setup_default_environment;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct GateStatus {
@@ -20,7 +22,9 @@ async fn root() -> Html<String> {
 
     let config = get_config();
 
-    Html(format!("<p>Gate open:{}</p><form action='apply' method='post'><input type='checkbox' id='gate_open' name='gate_open' checked /><button type='submit'>Apply</button></form>", config.gate_open))
+    let environment = setup_default_environment();
+    let template = environment.get_template("admin.html").unwrap();
+    Html(template.render(context! { gate_open => config.gate_open }).unwrap())
 }
 
 #[derive(Deserialize, Debug)]

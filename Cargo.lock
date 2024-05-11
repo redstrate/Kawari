@@ -334,6 +334,7 @@ name = "kawari"
 version = "0.1.0"
 dependencies = [
  "axum",
+ "minijinja",
  "rand",
  "serde",
  "serde_json",
@@ -371,6 +372,15 @@ name = "mime"
 version = "0.3.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6877bb514081ee2a7ff5ef9de3281f14a4dd4bceac4c09388074a6b5df8a139a"
+
+[[package]]
+name = "minijinja"
+version = "2.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7165d0e94806d52ad5295e4b54a95176d831814840bc067298ca647e1c956338"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "miniz_oxide"
