@@ -4,6 +4,8 @@ use axum::{Form, Json, Router, routing::get};
 use axum::extract::Query;
 use axum::response::Html;
 use axum::routing::post;
+use rand::distributions::Alphanumeric;
+use rand::{random, Rng};
 use serde::{Deserialize, Serialize};
 use kawari::config::Config;
 
@@ -30,8 +32,15 @@ struct Input {
     otppw: String
 }
 
-async fn login_send(Form(input): Form<Input>) -> Html<&'static str>  {
-    Html("window.external.user(\"login=auth,ok,sid,5b1548e2aa30bb9ef4cc9a4a690eb900cf0c801332149eeb227df7f8,terms,1,region,2,etmadd,0,playable,1,ps3pkg,0,maxex,4,product,1\");")
+async fn login_send(Form(input): Form<Input>) -> Html<String>  {
+    let random_id: String = rand::thread_rng()
+        .sample_iter(&Alphanumeric)
+        .take(56)
+        .map(char::from)
+        .collect();
+    let sid = random_id.to_lowercase();
+
+    Html(format!("window.external.user(\"login=auth,ok,sid,{sid},terms,1,region,2,etmadd,0,playable,1,ps3pkg,0,maxex,4,product,1\");"))
 }
 
 #[tokio::main]
