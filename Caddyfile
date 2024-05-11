@@ -6,6 +6,10 @@ admin.ffxiv.local:80 {
     reverse_proxy :5800
 }
 
+ffxiv.local:80 {
+    reverse_proxy :5801
+}
+
 frontier.ffxiv.local:80 {
     reverse_proxy :5857
 }

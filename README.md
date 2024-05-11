@@ -6,6 +6,8 @@ A substitute for a few official servers such as “ffxiv.com” and “square-en
 
 ## Components
 
+* Web
+  * A simple website used for account management and other misc features.
 * Admin
   * The admin panel for configuring the multitude of servers.
 * [Frontier](https://docs.xiv.zone/server/frontier/)
@@ -28,6 +30,7 @@ You will need some kind of reverse proxy because simply editing the `hosts` file
 First you need to edit your `hosts` file. Assuming you're using the default ports for each server, add the following:
 
 ```
+127.0.0.1 ffxiv.local
 127.0.0.1 admin.ffxiv.local
 127.0.0.1 frontier.ffxiv.local
 127.0.0.1 patch-bootver.ffxiv.local

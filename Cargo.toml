@@ -15,6 +15,9 @@ name = "kawari-login"
 [[bin]]
 name = "kawari-patch"
 
+[[bin]]
+name = "kawari-web"
+
 [profile.release]
 lto = true
 strip = true

@@ -16,6 +16,7 @@ pub fn generate_sid() -> String {
 pub fn setup_default_environment() -> Environment<'static> {
     let mut env = Environment::new();
     env.add_template("admin.html", include_str!("../templates/admin.html")).unwrap();
+    env.add_template("web.html", include_str!("../templates/web.html")).unwrap();
 
     env
 }
