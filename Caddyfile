@@ -10,14 +10,14 @@ frontier.ffxiv.local:80 {
     reverse_proxy :5857
 }
 
-patch-bootver.square.local:80 {
+patch-bootver.ffxiv.local:80 {
     reverse_proxy :6900
 }
 
-patch-gamever.square.local:80 {
+patch-gamever.ffxiv.local:80 {
     reverse_proxy :6900
 }
 
-ffxiv-login.ffxiv.local:80 {
+ffxiv-login.square.local:80 {
     reverse_proxy :6700
 }

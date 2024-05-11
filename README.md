@@ -30,9 +30,9 @@ First you need to edit your `hosts` file. Assuming you're using the default port
 ```
 127.0.0.1 admin.ffxiv.local
 127.0.0.1 frontier.ffxiv.local
-127.0.0.1 patch-bootver.square.local
-127.0.0.1 patch-gamever.square.local
-127.0.0.1 ffxiv-login.ffxiv.local
+127.0.0.1 patch-bootver.ffxiv.local
+127.0.0.1 patch-gamever.ffxiv.local
+127.0.0.1 ffxiv-login.square.local
 ```
 
 Then run Caddy from the repository's `Caddyfile`. You may need to run it as root because it binds to port 80:
