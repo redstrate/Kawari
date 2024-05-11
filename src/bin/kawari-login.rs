@@ -7,6 +7,7 @@ use axum::routing::post;
 use rand::distributions::Alphanumeric;
 use rand::Rng;
 use serde::Deserialize;
+use kawari::generate_sid;
 
 #[derive(Deserialize)]
 #[allow(dead_code)]
@@ -33,13 +34,7 @@ struct Input {
 }
 
 async fn login_send(Form(input): Form<Input>) -> Html<String>  {
-    let random_id: String = rand::thread_rng()
-        .sample_iter(&Alphanumeric)
-        .take(56)
-        .map(char::from)
-        .collect();
-    let sid = random_id.to_lowercase();
-
+    let sid = generate_sid();
     Html(format!("window.external.user(\"login=auth,ok,sid,{sid},terms,1,region,2,etmadd,0,playable,1,ps3pkg,0,maxex,4,product,1\");"))
 }
 
