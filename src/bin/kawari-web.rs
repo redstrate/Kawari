@@ -27,6 +27,26 @@ async fn root() -> Html<String> {
     Html(template.render(context! { gate_open => config.gate_open }).unwrap())
 }
 
+async fn login() -> Html<String> {
+    tracing::info!("Requesting gate status...");
+
+    let config = get_config();
+
+    let environment = setup_default_environment();
+    let template = environment.get_template("login.html").unwrap();
+    Html(template.render(context! { gate_open => config.gate_open }).unwrap())
+}
+
+async fn register() -> Html<String> {
+    tracing::info!("Requesting gate status...");
+
+    let config = get_config();
+
+    let environment = setup_default_environment();
+    let template = environment.get_template("register.html").unwrap();
+    Html(template.render(context! { gate_open => config.gate_open }).unwrap())
+}
+
 #[derive(Deserialize, Debug)]
 #[allow(dead_code)]
 struct Input {
@@ -59,6 +79,8 @@ async fn main() {
 
     let app = Router::new()
         .route("/", get(root))
+        .route("/login", get(login))
+        .route("/register", get(register))
         .route("/apply", post(apply));
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 5801));
