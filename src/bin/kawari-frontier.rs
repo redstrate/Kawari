@@ -77,6 +77,7 @@ async fn main() {
 
     let app = Router::new()
         .route("/worldStatus/gate_status.json", get(get_gate_status))
+        .route("/worldStatus/login_status.json", get(get_gate_status))
         .route("/news/headline.json", get(get_headline));
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 5857));
