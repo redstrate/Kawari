@@ -8,15 +8,7 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use axum::response::{Html, Redirect};
 use axum::routing::post;
-use kawari::config::Config;
-
-fn get_config() -> Config {
-    if let Ok(data) = std::fs::read_to_string("config.json") {
-        serde_json::from_str(&data).expect("Failed to parse")
-    } else {
-        Config::default()
-    }
-}
+use kawari::config::{Config, get_config};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct GateStatus {
