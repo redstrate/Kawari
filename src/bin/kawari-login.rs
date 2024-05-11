@@ -1,15 +1,15 @@
 use std::net::SocketAddr;
 
-use axum::{Form, Json, Router, routing::get};
+use axum::{Form, Router, routing::get};
 use axum::extract::Query;
 use axum::response::Html;
 use axum::routing::post;
 use rand::distributions::Alphanumeric;
-use rand::{random, Rng};
-use serde::{Deserialize, Serialize};
-use kawari::config::Config;
+use rand::Rng;
+use serde::Deserialize;
 
 #[derive(Deserialize)]
+#[allow(dead_code)]
 struct Params {
     lng: String,
     rgn: String,
@@ -24,7 +24,7 @@ async fn top(Query(params): Query<Params>) -> Html<&'static str> {
 }
 
 #[derive(Deserialize, Debug)]
-#[allow(dead_code)]
+#[allow(dead_code, non_snake_case)]
 struct Input {
     _STORED_: String,
     sqexid: String,
