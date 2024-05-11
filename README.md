@@ -13,6 +13,10 @@ A substitute for a few official servers such as “ffxiv.com” and “square-en
 * [Patch](https://docs.xiv.zone/server/patch/)
   * Handles checking if the client needs any patching.
 
+## Running
+
+Install [Rust](https://rust-lang.org) and then use the `run.sh` helper script in the repository. You can of course run each server individually.  
+
 ## License
 
 This project is licensed under the [GNU Affero General Public License 3](LICENSE). Some code or assets may be licensed differently.
