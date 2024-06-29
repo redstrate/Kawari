@@ -5,7 +5,7 @@ use axum::{
     Router, routing::get,
 };
 use serde::{Deserialize, Serialize};
-use kawari::config::Config;
+use kawari::config::{Config, get_config};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct GateStatus {
@@ -13,40 +13,20 @@ struct GateStatus {
 }
 
 async fn get_login_status() -> Json<GateStatus> {
-    tracing::info!("Requesting gate status...");
+    tracing::info!("Requesting login status...");
 
-    let mut is_open = 0;
-
-    // read config
-    if let Ok(data) = std::fs::read_to_string("config.json") {
-        let config: Config = serde_json::from_str(&data).expect("Failed to parse");
-
-        if config.login_open {
-            is_open = 1;
-        }
-    }
-
+    let config = get_config();
     Json(GateStatus {
-        status: is_open
+        status: config.login_open.into()
     })
 }
 
 async fn get_world_status() -> Json<GateStatus> {
-    tracing::info!("Requesting gate status...");
+    tracing::info!("Requesting world status...");
 
-    let mut is_open = 0;
-
-    // read config
-    if let Ok(data) = std::fs::read_to_string("config.json") {
-        let config: Config = serde_json::from_str(&data).expect("Failed to parse");
-
-        if config.worlds_open {
-            is_open = 1;
-        }
-    }
-
+    let config = get_config();
     Json(GateStatus {
-        status: is_open
+        status: config.login_open.into()
     })
 }
 
