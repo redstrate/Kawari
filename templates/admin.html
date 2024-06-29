@@ -1,7 +1,18 @@
 <p>Gate open:{{ worlds_open }}</p>
 <p>Gate open:{{ login_open }}</p>
+<p>Boot patch location:{{ boot_patch_location }}</p>
 <form action='apply' method='post'>
-    <input type='checkbox' id='worlds_open' name='worlds_open' checked/>
-    <input type='checkbox' id='login_open' name='login_open' checked/>
+    <label>
+        Worlds Open:
+        <input type='checkbox' id='worlds_open' name='worlds_open' checked/>
+    </label>
+    <label>
+        Login Open:
+        <input type='checkbox' id='login_open' name='login_open' checked/>
+    </label>
+    <label>
+        Boot Patch Location:
+        <input type='text' id='boot_patch_location' name='boot_patch_location'/>
+    </label>
     <button type='submit'>Apply</button>
 </form>

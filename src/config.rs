@@ -10,6 +10,9 @@ pub struct Config {
 
     #[serde(default = "default_supported_platforms")]
     pub supported_platforms: Vec<String>,
+
+    #[serde(default)]
+    pub boot_patches_location: String
 }
 
 impl Default for Config {
@@ -17,6 +20,7 @@ impl Default for Config {
         Self {
             worlds_open: false,
             login_open: false,
+            boot_patches_location: String::new(),
             supported_platforms: default_supported_platforms()
         }
     }

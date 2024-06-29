@@ -24,7 +24,7 @@ async fn root() -> Html<String> {
 
     let environment = setup_default_environment();
     let template = environment.get_template("admin.html").unwrap();
-    Html(template.render(context! { worlds_open => config.worlds_open, login_open => config.login_open }).unwrap())
+    Html(template.render(context! { worlds_open => config.worlds_open, login_open => config.login_open, boot_patch_location => config.boot_patches_location }).unwrap())
 }
 
 #[derive(Deserialize, Debug)]
@@ -32,6 +32,7 @@ async fn root() -> Html<String> {
 struct Input {
     worlds_open: Option<String>,
     login_open: Option<String>,
+    boot_patch_location: Option<String>,
 }
 
 async fn apply(Form(input): Form<Input>) -> Redirect {
@@ -49,6 +50,10 @@ async fn apply(Form(input): Form<Input>) -> Redirect {
         config.login_open = gate_open == "on";
     } else {
         config.login_open = false;
+    }
+
+    if let Some(boot_patch_location) = input.boot_patch_location {
+        config.boot_patches_location = boot_patch_location;
     }
 
     serde_json::to_writer(
