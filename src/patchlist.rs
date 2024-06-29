@@ -1,15 +1,28 @@
-struct PatchEntry {
-    url: String,
-    version: String,
-    hash_block_size: i64,
-    length: i64,
-    hashes: Vec<String>
+pub struct PatchEntry {
+    pub url: String,
+    pub version: String,
+    pub hash_block_size: i64,
+    pub length: i64,
+    pub size_on_disk: i64,
+    pub hashes: Vec<String>,
+    pub unknown_a: i32,
+    pub unknown_b: i32,
 }
 
-struct PatchList {
+#[derive(PartialEq)]
+pub enum PatchType {
+    /// Corresponds to 4e9a232b
+    Boot,
+    /// Corresponds to 2b5cbc63
+    Game
+}
+
+pub struct PatchList {
     // FIXME: this is most likely auto-generated, not set?
-    id: String,
-    patches: Vec<PatchEntry>
+    pub id: String,
+    pub patch_type: PatchType,
+    pub requested_version: String,
+    pub patches: Vec<PatchEntry>
 }
 
 impl PatchList {
@@ -21,8 +34,14 @@ impl PatchList {
         str.push_str(&self.id);
         str.push_str("\r\n");
         str.push_str("Content-Type: application/octet-stream\r\n");
-        str.push_str("Content-Location: ffxivpatch/4e9a232b/metainfo/2023.07.26.0000.0000.http\r\n"); // TODO: hardcoded
-        str.push_str("X-Patch-Length: 1664916486\r\n");
+        str.push_str(&format!("Content-Location: ffxivpatch/{}/metainfo/{}.http\r\n", if self.patch_type == PatchType::Boot { "2b5cbc63" } else { "4e9a232b" }, self.requested_version));
+
+        let mut total_patch_size = 0;
+        for patch in &self.patches {
+            total_patch_size += patch.length;
+        }
+
+        str.push_str(&format!("X-Patch-Length: {}\r\n", total_patch_size));
         str.push_str("\r\n");
 
         for patch in &self.patches {
@@ -32,37 +51,39 @@ impl PatchList {
 
             // TODO: unknown value, but i *suspect* is the size of the game on disk once this patch is applied.
             // which would make sense for the launcher to check for
-            str.push_str("44145529682");
+            str.push_str(&patch.size_on_disk.to_string());
             str.push_str("\t");
 
             // TODO: totally unknown
-            str.push_str("71");
+            str.push_str(&patch.unknown_a.to_string());
             str.push_str("\t");
 
             // TODO: unknown too
-            str.push_str("11");
+            str.push_str(&patch.unknown_b.to_string());
             str.push_str("\t");
 
             // version (e.g. 2023.09.15.0000.0000)
             str.push_str(&patch.version);
             str.push_str("\t");
 
-            // hash type
-            // TODO: does this need to be configurable?
-            str.push_str("sha1");
-            str.push_str("\t");
+            if (self.patch_type == PatchType::Game) {
+                // hash type
+                // TODO: does this need to be configurable?
+                str.push_str("sha1");
+                str.push_str("\t");
 
-            // hash block size
-            str.push_str(&patch.hash_block_size.to_string());
-            str.push_str("\t");
+                // hash block size
+                str.push_str(&patch.hash_block_size.to_string());
+                str.push_str("\t");
 
-            // hashes
-            str.push_str(&patch.hashes[0]);
-            for hash in &patch.hashes[1..] {
-                str.push_str(",");
-                str.push_str(&hash);
+                // hashes
+                str.push_str(&patch.hashes[0]);
+                for hash in &patch.hashes[1..] {
+                    str.push_str(",");
+                    str.push_str(&hash);
+                }
+                str.push_str("\t");
             }
-            str.push_str("\t");
 
             // url
             str.push_str(&patch.url);
@@ -84,10 +105,38 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_output() {
+    fn test_boot_patch_output() {
+        let test_case = "--477D80B1_38BC_41d4_8B48_5273ADB89CAC\r\nContent-Type: application/octet-stream\r\nContent-Location: \
+        ffxivpatch/2b5cbc63/metainfo/D2023.04.28.0000.0001.http\r\nX-Patch-Length: \
+        22221335\r\n\r\n22221335\t69674819\t19\t18\t2023.09.14.0000.0001\thttp://patch-dl.ffxiv.com/boot/2b5cbc63/\
+        D2023.09.14.0000.0001.patch\r\n--477D80B1_38BC_41d4_8B48_5273ADB89CAC--\r\n";
+
+        let patch_list = PatchList {
+            id: "477D80B1_38BC_41d4_8B48_5273ADB89CAC".to_string(),
+            requested_version: "D2023.04.28.0000.0001".to_string(),
+            patch_type: PatchType::Boot,
+            patches: vec![
+                PatchEntry {
+                    url: "http://patch-dl.ffxiv.com/boot/2b5cbc63/D2023.09.14.0000.0001.patch".to_string(),
+                    version: "2023.09.14.0000.0001".to_string(),
+                    hash_block_size: 0,
+                    length: 22221335,
+                    size_on_disk: 69674819,
+                    hashes: vec![],
+                    unknown_a: 19,
+                    unknown_b: 18
+                }
+            ]
+        };
+
+        assert_eq!(patch_list.to_string(), test_case);
+    }
+
+    #[test]
+    fn test_game_patch_output() {
         let test_case = "--477D80B1_38BC_41d4_8B48_5273ADB89CAC\r\nContent-Type: application/octet-stream\r\nContent-Location: \
         ffxivpatch/4e9a232b/metainfo/2023.07.26.0000.0000.http\r\nX-Patch-Length: \
-        1664916486\r\n\r\n1479062470\t44145529682\t71\t11\t2023.09.15.0000.0000\tsha1\t50000000\t1c66becde2a8cf26a99d0fc7c06f15f8bab2d87c,\
+        1479062470\r\n\r\n1479062470\t44145529682\t71\t11\t2023.09.15.0000.0000\tsha1\t50000000\t1c66becde2a8cf26a99d0fc7c06f15f8bab2d87c,\
         950725418366c965d824228bf20f0496f81e0b9a,cabef48f7bf00fbf18b72843bdae2f61582ad264,53608de567b52f5fdb43fdb8b623156317e26704,\
         f0bc06cabf9ff6490f36114b25f62619d594dbe8,3c5e4b962cd8445bd9ee29011ecdb331d108abd8,88e1a2a322f09de3dc28173d4130a2829950d4e0,\
         1040667917dc99b9215dfccff0e458c2e8a724a8,149c7e20e9e3e376377a130e0526b35fd7f43df2,1bb4e33807355cdf46af93ce828b6e145a9a8795,\
@@ -102,12 +151,17 @@ mod tests {
 
         let patch_list = PatchList {
             id: "477D80B1_38BC_41d4_8B48_5273ADB89CAC".to_string(),
+            requested_version: "2023.07.26.0000.0000".to_string(),
+            patch_type: PatchType::Game,
             patches: vec![
                 PatchEntry {
                     url: "http://patch-dl.ffxiv.com/game/4e9a232b/D2023.09.15.0000.0000.patch".to_string(),
                     version: "2023.09.15.0000.0000".to_string(),
                     hash_block_size: 50000000,
                     length: 1479062470,
+                    size_on_disk: 44145529682,
+                    unknown_a: 71,
+                    unknown_b: 11,
                     hashes: vec![
                         "1c66becde2a8cf26a99d0fc7c06f15f8bab2d87c".to_string(),
                         "950725418366c965d824228bf20f0496f81e0b9a".to_string(),
