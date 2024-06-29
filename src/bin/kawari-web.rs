@@ -18,33 +18,35 @@ struct GateStatus {
 }
 
 async fn root() -> Html<String> {
-    tracing::info!("Requesting gate status...");
-
     let config = get_config();
 
     let environment = setup_default_environment();
     let template = environment.get_template("web.html").unwrap();
-    Html(template.render(context! { gate_open => config.gate_open }).unwrap())
+    Html(template.render(context! { }).unwrap())
 }
 
 async fn login() -> Html<String> {
-    tracing::info!("Requesting gate status...");
-
     let config = get_config();
 
     let environment = setup_default_environment();
     let template = environment.get_template("login.html").unwrap();
-    Html(template.render(context! { gate_open => config.gate_open }).unwrap())
+    Html(template.render(context! { }).unwrap())
 }
 
 async fn register() -> Html<String> {
-    tracing::info!("Requesting gate status...");
-
     let config = get_config();
 
     let environment = setup_default_environment();
     let template = environment.get_template("register.html").unwrap();
-    Html(template.render(context! { gate_open => config.gate_open }).unwrap())
+    Html(template.render(context! {  }).unwrap())
+}
+
+async fn world_status() -> Html<String> {
+    let config = get_config();
+
+    let environment = setup_default_environment();
+    let template = environment.get_template("worldstatus.html").unwrap();
+    Html(template.render(context! { login_open => config.login_open, worlds_open => config.worlds_open }).unwrap())
 }
 
 #[derive(Deserialize, Debug)]
@@ -57,12 +59,6 @@ async fn apply(Form(input): Form<Input>) -> Redirect {
     tracing::info!("Apply config changes...");
 
     let mut config = get_config();
-
-    if let Some(gate_open) = input.gate_open {
-        config.gate_open = gate_open == "on";
-    } else {
-        config.gate_open = false;
-    }
 
     serde_json::to_writer(
         &std::fs::File::create("config.json").unwrap(),
@@ -81,6 +77,7 @@ async fn main() {
         .route("/", get(root))
         .route("/login", get(login))
         .route("/register", get(register))
+        .route("/worldstatus", get(world_status))
         .route("/apply", post(apply));
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 5801));
