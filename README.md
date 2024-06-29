@@ -1,8 +1,8 @@
 # Kawari
 
-A substitute for a few official servers such as “ffxiv.com” and “square-enix.com”. It’s still early in development, but can already emulate the basic login flow.
+A substitute for a few official servers such as “ffxiv.com” and “square-enix.com”. It’s still early in development, but it can already emulate the basic login flow.
 
-**Notice:** This is not allow you to download game files you legally do not have access to, or circumvent other copyright protections enacted by Square Enix.
+**Notice:** This does not allow you to download copyrighted game files, or circumvent the copyright protections enacted by Square Enix.
 
 ## Components
 
