@@ -3,7 +3,10 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize)]
 pub struct Config {
     #[serde(default)]
-    pub gate_open: bool,
+    pub worlds_open: bool,
+
+    #[serde(default)]
+    pub login_open: bool,
 
     #[serde(default = "default_supported_platforms")]
     pub supported_platforms: Vec<String>,
@@ -12,7 +15,8 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Self {
         Self {
-            gate_open: false,
+            worlds_open: false,
+            login_open: false,
             supported_platforms: default_supported_platforms()
         }
     }

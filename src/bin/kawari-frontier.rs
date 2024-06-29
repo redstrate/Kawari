@@ -12,7 +12,7 @@ struct GateStatus {
     status: i32,
 }
 
-async fn get_gate_status() -> Json<GateStatus> {
+async fn get_login_status() -> Json<GateStatus> {
     tracing::info!("Requesting gate status...");
 
     let mut is_open = 0;
@@ -21,7 +21,26 @@ async fn get_gate_status() -> Json<GateStatus> {
     if let Ok(data) = std::fs::read_to_string("config.json") {
         let config: Config = serde_json::from_str(&data).expect("Failed to parse");
 
-        if config.gate_open {
+        if config.login_open {
+            is_open = 1;
+        }
+    }
+
+    Json(GateStatus {
+        status: is_open
+    })
+}
+
+async fn get_world_status() -> Json<GateStatus> {
+    tracing::info!("Requesting gate status...");
+
+    let mut is_open = 0;
+
+    // read config
+    if let Ok(data) = std::fs::read_to_string("config.json") {
+        let config: Config = serde_json::from_str(&data).expect("Failed to parse");
+
+        if config.worlds_open {
             is_open = 1;
         }
     }
@@ -76,8 +95,8 @@ async fn main() {
     tracing_subscriber::fmt::init();
 
     let app = Router::new()
-        .route("/worldStatus/gate_status.json", get(get_gate_status))
-        .route("/worldStatus/login_status.json", get(get_gate_status))
+        .route("/worldStatus/gate_status.json", get(get_world_status))
+        .route("/worldStatus/login_status.json", get(get_login_status))
         .route("/news/headline.json", get(get_headline));
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 5857));

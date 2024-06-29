@@ -24,13 +24,14 @@ async fn root() -> Html<String> {
 
     let environment = setup_default_environment();
     let template = environment.get_template("admin.html").unwrap();
-    Html(template.render(context! { gate_open => config.gate_open }).unwrap())
+    Html(template.render(context! { worlds_open => config.worlds_open, login_open => config.login_open }).unwrap())
 }
 
 #[derive(Deserialize, Debug)]
 #[allow(dead_code)]
 struct Input {
-    gate_open: Option<String>,
+    worlds_open: Option<String>,
+    login_open: Option<String>,
 }
 
 async fn apply(Form(input): Form<Input>) -> Redirect {
@@ -38,10 +39,16 @@ async fn apply(Form(input): Form<Input>) -> Redirect {
 
     let mut config = get_config();
 
-    if let Some(gate_open) = input.gate_open {
-        config.gate_open = gate_open == "on";
+    if let Some(gate_open) = input.worlds_open {
+        config.worlds_open = gate_open == "on";
     } else {
-        config.gate_open = false;
+        config.worlds_open = false;
+    }
+
+    if let Some(gate_open) = input.login_open {
+        config.login_open = gate_open == "on";
+    } else {
+        config.login_open = false;
     }
 
     serde_json::to_writer(
