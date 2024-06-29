@@ -26,7 +26,7 @@ pub struct PatchList {
 }
 
 impl PatchList {
-    fn to_string(&self) -> String {
+    pub fn to_string(&self) -> String {
         let mut str = String::new();
 
         // header

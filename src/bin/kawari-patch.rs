@@ -12,6 +12,7 @@ use axum::extract::Path;
 use axum::response::IntoResponse;
 use axum::http::{HeaderMap, StatusCode};
 use minijinja::filters::list;
+use kawari::patchlist::{PatchEntry, PatchList, PatchType};
 
 fn list_patch_files(dir_path: &str) -> Vec<String> {
     let mut entries: Vec<_> = read_dir(dir_path).unwrap().flatten().collect();
@@ -76,7 +77,25 @@ async fn verify_boot(Path((platform, boot_version)): Path<(String, String)>) -> 
         let patch_str: &str = &patch;
         if actual_boot_version.partial_cmp(patch_str).unwrap() == Ordering::Less {
             // not up to date!
-            // TODO: serve patchlist
+            let patch_list = PatchList {
+                id: "477D80B1_38BC_41d4_8B48_5273ADB89CAC".to_string(),
+                patch_type: PatchType::Boot,
+                requested_version: boot_version.clone(),
+                patches: vec![
+                    PatchEntry {
+                        url: format!("http://{}", patch).to_string(),
+                        version: "2023.09.15.0000.0000".to_string(),
+                        hash_block_size: 50000000,
+                        length: 1479062470,
+                        size_on_disk: 0,
+                        hashes: vec![],
+                        unknown_a: 0,
+                        unknown_b: 0,
+                    }
+                ]
+            };
+            let patch_list_str = patch_list.to_string();
+            return patch_list_str.into_response();
         }
     }
 
