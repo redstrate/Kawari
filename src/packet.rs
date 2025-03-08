@@ -143,42 +143,46 @@ async fn send_packet(socket: &mut WriteHalf<TcpStream>, segments: &[PacketSegmen
 pub async fn parse_packet(socket: &mut WriteHalf<TcpStream>, data: &[u8]) {
     let mut cursor = Cursor::new(data);
 
-    if let Ok(packet) = Packet::read_le(&mut cursor) {
-        println!("{:#?}", packet);
 
-        if packet.header.size as usize != data.len() {
-            dump(
-                "Packet size mismatch between what we're given and the header!",
-                data,
-            );
-        }
+    match Packet::read_le(&mut cursor) {
+        Ok(packet) => {
+            println!("{:#?}", packet);
 
-        for segment in &packet.segments {
-            match &segment.segment_type {
-                SegmentType::InitializeEncryption { phrase, key } => {
-                    // Generate an encryption key for this client
-                    let client_key = generate_encryption_key(key, phrase);
-
-                    let blowfish = Blowfish::new(&client_key);
-                    let mut data = blowfish.encrypt(&0xE0003C2Au32.to_le_bytes()).unwrap();
-                    data.resize(0x280, 0);
-
-                    let response_packet = PacketSegment {
-                        source_actor: 0,
-                        target_actor: 0,
-                        segment_type: SegmentType::InitializationEncryptionResponse {
-                            data
-                        },
-                    };
-                    send_packet(socket, &[response_packet]).await;
-                },
-                SegmentType::InitializationEncryptionResponse { .. } => panic!("The server is recieving a response packet!"),
+            if packet.header.size as usize != data.len() {
+                dump(
+                    "Packet size mismatch between what we're given and the header!",
+                     data,
+                );
             }
-        }
 
-        //dump("nothing", data);
-    } else {
-        dump("Failed to parse packet!", data);
+            for segment in &packet.segments {
+                match &segment.segment_type {
+                    SegmentType::InitializeEncryption { phrase, key } => {
+                        // Generate an encryption key for this client
+                        let client_key = generate_encryption_key(key, phrase);
+
+                        let blowfish = Blowfish::new(&client_key);
+                        let mut data = blowfish.encrypt(&0xE0003C2Au32.to_le_bytes()).unwrap();
+                        data.resize(0x280, 0);
+
+                        let response_packet = PacketSegment {
+                            source_actor: 0,
+                            target_actor: 0,
+                            segment_type: SegmentType::InitializationEncryptionResponse {
+                                data
+                            },
+                        };
+                        send_packet(socket, &[response_packet]).await;
+                    },
+                    SegmentType::InitializationEncryptionResponse { .. } => panic!("The server is recieving a response packet!"),
+                }
+            }
+
+        },
+        Err(err) => {
+            println!("{err}");
+            dump("Failed to parse packet!", data);
+        },
     }
 }
 
