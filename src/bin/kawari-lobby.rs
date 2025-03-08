@@ -17,12 +17,11 @@ async fn main() {
         tokio::spawn(async move {
             let mut buf = [0; 2056];
             loop {
-                let n = read
-                .read(&mut buf)
-                .await
-                .expect("Failed to read data!");
+                let n = read.read(&mut buf).await.expect("Failed to read data!");
 
-                parse_packet(&buf[..n]);
+                if n != 0 {
+                    parse_packet(&buf[..n]);
+                }
             }
         });
     }
