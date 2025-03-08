@@ -39,7 +39,9 @@ enum ConnectionType {
 #[binrw]
 #[derive(Debug, Clone)]
 struct IPCSegment {
-    unk: u32,
+    unk1: u8,
+    unk2: u8,
+    op_code: u8,
 }
 
 #[binrw]
@@ -142,8 +144,8 @@ async fn send_packet(socket: &mut WriteHalf<TcpStream>, segments: &[PacketSegmen
     }
 
     let header = PacketHeader {
-        unk1: 0,
-        unk2: 0,
+        unk1: 0xE2465DFF41A05252, // wtf?
+        unk2: 0x75C4997B4D642A7F, // wtf? x2
         timestamp,
         size: std::mem::size_of::<PacketHeader>() as u32 + total_segment_size,
         connection_type: ConnectionType::Lobby,
@@ -202,8 +204,10 @@ pub async fn parse_packet(socket: &mut WriteHalf<TcpStream>, data: &[u8], state:
                         state.client_key = Some(generate_encryption_key(key, phrase));
 
                         let blowfish = Blowfish::new(&state.client_key.unwrap());
-                        let mut data = blowfish.encrypt(&0xE0003C2Au32.to_le_bytes()).unwrap();
+                        let mut data = 0xE0003C2Au32.to_le_bytes().to_vec();
                         data.resize(0x280, 0);
+
+                        let data = blowfish.encrypt(&data).unwrap();
 
                         let response_packet = PacketSegment {
                             source_actor: 0,
