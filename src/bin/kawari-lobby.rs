@@ -12,7 +12,7 @@ async fn main() {
 
     loop {
         let (socket, _) = listener.accept().await.unwrap();
-        let (mut read, _) = tokio::io::split(socket);
+        let (mut read, mut write) = tokio::io::split(socket);
 
         tokio::spawn(async move {
             let mut buf = [0; 2056];
@@ -20,7 +20,7 @@ async fn main() {
                 let n = read.read(&mut buf).await.expect("Failed to read data!");
 
                 if n != 0 {
-                    parse_packet(&buf[..n]);
+                    parse_packet(&mut write, &buf[..n]).await;
                 }
             }
         });

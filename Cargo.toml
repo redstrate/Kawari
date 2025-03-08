@@ -35,3 +35,5 @@ tracing-subscriber = { version = "0.3", features = ["fmt"], default-features = f
 rand = "0.8"
 minijinja = "2.0"
 binrw = { version = "0.14" }
+physis = { git = "https://github.com/redstrate/Physis" }
+md5 = "0.7.0"
