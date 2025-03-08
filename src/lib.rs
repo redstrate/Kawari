@@ -4,6 +4,7 @@ use rand::distributions::Alphanumeric;
 
 pub mod config;
 pub mod patchlist;
+pub mod packet;
 
 pub fn generate_sid() -> String {
     let random_id: String = rand::thread_rng()

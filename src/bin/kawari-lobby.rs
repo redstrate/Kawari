@@ -1,3 +1,4 @@
+use kawari::packet::parse_packet;
 use tokio::io::AsyncReadExt;
 use tokio::net::TcpListener;
 
@@ -21,7 +22,7 @@ async fn main() {
                 .await
                 .expect("Failed to read data!");
 
-                println!("Recieved data: {:#?}", &buf[..n]);
+                parse_packet(&buf[..n]);
             }
         });
     }
