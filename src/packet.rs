@@ -1,6 +1,6 @@
 use std::{fs::write, io::Cursor, time::{SystemTime, UNIX_EPOCH}};
 
-use binrw::{binrw, helpers::until_eof, BinRead, BinWrite};
+use binrw::{binrw, helpers::until_eof, BinRead, BinResult, BinWrite};
 use physis::blowfish::Blowfish;
 use tokio::{io::{AsyncWriteExt, WriteHalf}, net::TcpStream};
 
@@ -29,7 +29,37 @@ enum ConnectionType {
 
 #[binrw]
 #[derive(Debug, Clone)]
+struct IPCSegment {
+    unk: u32
+}
+
+#[binrw::parser(reader, endian)]
+pub(crate) fn decrypt<T>(size: u32, encryption_key: Option<&[u8]>) -> BinResult<T>
+where
+    for<'a> T: BinRead<Args<'a> = ()> + 'a
+{
+    let Some(encryption_key) = encryption_key else {
+        panic!("This segment type is encrypted and no key was provided!");
+    };
+
+    let size = size - 16; // 16 = header size
+
+    let mut data = Vec::new();
+    data.resize(size as usize, 0x0);
+    reader.read_exact(&mut data)?;
+
+    let blowfish = Blowfish::new(encryption_key);
+    let decrypted_data = blowfish.decrypt(&data).unwrap();
+
+    let mut cursor = Cursor::new(&decrypted_data);
+    T::read_options(&mut cursor, endian, ())
+}
+
+#[binrw]
+#[br(import(size: u32, encryption_key: Option<&[u8]>))]
+#[derive(Debug, Clone)]
 enum SegmentType {
+    // Client->Server Packets
     #[brw(magic = 0x9u32)]
     InitializeEncryption {
         #[brw(pad_before = 36)] // empty
@@ -41,11 +71,19 @@ enum SegmentType {
         #[brw(pad_after = 512)] // empty
         key: [u8; 4],
     },
+    #[brw(magic = 0x3u32)]
+    IPC {
+        #[br(parse_with = decrypt, args(size, encryption_key))]
+        #[bw(ignore)]
+        data: IPCSegment,
+    },
+
+    // Server->Client Packets
     #[brw(magic = 0x0Au32)]
     InitializationEncryptionResponse {
         #[br(count = 0x280)]
         data: Vec<u8>
-    }
+    },
 }
 
 #[binrw]
@@ -66,12 +104,14 @@ struct PacketHeader {
 }
 
 #[binrw]
+#[br(import(encryption_key: Option<&[u8]>))]
 #[derive(Debug, Clone)]
 struct PacketSegment {
     #[bw(calc = self.calc_size())]
     size: u32,
     source_actor: u32,
     target_actor: u32,
+    #[br(args(size, encryption_key))]
     segment_type: SegmentType,
 }
 
@@ -81,15 +121,17 @@ impl PacketSegment {
         return header as u32 + match &self.segment_type {
             SegmentType::InitializeEncryption { .. } => 616,
             SegmentType::InitializationEncryptionResponse { .. } => 640,
+            SegmentType::IPC { .. } => todo!(),
         };
     }
 }
 
 #[binrw]
+#[br(import(encryption_key: Option<&[u8]>))]
 #[derive(Debug)]
 struct Packet {
     header: PacketHeader,
-    #[br(count = header.segment_count)]
+    #[br(count = header.segment_count, args { inner: (encryption_key,) })]
     segments: Vec<PacketSegment>,
 }
 
@@ -143,11 +185,15 @@ async fn send_packet(socket: &mut WriteHalf<TcpStream>, segments: &[PacketSegmen
         .expect("Failed to write packet!");
 }
 
-pub async fn parse_packet(socket: &mut WriteHalf<TcpStream>, data: &[u8]) {
+// temporary
+pub struct State {
+    pub client_key: Option<[u8; 16]>
+}
+
+pub async fn parse_packet(socket: &mut WriteHalf<TcpStream>, data: &[u8], state: &mut State) {
     let mut cursor = Cursor::new(data);
 
-
-    match Packet::read_le(&mut cursor) {
+    match Packet::read_le_args(&mut cursor, (state.client_key.as_ref().map(|s: &[u8; 16]| s.as_slice()),)) {
         Ok(packet) => {
             println!("{:#?}", packet);
 
@@ -162,9 +208,9 @@ pub async fn parse_packet(socket: &mut WriteHalf<TcpStream>, data: &[u8]) {
                 match &segment.segment_type {
                     SegmentType::InitializeEncryption { phrase, key } => {
                         // Generate an encryption key for this client
-                        let client_key = generate_encryption_key(key, phrase);
+                        state.client_key = Some(generate_encryption_key(key, phrase));
 
-                        let blowfish = Blowfish::new(&client_key);
+                        let blowfish = Blowfish::new(&state.client_key.unwrap());
                         let mut data = blowfish.encrypt(&0xE0003C2Au32.to_le_bytes()).unwrap();
                         data.resize(0x280, 0);
 
@@ -178,6 +224,9 @@ pub async fn parse_packet(socket: &mut WriteHalf<TcpStream>, data: &[u8]) {
                         send_packet(socket, &[response_packet]).await;
                     },
                     SegmentType::InitializationEncryptionResponse { .. } => panic!("The server is recieving a response packet!"),
+                    SegmentType::IPC { .. } => {
+                        // decrypt
+                    },
                 }
             }
 
