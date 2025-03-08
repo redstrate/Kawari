@@ -1,8 +1,17 @@
-use std::{fs::write, io::Cursor, time::{SystemTime, UNIX_EPOCH}};
+use std::{
+    fs::write,
+    io::Cursor,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
-use binrw::{binrw, helpers::until_eof, BinRead, BinResult, BinWrite};
+use binrw::{BinRead, BinResult, BinWrite, binrw, helpers::until_eof};
 use physis::blowfish::Blowfish;
-use tokio::{io::{AsyncWriteExt, WriteHalf}, net::TcpStream};
+use tokio::{
+    io::{AsyncWriteExt, WriteHalf},
+    net::TcpStream,
+};
+
+use crate::encryption::{decrypt, generate_encryption_key};
 
 pub(crate) fn read_bool_from<T: std::convert::From<u8> + std::cmp::PartialEq>(x: T) -> bool {
     x == T::from(1u8)
@@ -30,29 +39,7 @@ enum ConnectionType {
 #[binrw]
 #[derive(Debug, Clone)]
 struct IPCSegment {
-    unk: u32
-}
-
-#[binrw::parser(reader, endian)]
-pub(crate) fn decrypt<T>(size: u32, encryption_key: Option<&[u8]>) -> BinResult<T>
-where
-    for<'a> T: BinRead<Args<'a> = ()> + 'a
-{
-    let Some(encryption_key) = encryption_key else {
-        panic!("This segment type is encrypted and no key was provided!");
-    };
-
-    let size = size - 16; // 16 = header size
-
-    let mut data = Vec::new();
-    data.resize(size as usize, 0x0);
-    reader.read_exact(&mut data)?;
-
-    let blowfish = Blowfish::new(encryption_key);
-    let decrypted_data = blowfish.decrypt(&data).unwrap();
-
-    let mut cursor = Cursor::new(&decrypted_data);
-    T::read_options(&mut cursor, endian, ())
+    unk: u32,
 }
 
 #[binrw]
@@ -82,7 +69,7 @@ enum SegmentType {
     #[brw(magic = 0x0Au32)]
     InitializationEncryptionResponse {
         #[br(count = 0x280)]
-        data: Vec<u8>
+        data: Vec<u8>,
     },
 }
 
@@ -118,11 +105,12 @@ struct PacketSegment {
 impl PacketSegment {
     fn calc_size(&self) -> u32 {
         let header = std::mem::size_of::<u32>() * 4;
-        return header as u32 + match &self.segment_type {
-            SegmentType::InitializeEncryption { .. } => 616,
-            SegmentType::InitializationEncryptionResponse { .. } => 640,
-            SegmentType::IPC { .. } => todo!(),
-        };
+        return header as u32
+            + match &self.segment_type {
+                SegmentType::InitializeEncryption { .. } => 616,
+                SegmentType::InitializationEncryptionResponse { .. } => 640,
+                SegmentType::IPC { .. } => todo!(),
+            };
     }
 }
 
@@ -187,20 +175,23 @@ async fn send_packet(socket: &mut WriteHalf<TcpStream>, segments: &[PacketSegmen
 
 // temporary
 pub struct State {
-    pub client_key: Option<[u8; 16]>
+    pub client_key: Option<[u8; 16]>,
 }
 
 pub async fn parse_packet(socket: &mut WriteHalf<TcpStream>, data: &[u8], state: &mut State) {
     let mut cursor = Cursor::new(data);
 
-    match Packet::read_le_args(&mut cursor, (state.client_key.as_ref().map(|s: &[u8; 16]| s.as_slice()),)) {
+    match Packet::read_le_args(
+        &mut cursor,
+        (state.client_key.as_ref().map(|s: &[u8; 16]| s.as_slice()),),
+    ) {
         Ok(packet) => {
             println!("{:#?}", packet);
 
             if packet.header.size as usize != data.len() {
                 dump(
                     "Packet size mismatch between what we're given and the header!",
-                     data,
+                    data,
                 );
             }
 
@@ -217,46 +208,22 @@ pub async fn parse_packet(socket: &mut WriteHalf<TcpStream>, data: &[u8], state:
                         let response_packet = PacketSegment {
                             source_actor: 0,
                             target_actor: 0,
-                            segment_type: SegmentType::InitializationEncryptionResponse {
-                                data
-                            },
+                            segment_type: SegmentType::InitializationEncryptionResponse { data },
                         };
                         send_packet(socket, &[response_packet]).await;
-                    },
-                    SegmentType::InitializationEncryptionResponse { .. } => panic!("The server is recieving a response packet!"),
+                    }
+                    SegmentType::InitializationEncryptionResponse { .. } => {
+                        panic!("The server is recieving a response packet!")
+                    }
                     SegmentType::IPC { .. } => {
                         // decrypt
-                    },
+                    }
                 }
             }
-
-        },
+        }
         Err(err) => {
             println!("{err}");
             dump("Failed to parse packet!", data);
-        },
-    }
-}
-
-const GAME_VERSION: u16 = 7000;
-
-pub fn generate_encryption_key(key: &[u8], phrase: &str) -> [u8; 16] {
-    let mut base_key = vec![0x78, 0x56, 0x34, 0x12];
-    base_key.extend_from_slice(&key);
-    base_key.extend_from_slice(&GAME_VERSION.to_le_bytes());
-    base_key.extend_from_slice(&[0; 2]); // padding (possibly for game version?)
-    base_key.extend_from_slice(&phrase.as_bytes());
-
-    md5::compute(&base_key).0
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_encryption_key() {
-        let key = generate_encryption_key([0x00, 0x00, 0x00, 0x00], "foobar");
-        assert_eq!(key, [169, 78, 235, 31, 57, 151, 26, 74, 250, 196, 1, 120, 206, 173, 202, 48]);
+        }
     }
 }

@@ -1,4 +1,4 @@
-use kawari::packet::{parse_packet, State};
+use kawari::packet::{State, parse_packet};
 use tokio::io::AsyncReadExt;
 use tokio::net::TcpListener;
 

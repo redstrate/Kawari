@@ -3,6 +3,7 @@ use rand::Rng;
 use rand::distributions::Alphanumeric;
 
 pub mod config;
+pub mod encryption;
 pub mod packet;
 pub mod patchlist;
 
