@@ -15,7 +15,11 @@ use minijinja::filters::list;
 use kawari::patchlist::{PatchEntry, PatchList, PatchType};
 
 fn list_patch_files(dir_path: &str) -> Vec<String> {
-    let mut entries: Vec<_> = read_dir(dir_path).unwrap().flatten().collect();
+    // If the dir doesn't exist, pretend there is no patch files
+    let Ok(dir) = read_dir(dir_path) else {
+        return Vec::new()
+    };
+    let mut entries: Vec<_> = dir.flatten().collect();
     entries.sort_by_key(|dir| dir.path());
     let mut game_patches: Vec<_> = entries
         .into_iter()
