@@ -21,6 +21,9 @@ pub(crate) fn read_string(byte_stream: Vec<u8>) -> String {
 #[brw(repr = u16)]
 #[derive(Debug)]
 enum ConnectionType {
+    None = 0x0,
+    Zone = 0x1,
+    Chat = 0x2,
     Lobby = 0x3,
 }
 
