@@ -1,16 +1,12 @@
 use std::net::SocketAddr;
 
-use axum::{
-    Json,
-    Router, routing::get,
-    extract::Form
-};
-use serde::{Deserialize, Serialize};
 use axum::response::{Html, Redirect};
 use axum::routing::post;
+use axum::{Json, Router, extract::Form, routing::get};
 use kawari::config::{Config, get_config};
-use minijinja::{Environment, context};
 use kawari::setup_default_environment;
+use minijinja::{Environment, context};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct GateStatus {
@@ -56,11 +52,8 @@ async fn apply(Form(input): Form<Input>) -> Redirect {
         config.boot_patches_location = boot_patch_location;
     }
 
-    serde_json::to_writer(
-        &std::fs::File::create("config.json").unwrap(),
-        &config,
-    )
-    .expect("TODO: panic message");
+    serde_json::to_writer(&std::fs::File::create("config.json").unwrap(), &config)
+        .expect("TODO: panic message");
 
     Redirect::to("/")
 }

@@ -1,11 +1,8 @@
 use std::net::SocketAddr;
 
-use axum::{
-    Json,
-    Router, routing::get,
-};
-use serde::{Deserialize, Serialize};
+use axum::{Json, Router, routing::get};
 use kawari::config::{Config, get_config};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct GateStatus {
@@ -17,7 +14,7 @@ async fn get_login_status() -> Json<GateStatus> {
 
     let config = get_config();
     Json(GateStatus {
-        status: config.login_open.into()
+        status: config.login_open.into(),
     })
 }
 
@@ -26,14 +23,14 @@ async fn get_world_status() -> Json<GateStatus> {
 
     let config = get_config();
     Json(GateStatus {
-        status: config.login_open.into()
+        status: config.login_open.into(),
     })
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct Banner {
     link: String,
-    lsb_banner: String
+    lsb_banner: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -42,7 +39,7 @@ struct NewsItem {
     id: String,
     tag: String,
     title: String,
-    url: String
+    url: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

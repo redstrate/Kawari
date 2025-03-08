@@ -1,16 +1,12 @@
 use std::net::SocketAddr;
 
-use axum::{
-    Json,
-    Router, routing::get,
-    extract::Form
-};
-use serde::{Deserialize, Serialize};
 use axum::response::{Html, Redirect};
 use axum::routing::post;
+use axum::{Json, Router, extract::Form, routing::get};
 use kawari::config::{Config, get_config};
-use minijinja::{Environment, context};
 use kawari::setup_default_environment;
+use minijinja::{Environment, context};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct GateStatus {
@@ -22,7 +18,7 @@ async fn root() -> Html<String> {
 
     let environment = setup_default_environment();
     let template = environment.get_template("web.html").unwrap();
-    Html(template.render(context! { }).unwrap())
+    Html(template.render(context! {}).unwrap())
 }
 
 async fn login() -> Html<String> {
@@ -30,7 +26,7 @@ async fn login() -> Html<String> {
 
     let environment = setup_default_environment();
     let template = environment.get_template("login.html").unwrap();
-    Html(template.render(context! { }).unwrap())
+    Html(template.render(context! {}).unwrap())
 }
 
 async fn register() -> Html<String> {
@@ -38,7 +34,7 @@ async fn register() -> Html<String> {
 
     let environment = setup_default_environment();
     let template = environment.get_template("register.html").unwrap();
-    Html(template.render(context! {  }).unwrap())
+    Html(template.render(context! {}).unwrap())
 }
 
 async fn world_status() -> Html<String> {
@@ -46,7 +42,11 @@ async fn world_status() -> Html<String> {
 
     let environment = setup_default_environment();
     let template = environment.get_template("worldstatus.html").unwrap();
-    Html(template.render(context! { login_open => config.login_open, worlds_open => config.worlds_open }).unwrap())
+    Html(
+        template
+            .render(context! { login_open => config.login_open, worlds_open => config.worlds_open })
+            .unwrap(),
+    )
 }
 
 #[derive(Deserialize, Debug)]
@@ -60,10 +60,7 @@ async fn apply(Form(input): Form<Input>) -> Redirect {
 
     let mut config = get_config();
 
-    serde_json::to_writer(
-        &std::fs::File::create("config.json").unwrap(),
-        &config,
-    )
+    serde_json::to_writer(&std::fs::File::create("config.json").unwrap(), &config)
         .expect("TODO: panic message");
 
     Redirect::to("/")

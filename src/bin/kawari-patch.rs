@@ -2,22 +2,22 @@ use std::cmp::Ordering;
 use std::fs::read_dir;
 use std::net::SocketAddr;
 
-use axum::{Form, Json, Router, routing::get};
-use axum::extract::Query;
-use axum::response::Html;
-use axum::routing::post;
-use serde::{Deserialize, Serialize};
-use kawari::config::{Config, get_config};
 use axum::extract::Path;
-use axum::response::IntoResponse;
+use axum::extract::Query;
 use axum::http::{HeaderMap, StatusCode};
-use minijinja::filters::list;
+use axum::response::Html;
+use axum::response::IntoResponse;
+use axum::routing::post;
+use axum::{Form, Json, Router, routing::get};
+use kawari::config::{Config, get_config};
 use kawari::patchlist::{PatchEntry, PatchList, PatchType};
+use minijinja::filters::list;
+use serde::{Deserialize, Serialize};
 
 fn list_patch_files(dir_path: &str) -> Vec<String> {
     // If the dir doesn't exist, pretend there is no patch files
     let Ok(dir) = read_dir(dir_path) else {
-        return Vec::new()
+        return Vec::new();
     };
     let mut entries: Vec<_> = dir.flatten().collect();
     entries.sort_by_key(|dir| dir.path());
@@ -38,20 +38,37 @@ fn list_patch_files(dir_path: &str) -> Vec<String> {
         .collect();
     game_patches.sort_by(|a, b| {
         // Ignore H/D in front of filenames
-        let mut a_path = a.as_path().file_name().unwrap().to_str().unwrap().to_string();
+        let mut a_path = a
+            .as_path()
+            .file_name()
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .to_string();
         if a_path.starts_with("H") {
             return Ordering::Less;
         }
-        let mut b_path = b.as_path().file_name().unwrap().to_str().unwrap().to_string();
+        let mut b_path = b
+            .as_path()
+            .file_name()
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .to_string();
         /*if b_path.starts_with("H") {
             return Ordering::Greater;
         }*/
         a_path.partial_cmp(&b_path).unwrap()
     }); // ensure we're actually installing them in the correct order
-    game_patches.iter().map(|x| x.file_stem().unwrap().to_str().unwrap().to_string() ).collect()
+    game_patches
+        .iter()
+        .map(|x| x.file_stem().unwrap().to_str().unwrap().to_string())
+        .collect()
 }
 
-async fn verify_session(Path((platform, game_version, sid)): Path<(String, String, String)>) -> impl IntoResponse {
+async fn verify_session(
+    Path((platform, game_version, sid)): Path<(String, String, String)>,
+) -> impl IntoResponse {
     let config = get_config();
     if !config.supports_platform(&platform) {
         return StatusCode::INTERNAL_SERVER_ERROR.into_response();
@@ -62,7 +79,6 @@ async fn verify_session(Path((platform, game_version, sid)): Path<(String, Strin
 
     (headers).into_response()
 }
-
 
 async fn verify_boot(Path((platform, boot_version)): Path<(String, String)>) -> impl IntoResponse {
     tracing::info!("Verifying boot components...");
@@ -85,18 +101,16 @@ async fn verify_boot(Path((platform, boot_version)): Path<(String, String)>) -> 
                 id: "477D80B1_38BC_41d4_8B48_5273ADB89CAC".to_string(),
                 patch_type: PatchType::Boot,
                 requested_version: boot_version.clone(),
-                patches: vec![
-                    PatchEntry {
-                        url: format!("http://{}", patch).to_string(),
-                        version: "2023.09.15.0000.0000".to_string(),
-                        hash_block_size: 50000000,
-                        length: 1479062470,
-                        size_on_disk: 0,
-                        hashes: vec![],
-                        unknown_a: 0,
-                        unknown_b: 0,
-                    }
-                ]
+                patches: vec![PatchEntry {
+                    url: format!("http://{}", patch).to_string(),
+                    version: "2023.09.15.0000.0000".to_string(),
+                    hash_block_size: 50000000,
+                    length: 1479062470,
+                    size_on_disk: 0,
+                    hashes: vec![],
+                    unknown_a: 0,
+                    unknown_b: 0,
+                }],
             };
             let patch_list_str = patch_list.to_string();
             return patch_list_str.into_response();
@@ -112,8 +126,14 @@ async fn main() {
     tracing_subscriber::fmt::init();
 
     let app = Router::new()
-        .route("/http/:platform/ffxivneo_release_game/:game_version/:sid", post(verify_session))
-        .route("/http/:platform/ffxivneo_release_boot/*boot_version", get(verify_boot)); // NOTE: for future programmers, this is a wildcard because axum hates the /version/?time=blah format.
+        .route(
+            "/http/:platform/ffxivneo_release_game/:game_version/:sid",
+            post(verify_session),
+        )
+        .route(
+            "/http/:platform/ffxivneo_release_boot/*boot_version",
+            get(verify_boot),
+        ); // NOTE: for future programmers, this is a wildcard because axum hates the /version/?time=blah format.
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 6900));
     tracing::info!("Patch server started on {}", addr);

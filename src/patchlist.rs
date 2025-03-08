@@ -14,7 +14,7 @@ pub enum PatchType {
     /// Corresponds to 4e9a232b
     Boot,
     /// Corresponds to 2b5cbc63
-    Game
+    Game,
 }
 
 pub struct PatchList {
@@ -22,7 +22,7 @@ pub struct PatchList {
     pub id: String,
     pub patch_type: PatchType,
     pub requested_version: String,
-    pub patches: Vec<PatchEntry>
+    pub patches: Vec<PatchEntry>,
 }
 
 impl PatchList {
@@ -34,7 +34,15 @@ impl PatchList {
         str.push_str(&self.id);
         str.push_str("\r\n");
         str.push_str("Content-Type: application/octet-stream\r\n");
-        str.push_str(&format!("Content-Location: ffxivpatch/{}/metainfo/{}.http\r\n", if self.patch_type == PatchType::Boot { "2b5cbc63" } else { "4e9a232b" }, self.requested_version));
+        str.push_str(&format!(
+            "Content-Location: ffxivpatch/{}/metainfo/{}.http\r\n",
+            if self.patch_type == PatchType::Boot {
+                "2b5cbc63"
+            } else {
+                "4e9a232b"
+            },
+            self.requested_version
+        ));
 
         let mut total_patch_size = 0;
         for patch in &self.patches {
@@ -115,18 +123,17 @@ mod tests {
             id: "477D80B1_38BC_41d4_8B48_5273ADB89CAC".to_string(),
             requested_version: "D2023.04.28.0000.0001".to_string(),
             patch_type: PatchType::Boot,
-            patches: vec![
-                PatchEntry {
-                    url: "http://patch-dl.ffxiv.com/boot/2b5cbc63/D2023.09.14.0000.0001.patch".to_string(),
-                    version: "2023.09.14.0000.0001".to_string(),
-                    hash_block_size: 0,
-                    length: 22221335,
-                    size_on_disk: 69674819,
-                    hashes: vec![],
-                    unknown_a: 19,
-                    unknown_b: 18
-                }
-            ]
+            patches: vec![PatchEntry {
+                url: "http://patch-dl.ffxiv.com/boot/2b5cbc63/D2023.09.14.0000.0001.patch"
+                    .to_string(),
+                version: "2023.09.14.0000.0001".to_string(),
+                hash_block_size: 0,
+                length: 22221335,
+                size_on_disk: 69674819,
+                hashes: vec![],
+                unknown_a: 19,
+                unknown_b: 18,
+            }],
         };
 
         assert_eq!(patch_list.to_string(), test_case);
@@ -153,49 +160,48 @@ mod tests {
             id: "477D80B1_38BC_41d4_8B48_5273ADB89CAC".to_string(),
             requested_version: "2023.07.26.0000.0000".to_string(),
             patch_type: PatchType::Game,
-            patches: vec![
-                PatchEntry {
-                    url: "http://patch-dl.ffxiv.com/game/4e9a232b/D2023.09.15.0000.0000.patch".to_string(),
-                    version: "2023.09.15.0000.0000".to_string(),
-                    hash_block_size: 50000000,
-                    length: 1479062470,
-                    size_on_disk: 44145529682,
-                    unknown_a: 71,
-                    unknown_b: 11,
-                    hashes: vec![
-                        "1c66becde2a8cf26a99d0fc7c06f15f8bab2d87c".to_string(),
-                        "950725418366c965d824228bf20f0496f81e0b9a".to_string(),
-                        "cabef48f7bf00fbf18b72843bdae2f61582ad264".to_string(),
-                        "53608de567b52f5fdb43fdb8b623156317e26704".to_string(),
-                        "f0bc06cabf9ff6490f36114b25f62619d594dbe8".to_string(),
-                        "3c5e4b962cd8445bd9ee29011ecdb331d108abd8".to_string(),
-                        "88e1a2a322f09de3dc28173d4130a2829950d4e0".to_string(),
-                        "1040667917dc99b9215dfccff0e458c2e8a724a8".to_string(),
-                        "149c7e20e9e3e376377a130e0526b35fd7f43df2".to_string(),
-                        "1bb4e33807355cdf46af93ce828b6e145a9a8795".to_string(),
-                        "a79daff43db488f087da8e22bb4c21fd3a390f3c".to_string(),
-                        "6b04fadb656d467fb8318eba1c7f5ee8f030d967".to_string(),
-                        "a6641e1c894db961a49b70fda2b0d6d87be487a7".to_string(),
-                        "edf419de49f42ef19bd6814f8184b35a25e9e977".to_string(),
-                        "c1525c4df6001b66b575e2891db0284dc3a16566".to_string(),
-                        "01b7628095b07fa3c9c1aed2d66d32d118020321".to_string(),
-                        "991b137ea0ebb11bd668f82149bc2392a4cbcf52".to_string(),
-                        "ad3f74d4fca143a6cf507fc859544a4bcd501d85".to_string(),
-                        "936a0f1711e273519cae6b2da0d8b435fe6aa020".to_string(),
-                        "023f19d8d8b3ecaaf865e3170e8243dd437a384c".to_string(),
-                        "2d9e934de152956961a849e81912ca8d848265ca".to_string(),
-                        "8e32f9aa76c95c60a9dbe0967aee5792b812d5ec".to_string(),
-                        "dee052b9aa1cc8863efd61afc63ac3c2d56f9acc".to_string(),
-                        "fa81225aea53fa13a9bae1e8e02dea07de6d7052".to_string(),
-                        "59b24693b1b62ea1660bc6f96a61f7d41b3f7878".to_string(),
-                        "349b691db1853f6c0120a8e66093c763ba6e3671".to_string(),
-                        "4561eb6f954d80cdb1ece3cc4d58cbd864bf2b50".to_string(),
-                        "de94175c4db39a11d5334aefc7a99434eea8e4f9".to_string(),
-                        "55dd7215f24441d6e47d1f9b32cebdb041f2157f".to_string(),
-                        "2ca09db645cfeefa41a04251dfcb13587418347a".to_string()
-                    ],
-                }
-            ]
+            patches: vec![PatchEntry {
+                url: "http://patch-dl.ffxiv.com/game/4e9a232b/D2023.09.15.0000.0000.patch"
+                    .to_string(),
+                version: "2023.09.15.0000.0000".to_string(),
+                hash_block_size: 50000000,
+                length: 1479062470,
+                size_on_disk: 44145529682,
+                unknown_a: 71,
+                unknown_b: 11,
+                hashes: vec![
+                    "1c66becde2a8cf26a99d0fc7c06f15f8bab2d87c".to_string(),
+                    "950725418366c965d824228bf20f0496f81e0b9a".to_string(),
+                    "cabef48f7bf00fbf18b72843bdae2f61582ad264".to_string(),
+                    "53608de567b52f5fdb43fdb8b623156317e26704".to_string(),
+                    "f0bc06cabf9ff6490f36114b25f62619d594dbe8".to_string(),
+                    "3c5e4b962cd8445bd9ee29011ecdb331d108abd8".to_string(),
+                    "88e1a2a322f09de3dc28173d4130a2829950d4e0".to_string(),
+                    "1040667917dc99b9215dfccff0e458c2e8a724a8".to_string(),
+                    "149c7e20e9e3e376377a130e0526b35fd7f43df2".to_string(),
+                    "1bb4e33807355cdf46af93ce828b6e145a9a8795".to_string(),
+                    "a79daff43db488f087da8e22bb4c21fd3a390f3c".to_string(),
+                    "6b04fadb656d467fb8318eba1c7f5ee8f030d967".to_string(),
+                    "a6641e1c894db961a49b70fda2b0d6d87be487a7".to_string(),
+                    "edf419de49f42ef19bd6814f8184b35a25e9e977".to_string(),
+                    "c1525c4df6001b66b575e2891db0284dc3a16566".to_string(),
+                    "01b7628095b07fa3c9c1aed2d66d32d118020321".to_string(),
+                    "991b137ea0ebb11bd668f82149bc2392a4cbcf52".to_string(),
+                    "ad3f74d4fca143a6cf507fc859544a4bcd501d85".to_string(),
+                    "936a0f1711e273519cae6b2da0d8b435fe6aa020".to_string(),
+                    "023f19d8d8b3ecaaf865e3170e8243dd437a384c".to_string(),
+                    "2d9e934de152956961a849e81912ca8d848265ca".to_string(),
+                    "8e32f9aa76c95c60a9dbe0967aee5792b812d5ec".to_string(),
+                    "dee052b9aa1cc8863efd61afc63ac3c2d56f9acc".to_string(),
+                    "fa81225aea53fa13a9bae1e8e02dea07de6d7052".to_string(),
+                    "59b24693b1b62ea1660bc6f96a61f7d41b3f7878".to_string(),
+                    "349b691db1853f6c0120a8e66093c763ba6e3671".to_string(),
+                    "4561eb6f954d80cdb1ece3cc4d58cbd864bf2b50".to_string(),
+                    "de94175c4db39a11d5334aefc7a99434eea8e4f9".to_string(),
+                    "55dd7215f24441d6e47d1f9b32cebdb041f2157f".to_string(),
+                    "2ca09db645cfeefa41a04251dfcb13587418347a".to_string(),
+                ],
+            }],
         };
 
         assert_eq!(patch_list.to_string(), test_case);
