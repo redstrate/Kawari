@@ -51,6 +51,11 @@ And then in Astra, plug these domains like so into Developer Settings:
 
 Make sure to set the "preferred protocol" to "HTTP" as well because HTTPS will not work without more setup.
 
+## Creidts & Thank You
+
+* [Sapphire](https://github.com/SapphireServer/Sapphire) for reference.
+* [iolite](https://github.com/0xbbadbeef/iolite) for reference.
+
 ## License
 
 This project is licensed under the [GNU Affero General Public License 3](LICENSE). Some code or assets may be licensed differently.
