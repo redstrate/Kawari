@@ -10,7 +10,11 @@ use tokio::{
     net::TcpStream,
 };
 
-use crate::{common::{read_bool_from, read_string, write_bool_as, write_string}, encryption::{blowfish_encode, decrypt, encrypt, generate_encryption_key}};
+use crate::{
+    common::{read_bool_from, read_string, write_bool_as, write_string},
+    encryption::{blowfish_encode, decrypt, encrypt, generate_encryption_key},
+    ipc::IPCOpCode,
+};
 
 #[binrw]
 #[brw(repr = u16)]
@@ -36,11 +40,11 @@ struct ServiceAccount {
 }
 
 #[binrw]
-#[br(import(magic: u16))]
+#[br(import(magic: &IPCOpCode))]
 #[derive(Debug, Clone)]
-enum IPCOpCode {
+enum IPCStructData {
     // Client->Server IPC
-    #[br(pre_assert(magic == 0x5u16))]
+    #[br(pre_assert(*magic == IPCOpCode::ClientVersionInfo))]
     ClientVersionInfo {
         #[brw(pad_before = 18)] // full of nonsense i don't understand yet
         #[br(count = 64)]
@@ -57,7 +61,6 @@ enum IPCOpCode {
     },
 
     // Server->Client IPC
-    //#[br(pre_assert(magic == 0x000C))]
     LobbyServiceAccountList {
         sequence: u64,
         #[brw(pad_before = 4)]
@@ -75,13 +78,13 @@ enum IPCOpCode {
 struct IPCSegment {
     unk1: u8,
     unk2: u8,
-    op_code: u16,
+    op_code: IPCOpCode,
     #[brw(pad_before = 2)] // empty
     server_id: u16,
     timestamp: u32,
     #[brw(pad_before = 4)]
-    #[br(args(op_code))]
-    pub data: IPCOpCode,
+    #[br(args(&op_code))]
+    pub data: IPCStructData,
 }
 
 impl IPCSegment {
@@ -89,8 +92,8 @@ impl IPCSegment {
         let header = 16;
         header
             + match self.data {
-                IPCOpCode::ClientVersionInfo { .. } => todo!(),
-                IPCOpCode::LobbyServiceAccountList { .. } => 19,
+                IPCStructData::ClientVersionInfo { .. } => todo!(),
+                IPCStructData::LobbyServiceAccountList { .. } => 19,
             }
     }
 }
@@ -286,7 +289,7 @@ pub async fn parse_packet(socket: &mut WriteHalf<TcpStream>, data: &[u8], state:
                     }
                     SegmentType::IPC { data } => {
                         match &data.data {
-                            IPCOpCode::ClientVersionInfo {
+                            IPCStructData::ClientVersionInfo {
                                 session_id,
                                 version_info,
                             } => {
@@ -307,7 +310,7 @@ pub async fn parse_packet(socket: &mut WriteHalf<TcpStream>, data: &[u8], state:
                                     name: "Test Service Account".to_string(),
                                 }];
 
-                                let service_account_list = IPCOpCode::LobbyServiceAccountList {
+                                let service_account_list = IPCStructData::LobbyServiceAccountList {
                                     sequence: 0,
                                     num_service_accounts: service_accounts.len() as u8,
                                     unk1: 3,
@@ -318,7 +321,7 @@ pub async fn parse_packet(socket: &mut WriteHalf<TcpStream>, data: &[u8], state:
                                 let ipc = IPCSegment {
                                     unk1: 0,
                                     unk2: 0,
-                                    op_code: 0xC, // FIXME: use enum pls
+                                    op_code: IPCOpCode::LobbyServiceAccountList,
                                     server_id: 0,
                                     timestamp,
                                     data: service_account_list,

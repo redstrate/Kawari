@@ -2,11 +2,12 @@ use minijinja::Environment;
 use rand::Rng;
 use rand::distributions::Alphanumeric;
 
+mod common;
 pub mod config;
 pub mod encryption;
+pub mod ipc;
 pub mod packet;
 pub mod patchlist;
-mod common;
 
 pub fn generate_sid() -> String {
     let random_id: String = rand::thread_rng()
