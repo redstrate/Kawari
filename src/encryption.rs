@@ -41,8 +41,7 @@ where
 
     let size = size - (std::mem::size_of::<u32>() * 4) as u32; // 16 = header size
 
-    let mut data = Vec::new();
-    data.resize(size as usize, 0x0);
+    let mut data = vec![0; size as usize];
     reader.read_exact(&mut data)?;
 
     unsafe {

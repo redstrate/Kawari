@@ -63,7 +63,7 @@ fn list_patch_files(dir_path: &str) -> Vec<String> {
 }
 
 async fn verify_session(
-    Path((platform, game_version, sid)): Path<(String, String, String)>,
+    Path((platform, _, sid)): Path<(String, String, String)>,
 ) -> impl IntoResponse {
     let config = get_config();
     if !config.supports_platform(&platform) {

@@ -1,5 +1,5 @@
 use std::{
-    cmp::{max, min},
+    cmp::min,
     fs::write,
     io::Cursor,
     time::{SystemTime, UNIX_EPOCH},
@@ -44,7 +44,7 @@ enum SegmentType {
         key: [u8; 4],
     },
     #[brw(magic = 0x3u32)]
-    IPC {
+    Ipc {
         #[br(parse_with = decrypt, args(size, encryption_key))]
         #[bw(write_with = encrypt, args(size, encryption_key))]
         data: IPCSegment,
@@ -98,7 +98,7 @@ impl PacketSegment {
             + match &self.segment_type {
                 SegmentType::InitializeEncryption { .. } => 616,
                 SegmentType::InitializationEncryptionResponse { .. } => 640,
-                SegmentType::IPC { data } => data.calc_size(),
+                SegmentType::Ipc { data } => data.calc_size(),
                 SegmentType::KeepAlive { .. } => todo!(),
                 SegmentType::KeepAliveResponse { .. } => 0x8,
             }
@@ -116,7 +116,7 @@ struct Packet {
 }
 
 fn dump(msg: &str, data: &[u8]) {
-    write("packet.bin", data);
+    write("packet.bin", data).unwrap();
     panic!("{msg} Dumped to packet.bin.");
 }
 
@@ -152,18 +152,20 @@ async fn send_packet(socket: &mut WriteHalf<TcpStream>, segments: &[PacketSegmen
     };
 
     let mut cursor = Cursor::new(Vec::new());
-    packet.write_le_args(
-        &mut cursor,
-        (state.client_key.as_ref().map(|s: &[u8; 16]| s.as_slice()),),
-    );
+    packet
+        .write_le_args(
+            &mut cursor,
+            (state.client_key.as_ref().map(|s: &[u8; 16]| s.as_slice()),),
+        )
+        .unwrap();
 
     let buffer = cursor.into_inner();
 
     tracing::info!("Wrote response packet to outpacket.bin");
-    write("outpacket.bin", &buffer);
+    write("outpacket.bin", &buffer).unwrap();
 
     socket
-        .write(&buffer)
+        .write_all(&buffer)
         .await
         .expect("Failed to write packet!");
 }
@@ -216,7 +218,7 @@ pub async fn parse_packet(socket: &mut WriteHalf<TcpStream>, data: &[u8], state:
                         };
                         send_packet(socket, &[response_packet], state).await;
                     }
-                    SegmentType::IPC { data } => {
+                    SegmentType::Ipc { data } => {
                         match &data.data {
                             IPCStructData::ClientVersionInfo {
                                 session_id,
@@ -262,7 +264,7 @@ pub async fn parse_packet(socket: &mut WriteHalf<TcpStream>, data: &[u8], state:
                                 let response_packet = PacketSegment {
                                     source_actor: 0,
                                     target_actor: 0,
-                                    segment_type: SegmentType::IPC { data: ipc },
+                                    segment_type: SegmentType::Ipc { data: ipc },
                                 };
                                 send_packet(socket, &[response_packet], state).await;
                             }
@@ -310,7 +312,7 @@ pub async fn parse_packet(socket: &mut WriteHalf<TcpStream>, data: &[u8], state:
                                     let response_packet = PacketSegment {
                                         source_actor: 0,
                                         target_actor: 0,
-                                        segment_type: SegmentType::IPC { data: ipc },
+                                        segment_type: SegmentType::Ipc { data: ipc },
                                     };
                                     packets.push(response_packet);
                                 }
@@ -332,7 +334,7 @@ pub async fn parse_packet(socket: &mut WriteHalf<TcpStream>, data: &[u8], state:
                                     let response_packet = PacketSegment {
                                         source_actor: 0,
                                         target_actor: 0,
-                                        segment_type: SegmentType::IPC { data: ipc },
+                                        segment_type: SegmentType::Ipc { data: ipc },
                                     };
                                     packets.push(response_packet);
                                 }
@@ -420,7 +422,7 @@ pub async fn parse_packet(socket: &mut WriteHalf<TcpStream>, data: &[u8], state:
                                         let response_packet = PacketSegment {
                                             source_actor: 0,
                                             target_actor: 0,
-                                            segment_type: SegmentType::IPC { data: ipc },
+                                            segment_type: SegmentType::Ipc { data: ipc },
                                         };
                                         send_packet(socket, &[response_packet], state).await;
                                     }

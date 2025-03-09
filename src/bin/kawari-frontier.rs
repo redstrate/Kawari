@@ -23,7 +23,7 @@ async fn get_world_status() -> Json<GateStatus> {
 
     let config = get_config();
     Json(GateStatus {
-        status: config.login_open.into(),
+        status: config.worlds_open.into(),
     })
 }
 
