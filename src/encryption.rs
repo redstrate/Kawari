@@ -1,4 +1,3 @@
-use std::fs::write;
 use std::{io::Cursor, slice};
 
 use binrw::{BinRead, BinResult, BinWrite};
@@ -9,28 +8,12 @@ const GAME_VERSION: u16 = 7000;
 
 pub fn generate_encryption_key(key: &[u8], phrase: &str) -> [u8; 16] {
     let mut base_key = vec![0x78, 0x56, 0x34, 0x12];
-    base_key.extend_from_slice(&key);
+    base_key.extend_from_slice(key);
     base_key.extend_from_slice(&GAME_VERSION.to_le_bytes());
     base_key.extend_from_slice(&[0; 2]); // padding (possibly for game version?)
-    base_key.extend_from_slice(&phrase.as_bytes());
+    base_key.extend_from_slice(phrase.as_bytes());
 
     md5::compute(&base_key).0
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_encryption_key() {
-        let key = generate_encryption_key(&[0x00, 0x00, 0x00, 0x00], "foobar");
-        assert_eq!(
-            key,
-            [
-                169, 78, 235, 31, 57, 151, 26, 74, 250, 196, 1, 120, 206, 173, 202, 48
-            ]
-        );
-    }
 }
 
 #[binrw::parser(reader, endian)]
@@ -85,5 +68,21 @@ where
         writer.write_all(encoded_data)?;
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_encryption_key() {
+        let key = generate_encryption_key(&[0x00, 0x00, 0x00, 0x00], "foobar");
+        assert_eq!(
+            key,
+            [
+                169, 78, 235, 31, 57, 151, 26, 74, 250, 196, 1, 120, 206, 173, 202, 48
+            ]
+        );
     }
 }

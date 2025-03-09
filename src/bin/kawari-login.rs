@@ -5,8 +5,6 @@ use axum::response::Html;
 use axum::routing::post;
 use axum::{Form, Router, routing::get};
 use kawari::generate_sid;
-use rand::Rng;
-use rand::distributions::Alphanumeric;
 use serde::Deserialize;
 
 #[derive(Deserialize)]

@@ -1,7 +1,7 @@
 use std::net::SocketAddr;
 
 use axum::{Json, Router, routing::get};
-use kawari::config::{Config, get_config};
+use kawari::config::get_config;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

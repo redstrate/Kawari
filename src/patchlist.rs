@@ -55,42 +55,42 @@ impl PatchList {
         for patch in &self.patches {
             // length
             str.push_str(&patch.length.to_string());
-            str.push_str("\t");
+            str.push('\t');
 
             // TODO: unknown value, but i *suspect* is the size of the game on disk once this patch is applied.
             // which would make sense for the launcher to check for
             str.push_str(&patch.size_on_disk.to_string());
-            str.push_str("\t");
+            str.push('\t');
 
             // TODO: totally unknown
             str.push_str(&patch.unknown_a.to_string());
-            str.push_str("\t");
+            str.push('\t');
 
             // TODO: unknown too
             str.push_str(&patch.unknown_b.to_string());
-            str.push_str("\t");
+            str.push('\t');
 
             // version (e.g. 2023.09.15.0000.0000)
             str.push_str(&patch.version);
-            str.push_str("\t");
+            str.push('\t');
 
-            if (self.patch_type == PatchType::Game) {
+            if self.patch_type == PatchType::Game {
                 // hash type
                 // TODO: does this need to be configurable?
                 str.push_str("sha1");
-                str.push_str("\t");
+                str.push('\t');
 
                 // hash block size
                 str.push_str(&patch.hash_block_size.to_string());
-                str.push_str("\t");
+                str.push('\t');
 
                 // hashes
                 str.push_str(&patch.hashes[0]);
                 for hash in &patch.hashes[1..] {
-                    str.push_str(",");
-                    str.push_str(&hash);
+                    str.push(',');
+                    str.push_str(hash);
                 }
-                str.push_str("\t");
+                str.push('\t');
             }
 
             // url
@@ -108,7 +108,6 @@ impl PatchList {
 
 #[cfg(test)]
 mod tests {
-    use std::fs;
 
     use super::*;
 

@@ -5,7 +5,7 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-use binrw::{BinRead, BinResult, BinWrite, binrw, helpers::until_eof};
+use binrw::{BinRead, BinWrite, binrw};
 use tokio::{
     io::{AsyncWriteExt, WriteHalf},
     net::TcpStream,
@@ -122,11 +122,11 @@ struct IPCSegment {
 impl IPCSegment {
     fn calc_size(&self) -> u32 {
         let header = 16;
-        return header
+        header
             + match self.data {
                 IPCOpCode::ClientVersionInfo { .. } => todo!(),
                 IPCOpCode::LobbyServiceAccountList { .. } => 19,
-            };
+            }
     }
 }
 
@@ -197,14 +197,14 @@ struct PacketSegment {
 impl PacketSegment {
     fn calc_size(&self) -> u32 {
         let header = std::mem::size_of::<u32>() * 4;
-        return header as u32
+        header as u32
             + match &self.segment_type {
                 SegmentType::InitializeEncryption { .. } => 616,
                 SegmentType::InitializationEncryptionResponse { .. } => 640,
                 SegmentType::IPC { data } => data.calc_size(),
                 SegmentType::KeepAlive { .. } => todo!(),
                 SegmentType::KeepAliveResponse { .. } => 0x8,
-            };
+            }
     }
 }
 

@@ -3,16 +3,12 @@ use std::fs::read_dir;
 use std::net::SocketAddr;
 
 use axum::extract::Path;
-use axum::extract::Query;
 use axum::http::{HeaderMap, StatusCode};
-use axum::response::Html;
 use axum::response::IntoResponse;
 use axum::routing::post;
-use axum::{Form, Json, Router, routing::get};
-use kawari::config::{Config, get_config};
+use axum::{Router, routing::get};
+use kawari::config::get_config;
 use kawari::patchlist::{PatchEntry, PatchList, PatchType};
-use minijinja::filters::list;
-use serde::{Deserialize, Serialize};
 
 fn list_patch_files(dir_path: &str) -> Vec<String> {
     // If the dir doesn't exist, pretend there is no patch files
@@ -38,7 +34,7 @@ fn list_patch_files(dir_path: &str) -> Vec<String> {
         .collect();
     game_patches.sort_by(|a, b| {
         // Ignore H/D in front of filenames
-        let mut a_path = a
+        let a_path = a
             .as_path()
             .file_name()
             .unwrap()
@@ -48,7 +44,7 @@ fn list_patch_files(dir_path: &str) -> Vec<String> {
         if a_path.starts_with("H") {
             return Ordering::Less;
         }
-        let mut b_path = b
+        let b_path = b
             .as_path()
             .file_name()
             .unwrap()
@@ -117,7 +113,7 @@ async fn verify_boot(Path((platform, boot_version)): Path<(String, String)>) -> 
         }
     }
 
-    let mut headers = HeaderMap::new();
+    let headers = HeaderMap::new();
     (headers).into_response()
 }
 

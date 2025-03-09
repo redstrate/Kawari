@@ -2,10 +2,10 @@ use std::net::SocketAddr;
 
 use axum::response::{Html, Redirect};
 use axum::routing::post;
-use axum::{Json, Router, extract::Form, routing::get};
-use kawari::config::{Config, get_config};
+use axum::{Router, extract::Form, routing::get};
+use kawari::config::get_config;
 use kawari::setup_default_environment;
-use minijinja::{Environment, context};
+use minijinja::context;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -58,7 +58,7 @@ struct Input {
 async fn apply(Form(input): Form<Input>) -> Redirect {
     tracing::info!("Apply config changes...");
 
-    let mut config = get_config();
+    let config = get_config();
 
     serde_json::to_writer(&std::fs::File::create("config.json").unwrap(), &config)
         .expect("TODO: panic message");

@@ -2,10 +2,10 @@ use std::net::SocketAddr;
 
 use axum::response::{Html, Redirect};
 use axum::routing::post;
-use axum::{Json, Router, extract::Form, routing::get};
-use kawari::config::{Config, get_config};
+use axum::{Router, extract::Form, routing::get};
+use kawari::config::get_config;
 use kawari::setup_default_environment;
-use minijinja::{Environment, context};
+use minijinja::context;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
