@@ -1,5 +1,4 @@
 use std::{
-    cmp::min,
     fs::write,
     io::Cursor,
     time::{SystemTime, UNIX_EPOCH},
@@ -13,8 +12,8 @@ use tokio::{
 
 use crate::{
     common::{read_bool_from, read_string, write_bool_as},
-    encryption::{blowfish_encode, decrypt, encrypt, generate_encryption_key},
-    ipc::{CharacterDetails, IPCOpCode, IPCSegment, IPCStructData, Server, ServiceAccount},
+    encryption::{decrypt, encrypt},
+    ipc::IPCSegment,
 };
 
 #[binrw]
@@ -30,7 +29,7 @@ enum ConnectionType {
 #[binrw]
 #[brw(import(size: u32, encryption_key: Option<&[u8]>))]
 #[derive(Debug, Clone)]
-enum SegmentType {
+pub enum SegmentType {
     // Client->Server Packets
     #[brw(magic = 0x9u32)]
     InitializeEncryption {
@@ -82,13 +81,13 @@ struct PacketHeader {
 #[binrw]
 #[brw(import(encryption_key: Option<&[u8]>))]
 #[derive(Debug, Clone)]
-struct PacketSegment {
+pub struct PacketSegment {
     #[bw(calc = self.calc_size())]
-    size: u32,
-    source_actor: u32,
-    target_actor: u32,
+    pub size: u32,
+    pub source_actor: u32,
+    pub target_actor: u32,
     #[brw(args(size, encryption_key))]
-    segment_type: SegmentType,
+    pub segment_type: SegmentType,
 }
 
 impl PacketSegment {
@@ -120,7 +119,11 @@ fn dump(msg: &str, data: &[u8]) {
     panic!("{msg} Dumped to packet.bin.");
 }
 
-async fn send_packet(socket: &mut WriteHalf<TcpStream>, segments: &[PacketSegment], state: &State) {
+pub async fn send_packet(
+    socket: &mut WriteHalf<TcpStream>,
+    segments: &[PacketSegment],
+    state: &State,
+) {
     let timestamp: u64 = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .expect("Failed to get UNIX timestamp!")
@@ -175,7 +178,7 @@ pub struct State {
     pub client_key: Option<[u8; 16]>,
 }
 
-pub async fn parse_packet(socket: &mut WriteHalf<TcpStream>, data: &[u8], state: &mut State) {
+pub async fn parse_packet(data: &[u8], state: &mut State) -> Vec<PacketSegment> {
     let mut cursor = Cursor::new(data);
 
     match Packet::read_le_args(
@@ -192,267 +195,27 @@ pub async fn parse_packet(socket: &mut WriteHalf<TcpStream>, data: &[u8], state:
                 );
             }
 
-            for segment in &packet.segments {
-                match &segment.segment_type {
-                    SegmentType::InitializeEncryption { phrase, key } => {
-                        // Generate an encryption key for this client
-                        state.client_key = Some(generate_encryption_key(key, phrase));
-
-                        let mut data = 0xE0003C2Au32.to_le_bytes().to_vec();
-                        data.resize(0x280, 0);
-
-                        unsafe {
-                            let result = blowfish_encode(
-                                state.client_key.unwrap().as_ptr(),
-                                16,
-                                data.as_ptr(),
-                                0x280,
-                            );
-                            data = std::slice::from_raw_parts(result, 0x280).to_vec();
-                        }
-
-                        let response_packet = PacketSegment {
-                            source_actor: 0,
-                            target_actor: 0,
-                            segment_type: SegmentType::InitializationEncryptionResponse { data },
-                        };
-                        send_packet(socket, &[response_packet], state).await;
-                    }
-                    SegmentType::Ipc { data } => {
-                        match &data.data {
-                            IPCStructData::ClientVersionInfo {
-                                session_id,
-                                version_info,
-                            } => {
-                                tracing::info!("Client {session_id} ({version_info}) logging in!");
-
-                                let timestamp: u32 = SystemTime::now()
-                                    .duration_since(UNIX_EPOCH)
-                                    .expect("Failed to get UNIX timestamp!")
-                                    .as_secs()
-                                    .try_into()
-                                    .unwrap();
-
-                                // send the client the service account list
-                                let mut service_accounts = [ServiceAccount {
-                                    id: 0x002E4A2B,
-                                    unk1: 0,
-                                    index: 0,
-                                    name: "FINAL FANTASY XIV".to_string(),
-                                }]
-                                .to_vec();
-                                // add any empty boys
-                                service_accounts.resize(8, ServiceAccount::default());
-
-                                let service_account_list = IPCStructData::LobbyServiceAccountList {
-                                    sequence: 0,
-                                    num_service_accounts: service_accounts.len() as u8,
-                                    unk1: 3,
-                                    unk2: 0x99,
-                                    service_accounts: service_accounts.to_vec(),
-                                };
-
-                                let ipc = IPCSegment {
-                                    unk1: 0,
-                                    unk2: 0,
-                                    op_code: IPCOpCode::LobbyServiceAccountList,
-                                    server_id: 0,
-                                    timestamp,
-                                    data: service_account_list,
-                                };
-
-                                let response_packet = PacketSegment {
-                                    source_actor: 0,
-                                    target_actor: 0,
-                                    segment_type: SegmentType::Ipc { data: ipc },
-                                };
-                                send_packet(socket, &[response_packet], state).await;
-                            }
-                            IPCStructData::RequestCharacterList { sequence } => {
-                                tracing::info!("Client is requesting character list...");
-
-                                let timestamp: u32 = SystemTime::now()
-                                    .duration_since(UNIX_EPOCH)
-                                    .expect("Failed to get UNIX timestamp!")
-                                    .as_secs()
-                                    .try_into()
-                                    .unwrap();
-
-                                let mut packets = Vec::new();
-                                // send them the character list
-                                {
-                                    let mut servers = [Server {
-                                        id: 21,
-                                        index: 0,
-                                        flags: 0,
-                                        icon: 0,
-                                        name: "KAWARI".to_string(),
-                                    }]
-                                    .to_vec();
-                                    // add any empty boys
-                                    servers.resize(6, Server::default());
-
-                                    let lobby_server_list = IPCStructData::LobbyServerList {
-                                        sequence: 0,
-                                        unk1: 1,
-                                        offset: 0,
-                                        num_servers: 1,
-                                        servers,
-                                    };
-
-                                    let ipc = IPCSegment {
-                                        unk1: 0,
-                                        unk2: 0,
-                                        op_code: IPCOpCode::LobbyServerList,
-                                        server_id: 0,
-                                        timestamp,
-                                        data: lobby_server_list,
-                                    };
-
-                                    let response_packet = PacketSegment {
-                                        source_actor: 0,
-                                        target_actor: 0,
-                                        segment_type: SegmentType::Ipc { data: ipc },
-                                    };
-                                    packets.push(response_packet);
-                                }
-
-                                // send them the retainer list
-                                {
-                                    let lobby_retainer_list =
-                                        IPCStructData::LobbyRetainerList { unk1: 1 };
-
-                                    let ipc = IPCSegment {
-                                        unk1: 0,
-                                        unk2: 0,
-                                        op_code: IPCOpCode::LobbyRetainerList,
-                                        server_id: 0,
-                                        timestamp,
-                                        data: lobby_retainer_list,
-                                    };
-
-                                    let response_packet = PacketSegment {
-                                        source_actor: 0,
-                                        target_actor: 0,
-                                        segment_type: SegmentType::Ipc { data: ipc },
-                                    };
-                                    packets.push(response_packet);
-                                }
-
-                                send_packet(socket, &packets, state).await;
-
-                                // now send them the character list
-                                {
-                                    let mut characters = vec![CharacterDetails {
-                                        id: 0,
-                                        content_id: 11111111111111111,
-                                        index: 0,
-                                        server_id: 21,
-                                        server_id1: 21,
-                                        unk1: [0; 16],
-                                        character_name: "test".to_string(),
-                                        character_server_name: "test".to_string(),
-                                        character_server_name1: "test".to_string(),
-                                        character_detail_json: "test".to_string(),
-                                        unk2: [0; 20],
-                                    }];
-                                    // add any empty boys
-                                    characters.resize(2, CharacterDetails::default());
-
-                                    for i in 0..4 {
-                                        let mut characters_in_packet = Vec::new();
-                                        for _ in 0..min(characters.len(), 2) {
-                                            characters_in_packet.push(characters.swap_remove(0));
-                                        }
-
-                                        let lobby_character_list = if i == 3 {
-                                            // On the last packet, add the account-wide information
-                                            IPCStructData::LobbyCharacterList {
-                                                sequence: *sequence,
-                                                counter: (i * 4) + 1, // TODO: why the + 1 here?
-                                                num_in_packet: characters_in_packet.len() as u8,
-                                                unk1: 0,
-                                                unk2: 0,
-                                                unk3: 0,
-                                                unk4: 128,
-                                                unk5: [0; 7],
-                                                unk6: 0,
-                                                veteran_rank: 0,
-                                                unk7: 0,
-                                                days_subscribed: 0,
-                                                remaining_days: 0,
-                                                days_to_next_rank: 0,
-                                                max_characters_on_world: 20,
-                                                unk8: 8,
-                                                entitled_expansion: 4,
-                                                characters: characters_in_packet,
-                                            }
-                                        } else {
-                                            IPCStructData::LobbyCharacterList {
-                                                sequence: *sequence,
-                                                counter: i * 4,
-                                                num_in_packet: characters_in_packet.len() as u8,
-                                                unk1: 0,
-                                                unk2: 0,
-                                                unk3: 0,
-                                                unk4: 0,
-                                                unk5: [0; 7],
-                                                unk6: 0,
-                                                veteran_rank: 0,
-                                                unk7: 0,
-                                                days_subscribed: 0,
-                                                remaining_days: 0,
-                                                days_to_next_rank: 0,
-                                                max_characters_on_world: 0,
-                                                unk8: 0,
-                                                entitled_expansion: 0,
-                                                characters: characters_in_packet,
-                                            }
-                                        };
-
-                                        let ipc = IPCSegment {
-                                            unk1: 0,
-                                            unk2: 0,
-                                            op_code: IPCOpCode::LobbyCharacterList,
-                                            server_id: 0,
-                                            timestamp,
-                                            data: lobby_character_list,
-                                        };
-
-                                        let response_packet = PacketSegment {
-                                            source_actor: 0,
-                                            target_actor: 0,
-                                            segment_type: SegmentType::Ipc { data: ipc },
-                                        };
-                                        send_packet(socket, &[response_packet], state).await;
-                                    }
-                                }
-                            }
-                            _ => {
-                                panic!("The server is recieving a IPC response packet!")
-                            }
-                        }
-                    }
-                    SegmentType::KeepAlive { id, timestamp } => {
-                        let response_packet = PacketSegment {
-                            source_actor: 0,
-                            target_actor: 0,
-                            segment_type: SegmentType::KeepAliveResponse {
-                                id: *id,
-                                timestamp: *timestamp,
-                            },
-                        };
-                        send_packet(socket, &[response_packet], state).await;
-                    }
-                    _ => {
-                        panic!("The server is recieving a response packet!")
-                    }
-                }
-            }
+            packet.segments
         }
         Err(err) => {
             println!("{err}");
             dump("Failed to parse packet!", data);
+
+            Vec::new()
         }
     }
+}
+
+pub async fn send_keep_alive(
+    socket: &mut WriteHalf<TcpStream>,
+    state: &State,
+    id: u32,
+    timestamp: u32,
+) {
+    let response_packet = PacketSegment {
+        source_actor: 0,
+        target_actor: 0,
+        segment_type: SegmentType::KeepAliveResponse { id, timestamp },
+    };
+    send_packet(socket, &[response_packet], state).await;
 }
