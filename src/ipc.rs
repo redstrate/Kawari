@@ -59,9 +59,8 @@ pub struct CharacterDetails {
     pub content_id: u64,
     #[brw(pad_after = 4)]
     pub index: u32,
-    // TODO: lol? why is there server_id1?
-    pub server_id: u16,
-    pub server_id1: u16,
+    pub origin_server_id: u16,
+    pub current_server_id: u16,
     pub unk1: [u8; 16],
     #[bw(pad_size_to = 32)]
     #[br(count = 32)]
@@ -72,12 +71,12 @@ pub struct CharacterDetails {
     #[br(count = 32)]
     #[br(map = read_string)]
     #[bw(map = write_string)]
-    pub character_server_name: String,
+    pub origin_server_name: String,
     #[bw(pad_size_to = 32)]
     #[br(count = 32)]
     #[br(map = read_string)]
     #[bw(map = write_string)]
-    pub character_server_name1: String,
+    pub current_server_name: String,
     #[bw(pad_size_to = 1024)]
     #[br(count = 1024)]
     #[br(map = read_string)]

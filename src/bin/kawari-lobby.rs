@@ -170,7 +170,7 @@ async fn send_lobby_info(socket: &mut WriteHalf<TcpStream>, state: &State, seque
         .unwrap();
 
     let mut packets = Vec::new();
-    // send them the character list
+    // send them the server list
     {
         let mut servers = [Server {
             id: WORLD_ID,
@@ -292,12 +292,12 @@ async fn send_lobby_info(socket: &mut WriteHalf<TcpStream>, state: &State, seque
             id: 0,
             content_id: 11111111111111111,
             index: 0,
-            server_id: WORLD_ID,
-            server_id1: WORLD_ID,
             unk1: [0; 16],
+            origin_server_id: WORLD_ID,
+            current_server_id: WORLD_ID,
             character_name: "test".to_string(),
-            character_server_name: WORLD_NAME.to_string(),
-            character_server_name1: WORLD_NAME.to_string(),
+            origin_server_name: WORLD_NAME.to_string(),
+            current_server_name: WORLD_NAME.to_string(),
             character_detail_json: select_data.to_json(),
             unk2: [0; 20],
         }];
@@ -327,8 +327,8 @@ async fn send_lobby_info(socket: &mut WriteHalf<TcpStream>, state: &State, seque
                     days_subscribed: 5,
                     remaining_days: 5,
                     days_to_next_rank: 0,
-                    max_characters_on_world: 0,
                     unk8: 8,
+                    max_characters_on_world: 2,
                     entitled_expansion: 4,
                     characters: characters_in_packet,
                 }
