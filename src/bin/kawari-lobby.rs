@@ -51,6 +51,11 @@ async fn main() {
 
                                     send_lobby_info(&mut write, &state, *sequence).await;
                                 }
+                                IPCStructData::RequestCharacterDelete { name } => {
+                                    tracing::info!(
+                                        "Client is requesting character named {name} to be deleted. Ignoring since it's not implemented yet."
+                                    );
+                                }
                                 _ => {
                                     panic!("The server is recieving a IPC response packet!")
                                 }

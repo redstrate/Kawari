@@ -1,3 +1,4 @@
+use std::fs::write;
 use std::{io::Cursor, slice};
 
 use binrw::{BinRead, BinResult, BinWrite};
@@ -47,6 +48,8 @@ where
     unsafe {
         let decryption_result = blowfish_decode(encryption_key.as_ptr(), 16, data.as_ptr(), size);
         let decrypted_data = slice::from_raw_parts(decryption_result, size as usize);
+
+        write("decrypted.bin", &decrypted_data).unwrap();
 
         let mut cursor = Cursor::new(&decrypted_data);
         T::read_options(&mut cursor, endian, ())

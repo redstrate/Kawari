@@ -10,6 +10,8 @@ pub enum IPCOpCode {
     RequestCharacterList = 0x3,
     /// Sent by the client after exchanging encryption information with the lobby server.
     ClientVersionInfo = 0x5,
+    /// Sent by the client when they request a character to be deleted.
+    RequestCharacterDelete = 0xB,
     /// Sent by the server to inform the client of their service accounts.
     LobbyServiceAccountList = 0xC,
     /// Sent by the server to inform the client of their characters.
@@ -84,24 +86,6 @@ pub struct CharacterDetails {
     pub unk2: [u8; 20],
 }
 
-/*impl Default for CharacterDetails {
-    fn default() -> Self {
-        Self {
-            id: 0,
-            content_id: 0,
-            index: 1,
-            server_id: 0,
-            server_id1: 0,
-            unk1: [0; 16],
-            character_name: String::new(),
-            character_server_name: String::new(),
-            character_server_name1: String::new(),
-            character_detail_json: String::new(),
-            unk2: [0; 20],
-        }
-    }
-}*/
-
 #[binrw]
 #[br(import(magic: &IPCOpCode))]
 #[derive(Debug, Clone)]
@@ -127,6 +111,16 @@ pub enum IPCStructData {
         #[brw(pad_before = 16)]
         sequence: u64,
         // TODO: what is in here?
+    },
+    #[br(pre_assert(*magic == IPCOpCode::RequestCharacterDelete))]
+    RequestCharacterDelete {
+        #[brw(pad_before = 28)]
+        #[bw(pad_size_to = 32)]
+        #[br(count = 32)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        name: String,
+        // TODO: what else is in here?
     },
 
     // Server->Client IPC
@@ -206,6 +200,7 @@ impl IPCSegment {
                 IPCStructData::LobbyServerList { .. } => 24 + (6 * 84),
                 IPCStructData::LobbyRetainerList { .. } => 210,
                 IPCStructData::LobbyCharacterList { .. } => 80 + (2 * 1184),
+                IPCStructData::RequestCharacterDelete { .. } => todo!(),
             }
     }
 }
