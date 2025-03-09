@@ -1,8 +1,9 @@
-use std::io::Cursor;
 use std::fs::write;
+use std::{io::Cursor, slice};
 
 use binrw::{BinRead, BinResult};
-use physis::blowfish::Blowfish;
+
+use crate::packet::blowfish_decode;
 
 const GAME_VERSION: u16 = 7000;
 
@@ -22,7 +23,7 @@ mod tests {
 
     #[test]
     fn test_encryption_key() {
-        let key = generate_encryption_key([0x00, 0x00, 0x00, 0x00], "foobar");
+        let key = generate_encryption_key(&[0x00, 0x00, 0x00, 0x00], "foobar");
         assert_eq!(
             key,
             [
@@ -47,13 +48,11 @@ where
     data.resize(size as usize, 0x0);
     reader.read_exact(&mut data)?;
 
-    write("encrypted.bin", &data);
+    unsafe {
+        let decryption_result = blowfish_decode(encryption_key.as_ptr(), 16, data.as_ptr(), size);
+        let decrypted_data = slice::from_raw_parts(decryption_result, size as usize);
 
-    let blowfish = Blowfish::new(encryption_key);
-    let decrypted_data = blowfish.decrypt(&data).unwrap();
-
-    write("decrypted.bin", &decrypted_data);
-
-    let mut cursor = Cursor::new(&decrypted_data);
-    T::read_options(&mut cursor, endian, ())
+        let mut cursor = Cursor::new(&decrypted_data);
+        T::read_options(&mut cursor, endian, ())
+    }
 }

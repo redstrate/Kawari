@@ -5,7 +5,6 @@ use std::{
 };
 
 use binrw::{BinRead, BinResult, BinWrite, binrw, helpers::until_eof};
-use physis::blowfish::Blowfish;
 use tokio::{
     io::{AsyncWriteExt, WriteHalf},
     net::TcpStream,
@@ -24,6 +23,22 @@ pub(crate) fn write_bool_as<T: std::convert::From<u8>>(x: &bool) -> T {
 pub(crate) fn read_string(byte_stream: Vec<u8>) -> String {
     let str = String::from_utf8(byte_stream).unwrap();
     str.trim_matches(char::from(0)).to_string() // trim \0 from the end of strings
+}
+
+#[link(name = "FFXIVBlowfish")]
+unsafe extern "C" {
+    pub fn blowfish_encode(
+        key: *const u8,
+        keybytes: u32,
+        pInput: *const u8,
+        lSize: u32,
+    ) -> *const u8;
+    pub fn blowfish_decode(
+        key: *const u8,
+        keybytes: u32,
+        pInput: *const u8,
+        lSize: u32,
+    ) -> *const u8;
 }
 
 #[binrw]
@@ -203,11 +218,18 @@ pub async fn parse_packet(socket: &mut WriteHalf<TcpStream>, data: &[u8], state:
                         // Generate an encryption key for this client
                         state.client_key = Some(generate_encryption_key(key, phrase));
 
-                        let blowfish = Blowfish::new(&state.client_key.unwrap());
                         let mut data = 0xE0003C2Au32.to_le_bytes().to_vec();
                         data.resize(0x280, 0);
 
-                        let data = blowfish.encrypt(&data).unwrap();
+                        unsafe {
+                            let result = blowfish_encode(
+                                state.client_key.unwrap().as_ptr(),
+                                16,
+                                data.as_ptr(),
+                                0x280,
+                            );
+                            data = std::slice::from_raw_parts(result, 0x280).to_vec();
+                        }
 
                         let response_packet = PacketSegment {
                             source_actor: 0,

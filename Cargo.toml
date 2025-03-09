@@ -25,6 +25,9 @@ opt-level = "z"
 codegen-units = 1
 panic = "abort"
 
+[build-dependencies]
+cc = "1.0"
+
 [dependencies]
 axum = { version = "0.6", features = ["json", "tokio", "http1", "form", "query", "headers"], default-features = false }
 serde_json = { version = "1.0", default-features = false }
@@ -35,5 +38,4 @@ tracing-subscriber = { version = "0.3", features = ["fmt"], default-features = f
 rand = "0.8"
 minijinja = "2.0"
 binrw = { version = "0.14" }
-physis = { git = "https://github.com/redstrate/Physis" }
 md5 = "0.7.0"
