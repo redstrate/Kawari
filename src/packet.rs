@@ -1,4 +1,5 @@
 use std::{
+    cmp::{max, min},
     fs::write,
     io::Cursor,
     time::{SystemTime, UNIX_EPOCH},
@@ -13,7 +14,7 @@ use tokio::{
 use crate::{
     common::{read_bool_from, read_string, write_bool_as},
     encryption::{blowfish_encode, decrypt, encrypt, generate_encryption_key},
-    ipc::{IPCOpCode, IPCSegment, IPCStructData, ServiceAccount},
+    ipc::{CharacterDetails, IPCOpCode, IPCSegment, IPCStructData, Server, ServiceAccount},
 };
 
 #[binrw]
@@ -236,7 +237,8 @@ pub async fn parse_packet(socket: &mut WriteHalf<TcpStream>, data: &[u8], state:
                                     unk1: 0,
                                     index: 0,
                                     name: "FINAL FANTASY XIV".to_string(),
-                                }].to_vec();
+                                }]
+                                .to_vec();
                                 // add any empty boys
                                 service_accounts.resize(8, ServiceAccount::default());
 
@@ -263,6 +265,166 @@ pub async fn parse_packet(socket: &mut WriteHalf<TcpStream>, data: &[u8], state:
                                     segment_type: SegmentType::IPC { data: ipc },
                                 };
                                 send_packet(socket, &[response_packet], state).await;
+                            }
+                            IPCStructData::RequestCharacterList { sequence } => {
+                                tracing::info!("Client is requesting character list...");
+
+                                let timestamp: u32 = SystemTime::now()
+                                    .duration_since(UNIX_EPOCH)
+                                    .expect("Failed to get UNIX timestamp!")
+                                    .as_secs()
+                                    .try_into()
+                                    .unwrap();
+
+                                let mut packets = Vec::new();
+                                // send them the character list
+                                {
+                                    let mut servers = [Server {
+                                        id: 21,
+                                        index: 0,
+                                        flags: 0,
+                                        icon: 0,
+                                        name: "KAWARI".to_string(),
+                                    }]
+                                    .to_vec();
+                                    // add any empty boys
+                                    servers.resize(6, Server::default());
+
+                                    let lobby_server_list = IPCStructData::LobbyServerList {
+                                        sequence: 0,
+                                        unk1: 1,
+                                        offset: 0,
+                                        num_servers: 1,
+                                        servers,
+                                    };
+
+                                    let ipc = IPCSegment {
+                                        unk1: 0,
+                                        unk2: 0,
+                                        op_code: IPCOpCode::LobbyServerList,
+                                        server_id: 0,
+                                        timestamp,
+                                        data: lobby_server_list,
+                                    };
+
+                                    let response_packet = PacketSegment {
+                                        source_actor: 0,
+                                        target_actor: 0,
+                                        segment_type: SegmentType::IPC { data: ipc },
+                                    };
+                                    packets.push(response_packet);
+                                }
+
+                                // send them the retainer list
+                                {
+                                    let lobby_retainer_list =
+                                        IPCStructData::LobbyRetainerList { unk1: 1 };
+
+                                    let ipc = IPCSegment {
+                                        unk1: 0,
+                                        unk2: 0,
+                                        op_code: IPCOpCode::LobbyRetainerList,
+                                        server_id: 0,
+                                        timestamp,
+                                        data: lobby_retainer_list,
+                                    };
+
+                                    let response_packet = PacketSegment {
+                                        source_actor: 0,
+                                        target_actor: 0,
+                                        segment_type: SegmentType::IPC { data: ipc },
+                                    };
+                                    packets.push(response_packet);
+                                }
+
+                                send_packet(socket, &packets, state).await;
+
+                                // now send them the character list
+                                {
+                                    let mut characters = vec![CharacterDetails {
+                                        id: 0,
+                                        content_id: 11111111111111111,
+                                        index: 0,
+                                        server_id: 21,
+                                        server_id1: 21,
+                                        unk1: [0; 16],
+                                        character_name: "test".to_string(),
+                                        character_server_name: "test".to_string(),
+                                        character_server_name1: "test".to_string(),
+                                        character_detail_json: "test".to_string(),
+                                        unk2: [0; 20],
+                                    }];
+                                    // add any empty boys
+                                    characters.resize(2, CharacterDetails::default());
+
+                                    for i in 0..4 {
+                                        let mut characters_in_packet = Vec::new();
+                                        for _ in 0..min(characters.len(), 2) {
+                                            characters_in_packet.push(characters.swap_remove(0));
+                                        }
+
+                                        let lobby_character_list = if i == 3 {
+                                            // On the last packet, add the account-wide information
+                                            IPCStructData::LobbyCharacterList {
+                                                sequence: *sequence,
+                                                counter: (i * 4) + 1, // TODO: why the + 1 here?
+                                                num_in_packet: characters_in_packet.len() as u8,
+                                                unk1: 0,
+                                                unk2: 0,
+                                                unk3: 0,
+                                                unk4: 128,
+                                                unk5: [0; 7],
+                                                unk6: 0,
+                                                veteran_rank: 0,
+                                                unk7: 0,
+                                                days_subscribed: 0,
+                                                remaining_days: 0,
+                                                days_to_next_rank: 0,
+                                                max_characters_on_world: 20,
+                                                unk8: 8,
+                                                entitled_expansion: 4,
+                                                characters: characters_in_packet,
+                                            }
+                                        } else {
+                                            IPCStructData::LobbyCharacterList {
+                                                sequence: *sequence,
+                                                counter: i * 4,
+                                                num_in_packet: characters_in_packet.len() as u8,
+                                                unk1: 0,
+                                                unk2: 0,
+                                                unk3: 0,
+                                                unk4: 0,
+                                                unk5: [0; 7],
+                                                unk6: 0,
+                                                veteran_rank: 0,
+                                                unk7: 0,
+                                                days_subscribed: 0,
+                                                remaining_days: 0,
+                                                days_to_next_rank: 0,
+                                                max_characters_on_world: 0,
+                                                unk8: 0,
+                                                entitled_expansion: 0,
+                                                characters: characters_in_packet,
+                                            }
+                                        };
+
+                                        let ipc = IPCSegment {
+                                            unk1: 0,
+                                            unk2: 0,
+                                            op_code: IPCOpCode::LobbyCharacterList,
+                                            server_id: 0,
+                                            timestamp,
+                                            data: lobby_character_list,
+                                        };
+
+                                        let response_packet = PacketSegment {
+                                            source_actor: 0,
+                                            target_actor: 0,
+                                            segment_type: SegmentType::IPC { data: ipc },
+                                        };
+                                        send_packet(socket, &[response_packet], state).await;
+                                    }
+                                }
                             }
                             _ => {
                                 panic!("The server is recieving a IPC response packet!")
