@@ -141,6 +141,7 @@ async fn send_account_list(socket: &mut WriteHalf<TcpStream>, state: &State) {
 // TODO: make this configurable
 // See https://ffxiv.consolegameswiki.com/wiki/Servers for a list of possible IDs
 const WORLD_ID: u16 = 63;
+const WORLD_NAME: &str = "KAWARI";
 
 async fn send_lobby_info(socket: &mut WriteHalf<TcpStream>, state: &State, sequence: u64) {
     let timestamp: u32 = SystemTime::now()
@@ -158,7 +159,7 @@ async fn send_lobby_info(socket: &mut WriteHalf<TcpStream>, state: &State, seque
             index: 0,
             flags: 0,
             icon: 0,
-            name: "KAWARI".to_string(),
+            name: WORLD_NAME.to_string(),
         }]
         .to_vec();
         // add any empty boys
@@ -222,19 +223,19 @@ async fn send_lobby_info(socket: &mut WriteHalf<TcpStream>, state: &State, seque
             server_id1: WORLD_ID,
             unk1: [0; 16],
             character_name: "test".to_string(),
-            character_server_name: "test".to_string(),
-            character_server_name1: "test".to_string(),
+            character_server_name: WORLD_NAME.to_string(),
+            character_server_name1: WORLD_NAME.to_string(),
             character_detail_json: "test".to_string(),
             unk2: [0; 20],
         }];
-        // add any empty boys
-        characters.resize(2, CharacterDetails::default());
 
         for i in 0..4 {
             let mut characters_in_packet = Vec::new();
             for _ in 0..min(characters.len(), 2) {
                 characters_in_packet.push(characters.swap_remove(0));
             }
+            // add any empty boys
+            characters_in_packet.resize(2, CharacterDetails::default());
 
             let lobby_character_list = if i == 3 {
                 // On the last packet, add the account-wide information

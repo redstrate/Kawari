@@ -61,8 +61,8 @@ pub struct CharacterDetails {
     pub server_id: u16,
     pub server_id1: u16,
     pub unk1: [u8; 16],
-    #[bw(pad_size_to = 16)]
-    #[br(count = 16)]
+    #[bw(pad_size_to = 32)]
+    #[br(count = 32)]
     #[br(map = read_string)]
     #[bw(map = write_string)]
     pub character_name: String,
@@ -83,6 +83,24 @@ pub struct CharacterDetails {
     pub character_detail_json: String,
     pub unk2: [u8; 20],
 }
+
+/*impl Default for CharacterDetails {
+    fn default() -> Self {
+        Self {
+            id: 0,
+            content_id: 0,
+            index: 1,
+            server_id: 0,
+            server_id1: 0,
+            unk1: [0; 16],
+            character_name: String::new(),
+            character_server_name: String::new(),
+            character_server_name1: String::new(),
+            character_detail_json: String::new(),
+            unk2: [0; 20],
+        }
+    }
+}*/
 
 #[binrw]
 #[br(import(magic: &IPCOpCode))]
@@ -154,7 +172,7 @@ pub enum IPCStructData {
         days_subscribed: u32,
         remaining_days: u32,
         days_to_next_rank: u32,
-        max_characters_on_world: u32,
+        max_characters_on_world: u16,
         unk8: u16,
         #[brw(pad_after = 12)]
         entitled_expansion: u32,
@@ -187,7 +205,7 @@ impl IPCSegment {
                 IPCStructData::RequestCharacterList { .. } => todo!(),
                 IPCStructData::LobbyServerList { .. } => 24 + (6 * 84),
                 IPCStructData::LobbyRetainerList { .. } => 210,
-                IPCStructData::LobbyCharacterList { .. } => 82 + (2 * 1168),
+                IPCStructData::LobbyCharacterList { .. } => 80 + (2 * 1184),
             }
     }
 }
