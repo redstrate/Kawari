@@ -231,12 +231,14 @@ pub async fn parse_packet(socket: &mut WriteHalf<TcpStream>, data: &[u8], state:
                                     .unwrap();
 
                                 // send the client the service account list
-                                let service_accounts = [ServiceAccount {
+                                let mut service_accounts = [ServiceAccount {
                                     id: 0x002E4A2B,
                                     unk1: 0,
                                     index: 0,
-                                    name: "Test Service Account".to_string(),
-                                }];
+                                    name: "FINAL FANTASY XIV".to_string(),
+                                }].to_vec();
+                                // add any empty boys
+                                service_accounts.resize(8, ServiceAccount::default());
 
                                 let service_account_list = IPCStructData::LobbyServiceAccountList {
                                     sequence: 0,

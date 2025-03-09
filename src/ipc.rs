@@ -13,7 +13,7 @@ pub enum IPCOpCode {
 }
 
 #[binrw]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ServiceAccount {
     pub id: u32,
     pub unk1: u32,
@@ -49,7 +49,7 @@ pub enum IPCStructData {
     // Server->Client IPC
     LobbyServiceAccountList {
         sequence: u64,
-        #[brw(pad_before = 4)]
+        #[brw(pad_before = 1)]
         num_service_accounts: u8,
         unk1: u8,
         #[brw(pad_after = 4)]
@@ -77,9 +77,9 @@ impl IPCSegment {
     pub fn calc_size(&self) -> u32 {
         let header = 16;
         header
-        + match self.data {
-            IPCStructData::ClientVersionInfo { .. } => todo!(),
-            IPCStructData::LobbyServiceAccountList { .. } => 19,
-        }
+            + match self.data {
+                IPCStructData::ClientVersionInfo { .. } => todo!(),
+                IPCStructData::LobbyServiceAccountList { .. } => 24 + (8 * 80),
+            }
     }
 }
