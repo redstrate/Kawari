@@ -138,6 +138,10 @@ async fn send_account_list(socket: &mut WriteHalf<TcpStream>, state: &State) {
     send_packet(socket, &[response_packet], state).await;
 }
 
+// TODO: make this configurable
+// See https://ffxiv.consolegameswiki.com/wiki/Servers for a list of possible IDs
+const WORLD_ID: u16 = 63;
+
 async fn send_lobby_info(socket: &mut WriteHalf<TcpStream>, state: &State, sequence: u64) {
     let timestamp: u32 = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -150,7 +154,7 @@ async fn send_lobby_info(socket: &mut WriteHalf<TcpStream>, state: &State, seque
     // send them the character list
     {
         let mut servers = [Server {
-            id: 21,
+            id: WORLD_ID,
             index: 0,
             flags: 0,
             icon: 0,
@@ -214,8 +218,8 @@ async fn send_lobby_info(socket: &mut WriteHalf<TcpStream>, state: &State, seque
             id: 0,
             content_id: 11111111111111111,
             index: 0,
-            server_id: 21,
-            server_id1: 21,
+            server_id: WORLD_ID,
+            server_id1: WORLD_ID,
             unk1: [0; 16],
             character_name: "test".to_string(),
             character_server_name: "test".to_string(),
@@ -249,7 +253,7 @@ async fn send_lobby_info(socket: &mut WriteHalf<TcpStream>, state: &State, seque
                     days_subscribed: 0,
                     remaining_days: 0,
                     days_to_next_rank: 0,
-                    max_characters_on_world: 20,
+                    max_characters_on_world: 0,
                     unk8: 8,
                     entitled_expansion: 4,
                     characters: characters_in_packet,
