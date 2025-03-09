@@ -11,9 +11,9 @@ use tokio::{
 };
 
 use crate::{
-    common::{read_bool_from, read_string, write_bool_as, write_string},
+    common::{read_bool_from, read_string, write_bool_as},
     encryption::{blowfish_encode, decrypt, encrypt, generate_encryption_key},
-    ipc::IPCOpCode,
+    ipc::{IPCOpCode, IPCSegment, IPCStructData, ServiceAccount},
 };
 
 #[binrw]
@@ -24,78 +24,6 @@ enum ConnectionType {
     Zone = 0x1,
     Chat = 0x2,
     Lobby = 0x3,
-}
-
-#[binrw]
-#[derive(Debug, Clone)]
-struct ServiceAccount {
-    id: u32,
-    unk1: u32,
-    index: u32,
-    #[bw(pad_size_to = 0x44)]
-    #[br(count = 0x44)]
-    #[br(map = read_string)]
-    #[bw(map = write_string)]
-    name: String,
-}
-
-#[binrw]
-#[br(import(magic: &IPCOpCode))]
-#[derive(Debug, Clone)]
-enum IPCStructData {
-    // Client->Server IPC
-    #[br(pre_assert(*magic == IPCOpCode::ClientVersionInfo))]
-    ClientVersionInfo {
-        #[brw(pad_before = 18)] // full of nonsense i don't understand yet
-        #[br(count = 64)]
-        #[br(map = read_string)]
-        #[bw(ignore)]
-        session_id: String,
-
-        #[brw(pad_before = 8)] // empty
-        #[br(count = 128)]
-        #[br(map = read_string)]
-        #[bw(ignore)]
-        version_info: String,
-        // unknown stuff at the end, it's not completely empty'
-    },
-
-    // Server->Client IPC
-    LobbyServiceAccountList {
-        sequence: u64,
-        #[brw(pad_before = 4)]
-        num_service_accounts: u8,
-        unk1: u8,
-        #[brw(pad_after = 4)]
-        unk2: u8,
-        #[br(count = 8)]
-        service_accounts: Vec<ServiceAccount>,
-    },
-}
-
-#[binrw]
-#[derive(Debug, Clone)]
-struct IPCSegment {
-    unk1: u8,
-    unk2: u8,
-    op_code: IPCOpCode,
-    #[brw(pad_before = 2)] // empty
-    server_id: u16,
-    timestamp: u32,
-    #[brw(pad_before = 4)]
-    #[br(args(&op_code))]
-    pub data: IPCStructData,
-}
-
-impl IPCSegment {
-    fn calc_size(&self) -> u32 {
-        let header = 16;
-        header
-            + match self.data {
-                IPCStructData::ClientVersionInfo { .. } => todo!(),
-                IPCStructData::LobbyServiceAccountList { .. } => 19,
-            }
-    }
 }
 
 #[binrw]
