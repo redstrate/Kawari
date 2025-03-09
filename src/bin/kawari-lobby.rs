@@ -1,5 +1,4 @@
 use std::cmp::min;
-use std::fs::read;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use kawari::client_select_data::{ClientCustomizeData, ClientSelectData};
@@ -23,7 +22,10 @@ async fn main() {
         let (socket, _) = listener.accept().await.unwrap();
         let (mut read, mut write) = tokio::io::split(socket);
 
-        let mut state = State {client_key:None, session_id: None };
+        let mut state = State {
+            client_key: None,
+            session_id: None,
+        };
 
         tokio::spawn(async move {
             let mut buf = [0; 2056];
@@ -77,7 +79,8 @@ async fn main() {
                                 } => {
                                     tracing::info!("Client is joining the world...");
 
-                                    send_enter_world(&mut write, &state, *sequence, *lookup_id).await;
+                                    send_enter_world(&mut write, &state, *sequence, *lookup_id)
+                                        .await;
                                 }
                                 _ => {
                                     panic!("The server is recieving a IPC response packet!")
@@ -131,7 +134,7 @@ async fn send_account_list(socket: &mut WriteHalf<TcpStream>, state: &State) {
         .unwrap();
 
     // send the client the service account list
-    let mut service_accounts = [ServiceAccount {
+    let service_accounts = [ServiceAccount {
         id: 0x002E4A2B,
         unk1: 0,
         index: 0,

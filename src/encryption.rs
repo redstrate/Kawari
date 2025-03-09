@@ -49,7 +49,7 @@ where
         let decryption_result = blowfish_decode(encryption_key.as_ptr(), 16, data.as_ptr(), size);
         let decrypted_data = slice::from_raw_parts(decryption_result, size as usize);
 
-        write("decrypted.bin", &decrypted_data).unwrap();
+        write("decrypted.bin", decrypted_data).unwrap();
 
         let mut cursor = Cursor::new(&decrypted_data);
         T::read_options(&mut cursor, endian, ())

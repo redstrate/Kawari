@@ -11,7 +11,7 @@ use tokio::{
 };
 
 use crate::{
-    common::{read_bool_from, read_string, write_bool_as},
+    common::read_string,
     encryption::{decrypt, encrypt},
     ipc::IPCSegment,
 };
@@ -62,6 +62,15 @@ pub enum SegmentType {
 }
 
 #[binrw]
+#[brw(repr = u8)]
+#[derive(Debug)]
+enum CompressionType {
+    Uncompressed = 0,
+    ZLib = 1,
+    Oodle = 2,
+}
+
+#[binrw]
 #[derive(Debug)]
 struct PacketHeader {
     unk1: u64,
@@ -71,9 +80,7 @@ struct PacketHeader {
     connection_type: ConnectionType,
     segment_count: u16,
     unk3: u8,
-    #[br(map = read_bool_from::<u8>)]
-    #[bw(map = write_bool_as::<u8>)]
-    compressed: bool,
+    compressed: CompressionType,
     unk4: u16,
     unk5: u32, // iolite says the size after oodle decompression
 }
@@ -108,6 +115,7 @@ impl PacketSegment {
 #[brw(import(encryption_key: Option<&[u8]>))]
 #[derive(Debug)]
 struct Packet {
+    #[br(dbg)]
     header: PacketHeader,
     #[br(count = header.segment_count, args { inner: (encryption_key,) })]
     #[bw(args(encryption_key))]
@@ -144,7 +152,7 @@ pub async fn send_packet(
         connection_type: ConnectionType::Lobby,
         segment_count: segments.len() as u16,
         unk3: 0,
-        compressed: false,
+        compressed: CompressionType::Uncompressed,
         unk4: 0,
         unk5: 0,
     };
