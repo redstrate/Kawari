@@ -16,7 +16,13 @@ A substitute for a few official servers such as “ffxiv.com” and “square-en
   * Handles logging in and giving a SID.
 * [Patch](https://docs.xiv.zone/server/patch/)
   * Handles checking if the client needs any patching.
+* [Lobby](https://docs.xiv.zone/server/lobby/)
+  * Handles logging the client into the world server, displaying the character list and so on.
+  
+## Supported Game Versions
 
+Only the Windows version of the game is supported at the moment. Only the latest version will be supported, older versions are not in the scope of this project.
+  
 ## Running
 
 Install [Rust](https://rust-lang.org) and then use the `run.sh` helper script in the repository. You can of course run each server individually.  
