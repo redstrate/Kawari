@@ -6,6 +6,7 @@ pub mod config;
 pub mod encryption;
 pub mod packet;
 pub mod patchlist;
+mod common;
 
 pub fn generate_sid() -> String {
     let random_id: String = rand::thread_rng()

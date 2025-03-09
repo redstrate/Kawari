@@ -2,7 +2,21 @@ use std::{io::Cursor, slice};
 
 use binrw::{BinRead, BinResult, BinWrite};
 
-use crate::packet::{blowfish_decode, blowfish_encode};
+#[link(name = "FFXIVBlowfish")]
+unsafe extern "C" {
+    pub fn blowfish_encode(
+        key: *const u8,
+        keybytes: u32,
+        pInput: *const u8,
+        lSize: u32,
+    ) -> *const u8;
+    pub fn blowfish_decode(
+        key: *const u8,
+        keybytes: u32,
+        pInput: *const u8,
+        lSize: u32,
+    ) -> *const u8;
+}
 
 const GAME_VERSION: u16 = 7000;
 

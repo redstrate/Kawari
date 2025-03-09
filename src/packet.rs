@@ -1,5 +1,4 @@
 use std::{
-    ffi::CString,
     fs::write,
     io::Cursor,
     time::{SystemTime, UNIX_EPOCH},
@@ -11,41 +10,7 @@ use tokio::{
     net::TcpStream,
 };
 
-use crate::encryption::{decrypt, encrypt, generate_encryption_key};
-
-pub(crate) fn read_bool_from<T: std::convert::From<u8> + std::cmp::PartialEq>(x: T) -> bool {
-    x == T::from(1u8)
-}
-
-pub(crate) fn write_bool_as<T: std::convert::From<u8>>(x: &bool) -> T {
-    if *x { T::from(1u8) } else { T::from(0u8) }
-}
-
-pub(crate) fn read_string(byte_stream: Vec<u8>) -> String {
-    let str = String::from_utf8(byte_stream).unwrap();
-    str.trim_matches(char::from(0)).to_string() // trim \0 from the end of strings
-}
-
-pub(crate) fn write_string(str: &String) -> Vec<u8> {
-    let c_string = CString::new(&**str).unwrap();
-    c_string.as_bytes_with_nul().to_vec()
-}
-
-#[link(name = "FFXIVBlowfish")]
-unsafe extern "C" {
-    pub fn blowfish_encode(
-        key: *const u8,
-        keybytes: u32,
-        pInput: *const u8,
-        lSize: u32,
-    ) -> *const u8;
-    pub fn blowfish_decode(
-        key: *const u8,
-        keybytes: u32,
-        pInput: *const u8,
-        lSize: u32,
-    ) -> *const u8;
-}
+use crate::{common::{read_bool_from, read_string, write_bool_as, write_string}, encryption::{blowfish_encode, decrypt, encrypt, generate_encryption_key}};
 
 #[binrw]
 #[brw(repr = u16)]
