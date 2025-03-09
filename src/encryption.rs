@@ -1,9 +1,9 @@
 use std::fs::write;
 use std::{io::Cursor, slice};
 
-use binrw::{BinRead, BinResult};
+use binrw::{BinRead, BinResult, BinWrite};
 
-use crate::packet::blowfish_decode;
+use crate::packet::{blowfish_decode, blowfish_encode};
 
 const GAME_VERSION: u16 = 7000;
 
@@ -54,5 +54,36 @@ where
 
         let mut cursor = Cursor::new(&decrypted_data);
         T::read_options(&mut cursor, endian, ())
+    }
+}
+
+#[binrw::writer(writer, endian)]
+pub(crate) fn encrypt<T>(value: &T, size: u32, encryption_key: Option<&[u8]>) -> BinResult<()>
+where
+    for<'a> T: BinWrite<Args<'a> = ()> + 'a,
+{
+    let Some(encryption_key) = encryption_key else {
+        panic!("This segment type needs to be encrypted and no key was provided!");
+    };
+
+    let size = size - (std::mem::size_of::<u32>() * 4) as u32; // 16 = header size
+
+    let mut cursor = Cursor::new(Vec::new());
+    value.write_options(&mut cursor, endian, ())?;
+
+    let mut buffer = cursor.into_inner();
+    buffer.resize(size as usize, 0);
+
+    unsafe {
+        let encoded = blowfish_encode(
+            encryption_key.as_ptr(),
+            16,
+            buffer.as_ptr(),
+            buffer.len() as u32,
+        );
+        let encoded_data = slice::from_raw_parts(encoded, size as usize);
+        writer.write_all(encoded_data)?;
+
+        Ok(())
     }
 }

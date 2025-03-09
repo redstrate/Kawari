@@ -1,4 +1,5 @@
 use std::{
+    ffi::CString,
     fs::write,
     io::Cursor,
     time::{SystemTime, UNIX_EPOCH},
@@ -10,7 +11,7 @@ use tokio::{
     net::TcpStream,
 };
 
-use crate::encryption::{decrypt, generate_encryption_key};
+use crate::encryption::{decrypt, encrypt, generate_encryption_key};
 
 pub(crate) fn read_bool_from<T: std::convert::From<u8> + std::cmp::PartialEq>(x: T) -> bool {
     x == T::from(1u8)
@@ -23,6 +24,11 @@ pub(crate) fn write_bool_as<T: std::convert::From<u8>>(x: &bool) -> T {
 pub(crate) fn read_string(byte_stream: Vec<u8>) -> String {
     let str = String::from_utf8(byte_stream).unwrap();
     str.trim_matches(char::from(0)).to_string() // trim \0 from the end of strings
+}
+
+pub(crate) fn write_string(str: &String) -> Vec<u8> {
+    let c_string = CString::new(&**str).unwrap();
+    c_string.as_bytes_with_nul().to_vec()
 }
 
 #[link(name = "FFXIVBlowfish")]
@@ -53,11 +59,25 @@ enum ConnectionType {
 
 #[binrw]
 #[derive(Debug, Clone)]
+struct ServiceAccount {
+    id: u32,
+    unk1: u32,
+    index: u32,
+    #[bw(pad_size_to = 0x44)]
+    #[br(count = 0x44)]
+    #[br(map = read_string)]
+    #[bw(map = write_string)]
+    name: String,
+}
+
+#[binrw]
+#[br(import(magic: u16))]
+#[derive(Debug, Clone)]
 enum IPCOpCode {
-    // Client->Server Packets
-    #[brw(magic = 0x5u16)]
+    // Client->Server IPC
+    #[br(pre_assert(magic == 0x5u16))]
     ClientVersionInfo {
-        #[brw(pad_before = 30)] // full of nonsense i don't understand yet
+        #[brw(pad_before = 18)] // full of nonsense i don't understand yet
         #[br(count = 64)]
         #[br(map = read_string)]
         #[bw(ignore)]
@@ -70,6 +90,19 @@ enum IPCOpCode {
         version_info: String,
         // unknown stuff at the end, it's not completely empty'
     },
+
+    // Server->Client IPC
+    //#[br(pre_assert(magic == 0x000C))]
+    LobbyServiceAccountList {
+        sequence: u64,
+        #[brw(pad_before = 4)]
+        num_service_accounts: u8,
+        unk1: u8,
+        #[brw(pad_after = 4)]
+        unk2: u8,
+        #[br(count = 8)]
+        service_accounts: Vec<ServiceAccount>,
+    },
 }
 
 #[binrw]
@@ -77,11 +110,28 @@ enum IPCOpCode {
 struct IPCSegment {
     unk1: u8,
     unk2: u8,
-    op_code: IPCOpCode,
+    op_code: u16,
+    #[brw(pad_before = 2)] // empty
+    server_id: u16,
+    timestamp: u32,
+    #[brw(pad_before = 4)]
+    #[br(args(op_code))]
+    pub data: IPCOpCode,
+}
+
+impl IPCSegment {
+    fn calc_size(&self) -> u32 {
+        let header = 16;
+        return header
+            + match self.data {
+                IPCOpCode::ClientVersionInfo { .. } => todo!(),
+                IPCOpCode::LobbyServiceAccountList { .. } => 19,
+            };
+    }
 }
 
 #[binrw]
-#[br(import(size: u32, encryption_key: Option<&[u8]>))]
+#[brw(import(size: u32, encryption_key: Option<&[u8]>))]
 #[derive(Debug, Clone)]
 enum SegmentType {
     // Client->Server Packets
@@ -99,7 +149,7 @@ enum SegmentType {
     #[brw(magic = 0x3u32)]
     IPC {
         #[br(parse_with = decrypt, args(size, encryption_key))]
-        #[bw(ignore)]
+        #[bw(write_with = encrypt, args(size, encryption_key))]
         data: IPCSegment,
     },
     #[brw(magic = 0x7u32)]
@@ -133,14 +183,14 @@ struct PacketHeader {
 }
 
 #[binrw]
-#[br(import(encryption_key: Option<&[u8]>))]
+#[brw(import(encryption_key: Option<&[u8]>))]
 #[derive(Debug, Clone)]
 struct PacketSegment {
     #[bw(calc = self.calc_size())]
     size: u32,
     source_actor: u32,
     target_actor: u32,
-    #[br(args(size, encryption_key))]
+    #[brw(args(size, encryption_key))]
     segment_type: SegmentType,
 }
 
@@ -151,7 +201,7 @@ impl PacketSegment {
             + match &self.segment_type {
                 SegmentType::InitializeEncryption { .. } => 616,
                 SegmentType::InitializationEncryptionResponse { .. } => 640,
-                SegmentType::IPC { .. } => todo!(),
+                SegmentType::IPC { data } => data.calc_size(),
                 SegmentType::KeepAlive { .. } => todo!(),
                 SegmentType::KeepAliveResponse { .. } => 0x8,
             };
@@ -159,11 +209,12 @@ impl PacketSegment {
 }
 
 #[binrw]
-#[br(import(encryption_key: Option<&[u8]>))]
+#[brw(import(encryption_key: Option<&[u8]>))]
 #[derive(Debug)]
 struct Packet {
     header: PacketHeader,
     #[br(count = header.segment_count, args { inner: (encryption_key,) })]
+    #[bw(args(encryption_key))]
     segments: Vec<PacketSegment>,
 }
 
@@ -172,7 +223,7 @@ fn dump(msg: &str, data: &[u8]) {
     panic!("{msg} Dumped to packet.bin.");
 }
 
-async fn send_packet(socket: &mut WriteHalf<TcpStream>, segments: &[PacketSegment]) {
+async fn send_packet(socket: &mut WriteHalf<TcpStream>, segments: &[PacketSegment], state: &State) {
     let timestamp: u64 = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .expect("Failed to get UNIX timestamp!")
@@ -204,7 +255,10 @@ async fn send_packet(socket: &mut WriteHalf<TcpStream>, segments: &[PacketSegmen
     };
 
     let mut cursor = Cursor::new(Vec::new());
-    packet.write_le(&mut cursor);
+    packet.write_le_args(
+        &mut cursor,
+        (state.client_key.as_ref().map(|s: &[u8; 16]| s.as_slice()),),
+    );
 
     let buffer = cursor.into_inner();
 
@@ -263,10 +317,59 @@ pub async fn parse_packet(socket: &mut WriteHalf<TcpStream>, data: &[u8], state:
                             target_actor: 0,
                             segment_type: SegmentType::InitializationEncryptionResponse { data },
                         };
-                        send_packet(socket, &[response_packet]).await;
+                        send_packet(socket, &[response_packet], state).await;
                     }
-                    SegmentType::IPC { .. } => {
-                        // decrypt
+                    SegmentType::IPC { data } => {
+                        match &data.data {
+                            IPCOpCode::ClientVersionInfo {
+                                session_id,
+                                version_info,
+                            } => {
+                                tracing::info!("Client {session_id} ({version_info}) logging in!");
+
+                                let timestamp: u32 = SystemTime::now()
+                                    .duration_since(UNIX_EPOCH)
+                                    .expect("Failed to get UNIX timestamp!")
+                                    .as_secs()
+                                    .try_into()
+                                    .unwrap();
+
+                                // send the client the service account list
+                                let service_accounts = [ServiceAccount {
+                                    id: 0x002E4A2B,
+                                    unk1: 0,
+                                    index: 0,
+                                    name: "Test Service Account".to_string(),
+                                }];
+
+                                let service_account_list = IPCOpCode::LobbyServiceAccountList {
+                                    sequence: 0,
+                                    num_service_accounts: service_accounts.len() as u8,
+                                    unk1: 3,
+                                    unk2: 0x99,
+                                    service_accounts: service_accounts.to_vec(),
+                                };
+
+                                let ipc = IPCSegment {
+                                    unk1: 0,
+                                    unk2: 0,
+                                    op_code: 0xC, // FIXME: use enum pls
+                                    server_id: 0,
+                                    timestamp,
+                                    data: service_account_list,
+                                };
+
+                                let response_packet = PacketSegment {
+                                    source_actor: 0,
+                                    target_actor: 0,
+                                    segment_type: SegmentType::IPC { data: ipc },
+                                };
+                                send_packet(socket, &[response_packet], state).await;
+                            }
+                            _ => {
+                                panic!("The server is recieving a IPC response packet!")
+                            }
+                        }
                     }
                     SegmentType::KeepAlive { id, timestamp } => {
                         let response_packet = PacketSegment {
@@ -277,7 +380,7 @@ pub async fn parse_packet(socket: &mut WriteHalf<TcpStream>, data: &[u8], state:
                                 timestamp: *timestamp,
                             },
                         };
-                        send_packet(socket, &[response_packet]).await;
+                        send_packet(socket, &[response_packet], state).await;
                     }
                     _ => {
                         panic!("The server is recieving a response packet!")
