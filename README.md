@@ -18,6 +18,8 @@ A substitute for a few official servers such as “ffxiv.com” and “square-en
   * Handles checking if the client needs any patching.
 * [Lobby](https://docs.xiv.zone/server/lobby/)
   * Handles logging the client into the world server, displaying the character list and so on.
+* [World](https://docs.xiv.zone/server/world/)
+  * Handles actual world operation, e.g. characters running around.
   
 ## Supported Game Versions
 
@@ -25,7 +27,9 @@ Only the Windows version of the game is supported at the moment. Only the latest
   
 ## Running
 
-Install [Rust](https://rust-lang.org) and then use the `run.sh` helper script in the repository. You can of course run each server individually.  
+Install [Rust](https://rust-lang.org) and then use the `run.sh` helper script in the repository. You can of course run each server individually.
+
+In order to run the World server, you need a copy of Oodle networking. Fortunately it is easy to do, assuming you have an Epic Games account and a GitHub account. Use something like [get-oodle-lib](https://github.com/sehnryr/get-oodle-lib) or another tool to fetch "liboo2net" for your platform.
 
 ### Testing via launcher
 

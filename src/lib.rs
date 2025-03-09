@@ -4,9 +4,11 @@ use rand::distributions::Alphanumeric;
 
 pub mod client_select_data;
 mod common;
+mod compression;
 pub mod config;
 pub mod encryption;
 pub mod ipc;
+mod oodle;
 pub mod packet;
 pub mod patchlist;
 

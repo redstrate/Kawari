@@ -12,6 +12,7 @@ use tokio::{
 
 use crate::{
     common::read_string,
+    compression::decompress,
     encryption::{decrypt, encrypt},
     ipc::IPCSegment,
 };
@@ -64,25 +65,24 @@ pub enum SegmentType {
 #[binrw]
 #[brw(repr = u8)]
 #[derive(Debug)]
-enum CompressionType {
+pub enum CompressionType {
     Uncompressed = 0,
-    ZLib = 1,
     Oodle = 2,
 }
 
 #[binrw]
 #[derive(Debug)]
-struct PacketHeader {
-    unk1: u64,
-    unk2: u64,
-    timestamp: u64,
-    size: u32,
-    connection_type: ConnectionType,
-    segment_count: u16,
-    unk3: u8,
-    compressed: CompressionType,
-    unk4: u16,
-    unk5: u32, // iolite says the size after oodle decompression
+pub struct PacketHeader {
+    pub unk1: u64,
+    pub unk2: u64,
+    pub timestamp: u64,
+    pub size: u32,
+    pub connection_type: ConnectionType,
+    pub segment_count: u16,
+    pub unk3: u8,
+    pub compressed: CompressionType,
+    pub unk4: u16,
+    pub oodle_decompressed_size: u32,
 }
 
 #[binrw]
@@ -117,8 +117,8 @@ impl PacketSegment {
 struct Packet {
     #[br(dbg)]
     header: PacketHeader,
-    #[br(count = header.segment_count, args { inner: (encryption_key,) })]
     #[bw(args(encryption_key))]
+    #[br(parse_with = decompress, args(&header, encryption_key,))]
     segments: Vec<PacketSegment>,
 }
 
@@ -154,7 +154,7 @@ pub async fn send_packet(
         unk3: 0,
         compressed: CompressionType::Uncompressed,
         unk4: 0,
-        unk5: 0,
+        oodle_decompressed_size: 0,
     };
 
     let packet = Packet {
