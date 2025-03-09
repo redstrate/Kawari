@@ -169,6 +169,7 @@ pub enum IPCStructData {
         unk1: u8,
         unk2: u8,
         unk3: u8,
+        /// Set to 128 if legacy character
         unk4: u8,
         unk5: [u32; 7],
         unk6: u8,

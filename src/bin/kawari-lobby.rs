@@ -1,6 +1,8 @@
 use std::cmp::min;
+use std::fs::read;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use kawari::client_select_data::{ClientCustomizeData, ClientSelectData};
 use kawari::encryption::{blowfish_encode, generate_encryption_key};
 use kawari::ipc::{CharacterDetails, IPCOpCode, IPCSegment, IPCStructData, Server, ServiceAccount};
 use kawari::packet::{
@@ -231,6 +233,61 @@ async fn send_lobby_info(socket: &mut WriteHalf<TcpStream>, state: &State, seque
 
     // now send them the character list
     {
+        let select_data = ClientSelectData {
+            game_name_unk: "Final Fantasy".to_string(),
+            version_maybe: 1,
+            unk1: [0; 30],
+            unk2: 0,
+            unk3: 0,
+            unk4: 0,
+            unk5: 0,
+            unk6: 0,
+            unk7: 0,
+            unk8: 0,
+            unk9: 0,
+            unk10: 0,
+            unk11: 0,
+            customize: ClientCustomizeData {
+                race: 3,
+                gender: 1,
+                height: 0,
+                subrace: 0,
+                face: 1,
+                hair: 1,
+                enable_highlights: 1,
+                skin_tone: 1,
+                right_eye_color: 1,
+                hair_tone: 1,
+                highlights: 1,
+                facial_features: 1,
+                facial_feature_color: 1,
+                eyebrows: 1,
+                left_eye_color: 1,
+                eyes: 1,
+                nose: 1,
+                jaw: 1,
+                mouth: 1,
+                lips_tone_fur_pattern: 1,
+                race_feature_size: 1,
+                race_feature_type: 1,
+                bust: 0,
+                face_paint: 1,
+                face_paint_color: 0,
+            },
+            unk12: 0,
+            unk13: 0,
+            unk14: [0; 10],
+            unk15: 0,
+            unk16: 0,
+            unk17: 0,
+            unk18: 0,
+            unk19: 0,
+            unk20: 0,
+            unk21: String::new(),
+            unk22: 0,
+            unk23: 0,
+        };
+
         let mut characters = vec![CharacterDetails {
             id: 0,
             content_id: 11111111111111111,
@@ -241,7 +298,7 @@ async fn send_lobby_info(socket: &mut WriteHalf<TcpStream>, state: &State, seque
             character_name: "test".to_string(),
             character_server_name: WORLD_NAME.to_string(),
             character_server_name1: WORLD_NAME.to_string(),
-            character_detail_json: "test".to_string(),
+            character_detail_json: select_data.to_json(),
             unk2: [0; 20],
         }];
 
@@ -267,8 +324,8 @@ async fn send_lobby_info(socket: &mut WriteHalf<TcpStream>, state: &State, seque
                     unk6: 0,
                     veteran_rank: 0,
                     unk7: 0,
-                    days_subscribed: 0,
-                    remaining_days: 0,
+                    days_subscribed: 5,
+                    remaining_days: 5,
                     days_to_next_rank: 0,
                     max_characters_on_world: 0,
                     unk8: 8,

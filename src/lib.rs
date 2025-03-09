@@ -2,6 +2,7 @@ use minijinja::Environment;
 use rand::Rng;
 use rand::distributions::Alphanumeric;
 
+pub mod client_select_data;
 mod common;
 pub mod config;
 pub mod encryption;
