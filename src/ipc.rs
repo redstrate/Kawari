@@ -8,6 +8,8 @@ use crate::common::{read_string, write_string};
 pub enum IPCOpCode {
     /// Sent by the client when it requests the character list in the lobby.
     RequestCharacterList = 0x3,
+    /// Sent by the client when it requests to enter a world.
+    RequestEnterWorld = 0x4,
     /// Sent by the client after exchanging encryption information with the lobby server.
     ClientVersionInfo = 0x5,
     /// Sent by the client when they request something about the character (e.g. deletion.)
@@ -16,6 +18,8 @@ pub enum IPCOpCode {
     LobbyServiceAccountList = 0xC,
     /// Sent by the server to inform the client of their characters.
     LobbyCharacterList = 0xD,
+    /// Sent by the server to tell the client how to connect to the world server.
+    LobbyEnterWorld = 0xF,
     /// Sent by the server to inform the client of their servers.
     LobbyServerList = 0x15,
     /// Sent by the server to inform the client of their retainers.
@@ -133,6 +137,13 @@ pub enum IPCStructData {
         name: String,
         // TODO: what else is in here?
     },
+    #[br(pre_assert(*magic == IPCOpCode::RequestEnterWorld))]
+    RequestEnterWorld {
+        #[brw(pad_before = 16)]
+        sequence: u64,
+        lookup_id: u64,
+        // TODO: what else is in here?
+    },
 
     // Server->Client IPC
     LobbyServiceAccountList {
@@ -185,6 +196,24 @@ pub enum IPCStructData {
         #[br(count = 2)]
         characters: Vec<CharacterDetails>,
     },
+    LobbyEnterWorld {
+        sequence: u64,
+        character_id: u32,
+        #[brw(pad_before = 4)]
+        content_id: u64,
+        #[brw(pad_before = 4)]
+        #[bw(pad_size_to = 66)]
+        #[br(count = 66)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        session_id: String,
+        port: u16,
+        #[brw(pad_after = 16)]
+        #[br(count = 48)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        host: String,
+    },
 }
 
 #[binrw]
@@ -213,6 +242,8 @@ impl IPCSegment {
                 IPCStructData::LobbyRetainerList { .. } => 210,
                 IPCStructData::LobbyCharacterList { .. } => 80 + (2 * 1184),
                 IPCStructData::LobbyCharacterAction { .. } => todo!(),
+                IPCStructData::LobbyEnterWorld { .. } => 160,
+                IPCStructData::RequestEnterWorld { .. } => todo!(),
             }
     }
 }

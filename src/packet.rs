@@ -176,6 +176,7 @@ pub async fn send_packet(
 // temporary
 pub struct State {
     pub client_key: Option<[u8; 16]>,
+    pub session_id: Option<String>,
 }
 
 pub async fn parse_packet(data: &[u8], state: &mut State) -> Vec<PacketSegment> {

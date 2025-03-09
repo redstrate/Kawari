@@ -23,7 +23,7 @@ async fn main() {
         let (socket, _) = listener.accept().await.unwrap();
         let (mut read, mut write) = tokio::io::split(socket);
 
-        let mut state = State { client_key: None };
+        let mut state = State {client_key:None, session_id: None };
 
         tokio::spawn(async move {
             let mut buf = [0; 2056];
@@ -45,6 +45,8 @@ async fn main() {
                                     tracing::info!(
                                         "Client {session_id} ({version_info}) logging in!"
                                     );
+
+                                    state.session_id = Some(session_id.clone());
 
                                     send_account_list(&mut write, &state).await;
                                 }
@@ -69,6 +71,14 @@ async fn main() {
                                         );
                                     }
                                 },
+                                IPCStructData::RequestEnterWorld {
+                                    sequence,
+                                    lookup_id,
+                                } => {
+                                    tracing::info!("Client is joining the world...");
+
+                                    send_enter_world(&mut write, &state, *sequence, *lookup_id).await;
+                                }
                                 _ => {
                                     panic!("The server is recieving a IPC response packet!")
                                 }
@@ -370,4 +380,47 @@ async fn send_lobby_info(socket: &mut WriteHalf<TcpStream>, state: &State, seque
             send_packet(socket, &[response_packet], state).await;
         }
     }
+}
+
+async fn send_enter_world(
+    socket: &mut WriteHalf<TcpStream>,
+    state: &State,
+    sequence: u64,
+    lookup_id: u64,
+) {
+    let Some(session_id) = &state.session_id else {
+        panic!("Missing session id!");
+    };
+
+    let timestamp: u32 = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("Failed to get UNIX timestamp!")
+        .as_secs()
+        .try_into()
+        .unwrap();
+
+    let enter_world = IPCStructData::LobbyEnterWorld {
+        sequence,
+        character_id: 0,
+        content_id: lookup_id, // TODO: shouldn't these be named the same then?
+        session_id: session_id.clone(),
+        port: 7100,
+        host: "127.0.0.1".to_string(),
+    };
+
+    let ipc = IPCSegment {
+        unk1: 0,
+        unk2: 0,
+        op_code: IPCOpCode::LobbyEnterWorld,
+        server_id: 0,
+        timestamp,
+        data: enter_world,
+    };
+
+    let response_packet = PacketSegment {
+        source_actor: 0,
+        target_actor: 0,
+        segment_type: SegmentType::Ipc { data: ipc },
+    };
+    send_packet(socket, &[response_packet], state).await;
 }
