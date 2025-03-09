@@ -53,10 +53,31 @@ enum ConnectionType {
 
 #[binrw]
 #[derive(Debug, Clone)]
+enum IPCOpCode {
+    // Client->Server Packets
+    #[brw(magic = 0x5u16)]
+    ClientVersionInfo {
+        #[brw(pad_before = 30)] // full of nonsense i don't understand yet
+        #[br(count = 64)]
+        #[br(map = read_string)]
+        #[bw(ignore)]
+        session_id: String,
+
+        #[brw(pad_before = 8)] // empty
+        #[br(count = 128)]
+        #[br(map = read_string)]
+        #[bw(ignore)]
+        version_info: String,
+        // unknown stuff at the end, it's not completely empty'
+    },
+}
+
+#[binrw]
+#[derive(Debug, Clone)]
 struct IPCSegment {
     unk1: u8,
     unk2: u8,
-    op_code: u8,
+    op_code: IPCOpCode,
 }
 
 #[binrw]
@@ -81,6 +102,8 @@ enum SegmentType {
         #[bw(ignore)]
         data: IPCSegment,
     },
+    #[brw(magic = 0x7u32)]
+    KeepAlive { id: u32, timestamp: u32 },
 
     // Server->Client Packets
     #[brw(magic = 0x0Au32)]
@@ -88,6 +111,8 @@ enum SegmentType {
         #[br(count = 0x280)]
         data: Vec<u8>,
     },
+    #[brw(magic = 0x08u32)]
+    KeepAliveResponse { id: u32, timestamp: u32 },
 }
 
 #[binrw]
@@ -127,6 +152,8 @@ impl PacketSegment {
                 SegmentType::InitializeEncryption { .. } => 616,
                 SegmentType::InitializationEncryptionResponse { .. } => 640,
                 SegmentType::IPC { .. } => todo!(),
+                SegmentType::KeepAlive { .. } => todo!(),
+                SegmentType::KeepAliveResponse { .. } => 0x8,
             };
     }
 }
@@ -238,11 +265,22 @@ pub async fn parse_packet(socket: &mut WriteHalf<TcpStream>, data: &[u8], state:
                         };
                         send_packet(socket, &[response_packet]).await;
                     }
-                    SegmentType::InitializationEncryptionResponse { .. } => {
-                        panic!("The server is recieving a response packet!")
-                    }
                     SegmentType::IPC { .. } => {
                         // decrypt
+                    }
+                    SegmentType::KeepAlive { id, timestamp } => {
+                        let response_packet = PacketSegment {
+                            source_actor: 0,
+                            target_actor: 0,
+                            segment_type: SegmentType::KeepAliveResponse {
+                                id: *id,
+                                timestamp: *timestamp,
+                            },
+                        };
+                        send_packet(socket, &[response_packet]).await;
+                    }
+                    _ => {
+                        panic!("The server is recieving a response packet!")
                     }
                 }
             }
