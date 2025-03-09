@@ -128,8 +128,6 @@ async fn send_account_list(socket: &mut WriteHalf<TcpStream>, state: &State) {
         name: "FINAL FANTASY XIV".to_string(),
     }]
     .to_vec();
-    // add any empty boys
-    service_accounts.resize(8, ServiceAccount::default());
 
     let service_account_list = IPCStructData::LobbyServiceAccountList {
         sequence: 0,
