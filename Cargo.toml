@@ -36,9 +36,6 @@ panic = "abort"
 default = ["oodle"]
 oodle = []
 
-[build-dependencies]
-cc = "1.0"
-
 [dependencies]
 axum = { version = "0.6", features = ["json", "tokio", "http1", "form", "query", "headers"], default-features = false }
 serde_json = { version = "1.0", default-features = false }

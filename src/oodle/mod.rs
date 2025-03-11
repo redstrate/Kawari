@@ -111,16 +111,16 @@ impl FFXIVOodle {
 
             OodleNetwork1_Shared_SetWindow(
                 oodle_shared.as_mut_ptr() as *mut c_void,
-                                           htbits,
-                                           oodle_window.as_mut_ptr() as *mut c_void,
-                                           oodle_window.len().try_into().unwrap(),
+                htbits,
+                oodle_window.as_mut_ptr() as *mut c_void,
+                oodle_window.len().try_into().unwrap(),
             );
             OodleNetwork1TCP_Train(
                 oodle_state.as_mut_ptr() as *mut c_void,
-                                   oodle_shared.as_mut_ptr() as *mut c_void,
-                                   null(),
-                                   0,
-                                   0,
+                oodle_shared.as_mut_ptr() as *mut c_void,
+                null(),
+                0,
+                0,
             );
 
             FFXIVOodle {
@@ -137,11 +137,11 @@ impl FFXIVOodle {
             let mut in_buf = input.to_vec();
             let success = OodleNetwork1TCP_Decode(
                 self.state.as_mut_ptr() as *mut c_void,
-                                                  self.shared.as_mut_ptr() as *mut c_void,
-                                                  in_buf.as_mut_ptr() as *const c_void,
-                                                  in_buf.len().try_into().unwrap(),
-                                                  out_buf.as_mut_ptr() as *mut c_void,
-                                                  out_buf.len().try_into().unwrap(),
+                self.shared.as_mut_ptr() as *mut c_void,
+                in_buf.as_mut_ptr() as *const c_void,
+                in_buf.len().try_into().unwrap(),
+                out_buf.as_mut_ptr() as *mut c_void,
+                out_buf.len().try_into().unwrap(),
             );
 
             if !success {

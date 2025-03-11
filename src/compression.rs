@@ -4,7 +4,7 @@ use std::io::Cursor;
 use binrw::{BinRead, BinResult};
 
 use crate::{
-    oodle::{FFXIVOodle},
+    oodle::FFXIVOodle,
     packet::{PacketHeader, PacketSegment},
 };
 

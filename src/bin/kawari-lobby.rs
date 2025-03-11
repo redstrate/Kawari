@@ -1,8 +1,9 @@
 use std::cmp::min;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use kawari::blowfish::Blowfish;
 use kawari::client_select_data::{ClientCustomizeData, ClientSelectData};
-use kawari::encryption::{blowfish_encode, generate_encryption_key};
+use kawari::encryption::generate_encryption_key;
 use kawari::ipc::{CharacterDetails, IPCOpCode, IPCSegment, IPCStructData, Server, ServiceAccount};
 use kawari::oodle::FFXIVOodle;
 use kawari::packet::{
@@ -116,10 +117,8 @@ async fn initialize_encryption(
     let mut data = 0xE0003C2Au32.to_le_bytes().to_vec();
     data.resize(0x280, 0);
 
-    unsafe {
-        let result = blowfish_encode(state.client_key.unwrap().as_ptr(), 16, data.as_ptr(), 0x280);
-        data = std::slice::from_raw_parts(result, 0x280).to_vec();
-    }
+    let blowfish = Blowfish::new(&state.client_key.unwrap());
+    blowfish.encrypt(&mut data);
 
     let response_packet = PacketSegment {
         source_actor: 0,
