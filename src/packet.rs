@@ -15,12 +15,13 @@ use crate::{
     compression::decompress,
     encryption::{decrypt, encrypt},
     ipc::IPCSegment,
+    oodle::FFXIVOodle,
 };
 
 #[binrw]
 #[brw(repr = u16)]
 #[derive(Debug)]
-enum ConnectionType {
+pub enum ConnectionType {
     None = 0x0,
     Zone = 0x1,
     Chat = 0x2,
@@ -32,6 +33,12 @@ enum ConnectionType {
 #[derive(Debug, Clone)]
 pub enum SegmentType {
     // Client->Server Packets
+    #[brw(magic = 0x1u32)]
+    InitializeSession {
+        #[brw(pad_before = 4)]
+        #[brw(pad_after = 48)] // TODO: probably not empty?
+        player_id: u32,
+    },
     #[brw(magic = 0x9u32)]
     InitializeEncryption {
         #[brw(pad_before = 36)] // empty
@@ -53,13 +60,18 @@ pub enum SegmentType {
     KeepAlive { id: u32, timestamp: u32 },
 
     // Server->Client Packets
-    #[brw(magic = 0x0Au32)]
+    #[brw(magic = 0xAu32)]
     InitializationEncryptionResponse {
         #[br(count = 0x280)]
         data: Vec<u8>,
     },
-    #[brw(magic = 0x08u32)]
+    #[brw(magic = 0x8u32)]
     KeepAliveResponse { id: u32, timestamp: u32 },
+    #[brw(magic = 0x2u32)]
+    ZoneInitialize {
+        #[brw(pad_after = 36)]
+        player_id: u32,
+    },
 }
 
 #[binrw]
@@ -90,10 +102,14 @@ pub struct PacketHeader {
 #[derive(Debug, Clone)]
 pub struct PacketSegment {
     #[bw(calc = self.calc_size())]
+    #[br(dbg)]
     pub size: u32,
+    #[br(dbg)]
     pub source_actor: u32,
+    #[br(dbg)]
     pub target_actor: u32,
     #[brw(args(size, encryption_key))]
+    #[br(dbg)]
     pub segment_type: SegmentType,
 }
 
@@ -105,20 +121,23 @@ impl PacketSegment {
                 SegmentType::InitializeEncryption { .. } => 616,
                 SegmentType::InitializationEncryptionResponse { .. } => 640,
                 SegmentType::Ipc { data } => data.calc_size(),
-                SegmentType::KeepAlive { .. } => todo!(),
+                SegmentType::KeepAlive { .. } => 0x8,
                 SegmentType::KeepAliveResponse { .. } => 0x8,
+                SegmentType::ZoneInitialize { .. } => 40,
+                SegmentType::InitializeSession { .. } => todo!(),
             }
     }
 }
 
 #[binrw]
-#[brw(import(encryption_key: Option<&[u8]>))]
+#[brw(import(oodle: &mut FFXIVOodle, encryption_key: Option<&[u8]>))]
 #[derive(Debug)]
 struct Packet {
     #[br(dbg)]
     header: PacketHeader,
     #[bw(args(encryption_key))]
-    #[br(parse_with = decompress, args(&header, encryption_key,))]
+    #[br(parse_with = decompress, args(oodle, &header, encryption_key,))]
+    #[br(dbg)]
     segments: Vec<PacketSegment>,
 }
 
@@ -130,7 +149,7 @@ fn dump(msg: &str, data: &[u8]) {
 pub async fn send_packet(
     socket: &mut WriteHalf<TcpStream>,
     segments: &[PacketSegment],
-    state: &State,
+    state: &mut State,
 ) {
     let timestamp: u64 = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -166,7 +185,10 @@ pub async fn send_packet(
     packet
         .write_le_args(
             &mut cursor,
-            (state.client_key.as_ref().map(|s: &[u8; 16]| s.as_slice()),),
+            (
+                &mut state.oodle,
+                state.client_key.as_ref().map(|s: &[u8; 16]| s.as_slice()),
+            ),
         )
         .unwrap();
 
@@ -185,14 +207,19 @@ pub async fn send_packet(
 pub struct State {
     pub client_key: Option<[u8; 16]>,
     pub session_id: Option<String>,
+    pub oodle: FFXIVOodle,
+    pub player_id: Option<u32>,
 }
 
-pub async fn parse_packet(data: &[u8], state: &mut State) -> Vec<PacketSegment> {
+pub async fn parse_packet(data: &[u8], state: &mut State) -> (Vec<PacketSegment>, ConnectionType) {
     let mut cursor = Cursor::new(data);
 
     match Packet::read_le_args(
         &mut cursor,
-        (state.client_key.as_ref().map(|s: &[u8; 16]| s.as_slice()),),
+        (
+            &mut state.oodle,
+            state.client_key.as_ref().map(|s: &[u8; 16]| s.as_slice()),
+        ),
     ) {
         Ok(packet) => {
             println!("{:#?}", packet);
@@ -204,20 +231,20 @@ pub async fn parse_packet(data: &[u8], state: &mut State) -> Vec<PacketSegment> 
                 );
             }
 
-            packet.segments
+            (packet.segments, packet.header.connection_type)
         }
         Err(err) => {
             println!("{err}");
             dump("Failed to parse packet!", data);
 
-            Vec::new()
+            (Vec::new(), ConnectionType::None)
         }
     }
 }
 
 pub async fn send_keep_alive(
     socket: &mut WriteHalf<TcpStream>,
-    state: &State,
+    state: &mut State,
     id: u32,
     timestamp: u32,
 ) {

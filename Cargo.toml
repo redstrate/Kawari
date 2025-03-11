@@ -18,12 +18,23 @@ name = "kawari-patch"
 [[bin]]
 name = "kawari-web"
 
+[[bin]]
+name = "kawari-lobby"
+
+[[bin]]
+name = "kawari-world"
+required-features = ["oodle"]
+
 [profile.release]
 lto = true
 strip = true
 opt-level = "z"
 codegen-units = 1
 panic = "abort"
+
+[features]
+default = ["oodle"]
+oodle = []
 
 [build-dependencies]
 cc = "1.0"

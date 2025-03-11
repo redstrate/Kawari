@@ -43,6 +43,10 @@ pub struct FFXIVOodle {
     window: Vec<u8>,
 }
 
+pub trait Oodle {
+    fn decode(&mut self, input: Vec<u8>, decompressed_size: u32) -> Vec<u8>;
+}
+
 impl FFXIVOodle {
     pub fn new() -> FFXIVOodle {
         let htbits: i32 = 17;
@@ -74,8 +78,10 @@ impl FFXIVOodle {
             }
         }
     }
+}
 
-    pub fn decode(&mut self, input: Vec<u8>, decompressed_size: u32) -> Vec<u8> {
+impl Oodle for FFXIVOodle {
+    fn decode(&mut self, input: Vec<u8>, decompressed_size: u32) -> Vec<u8> {
         unsafe {
             let mut out_buf: Vec<u8> = vec![0u8; decompressed_size.try_into().unwrap()];
             let mut in_buf = input.to_vec();

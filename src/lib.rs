@@ -8,9 +8,18 @@ mod compression;
 pub mod config;
 pub mod encryption;
 pub mod ipc;
-mod oodle;
+pub mod oodle;
 pub mod packet;
 pub mod patchlist;
+
+// TODO: make this configurable
+// See https://ffxiv.consolegameswiki.com/wiki/Servers for a list of possible IDs
+pub const WORLD_ID: u16 = 63;
+pub const WORLD_NAME: &str = "KAWARI";
+
+pub const ZONE_ID: u16 = 1255;
+
+pub const CONTENT_ID: u64 = 11111111111111111;
 
 pub fn generate_sid() -> String {
     let random_id: String = rand::thread_rng()

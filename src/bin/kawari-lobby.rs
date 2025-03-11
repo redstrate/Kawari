@@ -4,9 +4,11 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use kawari::client_select_data::{ClientCustomizeData, ClientSelectData};
 use kawari::encryption::{blowfish_encode, generate_encryption_key};
 use kawari::ipc::{CharacterDetails, IPCOpCode, IPCSegment, IPCStructData, Server, ServiceAccount};
+use kawari::oodle::FFXIVOodle;
 use kawari::packet::{
     PacketSegment, SegmentType, State, parse_packet, send_keep_alive, send_packet,
 };
+use kawari::{CONTENT_ID, WORLD_ID, WORLD_NAME, ZONE_ID};
 use tokio::io::{AsyncReadExt, WriteHalf};
 use tokio::net::{TcpListener, TcpStream};
 
@@ -25,6 +27,8 @@ async fn main() {
         let mut state = State {
             client_key: None,
             session_id: None,
+            oodle: FFXIVOodle::new(),
+            player_id: None,
         };
 
         tokio::spawn(async move {
@@ -33,7 +37,7 @@ async fn main() {
                 let n = read.read(&mut buf).await.expect("Failed to read data!");
 
                 if n != 0 {
-                    let segments = parse_packet(&buf[..n], &mut state).await;
+                    let (segments, _) = parse_packet(&buf[..n], &mut state).await;
                     for segment in &segments {
                         match &segment.segment_type {
                             SegmentType::InitializeEncryption { phrase, key } => {
@@ -50,12 +54,12 @@ async fn main() {
 
                                     state.session_id = Some(session_id.clone());
 
-                                    send_account_list(&mut write, &state).await;
+                                    send_account_list(&mut write, &mut state).await;
                                 }
                                 IPCStructData::RequestCharacterList { sequence } => {
                                     tracing::info!("Client is requesting character list...");
 
-                                    send_lobby_info(&mut write, &state, *sequence).await;
+                                    send_lobby_info(&mut write, &mut state, *sequence).await;
                                 }
                                 IPCStructData::LobbyCharacterAction {
                                     sequence,
@@ -79,7 +83,7 @@ async fn main() {
                                 } => {
                                     tracing::info!("Client is joining the world...");
 
-                                    send_enter_world(&mut write, &state, *sequence, *lookup_id)
+                                    send_enter_world(&mut write, &mut state, *sequence, *lookup_id)
                                         .await;
                                 }
                                 _ => {
@@ -87,7 +91,7 @@ async fn main() {
                                 }
                             },
                             SegmentType::KeepAlive { id, timestamp } => {
-                                send_keep_alive(&mut write, &state, *id, *timestamp).await
+                                send_keep_alive(&mut write, &mut state, *id, *timestamp).await
                             }
                             _ => {
                                 panic!("The server is recieving a response packet!")
@@ -125,7 +129,7 @@ async fn initialize_encryption(
     send_packet(socket, &[response_packet], state).await;
 }
 
-async fn send_account_list(socket: &mut WriteHalf<TcpStream>, state: &State) {
+async fn send_account_list(socket: &mut WriteHalf<TcpStream>, state: &mut State) {
     let timestamp: u32 = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .expect("Failed to get UNIX timestamp!")
@@ -167,12 +171,7 @@ async fn send_account_list(socket: &mut WriteHalf<TcpStream>, state: &State) {
     send_packet(socket, &[response_packet], state).await;
 }
 
-// TODO: make this configurable
-// See https://ffxiv.consolegameswiki.com/wiki/Servers for a list of possible IDs
-const WORLD_ID: u16 = 63;
-const WORLD_NAME: &str = "KAWARI";
-
-async fn send_lobby_info(socket: &mut WriteHalf<TcpStream>, state: &State, sequence: u64) {
+async fn send_lobby_info(socket: &mut WriteHalf<TcpStream>, state: &mut State, sequence: u64) {
     let timestamp: u32 = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .expect("Failed to get UNIX timestamp!")
@@ -256,7 +255,7 @@ async fn send_lobby_info(socket: &mut WriteHalf<TcpStream>, state: &State, seque
             guardian: 2,
             unk8: 0,
             unk9: 0,
-            zone_id: 1000,
+            zone_id: ZONE_ID as i32,
             unk11: 0,
             customize: ClientCustomizeData {
                 race: 3,
@@ -301,7 +300,7 @@ async fn send_lobby_info(socket: &mut WriteHalf<TcpStream>, state: &State, seque
 
         let mut characters = vec![CharacterDetails {
             id: 0,
-            content_id: 11111111111111111,
+            content_id: CONTENT_ID,
             index: 0,
             unk1: [0; 16],
             origin_server_id: WORLD_ID,
@@ -387,7 +386,7 @@ async fn send_lobby_info(socket: &mut WriteHalf<TcpStream>, state: &State, seque
 
 async fn send_enter_world(
     socket: &mut WriteHalf<TcpStream>,
-    state: &State,
+    state: &mut State,
     sequence: u64,
     lookup_id: u64,
 ) {

@@ -36,23 +36,26 @@ pub(crate) fn decrypt<T>(size: u32, encryption_key: Option<&[u8]>) -> BinResult<
 where
     for<'a> T: BinRead<Args<'a> = ()> + 'a,
 {
-    let Some(encryption_key) = encryption_key else {
-        panic!("This segment type is encrypted and no key was provided!");
-    };
+    if let Some(encryption_key) = encryption_key {
+        let size = size - (std::mem::size_of::<u32>() * 4) as u32; // 16 = header size
 
-    let size = size - (std::mem::size_of::<u32>() * 4) as u32; // 16 = header size
+        let mut data = vec![0; size as usize];
+        reader.read_exact(&mut data)?;
 
-    let mut data = vec![0; size as usize];
-    reader.read_exact(&mut data)?;
+        unsafe {
+            let decryption_result =
+                blowfish_decode(encryption_key.as_ptr(), 16, data.as_ptr(), size);
+            let decrypted_data = slice::from_raw_parts(decryption_result, size as usize);
 
-    unsafe {
-        let decryption_result = blowfish_decode(encryption_key.as_ptr(), 16, data.as_ptr(), size);
-        let decrypted_data = slice::from_raw_parts(decryption_result, size as usize);
+            write("decrypted.bin", decrypted_data).unwrap();
 
-        write("decrypted.bin", decrypted_data).unwrap();
+            let mut cursor = Cursor::new(&decrypted_data);
+            T::read_options(&mut cursor, endian, ())
+        }
+    } else {
+        tracing::info!("NOTE: Not decrypting this IPC packet since no key was provided!");
 
-        let mut cursor = Cursor::new(&decrypted_data);
-        T::read_options(&mut cursor, endian, ())
+        T::read_options(reader, endian, ())
     }
 }
 
@@ -61,29 +64,31 @@ pub(crate) fn encrypt<T>(value: &T, size: u32, encryption_key: Option<&[u8]>) ->
 where
     for<'a> T: BinWrite<Args<'a> = ()> + 'a,
 {
-    let Some(encryption_key) = encryption_key else {
-        panic!("This segment type needs to be encrypted and no key was provided!");
-    };
+    if let Some(encryption_key) = encryption_key {
+        let size = size - (std::mem::size_of::<u32>() * 4) as u32; // 16 = header size
 
-    let size = size - (std::mem::size_of::<u32>() * 4) as u32; // 16 = header size
+        let mut cursor = Cursor::new(Vec::new());
+        value.write_options(&mut cursor, endian, ())?;
 
-    let mut cursor = Cursor::new(Vec::new());
-    value.write_options(&mut cursor, endian, ())?;
+        let mut buffer = cursor.into_inner();
+        buffer.resize(size as usize, 0);
 
-    let mut buffer = cursor.into_inner();
-    buffer.resize(size as usize, 0);
+        unsafe {
+            let encoded = blowfish_encode(
+                encryption_key.as_ptr(),
+                16,
+                buffer.as_ptr(),
+                buffer.len() as u32,
+            );
+            let encoded_data = slice::from_raw_parts(encoded, size as usize);
+            writer.write_all(encoded_data)?;
 
-    unsafe {
-        let encoded = blowfish_encode(
-            encryption_key.as_ptr(),
-            16,
-            buffer.as_ptr(),
-            buffer.len() as u32,
-        );
-        let encoded_data = slice::from_raw_parts(encoded, size as usize);
-        writer.write_all(encoded_data)?;
+            Ok(())
+        }
+    } else {
+        tracing::info!("NOTE: Not encrypting this IPC packet since no key was provided!");
 
-        Ok(())
+        value.write_options(writer, endian, ())
     }
 }
 
