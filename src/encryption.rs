@@ -1,23 +1,9 @@
 use std::fs::write;
-use std::{io::Cursor, slice};
+use std::io::Cursor;
 
 use binrw::{BinRead, BinResult, BinWrite};
 
-#[link(name = "FFXIVBlowfish")]
-unsafe extern "C" {
-    pub fn blowfish_encode(
-        key: *const u8,
-        keybytes: u32,
-        pInput: *const u8,
-        lSize: u32,
-    ) -> *const u8;
-    pub fn blowfish_decode(
-        key: *const u8,
-        keybytes: u32,
-        pInput: *const u8,
-        lSize: u32,
-    ) -> *const u8;
-}
+use crate::blowfish::Blowfish;
 
 const GAME_VERSION: u16 = 7000;
 
@@ -42,16 +28,13 @@ where
         let mut data = vec![0; size as usize];
         reader.read_exact(&mut data)?;
 
-        unsafe {
-            let decryption_result =
-                blowfish_decode(encryption_key.as_ptr(), 16, data.as_ptr(), size);
-            let decrypted_data = slice::from_raw_parts(decryption_result, size as usize);
+        let blowfish = Blowfish::new(encryption_key);
+        blowfish.decrypt(&mut data);
 
-            write("decrypted.bin", decrypted_data).unwrap();
+        write("decrypted.bin", &data).unwrap();
 
-            let mut cursor = Cursor::new(&decrypted_data);
-            T::read_options(&mut cursor, endian, ())
-        }
+        let mut cursor = Cursor::new(&data);
+        T::read_options(&mut cursor, endian, ())
     } else {
         tracing::info!("NOTE: Not decrypting this IPC packet since no key was provided!");
 
@@ -73,18 +56,12 @@ where
         let mut buffer = cursor.into_inner();
         buffer.resize(size as usize, 0);
 
-        unsafe {
-            let encoded = blowfish_encode(
-                encryption_key.as_ptr(),
-                16,
-                buffer.as_ptr(),
-                buffer.len() as u32,
-            );
-            let encoded_data = slice::from_raw_parts(encoded, size as usize);
-            writer.write_all(encoded_data)?;
+        let blowfish = Blowfish::new(encryption_key);
+        blowfish.encrypt(&mut buffer);
 
-            Ok(())
-        }
+        writer.write_all(&buffer)?;
+
+        Ok(())
     } else {
         tracing::info!("NOTE: Not encrypting this IPC packet since no key was provided!");
 
