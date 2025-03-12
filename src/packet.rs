@@ -92,9 +92,9 @@ pub struct PacketHeader {
     pub connection_type: ConnectionType,
     pub segment_count: u16,
     pub unk3: u8,
-    pub compressed: CompressionType,
+    pub compression_type: CompressionType,
     pub unk4: u16,
-    pub oodle_decompressed_size: u32,
+    pub uncompressed_size: u32,
 }
 
 #[binrw]
@@ -171,9 +171,9 @@ pub async fn send_packet(
         connection_type: ConnectionType::Lobby,
         segment_count: segments.len() as u16,
         unk3: 0,
-        compressed: CompressionType::Uncompressed,
+        compression_type: CompressionType::Uncompressed,
         unk4: 0,
-        oodle_decompressed_size: 0,
+        uncompressed_size: 0,
     };
 
     let packet = Packet {

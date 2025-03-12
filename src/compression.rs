@@ -28,9 +28,9 @@ pub(crate) fn decompress(
 
     write("compressed.bin", &data).unwrap();
 
-    let data = match header.compressed {
+    let data = match header.compression_type {
         crate::packet::CompressionType::Uncompressed => data,
-        crate::packet::CompressionType::Oodle => oodle.decode(data, header.oodle_decompressed_size),
+        crate::packet::CompressionType::Oodle => oodle.decode(data, header.uncompressed_size),
     };
 
     write("decompressed.bin", &data).unwrap();
