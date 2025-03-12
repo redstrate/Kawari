@@ -43,6 +43,27 @@ pub enum IPCOpCode {
     PlayerSetup = 0x006B,
     // Sent by the server to setup class info
     UpdateClassInfo = 0x006A,
+    // Sent by the client when they're done loading and they need to be spawned in
+    FinishLoading = 0x397, // TODO: assumed
+    // Sent by the server to spawn the player in
+    PlayerSpawn = 0x1AB,
+
+    // FIXME: 32 bytes of something from the client, not sure what yet
+    Unk1 = 0x37C,
+    // FIXME: 16 bytes of something from the client, not sure what yet
+    Unk2 = 0x1A1,
+    // FIXME: 8 bytes of something from the client, not sure what yet
+    Unk3 = 0x326,
+    // FIXME: 8 bytes of something from the client, not sure what yet
+    Unk4 = 0x143,
+    SetSearchInfoHandler = 0x3B2, // TODO: assumed,
+    // FIXME: 8 bytes of something from the client, not sure what yet
+    Unk5 = 0x2D0,
+    // FIXME: 8 bytes of something from the client, not sure what yet
+    Unk6 = 0x2E5,
+    // FIXME: 32 bytes of something from the client, not sure what yet
+    Unk7 = 0x2B5,
+    UpdatePositionHandler = 0x249, // TODO: assumed
 }
 
 #[binrw]
@@ -142,6 +163,15 @@ pub enum ActorControlType {
 }
 
 #[binrw]
+#[derive(Debug, Clone, Copy, Default)]
+pub struct StatusEffect {
+    effect_id: u16,
+    param: u16,
+    duration: f32,
+    source_actor_id: u32,
+}
+
+#[binrw]
 #[br(import(magic: &IPCOpCode))]
 #[derive(Debug, Clone)]
 pub enum IPCStructData {
@@ -196,6 +226,56 @@ pub enum IPCStructData {
         // TODO: full of possibly interesting information
         #[br(dbg)]
         unk: [u8; 105],
+    },
+    #[br(pre_assert(*magic == IPCOpCode::FinishLoading))]
+    FinishLoading {
+        // TODO: full of possibly interesting information
+        unk: [u8; 72],
+    },
+    #[br(pre_assert(*magic == IPCOpCode::Unk1))]
+    Unk1 {
+        // TODO: full of possibly interesting information
+        unk: [u8; 32],
+    },
+    #[br(pre_assert(*magic == IPCOpCode::Unk2))]
+    Unk2 {
+        // TODO: full of possibly interesting information
+        unk: [u8; 16],
+    },
+    #[br(pre_assert(*magic == IPCOpCode::Unk3))]
+    Unk3 {
+        // TODO: full of possibly interesting information
+        unk: [u8; 8],
+    },
+    #[br(pre_assert(*magic == IPCOpCode::Unk4))]
+    Unk4 {
+        // TODO: full of possibly interesting information
+        unk: [u8; 8],
+    },
+    #[br(pre_assert(*magic == IPCOpCode::SetSearchInfoHandler))]
+    SetSearchInfoHandler {
+        // TODO: full of possibly interesting information
+        unk: [u8; 8],
+    },
+    #[br(pre_assert(*magic == IPCOpCode::Unk5))]
+    Unk5 {
+        // TODO: full of possibly interesting information
+        unk: [u8; 8],
+    },
+    #[br(pre_assert(*magic == IPCOpCode::Unk6))]
+    Unk6 {
+        // TODO: full of possibly interesting information
+        unk: [u8; 8],
+    },
+    #[br(pre_assert(*magic == IPCOpCode::Unk7))]
+    Unk7 {
+        // TODO: full of possibly interesting information
+        unk: [u8; 32],
+    },
+    #[br(pre_assert(*magic == IPCOpCode::UpdatePositionHandler))]
+    UpdatePositionHandler {
+        // TODO: full of possibly interesting information
+        unk: [u8; 24],
     },
 
     // Server->Client IPC
@@ -488,6 +568,85 @@ pub enum IPCStructData {
         class_level: u16,
         role_actions: [u32; 10],
     },
+    #[br(pre_assert(false))]
+    PlayerSpawn {
+        title: u16,
+        u1b: u16,
+        current_world_id: u16,
+        home_world_id: u16,
+
+        gm_rank: u8,
+        u3c: u8,
+        u4: u8,
+        online_status: u8,
+
+        pose: u8,
+        u5a: u8,
+        u5b: u8,
+        u5c: u8,
+
+        target_id: u64,
+        u6: u32,
+        u7: u32,
+        main_weapon_model: u64,
+        sec_weapon_model: u64,
+        craft_tool_model: u64,
+
+        u14: u32,
+        u15: u32,
+        b_npc_base: u32,
+        b_npc_name: u32,
+        u18: u32,
+        u19: u32,
+        director_id: u32,
+        owner_id: u32,
+        u22: u32,
+        padding4: [u8; 16],
+        hp_max: u32,
+        hp_curr: u32,
+        display_flags: u32,
+        fate_id: u16,
+        mp_curr: u16,
+        mp_max: u16,
+        unk: u16,
+        model_chara: u16,
+        rotation: u16,
+        current_mount: u16,
+        active_minion: u16,
+        u23: u8,
+        u24: u8,
+        u25: u8,
+        u26: u8,
+        spawn_index: u8,
+        state: u8,
+        persistent_emote: u8,
+        model_type: u8,
+        subtype: u8,
+        voice: u8,
+        enemy_type: u8,
+        unk27: u8,
+        level: u8,
+        class_job: u8,
+        unk28: u8,
+        unk29: u8,
+        unk30: u8,
+        mount_head: u8,
+        mount_body: u8,
+        mount_feet: u8,
+        mount_color: u8,
+        scale: u8,
+        element_data: [u8; 6],
+        padding2: [u8; 12],
+        effect: [StatusEffect; 30],
+        pos: Position,
+        models: [u32; 10],
+        unknown6_58: [u8; 10],
+        padding3: [u8; 7],
+        name: [u8; 32],
+        look: [u8; 26],
+        fc_tag: [u8; 6],
+        padding: [u8; 26],
+    },
 }
 
 #[binrw]
@@ -529,6 +688,17 @@ impl IPCSegment {
                 IPCStructData::PlayerStats { .. } => 228,
                 IPCStructData::PlayerSetup { .. } => 2544,
                 IPCStructData::UpdateClassInfo { .. } => 48,
+                IPCStructData::FinishLoading { .. } => todo!(),
+                IPCStructData::PlayerSpawn { .. } => 656,
+                IPCStructData::Unk1 { .. } => todo!(),
+                IPCStructData::Unk2 { .. } => todo!(),
+                IPCStructData::Unk3 { .. } => todo!(),
+                IPCStructData::Unk4 { .. } => todo!(),
+                IPCStructData::SetSearchInfoHandler { .. } => todo!(),
+                IPCStructData::Unk5 { .. } => todo!(),
+                IPCStructData::Unk6 { .. } => todo!(),
+                IPCStructData::Unk7 { .. } => todo!(),
+                IPCStructData::UpdatePositionHandler { .. } => todo!(),
             }
     }
 }

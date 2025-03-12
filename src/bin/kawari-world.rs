@@ -1,6 +1,6 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use kawari::ipc::{ActorControlType, IPCOpCode, IPCSegment, IPCStructData, Position};
+use kawari::ipc::{ActorControlType, IPCOpCode, IPCSegment, IPCStructData, Position, StatusEffect};
 use kawari::oodle::FFXIVOodle;
 use kawari::packet::{
     CompressionType, PacketSegment, SegmentType, State, parse_packet, send_keep_alive, send_packet,
@@ -38,6 +38,15 @@ async fn main() {
                     println!("recieved {n} bytes...");
                     let (segments, connection_type) = parse_packet(&buf[..n], &mut state).await;
                     for segment in &segments {
+                        let timestamp_secs = || {
+                            SystemTime::now()
+                                .duration_since(UNIX_EPOCH)
+                                .expect("Failed to get UNIX timestamp!")
+                                .as_secs()
+                                .try_into()
+                                .unwrap()
+                        };
+
                         match &segment.segment_type {
                             SegmentType::InitializeSession { player_id } => {
                                 state.player_id = Some(*player_id);
@@ -146,15 +155,6 @@ async fn main() {
                                         tracing::info!(
                                             "Client is now requesting zone information. Sending!"
                                         );
-
-                                        let timestamp_secs = || {
-                                            SystemTime::now()
-                                                .duration_since(UNIX_EPOCH)
-                                                .expect("Failed to get UNIX timestamp!")
-                                                .as_secs()
-                                                .try_into()
-                                                .unwrap()
-                                        };
 
                                         // IPC Init(?)
                                         {
@@ -502,19 +502,97 @@ async fn main() {
                                             )
                                             .await;
                                         }
+                                    }
+                                    IPCStructData::FinishLoading { .. } => {
+                                        tracing::info!(
+                                            "Client has finished loading... spawning in!"
+                                        );
 
-                                        // ?????
-                                        /*{
+                                        // send player spawn
+                                        {
                                             let ipc = IPCSegment {
                                                 unk1: 0,
                                                 unk2: 0,
-                                                op_code: IPCOpCode::InitRequest,
+                                                op_code: IPCOpCode::PlayerSpawn,
                                                 server_id: 0,
                                                 timestamp: timestamp_secs(),
-                                                data: IPCStructData::InitResponse {
-                                                    unk1: 0,
-                                                    character_id: state.player_id.unwrap(),
-                                                    unk2: 0,
+                                                data: IPCStructData::PlayerSpawn {
+                                                    title: 0,
+                                                    u1b: 0,
+                                                    current_world_id: 0,
+                                                    home_world_id: 0,
+                                                    gm_rank: 0,
+                                                    u3c: 0,
+                                                    u4: 0,
+                                                    online_status: 0,
+                                                    pose: 0,
+                                                    u5a: 0,
+                                                    u5b: 0,
+                                                    u5c: 0,
+                                                    target_id: 0,
+                                                    u6: 0,
+                                                    u7: 0,
+                                                    main_weapon_model: 0,
+                                                    sec_weapon_model: 0,
+                                                    craft_tool_model: 0,
+                                                    u14: 0,
+                                                    u15: 0,
+                                                    b_npc_base: 0,
+                                                    b_npc_name: 0,
+                                                    u18: 0,
+                                                    u19: 0,
+                                                    director_id: 0,
+                                                    owner_id: 0,
+                                                    u22: 0,
+                                                    padding4: [0; 16],
+                                                    hp_max: 0,
+                                                    hp_curr: 0,
+                                                    display_flags: 0,
+                                                    fate_id: 0,
+                                                    mp_curr: 0,
+                                                    mp_max: 0,
+                                                    unk: 0,
+                                                    model_chara: 0,
+                                                    rotation: 0,
+                                                    current_mount: 0,
+                                                    active_minion: 0,
+                                                    u23: 0,
+                                                    u24: 0,
+                                                    u25: 0,
+                                                    u26: 0,
+                                                    spawn_index: 0,
+                                                    state: 0,
+                                                    persistent_emote: 0,
+                                                    model_type: 0,
+                                                    subtype: 0,
+                                                    voice: 0,
+                                                    enemy_type: 0,
+                                                    unk27: 0,
+                                                    level: 0,
+                                                    class_job: 0,
+                                                    unk28: 0,
+                                                    unk29: 0,
+                                                    unk30: 0,
+                                                    mount_head: 0,
+                                                    mount_body: 0,
+                                                    mount_feet: 0,
+                                                    mount_color: 0,
+                                                    scale: 0,
+                                                    element_data: [0; 6],
+                                                    padding2: [0; 12],
+                                                    effect: [StatusEffect::default(); 30],
+                                                    pos: Position {
+                                                        x: 0.0,
+                                                        y: 0.0,
+                                                        z: 0.0,
+                                                    },
+                                                    models: [0; 10],
+                                                    unknown6_58: [0; 10],
+                                                    padding3: [0; 7],
+                                                    name: [0; 32],
+                                                    look: [0; 26],
+                                                    fc_tag: [0; 6],
+                                                    padding: [0; 26],
                                                 },
                                             };
 
@@ -523,9 +601,41 @@ async fn main() {
                                                 target_actor: state.player_id.unwrap(),
                                                 segment_type: SegmentType::Ipc { data: ipc },
                                             };
-                                            send_packet(&mut write, &[response_packet], &mut state, CompressionType::Oodle)
-                                                .await;
-                                        }*/
+                                            send_packet(
+                                                &mut write,
+                                                &[response_packet],
+                                                &mut state,
+                                                CompressionType::Oodle,
+                                            )
+                                            .await;
+                                        }
+                                    }
+                                    IPCStructData::Unk1 { .. } => {
+                                        tracing::info!("Recieved Unk1!");
+                                    }
+                                    IPCStructData::Unk2 { .. } => {
+                                        tracing::info!("Recieved Unk2!");
+                                    }
+                                    IPCStructData::Unk3 { .. } => {
+                                        tracing::info!("Recieved Unk3!");
+                                    }
+                                    IPCStructData::Unk4 { .. } => {
+                                        tracing::info!("Recieved Unk4!");
+                                    }
+                                    IPCStructData::SetSearchInfoHandler { .. } => {
+                                        tracing::info!("Recieved SetSearchInfoHandler!");
+                                    }
+                                    IPCStructData::Unk5 { .. } => {
+                                        tracing::info!("Recieved Unk5!");
+                                    }
+                                    IPCStructData::Unk6 { .. } => {
+                                        tracing::info!("Recieved Unk6!");
+                                    }
+                                    IPCStructData::Unk7 { .. } => {
+                                        tracing::info!("Recieved Unk7!");
+                                    }
+                                    IPCStructData::UpdatePositionHandler { .. } => {
+                                        tracing::info!("Recieved UpdatePositionHandler!");
                                     }
                                     _ => panic!(
                                         "The server is recieving a IPC response or unknown packet!"
