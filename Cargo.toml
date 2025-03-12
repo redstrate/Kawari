@@ -45,5 +45,5 @@ serde = { version = "1.0", features = ["derive"], default-features = false }
 tracing-subscriber = { version = "0.3", features = ["fmt"], default-features = false }
 rand = "0.8"
 minijinja = "2.0"
-binrw = { version = "0.14" }
+binrw = { version = "0.14", features = ["std"], default-features = false }
 md5 = "0.7.0"
