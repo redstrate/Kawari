@@ -361,9 +361,13 @@ async fn main() {
                                                 op_code: IPCOpCode::PlayerSpawn,
                                                 server_id: 0,
                                                 timestamp: timestamp_secs(),
-                                                data: IPCStructData::PlayerSpawn(
-                                                    PlayerSpawn::default(),
-                                                ),
+                                                data: IPCStructData::PlayerSpawn(PlayerSpawn {
+                                                    hp_curr: 100,
+                                                    hp_max: 100,
+                                                    mp_curr: 100,
+                                                    mp_max: 100,
+                                                    ..Default::default()
+                                                }),
                                             };
 
                                             let response_packet = PacketSegment {
