@@ -1,10 +1,12 @@
 use binrw::binrw;
 
+use crate::common::{read_string, write_string};
+
 use super::position::Position;
 use super::status_effect::StatusEffect;
 
 #[binrw]
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Default)]
 pub struct PlayerSpawn {
     pub title: u16,
     pub u1b: u16,
@@ -78,7 +80,11 @@ pub struct PlayerSpawn {
     pub models: [u32; 10],
     pub unknown6_58: [u8; 10],
     pub padding3: [u8; 7],
-    pub name: [u8; 32],
+    #[br(count = 32)]
+    #[bw(pad_size_to = 32)]
+    #[br(map = read_string)]
+    #[bw(map = write_string)]
+    pub name: String,
     pub look: [u8; 26],
     pub fc_tag: [u8; 6],
     pub padding: [u8; 26],

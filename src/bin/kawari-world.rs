@@ -362,10 +362,18 @@ async fn main() {
                                                 server_id: 0,
                                                 timestamp: timestamp_secs(),
                                                 data: IPCStructData::PlayerSpawn(PlayerSpawn {
+                                                    current_world_id: WORLD_ID,
+                                                    home_world_id: WORLD_ID,
+                                                    title: 1,
+                                                    class_job: 35,
+                                                    name: "Test".to_string(),
                                                     hp_curr: 100,
                                                     hp_max: 100,
                                                     mp_curr: 100,
                                                     mp_max: 100,
+                                                    model_type: 1,
+                                                    spawn_index: 1,
+                                                    state: 1,
                                                     ..Default::default()
                                                 }),
                                             };
@@ -441,6 +449,9 @@ async fn main() {
                                     }
                                     IPCStructData::Disconnected { .. } => {
                                         tracing::info!("Client disconnected!");
+                                    }
+                                    IPCStructData::ChatMessage { message } => {
+                                        tracing::info!("Client sent chat message: {message}!");
                                     }
                                     _ => panic!(
                                         "The server is recieving a IPC response or unknown packet!"

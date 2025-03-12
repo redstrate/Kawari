@@ -76,6 +76,8 @@ pub enum IPCOpCode {
     LogOutComplete = 0x369,
     // Sent by the client when it's actually disconnecting
     Disconnected = 0x360,
+    // Sent by the client when they send a chat message
+    ChatMessage = 0xCA,
 }
 
 #[binrw]
@@ -275,6 +277,18 @@ pub enum IPCStructData {
         // TODO: full of possibly interesting information
         unk: [u8; 8],
     },
+    #[br(pre_assert(*magic == IPCOpCode::ChatMessage))]
+    ChatMessage {
+        // TODO: incomplete
+        #[br(dbg)]
+        #[brw(pad_before = 26)]
+        #[brw(pad_after = 998)]
+        #[br(count = 32)]
+        #[bw(pad_size_to = 32)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        message: String,
+    },
 
     // Server->Client IPC
     #[br(pre_assert(false))]
@@ -433,6 +447,7 @@ impl IPCSegment {
                 IPCStructData::LogOut { .. } => todo!(),
                 IPCStructData::LogOutComplete { .. } => 8,
                 IPCStructData::Disconnected { .. } => todo!(),
+                IPCStructData::ChatMessage { .. } => todo!(),
             }
     }
 }
