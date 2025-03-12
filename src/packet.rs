@@ -235,12 +235,13 @@ pub async fn parse_packet(data: &[u8], state: &mut State) -> (Vec<PacketSegment>
         Ok(packet) => {
             println!("{:#?}", packet);
 
-            if packet.header.size as usize != data.len() {
+            // don't really think this works like I think it does'
+            /*if packet.header.size as usize != data.len() {
                 dump(
                     "Packet size mismatch between what we're given and the header!",
                     data,
                 );
-            }
+            }*/
 
             (packet.segments, packet.header.connection_type)
         }

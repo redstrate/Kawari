@@ -70,6 +70,12 @@ pub enum IPCOpCode {
     // FIXME: 32 bytes of something from the client, not sure what yet
     Unk7 = 0x2B5,
     UpdatePositionHandler = 0x249, // TODO: assumed
+    // Sent by the client when the user requests to log out
+    LogOut = 0x217,
+    // Sent by the server to indicate the log out is complete
+    LogOutComplete = 0x369,
+    // Sent by the client when it's actually disconnecting
+    Disconnected = 0x360,
 }
 
 #[binrw]
@@ -259,6 +265,16 @@ pub enum IPCStructData {
         // TODO: full of possibly interesting information
         unk: [u8; 24],
     },
+    #[br(pre_assert(*magic == IPCOpCode::LogOut))]
+    LogOut {
+        // TODO: full of possibly interesting information
+        unk: [u8; 8],
+    },
+    #[br(pre_assert(*magic == IPCOpCode::Disconnected))]
+    Disconnected {
+        // TODO: full of possibly interesting information
+        unk: [u8; 8],
+    },
 
     // Server->Client IPC
     #[br(pre_assert(false))]
@@ -357,6 +373,11 @@ pub enum IPCStructData {
     UpdateClassInfo(UpdateClassInfo),
     #[br(pre_assert(false))]
     PlayerSpawn(PlayerSpawn),
+    #[br(pre_assert(false))]
+    LogOutComplete {
+        // TODO: guessed
+        unk: [u8; 8],
+    },
 }
 
 #[binrw]
@@ -409,6 +430,9 @@ impl IPCSegment {
                 IPCStructData::Unk6 { .. } => todo!(),
                 IPCStructData::Unk7 { .. } => todo!(),
                 IPCStructData::UpdatePositionHandler { .. } => todo!(),
+                IPCStructData::LogOut { .. } => todo!(),
+                IPCStructData::LogOutComplete { .. } => 8,
+                IPCStructData::Disconnected { .. } => todo!(),
             }
     }
 }
