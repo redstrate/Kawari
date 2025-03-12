@@ -62,22 +62,9 @@ async fn main() {
 
                                     send_lobby_info(&mut write, &mut state, *sequence).await;
                                 }
-                                IPCStructData::LobbyCharacterAction {
-                                    sequence,
-                                    action,
-                                    name,
-                                } => match &action {
-                                    kawari::ipc::LobbyCharacterAction::Delete => {
-                                        tracing::info!(
-                                            "Client is requesting character named {name} to be deleted. Ignoring since it's not implemented yet."
-                                        );
-                                    }
-                                    kawari::ipc::LobbyCharacterAction::Request => {
-                                        tracing::info!(
-                                            "Client is requesting character data! Ignoring since it's not implemented yet."
-                                        );
-                                    }
-                                },
+                                IPCStructData::LobbyCharacterAction { .. } => tracing::info!(
+                                    "Client is doing a character-related action in the lobby, but we don't support any yet! Ignoring..."
+                                ),
                                 IPCStructData::RequestEnterWorld {
                                     sequence,
                                     lookup_id,

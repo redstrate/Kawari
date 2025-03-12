@@ -112,7 +112,17 @@ pub struct CharacterDetails {
 #[brw(repr = u8)]
 #[derive(Clone, PartialEq, Debug)]
 pub enum LobbyCharacterAction {
+    ReserveName = 0x1,
+    Create = 0x2,
+    Rename = 0x3,
     Delete = 0x4,
+    Move = 0x5,
+    RemakeRetainer = 0x6,
+    RemakeChara = 0x7,
+    SettingsUploadBegin = 0x8,
+    SettingsUpload = 0xC,
+    WorldVisit = 0xE,
+    DataCenterToken = 0xF,
     Request = 0x15,
 }
 
@@ -159,17 +169,20 @@ pub enum IPCStructData {
     },
     #[br(pre_assert(*magic == IPCOpCode::LobbyCharacterAction))]
     LobbyCharacterAction {
-        #[brw(pad_before = 16)]
-        sequence: u64,
-        #[brw(pad_before = 1)]
+        request_number: u32,
+        unk1: u32,
+        character_id: u64,
+        #[br(pad_before = 8)]
+        character_index: u8,
         action: LobbyCharacterAction,
-        #[brw(pad_before = 2)]
+        world_id: u16,
         #[bw(pad_size_to = 32)]
         #[br(count = 32)]
         #[br(map = read_string)]
         #[bw(map = write_string)]
         name: String,
         // TODO: what else is in here?
+        // according to TemporalStatis, chara make data? (probably op specific)
     },
     #[br(pre_assert(*magic == IPCOpCode::RequestEnterWorld))]
     RequestEnterWorld {
