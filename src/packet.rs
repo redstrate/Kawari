@@ -79,7 +79,7 @@ pub enum SegmentType {
 
 #[binrw]
 #[brw(repr = u8)]
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum CompressionType {
     Uncompressed = 0,
     Oodle = 2,
@@ -153,6 +153,7 @@ pub async fn send_packet(
     socket: &mut WriteHalf<TcpStream>,
     segments: &[PacketSegment],
     state: &mut State,
+    compression_type: CompressionType,
 ) {
     let timestamp: u64 = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -161,39 +162,45 @@ pub async fn send_packet(
         .try_into()
         .unwrap();
 
-    let mut total_segment_size = 0;
+    let mut segments_buffer = Cursor::new(Vec::new());
     for segment in segments {
-        total_segment_size += segment.calc_size();
+        segment
+            .write_le_args(
+                &mut segments_buffer,
+                (state.client_key.as_ref().map(|s: &[u8; 16]| s.as_slice()),),
+            )
+            .unwrap();
     }
+
+    let segments_buffer = segments_buffer.into_inner();
+
+    let mut uncompressed_size = 0;
+    let data = match compression_type {
+        CompressionType::Uncompressed => segments_buffer,
+        CompressionType::Oodle => {
+            uncompressed_size = segments_buffer.len();
+            state.clientbound_oodle.encode(segments_buffer)
+        }
+    };
+
+    let size = std::mem::size_of::<PacketHeader>() + data.len();
 
     let header = PacketHeader {
         unk1: 0xE2465DFF41A05252, // wtf?
         unk2: 0x75C4997B4D642A7F, // wtf? x2
         timestamp,
-        size: std::mem::size_of::<PacketHeader>() as u32 + total_segment_size,
+        size: size as u32,
         connection_type: ConnectionType::Lobby,
         segment_count: segments.len() as u16,
         unk3: 0,
-        compression_type: CompressionType::Uncompressed,
+        compression_type,
         unk4: 0,
-        uncompressed_size: 0,
-    };
-
-    let packet = Packet {
-        header,
-        segments: segments.to_vec(),
+        uncompressed_size: uncompressed_size as u32,
     };
 
     let mut cursor = Cursor::new(Vec::new());
-    packet
-        .write_le_args(
-            &mut cursor,
-            (
-                &mut state.oodle,
-                state.client_key.as_ref().map(|s: &[u8; 16]| s.as_slice()),
-            ),
-        )
-        .unwrap();
+    header.write_le(&mut cursor).unwrap();
+    std::io::Write::write_all(&mut cursor, &data).unwrap();
 
     let buffer = cursor.into_inner();
 
@@ -210,7 +217,8 @@ pub async fn send_packet(
 pub struct State {
     pub client_key: Option<[u8; 16]>,
     pub session_id: Option<String>,
-    pub oodle: FFXIVOodle,
+    pub serverbound_oodle: FFXIVOodle,
+    pub clientbound_oodle: FFXIVOodle,
     pub player_id: Option<u32>,
 }
 
@@ -220,7 +228,7 @@ pub async fn parse_packet(data: &[u8], state: &mut State) -> (Vec<PacketSegment>
     match Packet::read_le_args(
         &mut cursor,
         (
-            &mut state.oodle,
+            &mut state.serverbound_oodle,
             state.client_key.as_ref().map(|s: &[u8; 16]| s.as_slice()),
         ),
     ) {
@@ -256,7 +264,13 @@ pub async fn send_keep_alive(
         target_actor: 0,
         segment_type: SegmentType::KeepAliveResponse { id, timestamp },
     };
-    send_packet(socket, &[response_packet], state).await;
+    send_packet(
+        socket,
+        &[response_packet],
+        state,
+        CompressionType::Uncompressed,
+    )
+    .await;
 }
 
 #[cfg(test)]

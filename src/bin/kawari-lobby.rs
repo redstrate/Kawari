@@ -7,7 +7,7 @@ use kawari::encryption::generate_encryption_key;
 use kawari::ipc::{CharacterDetails, IPCOpCode, IPCSegment, IPCStructData, Server, ServiceAccount};
 use kawari::oodle::FFXIVOodle;
 use kawari::packet::{
-    PacketSegment, SegmentType, State, parse_packet, send_keep_alive, send_packet,
+    CompressionType, PacketSegment, SegmentType, State, parse_packet, send_keep_alive, send_packet,
 };
 use kawari::{CONTENT_ID, WORLD_ID, WORLD_NAME, ZONE_ID};
 use tokio::io::{AsyncReadExt, WriteHalf};
@@ -28,7 +28,8 @@ async fn main() {
         let mut state = State {
             client_key: None,
             session_id: None,
-            oodle: FFXIVOodle::new(),
+            clientbound_oodle: FFXIVOodle::new(),
+            serverbound_oodle: FFXIVOodle::new(),
             player_id: None,
         };
 
@@ -114,7 +115,13 @@ async fn initialize_encryption(
         target_actor: 0,
         segment_type: SegmentType::InitializationEncryptionResponse { data },
     };
-    send_packet(socket, &[response_packet], state).await;
+    send_packet(
+        socket,
+        &[response_packet],
+        state,
+        CompressionType::Uncompressed,
+    )
+    .await;
 }
 
 async fn send_account_list(socket: &mut WriteHalf<TcpStream>, state: &mut State) {
@@ -156,7 +163,13 @@ async fn send_account_list(socket: &mut WriteHalf<TcpStream>, state: &mut State)
         target_actor: 0,
         segment_type: SegmentType::Ipc { data: ipc },
     };
-    send_packet(socket, &[response_packet], state).await;
+    send_packet(
+        socket,
+        &[response_packet],
+        state,
+        CompressionType::Uncompressed,
+    )
+    .await;
 }
 
 async fn send_lobby_info(socket: &mut WriteHalf<TcpStream>, state: &mut State, sequence: u64) {
@@ -227,7 +240,7 @@ async fn send_lobby_info(socket: &mut WriteHalf<TcpStream>, state: &mut State, s
         packets.push(response_packet);
     }
 
-    send_packet(socket, &packets, state).await;
+    send_packet(socket, &packets, state, CompressionType::Uncompressed).await;
 
     // now send them the character list
     {
@@ -367,7 +380,13 @@ async fn send_lobby_info(socket: &mut WriteHalf<TcpStream>, state: &mut State, s
                 target_actor: 0,
                 segment_type: SegmentType::Ipc { data: ipc },
             };
-            send_packet(socket, &[response_packet], state).await;
+            send_packet(
+                socket,
+                &[response_packet],
+                state,
+                CompressionType::Uncompressed,
+            )
+            .await;
         }
     }
 }
@@ -412,5 +431,11 @@ async fn send_enter_world(
         target_actor: 0,
         segment_type: SegmentType::Ipc { data: ipc },
     };
-    send_packet(socket, &[response_packet], state).await;
+    send_packet(
+        socket,
+        &[response_packet],
+        state,
+        CompressionType::Uncompressed,
+    )
+    .await;
 }

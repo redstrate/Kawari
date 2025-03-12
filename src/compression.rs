@@ -33,6 +33,14 @@ pub(crate) fn decompress(
         crate::packet::CompressionType::Oodle => oodle.decode(data, header.uncompressed_size),
     };
 
+    if header.compression_type == crate::packet::CompressionType::Oodle {
+        assert_eq!(
+            data.len(),
+            header.uncompressed_size as usize,
+            "Decompressed data does not match the expected length!"
+        );
+    }
+
     write("decompressed.bin", &data).unwrap();
 
     let mut cursor = Cursor::new(&data);

@@ -151,4 +151,21 @@ impl FFXIVOodle {
             out_buf
         }
     }
+
+    pub fn encode(&mut self, input: Vec<u8>) -> Vec<u8> {
+        unsafe {
+            let mut out_buf: Vec<u8> = vec![0u8; input.len()];
+            let mut in_buf = input.to_vec();
+            let len = OodleNetwork1TCP_Encode(
+                self.state.as_mut_ptr() as *mut c_void,
+                self.shared.as_mut_ptr() as *mut c_void,
+                in_buf.as_mut_ptr() as *const c_void,
+                in_buf.len().try_into().unwrap(),
+                out_buf.as_mut_ptr() as *mut c_void,
+            );
+
+            out_buf.truncate(len as usize);
+            out_buf
+        }
+    }
 }

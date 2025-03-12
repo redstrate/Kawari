@@ -32,7 +32,7 @@ pub enum IPCOpCode {
     /// Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load)
     InitRequest = 0x2ED,
     /// Sent by the server as response to ZoneInitRequest.
-    InitResponse = 280, // TODO: probably wrong!
+    InitResponse = 0x1EF,
     /// Sent by the server that tells the client which zone to load
     InitZone = 0x0311,
     /// Sent by the server for... something
@@ -276,7 +276,7 @@ pub enum IPCStructData {
         host: String,
     },
     #[br(pre_assert(false))]
-    InitializeChat { unk: [u8; 24] },
+    InitializeChat { unk: [u8; 8] },
     #[br(pre_assert(false))]
     InitResponse {
         unk1: u64,
@@ -521,8 +521,8 @@ impl IPCSegment {
                 IPCStructData::LobbyCharacterAction { .. } => todo!(),
                 IPCStructData::LobbyEnterWorld { .. } => 160,
                 IPCStructData::RequestEnterWorld { .. } => todo!(),
-                IPCStructData::InitializeChat { .. } => 24,
-                IPCStructData::InitRequest { .. } => todo!(),
+                IPCStructData::InitializeChat { .. } => 8,
+                IPCStructData::InitRequest { .. } => 16,
                 IPCStructData::InitResponse { .. } => 16,
                 IPCStructData::InitZone { .. } => 103,
                 IPCStructData::ActorControlSelf { .. } => 32,
@@ -571,7 +571,17 @@ mod tests {
                 unk8: 0,
                 entitled_expansion: 0,
                 characters: Vec::new(),
-            }
+            },
+            IPCStructData::ActorControlSelf {
+                category: ActorControlType::SetCharaGearParamUI,
+                param1: 0,
+                param2: 0,
+                param3: 0,
+                param4: 0,
+                param5: 0,
+                param6: 0,
+            },
+            IPCStructData::InitializeChat { unk: [0; 8] },
         ];
 
         for ipc in &ipc_types {

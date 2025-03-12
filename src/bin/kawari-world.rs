@@ -3,7 +3,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use kawari::ipc::{ActorControlType, IPCOpCode, IPCSegment, IPCStructData, Position};
 use kawari::oodle::FFXIVOodle;
 use kawari::packet::{
-    PacketSegment, SegmentType, State, parse_packet, send_keep_alive, send_packet,
+    CompressionType, PacketSegment, SegmentType, State, parse_packet, send_keep_alive, send_packet,
 };
 use kawari::{CONTENT_ID, WORLD_ID, ZONE_ID};
 use tokio::io::AsyncReadExt;
@@ -24,7 +24,8 @@ async fn main() {
         let mut state = State {
             client_key: None,
             session_id: None,
-            oodle: FFXIVOodle::new(),
+            clientbound_oodle: FFXIVOodle::new(),
+            serverbound_oodle: FFXIVOodle::new(),
             player_id: None,
         };
 
@@ -58,7 +59,13 @@ async fn main() {
                                             timestamp,
                                         },
                                     };
-                                    send_packet(&mut write, &[response_packet], &mut state).await;
+                                    send_packet(
+                                        &mut write,
+                                        &[response_packet],
+                                        &mut state,
+                                        CompressionType::Oodle,
+                                    )
+                                    .await;
                                 }
 
                                 match connection_type {
@@ -74,8 +81,13 @@ async fn main() {
                                                 player_id: *player_id,
                                             },
                                         };
-                                        send_packet(&mut write, &[response_packet], &mut state)
-                                            .await;
+                                        send_packet(
+                                            &mut write,
+                                            &[response_packet],
+                                            &mut state,
+                                            CompressionType::Oodle,
+                                        )
+                                        .await;
                                     }
                                     kawari::packet::ConnectionType::Chat => {
                                         tracing::info!(
@@ -90,8 +102,13 @@ async fn main() {
                                                     player_id: *player_id,
                                                 },
                                             };
-                                            send_packet(&mut write, &[response_packet], &mut state)
-                                                .await;
+                                            send_packet(
+                                                &mut write,
+                                                &[response_packet],
+                                                &mut state,
+                                                CompressionType::Oodle,
+                                            )
+                                            .await;
                                         }
 
                                         {
@@ -101,9 +118,7 @@ async fn main() {
                                                 op_code: IPCOpCode::InitializeChat,
                                                 server_id: 0,
                                                 timestamp: 0,
-                                                data: IPCStructData::InitializeChat {
-                                                    unk: [0; 24],
-                                                },
+                                                data: IPCStructData::InitializeChat { unk: [0; 8] },
                                             };
 
                                             let response_packet = PacketSegment {
@@ -111,8 +126,13 @@ async fn main() {
                                                 target_actor: *player_id,
                                                 segment_type: SegmentType::Ipc { data: ipc },
                                             };
-                                            send_packet(&mut write, &[response_packet], &mut state)
-                                                .await;
+                                            send_packet(
+                                                &mut write,
+                                                &[response_packet],
+                                                &mut state,
+                                                CompressionType::Oodle,
+                                            )
+                                            .await;
                                         }
                                     }
                                     _ => panic!(
@@ -156,8 +176,13 @@ async fn main() {
                                                 target_actor: state.player_id.unwrap(),
                                                 segment_type: SegmentType::Ipc { data: ipc },
                                             };
-                                            send_packet(&mut write, &[response_packet], &mut state)
-                                                .await;
+                                            send_packet(
+                                                &mut write,
+                                                &[response_packet],
+                                                &mut state,
+                                                CompressionType::Oodle,
+                                            )
+                                            .await;
                                         }
 
                                         // Control Data
@@ -184,8 +209,13 @@ async fn main() {
                                                 target_actor: state.player_id.unwrap(),
                                                 segment_type: SegmentType::Ipc { data: ipc },
                                             };
-                                            send_packet(&mut write, &[response_packet], &mut state)
-                                                .await;
+                                            send_packet(
+                                                &mut write,
+                                                &[response_packet],
+                                                &mut state,
+                                                CompressionType::Oodle,
+                                            )
+                                            .await;
                                         }
 
                                         // Stats
@@ -236,8 +266,13 @@ async fn main() {
                                                 target_actor: state.player_id.unwrap(),
                                                 segment_type: SegmentType::Ipc { data: ipc },
                                             };
-                                            send_packet(&mut write, &[response_packet], &mut state)
-                                                .await;
+                                            send_packet(
+                                                &mut write,
+                                                &[response_packet],
+                                                &mut state,
+                                                CompressionType::Oodle,
+                                            )
+                                            .await;
                                         }
 
                                         // Player Setup
@@ -376,8 +411,13 @@ async fn main() {
                                                 target_actor: state.player_id.unwrap(),
                                                 segment_type: SegmentType::Ipc { data: ipc },
                                             };
-                                            send_packet(&mut write, &[response_packet], &mut state)
-                                                .await;
+                                            send_packet(
+                                                &mut write,
+                                                &[response_packet],
+                                                &mut state,
+                                                CompressionType::Oodle,
+                                            )
+                                            .await;
                                         }
 
                                         // Player Class Info
@@ -403,8 +443,13 @@ async fn main() {
                                                 target_actor: state.player_id.unwrap(),
                                                 segment_type: SegmentType::Ipc { data: ipc },
                                             };
-                                            send_packet(&mut write, &[response_packet], &mut state)
-                                                .await;
+                                            send_packet(
+                                                &mut write,
+                                                &[response_packet],
+                                                &mut state,
+                                                CompressionType::Oodle,
+                                            )
+                                            .await;
                                         }
 
                                         // Init Zone
@@ -449,9 +494,38 @@ async fn main() {
                                                 target_actor: state.player_id.unwrap(),
                                                 segment_type: SegmentType::Ipc { data: ipc },
                                             };
-                                            send_packet(&mut write, &[response_packet], &mut state)
-                                                .await;
+                                            send_packet(
+                                                &mut write,
+                                                &[response_packet],
+                                                &mut state,
+                                                CompressionType::Oodle,
+                                            )
+                                            .await;
                                         }
+
+                                        // ?????
+                                        /*{
+                                            let ipc = IPCSegment {
+                                                unk1: 0,
+                                                unk2: 0,
+                                                op_code: IPCOpCode::InitRequest,
+                                                server_id: 0,
+                                                timestamp: timestamp_secs(),
+                                                data: IPCStructData::InitResponse {
+                                                    unk1: 0,
+                                                    character_id: state.player_id.unwrap(),
+                                                    unk2: 0,
+                                                },
+                                            };
+
+                                            let response_packet = PacketSegment {
+                                                source_actor: state.player_id.unwrap(),
+                                                target_actor: state.player_id.unwrap(),
+                                                segment_type: SegmentType::Ipc { data: ipc },
+                                            };
+                                            send_packet(&mut write, &[response_packet], &mut state, CompressionType::Oodle)
+                                                .await;
+                                        }*/
                                     }
                                     _ => panic!(
                                         "The server is recieving a IPC response or unknown packet!"
