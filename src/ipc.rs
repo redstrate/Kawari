@@ -67,8 +67,8 @@ pub struct Server {
     #[brw(pad_before = 4)]
     #[brw(pad_after = 4)]
     pub icon: u32,
-    #[bw(pad_size_to = 0x40)]
-    #[br(count = 0x40)]
+    #[bw(pad_size_to = 64)]
+    #[br(count = 64)]
     #[br(map = read_string)]
     #[bw(map = write_string)]
     pub name: String,
@@ -219,6 +219,7 @@ pub enum IPCStructData {
         #[brw(pad_after = 8)]
         num_servers: u32,
         #[br(count = 6)]
+        #[brw(pad_size_to = 504)]
         servers: Vec<Server>,
     },
     #[br(pre_assert(false))]
@@ -252,6 +253,7 @@ pub enum IPCStructData {
         #[brw(pad_after = 12)]
         entitled_expansion: u32,
         #[br(count = 2)]
+        #[brw(pad_size_to = 2368)]
         characters: Vec<CharacterDetails>,
     },
     #[br(pre_assert(false))]
@@ -528,5 +530,66 @@ impl IPCSegment {
                 IPCStructData::PlayerSetup { .. } => 2544,
                 IPCStructData::UpdateClassInfo { .. } => 48,
             }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::io::Cursor;
+
+    use binrw::BinWrite;
+
+    use super::*;
+
+    /// Ensure that the IPC data size as reported matches up with what we write
+    #[test]
+    fn test_ipc_sizes() {
+        let ipc_types = [
+            IPCStructData::LobbyServerList {
+                sequence: 0,
+                unk1: 0,
+                offset: 0,
+                num_servers: 0,
+                servers: Vec::new(),
+            },
+            IPCStructData::LobbyCharacterList {
+                sequence: 0,
+                counter: 0,
+                num_in_packet: 0,
+                unk1: 0,
+                unk2: 0,
+                unk3: 0,
+                unk4: 0,
+                unk5: [0; 7],
+                unk6: 0,
+                veteran_rank: 0,
+                unk7: 0,
+                days_subscribed: 0,
+                remaining_days: 0,
+                days_to_next_rank: 0,
+                max_characters_on_world: 0,
+                unk8: 0,
+                entitled_expansion: 0,
+                characters: Vec::new(),
+            }
+        ];
+
+        for ipc in &ipc_types {
+            let mut cursor = Cursor::new(Vec::new());
+
+            let ipc_segment = IPCSegment {
+                unk1: 0,
+                unk2: 0,
+                op_code: IPCOpCode::InitializeChat, // doesn't matter for this test
+                server_id: 0,
+                timestamp: 0,
+                data: ipc.clone(),
+            };
+            ipc_segment.write_le(&mut cursor).unwrap();
+
+            let buffer = cursor.into_inner();
+
+            assert_eq!(buffer.len(), ipc_segment.calc_size() as usize);
+        }
     }
 }
