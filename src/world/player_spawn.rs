@@ -4,8 +4,8 @@ use super::position::Position;
 use super::status_effect::StatusEffect;
 
 #[binrw]
-#[derive(Debug, Clone, Default)]
-pub struct PlayerSpawnData {
+#[derive(Debug, Clone, Copy, Default)]
+pub struct PlayerSpawn {
     pub title: u16,
     pub u1b: u16,
     pub current_world_id: u16,
