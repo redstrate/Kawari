@@ -12,6 +12,7 @@ pub mod ipc;
 pub mod oodle;
 pub mod packet;
 pub mod patchlist;
+pub mod world;
 
 // TODO: make this configurable
 // See https://ffxiv.consolegameswiki.com/wiki/Servers for a list of possible IDs

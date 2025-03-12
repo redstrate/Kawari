@@ -1,6 +1,9 @@
 use binrw::binrw;
 
-use crate::common::{read_string, write_string};
+use crate::{
+    common::{read_string, write_string},
+    world::{PlayerSpawnData, Position},
+};
 
 // NOTE: See https://github.com/karashiiro/FFXIVOpcodes/blob/master/FFXIVOpcodes/Ipcs.cs for opcodes
 
@@ -148,27 +151,10 @@ pub enum LobbyCharacterAction {
 }
 
 #[binrw]
-#[derive(Debug, Clone, Default)]
-pub struct Position {
-    pub x: f32,
-    pub y: f32,
-    pub z: f32,
-}
-
-#[binrw]
 #[derive(Debug, Eq, PartialEq, Clone)]
 #[brw(repr = u16)]
 pub enum ActorControlType {
     SetCharaGearParamUI = 0x260,
-}
-
-#[binrw]
-#[derive(Debug, Clone, Copy, Default)]
-pub struct StatusEffect {
-    effect_id: u16,
-    param: u16,
-    duration: f32,
-    source_actor_id: u32,
 }
 
 #[binrw]
@@ -569,84 +555,7 @@ pub enum IPCStructData {
         role_actions: [u32; 10],
     },
     #[br(pre_assert(false))]
-    PlayerSpawn {
-        title: u16,
-        u1b: u16,
-        current_world_id: u16,
-        home_world_id: u16,
-
-        gm_rank: u8,
-        u3c: u8,
-        u4: u8,
-        online_status: u8,
-
-        pose: u8,
-        u5a: u8,
-        u5b: u8,
-        u5c: u8,
-
-        target_id: u64,
-        u6: u32,
-        u7: u32,
-        main_weapon_model: u64,
-        sec_weapon_model: u64,
-        craft_tool_model: u64,
-
-        u14: u32,
-        u15: u32,
-        b_npc_base: u32,
-        b_npc_name: u32,
-        u18: u32,
-        u19: u32,
-        director_id: u32,
-        owner_id: u32,
-        u22: u32,
-        padding4: [u8; 16],
-        hp_max: u32,
-        hp_curr: u32,
-        display_flags: u32,
-        fate_id: u16,
-        mp_curr: u16,
-        mp_max: u16,
-        unk: u16,
-        model_chara: u16,
-        rotation: u16,
-        current_mount: u16,
-        active_minion: u16,
-        u23: u8,
-        u24: u8,
-        u25: u8,
-        u26: u8,
-        spawn_index: u8,
-        state: u8,
-        persistent_emote: u8,
-        model_type: u8,
-        subtype: u8,
-        voice: u8,
-        enemy_type: u8,
-        unk27: u8,
-        level: u8,
-        class_job: u8,
-        unk28: u8,
-        unk29: u8,
-        unk30: u8,
-        mount_head: u8,
-        mount_body: u8,
-        mount_feet: u8,
-        mount_color: u8,
-        scale: u8,
-        element_data: [u8; 6],
-        padding2: [u8; 12],
-        effect: [StatusEffect; 30],
-        pos: Position,
-        models: [u32; 10],
-        unknown6_58: [u8; 10],
-        padding3: [u8; 7],
-        name: [u8; 32],
-        look: [u8; 26],
-        fc_tag: [u8; 6],
-        padding: [u8; 26],
-    },
+    PlayerSpawn(PlayerSpawnData),
 }
 
 #[binrw]
