@@ -395,8 +395,8 @@ impl IPCSegment {
                 IPCStructData::InitResponse { .. } => 16,
                 IPCStructData::InitZone { .. } => 103,
                 IPCStructData::ActorControlSelf { .. } => 32,
-                IPCStructData::PlayerStats { .. } => 228,
-                IPCStructData::PlayerSetup { .. } => 2544,
+                IPCStructData::PlayerStats { .. } => 224,
+                IPCStructData::PlayerSetup { .. } => 2545,
                 IPCStructData::UpdateClassInfo { .. } => 48,
                 IPCStructData::FinishLoading { .. } => todo!(),
                 IPCStructData::PlayerSpawn { .. } => 656,
@@ -454,6 +454,10 @@ mod tests {
             },
             IPCStructData::ActorControlSelf(ActorControlSelf::default()),
             IPCStructData::InitializeChat { unk: [0; 8] },
+            IPCStructData::PlayerStats(PlayerStats::default()),
+            IPCStructData::PlayerSetup(PlayerSetup::default()),
+            IPCStructData::UpdateClassInfo(UpdateClassInfo::default()),
+            IPCStructData::PlayerSpawn(PlayerSpawn::default()),
         ];
 
         for ipc in &ipc_types {
@@ -471,7 +475,12 @@ mod tests {
 
             let buffer = cursor.into_inner();
 
-            assert_eq!(buffer.len(), ipc_segment.calc_size() as usize);
+            assert_eq!(
+                buffer.len(),
+                ipc_segment.calc_size() as usize,
+                "{:?} did not match size!",
+                ipc
+            );
         }
     }
 }
