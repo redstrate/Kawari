@@ -65,6 +65,7 @@ pub enum SegmentType {
     #[brw(magic = 0xAu32)]
     InitializationEncryptionResponse {
         #[br(count = 0x280)]
+        #[brw(pad_size_to = 640)]
         data: Vec<u8>,
     },
     #[brw(magic = 0x8u32)]
@@ -262,12 +263,24 @@ pub async fn send_keep_alive(
 mod tests {
     use super::*;
 
+    /// Ensure that the packet size as reported matches up with what we write
     #[test]
     fn test_packet_sizes() {
-        let packet_types = [SegmentType::InitializeEncryption {
-            phrase: String::new(),
-            key: [0; 4],
-        }];
+        let packet_types = [
+            SegmentType::InitializeEncryption {
+                phrase: String::new(),
+                key: [0; 4],
+            },
+            SegmentType::InitializationEncryptionResponse { data: Vec::new() },
+            SegmentType::KeepAlive {
+                id: 0,
+                timestamp: 0,
+            },
+            SegmentType::KeepAliveResponse {
+                id: 0,
+                timestamp: 0,
+            },
+        ];
 
         for packet in &packet_types {
             let mut cursor = Cursor::new(Vec::new());
