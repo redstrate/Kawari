@@ -42,11 +42,13 @@ pub enum SegmentType {
     #[brw(magic = 0x9u32)]
     InitializeEncryption {
         #[brw(pad_before = 36)] // empty
-        #[br(count = 64)]
+        #[brw(pad_size_to = 32)]
+        #[br(count = 32)]
         #[br(map = read_string)]
         #[bw(ignore)]
         phrase: String,
 
+        #[brw(pad_before = 32)]
         #[brw(pad_after = 512)] // empty
         key: [u8; 4],
     },
@@ -254,4 +256,32 @@ pub async fn send_keep_alive(
         segment_type: SegmentType::KeepAliveResponse { id, timestamp },
     };
     send_packet(socket, &[response_packet], state).await;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_packet_sizes() {
+        let packet_types = [SegmentType::InitializeEncryption {
+            phrase: String::new(),
+            key: [0; 4],
+        }];
+
+        for packet in &packet_types {
+            let mut cursor = Cursor::new(Vec::new());
+
+            let packet_segment = PacketSegment {
+                source_actor: 0,
+                target_actor: 0,
+                segment_type: packet.clone(),
+            };
+            packet_segment.write_le(&mut cursor).unwrap();
+
+            let buffer = cursor.into_inner();
+
+            assert_eq!(buffer.len(), packet_segment.calc_size() as usize);
+        }
+    }
 }

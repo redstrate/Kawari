@@ -38,6 +38,8 @@ async fn main() {
                 let n = read.read(&mut buf).await.expect("Failed to read data!");
 
                 if n != 0 {
+                    tracing::info!("read {} bytes", n);
+
                     let (segments, _) = parse_packet(&buf[..n], &mut state).await;
                     for segment in &segments {
                         match &segment.segment_type {
