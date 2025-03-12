@@ -280,9 +280,15 @@ pub enum IPCStructData {
     #[br(pre_assert(*magic == IPCOpCode::ChatMessage))]
     ChatMessage {
         // TODO: incomplete
-        #[br(dbg)]
-        #[brw(pad_before = 26)]
-        #[brw(pad_after = 998)]
+        #[brw(pad_before = 4)] // empty
+        player_id: u32,
+
+        #[brw(pad_before = 4)] // empty
+        timestamp: u32,
+
+        #[brw(pad_before = 8)] // NOT empty
+        channel: u16,
+
         #[br(count = 32)]
         #[bw(pad_size_to = 32)]
         #[br(map = read_string)]
@@ -447,7 +453,7 @@ impl IPCSegment {
                 IPCStructData::LogOut { .. } => todo!(),
                 IPCStructData::LogOutComplete { .. } => 8,
                 IPCStructData::Disconnected { .. } => todo!(),
-                IPCStructData::ChatMessage { .. } => todo!(),
+                IPCStructData::ChatMessage { .. } => 1056,
             }
     }
 }

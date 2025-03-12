@@ -450,7 +450,7 @@ async fn main() {
                                     IPCStructData::Disconnected { .. } => {
                                         tracing::info!("Client disconnected!");
                                     }
-                                    IPCStructData::ChatMessage { message } => {
+                                    IPCStructData::ChatMessage { message, .. } => {
                                         tracing::info!("Client sent chat message: {message}!");
                                     }
                                     _ => panic!(
