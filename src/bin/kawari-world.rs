@@ -1,7 +1,7 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use kawari::client_select_data::ClientCustomizeData;
-use kawari::ipc::{IPCOpCode, IPCSegment, IPCStructData};
+use kawari::ipc::{GameMasterCommandType, IPCOpCode, IPCSegment, IPCStructData};
 use kawari::oodle::FFXIVOodle;
 use kawari::packet::{
     CompressionType, PacketSegment, SegmentType, State, parse_packet, send_keep_alive, send_packet,
@@ -375,6 +375,7 @@ async fn main() {
                                                     model_type: 1,
                                                     spawn_index: 1,
                                                     state: 1,
+                                                    gm_rank: 3,
                                                     look: CustomizeData {
                                                         race: 3,
                                                         age: 0,
@@ -482,6 +483,44 @@ async fn main() {
                                     }
                                     IPCStructData::ChatMessage { message, .. } => {
                                         tracing::info!("Client sent chat message: {message}!");
+                                    }
+                                    IPCStructData::GameMasterCommand { command, arg, .. } => {
+                                        tracing::info!("Got a game master command!");
+
+                                        match &command {
+                                            GameMasterCommandType::ChangeTerritory => {
+                                                // Init Zone
+                                                {
+                                                    let ipc = IPCSegment {
+                                                        unk1: 0,
+                                                        unk2: 0,
+                                                        op_code: IPCOpCode::InitZone,
+                                                        server_id: 0,
+                                                        timestamp: timestamp_secs(),
+                                                        data: IPCStructData::InitZone(InitZone {
+                                                            server_id: WORLD_ID,
+                                                            zone_id: *arg as u16,
+                                                            ..Default::default()
+                                                        }),
+                                                    };
+
+                                                    let response_packet = PacketSegment {
+                                                        source_actor: state.player_id.unwrap(),
+                                                        target_actor: state.player_id.unwrap(),
+                                                        segment_type: SegmentType::Ipc {
+                                                            data: ipc,
+                                                        },
+                                                    };
+                                                    send_packet(
+                                                        &mut write,
+                                                        &[response_packet],
+                                                        &mut state,
+                                                        CompressionType::Oodle,
+                                                    )
+                                                    .await;
+                                                }
+                                            }
+                                        }
                                     }
                                     _ => panic!(
                                         "The server is recieving a IPC response or unknown packet!"

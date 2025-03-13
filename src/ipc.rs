@@ -79,6 +79,8 @@ pub enum IPCOpCode {
     Disconnected = 0x360,
     // Sent by the client when they send a chat message
     ChatMessage = 0xCA,
+    // Sent by the client when they send a GM command. This can only be sent by the client if they are sent a GM rank.
+    GameMasterCommand = 0x3B3,
 }
 
 #[binrw]
@@ -160,6 +162,13 @@ pub enum LobbyCharacterAction {
     WorldVisit = 0xE,
     DataCenterToken = 0xF,
     Request = 0x15,
+}
+
+#[binrw]
+#[brw(repr = u8)]
+#[derive(Clone, PartialEq, Debug)]
+pub enum GameMasterCommandType {
+    ChangeTerritory = 0x58,
 }
 
 #[binrw]
@@ -295,6 +304,15 @@ pub enum IPCStructData {
         #[br(map = read_string)]
         #[bw(map = write_string)]
         message: String,
+    },
+    #[br(pre_assert(*magic == IPCOpCode::GameMasterCommand))]
+    GameMasterCommand {
+        // TODO: incomplete
+        command: GameMasterCommandType,
+        #[br(pad_before = 3)] // idk, not empty though
+        arg: u32,
+        #[br(dbg)]
+        unk: [u8; 24],
     },
 
     // Server->Client IPC
@@ -455,6 +473,7 @@ impl IPCSegment {
                 IPCStructData::LogOutComplete { .. } => 8,
                 IPCStructData::Disconnected { .. } => todo!(),
                 IPCStructData::ChatMessage { .. } => 1056,
+                IPCStructData::GameMasterCommand { .. } => todo!(),
             }
     }
 }
