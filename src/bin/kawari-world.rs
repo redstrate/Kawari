@@ -1,13 +1,14 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use kawari::client_select_data::ClientCustomizeData;
 use kawari::ipc::{IPCOpCode, IPCSegment, IPCStructData};
 use kawari::oodle::FFXIVOodle;
 use kawari::packet::{
     CompressionType, PacketSegment, SegmentType, State, parse_packet, send_keep_alive, send_packet,
 };
 use kawari::world::{
-    ActorControlSelf, ActorControlType, InitZone, PlayerSetup, PlayerSpawn, PlayerStats,
-    UpdateClassInfo,
+    ActorControlSelf, ActorControlType, CustomizeData, InitZone, PlayerSetup, PlayerSpawn,
+    PlayerStats, UpdateClassInfo,
 };
 use kawari::{CONTENT_ID, WORLD_ID, ZONE_ID};
 use tokio::io::AsyncReadExt;
@@ -374,6 +375,35 @@ async fn main() {
                                                     model_type: 1,
                                                     spawn_index: 1,
                                                     state: 1,
+                                                    look: CustomizeData {
+                                                        race: 3,
+                                                        age: 0,
+                                                        gender: 1,
+                                                        height: 5,
+                                                        subrace: 0,
+                                                        face: 1,
+                                                        hair: 2,
+                                                        enable_highlights: 0,
+                                                        skin_tone: 4,
+                                                        right_eye_color: 5,
+                                                        hair_tone: 2,
+                                                        highlights: 7,
+                                                        facial_features: 1,
+                                                        facial_feature_color: 1,
+                                                        eyebrows: 2,
+                                                        left_eye_color: 1,
+                                                        eyes: 1,
+                                                        nose: 0,
+                                                        jaw: 1,
+                                                        mouth: 0,
+                                                        lips_tone_fur_pattern: 1,
+                                                        race_feature_size: 1,
+                                                        race_feature_type: 1,
+                                                        bust: 0,
+                                                        face_paint: 1,
+                                                        face_paint_color: 1,
+                                                    },
+                                                    fc_tag: "LOCAL".to_string(),
                                                     ..Default::default()
                                                 }),
                                             };

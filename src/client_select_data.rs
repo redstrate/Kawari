@@ -1,5 +1,8 @@
+use binrw::binrw;
 use serde_json::{Value, json};
 
+#[binrw]
+#[derive(Debug, Clone, Default)]
 pub struct ClientCustomizeData {
     pub race: i32,
     pub gender: i32,
