@@ -1,6 +1,7 @@
 use binrw::binrw;
 
 use crate::{
+    CHAR_NAME_MAX_LENGTH,
     common::{read_string, write_string},
     world::{
         ActorControlSelf, InitZone, PlayerSetup, PlayerSpawn, PlayerStats, Position,
@@ -120,8 +121,8 @@ pub struct CharacterDetails {
     pub origin_server_id: u16,
     pub current_server_id: u16,
     pub unk1: [u8; 16],
-    #[bw(pad_size_to = 32)]
-    #[br(count = 32)]
+    #[bw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+    #[br(count = CHAR_NAME_MAX_LENGTH)]
     #[br(map = read_string)]
     #[bw(map = write_string)]
     pub character_name: String,
@@ -196,8 +197,8 @@ pub enum IPCStructData {
         character_index: u8,
         action: LobbyCharacterAction,
         world_id: u16,
-        #[bw(pad_size_to = 32)]
-        #[br(count = 32)]
+        #[bw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+        #[br(count = CHAR_NAME_MAX_LENGTH)]
         #[br(map = read_string)]
         #[bw(map = write_string)]
         name: String,

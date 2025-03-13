@@ -1,5 +1,6 @@
 use binrw::binrw;
 
+use crate::CHAR_NAME_MAX_LENGTH;
 use crate::client_select_data::ClientCustomizeData;
 use crate::common::{read_string, write_string};
 
@@ -82,8 +83,8 @@ pub struct PlayerSpawn {
     pub models: [u32; 10],
     pub unknown6_58: [u8; 10],
     pub padding3: [u8; 4],
-    #[br(count = 32)]
-    #[bw(pad_size_to = 32)]
+    #[br(count = CHAR_NAME_MAX_LENGTH)]
+    #[bw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
     #[br(map = read_string)]
     #[bw(map = write_string)]
     pub name: String,

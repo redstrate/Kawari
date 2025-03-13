@@ -23,6 +23,9 @@ pub const ZONE_ID: u16 = 1255;
 
 pub const CONTENT_ID: u64 = 11111111111111111;
 
+/// Maxmimum length of a character's name.
+pub const CHAR_NAME_MAX_LENGTH: usize = 32;
+
 pub fn generate_sid() -> String {
     let random_id: String = rand::thread_rng()
         .sample_iter(&Alphanumeric)

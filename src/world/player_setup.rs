@@ -1,6 +1,9 @@
 use binrw::binrw;
 
-use crate::common::{read_string, write_string};
+use crate::{
+    CHAR_NAME_MAX_LENGTH,
+    common::{read_string, write_string},
+};
 
 #[binrw]
 #[derive(Debug, Clone, Default)]
@@ -80,8 +83,8 @@ pub struct PlayerSetup {
     pub mount_guide_mask: Vec<u8>,
     pub ornament_mask: [u8; 4],
     pub unknown281: [u8; 23],
-    #[br(count = 32)]
-    #[bw(pad_size_to = 32)]
+    #[br(count = CHAR_NAME_MAX_LENGTH)]
+    #[bw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
     #[br(map = read_string)]
     #[bw(map = write_string)]
     pub name: String,
