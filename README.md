@@ -21,9 +21,9 @@ A substitute for a few official servers such as “ffxiv.com” and “square-en
 * [World](https://docs.xiv.zone/server/world/)
   * Handles actual world operation, e.g. characters running around.
   
-## Supported Game Versions
+## Supported Game Version
 
-Only the Windows version of the game is supported at the moment. Only the latest version will be supported, older versions are not in the scope of this project.
+Currently supports patch **7.18h**. Only the Global client is supported. Only the Windows version is supported.
   
 ## Running
 
