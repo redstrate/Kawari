@@ -130,7 +130,7 @@ pub struct CustomizeData {
 
 #[cfg(test)]
 mod tests {
-    use std::{fs::read, io::Cursor};
+    use std::{fs::read, io::Cursor, path::PathBuf};
 
     use binrw::BinRead;
 
@@ -138,7 +138,10 @@ mod tests {
 
     #[test]
     fn read_playerspawn() {
-        let buffer = read("/home/josh/Downloads/myfile(1).dat").unwrap();
+        let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        d.push("resources/tests/player_spawn.dat");
+
+        let buffer = read(d).unwrap();
         let mut buffer = Cursor::new(&buffer);
 
         let player_spawn = PlayerSpawn::read_le(&mut buffer).unwrap();
