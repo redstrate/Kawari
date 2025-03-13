@@ -1,14 +1,14 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use kawari::client_select_data::ClientCustomizeData;
-use kawari::ipc::{GameMasterCommandType, IPCOpCode, IPCSegment, IPCStructData};
+use kawari::ipc::{ActorSetPos, GameMasterCommandType, IPCOpCode, IPCSegment, IPCStructData};
 use kawari::oodle::FFXIVOodle;
 use kawari::packet::{
     CompressionType, PacketSegment, SegmentType, State, parse_packet, send_keep_alive, send_packet,
 };
 use kawari::world::{
     ActorControlSelf, ActorControlType, CustomizeData, InitZone, PlayerSetup, PlayerSpawn,
-    PlayerStats, UpdateClassInfo,
+    PlayerStats, Position, UpdateClassInfo,
 };
 use kawari::{CONTENT_ID, WORLD_ID, ZONE_ID};
 use tokio::io::AsyncReadExt;
@@ -483,6 +483,53 @@ async fn main() {
                                     }
                                     IPCStructData::ChatMessage { message, .. } => {
                                         tracing::info!("Client sent chat message: {message}!");
+
+                                        let parts: Vec<&str> = message.split(' ').collect();
+                                        match parts[0] {
+                                            "!setpos" => {
+                                                let pos_x = parts[1].parse::<f32>().unwrap();
+                                                let pos_y = parts[2].parse::<f32>().unwrap();
+                                                let pos_z = parts[3].parse::<f32>().unwrap();
+
+                                                // set pos
+                                                {
+                                                    let ipc = IPCSegment {
+                                                        unk1: 14,
+                                                        unk2: 0,
+                                                        op_code: IPCOpCode::ActorSetPos,
+                                                        server_id: WORLD_ID,
+                                                        timestamp: timestamp_secs(),
+                                                        data: IPCStructData::ActorSetPos(
+                                                            ActorSetPos {
+                                                                unk: 0x020fa3b8,
+                                                                position: Position {
+                                                                    x: pos_x,
+                                                                    y: pos_y,
+                                                                    z: pos_z,
+                                                                },
+                                                                ..Default::default()
+                                                            },
+                                                        ),
+                                                    };
+
+                                                    let response_packet = PacketSegment {
+                                                        source_actor: state.player_id.unwrap(),
+                                                        target_actor: state.player_id.unwrap(),
+                                                        segment_type: SegmentType::Ipc {
+                                                            data: ipc,
+                                                        },
+                                                    };
+                                                    send_packet(
+                                                        &mut write,
+                                                        &[response_packet],
+                                                        &mut state,
+                                                        CompressionType::Oodle,
+                                                    )
+                                                    .await;
+                                                }
+                                            }
+                                            _ => tracing::info!("Unrecognized debug command!"),
+                                        }
                                     }
                                     IPCStructData::GameMasterCommand { command, arg, .. } => {
                                         tracing::info!("Got a game master command!");

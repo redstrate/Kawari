@@ -81,6 +81,8 @@ pub enum IPCOpCode {
     ChatMessage = 0xCA,
     // Sent by the client when they send a GM command. This can only be sent by the client if they are sent a GM rank.
     GameMasterCommand = 0x3B3,
+    // Sent by the server to modify the client's position
+    ActorSetPos = 0x223,
 }
 
 #[binrw]
@@ -110,6 +112,15 @@ pub struct Server {
     #[br(map = read_string)]
     #[bw(map = write_string)]
     pub name: String,
+}
+
+#[binrw]
+#[derive(Debug, Clone, Default)]
+pub struct ActorSetPos {
+    pub unk: u32,
+    pub layer_id: u32,
+    pub position: Position,
+    pub unk3: u32,
 }
 
 #[binrw]
@@ -417,6 +428,8 @@ pub enum IPCStructData {
         // TODO: guessed
         unk: [u8; 8],
     },
+    #[br(pre_assert(false))]
+    ActorSetPos(ActorSetPos),
 }
 
 #[binrw]
@@ -474,6 +487,7 @@ impl IPCSegment {
                 IPCStructData::Disconnected { .. } => todo!(),
                 IPCStructData::ChatMessage { .. } => 1056,
                 IPCStructData::GameMasterCommand { .. } => todo!(),
+                IPCStructData::ActorSetPos { .. } => 24,
             }
     }
 }
@@ -523,6 +537,7 @@ mod tests {
             IPCStructData::PlayerSetup(PlayerSetup::default()),
             IPCStructData::UpdateClassInfo(UpdateClassInfo::default()),
             IPCStructData::PlayerSpawn(PlayerSpawn::default()),
+            IPCStructData::ActorSetPos(ActorSetPos::default()),
         ];
 
         for ipc in &ipc_types {
