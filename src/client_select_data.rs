@@ -60,6 +60,36 @@ impl ClientCustomizeData {
             self.face_paint_color.to_string(),
         ])
     }
+
+    pub fn from_json(json: &Value) -> Self {
+        Self {
+            race: json[0].as_str().unwrap().parse::<i32>().unwrap(),
+            gender: json[1].as_str().unwrap().parse::<i32>().unwrap(),
+            height: json[2].as_str().unwrap().parse::<i32>().unwrap(),
+            subrace: json[3].as_str().unwrap().parse::<i32>().unwrap(),
+            face: json[4].as_str().unwrap().parse::<i32>().unwrap(),
+            hair: json[5].as_str().unwrap().parse::<i32>().unwrap(),
+            enable_highlights: json[6].as_str().unwrap().parse::<i32>().unwrap(),
+            skin_tone: json[7].as_str().unwrap().parse::<i32>().unwrap(),
+            right_eye_color: json[8].as_str().unwrap().parse::<i32>().unwrap(),
+            hair_tone: json[9].as_str().unwrap().parse::<i32>().unwrap(),
+            highlights: json[10].as_str().unwrap().parse::<i32>().unwrap(),
+            facial_features: json[11].as_str().unwrap().parse::<i32>().unwrap(),
+            facial_feature_color: json[12].as_str().unwrap().parse::<i32>().unwrap(),
+            eyebrows: json[13].as_str().unwrap().parse::<i32>().unwrap(),
+            left_eye_color: json[14].as_str().unwrap().parse::<i32>().unwrap(),
+            eyes: json[15].as_str().unwrap().parse::<i32>().unwrap(),
+            nose: json[16].as_str().unwrap().parse::<i32>().unwrap(),
+            jaw: json[17].as_str().unwrap().parse::<i32>().unwrap(),
+            mouth: json[18].as_str().unwrap().parse::<i32>().unwrap(),
+            lips_tone_fur_pattern: json[19].as_str().unwrap().parse::<i32>().unwrap(),
+            race_feature_size: json[20].as_str().unwrap().parse::<i32>().unwrap(),
+            race_feature_type: json[21].as_str().unwrap().parse::<i32>().unwrap(),
+            bust: json[22].as_str().unwrap().parse::<i32>().unwrap(),
+            face_paint: json[23].as_str().unwrap().parse::<i32>().unwrap(),
+            face_paint_color: json[24].as_str().unwrap().parse::<i32>().unwrap(),
+        }
+    }
 }
 /// See https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Application/Network/WorkDefinitions/ClientSelectData.cs
 pub struct ClientSelectData {

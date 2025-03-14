@@ -3,6 +3,7 @@ use rand::Rng;
 use rand::distributions::Alphanumeric;
 
 pub mod blowfish;
+pub mod chara_make;
 pub mod client_select_data;
 mod common;
 mod compression;

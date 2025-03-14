@@ -2,6 +2,7 @@ use std::cmp::min;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use kawari::blowfish::Blowfish;
+use kawari::chara_make::CharaMake;
 use kawari::client_select_data::{ClientCustomizeData, ClientSelectData};
 use kawari::encryption::generate_encryption_key;
 use kawari::ipc::{
@@ -74,6 +75,7 @@ async fn main() {
                                     action,
                                     world_id,
                                     name,
+                                    json,
                                     ..
                                 } => {
                                     match action {
@@ -83,7 +85,7 @@ async fn main() {
                                             );
 
                                             // reject
-                                            {
+                                            /*{
                                                 let ipc = IPCSegment {
                                                     unk1: 0,
                                                     unk2: 0,
@@ -109,9 +111,89 @@ async fn main() {
                                                     CompressionType::Uncompressed,
                                                 )
                                                 .await;
+                                            }*/
+
+                                            // accept
+                                            {
+                                                let ipc = IPCSegment {
+                                                    unk1: 0,
+                                                    unk2: 0,
+                                                    op_code: IPCOpCode::CharacterCreated,
+                                                    server_id: 0,
+                                                    timestamp: 0,
+                                                    data: IPCStructData::CharacterCreated {
+                                                        unk1: 0x4,
+                                                        unk2: 0x00010101,
+                                                        details: CharacterDetails {
+                                                            content_id: CONTENT_ID,
+                                                            character_name: name.clone(),
+                                                            origin_server_name: "KAWARI"
+                                                                .to_string(),
+                                                            current_server_name: "KAWARI"
+                                                                .to_string(),
+                                                            ..Default::default()
+                                                        },
+                                                    },
+                                                };
+
+                                                let response_packet = PacketSegment {
+                                                    source_actor: 0x0,
+                                                    target_actor: 0x0,
+                                                    segment_type: SegmentType::Ipc { data: ipc },
+                                                };
+                                                send_packet(
+                                                    &mut write,
+                                                    &[response_packet],
+                                                    &mut state,
+                                                    CompressionType::Uncompressed,
+                                                )
+                                                .await;
                                             }
                                         }
-                                        LobbyCharacterAction::Create => todo!(),
+                                        LobbyCharacterAction::Create => {
+                                            tracing::info!("Player is creating a new character!");
+
+                                            let chara_make = CharaMake::from_json(json);
+                                            println!("charamake: {:#?}", chara_make);
+
+                                            // a slightly different character created packet now
+                                            {
+                                                let ipc = IPCSegment {
+                                                    unk1: 0,
+                                                    unk2: 0,
+                                                    op_code: IPCOpCode::CharacterCreated,
+                                                    server_id: 0,
+                                                    timestamp: 0,
+                                                    data: IPCStructData::CharacterCreated {
+                                                        unk1: 0x5,
+                                                        unk2: 0x00020101,
+                                                        details: CharacterDetails {
+                                                            id: 0x07369f3a, // notice that we give them an id now
+                                                            content_id: CONTENT_ID,
+                                                            character_name: name.clone(),
+                                                            origin_server_name: "KAWARI"
+                                                                .to_string(),
+                                                            current_server_name: "KAWARI"
+                                                                .to_string(),
+                                                            ..Default::default()
+                                                        },
+                                                    },
+                                                };
+
+                                                let response_packet = PacketSegment {
+                                                    source_actor: 0x0,
+                                                    target_actor: 0x0,
+                                                    segment_type: SegmentType::Ipc { data: ipc },
+                                                };
+                                                send_packet(
+                                                    &mut write,
+                                                    &[response_packet],
+                                                    &mut state,
+                                                    CompressionType::Uncompressed,
+                                                )
+                                                .await;
+                                            }
+                                        }
                                         LobbyCharacterAction::Rename => todo!(),
                                         LobbyCharacterAction::Delete => todo!(),
                                         LobbyCharacterAction::Move => todo!(),

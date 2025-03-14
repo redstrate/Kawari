@@ -96,6 +96,8 @@ pub enum IPCOpCode {
     Unk10 = 0x110,
     // Unknown, server sends this in response to Unk7
     Unk11 = 0x156,
+    // Assumed what this is, but probably incorrect
+    CharacterCreated = 0xE,
 }
 
 #[binrw]
@@ -493,6 +495,16 @@ pub enum IPCStructData {
         #[brw(pad_after = 516)] // mostly empty
         unk3: u32,
     },
+    #[br(pre_assert(false))]
+    CharacterCreated {
+        #[brw(pad_after = 4)] // empty
+        unk1: u32,
+        #[brw(pad_after = 4)] // empty
+        unk2: u32,
+        #[brw(pad_before = 32)] // empty
+        #[brw(pad_after = 1136)] // empty
+        details: CharacterDetails,
+    },
 }
 
 #[binrw]
@@ -558,6 +570,7 @@ impl IPCSegment {
                 IPCStructData::Unk10 { .. } => 8,
                 IPCStructData::Unk11 { .. } => 32,
                 IPCStructData::NameRejection { .. } => 536,
+                IPCStructData::CharacterCreated { .. } => 2568,
             }
     }
 }
