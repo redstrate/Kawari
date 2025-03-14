@@ -85,6 +85,17 @@ pub enum IPCOpCode {
     ActorSetPos = 0x223,
     // Sent by the server when they send a chat message
     ServerChatMessage = 0x196,
+    // Unknown, server sends to the client before player spawn
+    Unk8 = 0x134,
+    // Unknown, but seems to contain information on cross-world linkshells
+    LinkShellInformation = 0x234,
+    // Unknown, server sends to the client before player spawn
+    Unk9 = 0x189,
+    // Unknown, server sends to the client before player spawn.
+    // Seems to the same across two different characters?
+    Unk10 = 0x110,
+    // Unknown, server sends this in response to Unk7
+    Unk11 = 0x156,
 }
 
 #[binrw]
@@ -283,7 +294,10 @@ pub enum IPCStructData {
     #[br(pre_assert(*magic == IPCOpCode::Unk7))]
     Unk7 {
         // TODO: full of possibly interesting information
-        unk: [u8; 32],
+        timestamp: u32,
+        #[brw(pad_before = 8)] // empty bytes
+        #[brw(pad_after = 4)] // empty bytes
+        unk1: [u8; 16], // something
     },
     #[br(pre_assert(*magic == IPCOpCode::UpdatePositionHandler))]
     UpdatePositionHandler {
@@ -441,6 +455,20 @@ pub enum IPCStructData {
         #[bw(map = write_string)]
         message: String,
     },
+    #[br(pre_assert(false))]
+    Unk8 { unk: [u8; 808] },
+    #[br(pre_assert(false))]
+    LinkShellInformation { unk: [u8; 456] },
+    #[br(pre_assert(false))]
+    Unk9 { unk: [u8; 24] },
+    #[br(pre_assert(false))]
+    Unk10 { unk: u64 },
+    #[br(pre_assert(false))]
+    Unk11 {
+        timestamp: u32,
+        #[brw(pad_after = 24)] // empty bytes
+        unk: u32,
+    },
 }
 
 #[binrw]
@@ -500,6 +528,11 @@ impl IPCSegment {
                 IPCStructData::GameMasterCommand { .. } => todo!(),
                 IPCStructData::ActorSetPos { .. } => 24,
                 IPCStructData::ServerChatMessage { .. } => 776,
+                IPCStructData::Unk8 { .. } => 808,
+                IPCStructData::LinkShellInformation { .. } => 456,
+                IPCStructData::Unk9 { .. } => 24,
+                IPCStructData::Unk10 { .. } => 8,
+                IPCStructData::Unk11 { .. } => 32,
             }
     }
 }

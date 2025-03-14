@@ -320,6 +320,110 @@ async fn main() {
                                             .await;
                                         }
 
+                                        // unk10
+                                        {
+                                            let ipc = IPCSegment {
+                                                unk1: 0,
+                                                unk2: 0,
+                                                op_code: IPCOpCode::Unk10,
+                                                server_id: 69, // lol
+                                                timestamp: timestamp_secs(),
+                                                data: IPCStructData::Unk10 {
+                                                    unk: 0x41a0000000000002,
+                                                },
+                                            };
+
+                                            let response_packet = PacketSegment {
+                                                source_actor: state.player_id.unwrap(),
+                                                target_actor: state.player_id.unwrap(),
+                                                segment_type: SegmentType::Ipc { data: ipc },
+                                            };
+                                            send_packet(
+                                                &mut write,
+                                                &[response_packet],
+                                                &mut state,
+                                                CompressionType::Oodle,
+                                            )
+                                            .await;
+                                        }
+
+                                        // unk9
+                                        {
+                                            let ipc = IPCSegment {
+                                                unk1: 0,
+                                                unk2: 0,
+                                                op_code: IPCOpCode::Unk9,
+                                                server_id: 69, // lol
+                                                timestamp: timestamp_secs(),
+                                                data: IPCStructData::Unk9 { unk: [0; 24] },
+                                            };
+
+                                            let response_packet = PacketSegment {
+                                                source_actor: state.player_id.unwrap(),
+                                                target_actor: state.player_id.unwrap(),
+                                                segment_type: SegmentType::Ipc { data: ipc },
+                                            };
+                                            send_packet(
+                                                &mut write,
+                                                &[response_packet],
+                                                &mut state,
+                                                CompressionType::Oodle,
+                                            )
+                                            .await;
+                                        }
+
+                                        // link shell information
+                                        {
+                                            let ipc = IPCSegment {
+                                                unk1: 0,
+                                                unk2: 0,
+                                                op_code: IPCOpCode::LinkShellInformation,
+                                                server_id: 69, // lol
+                                                timestamp: timestamp_secs(),
+                                                data: IPCStructData::LinkShellInformation {
+                                                    unk: [0; 456],
+                                                },
+                                            };
+
+                                            let response_packet = PacketSegment {
+                                                source_actor: state.player_id.unwrap(),
+                                                target_actor: state.player_id.unwrap(),
+                                                segment_type: SegmentType::Ipc { data: ipc },
+                                            };
+                                            send_packet(
+                                                &mut write,
+                                                &[response_packet],
+                                                &mut state,
+                                                CompressionType::Oodle,
+                                            )
+                                            .await;
+                                        }
+
+                                        // unk8
+                                        {
+                                            let ipc = IPCSegment {
+                                                unk1: 0,
+                                                unk2: 0,
+                                                op_code: IPCOpCode::Unk8,
+                                                server_id: 69, // lol
+                                                timestamp: timestamp_secs(),
+                                                data: IPCStructData::Unk8 { unk: [0; 808] },
+                                            };
+
+                                            let response_packet = PacketSegment {
+                                                source_actor: state.player_id.unwrap(),
+                                                target_actor: state.player_id.unwrap(),
+                                                segment_type: SegmentType::Ipc { data: ipc },
+                                            };
+                                            send_packet(
+                                                &mut write,
+                                                &[response_packet],
+                                                &mut state,
+                                                CompressionType::Oodle,
+                                            )
+                                            .await;
+                                        }
+
                                         // Init Zone
                                         {
                                             let ipc = IPCSegment {
@@ -472,8 +576,38 @@ async fn main() {
                                     IPCStructData::Unk6 { .. } => {
                                         tracing::info!("Recieved Unk6!");
                                     }
-                                    IPCStructData::Unk7 { .. } => {
-                                        tracing::info!("Recieved Unk7!");
+                                    IPCStructData::Unk7 {
+                                        timestamp, unk1, ..
+                                    } => {
+                                        tracing::info!("Recieved Unk7! {:#?}", unk1);
+
+                                        // send unk11 in response
+                                        {
+                                            let ipc = IPCSegment {
+                                                unk1: 0,
+                                                unk2: 0,
+                                                op_code: IPCOpCode::Unk11,
+                                                server_id: 0,
+                                                timestamp: timestamp_secs(),
+                                                data: IPCStructData::Unk11 {
+                                                    timestamp: *timestamp,
+                                                    unk: 333,
+                                                },
+                                            };
+
+                                            let response_packet = PacketSegment {
+                                                source_actor: state.player_id.unwrap(),
+                                                target_actor: state.player_id.unwrap(),
+                                                segment_type: SegmentType::Ipc { data: ipc },
+                                            };
+                                            send_packet(
+                                                &mut write,
+                                                &[response_packet],
+                                                &mut state,
+                                                CompressionType::Oodle,
+                                            )
+                                            .await;
+                                        }
                                     }
                                     IPCStructData::UpdatePositionHandler { .. } => {
                                         tracing::info!("Recieved UpdatePositionHandler!");
