@@ -88,44 +88,13 @@ pub struct PlayerSpawn {
     #[br(map = read_string)]
     #[bw(map = write_string)]
     pub name: String,
-    pub look: CustomizeData,
+    pub look: ClientCustomizeData,
     #[br(count = 6)]
     #[bw(pad_size_to = 6)]
     #[br(map = read_string)]
     #[bw(map = write_string)]
     pub fc_tag: String,
     pub padding: [u8; 2],
-}
-
-#[binrw]
-#[derive(Debug, Clone, Default)]
-pub struct CustomizeData {
-    pub race: u8,
-    pub gender: u8,
-    pub age: u8,
-    pub height: u8,
-    pub subrace: u8,
-    pub face: u8,
-    pub hair: u8,
-    pub enable_highlights: u8,
-    pub skin_tone: u8,
-    pub right_eye_color: u8,
-    pub hair_tone: u8,
-    pub highlights: u8,
-    pub facial_features: u8,
-    pub facial_feature_color: u8,
-    pub eyebrows: u8,
-    pub left_eye_color: u8,
-    pub eyes: u8,
-    pub nose: u8,
-    pub jaw: u8,
-    pub mouth: u8,
-    pub lips_tone_fur_pattern: u8,
-    pub race_feature_size: u8,
-    pub race_feature_type: u8,
-    pub bust: u8,
-    pub face_paint: u8,
-    pub face_paint_color: u8,
 }
 
 #[cfg(test)]

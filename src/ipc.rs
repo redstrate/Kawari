@@ -98,6 +98,8 @@ pub enum IPCOpCode {
     Unk11 = 0x156,
     // Assumed what this is, but probably incorrect
     CharacterCreated = 0xE,
+    // Unknown, client sends this for ???
+    Unk12 = 0x0E9,
 }
 
 #[binrw]
@@ -357,6 +359,10 @@ pub enum IPCStructData {
         #[br(dbg)]
         unk: [u8; 24],
     },
+    #[br(pre_assert(*magic == IPCOpCode::Unk12))]
+    Unk12 {
+        unk: [u8; 8], // TODO: unknown
+    },
 
     // Server->Client IPC
     #[br(pre_assert(false))]
@@ -571,6 +577,7 @@ impl IPCSegment {
                 IPCStructData::Unk11 { .. } => 32,
                 IPCStructData::NameRejection { .. } => 536,
                 IPCStructData::CharacterCreated { .. } => 2568,
+                IPCStructData::Unk12 { .. } => todo!(),
             }
     }
 }

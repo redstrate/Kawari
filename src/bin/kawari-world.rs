@@ -7,10 +7,10 @@ use kawari::packet::{
     CompressionType, PacketSegment, SegmentType, State, parse_packet, send_keep_alive, send_packet,
 };
 use kawari::world::{
-    ActorControlSelf, ActorControlType, CustomizeData, InitZone, PlayerSetup, PlayerSpawn,
-    PlayerStats, Position, UpdateClassInfo,
+    ActorControlSelf, ActorControlType, InitZone, PlayerSetup, PlayerSpawn, PlayerStats, Position,
+    UpdateClassInfo,
 };
-use kawari::{CONTENT_ID, WORLD_ID, ZONE_ID};
+use kawari::{CHAR_NAME, CONTENT_ID, CUSTOMIZE_DATA, WORLD_ID, ZONE_ID};
 use tokio::io::AsyncReadExt;
 use tokio::net::TcpListener;
 
@@ -268,7 +268,7 @@ async fn main() {
                                                     content_id: CONTENT_ID,
                                                     exp: [10000; 32],
                                                     levels: [100; 32],
-                                                    name: "KAWARI".to_string(),
+                                                    name: CHAR_NAME.to_string(),
                                                     ..Default::default()
                                                 }),
                                             };
@@ -499,7 +499,7 @@ async fn main() {
                                                     home_world_id: WORLD_ID,
                                                     title: 1,
                                                     class_job: 35,
-                                                    name: "Test".to_string(),
+                                                    name: CHAR_NAME.to_string(),
                                                     hp_curr: 100,
                                                     hp_max: 100,
                                                     mp_curr: 100,
@@ -508,35 +508,20 @@ async fn main() {
                                                     spawn_index: 1,
                                                     state: 1,
                                                     gm_rank: 3,
-                                                    look: CustomizeData {
-                                                        race: 3,
-                                                        age: 0,
-                                                        gender: 1,
-                                                        height: 5,
-                                                        subrace: 0,
-                                                        face: 1,
-                                                        hair: 2,
-                                                        enable_highlights: 0,
-                                                        skin_tone: 4,
-                                                        right_eye_color: 5,
-                                                        hair_tone: 2,
-                                                        highlights: 7,
-                                                        facial_features: 1,
-                                                        facial_feature_color: 1,
-                                                        eyebrows: 2,
-                                                        left_eye_color: 1,
-                                                        eyes: 1,
-                                                        nose: 0,
-                                                        jaw: 1,
-                                                        mouth: 0,
-                                                        lips_tone_fur_pattern: 1,
-                                                        race_feature_size: 1,
-                                                        race_feature_type: 1,
-                                                        bust: 0,
-                                                        face_paint: 1,
-                                                        face_paint_color: 1,
-                                                    },
+                                                    look: CUSTOMIZE_DATA,
                                                     fc_tag: "LOCAL".to_string(),
+                                                    models: [
+                                                        0,  // head
+                                                        89, // body
+                                                        89, // hands
+                                                        89, // legs
+                                                        89, // feet
+                                                        0,  // ears
+                                                        0,  // neck
+                                                        0,  // wrists
+                                                        0,  // left finger
+                                                        0,  // right finger
+                                                    ],
                                                     ..Default::default()
                                                 }),
                                             };
@@ -730,6 +715,9 @@ async fn main() {
                                                 }
                                             }
                                         }
+                                    }
+                                    IPCStructData::Unk12 { .. } => {
+                                        tracing::info!("Recieved Unk12!");
                                     }
                                     _ => panic!(
                                         "The server is recieving a IPC response or unknown packet!"

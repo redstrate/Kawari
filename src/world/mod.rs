@@ -1,5 +1,4 @@
 mod player_spawn;
-pub use player_spawn::CustomizeData;
 pub use player_spawn::PlayerSpawn;
 
 mod position;

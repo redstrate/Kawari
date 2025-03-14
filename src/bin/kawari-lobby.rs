@@ -13,7 +13,7 @@ use kawari::oodle::FFXIVOodle;
 use kawari::packet::{
     CompressionType, PacketSegment, SegmentType, State, parse_packet, send_keep_alive, send_packet,
 };
-use kawari::{CONTENT_ID, WORLD_ID, WORLD_NAME, ZONE_ID};
+use kawari::{CHAR_NAME, CONTENT_ID, CUSTOMIZE_DATA, WORLD_ID, WORLD_NAME, ZONE_ID};
 use tokio::io::{AsyncReadExt, WriteHalf};
 use tokio::net::{TcpListener, TcpStream};
 
@@ -396,33 +396,7 @@ async fn send_lobby_info(socket: &mut WriteHalf<TcpStream>, state: &mut State, s
             unk9: 0,
             zone_id: ZONE_ID as i32,
             unk11: 0,
-            customize: ClientCustomizeData {
-                race: 3,
-                gender: 1,
-                height: 0,
-                subrace: 0,
-                face: 1,
-                hair: 1,
-                enable_highlights: 1,
-                skin_tone: 1,
-                right_eye_color: 1,
-                hair_tone: 1,
-                highlights: 1,
-                facial_features: 1,
-                facial_feature_color: 1,
-                eyebrows: 1,
-                left_eye_color: 1,
-                eyes: 1,
-                nose: 1,
-                jaw: 1,
-                mouth: 1,
-                lips_tone_fur_pattern: 1,
-                race_feature_size: 1,
-                race_feature_type: 1,
-                bust: 0,
-                face_paint: 1,
-                face_paint_color: 0,
-            },
+            customize: CUSTOMIZE_DATA,
             unk12: 0,
             unk13: 0,
             unk14: [0; 10],
@@ -432,7 +406,7 @@ async fn send_lobby_info(socket: &mut WriteHalf<TcpStream>, state: &mut State, s
             unk18: 0,
             unk19: 0,
             unk20: 0,
-            unk21: "hello".to_string(),
+            unk21: String::new(),
             unk22: 0,
             unk23: 0,
         };
@@ -444,7 +418,7 @@ async fn send_lobby_info(socket: &mut WriteHalf<TcpStream>, state: &mut State, s
             unk1: [0; 16],
             origin_server_id: WORLD_ID,
             current_server_id: WORLD_ID,
-            character_name: "test".to_string(),
+            character_name: CHAR_NAME.to_string(),
             origin_server_name: WORLD_NAME.to_string(),
             current_server_name: WORLD_NAME.to_string(),
             character_detail_json: select_data.to_json(),
