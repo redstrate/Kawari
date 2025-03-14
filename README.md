@@ -1,71 +1,32 @@
 # Kawari
 
-A substitute for a few official servers such as “ffxiv.com” and “square-enix.com”. It’s still early in development, but it can already emulate the basic login flow.
+A replacement server for a certain MMO. Updates on the project can be found [on my blog](https://redstrate.com/blog/series/kawari-progress-report/).
 
-**Notice:** This does not allow you to download copyrighted game files, or circumvent the copyright protections enacted by Square Enix.
+## Goals
 
-## Components
+Kawari is primarily a research project, but also a way to preserve the modern client. Kawari is...
+* **FOR** preservation of the game, in the event that the servers are permanently unavailable.
+* **FOR** exploring the packet structure for legitimate purposes (e.g. archival and preservation.)
+* **NOT** a way to play the game without a valid subscription.
+* **NOT** for creating bots, packet modifications or doing anything on the retail servers.
 
-* Web
-  * A simple website used for account management and other misc features.
-* Admin
-  * The admin panel for configuring the multitude of servers.
-* [Frontier](https://docs.xiv.zone/server/frontier/)
-  * Handles gate status requests.
-* [Login](https://docs.xiv.zone/server/login/)
-  * Handles logging in and giving a SID.
-* [Patch](https://docs.xiv.zone/server/patch/)
-  * Handles checking if the client needs any patching.
-* [Lobby](https://docs.xiv.zone/server/lobby/)
-  * Handles logging the client into the world server, displaying the character list and so on.
-* [World](https://docs.xiv.zone/server/world/)
-  * Handles actual world operation, e.g. characters running around.
-  
 ## Supported Game Version
 
-Currently supports patch **7.18h**. Only the Global client is supported. Only the Windows version is supported.
-  
+Kawari currently supports patch **7.18h**. Kawari will never "roll back" to a previous patch. There are other servers (e.g. Sapphire) that support older versions of the game.
+
+Only the Global region is supported. Only the Windows client is supported. Supporting other regions or clients are currently out of scope of this project.
+
 ## Running
 
-Install [Rust](https://rust-lang.org) and then use the `run.sh` helper script in the repository. You can of course run each server individually.
+A guide to running Kawari can be followed [here](USAGE.md).
 
-In order to run the World server, you need a copy of Oodle networking. Fortunately it is easy to do, assuming you have an Epic Games account and a GitHub account. Use something like [get-oodle-lib](https://github.com/sehnryr/get-oodle-lib) or another tool to fetch "liboo2net" for your platform.
+## Credits & Thank You
 
-### Testing via launcher
-
-Testing on a real launcher is not yet supported, the easiest way is through [Astra](https://github.com/redstrate/Astra) which allows you to plug in your own domains. Because of how the domains are set up, you can't simply plug them in though.
-
-You will need some kind of reverse proxy because simply editing the `hosts` file will not work. Each server is behind a subdomain (like `frontier.square-enix.com`) and some services span multiple subdomains (such as `patch-bootver.square-enix.com` and `patch-gamever.square-enix.com`.) We will walk through using [Caddy](https://caddyserver.com/) for this purpose, but any reverse proxy will do.
-
-First you need to edit your `hosts` file. Assuming you're using the default ports for each server, add the following:
-
-```
-127.0.0.1 ffxiv.local
-127.0.0.1 admin.ffxiv.local
-127.0.0.1 frontier.ffxiv.local
-127.0.0.1 patch-bootver.ffxiv.local
-127.0.0.1 patch-gamever.ffxiv.local
-127.0.0.1 ffxiv-login.square.local
-```
-
-Then run Caddy from the repository's `Caddyfile`. You may need to run it as root because it binds to port 80:
-
-```
-sudo caddy run
-```
-
-And then in Astra, plug these domains like so into Developer Settings:
-
-* `square.local` into the "SE Login Server"
-* `ffxiv.local` into "SE Main Server"
-
-Make sure to set the "preferred protocol" to "HTTP" as well because HTTPS will not work without more setup.
-
-## Creidts & Thank You
-
-* [Sapphire](https://github.com/SapphireServer/Sapphire) for reference.
-* [iolite](https://github.com/0xbbadbeef/iolite) for reference.
+- [Sapphire](https://github.com/SapphireServer/Sapphire) for reference.
+- [iolite](https://github.com/0xbbadbeef/iolite) for inspiration & reference.
+- [TemporalStasis](https://github.com/NotNite/TemporalStasis) for tooling and reference.
+- [Project Chronofoil](https://github.com/ProjectChronofoil/) for easy packet capture.
 
 ## License
 
-This project is licensed under the [GNU Affero General Public License 3](LICENSE). Some code or assets may be licensed differently.
+This project is licensed under the [GNU Affero General Public License 3](https://github.com/redstrate/Kawari/blob/master/LICENSE). Some code or assets may be licensed differently.
