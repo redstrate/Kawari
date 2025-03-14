@@ -354,6 +354,34 @@ async fn main() {
                                             "Client has finished loading... spawning in!"
                                         );
 
+                                        // send welcome message
+                                        {
+                                            let ipc = IPCSegment {
+                                                unk1: 0,
+                                                unk2: 0,
+                                                op_code: IPCOpCode::ServerChatMessage,
+                                                server_id: 0,
+                                                timestamp: timestamp_secs(),
+                                                data: IPCStructData::ServerChatMessage {
+                                                    message: "Welcome to Kawari!".to_string(),
+                                                    unk: 0,
+                                                },
+                                            };
+
+                                            let response_packet = PacketSegment {
+                                                source_actor: state.player_id.unwrap(),
+                                                target_actor: state.player_id.unwrap(),
+                                                segment_type: SegmentType::Ipc { data: ipc },
+                                            };
+                                            send_packet(
+                                                &mut write,
+                                                &[response_packet],
+                                                &mut state,
+                                                CompressionType::Oodle,
+                                            )
+                                            .await;
+                                        }
+
                                         // send player spawn
                                         {
                                             let ipc = IPCSegment {

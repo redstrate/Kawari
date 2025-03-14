@@ -83,6 +83,8 @@ pub enum IPCOpCode {
     GameMasterCommand = 0x3B3,
     // Sent by the server to modify the client's position
     ActorSetPos = 0x223,
+    // Sent by the server when they send a chat message
+    ServerChatMessage = 0x196,
 }
 
 #[binrw]
@@ -430,6 +432,15 @@ pub enum IPCStructData {
     },
     #[br(pre_assert(false))]
     ActorSetPos(ActorSetPos),
+    #[br(pre_assert(false))]
+    ServerChatMessage {
+        unk: u8, // channel?
+        #[brw(pad_after = 775)]
+        #[br(count = 775)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        message: String,
+    },
 }
 
 #[binrw]
@@ -488,6 +499,7 @@ impl IPCSegment {
                 IPCStructData::ChatMessage { .. } => 1056,
                 IPCStructData::GameMasterCommand { .. } => todo!(),
                 IPCStructData::ActorSetPos { .. } => 24,
+                IPCStructData::ServerChatMessage { .. } => 776,
             }
     }
 }
