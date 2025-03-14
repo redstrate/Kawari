@@ -171,21 +171,32 @@ pub struct CharacterDetails {
 }
 
 #[binrw]
-#[brw(repr = u8)]
 #[derive(Clone, PartialEq, Debug)]
 pub enum LobbyCharacterAction {
-    ReserveName = 0x1,
-    Create = 0x2,
-    Rename = 0x3,
-    Delete = 0x4,
-    Move = 0x5,
-    RemakeRetainer = 0x6,
-    RemakeChara = 0x7,
-    SettingsUploadBegin = 0x8,
-    SettingsUpload = 0xC,
-    WorldVisit = 0xE,
-    DataCenterToken = 0xF,
-    Request = 0x15,
+    #[brw(magic = 0x1u8)]
+    ReserveName,
+    #[brw(magic = 0x2u8)]
+    Create,
+    #[brw(magic = 0x3u8)]
+    Rename,
+    #[brw(magic = 0x4u8)]
+    Delete,
+    #[brw(magic = 0x5u8)]
+    Move,
+    #[brw(magic = 0x6u8)]
+    RemakeRetainer,
+    #[brw(magic = 0x7u8)]
+    RemakeChara,
+    #[brw(magic = 0x8u8)]
+    SettingsUploadBegin,
+    #[brw(magic = 0xCu8)]
+    SettingsUpload,
+    #[brw(magic = 0xEu8)]
+    WorldVisit,
+    #[brw(magic = 0xFu8)]
+    DataCenterToken,
+    #[brw(magic = 0x15u8)]
+    Request,
 }
 
 #[binrw]
@@ -235,8 +246,11 @@ pub enum IPCStructData {
         #[br(map = read_string)]
         #[bw(map = write_string)]
         name: String,
-        // TODO: what else is in here?
-        // according to TemporalStatis, chara make data? (probably op specific)
+        #[bw(pad_size_to = 436)]
+        #[br(count = 436)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        json: String,
     },
     #[br(pre_assert(*magic == IPCOpCode::RequestEnterWorld))]
     RequestEnterWorld {
@@ -469,6 +483,16 @@ pub enum IPCStructData {
         #[brw(pad_after = 24)] // empty bytes
         unk: u32,
     },
+    #[br(pre_assert(false))]
+    NameRejection {
+        // FIXME: This is opcode 0x2, which is InitializeChat. We need to separate the lobby/zone IPC codes.
+        unk1: u8,
+        #[brw(pad_before = 7)] // empty
+        unk2: u16,
+        #[brw(pad_before = 6)] // empty
+        #[brw(pad_after = 516)] // mostly empty
+        unk3: u32,
+    },
 }
 
 #[binrw]
@@ -533,6 +557,7 @@ impl IPCSegment {
                 IPCStructData::Unk9 { .. } => 24,
                 IPCStructData::Unk10 { .. } => 8,
                 IPCStructData::Unk11 { .. } => 32,
+                IPCStructData::NameRejection { .. } => 536,
             }
     }
 }

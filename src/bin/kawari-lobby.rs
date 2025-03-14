@@ -4,7 +4,10 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use kawari::blowfish::Blowfish;
 use kawari::client_select_data::{ClientCustomizeData, ClientSelectData};
 use kawari::encryption::generate_encryption_key;
-use kawari::ipc::{CharacterDetails, IPCOpCode, IPCSegment, IPCStructData, Server, ServiceAccount};
+use kawari::ipc::{
+    CharacterDetails, IPCOpCode, IPCSegment, IPCStructData, LobbyCharacterAction, Server,
+    ServiceAccount,
+};
 use kawari::oodle::FFXIVOodle;
 use kawari::packet::{
     CompressionType, PacketSegment, SegmentType, State, parse_packet, send_keep_alive, send_packet,
@@ -65,9 +68,62 @@ async fn main() {
 
                                     send_lobby_info(&mut write, &mut state, *sequence).await;
                                 }
-                                IPCStructData::LobbyCharacterAction { .. } => tracing::info!(
-                                    "Client is doing a character-related action in the lobby, but we don't support any yet! Ignoring..."
-                                ),
+                                IPCStructData::LobbyCharacterAction {
+                                    character_id,
+                                    character_index,
+                                    action,
+                                    world_id,
+                                    name,
+                                    ..
+                                } => {
+                                    match action {
+                                        LobbyCharacterAction::ReserveName => {
+                                            tracing::info!(
+                                                "Player is requesting {name} as a new character name!"
+                                            );
+
+                                            // reject
+                                            {
+                                                let ipc = IPCSegment {
+                                                    unk1: 0,
+                                                    unk2: 0,
+                                                    op_code: IPCOpCode::InitializeChat, // wrong but technically right
+                                                    server_id: 0,
+                                                    timestamp: 0,
+                                                    data: IPCStructData::NameRejection {
+                                                        unk1: 0x03,
+                                                        unk2: 0x0bdb,
+                                                        unk3: 0x000132cc,
+                                                    },
+                                                };
+
+                                                let response_packet = PacketSegment {
+                                                    source_actor: 0x0,
+                                                    target_actor: 0x0,
+                                                    segment_type: SegmentType::Ipc { data: ipc },
+                                                };
+                                                send_packet(
+                                                    &mut write,
+                                                    &[response_packet],
+                                                    &mut state,
+                                                    CompressionType::Uncompressed,
+                                                )
+                                                .await;
+                                            }
+                                        }
+                                        LobbyCharacterAction::Create => todo!(),
+                                        LobbyCharacterAction::Rename => todo!(),
+                                        LobbyCharacterAction::Delete => todo!(),
+                                        LobbyCharacterAction::Move => todo!(),
+                                        LobbyCharacterAction::RemakeRetainer => todo!(),
+                                        LobbyCharacterAction::RemakeChara => todo!(),
+                                        LobbyCharacterAction::SettingsUploadBegin => todo!(),
+                                        LobbyCharacterAction::SettingsUpload => todo!(),
+                                        LobbyCharacterAction::WorldVisit => todo!(),
+                                        LobbyCharacterAction::DataCenterToken => todo!(),
+                                        LobbyCharacterAction::Request => todo!(),
+                                    }
+                                }
                                 IPCStructData::RequestEnterWorld {
                                     sequence,
                                     lookup_id,
