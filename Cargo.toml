@@ -47,3 +47,4 @@ rand = "0.8"
 minijinja = "2.0"
 binrw = { version = "0.14", features = ["std"], default-features = false }
 md5 = "0.7.0"
+physis = { git = "https://github.com/redstrate/physis" }

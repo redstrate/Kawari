@@ -1,5 +1,9 @@
+use std::io::Cursor;
+use std::path::PathBuf;
+use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use binrw::BinRead;
 use kawari::client_select_data::ClientCustomizeData;
 use kawari::ipc::{ActorSetPos, GameMasterCommandType, IPCOpCode, IPCSegment, IPCStructData};
 use kawari::oodle::FFXIVOodle;
@@ -8,7 +12,7 @@ use kawari::packet::{
 };
 use kawari::world::{
     ActorControlSelf, ActorControlType, InitZone, PlayerSetup, PlayerSpawn, PlayerStats, Position,
-    UpdateClassInfo,
+    UpdateClassInfo, Zone,
 };
 use kawari::{CHAR_NAME, CONTENT_ID, CUSTOMIZE_DATA, WORLD_ID, ZONE_ID};
 use tokio::io::AsyncReadExt;
@@ -33,6 +37,10 @@ async fn main() {
             serverbound_oodle: FFXIVOodle::new(),
             player_id: None,
         };
+
+        let zone = Zone::load(010);
+
+        let mut exit_position = None;
 
         tokio::spawn(async move {
             let mut buf = [0; 2056];
@@ -523,6 +531,8 @@ async fn main() {
                                                         0,  // left finger
                                                         0,  // right finger
                                                     ],
+                                                    pos: exit_position
+                                                        .unwrap_or(Position::default()),
                                                     ..Default::default()
                                                 }),
                                             };
@@ -540,6 +550,36 @@ async fn main() {
                                             )
                                             .await;
                                         }
+
+                                        // fade in?
+                                        {
+                                            let ipc = IPCSegment {
+                                                unk1: 0,
+                                                unk2: 0,
+                                                op_code: IPCOpCode::PrepareZoning,
+                                                server_id: 0,
+                                                timestamp: timestamp_secs(),
+                                                data: IPCStructData::PrepareZoning {
+                                                    unk: [0, 0, 0, 0],
+                                                },
+                                            };
+
+                                            let response_packet = PacketSegment {
+                                                source_actor: state.player_id.unwrap(),
+                                                target_actor: state.player_id.unwrap(),
+                                                segment_type: SegmentType::Ipc { data: ipc },
+                                            };
+                                            send_packet(
+                                                &mut write,
+                                                &[response_packet],
+                                                &mut state,
+                                                CompressionType::Oodle,
+                                            )
+                                            .await;
+                                        }
+
+                                        // wipe any exit position so it isn't accidentally reused
+                                        exit_position = None;
                                     }
                                     IPCStructData::Unk1 { .. } => {
                                         tracing::info!("Recieved Unk1!");
@@ -719,6 +759,162 @@ async fn main() {
                                     }
                                     IPCStructData::Unk12 { .. } => {
                                         tracing::info!("Recieved Unk12!");
+                                    }
+                                    IPCStructData::EnterZoneLine {
+                                        exit_box_id,
+                                        position,
+                                        ..
+                                    } => {
+                                        tracing::info!(
+                                            "Character entered {exit_box_id} with a position of {position:#?}!"
+                                        );
+
+                                        // find the exit box id
+                                        let (_, exit_box) =
+                                            zone.find_exit_box(*exit_box_id).unwrap();
+                                        tracing::info!("exit box: {:#?}", exit_box);
+
+                                        // find the pop range on the other side
+                                        let new_zone = Zone::load(exit_box.territory_type);
+                                        let (destination_object, _) = new_zone
+                                            .find_pop_range(exit_box.destination_instance_id)
+                                            .unwrap();
+
+                                        // set the exit position
+                                        exit_position = Some(Position {
+                                            x: destination_object.transform.translation[0],
+                                            y: destination_object.transform.translation[1],
+                                            z: destination_object.transform.translation[2],
+                                        });
+
+                                        // fade out?
+                                        {
+                                            let ipc = IPCSegment {
+                                                unk1: 0,
+                                                unk2: 0,
+                                                op_code: IPCOpCode::PrepareZoning,
+                                                server_id: 0,
+                                                timestamp: timestamp_secs(),
+                                                data: IPCStructData::PrepareZoning {
+                                                    unk: [0x01000000, 0, 0, 0],
+                                                },
+                                            };
+
+                                            let response_packet = PacketSegment {
+                                                source_actor: state.player_id.unwrap(),
+                                                target_actor: state.player_id.unwrap(),
+                                                segment_type: SegmentType::Ipc { data: ipc },
+                                            };
+                                            send_packet(
+                                                &mut write,
+                                                &[response_packet],
+                                                &mut state,
+                                                CompressionType::Oodle,
+                                            )
+                                            .await;
+                                        }
+
+                                        // fade out? x2
+                                        {
+                                            let ipc = IPCSegment {
+                                                unk1: 0,
+                                                unk2: 0,
+                                                op_code: IPCOpCode::PrepareZoning,
+                                                server_id: 0,
+                                                timestamp: timestamp_secs(),
+                                                data: IPCStructData::PrepareZoning {
+                                                    unk: [0, 0x00000085, 0x00030000, 0x000008ff], // last thing is probably a float?
+                                                },
+                                            };
+
+                                            let response_packet = PacketSegment {
+                                                source_actor: state.player_id.unwrap(),
+                                                target_actor: state.player_id.unwrap(),
+                                                segment_type: SegmentType::Ipc { data: ipc },
+                                            };
+                                            send_packet(
+                                                &mut write,
+                                                &[response_packet],
+                                                &mut state,
+                                                CompressionType::Oodle,
+                                            )
+                                            .await;
+                                        }
+
+                                        tracing::info!(
+                                            "sending them to {:#?}",
+                                            exit_box.territory_type
+                                        );
+
+                                        let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+                                        d.push("resources/tests/init_zone.bin");
+
+                                        let buffer = std::fs::read(d).unwrap();
+                                        let mut buffer = Cursor::new(&buffer);
+
+                                        let init_zone = InitZone::read_le(&mut buffer).unwrap();
+
+                                        // Init Zone
+                                        {
+                                            let ipc = IPCSegment {
+                                                unk1: 0,
+                                                unk2: 0,
+                                                op_code: IPCOpCode::InitZone,
+                                                server_id: 0,
+                                                timestamp: timestamp_secs(),
+                                                data: IPCStructData::InitZone(InitZone {
+                                                    server_id: WORLD_ID,
+                                                    zone_id: exit_box.territory_type,
+                                                    ..Default::default()
+                                                }),
+                                            };
+
+                                            let response_packet = PacketSegment {
+                                                source_actor: state.player_id.unwrap(),
+                                                target_actor: state.player_id.unwrap(),
+                                                segment_type: SegmentType::Ipc { data: ipc },
+                                            };
+                                            send_packet(
+                                                &mut write,
+                                                &[response_packet],
+                                                &mut state,
+                                                CompressionType::Oodle,
+                                            )
+                                            .await;
+                                        }
+
+                                        // idk
+                                        {
+                                            let ipc = IPCSegment {
+                                                unk1: 0,
+                                                unk2: 0,
+                                                op_code: IPCOpCode::PrepareZoning,
+                                                server_id: 0,
+                                                timestamp: timestamp_secs(),
+                                                data: IPCStructData::PrepareZoning {
+                                                    unk: [0x01100000, 0, 0, 0],
+                                                },
+                                            };
+
+                                            let response_packet = PacketSegment {
+                                                source_actor: state.player_id.unwrap(),
+                                                target_actor: state.player_id.unwrap(),
+                                                segment_type: SegmentType::Ipc { data: ipc },
+                                            };
+                                            send_packet(
+                                                &mut write,
+                                                &[response_packet],
+                                                &mut state,
+                                                CompressionType::Oodle,
+                                            )
+                                            .await;
+                                        }
+                                    }
+                                    IPCStructData::Unk13 { .. } => {
+                                        tracing::info!("Recieved Unk13!");
+                                    }
+                                    IPCStructData::Unk14 { .. } => {
+                                        tracing::info!("Recieved Unk14!");
                                     }
                                     _ => panic!(
                                         "The server is recieving a IPC response or unknown packet!"

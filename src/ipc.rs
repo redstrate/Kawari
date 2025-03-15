@@ -100,6 +100,15 @@ pub enum IPCOpCode {
     CharacterCreated = 0xE,
     // Unknown, client sends this for ???
     Unk12 = 0x0E9,
+    // Sent by the client when the character walks into a zone transistion
+    EnterZoneLine = 0x205,
+    // Sent by the client after we sent a InitZone in TravelToZone??
+    // TODO: Actually, I don't think is real...
+    Unk13 = 0x2EE,
+    // Sent by the server when it wants the client to... prepare to zone?
+    PrepareZoning = 0x308,
+    // Sent by the client for unknown reasons
+    Unk14 = 0x87,
 }
 
 #[binrw]
@@ -363,6 +372,23 @@ pub enum IPCStructData {
     Unk12 {
         unk: [u8; 8], // TODO: unknown
     },
+    #[br(pre_assert(*magic == IPCOpCode::EnterZoneLine))]
+    EnterZoneLine {
+        exit_box_id: u32,
+        position: Position,
+        #[brw(pad_after = 4)] // empty
+        landset_index: i32,
+    },
+    #[br(pre_assert(*magic == IPCOpCode::Unk13))]
+    Unk13 {
+        #[br(dbg)]
+        unk: [u8; 16], // TODO: unknown
+    },
+    #[br(pre_assert(*magic == IPCOpCode::Unk14))]
+    Unk14 {
+        #[br(dbg)]
+        unk: [u8; 8], // TODO: unknown
+    },
 
     // Server->Client IPC
     #[br(pre_assert(false))]
@@ -511,6 +537,8 @@ pub enum IPCStructData {
         #[brw(pad_after = 1136)] // empty
         details: CharacterDetails,
     },
+    #[br(pre_assert(false))]
+    PrepareZoning { unk: [u32; 4] },
 }
 
 #[binrw]
@@ -578,6 +606,10 @@ impl IPCSegment {
                 IPCStructData::NameRejection { .. } => 536,
                 IPCStructData::CharacterCreated { .. } => 2568,
                 IPCStructData::Unk12 { .. } => todo!(),
+                IPCStructData::EnterZoneLine { .. } => todo!(),
+                IPCStructData::Unk13 { .. } => todo!(),
+                IPCStructData::PrepareZoning { .. } => 16,
+                IPCStructData::Unk14 { .. } => todo!(),
             }
     }
 }

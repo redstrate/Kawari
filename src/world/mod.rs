@@ -22,3 +22,6 @@ pub use actor_control_self::ActorControlType;
 
 mod init_zone;
 pub use init_zone::InitZone;
+
+mod zone;
+pub use zone::Zone;

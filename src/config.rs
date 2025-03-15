@@ -13,6 +13,9 @@ pub struct Config {
 
     #[serde(default)]
     pub boot_patches_location: String,
+
+    #[serde(default)]
+    pub game_location: String,
 }
 
 impl Default for Config {
@@ -22,6 +25,7 @@ impl Default for Config {
             login_open: false,
             boot_patches_location: String::new(),
             supported_platforms: default_supported_platforms(),
+            game_location: String::new(),
         }
     }
 }
