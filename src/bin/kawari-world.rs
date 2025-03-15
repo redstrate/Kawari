@@ -435,6 +435,7 @@ async fn main() {
                                                 data: IPCStructData::InitZone(InitZone {
                                                     server_id: WORLD_ID,
                                                     zone_id: ZONE_ID,
+                                                    weather_id: 1,
                                                     ..Default::default()
                                                 }),
                                             };
