@@ -252,11 +252,6 @@ async fn main() {
                                         }
 
                                         connection.change_zone(ZONE_ID).await;
-                                    }
-                                    IPCStructData::FinishLoading { .. } => {
-                                        tracing::info!(
-                                            "Client has finished loading... spawning in!"
-                                        );
 
                                         // send welcome message
                                         {
@@ -278,6 +273,11 @@ async fn main() {
                                                 })
                                                 .await;
                                         }
+                                    }
+                                    IPCStructData::FinishLoading { .. } => {
+                                        tracing::info!(
+                                            "Client has finished loading... spawning in!"
+                                        );
 
                                         // send player spawn
                                         {
