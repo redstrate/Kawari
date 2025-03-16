@@ -1,4 +1,3 @@
-use kawari::CONTENT_ID;
 use kawari::lobby::chara_make::CharaMake;
 use kawari::lobby::connection::LobbyConnection;
 use kawari::lobby::ipc::{
@@ -7,6 +6,7 @@ use kawari::lobby::ipc::{
 };
 use kawari::oodle::FFXIVOodle;
 use kawari::packet::{PacketSegment, PacketState, SegmentType, send_keep_alive};
+use kawari::{CONTENT_ID, WORLD_NAME};
 use tokio::io::AsyncReadExt;
 use tokio::net::TcpListener;
 
@@ -123,9 +123,9 @@ async fn main() {
                                                             character_name: character_action
                                                                 .name
                                                                 .clone(),
-                                                            origin_server_name: "KAWARI"
+                                                            origin_server_name: WORLD_NAME
                                                                 .to_string(),
-                                                            current_server_name: "KAWARI"
+                                                            current_server_name: WORLD_NAME
                                                                 .to_string(),
                                                             ..Default::default()
                                                         },
@@ -167,9 +167,9 @@ async fn main() {
                                                             character_name: character_action
                                                                 .name
                                                                 .clone(),
-                                                            origin_server_name: "KAWARI"
+                                                            origin_server_name: WORLD_NAME
                                                                 .to_string(),
-                                                            current_server_name: "KAWARI"
+                                                            current_server_name: WORLD_NAME
                                                                 .to_string(),
                                                             ..Default::default()
                                                         },
