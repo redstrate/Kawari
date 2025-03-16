@@ -1,10 +1,6 @@
-use std::io::Cursor;
-
-use binrw::BinRead;
 use tokio::net::TcpStream;
 
 use crate::{
-    WORLD_ID,
     common::timestamp_secs,
     ipc::{ActorSetPos, IPCOpCode, IPCSegment, IPCStructData},
     packet::{
@@ -139,6 +135,6 @@ impl ZoneConnection {
 
     pub fn get_free_spawn_index(&mut self) -> u8 {
         self.spawn_index += 1;
-        return self.spawn_index;
+        self.spawn_index
     }
 }

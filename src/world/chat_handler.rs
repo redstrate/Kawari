@@ -1,7 +1,3 @@
-use std::io::Cursor;
-
-use binrw::BinRead;
-
 use crate::{
     CHAR_NAME, CUSTOMIZE_DATA, WORLD_ID,
     ipc::{IPCOpCode, IPCSegment, IPCStructData},

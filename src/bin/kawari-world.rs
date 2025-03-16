@@ -1,5 +1,3 @@
-use std::io::Cursor;
-use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use binrw::BinRead;
@@ -7,8 +5,8 @@ use kawari::ipc::{GameMasterCommandType, IPCOpCode, IPCSegment, IPCStructData};
 use kawari::oodle::FFXIVOodle;
 use kawari::packet::{PacketSegment, SegmentType, State, send_keep_alive};
 use kawari::world::{
-    ActorControlSelf, ActorControlType, ChatHandler, InitZone, PlayerEntry, PlayerSetup,
-    PlayerSpawn, PlayerStats, Position, SocialList, UpdateClassInfo, Zone, ZoneConnection,
+    ActorControlSelf, ActorControlType, ChatHandler, PlayerEntry, PlayerSetup, PlayerSpawn,
+    PlayerStats, Position, SocialList, Zone, ZoneConnection,
 };
 use kawari::{CHAR_NAME, CONTENT_ID, CUSTOMIZE_DATA, WORLD_ID, ZONE_ID, timestamp_secs};
 use tokio::io::AsyncReadExt;
