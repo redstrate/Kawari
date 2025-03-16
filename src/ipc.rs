@@ -302,7 +302,7 @@ pub enum IPCStructData {
     #[br(pre_assert(*magic == IPCOpCode::Unk2))]
     Unk2 {
         // TODO: full of possibly interesting information
-        unk: [u8; 16],
+        unk: [u8; 8],
     },
     #[br(pre_assert(*magic == IPCOpCode::Unk3))]
     Unk3 {

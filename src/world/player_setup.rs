@@ -160,5 +160,40 @@ pub struct PlayerSetup {
     pub cleared_guildhests: [u8; 10],
     pub cleared_trials: [u8; 12],
     pub cleared_pvp: [u8; 5],
-    pub unknown948: [u8; 15],
+
+    // meh, this is where i put all of the new data
+    #[br(count = 192)]
+    #[bw(pad_size_to = 192)]
+    pub unknown948: Vec<u8>,
+}
+
+#[cfg(test)]
+mod tests {
+    use std::{fs::read, io::Cursor, path::PathBuf};
+
+    use binrw::BinRead;
+
+    use super::*;
+
+    #[test]
+    fn read_playerspawn() {
+        let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        d.push("resources/tests/player_setup.bin");
+
+        let buffer = read(d).unwrap();
+        let mut buffer = Cursor::new(&buffer);
+
+        let player_setup = PlayerSetup::read_le(&mut buffer).unwrap();
+        assert_eq!(player_setup.content_id, 0x004000174c50560d);
+        assert_eq!(player_setup.char_id, 0x107476e7);
+        assert_eq!(player_setup.name, "Lavenaa Warren");
+        assert_eq!(player_setup.max_level, 100);
+        assert_eq!(player_setup.gender, 1);
+        assert_eq!(player_setup.race, 1);
+        assert_eq!(player_setup.tribe, 2);
+        assert_eq!(player_setup.expansion, 5);
+        assert_eq!(player_setup.current_job, 1); // adventurer
+        assert_eq!(player_setup.current_class, 1); // ditto
+        assert_eq!(player_setup.levels[1], 1); // adventurer
+    }
 }

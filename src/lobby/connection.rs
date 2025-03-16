@@ -3,7 +3,8 @@ use std::cmp::min;
 use tokio::net::TcpStream;
 
 use crate::{
-    CHAR_NAME, CONTENT_ID, CUSTOMIZE_DATA, WORLD_ID, WORLD_NAME, ZONE_ID,
+    CHAR_NAME, CONTENT_ID, CUSTOMIZE_DATA, DEITY, NAMEDAY_DAY, NAMEDAY_MONTH, WORLD_ID, WORLD_NAME,
+    ZONE_ID,
     blowfish::Blowfish,
     client_select_data::ClientSelectData,
     common::timestamp_secs,
@@ -164,12 +165,12 @@ impl LobbyConnection {
                 game_name_unk: "Final Fantasy".to_string(),
                 current_class: 2,
                 class_levels: [5; 30],
-                race: 0,
-                subrace: 0,
-                gender: 0,
-                birth_month: 5,
-                birth_day: 5,
-                guardian: 2,
+                race: CUSTOMIZE_DATA.race as i32,
+                subrace: CUSTOMIZE_DATA.subrace as i32,
+                gender: CUSTOMIZE_DATA.gender as i32,
+                birth_month: NAMEDAY_MONTH as i32,
+                birth_day: NAMEDAY_DAY as i32,
+                guardian: DEITY as i32,
                 unk8: 0,
                 unk9: 0,
                 zone_id: ZONE_ID as i32,

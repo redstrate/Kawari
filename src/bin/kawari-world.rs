@@ -8,7 +8,10 @@ use kawari::world::{
     ActorControlSelf, ActorControlType, ChatHandler, PlayerEntry, PlayerSetup, PlayerSpawn,
     PlayerStats, Position, SocialList, Zone, ZoneConnection,
 };
-use kawari::{CHAR_NAME, CONTENT_ID, CUSTOMIZE_DATA, WORLD_ID, ZONE_ID, timestamp_secs};
+use kawari::{
+    CHAR_NAME, CITY_STATE, CONTENT_ID, CUSTOMIZE_DATA, DEITY, NAMEDAY_DAY, NAMEDAY_MONTH, WORLD_ID,
+    ZONE_ID, timestamp_secs,
+};
 use tokio::io::AsyncReadExt;
 use tokio::net::TcpListener;
 
@@ -227,6 +230,13 @@ async fn main() {
                                                     levels: [100; 32],
                                                     name: CHAR_NAME.to_string(),
                                                     char_id: connection.player_id,
+                                                    race: CUSTOMIZE_DATA.race,
+                                                    gender: CUSTOMIZE_DATA.gender,
+                                                    tribe: CUSTOMIZE_DATA.subrace,
+                                                    city_state: CITY_STATE,
+                                                    nameday_month: NAMEDAY_MONTH,
+                                                    nameday_day: NAMEDAY_DAY,
+                                                    deity: DEITY,
                                                     ..Default::default()
                                                 }),
                                                 ..Default::default()

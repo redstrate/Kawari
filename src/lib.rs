@@ -56,6 +56,11 @@ pub const CUSTOMIZE_DATA: ClientCustomizeData = ClientCustomizeData {
     face_paint_color: 167,
 };
 
+pub const DEITY: u8 = 0x8;
+pub const NAMEDAY_MONTH: u8 = 0x1;
+pub const NAMEDAY_DAY: u8 = 0x1;
+pub const CITY_STATE: u8 = 0x3;
+
 /// Maxmimum length of a character's name.
 pub const CHAR_NAME_MAX_LENGTH: usize = 32;
 
