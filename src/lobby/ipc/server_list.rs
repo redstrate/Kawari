@@ -17,3 +17,16 @@ pub struct Server {
     #[bw(map = write_string)]
     pub name: String,
 }
+
+#[binrw]
+#[derive(Debug, Clone, Default)]
+pub struct LobbyServerList {
+    pub sequence: u64,
+    pub unk1: u16,
+    pub offset: u16,
+    #[brw(pad_after = 8)]
+    pub num_servers: u32,
+    #[br(count = 6)]
+    #[brw(pad_size_to = 504)]
+    pub servers: Vec<Server>,
+}

@@ -4,15 +4,15 @@ mod character_action;
 pub use character_action::LobbyCharacterAction;
 
 mod character_list;
-pub use character_list::CharacterDetails;
+pub use character_list::{CharacterDetails, LobbyCharacterList};
 
 mod client_version_info;
 
 mod server_list;
-pub use server_list::Server;
+pub use server_list::{LobbyServerList, Server};
 
 mod service_account_list;
-pub use service_account_list::ServiceAccount;
+pub use service_account_list::{LobbyServiceAccountList, ServiceAccount};
 
 use crate::{
     CHAR_NAME_MAX_LENGTH,
@@ -53,10 +53,10 @@ impl IpcSegmentTrait for ServerLobbyIpcSegment {
         // 16 is the size of the IPC header
         16 + match self.op_code {
             ServerLobbyIpcType::LobbyError => 536,
-            ServerLobbyIpcType::LobbyServiceAccountList => 24 + (8 * 80),
-            ServerLobbyIpcType::LobbyCharacterList => 80 + (2 * 1184),
+            ServerLobbyIpcType::LobbyServiceAccountList => 656,
+            ServerLobbyIpcType::LobbyCharacterList => 2472,
             ServerLobbyIpcType::LobbyEnterWorld => 160,
-            ServerLobbyIpcType::LobbyServerList => 24 + (6 * 84),
+            ServerLobbyIpcType::LobbyServerList => 528,
             ServerLobbyIpcType::LobbyRetainerList => 210,
             ServerLobbyIpcType::CharacterCreated => 2568,
         }
@@ -178,59 +178,15 @@ pub enum ClientLobbyIpcData {
 #[br(import(_magic: &ServerLobbyIpcType))]
 #[derive(Debug, Clone)]
 pub enum ServerLobbyIpcData {
-    LobbyServiceAccountList {
-        #[br(dbg)]
-        sequence: u64,
-        #[brw(pad_before = 1)]
-        num_service_accounts: u8,
-        unk1: u8,
-        #[brw(pad_after = 4)]
-        unk2: u8,
-        #[br(count = 8)]
-        service_accounts: Vec<ServiceAccount>,
-    },
-    LobbyServerList {
-        sequence: u64,
-        unk1: u16,
-        offset: u16,
-        #[brw(pad_after = 8)]
-        num_servers: u32,
-        #[br(count = 6)]
-        #[brw(pad_size_to = 504)]
-        servers: Vec<Server>,
-    },
+    LobbyServiceAccountList(LobbyServiceAccountList),
+    LobbyServerList(LobbyServerList),
     LobbyRetainerList {
         // TODO: what is in here?
         #[brw(pad_before = 7)]
         #[brw(pad_after = 202)]
         unk1: u8,
     },
-    LobbyCharacterList {
-        sequence: u64,
-        counter: u8,
-        #[brw(pad_after = 2)]
-        num_in_packet: u8,
-        unk1: u8,
-        unk2: u8,
-        unk3: u8,
-        /// Set to 128 if legacy character
-        unk4: u8,
-        unk5: [u32; 7],
-        unk6: u8,
-        veteran_rank: u8,
-        #[brw(pad_after = 1)]
-        unk7: u8,
-        days_subscribed: u32,
-        remaining_days: u32,
-        days_to_next_rank: u32,
-        max_characters_on_world: u16,
-        unk8: u16,
-        #[brw(pad_after = 12)]
-        entitled_expansion: u32,
-        #[br(count = 2)]
-        #[brw(pad_size_to = 2368)]
-        characters: Vec<CharacterDetails>,
-    },
+    LobbyCharacterList(LobbyCharacterList),
     LobbyEnterWorld {
         sequence: u64,
         character_id: u32,
@@ -243,8 +199,9 @@ pub enum ServerLobbyIpcData {
         #[bw(map = write_string)]
         session_id: String,
         port: u16,
-        #[brw(pad_after = 16)]
+        #[brw(pad_after = 16)] // garbage?
         #[br(count = 48)]
+        #[brw(pad_size_to = 48)]
         #[br(map = read_string)]
         #[bw(map = write_string)]
         host: String,
@@ -254,24 +211,14 @@ pub enum ServerLobbyIpcData {
         error: u32,
         value: u32,
         exd_error_id: u16,
+        #[brw(pad_after = 516)] // empty and garbage
         unk1: u16,
     },
-    NameRejection {
-        // FIXME: This is opcode 0x2, which is InitializeChat. We need to separate the lobby/zone IPC codes.
-        unk1: u8,
-        #[brw(pad_before = 7)] // empty
-        unk2: u16,
-        #[brw(pad_before = 6)] // empty
-        #[brw(pad_after = 516)] // mostly empty
-        unk3: u32,
-    },
     CharacterCreated {
-        #[brw(pad_after = 4)] // empty
-        unk1: u32,
-        #[brw(pad_after = 4)] // empty
-        unk2: u32,
-        #[brw(pad_before = 32)] // empty
-        #[brw(pad_after = 1136)] // empty
+        sequence: u64,
+        unk: u32,
+        #[brw(pad_before = 36)] // empty
+        #[brw(pad_after = 1336)] // empty and garbage
         details: CharacterDetails,
     },
 }
@@ -289,36 +236,48 @@ mod tests {
     fn lobby_ipc_sizes() {
         let ipc_types = [
             (
+                ServerLobbyIpcType::LobbyServiceAccountList,
+                ServerLobbyIpcData::LobbyServiceAccountList(LobbyServiceAccountList::default()),
+            ),
+            (
                 ServerLobbyIpcType::LobbyServerList,
-                ServerLobbyIpcData::LobbyServerList {
-                    sequence: 0,
-                    unk1: 0,
-                    offset: 0,
-                    num_servers: 0,
-                    servers: Vec::new(),
-                },
+                ServerLobbyIpcData::LobbyServerList(LobbyServerList::default()),
+            ),
+            (
+                ServerLobbyIpcType::LobbyRetainerList,
+                ServerLobbyIpcData::LobbyRetainerList { unk1: 0 },
             ),
             (
                 ServerLobbyIpcType::LobbyCharacterList,
-                ServerLobbyIpcData::LobbyCharacterList {
+                ServerLobbyIpcData::LobbyCharacterList(LobbyCharacterList::default()),
+            ),
+            (
+                ServerLobbyIpcType::LobbyEnterWorld,
+                ServerLobbyIpcData::LobbyEnterWorld {
                     sequence: 0,
-                    counter: 0,
-                    num_in_packet: 0,
+                    character_id: 0,
+                    content_id: 0,
+                    session_id: String::new(),
+                    port: 0,
+                    host: String::new(),
+                },
+            ),
+            (
+                ServerLobbyIpcType::LobbyError,
+                ServerLobbyIpcData::LobbyError {
+                    sequence: 0,
+                    error: 0,
+                    value: 0,
+                    exd_error_id: 0,
                     unk1: 0,
-                    unk2: 0,
-                    unk3: 0,
-                    unk4: 0,
-                    unk5: [0; 7],
-                    unk6: 0,
-                    veteran_rank: 0,
-                    unk7: 0,
-                    days_subscribed: 0,
-                    remaining_days: 0,
-                    days_to_next_rank: 0,
-                    max_characters_on_world: 0,
-                    unk8: 0,
-                    entitled_expansion: 0,
-                    characters: Vec::new(),
+                },
+            ),
+            (
+                ServerLobbyIpcType::CharacterCreated,
+                ServerLobbyIpcData::CharacterCreated {
+                    sequence: 0,
+                    unk: 0,
+                    details: CharacterDetails::default(),
                 },
             ),
         ];

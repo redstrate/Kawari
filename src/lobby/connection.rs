@@ -16,8 +16,8 @@ use crate::{
 use super::{
     client_select_data::ClientSelectData,
     ipc::{
-        CharacterDetails, Server, ServerLobbyIpcData, ServerLobbyIpcSegment, ServerLobbyIpcType,
-        ServiceAccount,
+        CharacterDetails, LobbyCharacterList, LobbyServerList, LobbyServiceAccountList, Server,
+        ServerLobbyIpcData, ServerLobbyIpcSegment, ServerLobbyIpcType, ServiceAccount,
     },
 };
 use crate::lobby::ipc::ClientLobbyIpcSegment;
@@ -74,13 +74,14 @@ impl LobbyConnection {
         }]
         .to_vec();
 
-        let service_account_list = ServerLobbyIpcData::LobbyServiceAccountList {
-            sequence: 0,
-            num_service_accounts: service_accounts.len() as u8,
-            unk1: 3,
-            unk2: 0x99,
-            service_accounts: service_accounts.to_vec(),
-        };
+        let service_account_list =
+            ServerLobbyIpcData::LobbyServiceAccountList(LobbyServiceAccountList {
+                sequence: 0,
+                num_service_accounts: service_accounts.len() as u8,
+                unk1: 3,
+                unk2: 0x99,
+                service_accounts: service_accounts.to_vec(),
+            });
 
         let ipc = ServerLobbyIpcSegment {
             unk1: 0,
@@ -114,13 +115,13 @@ impl LobbyConnection {
             // add any empty boys
             servers.resize(6, Server::default());
 
-            let lobby_server_list = ServerLobbyIpcData::LobbyServerList {
+            let lobby_server_list = ServerLobbyIpcData::LobbyServerList(LobbyServerList {
                 sequence: 0,
                 unk1: 1,
                 offset: 0,
                 num_servers: 1,
                 servers,
-            };
+            });
 
             let ipc = ServerLobbyIpcSegment {
                 unk1: 0,
@@ -223,7 +224,7 @@ impl LobbyConnection {
 
                 let lobby_character_list = if i == 3 {
                     // On the last packet, add the account-wide information
-                    ServerLobbyIpcData::LobbyCharacterList {
+                    LobbyCharacterList {
                         sequence,
                         counter: (i * 4) + 1, // TODO: why the + 1 here?
                         num_in_packet: characters_in_packet.len() as u8,
@@ -244,7 +245,7 @@ impl LobbyConnection {
                         characters: characters_in_packet,
                     }
                 } else {
-                    ServerLobbyIpcData::LobbyCharacterList {
+                    LobbyCharacterList {
                         sequence,
                         counter: i * 4,
                         num_in_packet: characters_in_packet.len() as u8,
@@ -272,7 +273,7 @@ impl LobbyConnection {
                     op_code: ServerLobbyIpcType::LobbyCharacterList,
                     server_id: 0,
                     timestamp: timestamp_secs(),
-                    data: lobby_character_list,
+                    data: ServerLobbyIpcData::LobbyCharacterList(lobby_character_list),
                 };
 
                 self.send_segment(PacketSegment {

@@ -120,8 +120,8 @@ async fn main() {
                                                     server_id: 0,
                                                     timestamp: 0,
                                                     data: ServerLobbyIpcData::CharacterCreated {
-                                                        unk1: 0x4,
-                                                        unk2: 0x00010101,
+                                                        sequence: 0x4, // TODO: haha no
+                                                        unk: 0x00010101,
                                                         details: CharacterDetails {
                                                             content_id: CONTENT_ID,
                                                             character_name: name.clone(),
@@ -160,8 +160,8 @@ async fn main() {
                                                     server_id: 0,
                                                     timestamp: 0,
                                                     data: ServerLobbyIpcData::CharacterCreated {
-                                                        unk1: 0x5,
-                                                        unk2: 0x00020101,
+                                                        sequence: 0x5,
+                                                        unk: 0x00020101,
                                                         details: CharacterDetails {
                                                             id: 0x07369f3a, // notice that we give them an id now
                                                             content_id: CONTENT_ID,
