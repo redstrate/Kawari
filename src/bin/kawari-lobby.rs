@@ -71,6 +71,7 @@ async fn main() {
                                     connection.send_lobby_info(*sequence).await;
                                 }
                                 ClientLobbyIpcData::LobbyCharacterAction {
+                                    sequence,
                                     action,
                                     name,
                                     json,
@@ -120,7 +121,7 @@ async fn main() {
                                                     server_id: 0,
                                                     timestamp: 0,
                                                     data: ServerLobbyIpcData::CharacterCreated {
-                                                        sequence: 0x4, // TODO: haha no
+                                                        sequence: *sequence + 1,
                                                         unk: 0x00010101,
                                                         details: CharacterDetails {
                                                             content_id: CONTENT_ID,
@@ -160,7 +161,7 @@ async fn main() {
                                                     server_id: 0,
                                                     timestamp: 0,
                                                     data: ServerLobbyIpcData::CharacterCreated {
-                                                        sequence: 0x5,
+                                                        sequence: *sequence + 1,
                                                         unk: 0x00020101,
                                                         details: CharacterDetails {
                                                             id: 0x07369f3a, // notice that we give them an id now

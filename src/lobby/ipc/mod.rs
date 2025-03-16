@@ -147,8 +147,7 @@ pub enum ClientLobbyIpcData {
     },
     #[br(pre_assert(*magic == ClientLobbyIpcType::LobbyCharacterAction))]
     LobbyCharacterAction {
-        request_number: u32,
-        unk1: u32,
+        sequence: u64,
         character_id: u64,
         #[br(pad_before = 8)]
         character_index: u8,
