@@ -1,5 +1,5 @@
 use physis::{
-    common::Platform,
+    common::{Language, Platform},
     gamedata::GameData,
     layer::{
         ExitRangeInstanceObject, InstanceObject, LayerEntryData, LayerGroup, PopRangeInstanceObject,
@@ -20,19 +20,20 @@ impl Zone {
 
         let mut game_data =
             GameData::from_existing(Platform::Win32, &config.game_location).unwrap();
-        let mdl;
-        println!("loading {id}");
-        if id == 133 {
-            mdl = game_data
-                .extract("bg/ffxiv/fst_f1/twn/f1t2/level/planmap.lgb")
-                .unwrap();
-        } else {
-            mdl = game_data
-                .extract("bg/ffxiv/fst_f1/twn/f1t1/level/planmap.lgb")
-                .unwrap();
-        }
 
-        let layer_group = LayerGroup::from_existing(&mdl).unwrap();
+        let exh = game_data.read_excel_sheet_header("TerritoryType").unwrap();
+        let exd = game_data.read_excel_sheet("TerritoryType", &exh, Language::None, 0).unwrap();
+
+        let territory_type_row = &exd.read_row(&exh, id as u32).unwrap()[0];
+
+        // e.g. ffxiv/fst_f1/fld/f1f3/level/f1f3
+        let physis::exd::ColumnData::String(bg_path) = &territory_type_row.data[1] else {
+            panic!("Unexpected type!");
+        };
+
+        let path = format!("bg/{}/level/planmap.lgb", &bg_path[..bg_path.find("/level/").unwrap()]);
+        let lgb = game_data.extract(&path).unwrap();
+        let layer_group = LayerGroup::from_existing(&lgb).unwrap();
         Self { id, layer_group }
     }
 
