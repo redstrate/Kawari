@@ -37,14 +37,31 @@ default = ["oodle"]
 oodle = []
 
 [dependencies]
+# Used for the web servers
 axum = { version = "0.6", features = ["json", "tokio", "http1", "form", "query", "headers"], default-features = false }
-serde_json = { version = "1.0", default-features = false }
-tokio = { version = "1.37", features = ["macros", "rt", "rt-multi-thread", "io-util"], default-features = false }
-tracing = { version = "0.1", default-features = false }
+
+# Serialization used in almost every server
 serde = { version = "1.0", features = ["derive"], default-features = false }
+serde_json = { version = "1.0", default-features = false }
+
+# Async runtime
+tokio = { version = "1.37", features = ["macros", "rt", "rt-multi-thread", "io-util"], default-features = false }
+
+# Logging
+tracing = { version = "0.1", default-features = false }
 tracing-subscriber = { version = "0.3", features = ["fmt"], default-features = false }
+
+# Used currently for SID generation
 rand = "0.8"
+
+# HTML templates used in the web servers
 minijinja = "2.0"
+
+# Serialization of packets
 binrw = { version = "0.14", features = ["std"], default-features = false }
+
+# Used in encryption of packets
 md5 = "0.7.0"
+
+# Used to access game data
 physis = { git = "https://github.com/redstrate/physis" }
