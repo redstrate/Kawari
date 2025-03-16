@@ -300,7 +300,6 @@ pub enum ClientZoneIpcData {
     #[br(pre_assert(*magic == ClientZoneIpcType::InitRequest))]
     InitRequest {
         // TODO: full of possibly interesting information
-        #[br(dbg)]
         unk: [u8; 105],
     },
     #[br(pre_assert(*magic == ClientZoneIpcType::FinishLoading))]
@@ -371,7 +370,6 @@ pub enum ClientZoneIpcData {
         command: GameMasterCommandType,
         #[br(pad_before = 3)] // idk, not empty though
         arg: u32,
-        #[br(dbg)]
         unk: [u8; 24],
     },
     #[br(pre_assert(*magic == ClientZoneIpcType::Unk12))]
@@ -387,12 +385,10 @@ pub enum ClientZoneIpcData {
     },
     #[br(pre_assert(*magic == ClientZoneIpcType::Unk13))]
     Unk13 {
-        #[br(dbg)]
         unk: [u8; 16], // TODO: unknown
     },
     #[br(pre_assert(*magic == ClientZoneIpcType::Unk14))]
     Unk14 {
-        #[br(dbg)]
         unk: [u8; 8], // TODO: unknown
     },
 }

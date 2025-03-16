@@ -58,7 +58,6 @@ async fn main() {
                     .expect("Failed to read data!");
 
                 if n != 0 {
-                    println!("recieved {n} bytes...");
                     let (segments, connection_type) = connection.parse_packet(&buf[..n]).await;
                     for segment in &segments {
                         match &segment.segment_type {

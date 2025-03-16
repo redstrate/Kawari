@@ -19,12 +19,9 @@ where
 {
     pub unk1: u8,
     pub unk2: u8,
-    #[br(dbg)]
     pub op_code: OpCode,
     #[brw(pad_before = 2)] // empty
-    #[br(dbg)]
     pub server_id: u16,
-    #[br(dbg)]
     pub timestamp: u32,
     #[brw(pad_before = 4)]
     #[br(args(&op_code))]

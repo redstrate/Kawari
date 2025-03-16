@@ -1,5 +1,4 @@
 use binrw::binrw;
-use std::fs::write;
 use std::io::Cursor;
 
 use binrw::{BinRead, BinResult};
@@ -29,15 +28,8 @@ pub(crate) fn decompress<T: IpcSegmentTrait>(
 
     let size = header.size as usize - std::mem::size_of::<PacketHeader>();
 
-    println!(
-        "known packet size: {} but decompressing {} bytes",
-        header.size, size
-    );
-
     let mut data = vec![0; size];
     reader.read_exact(&mut data).unwrap();
-
-    write("compressed.bin", &data).unwrap();
 
     let data = match header.compression_type {
         crate::packet::CompressionType::Uncompressed => data,
@@ -51,8 +43,6 @@ pub(crate) fn decompress<T: IpcSegmentTrait>(
             "Decompressed data does not match the expected length!"
         );
     }
-
-    write("decompressed.bin", &data).unwrap();
 
     let mut cursor = Cursor::new(&data);
 

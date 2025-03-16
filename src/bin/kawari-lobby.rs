@@ -148,7 +148,6 @@ async fn main() {
 
                                             let chara_make =
                                                 CharaMake::from_json(&character_action.json);
-                                            println!("charamake: {:#?}", chara_make);
 
                                             // a slightly different character created packet now
                                             {

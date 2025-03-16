@@ -32,7 +32,7 @@ impl ChatHandler {
                     .await;
             }
             "!spawnactor" => {
-                println!("Spawning actor...");
+                tracing::info!("Spawning actor...");
 
                 // send player spawn
                 {

@@ -91,14 +91,10 @@ pub struct PacketHeader {
 #[derive(Debug, Clone)]
 pub struct PacketSegment<T: IpcSegmentTrait> {
     #[bw(calc = self.calc_size())]
-    #[br(dbg)]
     pub size: u32,
-    #[br(dbg)]
     pub source_actor: u32,
-    #[br(dbg)]
     pub target_actor: u32,
     #[brw(args(size, encryption_key))]
-    #[br(dbg)]
     pub segment_type: SegmentType<T>,
 }
 
@@ -122,11 +118,9 @@ impl<T: IpcSegmentTrait> PacketSegment<T> {
 #[brw(import(oodle: &mut FFXIVOodle, encryption_key: Option<&[u8]>))]
 #[derive(Debug)]
 struct Packet<T: IpcSegmentTrait> {
-    #[br(dbg)]
     header: PacketHeader,
     #[bw(args(encryption_key))]
     #[br(parse_with = decompress, args(oodle, &header, encryption_key,))]
-    #[br(dbg)]
     segments: Vec<PacketSegment<T>>,
 }
 
@@ -220,12 +214,9 @@ pub async fn parse_packet<T: IpcSegmentTrait>(
             state.client_key.as_ref().map(|s: &[u8; 16]| s.as_slice()),
         ),
     ) {
-        Ok(packet) => {
-            println!("{:#?}", packet);
-            (packet.segments, packet.header.connection_type)
-        }
+        Ok(packet) => (packet.segments, packet.header.connection_type),
         Err(err) => {
-            println!("{err}");
+            tracing::error!("{err}");
             dump("Failed to parse packet!", data);
 
             (Vec::new(), ConnectionType::None)

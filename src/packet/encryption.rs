@@ -1,4 +1,3 @@
-use std::fs::write;
 use std::io::Cursor;
 
 use binrw::BinResult;
@@ -32,8 +31,6 @@ pub(crate) fn decrypt<T: IpcSegmentTrait>(
 
         let blowfish = Blowfish::new(encryption_key);
         blowfish.decrypt(&mut data);
-
-        write("decrypted.bin", &data).unwrap();
 
         let mut cursor = Cursor::new(&data);
         T::read_options(&mut cursor, endian, ())
