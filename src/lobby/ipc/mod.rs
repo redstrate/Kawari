@@ -1,7 +1,7 @@
 use binrw::binrw;
 
 mod character_action;
-pub use character_action::LobbyCharacterAction;
+pub use character_action::{LobbyCharacterAction, LobbyCharacterActionKind};
 
 mod character_list;
 pub use character_list::{CharacterDetails, LobbyCharacterList};
@@ -15,7 +15,6 @@ mod service_account_list;
 pub use service_account_list::{LobbyServiceAccountList, ServiceAccount};
 
 use crate::{
-    CHAR_NAME_MAX_LENGTH,
     common::{read_string, write_string},
     packet::{IpcSegment, IpcSegmentTrait},
 };
@@ -146,24 +145,7 @@ pub enum ClientLobbyIpcData {
         // TODO: what is in here?
     },
     #[br(pre_assert(*magic == ClientLobbyIpcType::LobbyCharacterAction))]
-    LobbyCharacterAction {
-        sequence: u64,
-        character_id: u64,
-        #[br(pad_before = 8)]
-        character_index: u8,
-        action: LobbyCharacterAction,
-        world_id: u16,
-        #[bw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
-        #[br(count = CHAR_NAME_MAX_LENGTH)]
-        #[br(map = read_string)]
-        #[bw(map = write_string)]
-        name: String,
-        #[bw(pad_size_to = 436)]
-        #[br(count = 436)]
-        #[br(map = read_string)]
-        #[bw(map = write_string)]
-        json: String,
-    },
+    LobbyCharacterAction(LobbyCharacterAction),
     #[br(pre_assert(*magic == ClientLobbyIpcType::RequestEnterWorld))]
     RequestEnterWorld {
         #[brw(pad_before = 16)]

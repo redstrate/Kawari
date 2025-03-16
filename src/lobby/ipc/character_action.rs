@@ -1,8 +1,12 @@
 use binrw::binrw;
 
+use crate::CHAR_NAME_MAX_LENGTH;
+
+use super::{read_string, write_string};
+
 #[binrw]
 #[derive(Clone, PartialEq, Debug)]
-pub enum LobbyCharacterAction {
+pub enum LobbyCharacterActionKind {
     #[brw(magic = 0x1u8)]
     ReserveName,
     #[brw(magic = 0x2u8)]
@@ -27,4 +31,25 @@ pub enum LobbyCharacterAction {
     DataCenterToken,
     #[brw(magic = 0x15u8)]
     Request,
+}
+
+#[binrw]
+#[derive(Clone, PartialEq, Debug)]
+pub struct LobbyCharacterAction {
+    pub sequence: u64,
+    pub character_id: u64,
+    #[br(pad_before = 8)]
+    pub character_index: u8,
+    pub action: LobbyCharacterActionKind,
+    pub world_id: u16,
+    #[bw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+    #[br(count = CHAR_NAME_MAX_LENGTH)]
+    #[br(map = read_string)]
+    #[bw(map = write_string)]
+    pub name: String,
+    #[bw(pad_size_to = 436)]
+    #[br(count = 436)]
+    #[br(map = read_string)]
+    #[bw(map = write_string)]
+    pub json: String,
 }

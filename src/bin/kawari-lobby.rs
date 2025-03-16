@@ -2,7 +2,7 @@ use kawari::CONTENT_ID;
 use kawari::lobby::chara_make::CharaMake;
 use kawari::lobby::connection::LobbyConnection;
 use kawari::lobby::ipc::{
-    CharacterDetails, ClientLobbyIpcData, LobbyCharacterAction, ServerLobbyIpcData,
+    CharacterDetails, ClientLobbyIpcData, LobbyCharacterActionKind, ServerLobbyIpcData,
     ServerLobbyIpcSegment, ServerLobbyIpcType,
 };
 use kawari::oodle::FFXIVOodle;
@@ -70,17 +70,12 @@ async fn main() {
 
                                     connection.send_lobby_info(*sequence).await;
                                 }
-                                ClientLobbyIpcData::LobbyCharacterAction {
-                                    sequence,
-                                    action,
-                                    name,
-                                    json,
-                                    ..
-                                } => {
-                                    match action {
-                                        LobbyCharacterAction::ReserveName => {
+                                ClientLobbyIpcData::LobbyCharacterAction(character_action) => {
+                                    match &character_action.action {
+                                        LobbyCharacterActionKind::ReserveName => {
                                             tracing::info!(
-                                                "Player is requesting {name} as a new character name!"
+                                                "Player is requesting {} as a new character name!",
+                                                character_action.name
                                             );
 
                                             // reject
@@ -121,11 +116,13 @@ async fn main() {
                                                     server_id: 0,
                                                     timestamp: 0,
                                                     data: ServerLobbyIpcData::CharacterCreated {
-                                                        sequence: *sequence + 1,
+                                                        sequence: character_action.sequence + 1,
                                                         unk: 0x00010101,
                                                         details: CharacterDetails {
                                                             content_id: CONTENT_ID,
-                                                            character_name: name.clone(),
+                                                            character_name: character_action
+                                                                .name
+                                                                .clone(),
                                                             origin_server_name: "KAWARI"
                                                                 .to_string(),
                                                             current_server_name: "KAWARI"
@@ -146,10 +143,11 @@ async fn main() {
                                                     .await;
                                             }
                                         }
-                                        LobbyCharacterAction::Create => {
+                                        LobbyCharacterActionKind::Create => {
                                             tracing::info!("Player is creating a new character!");
 
-                                            let chara_make = CharaMake::from_json(json);
+                                            let chara_make =
+                                                CharaMake::from_json(&character_action.json);
                                             println!("charamake: {:#?}", chara_make);
 
                                             // a slightly different character created packet now
@@ -161,12 +159,14 @@ async fn main() {
                                                     server_id: 0,
                                                     timestamp: 0,
                                                     data: ServerLobbyIpcData::CharacterCreated {
-                                                        sequence: *sequence + 1,
+                                                        sequence: character_action.sequence + 1,
                                                         unk: 0x00020101,
                                                         details: CharacterDetails {
                                                             id: 0x07369f3a, // notice that we give them an id now
                                                             content_id: CONTENT_ID,
-                                                            character_name: name.clone(),
+                                                            character_name: character_action
+                                                                .name
+                                                                .clone(),
                                                             origin_server_name: "KAWARI"
                                                                 .to_string(),
                                                             current_server_name: "KAWARI"
@@ -187,16 +187,16 @@ async fn main() {
                                                     .await;
                                             }
                                         }
-                                        LobbyCharacterAction::Rename => todo!(),
-                                        LobbyCharacterAction::Delete => todo!(),
-                                        LobbyCharacterAction::Move => todo!(),
-                                        LobbyCharacterAction::RemakeRetainer => todo!(),
-                                        LobbyCharacterAction::RemakeChara => todo!(),
-                                        LobbyCharacterAction::SettingsUploadBegin => todo!(),
-                                        LobbyCharacterAction::SettingsUpload => todo!(),
-                                        LobbyCharacterAction::WorldVisit => todo!(),
-                                        LobbyCharacterAction::DataCenterToken => todo!(),
-                                        LobbyCharacterAction::Request => todo!(),
+                                        LobbyCharacterActionKind::Rename => todo!(),
+                                        LobbyCharacterActionKind::Delete => todo!(),
+                                        LobbyCharacterActionKind::Move => todo!(),
+                                        LobbyCharacterActionKind::RemakeRetainer => todo!(),
+                                        LobbyCharacterActionKind::RemakeChara => todo!(),
+                                        LobbyCharacterActionKind::SettingsUploadBegin => todo!(),
+                                        LobbyCharacterActionKind::SettingsUpload => todo!(),
+                                        LobbyCharacterActionKind::WorldVisit => todo!(),
+                                        LobbyCharacterActionKind::DataCenterToken => todo!(),
+                                        LobbyCharacterActionKind::Request => todo!(),
                                     }
                                 }
                                 ClientLobbyIpcData::RequestEnterWorld {
