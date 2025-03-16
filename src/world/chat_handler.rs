@@ -3,7 +3,7 @@ use crate::{
     ipc::{IPCOpCode, IPCSegment, IPCStructData},
     packet::{PacketSegment, SegmentType},
     timestamp_secs,
-    world::{CharacterMode, PlayerSpawn},
+    world::PlayerSpawn,
 };
 
 use super::{ChatMessage, Position, ZoneConnection};
