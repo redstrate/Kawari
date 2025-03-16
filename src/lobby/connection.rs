@@ -7,28 +7,36 @@ use crate::{
     ZONE_ID,
     blowfish::Blowfish,
     common::timestamp_secs,
-    encryption::generate_encryption_key,
-    ipc::{CharacterDetails, IPCOpCode, IPCSegment, IPCStructData, Server, ServiceAccount},
     packet::{
-        CompressionType, ConnectionType, PacketSegment, SegmentType, State, parse_packet,
-        send_packet,
+        CompressionType, ConnectionType, PacketSegment, PacketState, SegmentType,
+        generate_encryption_key, parse_packet, send_packet,
     },
 };
 
-use super::client_select_data::ClientSelectData;
+use super::{
+    client_select_data::ClientSelectData,
+    ipc::{
+        CharacterDetails, Server, ServerLobbyIpcData, ServerLobbyIpcSegment, ServerLobbyIpcType,
+        ServiceAccount,
+    },
+};
+use crate::lobby::ipc::ClientLobbyIpcSegment;
 
 pub struct LobbyConnection {
     pub socket: TcpStream,
 
-    pub state: State,
+    pub state: PacketState,
 }
 
 impl LobbyConnection {
-    pub async fn parse_packet(&mut self, data: &[u8]) -> (Vec<PacketSegment>, ConnectionType) {
+    pub async fn parse_packet(
+        &mut self,
+        data: &[u8],
+    ) -> (Vec<PacketSegment<ClientLobbyIpcSegment>>, ConnectionType) {
         parse_packet(data, &mut self.state).await
     }
 
-    pub async fn send_segment(&mut self, segment: PacketSegment) {
+    pub async fn send_segment(&mut self, segment: PacketSegment<ServerLobbyIpcSegment>) {
         send_packet(
             &mut self.socket,
             &[segment],
@@ -66,7 +74,7 @@ impl LobbyConnection {
         }]
         .to_vec();
 
-        let service_account_list = IPCStructData::LobbyServiceAccountList {
+        let service_account_list = ServerLobbyIpcData::LobbyServiceAccountList {
             sequence: 0,
             num_service_accounts: service_accounts.len() as u8,
             unk1: 3,
@@ -74,10 +82,10 @@ impl LobbyConnection {
             service_accounts: service_accounts.to_vec(),
         };
 
-        let ipc = IPCSegment {
+        let ipc = ServerLobbyIpcSegment {
             unk1: 0,
             unk2: 0,
-            op_code: IPCOpCode::LobbyServiceAccountList,
+            op_code: ServerLobbyIpcType::LobbyServiceAccountList,
             server_id: 0,
             timestamp: timestamp_secs(),
             data: service_account_list,
@@ -106,7 +114,7 @@ impl LobbyConnection {
             // add any empty boys
             servers.resize(6, Server::default());
 
-            let lobby_server_list = IPCStructData::LobbyServerList {
+            let lobby_server_list = ServerLobbyIpcData::LobbyServerList {
                 sequence: 0,
                 unk1: 1,
                 offset: 0,
@@ -114,10 +122,10 @@ impl LobbyConnection {
                 servers,
             };
 
-            let ipc = IPCSegment {
+            let ipc = ServerLobbyIpcSegment {
                 unk1: 0,
                 unk2: 0,
-                op_code: IPCOpCode::LobbyServerList,
+                op_code: ServerLobbyIpcType::LobbyServerList,
                 server_id: 0,
                 timestamp: timestamp_secs(),
                 data: lobby_server_list,
@@ -133,12 +141,12 @@ impl LobbyConnection {
 
         // send them the retainer list
         {
-            let lobby_retainer_list = IPCStructData::LobbyRetainerList { unk1: 1 };
+            let lobby_retainer_list = ServerLobbyIpcData::LobbyRetainerList { unk1: 1 };
 
-            let ipc = IPCSegment {
+            let ipc = ServerLobbyIpcSegment {
                 unk1: 0,
                 unk2: 0,
-                op_code: IPCOpCode::LobbyRetainerList,
+                op_code: ServerLobbyIpcType::LobbyRetainerList,
                 server_id: 0,
                 timestamp: timestamp_secs(),
                 data: lobby_retainer_list,
@@ -215,7 +223,7 @@ impl LobbyConnection {
 
                 let lobby_character_list = if i == 3 {
                     // On the last packet, add the account-wide information
-                    IPCStructData::LobbyCharacterList {
+                    ServerLobbyIpcData::LobbyCharacterList {
                         sequence,
                         counter: (i * 4) + 1, // TODO: why the + 1 here?
                         num_in_packet: characters_in_packet.len() as u8,
@@ -236,7 +244,7 @@ impl LobbyConnection {
                         characters: characters_in_packet,
                     }
                 } else {
-                    IPCStructData::LobbyCharacterList {
+                    ServerLobbyIpcData::LobbyCharacterList {
                         sequence,
                         counter: i * 4,
                         num_in_packet: characters_in_packet.len() as u8,
@@ -258,10 +266,10 @@ impl LobbyConnection {
                     }
                 };
 
-                let ipc = IPCSegment {
+                let ipc = ServerLobbyIpcSegment {
                     unk1: 0,
                     unk2: 0,
-                    op_code: IPCOpCode::LobbyCharacterList,
+                    op_code: ServerLobbyIpcType::LobbyCharacterList,
                     server_id: 0,
                     timestamp: timestamp_secs(),
                     data: lobby_character_list,
@@ -282,7 +290,7 @@ impl LobbyConnection {
             panic!("Missing session id!");
         };
 
-        let enter_world = IPCStructData::LobbyEnterWorld {
+        let enter_world = ServerLobbyIpcData::LobbyEnterWorld {
             sequence,
             character_id: 0,
             content_id: lookup_id, // TODO: shouldn't these be named the same then?
@@ -291,10 +299,10 @@ impl LobbyConnection {
             host: "127.0.0.1".to_string(),
         };
 
-        let ipc = IPCSegment {
+        let ipc = ServerLobbyIpcSegment {
             unk1: 0,
             unk2: 0,
-            op_code: IPCOpCode::LobbyEnterWorld,
+            op_code: ServerLobbyIpcType::LobbyEnterWorld,
             server_id: 0,
             timestamp: timestamp_secs(),
             data: enter_world,
@@ -309,7 +317,7 @@ impl LobbyConnection {
     }
 
     pub async fn send_error(&mut self, sequence: u64, error: u32, exd_error: u16) {
-        let lobby_error = IPCStructData::LobbyError {
+        let lobby_error = ServerLobbyIpcData::LobbyError {
             sequence,
             error,
             value: 0,
@@ -317,10 +325,10 @@ impl LobbyConnection {
             unk1: 1,
         };
 
-        let ipc = IPCSegment {
+        let ipc = ServerLobbyIpcSegment {
             unk1: 0,
             unk2: 0,
-            op_code: IPCOpCode::InitializeChat,
+            op_code: ServerLobbyIpcType::LobbyError,
             server_id: 0,
             timestamp: timestamp_secs(),
             data: lobby_error,

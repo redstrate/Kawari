@@ -1,12 +1,14 @@
 use crate::{
     CHAR_NAME, CUSTOMIZE_DATA, WORLD_ID,
     common::timestamp_secs,
-    ipc::{IPCOpCode, IPCSegment, IPCStructData},
     packet::{PacketSegment, SegmentType},
-    world::PlayerSpawn,
+    world::ipc::{PlayerSpawn, ServerZoneIpcData, ServerZoneIpcSegment, ServerZoneIpcType},
 };
 
-use super::{ChatMessage, Position, ZoneConnection};
+use super::{
+    ZoneConnection,
+    ipc::{ChatMessage, Position},
+};
 
 pub struct ChatHandler {}
 
@@ -34,13 +36,13 @@ impl ChatHandler {
 
                 // send player spawn
                 {
-                    let ipc = IPCSegment {
+                    let ipc = ServerZoneIpcSegment {
                         unk1: 20,
                         unk2: 0,
-                        op_code: IPCOpCode::PlayerSpawn,
+                        op_code: ServerZoneIpcType::PlayerSpawn,
                         server_id: 0,
                         timestamp: timestamp_secs(),
-                        data: IPCStructData::PlayerSpawn(PlayerSpawn {
+                        data: ServerZoneIpcData::PlayerSpawn(PlayerSpawn {
                             some_unique_id: 1,
                             content_id: 1,
                             current_world_id: WORLD_ID,

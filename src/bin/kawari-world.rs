@@ -1,11 +1,17 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use kawari::ipc::{GameMasterCommandType, IPCOpCode, IPCSegment, IPCStructData};
 use kawari::oodle::FFXIVOodle;
-use kawari::packet::{PacketSegment, SegmentType, State, send_keep_alive};
+use kawari::packet::{PacketSegment, PacketState, SegmentType, send_keep_alive};
+use kawari::world::ipc::{
+    ClientZoneIpcData, GameMasterCommandType, ServerZoneIpcData, ServerZoneIpcSegment,
+    ServerZoneIpcType, SocialListRequestType,
+};
 use kawari::world::{
-    ActorControlSelf, ActorControlType, ChatHandler, PlayerEntry, PlayerSetup, PlayerSpawn,
-    PlayerStats, Position, SocialList, Zone, ZoneConnection,
+    ChatHandler, Zone, ZoneConnection,
+    ipc::{
+        ActorControlSelf, ActorControlType, PlayerEntry, PlayerSetup, PlayerSpawn, PlayerStats,
+        Position, SocialList,
+    },
 };
 use kawari::{
     CHAR_NAME, CITY_STATE, CONTENT_ID, CUSTOMIZE_DATA, DEITY, NAMEDAY_DAY, NAMEDAY_MONTH, WORLD_ID,
@@ -25,7 +31,7 @@ async fn main() {
     loop {
         let (socket, _) = listener.accept().await.unwrap();
 
-        let state = State {
+        let state = PacketState {
             client_key: None,
             session_id: None,
             clientbound_oodle: FFXIVOodle::new(),
@@ -116,10 +122,12 @@ async fn main() {
                                         }
 
                                         {
-                                            let ipc = IPCSegment {
-                                                op_code: IPCOpCode::InitializeChat,
+                                            let ipc = ServerZoneIpcSegment {
+                                                op_code: ServerZoneIpcType::InitializeChat,
                                                 timestamp: timestamp_secs(),
-                                                data: IPCStructData::InitializeChat { unk: [0; 8] },
+                                                data: ServerZoneIpcData::InitializeChat {
+                                                    unk: [0; 8],
+                                                },
                                                 ..Default::default()
                                             };
 
@@ -139,17 +147,17 @@ async fn main() {
                             }
                             SegmentType::Ipc { data } => {
                                 match &data.data {
-                                    IPCStructData::InitRequest { .. } => {
+                                    ClientZoneIpcData::InitRequest { .. } => {
                                         tracing::info!(
                                             "Client is now requesting zone information. Sending!"
                                         );
 
                                         // IPC Init(?)
                                         {
-                                            let ipc = IPCSegment {
-                                                op_code: IPCOpCode::Unk5,
+                                            let ipc = ServerZoneIpcSegment {
+                                                op_code: ServerZoneIpcType::InitResponse,
                                                 timestamp: timestamp_secs(),
-                                                data: IPCStructData::InitResponse {
+                                                data: ServerZoneIpcData::InitResponse {
                                                     unk1: 0,
                                                     character_id: connection.player_id,
                                                     unk2: 0,
@@ -168,10 +176,10 @@ async fn main() {
 
                                         // Control Data
                                         {
-                                            let ipc = IPCSegment {
-                                                op_code: IPCOpCode::ActorControlSelf,
+                                            let ipc = ServerZoneIpcSegment {
+                                                op_code: ServerZoneIpcType::ActorControlSelf,
                                                 timestamp: timestamp_secs(),
-                                                data: IPCStructData::ActorControlSelf(
+                                                data: ServerZoneIpcData::ActorControlSelf(
                                                     ActorControlSelf {
                                                         category:
                                                             ActorControlType::SetCharaGearParamUI,
@@ -197,10 +205,10 @@ async fn main() {
 
                                         // Stats
                                         {
-                                            let ipc = IPCSegment {
-                                                op_code: IPCOpCode::PlayerStats,
+                                            let ipc = ServerZoneIpcSegment {
+                                                op_code: ServerZoneIpcType::PlayerStats,
                                                 timestamp: timestamp_secs(),
-                                                data: IPCStructData::PlayerStats(PlayerStats {
+                                                data: ServerZoneIpcData::PlayerStats(PlayerStats {
                                                     strength: 1,
                                                     hp: 100,
                                                     mp: 100,
@@ -220,10 +228,10 @@ async fn main() {
 
                                         // Player Setup
                                         {
-                                            let ipc = IPCSegment {
-                                                op_code: IPCOpCode::PlayerSetup,
+                                            let ipc = ServerZoneIpcSegment {
+                                                op_code: ServerZoneIpcType::PlayerSetup,
                                                 timestamp: timestamp_secs(),
-                                                data: IPCStructData::PlayerSetup(PlayerSetup {
+                                                data: ServerZoneIpcData::PlayerSetup(PlayerSetup {
                                                     content_id: CONTENT_ID,
                                                     exp: [10000; 32],
                                                     levels: [100; 32],
@@ -254,10 +262,10 @@ async fn main() {
 
                                         // send welcome message
                                         {
-                                            let ipc = IPCSegment {
-                                                op_code: IPCOpCode::ServerChatMessage,
+                                            let ipc = ServerZoneIpcSegment {
+                                                op_code: ServerZoneIpcType::ServerChatMessage,
                                                 timestamp: timestamp_secs(),
-                                                data: IPCStructData::ServerChatMessage {
+                                                data: ServerZoneIpcData::ServerChatMessage {
                                                     message: "Welcome to Kawari!".to_string(),
                                                     unk: 0,
                                                 },
@@ -273,17 +281,17 @@ async fn main() {
                                                 .await;
                                         }
                                     }
-                                    IPCStructData::FinishLoading { .. } => {
+                                    ClientZoneIpcData::FinishLoading { .. } => {
                                         tracing::info!(
                                             "Client has finished loading... spawning in!"
                                         );
 
                                         // send player spawn
                                         {
-                                            let ipc = IPCSegment {
-                                                op_code: IPCOpCode::PlayerSpawn,
+                                            let ipc = ServerZoneIpcSegment {
+                                                op_code: ServerZoneIpcType::PlayerSpawn,
                                                 timestamp: timestamp_secs(),
-                                                data: IPCStructData::PlayerSpawn(PlayerSpawn {
+                                                data: ServerZoneIpcData::PlayerSpawn(PlayerSpawn {
                                                     content_id: CONTENT_ID,
                                                     current_world_id: WORLD_ID,
                                                     home_world_id: WORLD_ID,
@@ -329,10 +337,10 @@ async fn main() {
 
                                         // fade in?
                                         {
-                                            let ipc = IPCSegment {
-                                                op_code: IPCOpCode::PrepareZoning,
+                                            let ipc = ServerZoneIpcSegment {
+                                                op_code: ServerZoneIpcType::PrepareZoning,
                                                 timestamp: timestamp_secs(),
-                                                data: IPCStructData::PrepareZoning {
+                                                data: ServerZoneIpcData::PrepareZoning {
                                                     unk: [0, 0, 0, 0],
                                                 },
                                                 ..Default::default()
@@ -350,47 +358,49 @@ async fn main() {
                                         // wipe any exit position so it isn't accidentally reused
                                         exit_position = None;
                                     }
-                                    IPCStructData::Unk1 { .. } => {
+                                    ClientZoneIpcData::Unk1 { .. } => {
                                         tracing::info!("Recieved Unk1!");
                                     }
-                                    IPCStructData::Unk2 { .. } => {
+                                    ClientZoneIpcData::Unk2 { .. } => {
                                         tracing::info!("Recieved Unk2!");
                                     }
-                                    IPCStructData::Unk3 { .. } => {
+                                    ClientZoneIpcData::Unk3 { .. } => {
                                         tracing::info!("Recieved Unk3!");
                                     }
-                                    IPCStructData::Unk4 { .. } => {
+                                    ClientZoneIpcData::Unk4 { .. } => {
                                         tracing::info!("Recieved Unk4!");
                                     }
-                                    IPCStructData::SetSearchInfoHandler { .. } => {
+                                    ClientZoneIpcData::SetSearchInfoHandler { .. } => {
                                         tracing::info!("Recieved SetSearchInfoHandler!");
                                     }
-                                    IPCStructData::Unk5 { .. } => {
+                                    ClientZoneIpcData::Unk5 { .. } => {
                                         tracing::info!("Recieved Unk5!");
                                     }
-                                    IPCStructData::SocialListRequest(request) => {
+                                    ClientZoneIpcData::SocialListRequest(request) => {
                                         tracing::info!("Recieved social list request!");
 
                                         match &request.request_type {
-                                            kawari::world::SocialListRequestType::Party => {
-                                                let ipc = IPCSegment {
-                                                    op_code: IPCOpCode::SocialList,
+                                            SocialListRequestType::Party => {
+                                                let ipc = ServerZoneIpcSegment {
+                                                    op_code: ServerZoneIpcType::SocialList,
                                                     timestamp: timestamp_secs(),
-                                                    data: IPCStructData::SocialList(SocialList {
-                                                        request_type: request.request_type,
-                                                        sequence: request.count,
-                                                        entries: vec![PlayerEntry {
-                                                            content_id: CONTENT_ID,
-                                                            zone_id: connection.zone.id,
-                                                            zone_id1: 0x0100,
-                                                            class_job: 36,
-                                                            level: 100,
-                                                            one: 1,
-                                                            name: CHAR_NAME.to_string(),
-                                                            fc_tag: "LOCAL".to_string(),
-                                                            ..Default::default()
-                                                        }],
-                                                    }),
+                                                    data: ServerZoneIpcData::SocialList(
+                                                        SocialList {
+                                                            request_type: request.request_type,
+                                                            sequence: request.count,
+                                                            entries: vec![PlayerEntry {
+                                                                content_id: CONTENT_ID,
+                                                                zone_id: connection.zone.id,
+                                                                zone_id1: 0x0100,
+                                                                class_job: 36,
+                                                                level: 100,
+                                                                one: 1,
+                                                                name: CHAR_NAME.to_string(),
+                                                                fc_tag: "LOCAL".to_string(),
+                                                                ..Default::default()
+                                                            }],
+                                                        },
+                                                    ),
                                                     ..Default::default()
                                                 };
 
@@ -404,15 +414,17 @@ async fn main() {
                                                     })
                                                     .await;
                                             }
-                                            kawari::world::SocialListRequestType::Friends => {
-                                                let ipc = IPCSegment {
-                                                    op_code: IPCOpCode::SocialList,
+                                            SocialListRequestType::Friends => {
+                                                let ipc = ServerZoneIpcSegment {
+                                                    op_code: ServerZoneIpcType::SocialList,
                                                     timestamp: timestamp_secs(),
-                                                    data: IPCStructData::SocialList(SocialList {
-                                                        request_type: request.request_type,
-                                                        sequence: request.count,
-                                                        entries: Default::default(),
-                                                    }),
+                                                    data: ServerZoneIpcData::SocialList(
+                                                        SocialList {
+                                                            request_type: request.request_type,
+                                                            sequence: request.count,
+                                                            entries: Default::default(),
+                                                        },
+                                                    ),
                                                     ..Default::default()
                                                 };
 
@@ -428,17 +440,17 @@ async fn main() {
                                             }
                                         }
                                     }
-                                    IPCStructData::Unk7 {
+                                    ClientZoneIpcData::Unk7 {
                                         timestamp, unk1, ..
                                     } => {
                                         tracing::info!("Recieved Unk7! {:#?}", unk1);
 
                                         // send unk11 in response
                                         {
-                                            let ipc = IPCSegment {
-                                                op_code: IPCOpCode::Unk11,
+                                            let ipc = ServerZoneIpcSegment {
+                                                op_code: ServerZoneIpcType::Unk11,
                                                 timestamp: timestamp_secs(),
-                                                data: IPCStructData::Unk11 {
+                                                data: ServerZoneIpcData::Unk11 {
                                                     timestamp: *timestamp,
                                                     unk: 333,
                                                 },
@@ -454,18 +466,20 @@ async fn main() {
                                                 .await;
                                         }
                                     }
-                                    IPCStructData::UpdatePositionHandler { .. } => {
+                                    ClientZoneIpcData::UpdatePositionHandler { .. } => {
                                         tracing::info!("Recieved UpdatePositionHandler!");
                                     }
-                                    IPCStructData::LogOut { .. } => {
+                                    ClientZoneIpcData::LogOut { .. } => {
                                         tracing::info!("Recieved log out from client!");
 
                                         // tell the client to disconnect
                                         {
-                                            let ipc = IPCSegment {
-                                                op_code: IPCOpCode::LogOutComplete,
+                                            let ipc = ServerZoneIpcSegment {
+                                                op_code: ServerZoneIpcType::LogOutComplete,
                                                 timestamp: timestamp_secs(),
-                                                data: IPCStructData::LogOutComplete { unk: [0; 8] },
+                                                data: ServerZoneIpcData::LogOutComplete {
+                                                    unk: [0; 8],
+                                                },
                                                 ..Default::default()
                                             };
 
@@ -478,17 +492,19 @@ async fn main() {
                                                 .await;
                                         }
                                     }
-                                    IPCStructData::Disconnected { .. } => {
+                                    ClientZoneIpcData::Disconnected { .. } => {
                                         tracing::info!("Client disconnected!");
                                     }
-                                    IPCStructData::ChatMessage(chat_message) => {
+                                    ClientZoneIpcData::ChatMessage(chat_message) => {
                                         ChatHandler::handle_chat_message(
                                             &mut connection,
                                             chat_message,
                                         )
                                         .await
                                     }
-                                    IPCStructData::GameMasterCommand { command, arg, .. } => {
+                                    ClientZoneIpcData::GameMasterCommand {
+                                        command, arg, ..
+                                    } => {
                                         tracing::info!("Got a game master command!");
 
                                         match &command {
@@ -497,10 +513,10 @@ async fn main() {
                                             }
                                         }
                                     }
-                                    IPCStructData::Unk12 { .. } => {
+                                    ClientZoneIpcData::Unk12 { .. } => {
                                         tracing::info!("Recieved Unk12!");
                                     }
-                                    IPCStructData::EnterZoneLine {
+                                    ClientZoneIpcData::EnterZoneLine {
                                         exit_box_id,
                                         position,
                                         ..
@@ -535,10 +551,10 @@ async fn main() {
 
                                         // fade out?
                                         {
-                                            let ipc = IPCSegment {
-                                                op_code: IPCOpCode::PrepareZoning,
+                                            let ipc = ServerZoneIpcSegment {
+                                                op_code: ServerZoneIpcType::PrepareZoning,
                                                 timestamp: timestamp_secs(),
-                                                data: IPCStructData::PrepareZoning {
+                                                data: ServerZoneIpcData::PrepareZoning {
                                                     unk: [0x01000000, 0, 0, 0],
                                                 },
                                                 ..Default::default()
@@ -555,10 +571,10 @@ async fn main() {
 
                                         // fade out? x2
                                         {
-                                            let ipc = IPCSegment {
-                                                op_code: IPCOpCode::PrepareZoning,
+                                            let ipc = ServerZoneIpcSegment {
+                                                op_code: ServerZoneIpcType::PrepareZoning,
                                                 timestamp: timestamp_secs(),
-                                                data: IPCStructData::PrepareZoning {
+                                                data: ServerZoneIpcData::PrepareZoning {
                                                     unk: [0, 0x00000085, 0x00030000, 0x000008ff], // last thing is probably a float?
                                                 },
                                                 ..Default::default()
@@ -577,19 +593,16 @@ async fn main() {
 
                                         connection.change_zone(new_territory).await;
                                     }
-                                    IPCStructData::Unk13 { .. } => {
+                                    ClientZoneIpcData::Unk13 { .. } => {
                                         tracing::info!("Recieved Unk13!");
                                     }
-                                    IPCStructData::Unk14 { .. } => {
+                                    ClientZoneIpcData::Unk14 { .. } => {
                                         tracing::info!("Recieved Unk14!");
                                     }
-                                    _ => panic!(
-                                        "The server is recieving a IPC response or unknown packet!"
-                                    ),
                                 }
                             }
                             SegmentType::KeepAlive { id, timestamp } => {
-                                send_keep_alive(
+                                send_keep_alive::<ServerZoneIpcSegment>(
                                     &mut connection.socket,
                                     &mut connection.state,
                                     *id,

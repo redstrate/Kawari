@@ -1,3 +1,4 @@
+use binrw::binrw;
 use std::fs::write;
 use std::io::Cursor;
 
@@ -8,12 +9,22 @@ use crate::{
     packet::{PacketHeader, PacketSegment},
 };
 
+use super::IpcSegmentTrait;
+
+#[binrw]
+#[brw(repr = u8)]
+#[derive(Debug, PartialEq)]
+pub enum CompressionType {
+    Uncompressed = 0,
+    Oodle = 2,
+}
+
 #[binrw::parser(reader, endian)]
-pub(crate) fn decompress(
+pub(crate) fn decompress<T: IpcSegmentTrait>(
     oodle: &mut FFXIVOodle,
     header: &PacketHeader,
     encryption_key: Option<&[u8]>,
-) -> BinResult<Vec<PacketSegment>> {
+) -> BinResult<Vec<PacketSegment<T>>> {
     let mut segments = Vec::new();
 
     let size = header.size as usize - std::mem::size_of::<PacketHeader>();

@@ -1,9 +1,12 @@
 use kawari::CONTENT_ID;
-use kawari::ipc::{CharacterDetails, IPCOpCode, IPCSegment, IPCStructData, LobbyCharacterAction};
 use kawari::lobby::chara_make::CharaMake;
 use kawari::lobby::connection::LobbyConnection;
+use kawari::lobby::ipc::{
+    CharacterDetails, ClientLobbyIpcData, LobbyCharacterAction, ServerLobbyIpcData,
+    ServerLobbyIpcSegment, ServerLobbyIpcType,
+};
 use kawari::oodle::FFXIVOodle;
-use kawari::packet::{PacketSegment, SegmentType, State, send_keep_alive};
+use kawari::packet::{PacketSegment, PacketState, SegmentType, send_keep_alive};
 use tokio::io::AsyncReadExt;
 use tokio::net::TcpListener;
 
@@ -18,7 +21,7 @@ async fn main() {
     loop {
         let (socket, _) = listener.accept().await.unwrap();
 
-        let state = State {
+        let state = PacketState {
             client_key: None,
             session_id: None,
             clientbound_oodle: FFXIVOodle::new(),
@@ -46,10 +49,10 @@ async fn main() {
                                 connection.initialize_encryption(phrase, key).await;
                             }
                             SegmentType::Ipc { data } => match &data.data {
-                                IPCStructData::ClientVersionInfo {
-                                    sequence,
+                                ClientLobbyIpcData::ClientVersionInfo {
                                     session_id,
                                     version_info,
+                                    ..
                                 } => {
                                     tracing::info!(
                                         "Client {session_id} ({version_info}) logging in!"
@@ -62,13 +65,16 @@ async fn main() {
                                     // request an update
                                     //connection.send_error(*sequence, 1012, 13101).await;
                                 }
-                                IPCStructData::RequestCharacterList { sequence } => {
+                                ClientLobbyIpcData::RequestCharacterList { sequence } => {
                                     tracing::info!("Client is requesting character list...");
 
                                     connection.send_lobby_info(*sequence).await;
                                 }
-                                IPCStructData::LobbyCharacterAction {
-                                    action, name, json, ..
+                                ClientLobbyIpcData::LobbyCharacterAction {
+                                    action,
+                                    name,
+                                    json,
+                                    ..
                                 } => {
                                     match action {
                                         LobbyCharacterAction::ReserveName => {
@@ -84,7 +90,7 @@ async fn main() {
                                                     op_code: IPCOpCode::InitializeChat, // wrong but technically right
                                                     server_id: 0,
                                                     timestamp: 0,
-                                                    data: IPCStructData::NameRejection {
+                                                    data: ClientLobbyIpcType::NameRejection {
                                                         unk1: 0x03,
                                                         unk2: 0x0bdb,
                                                         unk3: 0x000132cc,
@@ -107,13 +113,13 @@ async fn main() {
 
                                             // accept
                                             {
-                                                let ipc = IPCSegment {
+                                                let ipc = ServerLobbyIpcSegment {
                                                     unk1: 0,
                                                     unk2: 0,
-                                                    op_code: IPCOpCode::CharacterCreated,
+                                                    op_code: ServerLobbyIpcType::CharacterCreated,
                                                     server_id: 0,
                                                     timestamp: 0,
-                                                    data: IPCStructData::CharacterCreated {
+                                                    data: ServerLobbyIpcData::CharacterCreated {
                                                         unk1: 0x4,
                                                         unk2: 0x00010101,
                                                         details: CharacterDetails {
@@ -147,13 +153,13 @@ async fn main() {
 
                                             // a slightly different character created packet now
                                             {
-                                                let ipc = IPCSegment {
+                                                let ipc = ServerLobbyIpcSegment {
                                                     unk1: 0,
                                                     unk2: 0,
-                                                    op_code: IPCOpCode::CharacterCreated,
+                                                    op_code: ServerLobbyIpcType::CharacterCreated,
                                                     server_id: 0,
                                                     timestamp: 0,
-                                                    data: IPCStructData::CharacterCreated {
+                                                    data: ServerLobbyIpcData::CharacterCreated {
                                                         unk1: 0x5,
                                                         unk2: 0x00020101,
                                                         details: CharacterDetails {
@@ -192,7 +198,7 @@ async fn main() {
                                         LobbyCharacterAction::Request => todo!(),
                                     }
                                 }
-                                IPCStructData::RequestEnterWorld {
+                                ClientLobbyIpcData::RequestEnterWorld {
                                     sequence,
                                     lookup_id,
                                 } => {
@@ -200,12 +206,9 @@ async fn main() {
 
                                     connection.send_enter_world(*sequence, *lookup_id).await;
                                 }
-                                _ => {
-                                    panic!("The server is recieving a IPC response packet!")
-                                }
                             },
                             SegmentType::KeepAlive { id, timestamp } => {
-                                send_keep_alive(
+                                send_keep_alive::<ServerLobbyIpcSegment>(
                                     &mut connection.socket,
                                     &mut connection.state,
                                     *id,

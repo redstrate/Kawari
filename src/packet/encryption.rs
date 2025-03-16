@@ -1,9 +1,11 @@
 use std::fs::write;
 use std::io::Cursor;
 
-use binrw::{BinRead, BinResult, BinWrite};
+use binrw::BinResult;
 
 use crate::blowfish::Blowfish;
+
+use super::IpcSegmentTrait;
 
 const GAME_VERSION: u16 = 7000;
 
@@ -18,10 +20,10 @@ pub fn generate_encryption_key(key: &[u8], phrase: &str) -> [u8; 16] {
 }
 
 #[binrw::parser(reader, endian)]
-pub(crate) fn decrypt<T>(size: u32, encryption_key: Option<&[u8]>) -> BinResult<T>
-where
-    for<'a> T: BinRead<Args<'a> = ()> + 'a,
-{
+pub(crate) fn decrypt<T: IpcSegmentTrait>(
+    size: u32,
+    encryption_key: Option<&[u8]>,
+) -> BinResult<T> {
     if let Some(encryption_key) = encryption_key {
         let size = size - (std::mem::size_of::<u32>() * 4) as u32; // 16 = header size
 
@@ -43,10 +45,11 @@ where
 }
 
 #[binrw::writer(writer, endian)]
-pub(crate) fn encrypt<T>(value: &T, size: u32, encryption_key: Option<&[u8]>) -> BinResult<()>
-where
-    for<'a> T: BinWrite<Args<'a> = ()> + 'a,
-{
+pub(crate) fn encrypt<T: IpcSegmentTrait>(
+    value: &T,
+    size: u32,
+    encryption_key: Option<&[u8]>,
+) -> BinResult<()> {
     if let Some(encryption_key) = encryption_key {
         let size = size - (std::mem::size_of::<u32>() * 4) as u32; // 16 = header size
 

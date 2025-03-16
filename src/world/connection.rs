@@ -2,19 +2,24 @@ use tokio::net::TcpStream;
 
 use crate::{
     common::timestamp_secs,
-    ipc::{ActorSetPos, IPCOpCode, IPCSegment, IPCStructData},
     packet::{
-        CompressionType, ConnectionType, PacketSegment, SegmentType, State, parse_packet,
+        CompressionType, ConnectionType, PacketSegment, PacketState, SegmentType, parse_packet,
         send_packet,
     },
 };
 
-use super::{InitZone, Position, UpdateClassInfo, Zone};
+use super::{
+    Zone,
+    ipc::{
+        ActorSetPos, ClientZoneIpcSegment, InitZone, Position, ServerZoneIpcData,
+        ServerZoneIpcSegment, ServerZoneIpcType, UpdateClassInfo,
+    },
+};
 
 pub struct ZoneConnection {
     pub socket: TcpStream,
 
-    pub state: State,
+    pub state: PacketState,
     pub player_id: u32,
 
     pub zone: Zone,
@@ -22,11 +27,14 @@ pub struct ZoneConnection {
 }
 
 impl ZoneConnection {
-    pub async fn parse_packet(&mut self, data: &[u8]) -> (Vec<PacketSegment>, ConnectionType) {
+    pub async fn parse_packet(
+        &mut self,
+        data: &[u8],
+    ) -> (Vec<PacketSegment<ClientZoneIpcSegment>>, ConnectionType) {
         parse_packet(data, &mut self.state).await
     }
 
-    pub async fn send_segment(&mut self, segment: PacketSegment) {
+    pub async fn send_segment(&mut self, segment: PacketSegment<ServerZoneIpcSegment>) {
         send_packet(
             &mut self.socket,
             &[segment],
@@ -39,10 +47,10 @@ impl ZoneConnection {
     pub async fn set_player_position(&mut self, position: Position) {
         // set pos
         {
-            let ipc = IPCSegment {
-                op_code: IPCOpCode::ActorSetPos,
+            let ipc = ServerZoneIpcSegment {
+                op_code: ServerZoneIpcType::ActorSetPos,
                 timestamp: timestamp_secs(),
-                data: IPCStructData::ActorSetPos(ActorSetPos {
+                data: ServerZoneIpcData::ActorSetPos(ActorSetPos {
                     unk: 0x020fa3b8,
                     position,
                     ..Default::default()
@@ -70,10 +78,10 @@ impl ZoneConnection {
 
         // Player Class Info
         {
-            let ipc = IPCSegment {
-                op_code: IPCOpCode::UpdateClassInfo,
+            let ipc = ServerZoneIpcSegment {
+                op_code: ServerZoneIpcType::UpdateClassInfo,
                 timestamp: timestamp_secs(),
-                data: IPCStructData::UpdateClassInfo(UpdateClassInfo {
+                data: ServerZoneIpcData::UpdateClassInfo(UpdateClassInfo {
                     class_id: 35,
                     unknown: 1,
                     synced_level: 90,
@@ -93,10 +101,10 @@ impl ZoneConnection {
 
         // link shell information
         {
-            let ipc = IPCSegment {
-                op_code: IPCOpCode::LinkShellInformation,
+            let ipc = ServerZoneIpcSegment {
+                op_code: ServerZoneIpcType::LinkShellInformation,
                 timestamp: timestamp_secs(),
-                data: IPCStructData::LinkShellInformation { unk: [0; 456] },
+                data: ServerZoneIpcData::LinkShellInformation { unk: [0; 456] },
                 ..Default::default()
             };
 
@@ -112,10 +120,10 @@ impl ZoneConnection {
 
         // Init Zone
         {
-            let ipc = IPCSegment {
-                op_code: IPCOpCode::InitZone,
+            let ipc = ServerZoneIpcSegment {
+                op_code: ServerZoneIpcType::InitZone,
                 timestamp: timestamp_secs(),
-                data: IPCStructData::InitZone(InitZone {
+                data: ServerZoneIpcData::InitZone(InitZone {
                     server_id: 0,
                     zone_id: self.zone.id,
                     weather_id: 1,

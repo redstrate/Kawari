@@ -9,14 +9,9 @@ pub mod blowfish;
 /// Common functions, structures used between all servers.
 pub mod common;
 
-mod compression;
-
 /// Config management.
 pub mod config;
-pub mod encryption;
-pub mod ipc;
 pub mod oodle;
-pub mod packet;
 
 /// Patch server-specific code.
 pub mod patch;
@@ -26,6 +21,9 @@ pub mod lobby;
 
 /// World server-specific code.
 pub mod world;
+
+/// Everything packet parsing related.
+pub mod packet;
 
 // TODO: make this configurable
 // See https://ffxiv.consolegameswiki.com/wiki/Servers for a list of possible IDs
