@@ -20,7 +20,7 @@ async fn main() {
 
     let listener = TcpListener::bind("127.0.0.1:7100").await.unwrap();
 
-    tracing::info!("World server started on 7100");
+    tracing::info!("World server started on 127.0.0.1:7100");
 
     loop {
         let (socket, _) = listener.accept().await.unwrap();

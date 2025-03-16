@@ -13,7 +13,7 @@ async fn main() {
 
     let listener = TcpListener::bind("127.0.0.1:7000").await.unwrap();
 
-    tracing::info!("Lobby server started on 7000");
+    tracing::info!("Lobby server started on 127.0.0.1:7000");
 
     loop {
         let (socket, _) = listener.accept().await.unwrap();
