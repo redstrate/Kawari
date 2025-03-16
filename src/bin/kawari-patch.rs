@@ -8,7 +8,7 @@ use axum::response::IntoResponse;
 use axum::routing::post;
 use axum::{Router, routing::get};
 use kawari::config::get_config;
-use kawari::patchlist::{PatchEntry, PatchList, PatchType};
+use kawari::patch::{PatchEntry, PatchList, PatchType};
 
 fn list_patch_files(dir_path: &str) -> Vec<String> {
     // If the dir doesn't exist, pretend there is no patch files

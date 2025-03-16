@@ -3,16 +3,28 @@ use minijinja::Environment;
 use rand::Rng;
 use rand::distributions::Alphanumeric;
 
+/// The blowfish implementation used for packet encryption.
 pub mod blowfish;
+
+/// Common functions, structures used between all servers.
 pub mod common;
+
 mod compression;
+
+/// Config management.
 pub mod config;
 pub mod encryption;
 pub mod ipc;
-pub mod lobby;
 pub mod oodle;
 pub mod packet;
-pub mod patchlist;
+
+/// Patch server-specific code.
+pub mod patch;
+
+/// Lobby server-specific code.
+pub mod lobby;
+
+/// World server-specific code.
 pub mod world;
 
 // TODO: make this configurable
