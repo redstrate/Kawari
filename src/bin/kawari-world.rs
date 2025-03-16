@@ -32,14 +32,13 @@ async fn main() {
             serverbound_oodle: FFXIVOodle::new(),
         };
 
-        let zone = Zone::load(010);
-
         let mut exit_position = None;
 
         let mut connection = ZoneConnection {
             socket,
             state,
             player_id: 0,
+            zone: Zone::load(ZONE_ID),
         };
 
         tokio::spawn(async move {
@@ -250,142 +249,7 @@ async fn main() {
                                                 .await;
                                         }
 
-                                        // Player Class Info
-                                        {
-                                            let ipc = IPCSegment {
-                                                unk1: 0,
-                                                unk2: 0,
-                                                op_code: IPCOpCode::UpdateClassInfo,
-                                                server_id: 69, // lol
-                                                timestamp: timestamp_secs(),
-                                                data: IPCStructData::UpdateClassInfo(
-                                                    UpdateClassInfo {
-                                                        class_id: 35,
-                                                        unknown: 1,
-                                                        synced_level: 90,
-                                                        class_level: 90,
-                                                        ..Default::default()
-                                                    },
-                                                ),
-                                            };
-
-                                            connection
-                                                .send_segment(PacketSegment {
-                                                    source_actor: connection.player_id,
-                                                    target_actor: connection.player_id,
-                                                    segment_type: SegmentType::Ipc { data: ipc },
-                                                })
-                                                .await;
-                                        }
-
-                                        // unk10
-                                        {
-                                            let ipc = IPCSegment {
-                                                unk1: 0,
-                                                unk2: 0,
-                                                op_code: IPCOpCode::Unk10,
-                                                server_id: 69, // lol
-                                                timestamp: timestamp_secs(),
-                                                data: IPCStructData::Unk10 {
-                                                    unk: 0x41a0000000000002,
-                                                },
-                                            };
-
-                                            connection
-                                                .send_segment(PacketSegment {
-                                                    source_actor: connection.player_id,
-                                                    target_actor: connection.player_id,
-                                                    segment_type: SegmentType::Ipc { data: ipc },
-                                                })
-                                                .await;
-                                        }
-
-                                        // unk9
-                                        {
-                                            let ipc = IPCSegment {
-                                                unk1: 0,
-                                                unk2: 0,
-                                                op_code: IPCOpCode::Unk9,
-                                                server_id: 69, // lol
-                                                timestamp: timestamp_secs(),
-                                                data: IPCStructData::Unk9 { unk: [0; 24] },
-                                            };
-
-                                            connection
-                                                .send_segment(PacketSegment {
-                                                    source_actor: connection.player_id,
-                                                    target_actor: connection.player_id,
-                                                    segment_type: SegmentType::Ipc { data: ipc },
-                                                })
-                                                .await;
-                                        }
-
-                                        // link shell information
-                                        {
-                                            let ipc = IPCSegment {
-                                                unk1: 0,
-                                                unk2: 0,
-                                                op_code: IPCOpCode::LinkShellInformation,
-                                                server_id: 69, // lol
-                                                timestamp: timestamp_secs(),
-                                                data: IPCStructData::LinkShellInformation {
-                                                    unk: [0; 456],
-                                                },
-                                            };
-
-                                            connection
-                                                .send_segment(PacketSegment {
-                                                    source_actor: connection.player_id,
-                                                    target_actor: connection.player_id,
-                                                    segment_type: SegmentType::Ipc { data: ipc },
-                                                })
-                                                .await;
-                                        }
-
-                                        // unk8
-                                        {
-                                            let ipc = IPCSegment {
-                                                unk1: 0,
-                                                unk2: 0,
-                                                op_code: IPCOpCode::Unk8,
-                                                server_id: 69, // lol
-                                                timestamp: timestamp_secs(),
-                                                data: IPCStructData::Unk8 { unk: [0; 808] },
-                                            };
-
-                                            connection
-                                                .send_segment(PacketSegment {
-                                                    source_actor: connection.player_id,
-                                                    target_actor: connection.player_id,
-                                                    segment_type: SegmentType::Ipc { data: ipc },
-                                                })
-                                                .await;
-                                        }
-
-                                        // Init Zone
-                                        {
-                                            let ipc = IPCSegment {
-                                                unk1: 0,
-                                                unk2: 0,
-                                                op_code: IPCOpCode::InitZone,
-                                                server_id: 0,
-                                                timestamp: timestamp_secs(),
-                                                data: IPCStructData::InitZone(InitZone {
-                                                    server_id: WORLD_ID,
-                                                    zone_id: ZONE_ID,
-                                                    weather_id: 1,
-                                                    ..Default::default()
-                                                }),
-                                            };
-
-                                            connection
-                                                .send_segment(PacketSegment {
-                                                    source_actor: connection.player_id,
-                                                    target_actor: connection.player_id,
-                                                    segment_type: SegmentType::Ipc { data: ipc },
-                                                })
-                                                .await;
-                                        }
+                                        connection.change_zone(ZONE_ID).await;
                                     }
                                     IPCStructData::FinishLoading { .. } => {
                                         tracing::info!(
@@ -581,31 +445,7 @@ async fn main() {
 
                                         match &command {
                                             GameMasterCommandType::ChangeTerritory => {
-                                                // Init Zone
-                                                {
-                                                    let ipc = IPCSegment {
-                                                        unk1: 0,
-                                                        unk2: 0,
-                                                        op_code: IPCOpCode::InitZone,
-                                                        server_id: 0,
-                                                        timestamp: timestamp_secs(),
-                                                        data: IPCStructData::InitZone(InitZone {
-                                                            server_id: WORLD_ID,
-                                                            zone_id: *arg as u16,
-                                                            ..Default::default()
-                                                        }),
-                                                    };
-
-                                                    connection
-                                                        .send_segment(PacketSegment {
-                                                            source_actor: connection.player_id,
-                                                            target_actor: connection.player_id,
-                                                            segment_type: SegmentType::Ipc {
-                                                                data: ipc,
-                                                            },
-                                                        })
-                                                        .await;
-                                                }
+                                                connection.change_zone(*arg as u16).await
                                             }
                                         }
                                     }
@@ -622,22 +462,28 @@ async fn main() {
                                         );
 
                                         // find the exit box id
-                                        let (_, exit_box) =
-                                            zone.find_exit_box(*exit_box_id).unwrap();
-                                        tracing::info!("exit box: {:#?}", exit_box);
+                                        let new_territory;
+                                        {
+                                            let (_, exit_box) = connection
+                                                .zone
+                                                .find_exit_box(*exit_box_id)
+                                                .unwrap();
+                                            tracing::info!("exit box: {:#?}", exit_box);
 
-                                        // find the pop range on the other side
-                                        let new_zone = Zone::load(exit_box.territory_type);
-                                        let (destination_object, _) = new_zone
-                                            .find_pop_range(exit_box.destination_instance_id)
-                                            .unwrap();
+                                            // find the pop range on the other side
+                                            let new_zone = Zone::load(exit_box.territory_type);
+                                            let (destination_object, _) = new_zone
+                                                .find_pop_range(exit_box.destination_instance_id)
+                                                .unwrap();
 
-                                        // set the exit position
-                                        exit_position = Some(Position {
-                                            x: destination_object.transform.translation[0],
-                                            y: destination_object.transform.translation[1],
-                                            z: destination_object.transform.translation[2],
-                                        });
+                                            // set the exit position
+                                            exit_position = Some(Position {
+                                                x: destination_object.transform.translation[0],
+                                                y: destination_object.transform.translation[1],
+                                                z: destination_object.transform.translation[2],
+                                            });
+                                            new_territory = exit_box.territory_type;
+                                        }
 
                                         // fade out?
                                         {
@@ -683,64 +529,9 @@ async fn main() {
                                                 .await;
                                         }
 
-                                        tracing::info!(
-                                            "sending them to {:#?}",
-                                            exit_box.territory_type
-                                        );
+                                        tracing::info!("sending them to {:#?}", new_territory);
 
-                                        let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-                                        d.push("resources/tests/init_zone.bin");
-
-                                        let buffer = std::fs::read(d).unwrap();
-                                        let mut buffer = Cursor::new(&buffer);
-
-                                        let init_zone = InitZone::read_le(&mut buffer).unwrap();
-
-                                        // Init Zone
-                                        {
-                                            let ipc = IPCSegment {
-                                                unk1: 0,
-                                                unk2: 0,
-                                                op_code: IPCOpCode::InitZone,
-                                                server_id: 0,
-                                                timestamp: timestamp_secs(),
-                                                data: IPCStructData::InitZone(InitZone {
-                                                    server_id: WORLD_ID,
-                                                    zone_id: exit_box.territory_type,
-                                                    ..Default::default()
-                                                }),
-                                            };
-
-                                            connection
-                                                .send_segment(PacketSegment {
-                                                    source_actor: connection.player_id,
-                                                    target_actor: connection.player_id,
-                                                    segment_type: SegmentType::Ipc { data: ipc },
-                                                })
-                                                .await;
-                                        }
-
-                                        // idk
-                                        {
-                                            let ipc = IPCSegment {
-                                                unk1: 0,
-                                                unk2: 0,
-                                                op_code: IPCOpCode::PrepareZoning,
-                                                server_id: 0,
-                                                timestamp: timestamp_secs(),
-                                                data: IPCStructData::PrepareZoning {
-                                                    unk: [0x01100000, 0, 0, 0],
-                                                },
-                                            };
-
-                                            connection
-                                                .send_segment(PacketSegment {
-                                                    source_actor: connection.player_id,
-                                                    target_actor: connection.player_id,
-                                                    segment_type: SegmentType::Ipc { data: ipc },
-                                                })
-                                                .await;
-                                        }
+                                        connection.change_zone(new_territory).await;
                                     }
                                     IPCStructData::Unk13 { .. } => {
                                         tracing::info!("Recieved Unk13!");

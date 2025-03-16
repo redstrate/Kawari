@@ -10,7 +10,7 @@ use crate::config::get_config;
 
 /// Represents a loaded zone
 pub struct Zone {
-    id: u16,
+    pub id: u16,
     layer_group: LayerGroup,
 }
 
