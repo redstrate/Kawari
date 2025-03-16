@@ -4,7 +4,7 @@ use crate::{
     CHAR_NAME_MAX_LENGTH,
     common::{read_string, write_string},
     world::{
-        ActorControlSelf, InitZone, PlayerSetup, PlayerSpawn, PlayerStats, Position,
+        ActorControlSelf, ChatMessage, InitZone, PlayerSetup, PlayerSpawn, PlayerStats, Position,
         UpdateClassInfo,
     },
 };
@@ -342,23 +342,7 @@ pub enum IPCStructData {
         unk: [u8; 8],
     },
     #[br(pre_assert(*magic == IPCOpCode::ChatMessage))]
-    ChatMessage {
-        // TODO: incomplete
-        #[brw(pad_before = 4)] // empty
-        player_id: u32,
-
-        #[brw(pad_before = 4)] // empty
-        timestamp: u32,
-
-        #[brw(pad_before = 8)] // NOT empty
-        channel: u16,
-
-        #[br(count = 32)]
-        #[bw(pad_size_to = 32)]
-        #[br(map = read_string)]
-        #[bw(map = write_string)]
-        message: String,
-    },
+    ChatMessage(ChatMessage),
     #[br(pre_assert(*magic == IPCOpCode::GameMasterCommand))]
     GameMasterCommand {
         // TODO: incomplete

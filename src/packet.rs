@@ -5,10 +5,7 @@ use std::{
 };
 
 use binrw::{BinRead, BinWrite, binrw};
-use tokio::{
-    io::{AsyncWriteExt, WriteHalf},
-    net::TcpStream,
-};
+use tokio::{io::AsyncWriteExt, net::TcpStream};
 
 use crate::{
     common::read_string,
@@ -150,7 +147,7 @@ fn dump(msg: &str, data: &[u8]) {
 }
 
 pub async fn send_packet(
-    socket: &mut WriteHalf<TcpStream>,
+    socket: &mut TcpStream,
     segments: &[PacketSegment],
     state: &mut State,
     compression_type: CompressionType,
@@ -219,7 +216,6 @@ pub struct State {
     pub session_id: Option<String>,
     pub serverbound_oodle: FFXIVOodle,
     pub clientbound_oodle: FFXIVOodle,
-    pub player_id: Option<u32>,
 }
 
 pub async fn parse_packet(data: &[u8], state: &mut State) -> (Vec<PacketSegment>, ConnectionType) {
@@ -254,12 +250,7 @@ pub async fn parse_packet(data: &[u8], state: &mut State) -> (Vec<PacketSegment>
     }
 }
 
-pub async fn send_keep_alive(
-    socket: &mut WriteHalf<TcpStream>,
-    state: &mut State,
-    id: u32,
-    timestamp: u32,
-) {
+pub async fn send_keep_alive(socket: &mut TcpStream, state: &mut State, id: u32, timestamp: u32) {
     let response_packet = PacketSegment {
         source_actor: 0,
         target_actor: 0,

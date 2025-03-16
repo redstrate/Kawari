@@ -1,4 +1,7 @@
-use std::ffi::CString;
+use std::{
+    ffi::CString,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 pub(crate) fn read_bool_from<T: std::convert::From<u8> + std::cmp::PartialEq>(x: T) -> bool {
     x == T::from(1u8)
@@ -16,4 +19,13 @@ pub(crate) fn read_string(byte_stream: Vec<u8>) -> String {
 pub(crate) fn write_string(str: &String) -> Vec<u8> {
     let c_string = CString::new(&**str).unwrap();
     c_string.as_bytes_with_nul().to_vec()
+}
+
+pub fn timestamp_secs() -> u32 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("Failed to get UNIX timestamp!")
+        .as_secs()
+        .try_into()
+        .unwrap()
 }

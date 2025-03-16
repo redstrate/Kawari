@@ -6,7 +6,7 @@ use physis::{
     },
 };
 
-use crate::{config::get_config, world::Position};
+use crate::config::get_config;
 
 /// Represents a loaded zone
 pub struct Zone {

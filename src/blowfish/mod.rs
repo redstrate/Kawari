@@ -1,8 +1,6 @@
 // SPDX-FileCopyrightText: 2025 Joshua Goins <josh@redstrate.com>
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use std::io::{Cursor, Write};
-
 mod constants;
 use constants::{BLOWFISH_P, BLOWFISH_S};
 
@@ -93,29 +91,28 @@ impl Blowfish {
     /// Calculates the F-function for `x`.
     fn f(&self, x: u32) -> u32 {
         let [a, b, c, d] = x.to_le_bytes();
-        return ((self.s[0][d as usize].wrapping_add(self.s[1][c as usize]))
-            ^ (self.s[2][b as usize]))
-            .wrapping_add(self.s[3][a as usize]);
+        ((self.s[0][d as usize].wrapping_add(self.s[1][c as usize])) ^ (self.s[2][b as usize]))
+            .wrapping_add(self.s[3][a as usize])
     }
 
     fn encrypt_pair(&self, xl: &mut u32, xr: &mut u32) {
         for i in 0..ROUNDS {
-            *xl ^= self.p[i as usize];
-            *xr = self.f(*xl) ^ *xr;
+            *xl ^= self.p[i];
+            *xr ^= self.f(*xl);
 
             (*xl, *xr) = (*xr, *xl);
         }
 
         (*xl, *xr) = (*xr, *xl);
 
-        *xr ^= self.p[ROUNDS as usize];
-        *xl ^= self.p[ROUNDS as usize + 1];
+        *xr ^= self.p[ROUNDS];
+        *xl ^= self.p[ROUNDS + 1];
     }
 
     fn decrypt_pair(&self, xl: &mut u32, xr: &mut u32) {
         for i in (2..ROUNDS + 2).rev() {
-            *xl ^= self.p[i as usize];
-            *xr = self.f(*xl) ^ *xr;
+            *xl ^= self.p[i];
+            *xr ^= self.f(*xl);
 
             (*xl, *xr) = (*xr, *xl);
         }

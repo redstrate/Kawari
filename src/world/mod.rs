@@ -25,3 +25,12 @@ pub use init_zone::InitZone;
 
 mod zone;
 pub use zone::Zone;
+
+mod chat_handler;
+pub use chat_handler::ChatHandler;
+
+mod connection;
+pub use connection::ZoneConnection;
+
+mod chat_message;
+pub use chat_message::ChatMessage;

@@ -1,20 +1,16 @@
 use std::io::Cursor;
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use binrw::BinRead;
-use kawari::client_select_data::ClientCustomizeData;
-use kawari::ipc::{ActorSetPos, GameMasterCommandType, IPCOpCode, IPCSegment, IPCStructData};
+use kawari::ipc::{GameMasterCommandType, IPCOpCode, IPCSegment, IPCStructData};
 use kawari::oodle::FFXIVOodle;
-use kawari::packet::{
-    CompressionType, PacketSegment, SegmentType, State, parse_packet, send_keep_alive, send_packet,
-};
+use kawari::packet::{PacketSegment, SegmentType, State, send_keep_alive};
 use kawari::world::{
-    ActorControlSelf, ActorControlType, InitZone, PlayerSetup, PlayerSpawn, PlayerStats, Position,
-    UpdateClassInfo, Zone,
+    ActorControlSelf, ActorControlType, ChatHandler, InitZone, PlayerSetup, PlayerSpawn,
+    PlayerStats, Position, UpdateClassInfo, Zone, ZoneConnection,
 };
-use kawari::{CHAR_NAME, CONTENT_ID, CUSTOMIZE_DATA, WORLD_ID, ZONE_ID};
+use kawari::{CHAR_NAME, CONTENT_ID, CUSTOMIZE_DATA, WORLD_ID, ZONE_ID, timestamp_secs};
 use tokio::io::AsyncReadExt;
 use tokio::net::TcpListener;
 
@@ -28,41 +24,40 @@ async fn main() {
 
     loop {
         let (socket, _) = listener.accept().await.unwrap();
-        let (mut read, mut write) = tokio::io::split(socket);
 
-        let mut state = State {
+        let state = State {
             client_key: None,
             session_id: None,
             clientbound_oodle: FFXIVOodle::new(),
             serverbound_oodle: FFXIVOodle::new(),
-            player_id: None,
         };
 
         let zone = Zone::load(010);
 
         let mut exit_position = None;
 
+        let mut connection = ZoneConnection {
+            socket,
+            state,
+            player_id: 0,
+        };
+
         tokio::spawn(async move {
             let mut buf = [0; 2056];
             loop {
-                let n = read.read(&mut buf).await.expect("Failed to read data!");
+                let n = connection
+                    .socket
+                    .read(&mut buf)
+                    .await
+                    .expect("Failed to read data!");
 
                 if n != 0 {
                     println!("recieved {n} bytes...");
-                    let (segments, connection_type) = parse_packet(&buf[..n], &mut state).await;
+                    let (segments, connection_type) = connection.parse_packet(&buf[..n]).await;
                     for segment in &segments {
-                        let timestamp_secs = || {
-                            SystemTime::now()
-                                .duration_since(UNIX_EPOCH)
-                                .expect("Failed to get UNIX timestamp!")
-                                .as_secs()
-                                .try_into()
-                                .unwrap()
-                        };
-
                         match &segment.segment_type {
                             SegmentType::InitializeSession { player_id } => {
-                                state.player_id = Some(*player_id);
+                                connection.player_id = *player_id;
 
                                 // We have send THEM a keep alive
                                 {
@@ -73,21 +68,16 @@ async fn main() {
                                         .try_into()
                                         .unwrap();
 
-                                    let response_packet = PacketSegment {
-                                        source_actor: 0,
-                                        target_actor: 0,
-                                        segment_type: SegmentType::KeepAlive {
-                                            id: 0xE0037603u32,
-                                            timestamp,
-                                        },
-                                    };
-                                    send_packet(
-                                        &mut write,
-                                        &[response_packet],
-                                        &mut state,
-                                        CompressionType::Oodle,
-                                    )
-                                    .await;
+                                    connection
+                                        .send_segment(PacketSegment {
+                                            source_actor: 0,
+                                            target_actor: 0,
+                                            segment_type: SegmentType::KeepAlive {
+                                                id: 0xE0037603u32,
+                                                timestamp,
+                                            },
+                                        })
+                                        .await;
                                 }
 
                                 match connection_type {
@@ -96,20 +86,15 @@ async fn main() {
                                             "Client {player_id} is initializing zone session..."
                                         );
 
-                                        let response_packet = PacketSegment {
-                                            source_actor: 0,
-                                            target_actor: 0,
-                                            segment_type: SegmentType::ZoneInitialize {
-                                                player_id: *player_id,
-                                            },
-                                        };
-                                        send_packet(
-                                            &mut write,
-                                            &[response_packet],
-                                            &mut state,
-                                            CompressionType::Oodle,
-                                        )
-                                        .await;
+                                        connection
+                                            .send_segment(PacketSegment {
+                                                source_actor: 0,
+                                                target_actor: 0,
+                                                segment_type: SegmentType::ZoneInitialize {
+                                                    player_id: *player_id,
+                                                },
+                                            })
+                                            .await;
                                     }
                                     kawari::packet::ConnectionType::Chat => {
                                         tracing::info!(
@@ -117,20 +102,15 @@ async fn main() {
                                         );
 
                                         {
-                                            let response_packet = PacketSegment {
-                                                source_actor: 0,
-                                                target_actor: 0,
-                                                segment_type: SegmentType::ZoneInitialize {
-                                                    player_id: *player_id,
-                                                },
-                                            };
-                                            send_packet(
-                                                &mut write,
-                                                &[response_packet],
-                                                &mut state,
-                                                CompressionType::Oodle,
-                                            )
-                                            .await;
+                                            connection
+                                                .send_segment(PacketSegment {
+                                                    source_actor: 0,
+                                                    target_actor: 0,
+                                                    segment_type: SegmentType::ZoneInitialize {
+                                                        player_id: *player_id,
+                                                    },
+                                                })
+                                                .await;
                                         }
 
                                         {
@@ -143,18 +123,13 @@ async fn main() {
                                                 data: IPCStructData::InitializeChat { unk: [0; 8] },
                                             };
 
-                                            let response_packet = PacketSegment {
-                                                source_actor: *player_id,
-                                                target_actor: *player_id,
-                                                segment_type: SegmentType::Ipc { data: ipc },
-                                            };
-                                            send_packet(
-                                                &mut write,
-                                                &[response_packet],
-                                                &mut state,
-                                                CompressionType::Oodle,
-                                            )
-                                            .await;
+                                            connection
+                                                .send_segment(PacketSegment {
+                                                    source_actor: *player_id,
+                                                    target_actor: *player_id,
+                                                    segment_type: SegmentType::Ipc { data: ipc },
+                                                })
+                                                .await;
                                         }
                                     }
                                     _ => panic!(
@@ -179,23 +154,18 @@ async fn main() {
                                                 timestamp: timestamp_secs(),
                                                 data: IPCStructData::InitResponse {
                                                     unk1: 0,
-                                                    character_id: state.player_id.unwrap(),
+                                                    character_id: connection.player_id,
                                                     unk2: 0,
                                                 },
                                             };
 
-                                            let response_packet = PacketSegment {
-                                                source_actor: state.player_id.unwrap(),
-                                                target_actor: state.player_id.unwrap(),
-                                                segment_type: SegmentType::Ipc { data: ipc },
-                                            };
-                                            send_packet(
-                                                &mut write,
-                                                &[response_packet],
-                                                &mut state,
-                                                CompressionType::Oodle,
-                                            )
-                                            .await;
+                                            connection
+                                                .send_segment(PacketSegment {
+                                                    source_actor: connection.player_id,
+                                                    target_actor: connection.player_id,
+                                                    segment_type: SegmentType::Ipc { data: ipc },
+                                                })
+                                                .await;
                                         }
 
                                         // Control Data
@@ -220,18 +190,13 @@ async fn main() {
                                                 ),
                                             };
 
-                                            let response_packet = PacketSegment {
-                                                source_actor: state.player_id.unwrap(),
-                                                target_actor: state.player_id.unwrap(),
-                                                segment_type: SegmentType::Ipc { data: ipc },
-                                            };
-                                            send_packet(
-                                                &mut write,
-                                                &[response_packet],
-                                                &mut state,
-                                                CompressionType::Oodle,
-                                            )
-                                            .await;
+                                            connection
+                                                .send_segment(PacketSegment {
+                                                    source_actor: connection.player_id,
+                                                    target_actor: connection.player_id,
+                                                    segment_type: SegmentType::Ipc { data: ipc },
+                                                })
+                                                .await;
                                         }
 
                                         // Stats
@@ -250,18 +215,13 @@ async fn main() {
                                                 }),
                                             };
 
-                                            let response_packet = PacketSegment {
-                                                source_actor: state.player_id.unwrap(),
-                                                target_actor: state.player_id.unwrap(),
-                                                segment_type: SegmentType::Ipc { data: ipc },
-                                            };
-                                            send_packet(
-                                                &mut write,
-                                                &[response_packet],
-                                                &mut state,
-                                                CompressionType::Oodle,
-                                            )
-                                            .await;
+                                            connection
+                                                .send_segment(PacketSegment {
+                                                    source_actor: connection.player_id,
+                                                    target_actor: connection.player_id,
+                                                    segment_type: SegmentType::Ipc { data: ipc },
+                                                })
+                                                .await;
                                         }
 
                                         // Player Setup
@@ -281,18 +241,13 @@ async fn main() {
                                                 }),
                                             };
 
-                                            let response_packet = PacketSegment {
-                                                source_actor: state.player_id.unwrap(),
-                                                target_actor: state.player_id.unwrap(),
-                                                segment_type: SegmentType::Ipc { data: ipc },
-                                            };
-                                            send_packet(
-                                                &mut write,
-                                                &[response_packet],
-                                                &mut state,
-                                                CompressionType::Oodle,
-                                            )
-                                            .await;
+                                            connection
+                                                .send_segment(PacketSegment {
+                                                    source_actor: connection.player_id,
+                                                    target_actor: connection.player_id,
+                                                    segment_type: SegmentType::Ipc { data: ipc },
+                                                })
+                                                .await;
                                         }
 
                                         // Player Class Info
@@ -314,18 +269,13 @@ async fn main() {
                                                 ),
                                             };
 
-                                            let response_packet = PacketSegment {
-                                                source_actor: state.player_id.unwrap(),
-                                                target_actor: state.player_id.unwrap(),
-                                                segment_type: SegmentType::Ipc { data: ipc },
-                                            };
-                                            send_packet(
-                                                &mut write,
-                                                &[response_packet],
-                                                &mut state,
-                                                CompressionType::Oodle,
-                                            )
-                                            .await;
+                                            connection
+                                                .send_segment(PacketSegment {
+                                                    source_actor: connection.player_id,
+                                                    target_actor: connection.player_id,
+                                                    segment_type: SegmentType::Ipc { data: ipc },
+                                                })
+                                                .await;
                                         }
 
                                         // unk10
@@ -341,18 +291,13 @@ async fn main() {
                                                 },
                                             };
 
-                                            let response_packet = PacketSegment {
-                                                source_actor: state.player_id.unwrap(),
-                                                target_actor: state.player_id.unwrap(),
-                                                segment_type: SegmentType::Ipc { data: ipc },
-                                            };
-                                            send_packet(
-                                                &mut write,
-                                                &[response_packet],
-                                                &mut state,
-                                                CompressionType::Oodle,
-                                            )
-                                            .await;
+                                            connection
+                                                .send_segment(PacketSegment {
+                                                    source_actor: connection.player_id,
+                                                    target_actor: connection.player_id,
+                                                    segment_type: SegmentType::Ipc { data: ipc },
+                                                })
+                                                .await;
                                         }
 
                                         // unk9
@@ -366,18 +311,13 @@ async fn main() {
                                                 data: IPCStructData::Unk9 { unk: [0; 24] },
                                             };
 
-                                            let response_packet = PacketSegment {
-                                                source_actor: state.player_id.unwrap(),
-                                                target_actor: state.player_id.unwrap(),
-                                                segment_type: SegmentType::Ipc { data: ipc },
-                                            };
-                                            send_packet(
-                                                &mut write,
-                                                &[response_packet],
-                                                &mut state,
-                                                CompressionType::Oodle,
-                                            )
-                                            .await;
+                                            connection
+                                                .send_segment(PacketSegment {
+                                                    source_actor: connection.player_id,
+                                                    target_actor: connection.player_id,
+                                                    segment_type: SegmentType::Ipc { data: ipc },
+                                                })
+                                                .await;
                                         }
 
                                         // link shell information
@@ -393,18 +333,13 @@ async fn main() {
                                                 },
                                             };
 
-                                            let response_packet = PacketSegment {
-                                                source_actor: state.player_id.unwrap(),
-                                                target_actor: state.player_id.unwrap(),
-                                                segment_type: SegmentType::Ipc { data: ipc },
-                                            };
-                                            send_packet(
-                                                &mut write,
-                                                &[response_packet],
-                                                &mut state,
-                                                CompressionType::Oodle,
-                                            )
-                                            .await;
+                                            connection
+                                                .send_segment(PacketSegment {
+                                                    source_actor: connection.player_id,
+                                                    target_actor: connection.player_id,
+                                                    segment_type: SegmentType::Ipc { data: ipc },
+                                                })
+                                                .await;
                                         }
 
                                         // unk8
@@ -418,18 +353,13 @@ async fn main() {
                                                 data: IPCStructData::Unk8 { unk: [0; 808] },
                                             };
 
-                                            let response_packet = PacketSegment {
-                                                source_actor: state.player_id.unwrap(),
-                                                target_actor: state.player_id.unwrap(),
-                                                segment_type: SegmentType::Ipc { data: ipc },
-                                            };
-                                            send_packet(
-                                                &mut write,
-                                                &[response_packet],
-                                                &mut state,
-                                                CompressionType::Oodle,
-                                            )
-                                            .await;
+                                            connection
+                                                .send_segment(PacketSegment {
+                                                    source_actor: connection.player_id,
+                                                    target_actor: connection.player_id,
+                                                    segment_type: SegmentType::Ipc { data: ipc },
+                                                })
+                                                .await;
                                         }
 
                                         // Init Zone
@@ -448,18 +378,13 @@ async fn main() {
                                                 }),
                                             };
 
-                                            let response_packet = PacketSegment {
-                                                source_actor: state.player_id.unwrap(),
-                                                target_actor: state.player_id.unwrap(),
-                                                segment_type: SegmentType::Ipc { data: ipc },
-                                            };
-                                            send_packet(
-                                                &mut write,
-                                                &[response_packet],
-                                                &mut state,
-                                                CompressionType::Oodle,
-                                            )
-                                            .await;
+                                            connection
+                                                .send_segment(PacketSegment {
+                                                    source_actor: connection.player_id,
+                                                    target_actor: connection.player_id,
+                                                    segment_type: SegmentType::Ipc { data: ipc },
+                                                })
+                                                .await;
                                         }
                                     }
                                     IPCStructData::FinishLoading { .. } => {
@@ -481,18 +406,13 @@ async fn main() {
                                                 },
                                             };
 
-                                            let response_packet = PacketSegment {
-                                                source_actor: state.player_id.unwrap(),
-                                                target_actor: state.player_id.unwrap(),
-                                                segment_type: SegmentType::Ipc { data: ipc },
-                                            };
-                                            send_packet(
-                                                &mut write,
-                                                &[response_packet],
-                                                &mut state,
-                                                CompressionType::Oodle,
-                                            )
-                                            .await;
+                                            connection
+                                                .send_segment(PacketSegment {
+                                                    source_actor: connection.player_id,
+                                                    target_actor: connection.player_id,
+                                                    segment_type: SegmentType::Ipc { data: ipc },
+                                                })
+                                                .await;
                                         }
 
                                         // send player spawn
@@ -537,18 +457,13 @@ async fn main() {
                                                 }),
                                             };
 
-                                            let response_packet = PacketSegment {
-                                                source_actor: state.player_id.unwrap(),
-                                                target_actor: state.player_id.unwrap(),
-                                                segment_type: SegmentType::Ipc { data: ipc },
-                                            };
-                                            send_packet(
-                                                &mut write,
-                                                &[response_packet],
-                                                &mut state,
-                                                CompressionType::Oodle,
-                                            )
-                                            .await;
+                                            connection
+                                                .send_segment(PacketSegment {
+                                                    source_actor: connection.player_id,
+                                                    target_actor: connection.player_id,
+                                                    segment_type: SegmentType::Ipc { data: ipc },
+                                                })
+                                                .await;
                                         }
 
                                         // fade in?
@@ -564,18 +479,13 @@ async fn main() {
                                                 },
                                             };
 
-                                            let response_packet = PacketSegment {
-                                                source_actor: state.player_id.unwrap(),
-                                                target_actor: state.player_id.unwrap(),
-                                                segment_type: SegmentType::Ipc { data: ipc },
-                                            };
-                                            send_packet(
-                                                &mut write,
-                                                &[response_packet],
-                                                &mut state,
-                                                CompressionType::Oodle,
-                                            )
-                                            .await;
+                                            connection
+                                                .send_segment(PacketSegment {
+                                                    source_actor: connection.player_id,
+                                                    target_actor: connection.player_id,
+                                                    segment_type: SegmentType::Ipc { data: ipc },
+                                                })
+                                                .await;
                                         }
 
                                         // wipe any exit position so it isn't accidentally reused
@@ -621,18 +531,13 @@ async fn main() {
                                                 },
                                             };
 
-                                            let response_packet = PacketSegment {
-                                                source_actor: state.player_id.unwrap(),
-                                                target_actor: state.player_id.unwrap(),
-                                                segment_type: SegmentType::Ipc { data: ipc },
-                                            };
-                                            send_packet(
-                                                &mut write,
-                                                &[response_packet],
-                                                &mut state,
-                                                CompressionType::Oodle,
-                                            )
-                                            .await;
+                                            connection
+                                                .send_segment(PacketSegment {
+                                                    source_actor: connection.player_id,
+                                                    target_actor: connection.player_id,
+                                                    segment_type: SegmentType::Ipc { data: ipc },
+                                                })
+                                                .await;
                                         }
                                     }
                                     IPCStructData::UpdatePositionHandler { .. } => {
@@ -652,72 +557,24 @@ async fn main() {
                                                 data: IPCStructData::LogOutComplete { unk: [0; 8] },
                                             };
 
-                                            let response_packet = PacketSegment {
-                                                source_actor: state.player_id.unwrap(),
-                                                target_actor: state.player_id.unwrap(),
-                                                segment_type: SegmentType::Ipc { data: ipc },
-                                            };
-                                            send_packet(
-                                                &mut write,
-                                                &[response_packet],
-                                                &mut state,
-                                                CompressionType::Oodle,
-                                            )
-                                            .await;
+                                            connection
+                                                .send_segment(PacketSegment {
+                                                    source_actor: connection.player_id,
+                                                    target_actor: connection.player_id,
+                                                    segment_type: SegmentType::Ipc { data: ipc },
+                                                })
+                                                .await;
                                         }
                                     }
                                     IPCStructData::Disconnected { .. } => {
                                         tracing::info!("Client disconnected!");
                                     }
-                                    IPCStructData::ChatMessage { message, .. } => {
-                                        tracing::info!("Client sent chat message: {message}!");
-
-                                        let parts: Vec<&str> = message.split(' ').collect();
-                                        match parts[0] {
-                                            "!setpos" => {
-                                                let pos_x = parts[1].parse::<f32>().unwrap();
-                                                let pos_y = parts[2].parse::<f32>().unwrap();
-                                                let pos_z = parts[3].parse::<f32>().unwrap();
-
-                                                // set pos
-                                                {
-                                                    let ipc = IPCSegment {
-                                                        unk1: 14,
-                                                        unk2: 0,
-                                                        op_code: IPCOpCode::ActorSetPos,
-                                                        server_id: WORLD_ID,
-                                                        timestamp: timestamp_secs(),
-                                                        data: IPCStructData::ActorSetPos(
-                                                            ActorSetPos {
-                                                                unk: 0x020fa3b8,
-                                                                position: Position {
-                                                                    x: pos_x,
-                                                                    y: pos_y,
-                                                                    z: pos_z,
-                                                                },
-                                                                ..Default::default()
-                                                            },
-                                                        ),
-                                                    };
-
-                                                    let response_packet = PacketSegment {
-                                                        source_actor: state.player_id.unwrap(),
-                                                        target_actor: state.player_id.unwrap(),
-                                                        segment_type: SegmentType::Ipc {
-                                                            data: ipc,
-                                                        },
-                                                    };
-                                                    send_packet(
-                                                        &mut write,
-                                                        &[response_packet],
-                                                        &mut state,
-                                                        CompressionType::Oodle,
-                                                    )
-                                                    .await;
-                                                }
-                                            }
-                                            _ => tracing::info!("Unrecognized debug command!"),
-                                        }
+                                    IPCStructData::ChatMessage(chat_message) => {
+                                        ChatHandler::handle_chat_message(
+                                            &mut connection,
+                                            chat_message,
+                                        )
+                                        .await
                                     }
                                     IPCStructData::GameMasterCommand { command, arg, .. } => {
                                         tracing::info!("Got a game master command!");
@@ -739,20 +596,15 @@ async fn main() {
                                                         }),
                                                     };
 
-                                                    let response_packet = PacketSegment {
-                                                        source_actor: state.player_id.unwrap(),
-                                                        target_actor: state.player_id.unwrap(),
-                                                        segment_type: SegmentType::Ipc {
-                                                            data: ipc,
-                                                        },
-                                                    };
-                                                    send_packet(
-                                                        &mut write,
-                                                        &[response_packet],
-                                                        &mut state,
-                                                        CompressionType::Oodle,
-                                                    )
-                                                    .await;
+                                                    connection
+                                                        .send_segment(PacketSegment {
+                                                            source_actor: connection.player_id,
+                                                            target_actor: connection.player_id,
+                                                            segment_type: SegmentType::Ipc {
+                                                                data: ipc,
+                                                            },
+                                                        })
+                                                        .await;
                                                 }
                                             }
                                         }
@@ -800,18 +652,13 @@ async fn main() {
                                                 },
                                             };
 
-                                            let response_packet = PacketSegment {
-                                                source_actor: state.player_id.unwrap(),
-                                                target_actor: state.player_id.unwrap(),
-                                                segment_type: SegmentType::Ipc { data: ipc },
-                                            };
-                                            send_packet(
-                                                &mut write,
-                                                &[response_packet],
-                                                &mut state,
-                                                CompressionType::Oodle,
-                                            )
-                                            .await;
+                                            connection
+                                                .send_segment(PacketSegment {
+                                                    source_actor: connection.player_id,
+                                                    target_actor: connection.player_id,
+                                                    segment_type: SegmentType::Ipc { data: ipc },
+                                                })
+                                                .await;
                                         }
 
                                         // fade out? x2
@@ -827,18 +674,13 @@ async fn main() {
                                                 },
                                             };
 
-                                            let response_packet = PacketSegment {
-                                                source_actor: state.player_id.unwrap(),
-                                                target_actor: state.player_id.unwrap(),
-                                                segment_type: SegmentType::Ipc { data: ipc },
-                                            };
-                                            send_packet(
-                                                &mut write,
-                                                &[response_packet],
-                                                &mut state,
-                                                CompressionType::Oodle,
-                                            )
-                                            .await;
+                                            connection
+                                                .send_segment(PacketSegment {
+                                                    source_actor: connection.player_id,
+                                                    target_actor: connection.player_id,
+                                                    segment_type: SegmentType::Ipc { data: ipc },
+                                                })
+                                                .await;
                                         }
 
                                         tracing::info!(
@@ -869,18 +711,13 @@ async fn main() {
                                                 }),
                                             };
 
-                                            let response_packet = PacketSegment {
-                                                source_actor: state.player_id.unwrap(),
-                                                target_actor: state.player_id.unwrap(),
-                                                segment_type: SegmentType::Ipc { data: ipc },
-                                            };
-                                            send_packet(
-                                                &mut write,
-                                                &[response_packet],
-                                                &mut state,
-                                                CompressionType::Oodle,
-                                            )
-                                            .await;
+                                            connection
+                                                .send_segment(PacketSegment {
+                                                    source_actor: connection.player_id,
+                                                    target_actor: connection.player_id,
+                                                    segment_type: SegmentType::Ipc { data: ipc },
+                                                })
+                                                .await;
                                         }
 
                                         // idk
@@ -896,18 +733,13 @@ async fn main() {
                                                 },
                                             };
 
-                                            let response_packet = PacketSegment {
-                                                source_actor: state.player_id.unwrap(),
-                                                target_actor: state.player_id.unwrap(),
-                                                segment_type: SegmentType::Ipc { data: ipc },
-                                            };
-                                            send_packet(
-                                                &mut write,
-                                                &[response_packet],
-                                                &mut state,
-                                                CompressionType::Oodle,
-                                            )
-                                            .await;
+                                            connection
+                                                .send_segment(PacketSegment {
+                                                    source_actor: connection.player_id,
+                                                    target_actor: connection.player_id,
+                                                    segment_type: SegmentType::Ipc { data: ipc },
+                                                })
+                                                .await;
                                         }
                                     }
                                     IPCStructData::Unk13 { .. } => {
@@ -922,7 +754,13 @@ async fn main() {
                                 }
                             }
                             SegmentType::KeepAlive { id, timestamp } => {
-                                send_keep_alive(&mut write, &mut state, *id, *timestamp).await
+                                send_keep_alive(
+                                    &mut connection.socket,
+                                    &mut connection.state,
+                                    *id,
+                                    *timestamp,
+                                )
+                                .await
                             }
                             SegmentType::KeepAliveResponse { .. } => {
                                 tracing::info!("Got keep alive response from client... cool...");
