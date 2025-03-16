@@ -1,4 +1,5 @@
 mod player_spawn;
+pub use player_spawn::CharacterMode;
 pub use player_spawn::PlayerSpawn;
 
 mod position;

@@ -3,7 +3,7 @@ use crate::{
     ipc::{IPCOpCode, IPCSegment, IPCStructData},
     packet::{PacketSegment, SegmentType},
     timestamp_secs,
-    world::PlayerSpawn,
+    world::{CharacterMode, PlayerSpawn},
 };
 
 use super::{ChatMessage, Position, ZoneConnection};
@@ -53,7 +53,6 @@ impl ChatHandler {
                             mp_curr: 100,
                             mp_max: 100,
                             model_type: 1,
-                            state: 1,
                             gm_rank: 3,
                             spawn_index: connection.get_free_spawn_index(),
                             look: CUSTOMIZE_DATA,

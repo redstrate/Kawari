@@ -286,7 +286,6 @@ async fn main() {
                                                     mp_curr: 100,
                                                     mp_max: 100,
                                                     model_type: 1,
-                                                    state: 1,
                                                     gm_rank: 3,
                                                     look: CUSTOMIZE_DATA,
                                                     fc_tag: "LOCAL".to_string(),

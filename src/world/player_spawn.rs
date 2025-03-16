@@ -9,6 +9,17 @@ use super::status_effect::StatusEffect;
 
 #[binrw]
 #[brw(little)]
+#[brw(repr = u8)]
+#[derive(Debug, Clone, Default, PartialEq)]
+pub enum CharacterMode {
+    None = 0x0,
+    #[default]
+    Normal = 0x1,
+    Dead = 0x2,
+}
+
+#[binrw]
+#[brw(little)]
 #[derive(Debug, Clone, Default)]
 pub struct PlayerSpawn {
     // also shows up in the friends list.
@@ -64,7 +75,7 @@ pub struct PlayerSpawn {
     pub u25: u8,
     pub u26: u8,
     pub spawn_index: u8,
-    pub state: u8,
+    pub mode: CharacterMode,
     pub persistent_emote: u8,
     pub model_type: u8,
     pub subtype: u8,
@@ -124,7 +135,7 @@ mod tests {
         assert_eq!(player_spawn.hp_max, 159);
         assert_eq!(player_spawn.mp_curr, 10000);
         assert_eq!(player_spawn.mp_max, 10000);
-        assert_eq!(player_spawn.state, 1);
+        assert_eq!(player_spawn.mode, CharacterMode::Normal);
         assert_eq!(player_spawn.spawn_index, 0);
         assert_eq!(player_spawn.level, 1);
         assert_eq!(player_spawn.class_job, 1); // adventurer
