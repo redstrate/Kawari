@@ -1,6 +1,6 @@
 use kawari::CONTENT_ID;
-use kawari::chara_make::CharaMake;
 use kawari::ipc::{CharacterDetails, IPCOpCode, IPCSegment, IPCStructData, LobbyCharacterAction};
+use kawari::lobby::chara_make::CharaMake;
 use kawari::lobby::connection::LobbyConnection;
 use kawari::oodle::FFXIVOodle;
 use kawari::packet::{PacketSegment, SegmentType, State, send_keep_alive};

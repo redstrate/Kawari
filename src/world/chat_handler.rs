@@ -1,8 +1,8 @@
 use crate::{
     CHAR_NAME, CUSTOMIZE_DATA, WORLD_ID,
+    common::timestamp_secs,
     ipc::{IPCOpCode, IPCSegment, IPCStructData},
     packet::{PacketSegment, SegmentType},
-    timestamp_secs,
     world::PlayerSpawn,
 };
 

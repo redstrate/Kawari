@@ -1,8 +1,7 @@
 use binrw::binrw;
 
 use crate::CHAR_NAME_MAX_LENGTH;
-use crate::client_select_data::ClientCustomizeData;
-use crate::common::{read_string, write_string};
+use crate::common::{CustomizeData, read_string, write_string};
 
 use super::position::Position;
 use super::status_effect::StatusEffect;
@@ -103,7 +102,7 @@ pub struct PlayerSpawn {
     #[br(map = read_string)]
     #[bw(map = write_string)]
     pub name: String,
-    pub look: ClientCustomizeData,
+    pub look: CustomizeData,
     #[br(count = 6)]
     #[bw(pad_size_to = 6)]
     #[br(map = read_string)]

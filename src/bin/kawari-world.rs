@@ -9,7 +9,7 @@ use kawari::world::{
 };
 use kawari::{
     CHAR_NAME, CITY_STATE, CONTENT_ID, CUSTOMIZE_DATA, DEITY, NAMEDAY_DAY, NAMEDAY_MONTH, WORLD_ID,
-    ZONE_ID, timestamp_secs,
+    ZONE_ID, common::timestamp_secs,
 };
 use tokio::io::AsyncReadExt;
 use tokio::net::TcpListener;

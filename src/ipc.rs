@@ -239,7 +239,7 @@ pub enum IPCStructData {
     ClientVersionInfo {
         sequence: u64,
 
-        #[brw(pad_before = 14)] // full of nonsense i don't understand yet
+        #[brw(pad_before = 10)] // full of nonsense i don't understand yet
         #[br(count = 64)]
         #[br(map = read_string)]
         #[bw(ignore)]

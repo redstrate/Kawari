@@ -1,13 +1,10 @@
-use client_select_data::ClientCustomizeData;
+use common::CustomizeData;
 use minijinja::Environment;
 use rand::Rng;
 use rand::distributions::Alphanumeric;
 
 pub mod blowfish;
-pub mod chara_make;
-pub mod client_select_data;
-mod common;
-pub use common::timestamp_secs;
+pub mod common;
 mod compression;
 pub mod config;
 pub mod encryption;
@@ -27,7 +24,7 @@ pub const ZONE_ID: u16 = 132;
 
 pub const CONTENT_ID: u64 = 11111111111111111;
 
-pub const CUSTOMIZE_DATA: ClientCustomizeData = ClientCustomizeData {
+pub const CUSTOMIZE_DATA: CustomizeData = CustomizeData {
     race: 4,
     gender: 1,
     age: 1,

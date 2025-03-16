@@ -6,7 +6,6 @@ use crate::{
     CHAR_NAME, CONTENT_ID, CUSTOMIZE_DATA, DEITY, NAMEDAY_DAY, NAMEDAY_MONTH, WORLD_ID, WORLD_NAME,
     ZONE_ID,
     blowfish::Blowfish,
-    client_select_data::ClientSelectData,
     common::timestamp_secs,
     encryption::generate_encryption_key,
     ipc::{CharacterDetails, IPCOpCode, IPCSegment, IPCStructData, Server, ServiceAccount},
@@ -15,6 +14,8 @@ use crate::{
         send_packet,
     },
 };
+
+use super::client_select_data::ClientSelectData;
 
 pub struct LobbyConnection {
     pub socket: TcpStream,

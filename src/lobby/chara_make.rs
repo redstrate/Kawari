@@ -1,10 +1,10 @@
 use serde_json::Value;
 
-use crate::client_select_data::ClientCustomizeData;
+use crate::common::CustomizeData;
 
 #[derive(Debug)]
 pub struct CharaMake {
-    pub customize: ClientCustomizeData,
+    pub customize: CustomizeData,
     pub unk1: i32, // always 1?
     pub guardian: i32,
     pub birth_month: i32,
@@ -19,7 +19,7 @@ impl CharaMake {
         let content = &v["content"];
 
         Self {
-            customize: ClientCustomizeData::from_json(&content[0]),
+            customize: CustomizeData::from_json(&content[0]),
             unk1: content[1].as_str().unwrap().parse::<i32>().unwrap(),
             guardian: content[2].as_str().unwrap().parse::<i32>().unwrap(),
             birth_month: content[3].as_str().unwrap().parse::<i32>().unwrap(),
