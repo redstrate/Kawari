@@ -5,7 +5,7 @@ use crate::{
     common::{read_string, write_string},
     world::{
         ActorControlSelf, ChatMessage, InitZone, PlayerSetup, PlayerSpawn, PlayerStats, Position,
-        UpdateClassInfo,
+        SocialList, SocialListRequest, UpdateClassInfo,
     },
 };
 
@@ -38,8 +38,6 @@ pub enum IPCOpCode {
 
     /// Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load)
     InitRequest = 0x2ED,
-    /// Sent by the server as response to ZoneInitRequest.
-    InitResponse = 0x1EF,
     /// Sent by the server that tells the client which zone to load
     InitZone = 0x0311,
     /// Sent by the server for... something
@@ -58,16 +56,17 @@ pub enum IPCOpCode {
     // FIXME: 32 bytes of something from the client, not sure what yet
     Unk1 = 0x37C,
     // FIXME: 16 bytes of something from the client, not sure what yet
-    Unk2 = 0x1A1,
+    Unk2 = 0x2E5,
     // FIXME: 8 bytes of something from the client, not sure what yet
     Unk3 = 0x326,
     // FIXME: 8 bytes of something from the client, not sure what yet
     Unk4 = 0x143,
     SetSearchInfoHandler = 0x3B2, // TODO: assumed,
     // FIXME: 8 bytes of something from the client, not sure what yet
+    /// ALSO Sent by the server as response to ZoneInitRequest.
     Unk5 = 0x2D0,
-    // FIXME: 8 bytes of something from the client, not sure what yet
-    Unk6 = 0x2E5,
+    // Sent by the client when it requests the friends list and other related info
+    SocialListRequest = 0x1A1,
     // FIXME: 32 bytes of something from the client, not sure what yet
     Unk7 = 0x2B5,
     UpdatePositionHandler = 0x249, // TODO: assumed
@@ -109,6 +108,18 @@ pub enum IPCOpCode {
     PrepareZoning = 0x308,
     // Sent by the client for unknown reasons
     Unk14 = 0x87,
+    // Sent by the server???
+    Unk15 = 0x28C,
+    // Sent by the server before init zone???
+    Unk16 = 0x3AB,
+    // Sent by the server
+    ActorControl = 0x1B9,
+    // Sent by the server
+    ActorMove = 0x3D8,
+    // Sent by the server
+    Unk17 = 0x2A1,
+    // Sent by the server in response to SocialListRequest
+    SocialList = 0x36C,
 }
 
 #[binrw]
@@ -313,11 +324,8 @@ pub enum IPCStructData {
         // TODO: full of possibly interesting information
         unk: [u8; 8],
     },
-    #[br(pre_assert(*magic == IPCOpCode::Unk6))]
-    Unk6 {
-        // TODO: full of possibly interesting information
-        unk: [u8; 8],
-    },
+    #[br(pre_assert(*magic == IPCOpCode::SocialListRequest))]
+    SocialListRequest(SocialListRequest),
     #[br(pre_assert(*magic == IPCOpCode::Unk7))]
     Unk7 {
         // TODO: full of possibly interesting information
@@ -523,6 +531,24 @@ pub enum IPCStructData {
     },
     #[br(pre_assert(false))]
     PrepareZoning { unk: [u32; 4] },
+    #[br(pre_assert(false))]
+    Unk15 { unk: u32, player_id: u32 },
+    #[br(pre_assert(false))]
+    Unk16 { unk: [u8; 136] },
+    #[br(pre_assert(false))]
+    ActorControl {
+        #[brw(pad_after = 20)] // empty
+        unk: u32,
+    },
+    #[br(pre_assert(false))]
+    ActorMove {
+        #[brw(pad_after = 4)] // empty
+        pos: Position,
+    },
+    #[br(pre_assert(false))]
+    Unk17 { unk: [u8; 104] },
+    #[br(pre_assert(false))]
+    SocialList(SocialList),
 }
 
 #[binrw]
@@ -540,6 +566,22 @@ pub struct IPCSegment {
     #[brw(pad_before = 4)]
     #[br(args(&op_code))]
     pub data: IPCStructData,
+}
+
+impl Default for IPCSegment {
+    fn default() -> Self {
+        Self {
+            unk1: 0x14,
+            unk2: 0,
+            op_code: IPCOpCode::InitializeChat,
+            server_id: 0,
+            timestamp: 0,
+            data: IPCStructData::ClientVersionInfo {
+                session_id: String::new(),
+                version_info: String::new(),
+            },
+        }
+    }
 }
 
 impl IPCSegment {
@@ -562,7 +604,7 @@ impl IPCSegment {
                 IPCStructData::InitZone { .. } => 103,
                 IPCStructData::ActorControlSelf { .. } => 32,
                 IPCStructData::PlayerStats { .. } => 224,
-                IPCStructData::PlayerSetup { .. } => 2545,
+                IPCStructData::PlayerSetup { .. } => 2784,
                 IPCStructData::UpdateClassInfo { .. } => 48,
                 IPCStructData::FinishLoading { .. } => todo!(),
                 IPCStructData::PlayerSpawn { .. } => 656,
@@ -572,7 +614,7 @@ impl IPCSegment {
                 IPCStructData::Unk4 { .. } => todo!(),
                 IPCStructData::SetSearchInfoHandler { .. } => todo!(),
                 IPCStructData::Unk5 { .. } => todo!(),
-                IPCStructData::Unk6 { .. } => todo!(),
+                IPCStructData::SocialListRequest { .. } => todo!(),
                 IPCStructData::Unk7 { .. } => todo!(),
                 IPCStructData::UpdatePositionHandler { .. } => todo!(),
                 IPCStructData::LogOut { .. } => todo!(),
@@ -594,6 +636,12 @@ impl IPCSegment {
                 IPCStructData::Unk13 { .. } => todo!(),
                 IPCStructData::PrepareZoning { .. } => 16,
                 IPCStructData::Unk14 { .. } => todo!(),
+                IPCStructData::Unk15 { .. } => 8,
+                IPCStructData::Unk16 { .. } => 136,
+                IPCStructData::ActorControl { .. } => 24,
+                IPCStructData::ActorMove { .. } => 16,
+                IPCStructData::Unk17 { .. } => 104,
+                IPCStructData::SocialList { .. } => 1136,
             }
     }
 }

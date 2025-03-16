@@ -11,7 +11,6 @@ pub struct InitZone {
     pub content_finder_condition_id: u16,
     pub layer_set_id: u32,
     pub layout_id: u32,
-    #[br(dbg)]
     pub weather_id: u16, // index into Weather sheet probably?
     pub unk_really: u16,
     pub unk_bitmask1: u8,

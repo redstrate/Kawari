@@ -7,8 +7,8 @@ use kawari::ipc::{GameMasterCommandType, IPCOpCode, IPCSegment, IPCStructData};
 use kawari::oodle::FFXIVOodle;
 use kawari::packet::{PacketSegment, SegmentType, State, send_keep_alive};
 use kawari::world::{
-    ActorControlSelf, ActorControlType, ChatHandler, InitZone, PlayerSetup, PlayerSpawn,
-    PlayerStats, Position, UpdateClassInfo, Zone, ZoneConnection,
+    ActorControlSelf, ActorControlType, ChatHandler, InitZone, PlayerEntry, PlayerSetup,
+    PlayerSpawn, PlayerStats, Position, SocialList, UpdateClassInfo, Zone, ZoneConnection,
 };
 use kawari::{CHAR_NAME, CONTENT_ID, CUSTOMIZE_DATA, WORLD_ID, ZONE_ID, timestamp_secs};
 use tokio::io::AsyncReadExt;
@@ -38,6 +38,7 @@ async fn main() {
             socket,
             state,
             player_id: 0,
+            spawn_index: 0,
             zone: Zone::load(ZONE_ID),
         };
 
@@ -91,6 +92,7 @@ async fn main() {
                                                 target_actor: 0,
                                                 segment_type: SegmentType::ZoneInitialize {
                                                     player_id: *player_id,
+                                                    timestamp: timestamp_secs(),
                                                 },
                                             })
                                             .await;
@@ -107,6 +109,7 @@ async fn main() {
                                                     target_actor: 0,
                                                     segment_type: SegmentType::ZoneInitialize {
                                                         player_id: *player_id,
+                                                        timestamp: timestamp_secs(),
                                                     },
                                                 })
                                                 .await;
@@ -114,12 +117,10 @@ async fn main() {
 
                                         {
                                             let ipc = IPCSegment {
-                                                unk1: 0,
-                                                unk2: 0,
                                                 op_code: IPCOpCode::InitializeChat,
-                                                server_id: 0,
-                                                timestamp: 0,
+                                                timestamp: timestamp_secs(),
                                                 data: IPCStructData::InitializeChat { unk: [0; 8] },
+                                                ..Default::default()
                                             };
 
                                             connection
@@ -146,16 +147,14 @@ async fn main() {
                                         // IPC Init(?)
                                         {
                                             let ipc = IPCSegment {
-                                                unk1: 0,
-                                                unk2: 0,
-                                                op_code: IPCOpCode::InitResponse,
-                                                server_id: 0,
+                                                op_code: IPCOpCode::Unk5,
                                                 timestamp: timestamp_secs(),
                                                 data: IPCStructData::InitResponse {
                                                     unk1: 0,
                                                     character_id: connection.player_id,
                                                     unk2: 0,
                                                 },
+                                                ..Default::default()
                                             };
 
                                             connection
@@ -170,10 +169,7 @@ async fn main() {
                                         // Control Data
                                         {
                                             let ipc = IPCSegment {
-                                                unk1: 0,
-                                                unk2: 0,
                                                 op_code: IPCOpCode::ActorControlSelf,
-                                                server_id: 0,
                                                 timestamp: timestamp_secs(),
                                                 data: IPCStructData::ActorControlSelf(
                                                     ActorControlSelf {
@@ -187,6 +183,7 @@ async fn main() {
                                                         param6: 0,
                                                     },
                                                 ),
+                                                ..Default::default()
                                             };
 
                                             connection
@@ -201,10 +198,7 @@ async fn main() {
                                         // Stats
                                         {
                                             let ipc = IPCSegment {
-                                                unk1: 0,
-                                                unk2: 0,
                                                 op_code: IPCOpCode::PlayerStats,
-                                                server_id: 0,
                                                 timestamp: timestamp_secs(),
                                                 data: IPCStructData::PlayerStats(PlayerStats {
                                                     strength: 1,
@@ -212,6 +206,7 @@ async fn main() {
                                                     mp: 100,
                                                     ..Default::default()
                                                 }),
+                                                ..Default::default()
                                             };
 
                                             connection
@@ -226,18 +221,17 @@ async fn main() {
                                         // Player Setup
                                         {
                                             let ipc = IPCSegment {
-                                                unk1: 0,
-                                                unk2: 0,
                                                 op_code: IPCOpCode::PlayerSetup,
-                                                server_id: 0,
                                                 timestamp: timestamp_secs(),
                                                 data: IPCStructData::PlayerSetup(PlayerSetup {
                                                     content_id: CONTENT_ID,
                                                     exp: [10000; 32],
                                                     levels: [100; 32],
                                                     name: CHAR_NAME.to_string(),
+                                                    char_id: connection.player_id,
                                                     ..Default::default()
                                                 }),
+                                                ..Default::default()
                                             };
 
                                             connection
@@ -259,15 +253,13 @@ async fn main() {
                                         // send welcome message
                                         {
                                             let ipc = IPCSegment {
-                                                unk1: 0,
-                                                unk2: 0,
                                                 op_code: IPCOpCode::ServerChatMessage,
-                                                server_id: 0,
                                                 timestamp: timestamp_secs(),
                                                 data: IPCStructData::ServerChatMessage {
                                                     message: "Welcome to Kawari!".to_string(),
                                                     unk: 0,
                                                 },
+                                                ..Default::default()
                                             };
 
                                             connection
@@ -282,12 +274,10 @@ async fn main() {
                                         // send player spawn
                                         {
                                             let ipc = IPCSegment {
-                                                unk1: 0,
-                                                unk2: 0,
                                                 op_code: IPCOpCode::PlayerSpawn,
-                                                server_id: 0,
                                                 timestamp: timestamp_secs(),
                                                 data: IPCStructData::PlayerSpawn(PlayerSpawn {
+                                                    content_id: CONTENT_ID,
                                                     current_world_id: WORLD_ID,
                                                     home_world_id: WORLD_ID,
                                                     title: 1,
@@ -298,11 +288,11 @@ async fn main() {
                                                     mp_curr: 100,
                                                     mp_max: 100,
                                                     model_type: 1,
-                                                    spawn_index: 1,
                                                     state: 1,
                                                     gm_rank: 3,
                                                     look: CUSTOMIZE_DATA,
                                                     fc_tag: "LOCAL".to_string(),
+                                                    subtype: 4,
                                                     models: [
                                                         0,  // head
                                                         89, // body
@@ -319,6 +309,7 @@ async fn main() {
                                                         .unwrap_or(Position::default()),
                                                     ..Default::default()
                                                 }),
+                                                ..Default::default()
                                             };
 
                                             connection
@@ -333,14 +324,12 @@ async fn main() {
                                         // fade in?
                                         {
                                             let ipc = IPCSegment {
-                                                unk1: 0,
-                                                unk2: 0,
                                                 op_code: IPCOpCode::PrepareZoning,
-                                                server_id: 0,
                                                 timestamp: timestamp_secs(),
                                                 data: IPCStructData::PrepareZoning {
                                                     unk: [0, 0, 0, 0],
                                                 },
+                                                ..Default::default()
                                             };
 
                                             connection
@@ -373,8 +362,65 @@ async fn main() {
                                     IPCStructData::Unk5 { .. } => {
                                         tracing::info!("Recieved Unk5!");
                                     }
-                                    IPCStructData::Unk6 { .. } => {
-                                        tracing::info!("Recieved Unk6!");
+                                    IPCStructData::SocialListRequest(request) => {
+                                        tracing::info!("Recieved social list request!");
+
+                                        match &request.request_type {
+                                            kawari::world::SocialListRequestType::Party => {
+                                                let ipc = IPCSegment {
+                                                    op_code: IPCOpCode::SocialList,
+                                                    timestamp: timestamp_secs(),
+                                                    data: IPCStructData::SocialList(SocialList {
+                                                        request_type: request.request_type,
+                                                        sequence: request.count,
+                                                        entries: vec![PlayerEntry {
+                                                            content_id: CONTENT_ID,
+                                                            zone_id: connection.zone.id,
+                                                            zone_id1: 0x0100,
+                                                            class_job: 36,
+                                                            level: 100,
+                                                            one: 1,
+                                                            name: CHAR_NAME.to_string(),
+                                                            fc_tag: "LOCAL".to_string(),
+                                                            ..Default::default()
+                                                        }],
+                                                    }),
+                                                    ..Default::default()
+                                                };
+
+                                                connection
+                                                    .send_segment(PacketSegment {
+                                                        source_actor: connection.player_id,
+                                                        target_actor: connection.player_id,
+                                                        segment_type: SegmentType::Ipc {
+                                                            data: ipc,
+                                                        },
+                                                    })
+                                                    .await;
+                                            }
+                                            kawari::world::SocialListRequestType::Friends => {
+                                                let ipc = IPCSegment {
+                                                    op_code: IPCOpCode::SocialList,
+                                                    timestamp: timestamp_secs(),
+                                                    data: IPCStructData::SocialList(SocialList {
+                                                        request_type: request.request_type,
+                                                        sequence: request.count,
+                                                        entries: Default::default(),
+                                                    }),
+                                                    ..Default::default()
+                                                };
+
+                                                connection
+                                                    .send_segment(PacketSegment {
+                                                        source_actor: connection.player_id,
+                                                        target_actor: connection.player_id,
+                                                        segment_type: SegmentType::Ipc {
+                                                            data: ipc,
+                                                        },
+                                                    })
+                                                    .await;
+                                            }
+                                        }
                                     }
                                     IPCStructData::Unk7 {
                                         timestamp, unk1, ..
@@ -384,15 +430,13 @@ async fn main() {
                                         // send unk11 in response
                                         {
                                             let ipc = IPCSegment {
-                                                unk1: 0,
-                                                unk2: 0,
                                                 op_code: IPCOpCode::Unk11,
-                                                server_id: 0,
                                                 timestamp: timestamp_secs(),
                                                 data: IPCStructData::Unk11 {
                                                     timestamp: *timestamp,
                                                     unk: 333,
                                                 },
+                                                ..Default::default()
                                             };
 
                                             connection
@@ -413,12 +457,10 @@ async fn main() {
                                         // tell the client to disconnect
                                         {
                                             let ipc = IPCSegment {
-                                                unk1: 0,
-                                                unk2: 0,
                                                 op_code: IPCOpCode::LogOutComplete,
-                                                server_id: 0,
                                                 timestamp: timestamp_secs(),
                                                 data: IPCStructData::LogOutComplete { unk: [0; 8] },
+                                                ..Default::default()
                                             };
 
                                             connection
@@ -488,14 +530,12 @@ async fn main() {
                                         // fade out?
                                         {
                                             let ipc = IPCSegment {
-                                                unk1: 0,
-                                                unk2: 0,
                                                 op_code: IPCOpCode::PrepareZoning,
-                                                server_id: 0,
                                                 timestamp: timestamp_secs(),
                                                 data: IPCStructData::PrepareZoning {
                                                     unk: [0x01000000, 0, 0, 0],
                                                 },
+                                                ..Default::default()
                                             };
 
                                             connection
@@ -510,14 +550,12 @@ async fn main() {
                                         // fade out? x2
                                         {
                                             let ipc = IPCSegment {
-                                                unk1: 0,
-                                                unk2: 0,
                                                 op_code: IPCOpCode::PrepareZoning,
-                                                server_id: 0,
                                                 timestamp: timestamp_secs(),
                                                 data: IPCStructData::PrepareZoning {
                                                     unk: [0, 0x00000085, 0x00030000, 0x000008ff], // last thing is probably a float?
                                                 },
+                                                ..Default::default()
                                             };
 
                                             connection

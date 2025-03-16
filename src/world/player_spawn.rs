@@ -11,7 +11,11 @@ use super::status_effect::StatusEffect;
 #[brw(little)]
 #[derive(Debug, Clone, Default)]
 pub struct PlayerSpawn {
-    pub aafafaf: [u8; 16],
+    // also shows up in the friends list.
+    pub some_unique_id: u32,
+
+    #[brw(pad_before = 4)] // always empty?
+    pub content_id: u64,
 
     pub title: u16,
     pub u1b: u16,
@@ -121,6 +125,7 @@ mod tests {
         assert_eq!(player_spawn.mp_curr, 10000);
         assert_eq!(player_spawn.mp_max, 10000);
         assert_eq!(player_spawn.state, 1);
+        assert_eq!(player_spawn.spawn_index, 0);
         assert_eq!(player_spawn.level, 1);
         assert_eq!(player_spawn.class_job, 1); // adventurer
         assert_eq!(player_spawn.scale, 36);
@@ -132,5 +137,6 @@ mod tests {
         assert_eq!(player_spawn.look.gender, 1);
         assert_eq!(player_spawn.look.bust, 100);
         assert_eq!(player_spawn.fc_tag, "");
+        assert_eq!(player_spawn.subtype, 4);
     }
 }

@@ -34,3 +34,9 @@ pub use connection::ZoneConnection;
 
 mod chat_message;
 pub use chat_message::ChatMessage;
+
+mod social_list;
+pub use social_list::PlayerEntry;
+pub use social_list::SocialList;
+pub use social_list::SocialListRequest;
+pub use social_list::SocialListRequestType;

@@ -82,7 +82,9 @@ pub struct PlayerSetup {
     #[bw(pad_size_to = 33)]
     pub mount_guide_mask: Vec<u8>,
     pub ornament_mask: [u8; 4],
-    pub unknown281: [u8; 23],
+    #[br(count = 85)]
+    #[bw(pad_size_to = 85)]
+    pub unknown281: Vec<u8>,
     #[br(count = CHAR_NAME_MAX_LENGTH)]
     #[bw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
     #[br(map = read_string)]

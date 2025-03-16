@@ -1,3 +1,6 @@
+use std::io::Cursor;
+
+use binrw::BinRead;
 use tokio::net::TcpStream;
 
 use crate::{
@@ -19,6 +22,7 @@ pub struct ZoneConnection {
     pub player_id: u32,
 
     pub zone: Zone,
+    pub spawn_index: u8,
 }
 
 impl ZoneConnection {
@@ -40,16 +44,14 @@ impl ZoneConnection {
         // set pos
         {
             let ipc = IPCSegment {
-                unk1: 14,
-                unk2: 0,
                 op_code: IPCOpCode::ActorSetPos,
-                server_id: WORLD_ID,
                 timestamp: timestamp_secs(),
                 data: IPCStructData::ActorSetPos(ActorSetPos {
                     unk: 0x020fa3b8,
                     position,
                     ..Default::default()
                 }),
+                ..Default::default()
             };
 
             let response_packet = PacketSegment {
@@ -73,10 +75,7 @@ impl ZoneConnection {
         // Player Class Info
         {
             let ipc = IPCSegment {
-                unk1: 0,
-                unk2: 0,
                 op_code: IPCOpCode::UpdateClassInfo,
-                server_id: 69, // lol
                 timestamp: timestamp_secs(),
                 data: IPCStructData::UpdateClassInfo(UpdateClassInfo {
                     class_id: 35,
@@ -85,6 +84,7 @@ impl ZoneConnection {
                     class_level: 90,
                     ..Default::default()
                 }),
+                ..Default::default()
             };
 
             self.send_segment(PacketSegment {
@@ -95,56 +95,13 @@ impl ZoneConnection {
             .await;
         }
 
-        // unk10
-        {
-            let ipc = IPCSegment {
-                unk1: 0,
-                unk2: 0,
-                op_code: IPCOpCode::Unk10,
-                server_id: 69, // lol
-                timestamp: timestamp_secs(),
-                data: IPCStructData::Unk10 {
-                    unk: 0x41a0000000000002,
-                },
-            };
-
-            self.send_segment(PacketSegment {
-                source_actor: self.player_id,
-                target_actor: self.player_id,
-                segment_type: SegmentType::Ipc { data: ipc },
-            })
-            .await;
-        }
-
-        // unk9
-        {
-            let ipc = IPCSegment {
-                unk1: 0,
-                unk2: 0,
-                op_code: IPCOpCode::Unk9,
-                server_id: 69, // lol
-                timestamp: timestamp_secs(),
-                data: IPCStructData::Unk9 { unk: [0; 24] },
-            };
-
-            self.send_segment(PacketSegment {
-                source_actor: self.player_id,
-                target_actor: self.player_id,
-                segment_type: SegmentType::Ipc { data: ipc },
-            })
-            .await;
-        }
-
-        // TODO: maybe only sent on initial login not every zone?
         // link shell information
         {
             let ipc = IPCSegment {
-                unk1: 0,
-                unk2: 0,
                 op_code: IPCOpCode::LinkShellInformation,
-                server_id: 69, // lol
                 timestamp: timestamp_secs(),
                 data: IPCStructData::LinkShellInformation { unk: [0; 456] },
+                ..Default::default()
             };
 
             self.send_segment(PacketSegment {
@@ -155,39 +112,20 @@ impl ZoneConnection {
             .await;
         }
 
-        // unk8
-        {
-            let ipc = IPCSegment {
-                unk1: 0,
-                unk2: 0,
-                op_code: IPCOpCode::Unk8,
-                server_id: 69, // lol
-                timestamp: timestamp_secs(),
-                data: IPCStructData::Unk8 { unk: [0; 808] },
-            };
-
-            self.send_segment(PacketSegment {
-                source_actor: self.player_id,
-                target_actor: self.player_id,
-                segment_type: SegmentType::Ipc { data: ipc },
-            })
-            .await;
-        }
+        // TODO: send unk16?
 
         // Init Zone
         {
             let ipc = IPCSegment {
-                unk1: 0,
-                unk2: 0,
                 op_code: IPCOpCode::InitZone,
-                server_id: 0,
                 timestamp: timestamp_secs(),
                 data: IPCStructData::InitZone(InitZone {
-                    server_id: WORLD_ID,
+                    server_id: 0,
                     zone_id: self.zone.id,
                     weather_id: 1,
                     ..Default::default()
                 }),
+                ..Default::default()
             };
 
             self.send_segment(PacketSegment {
@@ -197,5 +135,10 @@ impl ZoneConnection {
             })
             .await;
         }
+    }
+
+    pub fn get_free_spawn_index(&mut self) -> u8 {
+        self.spawn_index += 1;
+        return self.spawn_index;
     }
 }

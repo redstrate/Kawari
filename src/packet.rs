@@ -69,8 +69,9 @@ pub enum SegmentType {
     KeepAliveResponse { id: u32, timestamp: u32 },
     #[brw(magic = 0x2u32)]
     ZoneInitialize {
-        #[brw(pad_after = 36)]
         player_id: u32,
+        #[brw(pad_after = 32)]
+        timestamp: u32,
     },
 }
 
