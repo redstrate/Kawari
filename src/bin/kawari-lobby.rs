@@ -47,6 +47,7 @@ async fn main() {
                             }
                             SegmentType::Ipc { data } => match &data.data {
                                 IPCStructData::ClientVersionInfo {
+                                    sequence,
                                     session_id,
                                     version_info,
                                 } => {
@@ -57,6 +58,9 @@ async fn main() {
                                     connection.state.session_id = Some(session_id.clone());
 
                                     connection.send_account_list().await;
+
+                                    // request an update
+                                    //connection.send_error(*sequence, 1012, 13101).await;
                                 }
                                 IPCStructData::RequestCharacterList { sequence } => {
                                     tracing::info!("Client is requesting character list...");

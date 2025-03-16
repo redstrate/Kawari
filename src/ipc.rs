@@ -237,7 +237,9 @@ pub enum IPCStructData {
     // Client->Server IPC
     #[br(pre_assert(*magic == IPCOpCode::ClientVersionInfo))]
     ClientVersionInfo {
-        #[brw(pad_before = 18)] // full of nonsense i don't understand yet
+        sequence: u64,
+
+        #[brw(pad_before = 14)] // full of nonsense i don't understand yet
         #[br(count = 64)]
         #[br(map = read_string)]
         #[bw(ignore)]
@@ -549,6 +551,14 @@ pub enum IPCStructData {
     Unk17 { unk: [u8; 104] },
     #[br(pre_assert(false))]
     SocialList(SocialList),
+    #[br(pre_assert(false))]
+    LobbyError {
+        sequence: u64,
+        error: u32,
+        value: u32,
+        exd_error_id: u16,
+        unk1: u16,
+    },
 }
 
 #[binrw]
@@ -579,6 +589,7 @@ impl Default for IPCSegment {
             data: IPCStructData::ClientVersionInfo {
                 session_id: String::new(),
                 version_info: String::new(),
+                sequence: 0,
             },
         }
     }
@@ -642,6 +653,7 @@ impl IPCSegment {
                 IPCStructData::ActorMove { .. } => 16,
                 IPCStructData::Unk17 { .. } => 104,
                 IPCStructData::SocialList { .. } => 1136,
+                IPCStructData::LobbyError { .. } => 536,
             }
     }
 }

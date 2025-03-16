@@ -306,4 +306,30 @@ impl LobbyConnection {
         })
         .await;
     }
+
+    pub async fn send_error(&mut self, sequence: u64, error: u32, exd_error: u16) {
+        let lobby_error = IPCStructData::LobbyError {
+            sequence,
+            error,
+            value: 0,
+            exd_error_id: exd_error,
+            unk1: 1,
+        };
+
+        let ipc = IPCSegment {
+            unk1: 0,
+            unk2: 0,
+            op_code: IPCOpCode::InitializeChat,
+            server_id: 0,
+            timestamp: timestamp_secs(),
+            data: lobby_error,
+        };
+
+        self.send_segment(PacketSegment {
+            source_actor: 0,
+            target_actor: 0,
+            segment_type: SegmentType::Ipc { data: ipc },
+        })
+        .await;
+    }
 }
