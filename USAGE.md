@@ -68,3 +68,18 @@ In this example, lobby number 4 will replace the **Aether data center**, but the
 * `DEV.TestSID=0` (this must be a valid session ID in the future)
 
 Some other launchers (like XIVLauncher) will allow you to specify these extra arguments, but they will still authenticate to the retail servers. You can still connect to Kawari with this way, but **make sure to specify your own session ID, or your retail account's session ID will be sent to the lobby server**!
+
+## Chat commands
+
+### Debug commands
+
+These special debug commands start with `!` and are custom to Kawari.
+
+* `!setpos <x> <y> <z>`: Teleport to the specified location
+* `!spawnactor`: Spawn another actor for debugging
+
+### GM commands
+
+These GM commands are implemented in the FFXIV protocol, but only some of them are implemented.
+
+* `//gm teri <id>`: Changes to the specified territory
