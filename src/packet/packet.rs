@@ -1,7 +1,4 @@
-use std::{
-    fs::write,
-    io::Cursor,
-};
+use std::{fs::write, io::Cursor};
 
 use binrw::{BinRead, BinWrite, binrw};
 use tokio::{io::AsyncWriteExt, net::TcpStream};

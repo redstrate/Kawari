@@ -128,9 +128,16 @@ async fn login_send(
         Err(err) => {
             // TODO: see what the official error messages are
             match err {
-                LoginError::WrongUsername => Html("window.external.user(\"login=auth,ng,err,Wrong Username\");".to_string()),
-                LoginError::WrongPassword => Html("window.external.user(\"login=auth,ng,err,Wrong Password\");".to_string()),
-                LoginError::InternalError => Html("window.external.user(\"login=auth,ng,err,Internal Server Error\");".to_string()),
+                LoginError::WrongUsername => {
+                    Html("window.external.user(\"login=auth,ng,err,Wrong Username\");".to_string())
+                }
+                LoginError::WrongPassword => {
+                    Html("window.external.user(\"login=auth,ng,err,Wrong Password\");".to_string())
+                }
+                LoginError::InternalError => Html(
+                    "window.external.user(\"login=auth,ng,err,Internal Server Error\");"
+                        .to_string(),
+                ),
             }
         }
     }

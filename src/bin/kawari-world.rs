@@ -1,4 +1,3 @@
-
 use kawari::oodle::OodleNetwork;
 use kawari::packet::{PacketSegment, PacketState, SegmentType, send_keep_alive};
 use kawari::world::ipc::{

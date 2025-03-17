@@ -8,7 +8,7 @@ use axum::response::IntoResponse;
 use axum::routing::post;
 use axum::{Router, routing::get};
 use kawari::config::get_config;
-use kawari::patch::{PatchEntry, PatchList, PatchType};
+use physis::patchlist::{PatchEntry, PatchList, PatchListType};
 
 fn list_patch_files(dir_path: &str) -> Vec<String> {
     // If the dir doesn't exist, pretend there is no patch files
@@ -95,8 +95,9 @@ async fn verify_boot(Path((platform, boot_version)): Path<(String, String)>) -> 
             // not up to date!
             let patch_list = PatchList {
                 id: "477D80B1_38BC_41d4_8B48_5273ADB89CAC".to_string(),
-                patch_type: PatchType::Boot,
                 requested_version: boot_version.clone(),
+                patch_length: todo!(),
+                content_location: todo!(),
                 patches: vec![PatchEntry {
                     url: format!("http://{}", patch).to_string(),
                     version: "2023.09.15.0000.0000".to_string(),
@@ -108,7 +109,7 @@ async fn verify_boot(Path((platform, boot_version)): Path<(String, String)>) -> 
                     unknown_b: 0,
                 }],
             };
-            let patch_list_str = patch_list.to_string();
+            let patch_list_str = patch_list.to_string(PatchListType::Boot);
             return patch_list_str.into_response();
         }
     }
