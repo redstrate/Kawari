@@ -4,7 +4,7 @@ use std::io::Cursor;
 use binrw::{BinRead, BinResult};
 
 use crate::{
-    oodle::FFXIVOodle,
+    oodle::OodleNetwork,
     packet::{PacketHeader, PacketSegment},
 };
 
@@ -20,7 +20,7 @@ pub enum CompressionType {
 
 #[binrw::parser(reader, endian)]
 pub(crate) fn decompress<T: ReadWriteIpcSegment>(
-    oodle: &mut FFXIVOodle,
+    oodle: &mut OodleNetwork,
     header: &PacketHeader,
     encryption_key: Option<&[u8]>,
 ) -> BinResult<Vec<PacketSegment<T>>> {

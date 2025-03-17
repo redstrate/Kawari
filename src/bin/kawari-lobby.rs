@@ -4,7 +4,7 @@ use kawari::lobby::ipc::{
     CharacterDetails, ClientLobbyIpcData, LobbyCharacterActionKind, ServerLobbyIpcData,
     ServerLobbyIpcSegment, ServerLobbyIpcType,
 };
-use kawari::oodle::FFXIVOodle;
+use kawari::oodle::OodleNetwork;
 use kawari::packet::{PacketSegment, PacketState, SegmentType, send_keep_alive};
 use kawari::{CONTENT_ID, WORLD_NAME};
 use tokio::io::AsyncReadExt;
@@ -23,8 +23,8 @@ async fn main() {
 
         let state = PacketState {
             client_key: None,
-            clientbound_oodle: FFXIVOodle::new(),
-            serverbound_oodle: FFXIVOodle::new(),
+            clientbound_oodle: OodleNetwork::new(),
+            serverbound_oodle: OodleNetwork::new(),
         };
 
         let mut connection = LobbyConnection {

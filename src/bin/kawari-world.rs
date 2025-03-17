@@ -1,6 +1,6 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use kawari::oodle::FFXIVOodle;
+use kawari::oodle::OodleNetwork;
 use kawari::packet::{PacketSegment, PacketState, SegmentType, send_keep_alive};
 use kawari::world::ipc::{
     ClientZoneIpcData, GameMasterCommandType, ServerZoneIpcData, ServerZoneIpcSegment,
@@ -33,8 +33,8 @@ async fn main() {
 
         let state = PacketState {
             client_key: None,
-            clientbound_oodle: FFXIVOodle::new(),
-            serverbound_oodle: FFXIVOodle::new(),
+            clientbound_oodle: OodleNetwork::new(),
+            serverbound_oodle: OodleNetwork::new(),
         };
 
         let mut exit_position = None;

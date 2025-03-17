@@ -7,7 +7,7 @@ use std::{
 use binrw::{BinRead, BinWrite, binrw};
 use tokio::{io::AsyncWriteExt, net::TcpStream};
 
-use crate::{common::read_string, oodle::FFXIVOodle, packet::encryption::decrypt};
+use crate::{common::read_string, oodle::OodleNetwork, packet::encryption::decrypt};
 
 use super::{
     CompressionType, compression::decompress, encryption::encrypt, ipc::ReadWriteIpcSegment,
@@ -117,7 +117,7 @@ impl<T: ReadWriteIpcSegment> PacketSegment<T> {
 }
 
 #[binrw]
-#[brw(import(oodle: &mut FFXIVOodle, encryption_key: Option<&[u8]>))]
+#[brw(import(oodle: &mut OodleNetwork, encryption_key: Option<&[u8]>))]
 #[derive(Debug)]
 struct Packet<T: ReadWriteIpcSegment> {
     header: PacketHeader,
@@ -199,8 +199,8 @@ pub async fn send_packet<T: ReadWriteIpcSegment>(
 /// State needed for each connection between the client & server, containing various things like the compressor and encryption keys.
 pub struct PacketState {
     pub client_key: Option<[u8; 16]>,
-    pub serverbound_oodle: FFXIVOodle,
-    pub clientbound_oodle: FFXIVOodle,
+    pub serverbound_oodle: OodleNetwork,
+    pub clientbound_oodle: OodleNetwork,
 }
 
 pub async fn parse_packet<T: ReadWriteIpcSegment>(

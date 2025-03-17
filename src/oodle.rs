@@ -92,15 +92,15 @@ pub fn OodleNetwork1TCP_Encode(
 }
 
 #[derive(Debug, Default)]
-pub struct FFXIVOodle {
+pub struct OodleNetwork {
     state: Vec<u8>,
     shared: Vec<u8>,
     #[allow(dead_code)] // unused in rust but required to still be available for low-level oodle
     window: Vec<u8>,
 }
 
-impl FFXIVOodle {
-    pub fn new() -> FFXIVOodle {
+impl OodleNetwork {
+    pub fn new() -> OodleNetwork {
         let htbits: i32 = 17;
         unsafe {
             let oodle_state_size: usize = OodleNetwork1TCP_State_Size().try_into().unwrap();
@@ -123,7 +123,7 @@ impl FFXIVOodle {
                 0,
             );
 
-            FFXIVOodle {
+            OodleNetwork {
                 state: oodle_state,
                 shared: oodle_shared,
                 window: oodle_window,
