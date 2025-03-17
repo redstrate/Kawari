@@ -1,4 +1,3 @@
-use std::time::{SystemTime, UNIX_EPOCH};
 
 use kawari::oodle::OodleNetwork;
 use kawari::packet::{PacketSegment, PacketState, SegmentType, send_keep_alive};
@@ -65,20 +64,13 @@ async fn main() {
 
                                 // We have send THEM a keep alive
                                 {
-                                    let timestamp: u32 = SystemTime::now()
-                                        .duration_since(UNIX_EPOCH)
-                                        .expect("Failed to get UNIX timestamp!")
-                                        .as_secs()
-                                        .try_into()
-                                        .unwrap();
-
                                     connection
                                         .send_segment(PacketSegment {
                                             source_actor: 0,
                                             target_actor: 0,
                                             segment_type: SegmentType::KeepAlive {
                                                 id: 0xE0037603u32,
-                                                timestamp,
+                                                timestamp: timestamp_secs(),
                                             },
                                         })
                                         .await;

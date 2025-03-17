@@ -48,7 +48,7 @@ impl LoginServerState {
             if their_password == password {
                 return self
                     .create_session(username)
-                    .ok_or_else(|| LoginError::InternalError);
+                    .ok_or(LoginError::InternalError);
             } else {
                 return Err(LoginError::WrongPassword);
             }
@@ -128,15 +128,9 @@ async fn login_send(
         Err(err) => {
             // TODO: see what the official error messages are
             match err {
-                LoginError::WrongUsername => Html(format!(
-                    "window.external.user(\"login=auth,ng,err,Wrong Username\");"
-                )),
-                LoginError::WrongPassword => Html(format!(
-                    "window.external.user(\"login=auth,ng,err,Wrong Password\");"
-                )),
-                LoginError::InternalError => Html(format!(
-                    "window.external.user(\"login=auth,ng,err,Internal Server Error\");"
-                )),
+                LoginError::WrongUsername => Html("window.external.user(\"login=auth,ng,err,Wrong Username\");".to_string()),
+                LoginError::WrongPassword => Html("window.external.user(\"login=auth,ng,err,Wrong Password\");".to_string()),
+                LoginError::InternalError => Html("window.external.user(\"login=auth,ng,err,Internal Server Error\");".to_string()),
             }
         }
     }
@@ -182,9 +176,9 @@ async fn check_session(
     Query(params): Query<CheckSessionParams>,
 ) -> String {
     if state.check_session(&params.sid) {
-        return "1".to_string();
+        "1".to_string()
     } else {
-        return "0".to_string();
+        "0".to_string()
     }
 }
 

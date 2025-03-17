@@ -1,14 +1,13 @@
 use std::{
     fs::write,
     io::Cursor,
-    time::{SystemTime, UNIX_EPOCH},
 };
 
 use binrw::{BinRead, BinWrite, binrw};
 use tokio::{io::AsyncWriteExt, net::TcpStream};
 
 use crate::{
-    common::read_string,
+    common::{read_string, timestamp_msecs},
     oodle::OodleNetwork,
     packet::{compression::compress, encryption::decrypt},
 };
@@ -141,20 +140,13 @@ pub async fn send_packet<T: ReadWriteIpcSegment>(
     state: &mut PacketState,
     compression_type: CompressionType,
 ) {
-    let timestamp: u64 = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("Failed to get UNIX timestamp!")
-        .as_millis()
-        .try_into()
-        .unwrap();
-
     let (data, uncompressed_size) = compress(state, &compression_type, segments);
     let size = std::mem::size_of::<PacketHeader>() + data.len();
 
     let header = PacketHeader {
         unk1: 0xE2465DFF41A05252, // wtf?
         unk2: 0x75C4997B4D642A7F, // wtf? x2
-        timestamp,
+        timestamp: timestamp_msecs(),
         size: size as u32,
         connection_type: ConnectionType::Lobby,
         segment_count: segments.len() as u16,

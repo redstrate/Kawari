@@ -16,11 +16,22 @@ pub(crate) fn write_string(str: &String) -> Vec<u8> {
     c_string.as_bytes_with_nul().to_vec()
 }
 
+/// Get the number of seconds since UNIX epoch.
 pub fn timestamp_secs() -> u32 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .expect("Failed to get UNIX timestamp!")
         .as_secs()
+        .try_into()
+        .unwrap()
+}
+
+/// Get the number of milliseconds since UNIX epoch.
+pub fn timestamp_msecs() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("Failed to get UNIX timestamp!")
+        .as_millis()
         .try_into()
         .unwrap()
 }

@@ -1,8 +1,7 @@
 use std::net::SocketAddr;
 
-use axum::response::{Html, Redirect};
-use axum::routing::post;
-use axum::{Router, extract::Form, routing::get};
+use axum::response::Html;
+use axum::{Router, routing::get};
 use kawari::config::get_config;
 use kawari::setup_default_environment;
 use minijinja::context;
