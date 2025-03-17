@@ -16,6 +16,7 @@ use super::{
     },
 };
 
+/// Represents a single connection between an instance of the client and the world server
 pub struct ZoneConnection {
     pub socket: TcpStream,
 

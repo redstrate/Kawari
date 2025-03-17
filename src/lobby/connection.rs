@@ -22,6 +22,7 @@ use super::{
 };
 use crate::lobby::ipc::ClientLobbyIpcSegment;
 
+/// Represents a single connection between an instance of the client and the lobby server
 pub struct LobbyConnection {
     pub socket: TcpStream,
 
