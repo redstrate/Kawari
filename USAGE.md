@@ -15,7 +15,21 @@ Kawari is designed to be easy to run, with the goal of being accessible to anyon
 
 ## Setup
 
-Build Kawari with `cargo build`. Then run it with the helper script:
+Build Kawari with `cargo build`. Afterwards, create a `config.json` in the current directory that looks like this:
+
+```json
+{
+  "worlds_open": false,
+  "login_open": false,
+  "supported_platforms": ["win32"],
+  "boot_patches_location": "/path/to/boot/patches",
+  "game_location": "/path/to/game"
+}
+```
+
+All values in the config are optional, but some may be required for certain services to work correctly.
+
+Finally, run Kawari with the helper script:
 
 ```shell
 $ ./run.sh
