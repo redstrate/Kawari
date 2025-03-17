@@ -1,3 +1,5 @@
+//! A server replacement for a certain MMO.
+
 use common::CustomizeData;
 use minijinja::Environment;
 use rand::Rng;
@@ -29,7 +31,7 @@ pub mod packet;
 
 // TODO: make this configurable
 /// The world ID and name for the lobby.
-/// See https://ffxiv.consolegameswiki.com/wiki/Servers for a list of possible IDs.
+/// See <https://ffxiv.consolegameswiki.com/wiki/Servers> for a list of possible IDs.
 pub const WORLD_ID: u16 = 63;
 pub const WORLD_NAME: &str = "KAWARI";
 

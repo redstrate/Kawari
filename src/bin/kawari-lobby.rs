@@ -23,12 +23,15 @@ async fn main() {
 
         let state = PacketState {
             client_key: None,
-            session_id: None,
             clientbound_oodle: FFXIVOodle::new(),
             serverbound_oodle: FFXIVOodle::new(),
         };
 
-        let mut connection = LobbyConnection { socket, state };
+        let mut connection = LobbyConnection {
+            socket,
+            state,
+            session_id: None,
+        };
 
         tokio::spawn(async move {
             let mut buf = [0; 2056];
@@ -58,7 +61,7 @@ async fn main() {
                                         "Client {session_id} ({version_info}) logging in!"
                                     );
 
-                                    connection.state.session_id = Some(session_id.clone());
+                                    connection.session_id = Some(session_id.clone());
 
                                     connection.send_account_list().await;
 

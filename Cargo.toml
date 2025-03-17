@@ -1,5 +1,6 @@
 [package]
 name = "kawari"
+description = "A server replacement for a certain MMO."
 version = "0.1.0"
 edition = "2024"
 

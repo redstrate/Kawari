@@ -25,6 +25,8 @@ use crate::lobby::ipc::ClientLobbyIpcSegment;
 pub struct LobbyConnection {
     pub socket: TcpStream,
 
+    pub session_id: Option<String>,
+
     pub state: PacketState,
 }
 
@@ -287,7 +289,7 @@ impl LobbyConnection {
     }
 
     pub async fn send_enter_world(&mut self, sequence: u64, lookup_id: u64) {
-        let Some(session_id) = &self.state.session_id else {
+        let Some(session_id) = &self.session_id else {
             panic!("Missing session id!");
         };
 

@@ -194,9 +194,9 @@ pub async fn send_packet<T: IpcSegmentTrait>(
 }
 
 // temporary
+/// State needed for each connection between the client & server, containing various things like the compressor and encryption keys.
 pub struct PacketState {
     pub client_key: Option<[u8; 16]>,
-    pub session_id: Option<String>,
     pub serverbound_oodle: FFXIVOodle,
     pub clientbound_oodle: FFXIVOodle,
 }

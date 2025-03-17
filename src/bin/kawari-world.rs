@@ -33,7 +33,6 @@ async fn main() {
 
         let state = PacketState {
             client_key: None,
-            session_id: None,
             clientbound_oodle: FFXIVOodle::new(),
             serverbound_oodle: FFXIVOodle::new(),
         };
