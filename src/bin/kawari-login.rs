@@ -12,6 +12,7 @@ use serde::Deserialize;
 pub enum LoginError {
     WrongUsername,
     WrongPassword,
+    InternalError,
 }
 
 #[derive(Clone)]
@@ -32,22 +33,60 @@ impl LoginServerState {
 
     /// Login as user, returns a session id.
     fn login_user(&self, username: &str, password: &str) -> Result<String, LoginError> {
-        let connection = self.connection.lock().unwrap();
+        let selected_row: Result<(String, String), rusqlite::Error>;
 
-        let mut stmt = connection
-            .prepare("SELECT username, password FROM users WHERE username = ?1")
-            .map_err(|_err| LoginError::WrongUsername)?;
-        let selected_row: Result<(String, String), rusqlite::Error> =
-            stmt.query_row((username,), |row| Ok((row.get(0)?, row.get(1)?)));
+        {
+            let connection = self.connection.lock().unwrap();
+
+            let mut stmt = connection
+                .prepare("SELECT username, password FROM users WHERE username = ?1")
+                .map_err(|_err| LoginError::WrongUsername)?;
+            selected_row = stmt.query_row((username,), |row| Ok((row.get(0)?, row.get(1)?)));
+        }
+
         if let Ok((_user, their_password)) = selected_row {
             if their_password == password {
-                return Ok(generate_sid());
+                return self
+                    .create_session(username)
+                    .ok_or_else(|| LoginError::InternalError);
             } else {
                 return Err(LoginError::WrongPassword);
             }
         }
 
         Err(LoginError::WrongUsername)
+    }
+
+    /// Create a new session for user, which replaces the last one (if any)
+    fn create_session(&self, username: &str) -> Option<String> {
+        let connection = self.connection.lock().unwrap();
+
+        let sid = generate_sid();
+
+        connection
+            .execute(
+                "INSERT OR REPLACE INTO sessions VALUES (?1, ?2);",
+                (username, &sid),
+            )
+            .ok()?;
+
+        tracing::info!("Created new session for {username}: {sid}");
+
+        Some(sid)
+    }
+
+    /// Checks if there is a valid session for a given id
+    fn check_session(&self, sid: &str) -> bool {
+        let connection = self.connection.lock().unwrap();
+
+        let mut stmt = connection
+            .prepare("SELECT username, sid FROM sessions WHERE sid = ?1")
+            .ok()
+            .unwrap();
+        let selected_row: Result<(String, String), rusqlite::Error> =
+            stmt.query_row((sid,), |row| Ok((row.get(0)?, row.get(1)?)));
+
+        selected_row.is_ok()
     }
 }
 
@@ -95,6 +134,9 @@ async fn login_send(
                 LoginError::WrongPassword => Html(format!(
                     "window.external.user(\"login=auth,ng,err,Wrong Password\");"
                 )),
+                LoginError::InternalError => Html(format!(
+                    "window.external.user(\"login=auth,ng,err,Internal Server Error\");"
+                )),
             }
         }
     }
@@ -129,11 +171,37 @@ async fn do_register(
     Redirect::to("/")
 }
 
+#[derive(Deserialize)]
+#[allow(dead_code)]
+struct CheckSessionParams {
+    sid: String,
+}
+
+async fn check_session(
+    State(state): State<LoginServerState>,
+    Query(params): Query<CheckSessionParams>,
+) -> String {
+    if state.check_session(&params.sid) {
+        return "1".to_string();
+    } else {
+        return "0".to_string();
+    }
+}
+
 fn setup_state() -> LoginServerState {
     let connection = Connection::open_in_memory().expect("Failed to open database!");
 
-    let query = "CREATE TABLE users (username TEXT, password TEXT);";
-    connection.execute(query, ()).unwrap();
+    // Create users table
+    {
+        let query = "CREATE TABLE users (username TEXT PRIMARY KEY, password TEXT);";
+        connection.execute(query, ()).unwrap();
+    }
+
+    // Create active sessions table
+    {
+        let query = "CREATE TABLE sessions (username TEXT PRIMARY KEY, sid TEXT);";
+        connection.execute(query, ()).unwrap();
+    }
 
     LoginServerState {
         connection: Arc::new(Mutex::new(connection)),
@@ -150,6 +218,8 @@ async fn main() {
         .route("/oauth/ffxivarr/login/top", get(top))
         .route("/oauth/ffxivarr/login/login.send", post(login_send))
         .route("/register", post(do_register))
+        // TODO: make these actually private
+        .route("/private/check_session", get(check_session))
         .with_state(state);
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 6700));
