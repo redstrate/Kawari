@@ -11,6 +11,8 @@ pub mod common;
 
 /// Config management.
 pub mod config;
+
+/// Bindings for Oodle network compression.
 pub mod oodle;
 
 /// Patch server-specific code.
@@ -26,10 +28,13 @@ pub mod world;
 pub mod packet;
 
 // TODO: make this configurable
-// See https://ffxiv.consolegameswiki.com/wiki/Servers for a list of possible IDs
+/// The world ID and name for the lobby.
+/// See https://ffxiv.consolegameswiki.com/wiki/Servers for a list of possible IDs.
 pub const WORLD_ID: u16 = 63;
 pub const WORLD_NAME: &str = "KAWARI";
 
+/// The zone ID you initially spawn in.
+/// See the TerritoryType excel sheet for a list of possible IDs.
 pub const ZONE_ID: u16 = 132;
 
 pub const CONTENT_ID: u64 = 11111111111111111;
