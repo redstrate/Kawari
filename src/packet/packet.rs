@@ -7,7 +7,11 @@ use std::{
 use binrw::{BinRead, BinWrite, binrw};
 use tokio::{io::AsyncWriteExt, net::TcpStream};
 
-use crate::{common::read_string, oodle::OodleNetwork, packet::encryption::decrypt};
+use crate::{
+    common::read_string,
+    oodle::OodleNetwork,
+    packet::{compression::compress, encryption::decrypt},
+};
 
 use super::{
     CompressionType, compression::decompress, encryption::encrypt, ipc::ReadWriteIpcSegment,
@@ -144,27 +148,7 @@ pub async fn send_packet<T: ReadWriteIpcSegment>(
         .try_into()
         .unwrap();
 
-    let mut segments_buffer = Cursor::new(Vec::new());
-    for segment in segments {
-        segment
-            .write_le_args(
-                &mut segments_buffer,
-                (state.client_key.as_ref().map(|s: &[u8; 16]| s.as_slice()),),
-            )
-            .unwrap();
-    }
-
-    let segments_buffer = segments_buffer.into_inner();
-
-    let mut uncompressed_size = 0;
-    let data = match compression_type {
-        CompressionType::Uncompressed => segments_buffer,
-        CompressionType::Oodle => {
-            uncompressed_size = segments_buffer.len();
-            state.clientbound_oodle.encode(segments_buffer)
-        }
-    };
-
+    let (data, uncompressed_size) = compress(state, &compression_type, segments);
     let size = std::mem::size_of::<PacketHeader>() + data.len();
 
     let header = PacketHeader {

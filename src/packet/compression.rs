@@ -1,4 +1,4 @@
-use binrw::binrw;
+use binrw::{BinWrite, binrw};
 use std::io::Cursor;
 
 use binrw::{BinRead, BinResult};
@@ -8,7 +8,7 @@ use crate::{
     packet::{PacketHeader, PacketSegment},
 };
 
-use super::ReadWriteIpcSegment;
+use super::{PacketState, ReadWriteIpcSegment};
 
 #[binrw]
 #[brw(repr = u8)]
@@ -55,4 +55,31 @@ pub(crate) fn decompress<T: ReadWriteIpcSegment>(
     }
 
     Ok(segments)
+}
+
+pub(crate) fn compress<T: ReadWriteIpcSegment>(
+    state: &mut PacketState,
+    compression_type: &CompressionType,
+    segments: &[PacketSegment<T>],
+) -> (Vec<u8>, usize) {
+    let mut segments_buffer = Cursor::new(Vec::new());
+    for segment in segments {
+        segment
+            .write_le_args(
+                &mut segments_buffer,
+                (state.client_key.as_ref().map(|s: &[u8; 16]| s.as_slice()),),
+            )
+            .unwrap();
+    }
+
+    let segments_buffer = segments_buffer.into_inner();
+    let segments_buffer_len = segments_buffer.len();
+
+    match compression_type {
+        CompressionType::Uncompressed => (segments_buffer, 0),
+        CompressionType::Oodle => (
+            state.clientbound_oodle.encode(segments_buffer),
+            segments_buffer_len,
+        ),
+    }
 }
