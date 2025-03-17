@@ -1,11 +1,14 @@
 use binrw::{BinRead, BinWrite, binrw};
 
-pub trait IpcSegmentTrait:
+/// Required to implement for specializations of `IpcSegment`. These should be read/writeable, however for client packets you can leave calc_size() unimplemented.
+pub trait ReadWriteIpcSegment:
     for<'a> BinRead<Args<'a> = ()> + for<'a> BinWrite<Args<'a> = ()> + std::fmt::Debug + 'static
 {
     /// Calculate the size of this Ipc segment *including* the 16 byte header.
-    /// When implementing this, please use the size as seen in retail.
-    fn calc_size(&self) -> u32;
+    /// When implementing this, please use the size seen in retail instead of guessing.
+    fn calc_size(&self) -> u32 {
+        unimplemented!()
+    }
 }
 
 /// An IPC packet segment.

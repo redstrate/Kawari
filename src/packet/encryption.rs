@@ -4,7 +4,7 @@ use binrw::BinResult;
 
 use crate::blowfish::Blowfish;
 
-use super::IpcSegmentTrait;
+use super::ReadWriteIpcSegment;
 
 const GAME_VERSION: u16 = 7000;
 
@@ -19,7 +19,7 @@ pub fn generate_encryption_key(key: &[u8], phrase: &str) -> [u8; 16] {
 }
 
 #[binrw::parser(reader, endian)]
-pub(crate) fn decrypt<T: IpcSegmentTrait>(
+pub(crate) fn decrypt<T: ReadWriteIpcSegment>(
     size: u32,
     encryption_key: Option<&[u8]>,
 ) -> BinResult<T> {
@@ -42,7 +42,7 @@ pub(crate) fn decrypt<T: IpcSegmentTrait>(
 }
 
 #[binrw::writer(writer, endian)]
-pub(crate) fn encrypt<T: IpcSegmentTrait>(
+pub(crate) fn encrypt<T: ReadWriteIpcSegment>(
     value: &T,
     size: u32,
     encryption_key: Option<&[u8]>,

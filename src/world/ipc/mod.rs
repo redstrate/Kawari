@@ -37,15 +37,11 @@ pub use init_zone::InitZone;
 use crate::common::read_string;
 use crate::common::write_string;
 use crate::packet::IpcSegment;
-use crate::packet::IpcSegmentTrait;
+use crate::packet::ReadWriteIpcSegment;
 
 pub type ClientZoneIpcSegment = IpcSegment<ClientZoneIpcType, ClientZoneIpcData>;
 
-impl IpcSegmentTrait for ClientZoneIpcSegment {
-    fn calc_size(&self) -> u32 {
-        todo!()
-    }
-}
+impl ReadWriteIpcSegment for ClientZoneIpcSegment {}
 
 // TODO: make generic
 impl Default for ClientZoneIpcSegment {
@@ -63,7 +59,7 @@ impl Default for ClientZoneIpcSegment {
 
 pub type ServerZoneIpcSegment = IpcSegment<ServerZoneIpcType, ServerZoneIpcData>;
 
-impl IpcSegmentTrait for ServerZoneIpcSegment {
+impl ReadWriteIpcSegment for ServerZoneIpcSegment {
     fn calc_size(&self) -> u32 {
         // 16 is the size of the IPC header
         16 + match self.op_code {

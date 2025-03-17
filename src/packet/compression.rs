@@ -8,7 +8,7 @@ use crate::{
     packet::{PacketHeader, PacketSegment},
 };
 
-use super::IpcSegmentTrait;
+use super::ReadWriteIpcSegment;
 
 #[binrw]
 #[brw(repr = u8)]
@@ -19,7 +19,7 @@ pub enum CompressionType {
 }
 
 #[binrw::parser(reader, endian)]
-pub(crate) fn decompress<T: IpcSegmentTrait>(
+pub(crate) fn decompress<T: ReadWriteIpcSegment>(
     oodle: &mut FFXIVOodle,
     header: &PacketHeader,
     encryption_key: Option<&[u8]>,

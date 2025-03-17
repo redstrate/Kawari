@@ -12,4 +12,4 @@ mod encryption;
 pub use encryption::generate_encryption_key;
 
 mod ipc;
-pub use ipc::{IpcSegment, IpcSegmentTrait};
+pub use ipc::{IpcSegment, ReadWriteIpcSegment};

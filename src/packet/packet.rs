@@ -9,7 +9,9 @@ use tokio::{io::AsyncWriteExt, net::TcpStream};
 
 use crate::{common::read_string, oodle::FFXIVOodle, packet::encryption::decrypt};
 
-use super::{CompressionType, compression::decompress, encryption::encrypt, ipc::IpcSegmentTrait};
+use super::{
+    CompressionType, compression::decompress, encryption::encrypt, ipc::ReadWriteIpcSegment,
+};
 
 #[binrw]
 #[brw(repr = u16)]
@@ -24,7 +26,7 @@ pub enum ConnectionType {
 #[binrw]
 #[brw(import(size: u32, encryption_key: Option<&[u8]>))]
 #[derive(Debug, Clone)]
-pub enum SegmentType<T: IpcSegmentTrait> {
+pub enum SegmentType<T: ReadWriteIpcSegment> {
     // Client->Server Packets
     #[brw(magic = 0x1u32)]
     InitializeSession {
@@ -89,7 +91,7 @@ pub struct PacketHeader {
 #[binrw]
 #[brw(import(encryption_key: Option<&[u8]>))]
 #[derive(Debug, Clone)]
-pub struct PacketSegment<T: IpcSegmentTrait> {
+pub struct PacketSegment<T: ReadWriteIpcSegment> {
     #[bw(calc = self.calc_size())]
     pub size: u32,
     pub source_actor: u32,
@@ -98,7 +100,7 @@ pub struct PacketSegment<T: IpcSegmentTrait> {
     pub segment_type: SegmentType<T>,
 }
 
-impl<T: IpcSegmentTrait> PacketSegment<T> {
+impl<T: ReadWriteIpcSegment> PacketSegment<T> {
     fn calc_size(&self) -> u32 {
         let header = std::mem::size_of::<u32>() * 4;
         header as u32
@@ -117,7 +119,7 @@ impl<T: IpcSegmentTrait> PacketSegment<T> {
 #[binrw]
 #[brw(import(oodle: &mut FFXIVOodle, encryption_key: Option<&[u8]>))]
 #[derive(Debug)]
-struct Packet<T: IpcSegmentTrait> {
+struct Packet<T: ReadWriteIpcSegment> {
     header: PacketHeader,
     #[bw(args(encryption_key))]
     #[br(parse_with = decompress, args(oodle, &header, encryption_key,))]
@@ -129,7 +131,7 @@ fn dump(msg: &str, data: &[u8]) {
     panic!("{msg} Dumped to packet.bin.");
 }
 
-pub async fn send_packet<T: IpcSegmentTrait>(
+pub async fn send_packet<T: ReadWriteIpcSegment>(
     socket: &mut TcpStream,
     segments: &[PacketSegment<T>],
     state: &mut PacketState,
@@ -201,7 +203,7 @@ pub struct PacketState {
     pub clientbound_oodle: FFXIVOodle,
 }
 
-pub async fn parse_packet<T: IpcSegmentTrait>(
+pub async fn parse_packet<T: ReadWriteIpcSegment>(
     data: &[u8],
     state: &mut PacketState,
 ) -> (Vec<PacketSegment<T>>, ConnectionType) {
@@ -224,7 +226,7 @@ pub async fn parse_packet<T: IpcSegmentTrait>(
     }
 }
 
-pub async fn send_keep_alive<T: IpcSegmentTrait>(
+pub async fn send_keep_alive<T: ReadWriteIpcSegment>(
     socket: &mut TcpStream,
     state: &mut PacketState,
     id: u32,

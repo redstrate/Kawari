@@ -16,16 +16,12 @@ pub use service_account_list::{LobbyServiceAccountList, ServiceAccount};
 
 use crate::{
     common::{read_string, write_string},
-    packet::{IpcSegment, IpcSegmentTrait},
+    packet::{IpcSegment, ReadWriteIpcSegment},
 };
 
 pub type ClientLobbyIpcSegment = IpcSegment<ClientLobbyIpcType, ClientLobbyIpcData>;
 
-impl IpcSegmentTrait for ClientLobbyIpcSegment {
-    fn calc_size(&self) -> u32 {
-        todo!()
-    }
-}
+impl ReadWriteIpcSegment for ClientLobbyIpcSegment {}
 
 // TODO: make generic
 impl Default for ClientLobbyIpcSegment {
@@ -47,7 +43,7 @@ impl Default for ClientLobbyIpcSegment {
 
 pub type ServerLobbyIpcSegment = IpcSegment<ServerLobbyIpcType, ServerLobbyIpcData>;
 
-impl IpcSegmentTrait for ServerLobbyIpcSegment {
+impl ReadWriteIpcSegment for ServerLobbyIpcSegment {
     fn calc_size(&self) -> u32 {
         // 16 is the size of the IPC header
         16 + match self.op_code {
