@@ -11,7 +11,7 @@ Kawari is designed to be easy to run, with the goal of being accessible to anyon
 ## Prerequisites
 * Linux
 * Copy of the game updated to the supported game version (see README)
-* Oodle (can be obtained from [here](https://github.com/WorkingRobot/OodleUE))
+* Oodle Network Compression (can be obtained from [here](https://github.com/WorkingRobot/OodleUE), place static library (`.a`) into `oodle` directory)
 
 ## Setup
 
