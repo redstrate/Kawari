@@ -33,10 +33,24 @@ This Caddyfile hosts several domains, most notably `ffxiv.localhost`, on port 80
 
 ## Logging in
 
-[Astra](https://github.com/redstrate/Astra) is the only launcher known to work, and it requires compiling the unreleased master branch. **If you don't know what any of that means, then wait for a new release of Astra before trying Kawari.**
+### Astra
+
+[Astra](https://github.com/redstrate/Astra) is the only launcher known to fully implement the login process, and it requires compiling the unreleased master branch. **If you don't know what any of that means, then wait for a new release of Astra before trying Kawari.**
 
 1. Enable "Developer Settings" under "General".
 2. Under "Developer Settings", enter the addresses of your servers in the section indicated below. If you used the default Caddy setup, tapping the "Set to localhost" button will fill these fields for you with the correct addresses.
 3. In "Game Server" and "Game Server Port", set it to "127.0.0.1" and "7000" respectively. This is the address and port of your **Lobby** server.
 
 Any username and password combination will work, as there is no actual login database yet. In the client, make sure to select the **Aether data center**.
+
+### Manual
+
+Advanced users can specify required command line arguments directly to the game executable. This skips most of the Kawari login process and should only be used if you know what you're doing. Right now, the lobby server does not check for authentication, but in the future you must complete the login process manually to get a valid session ID.
+
+In this example, lobby number 4 will replace the **Aether data center**, but the other data centers will still try (and fail) to connect.
+
+* `DEV.LobbyHost04=127.0.0.1`
+* `DEV.LobbyPort04=7000`
+* `DEV.TestSID=0` (this must be a valid session ID in the future)
+
+Some other launchers (like XIVLauncher) will allow you to specify these extra arguments, but they will still authenticate to the retail servers. You can still connect to Kawari with this way, but **make sure to specify your own session ID, or your retail account's session ID will be sent to the lobby server**!
