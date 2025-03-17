@@ -1,5 +1,5 @@
+use kawari::lobby::LobbyConnection;
 use kawari::lobby::chara_make::CharaMake;
-use kawari::lobby::connection::LobbyConnection;
 use kawari::lobby::ipc::{
     CharacterDetails, ClientLobbyIpcData, LobbyCharacterActionKind, ServerLobbyIpcData,
     ServerLobbyIpcSegment, ServerLobbyIpcType,

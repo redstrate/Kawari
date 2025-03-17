@@ -22,7 +22,7 @@ use super::{
 };
 use crate::lobby::ipc::ClientLobbyIpcSegment;
 
-/// Represents a single connection between an instance of the client and the lobby server
+/// Represents a single connection between an instance of the client and the lobby server.
 pub struct LobbyConnection {
     pub socket: TcpStream,
 
@@ -49,6 +49,7 @@ impl LobbyConnection {
         .await;
     }
 
+    /// Send an acknowledgement to the client that we generated a valid encryption key.
     pub async fn initialize_encryption(&mut self, phrase: &str, key: &[u8; 4]) {
         // Generate an encryption key for this client
         self.state.client_key = Some(generate_encryption_key(key, phrase));
@@ -67,6 +68,7 @@ impl LobbyConnection {
         .await;
     }
 
+    /// Send the service account list to the client.
     pub async fn send_account_list(&mut self) {
         // send the client the service account list
         let service_accounts = [ServiceAccount {
@@ -103,6 +105,7 @@ impl LobbyConnection {
         .await;
     }
 
+    /// Send the world, retainer and character list to the client.
     pub async fn send_lobby_info(&mut self, sequence: u64) {
         let mut packets = Vec::new();
         // send them the server list
@@ -289,6 +292,7 @@ impl LobbyConnection {
         }
     }
 
+    /// Send the host information for the world server to the client.
     pub async fn send_enter_world(&mut self, sequence: u64, lookup_id: u64) {
         let Some(session_id) = &self.session_id else {
             panic!("Missing session id!");
@@ -320,6 +324,7 @@ impl LobbyConnection {
         .await;
     }
 
+    /// Send a lobby error to the client.
     pub async fn send_error(&mut self, sequence: u64, error: u32, exd_error: u16) {
         let lobby_error = ServerLobbyIpcData::LobbyError {
             sequence,
