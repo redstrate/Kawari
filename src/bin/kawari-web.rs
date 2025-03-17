@@ -43,26 +43,6 @@ async fn world_status() -> Html<String> {
     )
 }
 
-#[derive(Deserialize, Debug)]
-#[allow(dead_code)]
-struct Input {
-    login_open: Option<String>,
-    worlds_open: Option<String>,
-}
-
-async fn apply(Form(input): Form<Input>) -> Redirect {
-    tracing::info!("Apply config changes...");
-
-    let mut config = get_config();
-    config.login_open = input.login_open == Some("1".to_string());
-    config.worlds_open = input.worlds_open == Some("1".to_string());
-
-    serde_json::to_writer(&std::fs::File::create("config.json").unwrap(), &config)
-        .expect("TODO: panic message");
-
-    Redirect::to("/")
-}
-
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
@@ -71,8 +51,7 @@ async fn main() {
         .route("/", get(root))
         .route("/login", get(login))
         .route("/register", get(register))
-        .route("/worldstatus", get(world_status))
-        .route("/apply", post(apply));
+        .route("/worldstatus", get(world_status));
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 5801));
     tracing::info!("Web server started on {}", addr);

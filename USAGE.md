@@ -1,6 +1,8 @@
-# USage
+# Usage
 
 Kawari is designed to be easy to run, with the goal of being accessible to anyone who wants to run a local server for themselves.
+
+**Note:** Persisted data (logins, characters, etc) is _not_ stable or secure. Treat all data as disposable.
 
 ## Copyright Notice
 

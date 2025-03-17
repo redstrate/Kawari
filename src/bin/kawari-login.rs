@@ -1,11 +1,55 @@
 use std::net::SocketAddr;
+use std::sync::{Arc, Mutex};
 
-use axum::extract::Query;
-use axum::response::Html;
+use axum::extract::{Query, State};
+use axum::response::{Html, Redirect};
 use axum::routing::post;
 use axum::{Form, Router, routing::get};
 use kawari::generate_sid;
+use rusqlite::Connection;
 use serde::Deserialize;
+
+pub enum LoginError {
+    WrongUsername,
+    WrongPassword,
+}
+
+#[derive(Clone)]
+struct LoginServerState {
+    connection: Arc<Mutex<Connection>>,
+}
+
+impl LoginServerState {
+    /// Adds a new user to the database.
+    fn add_user(&self, username: &str, password: &str) {
+        let connection = self.connection.lock().unwrap();
+
+        let query = "INSERT INTO users VALUES (?1, ?2);";
+        connection
+            .execute(query, (username, password))
+            .expect("Failed to write user to database!");
+    }
+
+    /// Login as user, returns a session id.
+    fn login_user(&self, username: &str, password: &str) -> Result<String, LoginError> {
+        let connection = self.connection.lock().unwrap();
+
+        let mut stmt = connection
+            .prepare("SELECT username, password FROM users WHERE username = ?1")
+            .map_err(|_err| LoginError::WrongUsername)?;
+        let selected_row: Result<(String, String), rusqlite::Error> =
+            stmt.query_row((username,), |row| Ok((row.get(0)?, row.get(1)?)));
+        if let Ok((_user, their_password)) = selected_row {
+            if their_password == password {
+                return Ok(generate_sid());
+            } else {
+                return Err(LoginError::WrongPassword);
+            }
+        }
+
+        Err(LoginError::WrongUsername)
+    }
+}
 
 #[derive(Deserialize)]
 #[allow(dead_code)]
@@ -33,20 +77,80 @@ struct Input {
     otppw: String,
 }
 
-async fn login_send(Form(_): Form<Input>) -> Html<String> {
-    let sid = generate_sid();
-    Html(format!(
-        "window.external.user(\"login=auth,ok,sid,{sid},terms,1,region,2,etmadd,0,playable,1,ps3pkg,0,maxex,4,product,1\");"
-    ))
+async fn login_send(
+    State(state): State<LoginServerState>,
+    Form(input): Form<Input>,
+) -> Html<String> {
+    let user = state.login_user(&input.sqexid, &input.password);
+    match user {
+        Ok(session_id) => Html(format!(
+            "window.external.user(\"login=auth,ok,sid,{session_id},terms,1,region,2,etmadd,0,playable,1,ps3pkg,0,maxex,4,product,1\");"
+        )),
+        Err(err) => {
+            // TODO: see what the official error messages are
+            match err {
+                LoginError::WrongUsername => Html(format!(
+                    "window.external.user(\"login=auth,ng,err,Wrong Username\");"
+                )),
+                LoginError::WrongPassword => Html(format!(
+                    "window.external.user(\"login=auth,ng,err,Wrong Password\");"
+                )),
+            }
+        }
+    }
+}
+
+#[derive(Deserialize, Debug)]
+#[allow(dead_code)]
+struct RegisterInput {
+    username: Option<String>,
+    password: Option<String>,
+}
+
+async fn do_register(
+    State(state): State<LoginServerState>,
+    Form(input): Form<RegisterInput>,
+) -> Redirect {
+    tracing::info!(
+        "Registering with {:#?} and {:#?}!",
+        input.username,
+        input.password
+    );
+
+    let Some(username) = input.username else {
+        panic!("Expected username!");
+    };
+    let Some(password) = input.password else {
+        panic!("Expected password!");
+    };
+
+    state.add_user(&username, &password);
+
+    Redirect::to("/")
+}
+
+fn setup_state() -> LoginServerState {
+    let connection = Connection::open_in_memory().expect("Failed to open database!");
+
+    let query = "CREATE TABLE users (username TEXT, password TEXT);";
+    connection.execute(query, ()).unwrap();
+
+    LoginServerState {
+        connection: Arc::new(Mutex::new(connection)),
+    }
 }
 
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
 
+    let state = setup_state();
+
     let app = Router::new()
         .route("/oauth/ffxivarr/login/top", get(top))
-        .route("/oauth/ffxivarr/login/login.send", post(login_send));
+        .route("/oauth/ffxivarr/login/login.send", post(login_send))
+        .route("/register", post(do_register))
+        .with_state(state);
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 6700));
     tracing::info!("Login server started on {}", addr);

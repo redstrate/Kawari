@@ -65,3 +65,6 @@ md5 = "0.7.0"
 
 # Used to access game data
 physis = { git = "https://github.com/redstrate/physis" }
+
+# Used for data persistence
+rusqlite = { version = "0.34.0", features = ["bundled"] }
