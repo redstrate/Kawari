@@ -19,8 +19,8 @@ Build Kawari with `cargo build`. Afterwards, create a `config.json` in the curre
 
 ```json
 {
-  "worlds_open": false,
-  "login_open": false,
+  "worlds_open": true,
+  "login_open": true,
   "supported_platforms": ["win32"],
   "boot_patches_location": "/path/to/boot/patches",
   "game_location": "/path/to/game"
