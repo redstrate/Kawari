@@ -224,12 +224,31 @@ pub async fn send_keep_alive<T: ReadWriteIpcSegment>(
 
 #[cfg(test)]
 mod tests {
-    // TODO: Restore this test
-    /*
+    use crate::packet::IpcSegment;
+
     use super::*;
+
     /// Ensure that the packet size as reported matches up with what we write
     #[test]
     fn test_packet_sizes() {
+        #[binrw]
+        #[brw(repr = u16)]
+        #[derive(Clone, PartialEq, Debug)]
+        enum ClientLobbyIpcType {
+            Dummy = 0x1,
+        }
+
+        #[binrw]
+        #[br(import(magic: &ClientLobbyIpcType))]
+        #[derive(Debug, Clone)]
+        enum ClientLobbyIpcData {
+            Dummy(),
+        }
+
+        type ClientLobbyIpcSegment = IpcSegment<ClientLobbyIpcType, ClientLobbyIpcData>;
+
+        impl ReadWriteIpcSegment for ClientLobbyIpcSegment {}
+
         let packet_types = [
             SegmentType::InitializeEncryption {
                 phrase: String::new(),
@@ -249,7 +268,7 @@ mod tests {
         for packet in &packet_types {
             let mut cursor = Cursor::new(Vec::new());
 
-            let packet_segment = PacketSegment {
+            let packet_segment: PacketSegment<ClientLobbyIpcSegment> = PacketSegment {
                 source_actor: 0,
                 target_actor: 0,
                 segment_type: packet.clone(),
@@ -260,5 +279,5 @@ mod tests {
 
             assert_eq!(buffer.len(), packet_segment.calc_size() as usize);
         }
-    }*/
+    }
 }
