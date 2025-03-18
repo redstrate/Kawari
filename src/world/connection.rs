@@ -38,9 +38,10 @@ impl ZoneConnection {
     pub async fn send_segment(&mut self, segment: PacketSegment<ServerZoneIpcSegment>) {
         send_packet(
             &mut self.socket,
-            &[segment],
             &mut self.state,
+            ConnectionType::Zone,
             CompressionType::Oodle,
+            &[segment],
         )
         .await;
     }
@@ -59,17 +60,11 @@ impl ZoneConnection {
                 ..Default::default()
             };
 
-            let response_packet = PacketSegment {
+            self.send_segment(PacketSegment {
                 source_actor: self.player_id,
                 target_actor: self.player_id,
                 segment_type: SegmentType::Ipc { data: ipc },
-            };
-            send_packet(
-                &mut self.socket,
-                &[response_packet],
-                &mut self.state,
-                CompressionType::Oodle,
-            )
+            })
             .await;
         }
     }

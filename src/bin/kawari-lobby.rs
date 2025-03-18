@@ -5,6 +5,7 @@ use kawari::lobby::ipc::{
     ServerLobbyIpcSegment, ServerLobbyIpcType,
 };
 use kawari::oodle::OodleNetwork;
+use kawari::packet::ConnectionType;
 use kawari::packet::{PacketSegment, PacketState, SegmentType, send_keep_alive};
 use kawari::{CONTENT_ID, WORLD_NAME};
 use tokio::io::AsyncReadExt;
@@ -214,6 +215,7 @@ async fn main() {
                                 send_keep_alive::<ServerLobbyIpcSegment>(
                                     &mut connection.socket,
                                     &mut connection.state,
+                                    ConnectionType::Lobby,
                                     *id,
                                     *timestamp,
                                 )

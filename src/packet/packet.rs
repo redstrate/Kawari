@@ -133,9 +133,10 @@ fn dump(msg: &str, data: &[u8]) {
 
 pub async fn send_packet<T: ReadWriteIpcSegment>(
     socket: &mut TcpStream,
-    segments: &[PacketSegment<T>],
     state: &mut PacketState,
+    connection_type: ConnectionType,
     compression_type: CompressionType,
+    segments: &[PacketSegment<T>],
 ) {
     let (data, uncompressed_size) = compress(state, &compression_type, segments);
     let size = std::mem::size_of::<PacketHeader>() + data.len();
@@ -145,7 +146,7 @@ pub async fn send_packet<T: ReadWriteIpcSegment>(
         unk2: 0x75C4997B4D642A7F, // wtf? x2
         timestamp: timestamp_msecs(),
         size: size as u32,
-        connection_type: ConnectionType::Lobby,
+        connection_type,
         segment_count: segments.len() as u16,
         unk3: 0,
         compression_type,
@@ -202,6 +203,7 @@ pub async fn parse_packet<T: ReadWriteIpcSegment>(
 pub async fn send_keep_alive<T: ReadWriteIpcSegment>(
     socket: &mut TcpStream,
     state: &mut PacketState,
+    connection_type: ConnectionType,
     id: u32,
     timestamp: u32,
 ) {
@@ -212,9 +214,10 @@ pub async fn send_keep_alive<T: ReadWriteIpcSegment>(
     };
     send_packet(
         socket,
-        &[response_packet],
         state,
+        connection_type,
         CompressionType::Uncompressed,
+        &[response_packet],
     )
     .await;
 }
