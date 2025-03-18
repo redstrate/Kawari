@@ -42,9 +42,10 @@ impl LobbyConnection {
     pub async fn send_segment(&mut self, segment: PacketSegment<ServerLobbyIpcSegment>) {
         send_packet(
             &mut self.socket,
-            &[segment],
             &mut self.state,
+            ConnectionType::Lobby,
             CompressionType::Uncompressed,
+            &[segment],
         )
         .await;
     }
@@ -169,9 +170,10 @@ impl LobbyConnection {
 
         send_packet(
             &mut self.socket,
-            &packets,
             &mut self.state,
+            ConnectionType::Lobby,
             CompressionType::Uncompressed,
+            &packets,
         )
         .await;
 

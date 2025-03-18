@@ -1,5 +1,5 @@
 use kawari::oodle::OodleNetwork;
-use kawari::packet::{PacketSegment, PacketState, SegmentType, send_keep_alive};
+use kawari::packet::{ConnectionType, PacketSegment, PacketState, SegmentType, send_keep_alive};
 use kawari::world::ipc::{
     ClientZoneIpcData, GameMasterCommandType, ServerZoneIpcData, ServerZoneIpcSegment,
     ServerZoneIpcType, SocialListRequestType,
@@ -594,6 +594,7 @@ async fn main() {
                                 send_keep_alive::<ServerZoneIpcSegment>(
                                     &mut connection.socket,
                                     &mut connection.state,
+                                    ConnectionType::Zone,
                                     *id,
                                     *timestamp,
                                 )
