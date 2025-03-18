@@ -2,8 +2,6 @@
 
 use common::CustomizeData;
 use minijinja::Environment;
-use rand::Rng;
-use rand::distributions::Alphanumeric;
 
 /// The blowfish implementation used for packet encryption.
 pub mod blowfish;
@@ -76,15 +74,6 @@ pub const CITY_STATE: u8 = 0x3;
 pub const CHAR_NAME_MAX_LENGTH: usize = 32;
 
 pub const CHAR_NAME: &str = "Test User";
-
-pub fn generate_sid() -> String {
-    let random_id: String = rand::thread_rng()
-        .sample_iter(&Alphanumeric)
-        .take(56)
-        .map(char::from)
-        .collect();
-    random_id.to_lowercase()
-}
 
 pub fn setup_default_environment() -> Environment<'static> {
     let mut env = Environment::new();

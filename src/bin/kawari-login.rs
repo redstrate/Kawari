@@ -5,9 +5,19 @@ use axum::extract::{Query, State};
 use axum::response::{Html, Redirect};
 use axum::routing::post;
 use axum::{Form, Router, routing::get};
-use kawari::generate_sid;
+use rand::Rng;
+use rand::distributions::Alphanumeric;
 use rusqlite::Connection;
 use serde::Deserialize;
+
+fn generate_sid() -> String {
+    let random_id: String = rand::thread_rng()
+        .sample_iter(&Alphanumeric)
+        .take(56)
+        .map(char::from)
+        .collect();
+    random_id.to_lowercase()
+}
 
 pub enum LoginError {
     WrongUsername,
