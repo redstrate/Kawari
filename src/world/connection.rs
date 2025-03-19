@@ -12,7 +12,7 @@ use super::{
     Zone,
     ipc::{
         ActorSetPos, ClientZoneIpcSegment, InitZone, Position, ServerZoneIpcData,
-        ServerZoneIpcSegment, ServerZoneIpcType, UpdateClassInfo,
+        ServerZoneIpcSegment, ServerZoneIpcType, UpdateClassInfo, WeatherChange,
     },
 };
 
@@ -135,6 +135,25 @@ impl ZoneConnection {
             })
             .await;
         }
+    }
+
+    pub async fn change_weather(&mut self, new_weather_id: u16) {
+        let ipc = ServerZoneIpcSegment {
+            op_code: ServerZoneIpcType::WeatherChange,
+            timestamp: timestamp_secs(),
+            data: ServerZoneIpcData::WeatherChange(WeatherChange {
+                weather_id: new_weather_id,
+                transistion_time: 1.0,
+            }),
+            ..Default::default()
+        };
+
+        self.send_segment(PacketSegment {
+            source_actor: self.player_id,
+            target_actor: self.player_id,
+            segment_type: SegmentType::Ipc { data: ipc },
+        })
+        .await;
     }
 
     pub fn get_free_spawn_index(&mut self) -> u8 {

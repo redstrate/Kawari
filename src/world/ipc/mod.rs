@@ -44,6 +44,9 @@ pub use common_spawn::{CharacterMode, CommonSpawn, ObjectKind};
 mod status_effect_list;
 pub use status_effect_list::StatusEffectList;
 
+mod weather_change;
+pub use weather_change::WeatherChange;
+
 use crate::common::read_string;
 use crate::common::write_string;
 use crate::packet::IpcSegment;
@@ -87,7 +90,6 @@ impl ReadWriteIpcSegment for ServerZoneIpcSegment {
             ServerZoneIpcType::Unk8 => 808,
             ServerZoneIpcType::LinkShellInformation => 456,
             ServerZoneIpcType::Unk9 => 24,
-            ServerZoneIpcType::Unk10 => 8,
             ServerZoneIpcType::Unk11 => 32,
             ServerZoneIpcType::Unk15 => 8,
             ServerZoneIpcType::Unk16 => 136,
@@ -98,6 +100,7 @@ impl ReadWriteIpcSegment for ServerZoneIpcSegment {
             ServerZoneIpcType::PrepareZoning => 16,
             ServerZoneIpcType::NpcSpawn => 648,
             ServerZoneIpcType::StatusEffectList => 384,
+            ServerZoneIpcType::WeatherChange => 8,
         }
     }
 }
@@ -130,6 +133,7 @@ pub struct ActorSetPos {
 #[brw(repr = u8)]
 #[derive(Clone, PartialEq, Debug)]
 pub enum GameMasterCommandType {
+    ChangeWeather = 0x6,
     ChangeTerritory = 0x58,
 }
 
@@ -165,9 +169,6 @@ pub enum ServerZoneIpcType {
     LinkShellInformation = 0x234,
     // Unknown, server sends to the client before player spawn
     Unk9 = 0x189,
-    // Unknown, server sends to the client before player spawn.
-    // Seems to the same across two different characters?
-    Unk10 = 0x110,
     // Unknown, server sends this in response to Unk7
     Unk11 = 0x156,
     // Sent by the server when it wants the client to... prepare to zone?
@@ -188,6 +189,8 @@ pub enum ServerZoneIpcType {
     NpcSpawn = 0x100,
     // Sent by the server to update an actor's status effect list
     StatusEffectList = 0xBB,
+    // Sent by the server when it's time to change the weather
+    WeatherChange = 0x110,
 }
 
 #[binrw]
@@ -273,9 +276,6 @@ pub enum ServerZoneIpcData {
     Unk9 {
         unk: [u8; 24],
     },
-    Unk10 {
-        unk: u64,
-    },
     Unk11 {
         timestamp: u32,
         #[brw(pad_after = 24)] // empty bytes
@@ -302,6 +302,7 @@ pub enum ServerZoneIpcData {
     SocialList(SocialList),
     NpcSpawn(NpcSpawn),
     StatusEffectList(StatusEffectList),
+    WeatherChange(WeatherChange),
 }
 
 #[binrw]
@@ -455,6 +456,10 @@ mod tests {
             (
                 ServerZoneIpcType::StatusEffectList,
                 ServerZoneIpcData::StatusEffectList(StatusEffectList::default()),
+            ),
+            (
+                ServerZoneIpcType::WeatherChange,
+                ServerZoneIpcData::WeatherChange(WeatherChange::default()),
             ),
         ];
 

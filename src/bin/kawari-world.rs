@@ -500,6 +500,9 @@ async fn main() {
                                         tracing::info!("Got a game master command!");
 
                                         match &command {
+                                            GameMasterCommandType::ChangeWeather => {
+                                                connection.change_weather(*arg as u16).await
+                                            }
                                             GameMasterCommandType::ChangeTerritory => {
                                                 connection.change_zone(*arg as u16).await
                                             }

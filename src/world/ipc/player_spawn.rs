@@ -1,6 +1,5 @@
 use binrw::binrw;
 
-
 use super::CommonSpawn;
 
 #[binrw]

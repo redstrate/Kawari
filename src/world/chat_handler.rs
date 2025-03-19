@@ -1,4 +1,3 @@
-
 use crate::{
     CHAR_NAME, CUSTOMIZE_DATA, INVALID_OBJECT_ID, WORLD_ID,
     common::timestamp_secs,
