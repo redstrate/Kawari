@@ -1,8 +1,9 @@
+use kawari::config::get_config;
 use kawari::oodle::OodleNetwork;
 use kawari::packet::{ConnectionType, PacketSegment, PacketState, SegmentType, send_keep_alive};
 use kawari::world::ipc::{
     ClientZoneIpcData, CommonSpawn, GameMasterCommandType, ObjectKind, ServerZoneIpcData,
-    ServerZoneIpcSegment, ServerZoneIpcType, SocialListRequestType,
+    ServerZoneIpcSegment, ServerZoneIpcType, SocialListRequestType, StatusEffect,
 };
 use kawari::world::{
     ChatHandler, Zone, ZoneConnection,
@@ -15,6 +16,8 @@ use kawari::{
     CHAR_NAME, CITY_STATE, CONTENT_ID, CUSTOMIZE_DATA, DEITY, NAMEDAY_DAY, NAMEDAY_MONTH, WORLD_ID,
     ZONE_ID, common::timestamp_secs,
 };
+use physis::common::{Language, Platform};
+use physis::gamedata::GameData;
 use tokio::io::AsyncReadExt;
 use tokio::net::TcpListener;
 
@@ -593,6 +596,58 @@ async fn main() {
                                     }
                                     ClientZoneIpcData::Unk14 { .. } => {
                                         tracing::info!("Recieved Unk14!");
+                                    }
+                                    ClientZoneIpcData::ActionRequest(request) => {
+                                        tracing::info!("Recieved action request: {:#?}!", request);
+
+                                        let config = get_config();
+
+                                        let mut game_data = GameData::from_existing(
+                                            Platform::Win32,
+                                            &config.game_location,
+                                        )
+                                        .unwrap();
+
+                                        let exh =
+                                            game_data.read_excel_sheet_header("Action").unwrap();
+                                        let exd = game_data
+                                            .read_excel_sheet("Action", &exh, Language::English, 0)
+                                            .unwrap();
+
+                                        let action_row = &exd
+                                            .read_row(&exh, request.action_id as u32)
+                                            .unwrap()[0];
+
+                                        println!("Found action: {:#?}", action_row);
+
+                                        // send new status list
+                                        {
+                                            let ipc = ServerZoneIpcSegment {
+                                                op_code: ServerZoneIpcType::StatusEffectList,
+                                                timestamp: timestamp_secs(),
+                                                data: ServerZoneIpcData::StatusEffectList(
+                                                    kawari::world::ipc::StatusEffectList {
+                                                        statues: [StatusEffect {
+                                                            effect_id: 50,
+                                                            param: 0,
+                                                            duration: 50.0,
+                                                            source_actor_id: connection.player_id,
+                                                        };
+                                                            30],
+                                                        ..Default::default()
+                                                    },
+                                                ),
+                                                ..Default::default()
+                                            };
+
+                                            connection
+                                                .send_segment(PacketSegment {
+                                                    source_actor: connection.player_id,
+                                                    target_actor: connection.player_id,
+                                                    segment_type: SegmentType::Ipc { data: ipc },
+                                                })
+                                                .await;
+                                        }
                                     }
                                 }
                             }

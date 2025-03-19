@@ -47,6 +47,9 @@ pub use status_effect_list::StatusEffectList;
 mod weather_change;
 pub use weather_change::WeatherChange;
 
+mod action_request;
+pub use action_request::ActionRequest;
+
 use crate::common::read_string;
 use crate::common::write_string;
 use crate::packet::IpcSegment;
@@ -234,6 +237,8 @@ pub enum ClientZoneIpcType {
     Unk13 = 0x2EE,
     // Sent by the client for unknown reasons
     Unk14 = 0x87,
+    // Sent by the client when a character performs an action
+    ActionRequest = 0x213,
 }
 
 #[binrw]
@@ -403,6 +408,8 @@ pub enum ClientZoneIpcData {
     Unk14 {
         unk: [u8; 8], // TODO: unknown
     },
+    #[br(pre_assert(*magic == ClientZoneIpcType::ActionRequest))]
+    ActionRequest(ActionRequest),
 }
 
 #[cfg(test)]

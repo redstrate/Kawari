@@ -3,8 +3,8 @@ use binrw::binrw;
 #[binrw]
 #[derive(Debug, Clone, Copy, Default)]
 pub struct StatusEffect {
-    effect_id: u16,
-    param: u16,
-    duration: f32,
-    source_actor_id: u32,
+    pub effect_id: u16,
+    pub param: u16,
+    pub duration: f32,
+    pub source_actor_id: u32,
 }
