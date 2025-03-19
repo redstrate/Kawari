@@ -9,17 +9,6 @@ use super::{CommonSpawn, ObjectKind};
 
 #[binrw]
 #[brw(little)]
-#[brw(repr = u8)]
-#[derive(Debug, Clone, Default, PartialEq)]
-pub enum CharacterMode {
-    None = 0x0,
-    #[default]
-    Normal = 0x1,
-    Dead = 0x2,
-}
-
-#[binrw]
-#[brw(little)]
 #[derive(Debug, Clone, Default)]
 pub struct PlayerSpawn {
     // also shows up in the friends list.
@@ -38,6 +27,8 @@ mod tests {
     use std::{fs::read, io::Cursor, path::PathBuf};
 
     use binrw::BinRead;
+
+    use crate::world::ipc::CharacterMode;
 
     use super::*;
 

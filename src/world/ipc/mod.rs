@@ -9,7 +9,6 @@ pub use social_list::SocialListRequest;
 pub use social_list::SocialListRequestType;
 
 mod player_spawn;
-pub use player_spawn::CharacterMode;
 pub use player_spawn::PlayerSpawn;
 
 mod position;
@@ -38,7 +37,7 @@ mod npc_spawn;
 pub use npc_spawn::NpcSpawn;
 
 mod common_spawn;
-pub use common_spawn::{CommonSpawn, ObjectKind};
+pub use common_spawn::{CharacterMode, CommonSpawn, ObjectKind};
 
 use crate::common::read_string;
 use crate::common::write_string;

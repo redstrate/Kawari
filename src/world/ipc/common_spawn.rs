@@ -3,8 +3,8 @@ use binrw::binrw;
 use crate::CHAR_NAME_MAX_LENGTH;
 use crate::common::{CustomizeData, read_string, write_string};
 
+use super::StatusEffect;
 use super::position::Position;
-use super::{CharacterMode, StatusEffect};
 
 #[binrw]
 #[brw(repr = u8)]
@@ -28,6 +28,17 @@ pub enum ObjectKind {
     MjiObject = 14,
     Ornament = 15,
     CardStand = 16,
+}
+
+#[binrw]
+#[brw(little)]
+#[brw(repr = u8)]
+#[derive(Debug, Clone, Default, PartialEq)]
+pub enum CharacterMode {
+    None = 0x0,
+    #[default]
+    Normal = 0x1,
+    Dead = 0x2,
 }
 
 #[binrw]
