@@ -38,7 +38,7 @@ mod npc_spawn;
 pub use npc_spawn::NpcSpawn;
 
 mod common_spawn;
-pub use common_spawn::CommonSpawn;
+pub use common_spawn::{CommonSpawn, ObjectKind};
 
 use crate::common::read_string;
 use crate::common::write_string;
@@ -126,30 +126,6 @@ pub struct ActorSetPos {
 #[derive(Clone, PartialEq, Debug)]
 pub enum GameMasterCommandType {
     ChangeTerritory = 0x58,
-}
-
-#[binrw]
-#[brw(repr = u8)]
-#[derive(Clone, PartialEq, Debug, Default)]
-pub enum ObjectKind {
-    #[default]
-    None = 0,
-    Player = 1,
-    BattleNpc = 2,
-    EventNpc = 3,
-    Treasure = 4,
-    Aetheryte = 5,
-    GatheringPoint = 6,
-    EventObj = 7,
-    Mount = 8,
-    Companion = 9,
-    Retainer = 10,
-    AreaObject = 11,
-    HousingEventObject = 12,
-    Cutscene = 13,
-    MjiObject = 14,
-    Ornament = 15,
-    CardStand = 16,
 }
 
 #[binrw]

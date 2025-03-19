@@ -4,7 +4,31 @@ use crate::CHAR_NAME_MAX_LENGTH;
 use crate::common::{CustomizeData, read_string, write_string};
 
 use super::position::Position;
-use super::{CharacterMode, ObjectKind, StatusEffect};
+use super::{CharacterMode, StatusEffect};
+
+#[binrw]
+#[brw(repr = u8)]
+#[derive(Clone, PartialEq, Debug, Default)]
+pub enum ObjectKind {
+    #[default]
+    None = 0,
+    Player = 1,
+    BattleNpc = 2,
+    EventNpc = 3,
+    Treasure = 4,
+    Aetheryte = 5,
+    GatheringPoint = 6,
+    EventObj = 7,
+    Mount = 8,
+    Companion = 9,
+    Retainer = 10,
+    AreaObject = 11,
+    HousingEventObject = 12,
+    Cutscene = 13,
+    MjiObject = 14,
+    Ornament = 15,
+    CardStand = 16,
+}
 
 #[binrw]
 #[brw(little)]
