@@ -77,9 +77,11 @@ These special debug commands start with `!` and are custom to Kawari.
 
 * `!setpos <x> <y> <z>`: Teleport to the specified location
 * `!spawnactor`: Spawn another actor for debugging
+* `!spawnnpc`: Spawn an NPC for debugging
 
 ### GM commands
 
 These GM commands are implemented in the FFXIV protocol, but only some of them are implemented.
 
 * `//gm teri <id>`: Changes to the specified territory
+* `//gm weather <id>`: Changes the weather
