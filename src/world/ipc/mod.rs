@@ -34,6 +34,12 @@ pub use actor_control_self::ActorControlType;
 mod init_zone;
 pub use init_zone::InitZone;
 
+mod npc_spawn;
+pub use npc_spawn::NpcSpawn;
+
+mod common_spawn;
+pub use common_spawn::CommonSpawn;
+
 use crate::common::read_string;
 use crate::common::write_string;
 use crate::packet::IpcSegment;
@@ -86,6 +92,7 @@ impl ReadWriteIpcSegment for ServerZoneIpcSegment {
             ServerZoneIpcType::Unk17 => 104,
             ServerZoneIpcType::SocialList => 1136,
             ServerZoneIpcType::PrepareZoning => 16,
+            ServerZoneIpcType::NpcSpawn => 648,
         }
     }
 }
@@ -119,6 +126,30 @@ pub struct ActorSetPos {
 #[derive(Clone, PartialEq, Debug)]
 pub enum GameMasterCommandType {
     ChangeTerritory = 0x58,
+}
+
+#[binrw]
+#[brw(repr = u8)]
+#[derive(Clone, PartialEq, Debug, Default)]
+pub enum ObjectKind {
+    #[default]
+    None = 0,
+    Player = 1,
+    BattleNpc = 2,
+    EventNpc = 3,
+    Treasure = 4,
+    Aetheryte = 5,
+    GatheringPoint = 6,
+    EventObj = 7,
+    Mount = 8,
+    Companion = 9,
+    Retainer = 10,
+    AreaObject = 11,
+    HousingEventObject = 12,
+    Cutscene = 13,
+    MjiObject = 14,
+    Ornament = 15,
+    CardStand = 16,
 }
 
 #[binrw]
@@ -172,6 +203,8 @@ pub enum ServerZoneIpcType {
     Unk17 = 0x2A1,
     // Sent by the server in response to SocialListRequest
     SocialList = 0x36C,
+    // Sent by the server to spawn an NPC
+    NpcSpawn = 0x100,
 }
 
 #[binrw]
@@ -287,6 +320,7 @@ pub enum ServerZoneIpcData {
         unk: [u8; 104],
     },
     SocialList(SocialList),
+    NpcSpawn(NpcSpawn),
 }
 
 #[binrw]
@@ -428,6 +462,10 @@ mod tests {
             (
                 ServerZoneIpcType::ActorSetPos,
                 ServerZoneIpcData::ActorSetPos(ActorSetPos::default()),
+            ),
+            (
+                ServerZoneIpcType::NpcSpawn,
+                ServerZoneIpcData::NpcSpawn(NpcSpawn::default()),
             ),
         ];
 

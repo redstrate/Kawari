@@ -1,8 +1,8 @@
 use kawari::oodle::OodleNetwork;
 use kawari::packet::{ConnectionType, PacketSegment, PacketState, SegmentType, send_keep_alive};
 use kawari::world::ipc::{
-    ClientZoneIpcData, GameMasterCommandType, ServerZoneIpcData, ServerZoneIpcSegment,
-    ServerZoneIpcType, SocialListRequestType,
+    ClientZoneIpcData, CommonSpawn, GameMasterCommandType, ObjectKind, ServerZoneIpcData,
+    ServerZoneIpcSegment, ServerZoneIpcType, SocialListRequestType,
 };
 use kawari::world::{
     ChatHandler, Zone, ZoneConnection,
@@ -282,34 +282,37 @@ async fn main() {
                                                 timestamp: timestamp_secs(),
                                                 data: ServerZoneIpcData::PlayerSpawn(PlayerSpawn {
                                                     content_id: CONTENT_ID,
-                                                    current_world_id: WORLD_ID,
-                                                    home_world_id: WORLD_ID,
-                                                    title: 1,
-                                                    class_job: 35,
-                                                    name: CHAR_NAME.to_string(),
-                                                    hp_curr: 100,
-                                                    hp_max: 100,
-                                                    mp_curr: 100,
-                                                    mp_max: 100,
-                                                    model_type: 1,
-                                                    gm_rank: 3,
-                                                    look: CUSTOMIZE_DATA,
-                                                    fc_tag: "LOCAL".to_string(),
-                                                    subtype: 4,
-                                                    models: [
-                                                        0,  // head
-                                                        89, // body
-                                                        89, // hands
-                                                        89, // legs
-                                                        89, // feet
-                                                        0,  // ears
-                                                        0,  // neck
-                                                        0,  // wrists
-                                                        0,  // left finger
-                                                        0,  // right finger
-                                                    ],
-                                                    pos: exit_position
-                                                        .unwrap_or(Position::default()),
+                                                    common: CommonSpawn {
+                                                        current_world_id: WORLD_ID,
+                                                        home_world_id: WORLD_ID,
+                                                        title: 1,
+                                                        class_job: 35,
+                                                        name: CHAR_NAME.to_string(),
+                                                        hp_curr: 100,
+                                                        hp_max: 100,
+                                                        mp_curr: 100,
+                                                        mp_max: 100,
+                                                        object_kind: ObjectKind::Player,
+                                                        gm_rank: 3,
+                                                        look: CUSTOMIZE_DATA,
+                                                        fc_tag: "LOCAL".to_string(),
+                                                        subtype: 4,
+                                                        models: [
+                                                            0,  // head
+                                                            89, // body
+                                                            89, // hands
+                                                            89, // legs
+                                                            89, // feet
+                                                            0,  // ears
+                                                            0,  // neck
+                                                            0,  // wrists
+                                                            0,  // left finger
+                                                            0,  // right finger
+                                                        ],
+                                                        pos: exit_position
+                                                            .unwrap_or(Position::default()),
+                                                        ..Default::default()
+                                                    },
                                                     ..Default::default()
                                                 }),
                                                 ..Default::default()

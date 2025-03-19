@@ -35,6 +35,7 @@ pub const WORLD_NAME: &str = "KAWARI";
 pub const ZONE_ID: u16 = 132;
 
 pub const CONTENT_ID: u64 = 11111111111111111;
+pub const INVALID_OBJECT_ID: u32 = 0xE0000000;
 
 pub const CUSTOMIZE_DATA: CustomizeData = CustomizeData {
     race: 4,
