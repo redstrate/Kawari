@@ -7,7 +7,7 @@ use kawari::world::ipc::{
 use kawari::world::{
     ChatHandler, Zone, ZoneConnection,
     ipc::{
-        ActorControlSelf, ActorControlType, PlayerEntry, PlayerSetup, PlayerSpawn, PlayerStats,
+        ActorControlCategory, ActorControlSelf, PlayerEntry, PlayerSetup, PlayerSpawn, PlayerStats,
         Position, SocialList,
     },
 };
@@ -171,7 +171,7 @@ async fn main() {
                                                 data: ServerZoneIpcData::ActorControlSelf(
                                                     ActorControlSelf {
                                                         category:
-                                                            ActorControlType::SetCharaGearParamUI,
+                                                            ActorControlCategory::SetCharaGearParamUI,
                                                         param1: 1,
                                                         param2: 1,
                                                         param3: 0,

@@ -1,18 +1,12 @@
 use binrw::binrw;
 
-#[binrw]
-#[derive(Debug, Eq, PartialEq, Clone, Default)]
-#[brw(repr = u16)]
-pub enum ActorControlType {
-    #[default]
-    SetCharaGearParamUI = 0x260,
-}
+use super::ActorControlCategory;
 
 #[binrw]
 #[derive(Debug, Clone, Default)]
 pub struct ActorControlSelf {
     #[brw(pad_after = 2)]
-    pub category: ActorControlType,
+    pub category: ActorControlCategory,
     pub param1: u32,
     pub param2: u32,
     pub param3: u32,

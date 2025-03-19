@@ -1,10 +1,11 @@
+
 use crate::{
     CHAR_NAME, CUSTOMIZE_DATA, INVALID_OBJECT_ID, WORLD_ID,
     common::timestamp_secs,
     packet::{PacketSegment, SegmentType},
     world::ipc::{
-        CommonSpawn, NpcSpawn, ObjectKind, PlayerSpawn, ServerZoneIpcData, ServerZoneIpcSegment,
-        ServerZoneIpcType,
+        ActorControl, ActorControlCategory, CommonSpawn, NpcSpawn, ObjectKind, PlayerSpawn,
+        ServerZoneIpcData, ServerZoneIpcSegment, ServerZoneIpcType, StatusEffectList,
     },
 };
 
@@ -37,6 +38,35 @@ impl ChatHandler {
             "!spawnactor" => {
                 tracing::info!("Spawning actor...");
 
+                // status effect
+                {
+                    let ipc = ServerZoneIpcSegment {
+                        unk1: 20,
+                        unk2: 0,
+                        op_code: ServerZoneIpcType::StatusEffectList,
+                        server_id: 0,
+                        timestamp: timestamp_secs(),
+                        data: ServerZoneIpcData::StatusEffectList(StatusEffectList {
+                            classjob_id: 3,
+                            level: 10,
+                            unk1: 10,
+                            curr_hp: 241,
+                            max_hp: 241,
+                            curr_mp: 10000,
+                            max_mp: 10000,
+                            ..Default::default()
+                        }),
+                    };
+
+                    connection
+                        .send_segment(PacketSegment {
+                            source_actor: 0x106ad804,
+                            target_actor: connection.player_id,
+                            segment_type: SegmentType::Ipc { data: ipc },
+                        })
+                        .await;
+                }
+
                 // send player spawn
                 {
                     let ipc = ServerZoneIpcSegment {
@@ -63,6 +93,7 @@ impl ChatHandler {
                                 spawn_index: connection.get_free_spawn_index(),
                                 look: CUSTOMIZE_DATA,
                                 fc_tag: "LOCAL".to_string(),
+                                subtype: 4,
                                 models: [
                                     0,  // head
                                     89, // body
@@ -78,6 +109,29 @@ impl ChatHandler {
                                 pos: Position::default(),
                                 ..Default::default()
                             },
+                            ..Default::default()
+                        }),
+                    };
+
+                    connection
+                        .send_segment(PacketSegment {
+                            source_actor: 0x106ad804,
+                            target_actor: connection.player_id,
+                            segment_type: SegmentType::Ipc { data: ipc },
+                        })
+                        .await;
+                }
+
+                // zone in
+                {
+                    let ipc = ServerZoneIpcSegment {
+                        unk1: 20,
+                        unk2: 0,
+                        op_code: ServerZoneIpcType::ActorControl,
+                        server_id: 0,
+                        timestamp: timestamp_secs(),
+                        data: ServerZoneIpcData::ActorControl(ActorControl {
+                            category: ActorControlCategory::ZoneIn,
                             ..Default::default()
                         }),
                     };

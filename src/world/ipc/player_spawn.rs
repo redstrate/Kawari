@@ -1,11 +1,7 @@
 use binrw::binrw;
 
-use crate::CHAR_NAME_MAX_LENGTH;
-use crate::common::{CustomizeData, read_string, write_string};
 
-use super::position::Position;
-use super::status_effect::StatusEffect;
-use super::{CommonSpawn, ObjectKind};
+use super::CommonSpawn;
 
 #[binrw]
 #[brw(little)]
@@ -63,5 +59,6 @@ mod tests {
         assert_eq!(player_spawn.common.subtype, 4);
         assert_eq!(player_spawn.common.model_chara, 0);
         assert_eq!(player_spawn.common.object_kind, ObjectKind::Player);
+        assert_eq!(player_spawn.common.display_flags, 262144);
     }
 }

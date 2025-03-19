@@ -28,7 +28,9 @@ pub use player_stats::PlayerStats;
 
 mod actor_control_self;
 pub use actor_control_self::ActorControlSelf;
-pub use actor_control_self::ActorControlType;
+
+mod actor_control;
+pub use actor_control::{ActorControl, ActorControlCategory};
 
 mod init_zone;
 pub use init_zone::InitZone;
@@ -38,6 +40,9 @@ pub use npc_spawn::NpcSpawn;
 
 mod common_spawn;
 pub use common_spawn::{CharacterMode, CommonSpawn, ObjectKind};
+
+mod status_effect_list;
+pub use status_effect_list::StatusEffectList;
 
 use crate::common::read_string;
 use crate::common::write_string;
@@ -92,6 +97,7 @@ impl ReadWriteIpcSegment for ServerZoneIpcSegment {
             ServerZoneIpcType::SocialList => 1136,
             ServerZoneIpcType::PrepareZoning => 16,
             ServerZoneIpcType::NpcSpawn => 648,
+            ServerZoneIpcType::StatusEffectList => 384,
         }
     }
 }
@@ -171,7 +177,7 @@ pub enum ServerZoneIpcType {
     // Sent by the server before init zone???
     Unk16 = 0x3AB,
     // Sent by the server
-    ActorControl = 0x1B9,
+    ActorControl = 0x38E,
     // Sent by the server
     ActorMove = 0x3D8,
     // Sent by the server
@@ -180,6 +186,8 @@ pub enum ServerZoneIpcType {
     SocialList = 0x36C,
     // Sent by the server to spawn an NPC
     NpcSpawn = 0x100,
+    // Sent by the server to update an actor's status effect list
+    StatusEffectList = 0xBB,
 }
 
 #[binrw]
@@ -283,10 +291,7 @@ pub enum ServerZoneIpcData {
     Unk16 {
         unk: [u8; 136],
     },
-    ActorControl {
-        #[brw(pad_after = 20)] // empty
-        unk: u32,
-    },
+    ActorControl(ActorControl),
     ActorMove {
         #[brw(pad_after = 4)] // empty
         pos: Position,
@@ -296,6 +301,7 @@ pub enum ServerZoneIpcData {
     },
     SocialList(SocialList),
     NpcSpawn(NpcSpawn),
+    StatusEffectList(StatusEffectList),
 }
 
 #[binrw]
@@ -441,6 +447,14 @@ mod tests {
             (
                 ServerZoneIpcType::NpcSpawn,
                 ServerZoneIpcData::NpcSpawn(NpcSpawn::default()),
+            ),
+            (
+                ServerZoneIpcType::ActorControl,
+                ServerZoneIpcData::ActorControl(ActorControl::default()),
+            ),
+            (
+                ServerZoneIpcType::StatusEffectList,
+                ServerZoneIpcData::StatusEffectList(StatusEffectList::default()),
             ),
         ];
 

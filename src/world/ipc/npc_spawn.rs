@@ -1,10 +1,7 @@
 use binrw::binrw;
 
-use crate::CHAR_NAME_MAX_LENGTH;
-use crate::common::{CustomizeData, read_string, write_string};
 
-use super::position::Position;
-use super::{CharacterMode, CommonSpawn, ObjectKind, StatusEffect};
+use super::CommonSpawn;
 
 #[binrw]
 #[brw(little)]
