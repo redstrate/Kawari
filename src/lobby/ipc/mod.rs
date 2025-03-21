@@ -144,9 +144,8 @@ pub enum ClientLobbyIpcData {
     LobbyCharacterAction(LobbyCharacterAction),
     #[br(pre_assert(*magic == ClientLobbyIpcType::RequestEnterWorld))]
     RequestEnterWorld {
-        #[brw(pad_before = 16)]
         sequence: u64,
-        lookup_id: u64,
+        content_id: u64,
         // TODO: what else is in here?
     },
 }
@@ -166,7 +165,7 @@ pub enum ServerLobbyIpcData {
     LobbyCharacterList(LobbyCharacterList),
     LobbyEnterWorld {
         sequence: u64,
-        character_id: u32,
+        actor_id: u32,
         #[brw(pad_before = 4)]
         content_id: u64,
         #[brw(pad_before = 4)]
@@ -174,7 +173,7 @@ pub enum ServerLobbyIpcData {
         #[br(count = 66)]
         #[br(map = read_string)]
         #[bw(map = write_string)]
-        session_id: String,
+        token: String, // WHAT IS THIS FOR??
         port: u16,
         #[brw(pad_after = 16)] // garbage?
         #[br(count = 48)]
@@ -232,9 +231,9 @@ mod tests {
                 ServerLobbyIpcType::LobbyEnterWorld,
                 ServerLobbyIpcData::LobbyEnterWorld {
                     sequence: 0,
-                    character_id: 0,
+                    actor_id: 0,
                     content_id: 0,
-                    session_id: String::new(),
+                    token: String::new(),
                     port: 0,
                     host: String::new(),
                 },

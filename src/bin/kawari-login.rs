@@ -35,6 +35,8 @@ impl LoginServerState {
     fn add_user(&self, username: &str, password: &str) {
         let connection = self.connection.lock().unwrap();
 
+        tracing::info!("Adding user with username {username}");
+
         let query = "INSERT INTO users VALUES (?1, ?2);";
         connection
             .execute(query, (username, password))
@@ -44,6 +46,8 @@ impl LoginServerState {
     /// Login as user, returns a session id.
     fn login_user(&self, username: &str, password: &str) -> Result<String, LoginError> {
         let selected_row: Result<(String, String), rusqlite::Error>;
+
+        tracing::info!("Finding user with username {username}");
 
         {
             let connection = self.connection.lock().unwrap();
@@ -200,17 +204,17 @@ async fn check_session(
 }
 
 fn setup_state() -> LoginServerState {
-    let connection = Connection::open_in_memory().expect("Failed to open database!");
+    let connection = Connection::open("login.db").expect("Failed to open database!");
 
     // Create users table
     {
-        let query = "CREATE TABLE users (username TEXT PRIMARY KEY, password TEXT);";
+        let query = "CREATE TABLE  IF NOT EXISTS users (username TEXT PRIMARY KEY, password TEXT);";
         connection.execute(query, ()).unwrap();
     }
 
     // Create active sessions table
     {
-        let query = "CREATE TABLE sessions (username TEXT PRIMARY KEY, sid TEXT);";
+        let query = "CREATE TABLE IF NOT EXISTS sessions (username TEXT PRIMARY KEY, sid TEXT);";
         connection.execute(query, ()).unwrap();
     }
 

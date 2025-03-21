@@ -16,6 +16,8 @@ mod tests {
 
     use binrw::BinRead;
 
+    use crate::world::ipc::{CharacterMode, ObjectKind};
+
     use super::*;
 
     #[test]

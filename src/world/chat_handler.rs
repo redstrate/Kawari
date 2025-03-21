@@ -60,7 +60,7 @@ impl ChatHandler {
                     connection
                         .send_segment(PacketSegment {
                             source_actor: 0x106ad804,
-                            target_actor: connection.player_id,
+                            target_actor: connection.player_data.actor_id,
                             segment_type: SegmentType::Ipc { data: ipc },
                         })
                         .await;
@@ -115,7 +115,7 @@ impl ChatHandler {
                     connection
                         .send_segment(PacketSegment {
                             source_actor: 0x106ad804,
-                            target_actor: connection.player_id,
+                            target_actor: connection.player_data.actor_id,
                             segment_type: SegmentType::Ipc { data: ipc },
                         })
                         .await;
@@ -138,7 +138,7 @@ impl ChatHandler {
                     connection
                         .send_segment(PacketSegment {
                             source_actor: 0x106ad804,
-                            target_actor: connection.player_id,
+                            target_actor: connection.player_data.actor_id,
                             segment_type: SegmentType::Ipc { data: ipc },
                         })
                         .await;
@@ -163,7 +163,7 @@ impl ChatHandler {
                                 spawn_index: connection.get_free_spawn_index(),
                                 bnpc_base: 13498,
                                 bnpc_name: 10261,
-                                spawner_id: connection.player_id,
+                                spawner_id: connection.player_data.actor_id,
                                 parent_actor_id: INVALID_OBJECT_ID, // TODO: make default?
                                 object_kind: ObjectKind::BattleNpc,
                                 level: 1,
@@ -189,7 +189,7 @@ impl ChatHandler {
                     connection
                         .send_segment(PacketSegment {
                             source_actor: 0x106ad804,
-                            target_actor: connection.player_id,
+                            target_actor: connection.player_data.actor_id,
                             segment_type: SegmentType::Ipc { data: ipc },
                         })
                         .await;

@@ -1,15 +1,61 @@
-use kawari::lobby::CharaMake;
+use kawari::common::custom_ipc::CustomIpcData;
+use kawari::common::custom_ipc::CustomIpcSegment;
+use kawari::common::custom_ipc::CustomIpcType;
 use kawari::lobby::LobbyConnection;
 use kawari::lobby::ipc::{
     CharacterDetails, ClientLobbyIpcData, LobbyCharacterActionKind, ServerLobbyIpcData,
     ServerLobbyIpcSegment, ServerLobbyIpcType,
 };
 use kawari::oodle::OodleNetwork;
+use kawari::packet::CompressionType;
 use kawari::packet::ConnectionType;
+use kawari::packet::parse_packet;
+use kawari::packet::send_packet;
 use kawari::packet::{PacketSegment, PacketState, SegmentType, send_keep_alive};
 use kawari::{CONTENT_ID, WORLD_NAME};
 use tokio::io::AsyncReadExt;
 use tokio::net::TcpListener;
+use tokio::net::TcpStream;
+
+/// Sends a custom IPC packet to the world server, meant for private server-to-server communication.
+/// Returns the first custom IPC segment returned.
+async fn send_custom_world_packet(segment: CustomIpcSegment) -> Option<CustomIpcSegment> {
+    let mut stream = TcpStream::connect("127.0.0.1:7100").await.unwrap();
+
+    let mut packet_state = PacketState {
+        client_key: None,
+        serverbound_oodle: OodleNetwork::new(),
+        clientbound_oodle: OodleNetwork::new(),
+    };
+
+    let segment: PacketSegment<CustomIpcSegment> = PacketSegment {
+        source_actor: 0,
+        target_actor: 0,
+        segment_type: SegmentType::CustomIpc { data: segment },
+    };
+
+    send_packet(
+        &mut stream,
+        &mut packet_state,
+        ConnectionType::None,
+        CompressionType::Uncompressed,
+        &[segment],
+    )
+    .await;
+
+    // read response
+    let mut buf = [0; 2056];
+    let n = stream.read(&mut buf).await.expect("Failed to read data!");
+
+    println!("Got {n} bytes of response!");
+
+    let (segments, _) = parse_packet::<CustomIpcSegment>(&buf[..n], &mut packet_state).await;
+
+    match &segments[0].segment_type {
+        SegmentType::CustomIpc { data } => Some(data.clone()),
+        _ => None,
+    }
+}
 
 #[tokio::main]
 async fn main() {
@@ -32,6 +78,7 @@ async fn main() {
             socket,
             state,
             session_id: None,
+            stored_character_creation_name: String::new(),
         };
 
         tokio::spawn(async move {
@@ -82,37 +129,37 @@ async fn main() {
                                                 character_action.name
                                             );
 
-                                            // reject
-                                            /*{
-                                                let ipc = IPCSegment {
-                                                    unk1: 0,
-                                                    unk2: 0,
-                                                    op_code: IPCOpCode::InitializeChat, // wrong but technically right
-                                                    server_id: 0,
-                                                    timestamp: 0,
-                                                    data: ClientLobbyIpcType::NameRejection {
-                                                        unk1: 0x03,
-                                                        unk2: 0x0bdb,
-                                                        unk3: 0x000132cc,
-                                                    },
-                                                };
+                                            // check with the world server if the name is available
+                                            let name_request = CustomIpcSegment {
+                                                unk1: 0,
+                                                unk2: 0,
+                                                op_code: CustomIpcType::CheckNameIsAvailable,
+                                                server_id: 0,
+                                                timestamp: 0,
+                                                data: CustomIpcData::CheckNameIsAvailable {
+                                                    name: character_action.name.clone(),
+                                                },
+                                            };
 
-                                                let response_packet = PacketSegment {
-                                                    source_actor: 0x0,
-                                                    target_actor: 0x0,
-                                                    segment_type: SegmentType::Ipc { data: ipc },
-                                                };
-                                                send_packet(
-                                                    &mut write,
-                                                    &[response_packet],
-                                                    &mut state,
-                                                    CompressionType::Uncompressed,
-                                                )
-                                                .await;
-                                            }*/
+                                            let name_response =
+                                                send_custom_world_packet(name_request)
+                                                    .await
+                                                    .expect("Failed to get name request packet!");
+                                            let CustomIpcData::NameIsAvailableResponse { free } =
+                                                &name_response.data
+                                            else {
+                                                panic!("Unexpedted custom IPC type!")
+                                            };
 
-                                            // accept
-                                            {
+                                            tracing::info!("Is name free? {free}");
+
+                                            // TODO: use read_bool_as
+                                            let free: bool = *free == 1u8;
+
+                                            if free {
+                                                connection.stored_character_creation_name =
+                                                    character_action.name.clone();
+
                                                 let ipc = ServerLobbyIpcSegment {
                                                     unk1: 0,
                                                     unk2: 0,
@@ -145,13 +192,75 @@ async fn main() {
                                                         },
                                                     })
                                                     .await;
+                                            } else {
+                                                let ipc = ServerLobbyIpcSegment {
+                                                    unk1: 0,
+                                                    unk2: 0,
+                                                    op_code: ServerLobbyIpcType::LobbyError,
+                                                    server_id: 0,
+                                                    timestamp: 0,
+                                                    data: ServerLobbyIpcData::LobbyError {
+                                                        sequence: 0x03,
+                                                        error: 0x0bdb,
+                                                        exd_error_id: 0,
+                                                        value: 0,
+                                                        unk1: 0,
+                                                    },
+                                                };
+
+                                                let response_packet = PacketSegment {
+                                                    source_actor: 0x0,
+                                                    target_actor: 0x0,
+                                                    segment_type: SegmentType::Ipc { data: ipc },
+                                                };
+                                                connection.send_segment(response_packet).await;
                                             }
                                         }
                                         LobbyCharacterActionKind::Create => {
                                             tracing::info!("Player is creating a new character!");
 
-                                            let chara_make =
-                                                CharaMake::from_json(&character_action.json);
+                                            let our_actor_id;
+                                            let our_content_id;
+
+                                            // tell the world server to create this character
+                                            {
+                                                let ipc_segment = CustomIpcSegment {
+                                                    unk1: 0,
+                                                    unk2: 0,
+                                                    op_code: CustomIpcType::RequestCreateCharacter,
+                                                    server_id: 0,
+                                                    timestamp: 0,
+                                                    data: CustomIpcData::RequestCreateCharacter {
+                                                        name: connection
+                                                            .stored_character_creation_name
+                                                            .clone(), // TODO: worth double-checking, but AFAIK we have to store it this way?
+                                                        chara_make_json: character_action
+                                                            .json
+                                                            .clone(),
+                                                    },
+                                                };
+
+                                                let response_segment =
+                                                    send_custom_world_packet(ipc_segment)
+                                                        .await
+                                                        .unwrap();
+                                                match &response_segment.data {
+                                                    CustomIpcData::CharacterCreated {
+                                                        actor_id,
+                                                        content_id,
+                                                    } => {
+                                                        our_actor_id = *actor_id;
+                                                        our_content_id = *content_id;
+                                                    }
+                                                    _ => panic!(
+                                                        "Unexpected custom IPC packet type here!"
+                                                    ),
+                                                }
+                                            }
+
+                                            tracing::info!(
+                                                "Got new player info from world server: {our_content_id} {our_actor_id}"
+                                            );
 
                                             // a slightly different character created packet now
                                             {
@@ -165,8 +274,8 @@ async fn main() {
                                                         sequence: character_action.sequence + 1,
                                                         unk: 0x00020101,
                                                         details: CharacterDetails {
-                                                            id: 0x07369f3a, // notice that we give them an id now
-                                                            content_id: CONTENT_ID,
+                                                            actor_id: our_actor_id,
+                                                            content_id: our_content_id,
                                                             character_name: character_action
                                                                 .name
                                                                 .clone(),
@@ -204,11 +313,41 @@ async fn main() {
                                 }
                                 ClientLobbyIpcData::RequestEnterWorld {
                                     sequence,
-                                    lookup_id,
+                                    content_id,
                                 } => {
-                                    tracing::info!("Client is joining the world...");
+                                    tracing::info!("Client is joining the world with {content_id}");
 
-                                    connection.send_enter_world(*sequence, *lookup_id).await;
+                                    let our_actor_id;
+
+                                    // find the actor id for this content id
+                                    // NOTE: This is NOT the ideal solution. I theorize the lobby server has it's own records with this information.
+                                    {
+                                        let ipc_segment = CustomIpcSegment {
+                                            unk1: 0,
+                                            unk2: 0,
+                                            op_code: CustomIpcType::GetActorId,
+                                            server_id: 0,
+                                            timestamp: 0,
+                                            data: CustomIpcData::GetActorId {
+                                                content_id: *content_id,
+                                            },
+                                        };
+
+                                        let response_segment = send_custom_world_packet(ipc_segment).await.unwrap();
+
+                                        match &response_segment.data {
+                                            CustomIpcData::ActorIdFound { actor_id } => {
+                                                our_actor_id = *actor_id;
+                                            }
+                                            _ => panic!(
+                                                "Unexpected custom IPC packet type here!"
+                                            ),
+                                        }
+                                    }
+
+                                    connection
+                                        .send_enter_world(*sequence, *content_id, our_actor_id)
+                                        .await;
                                 }
                             },
                             SegmentType::KeepAlive { id, timestamp } => {

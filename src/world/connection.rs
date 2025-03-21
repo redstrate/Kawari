@@ -16,12 +16,19 @@ use super::{
     },
 };
 
+#[derive(Debug, Default)]
+pub struct PlayerData {
+    pub actor_id: u32,
+    pub content_id: u64,
+    pub account_id: u32,
+}
+
 /// Represents a single connection between an instance of the client and the world server
 pub struct ZoneConnection {
     pub socket: TcpStream,
 
     pub state: PacketState,
-    pub player_id: u32,
+    pub player_data: PlayerData,
 
     pub zone: Zone,
     pub spawn_index: u8,
@@ -61,8 +68,8 @@ impl ZoneConnection {
             };
 
             self.send_segment(PacketSegment {
-                source_actor: self.player_id,
-                target_actor: self.player_id,
+                source_actor: self.player_data.actor_id,
+                target_actor: self.player_data.actor_id,
                 segment_type: SegmentType::Ipc { data: ipc },
             })
             .await;
@@ -88,8 +95,8 @@ impl ZoneConnection {
             };
 
             self.send_segment(PacketSegment {
-                source_actor: self.player_id,
-                target_actor: self.player_id,
+                source_actor: self.player_data.actor_id,
+                target_actor: self.player_data.actor_id,
                 segment_type: SegmentType::Ipc { data: ipc },
             })
             .await;
@@ -105,8 +112,8 @@ impl ZoneConnection {
             };
 
             self.send_segment(PacketSegment {
-                source_actor: self.player_id,
-                target_actor: self.player_id,
+                source_actor: self.player_data.actor_id,
+                target_actor: self.player_data.actor_id,
                 segment_type: SegmentType::Ipc { data: ipc },
             })
             .await;
@@ -129,8 +136,8 @@ impl ZoneConnection {
             };
 
             self.send_segment(PacketSegment {
-                source_actor: self.player_id,
-                target_actor: self.player_id,
+                source_actor: self.player_data.actor_id,
+                target_actor: self.player_data.actor_id,
                 segment_type: SegmentType::Ipc { data: ipc },
             })
             .await;
@@ -149,8 +156,8 @@ impl ZoneConnection {
         };
 
         self.send_segment(PacketSegment {
-            source_actor: self.player_id,
-            target_actor: self.player_id,
+            source_actor: self.player_data.actor_id,
+            target_actor: self.player_data.actor_id,
             segment_type: SegmentType::Ipc { data: ipc },
         })
         .await;

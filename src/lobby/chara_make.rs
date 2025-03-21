@@ -1,4 +1,4 @@
-use serde_json::Value;
+use serde_json::{Value, json};
 
 use crate::common::CustomizeData;
 
@@ -27,6 +27,26 @@ impl CharaMake {
             birth_day: content[5].as_str().unwrap().parse::<i32>().unwrap(),
             unk6: content[6].as_str().unwrap().parse::<i32>().unwrap(),
         }
+    }
+
+    pub fn to_json(&self) -> String {
+        let content = json!([
+            self.customize.to_json(),
+            self.unk1,
+            self.guardian,
+            self.birth_month,
+            self.classjob,
+            self.birth_day,
+            self.unk6,
+        ]);
+
+        let obj = json!({
+            "content": content,
+            "classname": "CharaMake",
+            "classid": 118,
+        });
+
+        serde_json::to_string(&obj).unwrap()
     }
 }
 

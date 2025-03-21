@@ -4,7 +4,7 @@ use binrw::{BinRead, BinWrite, binrw};
 use tokio::{io::AsyncWriteExt, net::TcpStream};
 
 use crate::{
-    common::{read_string, timestamp_msecs},
+    common::{custom_ipc::CustomIpcSegment, read_string, timestamp_msecs, write_string},
     oodle::OodleNetwork,
     packet::{compression::compress, encryption::decrypt},
 };
@@ -30,9 +30,12 @@ pub enum SegmentType<T: ReadWriteIpcSegment> {
     // Client->Server Packets
     #[brw(magic = 0x1u32)]
     InitializeSession {
-        #[brw(pad_before = 4)]
-        #[brw(pad_after = 48)] // TODO: probably not empty?
-        player_id: u32,
+        #[brw(pad_before = 4)] // empty
+        #[brw(pad_size_to = 36)]
+        #[br(count = 36)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        actor_id: String, // square enix in their infinite wisdom has this as a STRING REPRESENTATION of an integer. what
     },
     #[brw(magic = 0x9u32)]
     InitializeEncryption {
@@ -71,6 +74,10 @@ pub enum SegmentType<T: ReadWriteIpcSegment> {
         #[brw(pad_after = 32)]
         timestamp: u32,
     },
+
+    // Custom Packets
+    #[brw(magic = 0xAAAAu32)]
+    CustomIpc { data: CustomIpcSegment },
 }
 
 #[binrw]
@@ -112,6 +119,7 @@ impl<T: ReadWriteIpcSegment> PacketSegment<T> {
                 SegmentType::KeepAliveResponse { .. } => 0x8,
                 SegmentType::ZoneInitialize { .. } => 40,
                 SegmentType::InitializeSession { .. } => todo!(),
+                SegmentType::CustomIpc { data } => data.calc_size(),
             }
     }
 }

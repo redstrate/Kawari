@@ -1,6 +1,11 @@
+use std::sync::{Arc, Mutex};
+
+use kawari::common::custom_ipc::{CustomIpcData, CustomIpcSegment, CustomIpcType};
 use kawari::config::get_config;
+use kawari::lobby::CharaMake;
 use kawari::oodle::OodleNetwork;
 use kawari::packet::{ConnectionType, PacketSegment, PacketState, SegmentType, send_keep_alive};
+use kawari::world::PlayerData;
 use kawari::world::ipc::{
     ClientZoneIpcData, CommonSpawn, GameMasterCommandType, ObjectKind, ServerZoneIpcData,
     ServerZoneIpcSegment, ServerZoneIpcType, SocialListRequestType, StatusEffect,
@@ -12,14 +17,129 @@ use kawari::world::{
         Position, SocialList,
     },
 };
-use kawari::{
-    CHAR_NAME, CITY_STATE, CONTENT_ID, CUSTOMIZE_DATA, DEITY, NAMEDAY_DAY, NAMEDAY_MONTH, WORLD_ID,
-    ZONE_ID, common::timestamp_secs,
-};
+use kawari::{CHAR_NAME, CITY_STATE, CONTENT_ID, WORLD_ID, ZONE_ID, common::timestamp_secs};
 use physis::common::{Language, Platform};
 use physis::gamedata::GameData;
+use rusqlite::Connection;
 use tokio::io::AsyncReadExt;
 use tokio::net::TcpListener;
+
+fn setup_db() -> Arc<Mutex<Connection>> {
+    let connection = Connection::open("world.db").expect("Failed to open database!");
+
+    // Create characters table
+    {
+        let query = "CREATE TABLE IF NOT EXISTS characters (content_id INTEGER PRIMARY KEY, service_account_id INTEGER, actor_id INTEGER);";
+        connection.execute(query, ()).unwrap();
+    }
+
+    // Create characters data table
+    {
+        let query = "CREATE TABLE IF NOT EXISTS character_data (content_id INTEGER PRIMARY KEY, name STRING, chara_make STRING);";
+        connection.execute(query, ()).unwrap();
+    }
+
+    Arc::new(Mutex::new(connection))
+}
+
+fn find_player_data(connection: &Arc<Mutex<Connection>>, actor_id: u32) -> PlayerData {
+    let connection = connection.lock().unwrap();
+
+    let mut stmt = connection
+        .prepare("SELECT content_id, service_account_id FROM characters WHERE actor_id = ?1")
+        .unwrap();
+    let (content_id, account_id) = stmt
+        .query_row((actor_id,), |row| Ok((row.get(0)?, row.get(1)?)))
+        .unwrap();
+
+    PlayerData {
+        actor_id,
+        content_id,
+        account_id,
+    }
+}
+
+// TODO: from/to sql int
+
+fn find_actor_id(connection: &Arc<Mutex<Connection>>, content_id: u64) -> u32 {
+    let connection = connection.lock().unwrap();
+
+    let mut stmt = connection
+        .prepare("SELECT actor_id FROM characters WHERE content_id = ?1")
+        .unwrap();
+
+    stmt.query_row((content_id,), |row| row.get(0)).unwrap()
+}
+
+fn generate_content_id() -> u32 {
+    rand::random()
+}
+
+fn generate_actor_id() -> u32 {
+    rand::random()
+}
+
+/// Gives (content_id, actor_id)
+fn create_player_data(
+    connection: &Arc<Mutex<Connection>>,
+    name: &str,
+    chara_make: &str,
+) -> (u64, u32) {
+    let content_id = generate_content_id();
+    let actor_id = generate_actor_id();
+
+    let connection = connection.lock().unwrap();
+
+    // insert ids
+    connection
+        .execute(
+            "INSERT INTO characters VALUES (?1, ?2, ?3);",
+            (content_id, 0x1, actor_id),
+        )
+        .unwrap();
+
+    // insert char data
+    connection
+        .execute(
+            "INSERT INTO character_data VALUES (?1, ?2, ?3);",
+            (content_id, name, chara_make),
+        )
+        .unwrap();
+
+    (content_id as u64, actor_id)
+}
+
+/// Checks if `name` is in the character data table
+fn check_is_name_free(connection: &Arc<Mutex<Connection>>, name: &str) -> bool {
+    let connection = connection.lock().unwrap();
+
+    let mut stmt = connection
+        .prepare("SELECT content_id FROM character_data WHERE name = ?1")
+        .unwrap();
+
+    !stmt.exists((name,)).unwrap()
+}
+
+struct CharacterData {
+    name: String,
+    chara_make: CharaMake, // probably not the ideal way to store this?
+}
+
+fn find_chara_make(connection: &Arc<Mutex<Connection>>, content_id: u64) -> CharacterData {
+    let connection = connection.lock().unwrap();
+
+    let mut stmt = connection
+        .prepare("SELECT name, chara_make FROM character_data WHERE content_id = ?1")
+        .unwrap();
+    let (name, chara_make_json): (String, String) = stmt
+        .query_row((content_id,), |row| Ok((row.get(0)?, row.get(1)?)))
+        .unwrap();
+
+    CharacterData {
+        name,
+        chara_make: CharaMake::from_json(&chara_make_json),
+    }
+}
 
 #[tokio::main]
 async fn main() {
@@ -29,8 +149,12 @@ async fn main() {
 
     tracing::info!("World server started on 127.0.0.1:7100");
 
+    let db_connection = setup_db();
+
     loop {
         let (socket, _) = listener.accept().await.unwrap();
+
+        let db_connection = db_connection.clone();
 
         let state = PacketState {
             client_key: None,
@@ -43,7 +167,7 @@ async fn main() {
         let mut connection = ZoneConnection {
             socket,
             state,
-            player_id: 0,
+            player_data: PlayerData::default(),
             spawn_index: 0,
             zone: Zone::load(ZONE_ID),
         };
@@ -61,8 +185,16 @@ async fn main() {
                     let (segments, connection_type) = connection.parse_packet(&buf[..n]).await;
                     for segment in &segments {
                         match &segment.segment_type {
-                            SegmentType::InitializeSession { player_id } => {
-                                connection.player_id = *player_id;
+                            SegmentType::InitializeSession { actor_id } => {
+                                tracing::info!("actor id to parse: {actor_id}");
+
+                                // collect actor data
+                                connection.player_data = find_player_data(
+                                    &db_connection,
+                                    actor_id.parse::<u32>().unwrap(),
+                                );
+
+                                println!("player data: {:#?}", connection.player_data);
 
                                 // We have send THEM a keep alive
                                 {
@@ -81,7 +213,7 @@ async fn main() {
                                 match connection_type {
                                     kawari::packet::ConnectionType::Zone => {
                                         tracing::info!(
-                                            "Client {player_id} is initializing zone session..."
+                                            "Client {actor_id} is initializing zone session..."
                                         );
 
                                         connection
@@ -89,7 +221,7 @@ async fn main() {
                                                 source_actor: 0,
                                                 target_actor: 0,
                                                 segment_type: SegmentType::ZoneInitialize {
-                                                    player_id: *player_id,
+                                                    player_id: connection.player_data.actor_id,
                                                     timestamp: timestamp_secs(),
                                                 },
                                             })
@@ -97,7 +229,7 @@ async fn main() {
                                     }
                                     kawari::packet::ConnectionType::Chat => {
                                         tracing::info!(
-                                            "Client {player_id} is initializing chat session..."
+                                            "Client {actor_id} is initializing chat session..."
                                         );
 
                                         {
@@ -106,7 +238,7 @@ async fn main() {
                                                     source_actor: 0,
                                                     target_actor: 0,
                                                     segment_type: SegmentType::ZoneInitialize {
-                                                        player_id: *player_id,
+                                                        player_id: connection.player_data.actor_id,
                                                         timestamp: timestamp_secs(),
                                                     },
                                                 })
@@ -125,8 +257,8 @@ async fn main() {
 
                                             connection
                                                 .send_segment(PacketSegment {
-                                                    source_actor: *player_id,
-                                                    target_actor: *player_id,
+                                                    source_actor: connection.player_data.actor_id,
+                                                    target_actor: connection.player_data.actor_id,
                                                     segment_type: SegmentType::Ipc { data: ipc },
                                                 })
                                                 .await;
@@ -151,7 +283,7 @@ async fn main() {
                                                 timestamp: timestamp_secs(),
                                                 data: ServerZoneIpcData::InitResponse {
                                                     unk1: 0,
-                                                    character_id: connection.player_id,
+                                                    character_id: connection.player_data.actor_id,
                                                     unk2: 0,
                                                 },
                                                 ..Default::default()
@@ -159,8 +291,8 @@ async fn main() {
 
                                             connection
                                                 .send_segment(PacketSegment {
-                                                    source_actor: connection.player_id,
-                                                    target_actor: connection.player_id,
+                                                    source_actor: connection.player_data.actor_id,
+                                                    target_actor: connection.player_data.actor_id,
                                                     segment_type: SegmentType::Ipc { data: ipc },
                                                 })
                                                 .await;
@@ -188,8 +320,8 @@ async fn main() {
 
                                             connection
                                                 .send_segment(PacketSegment {
-                                                    source_actor: connection.player_id,
-                                                    target_actor: connection.player_id,
+                                                    source_actor: connection.player_data.actor_id,
+                                                    target_actor: connection.player_data.actor_id,
                                                     segment_type: SegmentType::Ipc { data: ipc },
                                                 })
                                                 .await;
@@ -211,8 +343,8 @@ async fn main() {
 
                                             connection
                                                 .send_segment(PacketSegment {
-                                                    source_actor: connection.player_id,
-                                                    target_actor: connection.player_id,
+                                                    source_actor: connection.player_data.actor_id,
+                                                    target_actor: connection.player_data.actor_id,
                                                     segment_type: SegmentType::Ipc { data: ipc },
                                                 })
                                                 .await;
@@ -220,22 +352,37 @@ async fn main() {
 
                                         // Player Setup
                                         {
+                                            let chara_details = find_chara_make(
+                                                &db_connection,
+                                                connection.player_data.content_id,
+                                            );
+
                                             let ipc = ServerZoneIpcSegment {
                                                 op_code: ServerZoneIpcType::PlayerSetup,
                                                 timestamp: timestamp_secs(),
                                                 data: ServerZoneIpcData::PlayerSetup(PlayerSetup {
-                                                    content_id: CONTENT_ID,
+                                                    content_id: connection.player_data.content_id,
                                                     exp: [10000; 32],
                                                     levels: [100; 32],
-                                                    name: CHAR_NAME.to_string(),
-                                                    char_id: connection.player_id,
-                                                    race: CUSTOMIZE_DATA.race,
-                                                    gender: CUSTOMIZE_DATA.gender,
-                                                    tribe: CUSTOMIZE_DATA.subrace,
+                                                    name: chara_details.name,
+                                                    char_id: connection.player_data.actor_id,
+                                                    race: chara_details.chara_make.customize.race,
+                                                    gender: chara_details
+                                                        .chara_make
+                                                        .customize
+                                                        .gender,
+                                                    tribe: chara_details
+                                                        .chara_make
+                                                        .customize
+                                                        .subrace,
                                                     city_state: CITY_STATE,
-                                                    nameday_month: NAMEDAY_MONTH,
-                                                    nameday_day: NAMEDAY_DAY,
-                                                    deity: DEITY,
+                                                    nameday_month: chara_details
+                                                        .chara_make
+                                                        .birth_month
+                                                        as u8,
+                                                    nameday_day: chara_details.chara_make.birth_day
+                                                        as u8,
+                                                    deity: chara_details.chara_make.guardian as u8,
                                                     ..Default::default()
                                                 }),
                                                 ..Default::default()
@@ -243,8 +390,8 @@ async fn main() {
 
                                             connection
                                                 .send_segment(PacketSegment {
-                                                    source_actor: connection.player_id,
-                                                    target_actor: connection.player_id,
+                                                    source_actor: connection.player_data.actor_id,
+                                                    target_actor: connection.player_data.actor_id,
                                                     segment_type: SegmentType::Ipc { data: ipc },
                                                 })
                                                 .await;
@@ -266,8 +413,8 @@ async fn main() {
 
                                             connection
                                                 .send_segment(PacketSegment {
-                                                    source_actor: connection.player_id,
-                                                    target_actor: connection.player_id,
+                                                    source_actor: connection.player_data.actor_id,
+                                                    target_actor: connection.player_data.actor_id,
                                                     segment_type: SegmentType::Ipc { data: ipc },
                                                 })
                                                 .await;
@@ -276,6 +423,11 @@ async fn main() {
                                     ClientZoneIpcData::FinishLoading { .. } => {
                                         tracing::info!(
                                             "Client has finished loading... spawning in!"
+                                        );
+
+                                        let chara_details = find_chara_make(
+                                            &db_connection,
+                                            connection.player_data.content_id,
                                         );
 
                                         // send player spawn
@@ -290,14 +442,14 @@ async fn main() {
                                                         home_world_id: WORLD_ID,
                                                         title: 1,
                                                         class_job: 35,
-                                                        name: CHAR_NAME.to_string(),
+                                                        name: chara_details.name,
                                                         hp_curr: 100,
                                                         hp_max: 100,
                                                         mp_curr: 100,
                                                         mp_max: 100,
                                                         object_kind: ObjectKind::Player,
                                                         gm_rank: 3,
-                                                        look: CUSTOMIZE_DATA,
+                                                        look: chara_details.chara_make.customize,
                                                         fc_tag: "LOCAL".to_string(),
                                                         subtype: 4,
                                                         models: [
@@ -323,8 +475,8 @@ async fn main() {
 
                                             connection
                                                 .send_segment(PacketSegment {
-                                                    source_actor: connection.player_id,
-                                                    target_actor: connection.player_id,
+                                                    source_actor: connection.player_data.actor_id,
+                                                    target_actor: connection.player_data.actor_id,
                                                     segment_type: SegmentType::Ipc { data: ipc },
                                                 })
                                                 .await;
@@ -343,8 +495,8 @@ async fn main() {
 
                                             connection
                                                 .send_segment(PacketSegment {
-                                                    source_actor: connection.player_id,
-                                                    target_actor: connection.player_id,
+                                                    source_actor: connection.player_data.actor_id,
+                                                    target_actor: connection.player_data.actor_id,
                                                     segment_type: SegmentType::Ipc { data: ipc },
                                                 })
                                                 .await;
@@ -401,8 +553,12 @@ async fn main() {
 
                                                 connection
                                                     .send_segment(PacketSegment {
-                                                        source_actor: connection.player_id,
-                                                        target_actor: connection.player_id,
+                                                        source_actor: connection
+                                                            .player_data
+                                                            .actor_id,
+                                                        target_actor: connection
+                                                            .player_data
+                                                            .actor_id,
                                                         segment_type: SegmentType::Ipc {
                                                             data: ipc,
                                                         },
@@ -425,8 +581,12 @@ async fn main() {
 
                                                 connection
                                                     .send_segment(PacketSegment {
-                                                        source_actor: connection.player_id,
-                                                        target_actor: connection.player_id,
+                                                        source_actor: connection
+                                                            .player_data
+                                                            .actor_id,
+                                                        target_actor: connection
+                                                            .player_data
+                                                            .actor_id,
                                                         segment_type: SegmentType::Ipc {
                                                             data: ipc,
                                                         },
@@ -454,8 +614,8 @@ async fn main() {
 
                                             connection
                                                 .send_segment(PacketSegment {
-                                                    source_actor: connection.player_id,
-                                                    target_actor: connection.player_id,
+                                                    source_actor: connection.player_data.actor_id,
+                                                    target_actor: connection.player_data.actor_id,
                                                     segment_type: SegmentType::Ipc { data: ipc },
                                                 })
                                                 .await;
@@ -480,8 +640,8 @@ async fn main() {
 
                                             connection
                                                 .send_segment(PacketSegment {
-                                                    source_actor: connection.player_id,
-                                                    target_actor: connection.player_id,
+                                                    source_actor: connection.player_data.actor_id,
+                                                    target_actor: connection.player_data.actor_id,
                                                     segment_type: SegmentType::Ipc { data: ipc },
                                                 })
                                                 .await;
@@ -560,8 +720,8 @@ async fn main() {
 
                                             connection
                                                 .send_segment(PacketSegment {
-                                                    source_actor: connection.player_id,
-                                                    target_actor: connection.player_id,
+                                                    source_actor: connection.player_data.actor_id,
+                                                    target_actor: connection.player_data.actor_id,
                                                     segment_type: SegmentType::Ipc { data: ipc },
                                                 })
                                                 .await;
@@ -580,8 +740,8 @@ async fn main() {
 
                                             connection
                                                 .send_segment(PacketSegment {
-                                                    source_actor: connection.player_id,
-                                                    target_actor: connection.player_id,
+                                                    source_actor: connection.player_data.actor_id,
+                                                    target_actor: connection.player_data.actor_id,
                                                     segment_type: SegmentType::Ipc { data: ipc },
                                                 })
                                                 .await;
@@ -614,9 +774,8 @@ async fn main() {
                                             .read_excel_sheet("Action", &exh, Language::English, 0)
                                             .unwrap();
 
-                                        let action_row = &exd
-                                            .read_row(&exh, request.action_id as u32)
-                                            .unwrap()[0];
+                                        let action_row =
+                                            &exd.read_row(&exh, request.action_id).unwrap()[0];
 
                                         println!("Found action: {:#?}", action_row);
 
@@ -631,7 +790,9 @@ async fn main() {
                                                             effect_id: 50,
                                                             param: 0,
                                                             duration: 50.0,
-                                                            source_actor_id: connection.player_id,
+                                                            source_actor_id: connection
+                                                                .player_data
+                                                                .actor_id,
                                                         };
                                                             30],
                                                         ..Default::default()
@@ -642,8 +803,8 @@ async fn main() {
 
                                             connection
                                                 .send_segment(PacketSegment {
-                                                    source_actor: connection.player_id,
-                                                    target_actor: connection.player_id,
+                                                    source_actor: connection.player_data.actor_id,
+                                                    target_actor: connection.player_data.actor_id,
                                                     segment_type: SegmentType::Ipc { data: ipc },
                                                 })
                                                 .await;
@@ -663,6 +824,108 @@ async fn main() {
                             }
                             SegmentType::KeepAliveResponse { .. } => {
                                 tracing::info!("Got keep alive response from client... cool...");
+                            }
+                            SegmentType::CustomIpc { data } => {
+                                match &data.data {
+                                    CustomIpcData::RequestCreateCharacter {
+                                        name,
+                                        chara_make_json,
+                                    } => {
+                                        tracing::info!(
+                                            "creating character from: {name} {chara_make_json}"
+                                        );
+
+                                        let (content_id, actor_id) = create_player_data(
+                                            &db_connection,
+                                            name,
+                                            chara_make_json,
+                                        );
+
+                                        tracing::info!(
+                                            "Created new player: {content_id} {actor_id}"
+                                        );
+
+                                        // send them the new actor and content id
+                                        {
+                                            connection
+                                                .send_segment(PacketSegment {
+                                                    source_actor: 0,
+                                                    target_actor: 0,
+                                                    segment_type: SegmentType::CustomIpc {
+                                                        data: CustomIpcSegment {
+                                                            unk1: 0,
+                                                            unk2: 0,
+                                                            op_code:
+                                                                CustomIpcType::CharacterCreated,
+                                                            server_id: 0,
+                                                            timestamp: 0,
+                                                            data: CustomIpcData::CharacterCreated {
+                                                                actor_id,
+                                                                content_id,
+                                                            },
+                                                        },
+                                                    },
+                                                })
+                                                .await;
+                                        }
+                                    }
+                                    CustomIpcData::GetActorId { content_id } => {
+                                        let actor_id = find_actor_id(&db_connection, *content_id);
+
+                                        tracing::info!("We found an actor id: {actor_id}");
+
+                                        // send them the actor id
+                                        {
+                                            connection
+                                                .send_segment(PacketSegment {
+                                                    source_actor: 0,
+                                                    target_actor: 0,
+                                                    segment_type: SegmentType::CustomIpc {
+                                                        data: CustomIpcSegment {
+                                                            unk1: 0,
+                                                            unk2: 0,
+                                                            op_code: CustomIpcType::ActorIdFound,
+                                                            server_id: 0,
+                                                            timestamp: 0,
+                                                            data: CustomIpcData::ActorIdFound {
+                                                                actor_id,
+                                                            },
+                                                        },
+                                                    },
+                                                })
+                                                .await;
+                                        }
+                                    }
+                                    CustomIpcData::CheckNameIsAvailable { name } => {
+                                        let is_name_free = check_is_name_free(&db_connection, name);
+                                        let is_name_free = if is_name_free { 1 } else { 0 };
+
+                                        // send response
+                                        {
+                                            connection
+                                            .send_segment(PacketSegment {
+                                                source_actor: 0,
+                                                target_actor: 0,
+                                                segment_type: SegmentType::CustomIpc {
+                                                    data: CustomIpcSegment {
+                                                        unk1: 0,
+                                                        unk2: 0,
+                                                        op_code: CustomIpcType::NameIsAvailableResponse,
+                                                        server_id: 0,
+                                                        timestamp: 0,
+                                                        data: CustomIpcData::NameIsAvailableResponse {
+                                                            free: is_name_free,
+                                                        },
+                                                    },
+                                                },
+                                            })
+                                            .await;
+                                        }
+                                    }
+                                    _ => panic!(
+                                        "The server is recieving a response or unknown custom IPC!"
+                                    ),
+                                }
                             }
                             _ => {
                                 panic!("The server is recieving a response or unknown packet!")

@@ -29,6 +29,8 @@ pub struct LobbyConnection {
     pub session_id: Option<String>,
 
     pub state: PacketState,
+
+    pub stored_character_creation_name: String,
 }
 
 impl LobbyConnection {
@@ -209,7 +211,7 @@ impl LobbyConnection {
             };
 
             let mut characters = vec![CharacterDetails {
-                id: 0,
+                actor_id: 0,
                 content_id: CONTENT_ID,
                 index: 0,
                 unk1: [0; 16],
@@ -295,16 +297,16 @@ impl LobbyConnection {
     }
 
     /// Send the host information for the world server to the client.
-    pub async fn send_enter_world(&mut self, sequence: u64, lookup_id: u64) {
+    pub async fn send_enter_world(&mut self, sequence: u64, content_id: u64, actor_id: u32) {
         let Some(session_id) = &self.session_id else {
             panic!("Missing session id!");
         };
 
         let enter_world = ServerLobbyIpcData::LobbyEnterWorld {
             sequence,
-            character_id: 0,
-            content_id: lookup_id, // TODO: shouldn't these be named the same then?
-            session_id: session_id.clone(),
+            actor_id,
+            content_id,
+            token: String::new(),
             port: 7100,
             host: "127.0.0.1".to_string(),
         };

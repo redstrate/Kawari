@@ -7,4 +7,4 @@ mod chat_handler;
 pub use chat_handler::ChatHandler;
 
 mod connection;
-pub use connection::ZoneConnection;
+pub use connection::{PlayerData, ZoneConnection};

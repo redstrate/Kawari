@@ -8,7 +8,7 @@ use super::{read_string, write_string};
 #[derive(Debug, Clone, Default)]
 pub struct CharacterDetails {
     #[brw(pad_after = 4)]
-    pub id: u32,
+    pub actor_id: u32,
     pub content_id: u64,
     #[brw(pad_after = 4)]
     pub index: u32,
