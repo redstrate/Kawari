@@ -179,7 +179,7 @@ impl Default for WorldConfig {
         Self {
             port: 7100,
             listen_address: "127.0.0.1".to_string(),
-            world_id: 1, // Dev
+            world_id: 63, // Gilgamesh
         }
     }
 }
