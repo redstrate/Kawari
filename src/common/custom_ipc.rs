@@ -3,6 +3,7 @@ use binrw::binrw;
 use crate::{
     CHAR_NAME_MAX_LENGTH,
     common::read_string,
+    lobby::ipc::CharacterDetails,
     packet::{IpcSegment, ReadWriteIpcSegment},
 };
 
@@ -20,6 +21,8 @@ impl ReadWriteIpcSegment for CustomIpcSegment {
             CustomIpcType::ActorIdFound => 4,
             CustomIpcType::CheckNameIsAvailable => CHAR_NAME_MAX_LENGTH as u32,
             CustomIpcType::NameIsAvailableResponse => 1,
+            CustomIpcType::RequestCharacterList => 4,
+            CustomIpcType::RequestCharacterListRepsonse => 1184 * 8,
         }
     }
 }
@@ -41,6 +44,10 @@ pub enum CustomIpcType {
     CheckNameIsAvailable = 0x5,
     /// Response to CheckNameIsAvailable
     NameIsAvailableResponse = 0x6,
+    /// Request the character list from the world server
+    RequestCharacterList = 0x7,
+    /// Response to RequestCharacterList
+    RequestCharacterListRepsonse = 0x8,
 }
 
 #[binrw]
@@ -76,6 +83,15 @@ pub enum CustomIpcData {
     },
     #[br(pre_assert(*magic == CustomIpcType::NameIsAvailableResponse))]
     NameIsAvailableResponse { free: u8 },
+    #[br(pre_assert(*magic == CustomIpcType::RequestCharacterList))]
+    RequestCharacterList { service_account_id: u32 },
+    #[br(pre_assert(*magic == CustomIpcType::RequestCharacterListRepsonse))]
+    RequestCharacterListRepsonse {
+        #[bw(calc = characters.len() as u8)]
+        num_characters: u8,
+        #[br(count = num_characters)]
+        characters: Vec<CharacterDetails>, // TODO: maybe chunk this into 4 parts ala the lobby server?
+    },
 }
 
 impl Default for CustomIpcData {

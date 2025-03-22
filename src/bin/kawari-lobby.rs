@@ -6,56 +6,13 @@ use kawari::lobby::ipc::{
     CharacterDetails, ClientLobbyIpcData, LobbyCharacterActionKind, ServerLobbyIpcData,
     ServerLobbyIpcSegment, ServerLobbyIpcType,
 };
+use kawari::lobby::send_custom_world_packet;
 use kawari::oodle::OodleNetwork;
-use kawari::packet::CompressionType;
 use kawari::packet::ConnectionType;
-use kawari::packet::parse_packet;
-use kawari::packet::send_packet;
 use kawari::packet::{PacketSegment, PacketState, SegmentType, send_keep_alive};
 use kawari::{CONTENT_ID, WORLD_NAME};
 use tokio::io::AsyncReadExt;
 use tokio::net::TcpListener;
-use tokio::net::TcpStream;
-
-/// Sends a custom IPC packet to the world server, meant for private server-to-server communication.
-/// Returns the first custom IPC segment returned.
-async fn send_custom_world_packet(segment: CustomIpcSegment) -> Option<CustomIpcSegment> {
-    let mut stream = TcpStream::connect("127.0.0.1:7100").await.unwrap();
-
-    let mut packet_state = PacketState {
-        client_key: None,
-        serverbound_oodle: OodleNetwork::new(),
-        clientbound_oodle: OodleNetwork::new(),
-    };
-
-    let segment: PacketSegment<CustomIpcSegment> = PacketSegment {
-        source_actor: 0,
-        target_actor: 0,
-        segment_type: SegmentType::CustomIpc { data: segment },
-    };
-
-    send_packet(
-        &mut stream,
-        &mut packet_state,
-        ConnectionType::None,
-        CompressionType::Uncompressed,
-        &[segment],
-    )
-    .await;
-
-    // read response
-    let mut buf = [0; 2056];
-    let n = stream.read(&mut buf).await.expect("Failed to read data!");
-
-    println!("Got {n} bytes of response!");
-
-    let (segments, _) = parse_packet::<CustomIpcSegment>(&buf[..n], &mut packet_state).await;
-
-    match &segments[0].segment_type {
-        SegmentType::CustomIpc { data } => Some(data.clone()),
-        _ => None,
-    }
-}
 
 #[tokio::main]
 async fn main() {
@@ -333,15 +290,14 @@ async fn main() {
                                             },
                                         };
 
-                                        let response_segment = send_custom_world_packet(ipc_segment).await.unwrap();
+                                        let response_segment =
+                                            send_custom_world_packet(ipc_segment).await.unwrap();
 
                                         match &response_segment.data {
                                             CustomIpcData::ActorIdFound { actor_id } => {
                                                 our_actor_id = *actor_id;
                                             }
-                                            _ => panic!(
-                                                "Unexpected custom IPC packet type here!"
-                                            ),
+                                            _ => panic!("Unexpected custom IPC packet type here!"),
                                         }
                                     }
 

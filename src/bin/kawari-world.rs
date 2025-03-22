@@ -1,10 +1,15 @@
 use std::sync::{Arc, Mutex};
 
+use kawari::WORLD_NAME;
 use kawari::common::custom_ipc::{CustomIpcData, CustomIpcSegment, CustomIpcType};
 use kawari::config::get_config;
-use kawari::lobby::CharaMake;
+use kawari::lobby::ipc::CharacterDetails;
+use kawari::lobby::{CharaMake, ClientSelectData};
 use kawari::oodle::OodleNetwork;
-use kawari::packet::{ConnectionType, PacketSegment, PacketState, SegmentType, send_keep_alive};
+use kawari::packet::{
+    CompressionType, ConnectionType, PacketSegment, PacketState, SegmentType, send_keep_alive,
+    send_packet,
+};
 use kawari::world::PlayerData;
 use kawari::world::ipc::{
     ClientZoneIpcData, CommonSpawn, GameMasterCommandType, ObjectKind, ServerZoneIpcData,
@@ -69,6 +74,91 @@ fn find_actor_id(connection: &Arc<Mutex<Connection>>, content_id: u64) -> u32 {
         .unwrap();
 
     stmt.query_row((content_id,), |row| row.get(0)).unwrap()
+}
+
+fn get_character_list(
+    connection: &Arc<Mutex<Connection>>,
+    service_account_id: u32,
+) -> Vec<CharacterDetails> {
+    let connection = connection.lock().unwrap();
+
+    let content_actor_ids: Vec<(u32, u32)>;
+
+    // find the content ids associated with the service account
+    {
+        let mut stmt = connection
+            .prepare("SELECT content_id, actor_id FROM characters WHERE service_account_id = ?1")
+            .unwrap();
+
+        content_actor_ids = stmt
+            .query_map((service_account_id,), |row| Ok((row.get(0)?, row.get(1)?)))
+            .unwrap()
+            .map(|x| x.unwrap())
+            .collect();
+    }
+
+    let mut characters = Vec::new();
+
+    for (index, (content_id, actor_id)) in content_actor_ids.iter().enumerate() {
+        dbg!(content_id);
+
+        let mut stmt = connection
+            .prepare("SELECT name, chara_make FROM character_data WHERE content_id = ?1")
+            .unwrap();
+
+        let (name, chara_make): (String, String) = stmt
+            .query_row((content_id,), |row| Ok((row.get(0)?, row.get(1)?)))
+            .unwrap();
+
+        let chara_make = CharaMake::from_json(&chara_make);
+
+        let select_data = ClientSelectData {
+            game_name_unk: "Final Fantasy".to_string(),
+            current_class: 2,
+            class_levels: [5; 30],
+            race: chara_make.customize.race as i32,
+            subrace: chara_make.customize.subrace as i32,
+            gender: chara_make.customize.gender as i32,
+            birth_month: chara_make.birth_month,
+            birth_day: chara_make.birth_day,
+            guardian: chara_make.guardian,
+            unk8: 0,
+            unk9: 0,
+            zone_id: ZONE_ID as i32,
+            unk11: 0,
+            customize: chara_make.customize,
+            unk12: 0,
+            unk13: 0,
+            unk14: [0; 10],
+            unk15: 0,
+            unk16: 0,
+            legacy_character: 0,
+            unk18: 0,
+            unk19: 0,
+            unk20: 0,
+            unk21: String::new(),
+            unk22: 0,
+            unk23: 0,
+        };
+
+        characters.push(CharacterDetails {
+            actor_id: *actor_id,
+            content_id: *content_id as u64,
+            index: index as u32,
+            unk1: [0; 16],
+            origin_server_id: WORLD_ID,
+            current_server_id: WORLD_ID,
+            character_name: name.clone(),
+            origin_server_name: WORLD_NAME.to_string(),
+            current_server_name: WORLD_NAME.to_string(),
+            character_detail_json: select_data.to_json(),
+            unk2: [0; 20],
+        });
+    }
+
+    dbg!(&characters);
+
+    characters
 }
 
 fn generate_content_id() -> u32 {
@@ -919,6 +1009,37 @@ async fn main() {
                                                     },
                                                 },
                                             })
+                                            .await;
+                                        }
+                                    }
+                                    CustomIpcData::RequestCharacterList { service_account_id } => {
+                                        let characters =
+                                            get_character_list(&db_connection, *service_account_id);
+
+                                        // send response
+                                        {
+                                            send_packet::<CustomIpcSegment>(
+                                                &mut connection.socket,
+                                                &mut connection.state,
+                                                ConnectionType::None,
+                                                CompressionType::Uncompressed,
+                                                &[PacketSegment {
+                                                    source_actor: 0,
+                                                    target_actor: 0,
+                                                    segment_type: SegmentType::CustomIpc {
+                                                        data: CustomIpcSegment {
+                                                            unk1: 0,
+                                                            unk2: 0,
+                                                            op_code: CustomIpcType::RequestCharacterListRepsonse,
+                                                            server_id: 0,
+                                                            timestamp: 0,
+                                                            data: CustomIpcData::RequestCharacterListRepsonse {
+                                                                characters
+                                                            },
+                                                        },
+                                                    },
+                                                }],
+                                            )
                                             .await;
                                         }
                                     }

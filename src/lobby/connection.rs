@@ -1,24 +1,24 @@
 use std::cmp::min;
 
-use tokio::net::TcpStream;
+use tokio::{io::AsyncReadExt, net::TcpStream};
 
 use crate::{
-    CHAR_NAME, CONTENT_ID, CUSTOMIZE_DATA, DEITY, NAMEDAY_DAY, NAMEDAY_MONTH, WORLD_ID, WORLD_NAME,
-    ZONE_ID,
+    WORLD_ID, WORLD_NAME,
     blowfish::Blowfish,
-    common::timestamp_secs,
+    common::{
+        custom_ipc::{CustomIpcData, CustomIpcSegment, CustomIpcType},
+        timestamp_secs,
+    },
+    oodle::OodleNetwork,
     packet::{
         CompressionType, ConnectionType, PacketSegment, PacketState, SegmentType,
         generate_encryption_key, parse_packet, send_packet,
     },
 };
 
-use super::{
-    client_select_data::ClientSelectData,
-    ipc::{
-        CharacterDetails, LobbyCharacterList, LobbyServerList, LobbyServiceAccountList, Server,
-        ServerLobbyIpcData, ServerLobbyIpcSegment, ServerLobbyIpcType, ServiceAccount,
-    },
+use super::ipc::{
+    CharacterDetails, LobbyCharacterList, LobbyServerList, LobbyServiceAccountList, Server,
+    ServerLobbyIpcData, ServerLobbyIpcSegment, ServerLobbyIpcType, ServiceAccount,
 };
 use crate::lobby::ipc::ClientLobbyIpcSegment;
 
@@ -181,48 +181,28 @@ impl LobbyConnection {
 
         // now send them the character list
         {
-            let select_data = ClientSelectData {
-                game_name_unk: "Final Fantasy".to_string(),
-                current_class: 2,
-                class_levels: [5; 30],
-                race: CUSTOMIZE_DATA.race as i32,
-                subrace: CUSTOMIZE_DATA.subrace as i32,
-                gender: CUSTOMIZE_DATA.gender as i32,
-                birth_month: NAMEDAY_MONTH as i32,
-                birth_day: NAMEDAY_DAY as i32,
-                guardian: DEITY as i32,
-                unk8: 0,
-                unk9: 0,
-                zone_id: ZONE_ID as i32,
-                unk11: 0,
-                customize: CUSTOMIZE_DATA,
-                unk12: 0,
-                unk13: 0,
-                unk14: [0; 10],
-                unk15: 0,
-                unk16: 0,
-                legacy_character: 0,
-                unk18: 0,
-                unk19: 0,
-                unk20: 0,
-                unk21: String::new(),
-                unk22: 0,
-                unk23: 0,
+            let charlist_request = CustomIpcSegment {
+                unk1: 0,
+                unk2: 0,
+                op_code: CustomIpcType::RequestCharacterList,
+                server_id: 0,
+                timestamp: 0,
+                data: CustomIpcData::RequestCharacterList {
+                    service_account_id: 0x1, // TODO: placeholder
+                },
             };
 
-            let mut characters = vec![CharacterDetails {
-                actor_id: 0,
-                content_id: CONTENT_ID,
-                index: 0,
-                unk1: [0; 16],
-                origin_server_id: WORLD_ID,
-                current_server_id: WORLD_ID,
-                character_name: CHAR_NAME.to_string(),
-                origin_server_name: WORLD_NAME.to_string(),
-                current_server_name: WORLD_NAME.to_string(),
-                character_detail_json: select_data.to_json(),
-                unk2: [0; 20],
-            }];
+            let name_response = send_custom_world_packet(charlist_request)
+                .await
+                .expect("Failed to get name request packet!");
+            let CustomIpcData::RequestCharacterListRepsonse { characters } = &name_response.data
+            else {
+                panic!("Unexpedted custom IPC type!")
+            };
+
+            let mut characters = characters.to_vec();
+
+            dbg!(&characters);
 
             for i in 0..4 {
                 let mut characters_in_packet = Vec::new();
@@ -353,5 +333,45 @@ impl LobbyConnection {
             segment_type: SegmentType::Ipc { data: ipc },
         })
         .await;
+    }
+}
+
+/// Sends a custom IPC packet to the world server, meant for private server-to-server communication.
+/// Returns the first custom IPC segment returned.
+pub async fn send_custom_world_packet(segment: CustomIpcSegment) -> Option<CustomIpcSegment> {
+    let mut stream = TcpStream::connect("127.0.0.1:7100").await.unwrap();
+
+    let mut packet_state = PacketState {
+        client_key: None,
+        serverbound_oodle: OodleNetwork::new(),
+        clientbound_oodle: OodleNetwork::new(),
+    };
+
+    let segment: PacketSegment<CustomIpcSegment> = PacketSegment {
+        source_actor: 0,
+        target_actor: 0,
+        segment_type: SegmentType::CustomIpc { data: segment },
+    };
+
+    send_packet(
+        &mut stream,
+        &mut packet_state,
+        ConnectionType::None,
+        CompressionType::Uncompressed,
+        &[segment],
+    )
+    .await;
+
+    // read response
+    let mut buf = [0; 10024]; // TODO: this large buffer is just working around these packets not being compressed, but they really should be!
+    let n = stream.read(&mut buf).await.expect("Failed to read data!");
+
+    println!("Got {n} bytes of response!");
+
+    let (segments, _) = parse_packet::<CustomIpcSegment>(&buf[..n], &mut packet_state).await;
+
+    match &segments[0].segment_type {
+        SegmentType::CustomIpc { data } => Some(data.clone()),
+        _ => None,
     }
 }
