@@ -2,10 +2,7 @@ use std::sync::Mutex;
 
 use rusqlite::Connection;
 
-use crate::{
-    ZONE_ID,
-    lobby::{CharaMake, ClientSelectData, ipc::CharacterDetails},
-};
+use crate::lobby::{CharaMake, ClientSelectData, ipc::CharacterDetails};
 
 use super::PlayerData;
 
@@ -121,7 +118,7 @@ impl WorldDatabase {
                     guardian: chara_make.guardian,
                     unk8: 0,
                     unk9: 0,
-                    zone_id: ZONE_ID as i32,
+                    zone_id: 130 as i32,
                     unk11: 0,
                     customize: chara_make.customize,
                     unk12: 0,

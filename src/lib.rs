@@ -26,10 +26,6 @@ pub mod packet;
 /// Logic server-specific code.
 pub mod login;
 
-/// The zone ID you initially spawn in.
-/// See the TerritoryType excel sheet for a list of possible IDs.
-pub const ZONE_ID: u16 = 132;
-
 pub const INVALID_OBJECT_ID: u32 = 0xE0000000;
 
 /// Maxmimum length of a character's name.

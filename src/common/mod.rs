@@ -83,3 +83,16 @@ pub fn get_citystate(classjob_id: u16) -> u8 {
 
     *town_id
 }
+
+/// Gets the initial zone for a given city-state id
+pub fn determine_initial_starting_zone(citystate_id: u8) -> u16 {
+    match citystate_id {
+        // Limsa
+        1 => 128,
+        // Gridania
+        2 => 132,
+        // Ul'dah
+        3 => 130,
+        _ => panic!("This is not a valid city-state id!"),
+    }
+}

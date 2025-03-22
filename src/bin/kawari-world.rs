@@ -1,7 +1,8 @@
 use std::sync::Arc;
 
 use kawari::common::custom_ipc::{CustomIpcData, CustomIpcSegment, CustomIpcType};
-use kawari::common::{get_citystate, get_world_name};
+use kawari::common::timestamp_secs;
+use kawari::common::{determine_initial_starting_zone, get_citystate, get_world_name};
 use kawari::config::get_config;
 use kawari::lobby::CharaMake;
 use kawari::oodle::OodleNetwork;
@@ -21,7 +22,6 @@ use kawari::world::{
     },
 };
 use kawari::world::{PlayerData, WorldDatabase};
-use kawari::{ZONE_ID, common::timestamp_secs};
 use physis::common::{Language, Platform};
 use physis::gamedata::GameData;
 use tokio::io::AsyncReadExt;
@@ -59,7 +59,7 @@ async fn main() {
             state,
             player_data: PlayerData::default(),
             spawn_index: 0,
-            zone: Zone::load(ZONE_ID),
+            zone: None,
         };
 
         tokio::spawn(async move {
@@ -238,11 +238,17 @@ async fn main() {
                                                 .await;
                                         }
 
+                                        let chara_details = database
+                                            .find_chara_make(connection.player_data.content_id);
+
+                                        let zone_id = determine_initial_starting_zone(
+                                            chara_details.city_state,
+                                        );
+
+                                        connection.zone = Some(Zone::load(zone_id));
+
                                         // Player Setup
                                         {
-                                            let chara_details = database
-                                                .find_chara_make(connection.player_data.content_id);
-
                                             let ipc = ServerZoneIpcSegment {
                                                 op_code: ServerZoneIpcType::PlayerSetup,
                                                 timestamp: timestamp_secs(),
@@ -283,7 +289,7 @@ async fn main() {
                                                 .await;
                                         }
 
-                                        connection.change_zone(ZONE_ID).await;
+                                        connection.change_zone(zone_id).await;
 
                                         // send welcome message
                                         {
@@ -424,7 +430,11 @@ async fn main() {
                                                                 content_id: connection
                                                                     .player_data
                                                                     .content_id,
-                                                                zone_id: connection.zone.id,
+                                                                zone_id: connection
+                                                                    .zone
+                                                                    .as_ref()
+                                                                    .unwrap()
+                                                                    .id,
                                                                 zone_id1: 0x0100,
                                                                 class_job: 36,
                                                                 level: 100,
@@ -575,6 +585,8 @@ async fn main() {
                                         {
                                             let (_, exit_box) = connection
                                                 .zone
+                                                .as_ref()
+                                                .unwrap()
                                                 .find_exit_box(*exit_box_id)
                                                 .unwrap();
                                             tracing::info!("exit box: {:#?}", exit_box);

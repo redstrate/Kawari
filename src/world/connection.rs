@@ -30,7 +30,7 @@ pub struct ZoneConnection {
     pub state: PacketState,
     pub player_data: PlayerData,
 
-    pub zone: Zone,
+    pub zone: Option<Zone>,
     pub spawn_index: u8,
 }
 
@@ -77,7 +77,7 @@ impl ZoneConnection {
     }
 
     pub async fn change_zone(&mut self, new_zone_id: u16) {
-        self.zone = Zone::load(new_zone_id);
+        self.zone = Some(Zone::load(new_zone_id));
 
         // Player Class Info
         {
@@ -128,7 +128,7 @@ impl ZoneConnection {
                 timestamp: timestamp_secs(),
                 data: ServerZoneIpcData::InitZone(InitZone {
                     server_id: 0,
-                    zone_id: self.zone.id,
+                    zone_id: self.zone.as_ref().unwrap().id,
                     weather_id: 1,
                     ..Default::default()
                 }),
