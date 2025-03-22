@@ -235,7 +235,7 @@ impl LobbyConnection {
                         remaining_days: 30,
                         days_to_next_rank: 0,
                         unk8: 8,
-                        max_characters_on_world: 2,
+                        max_characters_on_world: 8,
                         entitled_expansion: 5,
                         characters: characters_in_packet,
                     }
