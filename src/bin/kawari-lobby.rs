@@ -1,6 +1,8 @@
+use kawari::CONTENT_ID;
 use kawari::common::custom_ipc::CustomIpcData;
 use kawari::common::custom_ipc::CustomIpcSegment;
 use kawari::common::custom_ipc::CustomIpcType;
+use kawari::common::get_world_name;
 use kawari::config::get_config;
 use kawari::lobby::LobbyConnection;
 use kawari::lobby::ipc::{
@@ -11,7 +13,6 @@ use kawari::lobby::send_custom_world_packet;
 use kawari::oodle::OodleNetwork;
 use kawari::packet::ConnectionType;
 use kawari::packet::{PacketSegment, PacketState, SegmentType, send_keep_alive};
-use kawari::{CONTENT_ID, WORLD_NAME};
 use tokio::io::AsyncReadExt;
 use tokio::net::TcpListener;
 
@@ -26,6 +27,8 @@ async fn main() {
     let listener = TcpListener::bind(addr).await.unwrap();
 
     tracing::info!("Lobby server started on {addr}");
+
+    let world_name = get_world_name(config.world.world_id);
 
     loop {
         let (socket, _) = listener.accept().await.unwrap();
@@ -42,6 +45,8 @@ async fn main() {
             session_id: None,
             stored_character_creation_name: String::new(),
         };
+
+        let world_name = world_name.clone();
 
         tokio::spawn(async move {
             let mut buf = [0; 2056];
@@ -136,10 +141,8 @@ async fn main() {
                                                             character_name: character_action
                                                                 .name
                                                                 .clone(),
-                                                            origin_server_name: WORLD_NAME
-                                                                .to_string(),
-                                                            current_server_name: WORLD_NAME
-                                                                .to_string(),
+                                                            origin_server_name: world_name.clone(),
+                                                            current_server_name: world_name.clone(),
                                                             ..Default::default()
                                                         },
                                                     },
@@ -241,10 +244,8 @@ async fn main() {
                                                             character_name: character_action
                                                                 .name
                                                                 .clone(),
-                                                            origin_server_name: WORLD_NAME
-                                                                .to_string(),
-                                                            current_server_name: WORLD_NAME
-                                                                .to_string(),
+                                                            origin_server_name: world_name.clone(),
+                                                            current_server_name: world_name.clone(),
                                                             ..Default::default()
                                                         },
                                                     },

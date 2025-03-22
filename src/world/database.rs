@@ -3,7 +3,7 @@ use std::sync::Mutex;
 use rusqlite::Connection;
 
 use crate::{
-    WORLD_ID, WORLD_NAME, ZONE_ID,
+    ZONE_ID,
     lobby::{CharaMake, ClientSelectData, ipc::CharacterDetails},
 };
 
@@ -68,7 +68,12 @@ impl WorldDatabase {
         stmt.query_row((content_id,), |row| row.get(0)).unwrap()
     }
 
-    pub fn get_character_list(&self, service_account_id: u32) -> Vec<CharacterDetails> {
+    pub fn get_character_list(
+        &self,
+        service_account_id: u32,
+        world_id: u16,
+        world_name: &str,
+    ) -> Vec<CharacterDetails> {
         let connection = self.connection.lock().unwrap();
 
         let content_actor_ids: Vec<(u32, u32)>;
@@ -137,11 +142,11 @@ impl WorldDatabase {
                 content_id: *content_id as u64,
                 index: index as u32,
                 unk1: [0; 16],
-                origin_server_id: WORLD_ID,
-                current_server_id: WORLD_ID,
+                origin_server_id: world_id,
+                current_server_id: world_id,
                 character_name: name.clone(),
-                origin_server_name: WORLD_NAME.to_string(),
-                current_server_name: WORLD_NAME.to_string(),
+                origin_server_name: world_name.to_string(),
+                current_server_name: world_name.to_string(),
                 character_detail_json: select_data.to_json(),
                 unk2: [0; 20],
             });

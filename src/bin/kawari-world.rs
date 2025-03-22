@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use kawari::common::custom_ipc::{CustomIpcData, CustomIpcSegment, CustomIpcType};
+use kawari::common::get_world_name;
 use kawari::config::get_config;
 use kawari::oodle::OodleNetwork;
 use kawari::packet::{
@@ -19,7 +20,7 @@ use kawari::world::{
     },
 };
 use kawari::world::{PlayerData, WorldDatabase};
-use kawari::{CHAR_NAME, CITY_STATE, CONTENT_ID, WORLD_ID, ZONE_ID, common::timestamp_secs};
+use kawari::{CHAR_NAME, CITY_STATE, CONTENT_ID, ZONE_ID, common::timestamp_secs};
 use physis::common::{Language, Platform};
 use physis::gamedata::GameData;
 use tokio::io::AsyncReadExt;
@@ -320,8 +321,8 @@ async fn main() {
                                                 data: ServerZoneIpcData::PlayerSpawn(PlayerSpawn {
                                                     content_id: CONTENT_ID,
                                                     common: CommonSpawn {
-                                                        current_world_id: WORLD_ID,
-                                                        home_world_id: WORLD_ID,
+                                                        current_world_id: config.world.world_id,
+                                                        home_world_id: config.world.world_id,
                                                         title: 1,
                                                         class_job: 35,
                                                         name: chara_details.name,
@@ -802,8 +803,13 @@ async fn main() {
                                         }
                                     }
                                     CustomIpcData::RequestCharacterList { service_account_id } => {
-                                        let characters =
-                                            database.get_character_list(*service_account_id);
+                                        let config = get_config();
+
+                                        let characters = database.get_character_list(
+                                            *service_account_id,
+                                            config.world.world_id,
+                                            &get_world_name(config.world.world_id),
+                                        );
 
                                         // send response
                                         {

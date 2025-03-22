@@ -1,6 +1,7 @@
 use crate::{
-    CHAR_NAME, CUSTOMIZE_DATA, INVALID_OBJECT_ID, WORLD_ID,
+    CHAR_NAME, CUSTOMIZE_DATA, INVALID_OBJECT_ID,
     common::timestamp_secs,
+    config::get_config,
     packet::{PacketSegment, SegmentType},
     world::ipc::{
         ActorControl, ActorControlCategory, CommonSpawn, NpcSpawn, ObjectKind, PlayerSpawn,
@@ -66,6 +67,8 @@ impl ChatHandler {
                         .await;
                 }
 
+                let config = get_config();
+
                 // send player spawn
                 {
                     let ipc = ServerZoneIpcSegment {
@@ -78,8 +81,8 @@ impl ChatHandler {
                             some_unique_id: 1,
                             content_id: 1,
                             common: CommonSpawn {
-                                current_world_id: WORLD_ID,
-                                home_world_id: WORLD_ID,
+                                current_world_id: config.world.world_id,
+                                home_world_id: config.world.world_id,
                                 title: 1,
                                 class_job: 35,
                                 name: CHAR_NAME.to_string(),

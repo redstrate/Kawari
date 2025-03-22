@@ -170,6 +170,8 @@ impl WebConfig {
 pub struct WorldConfig {
     pub port: u16,
     pub listen_address: String,
+    /// See the World Excel sheet.
+    pub world_id: u16,
 }
 
 impl Default for WorldConfig {
@@ -177,6 +179,7 @@ impl Default for WorldConfig {
         Self {
             port: 7100,
             listen_address: "127.0.0.1".to_string(),
+            world_id: 1, // Dev
         }
     }
 }

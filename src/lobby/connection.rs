@@ -3,11 +3,10 @@ use std::cmp::min;
 use tokio::{io::AsyncReadExt, net::TcpStream};
 
 use crate::{
-    WORLD_ID, WORLD_NAME,
     blowfish::Blowfish,
     common::{
         custom_ipc::{CustomIpcData, CustomIpcSegment, CustomIpcType},
-        timestamp_secs,
+        get_world_name, timestamp_secs,
     },
     config::get_config,
     oodle::OodleNetwork,
@@ -114,12 +113,14 @@ impl LobbyConnection {
         let mut packets = Vec::new();
         // send them the server list
         {
+            let config = get_config();
+
             let mut servers = [Server {
-                id: WORLD_ID,
+                id: config.world.world_id,
                 index: 0,
                 flags: 0,
                 icon: 0,
-                name: WORLD_NAME.to_string(),
+                name: get_world_name(config.world.world_id),
             }]
             .to_vec();
             // add any empty boys

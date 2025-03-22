@@ -5,6 +5,12 @@ use std::{
 
 mod customize_data;
 pub use customize_data::CustomizeData;
+use physis::{
+    common::{Language, Platform},
+    gamedata::GameData,
+};
+
+use crate::config::get_config;
 
 pub mod custom_ipc;
 
@@ -36,4 +42,24 @@ pub fn timestamp_msecs() -> u64 {
         .as_millis()
         .try_into()
         .unwrap()
+}
+
+/// Gets the world name from an id into the World Excel sheet.
+pub fn get_world_name(world_id: u16) -> String {
+    let config = get_config();
+
+    let mut game_data = GameData::from_existing(Platform::Win32, &config.game_location).unwrap();
+
+    let exh = game_data.read_excel_sheet_header("World").unwrap();
+    let exd = game_data
+        .read_excel_sheet("World", &exh, Language::None, 0)
+        .unwrap();
+
+    let world_row = &exd.read_row(&exh, world_id as u32).unwrap()[0];
+
+    let physis::exd::ColumnData::String(name) = &world_row.data[1] else {
+        panic!("Unexpected type!");
+    };
+
+    name.clone()
 }

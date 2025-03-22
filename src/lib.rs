@@ -27,12 +27,6 @@ pub mod packet;
 /// Logic server-specific code.
 pub mod login;
 
-// TODO: make this configurable
-/// The world ID and name for the lobby.
-/// See <https://ffxiv.consolegameswiki.com/wiki/Servers> for a list of possible IDs.
-pub const WORLD_ID: u16 = 63;
-pub const WORLD_NAME: &str = "KAWARI";
-
 /// The zone ID you initially spawn in.
 /// See the TerritoryType excel sheet for a list of possible IDs.
 pub const ZONE_ID: u16 = 132;
