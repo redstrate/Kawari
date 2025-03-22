@@ -1,4 +1,3 @@
-use kawari::CONTENT_ID;
 use kawari::common::custom_ipc::CustomIpcData;
 use kawari::common::custom_ipc::CustomIpcSegment;
 use kawari::common::custom_ipc::CustomIpcType;
@@ -137,7 +136,6 @@ async fn main() {
                                                         sequence: character_action.sequence + 1,
                                                         unk: 0x00010101,
                                                         details: CharacterDetails {
-                                                            content_id: CONTENT_ID,
                                                             character_name: character_action
                                                                 .name
                                                                 .clone(),

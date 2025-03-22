@@ -20,7 +20,7 @@ use kawari::world::{
     },
 };
 use kawari::world::{PlayerData, WorldDatabase};
-use kawari::{CHAR_NAME, CITY_STATE, CONTENT_ID, ZONE_ID, common::timestamp_secs};
+use kawari::{ZONE_ID, common::timestamp_secs};
 use physis::common::{Language, Platform};
 use physis::gamedata::GameData;
 use tokio::io::AsyncReadExt;
@@ -260,7 +260,7 @@ async fn main() {
                                                         .chara_make
                                                         .customize
                                                         .subrace,
-                                                    city_state: CITY_STATE,
+                                                    city_state: chara_details.chara_make.unk6 as u8, // TODO: probably wrong
                                                     nameday_month: chara_details
                                                         .chara_make
                                                         .birth_month
@@ -319,7 +319,7 @@ async fn main() {
                                                 op_code: ServerZoneIpcType::PlayerSpawn,
                                                 timestamp: timestamp_secs(),
                                                 data: ServerZoneIpcData::PlayerSpawn(PlayerSpawn {
-                                                    content_id: CONTENT_ID,
+                                                    content_id: connection.player_data.content_id,
                                                     common: CommonSpawn {
                                                         current_world_id: config.world.world_id,
                                                         home_world_id: config.world.world_id,
@@ -419,13 +419,16 @@ async fn main() {
                                                             request_type: request.request_type,
                                                             sequence: request.count,
                                                             entries: vec![PlayerEntry {
-                                                                content_id: CONTENT_ID,
+                                                                // TODO: fill with actual player data, it also shows up wrong in game
+                                                                content_id: connection
+                                                                    .player_data
+                                                                    .content_id,
                                                                 zone_id: connection.zone.id,
                                                                 zone_id1: 0x0100,
                                                                 class_job: 36,
                                                                 level: 100,
                                                                 one: 1,
-                                                                name: CHAR_NAME.to_string(),
+                                                                name: "INVALID".to_string(),
                                                                 fc_tag: "LOCAL".to_string(),
                                                                 ..Default::default()
                                                             }],

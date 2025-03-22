@@ -1,6 +1,6 @@
 use crate::{
-    CHAR_NAME, CUSTOMIZE_DATA, INVALID_OBJECT_ID,
-    common::timestamp_secs,
+    INVALID_OBJECT_ID,
+    common::{CustomizeData, timestamp_secs},
     config::get_config,
     packet::{PacketSegment, SegmentType},
     world::ipc::{
@@ -12,6 +12,35 @@ use crate::{
 use super::{
     ZoneConnection,
     ipc::{ChatMessage, Position},
+};
+
+pub const CUSTOMIZE_DATA: CustomizeData = CustomizeData {
+    race: 4,
+    gender: 1,
+    age: 1,
+    height: 50,
+    subrace: 7,
+    face: 3,
+    hair: 5,
+    enable_highlights: 0,
+    skin_tone: 10,
+    right_eye_color: 75,
+    hair_tone: 50,
+    highlights: 0,
+    facial_features: 1,
+    facial_feature_color: 19,
+    eyebrows: 1,
+    left_eye_color: 75,
+    eyes: 1,
+    nose: 0,
+    jaw: 1,
+    mouth: 1,
+    lips_tone_fur_pattern: 169,
+    race_feature_size: 100,
+    race_feature_type: 1,
+    bust: 100,
+    face_paint: 0,
+    face_paint_color: 167,
 };
 
 pub struct ChatHandler {}
@@ -85,7 +114,7 @@ impl ChatHandler {
                                 home_world_id: config.world.world_id,
                                 title: 1,
                                 class_job: 35,
-                                name: CHAR_NAME.to_string(),
+                                name: "Test Actor".to_string(),
                                 hp_curr: 100,
                                 hp_max: 100,
                                 mp_curr: 100,
