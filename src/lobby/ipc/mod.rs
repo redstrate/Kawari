@@ -192,7 +192,10 @@ pub enum ServerLobbyIpcData {
     },
     CharacterCreated {
         sequence: u64,
-        unk: u32,
+        unk1: u8,
+        unk2: u8,
+        #[brw(pad_after = 1)] // empty
+        action: LobbyCharacterActionKind,
         #[brw(pad_before = 36)] // empty
         #[brw(pad_after = 1336)] // empty and garbage
         details: CharacterDetails,
@@ -252,7 +255,9 @@ mod tests {
                 ServerLobbyIpcType::CharacterCreated,
                 ServerLobbyIpcData::CharacterCreated {
                     sequence: 0,
-                    unk: 0,
+                    unk1: 0,
+                    unk2: 0,
+                    action: LobbyCharacterActionKind::ReserveName,
                     details: CharacterDetails::default(),
                 },
             ),

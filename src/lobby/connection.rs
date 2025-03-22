@@ -381,7 +381,9 @@ impl LobbyConnection {
                         timestamp: 0,
                         data: ServerLobbyIpcData::CharacterCreated {
                             sequence: character_action.sequence + 1,
-                            unk: 0x00010101,
+                            unk1: 0x1,
+                            unk2: 0x1,
+                            action: LobbyCharacterActionKind::ReserveName,
                             details: CharacterDetails {
                                 character_name: character_action.name.clone(),
                                 origin_server_name: self.world_name.clone(),
@@ -468,7 +470,9 @@ impl LobbyConnection {
                         timestamp: 0,
                         data: ServerLobbyIpcData::CharacterCreated {
                             sequence: character_action.sequence + 1,
-                            unk: 0x00020101,
+                            unk1: 0x1,
+                            unk2: 0x1,
+                            action: LobbyCharacterActionKind::Create,
                             details: CharacterDetails {
                                 actor_id: our_actor_id,
                                 content_id: our_content_id,
@@ -518,7 +522,9 @@ impl LobbyConnection {
                         timestamp: 0,
                         data: ServerLobbyIpcData::CharacterCreated {
                             sequence: character_action.sequence + 1,
-                            unk: 0x00040101, // TODO: probably LobbyCharacterAction actually, see create character packet too
+                            unk1: 0x1,
+                            unk2: 0x1,
+                            action: LobbyCharacterActionKind::Delete,
                             details: CharacterDetails {
                                 actor_id: 0, // TODO: fill maybe?
                                 content_id: character_action.content_id,
