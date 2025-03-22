@@ -1,5 +1,3 @@
-use std::net::SocketAddr;
-
 use axum::response::Html;
 use axum::{Router, routing::get};
 use kawari::config::get_config;
@@ -37,7 +35,7 @@ async fn world_status() -> Html<String> {
     let template = environment.get_template("worldstatus.html").unwrap();
     Html(
         template
-            .render(context! { login_open => config.login_open, worlds_open => config.worlds_open })
+            .render(context! { login_open => config.frontier.login_open, worlds_open => config.frontier.worlds_open })
             .unwrap(),
     )
 }
@@ -52,8 +50,10 @@ async fn main() {
         .route("/register", get(register))
         .route("/worldstatus", get(world_status));
 
-    let addr = SocketAddr::from(([127, 0, 0, 1], 5801));
-    tracing::info!("Web server started on {}", addr);
+    let config = get_config();
+
+    let addr = config.web.get_socketaddr();
+    tracing::info!("Web server started on {addr}");
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await

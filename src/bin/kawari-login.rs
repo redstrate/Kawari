@@ -1,10 +1,10 @@
-use std::net::SocketAddr;
 use std::sync::Arc;
 
 use axum::extract::{Query, State};
 use axum::response::{Html, Redirect};
 use axum::routing::post;
 use axum::{Form, Router, routing::get};
+use kawari::config::get_config;
 use kawari::login::{LoginDatabase, LoginError};
 use serde::Deserialize;
 
@@ -128,8 +128,10 @@ async fn main() {
         .route("/private/check_session", get(check_session))
         .with_state(state);
 
-    let addr = SocketAddr::from(([127, 0, 0, 1], 6700));
-    tracing::info!("Login server started on {}", addr);
+    let config = get_config();
+
+    let addr = config.login.get_socketaddr();
+    tracing::info!("Login server started on {addr}");
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await

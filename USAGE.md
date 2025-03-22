@@ -15,21 +15,13 @@ Kawari is designed to be easy to run, with the goal of being accessible to anyon
 
 ## Setup
 
-Build Kawari with `cargo build`. Afterwards, create a `config.json` in the current directory that looks like this:
+Build Kawari with `cargo build`. Afterwards, create a `config.yaml` in the current directory. Currently the minimal config you need to run most services looks like this:
 
-```json
-{
-  "worlds_open": true,
-  "login_open": true,
-  "supported_platforms": ["win32"],
-  "boot_patches_location": "/path/to/boot/patches",
-  "game_location": "/path/to/game"
-}
+```yaml
+game_location: pathtogamedir
 ```
 
-All values in the config are optional, but some may be required for certain services to work correctly.
-
-Finally, run Kawari with the helper script:
+More configuration options can be found in `config.rs`, such as changing the ports services run on. Finally, run Kawari with the helper script:
 
 ```shell
 $ ./run.sh

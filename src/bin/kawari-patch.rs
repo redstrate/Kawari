@@ -1,6 +1,5 @@
 use std::cmp::Ordering;
 use std::fs::read_dir;
-use std::net::SocketAddr;
 
 use axum::extract::Path;
 use axum::http::{HeaderMap, StatusCode};
@@ -132,8 +131,10 @@ async fn main() {
             get(verify_boot),
         ); // NOTE: for future programmers, this is a wildcard because axum hates the /version/?time=blah format.
 
-    let addr = SocketAddr::from(([127, 0, 0, 1], 6900));
-    tracing::info!("Patch server started on {}", addr);
+    let config = get_config();
+
+    let addr = config.patch.get_socketaddr();
+    tracing::info!("Patch server started on {addr}");
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await

@@ -1,5 +1,3 @@
-use std::net::SocketAddr;
-
 use axum::response::{Html, Redirect};
 use axum::routing::post;
 use axum::{Router, extract::Form, routing::get};
@@ -20,7 +18,7 @@ async fn root() -> Html<String> {
 
     let environment = setup_default_environment();
     let template = environment.get_template("admin.html").unwrap();
-    Html(template.render(context! { worlds_open => config.worlds_open, login_open => config.login_open, boot_patch_location => config.boot_patches_location }).unwrap())
+    Html(template.render(context! { worlds_open => config.frontier.worlds_open, login_open => config.frontier.login_open, boot_patch_location => config.boot_patches_location }).unwrap())
 }
 
 #[derive(Deserialize, Debug)]
@@ -37,22 +35,22 @@ async fn apply(Form(input): Form<Input>) -> Redirect {
     let mut config = get_config();
 
     if let Some(gate_open) = input.worlds_open {
-        config.worlds_open = gate_open == "on";
+        config.frontier.worlds_open = gate_open == "on";
     } else {
-        config.worlds_open = false;
+        config.frontier.worlds_open = false;
     }
 
     if let Some(gate_open) = input.login_open {
-        config.login_open = gate_open == "on";
+        config.frontier.login_open = gate_open == "on";
     } else {
-        config.login_open = false;
+        config.frontier.login_open = false;
     }
 
     if let Some(boot_patch_location) = input.boot_patch_location {
         config.boot_patches_location = boot_patch_location;
     }
 
-    serde_json::to_writer(&std::fs::File::create("config.json").unwrap(), &config)
+    serde_yaml_ng::to_writer(&std::fs::File::create("config.yaml").unwrap(), &config)
         .expect("TODO: panic message");
 
     Redirect::to("/")
@@ -66,8 +64,10 @@ async fn main() {
         .route("/", get(root))
         .route("/apply", post(apply));
 
-    let addr = SocketAddr::from(([127, 0, 0, 1], 5800));
-    tracing::info!("Admin server started on {}", addr);
+    let config = get_config();
+
+    let addr = config.admin.get_socketaddr();
+    tracing::info!("Admin server started on {addr}");
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await

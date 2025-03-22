@@ -9,6 +9,7 @@ use crate::{
         custom_ipc::{CustomIpcData, CustomIpcSegment, CustomIpcType},
         timestamp_secs,
     },
+    config::get_config,
     oodle::OodleNetwork,
     packet::{
         CompressionType, ConnectionType, PacketSegment, PacketState, SegmentType,
@@ -278,17 +279,15 @@ impl LobbyConnection {
 
     /// Send the host information for the world server to the client.
     pub async fn send_enter_world(&mut self, sequence: u64, content_id: u64, actor_id: u32) {
-        let Some(session_id) = &self.session_id else {
-            panic!("Missing session id!");
-        };
+        let config = get_config();
 
         let enter_world = ServerLobbyIpcData::LobbyEnterWorld {
             sequence,
             actor_id,
             content_id,
             token: String::new(),
-            port: 7100,
-            host: "127.0.0.1".to_string(),
+            port: config.world.port,
+            host: config.world.listen_address,
         };
 
         let ipc = ServerLobbyIpcSegment {
@@ -339,7 +338,11 @@ impl LobbyConnection {
 /// Sends a custom IPC packet to the world server, meant for private server-to-server communication.
 /// Returns the first custom IPC segment returned.
 pub async fn send_custom_world_packet(segment: CustomIpcSegment) -> Option<CustomIpcSegment> {
-    let mut stream = TcpStream::connect("127.0.0.1:7100").await.unwrap();
+    let config = get_config();
+
+    let addr = config.world.get_socketaddr();
+
+    let mut stream = TcpStream::connect(addr).await.unwrap();
 
     let mut packet_state = PacketState {
         client_key: None,

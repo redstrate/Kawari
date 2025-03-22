@@ -1,6 +1,7 @@
 use kawari::common::custom_ipc::CustomIpcData;
 use kawari::common::custom_ipc::CustomIpcSegment;
 use kawari::common::custom_ipc::CustomIpcType;
+use kawari::config::get_config;
 use kawari::lobby::LobbyConnection;
 use kawari::lobby::ipc::{
     CharacterDetails, ClientLobbyIpcData, LobbyCharacterActionKind, ServerLobbyIpcData,
@@ -18,9 +19,13 @@ use tokio::net::TcpListener;
 async fn main() {
     tracing_subscriber::fmt::init();
 
-    let listener = TcpListener::bind("127.0.0.1:7000").await.unwrap();
+    let config = get_config();
 
-    tracing::info!("Lobby server started on 127.0.0.1:7000");
+    let addr = config.lobby.get_socketaddr();
+
+    let listener = TcpListener::bind(addr).await.unwrap();
+
+    tracing::info!("Lobby server started on {addr}");
 
     loop {
         let (socket, _) = listener.accept().await.unwrap();

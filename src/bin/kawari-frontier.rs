@@ -1,5 +1,3 @@
-use std::net::SocketAddr;
-
 use axum::{Json, Router, routing::get};
 use kawari::config::get_config;
 use serde::{Deserialize, Serialize};
@@ -14,7 +12,7 @@ async fn get_login_status() -> Json<GateStatus> {
 
     let config = get_config();
     Json(GateStatus {
-        status: config.login_open.into(),
+        status: config.frontier.login_open.into(),
     })
 }
 
@@ -23,7 +21,7 @@ async fn get_world_status() -> Json<GateStatus> {
 
     let config = get_config();
     Json(GateStatus {
-        status: config.worlds_open.into(),
+        status: config.frontier.worlds_open.into(),
     })
 }
 
@@ -76,8 +74,10 @@ async fn main() {
         .route("/worldStatus/login_status.json", get(get_login_status))
         .route("/news/headline.json", get(get_headline));
 
-    let addr = SocketAddr::from(([127, 0, 0, 1], 5857));
-    tracing::info!("Frontier server started on {}", addr);
+    let config = get_config();
+
+    let addr = config.frontier.get_socketaddr();
+    tracing::info!("Frontier server started on {addr}");
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await

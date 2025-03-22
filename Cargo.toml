@@ -44,6 +44,7 @@ axum = { version = "0.6", features = ["json", "tokio", "http1", "form", "query",
 # Serialization used in almost every server
 serde = { version = "1.0", features = ["derive"], default-features = false }
 serde_json = { version = "1.0", default-features = false }
+serde_yaml_ng = "0.10"
 
 # Async runtime
 tokio = { version = "1.37", features = ["macros", "rt", "rt-multi-thread", "io-util"], default-features = false }

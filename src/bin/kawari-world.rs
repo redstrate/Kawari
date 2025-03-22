@@ -29,9 +29,13 @@ use tokio::net::TcpListener;
 async fn main() {
     tracing_subscriber::fmt::init();
 
-    let listener = TcpListener::bind("127.0.0.1:7100").await.unwrap();
+    let config = get_config();
 
-    tracing::info!("World server started on 127.0.0.1:7100");
+    let addr = config.world.get_socketaddr();
+
+    let listener = TcpListener::bind(addr).await.unwrap();
+
+    tracing::info!("World server started on {addr}");
 
     let database = Arc::new(WorldDatabase::new());
 
