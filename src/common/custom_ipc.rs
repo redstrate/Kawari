@@ -23,6 +23,8 @@ impl ReadWriteIpcSegment for CustomIpcSegment {
             CustomIpcType::NameIsAvailableResponse => 1,
             CustomIpcType::RequestCharacterList => 4,
             CustomIpcType::RequestCharacterListRepsonse => 1184 * 8,
+            CustomIpcType::DeleteCharacter => 4,
+            CustomIpcType::CharacterDeleted => 1,
         }
     }
 }
@@ -48,6 +50,10 @@ pub enum CustomIpcType {
     RequestCharacterList = 0x7,
     /// Response to RequestCharacterList
     RequestCharacterListRepsonse = 0x8,
+    /// Request that a character be deleted from the world server
+    DeleteCharacter = 0x9,
+    /// Response to DeleteCharacter
+    CharacterDeleted = 0x10,
 }
 
 #[binrw]
@@ -92,6 +98,10 @@ pub enum CustomIpcData {
         #[br(count = num_characters)]
         characters: Vec<CharacterDetails>, // TODO: maybe chunk this into 4 parts ala the lobby server?
     },
+    #[br(pre_assert(*magic == CustomIpcType::DeleteCharacter))]
+    DeleteCharacter { content_id: u64 },
+    #[br(pre_assert(*magic == CustomIpcType::CharacterDeleted))]
+    CharacterDeleted { deleted: u8 },
 }
 
 impl Default for CustomIpcData {

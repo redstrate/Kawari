@@ -17,8 +17,9 @@ use crate::{
 };
 
 use super::ipc::{
-    CharacterDetails, LobbyCharacterList, LobbyServerList, LobbyServiceAccountList, Server,
-    ServerLobbyIpcData, ServerLobbyIpcSegment, ServerLobbyIpcType, ServiceAccount,
+    CharacterDetails, LobbyCharacterAction, LobbyCharacterActionKind, LobbyCharacterList,
+    LobbyServerList, LobbyServiceAccountList, Server, ServerLobbyIpcData, ServerLobbyIpcSegment,
+    ServerLobbyIpcType, ServiceAccount,
 };
 use crate::lobby::ipc::ClientLobbyIpcSegment;
 
@@ -31,6 +32,8 @@ pub struct LobbyConnection {
     pub state: PacketState,
 
     pub stored_character_creation_name: String,
+
+    pub world_name: String,
 }
 
 impl LobbyConnection {
@@ -333,6 +336,217 @@ impl LobbyConnection {
             segment_type: SegmentType::Ipc { data: ipc },
         })
         .await;
+    }
+
+    pub async fn handle_character_action(&mut self, character_action: &LobbyCharacterAction) {
+        match &character_action.action {
+            LobbyCharacterActionKind::ReserveName => {
+                tracing::info!(
+                    "Player is requesting {} as a new character name!",
+                    character_action.name
+                );
+
+                // check with the world server if the name is available
+                let name_request = CustomIpcSegment {
+                    unk1: 0,
+                    unk2: 0,
+                    op_code: CustomIpcType::CheckNameIsAvailable,
+                    server_id: 0,
+                    timestamp: 0,
+                    data: CustomIpcData::CheckNameIsAvailable {
+                        name: character_action.name.clone(),
+                    },
+                };
+
+                let name_response = send_custom_world_packet(name_request)
+                    .await
+                    .expect("Failed to get name request packet!");
+                let CustomIpcData::NameIsAvailableResponse { free } = &name_response.data else {
+                    panic!("Unexpedted custom IPC type!")
+                };
+
+                tracing::info!("Is name free? {free}");
+
+                // TODO: use read_bool_as
+                let free: bool = *free == 1u8;
+
+                if free {
+                    self.stored_character_creation_name = character_action.name.clone();
+
+                    let ipc = ServerLobbyIpcSegment {
+                        unk1: 0,
+                        unk2: 0,
+                        op_code: ServerLobbyIpcType::CharacterCreated,
+                        server_id: 0,
+                        timestamp: 0,
+                        data: ServerLobbyIpcData::CharacterCreated {
+                            sequence: character_action.sequence + 1,
+                            unk: 0x00010101,
+                            details: CharacterDetails {
+                                character_name: character_action.name.clone(),
+                                origin_server_name: self.world_name.clone(),
+                                current_server_name: self.world_name.clone(),
+                                ..Default::default()
+                            },
+                        },
+                    };
+
+                    self.send_segment(PacketSegment {
+                        source_actor: 0x0,
+                        target_actor: 0x0,
+                        segment_type: SegmentType::Ipc { data: ipc },
+                    })
+                    .await;
+                } else {
+                    let ipc = ServerLobbyIpcSegment {
+                        unk1: 0,
+                        unk2: 0,
+                        op_code: ServerLobbyIpcType::LobbyError,
+                        server_id: 0,
+                        timestamp: 0,
+                        data: ServerLobbyIpcData::LobbyError {
+                            sequence: 0x03,
+                            error: 0x0bdb, // TODO: I screwed this up when translating from the old struct to the new LobbyError
+                            exd_error_id: 0,
+                            value: 0,
+                            unk1: 0,
+                        },
+                    };
+
+                    let response_packet = PacketSegment {
+                        source_actor: 0x0,
+                        target_actor: 0x0,
+                        segment_type: SegmentType::Ipc { data: ipc },
+                    };
+                    self.send_segment(response_packet).await;
+                }
+            }
+            LobbyCharacterActionKind::Create => {
+                tracing::info!("Player is creating a new character!");
+
+                let our_actor_id;
+                let our_content_id;
+
+                // tell the world server to create this character
+                {
+                    let ipc_segment = CustomIpcSegment {
+                        unk1: 0,
+                        unk2: 0,
+                        op_code: CustomIpcType::RequestCreateCharacter,
+                        server_id: 0,
+                        timestamp: 0,
+                        data: CustomIpcData::RequestCreateCharacter {
+                            name: self.stored_character_creation_name.clone(), // TODO: worth double-checking, but AFAIK we have to store it this way?
+                            chara_make_json: character_action.json.clone(),
+                        },
+                    };
+
+                    let response_segment = send_custom_world_packet(ipc_segment).await.unwrap();
+                    match &response_segment.data {
+                        CustomIpcData::CharacterCreated {
+                            actor_id,
+                            content_id,
+                        } => {
+                            our_actor_id = *actor_id;
+                            our_content_id = *content_id;
+                        }
+                        _ => panic!("Unexpected custom IPC packet type here!"),
+                    }
+                }
+
+                tracing::info!(
+                    "Got new player info from world server: {our_content_id} {our_actor_id}"
+                );
+
+                // a slightly different character created packet now
+                {
+                    let ipc = ServerLobbyIpcSegment {
+                        unk1: 0,
+                        unk2: 0,
+                        op_code: ServerLobbyIpcType::CharacterCreated,
+                        server_id: 0,
+                        timestamp: 0,
+                        data: ServerLobbyIpcData::CharacterCreated {
+                            sequence: character_action.sequence + 1,
+                            unk: 0x00020101,
+                            details: CharacterDetails {
+                                actor_id: our_actor_id,
+                                content_id: our_content_id,
+                                character_name: character_action.name.clone(),
+                                origin_server_name: self.world_name.clone(),
+                                current_server_name: self.world_name.clone(),
+                                ..Default::default()
+                            },
+                        },
+                    };
+
+                    self.send_segment(PacketSegment {
+                        source_actor: 0x0,
+                        target_actor: 0x0,
+                        segment_type: SegmentType::Ipc { data: ipc },
+                    })
+                    .await;
+                }
+            }
+            LobbyCharacterActionKind::Rename => todo!(),
+            LobbyCharacterActionKind::Delete => {
+                // tell the world server to yeet this guy
+                {
+                    let ipc_segment = CustomIpcSegment {
+                        unk1: 0,
+                        unk2: 0,
+                        op_code: CustomIpcType::DeleteCharacter,
+                        server_id: 0,
+                        timestamp: 0,
+                        data: CustomIpcData::DeleteCharacter {
+                            content_id: character_action.content_id,
+                        },
+                    };
+
+                    let _ = send_custom_world_packet(ipc_segment).await.unwrap();
+
+                    // we intentionally don't care about the response right now, it's not expected to fail
+                }
+
+                // send a confirmation that the deletion was successful
+                {
+                    let ipc = ServerLobbyIpcSegment {
+                        unk1: 0,
+                        unk2: 0,
+                        op_code: ServerLobbyIpcType::CharacterCreated, // FIXME: a TERRIBLE name for this packet
+                        server_id: 0,
+                        timestamp: 0,
+                        data: ServerLobbyIpcData::CharacterCreated {
+                            sequence: character_action.sequence + 1,
+                            unk: 0x00040101, // TODO: probably LobbyCharacterAction actually, see create character packet too
+                            details: CharacterDetails {
+                                actor_id: 0, // TODO: fill maybe?
+                                content_id: character_action.content_id,
+                                character_name: character_action.name.clone(),
+                                origin_server_name: self.world_name.clone(),
+                                current_server_name: self.world_name.clone(),
+                                ..Default::default()
+                            },
+                        },
+                    };
+
+                    self.send_segment(PacketSegment {
+                        source_actor: 0x0,
+                        target_actor: 0x0,
+                        segment_type: SegmentType::Ipc { data: ipc },
+                    })
+                    .await;
+                }
+            }
+            LobbyCharacterActionKind::Move => todo!(),
+            LobbyCharacterActionKind::RemakeRetainer => todo!(),
+            LobbyCharacterActionKind::RemakeChara => todo!(),
+            LobbyCharacterActionKind::SettingsUploadBegin => todo!(),
+            LobbyCharacterActionKind::SettingsUpload => todo!(),
+            LobbyCharacterActionKind::WorldVisit => todo!(),
+            LobbyCharacterActionKind::DataCenterToken => todo!(),
+            LobbyCharacterActionKind::Request => todo!(),
+        }
     }
 }
 

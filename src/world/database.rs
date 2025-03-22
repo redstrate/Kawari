@@ -102,54 +102,55 @@ impl WorldDatabase {
                 .prepare("SELECT name, chara_make FROM character_data WHERE content_id = ?1")
                 .unwrap();
 
-            let (name, chara_make): (String, String) = stmt
-                .query_row((content_id,), |row| Ok((row.get(0)?, row.get(1)?)))
-                .unwrap();
+            let result: Result<(String, String), rusqlite::Error> =
+                stmt.query_row((content_id,), |row| Ok((row.get(0)?, row.get(1)?)));
 
-            let chara_make = CharaMake::from_json(&chara_make);
+            if let Ok((name, chara_make)) = result {
+                let chara_make = CharaMake::from_json(&chara_make);
 
-            let select_data = ClientSelectData {
-                game_name_unk: "Final Fantasy".to_string(),
-                current_class: 2,
-                class_levels: [5; 30],
-                race: chara_make.customize.race as i32,
-                subrace: chara_make.customize.subrace as i32,
-                gender: chara_make.customize.gender as i32,
-                birth_month: chara_make.birth_month,
-                birth_day: chara_make.birth_day,
-                guardian: chara_make.guardian,
-                unk8: 0,
-                unk9: 0,
-                zone_id: ZONE_ID as i32,
-                unk11: 0,
-                customize: chara_make.customize,
-                unk12: 0,
-                unk13: 0,
-                unk14: [0; 10],
-                unk15: 0,
-                unk16: 0,
-                legacy_character: 0,
-                unk18: 0,
-                unk19: 0,
-                unk20: 0,
-                unk21: String::new(),
-                unk22: 0,
-                unk23: 0,
-            };
+                let select_data = ClientSelectData {
+                    game_name_unk: "Final Fantasy".to_string(),
+                    current_class: 2,
+                    class_levels: [5; 30],
+                    race: chara_make.customize.race as i32,
+                    subrace: chara_make.customize.subrace as i32,
+                    gender: chara_make.customize.gender as i32,
+                    birth_month: chara_make.birth_month,
+                    birth_day: chara_make.birth_day,
+                    guardian: chara_make.guardian,
+                    unk8: 0,
+                    unk9: 0,
+                    zone_id: ZONE_ID as i32,
+                    unk11: 0,
+                    customize: chara_make.customize,
+                    unk12: 0,
+                    unk13: 0,
+                    unk14: [0; 10],
+                    unk15: 0,
+                    unk16: 0,
+                    legacy_character: 0,
+                    unk18: 0,
+                    unk19: 0,
+                    unk20: 0,
+                    unk21: String::new(),
+                    unk22: 0,
+                    unk23: 0,
+                };
 
-            characters.push(CharacterDetails {
-                actor_id: *actor_id,
-                content_id: *content_id as u64,
-                index: index as u32,
-                unk1: [0; 16],
-                origin_server_id: world_id,
-                current_server_id: world_id,
-                character_name: name.clone(),
-                origin_server_name: world_name.to_string(),
-                current_server_name: world_name.to_string(),
-                character_detail_json: select_data.to_json(),
-                unk2: [0; 20],
-            });
+                characters.push(CharacterDetails {
+                    actor_id: *actor_id,
+                    content_id: *content_id as u64,
+                    index: index as u32,
+                    unk1: [0; 16],
+                    origin_server_id: world_id,
+                    current_server_id: world_id,
+                    character_name: name.clone(),
+                    origin_server_name: world_name.to_string(),
+                    current_server_name: world_name.to_string(),
+                    character_detail_json: select_data.to_json(),
+                    unk2: [0; 20],
+                });
+            }
         }
 
         characters
@@ -214,5 +215,15 @@ impl WorldDatabase {
             name,
             chara_make: CharaMake::from_json(&chara_make_json),
         }
+    }
+
+    /// Deletes a character and all associated data
+    pub fn delete_character(&self, content_id: u64) {
+        let connection = self.connection.lock().unwrap();
+
+        let mut stmt = connection
+            .prepare("DELETE FROM character_data WHERE content_id = ?1; DELETE FROM characters WHERE content_id = ?1;")
+            .unwrap();
+        stmt.execute((content_id,)).unwrap();
     }
 }

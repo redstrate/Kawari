@@ -37,7 +37,7 @@ pub enum LobbyCharacterActionKind {
 #[derive(Clone, PartialEq, Debug)]
 pub struct LobbyCharacterAction {
     pub sequence: u64,
-    pub character_id: u64,
+    pub content_id: u64,
     #[br(pad_before = 8)]
     pub character_index: u8,
     pub action: LobbyCharacterActionKind,

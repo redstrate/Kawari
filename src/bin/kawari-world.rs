@@ -841,6 +841,37 @@ async fn main() {
                                             .await;
                                         }
                                     }
+                                    CustomIpcData::DeleteCharacter { content_id } => {
+                                        database.delete_character(*content_id);
+
+                                        // send response
+                                        {
+                                            send_packet::<CustomIpcSegment>(
+                                                &mut connection.socket,
+                                                &mut connection.state,
+                                                ConnectionType::None,
+                                                CompressionType::Uncompressed,
+                                                &[PacketSegment {
+                                                    source_actor: 0,
+                                                    target_actor: 0,
+                                                    segment_type: SegmentType::CustomIpc {
+                                                        data: CustomIpcSegment {
+                                                            unk1: 0,
+                                                            unk2: 0,
+                                                            op_code:
+                                                                CustomIpcType::CharacterDeleted,
+                                                            server_id: 0,
+                                                            timestamp: 0,
+                                                            data: CustomIpcData::CharacterDeleted {
+                                                                deleted: 1,
+                                                            },
+                                                        },
+                                                    },
+                                                }],
+                                            )
+                                            .await;
+                                        }
+                                    }
                                     _ => panic!(
                                         "The server is recieving a response or unknown custom IPC!"
                                     ),
