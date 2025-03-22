@@ -4,7 +4,7 @@ use rusqlite::Connection;
 
 use crate::lobby::{CharaMake, ClientSelectData, ipc::CharacterDetails};
 
-use super::PlayerData;
+use super::{PlayerData, ipc::Position};
 
 pub struct WorldDatabase {
     connection: Mutex<Connection>,
@@ -14,6 +14,8 @@ pub struct CharacterData {
     pub name: String,
     pub chara_make: CharaMake, // probably not the ideal way to store this?
     pub city_state: u8,
+    pub position: Position,
+    pub zone_id: u16,
 }
 
 impl WorldDatabase {
@@ -28,7 +30,7 @@ impl WorldDatabase {
 
         // Create characters data table
         {
-            let query = "CREATE TABLE IF NOT EXISTS character_data (content_id INTEGER PRIMARY KEY, name STRING, chara_make STRING, city_state INTEGER);";
+            let query = "CREATE TABLE IF NOT EXISTS character_data (content_id INTEGER PRIMARY KEY, name STRING, chara_make STRING, city_state INTEGER, zone_id INTEGER, pos_x REAL, pos_y REAL, pos_z REAL);";
             connection.execute(query, ()).unwrap();
         }
 
@@ -94,16 +96,18 @@ impl WorldDatabase {
         let mut characters = Vec::new();
 
         for (index, (content_id, actor_id)) in content_actor_ids.iter().enumerate() {
-            dbg!(content_id);
-
             let mut stmt = connection
-                .prepare("SELECT name, chara_make FROM character_data WHERE content_id = ?1")
+                .prepare(
+                    "SELECT name, chara_make, zone_id FROM character_data WHERE content_id = ?1",
+                )
                 .unwrap();
 
-            let result: Result<(String, String), rusqlite::Error> =
-                stmt.query_row((content_id,), |row| Ok((row.get(0)?, row.get(1)?)));
+            let result: Result<(String, String, u16), rusqlite::Error> = stmt
+                .query_row((content_id,), |row| {
+                    Ok((row.get(0)?, row.get(1)?, row.get(2)?))
+                });
 
-            if let Ok((name, chara_make)) = result {
+            if let Ok((name, chara_make, zone_id)) = result {
                 let chara_make = CharaMake::from_json(&chara_make);
 
                 let select_data = ClientSelectData {
@@ -118,7 +122,7 @@ impl WorldDatabase {
                     guardian: chara_make.guardian,
                     unk8: 0,
                     unk9: 0,
-                    zone_id: 130 as i32,
+                    zone_id: zone_id as i32,
                     unk11: 0,
                     customize: chara_make.customize,
                     unk12: 0,
@@ -163,7 +167,13 @@ impl WorldDatabase {
     }
 
     /// Gives (content_id, actor_id)
-    pub fn create_player_data(&self, name: &str, chara_make: &str, city_state: u8) -> (u64, u32) {
+    pub fn create_player_data(
+        &self,
+        name: &str,
+        chara_make: &str,
+        city_state: u8,
+        zone_id: u16,
+    ) -> (u64, u32) {
         let content_id = Self::generate_content_id();
         let actor_id = Self::generate_actor_id();
 
@@ -180,8 +190,8 @@ impl WorldDatabase {
         // insert char data
         connection
             .execute(
-                "INSERT INTO character_data VALUES (?1, ?2, ?3, ?4);",
-                (content_id, name, chara_make, city_state),
+                "INSERT INTO character_data VALUES (?1, ?2, ?3, ?4, ?5, 0.0, 0.0, 0.0);",
+                (content_id, name, chara_make, city_state, zone_id),
             )
             .unwrap();
 
@@ -204,12 +214,28 @@ impl WorldDatabase {
 
         let mut stmt = connection
             .prepare(
-                "SELECT name, chara_make, city_state FROM character_data WHERE content_id = ?1",
+                "SELECT name, chara_make, city_state, zone_id, pos_x, pos_y, pos_z FROM character_data WHERE content_id = ?1",
             )
             .unwrap();
-        let (name, chara_make_json, city_state): (String, String, u8) = stmt
+        let (name, chara_make_json, city_state, zone_id, pos_x, pos_y, pos_z): (
+            String,
+            String,
+            u8,
+            u16,
+            f32,
+            f32,
+            f32,
+        ) = stmt
             .query_row((content_id,), |row| {
-                Ok((row.get(0)?, row.get(1)?, row.get(2)?))
+                Ok((
+                    row.get(0)?,
+                    row.get(1)?,
+                    row.get(2)?,
+                    row.get(3)?,
+                    row.get(4)?,
+                    row.get(5)?,
+                    row.get(6)?,
+                ))
             })
             .unwrap();
 
@@ -217,6 +243,12 @@ impl WorldDatabase {
             name,
             chara_make: CharaMake::from_json(&chara_make_json),
             city_state,
+            zone_id,
+            position: Position {
+                x: pos_x,
+                y: pos_y,
+                z: pos_z,
+            },
         }
     }
 

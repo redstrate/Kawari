@@ -241,9 +241,7 @@ async fn main() {
                                         let chara_details = database
                                             .find_chara_make(connection.player_data.content_id);
 
-                                        let zone_id = determine_initial_starting_zone(
-                                            chara_details.city_state,
-                                        );
+                                        let zone_id = chara_details.zone_id;
 
                                         connection.zone = Some(Zone::load(zone_id));
 
@@ -743,6 +741,7 @@ async fn main() {
                                             name,
                                             chara_make_json,
                                             city_state,
+                                            determine_initial_starting_zone(city_state),
                                         );
 
                                         tracing::info!(
