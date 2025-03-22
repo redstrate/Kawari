@@ -407,9 +407,9 @@ impl LobbyConnection {
                         server_id: 0,
                         timestamp: 0,
                         data: ServerLobbyIpcData::LobbyError {
-                            sequence: 0x03,
-                            error: 0x0bdb, // TODO: I screwed this up when translating from the old struct to the new LobbyError
-                            exd_error_id: 0,
+                            sequence: character_action.sequence,
+                            error: 0x00000bdb,
+                            exd_error_id: 0x32cc,
                             value: 0,
                             unk1: 0,
                         },
