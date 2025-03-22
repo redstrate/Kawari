@@ -24,6 +24,9 @@ pub mod world;
 /// Everything packet parsing related.
 pub mod packet;
 
+/// Logic server-specific code.
+pub mod login;
+
 // TODO: make this configurable
 /// The world ID and name for the lobby.
 /// See <https://ffxiv.consolegameswiki.com/wiki/Servers> for a list of possible IDs.

@@ -1,16 +1,12 @@
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
-use kawari::WORLD_NAME;
 use kawari::common::custom_ipc::{CustomIpcData, CustomIpcSegment, CustomIpcType};
 use kawari::config::get_config;
-use kawari::lobby::ipc::CharacterDetails;
-use kawari::lobby::{CharaMake, ClientSelectData};
 use kawari::oodle::OodleNetwork;
 use kawari::packet::{
     CompressionType, ConnectionType, PacketSegment, PacketState, SegmentType, send_keep_alive,
     send_packet,
 };
-use kawari::world::PlayerData;
 use kawari::world::ipc::{
     ClientZoneIpcData, CommonSpawn, GameMasterCommandType, ObjectKind, ServerZoneIpcData,
     ServerZoneIpcSegment, ServerZoneIpcType, SocialListRequestType, StatusEffect,
@@ -22,214 +18,12 @@ use kawari::world::{
         Position, SocialList,
     },
 };
+use kawari::world::{PlayerData, WorldDatabase};
 use kawari::{CHAR_NAME, CITY_STATE, CONTENT_ID, WORLD_ID, ZONE_ID, common::timestamp_secs};
 use physis::common::{Language, Platform};
 use physis::gamedata::GameData;
-use rusqlite::Connection;
 use tokio::io::AsyncReadExt;
 use tokio::net::TcpListener;
-
-fn setup_db() -> Arc<Mutex<Connection>> {
-    let connection = Connection::open("world.db").expect("Failed to open database!");
-
-    // Create characters table
-    {
-        let query = "CREATE TABLE IF NOT EXISTS characters (content_id INTEGER PRIMARY KEY, service_account_id INTEGER, actor_id INTEGER);";
-        connection.execute(query, ()).unwrap();
-    }
-
-    // Create characters data table
-    {
-        let query = "CREATE TABLE IF NOT EXISTS character_data (content_id INTEGER PRIMARY KEY, name STRING, chara_make STRING);";
-        connection.execute(query, ()).unwrap();
-    }
-
-    Arc::new(Mutex::new(connection))
-}
-
-fn find_player_data(connection: &Arc<Mutex<Connection>>, actor_id: u32) -> PlayerData {
-    let connection = connection.lock().unwrap();
-
-    let mut stmt = connection
-        .prepare("SELECT content_id, service_account_id FROM characters WHERE actor_id = ?1")
-        .unwrap();
-    let (content_id, account_id) = stmt
-        .query_row((actor_id,), |row| Ok((row.get(0)?, row.get(1)?)))
-        .unwrap();
-
-    PlayerData {
-        actor_id,
-        content_id,
-        account_id,
-    }
-}
-
-// TODO: from/to sql int
-
-fn find_actor_id(connection: &Arc<Mutex<Connection>>, content_id: u64) -> u32 {
-    let connection = connection.lock().unwrap();
-
-    let mut stmt = connection
-        .prepare("SELECT actor_id FROM characters WHERE content_id = ?1")
-        .unwrap();
-
-    stmt.query_row((content_id,), |row| row.get(0)).unwrap()
-}
-
-fn get_character_list(
-    connection: &Arc<Mutex<Connection>>,
-    service_account_id: u32,
-) -> Vec<CharacterDetails> {
-    let connection = connection.lock().unwrap();
-
-    let content_actor_ids: Vec<(u32, u32)>;
-
-    // find the content ids associated with the service account
-    {
-        let mut stmt = connection
-            .prepare("SELECT content_id, actor_id FROM characters WHERE service_account_id = ?1")
-            .unwrap();
-
-        content_actor_ids = stmt
-            .query_map((service_account_id,), |row| Ok((row.get(0)?, row.get(1)?)))
-            .unwrap()
-            .map(|x| x.unwrap())
-            .collect();
-    }
-
-    let mut characters = Vec::new();
-
-    for (index, (content_id, actor_id)) in content_actor_ids.iter().enumerate() {
-        dbg!(content_id);
-
-        let mut stmt = connection
-            .prepare("SELECT name, chara_make FROM character_data WHERE content_id = ?1")
-            .unwrap();
-
-        let (name, chara_make): (String, String) = stmt
-            .query_row((content_id,), |row| Ok((row.get(0)?, row.get(1)?)))
-            .unwrap();
-
-        let chara_make = CharaMake::from_json(&chara_make);
-
-        let select_data = ClientSelectData {
-            game_name_unk: "Final Fantasy".to_string(),
-            current_class: 2,
-            class_levels: [5; 30],
-            race: chara_make.customize.race as i32,
-            subrace: chara_make.customize.subrace as i32,
-            gender: chara_make.customize.gender as i32,
-            birth_month: chara_make.birth_month,
-            birth_day: chara_make.birth_day,
-            guardian: chara_make.guardian,
-            unk8: 0,
-            unk9: 0,
-            zone_id: ZONE_ID as i32,
-            unk11: 0,
-            customize: chara_make.customize,
-            unk12: 0,
-            unk13: 0,
-            unk14: [0; 10],
-            unk15: 0,
-            unk16: 0,
-            legacy_character: 0,
-            unk18: 0,
-            unk19: 0,
-            unk20: 0,
-            unk21: String::new(),
-            unk22: 0,
-            unk23: 0,
-        };
-
-        characters.push(CharacterDetails {
-            actor_id: *actor_id,
-            content_id: *content_id as u64,
-            index: index as u32,
-            unk1: [0; 16],
-            origin_server_id: WORLD_ID,
-            current_server_id: WORLD_ID,
-            character_name: name.clone(),
-            origin_server_name: WORLD_NAME.to_string(),
-            current_server_name: WORLD_NAME.to_string(),
-            character_detail_json: select_data.to_json(),
-            unk2: [0; 20],
-        });
-    }
-
-    dbg!(&characters);
-
-    characters
-}
-
-fn generate_content_id() -> u32 {
-    rand::random()
-}
-
-fn generate_actor_id() -> u32 {
-    rand::random()
-}
-
-/// Gives (content_id, actor_id)
-fn create_player_data(
-    connection: &Arc<Mutex<Connection>>,
-    name: &str,
-    chara_make: &str,
-) -> (u64, u32) {
-    let content_id = generate_content_id();
-    let actor_id = generate_actor_id();
-
-    let connection = connection.lock().unwrap();
-
-    // insert ids
-    connection
-        .execute(
-            "INSERT INTO characters VALUES (?1, ?2, ?3);",
-            (content_id, 0x1, actor_id),
-        )
-        .unwrap();
-
-    // insert char data
-    connection
-        .execute(
-            "INSERT INTO character_data VALUES (?1, ?2, ?3);",
-            (content_id, name, chara_make),
-        )
-        .unwrap();
-
-    (content_id as u64, actor_id)
-}
-
-/// Checks if `name` is in the character data table
-fn check_is_name_free(connection: &Arc<Mutex<Connection>>, name: &str) -> bool {
-    let connection = connection.lock().unwrap();
-
-    let mut stmt = connection
-        .prepare("SELECT content_id FROM character_data WHERE name = ?1")
-        .unwrap();
-
-    !stmt.exists((name,)).unwrap()
-}
-
-struct CharacterData {
-    name: String,
-    chara_make: CharaMake, // probably not the ideal way to store this?
-}
-
-fn find_chara_make(connection: &Arc<Mutex<Connection>>, content_id: u64) -> CharacterData {
-    let connection = connection.lock().unwrap();
-
-    let mut stmt = connection
-        .prepare("SELECT name, chara_make FROM character_data WHERE content_id = ?1")
-        .unwrap();
-    let (name, chara_make_json): (String, String) = stmt
-        .query_row((content_id,), |row| Ok((row.get(0)?, row.get(1)?)))
-        .unwrap();
-
-    CharacterData {
-        name,
-        chara_make: CharaMake::from_json(&chara_make_json),
-    }
-}
 
 #[tokio::main]
 async fn main() {
@@ -239,12 +33,12 @@ async fn main() {
 
     tracing::info!("World server started on 127.0.0.1:7100");
 
-    let db_connection = setup_db();
+    let database = Arc::new(WorldDatabase::new());
 
     loop {
         let (socket, _) = listener.accept().await.unwrap();
 
-        let db_connection = db_connection.clone();
+        let database = database.clone();
 
         let state = PacketState {
             client_key: None,
@@ -279,10 +73,8 @@ async fn main() {
                                 tracing::info!("actor id to parse: {actor_id}");
 
                                 // collect actor data
-                                connection.player_data = find_player_data(
-                                    &db_connection,
-                                    actor_id.parse::<u32>().unwrap(),
-                                );
+                                connection.player_data =
+                                    database.find_player_data(actor_id.parse::<u32>().unwrap());
 
                                 println!("player data: {:#?}", connection.player_data);
 
@@ -442,10 +234,8 @@ async fn main() {
 
                                         // Player Setup
                                         {
-                                            let chara_details = find_chara_make(
-                                                &db_connection,
-                                                connection.player_data.content_id,
-                                            );
+                                            let chara_details = database
+                                                .find_chara_make(connection.player_data.content_id);
 
                                             let ipc = ServerZoneIpcSegment {
                                                 op_code: ServerZoneIpcType::PlayerSetup,
@@ -515,10 +305,8 @@ async fn main() {
                                             "Client has finished loading... spawning in!"
                                         );
 
-                                        let chara_details = find_chara_make(
-                                            &db_connection,
-                                            connection.player_data.content_id,
-                                        );
+                                        let chara_details = database
+                                            .find_chara_make(connection.player_data.content_id);
 
                                         // send player spawn
                                         {
@@ -925,11 +713,8 @@ async fn main() {
                                             "creating character from: {name} {chara_make_json}"
                                         );
 
-                                        let (content_id, actor_id) = create_player_data(
-                                            &db_connection,
-                                            name,
-                                            chara_make_json,
-                                        );
+                                        let (content_id, actor_id) =
+                                            database.create_player_data(name, chara_make_json);
 
                                         tracing::info!(
                                             "Created new player: {content_id} {actor_id}"
@@ -960,7 +745,7 @@ async fn main() {
                                         }
                                     }
                                     CustomIpcData::GetActorId { content_id } => {
-                                        let actor_id = find_actor_id(&db_connection, *content_id);
+                                        let actor_id = database.find_actor_id(*content_id);
 
                                         tracing::info!("We found an actor id: {actor_id}");
 
@@ -987,7 +772,7 @@ async fn main() {
                                         }
                                     }
                                     CustomIpcData::CheckNameIsAvailable { name } => {
-                                        let is_name_free = check_is_name_free(&db_connection, name);
+                                        let is_name_free = database.check_is_name_free(name);
                                         let is_name_free = if is_name_free { 1 } else { 0 };
 
                                         // send response
@@ -1014,7 +799,7 @@ async fn main() {
                                     }
                                     CustomIpcData::RequestCharacterList { service_account_id } => {
                                         let characters =
-                                            get_character_list(&db_connection, *service_account_id);
+                                            database.get_character_list(*service_account_id);
 
                                         // send response
                                         {
