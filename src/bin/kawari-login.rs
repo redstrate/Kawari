@@ -46,7 +46,7 @@ async fn login_send(
     let user = state.database.login_user(&input.sqexid, &input.password);
     match user {
         Ok(session_id) => Html(format!(
-            "window.external.user(\"login=auth,ok,sid,{session_id},terms,1,region,2,etmadd,0,playable,1,ps3pkg,0,maxex,4,product,1\");"
+            "window.external.user(\"login=auth,ok,sid,{session_id},terms,1,region,2,etmadd,0,playable,1,ps3pkg,0,maxex,5,product,1\");"
         )),
         Err(err) => {
             // TODO: see what the official error messages are
