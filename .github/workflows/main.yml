@@ -31,8 +31,21 @@ jobs:
           target/
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
     - name: Build
-      run: cargo build --verbose --no-default-features
+      run: cargo build --release --verbose --no-default-features
     - name: Run clippy
       run: cargo clippy --no-default-features
     - name: Run tests
       run: cargo test --verbose --no-default-features
+    - name: Archive artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ runner.os }}-package
+        path: |
+          target/release/kawari-admin*
+          target/release/kawari-frontier*
+          target/release/kawari-lobby*
+          target/release/kawari-login*
+          target/release/kawari-patch*
+          target/release/kawari-web*
+          !target/release/*.d
+        if-no-files-found: error
