@@ -1,8 +1,9 @@
 use std::sync::Arc;
 
 use kawari::common::custom_ipc::{CustomIpcData, CustomIpcSegment, CustomIpcType};
-use kawari::common::get_world_name;
+use kawari::common::{get_citystate, get_world_name};
 use kawari::config::get_config;
+use kawari::lobby::CharaMake;
 use kawari::oodle::OodleNetwork;
 use kawari::packet::{
     CompressionType, ConnectionType, PacketSegment, PacketState, SegmentType, send_keep_alive,
@@ -260,7 +261,7 @@ async fn main() {
                                                         .chara_make
                                                         .customize
                                                         .subrace,
-                                                    city_state: chara_details.chara_make.unk6 as u8, // TODO: probably wrong
+                                                    city_state: chara_details.city_state,
                                                     nameday_month: chara_details
                                                         .chara_make
                                                         .birth_month
@@ -721,8 +722,16 @@ async fn main() {
                                             "creating character from: {name} {chara_make_json}"
                                         );
 
-                                        let (content_id, actor_id) =
-                                            database.create_player_data(name, chara_make_json);
+                                        let chara_make = CharaMake::from_json(&chara_make_json);
+
+                                        let city_state =
+                                            get_citystate(chara_make.classjob_id as u16);
+
+                                        let (content_id, actor_id) = database.create_player_data(
+                                            name,
+                                            chara_make_json,
+                                            city_state,
+                                        );
 
                                         tracing::info!(
                                             "Created new player: {content_id} {actor_id}"

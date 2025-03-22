@@ -63,3 +63,23 @@ pub fn get_world_name(world_id: u16) -> String {
 
     name.clone()
 }
+
+/// Gets the starting city-state from a given class/job id.
+pub fn get_citystate(classjob_id: u16) -> u8 {
+    let config = get_config();
+
+    let mut game_data = GameData::from_existing(Platform::Win32, &config.game_location).unwrap();
+
+    let exh = game_data.read_excel_sheet_header("ClassJob").unwrap();
+    let exd = game_data
+        .read_excel_sheet("ClassJob", &exh, Language::English, 0)
+        .unwrap();
+
+    let world_row = &exd.read_row(&exh, classjob_id as u32).unwrap()[0];
+
+    let physis::exd::ColumnData::UInt8(town_id) = &world_row.data[33] else {
+        panic!("Unexpected type!");
+    };
+
+    *town_id
+}

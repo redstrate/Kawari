@@ -16,6 +16,7 @@ pub struct WorldDatabase {
 pub struct CharacterData {
     pub name: String,
     pub chara_make: CharaMake, // probably not the ideal way to store this?
+    pub city_state: u8,
 }
 
 impl WorldDatabase {
@@ -30,7 +31,7 @@ impl WorldDatabase {
 
         // Create characters data table
         {
-            let query = "CREATE TABLE IF NOT EXISTS character_data (content_id INTEGER PRIMARY KEY, name STRING, chara_make STRING);";
+            let query = "CREATE TABLE IF NOT EXISTS character_data (content_id INTEGER PRIMARY KEY, name STRING, chara_make STRING, city_state INTEGER);";
             connection.execute(query, ()).unwrap();
         }
 
@@ -165,7 +166,7 @@ impl WorldDatabase {
     }
 
     /// Gives (content_id, actor_id)
-    pub fn create_player_data(&self, name: &str, chara_make: &str) -> (u64, u32) {
+    pub fn create_player_data(&self, name: &str, chara_make: &str, city_state: u8) -> (u64, u32) {
         let content_id = Self::generate_content_id();
         let actor_id = Self::generate_actor_id();
 
@@ -182,8 +183,8 @@ impl WorldDatabase {
         // insert char data
         connection
             .execute(
-                "INSERT INTO character_data VALUES (?1, ?2, ?3);",
-                (content_id, name, chara_make),
+                "INSERT INTO character_data VALUES (?1, ?2, ?3, ?4);",
+                (content_id, name, chara_make, city_state),
             )
             .unwrap();
 
@@ -205,15 +206,20 @@ impl WorldDatabase {
         let connection = self.connection.lock().unwrap();
 
         let mut stmt = connection
-            .prepare("SELECT name, chara_make FROM character_data WHERE content_id = ?1")
+            .prepare(
+                "SELECT name, chara_make, city_state FROM character_data WHERE content_id = ?1",
+            )
             .unwrap();
-        let (name, chara_make_json): (String, String) = stmt
-            .query_row((content_id,), |row| Ok((row.get(0)?, row.get(1)?)))
+        let (name, chara_make_json, city_state): (String, String, u8) = stmt
+            .query_row((content_id,), |row| {
+                Ok((row.get(0)?, row.get(1)?, row.get(2)?))
+            })
             .unwrap();
 
         CharacterData {
             name,
             chara_make: CharaMake::from_json(&chara_make_json),
+            city_state,
         }
     }
 

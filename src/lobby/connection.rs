@@ -9,6 +9,7 @@ use crate::{
         get_world_name, timestamp_secs,
     },
     config::get_config,
+    lobby::CharaMake,
     oodle::OodleNetwork,
     packet::{
         CompressionType, ConnectionType, PacketSegment, PacketState, SegmentType,
@@ -206,8 +207,6 @@ impl LobbyConnection {
             };
 
             let mut characters = characters.to_vec();
-
-            dbg!(&characters);
 
             for i in 0..4 {
                 let mut characters_in_packet = Vec::new();
@@ -428,6 +427,8 @@ impl LobbyConnection {
 
                 let our_actor_id;
                 let our_content_id;
+
+                dbg!(CharaMake::from_json(&character_action.json));
 
                 // tell the world server to create this character
                 {
