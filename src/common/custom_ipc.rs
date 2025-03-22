@@ -1,8 +1,7 @@
 use binrw::binrw;
 
 use crate::{
-    CHAR_NAME_MAX_LENGTH,
-    common::read_string,
+    common::{CHAR_NAME_MAX_LENGTH, read_string},
     lobby::ipc::CharacterDetails,
     packet::{IpcSegment, ReadWriteIpcSegment},
 };

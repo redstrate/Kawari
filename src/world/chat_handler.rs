@@ -1,6 +1,5 @@
 use crate::{
-    INVALID_OBJECT_ID,
-    common::{CustomizeData, timestamp_secs},
+    common::{CustomizeData, INVALID_OBJECT_ID, timestamp_secs},
     config::get_config,
     packet::{PacketSegment, SegmentType},
     world::ipc::{

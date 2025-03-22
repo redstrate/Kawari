@@ -26,11 +26,6 @@ pub mod packet;
 /// Logic server-specific code.
 pub mod login;
 
-pub const INVALID_OBJECT_ID: u32 = 0xE0000000;
-
-/// Maxmimum length of a character's name.
-pub const CHAR_NAME_MAX_LENGTH: usize = 32;
-
 pub fn setup_default_environment() -> Environment<'static> {
     let mut env = Environment::new();
     env.add_template("admin.html", include_str!("../templates/admin.html"))

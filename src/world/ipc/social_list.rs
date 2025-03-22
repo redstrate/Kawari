@@ -1,9 +1,6 @@
 use binrw::binrw;
 
-use crate::{
-    CHAR_NAME_MAX_LENGTH,
-    common::{read_string, write_string},
-};
+use crate::common::{CHAR_NAME_MAX_LENGTH, read_string, write_string};
 
 #[binrw]
 #[brw(repr = u8)]

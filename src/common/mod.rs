@@ -14,6 +14,12 @@ use crate::config::get_config;
 
 pub mod custom_ipc;
 
+/// An invalid actor/object id.
+pub const INVALID_OBJECT_ID: u32 = 0xE0000000;
+
+/// Maxmimum length of a character's name.
+pub const CHAR_NAME_MAX_LENGTH: usize = 32;
+
 pub(crate) fn read_string(byte_stream: Vec<u8>) -> String {
     let str = String::from_utf8(byte_stream).unwrap();
     str.trim_matches(char::from(0)).to_string() // trim \0 from the end of strings
