@@ -7,6 +7,8 @@ use axum::response::IntoResponse;
 use axum::routing::post;
 use axum::{Router, routing::get};
 use kawari::config::get_config;
+use kawari::patch::Version;
+use kawari::{SUPPORTED_BOOT_VERSION, SUPPORTED_GAME_VERSION, get_supported_expac_versions};
 use physis::patchlist::{PatchEntry, PatchList, PatchListType};
 
 fn list_patch_files(dir_path: &str) -> Vec<String> {
@@ -73,6 +75,7 @@ fn check_valid_patch_client(headers: &HeaderMap) -> bool {
 async fn verify_session(
     headers: HeaderMap,
     Path((platform, channel, game_version, sid)): Path<(String, String, String, String)>,
+    body: String,
 ) -> impl IntoResponse {
     if !check_valid_patch_client(&headers) {
         return StatusCode::INTERNAL_SERVER_ERROR.into_response();
@@ -81,6 +84,45 @@ async fn verify_session(
     let config = get_config();
     if !config.supports_platform(&platform) {
         return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+    }
+
+    tracing::info!("Verifying game components for {platform} {channel} {game_version} {body}...");
+
+    let body_parts: Vec<&str> = body.split('\n').collect();
+
+    let hashes = body_parts[0];
+    let expansion_versions = &body_parts[1..body_parts.len() - 1]; // last part is empty
+
+    let game_version = Version(&game_version);
+
+    let supported_expac_versions = get_supported_expac_versions();
+
+    for expansion_version in expansion_versions {
+        let expac_version_parts: Vec<&str> = expansion_version.split('\t').collect();
+        let expansion_name = expac_version_parts[0]; // e.g. ex1
+        let expansion_version = expac_version_parts[1];
+
+        if Version(expansion_version) > supported_expac_versions[expansion_name] {
+            tracing::warn!(
+                "{expansion_name} {expansion_version} is above supported version {}!",
+                supported_expac_versions[expansion_name]
+            );
+            return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+        }
+    }
+
+    // Their version is too new
+    if game_version > SUPPORTED_GAME_VERSION {
+        tracing::warn!("{game_version} is above supported game version {SUPPORTED_GAME_VERSION}!");
+        return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+    }
+
+    // If we are up to date, yay!
+    if game_version == SUPPORTED_GAME_VERSION {
+        let mut headers = HeaderMap::new();
+        headers.insert("X-Patch-Unique-Id", sid.parse().unwrap());
+
+        return (headers).into_response();
     }
 
     let mut headers = HeaderMap::new();
@@ -104,8 +146,20 @@ async fn verify_boot(
         return StatusCode::INTERNAL_SERVER_ERROR.into_response();
     }
 
-    // Turns 2019.03.12.0000.0001/?time=2024-06-29-18-30 into just 2019.03.12.0000.0001
     let actual_boot_version = boot_version.split("?time").collect::<Vec<&str>>()[0];
+    let boot_version = Version(actual_boot_version);
+
+    // If we are up to date, yay!
+    if boot_version == SUPPORTED_BOOT_VERSION {
+        let headers = HeaderMap::new();
+        return (headers).into_response();
+    }
+
+    // Their version is too new
+    if boot_version > SUPPORTED_BOOT_VERSION {
+        tracing::warn!("{boot_version} is above supported boot version {SUPPORTED_BOOT_VERSION}!");
+        return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+    }
 
     // check if we need any patching
     let patches = list_patch_files(&config.patch.patches_location);
@@ -115,7 +169,7 @@ async fn verify_boot(
             // not up to date!
             let patch_list = PatchList {
                 id: "477D80B1_38BC_41d4_8B48_5273ADB89CAC".to_string(),
-                requested_version: boot_version.clone(),
+                requested_version: boot_version.to_string().clone(),
                 patch_length: todo!(),
                 content_location: todo!(),
                 patches: vec![PatchEntry {

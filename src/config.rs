@@ -122,7 +122,7 @@ pub struct PatchConfig {
     /// For example, "patch-dl.ffxiv.localhost". Patch files must be served so they're accessible as: "http://patch-dl.ffxiv.localhost/game/ex4/somepatchfilename.patch"
     pub patch_dl_url: String,
     /// Location of the patches directory on disk. Must be setup like so:
-    /// ```
+    /// ```ignore
     /// <channel> (e.g. ffxivneo_release_game) /
     ///     game/
     ///     ex1/
