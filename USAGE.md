@@ -9,7 +9,7 @@ Kawari is designed to be easy to run, with the goal of being accessible to anyon
 **Kawari requires that you have an active subscription**, and are in possession of a legitimate copy of the game. Kawari is not related or affiliated to SqEx, and by using it you are in explicit violation of the User Agreement (_Limitation 2.4_.)
 
 ## Prerequisites
-* Linux
+* Windows or Linux
 * Copy of the game updated to the supported game version (see README)
 * Oodle Network Compression (can be obtained from [here](https://github.com/WorkingRobot/OodleUE), place static library (`.a`) into `oodle` directory)
 
