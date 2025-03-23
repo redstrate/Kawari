@@ -11,16 +11,15 @@ use kawari::packet::{
     send_packet,
 };
 use kawari::world::ipc::{
-    ClientZoneIpcData, CommonSpawn, ContainerInfo, ContainerType, DisplayFlag,
-    GameMasterCommandType, GameMasterRank, ItemInfo, ObjectKind, OnlineStatus, PlayerSubKind,
-    ServerZoneIpcData, ServerZoneIpcSegment, ServerZoneIpcType, SocialListRequestType,
-    StatusEffect,
+    ClientZoneIpcData, CommonSpawn, DisplayFlag, GameMasterCommandType, GameMasterRank, ObjectKind,
+    OnlineStatus, PlayerSubKind, ServerZoneIpcData, ServerZoneIpcSegment, ServerZoneIpcType,
+    SocialListRequestType, StatusEffect,
 };
 use kawari::world::{
     ChatHandler, Inventory, Zone, ZoneConnection,
     ipc::{
-        ActorControl, ActorControlCategory, ActorControlSelf, PlayerEntry, PlayerSetup,
-        PlayerSpawn, PlayerStats, SocialList,
+        ActorControlCategory, ActorControlSelf, PlayerEntry, PlayerSetup, PlayerSpawn, PlayerStats,
+        SocialList,
     },
 };
 use kawari::world::{PlayerData, WorldDatabase};
@@ -781,7 +780,7 @@ async fn main() {
                                             "creating character from: {name} {chara_make_json}"
                                         );
 
-                                        let chara_make = CharaMake::from_json(&chara_make_json);
+                                        let chara_make = CharaMake::from_json(chara_make_json);
 
                                         let city_state =
                                             get_citystate(chara_make.classjob_id as u16);

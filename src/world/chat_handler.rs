@@ -1,11 +1,11 @@
 use crate::{
-    common::{CustomizeData, INVALID_OBJECT_ID, ObjectId, ObjectTypeId, Position, timestamp_secs},
+    common::{CustomizeData, ObjectId, ObjectTypeId, Position, timestamp_secs},
     config::get_config,
     packet::{PacketSegment, SegmentType},
     world::ipc::{
         ActorControl, ActorControlCategory, BattleNpcSubKind, CommonSpawn, DisplayFlag, NpcSpawn,
         ObjectKind, PlayerSpawn, PlayerSubKind, ServerZoneIpcData, ServerZoneIpcSegment,
-        ServerZoneIpcType, StatusEffectList,
+        ServerZoneIpcType,
     },
 };
 
@@ -135,7 +135,6 @@ impl ChatHandler {
                                 warp_finish_anim: 0x0,
                                 raise_anim: 0x0,
                             },
-                            ..Default::default()
                         }),
                     };
 

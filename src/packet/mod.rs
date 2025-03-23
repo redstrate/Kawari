@@ -1,6 +1,6 @@
-mod packet;
-use packet::PacketHeader;
-pub use packet::{
+mod parsing;
+use parsing::PacketHeader;
+pub use parsing::{
     ConnectionType, PacketSegment, PacketState, SegmentType, parse_packet, send_keep_alive,
     send_packet,
 };

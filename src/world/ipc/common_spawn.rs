@@ -3,8 +3,8 @@ use binrw::binrw;
 use bitflags::bitflags;
 
 use crate::common::{
-    CHAR_NAME_MAX_LENGTH, CustomizeData, INVALID_OBJECT_ID, ObjectId, ObjectTypeId, Position,
-    read_string, write_string,
+    CHAR_NAME_MAX_LENGTH, CustomizeData, ObjectId, ObjectTypeId, Position, read_string,
+    write_string,
 };
 
 use super::StatusEffect;

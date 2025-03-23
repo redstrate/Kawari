@@ -14,6 +14,12 @@ pub enum LoginError {
     InternalError,
 }
 
+impl Default for LoginDatabase {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl LoginDatabase {
     pub fn new() -> Self {
         let connection = Connection::open("login.db").expect("Failed to open database!");

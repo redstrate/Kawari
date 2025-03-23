@@ -21,6 +21,12 @@ pub struct CharacterData {
     pub zone_id: u16,
 }
 
+impl Default for WorldDatabase {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl WorldDatabase {
     pub fn new() -> Self {
         let connection = Connection::open("world.db").expect("Failed to open database!");

@@ -174,7 +174,7 @@ impl ZoneConnection {
     pub async fn send_inventory(&mut self) {
         // item list
         {
-            let equipped = self.inventory.equipped.clone();
+            let equipped = self.inventory.equipped;
 
             let mut send_slot = async |slot_index: u16, item: &Item| {
                 let ipc = ServerZoneIpcSegment {

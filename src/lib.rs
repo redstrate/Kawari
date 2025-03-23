@@ -1,5 +1,7 @@
 //! A server replacement for a certain MMO.
 
+#![allow(clippy::large_enum_variant)]
+
 use std::collections::HashMap;
 
 use minijinja::Environment;
