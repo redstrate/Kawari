@@ -123,11 +123,11 @@ async fn main() {
 
     let app = Router::new()
         .route(
-            "/http/:platform/ffxivneo_release_game/:game_version/:sid",
+            "/http/{platform}/ffxivneo_release_game/{game_version}/{sid}",
             post(verify_session),
         )
         .route(
-            "/http/:platform/ffxivneo_release_boot/*boot_version",
+            "/http/{platform}/ffxivneo_release_boot/{*boot_version}",
             get(verify_boot),
         ); // NOTE: for future programmers, this is a wildcard because axum hates the /version/?time=blah format.
 
