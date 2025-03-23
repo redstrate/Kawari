@@ -9,13 +9,22 @@ Kawari is designed to be easy to run, with the goal of being accessible to anyon
 **Kawari requires that you have an active subscription**, and are in possession of a legitimate copy of the game. Kawari is not related or affiliated to SqEx, and by using it you are in explicit violation of the User Agreement (_Limitation 2.4_.)
 
 ## Prerequisites
+
 * Windows or Linux
 * Copy of the game updated to the supported game version (see README)
-* Oodle Network Compression (can be obtained from [here](https://github.com/WorkingRobot/OodleUE), place static library (`.a`) into `oodle` directory)
+* Oodle Network Compression (can be obtained from [here](https://github.com/WorkingRobot/OodleUE)
+
+## Download Artifact
+
+Windows and Linux artifacts are built on every commit, under [Github Actions](https://github.com/redstrate/Kawari/actions). You will have to download the Oodle Network `.dll` (Windows) or `.so` (Linux) yourself however.
+
+## Building
+
+Build Kawari with `cargo build`. If you're building with Oodle support, place the `.so` (Linux) or `.lib` (Windows) into the `oodle` directory when building. The library must be named "oodle-network-shared".
 
 ## Setup
 
-Build Kawari with `cargo build`. Afterwards, create a `config.yaml` in the current directory. Currently the minimal config you need to run most services looks like this:
+Afterwards, create a `config.yaml` in the current directory. Currently the minimal config you need to run most services looks like this:
 
 ```yaml
 game_location: pathtogamedir

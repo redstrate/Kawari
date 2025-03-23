@@ -30,22 +30,49 @@ jobs:
           ~/.cargo/git/db/
           target/
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+    - uses: robinraju/release-downloader@v1
+      if: runner.os == 'Linux'
+      with:
+        repository: 'WorkingRobot/OodleUE'
+        fileName: 'gcc.zip'
+        latest: true
+        extract: true
+    - if: runner.os == 'Linux'
+      run: |
+        mkdir oodle
+        cp lib/Release/liboodle-network-shared.so oodle/
+    - uses: robinraju/release-downloader@v1
+      if: runner.os == 'Windows'
+      with:
+        repository: 'WorkingRobot/OodleUE'
+        fileName: 'clang-cl.zip'
+        latest: true
+        extract: true
+    - if: runner.os == 'Windows'
+      run: |
+        mkdir oodle
+        cp ar/Release/oodle-network-shared.lib oodle/
     - name: Build
-      run: cargo build --release --verbose --no-default-features
+      run: cargo build --release --verbose
     - name: Run clippy
-      run: cargo clippy --no-default-features
+      run: cargo clippy
     - name: Run tests
-      run: cargo test --verbose --no-default-features
+      run: cargo test --verbose
     - name: Archive artifacts
       uses: actions/upload-artifact@v4
       with:
         name: ${{ runner.os }}-package
         path: |
+          LICENSE
+          USAGE.md
+          README.md
+          Caddyfile
           target/release/kawari-admin*
           target/release/kawari-frontier*
           target/release/kawari-lobby*
           target/release/kawari-login*
           target/release/kawari-patch*
           target/release/kawari-web*
+          target/release/kawari-world*
           !target/release/*.d
         if-no-files-found: error
