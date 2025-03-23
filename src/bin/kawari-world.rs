@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use kawari::common::custom_ipc::{CustomIpcData, CustomIpcSegment, CustomIpcType};
 use kawari::common::timestamp_secs;
-use kawari::common::{determine_initial_starting_zone, get_citystate, get_world_name, Position};
+use kawari::common::{Position, determine_initial_starting_zone, get_citystate, get_world_name};
 use kawari::config::get_config;
 use kawari::lobby::CharaMake;
 use kawari::oodle::OodleNetwork;
@@ -17,7 +17,8 @@ use kawari::world::ipc::{
 use kawari::world::{
     ChatHandler, Zone, ZoneConnection,
     ipc::{
-        ActorControlCategory, ActorControlSelf, PlayerEntry, PlayerSetup, PlayerSpawn, PlayerStats, SocialList,
+        ActorControlCategory, ActorControlSelf, PlayerEntry, PlayerSetup, PlayerSpawn, PlayerStats,
+        SocialList,
     },
 };
 use kawari::world::{PlayerData, WorldDatabase};

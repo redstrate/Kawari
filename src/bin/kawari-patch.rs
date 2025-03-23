@@ -61,9 +61,23 @@ fn list_patch_files(dir_path: &str) -> Vec<String> {
         .collect()
 }
 
+/// Check if it's a valid patch client connecting
+fn check_valid_patch_client(headers: &HeaderMap) -> bool {
+    let Some(user_agent) = headers.get("User-Agent") else {
+        return false;
+    };
+
+    user_agent == "FFXIV PATCH CLIENT"
+}
+
 async fn verify_session(
-    Path((platform, _, sid)): Path<(String, String, String)>,
+    headers: HeaderMap,
+    Path((platform, channel, game_version, sid)): Path<(String, String, String, String)>,
 ) -> impl IntoResponse {
+    if !check_valid_patch_client(&headers) {
+        return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+    }
+
     let config = get_config();
     if !config.supports_platform(&platform) {
         return StatusCode::INTERNAL_SERVER_ERROR.into_response();
@@ -75,8 +89,15 @@ async fn verify_session(
     (headers).into_response()
 }
 
-async fn verify_boot(Path((platform, boot_version)): Path<(String, String)>) -> impl IntoResponse {
-    tracing::info!("Verifying boot components...");
+async fn verify_boot(
+    headers: HeaderMap,
+    Path((platform, channel, boot_version)): Path<(String, String, String)>,
+) -> impl IntoResponse {
+    if !check_valid_patch_client(&headers) {
+        return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+    }
+
+    tracing::info!("Verifying boot components for {platform} {channel} {boot_version}...");
 
     let config = get_config();
     if !config.supports_platform(&platform) {
@@ -123,13 +144,13 @@ async fn main() {
 
     let app = Router::new()
         .route(
-            "/http/{platform}/ffxivneo_release_game/{game_version}/{sid}",
+            "/http/{platform}/{channel}/{game_version}/{sid}",
             post(verify_session),
         )
         .route(
-            "/http/{platform}/ffxivneo_release_boot/{*boot_version}",
+            "/http/{platform}/{channel}/{boot_version}",
             get(verify_boot),
-        ); // NOTE: for future programmers, this is a wildcard because axum hates the /version/?time=blah format.
+        );
 
     let config = get_config();
 
