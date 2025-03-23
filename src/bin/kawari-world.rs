@@ -194,6 +194,7 @@ async fn main() {
                                         // fill inventory
                                         connection.inventory.equip_racial_items(
                                             chara_details.chara_make.customize.race,
+                                            chara_details.chara_make.customize.gender,
                                         );
 
                                         // Send inventory
