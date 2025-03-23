@@ -39,7 +39,7 @@ mod tests {
 
     use binrw::BinRead;
 
-    use crate::world::ipc::{CharacterMode, ObjectKind, OnlineStatus, PlayerSubKind};
+    use crate::world::ipc::{CharacterMode, DisplayFlag, ObjectKind, OnlineStatus, PlayerSubKind};
 
     use super::*;
 
@@ -76,7 +76,7 @@ mod tests {
             player_spawn.common.object_kind,
             ObjectKind::Player(PlayerSubKind::Player)
         );
-        assert_eq!(player_spawn.common.display_flags, 262144);
+        assert_eq!(player_spawn.common.display_flags, DisplayFlag::UNK);
         assert_eq!(player_spawn.online_status, OnlineStatus::Offline);
     }
 }

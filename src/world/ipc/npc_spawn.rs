@@ -31,7 +31,7 @@ mod tests {
 
     use crate::{
         common::INVALID_OBJECT_ID,
-        world::ipc::{BattleNpcSubKind, CharacterMode, ObjectKind, OnlineStatus},
+        world::ipc::{BattleNpcSubKind, CharacterMode, DisplayFlag, ObjectKind, OnlineStatus},
     };
 
     use super::*;
@@ -49,7 +49,7 @@ mod tests {
         assert_eq!(npc_spawn.common.hp_curr, 1393);
         assert_eq!(npc_spawn.common.mp_curr, 10000);
         assert_eq!(npc_spawn.common.mp_max, 10000);
-        assert_eq!(npc_spawn.common.display_flags, 0);
+        assert_eq!(npc_spawn.common.display_flags, DisplayFlag::NONE);
         assert_eq!(npc_spawn.common.pos.x, -64.17707);
         assert_eq!(npc_spawn.common.pos.y, -2.0206506);
         assert_eq!(npc_spawn.common.pos.z, 15.913875);
@@ -80,7 +80,7 @@ mod tests {
         assert_eq!(npc_spawn.common.hp_curr, 91);
         assert_eq!(npc_spawn.common.mp_curr, 0);
         assert_eq!(npc_spawn.common.mp_max, 0);
-        assert_eq!(npc_spawn.common.display_flags, 0);
+        assert_eq!(npc_spawn.common.display_flags, DisplayFlag::NONE);
         assert_eq!(npc_spawn.common.pos.x, 116.99154);
         assert_eq!(npc_spawn.common.pos.y, 76.64936);
         assert_eq!(npc_spawn.common.pos.z, -187.02414);

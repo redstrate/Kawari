@@ -1,5 +1,7 @@
 use binrw::binrw;
 
+use bitflags::bitflags;
+
 use crate::common::{
     CHAR_NAME_MAX_LENGTH, CustomizeData, INVALID_OBJECT_ID, ObjectId, ObjectTypeId, Position,
     read_string, write_string,
@@ -112,6 +114,26 @@ pub enum GameMasterRank {
     Debug = 90,
 }
 
+bitflags! {
+    #[binrw]
+    pub struct DisplayFlag : u32 {
+        const NONE = 0x0;
+        // Can be made visible with ActorControl I think
+        const INVISIBLE = 0x20;
+        const HIDE_HEAD = 0x40;
+        const HIDE_WEAPON = 0x80;
+        const FADED = 0x100;
+        const VISOR = 0x800;
+        const UNK = 0x40000; // FIXME: what is this?
+    }
+}
+
+impl Default for DisplayFlag {
+    fn default() -> Self {
+        Self::NONE
+    }
+}
+
 #[binrw]
 #[brw(little)]
 #[derive(Debug, Clone, Default)]
@@ -135,8 +157,8 @@ pub struct CommonSpawn {
     pub parent_actor_id: ObjectId,
     pub hp_max: u32,
     pub hp_curr: u32,
-    pub display_flags: u32, // assumed
-    pub fate_id: u16,       // assumed
+    pub display_flags: DisplayFlag,
+    pub fate_id: u16, // assumed
     pub mp_curr: u16,
     pub mp_max: u16,
     pub unk: u16,

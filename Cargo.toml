@@ -75,3 +75,7 @@ physis = { git = "https://github.com/redstrate/physis" }
 
 # Used for data persistence
 rusqlite = { version = "0.34", features = ["bundled"], default-features = false }
+
+# needed for c-style bitflags
+# cannot upgrade to 2.0.0, breaking changes that aren't recoverable: https://github.com/bitflags/bitflags/issues/314
+bitflags = { version = "1.3", default-features = false }

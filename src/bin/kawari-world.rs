@@ -11,9 +11,7 @@ use kawari::packet::{
     send_packet,
 };
 use kawari::world::ipc::{
-    ClientZoneIpcData, CommonSpawn, GameMasterCommandType, GameMasterRank, ObjectKind,
-    OnlineStatus, PlayerSubKind, ServerZoneIpcData, ServerZoneIpcSegment, ServerZoneIpcType,
-    SocialListRequestType, StatusEffect,
+    ClientZoneIpcData, CommonSpawn, DisplayFlag, GameMasterCommandType, GameMasterRank, ObjectKind, OnlineStatus, PlayerSubKind, ServerZoneIpcData, ServerZoneIpcSegment, ServerZoneIpcType, SocialListRequestType, StatusEffect
 };
 use kawari::world::{
     ChatHandler, Zone, ZoneConnection,
@@ -344,6 +342,7 @@ async fn main() {
                                                         ),
                                                         look: chara_details.chara_make.customize,
                                                         fc_tag: "LOCAL".to_string(),
+                                                        display_flags: DisplayFlag::UNK,
                                                         models: [
                                                             0,  // head
                                                             89, // body
