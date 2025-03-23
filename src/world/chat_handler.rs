@@ -1,5 +1,5 @@
 use crate::{
-    common::{CustomizeData, INVALID_OBJECT_ID, Position, timestamp_secs},
+    common::{CustomizeData, INVALID_OBJECT_ID, ObjectId, ObjectTypeId, Position, timestamp_secs},
     config::get_config,
     packet::{PacketSegment, SegmentType},
     world::ipc::{
@@ -191,9 +191,11 @@ impl ChatHandler {
                                 spawn_index: connection.get_free_spawn_index(),
                                 bnpc_base: 13498,
                                 bnpc_name: 10261,
-                                spawner_id: connection.player_data.actor_id,
-                                parent_actor_id: INVALID_OBJECT_ID, // TODO: make default?
                                 object_kind: ObjectKind::BattleNpc,
+                                target_id: ObjectTypeId {
+                                    object_id: ObjectId(connection.player_data.actor_id),
+                                    object_type: 0,
+                                }, // target the player
                                 level: 1,
                                 models: [
                                     0,  // head
@@ -241,10 +243,7 @@ impl ChatHandler {
                                 spawn_index: connection.get_free_spawn_index(),
                                 bnpc_base: 13498, // TODO: changing this prevents it from spawning...
                                 bnpc_name: 405,
-                                spawner_id: connection.player_data.actor_id,
-                                parent_actor_id: INVALID_OBJECT_ID, // TODO: make default?
                                 object_kind: ObjectKind::BattleNpc,
-                                target_id: INVALID_OBJECT_ID as u64,
                                 level: 1,
                                 battalion: 4,
                                 model_chara: 297,

@@ -1,6 +1,9 @@
 use binrw::binrw;
 
-use crate::common::{CHAR_NAME_MAX_LENGTH, CustomizeData, Position, read_string, write_string};
+use crate::common::{
+    CHAR_NAME_MAX_LENGTH, CustomizeData, INVALID_OBJECT_ID, ObjectId, ObjectTypeId, Position,
+    read_string, write_string,
+};
 
 use super::StatusEffect;
 
@@ -58,7 +61,7 @@ pub struct CommonSpawn {
     pub u5b: u8,
     pub u5c: u8,
 
-    pub target_id: u64,
+    pub target_id: ObjectTypeId,
     pub u6: u32,
     pub u7: u32,
     pub main_weapon_model: u64,
@@ -73,8 +76,8 @@ pub struct CommonSpawn {
     pub bnpc_name: u32,
     pub unk3: [u8; 8],
     pub director_id: u32, // FIXME: i think the next three are in the wrong order
-    pub spawner_id: u32,
-    pub parent_actor_id: u32,
+    pub spawner_id: ObjectId,
+    pub parent_actor_id: ObjectId,
     pub hp_max: u32,
     pub hp_curr: u32,
     pub display_flags: u32, // assumed

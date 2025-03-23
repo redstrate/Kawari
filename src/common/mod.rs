@@ -4,6 +4,7 @@ use std::{
 };
 
 mod customize_data;
+use binrw::binrw;
 pub use customize_data::CustomizeData;
 use physis::{
     common::{Language, Platform},
@@ -17,8 +18,38 @@ pub mod custom_ipc;
 mod position;
 pub use position::Position;
 
+#[binrw]
+#[brw(little)]
+#[derive(Debug, Clone)]
+pub struct ObjectId(pub u32);
+
+impl Default for ObjectId {
+    fn default() -> Self {
+        INVALID_OBJECT_ID
+    }
+}
+
+// See https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Client/Game/Object/GameObject.cs#L158
+#[binrw]
+#[brw(little)]
+#[derive(Debug, Clone)]
+pub struct ObjectTypeId {
+    pub object_id: ObjectId,
+    #[brw(pad_after = 3)]
+    pub object_type: u8,
+}
+
+impl Default for ObjectTypeId {
+    fn default() -> Self {
+        Self {
+            object_id: INVALID_OBJECT_ID,
+            object_type: 0, // TODO: not sure if correct?
+        }
+    }
+}
+
 /// An invalid actor/object id.
-pub const INVALID_OBJECT_ID: u32 = 0xE0000000;
+pub const INVALID_OBJECT_ID: ObjectId = ObjectId(0xE0000000);
 
 /// Maxmimum length of a character's name.
 pub const CHAR_NAME_MAX_LENGTH: usize = 32;
