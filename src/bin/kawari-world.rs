@@ -17,7 +17,7 @@ use kawari::world::ipc::{
     StatusEffect,
 };
 use kawari::world::{
-    ChatHandler, Zone, ZoneConnection,
+    ChatHandler, Inventory, Zone, ZoneConnection,
     ipc::{
         ActorControl, ActorControlCategory, ActorControlSelf, PlayerEntry, PlayerSetup,
         PlayerSpawn, PlayerStats, SocialList,
@@ -63,6 +63,7 @@ async fn main() {
             spawn_index: 0,
             zone: None,
             position: Position::default(),
+            inventory: Inventory::new(),
         };
 
         tokio::spawn(async move {
@@ -84,8 +85,6 @@ async fn main() {
                                 // collect actor data
                                 connection.player_data =
                                     database.find_player_data(actor_id.parse::<u32>().unwrap());
-
-                                println!("player data: {:#?}", connection.player_data);
 
                                 // We have send THEM a keep alive
                                 {
@@ -189,75 +188,16 @@ async fn main() {
                                                 .await;
                                         }
 
-                                        let item_ids = [
-                                            (12, 0x00003b1d),
-                                            (11, 0x0000114a),
-                                            (10, 0x00003b1c),
-                                            (9, 0x00003b1a),
-                                            (8, 0x00003b1b),
-                                            (7, 0x00000ea7),
-                                            (6, 0x00000ce1),
-                                            (4, 0x00000dc1),
-                                            (3, 0x00000ba8),
-                                            (0, 0x00000641),
-                                        ];
+                                        let chara_details = database
+                                            .find_chara_make(connection.player_data.content_id);
 
-                                        // send inventory
-                                        {
-                                            for (slot, id) in &item_ids {
-                                                let ipc = ServerZoneIpcSegment {
-                                                    op_code: ServerZoneIpcType::ItemInfo,
-                                                    timestamp: timestamp_secs(),
-                                                    data: ServerZoneIpcData::ItemInfo(ItemInfo {
-                                                        container: ContainerType::Equipped,
-                                                        slot: *slot,
-                                                        quantity: 1,
-                                                        catalog_id: *id,
-                                                        condition: 30000,
-                                                        ..Default::default()
-                                                    }),
-                                                    ..Default::default()
-                                                };
+                                        // fill inventory
+                                        connection.inventory.equip_racial_items(
+                                            chara_details.chara_make.customize.race,
+                                        );
 
-                                                connection
-                                                    .send_segment(PacketSegment {
-                                                        source_actor: connection
-                                                            .player_data
-                                                            .actor_id,
-                                                        target_actor: connection
-                                                            .player_data
-                                                            .actor_id,
-                                                        segment_type: SegmentType::Ipc {
-                                                            data: ipc,
-                                                        },
-                                                    })
-                                                    .await;
-                                            }
-                                        }
-
-                                        // inform the client they have 10 items equipped
-                                        {
-                                            let ipc = ServerZoneIpcSegment {
-                                                op_code: ServerZoneIpcType::ContainerInfo,
-                                                timestamp: timestamp_secs(),
-                                                data: ServerZoneIpcData::ContainerInfo(
-                                                    ContainerInfo {
-                                                        container: ContainerType::Equipped,
-                                                        num_items: item_ids.len() as u32,
-                                                        ..Default::default()
-                                                    },
-                                                ),
-                                                ..Default::default()
-                                            };
-
-                                            connection
-                                                .send_segment(PacketSegment {
-                                                    source_actor: connection.player_data.actor_id,
-                                                    target_actor: connection.player_data.actor_id,
-                                                    segment_type: SegmentType::Ipc { data: ipc },
-                                                })
-                                                .await;
-                                        }
+                                        // Send inventory
+                                        connection.send_inventory().await;
 
                                         // Control Data
                                         {
@@ -308,11 +248,7 @@ async fn main() {
                                                 .await;
                                         }
 
-                                        let chara_details = database
-                                            .find_chara_make(connection.player_data.content_id);
-
                                         let zone_id = chara_details.zone_id;
-
                                         connection.zone = Some(Zone::load(zone_id));
 
                                         // Player Setup

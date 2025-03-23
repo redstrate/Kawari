@@ -11,3 +11,6 @@ pub use connection::{PlayerData, ZoneConnection};
 
 mod database;
 pub use database::{CharacterData, WorldDatabase};
+
+mod inventory;
+pub use inventory::{EquippedContainer, Inventory, Item};
