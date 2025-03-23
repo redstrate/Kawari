@@ -93,6 +93,7 @@ pub enum OnlineStatus {
     GameMaster = 2,
     GameMasterBlue = 3,
     EventParticipant = 4,
+    NewAdventurer = 32, // TODO: This is actually a flag!
     #[default]
     Online = 47,
 }

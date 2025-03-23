@@ -23,11 +23,8 @@ pub use player_setup::PlayerSetup;
 mod player_stats;
 pub use player_stats::PlayerStats;
 
-mod actor_control_self;
-pub use actor_control_self::ActorControlSelf;
-
 mod actor_control;
-pub use actor_control::{ActorControl, ActorControlCategory};
+pub use actor_control::{ActorControl, ActorControlCategory, ActorControlSelf};
 
 mod init_zone;
 pub use init_zone::InitZone;
@@ -138,6 +135,7 @@ pub struct ActorSetPos {
 #[derive(Clone, PartialEq, Debug)]
 pub enum GameMasterCommandType {
     ChangeWeather = 0x6,
+    ToggleInvisibility = 0xD,
     ChangeTerritory = 0x58,
 }
 
@@ -184,7 +182,7 @@ pub enum ServerZoneIpcType {
     // Sent by the server
     ActorControl = 0x38E,
     // Sent by the server
-    ActorMove = 0x3D8,
+    ActorMove = 0x31C,
     // Sent by the server
     Unk17 = 0x2A1,
     // Sent by the server in response to SocialListRequest
@@ -474,6 +472,10 @@ mod tests {
             (
                 ServerZoneIpcType::WeatherChange,
                 ServerZoneIpcData::WeatherChange(WeatherChange::default()),
+            ),
+            (
+                ServerZoneIpcType::ActorControl,
+                ServerZoneIpcData::ActorControl(ActorControl::default()),
             ),
         ];
 

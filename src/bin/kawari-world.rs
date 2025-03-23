@@ -11,13 +11,15 @@ use kawari::packet::{
     send_packet,
 };
 use kawari::world::ipc::{
-    ClientZoneIpcData, CommonSpawn, DisplayFlag, GameMasterCommandType, GameMasterRank, ObjectKind, OnlineStatus, PlayerSubKind, ServerZoneIpcData, ServerZoneIpcSegment, ServerZoneIpcType, SocialListRequestType, StatusEffect
+    ClientZoneIpcData, CommonSpawn, DisplayFlag, GameMasterCommandType, GameMasterRank, ObjectKind,
+    OnlineStatus, PlayerSubKind, ServerZoneIpcData, ServerZoneIpcSegment, ServerZoneIpcType,
+    SocialListRequestType, StatusEffect,
 };
 use kawari::world::{
     ChatHandler, Zone, ZoneConnection,
     ipc::{
-        ActorControlCategory, ActorControlSelf, PlayerEntry, PlayerSetup, PlayerSpawn, PlayerStats,
-        SocialList,
+        ActorControl, ActorControlCategory, ActorControlSelf, PlayerEntry, PlayerSetup,
+        PlayerSpawn, PlayerStats, SocialList,
     },
 };
 use kawari::world::{PlayerData, WorldDatabase};
@@ -194,13 +196,10 @@ async fn main() {
                                                 data: ServerZoneIpcData::ActorControlSelf(
                                                     ActorControlSelf {
                                                         category:
-                                                            ActorControlCategory::SetCharaGearParamUI,
-                                                        param1: 1,
-                                                        param2: 1,
-                                                        param3: 0,
-                                                        param4: 0,
-                                                        param5: 0,
-                                                        param6: 0,
+                                                            ActorControlCategory::SetCharaGearParamUI {
+                                                        unk1: 1,
+                                                        unk2: 1,
+                                                            }
                                                     },
                                                 ),
                                                 ..Default::default()
@@ -570,6 +569,38 @@ async fn main() {
                                             }
                                             GameMasterCommandType::ChangeTerritory => {
                                                 connection.change_zone(*arg as u16).await
+                                            }
+                                            GameMasterCommandType::ToggleInvisibility => {
+                                                // Control Data
+                                                {
+                                                    let ipc = ServerZoneIpcSegment {
+                                                        op_code: ServerZoneIpcType::ActorControlSelf,
+                                                        timestamp: timestamp_secs(),
+                                                        data: ServerZoneIpcData::ActorControlSelf(
+                                                            ActorControlSelf {
+                                                                category:
+                                                                ActorControlCategory::ToggleInvisibility {
+                                                                    invisible: 1
+                                                                },
+                                                            },
+                                                        ),
+                                                        ..Default::default()
+                                                    };
+
+                                                    connection
+                                                        .send_segment(PacketSegment {
+                                                            source_actor: connection
+                                                                .player_data
+                                                                .actor_id,
+                                                            target_actor: connection
+                                                                .player_data
+                                                                .actor_id,
+                                                            segment_type: SegmentType::Ipc {
+                                                                data: ipc,
+                                                            },
+                                                        })
+                                                        .await;
+                                                }
                                             }
                                         }
                                     }
