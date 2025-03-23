@@ -34,39 +34,39 @@ codegen-units = 1
 panic = "abort"
 
 [features]
-default = ["oodle"]
+default = []
 oodle = []
 
 [dependencies]
 # Used for the web servers
-axum = { version = "0.6", features = ["json", "tokio", "http1", "form", "query", "headers"], default-features = false }
+axum = { version = "0.8", features = ["json", "tokio", "http1", "form", "query"], default-features = false }
 
 # Serialization used in almost every server
 serde = { version = "1.0", features = ["derive"], default-features = false }
 serde_json = { version = "1.0", default-features = false }
-serde_yaml_ng = "0.10"
+serde_yaml_ng = { version = "0.10", default-features = false }
 
 # Async runtime
-tokio = { version = "1.37", features = ["macros", "rt", "rt-multi-thread", "io-util"], default-features = false }
+tokio = { version = "1.44", features = ["macros", "rt", "rt-multi-thread", "io-util"], default-features = false }
 
 # Logging
 tracing = { version = "0.1", default-features = false }
 tracing-subscriber = { version = "0.3", features = ["fmt"], default-features = false }
 
 # Used currently for SID generation
-rand = "0.8"
+rand = { version = "0.9", features = ["std", "thread_rng"], default-features = false }
 
 # HTML templates used in the web servers
-minijinja = "2.0"
+minijinja = { version = "2.8", features = ["serde"], default-features = false }
 
 # Serialization of packets
 binrw = { version = "0.14", features = ["std"], default-features = false }
 
 # Used in encryption of packets
-md5 = "0.7.0"
+md5 = { version = "0.7", default-features = false }
 
 # Used to access game data
 physis = { git = "https://github.com/redstrate/physis" }
 
 # Used for data persistence
-rusqlite = { version = "0.34.0", features = ["bundled"] }
+rusqlite = { version = "0.34", features = ["bundled"], default-features = false }

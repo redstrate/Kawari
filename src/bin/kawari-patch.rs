@@ -135,8 +135,6 @@ async fn main() {
 
     let addr = config.patch.get_socketaddr();
     tracing::info!("Patch server started on {addr}");
-    axum::Server::bind(&addr)
-        .serve(app.into_make_service())
-        .await
-        .unwrap();
+    let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
+    axum::serve(listener, app).await.unwrap();
 }

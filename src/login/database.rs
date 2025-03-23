@@ -1,7 +1,7 @@
 use std::sync::Mutex;
 
 use rand::Rng;
-use rand::distributions::Alphanumeric;
+use rand::distr::Alphanumeric;
 use rusqlite::Connection;
 
 pub struct LoginDatabase {
@@ -78,7 +78,7 @@ impl LoginDatabase {
     }
 
     fn generate_sid() -> String {
-        let random_id: String = rand::thread_rng()
+        let random_id: String = rand::rng()
             .sample_iter(&Alphanumeric)
             .take(56)
             .map(char::from)
