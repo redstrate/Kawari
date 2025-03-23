@@ -12,7 +12,7 @@ Kawari is designed to be easy to run, with the goal of being accessible to anyon
 
 * Windows or Linux
 * Copy of the game updated to the supported game version (see README)
-* Oodle Network Compression (can be obtained from [here](https://github.com/WorkingRobot/OodleUE)
+* Oodle Network Compression (can be obtained from [here](https://github.com/WorkingRobot/OodleUE))
 
 ## Download Artifact
 
