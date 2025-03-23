@@ -32,6 +32,9 @@ pub mod login;
 /// Patch server-specific code.
 pub mod patch;
 
+/// Used in the encryption key.
+const GAME_VERSION: u16 = 7000;
+
 /// Supported boot version.
 pub const SUPPORTED_BOOT_VERSION: Version = Version("2025.01.10.0000.0001");
 

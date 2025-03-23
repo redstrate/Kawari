@@ -2,11 +2,9 @@ use std::io::Cursor;
 
 use binrw::BinResult;
 
-use crate::blowfish::Blowfish;
+use crate::{GAME_VERSION, blowfish::Blowfish};
 
 use super::ReadWriteIpcSegment;
-
-const GAME_VERSION: u16 = 7000;
 
 pub fn generate_encryption_key(key: &[u8], phrase: &str) -> [u8; 16] {
     let mut base_key = vec![0x78, 0x56, 0x34, 0x12];
