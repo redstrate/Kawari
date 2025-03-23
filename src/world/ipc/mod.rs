@@ -108,6 +108,8 @@ impl ReadWriteIpcSegment for ServerZoneIpcSegment {
             ServerZoneIpcType::NpcSpawn => 648,
             ServerZoneIpcType::StatusEffectList => 384,
             ServerZoneIpcType::WeatherChange => 8,
+            ServerZoneIpcType::ItemInfo => 64,
+            ServerZoneIpcType::ContainerInfo => 16,
         }
     }
 }
@@ -199,6 +201,10 @@ pub enum ServerZoneIpcType {
     StatusEffectList = 0xBB,
     // Sent by the server when it's time to change the weather
     WeatherChange = 0x110,
+    // Sent to inform the client of an inventory item
+    ItemInfo = 0x3AA,
+    // Sent to inform the client of container status
+    ContainerInfo = 0x2EA,
 }
 
 #[binrw]
@@ -315,6 +321,8 @@ pub enum ServerZoneIpcData {
     NpcSpawn(NpcSpawn),
     StatusEffectList(StatusEffectList),
     WeatherChange(WeatherChange),
+    ItemInfo(ItemInfo),
+    ContainerInfo(ContainerInfo),
 }
 
 #[binrw]
@@ -482,6 +490,14 @@ mod tests {
             (
                 ServerZoneIpcType::ActorControl,
                 ServerZoneIpcData::ActorControl(ActorControl::default()),
+            ),
+            (
+                ServerZoneIpcType::ItemInfo,
+                ServerZoneIpcData::ItemInfo(ItemInfo::default()),
+            ),
+            (
+                ServerZoneIpcType::ContainerInfo,
+                ServerZoneIpcData::ContainerInfo(ContainerInfo::default()),
             ),
         ];
 

@@ -11,9 +11,10 @@ use kawari::packet::{
     send_packet,
 };
 use kawari::world::ipc::{
-    ClientZoneIpcData, CommonSpawn, DisplayFlag, GameMasterCommandType, GameMasterRank, ObjectKind,
-    OnlineStatus, PlayerSubKind, ServerZoneIpcData, ServerZoneIpcSegment, ServerZoneIpcType,
-    SocialListRequestType, StatusEffect,
+    ClientZoneIpcData, CommonSpawn, ContainerInfo, ContainerType, DisplayFlag,
+    GameMasterCommandType, GameMasterRank, ItemInfo, ObjectKind, OnlineStatus, PlayerSubKind,
+    ServerZoneIpcData, ServerZoneIpcSegment, ServerZoneIpcType, SocialListRequestType,
+    StatusEffect,
 };
 use kawari::world::{
     ChatHandler, Zone, ZoneConnection,
@@ -176,6 +177,76 @@ async fn main() {
                                                     character_id: connection.player_data.actor_id,
                                                     unk2: 0,
                                                 },
+                                                ..Default::default()
+                                            };
+
+                                            connection
+                                                .send_segment(PacketSegment {
+                                                    source_actor: connection.player_data.actor_id,
+                                                    target_actor: connection.player_data.actor_id,
+                                                    segment_type: SegmentType::Ipc { data: ipc },
+                                                })
+                                                .await;
+                                        }
+
+                                        let item_ids = [
+                                            (12, 0x00003b1d),
+                                            (11, 0x0000114a),
+                                            (10, 0x00003b1c),
+                                            (9, 0x00003b1a),
+                                            (8, 0x00003b1b),
+                                            (7, 0x00000ea7),
+                                            (6, 0x00000ce1),
+                                            (4, 0x00000dc1),
+                                            (3, 0x00000ba8),
+                                            (0, 0x00000641),
+                                        ];
+
+                                        // send inventory
+                                        {
+                                            for (slot, id) in &item_ids {
+                                                let ipc = ServerZoneIpcSegment {
+                                                    op_code: ServerZoneIpcType::ItemInfo,
+                                                    timestamp: timestamp_secs(),
+                                                    data: ServerZoneIpcData::ItemInfo(ItemInfo {
+                                                        container: ContainerType::Equipped,
+                                                        slot: *slot,
+                                                        quantity: 1,
+                                                        catalog_id: *id,
+                                                        condition: 30000,
+                                                        ..Default::default()
+                                                    }),
+                                                    ..Default::default()
+                                                };
+
+                                                connection
+                                                    .send_segment(PacketSegment {
+                                                        source_actor: connection
+                                                            .player_data
+                                                            .actor_id,
+                                                        target_actor: connection
+                                                            .player_data
+                                                            .actor_id,
+                                                        segment_type: SegmentType::Ipc {
+                                                            data: ipc,
+                                                        },
+                                                    })
+                                                    .await;
+                                            }
+                                        }
+
+                                        // inform the client they have 10 items equipped
+                                        {
+                                            let ipc = ServerZoneIpcSegment {
+                                                op_code: ServerZoneIpcType::ContainerInfo,
+                                                timestamp: timestamp_secs(),
+                                                data: ServerZoneIpcData::ContainerInfo(
+                                                    ContainerInfo {
+                                                        container: ContainerType::Equipped,
+                                                        num_items: item_ids.len() as u32,
+                                                        ..Default::default()
+                                                    },
+                                                ),
                                                 ..Default::default()
                                             };
 
