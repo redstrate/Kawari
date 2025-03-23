@@ -1,7 +1,7 @@
 use tokio::net::TcpStream;
 
 use crate::{
-    common::timestamp_secs,
+    common::{Position, timestamp_secs},
     packet::{
         CompressionType, ConnectionType, PacketSegment, PacketState, SegmentType, parse_packet,
         send_packet,
@@ -11,8 +11,8 @@ use crate::{
 use super::{
     Zone,
     ipc::{
-        ActorSetPos, ClientZoneIpcSegment, InitZone, Position, ServerZoneIpcData,
-        ServerZoneIpcSegment, ServerZoneIpcType, UpdateClassInfo, WeatherChange,
+        ActorSetPos, ClientZoneIpcSegment, InitZone, ServerZoneIpcData, ServerZoneIpcSegment,
+        ServerZoneIpcType, UpdateClassInfo, WeatherChange,
     },
 };
 

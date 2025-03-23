@@ -1,5 +1,5 @@
 use crate::{
-    common::{CustomizeData, INVALID_OBJECT_ID, timestamp_secs},
+    common::{CustomizeData, INVALID_OBJECT_ID, Position, timestamp_secs},
     config::get_config,
     packet::{PacketSegment, SegmentType},
     world::ipc::{
@@ -8,10 +8,7 @@ use crate::{
     },
 };
 
-use super::{
-    ZoneConnection,
-    ipc::{ChatMessage, Position},
-};
+use super::{ZoneConnection, ipc::ChatMessage};
 
 pub const CUSTOMIZE_DATA: CustomizeData = CustomizeData {
     race: 4,

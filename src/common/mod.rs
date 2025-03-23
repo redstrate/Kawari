@@ -14,6 +14,9 @@ use crate::config::get_config;
 
 pub mod custom_ipc;
 
+mod position;
+pub use position::Position;
+
 /// An invalid actor/object id.
 pub const INVALID_OBJECT_ID: u32 = 0xE0000000;
 

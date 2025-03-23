@@ -11,9 +11,6 @@ pub use social_list::SocialListRequestType;
 mod player_spawn;
 pub use player_spawn::PlayerSpawn;
 
-mod position;
-pub use position::Position;
-
 mod status_effect;
 pub use status_effect::StatusEffect;
 
@@ -50,6 +47,7 @@ pub use weather_change::WeatherChange;
 mod action_request;
 pub use action_request::ActionRequest;
 
+use crate::common::Position;
 use crate::common::read_string;
 use crate::common::write_string;
 use crate::packet::IpcSegment;

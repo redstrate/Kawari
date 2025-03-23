@@ -1,9 +1,8 @@
 use binrw::binrw;
 
-use crate::common::{CHAR_NAME_MAX_LENGTH, CustomizeData, read_string, write_string};
+use crate::common::{CHAR_NAME_MAX_LENGTH, CustomizeData, Position, read_string, write_string};
 
 use super::StatusEffect;
-use super::position::Position;
 
 #[binrw]
 #[brw(repr = u8)]

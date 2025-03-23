@@ -2,9 +2,12 @@ use std::sync::Mutex;
 
 use rusqlite::Connection;
 
-use crate::lobby::{CharaMake, ClientSelectData, ipc::CharacterDetails};
+use crate::{
+    common::Position,
+    lobby::{CharaMake, ClientSelectData, ipc::CharacterDetails},
+};
 
-use super::{PlayerData, ipc::Position};
+use super::PlayerData;
 
 pub struct WorldDatabase {
     connection: Mutex<Connection>,
