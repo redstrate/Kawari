@@ -12,7 +12,7 @@ use kawari::packet::{
 };
 use kawari::world::ipc::{
     ClientZoneIpcData, CommonSpawn, GameMasterCommandType, GameMasterRank, ObjectKind,
-    OnlineStatus, ServerZoneIpcData, ServerZoneIpcSegment, ServerZoneIpcType,
+    OnlineStatus, PlayerSubKind, ServerZoneIpcData, ServerZoneIpcSegment, ServerZoneIpcType,
     SocialListRequestType, StatusEffect,
 };
 use kawari::world::{
@@ -326,22 +326,24 @@ async fn main() {
                                                 op_code: ServerZoneIpcType::PlayerSpawn,
                                                 timestamp: timestamp_secs(),
                                                 data: ServerZoneIpcData::PlayerSpawn(PlayerSpawn {
+                                                    account_id: connection.player_data.account_id,
                                                     content_id: connection.player_data.content_id,
+                                                    current_world_id: config.world.world_id,
+                                                    home_world_id: config.world.world_id,
+                                                    gm_rank: GameMasterRank::Debug,
+                                                    online_status: OnlineStatus::GameMasterBlue,
                                                     common: CommonSpawn {
-                                                        current_world_id: config.world.world_id,
-                                                        home_world_id: config.world.world_id,
                                                         class_job: 35,
                                                         name: chara_details.name,
                                                         hp_curr: 100,
                                                         hp_max: 100,
                                                         mp_curr: 100,
                                                         mp_max: 100,
-                                                        object_kind: ObjectKind::Player,
-                                                        gm_rank: GameMasterRank::Debug,
-                                                        online_status: OnlineStatus::GameMasterBlue,
+                                                        object_kind: ObjectKind::Player(
+                                                            PlayerSubKind::Player,
+                                                        ),
                                                         look: chara_details.chara_make.customize,
                                                         fc_tag: "LOCAL".to_string(),
-                                                        subtype: 4,
                                                         models: [
                                                             0,  // head
                                                             89, // body

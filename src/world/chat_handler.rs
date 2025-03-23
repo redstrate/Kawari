@@ -3,8 +3,9 @@ use crate::{
     config::get_config,
     packet::{PacketSegment, SegmentType},
     world::ipc::{
-        ActorControl, ActorControlCategory, CommonSpawn, NpcSpawn, ObjectKind, PlayerSpawn,
-        ServerZoneIpcData, ServerZoneIpcSegment, ServerZoneIpcType, StatusEffectList,
+        ActorControl, ActorControlCategory, BattleNpcSubKind, CommonSpawn, NpcSpawn, ObjectKind,
+        PlayerSpawn, PlayerSubKind, ServerZoneIpcData, ServerZoneIpcSegment, ServerZoneIpcType,
+        StatusEffectList,
     },
 };
 
@@ -103,22 +104,21 @@ impl ChatHandler {
                         server_id: 0,
                         timestamp: timestamp_secs(),
                         data: ServerZoneIpcData::PlayerSpawn(PlayerSpawn {
-                            some_unique_id: 1,
+                            account_id: 1,
                             content_id: 1,
+                            current_world_id: config.world.world_id,
+                            home_world_id: config.world.world_id,
                             common: CommonSpawn {
-                                current_world_id: config.world.world_id,
-                                home_world_id: config.world.world_id,
                                 class_job: 35,
                                 name: "Test Actor".to_string(),
                                 hp_curr: 100,
                                 hp_max: 100,
                                 mp_curr: 100,
                                 mp_max: 100,
-                                object_kind: ObjectKind::Player,
+                                object_kind: ObjectKind::Player(PlayerSubKind::Player),
                                 spawn_index: connection.get_free_spawn_index(),
                                 look: CUSTOMIZE_DATA,
                                 fc_tag: "LOCAL".to_string(),
-                                subtype: 4,
                                 models: [
                                     0,  // head
                                     89, // body
@@ -189,7 +189,7 @@ impl ChatHandler {
                                 spawn_index: connection.get_free_spawn_index(),
                                 bnpc_base: 13498,
                                 bnpc_name: 10261,
-                                object_kind: ObjectKind::BattleNpc,
+                                object_kind: ObjectKind::BattleNpc(BattleNpcSubKind::Enemy),
                                 target_id: ObjectTypeId {
                                     object_id: ObjectId(connection.player_data.actor_id),
                                     object_type: 0,
@@ -233,6 +233,7 @@ impl ChatHandler {
                         server_id: 0,
                         timestamp: timestamp_secs(),
                         data: ServerZoneIpcData::NpcSpawn(NpcSpawn {
+                            aggression_mode: 1,
                             common: CommonSpawn {
                                 hp_curr: 91,
                                 hp_max: 91,
@@ -241,7 +242,7 @@ impl ChatHandler {
                                 spawn_index: connection.get_free_spawn_index(),
                                 bnpc_base: 13498, // TODO: changing this prevents it from spawning...
                                 bnpc_name: 405,
-                                object_kind: ObjectKind::BattleNpc,
+                                object_kind: ObjectKind::BattleNpc(BattleNpcSubKind::Enemy),
                                 level: 1,
                                 battalion: 4,
                                 model_chara: 297,

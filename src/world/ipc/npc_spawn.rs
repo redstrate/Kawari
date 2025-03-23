@@ -1,11 +1,24 @@
 use binrw::binrw;
 
-use super::CommonSpawn;
+use super::{CommonSpawn, GameMasterRank, OnlineStatus};
 
 #[binrw]
 #[brw(little)]
 #[derive(Debug, Clone, Default)]
 pub struct NpcSpawn {
+    pub gimmick_id: u32,
+    pub u1b: u8,
+    pub u2b: u8,
+    pub gm_rank: GameMasterRank, // lol really? what does an NPC need GM rank privileges for?
+    pub u3b: u8,
+
+    pub aggression_mode: u8,
+    pub online_status: OnlineStatus,
+    pub u5a: u8,
+    pub pose: u8,
+
+    pub u5b: u32,
+
     pub common: CommonSpawn,
     pub padding: [u8; 10],
 }
@@ -18,7 +31,7 @@ mod tests {
 
     use crate::{
         common::INVALID_OBJECT_ID,
-        world::ipc::{CharacterMode, ObjectKind, OnlineStatus},
+        world::ipc::{BattleNpcSubKind, CharacterMode, ObjectKind, OnlineStatus},
     };
 
     use super::*;
@@ -45,10 +58,13 @@ mod tests {
         assert_eq!(npc_spawn.common.bnpc_name, 10261);
         assert_eq!(npc_spawn.common.spawn_index, 56);
         assert_eq!(npc_spawn.common.mode, CharacterMode::Normal);
-        assert_eq!(npc_spawn.common.object_kind, ObjectKind::BattleNpc);
-        assert_eq!(npc_spawn.common.subtype, 2);
+        assert_eq!(
+            npc_spawn.common.object_kind,
+            ObjectKind::BattleNpc(BattleNpcSubKind::Pet)
+        );
         assert_eq!(npc_spawn.common.battalion, 0);
-        assert_eq!(npc_spawn.common.online_status, OnlineStatus::Offline); // TODO: why is this guy offline?
+        assert_eq!(npc_spawn.aggression_mode, 1); // passive
+        assert_eq!(npc_spawn.online_status, OnlineStatus::Offline);
     }
 
     #[test]
@@ -73,11 +89,14 @@ mod tests {
         assert_eq!(npc_spawn.common.bnpc_name, 405);
         assert_eq!(npc_spawn.common.spawn_index, 14);
         assert_eq!(npc_spawn.common.mode, CharacterMode::Normal);
-        assert_eq!(npc_spawn.common.object_kind, ObjectKind::BattleNpc);
-        assert_eq!(npc_spawn.common.subtype, 5);
+        assert_eq!(
+            npc_spawn.common.object_kind,
+            ObjectKind::BattleNpc(BattleNpcSubKind::Enemy)
+        );
         assert_eq!(npc_spawn.common.battalion, 4);
         assert_eq!(npc_spawn.common.parent_actor_id, INVALID_OBJECT_ID);
         assert_eq!(npc_spawn.common.spawner_id, INVALID_OBJECT_ID);
-        assert_eq!(npc_spawn.common.online_status, OnlineStatus::EventParticipant);
+        assert_eq!(npc_spawn.aggression_mode, 1); // passive
+        assert_eq!(npc_spawn.online_status, OnlineStatus::Offline);
     }
 }

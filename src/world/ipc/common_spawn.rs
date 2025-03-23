@@ -10,25 +10,63 @@ use super::StatusEffect;
 #[binrw]
 #[brw(repr = u8)]
 #[derive(Clone, PartialEq, Debug, Default)]
-pub enum ObjectKind {
+pub enum PlayerSubKind {
+    #[default]
+    Player = 4,
+}
+
+// See https://github.com/Caraxi/Dalamud/blob/e6017f96c09b8cde20e02371914ec25cfa989ef7/Dalamud/Game/ClientState/Objects/Enums/BattleNpcSubKind.cs#L6
+#[binrw]
+#[brw(repr = u8)]
+#[derive(Clone, PartialEq, Debug, Default)]
+pub enum BattleNpcSubKind {
     #[default]
     None = 0,
-    Player = 1,
-    BattleNpc = 2,
-    EventNpc = 3,
-    Treasure = 4,
-    Aetheryte = 5,
-    GatheringPoint = 6,
-    EventObj = 7,
-    Mount = 8,
-    Companion = 9,
-    Retainer = 10,
-    AreaObject = 11,
-    HousingEventObject = 12,
-    Cutscene = 13,
-    MjiObject = 14,
-    Ornament = 15,
-    CardStand = 16,
+    Part = 1,
+    Pet = 2,
+    Chocobo = 3,
+    Enemy = 5,
+    NpcPartyMember = 9,
+}
+
+#[binrw]
+#[derive(Clone, PartialEq, Debug, Default)]
+pub enum ObjectKind {
+    #[default]
+    #[brw(magic = 0u8)]
+    None,
+    #[brw(magic = 1u8)]
+    Player(PlayerSubKind),
+    #[brw(magic = 2u8)]
+    BattleNpc(BattleNpcSubKind),
+    #[brw(magic = 3u8)]
+    EventNpc,
+    #[brw(magic = 4u8)]
+    Treasure,
+    #[brw(magic = 5u8)]
+    Aetheryte,
+    #[brw(magic = 6u8)]
+    GatheringPoint,
+    #[brw(magic = 7u8)]
+    EventObj,
+    #[brw(magic = 8u8)]
+    Mount,
+    #[brw(magic = 9u8)]
+    Companion,
+    #[brw(magic = 10u8)]
+    Retainer,
+    #[brw(magic = 11u8)]
+    AreaObject,
+    #[brw(magic = 12u8)]
+    HousingEventObject,
+    #[brw(magic = 13u8)]
+    Cutscene,
+    #[brw(magic = 14u8)]
+    MjiObject,
+    #[brw(magic = 15u8)]
+    Ornament,
+    #[brw(magic = 16u8)]
+    CardStand,
 }
 
 #[binrw]
@@ -52,7 +90,7 @@ pub enum OnlineStatus {
     GameQA = 1,
     GameMaster = 2,
     GameMasterBlue = 3,
-    EventParticipant = 4, // used by NPCs?
+    EventParticipant = 4,
     #[default]
     Online = 47,
 }
@@ -78,22 +116,6 @@ pub enum GameMasterRank {
 #[brw(little)]
 #[derive(Debug, Clone, Default)]
 pub struct CommonSpawn {
-    /// See Title Excel sheet
-    pub title_id: u16,
-    pub u1b: u16,
-    pub current_world_id: u16,
-    pub home_world_id: u16,
-
-    pub gm_rank: GameMasterRank,
-    pub u3c: u8,
-    pub u4: u8,
-    pub online_status: OnlineStatus,
-
-    pub pose: u8,
-    pub u5a: u8,
-    pub u5b: u8,
-    pub u5c: u8,
-
     pub target_id: ObjectTypeId,
     pub u6: u32,
     pub u7: u32,
@@ -133,8 +155,8 @@ pub struct CommonSpawn {
     /// Argument used in CharacterMode.
     // TODO: move to enum
     pub persistent_emote: u8,
+    #[brw(pad_size_to = 2)] // for kinds that don't have a param
     pub object_kind: ObjectKind,
-    pub subtype: u8,
     pub voice: u8,
     pub unk27: u8,
     /// See Battalion Excel sheet. Used for determing whether it's friendy or an enemy.
