@@ -18,7 +18,7 @@ async fn root() -> Html<String> {
 
     let environment = setup_default_environment();
     let template = environment.get_template("admin.html").unwrap();
-    Html(template.render(context! { worlds_open => config.frontier.worlds_open, login_open => config.frontier.login_open, boot_patch_location => config.boot_patches_location }).unwrap())
+    Html(template.render(context! { worlds_open => config.frontier.worlds_open, login_open => config.frontier.login_open, boot_patch_location => config.patch.patches_location }).unwrap())
 }
 
 #[derive(Deserialize, Debug)]
@@ -47,7 +47,7 @@ async fn apply(Form(input): Form<Input>) -> Redirect {
     }
 
     if let Some(boot_patch_location) = input.boot_patch_location {
-        config.boot_patches_location = boot_patch_location;
+        config.patch.patches_location = boot_patch_location;
     }
 
     serde_yaml_ng::to_writer(&std::fs::File::create("config.yaml").unwrap(), &config)

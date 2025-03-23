@@ -118,6 +118,17 @@ impl LoginConfig {
 pub struct PatchConfig {
     pub port: u16,
     pub listen_address: String,
+    /// Publicly accessible URL to download patches from.
+    /// For example, "patch-dl.ffxiv.localhost". Patch files must be served so they're accessible as: "http://patch-dl.ffxiv.localhost/game/ex4/somepatchfilename.patch"
+    pub patch_dl_url: String,
+    /// Location of the patches directory on disk. Must be setup like so:
+    /// ```
+    /// <channel> (e.g. ffxivneo_release_game) /
+    ///     game/
+    ///     ex1/
+    /// ...
+    /// ```
+    pub patches_location: String,
 }
 
 impl Default for PatchConfig {
@@ -125,6 +136,8 @@ impl Default for PatchConfig {
         Self {
             port: 6900,
             listen_address: "127.0.0.1".to_string(),
+            patch_dl_url: "patch-dl.ffxiv.localhost".to_string(),
+            patches_location: String::new(),
         }
     }
 }
@@ -202,9 +215,6 @@ pub struct Config {
     pub supported_platforms: Vec<String>,
 
     #[serde(default)]
-    pub boot_patches_location: String,
-
-    #[serde(default)]
     pub game_location: String,
 
     #[serde(default)]
@@ -232,7 +242,6 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Self {
         Self {
-            boot_patches_location: String::new(),
             supported_platforms: default_supported_platforms(),
             game_location: String::new(),
             admin: AdminConfig::default(),

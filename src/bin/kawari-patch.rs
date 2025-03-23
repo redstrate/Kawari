@@ -108,7 +108,7 @@ async fn verify_boot(
     let actual_boot_version = boot_version.split("?time").collect::<Vec<&str>>()[0];
 
     // check if we need any patching
-    let patches = list_patch_files(&config.boot_patches_location);
+    let patches = list_patch_files(&config.patch.patches_location);
     for patch in patches {
         let patch_str: &str = &patch;
         if actual_boot_version.partial_cmp(patch_str).unwrap() == Ordering::Less {
@@ -119,7 +119,7 @@ async fn verify_boot(
                 patch_length: todo!(),
                 content_location: todo!(),
                 patches: vec![PatchEntry {
-                    url: format!("http://{}", patch).to_string(),
+                    url: format!("http://{}/{}", config.patch.patch_dl_url, patch).to_string(),
                     version: "2023.09.15.0000.0000".to_string(),
                     hash_block_size: 50000000,
                     length: 1479062470,
