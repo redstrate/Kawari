@@ -2,11 +2,25 @@ use binrw::binrw;
 
 #[binrw]
 #[brw(little)]
+#[brw(repr = u16)]
+#[derive(Debug, Clone, Default, PartialEq)]
+pub enum ContainerType {
+    #[default]
+    Inventory0 = 0,
+    Inventory1 = 1,
+    Inventory2 = 2,
+    Inventory3 = 3,
+    Equipped = 1000,
+}
+
+#[binrw]
+#[brw(little)]
 #[derive(Debug, Clone, Default)]
 pub struct ContainerInfo {
     pub sequence: u32,
     pub num_items: u32,
-    pub container_id: u32,
+    #[brw(pad_after = 2)] // not used
+    pub container: ContainerType,
     pub start_or_finish: u32,
 }
 
@@ -29,7 +43,7 @@ mod tests {
         let container_info = ContainerInfo::read_le(&mut buffer).unwrap();
         assert_eq!(container_info.sequence, 1);
         assert_eq!(container_info.num_items, 0);
-        assert_eq!(container_info.container_id, 1);
+        assert_eq!(container_info.container, ContainerType::Inventory1);
         assert_eq!(container_info.start_or_finish, 0);
     }
 }

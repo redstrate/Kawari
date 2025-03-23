@@ -1,12 +1,14 @@
 use binrw::binrw;
 
+use super::ContainerType;
+
 #[binrw]
 #[brw(little)]
 #[derive(Debug, Clone, Default)]
 pub struct ItemInfo {
     pub sequence: u32,
     pub unk1: u32,
-    pub container_id: u16,
+    pub container: ContainerType,
     pub slot: u16,
     pub quantity: u32,
     pub catalog_id: u32,
@@ -42,7 +44,7 @@ mod tests {
         let item_info = ItemInfo::read_le(&mut buffer).unwrap();
         assert_eq!(item_info.sequence, 4);
         assert_eq!(item_info.unk1, 0);
-        assert_eq!(item_info.container_id, 1000);
+        assert_eq!(item_info.container, ContainerType::Equipped);
         assert_eq!(item_info.slot, 11);
         assert_eq!(item_info.quantity, 1);
         assert_eq!(item_info.catalog_id, 4426);

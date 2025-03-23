@@ -48,7 +48,7 @@ mod action_request;
 pub use action_request::ActionRequest;
 
 mod container_info;
-pub use container_info::ContainerInfo;
+pub use container_info::{ContainerInfo, ContainerType};
 
 mod item_info;
 pub use item_info::ItemInfo;
