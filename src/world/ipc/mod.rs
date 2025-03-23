@@ -47,6 +47,12 @@ pub use weather_change::WeatherChange;
 mod action_request;
 pub use action_request::ActionRequest;
 
+mod container_info;
+pub use container_info::ContainerInfo;
+
+mod item_info;
+pub use item_info::ItemInfo;
+
 use crate::common::Position;
 use crate::common::read_string;
 use crate::common::write_string;
