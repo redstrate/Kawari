@@ -151,10 +151,8 @@ pub struct CommonSpawn {
     pub u26: u8,            // assumed
     /// Must be unique for each actor.
     pub spawn_index: u8,
+    #[brw(pad_size_to = 2)] // for modes that don't have a param
     pub mode: CharacterMode,
-    /// Argument used in CharacterMode.
-    // TODO: move to enum
-    pub persistent_emote: u8,
     #[brw(pad_size_to = 2)] // for kinds that don't have a param
     pub object_kind: ObjectKind,
     pub voice: u8,
