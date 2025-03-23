@@ -108,7 +108,6 @@ impl ChatHandler {
                             common: CommonSpawn {
                                 current_world_id: config.world.world_id,
                                 home_world_id: config.world.world_id,
-                                title: 1,
                                 class_job: 35,
                                 name: "Test Actor".to_string(),
                                 hp_curr: 100,
@@ -116,7 +115,6 @@ impl ChatHandler {
                                 mp_curr: 100,
                                 mp_max: 100,
                                 object_kind: ObjectKind::Player,
-                                gm_rank: 3,
                                 spawn_index: connection.get_free_spawn_index(),
                                 look: CUSTOMIZE_DATA,
                                 fc_tag: "LOCAL".to_string(),

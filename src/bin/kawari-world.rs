@@ -11,8 +11,9 @@ use kawari::packet::{
     send_packet,
 };
 use kawari::world::ipc::{
-    ClientZoneIpcData, CommonSpawn, GameMasterCommandType, ObjectKind, ServerZoneIpcData,
-    ServerZoneIpcSegment, ServerZoneIpcType, SocialListRequestType, StatusEffect,
+    ClientZoneIpcData, CommonSpawn, GameMasterCommandType, GameMasterRank, ObjectKind,
+    OnlineStatus, ServerZoneIpcData, ServerZoneIpcSegment, ServerZoneIpcType,
+    SocialListRequestType, StatusEffect,
 };
 use kawari::world::{
     ChatHandler, Zone, ZoneConnection,
@@ -329,7 +330,6 @@ async fn main() {
                                                     common: CommonSpawn {
                                                         current_world_id: config.world.world_id,
                                                         home_world_id: config.world.world_id,
-                                                        title: 1,
                                                         class_job: 35,
                                                         name: chara_details.name,
                                                         hp_curr: 100,
@@ -337,7 +337,8 @@ async fn main() {
                                                         mp_curr: 100,
                                                         mp_max: 100,
                                                         object_kind: ObjectKind::Player,
-                                                        gm_rank: 3,
+                                                        gm_rank: GameMasterRank::Debug,
+                                                        online_status: OnlineStatus::GameMasterBlue,
                                                         look: chara_details.chara_make.customize,
                                                         fc_tag: "LOCAL".to_string(),
                                                         subtype: 4,

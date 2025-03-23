@@ -42,19 +42,52 @@ pub enum CharacterMode {
     Dead = 0x2,
 }
 
+// See https://github.com/aers/FFXIVClientStructs/blob/28d9f0f77fdf388f596ba65768c7d6441e962d06/FFXIVClientStructs/FFXIV/Client/UI/Info/InfoProxyCommonList.cs#L86
+#[binrw]
+#[brw(little)]
+#[brw(repr = u8)]
+#[derive(Debug, Clone, Default, PartialEq)]
+pub enum OnlineStatus {
+    Offline = 0x0,
+    GameQA = 1,
+    GameMaster = 2,
+    GameMasterBlue = 3,
+    EventParticipant = 4, // used by NPCs?
+    #[default]
+    Online = 47,
+}
+
+// From https://github.com/SapphireServer/Sapphire/blob/bf3368224a00c180cbb7ba413b52395eba58ec0b/src/common/Common.h#L212
+// Where did they get this list from??
+#[binrw]
+#[brw(little)]
+#[brw(repr = u8)]
+#[derive(Debug, Clone, Default, PartialEq)]
+pub enum GameMasterRank {
+    #[default]
+    NormalUser,
+    GameMaster = 1,
+    EventJunior = 3,
+    EventSenior = 4,
+    Support = 5,
+    Senior = 7,
+    Debug = 90,
+}
+
 #[binrw]
 #[brw(little)]
 #[derive(Debug, Clone, Default)]
 pub struct CommonSpawn {
-    pub title: u16,
+    /// See Title Excel sheet
+    pub title_id: u16,
     pub u1b: u16,
     pub current_world_id: u16,
     pub home_world_id: u16,
 
-    pub gm_rank: u8,
+    pub gm_rank: GameMasterRank,
     pub u3c: u8,
     pub u4: u8,
-    pub online_status: u8,
+    pub online_status: OnlineStatus,
 
     pub pose: u8,
     pub u5a: u8,

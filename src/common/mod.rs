@@ -20,7 +20,7 @@ pub use position::Position;
 
 #[binrw]
 #[brw(little)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ObjectId(pub u32);
 
 impl Default for ObjectId {

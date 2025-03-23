@@ -18,7 +18,7 @@ mod tests {
 
     use crate::{
         common::INVALID_OBJECT_ID,
-        world::ipc::{CharacterMode, ObjectKind},
+        world::ipc::{CharacterMode, ObjectKind, OnlineStatus},
     };
 
     use super::*;
@@ -48,6 +48,7 @@ mod tests {
         assert_eq!(npc_spawn.common.object_kind, ObjectKind::BattleNpc);
         assert_eq!(npc_spawn.common.subtype, 2);
         assert_eq!(npc_spawn.common.battalion, 0);
+        assert_eq!(npc_spawn.common.online_status, OnlineStatus::Offline); // TODO: why is this guy offline?
     }
 
     #[test]
@@ -77,5 +78,6 @@ mod tests {
         assert_eq!(npc_spawn.common.battalion, 4);
         assert_eq!(npc_spawn.common.parent_actor_id, INVALID_OBJECT_ID);
         assert_eq!(npc_spawn.common.spawner_id, INVALID_OBJECT_ID);
+        assert_eq!(npc_spawn.common.online_status, OnlineStatus::EventParticipant);
     }
 }
