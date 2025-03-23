@@ -1,3 +1,8 @@
+// These are triggered in non-Oodle builds
+#![allow(non_snake_case)]
+#![allow(unused_unsafe)]
+#![allow(unused_variables)]
+
 use std::{ffi::c_void, ptr::null};
 
 #[cfg(feature = "oodle")]

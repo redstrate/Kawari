@@ -90,7 +90,7 @@ async fn verify_session(
 
     let body_parts: Vec<&str> = body.split('\n').collect();
 
-    let hashes = body_parts[0];
+    let _hashes = body_parts[0];
     let expansion_versions = &body_parts[1..body_parts.len() - 1]; // last part is empty
 
     let game_version = Version(&game_version);
@@ -170,8 +170,8 @@ async fn verify_boot(
             let patch_list = PatchList {
                 id: "477D80B1_38BC_41d4_8B48_5273ADB89CAC".to_string(),
                 requested_version: boot_version.to_string().clone(),
-                patch_length: todo!(),
-                content_location: todo!(),
+                patch_length: 0,
+                content_location: String::new(),
                 patches: vec![PatchEntry {
                     url: format!("http://{}/{}", config.patch.patch_dl_url, patch).to_string(),
                     version: "2023.09.15.0000.0000".to_string(),
