@@ -80,7 +80,8 @@ These special debug commands start with `!` and are custom to Kawari.
 
 * `!setpos <x> <y> <z>`: Teleport to the specified location
 * `!spawnactor`: Spawn another actor for debugging
-* `!spawnnpc`: Spawn an NPC for debugging
+* `!spawnnpc`: Spawn a NPC for debugging
+* `!spawnmonster`: Spawn a monster for debugging
 
 ### GM commands
 

@@ -237,6 +237,8 @@ pub enum ClientZoneIpcType {
     Unk14 = 0x87,
     // Sent by the client when a character performs an action
     ActionRequest = 0x213,
+    /// Sent by the client for unknown reasons, it's a bunch of numbers?
+    Unk15 = 0x10B,
 }
 
 #[binrw]
@@ -365,7 +367,9 @@ pub enum ClientZoneIpcData {
     #[br(pre_assert(*magic == ClientZoneIpcType::UpdatePositionHandler))]
     UpdatePositionHandler {
         // TODO: full of possibly interesting information
-        unk: [u8; 24],
+        unk: [u8; 8], // not empty
+        #[brw(pad_after = 4)] // empty
+        position: Position,
     },
     #[br(pre_assert(*magic == ClientZoneIpcType::LogOut))]
     LogOut {
@@ -408,6 +412,8 @@ pub enum ClientZoneIpcData {
     },
     #[br(pre_assert(*magic == ClientZoneIpcType::ActionRequest))]
     ActionRequest(ActionRequest),
+    #[br(pre_assert(*magic == ClientZoneIpcType::Unk15))]
+    Unk15 { unk: [u8; 632] },
 }
 
 #[cfg(test)]

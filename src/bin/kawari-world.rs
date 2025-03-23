@@ -60,6 +60,7 @@ async fn main() {
             player_data: PlayerData::default(),
             spawn_index: 0,
             zone: None,
+            position: Position::default(),
         };
 
         tokio::spawn(async move {
@@ -516,8 +517,12 @@ async fn main() {
                                                 .await;
                                         }
                                     }
-                                    ClientZoneIpcData::UpdatePositionHandler { .. } => {
-                                        tracing::info!("Recieved UpdatePositionHandler!");
+                                    ClientZoneIpcData::UpdatePositionHandler {
+                                        position, ..
+                                    } => {
+                                        tracing::info!("Character moved to {position:#?}");
+
+                                        connection.position = *position;
                                     }
                                     ClientZoneIpcData::LogOut { .. } => {
                                         tracing::info!("Recieved log out from client!");
@@ -706,6 +711,9 @@ async fn main() {
                                                 })
                                                 .await;
                                         }
+                                    }
+                                    ClientZoneIpcData::Unk15 { .. } => {
+                                        tracing::info!("Recieved Unk15!");
                                     }
                                 }
                             }

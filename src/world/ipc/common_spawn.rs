@@ -67,8 +67,10 @@ pub struct CommonSpawn {
 
     pub u14: u32,
     pub u15: u32,
-    pub bnpc_base: u32, // See BNpcBase Excel sheet
-    pub bnpc_name: u32, // See BNpcName Excel sheet
+    /// See BNpcBase Excel sheet
+    pub bnpc_base: u32,
+    /// See BNpcName Excel sheet
+    pub bnpc_name: u32,
     pub unk3: [u8; 8],
     pub director_id: u32, // FIXME: i think the next three are in the wrong order
     pub spawner_id: u32,
@@ -80,7 +82,8 @@ pub struct CommonSpawn {
     pub mp_curr: u16,
     pub mp_max: u16,
     pub unk: u16,
-    pub model_chara: u16,   // See ModelChara Excel sheet
+    /// See ModelChara Excel sheet
+    pub model_chara: u16,
     pub rotation: u16,      // assumed
     pub current_mount: u16, // assumed
     pub active_minion: u16, // assumed
@@ -88,15 +91,20 @@ pub struct CommonSpawn {
     pub u24: u8,            // assumed
     pub u25: u8,            // assumed
     pub u26: u8,            // assumed
+    /// Must be unique for each actor.
     pub spawn_index: u8,
     pub mode: CharacterMode,
+    /// Argument used in CharacterMode.
+    // TODO: move to enum
     pub persistent_emote: u8,
     pub object_kind: ObjectKind,
     pub subtype: u8,
     pub voice: u8,
-    pub enemy_type: u8,
     pub unk27: u8,
+    /// See Battalion Excel sheet. Used for determing whether it's friendy or an enemy.
+    pub battalion: u8,
     pub level: u8,
+    /// See ClassJob Excel sheet.
     pub class_job: u8,
     pub unk28: u8,
     pub unk29: u8,

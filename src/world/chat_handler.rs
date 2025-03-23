@@ -133,7 +133,7 @@ impl ChatHandler {
                                     0,  // left finger
                                     0,  // right finger
                                 ],
-                                pos: Position::default(),
+                                pos: connection.position,
                                 ..Default::default()
                             },
                             ..Default::default()
@@ -207,7 +207,48 @@ impl ChatHandler {
                                     0,  // left finger
                                     0,  // right finger
                                 ],
-                                pos: Position::default(),
+                                pos: connection.position,
+                                ..Default::default()
+                            },
+                            ..Default::default()
+                        }),
+                    };
+
+                    connection
+                        .send_segment(PacketSegment {
+                            source_actor: 0x106ad804,
+                            target_actor: connection.player_data.actor_id,
+                            segment_type: SegmentType::Ipc { data: ipc },
+                        })
+                        .await;
+                }
+            }
+            "!spawnmonster" => {
+                // spawn a tiny mandragora
+                {
+                    let ipc = ServerZoneIpcSegment {
+                        unk1: 20,
+                        unk2: 0,
+                        op_code: ServerZoneIpcType::NpcSpawn,
+                        server_id: 0,
+                        timestamp: timestamp_secs(),
+                        data: ServerZoneIpcData::NpcSpawn(NpcSpawn {
+                            common: CommonSpawn {
+                                hp_curr: 91,
+                                hp_max: 91,
+                                mp_curr: 100,
+                                mp_max: 100,
+                                spawn_index: connection.get_free_spawn_index(),
+                                bnpc_base: 13498, // TODO: changing this prevents it from spawning...
+                                bnpc_name: 405,
+                                spawner_id: connection.player_data.actor_id,
+                                parent_actor_id: INVALID_OBJECT_ID, // TODO: make default?
+                                object_kind: ObjectKind::BattleNpc,
+                                target_id: INVALID_OBJECT_ID as u64,
+                                level: 1,
+                                battalion: 4,
+                                model_chara: 297,
+                                pos: connection.position,
                                 ..Default::default()
                             },
                             ..Default::default()

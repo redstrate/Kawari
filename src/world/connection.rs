@@ -32,6 +32,8 @@ pub struct ZoneConnection {
 
     pub zone: Option<Zone>,
     pub spawn_index: u8,
+
+    pub position: Position,
 }
 
 impl ZoneConnection {
