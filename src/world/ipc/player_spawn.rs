@@ -30,7 +30,7 @@ mod tests {
     #[test]
     fn read_playerspawn() {
         let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        d.push("resources/tests/player_spawn.dat");
+        d.push("resources/tests/player_spawn.bin");
 
         let buffer = read(d).unwrap();
         let mut buffer = Cursor::new(&buffer);
