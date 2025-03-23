@@ -1,8 +1,7 @@
 use std::{ffi::c_void, ptr::null};
 
-// TODO: add support for windows?
 #[cfg(feature = "oodle")]
-#[link(name = "oo2netlinux64")]
+#[link(name = "oodle-network-shared")]
 unsafe extern "C" {
     pub fn OodleNetwork1TCP_State_Size() -> isize;
     pub fn OodleNetwork1_Shared_Size(htbits: i32) -> isize;
