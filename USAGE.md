@@ -20,7 +20,9 @@ Windows and Linux artifacts are built on every commit, under [Github Actions](ht
 
 ## Building
 
-Build Kawari with `cargo build`. If you're building with Oodle support, place the `.so` (Linux) or `.lib` (Windows) into the `oodle` directory when building. The library must be named "oodle-network-shared".
+Build Kawari with `cargo build`.
+
+For the World server to function, Kawari needs to be built with `--features oodle`. Place the `.so` (Linux) or `.lib` (Windows) into the `oodle` directory when building. The library must be named "oodle-network-shared".
 
 ## Setup
 
