@@ -41,14 +41,14 @@ const GAME_VERSION: u16 = 7000;
 pub const SUPPORTED_BOOT_VERSION: Version = Version("2025.01.10.0000.0001");
 
 /// Supported game version.
-pub const SUPPORTED_GAME_VERSION: Version = Version("2025.02.27.0000.0000");
+pub const SUPPORTED_GAME_VERSION: Version = Version("2025.03.18.0000.0000");
 
 const SUPPORTED_EXPAC_VERSIONS: [(&str, Version); 5] = [
-    ("ex1", Version("2025.01.09.0000.0000")),
-    ("ex2", Version("2025.01.14.0000.0000")),
-    ("ex3", Version("2025.02.27.0000.0000")),
-    ("ex4", Version("2025.02.27.0000.0000")),
-    ("ex5", Version("2025.02.27.0000.0000")),
+    ("ex1", Version("2025.03.14.0000.0000")),
+    ("ex2", Version("2025.03.18.0000.0000")),
+    ("ex3", Version("2025.03.18.0000.0000")),
+    ("ex4", Version("2025.03.18.0000.0000")),
+    ("ex5", Version("2025.03.18.0000.0000")),
 ];
 
 /// Supported expansion versions.
