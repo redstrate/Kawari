@@ -154,23 +154,23 @@ pub enum ServerZoneIpcType {
     /// Sent by the server to Initialize something chat-related?
     InitializeChat = 0x2,
     /// Sent by the server that tells the client which zone to load
-    InitZone = 0x0311,
+    InitZone = 0x2BB,
     /// Sent by the server for... something
-    ActorControlSelf = 0x018C,
+    ActorControlSelf = 0x16F,
     /// Sent by the server containing character stats
-    PlayerStats = 0x01FA,
+    PlayerStats = 0x191,
     /// Sent by the server to setup the player on the client
-    PlayerSetup = 0x006B,
+    PlayerSetup = 0xDA,
     // Sent by the server to setup class info
-    UpdateClassInfo = 0x006A,
+    UpdateClassInfo = 0x77,
     // Sent by the server to spawn the player in
-    PlayerSpawn = 0x1AB,
+    PlayerSpawn = 0x331,
     /// Sent by the server as response to ZoneInitRequest.
     InitResponse = 0x2D0,
     // Sent by the server to indicate the log out is complete
-    LogOutComplete = 0x369,
+    LogOutComplete = 0x69,
     // Sent by the server to modify the client's position
-    ActorSetPos = 0x223,
+    ActorSetPos = 0x88,
     // Sent by the server when they send a chat message
     ServerChatMessage = 0x196,
     // Unknown, server sends to the client before player spawn
@@ -182,29 +182,29 @@ pub enum ServerZoneIpcType {
     // Unknown, server sends this in response to Unk7
     Unk11 = 0x156,
     // Sent by the server when it wants the client to... prepare to zone?
-    PrepareZoning = 0x308,
+    PrepareZoning = 0x16C,
     // Sent by the server???
     Unk15 = 0x28C,
     // Sent by the server before init zone???
     Unk16 = 0x3AB,
     // Sent by the server
-    ActorControl = 0x38E,
+    ActorControl = 0x208,
     // Sent by the server
-    ActorMove = 0x31C,
+    ActorMove = 0x159,
     // Sent by the server
     Unk17 = 0x2A1,
     // Sent by the server in response to SocialListRequest
     SocialList = 0x36C,
     // Sent by the server to spawn an NPC
-    NpcSpawn = 0x100,
+    NpcSpawn = 0x13F,
     // Sent by the server to update an actor's status effect list
     StatusEffectList = 0xBB,
     // Sent by the server when it's time to change the weather
-    WeatherChange = 0x110,
+    WeatherChange = 0x175,
     // Sent to inform the client of an inventory item
-    ItemInfo = 0x3AA,
+    ItemInfo = 0x352,
     // Sent to inform the client of container status
-    ContainerInfo = 0x2EA,
+    ContainerInfo = 0x236,
 }
 
 #[binrw]
@@ -223,14 +223,14 @@ pub enum ClientZoneIpcType {
     Unk3 = 0x326,
     // FIXME: 8 bytes of something from the client, not sure what yet
     Unk4 = 0x143,
-    SetSearchInfoHandler = 0x3B2, // TODO: assumed,
+    SetSearchInfoHandler = 0x20A,
     // FIXME: 8 bytes of something from the client, not sure what yet
     Unk5 = 0x2D0,
     // Sent by the client when it requests the friends list and other related info
     SocialListRequest = 0x1A1,
     // FIXME: 32 bytes of something from the client, not sure what yet
     Unk7 = 0x2B5,
-    UpdatePositionHandler = 0x249, // TODO: assumed
+    UpdatePositionHandler = 0x231,
     // Sent by the client when the user requests to log out
     LogOut = 0x217,
     // Sent by the client when it's actually disconnecting
