@@ -47,11 +47,22 @@ pub(crate) fn decompress<T: ReadWriteIpcSegment>(
     let mut cursor = Cursor::new(&data);
 
     for _ in 0..header.segment_count {
+        let current_position = cursor.position();
         segments.push(PacketSegment::read_options(
             &mut cursor,
             endian,
             (encryption_key,),
         )?);
+        let new_position = cursor.position();
+        let expected_size = segments.last().unwrap().calc_size() as u64;
+        let actual_size = new_position - current_position;
+
+        if expected_size != actual_size {
+            tracing::warn!(
+                "The segment {:#?} does not match the size in calc_size()! (expected {expected_size} got {actual_size}",
+                segments.last()
+            );
+        }
     }
 
     Ok(segments)

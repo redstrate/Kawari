@@ -6,9 +6,7 @@ pub trait ReadWriteIpcSegment:
 {
     /// Calculate the size of this Ipc segment *including* the 16 byte header.
     /// When implementing this, please use the size seen in retail instead of guessing.
-    fn calc_size(&self) -> u32 {
-        unimplemented!()
-    }
+    fn calc_size(&self) -> u32;
 }
 
 /// An IPC packet segment.
@@ -47,6 +45,7 @@ where
     /// Unknown purpose, but usually 0.
     pub unk2: u8,
     /// The opcode for this segment.
+    #[br(dbg)]
     pub op_code: OpCode,
     #[brw(pad_before = 2)] // empty
     /// Unknown purpose, but safe to keep 0.

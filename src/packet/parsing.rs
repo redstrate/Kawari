@@ -15,7 +15,7 @@ use super::{
 
 #[binrw]
 #[brw(repr = u16)]
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum ConnectionType {
     None = 0x0,
     Zone = 0x1,
@@ -108,7 +108,7 @@ pub struct PacketSegment<T: ReadWriteIpcSegment> {
 }
 
 impl<T: ReadWriteIpcSegment> PacketSegment<T> {
-    fn calc_size(&self) -> u32 {
+    pub fn calc_size(&self) -> u32 {
         let header = std::mem::size_of::<u32>() * 4;
         header as u32
             + match &self.segment_type {
@@ -118,7 +118,7 @@ impl<T: ReadWriteIpcSegment> PacketSegment<T> {
                 SegmentType::KeepAlive { .. } => 0x8,
                 SegmentType::KeepAliveResponse { .. } => 0x8,
                 SegmentType::ZoneInitialize { .. } => 40,
-                SegmentType::InitializeSession { .. } => todo!(),
+                SegmentType::InitializeSession { .. } => 40,
                 SegmentType::CustomIpc { data } => data.calc_size(),
             }
     }
