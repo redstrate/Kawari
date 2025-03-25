@@ -21,7 +21,17 @@ use crate::{
 
 pub type ClientLobbyIpcSegment = IpcSegment<ClientLobbyIpcType, ClientLobbyIpcData>;
 
-impl ReadWriteIpcSegment for ClientLobbyIpcSegment {}
+impl ReadWriteIpcSegment for ClientLobbyIpcSegment {
+    fn calc_size(&self) -> u32 {
+        // 16 is the size of the IPC header
+        16 + match self.op_code {
+            ClientLobbyIpcType::RequestCharacterList => 24,
+            ClientLobbyIpcType::RequestEnterWorld => 32,
+            ClientLobbyIpcType::ClientVersionInfo => 1144,
+            ClientLobbyIpcType::LobbyCharacterAction => 496,
+        }
+    }
+}
 
 // TODO: make generic
 impl Default for ClientLobbyIpcSegment {

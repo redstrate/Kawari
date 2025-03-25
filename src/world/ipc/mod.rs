@@ -61,7 +61,34 @@ use crate::packet::ReadWriteIpcSegment;
 
 pub type ClientZoneIpcSegment = IpcSegment<ClientZoneIpcType, ClientZoneIpcData>;
 
-impl ReadWriteIpcSegment for ClientZoneIpcSegment {}
+impl ReadWriteIpcSegment for ClientZoneIpcSegment {
+    fn calc_size(&self) -> u32 {
+        // 16 is the size of the IPC header
+        16 + match self.op_code {
+            ClientZoneIpcType::InitRequest => 120,
+            ClientZoneIpcType::FinishLoading => 72,
+            ClientZoneIpcType::Unk1 => 32,
+            ClientZoneIpcType::Unk2 => 16,
+            ClientZoneIpcType::Unk3 => 8,
+            ClientZoneIpcType::Unk4 => 8,
+            ClientZoneIpcType::SetSearchInfoHandler => 8,
+            ClientZoneIpcType::Unk5 => 8,
+            ClientZoneIpcType::SocialListRequest => 16,
+            ClientZoneIpcType::Unk7 => 32,
+            ClientZoneIpcType::UpdatePositionHandler => 24,
+            ClientZoneIpcType::LogOut => 8,
+            ClientZoneIpcType::Disconnected => 8,
+            ClientZoneIpcType::ChatMessage => todo!(),
+            ClientZoneIpcType::GameMasterCommand => todo!(),
+            ClientZoneIpcType::Unk12 => todo!(),
+            ClientZoneIpcType::EnterZoneLine => todo!(),
+            ClientZoneIpcType::Unk13 => todo!(),
+            ClientZoneIpcType::Unk14 => todo!(),
+            ClientZoneIpcType::ActionRequest => todo!(),
+            ClientZoneIpcType::Unk15 => todo!(),
+        }
+    }
+}
 
 // TODO: make generic
 impl Default for ClientZoneIpcSegment {
@@ -72,7 +99,7 @@ impl Default for ClientZoneIpcSegment {
             op_code: ClientZoneIpcType::InitRequest,
             server_id: 0,
             timestamp: 0,
-            data: ClientZoneIpcData::InitRequest { unk: [0; 105] },
+            data: ClientZoneIpcData::InitRequest { unk: [0; 120] },
         }
     }
 }
@@ -166,7 +193,7 @@ pub enum ServerZoneIpcType {
     // Sent by the server to spawn the player in
     PlayerSpawn = 0x331,
     /// Sent by the server as response to ZoneInitRequest.
-    InitResponse = 0x2D0,
+    InitResponse = 0x223,
     // Sent by the server to indicate the log out is complete
     LogOutComplete = 0x69,
     // Sent by the server to modify the client's position
@@ -212,20 +239,20 @@ pub enum ServerZoneIpcType {
 #[derive(Clone, PartialEq, Debug)]
 pub enum ClientZoneIpcType {
     /// Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load)
-    InitRequest = 0x2ED,
+    InitRequest = 0x2AB,
     // Sent by the client when they're done loading and they need to be spawned in
-    FinishLoading = 0x397, // TODO: assumed
+    FinishLoading = 0x1AB,
     // FIXME: 32 bytes of something from the client, not sure what yet
-    Unk1 = 0x37C,
+    Unk1 = 0x364,
     // FIXME: 16 bytes of something from the client, not sure what yet
-    Unk2 = 0x2E5,
+    Unk2 = 0x1D8,
     // FIXME: 8 bytes of something from the client, not sure what yet
-    Unk3 = 0x326,
+    Unk3 = 0x2AF,
     // FIXME: 8 bytes of something from the client, not sure what yet
-    Unk4 = 0x143,
+    Unk4 = 0x178,
     SetSearchInfoHandler = 0x20A,
     // FIXME: 8 bytes of something from the client, not sure what yet
-    Unk5 = 0x2D0,
+    Unk5 = 0x223,
     // Sent by the client when it requests the friends list and other related info
     SocialListRequest = 0x1A1,
     // FIXME: 32 bytes of something from the client, not sure what yet
@@ -332,7 +359,7 @@ pub enum ClientZoneIpcData {
     #[br(pre_assert(*magic == ClientZoneIpcType::InitRequest))]
     InitRequest {
         // TODO: full of possibly interesting information
-        unk: [u8; 105],
+        unk: [u8; 120],
     },
     #[br(pre_assert(*magic == ClientZoneIpcType::FinishLoading))]
     FinishLoading {
@@ -347,7 +374,7 @@ pub enum ClientZoneIpcData {
     #[br(pre_assert(*magic == ClientZoneIpcType::Unk2))]
     Unk2 {
         // TODO: full of possibly interesting information
-        unk: [u8; 8],
+        unk: [u8; 16],
     },
     #[br(pre_assert(*magic == ClientZoneIpcType::Unk3))]
     Unk3 {
