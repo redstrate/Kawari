@@ -45,7 +45,6 @@ where
     /// Unknown purpose, but usually 0.
     pub unk2: u8,
     /// The opcode for this segment.
-    #[br(dbg)]
     pub op_code: OpCode,
     #[brw(pad_before = 2)] // empty
     /// Unknown purpose, but safe to keep 0.

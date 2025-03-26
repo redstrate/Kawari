@@ -30,7 +30,7 @@ pub struct PlayerSpawn {
 
     pub common: CommonSpawn,
 
-    pub padding: [u8; 2],
+    pub padding: [u8; 6],
 }
 
 #[cfg(test)]
