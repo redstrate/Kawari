@@ -6,14 +6,15 @@ use kawari::common::{Position, determine_initial_starting_zone, get_citystate, g
 use kawari::config::get_config;
 use kawari::lobby::CharaMake;
 use kawari::oodle::OodleNetwork;
+use kawari::opcodes::ServerZoneIpcType;
 use kawari::packet::{
     CompressionType, ConnectionType, PacketSegment, PacketState, SegmentType, send_keep_alive,
     send_packet,
 };
 use kawari::world::ipc::{
     ClientZoneIpcData, CommonSpawn, DisplayFlag, GameMasterCommandType, GameMasterRank, ObjectKind,
-    OnlineStatus, PlayerSubKind, ServerZoneIpcData, ServerZoneIpcSegment, ServerZoneIpcType,
-    SocialListRequestType, StatusEffect,
+    OnlineStatus, PlayerSubKind, ServerZoneIpcData, ServerZoneIpcSegment, SocialListRequestType,
+    StatusEffect,
 };
 use kawari::world::{
     ChatHandler, Inventory, Zone, ZoneConnection,
@@ -611,9 +612,6 @@ async fn main() {
                                             }
                                         }
                                     }
-                                    ClientZoneIpcData::Unk12 { .. } => {
-                                        tracing::info!("Recieved Unk12!");
-                                    }
                                     ClientZoneIpcData::EnterZoneLine {
                                         exit_box_id,
                                         position,
@@ -693,12 +691,6 @@ async fn main() {
 
                                         connection.change_zone(new_territory).await;
                                     }
-                                    ClientZoneIpcData::Unk13 { .. } => {
-                                        tracing::info!("Recieved Unk13!");
-                                    }
-                                    ClientZoneIpcData::Unk14 { .. } => {
-                                        tracing::info!("Recieved Unk14!");
-                                    }
                                     ClientZoneIpcData::ActionRequest(request) => {
                                         tracing::info!("Recieved action request: {:#?}!", request);
 
@@ -751,9 +743,6 @@ async fn main() {
                                                 })
                                                 .await;
                                         }
-                                    }
-                                    ClientZoneIpcData::Unk15 { .. } => {
-                                        tracing::info!("Recieved Unk15!");
                                     }
                                     ClientZoneIpcData::Unk16 { .. } => {
                                         tracing::info!("Recieved Unk16!");

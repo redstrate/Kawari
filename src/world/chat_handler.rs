@@ -1,11 +1,11 @@
 use crate::{
     common::{CustomizeData, ObjectId, ObjectTypeId, Position, timestamp_secs},
     config::get_config,
+    opcodes::ServerZoneIpcType,
     packet::{PacketSegment, SegmentType},
     world::ipc::{
         ActorControl, ActorControlCategory, BattleNpcSubKind, CommonSpawn, DisplayFlag, NpcSpawn,
         ObjectKind, PlayerSpawn, PlayerSubKind, ServerZoneIpcData, ServerZoneIpcSegment,
-        ServerZoneIpcType,
     },
 };
 

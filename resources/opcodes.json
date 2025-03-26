@@ -1,4 +1,238 @@
 {
+    "ServerZoneIpcType": [
+        {
+            "name": "InitializeChat",
+            "opcode": 2,
+            "size": 8
+        },
+        {
+            "name": "InitZone",
+            "opcode": 699,
+            "size": 103
+        },
+        {
+            "name": "ActorControlSelf",
+            "opcode": 367,
+            "size": 32
+        },
+        {
+            "name": "PlayerStats",
+            "opcode": 401,
+            "size": 224
+        },
+        {
+            "name": "PlayerSetup",
+            "opcode": 218,
+            "size": 2784
+        },
+        {
+            "name": "UpdateClassInfo",
+            "opcode": 119,
+            "size": 48
+        },
+        {
+            "name": "PlayerSpawn",
+            "opcode": 817,
+            "size": 664
+        },
+        {
+            "name": "InitResponse",
+            "opcode": 547,
+            "size": 16
+        },
+        {
+            "name": "LogOutComplete",
+            "opcode": 105,
+            "size": 8
+        },
+        {
+            "name": "ActorSetPos",
+            "opcode": 136,
+            "size": 24
+        },
+        {
+            "name": "ServerChatMessage",
+            "opcode": 406,
+            "size": 776
+        },
+        {
+            "name": "Unk8",
+            "opcode": 308,
+            "size": 808
+        },
+        {
+            "name": "LinkShellInformation",
+            "opcode": 564,
+            "size": 456
+        },
+        {
+            "name": "Unk11",
+            "opcode": 342,
+            "size": 32
+        },
+        {
+            "name": "PrepareZoning",
+            "opcode": 364,
+            "size": 16
+        },
+        {
+            "name": "Unk15",
+            "opcode": 652,
+            "size": 8
+        },
+        {
+            "name": "Unk16",
+            "opcode": 939,
+            "size": 136
+        },
+        {
+            "name": "ActorControl",
+            "opcode": 520,
+            "size": 24
+        },
+        {
+            "name": "ActorMove",
+            "opcode": 345,
+            "size": 16
+        },
+        {
+            "name": "Unk17",
+            "opcode": 673,
+            "size": 104
+        },
+        {
+            "name": "SocialList",
+            "opcode": 876,
+            "size": 1136
+        },
+        {
+            "name": "NpcSpawn",
+            "opcode": 319,
+            "size": 648
+        },
+        {
+            "name": "StatusEffectList",
+            "opcode": 839,
+            "size": 384
+        },
+        {
+            "name": "WeatherChange",
+            "opcode": 373,
+            "size": 8
+        },
+        {
+            "name": "ItemInfo",
+            "opcode": 850,
+            "size": 64
+        },
+        {
+            "name": "ContainerInfo",
+            "opcode": 566,
+            "size": 16
+        }
+    ],
+    "ClientZoneIpcType": [
+        {
+            "name": "InitRequest",
+            "opcode": 683,
+            "size": 120
+        },
+        {
+            "name": "FinishLoading",
+            "opcode": 427,
+            "size": 72
+        },
+        {
+            "name": "Unk1",
+            "opcode": 868,
+            "size": 32
+        },
+        {
+            "name": "Unk2",
+            "opcode": 472,
+            "size": 16
+        },
+        {
+            "name": "Unk3",
+            "opcode": 687,
+            "size": 8
+        },
+        {
+            "name": "Unk4",
+            "opcode": 376,
+            "size": 8
+        },
+        {
+            "name": "SetSearchInfoHandler",
+            "opcode": 522,
+            "size": 8
+        },
+        {
+            "name": "Unk5",
+            "opcode": 547,
+            "size": 8
+        },
+        {
+            "name": "SocialListRequest",
+            "opcode": 417,
+            "size": 16
+        },
+        {
+            "name": "Unk7",
+            "opcode": 693,
+            "size": 32
+        },
+        {
+            "name": "UpdatePositionHandler",
+            "opcode": 561,
+            "size": 24
+        },
+        {
+            "name": "LogOut",
+            "opcode": 538,
+            "size": 8
+        },
+        {
+            "name": "Disconnected",
+            "opcode": 864,
+            "size": 8
+        },
+        {
+            "name": "ChatMessage",
+            "opcode": 375,
+            "size": 1056
+        },
+        {
+            "name": "GameMasterCommand",
+            "opcode": 905,
+            "size": 32
+        },
+        {
+            "name": "EnterZoneLine",
+            "opcode": 447,
+            "size": 24
+        },
+        {
+            "name": "ActionRequest",
+            "opcode": 865,
+            "size": 32
+        },
+        {
+            "name": "Unk16",
+            "opcode": 392,
+            "size": 6
+        },
+        {
+            "name": "Unk17",
+            "opcode": 466,
+            "size": 32
+        },
+        {
+            "name": "Unk18",
+            "opcode": 221,
+            "size": 8
+        }
+    ],
     "ServerLobbyIpcType": [
         {
             "name": "LobbyError",
