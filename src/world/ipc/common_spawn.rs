@@ -172,6 +172,8 @@ pub struct CommonSpawn {
     pub u24: u8,            // assumed
     pub u25: u8,            // assumed
     pub u26: u8,            // assumed
+    pub u27: u8,            // assumed
+    pub u28: u8,            // assumed
     /// Must be unique for each actor.
     pub spawn_index: u8,
     #[brw(pad_size_to = 2)] // for modes that don't have a param
@@ -193,7 +195,7 @@ pub struct CommonSpawn {
     pub mount_color: u8,
     pub scale: u8,
     pub element_data: [u8; 6],
-    pub padding2: [u8; 1],
+    pub padding2: [u8; 3],
     pub effect: [StatusEffect; 30],
     pub pos: Position,
     pub models: [u32; 10],

@@ -755,6 +755,15 @@ async fn main() {
                                     ClientZoneIpcData::Unk15 { .. } => {
                                         tracing::info!("Recieved Unk15!");
                                     }
+                                    ClientZoneIpcData::Unk16 { .. } => {
+                                        tracing::info!("Recieved Unk16!");
+                                    }
+                                    ClientZoneIpcData::Unk17 { .. } => {
+                                        tracing::info!("Recieved Unk17!");
+                                    }
+                                    ClientZoneIpcData::Unk18 { .. } => {
+                                        tracing::info!("Recieved Unk18!");
+                                    }
                                 }
                             }
                             SegmentType::KeepAlive { id, timestamp } => {

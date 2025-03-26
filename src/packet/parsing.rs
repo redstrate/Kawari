@@ -255,7 +255,11 @@ mod tests {
 
         type ClientLobbyIpcSegment = IpcSegment<ClientLobbyIpcType, ClientLobbyIpcData>;
 
-        impl ReadWriteIpcSegment for ClientLobbyIpcSegment {}
+        impl ReadWriteIpcSegment for ClientLobbyIpcSegment {
+            fn calc_size(&self) -> u32 {
+                todo!()
+            }
+        }
 
         let packet_types = [
             SegmentType::InitializeEncryption {

@@ -78,14 +78,17 @@ impl ReadWriteIpcSegment for ClientZoneIpcSegment {
             ClientZoneIpcType::UpdatePositionHandler => 24,
             ClientZoneIpcType::LogOut => 8,
             ClientZoneIpcType::Disconnected => 8,
-            ClientZoneIpcType::ChatMessage => todo!(),
-            ClientZoneIpcType::GameMasterCommand => todo!(),
+            ClientZoneIpcType::ChatMessage => 1056,
+            ClientZoneIpcType::GameMasterCommand => 32,
             ClientZoneIpcType::Unk12 => todo!(),
-            ClientZoneIpcType::EnterZoneLine => todo!(),
+            ClientZoneIpcType::EnterZoneLine => 24,
             ClientZoneIpcType::Unk13 => todo!(),
             ClientZoneIpcType::Unk14 => todo!(),
-            ClientZoneIpcType::ActionRequest => todo!(),
+            ClientZoneIpcType::ActionRequest => 32,
             ClientZoneIpcType::Unk15 => todo!(),
+            ClientZoneIpcType::Unk16 => 6,
+            ClientZoneIpcType::Unk17 => 32,
+            ClientZoneIpcType::Unk18 => 8,
         }
     }
 }
@@ -116,7 +119,7 @@ impl ReadWriteIpcSegment for ServerZoneIpcSegment {
             ServerZoneIpcType::PlayerStats => 224,
             ServerZoneIpcType::PlayerSetup => 2784,
             ServerZoneIpcType::UpdateClassInfo => 48,
-            ServerZoneIpcType::PlayerSpawn => 656,
+            ServerZoneIpcType::PlayerSpawn => 664,
             ServerZoneIpcType::InitResponse => 16,
             ServerZoneIpcType::LogOutComplete => 8,
             ServerZoneIpcType::ActorSetPos => 24,
@@ -225,7 +228,7 @@ pub enum ServerZoneIpcType {
     // Sent by the server to spawn an NPC
     NpcSpawn = 0x13F,
     // Sent by the server to update an actor's status effect list
-    StatusEffectList = 0xBB,
+    StatusEffectList = 0x347,
     // Sent by the server when it's time to change the weather
     WeatherChange = 0x175,
     // Sent to inform the client of an inventory item
@@ -259,26 +262,32 @@ pub enum ClientZoneIpcType {
     Unk7 = 0x2B5,
     UpdatePositionHandler = 0x231,
     // Sent by the client when the user requests to log out
-    LogOut = 0x217,
+    LogOut = 0x21A,
     // Sent by the client when it's actually disconnecting
     Disconnected = 0x360,
     // Sent by the client when they send a chat message
-    ChatMessage = 0xCA,
+    ChatMessage = 0x177,
     // Sent by the client when they send a GM command. This can only be sent by the client if they are sent a GM rank.
-    GameMasterCommand = 0x3B3,
+    GameMasterCommand = 0x389,
     // Unknown, client sends this for ???
     Unk12 = 0x0E9,
     // Sent by the client when the character walks into a zone transistion
-    EnterZoneLine = 0x205,
+    EnterZoneLine = 0x1BF,
     // Sent by the client after we sent a InitZone in TravelToZone??
     // TODO: Actually, I don't think is real...
     Unk13 = 0x2EE,
     // Sent by the client for unknown reasons
     Unk14 = 0x87,
     // Sent by the client when a character performs an action
-    ActionRequest = 0x213,
+    ActionRequest = 0x361,
     /// Sent by the client for unknown reasons, it's a bunch of numbers?
     Unk15 = 0x10B,
+    /// 8 unknown bytes sent by the client for unknown reason
+    Unk16 = 0x188,
+    // FIXME: 32 bytes of something from the client, not sure what yet
+    Unk17 = 0x1D2,
+    // FIXME: 8 bytes of something from the client, not sure what yet
+    Unk18 = 0xDD,
 }
 
 #[binrw]
@@ -456,6 +465,18 @@ pub enum ClientZoneIpcData {
     ActionRequest(ActionRequest),
     #[br(pre_assert(*magic == ClientZoneIpcType::Unk15))]
     Unk15 { unk: [u8; 632] },
+    #[br(pre_assert(*magic == ClientZoneIpcType::Unk16))]
+    Unk16 {
+        unk: [u8; 8], // TODO: unknown
+    },
+    #[br(pre_assert(*magic == ClientZoneIpcType::Unk17))]
+    Unk17 {
+        unk: [u8; 32], // TODO: unknown
+    },
+    #[br(pre_assert(*magic == ClientZoneIpcType::Unk18))]
+    Unk18 {
+        unk: [u8; 8], // TODO: unknown
+    },
 }
 
 #[cfg(test)]
