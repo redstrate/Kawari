@@ -108,7 +108,7 @@
         {
             "name": "NpcSpawn",
             "opcode": 319,
-            "size": 648
+            "size": 656
         },
         {
             "name": "StatusEffectList",
