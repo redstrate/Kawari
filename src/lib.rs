@@ -34,6 +34,9 @@ pub mod login;
 /// Patch server-specific code.
 pub mod patch;
 
+/// Opcodes, see `resources/opcodes.json`
+pub mod opcodes;
+
 /// Used in the encryption key.
 const GAME_VERSION: u16 = 7000;
 

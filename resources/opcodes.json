@@ -1,0 +1,61 @@
+{
+    "ServerLobbyIpcType": [
+        {
+            "name": "LobbyError",
+            "opcode": 2,
+            "size": 536
+        },
+        {
+            "name": "LobbyServiceAccountList",
+            "opcode": 12,
+            "size": 656
+        },
+        {
+            "name": "LobbyCharacterList",
+            "opcode": 13,
+            "size": 2472
+        },
+        {
+            "name": "LobbyEnterWorld",
+            "opcode": 15,
+            "size": 160
+        },
+        {
+            "name": "LobbyServerList",
+            "opcode": 21,
+            "size": 528
+        },
+        {
+            "name": "LobbyRetainerList",
+            "opcode": 23,
+            "size": 210
+        },
+        {
+            "name": "CharacterCreated",
+            "opcode": 14,
+            "size": 2568
+        }
+    ],
+    "ClientLobbyIpcType": [
+        {
+            "name": "RequestCharacterList",
+            "opcode": 3,
+            "size": 24
+        },
+        {
+            "name": "RequestEnterWorld",
+            "opcode": 4,
+            "size": 32
+        },
+        {
+            "name": "ClientVersionInfo",
+            "opcode": 5,
+            "size": 1144
+        },
+        {
+            "name": "LobbyCharacterAction",
+            "opcode": 11,
+            "size": 496
+        }
+    ]
+}

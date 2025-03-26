@@ -16,6 +16,7 @@ pub use service_account_list::{LobbyServiceAccountList, ServiceAccount};
 
 use crate::{
     common::{read_string, write_string},
+    opcodes::{ClientLobbyIpcType, ServerLobbyIpcType},
     packet::{IpcSegment, ReadWriteIpcSegment},
 };
 
@@ -24,12 +25,7 @@ pub type ClientLobbyIpcSegment = IpcSegment<ClientLobbyIpcType, ClientLobbyIpcDa
 impl ReadWriteIpcSegment for ClientLobbyIpcSegment {
     fn calc_size(&self) -> u32 {
         // 16 is the size of the IPC header
-        16 + match self.op_code {
-            ClientLobbyIpcType::RequestCharacterList => 24,
-            ClientLobbyIpcType::RequestEnterWorld => 32,
-            ClientLobbyIpcType::ClientVersionInfo => 1144,
-            ClientLobbyIpcType::LobbyCharacterAction => 496,
-        }
+        16 + self.op_code.calc_size()
     }
 }
 
@@ -56,15 +52,7 @@ pub type ServerLobbyIpcSegment = IpcSegment<ServerLobbyIpcType, ServerLobbyIpcDa
 impl ReadWriteIpcSegment for ServerLobbyIpcSegment {
     fn calc_size(&self) -> u32 {
         // 16 is the size of the IPC header
-        16 + match self.op_code {
-            ServerLobbyIpcType::LobbyError => 536,
-            ServerLobbyIpcType::LobbyServiceAccountList => 656,
-            ServerLobbyIpcType::LobbyCharacterList => 2472,
-            ServerLobbyIpcType::LobbyEnterWorld => 160,
-            ServerLobbyIpcType::LobbyServerList => 528,
-            ServerLobbyIpcType::LobbyRetainerList => 210,
-            ServerLobbyIpcType::CharacterCreated => 2568,
-        }
+        16 + self.op_code.calc_size()
     }
 }
 
@@ -89,44 +77,10 @@ impl Default for ServerLobbyIpcSegment {
 }
 
 #[binrw]
-#[brw(repr = u16)]
-#[derive(Clone, PartialEq, Debug)]
-pub enum ServerLobbyIpcType {
-    /// Sent by the server to indicate an lobby error occured
-    LobbyError = 0x2,
-    /// Sent by the server to inform the client of their service accounts.
-    LobbyServiceAccountList = 0xC,
-    /// Sent by the server to inform the client of their characters.
-    LobbyCharacterList = 0xD,
-    /// Sent by the server to tell the client how to connect to the world server.
-    LobbyEnterWorld = 0xF,
-    /// Sent by the server to inform the client of their servers.
-    LobbyServerList = 0x15,
-    /// Sent by the server to inform the client of their retainers.
-    LobbyRetainerList = 0x17,
-    // Assumed what this is, but probably incorrect
-    CharacterCreated = 0xE,
-}
-
-#[binrw]
-#[brw(repr = u16)]
-#[derive(Clone, PartialEq, Debug)]
-pub enum ClientLobbyIpcType {
-    /// Sent by the client when it requests the character list in the lobby.
-    RequestCharacterList = 0x3,
-    /// Sent by the client when it requests to enter a world.
-    RequestEnterWorld = 0x4,
-    /// Sent by the client after exchanging encryption information with the lobby server.
-    ClientVersionInfo = 0x5,
-    /// Sent by the client when they request something about the character (e.g. deletion.)
-    LobbyCharacterAction = 0xB,
-}
-
-#[binrw]
 #[br(import(magic: &ClientLobbyIpcType))]
 #[derive(Debug, Clone)]
 pub enum ClientLobbyIpcData {
-    // Client->Server IPC
+    /// Sent by the client after exchanging encryption information with the lobby server.
     #[br(pre_assert(*magic == ClientLobbyIpcType::ClientVersionInfo))]
     ClientVersionInfo {
         sequence: u64,
@@ -142,16 +96,19 @@ pub enum ClientLobbyIpcData {
         #[br(map = read_string)]
         #[bw(ignore)]
         version_info: String,
-        // unknown stuff at the end, it's not completely empty'
+        // unknown stuff at the end, it's not completely empty
     },
+    /// Sent by the client when it requests the character list in the lobby.
     #[br(pre_assert(*magic == ClientLobbyIpcType::RequestCharacterList))]
     RequestCharacterList {
         #[brw(pad_before = 16)]
         sequence: u64,
         // TODO: what is in here?
     },
+    /// Sent by the client when they request something about the character (e.g. deletion.)
     #[br(pre_assert(*magic == ClientLobbyIpcType::LobbyCharacterAction))]
     LobbyCharacterAction(LobbyCharacterAction),
+    /// Sent by the client when it requests to enter a world.
     #[br(pre_assert(*magic == ClientLobbyIpcType::RequestEnterWorld))]
     RequestEnterWorld {
         sequence: u64,
@@ -164,15 +121,20 @@ pub enum ClientLobbyIpcData {
 #[br(import(_magic: &ServerLobbyIpcType))]
 #[derive(Debug, Clone)]
 pub enum ServerLobbyIpcData {
+    /// Sent by the server to inform the client of their service accounts.
     LobbyServiceAccountList(LobbyServiceAccountList),
+    /// Sent by the server to inform the client of their servers.
     LobbyServerList(LobbyServerList),
+    /// Sent by the server to inform the client of their retainers.
     LobbyRetainerList {
         // TODO: what is in here?
         #[brw(pad_before = 7)]
         #[brw(pad_after = 202)]
         unk1: u8,
     },
+    /// Sent by the server to inform the client of their characters.
     LobbyCharacterList(LobbyCharacterList),
+    /// Sent by the server to tell the client how to connect to the world server.
     LobbyEnterWorld {
         sequence: u64,
         actor_id: u32,
@@ -192,6 +154,7 @@ pub enum ServerLobbyIpcData {
         #[bw(map = write_string)]
         host: String,
     },
+    /// Sent by the server to indicate an lobby error occured.
     LobbyError {
         sequence: u64,
         error: u32,
@@ -200,6 +163,7 @@ pub enum ServerLobbyIpcData {
         #[brw(pad_after = 516)] // empty and garbage
         unk1: u16,
     },
+    // Assumed what this is, but probably incorrect
     CharacterCreated {
         sequence: u64,
         unk1: u8,
