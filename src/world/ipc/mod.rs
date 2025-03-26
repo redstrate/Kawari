@@ -56,6 +56,8 @@ pub use item_info::ItemInfo;
 use crate::common::Position;
 use crate::common::read_string;
 use crate::common::write_string;
+use crate::opcodes::ClientZoneIpcType;
+use crate::opcodes::ServerZoneIpcType;
 use crate::packet::IpcSegment;
 use crate::packet::ReadWriteIpcSegment;
 
@@ -64,32 +66,7 @@ pub type ClientZoneIpcSegment = IpcSegment<ClientZoneIpcType, ClientZoneIpcData>
 impl ReadWriteIpcSegment for ClientZoneIpcSegment {
     fn calc_size(&self) -> u32 {
         // 16 is the size of the IPC header
-        16 + match self.op_code {
-            ClientZoneIpcType::InitRequest => 120,
-            ClientZoneIpcType::FinishLoading => 72,
-            ClientZoneIpcType::Unk1 => 32,
-            ClientZoneIpcType::Unk2 => 16,
-            ClientZoneIpcType::Unk3 => 8,
-            ClientZoneIpcType::Unk4 => 8,
-            ClientZoneIpcType::SetSearchInfoHandler => 8,
-            ClientZoneIpcType::Unk5 => 8,
-            ClientZoneIpcType::SocialListRequest => 16,
-            ClientZoneIpcType::Unk7 => 32,
-            ClientZoneIpcType::UpdatePositionHandler => 24,
-            ClientZoneIpcType::LogOut => 8,
-            ClientZoneIpcType::Disconnected => 8,
-            ClientZoneIpcType::ChatMessage => 1056,
-            ClientZoneIpcType::GameMasterCommand => 32,
-            ClientZoneIpcType::Unk12 => todo!(),
-            ClientZoneIpcType::EnterZoneLine => 24,
-            ClientZoneIpcType::Unk13 => todo!(),
-            ClientZoneIpcType::Unk14 => todo!(),
-            ClientZoneIpcType::ActionRequest => 32,
-            ClientZoneIpcType::Unk15 => todo!(),
-            ClientZoneIpcType::Unk16 => 6,
-            ClientZoneIpcType::Unk17 => 32,
-            ClientZoneIpcType::Unk18 => 8,
-        }
+        16 + self.op_code.calc_size()
     }
 }
 
@@ -112,35 +89,7 @@ pub type ServerZoneIpcSegment = IpcSegment<ServerZoneIpcType, ServerZoneIpcData>
 impl ReadWriteIpcSegment for ServerZoneIpcSegment {
     fn calc_size(&self) -> u32 {
         // 16 is the size of the IPC header
-        16 + match self.op_code {
-            ServerZoneIpcType::InitializeChat => 8,
-            ServerZoneIpcType::InitZone => 103,
-            ServerZoneIpcType::ActorControlSelf => 32,
-            ServerZoneIpcType::PlayerStats => 224,
-            ServerZoneIpcType::PlayerSetup => 2784,
-            ServerZoneIpcType::UpdateClassInfo => 48,
-            ServerZoneIpcType::PlayerSpawn => 664,
-            ServerZoneIpcType::InitResponse => 16,
-            ServerZoneIpcType::LogOutComplete => 8,
-            ServerZoneIpcType::ActorSetPos => 24,
-            ServerZoneIpcType::ServerChatMessage => 776,
-            ServerZoneIpcType::Unk8 => 808,
-            ServerZoneIpcType::LinkShellInformation => 456,
-            ServerZoneIpcType::Unk9 => 24,
-            ServerZoneIpcType::Unk11 => 32,
-            ServerZoneIpcType::Unk15 => 8,
-            ServerZoneIpcType::Unk16 => 136,
-            ServerZoneIpcType::ActorControl => 24,
-            ServerZoneIpcType::ActorMove => 16,
-            ServerZoneIpcType::Unk17 => 104,
-            ServerZoneIpcType::SocialList => 1136,
-            ServerZoneIpcType::PrepareZoning => 16,
-            ServerZoneIpcType::NpcSpawn => 648,
-            ServerZoneIpcType::StatusEffectList => 384,
-            ServerZoneIpcType::WeatherChange => 8,
-            ServerZoneIpcType::ItemInfo => 64,
-            ServerZoneIpcType::ContainerInfo => 16,
-        }
+        16 + self.op_code.calc_size()
     }
 }
 
@@ -178,141 +127,37 @@ pub enum GameMasterCommandType {
 }
 
 #[binrw]
-#[brw(repr = u16)]
-#[derive(Clone, PartialEq, Debug)]
-pub enum ServerZoneIpcType {
-    /// Sent by the server to Initialize something chat-related?
-    InitializeChat = 0x2,
-    /// Sent by the server that tells the client which zone to load
-    InitZone = 0x2BB,
-    /// Sent by the server for... something
-    ActorControlSelf = 0x16F,
-    /// Sent by the server containing character stats
-    PlayerStats = 0x191,
-    /// Sent by the server to setup the player on the client
-    PlayerSetup = 0xDA,
-    // Sent by the server to setup class info
-    UpdateClassInfo = 0x77,
-    // Sent by the server to spawn the player in
-    PlayerSpawn = 0x331,
-    /// Sent by the server as response to ZoneInitRequest.
-    InitResponse = 0x223,
-    // Sent by the server to indicate the log out is complete
-    LogOutComplete = 0x69,
-    // Sent by the server to modify the client's position
-    ActorSetPos = 0x88,
-    // Sent by the server when they send a chat message
-    ServerChatMessage = 0x196,
-    // Unknown, server sends to the client before player spawn
-    Unk8 = 0x134,
-    // Unknown, but seems to contain information on cross-world linkshells
-    LinkShellInformation = 0x234,
-    // Unknown, server sends to the client before player spawn
-    Unk9 = 0x189,
-    // Unknown, server sends this in response to Unk7
-    Unk11 = 0x156,
-    // Sent by the server when it wants the client to... prepare to zone?
-    PrepareZoning = 0x16C,
-    // Sent by the server???
-    Unk15 = 0x28C,
-    // Sent by the server before init zone???
-    Unk16 = 0x3AB,
-    // Sent by the server
-    ActorControl = 0x208,
-    // Sent by the server
-    ActorMove = 0x159,
-    // Sent by the server
-    Unk17 = 0x2A1,
-    // Sent by the server in response to SocialListRequest
-    SocialList = 0x36C,
-    // Sent by the server to spawn an NPC
-    NpcSpawn = 0x13F,
-    // Sent by the server to update an actor's status effect list
-    StatusEffectList = 0x347,
-    // Sent by the server when it's time to change the weather
-    WeatherChange = 0x175,
-    // Sent to inform the client of an inventory item
-    ItemInfo = 0x352,
-    // Sent to inform the client of container status
-    ContainerInfo = 0x236,
-}
-
-#[binrw]
-#[brw(repr = u16)]
-#[derive(Clone, PartialEq, Debug)]
-pub enum ClientZoneIpcType {
-    /// Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load)
-    InitRequest = 0x2AB,
-    // Sent by the client when they're done loading and they need to be spawned in
-    FinishLoading = 0x1AB,
-    // FIXME: 32 bytes of something from the client, not sure what yet
-    Unk1 = 0x364,
-    // FIXME: 16 bytes of something from the client, not sure what yet
-    Unk2 = 0x1D8,
-    // FIXME: 8 bytes of something from the client, not sure what yet
-    Unk3 = 0x2AF,
-    // FIXME: 8 bytes of something from the client, not sure what yet
-    Unk4 = 0x178,
-    SetSearchInfoHandler = 0x20A,
-    // FIXME: 8 bytes of something from the client, not sure what yet
-    Unk5 = 0x223,
-    // Sent by the client when it requests the friends list and other related info
-    SocialListRequest = 0x1A1,
-    // FIXME: 32 bytes of something from the client, not sure what yet
-    Unk7 = 0x2B5,
-    UpdatePositionHandler = 0x231,
-    // Sent by the client when the user requests to log out
-    LogOut = 0x21A,
-    // Sent by the client when it's actually disconnecting
-    Disconnected = 0x360,
-    // Sent by the client when they send a chat message
-    ChatMessage = 0x177,
-    // Sent by the client when they send a GM command. This can only be sent by the client if they are sent a GM rank.
-    GameMasterCommand = 0x389,
-    // Unknown, client sends this for ???
-    Unk12 = 0x0E9,
-    // Sent by the client when the character walks into a zone transistion
-    EnterZoneLine = 0x1BF,
-    // Sent by the client after we sent a InitZone in TravelToZone??
-    // TODO: Actually, I don't think is real...
-    Unk13 = 0x2EE,
-    // Sent by the client for unknown reasons
-    Unk14 = 0x87,
-    // Sent by the client when a character performs an action
-    ActionRequest = 0x361,
-    /// Sent by the client for unknown reasons, it's a bunch of numbers?
-    Unk15 = 0x10B,
-    /// 8 unknown bytes sent by the client for unknown reason
-    Unk16 = 0x188,
-    // FIXME: 32 bytes of something from the client, not sure what yet
-    Unk17 = 0x1D2,
-    // FIXME: 8 bytes of something from the client, not sure what yet
-    Unk18 = 0xDD,
-}
-
-#[binrw]
 #[br(import(_magic: &ServerZoneIpcType))]
 #[derive(Debug, Clone)]
 pub enum ServerZoneIpcData {
-    InitializeChat {
-        unk: [u8; 8],
-    },
+    /// Sent by the server to Initialize something chat-related?
+    InitializeChat { unk: [u8; 8] },
+    /// Sent by the server as response to ZoneInitRequest.
     InitResponse {
         unk1: u64,
         character_id: u32,
         unk2: u32,
     },
+    /// Sent by the server that tells the client which zone to load
     InitZone(InitZone),
+    /// Sent by the server for... something
     ActorControlSelf(ActorControlSelf),
+    /// Sent by the server containing character stats
     PlayerStats(PlayerStats),
+    /// Sent by the server to setup the player on the client
     PlayerSetup(PlayerSetup),
+    /// Sent by the server to setup class info
     UpdateClassInfo(UpdateClassInfo),
+    /// Sent by the server to spawn the player in
     PlayerSpawn(PlayerSpawn),
+    /// Sent by the server to indicate the log out is complete
     LogOutComplete {
         // TODO: guessed
         unk: [u8; 8],
     },
+    /// Sent by the server to modify the client's position
     ActorSetPos(ActorSetPos),
+    /// Sent by the server when they send a chat message
     ServerChatMessage {
         unk: u8, // channel?
         #[brw(pad_after = 775)]
@@ -321,43 +166,44 @@ pub enum ServerZoneIpcData {
         #[bw(map = write_string)]
         message: String,
     },
-    Unk8 {
-        unk: [u8; 808],
-    },
-    LinkShellInformation {
-        unk: [u8; 456],
-    },
-    Unk9 {
-        unk: [u8; 24],
-    },
+    /// Unknown, server sends to the client before player spawn
+    Unk8 { unk: [u8; 808] },
+    /// Unknown, but seems to contain information on cross-world linkshells
+    LinkShellInformation { unk: [u8; 456] },
+    /// Unknown, server sends to the client before player spawn
+    Unk9 { unk: [u8; 24] },
+    /// Unknown, server sends this in response to Unk7
     Unk11 {
         timestamp: u32,
         #[brw(pad_after = 24)] // empty bytes
         unk: u32,
     },
-    PrepareZoning {
-        unk: [u32; 4],
-    },
-    Unk15 {
-        unk: u32,
-        player_id: u32,
-    },
-    Unk16 {
-        unk: [u8; 136],
-    },
+    /// Sent by the server when it wants the client to... prepare to zone?
+    PrepareZoning { unk: [u32; 4] },
+    /// Sent by the server???
+    Unk15 { unk: u32, player_id: u32 },
+    /// Sent by the server before init zone???
+    Unk16 { unk: [u8; 136] },
+    /// Sent by the server
     ActorControl(ActorControl),
+    /// Sent by the server
     ActorMove {
         #[brw(pad_after = 4)] // empty
         pos: Position,
     },
-    Unk17 {
-        unk: [u8; 104],
-    },
+    /// Sent by the server
+    Unk17 { unk: [u8; 104] },
+    /// Sent by the server in response to SocialListRequest
     SocialList(SocialList),
+    /// Sent by the server to spawn an NPC
     NpcSpawn(NpcSpawn),
+    /// Sent by the server to update an actor's status effect list
     StatusEffectList(StatusEffectList),
+    /// Sent by the server when it's time to change the weather
     WeatherChange(WeatherChange),
+    /// Sent to inform the client of an inventory item
     ItemInfo(ItemInfo),
+    /// Sent to inform the client of container status
     ContainerInfo(ContainerInfo),
 }
 
@@ -365,31 +211,37 @@ pub enum ServerZoneIpcData {
 #[br(import(magic: &ClientZoneIpcType))]
 #[derive(Debug, Clone)]
 pub enum ClientZoneIpcData {
+    /// Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load)
     #[br(pre_assert(*magic == ClientZoneIpcType::InitRequest))]
     InitRequest {
         // TODO: full of possibly interesting information
         unk: [u8; 120],
     },
+    /// Sent by the client when they're done loading and they need to be spawned in
     #[br(pre_assert(*magic == ClientZoneIpcType::FinishLoading))]
     FinishLoading {
         // TODO: full of possibly interesting information
         unk: [u8; 72],
     },
+    /// FIXME: 32 bytes of something from the client, not sure what yet
     #[br(pre_assert(*magic == ClientZoneIpcType::Unk1))]
     Unk1 {
         // TODO: full of possibly interesting information
         unk: [u8; 32],
     },
+    /// FIXME: 16 bytes of something from the client, not sure what yet
     #[br(pre_assert(*magic == ClientZoneIpcType::Unk2))]
     Unk2 {
         // TODO: full of possibly interesting information
         unk: [u8; 16],
     },
+    /// FIXME: 8 bytes of something from the client, not sure what yet
     #[br(pre_assert(*magic == ClientZoneIpcType::Unk3))]
     Unk3 {
         // TODO: full of possibly interesting information
         unk: [u8; 8],
     },
+    /// FIXME: 8 bytes of something from the client, not sure what yet
     #[br(pre_assert(*magic == ClientZoneIpcType::Unk4))]
     Unk4 {
         // TODO: full of possibly interesting information
@@ -400,13 +252,16 @@ pub enum ClientZoneIpcData {
         // TODO: full of possibly interesting information
         unk: [u8; 8],
     },
+    /// FIXME: 8 bytes of something from the client, not sure what yet
     #[br(pre_assert(*magic == ClientZoneIpcType::Unk5))]
     Unk5 {
         // TODO: full of possibly interesting information
         unk: [u8; 8],
     },
+    /// Sent by the client when it requests the friends list and other related info
     #[br(pre_assert(*magic == ClientZoneIpcType::SocialListRequest))]
     SocialListRequest(SocialListRequest),
+    /// FIXME: 32 bytes of something from the client, not sure what yet
     #[br(pre_assert(*magic == ClientZoneIpcType::Unk7))]
     Unk7 {
         // TODO: full of possibly interesting information
@@ -422,18 +277,22 @@ pub enum ClientZoneIpcData {
         #[brw(pad_after = 4)] // empty
         position: Position,
     },
+    /// Sent by the client when the user requests to log out
     #[br(pre_assert(*magic == ClientZoneIpcType::LogOut))]
     LogOut {
         // TODO: full of possibly interesting information
         unk: [u8; 8],
     },
+    /// Sent by the client when it's actually disconnecting
     #[br(pre_assert(*magic == ClientZoneIpcType::Disconnected))]
     Disconnected {
         // TODO: full of possibly interesting information
         unk: [u8; 8],
     },
+    /// Sent by the client when they send a chat message
     #[br(pre_assert(*magic == ClientZoneIpcType::ChatMessage))]
     ChatMessage(ChatMessage),
+    /// Sent by the client when they send a GM command. This can only be sent by the client if they are sent a GM rank.
     #[br(pre_assert(*magic == ClientZoneIpcType::GameMasterCommand))]
     GameMasterCommand {
         // TODO: incomplete
@@ -442,10 +301,7 @@ pub enum ClientZoneIpcData {
         arg: u32,
         unk: [u8; 24],
     },
-    #[br(pre_assert(*magic == ClientZoneIpcType::Unk12))]
-    Unk12 {
-        unk: [u8; 8], // TODO: unknown
-    },
+    /// Sent by the client when the character walks into a zone transistion
     #[br(pre_assert(*magic == ClientZoneIpcType::EnterZoneLine))]
     EnterZoneLine {
         exit_box_id: u32,
@@ -453,18 +309,9 @@ pub enum ClientZoneIpcData {
         #[brw(pad_after = 4)] // empty
         landset_index: i32,
     },
-    #[br(pre_assert(*magic == ClientZoneIpcType::Unk13))]
-    Unk13 {
-        unk: [u8; 16], // TODO: unknown
-    },
-    #[br(pre_assert(*magic == ClientZoneIpcType::Unk14))]
-    Unk14 {
-        unk: [u8; 8], // TODO: unknown
-    },
+    /// Sent by the client when a character performs an action
     #[br(pre_assert(*magic == ClientZoneIpcType::ActionRequest))]
     ActionRequest(ActionRequest),
-    #[br(pre_assert(*magic == ClientZoneIpcType::Unk15))]
-    Unk15 { unk: [u8; 632] },
     #[br(pre_assert(*magic == ClientZoneIpcType::Unk16))]
     Unk16 {
         unk: [u8; 8], // TODO: unknown
@@ -484,6 +331,8 @@ mod tests {
     use std::io::Cursor;
 
     use binrw::BinWrite;
+
+    use crate::opcodes::ServerZoneIpcType;
 
     use super::*;
 
