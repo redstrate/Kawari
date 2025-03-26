@@ -18,6 +18,10 @@ Here are the various things that should be checked when updating Kawari to a new
 * The IPC opcodes _will_ change and must all be replaced.
 * Check the game version used in the encryption key in `lib.rs`.
 
+## IPC Opcodes
+
+Since the Zone IPC opcodes change every patch, it's extremely easy to change the opcodes in Kawari. Edit the values under `resources/opcodes.json` and recompile Kawari. You still have to change the structs themselves (located under `src/<connection>/ipc`) if needed though.
+
 ## Contributing
 
 Before making a pull request, make sure:

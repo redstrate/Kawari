@@ -11,6 +11,7 @@ use crate::{
     config::get_config,
     lobby::CharaMake,
     oodle::OodleNetwork,
+    opcodes::ServerLobbyIpcType,
     packet::{
         CompressionType, ConnectionType, PacketSegment, PacketState, SegmentType,
         generate_encryption_key, parse_packet, send_packet,
@@ -20,7 +21,7 @@ use crate::{
 use super::ipc::{
     CharacterDetails, LobbyCharacterAction, LobbyCharacterActionKind, LobbyCharacterList,
     LobbyServerList, LobbyServiceAccountList, Server, ServerLobbyIpcData, ServerLobbyIpcSegment,
-    ServerLobbyIpcType, ServiceAccount,
+    ServiceAccount,
 };
 use crate::lobby::ipc::ClientLobbyIpcSegment;
 
