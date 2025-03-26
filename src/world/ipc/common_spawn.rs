@@ -160,9 +160,7 @@ pub struct CommonSpawn {
     pub hp_curr: u32,
     pub display_flags: DisplayFlag,
     pub fate_id: u16, // assumed
-    #[br(dbg)]
     pub mp_curr: u16,
-    #[br(dbg)]
     pub mp_max: u16,
     pub unk: u16,
     /// See ModelChara Excel sheet
