@@ -1,3 +1,4 @@
+use mlua::{UserData, UserDataFields};
 use tokio::net::TcpStream;
 
 use crate::{
@@ -22,6 +23,12 @@ pub struct PlayerData {
     pub actor_id: u32,
     pub content_id: u64,
     pub account_id: u32,
+}
+
+impl UserData for PlayerData {
+    fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
+        fields.add_field_method_get("content_id", |_, this| Ok(this.content_id));
+    }
 }
 
 /// Represents a single connection between an instance of the client and the world server
