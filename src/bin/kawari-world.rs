@@ -24,7 +24,7 @@ use kawari::world::{
     },
 };
 use kawari::world::{PlayerData, WorldDatabase};
-use mlua::Lua;
+use mlua::{Function, Lua};
 use physis::common::{Language, Platform};
 use physis::gamedata::GameData;
 use tokio::io::AsyncReadExt;
@@ -331,12 +331,18 @@ async fn main() {
                                         }
 
                                         let lua = lua.lock().unwrap();
-                                        lua.load(
-                                            r#"
-                                                onBeginLogin()
-                                            "#,
-                                        )
-                                        .exec()
+                                        lua.scope(|scope| {
+                                            let player_data = scope
+                                                .create_userdata_ref(&connection.player_data)
+                                                .unwrap();
+
+                                            let func: Function =
+                                                lua.globals().get("onBeginLogin").unwrap();
+
+                                            func.call::<()>(player_data).unwrap();
+
+                                            Ok(())
+                                        })
                                         .unwrap();
                                     }
                                     ClientZoneIpcData::FinishLoading { .. } => {
