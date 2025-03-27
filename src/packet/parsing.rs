@@ -168,9 +168,6 @@ pub async fn send_packet<T: ReadWriteIpcSegment>(
 
     let buffer = cursor.into_inner();
 
-    tracing::info!("Wrote response packet to outpacket.bin");
-    write("outpacket.bin", &buffer).unwrap();
-
     socket
         .write_all(&buffer)
         .await

@@ -33,8 +33,6 @@ pub(crate) fn decrypt<T: ReadWriteIpcSegment>(
         let mut cursor = Cursor::new(&data);
         T::read_options(&mut cursor, endian, ())
     } else {
-        tracing::info!("NOTE: Not decrypting this IPC packet since no key was provided!");
-
         T::read_options(reader, endian, ())
     }
 }
@@ -61,8 +59,6 @@ pub(crate) fn encrypt<T: ReadWriteIpcSegment>(
 
         Ok(())
     } else {
-        tracing::info!("NOTE: Not encrypting this IPC packet since no key was provided!");
-
         value.write_options(writer, endian, ())
     }
 }
