@@ -185,6 +185,9 @@ pub struct WorldConfig {
     pub listen_address: String,
     /// See the World Excel sheet.
     pub world_id: u16,
+    /// Location of the scripts directory.
+    /// Defaults to a sensible value if the project is self-built.
+    pub scripts_location: String,
 }
 
 impl Default for WorldConfig {
@@ -193,6 +196,7 @@ impl Default for WorldConfig {
             port: 7100,
             listen_address: "127.0.0.1".to_string(),
             world_id: 63, // Gilgamesh
+            scripts_location: "resources/scripts".to_string(),
         }
     }
 }

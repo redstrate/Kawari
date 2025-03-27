@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use kawari::common::custom_ipc::{CustomIpcData, CustomIpcSegment, CustomIpcType};
 use kawari::common::timestamp_secs;
@@ -24,6 +24,7 @@ use kawari::world::{
     },
 };
 use kawari::world::{PlayerData, WorldDatabase};
+use mlua::Lua;
 use physis::common::{Language, Platform};
 use physis::gamedata::GameData;
 use tokio::io::AsyncReadExt;
@@ -42,11 +43,23 @@ async fn main() {
     tracing::info!("World server started on {addr}");
 
     let database = Arc::new(WorldDatabase::new());
+    let lua = Arc::new(Mutex::new(Lua::new()));
+
+    {
+        let lua = lua.lock().unwrap();
+        lua.load(
+            std::fs::read(format!("{}/test.lua", &config.world.scripts_location))
+                .expect("Failed to locate scripts directory!"),
+        )
+        .exec()
+        .unwrap();
+    }
 
     loop {
         let (socket, _) = listener.accept().await.unwrap();
 
         let database = database.clone();
+        let lua = lua.clone();
 
         let state = PacketState {
             client_key: None,
@@ -316,6 +329,15 @@ async fn main() {
                                                 })
                                                 .await;
                                         }
+
+                                        let lua = lua.lock().unwrap();
+                                        lua.load(
+                                            r#"
+                                                onBeginLogin()
+                                            "#,
+                                        )
+                                        .exec()
+                                        .unwrap();
                                     }
                                     ClientZoneIpcData::FinishLoading { .. } => {
                                         tracing::info!(
