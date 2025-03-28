@@ -21,4 +21,5 @@ pub struct ActionRequest {
     pub dir_target: u16,
     pub target: u64,
     pub arg: u32,
+    pub padding_prob: u32,
 }
