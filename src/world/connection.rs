@@ -1,4 +1,4 @@
-use mlua::{UserData, UserDataFields};
+use mlua::{UserData, UserDataFields, UserDataMethods};
 use tokio::net::TcpStream;
 
 use crate::{
@@ -18,7 +18,7 @@ use super::{
     },
 };
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, Copy)]
 pub struct PlayerData {
     pub actor_id: u32,
     pub content_id: u64,
@@ -242,5 +242,70 @@ impl ZoneConnection {
             })
             .await;
         }
+    }
+
+    pub async fn send_message(&mut self, message: &str) {
+        let ipc = ServerZoneIpcSegment {
+            op_code: ServerZoneIpcType::ServerChatMessage,
+            timestamp: timestamp_secs(),
+            data: ServerZoneIpcData::ServerChatMessage {
+                message: message.to_string(),
+                unk: 0,
+            },
+            ..Default::default()
+        };
+
+        self.send_segment(PacketSegment {
+            source_actor: self.player_data.actor_id,
+            target_actor: self.player_data.actor_id,
+            segment_type: SegmentType::Ipc { data: ipc },
+        })
+        .await;
+    }
+
+    pub async fn process_lua_player(&mut self, player: &mut LuaPlayer) {
+        for segment in &player.queued_segments {
+            self.send_segment(segment.clone()).await;
+        }
+        player.queued_segments.clear();
+    }
+}
+
+#[derive(Default)]
+pub struct LuaPlayer {
+    pub player_data: PlayerData,
+    queued_segments: Vec<PacketSegment<ServerZoneIpcSegment>>,
+}
+
+impl LuaPlayer {
+    fn queue_segment(&mut self, segment: PacketSegment<ServerZoneIpcSegment>) {
+        self.queued_segments.push(segment);
+    }
+
+    fn send_message(&mut self, message: &str) {
+        let ipc = ServerZoneIpcSegment {
+            op_code: ServerZoneIpcType::ServerChatMessage,
+            timestamp: timestamp_secs(),
+            data: ServerZoneIpcData::ServerChatMessage {
+                message: message.to_string(),
+                unk: 0,
+            },
+            ..Default::default()
+        };
+
+        self.queue_segment(PacketSegment {
+            source_actor: self.player_data.actor_id,
+            target_actor: self.player_data.actor_id,
+            segment_type: SegmentType::Ipc { data: ipc },
+        });
+    }
+}
+
+impl UserData for LuaPlayer {
+    fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
+        methods.add_method_mut("send_message", |_, this, message: String| {
+            this.send_message(&message);
+            Ok(())
+        });
     }
 }

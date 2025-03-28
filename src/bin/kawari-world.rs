@@ -23,8 +23,8 @@ use kawari::world::{
         SocialList,
     },
 };
-use kawari::world::{PlayerData, WorldDatabase};
-use mlua::{Function, Lua};
+use kawari::world::{LuaPlayer, PlayerData, WorldDatabase};
+use mlua::{AnyUserData, Function, Lua};
 use physis::common::{Language, Platform};
 use physis::gamedata::GameData;
 use tokio::io::AsyncReadExt;
@@ -47,12 +47,11 @@ async fn main() {
 
     {
         let lua = lua.lock().unwrap();
-        lua.load(
-            std::fs::read(format!("{}/test.lua", &config.world.scripts_location))
-                .expect("Failed to locate scripts directory!"),
-        )
-        .exec()
-        .unwrap();
+        let file_name = format!("{}/test.lua", &config.world.scripts_location);
+        lua.load(std::fs::read(&file_name).expect("Failed to locate scripts directory!"))
+            .set_name("@".to_string() + &file_name)
+            .exec()
+            .unwrap();
     }
 
     loop {
@@ -79,6 +78,8 @@ async fn main() {
             inventory: Inventory::new(),
         };
 
+        let mut lua_player = LuaPlayer::default();
+
         tokio::spawn(async move {
             let mut buf = [0; 2056];
             loop {
@@ -98,6 +99,7 @@ async fn main() {
                                 // collect actor data
                                 connection.player_data =
                                     database.find_player_data(actor_id.parse::<u32>().unwrap());
+                                lua_player.player_data = connection.player_data;
 
                                 // We have send THEM a keep alive
                                 {
@@ -309,37 +311,16 @@ async fn main() {
 
                                         connection.change_zone(zone_id).await;
 
-                                        // send welcome message
-                                        {
-                                            let ipc = ServerZoneIpcSegment {
-                                                op_code: ServerZoneIpcType::ServerChatMessage,
-                                                timestamp: timestamp_secs(),
-                                                data: ServerZoneIpcData::ServerChatMessage {
-                                                    message: "Welcome to Kawari!".to_string(),
-                                                    unk: 0,
-                                                },
-                                                ..Default::default()
-                                            };
-
-                                            connection
-                                                .send_segment(PacketSegment {
-                                                    source_actor: connection.player_data.actor_id,
-                                                    target_actor: connection.player_data.actor_id,
-                                                    segment_type: SegmentType::Ipc { data: ipc },
-                                                })
-                                                .await;
-                                        }
-
                                         let lua = lua.lock().unwrap();
                                         lua.scope(|scope| {
-                                            let player_data = scope
-                                                .create_userdata_ref(&connection.player_data)
+                                            let connection_data = scope
+                                                .create_userdata_ref_mut(&mut lua_player)
                                                 .unwrap();
 
                                             let func: Function =
                                                 lua.globals().get("onBeginLogin").unwrap();
 
-                                            func.call::<()>(player_data).unwrap();
+                                            func.call::<()>(connection_data).unwrap();
 
                                             Ok(())
                                         })
@@ -976,6 +957,8 @@ async fn main() {
                             }
                         }
                     }
+
+                    connection.process_lua_player(&mut lua_player).await;
                 }
             }
         });
