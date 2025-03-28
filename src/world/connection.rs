@@ -14,7 +14,8 @@ use super::{
     Inventory, Item, Zone,
     ipc::{
         ActorSetPos, ClientZoneIpcSegment, ContainerInfo, ContainerType, InitZone, ItemInfo,
-        ServerZoneIpcData, ServerZoneIpcSegment, UpdateClassInfo, WeatherChange,
+        ServerZoneIpcData, ServerZoneIpcSegment, StatusEffect, StatusEffectList, UpdateClassInfo,
+        WeatherChange,
     },
 };
 
@@ -299,6 +300,29 @@ impl LuaPlayer {
             segment_type: SegmentType::Ipc { data: ipc },
         });
     }
+
+    fn give_status_effect(&mut self, effect_id: u16, duration: f32) {
+        let ipc = ServerZoneIpcSegment {
+            op_code: ServerZoneIpcType::StatusEffectList,
+            timestamp: timestamp_secs(),
+            data: ServerZoneIpcData::StatusEffectList(StatusEffectList {
+                statues: [StatusEffect {
+                    effect_id,
+                    param: 0,
+                    duration,
+                    source_actor_id: self.player_data.actor_id,
+                }; 30],
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+
+        self.queue_segment(PacketSegment {
+            source_actor: self.player_data.actor_id,
+            target_actor: self.player_data.actor_id,
+            segment_type: SegmentType::Ipc { data: ipc },
+        });
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -307,5 +331,12 @@ impl UserData for LuaPlayer {
             this.send_message(&message);
             Ok(())
         });
+        methods.add_method_mut(
+            "give_status_effect",
+            |_, this, (effect_id, duration): (u16, f32)| {
+                this.give_status_effect(effect_id, duration);
+                Ok(())
+            },
+        );
     }
 }
