@@ -7,10 +7,13 @@ mod chat_handler;
 pub use chat_handler::ChatHandler;
 
 mod connection;
-pub use connection::{LuaPlayer, PlayerData, StatusEffects, ZoneConnection};
+pub use connection::{PlayerData, StatusEffects, ZoneConnection};
 
 mod database;
 pub use database::{CharacterData, WorldDatabase};
 
 mod inventory;
 pub use inventory::{EquippedContainer, Inventory, Item};
+
+mod lua;
+pub use lua::LuaPlayer;
