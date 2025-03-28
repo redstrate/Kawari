@@ -1,4 +1,4 @@
-use mlua::{UserData, UserDataFields, UserDataMethods};
+use mlua::{UserData, UserDataMethods};
 use tokio::net::TcpStream;
 
 use crate::{
@@ -26,9 +26,34 @@ pub struct PlayerData {
     pub account_id: u32,
 }
 
-impl UserData for PlayerData {
-    fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
-        fields.add_field_method_get("content_id", |_, this| Ok(this.content_id));
+#[derive(Debug, Default, Clone)]
+pub struct StatusEffects {
+    pub status_effects: Vec<StatusEffect>,
+    /// If the list is dirty and must be propagated to the client
+    pub dirty: bool,
+}
+
+impl StatusEffects {
+    pub fn add(&mut self, effect_id: u16, duration: f32) {
+        let status_effect = self.find_or_create_status_effect(effect_id);
+        status_effect.duration = duration;
+        self.dirty = true
+    }
+
+    fn find_or_create_status_effect(&mut self, effect_id: u16) -> &mut StatusEffect {
+        if let Some(i) = self
+            .status_effects
+            .iter()
+            .position(|effect| effect.effect_id == effect_id)
+        {
+            &mut self.status_effects[i]
+        } else {
+            self.status_effects.push(StatusEffect {
+                effect_id,
+                ..Default::default()
+            });
+            self.status_effects.last_mut().unwrap()
+        }
     }
 }
 
@@ -44,6 +69,7 @@ pub struct ZoneConnection {
 
     pub position: Position,
     pub inventory: Inventory,
+    pub status_effects: StatusEffects,
 }
 
 impl ZoneConnection {
@@ -270,11 +296,40 @@ impl ZoneConnection {
         }
         player.queued_segments.clear();
     }
+
+    pub async fn process_effects_list(&mut self) {
+        // Only update the client if absolutely nessecary (e.g. an effect is added, removed or changed duration)
+        if self.status_effects.dirty {
+            let mut list = [StatusEffect::default(); 30];
+            list[..self.status_effects.status_effects.len()]
+                .copy_from_slice(&self.status_effects.status_effects);
+
+            let ipc = ServerZoneIpcSegment {
+                op_code: ServerZoneIpcType::StatusEffectList,
+                timestamp: timestamp_secs(),
+                data: ServerZoneIpcData::StatusEffectList(StatusEffectList {
+                    statues: list,
+                    ..Default::default()
+                }),
+                ..Default::default()
+            };
+
+            self.send_segment(PacketSegment {
+                source_actor: self.player_data.actor_id,
+                target_actor: self.player_data.actor_id,
+                segment_type: SegmentType::Ipc { data: ipc },
+            })
+            .await;
+
+            self.status_effects.dirty = false;
+        }
+    }
 }
 
 #[derive(Default)]
 pub struct LuaPlayer {
     pub player_data: PlayerData,
+    pub status_effects: StatusEffects,
     queued_segments: Vec<PacketSegment<ServerZoneIpcSegment>>,
 }
 
@@ -302,26 +357,7 @@ impl LuaPlayer {
     }
 
     fn give_status_effect(&mut self, effect_id: u16, duration: f32) {
-        let ipc = ServerZoneIpcSegment {
-            op_code: ServerZoneIpcType::StatusEffectList,
-            timestamp: timestamp_secs(),
-            data: ServerZoneIpcData::StatusEffectList(StatusEffectList {
-                statues: [StatusEffect {
-                    effect_id,
-                    param: 0,
-                    duration,
-                    source_actor_id: self.player_data.actor_id,
-                }; 30],
-                ..Default::default()
-            }),
-            ..Default::default()
-        };
-
-        self.queue_segment(PacketSegment {
-            source_actor: self.player_data.actor_id,
-            target_actor: self.player_data.actor_id,
-            segment_type: SegmentType::Ipc { data: ipc },
-        });
+        self.status_effects.add(effect_id, duration);
     }
 }
 
