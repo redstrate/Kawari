@@ -722,36 +722,20 @@ async fn main() {
 
                                         println!("Found action: {:#?}", action_row);
 
-                                        // send new status list
-                                        {
-                                            let ipc = ServerZoneIpcSegment {
-                                                op_code: ServerZoneIpcType::StatusEffectList,
-                                                timestamp: timestamp_secs(),
-                                                data: ServerZoneIpcData::StatusEffectList(
-                                                    kawari::world::ipc::StatusEffectList {
-                                                        statues: [StatusEffect {
-                                                            effect_id: 50,
-                                                            param: 0,
-                                                            duration: 50.0,
-                                                            source_actor_id: connection
-                                                                .player_data
-                                                                .actor_id,
-                                                        };
-                                                            30],
-                                                        ..Default::default()
-                                                    },
-                                                ),
-                                                ..Default::default()
-                                            };
+                                        let lua = lua.lock().unwrap();
+                                        lua.scope(|scope| {
+                                            let connection_data = scope
+                                                .create_userdata_ref_mut(&mut lua_player)
+                                                .unwrap();
 
-                                            connection
-                                                .send_segment(PacketSegment {
-                                                    source_actor: connection.player_data.actor_id,
-                                                    target_actor: connection.player_data.actor_id,
-                                                    segment_type: SegmentType::Ipc { data: ipc },
-                                                })
-                                                .await;
-                                        }
+                                            let func: Function =
+                                                lua.globals().get("doAction").unwrap();
+
+                                            func.call::<()>(connection_data).unwrap();
+
+                                            Ok(())
+                                        })
+                                        .unwrap();
                                     }
                                     ClientZoneIpcData::Unk16 { .. } => {
                                         tracing::info!("Recieved Unk16!");
