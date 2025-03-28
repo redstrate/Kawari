@@ -1,3 +1,4 @@
 function onBeginLogin(player)
-    print("Player " .. player.content_id .. " is connecting!")
+    -- send a welcome message
+    player:send_message("Welcome to Kawari!")
 end

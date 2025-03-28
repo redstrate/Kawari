@@ -11,6 +11,8 @@ fn main() {
         let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
         d.push("resources/opcodes.json");
 
+        println!("cargo::rerun-if-changed={}", d.to_str().unwrap());
+
         let mut output_str = "use binrw::binrw;\n".to_string();
 
         let opcodes_buffer = std::fs::read_to_string(d).unwrap();

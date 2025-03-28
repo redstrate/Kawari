@@ -7,7 +7,7 @@ mod chat_handler;
 pub use chat_handler::ChatHandler;
 
 mod connection;
-pub use connection::{PlayerData, ZoneConnection};
+pub use connection::{LuaPlayer, PlayerData, ZoneConnection};
 
 mod database;
 pub use database::{CharacterData, WorldDatabase};
