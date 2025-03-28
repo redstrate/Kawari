@@ -14,7 +14,6 @@ use kawari::packet::{
 use kawari::world::ipc::{
     ClientZoneIpcData, CommonSpawn, DisplayFlag, GameMasterCommandType, GameMasterRank, ObjectKind,
     OnlineStatus, PlayerSubKind, ServerZoneIpcData, ServerZoneIpcSegment, SocialListRequestType,
-    StatusEffect,
 };
 use kawari::world::{
     ChatHandler, Inventory, Zone, ZoneConnection,
@@ -23,8 +22,8 @@ use kawari::world::{
         SocialList,
     },
 };
-use kawari::world::{LuaPlayer, PlayerData, WorldDatabase};
-use mlua::{AnyUserData, Function, Lua};
+use kawari::world::{LuaPlayer, PlayerData, StatusEffects, WorldDatabase};
+use mlua::{Function, Lua};
 use physis::common::{Language, Platform};
 use physis::gamedata::GameData;
 use tokio::io::AsyncReadExt;
@@ -76,6 +75,7 @@ async fn main() {
             zone: None,
             position: Position::default(),
             inventory: Inventory::new(),
+            status_effects: StatusEffects::default(),
         };
 
         let mut lua_player = LuaPlayer::default();
@@ -99,7 +99,6 @@ async fn main() {
                                 // collect actor data
                                 connection.player_data =
                                     database.find_player_data(actor_id.parse::<u32>().unwrap());
-                                lua_player.player_data = connection.player_data;
 
                                 // We have send THEM a keep alive
                                 {
@@ -942,7 +941,19 @@ async fn main() {
                         }
                     }
 
+                    // copy from lua player state, as they modify the status effects list
+                    // TODO: i dunno?
+                    connection.status_effects = lua_player.status_effects.clone();
+
+                    // Process any queued packets from scripts and whatnot
                     connection.process_lua_player(&mut lua_player).await;
+
+                    // check if status effects need sending
+                    connection.process_effects_list().await;
+
+                    // update lua player
+                    lua_player.player_data = connection.player_data;
+                    lua_player.status_effects = connection.status_effects.clone();
                 }
             }
         });
