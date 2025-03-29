@@ -1,7 +1,7 @@
 use tokio::net::TcpStream;
 
 use crate::{
-    common::{Position, timestamp_secs},
+    common::{ObjectId, Position, timestamp_secs},
     opcodes::ServerZoneIpcType,
     packet::{
         CompressionType, ConnectionType, PacketSegment, PacketState, SegmentType, parse_packet,
@@ -10,7 +10,7 @@ use crate::{
 };
 
 use super::{
-    Event, Inventory, Item, LuaPlayer, Zone,
+    Actor, Event, Inventory, Item, LuaPlayer, Zone,
     ipc::{
         ActorSetPos, ClientZoneIpcSegment, ContainerInfo, ContainerType, InitZone, ItemInfo,
         ServerZoneIpcData, ServerZoneIpcSegment, StatusEffect, StatusEffectList, UpdateClassInfo,
@@ -77,6 +77,7 @@ pub struct ZoneConnection {
     pub status_effects: StatusEffects,
 
     pub event: Option<Event>,
+    pub actors: Vec<Actor>,
 }
 
 impl ZoneConnection {
@@ -336,5 +337,35 @@ impl ZoneConnection {
 
             self.status_effects.dirty = false;
         }
+    }
+
+    pub async fn update_hp_mp(&mut self, actor_id: ObjectId, hp: u32, mp: u16) {
+        let ipc = ServerZoneIpcSegment {
+            op_code: ServerZoneIpcType::UpdateHpMpTp,
+            timestamp: timestamp_secs(),
+            data: ServerZoneIpcData::UpdateHpMpTp { hp, mp, unk: 0 },
+            ..Default::default()
+        };
+
+        self.send_segment(PacketSegment {
+            source_actor: actor_id.0,
+            target_actor: actor_id.0,
+            segment_type: SegmentType::Ipc { data: ipc },
+        })
+        .await;
+    }
+
+    pub fn add_actor(&mut self, actor: Actor) {
+        self.actors.push(actor);
+    }
+
+    pub fn get_actor(&mut self, id: ObjectId) -> Option<&mut Actor> {
+        for actor in &mut self.actors {
+            if actor.id == id {
+                return Some(actor);
+            }
+        }
+
+        return None;
     }
 }

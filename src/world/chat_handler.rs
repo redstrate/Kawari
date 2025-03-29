@@ -4,7 +4,7 @@ use crate::{
     opcodes::ServerZoneIpcType,
     packet::{PacketSegment, SegmentType},
     world::{
-        Event,
+        Actor, Event,
         ipc::{
             ActorControl, ActorControlCategory, BattleNpcSubKind, CommonSpawn, DisplayFlag,
             EventStart, NpcSpawn, ObjectKind, OnlineStatus, PlayerSpawn, PlayerSubKind,
@@ -235,6 +235,13 @@ impl ChatHandler {
                 }
             }
             "!spawnmonster" => {
+                let actor = Actor {
+                    id: ObjectId(0x106ad804),
+                    hp: 100,
+                };
+
+                connection.add_actor(actor);
+
                 // spawn a tiny mandragora
                 {
                     let ipc = ServerZoneIpcSegment {

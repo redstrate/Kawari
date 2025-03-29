@@ -216,6 +216,12 @@ pub enum ServerZoneIpcData {
     EventPlay(EventPlay),
     /// Sent to tell the client to load a scene, but not play it
     EventStart(EventStart),
+    /// Sent to update an actor's hp & mp values
+    UpdateHpMpTp {
+        hp: u32,
+        mp: u16,
+        unk: u16, // it's filled with... something
+    },
 }
 
 #[binrw]
@@ -237,8 +243,15 @@ pub enum ClientZoneIpcData {
     /// FIXME: 32 bytes of something from the client, not sure what yet
     #[br(pre_assert(*magic == ClientZoneIpcType::Unk1))]
     Unk1 {
-        // TODO: full of possibly interesting information
-        unk: [u8; 32],
+        // 3 = target
+        category: u32,
+        param1: u32,
+        param2: u32,
+        param3: u32,
+        param4: u32,
+        param5: u32,
+        param6: u32,
+        param7: u32,
     },
     /// FIXME: 16 bytes of something from the client, not sure what yet
     #[br(pre_assert(*magic == ClientZoneIpcType::Unk2))]

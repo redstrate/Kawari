@@ -1,7 +1,10 @@
 use std::sync::{Arc, Mutex};
 
 use kawari::common::custom_ipc::{CustomIpcData, CustomIpcSegment, CustomIpcType};
-use kawari::common::{Position, determine_initial_starting_zone, get_citystate, get_world_name};
+use kawari::common::{
+    INVALID_OBJECT_ID, ObjectId, Position, determine_initial_starting_zone, get_citystate,
+    get_world_name,
+};
 use kawari::common::{get_racial_base_attributes, timestamp_secs};
 use kawari::config::get_config;
 use kawari::lobby::CharaMake;
@@ -77,6 +80,7 @@ async fn main() {
             inventory: Inventory::new(),
             status_effects: StatusEffects::default(),
             event: None,
+            actors: Vec::new(),
         };
 
         let mut lua_player = LuaPlayer::default();
@@ -425,8 +429,18 @@ async fn main() {
                                         exit_position = None;
                                         exit_rotation = None;
                                     }
-                                    ClientZoneIpcData::Unk1 { .. } => {
-                                        tracing::info!("Recieved Unk1!");
+                                    ClientZoneIpcData::Unk1 {
+                                        category, param1, ..
+                                    } => {
+                                        tracing::info!("Recieved Unk1! {category:#?}");
+
+                                        match category {
+                                            3 => {
+                                                // set target
+                                                tracing::info!("Targeting actor {param1}");
+                                            }
+                                            _ => {}
+                                        }
                                     }
                                     ClientZoneIpcData::Unk2 { .. } => {
                                         tracing::info!("Recieved Unk2!");
@@ -768,6 +782,18 @@ async fn main() {
 
                                         println!("Found action: {:#?}", action_row);
 
+                                        //if request.target.object_id == INVALID_OBJECT_ID {
+                                        if let Some(actor) =
+                                            connection.get_actor(ObjectId(0x106ad804))
+                                        {
+                                            actor.hp -= 50;
+
+                                            let actor = actor.clone();
+                                            connection
+                                                .update_hp_mp(actor.id, actor.hp, 10000)
+                                                .await;
+                                        }
+                                        //} else {
                                         let lua = lua.lock().unwrap();
                                         lua.scope(|scope| {
                                             let connection_data = scope
@@ -782,6 +808,7 @@ async fn main() {
                                             Ok(())
                                         })
                                         .unwrap();
+                                        //}
                                     }
                                     ClientZoneIpcData::Unk16 { .. } => {
                                         tracing::info!("Recieved Unk16!");

@@ -20,3 +20,6 @@ pub use lua::LuaPlayer;
 
 mod event;
 pub use event::Event;
+
+mod actor;
+pub use actor::Actor;

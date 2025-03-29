@@ -139,6 +139,11 @@
             "name": "EventStart",
             "opcode": 955,
             "size": 24
+        },
+        {
+            "name": "UpdateHpMpTp",
+            "opcode": 325,
+            "size": 8
         }
     ],
     "ClientZoneIpcType": [

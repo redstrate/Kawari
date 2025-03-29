@@ -1,5 +1,7 @@
 use binrw::binrw;
 
+use crate::common::ObjectTypeId;
+
 #[binrw]
 #[derive(Debug, Eq, PartialEq, Clone, Default)]
 #[brw(repr = u8)]
@@ -19,7 +21,7 @@ pub struct ActionRequest {
     pub request_id: u32,
     pub dir: u16,
     pub dir_target: u16,
-    pub target: u64,
+    pub target: ObjectTypeId,
     pub arg: u32,
     pub padding_prob: u32,
 }
