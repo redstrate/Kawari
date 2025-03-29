@@ -129,6 +129,7 @@ pub struct ActorSetPos {
 pub enum GameMasterCommandType {
     ChangeWeather = 0x6,
     ToggleInvisibility = 0xD,
+    ToggleWireframe = 0x26,
     ChangeTerritory = 0x58,
 }
 

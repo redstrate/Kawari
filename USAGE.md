@@ -93,3 +93,4 @@ These GM commands are implemented in the FFXIV protocol, but only some of them a
 
 * `//gm teri <id>`: Changes to the specified territory
 * `//gm weather <id>`: Changes the weather
+* `//gm wireframe`: Toggle wireframe rendering for the environment

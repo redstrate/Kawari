@@ -602,9 +602,7 @@ async fn main() {
                                                 connection.change_zone(*arg as u16).await
                                             }
                                             GameMasterCommandType::ToggleInvisibility => {
-                                                // Control Data
-                                                {
-                                                    let ipc = ServerZoneIpcSegment {
+                                                let ipc = ServerZoneIpcSegment {
                                                         op_code: ServerZoneIpcType::ActorControlSelf,
                                                         timestamp: timestamp_secs(),
                                                         data: ServerZoneIpcData::ActorControlSelf(
@@ -618,20 +616,46 @@ async fn main() {
                                                         ..Default::default()
                                                     };
 
-                                                    connection
-                                                        .send_segment(PacketSegment {
-                                                            source_actor: connection
-                                                                .player_data
-                                                                .actor_id,
-                                                            target_actor: connection
-                                                                .player_data
-                                                                .actor_id,
-                                                            segment_type: SegmentType::Ipc {
-                                                                data: ipc,
-                                                            },
-                                                        })
-                                                        .await;
-                                                }
+                                                connection
+                                                    .send_segment(PacketSegment {
+                                                        source_actor: connection
+                                                            .player_data
+                                                            .actor_id,
+                                                        target_actor: connection
+                                                            .player_data
+                                                            .actor_id,
+                                                        segment_type: SegmentType::Ipc {
+                                                            data: ipc,
+                                                        },
+                                                    })
+                                                    .await;
+                                            }
+                                            GameMasterCommandType::ToggleWireframe => {
+                                                let ipc = ServerZoneIpcSegment {
+                                                    op_code: ServerZoneIpcType::ActorControlSelf,
+                                                    timestamp: timestamp_secs(),
+                                                    data: ServerZoneIpcData::ActorControlSelf(
+                                                        ActorControlSelf {
+                                                            category:
+                                                            ActorControlCategory::ToggleWireframeRendering(),
+                                                        },
+                                                    ),
+                                                    ..Default::default()
+                                                };
+
+                                                connection
+                                                    .send_segment(PacketSegment {
+                                                        source_actor: connection
+                                                            .player_data
+                                                            .actor_id,
+                                                        target_actor: connection
+                                                            .player_data
+                                                            .actor_id,
+                                                        segment_type: SegmentType::Ipc {
+                                                            data: ipc,
+                                                        },
+                                                    })
+                                                    .await;
                                             }
                                         }
                                     }

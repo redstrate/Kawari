@@ -28,6 +28,8 @@ pub enum ActorControlCategory {
         #[brw(pad_before = 2)]
         icon: OnlineStatus,
     },
+    #[brw(magic = 0x261u16)]
+    ToggleWireframeRendering(),
 }
 
 #[binrw]
