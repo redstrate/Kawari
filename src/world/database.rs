@@ -39,7 +39,7 @@ impl WorldDatabase {
 
         // Create characters data table
         {
-            let query = "CREATE TABLE IF NOT EXISTS character_data (content_id INTEGER PRIMARY KEY, name STRING, chara_make STRING, city_state INTEGER, zone_id INTEGER, pos_x REAL, pos_y REAL, pos_z REAL);";
+            let query = "CREATE TABLE IF NOT EXISTS character_data (content_id INTEGER PRIMARY KEY, name STRING, chara_make STRING, city_state INTEGER, zone_id INTEGER, pos_x REAL, pos_y REAL, pos_z REAL, rotation REAL);";
             connection.execute(query, ()).unwrap();
         }
 
@@ -58,11 +58,51 @@ impl WorldDatabase {
             .query_row((actor_id,), |row| Ok((row.get(0)?, row.get(1)?)))
             .unwrap();
 
+        stmt = connection
+            .prepare("SELECT pos_x, pos_y, pos_z, rotation, zone_id FROM character_data WHERE content_id = ?1")
+            .unwrap();
+        let (pos_x, pos_y, pos_z, rotation, zone_id) = stmt
+            .query_row((content_id,), |row| {
+                Ok((
+                    row.get(0)?,
+                    row.get(1)?,
+                    row.get(2)?,
+                    row.get(3)?,
+                    row.get(4)?,
+                ))
+            })
+            .unwrap();
+
         PlayerData {
             actor_id,
             content_id,
             account_id,
+            position: Position {
+                x: pos_x,
+                y: pos_y,
+                z: pos_z,
+            },
+            rotation,
+            zone_id,
         }
+    }
+
+    /// Commit the dynamic player data back to the database
+    pub fn commit_player_data(&self, data: &PlayerData) {
+        let connection = self.connection.lock().unwrap();
+
+        let mut stmt = connection
+            .prepare("UPDATE character_data SET zone_id=?1, pos_x=?2, pos_y=?3, pos_z=?4, rotation=?5 WHERE content_id = ?6")
+            .unwrap();
+        stmt.execute((
+            data.zone_id,
+            data.position.x,
+            data.position.y,
+            data.position.z,
+            data.rotation,
+            data.content_id,
+        ))
+        .unwrap();
     }
 
     // TODO: from/to sql int
@@ -199,7 +239,7 @@ impl WorldDatabase {
         // insert char data
         connection
             .execute(
-                "INSERT INTO character_data VALUES (?1, ?2, ?3, ?4, ?5, 0.0, 0.0, 0.0);",
+                "INSERT INTO character_data VALUES (?1, ?2, ?3, ?4, ?5, 0.0, 0.0, 0.0, 0.0);",
                 (content_id, name, chara_make, city_state, zone_id),
             )
             .unwrap();

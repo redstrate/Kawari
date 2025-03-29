@@ -73,7 +73,6 @@ async fn main() {
             player_data: PlayerData::default(),
             spawn_index: 0,
             zone: None,
-            position: Position::default(),
             inventory: Inventory::new(),
             status_effects: StatusEffects::default(),
             event: None,
@@ -544,10 +543,14 @@ async fn main() {
                                             rotation.to_degrees()
                                         );
 
-                                        connection.position = *position;
+                                        connection.player_data.rotation = *rotation;
+                                        connection.player_data.position = *position;
                                     }
                                     ClientZoneIpcData::LogOut { .. } => {
                                         tracing::info!("Recieved log out from client!");
+
+                                        // write the player back to the database
+                                        database.commit_player_data(&connection.player_data);
 
                                         // tell the client to disconnect
                                         {

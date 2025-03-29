@@ -20,9 +20,16 @@ use super::{
 
 #[derive(Debug, Default, Clone, Copy)]
 pub struct PlayerData {
+    // Static data
     pub actor_id: u32,
     pub content_id: u64,
     pub account_id: u32,
+
+    // Dynamic data
+    pub position: Position,
+    /// In radians.
+    pub rotation: f32,
+    pub zone_id: u16,
 }
 
 #[derive(Debug, Default, Clone)]
@@ -66,7 +73,6 @@ pub struct ZoneConnection {
     pub zone: Option<Zone>,
     pub spawn_index: u8,
 
-    pub position: Position,
     pub inventory: Inventory,
     pub status_effects: StatusEffects,
 
@@ -117,6 +123,7 @@ impl ZoneConnection {
 
     pub async fn change_zone(&mut self, new_zone_id: u16) {
         self.zone = Some(Zone::load(new_zone_id));
+        self.player_data.zone_id = new_zone_id;
 
         // Player Class Info
         {

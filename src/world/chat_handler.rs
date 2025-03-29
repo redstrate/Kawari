@@ -114,7 +114,7 @@ impl ChatHandler {
                                     0,  // left finger
                                     0,  // right finger
                                 ],
-                                pos: connection.position,
+                                pos: connection.player_data.position,
                                 ..Default::default()
                             },
                             ..Default::default()
@@ -218,7 +218,7 @@ impl ChatHandler {
                                     0,  // left finger
                                     0,  // right finger
                                 ],
-                                pos: connection.position,
+                                pos: connection.player_data.position,
                                 ..Default::default()
                             },
                             ..Default::default()
@@ -257,7 +257,7 @@ impl ChatHandler {
                                 level: 1,
                                 battalion: 4,
                                 model_chara: 297,
-                                pos: connection.position,
+                                pos: connection.player_data.position,
                                 ..Default::default()
                             },
                             ..Default::default()
