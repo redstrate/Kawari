@@ -76,7 +76,7 @@ binrw = { version = "0.14", features = ["std"], default-features = false }
 md5 = { version = "0.7", default-features = false }
 
 # Used to access game data
-physis = { git = "https://github.com/redstrate/physis" }
+physis = { git = "https://github.com/redstrate/physis", default-features = false }
 
 # Used for data persistence
 rusqlite = { version = "0.34", features = ["bundled"], default-features = false }
@@ -86,4 +86,4 @@ rusqlite = { version = "0.34", features = ["bundled"], default-features = false 
 bitflags = { version = "1.3", default-features = false }
 
 # For server-side scripting
-mlua = { version = "0.10", features = ["lua51", "vendored", "send", "async"] }
+mlua = { version = "0.10", features = ["lua51", "vendored", "send", "async"], default-features = false }
