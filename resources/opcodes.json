@@ -256,6 +256,11 @@
             "name": "EventRelatedUnk",
             "opcode": 861,
             "size": 16
+        },
+        {
+            "name": "Unk19",
+            "opcode": 379,
+            "size": 16
         }
     ],
     "ServerLobbyIpcType": [

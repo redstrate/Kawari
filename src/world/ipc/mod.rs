@@ -362,6 +362,10 @@ pub enum ClientZoneIpcData {
         unk3: u32,
         unk4: u32,
     },
+    #[br(pre_assert(*magic == ClientZoneIpcType::Unk19))]
+    Unk19 {
+        unk: [u8; 16], // TODO: unknown
+    },
 }
 
 #[cfg(test)]

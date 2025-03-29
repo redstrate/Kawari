@@ -719,7 +719,6 @@ async fn main() {
                                                 .unwrap()
                                                 .find_exit_box(*exit_box_id)
                                                 .unwrap();
-                                            tracing::info!("exit box: {:#?}", exit_box);
 
                                             // find the pop range on the other side
                                             let new_zone = Zone::load(exit_box.territory_type);
@@ -735,48 +734,6 @@ async fn main() {
                                             });
                                             new_territory = exit_box.territory_type;
                                         }
-
-                                        // fade out?
-                                        {
-                                            let ipc = ServerZoneIpcSegment {
-                                                op_code: ServerZoneIpcType::PrepareZoning,
-                                                timestamp: timestamp_secs(),
-                                                data: ServerZoneIpcData::PrepareZoning {
-                                                    unk: [0x01000000, 0, 0, 0],
-                                                },
-                                                ..Default::default()
-                                            };
-
-                                            connection
-                                                .send_segment(PacketSegment {
-                                                    source_actor: connection.player_data.actor_id,
-                                                    target_actor: connection.player_data.actor_id,
-                                                    segment_type: SegmentType::Ipc { data: ipc },
-                                                })
-                                                .await;
-                                        }
-
-                                        // fade out? x2
-                                        {
-                                            let ipc = ServerZoneIpcSegment {
-                                                op_code: ServerZoneIpcType::PrepareZoning,
-                                                timestamp: timestamp_secs(),
-                                                data: ServerZoneIpcData::PrepareZoning {
-                                                    unk: [0, 0x00000085, 0x00030000, 0x000008ff], // last thing is probably a float?
-                                                },
-                                                ..Default::default()
-                                            };
-
-                                            connection
-                                                .send_segment(PacketSegment {
-                                                    source_actor: connection.player_data.actor_id,
-                                                    target_actor: connection.player_data.actor_id,
-                                                    segment_type: SegmentType::Ipc { data: ipc },
-                                                })
-                                                .await;
-                                        }
-
-                                        tracing::info!("sending them to {:#?}", new_territory);
 
                                         connection.change_zone(new_territory).await;
                                     }
@@ -884,6 +841,9 @@ async fn main() {
                                         if let Some(event) = connection.event.as_mut() {
                                             event.scene_finished(&mut lua_player, *unk2);
                                         }
+                                    }
+                                    ClientZoneIpcData::Unk19 { .. } => {
+                                        tracing::info!("Recieved Unk19!");
                                     }
                                 }
                             }
