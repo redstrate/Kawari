@@ -2,8 +2,8 @@ use std::sync::{Arc, Mutex};
 
 use kawari::common::custom_ipc::{CustomIpcData, CustomIpcSegment, CustomIpcType};
 use kawari::common::{
-    INVALID_OBJECT_ID, ObjectId, ObjectTypeId, Position, determine_initial_starting_zone,
-    get_citystate, get_world_name,
+    ObjectId, ObjectTypeId, Position, determine_initial_starting_zone, get_citystate,
+    get_world_name,
 };
 use kawari::common::{get_racial_base_attributes, timestamp_secs};
 use kawari::config::get_config;
@@ -115,6 +115,13 @@ async fn main() {
                                 // collect actor data
                                 connection.player_data =
                                     database.find_player_data(actor_id.parse::<u32>().unwrap());
+                                // some still hardcoded values
+                                connection.player_data.classjob_id = 1;
+                                connection.player_data.level = 5;
+                                connection.player_data.curr_hp = 100;
+                                connection.player_data.max_hp = 100;
+                                connection.player_data.curr_mp = 10000;
+                                connection.player_data.max_mp = 10000;
 
                                 exit_position = Some(connection.player_data.position);
                                 exit_rotation = Some(connection.player_data.rotation);
@@ -274,8 +281,8 @@ async fn main() {
                                                     vitality: attributes.vitality,
                                                     intelligence: attributes.intelligence,
                                                     mind: attributes.mind,
-                                                    hp: 100,
-                                                    mp: 100,
+                                                    hp: connection.player_data.max_hp,
+                                                    mp: connection.player_data.max_mp as u32,
                                                     ..Default::default()
                                                 }),
                                                 ..Default::default()
@@ -373,12 +380,14 @@ async fn main() {
                                                     gm_rank: GameMasterRank::Debug,
                                                     online_status: OnlineStatus::GameMasterBlue,
                                                     common: CommonSpawn {
-                                                        class_job: 1,
+                                                        class_job: connection
+                                                            .player_data
+                                                            .classjob_id,
                                                         name: chara_details.name,
-                                                        hp_curr: 100,
-                                                        hp_max: 100,
-                                                        mp_curr: 100,
-                                                        mp_max: 100,
+                                                        hp_curr: connection.player_data.curr_hp,
+                                                        hp_max: connection.player_data.max_hp,
+                                                        mp_curr: connection.player_data.curr_mp,
+                                                        mp_max: connection.player_data.max_mp,
                                                         object_kind: ObjectKind::Player(
                                                             PlayerSubKind::Player,
                                                         ),

@@ -25,6 +25,13 @@ pub struct PlayerData {
     pub content_id: u64,
     pub account_id: u32,
 
+    pub classjob_id: u8,
+    pub level: u8,
+    pub curr_hp: u32,
+    pub max_hp: u32,
+    pub curr_mp: u16,
+    pub max_mp: u16,
+
     // Dynamic data
     pub position: Position,
     /// In radians.
@@ -132,10 +139,10 @@ impl ZoneConnection {
                 op_code: ServerZoneIpcType::UpdateClassInfo,
                 timestamp: timestamp_secs(),
                 data: ServerZoneIpcData::UpdateClassInfo(UpdateClassInfo {
-                    class_id: 1,
+                    class_id: self.player_data.classjob_id as u16,
                     unknown: 1,
-                    synced_level: 90,
-                    class_level: 90,
+                    synced_level: self.player_data.level as u16,
+                    class_level: self.player_data.level as u16,
                     ..Default::default()
                 }),
                 ..Default::default()
@@ -323,6 +330,12 @@ impl ZoneConnection {
                 timestamp: timestamp_secs(),
                 data: ServerZoneIpcData::StatusEffectList(StatusEffectList {
                     statues: list,
+                    classjob_id: self.player_data.classjob_id,
+                    level: self.player_data.level,
+                    curr_hp: self.player_data.curr_hp,
+                    max_hp: self.player_data.max_hp,
+                    curr_mp: self.player_data.curr_mp,
+                    max_mp: self.player_data.max_mp,
                     ..Default::default()
                 }),
                 ..Default::default()

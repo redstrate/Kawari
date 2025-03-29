@@ -84,6 +84,7 @@ impl WorldDatabase {
             },
             rotation,
             zone_id,
+            ..Default::default()
         }
     }
 
