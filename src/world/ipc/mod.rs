@@ -282,8 +282,9 @@ pub enum ClientZoneIpcData {
     },
     #[br(pre_assert(*magic == ClientZoneIpcType::UpdatePositionHandler))]
     UpdatePositionHandler {
-        // TODO: full of possibly interesting information
-        unk: [u8; 8], // not empty
+        /// In radians.
+        #[brw(pad_after = 4)] // empty
+        rotation: f32,
         #[brw(pad_after = 4)] // empty
         position: Position,
     },

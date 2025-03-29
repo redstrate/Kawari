@@ -536,9 +536,13 @@ async fn main() {
                                         }
                                     }
                                     ClientZoneIpcData::UpdatePositionHandler {
-                                        position, ..
+                                        position,
+                                        rotation,
                                     } => {
-                                        tracing::info!("Character moved to {position:#?}");
+                                        tracing::info!(
+                                            "Character moved to {position:#?} {}",
+                                            rotation.to_degrees()
+                                        );
 
                                         connection.position = *position;
                                     }
