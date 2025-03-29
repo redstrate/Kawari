@@ -4,8 +4,9 @@ use crate::{
     opcodes::ServerZoneIpcType,
     packet::{PacketSegment, SegmentType},
     world::ipc::{
-        ActorControl, ActorControlCategory, BattleNpcSubKind, CommonSpawn, DisplayFlag, NpcSpawn,
-        ObjectKind, PlayerSpawn, PlayerSubKind, ServerZoneIpcData, ServerZoneIpcSegment,
+        ActorControl, ActorControlCategory, BattleNpcSubKind, CommonSpawn, DisplayFlag, EventPlay,
+        EventStart, NpcSpawn, ObjectKind, OnlineStatus, PlayerSpawn, PlayerSubKind,
+        ServerZoneIpcData, ServerZoneIpcSegment,
     },
 };
 
@@ -259,6 +260,91 @@ impl ChatHandler {
                     connection
                         .send_segment(PacketSegment {
                             source_actor: 0x106ad804,
+                            target_actor: connection.player_data.actor_id,
+                            segment_type: SegmentType::Ipc { data: ipc },
+                        })
+                        .await;
+                }
+            }
+            "!playscene" => {
+                // only works in ul'dah opening
+
+                // Load the game script for this event on the client
+                {
+                    let ipc = ServerZoneIpcSegment {
+                        unk1: 20,
+                        unk2: 0,
+                        op_code: ServerZoneIpcType::EventStart,
+                        server_id: 0,
+                        timestamp: timestamp_secs(),
+                        data: ServerZoneIpcData::EventStart(EventStart {
+                            target_id: ObjectTypeId {
+                                object_id: ObjectId(connection.player_data.actor_id),
+                                object_type: 0,
+                            },
+                            event_type: 15,
+                            event_id: 0x130003,
+                            flags: 0,
+                            event_arg: 182,
+                        }),
+                    };
+
+                    connection
+                        .send_segment(PacketSegment {
+                            source_actor: connection.player_data.actor_id,
+                            target_actor: connection.player_data.actor_id,
+                            segment_type: SegmentType::Ipc { data: ipc },
+                        })
+                        .await;
+                }
+
+                // set our status icon to viewing cutscene
+                {
+                    let ipc = ServerZoneIpcSegment {
+                        unk1: 20,
+                        unk2: 0,
+                        op_code: ServerZoneIpcType::ActorControl,
+                        server_id: 0,
+                        timestamp: timestamp_secs(),
+                        data: ServerZoneIpcData::ActorControl(ActorControl {
+                            category: ActorControlCategory::SetStatusIcon {
+                                icon: OnlineStatus::ViewingCutscene,
+                            },
+                        }),
+                    };
+
+                    connection
+                        .send_segment(PacketSegment {
+                            source_actor: connection.player_data.actor_id,
+                            target_actor: connection.player_data.actor_id,
+                            segment_type: SegmentType::Ipc { data: ipc },
+                        })
+                        .await;
+                }
+
+                // play the scene, bart
+                {
+                    let ipc = ServerZoneIpcSegment {
+                        unk1: 20,
+                        unk2: 0,
+                        op_code: ServerZoneIpcType::EventPlay,
+                        server_id: 0,
+                        timestamp: timestamp_secs(),
+                        data: ServerZoneIpcData::EventPlay(EventPlay {
+                            actor_id: ObjectTypeId {
+                                object_id: ObjectId(connection.player_data.actor_id),
+                                object_type: 0,
+                            },
+                            event_id: 0x130003,
+                            scene: 1,
+                            scene_flags: 4959237,
+                            ..Default::default()
+                        }),
+                    };
+
+                    connection
+                        .send_segment(PacketSegment {
+                            source_actor: connection.player_data.actor_id,
                             target_actor: connection.player_data.actor_id,
                             segment_type: SegmentType::Ipc { data: ipc },
                         })

@@ -1,5 +1,7 @@
 use binrw::binrw;
 
+use super::OnlineStatus;
+
 // See https://github.com/awgil/ffxiv_reverse/blob/f35b6226c1478234ca2b7149f82d251cffca2f56/vnetlog/vnetlog/ServerIPC.cs#L266 for a REALLY useful list of known values
 #[binrw]
 #[derive(Debug, Eq, PartialEq, Clone)]
@@ -20,6 +22,11 @@ pub enum ActorControlCategory {
         #[brw(pad_before = 2)]
         unk1: u32,
         unk2: u32,
+    },
+    #[brw(magic = 0x01F8u16)]
+    SetStatusIcon {
+        #[brw(pad_before = 2)]
+        icon: OnlineStatus,
     },
 }
 

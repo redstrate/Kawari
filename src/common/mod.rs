@@ -20,7 +20,7 @@ pub use position::Position;
 
 #[binrw]
 #[brw(little)]
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ObjectId(pub u32);
 
 impl Default for ObjectId {
@@ -32,7 +32,7 @@ impl Default for ObjectId {
 // See https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Client/Game/Object/GameObject.cs#L158
 #[binrw]
 #[brw(little)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ObjectTypeId {
     pub object_id: ObjectId,
     #[brw(pad_after = 3)]

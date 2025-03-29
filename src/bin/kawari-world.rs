@@ -745,6 +745,16 @@ async fn main() {
                                     ClientZoneIpcData::Unk18 { .. } => {
                                         tracing::info!("Recieved Unk18!");
                                     }
+                                    ClientZoneIpcData::EventRelatedUnk {
+                                        unk1,
+                                        unk2,
+                                        unk3,
+                                        unk4,
+                                    } => {
+                                        tracing::info!(
+                                            "Recieved EventRelatedUnk! {unk1} {unk2} {unk3} {unk4}"
+                                        );
+                                    }
                                 }
                             }
                             SegmentType::KeepAlive { id, timestamp } => {

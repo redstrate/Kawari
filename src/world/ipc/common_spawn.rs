@@ -86,7 +86,7 @@ pub enum CharacterMode {
 #[binrw]
 #[brw(little)]
 #[brw(repr = u8)]
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub enum OnlineStatus {
     Offline = 0x0,
     GameQA = 1,
@@ -94,6 +94,7 @@ pub enum OnlineStatus {
     GameMasterBlue = 3,
     EventParticipant = 4,
     NewAdventurer = 32, // TODO: This is actually a flag!
+    ViewingCutscene = 15,
     #[default]
     Online = 47,
 }
