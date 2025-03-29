@@ -147,17 +147,16 @@ impl UserData for Zone {
     fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
         methods.add_method(
             "get_pop_range",
-            |_, this, id: u32| -> mlua::Result<Position> {
+            |lua: &Lua, this, id: u32| -> mlua::Result<mlua::Value> {
                 if let Some(pop_range) = this.find_pop_range(id) {
                     let trans = pop_range.0.transform.translation;
-                    return Ok(Position {
+                    return lua.pack(Position {
                         x: trans[0],
                         y: trans[1],
                         z: trans[2],
                     });
                 }
-                // FIXME: return nil?
-                Ok(Position::default())
+                Ok(mlua::Nil)
             },
         );
     }
