@@ -153,6 +153,46 @@ pub fn determine_initial_starting_zone(citystate_id: u8) -> u16 {
     }
 }
 
+pub struct Attributes {
+    pub strength: u32,
+    pub dexterity: u32,
+    pub vitality: u32,
+    pub intelligence: u32,
+    pub mind: u32,
+}
+
+pub fn get_racial_base_attributes(tribe_id: u8) -> Attributes {
+    // The Tribe Excel sheet only has deltas (e.g. 2 or -2) which are applied to a base 20 number... from somewhere
+    let base_stat = 20;
+
+    let config = get_config();
+
+    let mut game_data = GameData::from_existing(Platform::Win32, &config.game_location).unwrap();
+
+    let exh = game_data.read_excel_sheet_header("Tribe").unwrap();
+    let exd = game_data
+        .read_excel_sheet("Tribe", &exh, Language::English, 0)
+        .unwrap();
+
+    let tribe_row = &exd.read_row(&exh, tribe_id as u32).unwrap()[0];
+
+    let get_column = |column_index: usize| {
+        let physis::exd::ColumnData::Int8(delta) = &tribe_row.data[column_index] else {
+            panic!("Unexpected type!");
+        };
+
+        *delta
+    };
+
+    Attributes {
+        strength: (base_stat + get_column(4)) as u32,
+        dexterity: (base_stat + get_column(6)) as u32,
+        vitality: (base_stat + get_column(5)) as u32,
+        intelligence: (base_stat + get_column(7)) as u32,
+        mind: (base_stat + get_column(8)) as u32,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

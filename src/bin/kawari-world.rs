@@ -1,8 +1,8 @@
 use std::sync::{Arc, Mutex};
 
 use kawari::common::custom_ipc::{CustomIpcData, CustomIpcSegment, CustomIpcType};
-use kawari::common::timestamp_secs;
 use kawari::common::{Position, determine_initial_starting_zone, get_citystate, get_world_name};
+use kawari::common::{get_racial_base_attributes, timestamp_secs};
 use kawari::config::get_config;
 use kawari::lobby::CharaMake;
 use kawari::oodle::OodleNetwork;
@@ -246,11 +246,19 @@ async fn main() {
 
                                         // Stats
                                         {
+                                            let attributes = get_racial_base_attributes(
+                                                chara_details.chara_make.customize.subrace,
+                                            );
+
                                             let ipc = ServerZoneIpcSegment {
                                                 op_code: ServerZoneIpcType::PlayerStats,
                                                 timestamp: timestamp_secs(),
                                                 data: ServerZoneIpcData::PlayerStats(PlayerStats {
-                                                    strength: 1,
+                                                    strength: attributes.strength,
+                                                    dexterity: attributes.dexterity,
+                                                    vitality: attributes.vitality,
+                                                    intelligence: attributes.intelligence,
+                                                    mind: attributes.mind,
                                                     hp: 100,
                                                     mp: 100,
                                                     ..Default::default()
