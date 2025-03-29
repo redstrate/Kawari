@@ -86,6 +86,16 @@ async fn main() {
 
         let mut lua_player = LuaPlayer::default();
 
+        let config = get_config();
+
+        let mut game_data =
+            GameData::from_existing(Platform::Win32, &config.game_location).unwrap();
+
+        let exh = game_data.read_excel_sheet_header("Action").unwrap();
+        let exd = game_data
+            .read_excel_sheet("Action", &exh, Language::English, 0)
+            .unwrap();
+
         tokio::spawn(async move {
             let mut buf = [0; 2056];
             loop {
@@ -763,20 +773,6 @@ async fn main() {
                                     }
                                     ClientZoneIpcData::ActionRequest(request) => {
                                         tracing::info!("Recieved action request: {:#?}!", request);
-
-                                        let config = get_config();
-
-                                        let mut game_data = GameData::from_existing(
-                                            Platform::Win32,
-                                            &config.game_location,
-                                        )
-                                        .unwrap();
-
-                                        let exh =
-                                            game_data.read_excel_sheet_header("Action").unwrap();
-                                        let exd = game_data
-                                            .read_excel_sheet("Action", &exh, Language::English, 0)
-                                            .unwrap();
 
                                         let action_row =
                                             &exd.read_row(&exh, request.action_id).unwrap()[0];
