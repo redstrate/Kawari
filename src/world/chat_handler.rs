@@ -274,7 +274,8 @@ impl ChatHandler {
                 }
             }
             "!playscene" => {
-                // only works in ul'dah opening
+                let parts: Vec<&str> = chat_message.message.split(' ').collect();
+                let event_id = parts[1].parse::<u32>().unwrap();
 
                 // Load the game script for this event on the client
                 {
@@ -290,9 +291,9 @@ impl ChatHandler {
                                 object_type: 0,
                             },
                             event_type: 15,
-                            event_id: 0x130003,
+                            event_id,
                             flags: 0,
-                            event_arg: 182,
+                            event_arg: 182, // zone?
                         }),
                     };
 
@@ -329,7 +330,14 @@ impl ChatHandler {
                         .await;
                 }
 
-                connection.event = Some(Event::new("opening/OpeningUldah.lua"));
+                let event = match event_id {
+                    1245185 => Event::new("opening/OpeningLimsaLominsa.lua"),
+                    1245186 => Event::new("opening/OpeningGridania.lua"),
+                    1245187 => Event::new("opening/OpeningUldah.lua"),
+                    _ => panic!("Unsupported event!"),
+                };
+
+                connection.event = Some(event);
                 connection
                     .event
                     .as_mut()
