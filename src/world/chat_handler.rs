@@ -7,7 +7,7 @@ use crate::{
         Event,
         ipc::{
             ActorControl, ActorControlCategory, BattleNpcSubKind, CommonSpawn, DisplayFlag,
-            EventPlay, EventStart, NpcSpawn, ObjectKind, OnlineStatus, PlayerSpawn, PlayerSubKind,
+            EventStart, NpcSpawn, ObjectKind, OnlineStatus, PlayerSpawn, PlayerSubKind,
             ServerZoneIpcData, ServerZoneIpcSegment,
         },
     },
@@ -334,7 +334,7 @@ impl ChatHandler {
                     .event
                     .as_mut()
                     .unwrap()
-                    .enter_territory(lua_player);
+                    .enter_territory(lua_player, connection.zone.as_ref().unwrap());
             }
             _ => tracing::info!("Unrecognized debug command!"),
         }

@@ -1,14 +1,14 @@
-use mlua::{UserData, UserDataMethods};
+use mlua::{FromLua, Lua, UserData, UserDataMethods, Value};
 
 use crate::{
-    common::{ObjectId, ObjectTypeId, timestamp_secs},
+    common::{ObjectId, ObjectTypeId, Position, timestamp_secs},
     opcodes::ServerZoneIpcType,
     packet::{PacketSegment, SegmentType},
 };
 
 use super::{
-    PlayerData, StatusEffects,
-    ipc::{EventPlay, ServerZoneIpcData, ServerZoneIpcSegment},
+    PlayerData, StatusEffects, Zone,
+    ipc::{ActorSetPos, EventPlay, ServerZoneIpcData, ServerZoneIpcSegment},
 };
 
 #[derive(Default)]
@@ -71,6 +71,25 @@ impl LuaPlayer {
             segment_type: SegmentType::Ipc { data: ipc },
         });
     }
+
+    fn set_position(&mut self, position: Position) {
+        let ipc = ServerZoneIpcSegment {
+            op_code: ServerZoneIpcType::ActorSetPos,
+            timestamp: timestamp_secs(),
+            data: ServerZoneIpcData::ActorSetPos(ActorSetPos {
+                unk: 0x020fa3b8,
+                position,
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+
+        self.queue_segment(PacketSegment {
+            source_actor: self.player_data.actor_id,
+            target_actor: self.player_data.actor_id,
+            segment_type: SegmentType::Ipc { data: ipc },
+        });
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -91,6 +110,41 @@ impl UserData for LuaPlayer {
             |_, this, (event_id, scene, scene_flags, param): (u32, u16, u32, u8)| {
                 this.play_scene(event_id, scene, scene_flags, param);
                 Ok(())
+            },
+        );
+        methods.add_method_mut("set_position", |_, this, position: Position| {
+            this.set_position(position);
+            Ok(())
+        });
+    }
+}
+
+impl UserData for Position {}
+
+impl FromLua for Position {
+    fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
+        match value {
+            Value::UserData(ud) => Ok(*ud.borrow::<Self>()?),
+            _ => unreachable!(),
+        }
+    }
+}
+
+impl UserData for Zone {
+    fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
+        methods.add_method(
+            "get_pop_range",
+            |_, this, id: u32| -> mlua::Result<Position> {
+                if let Some(pop_range) = this.find_pop_range(id) {
+                    let trans = pop_range.0.transform.translation;
+                    return Ok(Position {
+                        x: trans[0],
+                        y: trans[1],
+                        z: trans[2],
+                    });
+                }
+                // FIXME: return nil?
+                Ok(Position::default())
             },
         );
     }

@@ -9,9 +9,16 @@ use physis::{
 use crate::config::get_config;
 
 /// Represents a loaded zone
+#[derive(Default)]
 pub struct Zone {
     pub id: u16,
-    layer_group: Option<LayerGroup>,
+    planevent: Option<LayerGroup>,
+    vfx: Option<LayerGroup>,
+    planmap: Option<LayerGroup>,
+    planner: Option<LayerGroup>,
+    bg: Option<LayerGroup>,
+    sound: Option<LayerGroup>,
+    planlive: Option<LayerGroup>,
 }
 
 impl Zone {
@@ -20,7 +27,7 @@ impl Zone {
 
         let mut zone = Self {
             id,
-            layer_group: None,
+            ..Default::default()
         };
 
         let Some(mut game_data) = GameData::from_existing(Platform::Win32, &config.game_location)
@@ -49,11 +56,22 @@ impl Zone {
             return zone;
         };
 
-        let path = format!("bg/{}/level/planmap.lgb", &bg_path[..level_index]);
-        let Some(lgb) = game_data.extract(&path) else {
-            return zone;
+        let mut load_lgb = |name: &str| -> Option<LayerGroup> {
+            let path = format!("bg/{}/level/{}.lgb", &bg_path[..level_index], name);
+            tracing::info!("Loading {path}");
+            let Some(lgb) = game_data.extract(&path) else {
+                return None;
+            };
+            LayerGroup::from_existing(&lgb)
         };
-        zone.layer_group = LayerGroup::from_existing(&lgb);
+
+        zone.planevent = load_lgb("planevent");
+        zone.vfx = load_lgb("vfx");
+        zone.planmap = load_lgb("planmap");
+        zone.planner = load_lgb("planner");
+        zone.bg = load_lgb("bg");
+        zone.sound = load_lgb("sound");
+        zone.planlive = load_lgb("planlive");
 
         zone
     }
@@ -64,7 +82,7 @@ impl Zone {
         instance_id: u32,
     ) -> Option<(&InstanceObject, &ExitRangeInstanceObject)> {
         // TODO: also check position!
-        for group in &self.layer_group.as_ref().unwrap().layers {
+        for group in &self.planmap.as_ref().unwrap().layers {
             for object in &group.objects {
                 if let LayerEntryData::ExitRange(exit_range) = &object.data {
                     if object.instance_id == instance_id {
@@ -82,7 +100,18 @@ impl Zone {
         instance_id: u32,
     ) -> Option<(&InstanceObject, &PopRangeInstanceObject)> {
         // TODO: also check position!
-        for group in &self.layer_group.as_ref().unwrap().layers {
+        for group in &self.planmap.as_ref().unwrap().layers {
+            for object in &group.objects {
+                if let LayerEntryData::PopRange(pop_range) = &object.data {
+                    if object.instance_id == instance_id {
+                        return Some((object, pop_range));
+                    }
+                }
+            }
+        }
+
+        // For certain PopRanges (e.g. the starting position in the opening zones)
+        for group in &self.planevent.as_ref().unwrap().layers {
             for object in &group.objects {
                 if let LayerEntryData::PopRange(pop_range) = &object.data {
                     if object.instance_id == instance_id {
