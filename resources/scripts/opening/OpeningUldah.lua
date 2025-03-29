@@ -1,16 +1,22 @@
 --- TODO: find a way to hardcode it this way
 EVENT_ID = 1245187
 
+--- load defines from Opening Excel sheet, which has this and we don't need to hardcode it'
+POS_START = 4101669
+
 function Scene00000(player)
     player:play_scene(EVENT_ID, 00000, 4959237, 1)
 end
 
 function Scene00001(player)
-    --- todo put player in correct position
     player:play_scene(EVENT_ID, 00001, 4959237, 1)
 end
 
-function onEnterTerritory(player)
+function onEnterTerritory(player, zone)
+    --- move the player into the starting position
+    start_pos = zone:get_pop_range(POS_START)
+    player:set_position(start_pos)
+
     Scene00000(player);
 end
 

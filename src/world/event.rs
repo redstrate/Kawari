@@ -2,7 +2,7 @@ use mlua::{Function, Lua};
 
 use crate::config::get_config;
 
-use super::LuaPlayer;
+use super::{LuaPlayer, Zone};
 
 pub struct Event {
     lua: Lua,
@@ -22,14 +22,15 @@ impl Event {
         Self { lua }
     }
 
-    pub fn enter_territory(&mut self, player: &mut LuaPlayer) {
+    pub fn enter_territory(&mut self, player: &mut LuaPlayer, zone: &Zone) {
         self.lua
             .scope(|scope| {
                 let player = scope.create_userdata_ref_mut(player).unwrap();
+                let zone = scope.create_userdata_ref(zone).unwrap();
 
                 let func: Function = self.lua.globals().get("onEnterTerritory").unwrap();
 
-                func.call::<()>(player).unwrap();
+                func.call::<()>((player, zone)).unwrap();
 
                 Ok(())
             })
