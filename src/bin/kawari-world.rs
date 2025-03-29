@@ -66,6 +66,7 @@ async fn main() {
         };
 
         let mut exit_position = None;
+        let mut exit_rotation = None;
 
         let mut connection = ZoneConnection {
             socket,
@@ -99,6 +100,9 @@ async fn main() {
                                 // collect actor data
                                 connection.player_data =
                                     database.find_player_data(actor_id.parse::<u32>().unwrap());
+
+                                exit_position = Some(connection.player_data.position);
+                                exit_rotation = Some(connection.player_data.rotation);
 
                                 // We have send THEM a keep alive
                                 {
@@ -263,7 +267,7 @@ async fn main() {
                                                 .await;
                                         }
 
-                                        let zone_id = chara_details.zone_id;
+                                        let zone_id = connection.player_data.zone_id;
                                         connection.zone = Some(Zone::load(zone_id));
 
                                         // Player Setup
@@ -372,6 +376,7 @@ async fn main() {
                                                         ],
                                                         pos: exit_position
                                                             .unwrap_or(Position::default()),
+                                                        rotation: exit_rotation.unwrap_or(0.0),
                                                         ..Default::default()
                                                     },
                                                     ..Default::default()
@@ -410,6 +415,7 @@ async fn main() {
 
                                         // wipe any exit position so it isn't accidentally reused
                                         exit_position = None;
+                                        exit_rotation = None;
                                     }
                                     ClientZoneIpcData::Unk1 { .. } => {
                                         tracing::info!("Recieved Unk1!");

@@ -64,6 +64,22 @@ pub(crate) fn write_string(str: &String) -> Vec<u8> {
     c_string.as_bytes_with_nul().to_vec()
 }
 
+/// Converts a quantized rotation to degrees in f32
+pub(crate) fn read_quantized_rotation(quantized: u16) -> f32 {
+    let max = std::u16::MAX as f32;
+    let pi = std::f32::consts::PI;
+
+    quantized as f32 / max * (2.0 * pi) - pi
+}
+
+/// Converts a rotation (in degrees) to
+pub(crate) fn write_quantized_rotation(quantized: &f32) -> u16 {
+    let max = std::u16::MAX as f32;
+    let pi = std::f32::consts::PI;
+
+    ((quantized + pi / (2.0 * pi)) * max) as u16
+}
+
 /// Get the number of seconds since UNIX epoch.
 pub fn timestamp_secs() -> u32 {
     SystemTime::now()
@@ -134,5 +150,19 @@ pub fn determine_initial_starting_zone(citystate_id: u8) -> u16 {
         // Ul'dah
         3 => 130,
         _ => panic!("This is not a valid city-state id!"),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn quantized_rotations() {
+        assert_eq!(read_quantized_rotation(0), -std::f32::consts::PI);
+        assert_eq!(read_quantized_rotation(65535), std::f32::consts::PI);
+
+        assert_eq!(write_quantized_rotation(&-std::f32::consts::PI), 0);
+        assert_eq!(write_quantized_rotation(&std::f32::consts::PI), 65535);
     }
 }

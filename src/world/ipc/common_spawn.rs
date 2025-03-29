@@ -3,8 +3,8 @@ use binrw::binrw;
 use bitflags::bitflags;
 
 use crate::common::{
-    CHAR_NAME_MAX_LENGTH, CustomizeData, ObjectId, ObjectTypeId, Position, read_string,
-    write_string,
+    CHAR_NAME_MAX_LENGTH, CustomizeData, ObjectId, ObjectTypeId, Position, read_quantized_rotation,
+    read_string, write_quantized_rotation, write_string,
 };
 
 use super::StatusEffect;
@@ -166,7 +166,9 @@ pub struct CommonSpawn {
     pub unk: u16,
     /// See ModelChara Excel sheet
     pub model_chara: u16,
-    pub rotation: u16,      // assumed
+    #[br(map = read_quantized_rotation)]
+    #[bw(map = write_quantized_rotation)]
+    pub rotation: f32,
     pub current_mount: u16, // assumed
     pub active_minion: u16, // assumed
     pub u23: u8,            // assumed
