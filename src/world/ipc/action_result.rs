@@ -35,8 +35,9 @@ pub struct ActionResult {
     pub effect_count: u8,
     pub unk4: u16,
     pub unk5: [u8; 6],
-    #[brw(pad_after = 18)] // idk, target is here too?
     pub effects: [ActionEffect; 8],
+    #[brw(pad_before = 6, pad_after = 4)]
+    pub target_id_again: ObjectTypeId,
 }
 
 #[cfg(test)]
@@ -59,6 +60,10 @@ mod tests {
 
         let action_result = ActionResult::read_le(&mut buffer).unwrap();
         assert_eq!(action_result.main_target.object_id, ObjectId(0x400097d0));
+        assert_eq!(
+            action_result.target_id_again.object_id,
+            ObjectId(0x400097d0)
+        );
         assert_eq!(action_result.action_id, 31);
         assert_eq!(action_result.animation_lock_time, 0.6);
         assert_eq!(action_result.rotation, 1.9694216);
@@ -68,6 +73,12 @@ mod tests {
 
         // effect 0: attack
         assert_eq!(action_result.effects[0].action_type, 3);
+        assert_eq!(action_result.effects[0].param0, 0);
+        assert_eq!(action_result.effects[0].param1, 113);
+        assert_eq!(action_result.effects[0].param2, 0);
+        assert_eq!(action_result.effects[0].param3, 0);
+        assert_eq!(action_result.effects[0].param4, 0);
+        assert_eq!(action_result.effects[0].value, 22);
 
         // effect 1: start action combo
         assert_eq!(action_result.effects[1].action_type, 27);

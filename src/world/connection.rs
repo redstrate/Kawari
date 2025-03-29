@@ -348,8 +348,8 @@ impl ZoneConnection {
         };
 
         self.send_segment(PacketSegment {
-            source_actor: self.player_data.actor_id,
-            target_actor: actor_id.0,
+            source_actor: actor_id.0,
+            target_actor: self.player_data.actor_id,
             segment_type: SegmentType::Ipc { data: ipc },
         })
         .await;

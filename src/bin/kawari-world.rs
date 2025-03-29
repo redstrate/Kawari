@@ -814,6 +814,14 @@ async fn main() {
 
                                         // tell them the action results
                                         {
+                                            let mut effects = [ActionEffect::default(); 8];
+                                            effects[0] = ActionEffect {
+                                                action_type: 3,
+                                                value: 22,
+                                                param1: 133,
+                                                ..Default::default()
+                                            };
+
                                             let ipc = ServerZoneIpcSegment {
                                                 op_code: ServerZoneIpcType::ActionResult,
                                                 timestamp: timestamp_secs(),
@@ -823,18 +831,17 @@ async fn main() {
                                                             object_id: ObjectId(0x106ad804),
                                                             object_type: 0,
                                                         },
+                                                        target_id_again: ObjectTypeId {
+                                                            object_id: ObjectId(0x106ad804),
+                                                            object_type: 0,
+                                                        },
                                                         action_id: 31,
                                                         animation_lock_time: 0.6,
                                                         rotation: connection.player_data.rotation,
                                                         action_animation_id: 31,
                                                         flag: 1,
                                                         effect_count: 1,
-                                                        effects: [ActionEffect {
-                                                            action_type: 3,
-                                                            value: 50,
-                                                            ..Default::default()
-                                                        };
-                                                            8],
+                                                        effects,
                                                         ..Default::default()
                                                     },
                                                 ),
