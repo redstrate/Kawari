@@ -2,8 +2,8 @@ use std::sync::{Arc, Mutex};
 
 use kawari::common::custom_ipc::{CustomIpcData, CustomIpcSegment, CustomIpcType};
 use kawari::common::{
-    INVALID_OBJECT_ID, ObjectId, Position, determine_initial_starting_zone, get_citystate,
-    get_world_name,
+    INVALID_OBJECT_ID, ObjectId, ObjectTypeId, Position, determine_initial_starting_zone,
+    get_citystate, get_world_name,
 };
 use kawari::common::{get_racial_base_attributes, timestamp_secs};
 use kawari::config::get_config;
@@ -15,8 +15,9 @@ use kawari::packet::{
     send_packet,
 };
 use kawari::world::ipc::{
-    ClientZoneIpcData, CommonSpawn, DisplayFlag, GameMasterCommandType, GameMasterRank, ObjectKind,
-    OnlineStatus, PlayerSubKind, ServerZoneIpcData, ServerZoneIpcSegment, SocialListRequestType,
+    ActionEffect, ActionResult, ClientZoneIpcData, CommonSpawn, DisplayFlag, GameMasterCommandType,
+    GameMasterRank, ObjectKind, OnlineStatus, PlayerSubKind, ServerZoneIpcData,
+    ServerZoneIpcSegment, SocialListRequestType,
 };
 use kawari::world::{
     ChatHandler, Inventory, Zone, ZoneConnection,
@@ -362,7 +363,7 @@ async fn main() {
                                                     gm_rank: GameMasterRank::Debug,
                                                     online_status: OnlineStatus::GameMasterBlue,
                                                     common: CommonSpawn {
-                                                        class_job: 35,
+                                                        class_job: 1,
                                                         name: chara_details.name,
                                                         hp_curr: 100,
                                                         hp_max: 100,
@@ -782,7 +783,7 @@ async fn main() {
 
                                         println!("Found action: {:#?}", action_row);
 
-                                        //if request.target.object_id == INVALID_OBJECT_ID {
+                                        // placeholder for now
                                         if let Some(actor) =
                                             connection.get_actor(ObjectId(0x106ad804))
                                         {
@@ -793,22 +794,61 @@ async fn main() {
                                                 .update_hp_mp(actor.id, actor.hp, 10000)
                                                 .await;
                                         }
-                                        //} else {
-                                        let lua = lua.lock().unwrap();
-                                        lua.scope(|scope| {
-                                            let connection_data = scope
-                                                .create_userdata_ref_mut(&mut lua_player)
-                                                .unwrap();
 
-                                            let func: Function =
-                                                lua.globals().get("doAction").unwrap();
+                                        {
+                                            let lua = lua.lock().unwrap();
+                                            lua.scope(|scope| {
+                                                let connection_data = scope
+                                                    .create_userdata_ref_mut(&mut lua_player)
+                                                    .unwrap();
 
-                                            func.call::<()>(connection_data).unwrap();
+                                                let func: Function =
+                                                    lua.globals().get("doAction").unwrap();
 
-                                            Ok(())
-                                        })
-                                        .unwrap();
-                                        //}
+                                                func.call::<()>(connection_data).unwrap();
+
+                                                Ok(())
+                                            })
+                                            .unwrap();
+                                        }
+
+                                        // tell them the action results
+                                        {
+                                            let ipc = ServerZoneIpcSegment {
+                                                op_code: ServerZoneIpcType::ActionResult,
+                                                timestamp: timestamp_secs(),
+                                                data: ServerZoneIpcData::ActionResult(
+                                                    ActionResult {
+                                                        main_target: ObjectTypeId {
+                                                            object_id: ObjectId(0x106ad804),
+                                                            object_type: 0,
+                                                        },
+                                                        action_id: 31,
+                                                        animation_lock_time: 0.6,
+                                                        rotation: connection.player_data.rotation,
+                                                        action_animation_id: 31,
+                                                        flag: 1,
+                                                        effect_count: 1,
+                                                        effects: [ActionEffect {
+                                                            action_type: 3,
+                                                            value: 50,
+                                                            ..Default::default()
+                                                        };
+                                                            8],
+                                                        ..Default::default()
+                                                    },
+                                                ),
+                                                ..Default::default()
+                                            };
+
+                                            connection
+                                                .send_segment(PacketSegment {
+                                                    source_actor: connection.player_data.actor_id,
+                                                    target_actor: connection.player_data.actor_id,
+                                                    segment_type: SegmentType::Ipc { data: ipc },
+                                                })
+                                                .await;
+                                        }
                                     }
                                     ClientZoneIpcData::Unk16 { .. } => {
                                         tracing::info!("Recieved Unk16!");

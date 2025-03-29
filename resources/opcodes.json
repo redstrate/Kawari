@@ -144,6 +144,11 @@
             "name": "UpdateHpMpTp",
             "opcode": 325,
             "size": 8
+        },
+        {
+            "name": "ActionResult",
+            "opcode": 785,
+            "size": 124
         }
     ],
     "ClientZoneIpcType": [

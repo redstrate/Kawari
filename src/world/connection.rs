@@ -132,7 +132,7 @@ impl ZoneConnection {
                 op_code: ServerZoneIpcType::UpdateClassInfo,
                 timestamp: timestamp_secs(),
                 data: ServerZoneIpcData::UpdateClassInfo(UpdateClassInfo {
-                    class_id: 35,
+                    class_id: 1,
                     unknown: 1,
                     synced_level: 90,
                     class_level: 90,
@@ -348,7 +348,7 @@ impl ZoneConnection {
         };
 
         self.send_segment(PacketSegment {
-            source_actor: actor_id.0,
+            source_actor: self.player_data.actor_id,
             target_actor: actor_id.0,
             segment_type: SegmentType::Ipc { data: ipc },
         })

@@ -1,6 +1,6 @@
 use binrw::binrw;
 
-use crate::common::ObjectTypeId;
+use crate::common::{ObjectTypeId, read_quantized_rotation, write_quantized_rotation};
 
 #[binrw]
 #[derive(Debug, Eq, PartialEq, Clone, Default)]
@@ -18,10 +18,38 @@ pub struct ActionRequest {
     pub action_kind: ActionKind,
     #[brw(pad_before = 2)] // this ISNT empty
     pub action_id: u32, // See Action Excel sheet
-    pub request_id: u32,
+    pub request_id: u16,
+    #[br(map = read_quantized_rotation)]
+    #[bw(map = write_quantized_rotation)]
+    pub rotation: f32,
     pub dir: u16,
     pub dir_target: u16,
     pub target: ObjectTypeId,
     pub arg: u32,
     pub padding_prob: u32,
+}
+
+#[cfg(test)]
+mod tests {
+    use std::{fs::read, io::Cursor, path::PathBuf};
+
+    use binrw::BinRead;
+
+    use crate::common::ObjectId;
+
+    use super::*;
+
+    #[test]
+    fn read_actionrequest() {
+        let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        d.push("resources/tests/action_request.bin");
+
+        let buffer = read(d).unwrap();
+        let mut buffer = Cursor::new(&buffer);
+
+        let action_request = ActionRequest::read_le(&mut buffer).unwrap();
+        assert_eq!(action_request.target.object_id, ObjectId(0x400097d0));
+        assert_eq!(action_request.request_id, 0x2);
+        assert_eq!(action_request.rotation, 1.9694216);
+    }
 }

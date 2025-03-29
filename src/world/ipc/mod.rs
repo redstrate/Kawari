@@ -59,6 +59,9 @@ pub use event_play::EventPlay;
 mod event_start;
 pub use event_start::EventStart;
 
+mod action_result;
+pub use action_result::{ActionEffect, ActionResult};
+
 use crate::common::Position;
 use crate::common::read_string;
 use crate::common::write_string;
@@ -222,6 +225,8 @@ pub enum ServerZoneIpcData {
         mp: u16,
         unk: u16, // it's filled with... something
     },
+    /// Sent to inform the client the consequences of their actions
+    ActionResult(ActionResult),
 }
 
 #[binrw]
@@ -436,6 +441,10 @@ mod tests {
             (
                 ServerZoneIpcType::EventStart,
                 ServerZoneIpcData::EventStart(EventStart::default()),
+            ),
+            (
+                ServerZoneIpcType::ActionResult,
+                ServerZoneIpcData::ActionResult(ActionResult::default()),
             ),
         ];
 
