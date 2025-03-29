@@ -46,6 +46,8 @@ pub(crate) fn decompress<T: ReadWriteIpcSegment>(
 
     let mut cursor = Cursor::new(&data);
 
+    std::fs::write("decompressed.bin", &data).unwrap();
+
     for _ in 0..header.segment_count {
         let current_position = cursor.position();
         segments.push(PacketSegment::read_options(

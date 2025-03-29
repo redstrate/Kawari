@@ -53,6 +53,12 @@ pub use container_info::{ContainerInfo, ContainerType};
 mod item_info;
 pub use item_info::ItemInfo;
 
+mod event_play;
+pub use event_play::EventPlay;
+
+mod event_start;
+pub use event_start::EventStart;
+
 use crate::common::Position;
 use crate::common::read_string;
 use crate::common::write_string;
@@ -205,6 +211,10 @@ pub enum ServerZoneIpcData {
     ItemInfo(ItemInfo),
     /// Sent to inform the client of container status
     ContainerInfo(ContainerInfo),
+    /// Sent to tell the client to play a scene
+    EventPlay(EventPlay),
+    /// Sent to tell the client to load a scene, but not play it
+    EventStart(EventStart),
 }
 
 #[binrw]
@@ -324,6 +334,13 @@ pub enum ClientZoneIpcData {
     Unk18 {
         unk: [u8; 8], // TODO: unknown
     },
+    #[br(pre_assert(*magic == ClientZoneIpcType::EventRelatedUnk))]
+    EventRelatedUnk {
+        unk1: u32,
+        unk2: u32,
+        unk3: u32,
+        unk4: u32,
+    },
 }
 
 #[cfg(test)]
@@ -395,6 +412,14 @@ mod tests {
             (
                 ServerZoneIpcType::ContainerInfo,
                 ServerZoneIpcData::ContainerInfo(ContainerInfo::default()),
+            ),
+            (
+                ServerZoneIpcType::EventPlay,
+                ServerZoneIpcData::EventPlay(EventPlay::default()),
+            ),
+            (
+                ServerZoneIpcType::EventStart,
+                ServerZoneIpcData::EventStart(EventStart::default()),
             ),
         ];
 

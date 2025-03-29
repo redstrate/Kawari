@@ -129,6 +129,16 @@
             "name": "ContainerInfo",
             "opcode": 566,
             "size": 16
+        },
+        {
+            "name": "EventPlay",
+            "opcode": 991,
+            "size": 40
+        },
+        {
+            "name": "EventStart",
+            "opcode": 955,
+            "size": 24
         }
     ],
     "ClientZoneIpcType": [
@@ -231,6 +241,11 @@
             "name": "Unk18",
             "opcode": 221,
             "size": 8
+        },
+        {
+            "name": "EventRelatedUnk",
+            "opcode": 861,
+            "size": 16
         }
     ],
     "ServerLobbyIpcType": [
