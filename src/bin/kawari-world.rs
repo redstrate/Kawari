@@ -76,6 +76,7 @@ async fn main() {
             position: Position::default(),
             inventory: Inventory::new(),
             status_effects: StatusEffects::default(),
+            event: None,
         };
 
         let mut lua_player = LuaPlayer::default();
@@ -570,6 +571,7 @@ async fn main() {
                                     ClientZoneIpcData::ChatMessage(chat_message) => {
                                         ChatHandler::handle_chat_message(
                                             &mut connection,
+                                            &mut lua_player,
                                             chat_message,
                                         )
                                         .await
@@ -754,6 +756,10 @@ async fn main() {
                                         tracing::info!(
                                             "Recieved EventRelatedUnk! {unk1} {unk2} {unk3} {unk4}"
                                         );
+
+                                        if let Some(event) = connection.event.as_mut() {
+                                            event.scene_finished(&mut lua_player, *unk2);
+                                        }
                                     }
                                 }
                             }

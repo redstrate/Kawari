@@ -3,14 +3,17 @@ use crate::{
     config::get_config,
     opcodes::ServerZoneIpcType,
     packet::{PacketSegment, SegmentType},
-    world::ipc::{
-        ActorControl, ActorControlCategory, BattleNpcSubKind, CommonSpawn, DisplayFlag, EventPlay,
-        EventStart, NpcSpawn, ObjectKind, OnlineStatus, PlayerSpawn, PlayerSubKind,
-        ServerZoneIpcData, ServerZoneIpcSegment,
+    world::{
+        Event,
+        ipc::{
+            ActorControl, ActorControlCategory, BattleNpcSubKind, CommonSpawn, DisplayFlag,
+            EventPlay, EventStart, NpcSpawn, ObjectKind, OnlineStatus, PlayerSpawn, PlayerSubKind,
+            ServerZoneIpcData, ServerZoneIpcSegment,
+        },
     },
 };
 
-use super::{ZoneConnection, ipc::ChatMessage};
+use super::{LuaPlayer, ZoneConnection, ipc::ChatMessage};
 
 pub const CUSTOMIZE_DATA: CustomizeData = CustomizeData {
     race: 4,
@@ -44,7 +47,11 @@ pub const CUSTOMIZE_DATA: CustomizeData = CustomizeData {
 pub struct ChatHandler {}
 
 impl ChatHandler {
-    pub async fn handle_chat_message(connection: &mut ZoneConnection, chat_message: &ChatMessage) {
+    pub async fn handle_chat_message(
+        connection: &mut ZoneConnection,
+        lua_player: &mut LuaPlayer,
+        chat_message: &ChatMessage,
+    ) {
         tracing::info!("Client sent chat message: {}!", chat_message.message);
 
         let parts: Vec<&str> = chat_message.message.split(' ').collect();
@@ -322,34 +329,12 @@ impl ChatHandler {
                         .await;
                 }
 
-                // play the scene, bart
-                {
-                    let ipc = ServerZoneIpcSegment {
-                        unk1: 20,
-                        unk2: 0,
-                        op_code: ServerZoneIpcType::EventPlay,
-                        server_id: 0,
-                        timestamp: timestamp_secs(),
-                        data: ServerZoneIpcData::EventPlay(EventPlay {
-                            actor_id: ObjectTypeId {
-                                object_id: ObjectId(connection.player_data.actor_id),
-                                object_type: 0,
-                            },
-                            event_id: 0x130003,
-                            scene: 1,
-                            scene_flags: 4959237,
-                            ..Default::default()
-                        }),
-                    };
-
-                    connection
-                        .send_segment(PacketSegment {
-                            source_actor: connection.player_data.actor_id,
-                            target_actor: connection.player_data.actor_id,
-                            segment_type: SegmentType::Ipc { data: ipc },
-                        })
-                        .await;
-                }
+                connection.event = Some(Event::new("opening/OpeningUldah.lua"));
+                connection
+                    .event
+                    .as_mut()
+                    .unwrap()
+                    .enter_territory(lua_player);
             }
             _ => tracing::info!("Unrecognized debug command!"),
         }

@@ -17,3 +17,6 @@ pub use inventory::{EquippedContainer, Inventory, Item};
 
 mod lua;
 pub use lua::LuaPlayer;
+
+mod event;
+pub use event::Event;

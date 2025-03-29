@@ -10,7 +10,7 @@ use crate::{
 };
 
 use super::{
-    Inventory, Item, LuaPlayer, Zone,
+    Event, Inventory, Item, LuaPlayer, Zone,
     ipc::{
         ActorSetPos, ClientZoneIpcSegment, ContainerInfo, ContainerType, InitZone, ItemInfo,
         ServerZoneIpcData, ServerZoneIpcSegment, StatusEffect, StatusEffectList, UpdateClassInfo,
@@ -69,6 +69,8 @@ pub struct ZoneConnection {
     pub position: Position,
     pub inventory: Inventory,
     pub status_effects: StatusEffects,
+
+    pub event: Option<Event>,
 }
 
 impl ZoneConnection {

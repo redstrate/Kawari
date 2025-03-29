@@ -337,7 +337,8 @@ pub enum ClientZoneIpcData {
     #[br(pre_assert(*magic == ClientZoneIpcType::EventRelatedUnk))]
     EventRelatedUnk {
         unk1: u32,
-        unk2: u32,
+        unk2: u16,
+        #[brw(pad_before = 2)]
         unk3: u32,
         unk4: u32,
     },
