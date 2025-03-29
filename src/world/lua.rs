@@ -11,11 +11,16 @@ use super::{
     ipc::{ActorSetPos, EventPlay, ServerZoneIpcData, ServerZoneIpcSegment},
 };
 
+pub struct ChangeTerritoryTask {
+    pub zone_id: u16,
+}
+
 #[derive(Default)]
 pub struct LuaPlayer {
     pub player_data: PlayerData,
     pub status_effects: StatusEffects,
     pub queued_segments: Vec<PacketSegment<ServerZoneIpcSegment>>,
+    pub queued_tasks: Vec<ChangeTerritoryTask>,
 }
 
 impl LuaPlayer {
@@ -90,6 +95,10 @@ impl LuaPlayer {
             segment_type: SegmentType::Ipc { data: ipc },
         });
     }
+
+    fn change_territory(&mut self, zone_id: u16) {
+        self.queued_tasks.push(ChangeTerritoryTask { zone_id });
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -114,6 +123,10 @@ impl UserData for LuaPlayer {
         );
         methods.add_method_mut("set_position", |_, this, position: Position| {
             this.set_position(position);
+            Ok(())
+        });
+        methods.add_method_mut("change_territory", |_, this, zone_id: u16| {
+            this.change_territory(zone_id);
             Ok(())
         });
     }

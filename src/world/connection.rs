@@ -296,6 +296,11 @@ impl ZoneConnection {
             self.send_segment(segment.clone()).await;
         }
         player.queued_segments.clear();
+
+        for task in &player.queued_tasks {
+            self.change_zone(task.zone_id).await;
+        }
+        player.queued_tasks.clear();
     }
 
     pub async fn process_effects_list(&mut self) {
