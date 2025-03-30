@@ -6,17 +6,14 @@ use std::{
 mod customize_data;
 use binrw::binrw;
 pub use customize_data::CustomizeData;
-use physis::{
-    common::{Language, Platform},
-    gamedata::GameData,
-};
-
-use crate::config::get_config;
 
 pub mod custom_ipc;
 
 mod position;
 pub use position::Position;
+
+mod gamedata;
+pub use gamedata::GameData;
 
 #[binrw]
 #[brw(little)]
@@ -100,46 +97,6 @@ pub fn timestamp_msecs() -> u64 {
         .unwrap()
 }
 
-/// Gets the world name from an id into the World Excel sheet.
-pub fn get_world_name(world_id: u16) -> String {
-    let config = get_config();
-
-    let mut game_data = GameData::from_existing(Platform::Win32, &config.game_location).unwrap();
-
-    let exh = game_data.read_excel_sheet_header("World").unwrap();
-    let exd = game_data
-        .read_excel_sheet("World", &exh, Language::None, 0)
-        .unwrap();
-
-    let world_row = &exd.read_row(&exh, world_id as u32).unwrap()[0];
-
-    let physis::exd::ColumnData::String(name) = &world_row.data[1] else {
-        panic!("Unexpected type!");
-    };
-
-    name.clone()
-}
-
-/// Gets the starting city-state from a given class/job id.
-pub fn get_citystate(classjob_id: u16) -> u8 {
-    let config = get_config();
-
-    let mut game_data = GameData::from_existing(Platform::Win32, &config.game_location).unwrap();
-
-    let exh = game_data.read_excel_sheet_header("ClassJob").unwrap();
-    let exd = game_data
-        .read_excel_sheet("ClassJob", &exh, Language::English, 0)
-        .unwrap();
-
-    let world_row = &exd.read_row(&exh, classjob_id as u32).unwrap()[0];
-
-    let physis::exd::ColumnData::UInt8(town_id) = &world_row.data[33] else {
-        panic!("Unexpected type!");
-    };
-
-    *town_id
-}
-
 /// Gets the initial zone for a given city-state id
 pub fn determine_initial_starting_zone(citystate_id: u8) -> u16 {
     match citystate_id {
@@ -153,73 +110,12 @@ pub fn determine_initial_starting_zone(citystate_id: u8) -> u16 {
     }
 }
 
-/// Gets the primary model ID for a given item ID
-pub fn get_primary_model_id(item_id: u32) -> u16 {
-    let config = get_config();
-
-    let mut game_data = GameData::from_existing(Platform::Win32, &config.game_location).unwrap();
-
-    let exh = game_data.read_excel_sheet_header("Item").unwrap();
-    for (i, _) in exh.pages.iter().enumerate() {
-        let exd = game_data
-            .read_excel_sheet("Item", &exh, Language::English, i)
-            .unwrap();
-
-        if let Some(row) = exd.read_row(&exh, item_id) {
-            let item_row = &row[0];
-
-            let physis::exd::ColumnData::UInt64(id) = &item_row.data[47] else {
-                panic!("Unexpected type!");
-            };
-
-            return *id as u16;
-        }
-    }
-
-    // TODO: just turn this into an Option<>
-    tracing::warn!("Failed to get model id for {item_id}, this is most likely a bug!");
-
-    0
-}
-
 pub struct Attributes {
     pub strength: u32,
     pub dexterity: u32,
     pub vitality: u32,
     pub intelligence: u32,
     pub mind: u32,
-}
-
-pub fn get_racial_base_attributes(tribe_id: u8) -> Attributes {
-    // The Tribe Excel sheet only has deltas (e.g. 2 or -2) which are applied to a base 20 number... from somewhere
-    let base_stat = 20;
-
-    let config = get_config();
-
-    let mut game_data = GameData::from_existing(Platform::Win32, &config.game_location).unwrap();
-
-    let exh = game_data.read_excel_sheet_header("Tribe").unwrap();
-    let exd = game_data
-        .read_excel_sheet("Tribe", &exh, Language::English, 0)
-        .unwrap();
-
-    let tribe_row = &exd.read_row(&exh, tribe_id as u32).unwrap()[0];
-
-    let get_column = |column_index: usize| {
-        let physis::exd::ColumnData::Int8(delta) = &tribe_row.data[column_index] else {
-            panic!("Unexpected type!");
-        };
-
-        *delta
-    };
-
-    Attributes {
-        strength: (base_stat + get_column(4)) as u32,
-        dexterity: (base_stat + get_column(6)) as u32,
-        vitality: (base_stat + get_column(5)) as u32,
-        intelligence: (base_stat + get_column(7)) as u32,
-        mind: (base_stat + get_column(8)) as u32,
-    }
 }
 
 #[cfg(test)]

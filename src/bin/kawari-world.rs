@@ -2,10 +2,8 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 use kawari::common::custom_ipc::{CustomIpcData, CustomIpcSegment, CustomIpcType};
-use kawari::common::{
-    Position, determine_initial_starting_zone, get_citystate, get_primary_model_id, get_world_name,
-};
-use kawari::common::{get_racial_base_attributes, timestamp_secs};
+use kawari::common::{GameData, timestamp_secs};
+use kawari::common::{Position, determine_initial_starting_zone};
 use kawari::config::get_config;
 use kawari::lobby::CharaMake;
 use kawari::oodle::OodleNetwork;
@@ -28,8 +26,6 @@ use kawari::world::{
 };
 use kawari::world::{EffectsBuilder, LuaPlayer, PlayerData, StatusEffects, WorldDatabase};
 use mlua::{Function, Lua};
-use physis::common::{Language, Platform};
-use physis::gamedata::GameData;
 use tokio::io::AsyncReadExt;
 use tokio::net::TcpListener;
 
@@ -52,6 +48,7 @@ async fn main() {
 
     let database = Arc::new(WorldDatabase::new());
     let lua = Arc::new(Mutex::new(Lua::new()));
+    let game_data = Arc::new(Mutex::new(GameData::new()));
 
     {
         let lua = lua.lock().unwrap();
@@ -89,6 +86,7 @@ async fn main() {
 
         let database = database.clone();
         let lua = lua.clone();
+        let game_data = game_data.clone();
 
         let state = PacketState {
             client_key: None,
@@ -113,7 +111,7 @@ async fn main() {
 
         let mut lua_player = LuaPlayer::default();
 
-        let config = get_config();
+        /*let config = get_config();
 
         let mut game_data =
             GameData::from_existing(Platform::Win32, &config.game_location).unwrap();
@@ -121,7 +119,7 @@ async fn main() {
         let exh = game_data.read_excel_sheet_header("Action").unwrap();
         let exd = game_data
             .read_excel_sheet("Action", &exh, Language::English, 0)
-            .unwrap();
+            .unwrap();*/
 
         tokio::spawn(async move {
             let mut buf = [0; 2056];
@@ -295,9 +293,14 @@ async fn main() {
 
                                         // Stats
                                         {
-                                            let attributes = get_racial_base_attributes(
-                                                chara_details.chara_make.customize.subrace,
-                                            );
+                                            let attributes;
+                                            {
+                                                let mut game_data = game_data.lock().unwrap();
+
+                                                attributes = game_data.get_racial_base_attributes(
+                                                    chara_details.chara_make.customize.subrace,
+                                                );
+                                            }
 
                                             let ipc = ServerZoneIpcSegment {
                                                 op_code: ServerZoneIpcType::PlayerStats,
@@ -396,122 +399,106 @@ async fn main() {
 
                                         // send player spawn
                                         {
-                                            let ipc = ServerZoneIpcSegment {
-                                                op_code: ServerZoneIpcType::PlayerSpawn,
-                                                timestamp: timestamp_secs(),
-                                                data: ServerZoneIpcData::PlayerSpawn(PlayerSpawn {
-                                                    account_id: connection.player_data.account_id,
-                                                    content_id: connection.player_data.content_id,
-                                                    current_world_id: config.world.world_id,
-                                                    home_world_id: config.world.world_id,
-                                                    gm_rank: GameMasterRank::Debug,
-                                                    online_status: OnlineStatus::GameMasterBlue,
-                                                    common: CommonSpawn {
-                                                        class_job: connection
-                                                            .player_data
-                                                            .classjob_id,
-                                                        name: chara_details.name,
-                                                        hp_curr: connection.player_data.curr_hp,
-                                                        hp_max: connection.player_data.max_hp,
-                                                        mp_curr: connection.player_data.curr_mp,
-                                                        mp_max: connection.player_data.max_mp,
-                                                        object_kind: ObjectKind::Player(
-                                                            PlayerSubKind::Player,
-                                                        ),
-                                                        look: chara_details.chara_make.customize,
-                                                        fc_tag: "LOCAL".to_string(),
-                                                        display_flags: DisplayFlag::UNK,
-                                                        models: [
-                                                            get_primary_model_id(
-                                                                connection
-                                                                    .inventory
-                                                                    .equipped
-                                                                    .head
-                                                                    .id,
-                                                            )
-                                                                as u32,
-                                                            get_primary_model_id(
-                                                                connection
-                                                                    .inventory
-                                                                    .equipped
-                                                                    .body
-                                                                    .id,
-                                                            )
-                                                                as u32,
-                                                            get_primary_model_id(
-                                                                connection
-                                                                    .inventory
-                                                                    .equipped
-                                                                    .hands
-                                                                    .id,
-                                                            )
-                                                                as u32,
-                                                            get_primary_model_id(
-                                                                connection
-                                                                    .inventory
-                                                                    .equipped
-                                                                    .legs
-                                                                    .id,
-                                                            )
-                                                                as u32,
-                                                            get_primary_model_id(
-                                                                connection
-                                                                    .inventory
-                                                                    .equipped
-                                                                    .feet
-                                                                    .id,
-                                                            )
-                                                                as u32,
-                                                            get_primary_model_id(
-                                                                connection
-                                                                    .inventory
-                                                                    .equipped
-                                                                    .ears
-                                                                    .id,
-                                                            )
-                                                                as u32,
-                                                            get_primary_model_id(
-                                                                connection
-                                                                    .inventory
-                                                                    .equipped
-                                                                    .neck
-                                                                    .id,
-                                                            )
-                                                                as u32,
-                                                            get_primary_model_id(
-                                                                connection
-                                                                    .inventory
-                                                                    .equipped
-                                                                    .wrists
-                                                                    .id,
-                                                            )
-                                                                as u32,
-                                                            get_primary_model_id(
-                                                                connection
-                                                                    .inventory
-                                                                    .equipped
-                                                                    .left_ring
-                                                                    .id,
-                                                            )
-                                                                as u32,
-                                                            get_primary_model_id(
-                                                                connection
-                                                                    .inventory
-                                                                    .equipped
-                                                                    .right_ring
-                                                                    .id,
-                                                            )
-                                                                as u32,
-                                                        ],
-                                                        pos: exit_position
-                                                            .unwrap_or(Position::default()),
-                                                        rotation: exit_rotation.unwrap_or(0.0),
-                                                        ..Default::default()
-                                                    },
+                                            let ipc;
+                                            {
+                                                let mut game_data = game_data.lock().unwrap();
+                                                let equipped = &connection.inventory.equipped;
+
+                                                ipc = ServerZoneIpcSegment {
+                                                    op_code: ServerZoneIpcType::PlayerSpawn,
+                                                    timestamp: timestamp_secs(),
+                                                    data: ServerZoneIpcData::PlayerSpawn(
+                                                        PlayerSpawn {
+                                                            account_id: connection
+                                                                .player_data
+                                                                .account_id,
+                                                            content_id: connection
+                                                                .player_data
+                                                                .content_id,
+                                                            current_world_id: config.world.world_id,
+                                                            home_world_id: config.world.world_id,
+                                                            gm_rank: GameMasterRank::Debug,
+                                                            online_status:
+                                                                OnlineStatus::GameMasterBlue,
+                                                            common: CommonSpawn {
+                                                                class_job: connection
+                                                                    .player_data
+                                                                    .classjob_id,
+                                                                name: chara_details.name,
+                                                                hp_curr: connection
+                                                                    .player_data
+                                                                    .curr_hp,
+                                                                hp_max: connection
+                                                                    .player_data
+                                                                    .max_hp,
+                                                                mp_curr: connection
+                                                                    .player_data
+                                                                    .curr_mp,
+                                                                mp_max: connection
+                                                                    .player_data
+                                                                    .max_mp,
+                                                                object_kind: ObjectKind::Player(
+                                                                    PlayerSubKind::Player,
+                                                                ),
+                                                                look: chara_details
+                                                                    .chara_make
+                                                                    .customize,
+                                                                fc_tag: "LOCAL".to_string(),
+                                                                display_flags: DisplayFlag::UNK,
+                                                                models: [
+                                                                    game_data.get_primary_model_id(
+                                                                        equipped.head.id,
+                                                                    )
+                                                                        as u32,
+                                                                    game_data.get_primary_model_id(
+                                                                        equipped.body.id,
+                                                                    )
+                                                                        as u32,
+                                                                    game_data.get_primary_model_id(
+                                                                        equipped.hands.id,
+                                                                    )
+                                                                        as u32,
+                                                                    game_data.get_primary_model_id(
+                                                                        equipped.legs.id,
+                                                                    )
+                                                                        as u32,
+                                                                    game_data.get_primary_model_id(
+                                                                        equipped.feet.id,
+                                                                    )
+                                                                        as u32,
+                                                                    game_data.get_primary_model_id(
+                                                                        equipped.ears.id,
+                                                                    )
+                                                                        as u32,
+                                                                    game_data.get_primary_model_id(
+                                                                        equipped.neck.id,
+                                                                    )
+                                                                        as u32,
+                                                                    game_data.get_primary_model_id(
+                                                                        equipped.wrists.id,
+                                                                    )
+                                                                        as u32,
+                                                                    game_data.get_primary_model_id(
+                                                                        equipped.left_ring.id,
+                                                                    )
+                                                                        as u32,
+                                                                    game_data.get_primary_model_id(
+                                                                        equipped.right_ring.id,
+                                                                    )
+                                                                        as u32,
+                                                                ],
+                                                                pos: exit_position
+                                                                    .unwrap_or(Position::default()),
+                                                                rotation: exit_rotation
+                                                                    .unwrap_or(0.0),
+                                                                ..Default::default()
+                                                            },
+                                                            ..Default::default()
+                                                        },
+                                                    ),
                                                     ..Default::default()
-                                                }),
-                                                ..Default::default()
-                                            };
+                                                };
+                                            }
 
                                             connection
                                                 .send_segment(PacketSegment {
@@ -837,10 +824,10 @@ async fn main() {
                                     ClientZoneIpcData::ActionRequest(request) => {
                                         tracing::info!("Recieved action request: {:#?}!", request);
 
-                                        let action_row =
+                                        /*let action_row =
                                             &exd.read_row(&exh, request.action_id).unwrap()[0];
 
-                                        println!("Found action: {:#?}", action_row);
+                                        println!("Found action: {:#?}", action_row);*/
 
                                         let mut effects_builder = None;
 
@@ -857,6 +844,8 @@ async fn main() {
                                                     let connection_data = scope
                                                         .create_userdata_ref_mut(&mut lua_player)
                                                         .unwrap();
+
+                                                    let config = get_config();
 
                                                     let file_name = format!(
                                                         "{}/{}",
@@ -993,8 +982,13 @@ async fn main() {
 
                                         let chara_make = CharaMake::from_json(chara_make_json);
 
-                                        let city_state =
-                                            get_citystate(chara_make.classjob_id as u16);
+                                        let city_state;
+                                        {
+                                            let mut game_data = game_data.lock().unwrap();
+
+                                            city_state = game_data
+                                                .get_citystate(chara_make.classjob_id as u16);
+                                        }
 
                                         let (content_id, actor_id) = database.create_player_data(
                                             name,
@@ -1087,10 +1081,17 @@ async fn main() {
                                     CustomIpcData::RequestCharacterList { service_account_id } => {
                                         let config = get_config();
 
+                                        let world_name;
+                                        {
+                                            let mut game_data = game_data.lock().unwrap();
+                                            world_name =
+                                                game_data.get_world_name(config.world.world_id);
+                                        }
+
                                         let characters = database.get_character_list(
                                             *service_account_id,
                                             config.world.world_id,
-                                            &get_world_name(config.world.world_id),
+                                            &world_name,
                                         );
 
                                         // send response

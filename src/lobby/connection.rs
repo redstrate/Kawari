@@ -6,7 +6,7 @@ use crate::{
     blowfish::Blowfish,
     common::{
         custom_ipc::{CustomIpcData, CustomIpcSegment, CustomIpcType},
-        get_world_name, timestamp_secs,
+        timestamp_secs,
     },
     config::get_config,
     lobby::CharaMake,
@@ -125,7 +125,7 @@ impl LobbyConnection {
                 index: 0,
                 flags: 0,
                 icon: 0,
-                name: get_world_name(config.world.world_id),
+                name: self.world_name.clone(),
             }]
             .to_vec();
             // add any empty boys

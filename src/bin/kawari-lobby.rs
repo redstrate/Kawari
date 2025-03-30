@@ -1,7 +1,7 @@
+use kawari::common::GameData;
 use kawari::common::custom_ipc::CustomIpcData;
 use kawari::common::custom_ipc::CustomIpcSegment;
 use kawari::common::custom_ipc::CustomIpcType;
-use kawari::common::get_world_name;
 use kawari::config::get_config;
 use kawari::lobby::LobbyConnection;
 use kawari::lobby::ipc::{ClientLobbyIpcData, ServerLobbyIpcSegment};
@@ -24,7 +24,8 @@ async fn main() {
 
     tracing::info!("Server started on {addr}");
 
-    let world_name = get_world_name(config.world.world_id);
+    let mut game_data = GameData::new();
+    let world_name = game_data.get_world_name(config.world.world_id);
 
     loop {
         let (socket, _) = listener.accept().await.unwrap();
