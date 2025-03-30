@@ -4,3 +4,4 @@ function onBeginLogin(player)
 end
 
 registerAction(3, "actions/Sprint.lua")
+registerAction(9, "actions/FastBlade.lua")

@@ -1,4 +1,4 @@
-use mlua::{FromLua, Lua, UserData, UserDataMethods, Value};
+use mlua::{FromLua, Lua, MetaMethod, UserData, UserDataMethods, Value};
 
 use crate::{
     common::{ObjectId, ObjectTypeId, Position, timestamp_secs},
@@ -8,7 +8,7 @@ use crate::{
 
 use super::{
     PlayerData, StatusEffects, Zone,
-    ipc::{ActorSetPos, EventPlay, ServerZoneIpcData, ServerZoneIpcSegment},
+    ipc::{ActionEffect, ActorSetPos, EventPlay, ServerZoneIpcData, ServerZoneIpcSegment},
 };
 
 pub struct ChangeTerritoryTask {
@@ -159,5 +159,33 @@ impl UserData for Zone {
                 Ok(mlua::Nil)
             },
         );
+    }
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct EffectsBuilder {
+    pub effects: Vec<ActionEffect>,
+}
+
+impl UserData for EffectsBuilder {
+    fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
+        methods.add_method_mut("damage", |_, this, amount: u16| {
+            this.effects.push(ActionEffect {
+                action_type: 3,
+                value: amount,
+                param1: 133,
+                ..Default::default()
+            });
+            Ok(())
+        });
+    }
+}
+
+impl FromLua for EffectsBuilder {
+    fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
+        match value {
+            Value::UserData(ud) => Ok(ud.borrow::<Self>()?.clone()),
+            _ => unreachable!(),
+        }
     }
 }

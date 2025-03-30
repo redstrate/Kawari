@@ -27,7 +27,7 @@ use kawari::world::{
         SocialList,
     },
 };
-use kawari::world::{LuaPlayer, PlayerData, StatusEffects, WorldDatabase};
+use kawari::world::{EffectsBuilder, LuaPlayer, PlayerData, StatusEffects, WorldDatabase};
 use mlua::{Function, Lua};
 use physis::common::{Language, Platform};
 use physis::gamedata::GameData;
@@ -69,6 +69,13 @@ async fn main() {
         lua.set_app_data(ExtraLuaState::default());
         lua.globals()
             .set("registerAction", register_action_func)
+            .unwrap();
+
+        let effectsbuilder_constructor = lua
+            .create_function(|_, ()| Ok(EffectsBuilder::default()))
+            .unwrap();
+        lua.globals()
+            .set("EffectsBuilder", effectsbuilder_constructor)
             .unwrap();
 
         let file_name = format!("{}/Global.lua", &config.world.scripts_location);
@@ -778,6 +785,8 @@ async fn main() {
                                                 .await;
                                         }
 
+                                        let mut effects_builder = None;
+
                                         // run action script
                                         {
                                             let lua = lua.lock().unwrap();
@@ -807,7 +816,12 @@ async fn main() {
                                                     let func: Function =
                                                         lua.globals().get("doAction").unwrap();
 
-                                                    func.call::<()>(connection_data).unwrap();
+                                                    effects_builder = Some(
+                                                        func.call::<EffectsBuilder>(
+                                                            connection_data,
+                                                        )
+                                                        .unwrap(),
+                                                    );
 
                                                     Ok(())
                                                 })
@@ -816,14 +830,10 @@ async fn main() {
                                         }
 
                                         // tell them the action results
-                                        {
+                                        if let Some(effects_builder) = effects_builder {
                                             let mut effects = [ActionEffect::default(); 8];
-                                            effects[0] = ActionEffect {
-                                                action_type: 3,
-                                                value: 22,
-                                                param1: 133,
-                                                ..Default::default()
-                                            };
+                                            effects[..effects_builder.effects.len()]
+                                                .copy_from_slice(&effects_builder.effects);
 
                                             let ipc = ServerZoneIpcSegment {
                                                 op_code: ServerZoneIpcType::ActionResult,
@@ -843,7 +853,8 @@ async fn main() {
                                                         rotation: connection.player_data.rotation,
                                                         action_animation_id: 31,
                                                         flag: 1,
-                                                        effect_count: 1,
+                                                        effect_count: effects_builder.effects.len()
+                                                            as u8,
                                                         effects,
                                                         ..Default::default()
                                                     },
