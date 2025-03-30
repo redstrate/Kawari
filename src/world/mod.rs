@@ -7,7 +7,7 @@ mod chat_handler;
 pub use chat_handler::ChatHandler;
 
 mod connection;
-pub use connection::{PlayerData, StatusEffects, ZoneConnection};
+pub use connection::{PlayerData, ZoneConnection};
 
 mod database;
 pub use database::{CharacterData, WorldDatabase};
@@ -23,3 +23,6 @@ pub use event::Event;
 
 mod actor;
 pub use actor::Actor;
+
+mod status_effects;
+pub use status_effects::StatusEffects;
