@@ -9,7 +9,7 @@ use std::{
 use tokio::{net::TcpStream, sync::mpsc::Sender, task::JoinHandle};
 
 use crate::{
-    common::{GameData, ObjectId, Position, timestamp_secs},
+    common::{GameData, ObjectId, ObjectTypeId, Position, timestamp_secs},
     opcodes::ServerZoneIpcType,
     packet::{
         CompressionType, ConnectionType, PacketSegment, PacketState, SegmentType, parse_packet,
@@ -19,10 +19,11 @@ use crate::{
 
 use super::{
     Actor, Event, Inventory, Item, LuaPlayer, StatusEffects, WorldDatabase, Zone,
+    chat_handler::CUSTOMIZE_DATA,
     ipc::{
-        ActorControlSelf, ActorSetPos, ClientZoneIpcSegment, ContainerInfo, ContainerType,
-        InitZone, ItemInfo, ServerZoneIpcData, ServerZoneIpcSegment, StatusEffect,
-        StatusEffectList, UpdateClassInfo, WeatherChange,
+        ActorControlSelf, ActorSetPos, BattleNpcSubKind, ClientZoneIpcSegment, CommonSpawn,
+        ContainerInfo, ContainerType, InitZone, ItemInfo, NpcSpawn, ObjectKind, ServerZoneIpcData,
+        ServerZoneIpcSegment, StatusEffect, StatusEffectList, UpdateClassInfo, WeatherChange,
     },
 };
 
@@ -53,6 +54,10 @@ pub struct ClientId(usize);
 pub enum FromServer {
     /// A chat message.
     Message(String),
+    /// An actor has been spawned.
+    ActorSpawn(Actor),
+    /// An actor moved to a new position.
+    ActorMove(u32, Position),
 }
 
 #[derive(Debug)]
@@ -88,6 +93,8 @@ impl ClientHandle {
 pub enum ToServer {
     NewClient(ClientHandle),
     Message(ClientId, String),
+    ActorSpawned(ClientId, Actor),
+    ActorMoved(ClientId, u32, Position),
     FatalError(std::io::Error),
 }
 
@@ -245,6 +252,67 @@ impl ZoneConnection {
             })
             .await;
         }
+    }
+
+    pub async fn set_actor_position(&mut self, actor_id: u32, position: Position) {
+        let ipc = ServerZoneIpcSegment {
+            op_code: ServerZoneIpcType::ActorMove,
+            timestamp: timestamp_secs(),
+            data: ServerZoneIpcData::ActorMove { pos: position },
+            ..Default::default()
+        };
+
+        self.send_segment(PacketSegment {
+            source_actor: actor_id,
+            target_actor: actor_id,
+            segment_type: SegmentType::Ipc { data: ipc },
+        })
+        .await;
+    }
+
+    pub async fn spawn_actor(&mut self, actor: Actor) {
+        let ipc = ServerZoneIpcSegment {
+            unk1: 20,
+            unk2: 0,
+            op_code: ServerZoneIpcType::NpcSpawn,
+            server_id: 0,
+            timestamp: timestamp_secs(),
+            data: ServerZoneIpcData::NpcSpawn(NpcSpawn {
+                common: CommonSpawn {
+                    hp_curr: 100,
+                    hp_max: 100,
+                    mp_curr: 100,
+                    mp_max: 100,
+                    look: CUSTOMIZE_DATA,
+                    spawn_index: self.get_free_spawn_index(),
+                    bnpc_base: 13498,
+                    bnpc_name: 10261,
+                    object_kind: ObjectKind::BattleNpc(BattleNpcSubKind::Enemy),
+                    level: 1,
+                    models: [
+                        0,  // head
+                        89, // body
+                        89, // hands
+                        89, // legs
+                        89, // feet
+                        0,  // ears
+                        0,  // neck
+                        0,  // wrists
+                        0,  // left finger
+                        0,  // right finger
+                    ],
+                    ..Default::default()
+                },
+                ..Default::default()
+            }),
+        };
+
+        self.send_segment(PacketSegment {
+            source_actor: actor.id.0,
+            target_actor: self.player_data.actor_id,
+            segment_type: SegmentType::Ipc { data: ipc },
+        })
+        .await;
     }
 
     pub async fn change_zone(&mut self, new_zone_id: u16) {

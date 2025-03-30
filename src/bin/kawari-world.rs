@@ -19,15 +19,15 @@ use kawari::world::ipc::{
     ServerZoneIpcData, ServerZoneIpcSegment, SocialListRequestType,
 };
 use kawari::world::{
+    Actor, ClientHandle, ClientId, EffectsBuilder, FromServer, LuaPlayer, PlayerData, ServerHandle,
+    StatusEffects, ToServer, WorldDatabase,
+};
+use kawari::world::{
     ChatHandler, Inventory, Zone, ZoneConnection,
     ipc::{
         ActorControlCategory, ActorControlSelf, PlayerEntry, PlayerSetup, PlayerSpawn, PlayerStats,
         SocialList,
     },
-};
-use kawari::world::{
-    ClientHandle, ClientId, EffectsBuilder, FromServer, LuaPlayer, PlayerData, ServerHandle,
-    StatusEffects, ToServer, WorldDatabase,
 };
 use mlua::{Function, Lua};
 use std::net::SocketAddr;
@@ -49,10 +49,12 @@ struct ExtraLuaState {
 #[derive(Default, Debug)]
 struct Data {
     clients: HashMap<ClientId, ClientHandle>,
+    actors: Vec<Actor>,
 }
 
 async fn main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::io::Error> {
     let mut data = Data::default();
+    let mut to_remove = Vec::new();
 
     while let Some(msg) = recv.recv().await {
         match msg {
@@ -60,9 +62,7 @@ async fn main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::io::Error> {
                 data.clients.insert(handle.id, handle);
             }
             ToServer::Message(from_id, msg) => {
-                let mut to_remove = Vec::new();
-
-                for (id, handle) in data.clients.iter_mut() {
+                for (id, handle) in &mut data.clients {
                     let id = *id;
 
                     if id == from_id {
@@ -75,16 +75,44 @@ async fn main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::io::Error> {
                         to_remove.push(id);
                     }
                 }
+            }
+            ToServer::ActorSpawned(from_id, actor) => {
+                for (id, handle) in &mut data.clients {
+                    let id = *id;
 
-                // Remove any clients that errored out
-                for id in to_remove {
-                    data.clients.remove(&id);
+                    if id == from_id {
+                        continue;
+                    }
+
+                    let msg = FromServer::ActorSpawn(actor);
+
+                    if handle.send(msg).is_err() {
+                        to_remove.push(id);
+                    }
+                }
+            }
+            ToServer::ActorMoved(from_id, actor_id, position) => {
+                for (id, handle) in &mut data.clients {
+                    let id = *id;
+
+                    if id == from_id {
+                        continue;
+                    }
+
+                    let msg = FromServer::ActorMove(actor_id, position);
+
+                    if handle.send(msg).is_err() {
+                        to_remove.push(id);
+                    }
                 }
             }
             ToServer::FatalError(err) => return Err(err),
         }
     }
-
+    // Remove any clients that errored out
+    for id in to_remove {
+        data.clients.remove(&id);
+    }
     Ok(())
 }
 
@@ -1016,7 +1044,9 @@ async fn client_loop(
             }
             msg = internal_recv.recv() => match msg {
                 Some(msg) => match msg {
-                    FromServer::Message(msg) => connection.send_message(&msg).await,
+                    FromServer::Message(msg)=>connection.send_message(&msg).await,
+                    FromServer::ActorSpawn(actor) => connection.spawn_actor(actor).await,
+                    FromServer::ActorMove(actor_id, position) => connection.set_actor_position(actor_id, position).await,
                 },
                 None => break,
             }
