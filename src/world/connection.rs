@@ -12,9 +12,9 @@ use crate::{
 use super::{
     Actor, Event, Inventory, Item, LuaPlayer, Zone,
     ipc::{
-        ActorSetPos, ClientZoneIpcSegment, ContainerInfo, ContainerType, InitZone, ItemInfo,
-        ServerZoneIpcData, ServerZoneIpcSegment, StatusEffect, StatusEffectList, UpdateClassInfo,
-        WeatherChange,
+        ActorControl, ActorControlSelf, ActorSetPos, ClientZoneIpcSegment, ContainerInfo,
+        ContainerType, InitZone, ItemInfo, ServerZoneIpcData, ServerZoneIpcSegment, StatusEffect,
+        StatusEffectList, UpdateClassInfo, WeatherChange,
     },
 };
 
@@ -104,6 +104,77 @@ impl ZoneConnection {
             &[segment],
         )
         .await;
+    }
+
+    pub async fn initialize(&mut self, connection_type: &ConnectionType, actor_id: u32) {
+        // some still hardcoded values
+        self.player_data.classjob_id = 1;
+        self.player_data.level = 5;
+        self.player_data.curr_hp = 100;
+        self.player_data.max_hp = 100;
+        self.player_data.curr_mp = 10000;
+        self.player_data.max_mp = 10000;
+
+        // We have send THEM a keep alive
+        {
+            self.send_segment(PacketSegment {
+                source_actor: 0,
+                target_actor: 0,
+                segment_type: SegmentType::KeepAlive {
+                    id: 0xE0037603u32,
+                    timestamp: timestamp_secs(),
+                },
+            })
+            .await;
+        }
+
+        match connection_type {
+            ConnectionType::Zone => {
+                tracing::info!("Client {actor_id} is initializing zone session...");
+
+                self.send_segment(PacketSegment {
+                    source_actor: 0,
+                    target_actor: 0,
+                    segment_type: SegmentType::ZoneInitialize {
+                        player_id: self.player_data.actor_id,
+                        timestamp: timestamp_secs(),
+                    },
+                })
+                .await;
+            }
+            ConnectionType::Chat => {
+                tracing::info!("Client {actor_id} is initializing chat session...");
+
+                {
+                    self.send_segment(PacketSegment {
+                        source_actor: 0,
+                        target_actor: 0,
+                        segment_type: SegmentType::ZoneInitialize {
+                            player_id: self.player_data.actor_id,
+                            timestamp: timestamp_secs(),
+                        },
+                    })
+                    .await;
+                }
+
+                {
+                    let ipc = ServerZoneIpcSegment {
+                        op_code: ServerZoneIpcType::InitializeChat,
+                        timestamp: timestamp_secs(),
+                        data: ServerZoneIpcData::InitializeChat { unk: [0; 8] },
+                        ..Default::default()
+                    };
+
+                    self.send_segment(PacketSegment {
+                        source_actor: self.player_data.actor_id,
+                        target_actor: self.player_data.actor_id,
+                        segment_type: SegmentType::Ipc { data: ipc },
+                    })
+                    .await;
+                }
+            }
+            _ => panic!("The client is trying to initialize the wrong connection?!"),
+        }
     }
 
     pub async fn set_player_position(&mut self, position: Position) {
@@ -380,5 +451,21 @@ impl ZoneConnection {
         }
 
         return None;
+    }
+
+    pub async fn actor_control_self(&mut self, actor_control: ActorControlSelf) {
+        let ipc = ServerZoneIpcSegment {
+            op_code: ServerZoneIpcType::ActorControlSelf,
+            timestamp: timestamp_secs(),
+            data: ServerZoneIpcData::ActorControlSelf(actor_control),
+            ..Default::default()
+        };
+
+        self.send_segment(PacketSegment {
+            source_actor: self.player_data.actor_id,
+            target_actor: self.player_data.actor_id,
+            segment_type: SegmentType::Ipc { data: ipc },
+        })
+        .await;
     }
 }

@@ -135,94 +135,14 @@ async fn main() {
                     for segment in &segments {
                         match &segment.segment_type {
                             SegmentType::InitializeSession { actor_id } => {
-                                tracing::info!("actor id to parse: {actor_id}");
+                                // for some reason they send a string representation
+                                let actor_id = actor_id.parse::<u32>().unwrap();
 
                                 // collect actor data
-                                connection.player_data =
-                                    database.find_player_data(actor_id.parse::<u32>().unwrap());
-                                // some still hardcoded values
-                                connection.player_data.classjob_id = 1;
-                                connection.player_data.level = 5;
-                                connection.player_data.curr_hp = 100;
-                                connection.player_data.max_hp = 100;
-                                connection.player_data.curr_mp = 10000;
-                                connection.player_data.max_mp = 10000;
-
+                                connection.player_data = database.find_player_data(actor_id);
+                                connection.initialize(&connection_type, actor_id).await;
                                 exit_position = Some(connection.player_data.position);
                                 exit_rotation = Some(connection.player_data.rotation);
-
-                                // We have send THEM a keep alive
-                                {
-                                    connection
-                                        .send_segment(PacketSegment {
-                                            source_actor: 0,
-                                            target_actor: 0,
-                                            segment_type: SegmentType::KeepAlive {
-                                                id: 0xE0037603u32,
-                                                timestamp: timestamp_secs(),
-                                            },
-                                        })
-                                        .await;
-                                }
-
-                                match connection_type {
-                                    kawari::packet::ConnectionType::Zone => {
-                                        tracing::info!(
-                                            "Client {actor_id} is initializing zone session..."
-                                        );
-
-                                        connection
-                                            .send_segment(PacketSegment {
-                                                source_actor: 0,
-                                                target_actor: 0,
-                                                segment_type: SegmentType::ZoneInitialize {
-                                                    player_id: connection.player_data.actor_id,
-                                                    timestamp: timestamp_secs(),
-                                                },
-                                            })
-                                            .await;
-                                    }
-                                    kawari::packet::ConnectionType::Chat => {
-                                        tracing::info!(
-                                            "Client {actor_id} is initializing chat session..."
-                                        );
-
-                                        {
-                                            connection
-                                                .send_segment(PacketSegment {
-                                                    source_actor: 0,
-                                                    target_actor: 0,
-                                                    segment_type: SegmentType::ZoneInitialize {
-                                                        player_id: connection.player_data.actor_id,
-                                                        timestamp: timestamp_secs(),
-                                                    },
-                                                })
-                                                .await;
-                                        }
-
-                                        {
-                                            let ipc = ServerZoneIpcSegment {
-                                                op_code: ServerZoneIpcType::InitializeChat,
-                                                timestamp: timestamp_secs(),
-                                                data: ServerZoneIpcData::InitializeChat {
-                                                    unk: [0; 8],
-                                                },
-                                                ..Default::default()
-                                            };
-
-                                            connection
-                                                .send_segment(PacketSegment {
-                                                    source_actor: connection.player_data.actor_id,
-                                                    target_actor: connection.player_data.actor_id,
-                                                    segment_type: SegmentType::Ipc { data: ipc },
-                                                })
-                                                .await;
-                                        }
-                                    }
-                                    _ => panic!(
-                                        "The client is trying to initialize the wrong connection?!"
-                                    ),
-                                }
                             }
                             SegmentType::Ipc { data } => {
                                 match &data.data {
@@ -265,31 +185,16 @@ async fn main() {
                                         // Send inventory
                                         connection.send_inventory().await;
 
-                                        // Control Data
-                                        {
-                                            let ipc = ServerZoneIpcSegment {
-                                                op_code: ServerZoneIpcType::ActorControlSelf,
-                                                timestamp: timestamp_secs(),
-                                                data: ServerZoneIpcData::ActorControlSelf(
-                                                    ActorControlSelf {
-                                                        category:
-                                                            ActorControlCategory::SetCharaGearParamUI {
+                                        // set chara gear param
+                                        connection
+                                            .actor_control_self(ActorControlSelf {
+                                                category:
+                                                    ActorControlCategory::SetCharaGearParamUI {
                                                         unk1: 1,
                                                         unk2: 1,
-                                                            }
                                                     },
-                                                ),
-                                                ..Default::default()
-                                            };
-
-                                            connection
-                                                .send_segment(PacketSegment {
-                                                    source_actor: connection.player_data.actor_id,
-                                                    target_actor: connection.player_data.actor_id,
-                                                    segment_type: SegmentType::Ipc { data: ipc },
-                                                })
-                                                .await;
-                                        }
+                                            })
+                                            .await;
 
                                         // Stats
                                         {
@@ -727,62 +632,16 @@ async fn main() {
                                             GameMasterCommandType::ChangeTerritory => {
                                                 connection.change_zone(*arg as u16).await
                                             }
-                                            GameMasterCommandType::ToggleInvisibility => {
-                                                let ipc = ServerZoneIpcSegment {
-                                                        op_code: ServerZoneIpcType::ActorControlSelf,
-                                                        timestamp: timestamp_secs(),
-                                                        data: ServerZoneIpcData::ActorControlSelf(
-                                                            ActorControlSelf {
-                                                                category:
-                                                                ActorControlCategory::ToggleInvisibility {
-                                                                    invisible: 1
-                                                                },
-                                                            },
-                                                        ),
-                                                        ..Default::default()
-                                                    };
-
-                                                connection
-                                                    .send_segment(PacketSegment {
-                                                        source_actor: connection
-                                                            .player_data
-                                                            .actor_id,
-                                                        target_actor: connection
-                                                            .player_data
-                                                            .actor_id,
-                                                        segment_type: SegmentType::Ipc {
-                                                            data: ipc,
-                                                        },
-                                                    })
-                                                    .await;
-                                            }
-                                            GameMasterCommandType::ToggleWireframe => {
-                                                let ipc = ServerZoneIpcSegment {
-                                                    op_code: ServerZoneIpcType::ActorControlSelf,
-                                                    timestamp: timestamp_secs(),
-                                                    data: ServerZoneIpcData::ActorControlSelf(
-                                                        ActorControlSelf {
-                                                            category:
-                                                            ActorControlCategory::ToggleWireframeRendering(),
-                                                        },
-                                                    ),
-                                                    ..Default::default()
-                                                };
-
-                                                connection
-                                                    .send_segment(PacketSegment {
-                                                        source_actor: connection
-                                                            .player_data
-                                                            .actor_id,
-                                                        target_actor: connection
-                                                            .player_data
-                                                            .actor_id,
-                                                        segment_type: SegmentType::Ipc {
-                                                            data: ipc,
-                                                        },
-                                                    })
-                                                    .await;
-                                            }
+                                            GameMasterCommandType::ToggleInvisibility => connection.actor_control_self(ActorControlSelf {
+                                                category:
+                                                ActorControlCategory::ToggleInvisibility {
+                                                    invisible: 1
+                                                },
+                                            }).await,
+                                            GameMasterCommandType::ToggleWireframe => connection.actor_control_self(ActorControlSelf {
+                                                category:
+                                                ActorControlCategory::ToggleWireframeRendering() ,
+                                            }).await
                                         }
                                     }
                                     ClientZoneIpcData::EnterZoneLine {
