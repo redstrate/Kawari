@@ -321,7 +321,10 @@ impl ZoneConnection {
     }
 
     pub async fn change_zone(&mut self, new_zone_id: u16) {
-        self.zone = Some(Zone::load(new_zone_id));
+        {
+            let mut game_data = self.gamedata.lock().unwrap();
+            self.zone = Some(Zone::load(&mut game_data.game_data, new_zone_id));
+        }
         self.player_data.zone_id = new_zone_id;
 
         // Player Class Info

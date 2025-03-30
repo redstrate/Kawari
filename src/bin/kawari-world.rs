@@ -213,11 +213,11 @@ async fn client_loop(
 
     let mut lua_player = LuaPlayer::default();
 
-    let mut buf = [0; 2056];
+    let mut buf = [0; 4096];
     loop {
         tokio::select! {
             Ok(n) = connection.socket.read(&mut buf) => {
-                if n != 0 {
+                if n > 0 {
                     let (segments, connection_type) = connection.parse_packet(&buf[..n]).await;
                     for segment in &segments {
                         match &segment.segment_type {
@@ -318,9 +318,6 @@ async fn client_loop(
                                                 .await;
                                         }
 
-                                        let zone_id = connection.player_data.zone_id;
-                                        connection.zone = Some(Zone::load(zone_id));
-
                                         // Player Setup
                                         {
                                             let ipc = ServerZoneIpcSegment {
@@ -354,6 +351,7 @@ async fn client_loop(
                                                 .await;
                                         }
 
+                                        let zone_id = connection.player_data.zone_id;
                                         connection.change_zone(zone_id).await;
 
                                         let lua = lua.lock().unwrap();
@@ -692,7 +690,8 @@ async fn client_loop(
                                                 .unwrap();
 
                                             // find the pop range on the other side
-                                            let new_zone = Zone::load(exit_box.territory_type);
+                                            let mut game_data = game_data.lock().unwrap();
+                                            let new_zone = Zone::load(&mut game_data.game_data, exit_box.territory_type);
                                             let (destination_object, _) = new_zone
                                                 .find_pop_range(exit_box.destination_instance_id)
                                                 .unwrap();

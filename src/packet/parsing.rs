@@ -168,10 +168,7 @@ pub async fn send_packet<T: ReadWriteIpcSegment>(
 
     let buffer = cursor.into_inner();
 
-    socket
-        .write_all(&buffer)
-        .await
-        .expect("Failed to write packet!");
+    socket.write_all(&buffer).await.unwrap();
 }
 
 // temporary

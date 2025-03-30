@@ -22,17 +22,10 @@ pub struct Zone {
 }
 
 impl Zone {
-    pub fn load(id: u16) -> Self {
-        let config = get_config();
-
+    pub fn load(game_data: &mut GameData, id: u16) -> Self {
         let mut zone = Self {
             id,
             ..Default::default()
-        };
-
-        let Some(mut game_data) = GameData::from_existing(Platform::Win32, &config.game_location)
-        else {
-            return zone;
         };
 
         let Some(exh) = game_data.read_excel_sheet_header("TerritoryType") else {

@@ -4,7 +4,7 @@ use crate::{common::Attributes, config::get_config};
 
 /// Convenient methods built on top of Physis to access data relevant to the server
 pub struct GameData {
-    game_data: physis::gamedata::GameData,
+    pub game_data: physis::gamedata::GameData,
 }
 
 impl GameData {
