@@ -840,18 +840,12 @@ async fn main() {
                                                 timestamp: timestamp_secs(),
                                                 data: ServerZoneIpcData::ActionResult(
                                                     ActionResult {
-                                                        main_target: ObjectTypeId {
-                                                            object_id: ObjectId(0x106ad804),
-                                                            object_type: 0,
-                                                        },
-                                                        target_id_again: ObjectTypeId {
-                                                            object_id: ObjectId(0x106ad804),
-                                                            object_type: 0,
-                                                        },
-                                                        action_id: 31,
+                                                        main_target: request.target,
+                                                        target_id_again: request.target,
+                                                        action_id: request.action_id,
                                                         animation_lock_time: 0.6,
                                                         rotation: connection.player_data.rotation,
-                                                        action_animation_id: 31,
+                                                        action_animation_id: request.action_id as u16, // assuming action id == animation id
                                                         flag: 1,
                                                         effect_count: effects_builder.effects.len()
                                                             as u8,

@@ -1,4 +1,4 @@
-use mlua::{FromLua, Lua, MetaMethod, UserData, UserDataMethods, Value};
+use mlua::{FromLua, Lua, UserData, UserDataMethods, Value};
 
 use crate::{
     common::{ObjectId, ObjectTypeId, Position, timestamp_secs},
