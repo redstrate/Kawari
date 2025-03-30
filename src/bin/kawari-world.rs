@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
 use kawari::common::custom_ipc::{CustomIpcData, CustomIpcSegment, CustomIpcType};
@@ -30,14 +29,10 @@ use kawari::world::{
     },
 };
 use mlua::{Function, Lua};
-use std::net::SocketAddr;
 use tokio::io::AsyncReadExt;
 use tokio::join;
-use tokio::net::tcp::WriteHalf;
-use tokio::net::{TcpListener, TcpStream};
-use tokio::sync::mpsc::{
-    Receiver, Sender, UnboundedReceiver, UnboundedSender, channel, unbounded_channel,
-};
+use tokio::net::TcpListener;
+use tokio::sync::mpsc::{Receiver, UnboundedReceiver, UnboundedSender, channel, unbounded_channel};
 use tokio::sync::oneshot;
 use tokio::task::JoinHandle;
 
@@ -49,7 +44,6 @@ struct ExtraLuaState {
 #[derive(Default, Debug)]
 struct Data {
     clients: HashMap<ClientId, ClientHandle>,
-    actors: Vec<Actor>,
 }
 
 async fn main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::io::Error> {
@@ -181,9 +175,8 @@ async fn start_client(my_handle: oneshot::Receiver<ClientHandle>, mut data: Clie
     };
     data.handle.send(ToServer::NewClient(my_handle)).await;
 
-    let mut connection = data.connection;
+    let connection = data.connection;
     let recv = data.recv;
-    let (_, write) = &connection.socket.split();
 
     // communication channel between client_loop and client_server_loop
     let (internal_send, internal_recv) = unbounded_channel();
@@ -1107,7 +1100,7 @@ async fn main() {
             .unwrap();
     }
 
-    let (handle, join) = spawn_main_loop();
+    let (handle, _) = spawn_main_loop();
 
     loop {
         let (socket, ip) = listener.accept().await.unwrap();
@@ -1137,6 +1130,4 @@ async fn main() {
             gamedata: game_data.clone(),
         });
     }
-
-    join.await.unwrap();
 }

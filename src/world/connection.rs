@@ -9,7 +9,7 @@ use std::{
 use tokio::{net::TcpStream, sync::mpsc::Sender, task::JoinHandle};
 
 use crate::{
-    common::{GameData, ObjectId, ObjectTypeId, Position, timestamp_secs},
+    common::{GameData, ObjectId, Position, timestamp_secs},
     opcodes::ServerZoneIpcType,
     packet::{
         CompressionType, ConnectionType, PacketSegment, PacketState, SegmentType, parse_packet,
