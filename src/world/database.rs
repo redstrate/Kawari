@@ -5,8 +5,7 @@ use rusqlite::Connection;
 use crate::{
     common::Position,
     lobby::{
-        CharaMake, ClientSelectData,
-        ipc::{CharacterDetails, CharacterFlag},
+        ipc::{CharacterDetails, CharacterFlag}, CharaMake, ClientSelectData, RemakeMode
     },
 };
 
@@ -173,23 +172,23 @@ impl WorldDatabase {
                     birth_month: chara_make.birth_month,
                     birth_day: chara_make.birth_day,
                     guardian: chara_make.guardian,
-                    unk8: 255,
-                    unk9: 255,
+                    unk8: 0,
+                    unk9: 0,
                     zone_id: zone_id as i32,
-                    unk11: 255,
+                    content_finder_condition: 0,
                     customize: chara_make.customize,
                     model_main_weapon: 0,
                     model_sub_weapon: 0,
                     unk14: [0; 10],
-                    unk15: 255,
-                    unk16: 2,
-                    legacy_character: 2,
-                    unk18: 255,
-                    unk19: 255,
-                    unk20: 255,
+                    unk15: 0,
+                    unk16: 0,
+                    remake_mode: RemakeMode::None,
+                    remake_minutes_remaining: 0,
+                    unk19: 0,
+                    unk20: 0,
                     world_name: String::new(),
-                    unk22: 255,
-                    unk23: 255,
+                    unk22: 0,
+                    unk23: 0,
                 };
 
                 characters.push(CharacterDetails {
