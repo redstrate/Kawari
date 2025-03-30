@@ -136,7 +136,7 @@ struct Packet<T: ReadWriteIpcSegment> {
 
 fn dump(msg: &str, data: &[u8]) {
     write("packet.bin", data).unwrap();
-    panic!("{msg} Dumped to packet.bin.");
+    tracing::warn!("{msg} Dumped to packet.bin.");
 }
 
 pub async fn send_packet<T: ReadWriteIpcSegment>(
