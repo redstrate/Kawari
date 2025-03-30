@@ -166,8 +166,8 @@ pub enum ServerZoneIpcData {
     /// Sent by the server when they send a chat message
     ServerChatMessage {
         unk: u8, // channel?
-        #[brw(pad_after = 775)]
-        #[br(count = 775)]
+        #[brw(pad_after = 774)]
+        #[br(count = 774)]
         #[br(map = read_string)]
         #[bw(map = write_string)]
         message: String,
@@ -376,12 +376,24 @@ mod tests {
     fn world_ipc_sizes() {
         let ipc_types = [
             (
-                ServerZoneIpcType::ActorControlSelf,
-                ServerZoneIpcData::ActorControlSelf(ActorControlSelf::default()),
-            ),
-            (
                 ServerZoneIpcType::InitializeChat,
                 ServerZoneIpcData::InitializeChat { unk: [0; 8] },
+            ),
+            (
+                ServerZoneIpcType::InitResponse,
+                ServerZoneIpcData::InitResponse {
+                    unk1: 0,
+                    character_id: 0,
+                    unk2: 0,
+                },
+            ),
+            (
+                ServerZoneIpcType::InitZone,
+                ServerZoneIpcData::InitZone(InitZone::default()),
+            ),
+            (
+                ServerZoneIpcType::ActorControlSelf,
+                ServerZoneIpcData::ActorControlSelf(ActorControlSelf::default()),
             ),
             (
                 ServerZoneIpcType::PlayerStats,
@@ -400,16 +412,35 @@ mod tests {
                 ServerZoneIpcData::PlayerSpawn(PlayerSpawn::default()),
             ),
             (
+                ServerZoneIpcType::LogOutComplete,
+                ServerZoneIpcData::LogOutComplete { unk: [0; 8] },
+            ),
+            (
                 ServerZoneIpcType::ActorSetPos,
                 ServerZoneIpcData::ActorSetPos(ActorSetPos::default()),
             ),
             (
-                ServerZoneIpcType::NpcSpawn,
-                ServerZoneIpcData::NpcSpawn(NpcSpawn::default()),
+                ServerZoneIpcType::ServerChatMessage,
+                ServerZoneIpcData::ServerChatMessage {
+                    unk: 0,
+                    message: String::new(),
+                },
+            ),
+            (
+                ServerZoneIpcType::PrepareZoning,
+                ServerZoneIpcData::PrepareZoning { unk: [0; 4] },
             ),
             (
                 ServerZoneIpcType::ActorControl,
                 ServerZoneIpcData::ActorControl(ActorControl::default()),
+            ),
+            (
+                ServerZoneIpcType::ActorMove,
+                ServerZoneIpcData::ActorMove(ActorMove::default()),
+            ),
+            (
+                ServerZoneIpcType::NpcSpawn,
+                ServerZoneIpcData::NpcSpawn(NpcSpawn::default()),
             ),
             (
                 ServerZoneIpcType::StatusEffectList,
@@ -418,10 +449,6 @@ mod tests {
             (
                 ServerZoneIpcType::WeatherChange,
                 ServerZoneIpcData::WeatherChange(WeatherChange::default()),
-            ),
-            (
-                ServerZoneIpcType::ActorControl,
-                ServerZoneIpcData::ActorControl(ActorControl::default()),
             ),
             (
                 ServerZoneIpcType::ItemInfo,
@@ -440,12 +467,16 @@ mod tests {
                 ServerZoneIpcData::EventStart(EventStart::default()),
             ),
             (
-                ServerZoneIpcType::ActionResult,
-                ServerZoneIpcData::ActionResult(ActionResult::default()),
+                ServerZoneIpcType::UpdateHpMpTp,
+                ServerZoneIpcData::UpdateHpMpTp {
+                    hp: 0,
+                    mp: 0,
+                    unk: 0,
+                },
             ),
             (
-                ServerZoneIpcType::ActorMove,
-                ServerZoneIpcData::ActorMove(ActorMove::default()),
+                ServerZoneIpcType::ActionResult,
+                ServerZoneIpcData::ActionResult(ActionResult::default()),
             ),
         ];
 

@@ -8,7 +8,7 @@
         {
             "name": "InitZone",
             "opcode": 699,
-            "size": 103
+            "size": 112
         },
         {
             "name": "ActorControlSelf",
