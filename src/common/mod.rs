@@ -153,6 +153,35 @@ pub fn determine_initial_starting_zone(citystate_id: u8) -> u16 {
     }
 }
 
+/// Gets the primary model ID for a given item ID
+pub fn get_primary_model_id(item_id: u32) -> u16 {
+    let config = get_config();
+
+    let mut game_data = GameData::from_existing(Platform::Win32, &config.game_location).unwrap();
+
+    let exh = game_data.read_excel_sheet_header("Item").unwrap();
+    for (i, _) in exh.pages.iter().enumerate() {
+        let exd = game_data
+            .read_excel_sheet("Item", &exh, Language::English, i)
+            .unwrap();
+
+        if let Some(row) = exd.read_row(&exh, item_id) {
+            let item_row = &row[0];
+
+            let physis::exd::ColumnData::UInt64(id) = &item_row.data[47] else {
+                panic!("Unexpected type!");
+            };
+
+            return *id as u16;
+        }
+    }
+
+    // TODO: just turn this into an Option<>
+    tracing::warn!("Failed to get model id for {item_id}, this is most likely a bug!");
+
+    0
+}
+
 pub struct Attributes {
     pub strength: u32,
     pub dexterity: u32,

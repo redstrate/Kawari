@@ -2,7 +2,9 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 use kawari::common::custom_ipc::{CustomIpcData, CustomIpcSegment, CustomIpcType};
-use kawari::common::{Position, determine_initial_starting_zone, get_citystate, get_world_name};
+use kawari::common::{
+    Position, determine_initial_starting_zone, get_citystate, get_primary_model_id, get_world_name,
+};
 use kawari::common::{get_racial_base_attributes, timestamp_secs};
 use kawari::config::get_config;
 use kawari::lobby::CharaMake;
@@ -420,16 +422,86 @@ async fn main() {
                                                         fc_tag: "LOCAL".to_string(),
                                                         display_flags: DisplayFlag::UNK,
                                                         models: [
-                                                            0,  // head
-                                                            89, // body
-                                                            89, // hands
-                                                            89, // legs
-                                                            89, // feet
-                                                            0,  // ears
-                                                            0,  // neck
-                                                            0,  // wrists
-                                                            0,  // left finger
-                                                            0,  // right finger
+                                                            get_primary_model_id(
+                                                                connection
+                                                                    .inventory
+                                                                    .equipped
+                                                                    .head
+                                                                    .id,
+                                                            )
+                                                                as u32,
+                                                            get_primary_model_id(
+                                                                connection
+                                                                    .inventory
+                                                                    .equipped
+                                                                    .body
+                                                                    .id,
+                                                            )
+                                                                as u32,
+                                                            get_primary_model_id(
+                                                                connection
+                                                                    .inventory
+                                                                    .equipped
+                                                                    .hands
+                                                                    .id,
+                                                            )
+                                                                as u32,
+                                                            get_primary_model_id(
+                                                                connection
+                                                                    .inventory
+                                                                    .equipped
+                                                                    .legs
+                                                                    .id,
+                                                            )
+                                                                as u32,
+                                                            get_primary_model_id(
+                                                                connection
+                                                                    .inventory
+                                                                    .equipped
+                                                                    .feet
+                                                                    .id,
+                                                            )
+                                                                as u32,
+                                                            get_primary_model_id(
+                                                                connection
+                                                                    .inventory
+                                                                    .equipped
+                                                                    .ears
+                                                                    .id,
+                                                            )
+                                                                as u32,
+                                                            get_primary_model_id(
+                                                                connection
+                                                                    .inventory
+                                                                    .equipped
+                                                                    .neck
+                                                                    .id,
+                                                            )
+                                                                as u32,
+                                                            get_primary_model_id(
+                                                                connection
+                                                                    .inventory
+                                                                    .equipped
+                                                                    .wrists
+                                                                    .id,
+                                                            )
+                                                                as u32,
+                                                            get_primary_model_id(
+                                                                connection
+                                                                    .inventory
+                                                                    .equipped
+                                                                    .left_ring
+                                                                    .id,
+                                                            )
+                                                                as u32,
+                                                            get_primary_model_id(
+                                                                connection
+                                                                    .inventory
+                                                                    .equipped
+                                                                    .right_ring
+                                                                    .id,
+                                                            )
+                                                                as u32,
                                                         ],
                                                         pos: exit_position
                                                             .unwrap_or(Position::default()),
