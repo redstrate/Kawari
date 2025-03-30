@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 use kawari::common::custom_ipc::{CustomIpcData, CustomIpcSegment, CustomIpcType};
@@ -33,6 +34,11 @@ use physis::gamedata::GameData;
 use tokio::io::AsyncReadExt;
 use tokio::net::TcpListener;
 
+#[derive(Default)]
+struct ExtraLuaState {
+    action_scripts: HashMap<u32, String>,
+}
+
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
@@ -50,7 +56,22 @@ async fn main() {
 
     {
         let lua = lua.lock().unwrap();
-        let file_name = format!("{}/test.lua", &config.world.scripts_location);
+
+        let register_action_func = lua
+            .create_function(|lua, (action_id, action_script): (u32, String)| {
+                tracing::info!("Registering {action_id} with {action_script}!");
+                let mut state = lua.app_data_mut::<ExtraLuaState>().unwrap();
+                let _ = state.action_scripts.insert(action_id, action_script);
+                Ok(())
+            })
+            .unwrap();
+
+        lua.set_app_data(ExtraLuaState::default());
+        lua.globals()
+            .set("registerAction", register_action_func)
+            .unwrap();
+
+        let file_name = format!("{}/Global.lua", &config.world.scripts_location);
         lua.load(std::fs::read(&file_name).expect("Failed to locate scripts directory!"))
             .set_name("@".to_string() + &file_name)
             .exec()
@@ -757,21 +778,41 @@ async fn main() {
                                                 .await;
                                         }
 
+                                        // run action script
                                         {
                                             let lua = lua.lock().unwrap();
-                                            lua.scope(|scope| {
-                                                let connection_data = scope
-                                                    .create_userdata_ref_mut(&mut lua_player)
+                                            let state =
+                                                lua.app_data_ref::<ExtraLuaState>().unwrap();
+
+                                            if let Some(action_script) =
+                                                state.action_scripts.get(&request.action_id)
+                                            {
+                                                lua.scope(|scope| {
+                                                    let connection_data = scope
+                                                        .create_userdata_ref_mut(&mut lua_player)
+                                                        .unwrap();
+
+                                                    let file_name = format!(
+                                                        "{}/{}",
+                                                        &config.world.scripts_location,
+                                                        action_script
+                                                    );
+                                                    lua.load(std::fs::read(&file_name).expect(
+                                                        "Failed to locate scripts directory!",
+                                                    ))
+                                                    .set_name("@".to_string() + &file_name)
+                                                    .exec()
                                                     .unwrap();
 
-                                                let func: Function =
-                                                    lua.globals().get("doAction").unwrap();
+                                                    let func: Function =
+                                                        lua.globals().get("doAction").unwrap();
 
-                                                func.call::<()>(connection_data).unwrap();
+                                                    func.call::<()>(connection_data).unwrap();
 
-                                                Ok(())
-                                            })
-                                            .unwrap();
+                                                    Ok(())
+                                                })
+                                                .unwrap();
+                                            }
                                         }
 
                                         // tell them the action results

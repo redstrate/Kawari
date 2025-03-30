@@ -5,7 +5,8 @@ use rusqlite::Connection;
 use crate::{
     common::Position,
     lobby::{
-        ipc::{CharacterDetails, CharacterFlag}, CharaMake, ClientSelectData, RemakeMode
+        CharaMake, ClientSelectData, RemakeMode,
+        ipc::{CharacterDetails, CharacterFlag},
     },
 };
 
