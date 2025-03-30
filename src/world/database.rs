@@ -4,7 +4,10 @@ use rusqlite::Connection;
 
 use crate::{
     common::Position,
-    lobby::{CharaMake, ClientSelectData, ipc::CharacterDetails},
+    lobby::{
+        CharaMake, ClientSelectData,
+        ipc::{CharacterDetails, CharacterFlag},
+    },
 };
 
 use super::PlayerData;
@@ -170,37 +173,39 @@ impl WorldDatabase {
                     birth_month: chara_make.birth_month,
                     birth_day: chara_make.birth_day,
                     guardian: chara_make.guardian,
-                    unk8: 0,
-                    unk9: 0,
+                    unk8: 255,
+                    unk9: 255,
                     zone_id: zone_id as i32,
-                    unk11: 0,
+                    unk11: 255,
                     customize: chara_make.customize,
-                    unk12: 0,
-                    unk13: 0,
+                    model_main_weapon: 0,
+                    model_sub_weapon: 0,
                     unk14: [0; 10],
-                    unk15: 0,
-                    unk16: 0,
-                    legacy_character: 0,
-                    unk18: 0,
-                    unk19: 0,
-                    unk20: 0,
-                    unk21: String::new(),
-                    unk22: 0,
-                    unk23: 0,
+                    unk15: 255,
+                    unk16: 2,
+                    legacy_character: 2,
+                    unk18: 255,
+                    unk19: 255,
+                    unk20: 255,
+                    world_name: String::new(),
+                    unk22: 255,
+                    unk23: 255,
                 };
 
                 characters.push(CharacterDetails {
                     actor_id: *actor_id,
                     content_id: *content_id as u64,
-                    index: index as u32,
-                    unk1: [0; 16],
+                    index: index as u8,
+                    flags: CharacterFlag::NONE,
+                    unk1: [255; 6],
                     origin_server_id: world_id,
                     current_server_id: world_id,
                     character_name: name.clone(),
                     origin_server_name: world_name.to_string(),
                     current_server_name: world_name.to_string(),
                     character_detail_json: select_data.to_json(),
-                    unk2: [0; 20],
+                    unk2: [255; 16],
+                    unk3: [4; 5],
                 });
             }
         }

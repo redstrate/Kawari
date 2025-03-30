@@ -4,7 +4,7 @@ mod character_action;
 pub use character_action::{LobbyCharacterAction, LobbyCharacterActionKind};
 
 mod character_list;
-pub use character_list::{CharacterDetails, LobbyCharacterList};
+pub use character_list::{CharacterDetails, CharacterFlag, LobbyCharacterList};
 
 mod client_version_info;
 
