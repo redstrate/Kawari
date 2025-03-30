@@ -131,7 +131,7 @@ async fn main() {
     let config = get_config();
 
     let addr = config.login.get_socketaddr();
-    tracing::info!("Login server started on {addr}");
+    tracing::info!("Server started on {addr}");
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
     axum::serve(listener, app).await.unwrap();
 }

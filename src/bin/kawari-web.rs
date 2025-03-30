@@ -53,7 +53,7 @@ async fn main() {
     let config = get_config();
 
     let addr = config.web.get_socketaddr();
-    tracing::info!("Web server started on {addr}");
+    tracing::info!("Server started on {addr}");
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
     axum::serve(listener, app).await.unwrap();
 }

@@ -22,7 +22,7 @@ async fn main() {
 
     let listener = TcpListener::bind(addr).await.unwrap();
 
-    tracing::info!("Lobby server started on {addr}");
+    tracing::info!("Server started on {addr}");
 
     let world_name = get_world_name(config.world.world_id);
 
