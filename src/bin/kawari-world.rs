@@ -117,11 +117,6 @@ struct ClientData {
     connection: ZoneConnection,
 }
 
-#[derive(Debug)]
-enum InternalMsg {
-    Message(String),
-}
-
 /// Spawn a new client actor.
 pub fn spawn_client(info: ZoneConnection) {
     let (send, recv) = channel(64);
@@ -173,13 +168,11 @@ async fn start_client(my_handle: oneshot::Receiver<ClientHandle>, mut data: Clie
 
 async fn client_server_loop(
     mut data: Receiver<FromServer>,
-    internal_send: UnboundedSender<InternalMsg>,
+    internal_send: UnboundedSender<FromServer>,
 ) {
     loop {
         match data.recv().await {
-            Some(msg) => match msg {
-                FromServer::Message(msg) => internal_send.send(InternalMsg::Message(msg)).unwrap(),
-            },
+            Some(msg) => internal_send.send(msg).unwrap(),
             None => break,
         }
     }
@@ -187,7 +180,7 @@ async fn client_server_loop(
 
 async fn client_loop(
     mut connection: ZoneConnection,
-    mut internal_recv: UnboundedReceiver<InternalMsg>,
+    mut internal_recv: UnboundedReceiver<FromServer>,
 ) {
     let database = connection.database.clone();
     let game_data = connection.gamedata.clone();
@@ -1023,7 +1016,7 @@ async fn client_loop(
             }
             msg = internal_recv.recv() => match msg {
                 Some(msg) => match msg {
-                    InternalMsg::Message(msg) => connection.send_message(&msg).await,
+                    FromServer::Message(msg) => connection.send_message(&msg).await,
                 },
                 None => break,
             }
