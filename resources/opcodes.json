@@ -214,7 +214,7 @@
         },
         {
             "name": "Disconnected",
-            "opcode": 864,
+            "opcode": 983,
             "size": 8
         },
         {
