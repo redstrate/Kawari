@@ -103,19 +103,21 @@ pub struct OodleNetwork {
     window: Vec<u8>,
 }
 
+const HT_BITS: i32 = 0x11;
+const WINDOW_SIZE: usize = 0x100000;
+
 impl OodleNetwork {
     pub fn new() -> OodleNetwork {
-        let htbits: i32 = 17;
         unsafe {
             let oodle_state_size: usize = OodleNetwork1TCP_State_Size().try_into().unwrap();
-            let oodle_shared_size: usize = OodleNetwork1_Shared_Size(17).try_into().unwrap();
+            let oodle_shared_size: usize = OodleNetwork1_Shared_Size(HT_BITS).try_into().unwrap();
             let mut oodle_state = vec![0u8; oodle_state_size];
             let mut oodle_shared = vec![0u8; oodle_shared_size];
-            let mut oodle_window = [0u8; 0x100000].to_vec();
+            let mut oodle_window = [0u8; WINDOW_SIZE].to_vec();
 
             OodleNetwork1_Shared_SetWindow(
                 oodle_shared.as_mut_ptr() as *mut c_void,
-                htbits,
+                HT_BITS,
                 oodle_window.as_mut_ptr() as *mut c_void,
                 oodle_window.len().try_into().unwrap(),
             );
