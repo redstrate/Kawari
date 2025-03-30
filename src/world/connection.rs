@@ -1,7 +1,15 @@
-use tokio::net::TcpStream;
+use std::{
+    net::SocketAddr,
+    sync::{
+        Arc, Mutex,
+        atomic::{AtomicUsize, Ordering},
+    },
+};
+
+use tokio::{net::TcpStream, sync::mpsc::Sender, task::JoinHandle};
 
 use crate::{
-    common::{ObjectId, Position, timestamp_secs},
+    common::{GameData, ObjectId, Position, timestamp_secs},
     opcodes::ServerZoneIpcType,
     packet::{
         CompressionType, ConnectionType, PacketSegment, PacketState, SegmentType, parse_packet,
@@ -10,7 +18,7 @@ use crate::{
 };
 
 use super::{
-    Actor, Event, Inventory, Item, LuaPlayer, StatusEffects, Zone,
+    Actor, Event, Inventory, Item, LuaPlayer, StatusEffects, WorldDatabase, Zone,
     ipc::{
         ActorControlSelf, ActorSetPos, ClientZoneIpcSegment, ContainerInfo, ContainerType,
         InitZone, ItemInfo, ServerZoneIpcData, ServerZoneIpcSegment, StatusEffect,
@@ -39,6 +47,68 @@ pub struct PlayerData {
     pub zone_id: u16,
 }
 
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
+pub struct ClientId(usize);
+
+pub enum FromServer {
+    /// A chat message.
+    Message(String),
+}
+
+#[derive(Debug)]
+pub struct ClientHandle {
+    pub id: ClientId,
+    pub ip: SocketAddr,
+    pub channel: Sender<FromServer>,
+    pub kill: JoinHandle<()>,
+}
+
+impl ClientHandle {
+    /// Send a message to this client actor. Will emit an error if sending does
+    /// not succeed immediately, as this means that forwarding messages to the
+    /// tcp connection cannot keep up.
+    pub fn send(&mut self, msg: FromServer) -> Result<(), std::io::Error> {
+        if self.channel.try_send(msg).is_err() {
+            Err(std::io::Error::new(
+                std::io::ErrorKind::BrokenPipe,
+                "Can't keep up or dead",
+            ))
+        } else {
+            Ok(())
+        }
+    }
+
+    /// Kill the actor.
+    pub fn kill(self) {
+        // run the destructor
+        drop(self);
+    }
+}
+
+pub enum ToServer {
+    NewClient(ClientHandle),
+    Message(ClientId, String),
+    FatalError(std::io::Error),
+}
+
+#[derive(Clone, Debug)]
+pub struct ServerHandle {
+    pub chan: Sender<ToServer>,
+    pub next_id: Arc<AtomicUsize>,
+}
+
+impl ServerHandle {
+    pub async fn send(&mut self, msg: ToServer) {
+        if self.chan.send(msg).await.is_err() {
+            panic!("Main loop has shut down.");
+        }
+    }
+    pub fn next_id(&self) -> ClientId {
+        let id = self.next_id.fetch_add(1, Ordering::Relaxed);
+        ClientId(id)
+    }
+}
+
 /// Represents a single connection between an instance of the client and the world server
 pub struct ZoneConnection {
     pub socket: TcpStream,
@@ -54,6 +124,14 @@ pub struct ZoneConnection {
 
     pub event: Option<Event>,
     pub actors: Vec<Actor>,
+
+    pub ip: SocketAddr,
+    pub id: ClientId,
+    pub handle: ServerHandle,
+
+    pub database: Arc<WorldDatabase>,
+    pub lua: Arc<Mutex<mlua::Lua>>,
+    pub gamedata: Arc<Mutex<GameData>>,
 }
 
 impl ZoneConnection {
