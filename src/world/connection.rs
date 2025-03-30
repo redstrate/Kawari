@@ -21,9 +21,10 @@ use super::{
     Actor, Event, Inventory, Item, LuaPlayer, StatusEffects, WorldDatabase, Zone,
     chat_handler::CUSTOMIZE_DATA,
     ipc::{
-        ActorControlSelf, ActorSetPos, BattleNpcSubKind, ClientZoneIpcSegment, CommonSpawn,
-        ContainerInfo, ContainerType, InitZone, ItemInfo, NpcSpawn, ObjectKind, ServerZoneIpcData,
-        ServerZoneIpcSegment, StatusEffect, StatusEffectList, UpdateClassInfo, WeatherChange,
+        ActorControlSelf, ActorMove, ActorSetPos, BattleNpcSubKind, ClientZoneIpcSegment,
+        CommonSpawn, ContainerInfo, ContainerType, InitZone, ItemInfo, NpcSpawn, ObjectKind,
+        ServerZoneIpcData, ServerZoneIpcSegment, StatusEffect, StatusEffectList, UpdateClassInfo,
+        WeatherChange,
     },
 };
 
@@ -258,7 +259,11 @@ impl ZoneConnection {
         let ipc = ServerZoneIpcSegment {
             op_code: ServerZoneIpcType::ActorMove,
             timestamp: timestamp_secs(),
-            data: ServerZoneIpcData::ActorMove { pos: position },
+            data: ServerZoneIpcData::ActorMove(ActorMove {
+                speed: 24,
+                position,
+                ..Default::default()
+            }),
             ..Default::default()
         };
 
