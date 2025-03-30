@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
 use kawari::common::custom_ipc::{CustomIpcData, CustomIpcSegment, CustomIpcType};
@@ -24,112 +25,184 @@ use kawari::world::{
         SocialList,
     },
 };
-use kawari::world::{EffectsBuilder, LuaPlayer, PlayerData, StatusEffects, WorldDatabase};
+use kawari::world::{
+    ClientHandle, ClientId, EffectsBuilder, FromServer, LuaPlayer, PlayerData, ServerHandle,
+    StatusEffects, ToServer, WorldDatabase,
+};
 use mlua::{Function, Lua};
+use std::net::SocketAddr;
 use tokio::io::AsyncReadExt;
-use tokio::net::TcpListener;
+use tokio::join;
+use tokio::net::tcp::WriteHalf;
+use tokio::net::{TcpListener, TcpStream};
+use tokio::sync::mpsc::{
+    Receiver, Sender, UnboundedReceiver, UnboundedSender, channel, unbounded_channel,
+};
+use tokio::sync::oneshot;
+use tokio::task::JoinHandle;
 
 #[derive(Default)]
 struct ExtraLuaState {
     action_scripts: HashMap<u32, String>,
 }
 
-#[tokio::main]
-async fn main() {
-    tracing_subscriber::fmt::init();
+#[derive(Default, Debug)]
+struct Data {
+    clients: HashMap<ClientId, ClientHandle>,
+}
 
-    let config = get_config();
+async fn main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::io::Error> {
+    let mut data = Data::default();
 
-    let addr = config.world.get_socketaddr();
+    while let Some(msg) = recv.recv().await {
+        match msg {
+            ToServer::NewClient(handle) => {
+                data.clients.insert(handle.id, handle);
+            }
+            ToServer::Message(from_id, msg) => {
+                let mut to_remove = Vec::new();
 
-    let listener = TcpListener::bind(addr).await.unwrap();
+                for (id, handle) in data.clients.iter_mut() {
+                    let id = *id;
 
-    tracing::info!("Server started on {addr}");
+                    if id == from_id {
+                        continue;
+                    }
 
-    let database = Arc::new(WorldDatabase::new());
-    let lua = Arc::new(Mutex::new(Lua::new()));
-    let game_data = Arc::new(Mutex::new(GameData::new()));
+                    let msg = FromServer::Message(msg.clone());
 
-    {
-        let lua = lua.lock().unwrap();
+                    if handle.send(msg).is_err() {
+                        to_remove.push(id);
+                    }
+                }
 
-        let register_action_func = lua
-            .create_function(|lua, (action_id, action_script): (u32, String)| {
-                tracing::info!("Registering {action_id} with {action_script}!");
-                let mut state = lua.app_data_mut::<ExtraLuaState>().unwrap();
-                let _ = state.action_scripts.insert(action_id, action_script);
-                Ok(())
-            })
-            .unwrap();
-
-        lua.set_app_data(ExtraLuaState::default());
-        lua.globals()
-            .set("registerAction", register_action_func)
-            .unwrap();
-
-        let effectsbuilder_constructor = lua
-            .create_function(|_, ()| Ok(EffectsBuilder::default()))
-            .unwrap();
-        lua.globals()
-            .set("EffectsBuilder", effectsbuilder_constructor)
-            .unwrap();
-
-        let file_name = format!("{}/Global.lua", &config.world.scripts_location);
-        lua.load(std::fs::read(&file_name).expect("Failed to locate scripts directory!"))
-            .set_name("@".to_string() + &file_name)
-            .exec()
-            .unwrap();
+                // Remove any clients that errored out
+                for id in to_remove {
+                    data.clients.remove(&id);
+                }
+            }
+            ToServer::FatalError(err) => return Err(err),
+        }
     }
 
+    Ok(())
+}
+
+fn spawn_main_loop() -> (ServerHandle, JoinHandle<()>) {
+    let (send, recv) = channel(64);
+
+    let handle = ServerHandle {
+        chan: send,
+        next_id: Default::default(),
+    };
+
+    let join = tokio::spawn(async move {
+        let res = main_loop(recv).await;
+        match res {
+            Ok(()) => {}
+            Err(err) => {
+                tracing::error!("{}", err);
+            }
+        }
+    });
+
+    (handle, join)
+}
+
+struct ClientData {
+    id: ClientId,
+    handle: ServerHandle,
+    /// Socket for data recieved from the global server
+    recv: Receiver<FromServer>,
+    connection: ZoneConnection,
+}
+
+#[derive(Debug)]
+enum InternalMsg {
+    Message(String),
+}
+
+/// Spawn a new client actor.
+pub fn spawn_client(info: ZoneConnection) {
+    let (send, recv) = channel(64);
+
+    let id = &info.id.clone();
+    let ip = &info.ip.clone();
+
+    let data = ClientData {
+        id: info.id,
+        handle: info.handle.clone(),
+        recv,
+        connection: info,
+    };
+
+    // Spawn a new client task
+    let (my_send, my_recv) = oneshot::channel();
+    let kill = tokio::spawn(start_client(my_recv, data));
+
+    // Send client information to said task
+    let handle = ClientHandle {
+        id: *id,
+        ip: *ip,
+        channel: send,
+        kill,
+    };
+    let _ = my_send.send(handle);
+}
+
+async fn start_client(my_handle: oneshot::Receiver<ClientHandle>, mut data: ClientData) {
+    // Recieve client information from global
+    let my_handle = match my_handle.await {
+        Ok(my_handle) => my_handle,
+        Err(_) => return,
+    };
+    data.handle.send(ToServer::NewClient(my_handle)).await;
+
+    let mut connection = data.connection;
+    let recv = data.recv;
+    let (_, write) = &connection.socket.split();
+
+    // communication channel between client_loop and client_server_loop
+    let (internal_send, internal_recv) = unbounded_channel();
+
+    join! {
+        client_loop(connection, internal_recv),
+        client_server_loop(recv, internal_send)
+    };
+}
+
+async fn client_server_loop(
+    mut data: Receiver<FromServer>,
+    internal_send: UnboundedSender<InternalMsg>,
+) {
     loop {
-        let (socket, _) = listener.accept().await.unwrap();
+        match data.recv().await {
+            Some(msg) => match msg {
+                FromServer::Message(msg) => internal_send.send(InternalMsg::Message(msg)).unwrap(),
+            },
+            None => break,
+        }
+    }
+}
 
-        let database = database.clone();
-        let lua = lua.clone();
-        let game_data = game_data.clone();
+async fn client_loop(
+    mut connection: ZoneConnection,
+    mut internal_recv: UnboundedReceiver<InternalMsg>,
+) {
+    let database = connection.database.clone();
+    let game_data = connection.gamedata.clone();
+    let lua = connection.lua.clone();
+    let config = get_config();
 
-        let state = PacketState {
-            client_key: None,
-            clientbound_oodle: OodleNetwork::new(),
-            serverbound_oodle: OodleNetwork::new(),
-        };
+    let mut exit_position = None;
+    let mut exit_rotation = None;
 
-        let mut exit_position = None;
-        let mut exit_rotation = None;
+    let mut lua_player = LuaPlayer::default();
 
-        let mut connection = ZoneConnection {
-            socket,
-            state,
-            player_data: PlayerData::default(),
-            spawn_index: 0,
-            zone: None,
-            inventory: Inventory::new(),
-            status_effects: StatusEffects::default(),
-            event: None,
-            actors: Vec::new(),
-        };
-
-        let mut lua_player = LuaPlayer::default();
-
-        /*let config = get_config();
-
-        let mut game_data =
-            GameData::from_existing(Platform::Win32, &config.game_location).unwrap();
-
-        let exh = game_data.read_excel_sheet_header("Action").unwrap();
-        let exd = game_data
-            .read_excel_sheet("Action", &exh, Language::English, 0)
-            .unwrap();*/
-
-        tokio::spawn(async move {
-            let mut buf = [0; 2056];
-            loop {
-                let n = connection
-                    .socket
-                    .read(&mut buf)
-                    .await
-                    .expect("Failed to read data!");
-
+    let mut buf = [0; 2056];
+    loop {
+        tokio::select! {
+            Ok(n) = connection.socket.read(&mut buf) => {
                 if n != 0 {
                     let (segments, connection_type) = connection.parse_packet(&buf[..n]).await;
                     for segment in &segments {
@@ -173,8 +246,8 @@ async fn main() {
                                                 .await;
                                         }
 
-                                        let chara_details = database
-                                            .find_chara_make(connection.player_data.content_id);
+                                        let chara_details =
+                                            database.find_chara_make(connection.player_data.content_id);
 
                                         // fill inventory
                                         connection.inventory.equip_racial_items(
@@ -188,11 +261,10 @@ async fn main() {
                                         // set chara gear param
                                         connection
                                             .actor_control_self(ActorControlSelf {
-                                                category:
-                                                    ActorControlCategory::SetCharaGearParamUI {
-                                                        unk1: 1,
-                                                        unk2: 1,
-                                                    },
+                                                category: ActorControlCategory::SetCharaGearParamUI {
+                                                    unk1: 1,
+                                                    unk2: 1,
+                                                },
                                             })
                                             .await;
 
@@ -247,21 +319,12 @@ async fn main() {
                                                     name: chara_details.name,
                                                     char_id: connection.player_data.actor_id,
                                                     race: chara_details.chara_make.customize.race,
-                                                    gender: chara_details
-                                                        .chara_make
-                                                        .customize
-                                                        .gender,
-                                                    tribe: chara_details
-                                                        .chara_make
-                                                        .customize
-                                                        .subrace,
+                                                    gender: chara_details.chara_make.customize.gender,
+                                                    tribe: chara_details.chara_make.customize.subrace,
                                                     city_state: chara_details.city_state,
-                                                    nameday_month: chara_details
-                                                        .chara_make
-                                                        .birth_month
+                                                    nameday_month: chara_details.chara_make.birth_month
                                                         as u8,
-                                                    nameday_day: chara_details.chara_make.birth_day
-                                                        as u8,
+                                                    nameday_day: chara_details.chara_make.birth_day as u8,
                                                     deity: chara_details.chara_make.guardian as u8,
                                                     ..Default::default()
                                                 }),
@@ -281,12 +344,10 @@ async fn main() {
 
                                         let lua = lua.lock().unwrap();
                                         lua.scope(|scope| {
-                                            let connection_data = scope
-                                                .create_userdata_ref_mut(&mut lua_player)
-                                                .unwrap();
+                                            let connection_data =
+                                                scope.create_userdata_ref_mut(&mut lua_player).unwrap();
 
-                                            let func: Function =
-                                                lua.globals().get("onBeginLogin").unwrap();
+                                            let func: Function = lua.globals().get("onBeginLogin").unwrap();
 
                                             func.call::<()>(connection_data).unwrap();
 
@@ -295,12 +356,8 @@ async fn main() {
                                         .unwrap();
                                     }
                                     ClientZoneIpcData::FinishLoading { .. } => {
-                                        tracing::info!(
-                                            "Client has finished loading... spawning in!"
-                                        );
-
-                                        let chara_details = database
-                                            .find_chara_make(connection.player_data.content_id);
+                                        let chara_details =
+                                            database.find_chara_make(connection.player_data.content_id);
 
                                         // send player spawn
                                         {
@@ -312,95 +369,68 @@ async fn main() {
                                                 ipc = ServerZoneIpcSegment {
                                                     op_code: ServerZoneIpcType::PlayerSpawn,
                                                     timestamp: timestamp_secs(),
-                                                    data: ServerZoneIpcData::PlayerSpawn(
-                                                        PlayerSpawn {
-                                                            account_id: connection
-                                                                .player_data
-                                                                .account_id,
-                                                            content_id: connection
-                                                                .player_data
-                                                                .content_id,
-                                                            current_world_id: config.world.world_id,
-                                                            home_world_id: config.world.world_id,
-                                                            gm_rank: GameMasterRank::Debug,
-                                                            online_status:
-                                                                OnlineStatus::GameMasterBlue,
-                                                            common: CommonSpawn {
-                                                                class_job: connection
-                                                                    .player_data
-                                                                    .classjob_id,
-                                                                name: chara_details.name,
-                                                                hp_curr: connection
-                                                                    .player_data
-                                                                    .curr_hp,
-                                                                hp_max: connection
-                                                                    .player_data
-                                                                    .max_hp,
-                                                                mp_curr: connection
-                                                                    .player_data
-                                                                    .curr_mp,
-                                                                mp_max: connection
-                                                                    .player_data
-                                                                    .max_mp,
-                                                                object_kind: ObjectKind::Player(
-                                                                    PlayerSubKind::Player,
-                                                                ),
-                                                                look: chara_details
-                                                                    .chara_make
-                                                                    .customize,
-                                                                fc_tag: "LOCAL".to_string(),
-                                                                display_flags: DisplayFlag::UNK,
-                                                                models: [
-                                                                    game_data.get_primary_model_id(
-                                                                        equipped.head.id,
-                                                                    )
-                                                                        as u32,
-                                                                    game_data.get_primary_model_id(
-                                                                        equipped.body.id,
-                                                                    )
-                                                                        as u32,
-                                                                    game_data.get_primary_model_id(
-                                                                        equipped.hands.id,
-                                                                    )
-                                                                        as u32,
-                                                                    game_data.get_primary_model_id(
-                                                                        equipped.legs.id,
-                                                                    )
-                                                                        as u32,
-                                                                    game_data.get_primary_model_id(
-                                                                        equipped.feet.id,
-                                                                    )
-                                                                        as u32,
-                                                                    game_data.get_primary_model_id(
-                                                                        equipped.ears.id,
-                                                                    )
-                                                                        as u32,
-                                                                    game_data.get_primary_model_id(
-                                                                        equipped.neck.id,
-                                                                    )
-                                                                        as u32,
-                                                                    game_data.get_primary_model_id(
-                                                                        equipped.wrists.id,
-                                                                    )
-                                                                        as u32,
-                                                                    game_data.get_primary_model_id(
-                                                                        equipped.left_ring.id,
-                                                                    )
-                                                                        as u32,
-                                                                    game_data.get_primary_model_id(
-                                                                        equipped.right_ring.id,
-                                                                    )
-                                                                        as u32,
-                                                                ],
-                                                                pos: exit_position
-                                                                    .unwrap_or(Position::default()),
-                                                                rotation: exit_rotation
-                                                                    .unwrap_or(0.0),
-                                                                ..Default::default()
-                                                            },
+                                                    data: ServerZoneIpcData::PlayerSpawn(PlayerSpawn {
+                                                        account_id: connection.player_data.account_id,
+                                                        content_id: connection.player_data.content_id,
+                                                        current_world_id: config.world.world_id,
+                                                        home_world_id: config.world.world_id,
+                                                        gm_rank: GameMasterRank::Debug,
+                                                        online_status: OnlineStatus::GameMasterBlue,
+                                                        common: CommonSpawn {
+                                                            class_job: connection.player_data.classjob_id,
+                                                            name: chara_details.name,
+                                                            hp_curr: connection.player_data.curr_hp,
+                                                            hp_max: connection.player_data.max_hp,
+                                                            mp_curr: connection.player_data.curr_mp,
+                                                            mp_max: connection.player_data.max_mp,
+                                                            object_kind: ObjectKind::Player(
+                                                                PlayerSubKind::Player,
+                                                            ),
+                                                            look: chara_details.chara_make.customize,
+                                                            fc_tag: "LOCAL".to_string(),
+                                                            display_flags: DisplayFlag::UNK,
+                                                            models: [
+                                                                game_data
+                                                                    .get_primary_model_id(equipped.head.id)
+                                                                    as u32,
+                                                                game_data
+                                                                    .get_primary_model_id(equipped.body.id)
+                                                                    as u32,
+                                                                game_data
+                                                                    .get_primary_model_id(equipped.hands.id)
+                                                                    as u32,
+                                                                game_data
+                                                                    .get_primary_model_id(equipped.legs.id)
+                                                                    as u32,
+                                                                game_data
+                                                                    .get_primary_model_id(equipped.feet.id)
+                                                                    as u32,
+                                                                game_data
+                                                                    .get_primary_model_id(equipped.ears.id)
+                                                                    as u32,
+                                                                game_data
+                                                                    .get_primary_model_id(equipped.neck.id)
+                                                                    as u32,
+                                                                game_data.get_primary_model_id(
+                                                                    equipped.wrists.id,
+                                                                )
+                                                                    as u32,
+                                                                game_data.get_primary_model_id(
+                                                                    equipped.left_ring.id,
+                                                                )
+                                                                    as u32,
+                                                                game_data.get_primary_model_id(
+                                                                    equipped.right_ring.id,
+                                                                )
+                                                                    as u32,
+                                                            ],
+                                                            pos: exit_position
+                                                                .unwrap_or(Position::default()),
+                                                            rotation: exit_rotation.unwrap_or(0.0),
                                                             ..Default::default()
                                                         },
-                                                    ),
+                                                        ..Default::default()
+                                                    }),
                                                     ..Default::default()
                                                 };
                                             }
@@ -474,44 +504,30 @@ async fn main() {
                                                 let ipc = ServerZoneIpcSegment {
                                                     op_code: ServerZoneIpcType::SocialList,
                                                     timestamp: timestamp_secs(),
-                                                    data: ServerZoneIpcData::SocialList(
-                                                        SocialList {
-                                                            request_type: request.request_type,
-                                                            sequence: request.count,
-                                                            entries: vec![PlayerEntry {
-                                                                // TODO: fill with actual player data, it also shows up wrong in game
-                                                                content_id: connection
-                                                                    .player_data
-                                                                    .content_id,
-                                                                zone_id: connection
-                                                                    .zone
-                                                                    .as_ref()
-                                                                    .unwrap()
-                                                                    .id,
-                                                                zone_id1: 0x0100,
-                                                                class_job: 36,
-                                                                level: 100,
-                                                                one: 1,
-                                                                name: "INVALID".to_string(),
-                                                                fc_tag: "LOCAL".to_string(),
-                                                                ..Default::default()
-                                                            }],
-                                                        },
-                                                    ),
+                                                    data: ServerZoneIpcData::SocialList(SocialList {
+                                                        request_type: request.request_type,
+                                                        sequence: request.count,
+                                                        entries: vec![PlayerEntry {
+                                                            // TODO: fill with actual player data, it also shows up wrong in game
+                                                            content_id: connection.player_data.content_id,
+                                                            zone_id: connection.zone.as_ref().unwrap().id,
+                                                            zone_id1: 0x0100,
+                                                            class_job: 36,
+                                                            level: 100,
+                                                            one: 1,
+                                                            name: "INVALID".to_string(),
+                                                            fc_tag: "LOCAL".to_string(),
+                                                            ..Default::default()
+                                                        }],
+                                                    }),
                                                     ..Default::default()
                                                 };
 
                                                 connection
                                                     .send_segment(PacketSegment {
-                                                        source_actor: connection
-                                                            .player_data
-                                                            .actor_id,
-                                                        target_actor: connection
-                                                            .player_data
-                                                            .actor_id,
-                                                        segment_type: SegmentType::Ipc {
-                                                            data: ipc,
-                                                        },
+                                                        source_actor: connection.player_data.actor_id,
+                                                        target_actor: connection.player_data.actor_id,
+                                                        segment_type: SegmentType::Ipc { data: ipc },
                                                     })
                                                     .await;
                                             }
@@ -519,27 +535,19 @@ async fn main() {
                                                 let ipc = ServerZoneIpcSegment {
                                                     op_code: ServerZoneIpcType::SocialList,
                                                     timestamp: timestamp_secs(),
-                                                    data: ServerZoneIpcData::SocialList(
-                                                        SocialList {
-                                                            request_type: request.request_type,
-                                                            sequence: request.count,
-                                                            entries: Default::default(),
-                                                        },
-                                                    ),
+                                                    data: ServerZoneIpcData::SocialList(SocialList {
+                                                        request_type: request.request_type,
+                                                        sequence: request.count,
+                                                        entries: Default::default(),
+                                                    }),
                                                     ..Default::default()
                                                 };
 
                                                 connection
                                                     .send_segment(PacketSegment {
-                                                        source_actor: connection
-                                                            .player_data
-                                                            .actor_id,
-                                                        target_actor: connection
-                                                            .player_data
-                                                            .actor_id,
-                                                        segment_type: SegmentType::Ipc {
-                                                            data: ipc,
-                                                        },
+                                                        source_actor: connection.player_data.actor_id,
+                                                        target_actor: connection.player_data.actor_id,
+                                                        segment_type: SegmentType::Ipc { data: ipc },
                                                     })
                                                     .await;
                                             }
@@ -571,10 +579,7 @@ async fn main() {
                                                 .await;
                                         }
                                     }
-                                    ClientZoneIpcData::UpdatePositionHandler {
-                                        position,
-                                        rotation,
-                                    } => {
+                                    ClientZoneIpcData::UpdatePositionHandler { position, rotation } => {
                                         tracing::info!(
                                             "Character moved to {position:#?} {}",
                                             rotation.to_degrees()
@@ -594,9 +599,7 @@ async fn main() {
                                             let ipc = ServerZoneIpcSegment {
                                                 op_code: ServerZoneIpcType::LogOutComplete,
                                                 timestamp: timestamp_secs(),
-                                                data: ServerZoneIpcData::LogOutComplete {
-                                                    unk: [0; 8],
-                                                },
+                                                data: ServerZoneIpcData::LogOutComplete { unk: [0; 8] },
                                                 ..Default::default()
                                             };
 
@@ -613,6 +616,8 @@ async fn main() {
                                         tracing::info!("Client disconnected!");
                                     }
                                     ClientZoneIpcData::ChatMessage(chat_message) => {
+                                        connection.handle.send(ToServer::Message(connection.id, chat_message.message.clone())).await;
+
                                         ChatHandler::handle_chat_message(
                                             &mut connection,
                                             &mut lua_player,
@@ -620,9 +625,7 @@ async fn main() {
                                         )
                                         .await
                                     }
-                                    ClientZoneIpcData::GameMasterCommand {
-                                        command, arg, ..
-                                    } => {
+                                    ClientZoneIpcData::GameMasterCommand { command, arg, .. } => {
                                         tracing::info!("Got a game master command!");
 
                                         match &command {
@@ -632,16 +635,22 @@ async fn main() {
                                             GameMasterCommandType::ChangeTerritory => {
                                                 connection.change_zone(*arg as u16).await
                                             }
-                                            GameMasterCommandType::ToggleInvisibility => connection.actor_control_self(ActorControlSelf {
-                                                category:
-                                                ActorControlCategory::ToggleInvisibility {
-                                                    invisible: 1
-                                                },
-                                            }).await,
-                                            GameMasterCommandType::ToggleWireframe => connection.actor_control_self(ActorControlSelf {
-                                                category:
-                                                ActorControlCategory::ToggleWireframeRendering() ,
-                                            }).await
+                                            GameMasterCommandType::ToggleInvisibility => {
+                                                connection
+                                                    .actor_control_self(ActorControlSelf {
+                                                        category:
+                                                            ActorControlCategory::ToggleInvisibility {
+                                                                invisible: 1,
+                                                            },
+                                                    })
+                                                    .await
+                                            }
+                                            GameMasterCommandType::ToggleWireframe => connection
+                                                .actor_control_self(ActorControlSelf {
+                                                    category:
+                                                        ActorControlCategory::ToggleWireframeRendering(),
+                                                })
+                                                .await,
                                         }
                                     }
                                     ClientZoneIpcData::EnterZoneLine {
@@ -681,20 +690,12 @@ async fn main() {
                                         connection.change_zone(new_territory).await;
                                     }
                                     ClientZoneIpcData::ActionRequest(request) => {
-                                        tracing::info!("Recieved action request: {:#?}!", request);
-
-                                        /*let action_row =
-                                            &exd.read_row(&exh, request.action_id).unwrap()[0];
-
-                                        println!("Found action: {:#?}", action_row);*/
-
                                         let mut effects_builder = None;
 
                                         // run action script
                                         {
                                             let lua = lua.lock().unwrap();
-                                            let state =
-                                                lua.app_data_ref::<ExtraLuaState>().unwrap();
+                                            let state = lua.app_data_ref::<ExtraLuaState>().unwrap();
 
                                             if let Some(action_script) =
                                                 state.action_scripts.get(&request.action_id)
@@ -708,12 +709,12 @@ async fn main() {
 
                                                     let file_name = format!(
                                                         "{}/{}",
-                                                        &config.world.scripts_location,
-                                                        action_script
+                                                        &config.world.scripts_location, action_script
                                                     );
-                                                    lua.load(std::fs::read(&file_name).expect(
-                                                        "Failed to locate scripts directory!",
-                                                    ))
+                                                    lua.load(
+                                                        std::fs::read(&file_name)
+                                                            .expect("Failed to locate scripts directory!"),
+                                                    )
                                                     .set_name("@".to_string() + &file_name)
                                                     .exec()
                                                     .unwrap();
@@ -722,10 +723,8 @@ async fn main() {
                                                         lua.globals().get("doAction").unwrap();
 
                                                     effects_builder = Some(
-                                                        func.call::<EffectsBuilder>(
-                                                            connection_data,
-                                                        )
-                                                        .unwrap(),
+                                                        func.call::<EffectsBuilder>(connection_data)
+                                                            .unwrap(),
                                                     );
 
                                                     Ok(())
@@ -752,30 +751,24 @@ async fn main() {
                                                 }
 
                                                 let actor = actor.clone();
-                                                connection
-                                                    .update_hp_mp(actor.id, actor.hp, 10000)
-                                                    .await;
+                                                connection.update_hp_mp(actor.id, actor.hp, 10000).await;
                                             }
 
                                             let ipc = ServerZoneIpcSegment {
                                                 op_code: ServerZoneIpcType::ActionResult,
                                                 timestamp: timestamp_secs(),
-                                                data: ServerZoneIpcData::ActionResult(
-                                                    ActionResult {
-                                                        main_target: request.target,
-                                                        target_id_again: request.target,
-                                                        action_id: request.action_id,
-                                                        animation_lock_time: 0.6,
-                                                        rotation: connection.player_data.rotation,
-                                                        action_animation_id: request.action_id
-                                                            as u16, // assuming action id == animation id
-                                                        flag: 1,
-                                                        effect_count: effects_builder.effects.len()
-                                                            as u8,
-                                                        effects,
-                                                        ..Default::default()
-                                                    },
-                                                ),
+                                                data: ServerZoneIpcData::ActionResult(ActionResult {
+                                                    main_target: request.target,
+                                                    target_id_again: request.target,
+                                                    action_id: request.action_id,
+                                                    animation_lock_time: 0.6,
+                                                    rotation: connection.player_data.rotation,
+                                                    action_animation_id: request.action_id as u16, // assuming action id == animation id
+                                                    flag: 1,
+                                                    effect_count: effects_builder.effects.len() as u8,
+                                                    effects,
+                                                    ..Default::default()
+                                                }),
                                                 ..Default::default()
                                             };
 
@@ -835,9 +828,7 @@ async fn main() {
                                         name,
                                         chara_make_json,
                                     } => {
-                                        tracing::info!(
-                                            "creating character from: {name} {chara_make_json}"
-                                        );
+                                        tracing::info!("creating character from: {name} {chara_make_json}");
 
                                         let chara_make = CharaMake::from_json(chara_make_json);
 
@@ -845,8 +836,8 @@ async fn main() {
                                         {
                                             let mut game_data = game_data.lock().unwrap();
 
-                                            city_state = game_data
-                                                .get_citystate(chara_make.classjob_id as u16);
+                                            city_state =
+                                                game_data.get_citystate(chara_make.classjob_id as u16);
                                         }
 
                                         let (content_id, actor_id) = database.create_player_data(
@@ -856,9 +847,7 @@ async fn main() {
                                             determine_initial_starting_zone(city_state),
                                         );
 
-                                        tracing::info!(
-                                            "Created new player: {content_id} {actor_id}"
-                                        );
+                                        tracing::info!("Created new player: {content_id} {actor_id}");
 
                                         // send them the new actor and content id
                                         {
@@ -870,8 +859,7 @@ async fn main() {
                                                         data: CustomIpcSegment {
                                                             unk1: 0,
                                                             unk2: 0,
-                                                            op_code:
-                                                                CustomIpcType::CharacterCreated,
+                                                            op_code: CustomIpcType::CharacterCreated,
                                                             server_id: 0,
                                                             timestamp: 0,
                                                             data: CustomIpcData::CharacterCreated {
@@ -902,9 +890,7 @@ async fn main() {
                                                             op_code: CustomIpcType::ActorIdFound,
                                                             server_id: 0,
                                                             timestamp: 0,
-                                                            data: CustomIpcData::ActorIdFound {
-                                                                actor_id,
-                                                            },
+                                                            data: CustomIpcData::ActorIdFound { actor_id },
                                                         },
                                                     },
                                                 })
@@ -918,23 +904,23 @@ async fn main() {
                                         // send response
                                         {
                                             connection
-                                            .send_segment(PacketSegment {
-                                                source_actor: 0,
-                                                target_actor: 0,
-                                                segment_type: SegmentType::CustomIpc {
-                                                    data: CustomIpcSegment {
-                                                        unk1: 0,
-                                                        unk2: 0,
-                                                        op_code: CustomIpcType::NameIsAvailableResponse,
-                                                        server_id: 0,
-                                                        timestamp: 0,
-                                                        data: CustomIpcData::NameIsAvailableResponse {
-                                                            free: is_name_free,
+                                                .send_segment(PacketSegment {
+                                                    source_actor: 0,
+                                                    target_actor: 0,
+                                                    segment_type: SegmentType::CustomIpc {
+                                                        data: CustomIpcSegment {
+                                                            unk1: 0,
+                                                            unk2: 0,
+                                                            op_code: CustomIpcType::NameIsAvailableResponse,
+                                                            server_id: 0,
+                                                            timestamp: 0,
+                                                            data: CustomIpcData::NameIsAvailableResponse {
+                                                                free: is_name_free,
+                                                            },
                                                         },
                                                     },
-                                                },
-                                            })
-                                            .await;
+                                                })
+                                                .await;
                                         }
                                     }
                                     CustomIpcData::RequestCharacterList { service_account_id } => {
@@ -943,8 +929,7 @@ async fn main() {
                                         let world_name;
                                         {
                                             let mut game_data = game_data.lock().unwrap();
-                                            world_name =
-                                                game_data.get_world_name(config.world.world_id);
+                                            world_name = game_data.get_world_name(config.world.world_id);
                                         }
 
                                         let characters = database.get_character_list(
@@ -956,28 +941,28 @@ async fn main() {
                                         // send response
                                         {
                                             send_packet::<CustomIpcSegment>(
-                                                &mut connection.socket,
-                                                &mut connection.state,
-                                                ConnectionType::None,
-                                                CompressionType::Uncompressed,
-                                                &[PacketSegment {
-                                                    source_actor: 0,
-                                                    target_actor: 0,
-                                                    segment_type: SegmentType::CustomIpc {
-                                                        data: CustomIpcSegment {
-                                                            unk1: 0,
-                                                            unk2: 0,
-                                                            op_code: CustomIpcType::RequestCharacterListRepsonse,
-                                                            server_id: 0,
-                                                            timestamp: 0,
-                                                            data: CustomIpcData::RequestCharacterListRepsonse {
-                                                                characters
+                                                        &mut connection.socket,
+                                                        &mut connection.state,
+                                                        ConnectionType::None,
+                                                        CompressionType::Uncompressed,
+                                                        &[PacketSegment {
+                                                            source_actor: 0,
+                                                            target_actor: 0,
+                                                            segment_type: SegmentType::CustomIpc {
+                                                                data: CustomIpcSegment {
+                                                                    unk1: 0,
+                                                                    unk2: 0,
+                                                                    op_code: CustomIpcType::RequestCharacterListRepsonse,
+                                                                    server_id: 0,
+                                                                    timestamp: 0,
+                                                                    data: CustomIpcData::RequestCharacterListRepsonse {
+                                                                        characters
+                                                                    },
+                                                                },
                                                             },
-                                                        },
-                                                    },
-                                                }],
-                                            )
-                                            .await;
+                                                        }],
+                                                    )
+                                                    .await;
                                         }
                                     }
                                     CustomIpcData::DeleteCharacter { content_id } => {
@@ -997,8 +982,7 @@ async fn main() {
                                                         data: CustomIpcSegment {
                                                             unk1: 0,
                                                             unk2: 0,
-                                                            op_code:
-                                                                CustomIpcType::CharacterDeleted,
+                                                            op_code: CustomIpcType::CharacterDeleted,
                                                             server_id: 0,
                                                             timestamp: 0,
                                                             data: CustomIpcData::CharacterDeleted {
@@ -1011,9 +995,9 @@ async fn main() {
                                             .await;
                                         }
                                     }
-                                    _ => panic!(
-                                        "The server is recieving a response or unknown custom IPC!"
-                                    ),
+                                    _ => {
+                                        panic!("The server is recieving a response or unknown custom IPC!")
+                                    }
                                 }
                             }
                             _ => {
@@ -1037,6 +1021,93 @@ async fn main() {
                     lua_player.status_effects = connection.status_effects.clone();
                 }
             }
+            msg = internal_recv.recv() => match msg {
+                Some(msg) => match msg {
+                    InternalMsg::Message(msg) => connection.send_message(&msg).await,
+                },
+                None => break,
+            }
+        }
+    }
+}
+
+#[tokio::main]
+async fn main() {
+    tracing_subscriber::fmt::init();
+
+    let config = get_config();
+
+    let addr = config.world.get_socketaddr();
+
+    let listener = TcpListener::bind(addr).await.unwrap();
+
+    tracing::info!("Server started on {addr}");
+
+    let database = Arc::new(WorldDatabase::new());
+    let lua = Arc::new(Mutex::new(Lua::new()));
+    let game_data = Arc::new(Mutex::new(GameData::new()));
+
+    {
+        let lua = lua.lock().unwrap();
+
+        let register_action_func = lua
+            .create_function(|lua, (action_id, action_script): (u32, String)| {
+                tracing::info!("Registering {action_id} with {action_script}!");
+                let mut state = lua.app_data_mut::<ExtraLuaState>().unwrap();
+                let _ = state.action_scripts.insert(action_id, action_script);
+                Ok(())
+            })
+            .unwrap();
+
+        lua.set_app_data(ExtraLuaState::default());
+        lua.globals()
+            .set("registerAction", register_action_func)
+            .unwrap();
+
+        let effectsbuilder_constructor = lua
+            .create_function(|_, ()| Ok(EffectsBuilder::default()))
+            .unwrap();
+        lua.globals()
+            .set("EffectsBuilder", effectsbuilder_constructor)
+            .unwrap();
+
+        let file_name = format!("{}/Global.lua", &config.world.scripts_location);
+        lua.load(std::fs::read(&file_name).expect("Failed to locate scripts directory!"))
+            .set_name("@".to_string() + &file_name)
+            .exec()
+            .unwrap();
+    }
+
+    let (handle, join) = spawn_main_loop();
+
+    loop {
+        let (socket, ip) = listener.accept().await.unwrap();
+        let id = handle.next_id();
+
+        let state = PacketState {
+            client_key: None,
+            clientbound_oodle: OodleNetwork::new(),
+            serverbound_oodle: OodleNetwork::new(),
+        };
+
+        spawn_client(ZoneConnection {
+            socket,
+            state,
+            player_data: PlayerData::default(),
+            spawn_index: 0,
+            zone: None,
+            inventory: Inventory::new(),
+            status_effects: StatusEffects::default(),
+            event: None,
+            actors: Vec::new(),
+            ip,
+            id,
+            handle: handle.clone(),
+            database: database.clone(),
+            lua: lua.clone(),
+            gamedata: game_data.clone(),
         });
     }
+
+    join.await.unwrap();
 }
