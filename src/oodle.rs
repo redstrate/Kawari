@@ -137,15 +137,14 @@ impl OodleNetwork {
         }
     }
 
-    pub fn decode(&mut self, input: Vec<u8>, decompressed_size: u32) -> Vec<u8> {
+    pub fn decode(&mut self, mut input: Vec<u8>, decompressed_size: u32) -> Vec<u8> {
         unsafe {
             let mut out_buf: Vec<u8> = vec![0u8; decompressed_size.try_into().unwrap()];
-            let mut in_buf = input.to_vec();
             let success = OodleNetwork1TCP_Decode(
                 self.state.as_mut_ptr() as *mut c_void,
                 self.shared.as_mut_ptr() as *mut c_void,
-                in_buf.as_mut_ptr() as *const c_void,
-                in_buf.len().try_into().unwrap(),
+                input.as_mut_ptr() as *const c_void,
+                input.len().try_into().unwrap(),
                 out_buf.as_mut_ptr() as *mut c_void,
                 out_buf.len().try_into().unwrap(),
             );
@@ -158,15 +157,14 @@ impl OodleNetwork {
         }
     }
 
-    pub fn encode(&mut self, input: Vec<u8>) -> Vec<u8> {
+    pub fn encode(&mut self, mut input: Vec<u8>) -> Vec<u8> {
         unsafe {
             let mut out_buf: Vec<u8> = vec![0u8; input.len()];
-            let mut in_buf = input.to_vec();
             let len = OodleNetwork1TCP_Encode(
                 self.state.as_mut_ptr() as *mut c_void,
                 self.shared.as_mut_ptr() as *mut c_void,
-                in_buf.as_mut_ptr() as *const c_void,
-                in_buf.len().try_into().unwrap(),
+                input.as_mut_ptr() as *const c_void,
+                input.len().try_into().unwrap(),
                 out_buf.as_mut_ptr() as *mut c_void,
             );
 
