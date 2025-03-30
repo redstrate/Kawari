@@ -1,9 +1,10 @@
-use std::sync::Mutex;
+use std::{io::Read, sync::Mutex};
 
 use rusqlite::Connection;
+use serde::Deserialize;
 
 use crate::{
-    common::Position,
+    common::{CustomizeData, Position},
     lobby::{
         CharaMake, ClientSelectData, RemakeMode,
         ipc::{CharacterDetails, CharacterFlag},
@@ -46,9 +47,73 @@ impl WorldDatabase {
             connection.execute(query, ()).unwrap();
         }
 
-        Self {
+        let this = Self {
             connection: Mutex::new(connection),
+        };
+
+        // Import any backups
+        // NOTE: This won't make sense when service accounts are a real thing, so the functionality will probably be moved
+        {
+            if let Ok(paths) = std::fs::read_dir("./backups") {
+                for path in paths {
+                    let path = path.unwrap().path();
+                    if path.extension().unwrap() == "zip" {
+                        this.import_character(path.to_str().unwrap());
+                    }
+                }
+            }
         }
+
+        this
+    }
+
+    fn import_character(&self, path: &str) {
+        tracing::info!("Importing character backup {path}...");
+
+        let file = std::fs::File::open(path).unwrap();
+
+        let mut archive = zip::ZipArchive::new(file).unwrap();
+
+        #[derive(Deserialize)]
+        struct CharacterJson {
+            name: String,
+        }
+
+        let character: CharacterJson;
+        {
+            let mut character_file = archive.by_name("character.json").unwrap();
+
+            let mut json_string = String::new();
+            character_file.read_to_string(&mut json_string).unwrap();
+
+            character = serde_json::from_str(&json_string).unwrap();
+        }
+
+        if !self.check_is_name_free(&character.name) {
+            tracing::warn!("* Skipping since this character already exists.");
+            return;
+        }
+
+        let charsave_file = archive.by_name("FFXIV_CHARA_01.dat").unwrap();
+        let charsave_bytes: Vec<u8> = charsave_file.bytes().map(|x| x.unwrap()).collect();
+        let charsave = physis::chardat::CharacterData::from_existing(&charsave_bytes).unwrap();
+
+        let customize = CustomizeData::from(charsave.customize);
+
+        let chara_make = CharaMake {
+            customize,
+            unk1: 73,
+            guardian: 1, // TODO: extract these as well
+            birth_month: 1,
+            birth_day: 1,
+            classjob_id: 5,
+            unk2: 1,
+        };
+
+        // TODO: extract city-state
+        self.create_player_data(&character.name, &chara_make.to_json(), 2, 132);
+
+        tracing::info!("{} added to the world!", character.name);
     }
 
     pub fn find_player_data(&self, actor_id: u32) -> PlayerData {

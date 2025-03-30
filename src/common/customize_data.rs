@@ -32,6 +32,39 @@ pub struct CustomizeData {
     pub face_paint_color: u8,
 }
 
+impl From<physis::chardat::CustomizeData> for CustomizeData {
+    fn from(value: physis::chardat::CustomizeData) -> Self {
+        Self {
+            race: value.race as u8 + 1,
+            gender: value.gender as u8,
+            age: value.age,
+            height: value.height,
+            subrace: value.subrace as u8 + 1,
+            face: value.face,
+            hair: value.hair,
+            enable_highlights: value.enable_highlights as u8,
+            skin_tone: value.skin_tone,
+            right_eye_color: value.right_eye_color,
+            hair_tone: value.hair_tone,
+            highlights: value.highlights,
+            facial_features: value.facial_features,
+            facial_feature_color: value.facial_feature_color,
+            eyebrows: value.eyebrows,
+            left_eye_color: value.left_eye_color,
+            eyes: value.eyes,
+            nose: value.nose,
+            jaw: value.jaw,
+            mouth: value.mouth,
+            lips_tone_fur_pattern: value.lips_tone_fur_pattern,
+            race_feature_size: value.race_feature_size,
+            race_feature_type: value.race_feature_type,
+            bust: value.bust,
+            face_paint: value.face_paint,
+            face_paint_color: value.face_paint_color,
+        }
+    }
+}
+
 impl CustomizeData {
     pub fn to_json(&self) -> Value {
         json!([

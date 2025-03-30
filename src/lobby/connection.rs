@@ -591,13 +591,16 @@ pub async fn send_custom_world_packet(segment: CustomIpcSegment) -> Option<Custo
     // read response
     let mut buf = [0; 10024]; // TODO: this large buffer is just working around these packets not being compressed, but they really should be!
     let n = stream.read(&mut buf).await.expect("Failed to read data!");
+    if n != 0 {
+        println!("Got {n} bytes of response!");
 
-    println!("Got {n} bytes of response!");
+        let (segments, _) = parse_packet::<CustomIpcSegment>(&buf[..n], &mut packet_state).await;
 
-    let (segments, _) = parse_packet::<CustomIpcSegment>(&buf[..n], &mut packet_state).await;
-
-    match &segments[0].segment_type {
-        SegmentType::CustomIpc { data } => Some(data.clone()),
-        _ => None,
+        return match &segments[0].segment_type {
+            SegmentType::CustomIpc { data } => Some(data.clone()),
+            _ => None,
+        };
     }
+
+    None
 }

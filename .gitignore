@@ -6,3 +6,4 @@ config.json
 *.db
 config.yaml
 src/opcodes.rs
+backups/

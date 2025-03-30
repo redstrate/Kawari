@@ -32,12 +32,12 @@ impl CharaMake {
     pub fn to_json(&self) -> String {
         let content = json!([
             self.customize.to_json(),
-            self.unk1,
-            self.guardian,
-            self.birth_month,
-            self.birth_day,
-            self.classjob_id,
-            self.unk2,
+            self.unk1.to_string(),
+            self.guardian.to_string(),
+            self.birth_month.to_string(),
+            self.birth_day.to_string(),
+            self.classjob_id.to_string(),
+            self.unk2.to_string(),
         ]);
 
         let obj = json!({
