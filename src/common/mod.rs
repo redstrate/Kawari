@@ -77,6 +77,26 @@ pub(crate) fn write_quantized_rotation(quantized: &f32) -> u16 {
     ((quantized + pi / (2.0 * pi)) * max) as u16
 }
 
+pub(crate) fn read_packed_float(packed: u16) -> f32 {
+    todo!()
+}
+
+pub(crate) fn write_packed_float(float: f32) -> u16 {
+    (((float + 1000.0) * 100.0) * 0.32767501) as u16
+}
+
+pub(crate) fn read_packed_position(packed: [u16; 3]) -> Position {
+    todo!()
+}
+
+pub(crate) fn write_packed_position(pos: &Position) -> [u16; 3] {
+    [
+        write_packed_float(pos.x),
+        write_packed_float(pos.y),
+        write_packed_float(pos.z),
+    ]
+}
+
 /// Get the number of seconds since UNIX epoch.
 pub fn timestamp_secs() -> u32 {
     SystemTime::now()

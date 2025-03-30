@@ -7,7 +7,9 @@ use crate::common::{ObjectTypeId, read_quantized_rotation, write_quantized_rotat
 #[brw(repr = u8)]
 pub enum EffectKind {
     #[default]
+    Miss = 0, // FIXME: is this correct?
     Damage = 3,
+    BeginCombo = 27,
 }
 
 #[binrw]
@@ -80,7 +82,7 @@ mod tests {
         assert_eq!(action_result.effect_count, 1);
 
         // effect 0: attack
-        assert_eq!(action_result.effects[0].action_type, 3);
+        assert_eq!(action_result.effects[0].kind, EffectKind::Damage);
         assert_eq!(action_result.effects[0].param0, 0);
         assert_eq!(action_result.effects[0].param1, 113);
         assert_eq!(action_result.effects[0].param2, 0);
@@ -89,6 +91,6 @@ mod tests {
         assert_eq!(action_result.effects[0].value, 22);
 
         // effect 1: start action combo
-        assert_eq!(action_result.effects[1].action_type, 27);
+        assert_eq!(action_result.effects[1].kind, EffectKind::BeginCombo);
     }
 }

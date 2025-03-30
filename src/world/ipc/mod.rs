@@ -62,6 +62,12 @@ pub use event_start::EventStart;
 mod action_result;
 pub use action_result::{ActionEffect, ActionResult, EffectKind};
 
+mod actor_move;
+pub use actor_move::ActorMove;
+
+mod actor_set_pos;
+pub use actor_set_pos::ActorSetPos;
+
 use crate::common::Position;
 use crate::common::read_string;
 use crate::common::write_string;
@@ -114,16 +120,6 @@ impl Default for ServerZoneIpcSegment {
             data: ServerZoneIpcData::InitializeChat { unk: [0; 8] },
         }
     }
-}
-
-// TODO: move to their own files
-#[binrw]
-#[derive(Debug, Clone, Default)]
-pub struct ActorSetPos {
-    pub unk: u32,
-    pub layer_id: u32,
-    pub position: Position,
-    pub unk3: u32,
 }
 
 #[binrw]
@@ -197,10 +193,7 @@ pub enum ServerZoneIpcData {
     /// Sent by the server
     ActorControl(ActorControl),
     /// Sent by the server
-    ActorMove {
-        #[brw(pad_after = 4)] // empty
-        pos: Position,
-    },
+    ActorMove(ActorMove),
     /// Sent by the server
     Unk17 { unk: [u8; 104] },
     /// Sent by the server in response to SocialListRequest
@@ -449,6 +442,10 @@ mod tests {
             (
                 ServerZoneIpcType::ActionResult,
                 ServerZoneIpcData::ActionResult(ActionResult::default()),
+            ),
+            (
+                ServerZoneIpcType::ActorMove,
+                ServerZoneIpcData::ActorMove(ActorMove::default()),
             ),
         ];
 

@@ -3,7 +3,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
 use kawari::common::custom_ipc::{CustomIpcData, CustomIpcSegment, CustomIpcType};
-use kawari::common::{GameData, timestamp_secs};
+use kawari::common::{GameData, ObjectId, timestamp_secs};
 use kawari::common::{Position, determine_initial_starting_zone};
 use kawari::config::get_config;
 use kawari::lobby::CharaMake;
@@ -488,6 +488,9 @@ async fn client_loop(
                                         // wipe any exit position so it isn't accidentally reused
                                         exit_position = None;
                                         exit_rotation = None;
+
+                                        // tell the other players we're here
+                                        connection.handle.send(ToServer::ActorSpawned(connection.id, Actor { id: ObjectId(connection.player_data.actor_id), hp: 100 })).await;
                                     }
                                     ClientZoneIpcData::Unk1 {
                                         category, param1, ..
@@ -608,6 +611,8 @@ async fn client_loop(
 
                                         connection.player_data.rotation = *rotation;
                                         connection.player_data.position = *position;
+
+                                        connection.handle.send(ToServer::ActorMoved(connection.id, connection.player_data.actor_id, *position)).await;
                                     }
                                     ClientZoneIpcData::LogOut { .. } => {
                                         tracing::info!("Recieved log out from client!");
@@ -768,6 +773,7 @@ async fn client_loop(
                                                         EffectKind::Damage => {
                                                             actor.hp -= effect.value as u32;
                                                         }
+                                                        _ => todo!()
                                                     }
                                                 }
 

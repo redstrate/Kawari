@@ -154,32 +154,6 @@ impl ChatHandler {
                         })
                         .await;
                 }
-
-                // move
-                {
-                    let ipc = ServerZoneIpcSegment {
-                        unk1: 20,
-                        unk2: 0,
-                        op_code: ServerZoneIpcType::ActorMove,
-                        server_id: 0,
-                        timestamp: timestamp_secs(),
-                        data: ServerZoneIpcData::ActorMove {
-                            pos: Position {
-                                x: 1.0,
-                                y: 0.0,
-                                z: 1.0,
-                            },
-                        },
-                    };
-
-                    connection
-                        .send_segment(PacketSegment {
-                            source_actor: 0x106ad804,
-                            target_actor: connection.player_data.actor_id,
-                            segment_type: SegmentType::Ipc { data: ipc },
-                        })
-                        .await;
-                }
             }
             "!spawnnpc" => {
                 // spawn another one of us
