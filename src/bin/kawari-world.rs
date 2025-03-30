@@ -13,9 +13,9 @@ use kawari::packet::{
     send_packet,
 };
 use kawari::world::ipc::{
-    ActionEffect, ActionResult, ClientZoneIpcData, CommonSpawn, DisplayFlag, GameMasterCommandType,
-    GameMasterRank, ObjectKind, OnlineStatus, PlayerSubKind, ServerZoneIpcData,
-    ServerZoneIpcSegment, SocialListRequestType,
+    ActionEffect, ActionResult, ClientZoneIpcData, CommonSpawn, DisplayFlag, EffectKind,
+    GameMasterCommandType, GameMasterRank, ObjectKind, OnlineStatus, PlayerSubKind,
+    ServerZoneIpcData, ServerZoneIpcSegment, SocialListRequestType,
 };
 use kawari::world::{
     ChatHandler, Inventory, Zone, ZoneConnection,
@@ -824,11 +824,10 @@ async fn main() {
                                                 connection.get_actor(request.target.object_id)
                                             {
                                                 for effect in &effects_builder.effects {
-                                                    match effect.action_type {
-                                                        3 => {
+                                                    match effect.kind {
+                                                        EffectKind::Damage => {
                                                             actor.hp -= effect.value as u32;
                                                         }
-                                                        _ => {}
                                                     }
                                                 }
 

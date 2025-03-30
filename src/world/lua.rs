@@ -8,7 +8,9 @@ use crate::{
 
 use super::{
     PlayerData, StatusEffects, Zone,
-    ipc::{ActionEffect, ActorSetPos, EventPlay, ServerZoneIpcData, ServerZoneIpcSegment},
+    ipc::{
+        ActionEffect, ActorSetPos, EffectKind, EventPlay, ServerZoneIpcData, ServerZoneIpcSegment,
+    },
 };
 
 pub struct ChangeTerritoryTask {
@@ -171,7 +173,7 @@ impl UserData for EffectsBuilder {
     fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
         methods.add_method_mut("damage", |_, this, amount: u16| {
             this.effects.push(ActionEffect {
-                action_type: 3,
+                kind: EffectKind::Damage,
                 value: amount,
                 param1: 133,
                 ..Default::default()

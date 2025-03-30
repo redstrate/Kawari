@@ -3,10 +3,18 @@ use binrw::binrw;
 use crate::common::{ObjectTypeId, read_quantized_rotation, write_quantized_rotation};
 
 #[binrw]
+#[derive(Debug, Eq, PartialEq, Clone, Copy, Default)]
+#[brw(repr = u8)]
+pub enum EffectKind {
+    #[default]
+    Damage = 3,
+}
+
+#[binrw]
 #[brw(little)]
 #[derive(Debug, Clone, Copy, Default)]
 pub struct ActionEffect {
-    pub action_type: u8,
+    pub kind: EffectKind,
     pub param0: u8,
     pub param1: u8,
     pub param2: u8,

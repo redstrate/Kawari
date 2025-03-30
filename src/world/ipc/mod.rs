@@ -60,7 +60,7 @@ mod event_start;
 pub use event_start::EventStart;
 
 mod action_result;
-pub use action_result::{ActionEffect, ActionResult};
+pub use action_result::{ActionEffect, ActionResult, EffectKind};
 
 use crate::common::Position;
 use crate::common::read_string;
