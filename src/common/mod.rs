@@ -197,6 +197,27 @@ pub fn get_racial_base_attributes(tribe_id: u8) -> Attributes {
 mod tests {
     use super::*;
 
+    // "FOO\0"
+    const STRING_DATA: [u8; 4] = [0x46u8, 0x4Fu8, 0x4Fu8, 0x0u8];
+
+    #[test]
+    fn read_string() {
+        // The nul terminator is supposed to be removed
+        assert_eq!(
+            crate::common::read_string(STRING_DATA.to_vec()),
+            "FOO".to_string()
+        );
+    }
+
+    #[test]
+    fn write_string() {
+        // Supposed to include the nul terminator
+        assert_eq!(
+            crate::common::write_string(&"FOO".to_string()),
+            STRING_DATA.to_vec()
+        );
+    }
+
     #[test]
     fn quantized_rotations() {
         assert_eq!(read_quantized_rotation(0), -std::f32::consts::PI);
