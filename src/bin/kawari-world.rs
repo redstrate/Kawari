@@ -2,10 +2,7 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 use kawari::common::custom_ipc::{CustomIpcData, CustomIpcSegment, CustomIpcType};
-use kawari::common::{
-    ObjectId, ObjectTypeId, Position, determine_initial_starting_zone, get_citystate,
-    get_world_name,
-};
+use kawari::common::{Position, determine_initial_starting_zone, get_citystate, get_world_name};
 use kawari::common::{get_racial_base_attributes, timestamp_secs};
 use kawari::config::get_config;
 use kawari::lobby::CharaMake;
@@ -773,18 +770,6 @@ async fn main() {
 
                                         println!("Found action: {:#?}", action_row);
 
-                                        // placeholder for now
-                                        if let Some(actor) =
-                                            connection.get_actor(ObjectId(0x106ad804))
-                                        {
-                                            actor.hp -= 50;
-
-                                            let actor = actor.clone();
-                                            connection
-                                                .update_hp_mp(actor.id, actor.hp, 10000)
-                                                .await;
-                                        }
-
                                         let mut effects_builder = None;
 
                                         // run action script
@@ -835,6 +820,24 @@ async fn main() {
                                             effects[..effects_builder.effects.len()]
                                                 .copy_from_slice(&effects_builder.effects);
 
+                                            if let Some(actor) =
+                                                connection.get_actor(request.target.object_id)
+                                            {
+                                                for effect in &effects_builder.effects {
+                                                    match effect.action_type {
+                                                        3 => {
+                                                            actor.hp -= effect.value as u32;
+                                                        }
+                                                        _ => {}
+                                                    }
+                                                }
+
+                                                let actor = actor.clone();
+                                                connection
+                                                    .update_hp_mp(actor.id, actor.hp, 10000)
+                                                    .await;
+                                            }
+
                                             let ipc = ServerZoneIpcSegment {
                                                 op_code: ServerZoneIpcType::ActionResult,
                                                 timestamp: timestamp_secs(),
@@ -845,7 +848,8 @@ async fn main() {
                                                         action_id: request.action_id,
                                                         animation_lock_time: 0.6,
                                                         rotation: connection.player_data.rotation,
-                                                        action_animation_id: request.action_id as u16, // assuming action id == animation id
+                                                        action_animation_id: request.action_id
+                                                            as u16, // assuming action id == animation id
                                                         flag: 1,
                                                         effect_count: effects_builder.effects.len()
                                                             as u8,
