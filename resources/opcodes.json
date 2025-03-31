@@ -18,17 +18,17 @@
         {
             "name": "PlayerStats",
             "opcode": 401,
-            "size": 224
+            "size": 144
         },
         {
             "name": "PlayerSetup",
             "opcode": 218,
-            "size": 2784
+            "size": 2808
         },
         {
             "name": "UpdateClassInfo",
             "opcode": 119,
-            "size": 48
+            "size": 16
         },
         {
             "name": "PlayerSpawn",
@@ -78,7 +78,7 @@
         {
             "name": "Unk15",
             "opcode": 652,
-            "size": 8
+            "size": 16
         },
         {
             "name": "Unk16",
@@ -196,11 +196,6 @@
             "name": "SocialListRequest",
             "opcode": 417,
             "size": 16
-        },
-        {
-            "name": "Unk7",
-            "opcode": 693,
-            "size": 32
         },
         {
             "name": "UpdatePositionHandler",

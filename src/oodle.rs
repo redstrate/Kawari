@@ -149,7 +149,7 @@ impl OodleNetwork {
             let mut out_buf: Vec<u8> = vec![0u8; decompressed_size.try_into().unwrap()];
             let success = OodleNetwork1TCP_Decode(
                 self.state.as_mut_ptr() as *mut c_void,
-                self.shared.as_mut_ptr() as *const c_void,
+                self.shared.as_ptr() as *const c_void,
                 padded_buffer.as_mut_ptr() as *const c_void,
                 input.len().try_into().unwrap(),
                 out_buf.as_mut_ptr() as *mut c_void,
@@ -169,7 +169,7 @@ impl OodleNetwork {
             let mut out_buf: Vec<u8> = vec![0u8; input.len()];
             let len = OodleNetwork1TCP_Encode(
                 self.state.as_mut_ptr() as *mut c_void,
-                self.shared.as_mut_ptr() as *const c_void,
+                self.shared.as_ptr() as *const c_void,
                 input.as_mut_ptr() as *const c_void,
                 input.len().try_into().unwrap(),
                 out_buf.as_mut_ptr() as *mut c_void,

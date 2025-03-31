@@ -581,32 +581,6 @@ async fn client_loop(
                                             }
                                         }
                                     }
-                                    ClientZoneIpcData::Unk7 {
-                                        timestamp, unk1, ..
-                                    } => {
-                                        tracing::info!("Recieved Unk7! {:#?}", unk1);
-
-                                        // send unk11 in response
-                                        {
-                                            let ipc = ServerZoneIpcSegment {
-                                                op_code: ServerZoneIpcType::Unk11,
-                                                timestamp: timestamp_secs(),
-                                                data: ServerZoneIpcData::Unk11 {
-                                                    timestamp: *timestamp,
-                                                    unk: 333,
-                                                },
-                                                ..Default::default()
-                                            };
-
-                                            connection
-                                                .send_segment(PacketSegment {
-                                                    source_actor: connection.player_data.actor_id,
-                                                    target_actor: connection.player_data.actor_id,
-                                                    segment_type: SegmentType::Ipc { data: ipc },
-                                                })
-                                                .await;
-                                        }
-                                    }
                                     ClientZoneIpcData::UpdatePositionHandler { position, rotation } => {
                                         tracing::info!(
                                             "Character moved to {position:#?} {}",

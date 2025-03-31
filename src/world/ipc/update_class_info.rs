@@ -8,5 +8,5 @@ pub struct UpdateClassInfo {
     pub is_specialist: u8,
     pub synced_level: u16,
     pub class_level: u16,
-    pub role_actions: [u32; 10],
+    pub role_actions: [u32; 2],
 }

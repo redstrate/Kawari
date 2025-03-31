@@ -172,30 +172,14 @@ pub enum ServerZoneIpcData {
         #[bw(map = write_string)]
         message: String,
     },
-    /// Unknown, server sends to the client before player spawn
-    Unk8 { unk: [u8; 808] },
     /// Unknown, but seems to contain information on cross-world linkshells
     LinkShellInformation { unk: [u8; 456] },
-    /// Unknown, server sends to the client before player spawn
-    Unk9 { unk: [u8; 24] },
-    /// Unknown, server sends this in response to Unk7
-    Unk11 {
-        timestamp: u32,
-        #[brw(pad_after = 24)] // empty bytes
-        unk: u32,
-    },
     /// Sent by the server when it wants the client to... prepare to zone?
     PrepareZoning { unk: [u32; 4] },
-    /// Sent by the server???
-    Unk15 { unk: u32, player_id: u32 },
-    /// Sent by the server before init zone???
-    Unk16 { unk: [u8; 136] },
     /// Sent by the server
     ActorControl(ActorControl),
     /// Sent by the server
     ActorMove(ActorMove),
-    /// Sent by the server
-    Unk17 { unk: [u8; 104] },
     /// Sent by the server in response to SocialListRequest
     SocialList(SocialList),
     /// Sent by the server to spawn an NPC
@@ -283,15 +267,6 @@ pub enum ClientZoneIpcData {
     /// Sent by the client when it requests the friends list and other related info
     #[br(pre_assert(*magic == ClientZoneIpcType::SocialListRequest))]
     SocialListRequest(SocialListRequest),
-    /// FIXME: 32 bytes of something from the client, not sure what yet
-    #[br(pre_assert(*magic == ClientZoneIpcType::Unk7))]
-    Unk7 {
-        // TODO: full of possibly interesting information
-        timestamp: u32,
-        #[brw(pad_before = 8)] // empty bytes
-        #[brw(pad_after = 4)] // empty bytes
-        unk1: [u8; 16], // something
-    },
     #[br(pre_assert(*magic == ClientZoneIpcType::UpdatePositionHandler))]
     UpdatePositionHandler {
         /// In radians.

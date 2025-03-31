@@ -33,5 +33,5 @@ pub struct PlayerStats {
     pub control: u32,
     pub gathering: u32,
     pub perception: u32,
-    pub unk1: [u32; 26],
+    pub unk1: [u32; 6],
 }

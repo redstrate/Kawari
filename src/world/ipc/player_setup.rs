@@ -159,8 +159,8 @@ pub struct PlayerSetup {
     pub cleared_pvp: [u8; 5],
 
     // meh, this is where i put all of the new data
-    #[br(count = 192)]
-    #[bw(pad_size_to = 192)]
+    #[br(count = 216)]
+    #[bw(pad_size_to = 216)]
     pub unknown948: Vec<u8>,
 }
 
