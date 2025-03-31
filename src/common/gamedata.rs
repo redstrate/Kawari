@@ -1,10 +1,14 @@
 use physis::common::{Language, Platform};
+use physis::exd::EXD;
+use physis::exh::EXH;
 
 use crate::{common::Attributes, config::get_config};
 
 /// Convenient methods built on top of Physis to access data relevant to the server
 pub struct GameData {
     pub game_data: physis::gamedata::GameData,
+    pub item_exh: EXH,
+    pub item_pages: Vec<EXD>,
 }
 
 impl Default for GameData {
@@ -17,12 +21,24 @@ impl GameData {
     pub fn new() -> Self {
         let config = get_config();
 
-        Self {
-            game_data: physis::gamedata::GameData::from_existing(
+        let mut game_data = physis::gamedata::GameData::from_existing(
                 Platform::Win32,
                 &config.game_location,
-            )
-            .unwrap(),
+            ).unwrap();
+
+        let mut item_pages = Vec::new();
+
+        let item_exh = game_data.read_excel_sheet_header("Item").unwrap();
+        for (i, _) in item_exh.pages.iter().enumerate() {
+            item_pages.push(game_data
+                .read_excel_sheet("Item", &item_exh, Language::English, i)
+                .unwrap());
+        }
+
+        Self {
+            game_data,
+            item_exh,
+            item_pages
         }
     }
 
@@ -91,14 +107,8 @@ impl GameData {
 
     /// Gets the primary model ID for a given item ID
     pub fn get_primary_model_id(&mut self, item_id: u32) -> u16 {
-        let exh = self.game_data.read_excel_sheet_header("Item").unwrap();
-        for (i, _) in exh.pages.iter().enumerate() {
-            let exd = self
-                .game_data
-                .read_excel_sheet("Item", &exh, Language::English, i)
-                .unwrap();
-
-            if let Some(row) = exd.read_row(&exh, item_id) {
+        for page in &self.item_pages {
+            if let Some(row) = page.read_row(&self.item_exh, item_id) {
                 let item_row = &row[0];
 
                 let physis::exd::ColumnData::UInt64(id) = &item_row.data[47] else {
