@@ -2,6 +2,7 @@
 #![allow(non_snake_case)]
 #![allow(unused_unsafe)]
 #![allow(unused_variables)]
+#![allow(dead_code)]
 
 use std::{ffi::c_void, ptr::null};
 
@@ -38,6 +39,7 @@ unsafe extern "C" {
         dec_size: isize,
         enc: *mut c_void,
     ) -> bool;
+    pub fn OodleNetwork1_CompressedBufferSizeNeeded(rawLen: isize) -> isize;
 }
 
 // dummy functions for CI mostly
@@ -95,11 +97,15 @@ pub fn OodleNetwork1TCP_Encode(
     panic!("Something is trying to use Oodle but the feature isn't enabled!")
 }
 
+#[cfg(not(feature = "oodle"))]
+pub fn OodleNetwork1_CompressedBufferSizeNeeded(rawLen: isize) -> isize {
+    panic!("Something is trying to use Oodle but the feature isn't enabled!")
+}
+
 #[derive(Debug, Default)]
 pub struct OodleNetwork {
     state: Vec<u8>,
     shared: Vec<u8>,
-    #[allow(dead_code)] // unused in rust but required to still be available for low-level oodle
     window: Vec<u8>,
 }
 
@@ -120,7 +126,7 @@ impl OodleNetwork {
                 oodle_shared.as_mut_ptr() as *mut c_void,
                 HT_BITS,
                 oodle_window.as_mut_ptr() as *mut c_void,
-                oodle_window.len().try_into().unwrap(),
+                WINDOW_SIZE.try_into().unwrap(),
             );
             OodleNetwork1TCP_Train(
                 oodle_state.as_mut_ptr() as *mut c_void,
@@ -139,21 +145,21 @@ impl OodleNetwork {
     }
 
     pub fn decode(&mut self, input: Vec<u8>, decompressed_size: u32) -> Vec<u8> {
-        let mut padded_buffer = input.clone();
-        padded_buffer.resize(
-            padded_buffer.len() + OODLENETWORK1_DECOMP_BUF_OVERREAD_LEN,
-            0,
-        );
-
         unsafe {
+            let mut padded_buffer = input.clone();
+            padded_buffer.resize(
+                padded_buffer.len() + OODLENETWORK1_DECOMP_BUF_OVERREAD_LEN,
+                0,
+            );
+
             let mut out_buf: Vec<u8> = vec![0u8; decompressed_size.try_into().unwrap()];
             let success = OodleNetwork1TCP_Decode(
-                self.state.as_mut_ptr() as *mut c_void,
-                self.shared.as_ptr() as *const c_void,
-                padded_buffer.as_mut_ptr() as *const c_void,
-                input.len().try_into().unwrap(),
-                out_buf.as_mut_ptr() as *mut c_void,
-                out_buf.len().try_into().unwrap(),
+                self.state.as_mut_ptr() as *mut c_void,      // state
+                self.shared.as_ptr() as *const c_void,       // shared
+                padded_buffer.as_mut_ptr() as *const c_void, // comp
+                input.len().try_into().unwrap(),             // compLen
+                out_buf.as_mut_ptr() as *mut c_void,         // raw
+                decompressed_size.try_into().unwrap(),       // rawLen
             );
 
             if !success {
@@ -166,13 +172,15 @@ impl OodleNetwork {
 
     pub fn encode(&mut self, mut input: Vec<u8>) -> Vec<u8> {
         unsafe {
-            let mut out_buf: Vec<u8> = vec![0u8; input.len()];
+            let output_size = OodleNetwork1_CompressedBufferSizeNeeded(input.len() as isize);
+            let mut out_buf: Vec<u8> = vec![0u8; output_size as usize];
+
             let len = OodleNetwork1TCP_Encode(
-                self.state.as_mut_ptr() as *mut c_void,
-                self.shared.as_ptr() as *const c_void,
-                input.as_mut_ptr() as *const c_void,
-                input.len().try_into().unwrap(),
-                out_buf.as_mut_ptr() as *mut c_void,
+                self.state.as_mut_ptr() as *mut c_void, // state
+                self.shared.as_ptr() as *const c_void,  // shared
+                input.as_mut_ptr() as *const c_void,    // raw
+                input.len().try_into().unwrap(),        // rawLen
+                out_buf.as_mut_ptr() as *mut c_void,    // comp
             );
 
             out_buf.truncate(len as usize);
