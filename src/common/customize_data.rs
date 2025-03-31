@@ -35,11 +35,11 @@ pub struct CustomizeData {
 impl From<physis::chardat::CustomizeData> for CustomizeData {
     fn from(value: physis::chardat::CustomizeData) -> Self {
         Self {
-            race: value.race as u8 + 1,
+            race: value.race as u8,
             gender: value.gender as u8,
             age: value.age,
             height: value.height,
-            subrace: value.subrace as u8 + 1,
+            subrace: value.tribe as u8,
             face: value.face,
             hair: value.hair,
             enable_highlights: value.enable_highlights as u8,
