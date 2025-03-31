@@ -7,6 +7,12 @@ pub struct GameData {
     pub game_data: physis::gamedata::GameData,
 }
 
+impl Default for GameData {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl GameData {
     pub fn new() -> Self {
         let config = get_config();

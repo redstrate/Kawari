@@ -82,7 +82,7 @@ pub(crate) fn read_packed_float(packed: u16) -> f32 {
 }
 
 pub(crate) fn write_packed_float(float: f32) -> u16 {
-    (((float + 1000.0) * 100.0) * 0.32767501) as u16
+    (((float + 1000.0) * 100.0) * 0.327_675) as u16
 }
 
 pub(crate) fn read_packed_position(packed: [u16; 3]) -> Position {

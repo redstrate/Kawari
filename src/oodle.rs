@@ -105,6 +105,7 @@ pub struct OodleNetwork {
 
 const HT_BITS: i32 = 0x11;
 const WINDOW_SIZE: usize = 0x100000;
+const OODLENETWORK1_DECOMP_BUF_OVERREAD_LEN: usize = 5;
 
 impl OodleNetwork {
     pub fn new() -> OodleNetwork {
@@ -137,13 +138,19 @@ impl OodleNetwork {
         }
     }
 
-    pub fn decode(&mut self, mut input: Vec<u8>, decompressed_size: u32) -> Vec<u8> {
+    pub fn decode(&mut self, input: Vec<u8>, decompressed_size: u32) -> Vec<u8> {
+        let mut padded_buffer = input.clone();
+        padded_buffer.resize(
+            padded_buffer.len() + OODLENETWORK1_DECOMP_BUF_OVERREAD_LEN,
+            0,
+        );
+
         unsafe {
             let mut out_buf: Vec<u8> = vec![0u8; decompressed_size.try_into().unwrap()];
             let success = OodleNetwork1TCP_Decode(
                 self.state.as_mut_ptr() as *mut c_void,
-                self.shared.as_mut_ptr() as *mut c_void,
-                input.as_mut_ptr() as *const c_void,
+                self.shared.as_mut_ptr() as *const c_void,
+                padded_buffer.as_mut_ptr() as *const c_void,
                 input.len().try_into().unwrap(),
                 out_buf.as_mut_ptr() as *mut c_void,
                 out_buf.len().try_into().unwrap(),
@@ -162,7 +169,7 @@ impl OodleNetwork {
             let mut out_buf: Vec<u8> = vec![0u8; input.len()];
             let len = OodleNetwork1TCP_Encode(
                 self.state.as_mut_ptr() as *mut c_void,
-                self.shared.as_mut_ptr() as *mut c_void,
+                self.shared.as_mut_ptr() as *const c_void,
                 input.as_mut_ptr() as *const c_void,
                 input.len().try_into().unwrap(),
                 out_buf.as_mut_ptr() as *mut c_void,

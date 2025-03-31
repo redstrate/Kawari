@@ -21,7 +21,7 @@ impl ReadWriteIpcSegment for CustomIpcSegment {
             CustomIpcType::CheckNameIsAvailable => CHAR_NAME_MAX_LENGTH as u32,
             CustomIpcType::NameIsAvailableResponse => 1,
             CustomIpcType::RequestCharacterList => 4,
-            CustomIpcType::RequestCharacterListRepsonse => 1184 * 8,
+            CustomIpcType::RequestCharacterListRepsonse => 1 + (1184 * 8),
             CustomIpcType::DeleteCharacter => 4,
             CustomIpcType::CharacterDeleted => 1,
         }
@@ -95,6 +95,7 @@ pub enum CustomIpcData {
         #[bw(calc = characters.len() as u8)]
         num_characters: u8,
         #[br(count = num_characters)]
+        #[brw(pad_size_to = 1184 * 8)]
         characters: Vec<CharacterDetails>, // TODO: maybe chunk this into 4 parts ala the lobby server?
     },
     #[br(pre_assert(*magic == CustomIpcType::DeleteCharacter))]

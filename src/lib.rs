@@ -40,6 +40,8 @@ pub mod opcodes;
 /// Used in the encryption key.
 const GAME_VERSION: u16 = 7000;
 
+pub const RECEIVE_BUFFER_SIZE: usize = 32000;
+
 /// Supported boot version.
 pub const SUPPORTED_BOOT_VERSION: Version = Version("2025.01.10.0000.0001");
 

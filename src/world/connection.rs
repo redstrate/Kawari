@@ -6,7 +6,7 @@ use std::{
     },
 };
 
-use tokio::{net::TcpStream, sync::mpsc::Sender, task::JoinHandle};
+use tokio::{net::TcpStream, sync::mpsc::Sender};
 
 use crate::{
     common::{GameData, ObjectId, Position, timestamp_secs},
@@ -61,12 +61,13 @@ pub enum FromServer {
     ActorMove(u32, Position),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ClientHandle {
     pub id: ClientId,
     pub ip: SocketAddr,
     pub channel: Sender<FromServer>,
-    pub kill: JoinHandle<()>,
+    // TODO: restore, i guess
+    //pub kill: JoinHandle<()>,
 }
 
 impl ClientHandle {
@@ -161,6 +162,17 @@ impl ZoneConnection {
         .await;
     }
 
+    pub async fn send_chat_segment(&mut self, segment: PacketSegment<ServerZoneIpcSegment>) {
+        send_packet(
+            &mut self.socket,
+            &mut self.state,
+            ConnectionType::Chat,
+            CompressionType::Oodle,
+            &[segment],
+        )
+        .await;
+    }
+
     pub async fn initialize(&mut self, connection_type: &ConnectionType, actor_id: u32) {
         // some still hardcoded values
         self.player_data.classjob_id = 1;
@@ -170,22 +182,22 @@ impl ZoneConnection {
         self.player_data.curr_mp = 10000;
         self.player_data.max_mp = 10000;
 
-        // We have send THEM a keep alive
-        {
-            self.send_segment(PacketSegment {
-                source_actor: 0,
-                target_actor: 0,
-                segment_type: SegmentType::KeepAlive {
-                    id: 0xE0037603u32,
-                    timestamp: timestamp_secs(),
-                },
-            })
-            .await;
-        }
-
         match connection_type {
             ConnectionType::Zone => {
                 tracing::info!("Client {actor_id} is initializing zone session...");
+
+                // We have send THEM a keep alive
+                {
+                    self.send_segment(PacketSegment {
+                        source_actor: 0,
+                        target_actor: 0,
+                        segment_type: SegmentType::KeepAlive {
+                            id: 0xE0037603u32,
+                            timestamp: timestamp_secs(),
+                        },
+                    })
+                    .await;
+                }
 
                 self.send_segment(PacketSegment {
                     source_actor: 0,
@@ -200,8 +212,21 @@ impl ZoneConnection {
             ConnectionType::Chat => {
                 tracing::info!("Client {actor_id} is initializing chat session...");
 
+                // We have send THEM a keep alive
                 {
-                    self.send_segment(PacketSegment {
+                    self.send_chat_segment(PacketSegment {
+                        source_actor: 0,
+                        target_actor: 0,
+                        segment_type: SegmentType::KeepAlive {
+                            id: 0xE0037603u32,
+                            timestamp: timestamp_secs(),
+                        },
+                    })
+                    .await;
+                }
+
+                {
+                    self.send_chat_segment(PacketSegment {
                         source_actor: 0,
                         target_actor: 0,
                         segment_type: SegmentType::ZoneInitialize {
@@ -212,6 +237,9 @@ impl ZoneConnection {
                     .await;
                 }
 
+                // we need the actor id at this point!
+                assert!(self.player_data.actor_id != 0);
+
                 {
                     let ipc = ServerZoneIpcSegment {
                         op_code: ServerZoneIpcType::InitializeChat,
@@ -220,7 +248,7 @@ impl ZoneConnection {
                         ..Default::default()
                     };
 
-                    self.send_segment(PacketSegment {
+                    self.send_chat_segment(PacketSegment {
                         source_actor: self.player_data.actor_id,
                         target_actor: self.player_data.actor_id,
                         segment_type: SegmentType::Ipc { data: ipc },
@@ -276,6 +304,9 @@ impl ZoneConnection {
     }
 
     pub async fn spawn_actor(&mut self, actor: Actor) {
+        // There is no reason for us to spawn our own player again. It's probably a bug!'
+        assert!(actor.id.0 != self.player_data.actor_id);
+
         let ipc = ServerZoneIpcSegment {
             unk1: 20,
             unk2: 0,
@@ -351,7 +382,7 @@ impl ZoneConnection {
         }
 
         // link shell information
-        {
+        /*{
             let ipc = ServerZoneIpcSegment {
                 op_code: ServerZoneIpcType::LinkShellInformation,
                 timestamp: timestamp_secs(),
@@ -365,7 +396,7 @@ impl ZoneConnection {
                 segment_type: SegmentType::Ipc { data: ipc },
             })
             .await;
-        }
+        }*/
 
         // TODO: send unk16?
 
@@ -573,7 +604,7 @@ impl ZoneConnection {
             }
         }
 
-        return None;
+        None
     }
 
     pub async fn actor_control_self(&mut self, actor_control: ActorControlSelf) {

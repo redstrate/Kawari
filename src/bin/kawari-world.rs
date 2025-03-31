@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
+use kawari::RECEIVE_BUFFER_SIZE;
 use kawari::common::custom_ipc::{CustomIpcData, CustomIpcSegment, CustomIpcType};
 use kawari::common::{GameData, ObjectId, timestamp_secs};
 use kawari::common::{Position, determine_initial_starting_zone};
@@ -28,6 +29,7 @@ use kawari::world::{
         SocialList,
     },
 };
+
 use mlua::{Function, Lua};
 use tokio::io::AsyncReadExt;
 use tokio::join;
@@ -162,18 +164,17 @@ pub fn spawn_client(info: ZoneConnection) {
         id: *id,
         ip: *ip,
         channel: send,
-        kill,
+        //kill,
     };
     let _ = my_send.send(handle);
 }
 
-async fn start_client(my_handle: oneshot::Receiver<ClientHandle>, mut data: ClientData) {
+async fn start_client(my_handle: oneshot::Receiver<ClientHandle>, data: ClientData) {
     // Recieve client information from global
     let my_handle = match my_handle.await {
         Ok(my_handle) => my_handle,
         Err(_) => return,
     };
-    data.handle.send(ToServer::NewClient(my_handle)).await;
 
     let connection = data.connection;
     let recv = data.recv;
@@ -182,7 +183,7 @@ async fn start_client(my_handle: oneshot::Receiver<ClientHandle>, mut data: Clie
     let (internal_send, internal_recv) = unbounded_channel();
 
     join! {
-        client_loop(connection, internal_recv),
+        client_loop(connection, internal_recv, my_handle),
         client_server_loop(recv, internal_send)
     };
 }
@@ -202,6 +203,7 @@ async fn client_server_loop(
 async fn client_loop(
     mut connection: ZoneConnection,
     mut internal_recv: UnboundedReceiver<FromServer>,
+    client_handle: ClientHandle,
 ) {
     let database = connection.database.clone();
     let game_data = connection.gamedata.clone();
@@ -213,9 +215,10 @@ async fn client_loop(
 
     let mut lua_player = LuaPlayer::default();
 
-    let mut buf = [0; 4096];
+    let mut buf = vec![0; RECEIVE_BUFFER_SIZE];
     loop {
         tokio::select! {
+            biased; // client data should always be prioritized
             Ok(n) = connection.socket.read(&mut buf) => {
                 if n > 0 {
                     let (segments, connection_type) = connection.parse_packet(&buf[..n]).await;
@@ -225,11 +228,21 @@ async fn client_loop(
                                 // for some reason they send a string representation
                                 let actor_id = actor_id.parse::<u32>().unwrap();
 
+                                // initialize player data if it doesn't exist'
+                                if connection.player_data.actor_id == 0 {
+                                    connection.player_data = database.find_player_data(actor_id);
+                                }
+
                                 // collect actor data
-                                connection.player_data = database.find_player_data(actor_id);
                                 connection.initialize(&connection_type, actor_id).await;
-                                exit_position = Some(connection.player_data.position);
-                                exit_rotation = Some(connection.player_data.rotation);
+
+                                if connection_type == ConnectionType::Zone {
+                                    exit_position = Some(connection.player_data.position);
+                                    exit_rotation = Some(connection.player_data.rotation);
+
+                                    // tell the server we exist, now that we confirmed we are a legitimate connection
+                                    connection.handle.send(ToServer::NewClient(client_handle.clone())).await;
+                                }
                             }
                             SegmentType::Ipc { data } => {
                                 match &data.data {
@@ -1040,14 +1053,17 @@ async fn client_loop(
                     lua_player.status_effects = connection.status_effects.clone();
                 }
             }
-            msg = internal_recv.recv() => match msg {
+            /*msg = internal_recv.recv() => match msg {
                 Some(msg) => match msg {
                     FromServer::Message(msg)=>connection.send_message(&msg).await,
-                    FromServer::ActorSpawn(actor) => connection.spawn_actor(actor).await,
+                    FromServer::ActorSpawn(actor) => {
+                        tracing::info!("connection {:?} is recieving an actorspawn!", connection.id);
+                        connection.spawn_actor(actor).await
+                    },
                     FromServer::ActorMove(actor_id, position) => connection.set_actor_position(actor_id, position).await,
                 },
                 None => break,
-            }
+            }*/
         }
     }
 }

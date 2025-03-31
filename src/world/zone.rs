@@ -1,12 +1,10 @@
 use physis::{
-    common::{Language, Platform},
+    common::Language,
     gamedata::GameData,
     layer::{
         ExitRangeInstanceObject, InstanceObject, LayerEntryData, LayerGroup, PopRangeInstanceObject,
     },
 };
-
-use crate::config::get_config;
 
 /// Represents a loaded zone
 #[derive(Default)]

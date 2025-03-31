@@ -3,6 +3,7 @@ use std::cmp::min;
 use tokio::{io::AsyncReadExt, net::TcpStream};
 
 use crate::{
+    RECEIVE_BUFFER_SIZE,
     blowfish::Blowfish,
     common::{
         custom_ipc::{CustomIpcData, CustomIpcSegment, CustomIpcType},
@@ -589,11 +590,9 @@ pub async fn send_custom_world_packet(segment: CustomIpcSegment) -> Option<Custo
     .await;
 
     // read response
-    let mut buf = [0; 10024]; // TODO: this large buffer is just working around these packets not being compressed, but they really should be!
+    let mut buf = vec![0; RECEIVE_BUFFER_SIZE];
     let n = stream.read(&mut buf).await.expect("Failed to read data!");
     if n != 0 {
-        println!("Got {n} bytes of response!");
-
         let (segments, _) = parse_packet::<CustomIpcSegment>(&buf[..n], &mut packet_state).await;
 
         return match &segments[0].segment_type {

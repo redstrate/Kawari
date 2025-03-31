@@ -1,3 +1,4 @@
+use kawari::RECEIVE_BUFFER_SIZE;
 use kawari::common::GameData;
 use kawari::common::custom_ipc::CustomIpcData;
 use kawari::common::custom_ipc::CustomIpcSegment;
@@ -45,7 +46,7 @@ async fn main() {
         };
 
         tokio::spawn(async move {
-            let mut buf = [0; 2056];
+            let mut buf = vec![0; RECEIVE_BUFFER_SIZE];
             loop {
                 let n = connection
                     .socket
@@ -54,8 +55,6 @@ async fn main() {
                     .expect("Failed to read data!");
 
                 if n != 0 {
-                    tracing::info!("read {} bytes", n);
-
                     let (segments, _) = connection.parse_packet(&buf[..n]).await;
                     for segment in &segments {
                         match &segment.segment_type {
