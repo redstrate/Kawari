@@ -1,6 +1,6 @@
 # Kawari
 
-A replacement server for a certain MMO. Updates on the project can be found [on my blog](https://redstrate.com/blog/series/kawari-progress-report/).
+Server emulator for a certain MMO. Updates on the project can be found [on my blog](https://redstrate.com/blog/series/kawari-progress-report/).
 
 ## Goals
 
