@@ -142,17 +142,17 @@ struct ClientData {
 }
 
 /// Spawn a new client actor.
-pub fn spawn_client(info: ZoneConnection) {
+pub fn spawn_client(connection: ZoneConnection) {
     let (send, recv) = channel(64);
 
-    let id = &info.id.clone();
-    let ip = &info.ip.clone();
+    let id = &connection.id.clone();
+    let ip = &connection.ip.clone();
 
     let data = ClientData {
-        id: info.id,
-        handle: info.handle.clone(),
+        id: connection.id,
+        handle: connection.handle.clone(),
         recv,
-        connection: info,
+        connection,
     };
 
     // Spawn a new client task
@@ -182,10 +182,10 @@ async fn start_client(my_handle: oneshot::Receiver<ClientHandle>, data: ClientDa
     // communication channel between client_loop and client_server_loop
     let (internal_send, internal_recv) = unbounded_channel();
 
-    join! {
-        client_loop(connection, internal_recv, my_handle),
-        client_server_loop(recv, internal_send)
-    };
+    let _ = join!(
+        tokio::spawn(client_loop(connection, internal_recv, my_handle)),
+        tokio::spawn(client_server_loop(recv, internal_send))
+    );
 }
 
 async fn client_server_loop(
@@ -1027,17 +1027,16 @@ async fn client_loop(
                     lua_player.status_effects = connection.status_effects.clone();
                 }
             }
-            /*msg = internal_recv.recv() => match msg {
+            msg = internal_recv.recv() => match msg {
                 Some(msg) => match msg {
                     FromServer::Message(msg)=>connection.send_message(&msg).await,
                     FromServer::ActorSpawn(actor) => {
-                        tracing::info!("connection {:?} is recieving an actorspawn!", connection.id);
                         connection.spawn_actor(actor).await
                     },
                     FromServer::ActorMove(actor_id, position) => connection.set_actor_position(actor_id, position).await,
                 },
                 None => break,
-            }*/
+            }
         }
     }
 }
