@@ -11,7 +11,7 @@ use crate::{
     },
 };
 
-use super::PlayerData;
+use super::{Inventory, PlayerData};
 
 pub struct WorldDatabase {
     connection: Mutex<Connection>,
@@ -43,7 +43,7 @@ impl WorldDatabase {
 
         // Create characters data table
         {
-            let query = "CREATE TABLE IF NOT EXISTS character_data (content_id INTEGER PRIMARY KEY, name STRING, chara_make STRING, city_state INTEGER, zone_id INTEGER, pos_x REAL, pos_y REAL, pos_z REAL, rotation REAL);";
+            let query = "CREATE TABLE IF NOT EXISTS character_data (content_id INTEGER PRIMARY KEY, name STRING, chara_make STRING, city_state INTEGER, zone_id INTEGER, pos_x REAL, pos_y REAL, pos_z REAL, rotation REAL, inventory STRING);";
             connection.execute(query, ()).unwrap();
         }
 
@@ -111,7 +111,14 @@ impl WorldDatabase {
         };
 
         // TODO: extract city-state
-        self.create_player_data(&character.name, &chara_make.to_json(), 2, 132);
+        // TODO: import inventory
+        self.create_player_data(
+            &character.name,
+            &chara_make.to_json(),
+            2,
+            132,
+            Inventory::new(),
+        );
 
         tracing::info!("{} added to the world!", character.name);
     }
@@ -127,9 +134,16 @@ impl WorldDatabase {
             .unwrap();
 
         stmt = connection
-            .prepare("SELECT pos_x, pos_y, pos_z, rotation, zone_id FROM character_data WHERE content_id = ?1")
+            .prepare("SELECT pos_x, pos_y, pos_z, rotation, zone_id, inventory FROM character_data WHERE content_id = ?1")
             .unwrap();
-        let (pos_x, pos_y, pos_z, rotation, zone_id) = stmt
+        let (pos_x, pos_y, pos_z, rotation, zone_id, inventory_json): (
+            f32,
+            f32,
+            f32,
+            f32,
+            u16,
+            String,
+        ) = stmt
             .query_row((content_id,), |row| {
                 Ok((
                     row.get(0)?,
@@ -137,9 +151,12 @@ impl WorldDatabase {
                     row.get(2)?,
                     row.get(3)?,
                     row.get(4)?,
+                    row.get(5)?,
                 ))
             })
             .unwrap();
+
+        let inventory = serde_json::from_str(&inventory_json).unwrap();
 
         PlayerData {
             actor_id,
@@ -152,6 +169,7 @@ impl WorldDatabase {
             },
             rotation,
             zone_id,
+            inventory,
             ..Default::default()
         }
     }
@@ -161,7 +179,7 @@ impl WorldDatabase {
         let connection = self.connection.lock().unwrap();
 
         let mut stmt = connection
-            .prepare("UPDATE character_data SET zone_id=?1, pos_x=?2, pos_y=?3, pos_z=?4, rotation=?5 WHERE content_id = ?6")
+            .prepare("UPDATE character_data SET zone_id=?1, pos_x=?2, pos_y=?3, pos_z=?4, rotation=?5, inventory=?6 WHERE content_id = ?7")
             .unwrap();
         stmt.execute((
             data.zone_id,
@@ -169,6 +187,7 @@ impl WorldDatabase {
             data.position.y,
             data.position.z,
             data.rotation,
+            serde_json::to_string(&data.inventory).unwrap(),
             data.content_id,
         ))
         .unwrap();
@@ -293,6 +312,7 @@ impl WorldDatabase {
         chara_make: &str,
         city_state: u8,
         zone_id: u16,
+        inventory: Inventory,
     ) -> (u64, u32) {
         let content_id = Self::generate_content_id();
         let actor_id = Self::generate_actor_id();
@@ -310,8 +330,15 @@ impl WorldDatabase {
         // insert char data
         connection
             .execute(
-                "INSERT INTO character_data VALUES (?1, ?2, ?3, ?4, ?5, 0.0, 0.0, 0.0, 0.0);",
-                (content_id, name, chara_make, city_state, zone_id),
+                "INSERT INTO character_data VALUES (?1, ?2, ?3, ?4, ?5, 0.0, 0.0, 0.0, 0.0, ?6);",
+                (
+                    content_id,
+                    name,
+                    chara_make,
+                    city_state,
+                    zone_id,
+                    serde_json::to_string(&inventory).unwrap(),
+                ),
             )
             .unwrap();
 

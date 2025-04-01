@@ -19,11 +19,11 @@ use kawari::world::ipc::{
     ServerZoneIpcData, ServerZoneIpcSegment, SocialListRequestType,
 };
 use kawari::world::{
-    Actor, ClientHandle, ClientId, EffectsBuilder, FromServer, LuaPlayer, PlayerData, ServerHandle,
-    StatusEffects, ToServer, WorldDatabase,
+    Actor, ClientHandle, ClientId, EffectsBuilder, FromServer, Inventory, LuaPlayer, PlayerData,
+    ServerHandle, StatusEffects, ToServer, WorldDatabase,
 };
 use kawari::world::{
-    ChatHandler, Inventory, Zone, ZoneConnection,
+    ChatHandler, Zone, ZoneConnection,
     ipc::{
         ActorControlCategory, ActorControlSelf, PlayerEntry, PlayerSetup, PlayerSpawn, PlayerStats,
         SocialList,
@@ -276,12 +276,6 @@ async fn client_loop(
                                         let chara_details =
                                             database.find_chara_make(connection.player_data.content_id);
 
-                                        // fill inventory
-                                        connection.inventory.equip_racial_items(
-                                            chara_details.chara_make.customize.race,
-                                            chara_details.chara_make.customize.gender,
-                                        );
-
                                         // Send inventory
                                         connection.send_inventory(false).await;
 
@@ -389,7 +383,7 @@ async fn client_loop(
                                             let ipc;
                                             {
                                                 let mut game_data = game_data.lock().unwrap();
-                                                let equipped = &connection.inventory.equipped;
+                                                let equipped = &connection.player_data.inventory.equipped;
 
                                                 ipc = ServerZoneIpcSegment {
                                                     op_code: ServerZoneIpcType::PlayerSpawn,
@@ -656,8 +650,8 @@ async fn client_loop(
                                                 })
                                                 .await,
                                             GameMasterCommandType::GiveItem => {
-                                                connection.inventory.extra_slot.id = *arg;
-                                                connection.inventory.extra_slot.quantity = 1;
+                                                connection.player_data.inventory.extra_slot.id = *arg;
+                                                connection.player_data.inventory.extra_slot.quantity = 1;
                                                 connection.send_inventory(false).await;
                                             }
                                         }
@@ -821,7 +815,7 @@ async fn client_loop(
                                     ClientZoneIpcData::InventoryModify(action) => {
                                         tracing::info!("Client is modifying inventory! {action:#?}");
 
-                                        connection.inventory.process_action(&action);
+                                        connection.player_data.inventory.process_action(&action);
                                         connection.send_inventory(true).await;
                                     }
                                 }
@@ -857,11 +851,20 @@ async fn client_loop(
                                                 game_data.get_citystate(chara_make.classjob_id as u16);
                                         }
 
+                                        let mut inventory = Inventory::new();
+
+                                        // fill inventory
+                                        inventory.equip_racial_items(
+                                            chara_make.customize.race,
+                                            chara_make.customize.gender,
+                                        );
+
                                         let (content_id, actor_id) = database.create_player_data(
                                             name,
                                             chara_make_json,
                                             city_state,
                                             determine_initial_starting_zone(city_state),
+                                            inventory
                                         );
 
                                         tracing::info!("Created new player: {content_id} {actor_id}");
@@ -1117,7 +1120,6 @@ async fn main() {
             player_data: PlayerData::default(),
             spawn_index: 0,
             zone: None,
-            inventory: Inventory::new(),
             status_effects: StatusEffects::default(),
             event: None,
             actors: Vec::new(),

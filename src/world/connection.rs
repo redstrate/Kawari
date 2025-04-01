@@ -47,6 +47,7 @@ pub struct PlayerData {
     /// In radians.
     pub rotation: f32,
     pub zone_id: u16,
+    pub inventory: Inventory,
 }
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
@@ -128,7 +129,6 @@ pub struct ZoneConnection {
     pub zone: Option<Zone>,
     pub spawn_index: u8,
 
-    pub inventory: Inventory,
     pub status_effects: StatusEffects,
 
     pub event: Option<Event>,
@@ -450,7 +450,7 @@ impl ZoneConnection {
     pub async fn send_inventory(&mut self, send_appearance_update: bool) {
         // page 1
         {
-            let extra_slot = self.inventory.extra_slot;
+            let extra_slot = self.player_data.inventory.extra_slot;
 
             let mut send_slot = async |slot_index: u16, item: &Item| {
                 let ipc = ServerZoneIpcSegment {
@@ -480,7 +480,7 @@ impl ZoneConnection {
 
         // equipped
         {
-            let equipped = self.inventory.equipped;
+            let equipped = self.player_data.inventory.equipped;
 
             let mut send_slot = async |slot_index: u16, item: &Item| {
                 let ipc = ServerZoneIpcSegment {
@@ -548,7 +548,7 @@ impl ZoneConnection {
                 timestamp: timestamp_secs(),
                 data: ServerZoneIpcData::ContainerInfo(ContainerInfo {
                     container: ContainerType::Equipped,
-                    num_items: self.inventory.equipped.num_items(),
+                    num_items: self.player_data.inventory.equipped.num_items(),
                     sequence: 1,
                     ..Default::default()
                 }),
@@ -568,7 +568,7 @@ impl ZoneConnection {
             let ipc;
             {
                 let mut game_data = self.gamedata.lock().unwrap();
-                let equipped = &self.inventory.equipped;
+                let equipped = &self.player_data.inventory.equipped;
 
                 ipc = ServerZoneIpcSegment {
                     op_code: ServerZoneIpcType::Equip,

@@ -2,12 +2,13 @@ use physis::{
     common::{Language, Platform},
     gamedata::GameData,
 };
+use serde::{Deserialize, Serialize};
 
 use crate::config::get_config;
 
 use super::ipc::{ContainerType, InventoryModify};
 
-#[derive(Default, Copy, Clone)]
+#[derive(Default, Copy, Clone, Serialize, Deserialize, Debug)]
 pub struct Item {
     pub quantity: u32,
     pub id: u32,
@@ -19,7 +20,7 @@ impl Item {
     }
 }
 
-#[derive(Default, Clone, Copy)]
+#[derive(Default, Clone, Copy, Deserialize, Serialize, Debug)]
 pub struct EquippedContainer {
     pub main_hand: Item,
     pub off_hand: Item,
@@ -73,6 +74,7 @@ impl EquippedContainer {
     }
 }
 
+#[derive(Debug, Clone, Copy, Deserialize, Serialize)]
 pub struct Inventory {
     pub equipped: EquippedContainer,
     pub extra_slot: Item, // WIP for inventory pages
