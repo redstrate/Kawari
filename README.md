@@ -26,10 +26,10 @@ Pull requests for new features, patch updates, and documentation are welcome. A 
 
 ## Credits & Thank You
 
-- [Sapphire](https://github.com/SapphireServer/Sapphire) for reference.
-- [iolite](https://github.com/0xbbadbeef/iolite) for inspiration & reference.
-- [TemporalStasis](https://github.com/NotNite/TemporalStasis) for tooling and reference.
-- [Project Chronofoil](https://github.com/ProjectChronofoil/) for easy packet capture.
+* [Sapphire](https://github.com/SapphireServer/Sapphire) for reference.
+* [iolite](https://github.com/0xbbadbeef/iolite) for inspiration & reference.
+* [TemporalStasis](https://github.com/NotNite/TemporalStasis) for tooling and reference.
+* [Project Chronofoil](https://github.com/ProjectChronofoil/) for easy packet capture.
 * [FFXIVClientStructs](https://github.com/aers/FFXIVClientStructs/) for being an invaluable resource for the client's internals.
 
 ## License
