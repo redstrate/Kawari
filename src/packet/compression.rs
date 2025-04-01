@@ -4,6 +4,7 @@ use std::io::Cursor;
 use binrw::{BinRead, BinResult};
 
 use crate::{
+    config::get_config,
     oodle::OodleNetwork,
     packet::{PacketHeader, PacketSegment},
 };
@@ -46,7 +47,10 @@ pub(crate) fn decompress<T: ReadWriteIpcSegment>(
 
     let mut cursor = Cursor::new(&data);
 
-    std::fs::write("decompressed.bin", &data).unwrap();
+    let config = get_config();
+    if config.packet_debugging {
+        std::fs::write("decompressed.bin", &data).unwrap();
+    }
 
     for _ in 0..header.segment_count {
         let current_position = cursor.position();

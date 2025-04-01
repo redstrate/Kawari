@@ -521,7 +521,7 @@ impl ZoneConnection {
         }
 
         // inform the client of page 1
-          {
+        {
             let ipc = ServerZoneIpcSegment {
                 op_code: ServerZoneIpcType::ContainerInfo,
                 timestamp: timestamp_secs(),

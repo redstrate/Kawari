@@ -241,6 +241,10 @@ pub struct Config {
 
     #[serde(default)]
     pub world: WorldConfig,
+
+    /// Enable various packet debug functions. This will clutter your working directory!
+    #[serde(default)]
+    pub packet_debugging: bool,
 }
 
 impl Default for Config {
@@ -255,6 +259,7 @@ impl Default for Config {
             patch: PatchConfig::default(),
             web: WebConfig::default(),
             world: WorldConfig::default(),
+            packet_debugging: false,
         }
     }
 }

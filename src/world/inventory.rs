@@ -88,7 +88,7 @@ impl Inventory {
     pub fn new() -> Self {
         Self {
             equipped: EquippedContainer::default(),
-            extra_slot: Item::default()
+            extra_slot: Item::default(),
         }
     }
 

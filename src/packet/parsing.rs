@@ -5,6 +5,7 @@ use tokio::{io::AsyncWriteExt, net::TcpStream};
 
 use crate::{
     common::{custom_ipc::CustomIpcSegment, read_string, timestamp_msecs, write_string},
+    config::get_config,
     oodle::OodleNetwork,
     packet::{compression::compress, encryption::decrypt},
 };
@@ -195,7 +196,11 @@ pub async fn parse_packet<T: ReadWriteIpcSegment>(
         Ok(packet) => (packet.segments, packet.header.connection_type),
         Err(err) => {
             tracing::error!("{err}");
-            dump("Failed to parse packet!", data);
+
+            let config = get_config();
+            if config.packet_debugging {
+                dump("Failed to parse packet!", data);
+            }
 
             (Vec::new(), ConnectionType::None)
         }
