@@ -256,6 +256,11 @@
             "name": "Unk19",
             "opcode": 379,
             "size": 16
+        },
+        {
+            "name": "InventoryModify",
+            "opcode": 318,
+            "size": 112
         }
     ],
     "ServerLobbyIpcType": [

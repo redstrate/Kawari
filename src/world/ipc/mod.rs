@@ -68,6 +68,9 @@ pub use actor_move::ActorMove;
 mod actor_set_pos;
 pub use actor_set_pos::ActorSetPos;
 
+mod inventory_modify;
+pub use inventory_modify::InventoryModify;
+
 use crate::common::Position;
 use crate::common::read_string;
 use crate::common::write_string;
@@ -334,6 +337,8 @@ pub enum ClientZoneIpcData {
     Unk19 {
         unk: [u8; 16], // TODO: unknown
     },
+    #[br(pre_assert(*magic == ClientZoneIpcType::InventoryModify))]
+    InventoryModify(InventoryModify),
 }
 
 #[cfg(test)]

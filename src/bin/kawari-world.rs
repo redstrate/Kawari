@@ -813,6 +813,9 @@ async fn client_loop(
                                     ClientZoneIpcData::Unk19 { .. } => {
                                         tracing::info!("Recieved Unk19!");
                                     }
+                                    ClientZoneIpcData::InventoryModify(action) => {
+                                        tracing::info!("Client is modifying inventory! {action:#?}");
+                                    }
                                 }
                             }
                             SegmentType::KeepAlive { id, timestamp } => {
