@@ -71,7 +71,7 @@ async fn main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::io::Error> {
                     }
                 }
             }
-            ToServer::ActorSpawned(from_id, actor) => {
+            ToServer::ActorSpawned(from_id, actor, common) => {
                 for (id, handle) in &mut data.clients {
                     let id = *id;
 
@@ -79,7 +79,7 @@ async fn main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::io::Error> {
                         continue;
                     }
 
-                    let msg = FromServer::ActorSpawn(actor);
+                    let msg = FromServer::ActorSpawn(actor, common.clone());
 
                     if handle.send(msg).is_err() {
                         to_remove.push(id);
@@ -426,7 +426,7 @@ async fn client_loop(
                                         exit_rotation = None;
 
                                         // tell the other players we're here
-                                        connection.handle.send(ToServer::ActorSpawned(connection.id, Actor { id: ObjectId(connection.player_data.actor_id), hp: 100 })).await;
+                                        connection.handle.send(ToServer::ActorSpawned(connection.id, Actor { id: ObjectId(connection.player_data.actor_id), hp: 100 }, connection.get_player_common_spawn(None, None))).await;
                                     }
                                     ClientZoneIpcData::Unk1 {
                                         category, param1, ..
@@ -981,8 +981,8 @@ async fn client_loop(
             msg = internal_recv.recv() => match msg {
                 Some(msg) => match msg {
                     FromServer::Message(msg)=>connection.send_message(&msg).await,
-                    FromServer::ActorSpawn(actor) => {
-                        connection.spawn_actor(actor).await
+                    FromServer::ActorSpawn(actor, common) => {
+                        connection.spawn_actor(actor, common).await
                     },
                     FromServer::ActorMove(actor_id, position) => connection.set_actor_position(actor_id, position).await,
                 },

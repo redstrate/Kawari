@@ -19,12 +19,11 @@ use crate::{
 
 use super::{
     Actor, Event, Inventory, Item, LuaPlayer, StatusEffects, WorldDatabase, Zone,
-    chat_handler::CUSTOMIZE_DATA,
     ipc::{
-        ActorControlSelf, ActorMove, ActorSetPos, BattleNpcSubKind, ClientZoneIpcSegment,
-        CommonSpawn, ContainerInfo, ContainerType, DisplayFlag, Equip, InitZone, ItemInfo,
-        NpcSpawn, ObjectKind, PlayerSubKind, ServerZoneIpcData, ServerZoneIpcSegment, StatusEffect,
-        StatusEffectList, UpdateClassInfo, WeatherChange,
+        ActorControlSelf, ActorMove, ActorSetPos, ClientZoneIpcSegment, CommonSpawn, ContainerInfo,
+        ContainerType, DisplayFlag, Equip, InitZone, ItemInfo, NpcSpawn, ObjectKind, PlayerSubKind,
+        ServerZoneIpcData, ServerZoneIpcSegment, StatusEffect, StatusEffectList, UpdateClassInfo,
+        WeatherChange,
     },
 };
 
@@ -57,7 +56,7 @@ pub enum FromServer {
     /// A chat message.
     Message(String),
     /// An actor has been spawned.
-    ActorSpawn(Actor),
+    ActorSpawn(Actor, CommonSpawn),
     /// An actor moved to a new position.
     ActorMove(u32, Position),
 }
@@ -96,7 +95,7 @@ impl ClientHandle {
 pub enum ToServer {
     NewClient(ClientHandle),
     Message(ClientId, String),
-    ActorSpawned(ClientId, Actor),
+    ActorSpawned(ClientId, Actor, CommonSpawn),
     ActorMoved(ClientId, u32, Position),
     FatalError(std::io::Error),
 }
@@ -303,9 +302,11 @@ impl ZoneConnection {
         .await;
     }
 
-    pub async fn spawn_actor(&mut self, actor: Actor) {
+    pub async fn spawn_actor(&mut self, actor: Actor, mut common: CommonSpawn) {
         // There is no reason for us to spawn our own player again. It's probably a bug!'
         assert!(actor.id.0 != self.player_data.actor_id);
+
+        common.spawn_index = self.get_free_spawn_index();
 
         let ipc = ServerZoneIpcSegment {
             unk1: 20,
@@ -314,31 +315,7 @@ impl ZoneConnection {
             server_id: 0,
             timestamp: timestamp_secs(),
             data: ServerZoneIpcData::NpcSpawn(NpcSpawn {
-                common: CommonSpawn {
-                    hp_curr: 100,
-                    hp_max: 100,
-                    mp_curr: 100,
-                    mp_max: 100,
-                    look: CUSTOMIZE_DATA,
-                    spawn_index: self.get_free_spawn_index(),
-                    bnpc_base: 13498,
-                    bnpc_name: 10261,
-                    object_kind: ObjectKind::BattleNpc(BattleNpcSubKind::Enemy),
-                    level: 1,
-                    models: [
-                        0,  // head
-                        89, // body
-                        89, // hands
-                        89, // legs
-                        89, // feet
-                        0,  // ears
-                        0,  // neck
-                        0,  // wrists
-                        0,  // left finger
-                        0,  // right finger
-                    ],
-                    ..Default::default()
-                },
+                common,
                 ..Default::default()
             }),
         };
@@ -716,7 +693,7 @@ impl ZoneConnection {
     }
 
     pub fn get_player_common_spawn(
-        &mut self,
+        &self,
         exit_position: Option<Position>,
         exit_rotation: Option<f32>,
     ) -> CommonSpawn {
