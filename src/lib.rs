@@ -4,7 +4,6 @@
 
 use std::collections::HashMap;
 
-use minijinja::Environment;
 use patch::Version;
 
 /// The blowfish implementation used for packet encryption.
@@ -59,23 +58,4 @@ const SUPPORTED_EXPAC_VERSIONS: [(&str, Version); 5] = [
 /// Supported expansion versions.
 pub fn get_supported_expac_versions() -> HashMap<&'static str, Version<'static>> {
     HashMap::from(SUPPORTED_EXPAC_VERSIONS)
-}
-
-pub fn setup_default_environment() -> Environment<'static> {
-    let mut env = Environment::new();
-    env.add_template("admin.html", include_str!("../templates/admin.html"))
-        .unwrap();
-    env.add_template("web.html", include_str!("../templates/web.html"))
-        .unwrap();
-    env.add_template("login.html", include_str!("../templates/login.html"))
-        .unwrap();
-    env.add_template("register.html", include_str!("../templates/register.html"))
-        .unwrap();
-    env.add_template(
-        "worldstatus.html",
-        include_str!("../templates/worldstatus.html"),
-    )
-    .unwrap();
-
-    env
 }

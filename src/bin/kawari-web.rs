@@ -1,9 +1,29 @@
 use axum::response::Html;
 use axum::{Router, routing::get};
 use kawari::config::get_config;
-use kawari::setup_default_environment;
+use minijinja::Environment;
 use minijinja::context;
 use serde::{Deserialize, Serialize};
+
+fn setup_default_environment() -> Environment<'static> {
+    let mut env = Environment::new();
+    env.add_template("web.html", include_str!("../../templates/web.html"))
+        .unwrap();
+    env.add_template("login.html", include_str!("../../templates/login.html"))
+        .unwrap();
+    env.add_template(
+        "register.html",
+        include_str!("../../templates/register.html"),
+    )
+    .unwrap();
+    env.add_template(
+        "worldstatus.html",
+        include_str!("../../templates/worldstatus.html"),
+    )
+    .unwrap();
+
+    env
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct GateStatus {

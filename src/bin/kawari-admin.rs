@@ -2,9 +2,17 @@ use axum::response::{Html, Redirect};
 use axum::routing::post;
 use axum::{Router, extract::Form, routing::get};
 use kawari::config::get_config;
-use kawari::setup_default_environment;
+use minijinja::Environment;
 use minijinja::context;
 use serde::{Deserialize, Serialize};
+
+fn setup_default_environment() -> Environment<'static> {
+    let mut env = Environment::new();
+    env.add_template("admin.html", include_str!("../../templates/admin.html"))
+        .unwrap();
+
+    env
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct GateStatus {
