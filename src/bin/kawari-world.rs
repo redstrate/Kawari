@@ -19,8 +19,8 @@ use kawari::world::ipc::{
     ServerZoneIpcData, ServerZoneIpcSegment, SocialListRequestType,
 };
 use kawari::world::{
-    Actor, ClientHandle, ClientId, EffectsBuilder, FromServer, Item, LuaPlayer, PlayerData,
-    ServerHandle, StatusEffects, ToServer, WorldDatabase,
+    Actor, ClientHandle, ClientId, EffectsBuilder, FromServer, LuaPlayer, PlayerData, ServerHandle,
+    StatusEffects, ToServer, WorldDatabase,
 };
 use kawari::world::{
     ChatHandler, Inventory, Zone, ZoneConnection,
@@ -134,8 +134,8 @@ fn spawn_main_loop() -> (ServerHandle, JoinHandle<()>) {
 }
 
 struct ClientData {
-    id: ClientId,
-    handle: ServerHandle,
+    //id: ClientId,
+    // handle: ServerHandle,
     /// Socket for data recieved from the global server
     recv: Receiver<FromServer>,
     connection: ZoneConnection,
@@ -149,15 +149,15 @@ pub fn spawn_client(connection: ZoneConnection) {
     let ip = &connection.ip.clone();
 
     let data = ClientData {
-        id: connection.id,
-        handle: connection.handle.clone(),
+        //id: connection.id,
+        //handle: connection.handle.clone(),
         recv,
         connection,
     };
 
     // Spawn a new client task
     let (my_send, my_recv) = oneshot::channel();
-    let kill = tokio::spawn(start_client(my_recv, data));
+    let _kill = tokio::spawn(start_client(my_recv, data));
 
     // Send client information to said task
     let handle = ClientHandle {

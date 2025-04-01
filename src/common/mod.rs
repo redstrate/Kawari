@@ -78,15 +78,19 @@ pub(crate) fn write_quantized_rotation(quantized: &f32) -> u16 {
 }
 
 pub(crate) fn read_packed_float(packed: u16) -> f32 {
-    todo!()
+    ((packed as f32 / 0.327675) / 100.0) - 1000.0
 }
 
 pub(crate) fn write_packed_float(float: f32) -> u16 {
-    (((float + 1000.0) * 100.0) * 0.327_675) as u16
+    (((float + 1000.0) * 100.0) * 0.327675) as u16
 }
 
 pub(crate) fn read_packed_position(packed: [u16; 3]) -> Position {
-    todo!()
+    Position {
+        x: read_packed_float(packed[0]),
+        y: read_packed_float(packed[1]),
+        z: read_packed_float(packed[2]),
+    }
 }
 
 pub(crate) fn write_packed_position(pos: &Position) -> [u16; 3] {
@@ -170,5 +174,11 @@ mod tests {
 
         assert_eq!(write_quantized_rotation(&-std::f32::consts::PI), 0);
         assert_eq!(write_quantized_rotation(&std::f32::consts::PI), 65535);
+    }
+
+    #[test]
+    fn packed_floats() {
+        assert_eq!(read_packed_float(32931), 4.989685);
+        assert_eq!(write_packed_float(5.0), 32931);
     }
 }

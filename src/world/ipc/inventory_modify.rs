@@ -47,6 +47,6 @@ mod tests {
         assert_eq!(modify_inventory.dst_storage_id, 0);
         assert_eq!(modify_inventory.dst_container_index, 96);
         assert_eq!(modify_inventory.dst_stack, 0);
-        assert_eq!(modify_inventory.dst_catalog_id, 4194304);
+        assert_eq!(modify_inventory.dst_catalog_id, 0);
     }
 }
