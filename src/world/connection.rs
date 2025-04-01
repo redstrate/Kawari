@@ -448,7 +448,37 @@ impl ZoneConnection {
     }
 
     pub async fn send_inventory(&mut self, send_appearance_update: bool) {
-        // item list
+        // page 1
+        {
+            let extra_slot = self.inventory.extra_slot;
+
+            let mut send_slot = async |slot_index: u16, item: &Item| {
+                let ipc = ServerZoneIpcSegment {
+                    op_code: ServerZoneIpcType::ItemInfo,
+                    timestamp: timestamp_secs(),
+                    data: ServerZoneIpcData::ItemInfo(ItemInfo {
+                        container: ContainerType::Inventory0,
+                        slot: slot_index,
+                        quantity: item.quantity,
+                        catalog_id: item.id,
+                        condition: 30000,
+                        ..Default::default()
+                    }),
+                    ..Default::default()
+                };
+
+                self.send_segment(PacketSegment {
+                    source_actor: self.player_data.actor_id,
+                    target_actor: self.player_data.actor_id,
+                    segment_type: SegmentType::Ipc { data: ipc },
+                })
+                .await;
+            };
+
+            send_slot(0, &extra_slot).await;
+        }
+
+        // equipped
         {
             let equipped = self.inventory.equipped;
 
@@ -490,6 +520,27 @@ impl ZoneConnection {
             send_slot(13, &equipped.soul_crystal).await;
         }
 
+        // inform the client of page 1
+          {
+            let ipc = ServerZoneIpcSegment {
+                op_code: ServerZoneIpcType::ContainerInfo,
+                timestamp: timestamp_secs(),
+                data: ServerZoneIpcData::ContainerInfo(ContainerInfo {
+                    container: ContainerType::Inventory0,
+                    num_items: 1,
+                    ..Default::default()
+                }),
+                ..Default::default()
+            };
+
+            self.send_segment(PacketSegment {
+                source_actor: self.player_data.actor_id,
+                target_actor: self.player_data.actor_id,
+                segment_type: SegmentType::Ipc { data: ipc },
+            })
+            .await;
+        }
+
         // inform the client they have items equipped
         {
             let ipc = ServerZoneIpcSegment {
@@ -498,6 +549,7 @@ impl ZoneConnection {
                 data: ServerZoneIpcData::ContainerInfo(ContainerInfo {
                     container: ContainerType::Equipped,
                     num_items: self.inventory.equipped.num_items(),
+                    sequence: 1,
                     ..Default::default()
                 }),
                 ..Default::default()

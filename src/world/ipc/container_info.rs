@@ -11,6 +11,7 @@ pub enum ContainerType {
     Inventory2 = 2,
     Inventory3 = 3,
     Equipped = 1000,
+    ArmouryBody = 3202,
 }
 
 #[binrw]
@@ -19,7 +20,7 @@ pub enum ContainerType {
 pub struct ContainerInfo {
     pub sequence: u32,
     pub num_items: u32,
-    #[brw(pad_after = 2)] // not used
+    #[brw(pad_size_to = 4)]
     pub container: ContainerType,
     pub start_or_finish: u32,
 }

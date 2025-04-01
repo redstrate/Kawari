@@ -5,7 +5,7 @@ use physis::{
 
 use crate::config::get_config;
 
-use super::ipc::InventoryModify;
+use super::ipc::{ContainerType, InventoryModify};
 
 #[derive(Default, Copy, Clone)]
 pub struct Item {
@@ -52,10 +52,30 @@ impl EquippedContainer {
             + self.left_ring.quantity
             + self.soul_crystal.quantity
     }
+
+    pub fn get_slot(&mut self, index: u16) -> &mut Item {
+        match index {
+            0 => &mut self.main_hand,
+            1 => &mut self.off_hand,
+            2 => &mut self.head,
+            3 => &mut self.body,
+            4 => &mut self.hands,
+            6 => &mut self.legs,
+            7 => &mut self.feet,
+            8 => &mut self.ears,
+            9 => &mut self.neck,
+            10 => &mut self.wrists,
+            11 => &mut self.right_ring,
+            12 => &mut self.left_ring,
+            13 => &mut self.soul_crystal,
+            _ => panic!("Not a valid src_container_index?!?"),
+        }
+    }
 }
 
 pub struct Inventory {
     pub equipped: EquippedContainer,
+    pub extra_slot: Item, // WIP for inventory pages
 }
 
 impl Default for Inventory {
@@ -68,6 +88,7 @@ impl Inventory {
     pub fn new() -> Self {
         Self {
             equipped: EquippedContainer::default(),
+            extra_slot: Item::default()
         }
     }
 
@@ -116,26 +137,15 @@ impl Inventory {
 
     pub fn process_action(&mut self, action: &InventoryModify) {
         // equipped
-        if action.src_storage_id == 1000 {
-            let slot = match action.src_container_index {
-                0 => &mut self.equipped.main_hand,
-                1 => &mut self.equipped.off_hand,
-                2 => &mut self.equipped.head,
-                3 => &mut self.equipped.body,
-                4 => &mut self.equipped.hands,
-                6 => &mut self.equipped.legs,
-                7 => &mut self.equipped.feet,
-                8 => &mut self.equipped.ears,
-                9 => &mut self.equipped.neck,
-                10 => &mut self.equipped.wrists,
-                11 => &mut self.equipped.right_ring,
-                12 => &mut self.equipped.left_ring,
-                13 => &mut self.equipped.soul_crystal,
-                _ => panic!("Not a valid src_container_index?!?"),
-            };
+        if action.src_storage_id == ContainerType::Equipped {
+            let src_slot = self.equipped.get_slot(action.src_container_index);
 
             // it only unequips for now, doesn't move the item
-            *slot = Item::default();
+            *src_slot = Item::default();
+        } else if action.src_storage_id == ContainerType::Inventory0 {
+            let dst_slot = self.equipped.get_slot(action.dst_container_index);
+
+            *dst_slot = self.extra_slot;
         }
     }
 }

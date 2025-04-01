@@ -92,7 +92,7 @@ These special debug commands start with `!` and are custom to Kawari.
     * Territory `181`, Event `1245185` plays the Limsa opening sequence
     * Territory `182`, Event `1245187` plays the Ul'dah opening sequence
     * Territory `183`, Event `1245186` plays the Gridania opening sequence
-
+    
 ### GM commands
 
 These GM commands are implemented in the FFXIV protocol, but only some of them are implemented.
@@ -100,3 +100,4 @@ These GM commands are implemented in the FFXIV protocol, but only some of them a
 * `//gm teri <id>`: Changes to the specified territory
 * `//gm weather <id>`: Changes the weather
 * `//gm wireframe`: Toggle wireframe rendering for the environment
+* `//gm item <id>`: Gives yourself an item. This can only place a single item in the first page of your inventory currently.

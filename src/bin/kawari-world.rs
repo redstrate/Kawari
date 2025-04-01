@@ -655,6 +655,11 @@ async fn client_loop(
                                                         ActorControlCategory::ToggleWireframeRendering(),
                                                 })
                                                 .await,
+                                            GameMasterCommandType::GiveItem => {
+                                                connection.inventory.extra_slot.id = *arg;
+                                                connection.inventory.extra_slot.quantity = 1;
+                                                connection.send_inventory(false).await;
+                                            }
                                         }
                                     }
                                     ClientZoneIpcData::EnterZoneLine {
