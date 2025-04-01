@@ -14,9 +14,8 @@ use kawari::packet::{
     send_packet,
 };
 use kawari::world::ipc::{
-    ActionEffect, ActionResult, ClientZoneIpcData, CommonSpawn, DisplayFlag, EffectKind,
-    GameMasterCommandType, GameMasterRank, ObjectKind, OnlineStatus, PlayerSubKind,
-    ServerZoneIpcData, ServerZoneIpcSegment, SocialListRequestType,
+    ActionEffect, ActionResult, ClientZoneIpcData, EffectKind, GameMasterCommandType,
+    GameMasterRank, OnlineStatus, ServerZoneIpcData, ServerZoneIpcSegment, SocialListRequestType,
 };
 use kawari::world::{
     Actor, ClientHandle, ClientId, EffectsBuilder, FromServer, Inventory, LuaPlayer, PlayerData,
@@ -375,17 +374,9 @@ async fn client_loop(
                                         .unwrap();
                                     }
                                     ClientZoneIpcData::FinishLoading { .. } => {
-                                        let chara_details =
-                                            database.find_chara_make(connection.player_data.content_id);
-
                                         // send player spawn
                                         {
-                                            let ipc;
-                                            {
-                                                let mut game_data = game_data.lock().unwrap();
-                                                let equipped = &connection.player_data.inventory.equipped;
-
-                                                ipc = ServerZoneIpcSegment {
+                                            let ipc = ServerZoneIpcSegment {
                                                     op_code: ServerZoneIpcType::PlayerSpawn,
                                                     timestamp: timestamp_secs(),
                                                     data: ServerZoneIpcData::PlayerSpawn(PlayerSpawn {
@@ -395,64 +386,11 @@ async fn client_loop(
                                                         home_world_id: config.world.world_id,
                                                         gm_rank: GameMasterRank::Debug,
                                                         online_status: OnlineStatus::GameMasterBlue,
-                                                        common: CommonSpawn {
-                                                            class_job: connection.player_data.classjob_id,
-                                                            name: chara_details.name,
-                                                            hp_curr: connection.player_data.curr_hp,
-                                                            hp_max: connection.player_data.max_hp,
-                                                            mp_curr: connection.player_data.curr_mp,
-                                                            mp_max: connection.player_data.max_mp,
-                                                            object_kind: ObjectKind::Player(
-                                                                PlayerSubKind::Player,
-                                                            ),
-                                                            look: chara_details.chara_make.customize,
-                                                            fc_tag: "LOCAL".to_string(),
-                                                            display_flags: DisplayFlag::UNK,
-                                                            models: [
-                                                                game_data
-                                                                    .get_primary_model_id(equipped.head.id)
-                                                                    as u32,
-                                                                game_data
-                                                                    .get_primary_model_id(equipped.body.id)
-                                                                    as u32,
-                                                                game_data
-                                                                    .get_primary_model_id(equipped.hands.id)
-                                                                    as u32,
-                                                                game_data
-                                                                    .get_primary_model_id(equipped.legs.id)
-                                                                    as u32,
-                                                                game_data
-                                                                    .get_primary_model_id(equipped.feet.id)
-                                                                    as u32,
-                                                                game_data
-                                                                    .get_primary_model_id(equipped.ears.id)
-                                                                    as u32,
-                                                                game_data
-                                                                    .get_primary_model_id(equipped.neck.id)
-                                                                    as u32,
-                                                                game_data.get_primary_model_id(
-                                                                    equipped.wrists.id,
-                                                                )
-                                                                    as u32,
-                                                                game_data.get_primary_model_id(
-                                                                    equipped.left_ring.id,
-                                                                )
-                                                                    as u32,
-                                                                game_data.get_primary_model_id(
-                                                                    equipped.right_ring.id,
-                                                                )
-                                                                    as u32,
-                                                            ],
-                                                            pos: exit_position
-                                                                .unwrap_or(Position::default()),
-                                                            rotation: exit_rotation.unwrap_or(0.0),
-                                                            ..Default::default()
-                                                        },
+                                                        common: connection.get_player_common_spawn(exit_position, exit_rotation),
                                                         ..Default::default()
                                                     }),
                                                     ..Default::default()
                                                 };
-                                            }
 
                                             connection
                                                 .send_segment(PacketSegment {
@@ -538,7 +476,6 @@ async fn client_loop(
                                                             level: 100,
                                                             one: 1,
                                                             name: "INVALID".to_string(),
-                                                            fc_tag: "LOCAL".to_string(),
                                                             ..Default::default()
                                                         }],
                                                     }),

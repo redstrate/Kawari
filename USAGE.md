@@ -85,13 +85,14 @@ This feature is still a work-in-progress, and not all data is imported yet.
 These special debug commands start with `!` and are custom to Kawari.
 
 * `!setpos <x> <y> <z>`: Teleport to the specified location
-* `!spawnactor`: Spawn another actor for debugging
+* `!spawnplayer`: Spawn another player for debugging, not known to work at the moment
 * `!spawnnpc`: Spawn a NPC for debugging
 * `!spawnmonster`: Spawn a monster for debugging
 * `!playscene <id>`: Plays an event. Only some events are supported for now:
     * Territory `181`, Event `1245185` plays the Limsa opening sequence
     * Territory `182`, Event `1245187` plays the Ul'dah opening sequence
     * Territory `183`, Event `1245186` plays the Gridania opening sequence
+* `!spawnclone`: Spawn a clone of yourself
     
 ### GM commands
 

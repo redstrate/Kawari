@@ -22,9 +22,9 @@ use super::{
     chat_handler::CUSTOMIZE_DATA,
     ipc::{
         ActorControlSelf, ActorMove, ActorSetPos, BattleNpcSubKind, ClientZoneIpcSegment,
-        CommonSpawn, ContainerInfo, ContainerType, Equip, InitZone, ItemInfo, NpcSpawn, ObjectKind,
-        ServerZoneIpcData, ServerZoneIpcSegment, StatusEffect, StatusEffectList, UpdateClassInfo,
-        WeatherChange,
+        CommonSpawn, ContainerInfo, ContainerType, DisplayFlag, Equip, InitZone, ItemInfo,
+        NpcSpawn, ObjectKind, PlayerSubKind, ServerZoneIpcData, ServerZoneIpcSegment, StatusEffect,
+        StatusEffectList, UpdateClassInfo, WeatherChange,
     },
 };
 
@@ -713,5 +713,44 @@ impl ZoneConnection {
             segment_type: SegmentType::Ipc { data: ipc },
         })
         .await;
+    }
+
+    pub fn get_player_common_spawn(
+        &mut self,
+        exit_position: Option<Position>,
+        exit_rotation: Option<f32>,
+    ) -> CommonSpawn {
+        let mut game_data = self.gamedata.lock().unwrap();
+
+        let chara_details = self.database.find_chara_make(self.player_data.content_id);
+
+        let equipped = &self.player_data.inventory.equipped;
+        CommonSpawn {
+            class_job: self.player_data.classjob_id,
+            name: chara_details.name,
+            hp_curr: self.player_data.curr_hp,
+            hp_max: self.player_data.max_hp,
+            mp_curr: self.player_data.curr_mp,
+            mp_max: self.player_data.max_mp,
+            level: self.player_data.level,
+            object_kind: ObjectKind::Player(PlayerSubKind::Player),
+            look: chara_details.chara_make.customize,
+            display_flags: DisplayFlag::UNK,
+            models: [
+                game_data.get_primary_model_id(equipped.head.id) as u32,
+                game_data.get_primary_model_id(equipped.body.id) as u32,
+                game_data.get_primary_model_id(equipped.hands.id) as u32,
+                game_data.get_primary_model_id(equipped.legs.id) as u32,
+                game_data.get_primary_model_id(equipped.feet.id) as u32,
+                game_data.get_primary_model_id(equipped.ears.id) as u32,
+                game_data.get_primary_model_id(equipped.neck.id) as u32,
+                game_data.get_primary_model_id(equipped.wrists.id) as u32,
+                game_data.get_primary_model_id(equipped.left_ring.id) as u32,
+                game_data.get_primary_model_id(equipped.right_ring.id) as u32,
+            ],
+            pos: exit_position.unwrap_or(Position::default()),
+            rotation: exit_rotation.unwrap_or(0.0),
+            ..Default::default()
+        }
     }
 }

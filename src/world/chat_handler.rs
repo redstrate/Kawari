@@ -69,9 +69,7 @@ impl ChatHandler {
                     })
                     .await;
             }
-            "!spawnactor" => {
-                tracing::info!("Spawning actor...");
-
+            "!spawnplayer" => {
                 let config = get_config();
 
                 // send player spawn
@@ -98,7 +96,6 @@ impl ChatHandler {
                                 object_kind: ObjectKind::Player(PlayerSubKind::Player),
                                 spawn_index: connection.get_free_spawn_index(),
                                 look: CUSTOMIZE_DATA,
-                                fc_tag: "LOCAL".to_string(),
                                 display_flags: DisplayFlag::INVISIBLE
                                     | DisplayFlag::HIDE_HEAD
                                     | DisplayFlag::UNK,
@@ -156,57 +153,54 @@ impl ChatHandler {
                 }
             }
             "!spawnnpc" => {
-                // spawn another one of us
-                {
-                    let ipc = ServerZoneIpcSegment {
-                        unk1: 20,
-                        unk2: 0,
-                        op_code: ServerZoneIpcType::NpcSpawn,
-                        server_id: 0,
-                        timestamp: timestamp_secs(),
-                        data: ServerZoneIpcData::NpcSpawn(NpcSpawn {
-                            common: CommonSpawn {
-                                hp_curr: 100,
-                                hp_max: 100,
-                                mp_curr: 100,
-                                mp_max: 100,
-                                look: CUSTOMIZE_DATA,
-                                spawn_index: connection.get_free_spawn_index(),
-                                bnpc_base: 13498,
-                                bnpc_name: 10261,
-                                object_kind: ObjectKind::BattleNpc(BattleNpcSubKind::Enemy),
-                                target_id: ObjectTypeId {
-                                    object_id: ObjectId(connection.player_data.actor_id),
-                                    object_type: 0,
-                                }, // target the player
-                                level: 1,
-                                models: [
-                                    0,  // head
-                                    89, // body
-                                    89, // hands
-                                    89, // legs
-                                    89, // feet
-                                    0,  // ears
-                                    0,  // neck
-                                    0,  // wrists
-                                    0,  // left finger
-                                    0,  // right finger
-                                ],
-                                pos: connection.player_data.position,
-                                ..Default::default()
-                            },
+                let ipc = ServerZoneIpcSegment {
+                    unk1: 20,
+                    unk2: 0,
+                    op_code: ServerZoneIpcType::NpcSpawn,
+                    server_id: 0,
+                    timestamp: timestamp_secs(),
+                    data: ServerZoneIpcData::NpcSpawn(NpcSpawn {
+                        common: CommonSpawn {
+                            hp_curr: 100,
+                            hp_max: 100,
+                            mp_curr: 100,
+                            mp_max: 100,
+                            look: CUSTOMIZE_DATA,
+                            spawn_index: connection.get_free_spawn_index(),
+                            bnpc_base: 13498,
+                            bnpc_name: 10261,
+                            object_kind: ObjectKind::BattleNpc(BattleNpcSubKind::Enemy),
+                            target_id: ObjectTypeId {
+                                object_id: ObjectId(connection.player_data.actor_id),
+                                object_type: 0,
+                            }, // target the player
+                            level: 1,
+                            models: [
+                                0,  // head
+                                89, // body
+                                89, // hands
+                                89, // legs
+                                89, // feet
+                                0,  // ears
+                                0,  // neck
+                                0,  // wrists
+                                0,  // left finger
+                                0,  // right finger
+                            ],
+                            pos: connection.player_data.position,
                             ..Default::default()
-                        }),
-                    };
+                        },
+                        ..Default::default()
+                    }),
+                };
 
-                    connection
-                        .send_segment(PacketSegment {
-                            source_actor: 0x106ad804,
-                            target_actor: connection.player_data.actor_id,
-                            segment_type: SegmentType::Ipc { data: ipc },
-                        })
-                        .await;
-                }
+                connection
+                    .send_segment(PacketSegment {
+                        source_actor: 0x106ad804,
+                        target_actor: connection.player_data.actor_id,
+                        segment_type: SegmentType::Ipc { data: ipc },
+                    })
+                    .await;
             }
             "!spawnmonster" => {
                 let actor = Actor {
@@ -324,6 +318,35 @@ impl ChatHandler {
                     .as_mut()
                     .unwrap()
                     .enter_territory(lua_player, connection.zone.as_ref().unwrap());
+            }
+            "!spawnclone" => {
+                // spawn another one of us
+
+                let player = connection.player_data;
+
+                let mut common = connection
+                    .get_player_common_spawn(Some(player.position), Some(player.rotation));
+                common.spawn_index = connection.get_free_spawn_index();
+
+                let ipc = ServerZoneIpcSegment {
+                    unk1: 20,
+                    unk2: 0,
+                    op_code: ServerZoneIpcType::NpcSpawn,
+                    server_id: 0,
+                    timestamp: timestamp_secs(),
+                    data: ServerZoneIpcData::NpcSpawn(NpcSpawn {
+                        common,
+                        ..Default::default()
+                    }),
+                };
+
+                connection
+                    .send_segment(PacketSegment {
+                        source_actor: 0x106ad804,
+                        target_actor: connection.player_data.actor_id,
+                        segment_type: SegmentType::Ipc { data: ipc },
+                    })
+                    .await;
             }
             _ => tracing::info!("Unrecognized debug command!"),
         }
