@@ -42,7 +42,7 @@
         },
         {
             "name": "LogOutComplete",
-            "opcode": 105,
+            "opcode": 296,
             "size": 8
         },
         {
@@ -204,12 +204,12 @@
         },
         {
             "name": "LogOut",
-            "opcode": 538,
+            "opcode": 127,
             "size": 8
         },
         {
             "name": "Disconnected",
-            "opcode": 983,
+            "opcode": 335,
             "size": 8
         },
         {
