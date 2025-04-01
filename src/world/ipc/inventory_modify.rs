@@ -3,21 +3,20 @@ use binrw::binrw;
 #[binrw]
 #[derive(Debug, Clone, Default)]
 pub struct InventoryModify {
-    context_id: u32,
-    operation_type: u8,
+    pub context_id: u32,
+    pub operation_type: u8,
     #[brw(pad_before = 3)]
-    src_actor_id: u32,
-    src_storage_id: u32,
-    src_container_index: i16,
+    pub src_actor_id: u32,
+    pub src_storage_id: u32,
+    pub src_container_index: i16,
     #[brw(pad_before = 4)]
-    src_stack: u32,
-    src_catalog_id: u32,
-    dst_actor_id: u32,
-    dst_storage_id: u32,
-    dst_container_index: i16,
-    #[brw(pad_before = 2)]
-    dst_stack: u32,
-    dst_catalog_id: u32,
+    pub src_stack: u32,
+    pub src_catalog_id: u32,
+    pub dst_actor_id: u32,
+    pub dst_storage_id: u32,
+    pub dst_container_index: i16,
+    pub dst_stack: u32,
+    pub dst_catalog_id: u32,
 }
 
 #[cfg(test)]

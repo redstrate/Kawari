@@ -19,8 +19,8 @@ use kawari::world::ipc::{
     ServerZoneIpcData, ServerZoneIpcSegment, SocialListRequestType,
 };
 use kawari::world::{
-    Actor, ClientHandle, ClientId, EffectsBuilder, FromServer, LuaPlayer, PlayerData, ServerHandle,
-    StatusEffects, ToServer, WorldDatabase,
+    Actor, ClientHandle, ClientId, EffectsBuilder, FromServer, Item, LuaPlayer, PlayerData,
+    ServerHandle, StatusEffects, ToServer, WorldDatabase,
 };
 use kawari::world::{
     ChatHandler, Inventory, Zone, ZoneConnection,
@@ -283,7 +283,7 @@ async fn client_loop(
                                         );
 
                                         // Send inventory
-                                        connection.send_inventory().await;
+                                        connection.send_inventory(false).await;
 
                                         // set chara gear param
                                         connection
@@ -815,6 +815,9 @@ async fn client_loop(
                                     }
                                     ClientZoneIpcData::InventoryModify(action) => {
                                         tracing::info!("Client is modifying inventory! {action:#?}");
+
+                                        connection.inventory.process_action(&action);
+                                        connection.send_inventory(true).await;
                                     }
                                 }
                             }

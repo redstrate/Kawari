@@ -149,6 +149,11 @@
             "name": "ActionResult",
             "opcode": 508,
             "size": 124
+        },
+        {
+            "name": "Equip",
+            "opcode": 468,
+            "size": 72
         }
     ],
     "ClientZoneIpcType": [
@@ -260,7 +265,7 @@
         {
             "name": "InventoryModify",
             "opcode": 564,
-            "size": 112
+            "size": 48
         }
     ],
     "ServerLobbyIpcType": [

@@ -71,6 +71,9 @@ pub use actor_set_pos::ActorSetPos;
 mod inventory_modify;
 pub use inventory_modify::InventoryModify;
 
+mod equip;
+pub use equip::Equip;
+
 use crate::common::Position;
 use crate::common::read_string;
 use crate::common::write_string;
@@ -207,6 +210,8 @@ pub enum ServerZoneIpcData {
     },
     /// Sent to inform the client the consequences of their actions
     ActionResult(ActionResult),
+    /// Sent to to the client to update their appearance
+    Equip(Equip),
 }
 
 #[binrw]
@@ -457,6 +462,10 @@ mod tests {
             (
                 ServerZoneIpcType::ActionResult,
                 ServerZoneIpcData::ActionResult(ActionResult::default()),
+            ),
+            (
+                ServerZoneIpcType::Equip,
+                ServerZoneIpcData::Equip(Equip::default()),
             ),
         ];
 

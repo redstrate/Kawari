@@ -5,6 +5,8 @@ use physis::{
 
 use crate::config::get_config;
 
+use super::ipc::InventoryModify;
+
 #[derive(Default, Copy, Clone)]
 pub struct Item {
     pub quantity: u32,
@@ -110,5 +112,30 @@ impl Inventory {
         self.equipped.wrists = Item::new(1, 0x00003b1c);
         self.equipped.right_ring = Item::new(1, 0x0000114a);
         self.equipped.left_ring = Item::new(1, 0x00003b1d);
+    }
+
+    pub fn process_action(&mut self, action: &InventoryModify) {
+        // equipped
+        if action.src_storage_id == 1000 {
+            let slot = match action.src_container_index {
+                0 => &mut self.equipped.main_hand,
+                1 => &mut self.equipped.off_hand,
+                2 => &mut self.equipped.head,
+                3 => &mut self.equipped.body,
+                4 => &mut self.equipped.hands,
+                6 => &mut self.equipped.legs,
+                7 => &mut self.equipped.feet,
+                8 => &mut self.equipped.ears,
+                9 => &mut self.equipped.neck,
+                10 => &mut self.equipped.wrists,
+                11 => &mut self.equipped.right_ring,
+                12 => &mut self.equipped.left_ring,
+                13 => &mut self.equipped.soul_crystal,
+                _ => panic!("Not a valid src_container_index?!?"),
+            };
+
+            // it only unequips for now, doesn't move the item
+            *slot = Item::default();
+        }
     }
 }

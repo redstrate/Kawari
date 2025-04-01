@@ -22,7 +22,7 @@ use super::{
     chat_handler::CUSTOMIZE_DATA,
     ipc::{
         ActorControlSelf, ActorMove, ActorSetPos, BattleNpcSubKind, ClientZoneIpcSegment,
-        CommonSpawn, ContainerInfo, ContainerType, InitZone, ItemInfo, NpcSpawn, ObjectKind,
+        CommonSpawn, ContainerInfo, ContainerType, Equip, InitZone, ItemInfo, NpcSpawn, ObjectKind,
         ServerZoneIpcData, ServerZoneIpcSegment, StatusEffect, StatusEffectList, UpdateClassInfo,
         WeatherChange,
     },
@@ -447,7 +447,7 @@ impl ZoneConnection {
         self.spawn_index
     }
 
-    pub async fn send_inventory(&mut self) {
+    pub async fn send_inventory(&mut self, send_appearance_update: bool) {
         // item list
         {
             let equipped = self.inventory.equipped;
@@ -502,6 +502,46 @@ impl ZoneConnection {
                 }),
                 ..Default::default()
             };
+
+            self.send_segment(PacketSegment {
+                source_actor: self.player_data.actor_id,
+                target_actor: self.player_data.actor_id,
+                segment_type: SegmentType::Ipc { data: ipc },
+            })
+            .await;
+        }
+
+        // send them an appearance update
+        if send_appearance_update {
+            let ipc;
+            {
+                let mut game_data = self.gamedata.lock().unwrap();
+                let equipped = &self.inventory.equipped;
+
+                ipc = ServerZoneIpcSegment {
+                    op_code: ServerZoneIpcType::Equip,
+                    timestamp: timestamp_secs(),
+                    data: ServerZoneIpcData::Equip(Equip {
+                        main_weapon_id: 0,
+                        sub_weapon_id: 0,
+                        crest_enable: 0,
+                        pattern_invalid: 0,
+                        model_ids: [
+                            game_data.get_primary_model_id(equipped.head.id) as u32,
+                            game_data.get_primary_model_id(equipped.body.id) as u32,
+                            game_data.get_primary_model_id(equipped.hands.id) as u32,
+                            game_data.get_primary_model_id(equipped.legs.id) as u32,
+                            game_data.get_primary_model_id(equipped.feet.id) as u32,
+                            game_data.get_primary_model_id(equipped.ears.id) as u32,
+                            game_data.get_primary_model_id(equipped.neck.id) as u32,
+                            game_data.get_primary_model_id(equipped.wrists.id) as u32,
+                            game_data.get_primary_model_id(equipped.left_ring.id) as u32,
+                            game_data.get_primary_model_id(equipped.right_ring.id) as u32,
+                        ],
+                    }),
+                    ..Default::default()
+                };
+            }
 
             self.send_segment(PacketSegment {
                 source_actor: self.player_data.actor_id,
