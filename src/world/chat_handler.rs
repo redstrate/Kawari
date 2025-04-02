@@ -321,7 +321,6 @@ impl ChatHandler {
             }
             "!spawnclone" => {
                 // spawn another one of us
-
                 let player = &connection.player_data;
 
                 let mut common = connection
@@ -347,6 +346,12 @@ impl ChatHandler {
                         segment_type: SegmentType::Ipc { data: ipc },
                     })
                     .await;
+            }
+            "!classjob" => {
+                let parts: Vec<&str> = chat_message.message.split(' ').collect();
+
+                connection.player_data.classjob_id = parts[1].parse::<u8>().unwrap();
+                connection.update_class_info().await;
             }
             _ => tracing::info!("Unrecognized debug command!"),
         }

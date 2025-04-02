@@ -93,6 +93,7 @@ These special debug commands start with `!` and are custom to Kawari.
     * Territory `182`, Event `1245187` plays the Ul'dah opening sequence
     * Territory `183`, Event `1245186` plays the Gridania opening sequence
 * `!spawnclone`: Spawn a clone of yourself
+* `!classjob <id>`: Changes to another class/job
     
 ### GM commands
 
