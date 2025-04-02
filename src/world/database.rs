@@ -75,8 +75,23 @@ impl WorldDatabase {
         let mut archive = zip::ZipArchive::new(file).unwrap();
 
         #[derive(Deserialize)]
+        struct GenericValue {
+            value: i32,
+        }
+
+        #[derive(Deserialize)]
+        struct NamedayValue {
+            day: i32,
+            month: i32,
+        }
+
+        #[derive(Deserialize)]
         struct CharacterJson {
             name: String,
+            city_state: GenericValue,
+            nameday: NamedayValue,
+            guardian: GenericValue,
+            voice: i32,
         }
 
         let character: CharacterJson;
@@ -103,19 +118,18 @@ impl WorldDatabase {
         let chara_make = CharaMake {
             customize,
             unk1: 73,
-            guardian: 1, // TODO: extract these as well
-            birth_month: 1,
-            birth_day: 1,
+            guardian: character.guardian.value,
+            birth_month: character.nameday.month,
+            birth_day: character.nameday.day,
             classjob_id: 5,
             unk2: 1,
         };
 
-        // TODO: extract city-state
         // TODO: import inventory
         self.create_player_data(
             &character.name,
             &chara_make.to_json(),
-            2,
+            character.city_state.value as u8,
             132,
             Inventory::default(),
         );

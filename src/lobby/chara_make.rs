@@ -7,7 +7,7 @@ pub struct CharaMake {
     pub customize: CustomizeData,
     pub unk1: i32,
     pub guardian: i32,
-    pub birth_month: i32,
+    pub birth_month: i32, // TODO: wrong?
     pub birth_day: i32,
     pub classjob_id: i32,
     pub unk2: i32,
