@@ -588,6 +588,10 @@ async fn client_loop(
                                         tracing::info!("Got a game master command!");
 
                                         match &command {
+                                            GameMasterCommandType::SetLevel => {
+                                                connection.player_data.level = *arg as u8;
+                                                connection.update_class_info().await;
+                                            }
                                             GameMasterCommandType::ChangeWeather => {
                                                 connection.change_weather(*arg as u16).await
                                             }

@@ -329,6 +329,28 @@ impl ZoneConnection {
         .await;
     }
 
+    pub async fn update_class_info(&mut self) {
+        let ipc = ServerZoneIpcSegment {
+            op_code: ServerZoneIpcType::UpdateClassInfo,
+            timestamp: timestamp_secs(),
+            data: ServerZoneIpcData::UpdateClassInfo(UpdateClassInfo {
+                class_id: self.player_data.classjob_id as u16,
+                unknown: 1,
+                synced_level: self.player_data.level as u16,
+                class_level: self.player_data.level as u16,
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+
+        self.send_segment(PacketSegment {
+            source_actor: self.player_data.actor_id,
+            target_actor: self.player_data.actor_id,
+            segment_type: SegmentType::Ipc { data: ipc },
+        })
+        .await;
+    }
+
     pub async fn change_zone(&mut self, new_zone_id: u16) {
         {
             let mut game_data = self.gamedata.lock().unwrap();
@@ -337,27 +359,7 @@ impl ZoneConnection {
         self.player_data.zone_id = new_zone_id;
 
         // Player Class Info
-        {
-            let ipc = ServerZoneIpcSegment {
-                op_code: ServerZoneIpcType::UpdateClassInfo,
-                timestamp: timestamp_secs(),
-                data: ServerZoneIpcData::UpdateClassInfo(UpdateClassInfo {
-                    class_id: self.player_data.classjob_id as u16,
-                    unknown: 1,
-                    synced_level: self.player_data.level as u16,
-                    class_level: self.player_data.level as u16,
-                    ..Default::default()
-                }),
-                ..Default::default()
-            };
-
-            self.send_segment(PacketSegment {
-                source_actor: self.player_data.actor_id,
-                target_actor: self.player_data.actor_id,
-                segment_type: SegmentType::Ipc { data: ipc },
-            })
-            .await;
-        }
+        self.update_class_info().await;
 
         // link shell information
         /*{

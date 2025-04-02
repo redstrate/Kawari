@@ -132,6 +132,7 @@ impl Default for ServerZoneIpcSegment {
 #[brw(repr = u8)]
 #[derive(Clone, PartialEq, Debug)]
 pub enum GameMasterCommandType {
+    SetLevel = 0x1,
     ChangeWeather = 0x6,
     ToggleInvisibility = 0xD,
     ToggleWireframe = 0x26,
