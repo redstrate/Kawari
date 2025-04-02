@@ -17,7 +17,7 @@ pub use gamedata::GameData;
 
 #[binrw]
 #[brw(little)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ObjectId(pub u32);
 
 impl Default for ObjectId {

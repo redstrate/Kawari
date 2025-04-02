@@ -24,8 +24,8 @@ use kawari::world::{
 use kawari::world::{
     ChatHandler, Zone, ZoneConnection,
     ipc::{
-        ActorControlCategory, ActorControlSelf, PlayerEntry, PlayerSetup, PlayerSpawn, PlayerStats,
-        SocialList,
+        ActorControlCategory, ActorControlSelf, CommonSpawn, PlayerEntry, PlayerSetup, PlayerSpawn,
+        PlayerStats, SocialList,
     },
 };
 
@@ -45,6 +45,8 @@ struct ExtraLuaState {
 #[derive(Default, Debug)]
 struct Data {
     clients: HashMap<ClientId, ClientHandle>,
+    // structure temporary, of course
+    actors: HashMap<ObjectId, CommonSpawn>,
 }
 
 async fn main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::io::Error> {
@@ -55,6 +57,23 @@ async fn main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::io::Error> {
         match msg {
             ToServer::NewClient(handle) => {
                 data.clients.insert(handle.id, handle);
+            }
+            ToServer::ZoneLoaded(from_id) => {
+                for (id, handle) in &mut data.clients {
+                    let id = *id;
+
+                    if id == from_id {
+                        // send existing player data
+                        for (id, common) in &data.actors {
+                            let msg =
+                                FromServer::ActorSpawn(Actor { id: *id, hp: 100 }, common.clone());
+
+                            let _ = handle.send(msg).unwrap();
+                        }
+
+                        break;
+                    }
+                }
             }
             ToServer::Message(from_id, msg) => {
                 for (id, handle) in &mut data.clients {
@@ -72,6 +91,8 @@ async fn main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::io::Error> {
                 }
             }
             ToServer::ActorSpawned(from_id, actor, common) => {
+                data.actors.insert(actor.id, common.clone());
+
                 for (id, handle) in &mut data.clients {
                     let id = *id;
 
@@ -86,7 +107,7 @@ async fn main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::io::Error> {
                     }
                 }
             }
-            ToServer::ActorMoved(from_id, actor_id, position) => {
+            ToServer::ActorMoved(from_id, actor_id, position, rotation) => {
                 for (id, handle) in &mut data.clients {
                     let id = *id;
 
@@ -94,7 +115,7 @@ async fn main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::io::Error> {
                         continue;
                     }
 
-                    let msg = FromServer::ActorMove(actor_id, position);
+                    let msg = FromServer::ActorMove(actor_id, position, rotation);
 
                     if handle.send(msg).is_err() {
                         to_remove.push(id);
@@ -374,6 +395,9 @@ async fn client_loop(
                                         .unwrap();
                                     }
                                     ClientZoneIpcData::FinishLoading { .. } => {
+                                        // tell the server we loaded into the zone, so it can start sending us acors
+                                        connection.handle.send(ToServer::ZoneLoaded(connection.id)).await;
+
                                         // send player spawn
                                         {
                                             let ipc = ServerZoneIpcSegment {
@@ -521,7 +545,7 @@ async fn client_loop(
                                         connection.player_data.rotation = *rotation;
                                         connection.player_data.position = *position;
 
-                                        connection.handle.send(ToServer::ActorMoved(connection.id, connection.player_data.actor_id, *position)).await;
+                                        connection.handle.send(ToServer::ActorMoved(connection.id, connection.player_data.actor_id, *position, *rotation)).await;
                                     }
                                     ClientZoneIpcData::LogOut { .. } => {
                                         tracing::info!("Recieved log out from client!");
@@ -980,11 +1004,11 @@ async fn client_loop(
             }
             msg = internal_recv.recv() => match msg {
                 Some(msg) => match msg {
-                    FromServer::Message(msg)=>connection.send_message(&msg).await,
+                    FromServer::Message(msg)=> connection.send_message(&msg).await,
                     FromServer::ActorSpawn(actor, common) => {
                         connection.spawn_actor(actor, common).await
                     },
-                    FromServer::ActorMove(actor_id, position) => connection.set_actor_position(actor_id, position).await,
+                    FromServer::ActorMove(actor_id, position, rotation) => connection.set_actor_position(actor_id, position, rotation).await,
                 },
                 None => break,
             }

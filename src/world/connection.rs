@@ -58,7 +58,7 @@ pub enum FromServer {
     /// An actor has been spawned.
     ActorSpawn(Actor, CommonSpawn),
     /// An actor moved to a new position.
-    ActorMove(u32, Position),
+    ActorMove(u32, Position, f32),
 }
 
 #[derive(Debug, Clone)]
@@ -96,7 +96,8 @@ pub enum ToServer {
     NewClient(ClientHandle),
     Message(ClientId, String),
     ActorSpawned(ClientId, Actor, CommonSpawn),
-    ActorMoved(ClientId, u32, Position),
+    ActorMoved(ClientId, u32, Position, f32),
+    ZoneLoaded(ClientId),
     FatalError(std::io::Error),
 }
 
@@ -282,7 +283,7 @@ impl ZoneConnection {
         }
     }
 
-    pub async fn set_actor_position(&mut self, actor_id: u32, position: Position) {
+    pub async fn set_actor_position(&mut self, actor_id: u32, position: Position, rotation: f32) {
         let ipc = ServerZoneIpcSegment {
             op_code: ServerZoneIpcType::ActorMove,
             timestamp: timestamp_secs(),
