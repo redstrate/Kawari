@@ -19,6 +19,7 @@ use crate::{
 
 use super::{
     Actor, Event, Inventory, Item, LuaPlayer, StatusEffects, WorldDatabase, Zone,
+    inventory::Container,
     ipc::{
         ActorControlSelf, ActorMove, ActorSetPos, ClientZoneIpcSegment, CommonSpawn, ContainerInfo,
         ContainerType, DisplayFlag, Equip, InitZone, ItemInfo, NpcSpawn, ObjectKind, PlayerSubKind,
@@ -27,7 +28,7 @@ use super::{
     },
 };
 
-#[derive(Debug, Default, Clone, Copy)]
+#[derive(Debug, Default, Clone)]
 pub struct PlayerData {
     // Static data
     pub actor_id: u32,
@@ -428,16 +429,25 @@ impl ZoneConnection {
     }
 
     pub async fn send_inventory(&mut self, send_appearance_update: bool) {
-        // page 1
-        {
-            let extra_slot = self.player_data.inventory.extra_slot;
+        let mut sequence = 0;
+
+        // pages
+        for (i, page) in self.player_data.inventory.pages.clone().iter().enumerate() {
+            let kind = match i {
+                0 => ContainerType::Inventory0,
+                1 => ContainerType::Inventory1,
+                2 => ContainerType::Inventory2,
+                3 => ContainerType::Inventory3,
+                _ => panic!("Shouldn't be anything else!"),
+            };
 
             let mut send_slot = async |slot_index: u16, item: &Item| {
                 let ipc = ServerZoneIpcSegment {
                     op_code: ServerZoneIpcType::ItemInfo,
                     timestamp: timestamp_secs(),
                     data: ServerZoneIpcData::ItemInfo(ItemInfo {
-                        container: ContainerType::Inventory0,
+                        sequence,
+                        container: kind,
                         slot: slot_index,
                         quantity: item.quantity,
                         catalog_id: item.id,
@@ -455,7 +465,33 @@ impl ZoneConnection {
                 .await;
             };
 
-            send_slot(0, &extra_slot).await;
+            for (i, slot) in page.slots.iter().enumerate() {
+                send_slot(i as u16, slot).await;
+            }
+
+            // inform the client of container state
+            {
+                let ipc = ServerZoneIpcSegment {
+                    op_code: ServerZoneIpcType::ContainerInfo,
+                    timestamp: timestamp_secs(),
+                    data: ServerZoneIpcData::ContainerInfo(ContainerInfo {
+                        container: kind,
+                        num_items: page.num_items(),
+                        sequence,
+                        ..Default::default()
+                    }),
+                    ..Default::default()
+                };
+
+                self.send_segment(PacketSegment {
+                    source_actor: self.player_data.actor_id,
+                    target_actor: self.player_data.actor_id,
+                    segment_type: SegmentType::Ipc { data: ipc },
+                })
+                .await;
+            }
+
+            sequence += 1;
         }
 
         // equipped
@@ -467,6 +503,7 @@ impl ZoneConnection {
                     op_code: ServerZoneIpcType::ItemInfo,
                     timestamp: timestamp_secs(),
                     data: ServerZoneIpcData::ItemInfo(ItemInfo {
+                        sequence,
                         container: ContainerType::Equipped,
                         slot: slot_index,
                         quantity: item.quantity,
@@ -485,6 +522,7 @@ impl ZoneConnection {
                 .await;
             };
 
+            // TODO: make containers enumerable to vastly simplify this code
             send_slot(0, &equipped.main_hand).await;
             send_slot(1, &equipped.off_hand).await;
             send_slot(2, &equipped.head).await;
@@ -500,27 +538,6 @@ impl ZoneConnection {
             send_slot(13, &equipped.soul_crystal).await;
         }
 
-        // inform the client of page 1
-        {
-            let ipc = ServerZoneIpcSegment {
-                op_code: ServerZoneIpcType::ContainerInfo,
-                timestamp: timestamp_secs(),
-                data: ServerZoneIpcData::ContainerInfo(ContainerInfo {
-                    container: ContainerType::Inventory0,
-                    num_items: 1,
-                    ..Default::default()
-                }),
-                ..Default::default()
-            };
-
-            self.send_segment(PacketSegment {
-                source_actor: self.player_data.actor_id,
-                target_actor: self.player_data.actor_id,
-                segment_type: SegmentType::Ipc { data: ipc },
-            })
-            .await;
-        }
-
         // inform the client they have items equipped
         {
             let ipc = ServerZoneIpcSegment {
@@ -529,7 +546,7 @@ impl ZoneConnection {
                 data: ServerZoneIpcData::ContainerInfo(ContainerInfo {
                     container: ContainerType::Equipped,
                     num_items: self.player_data.inventory.equipped.num_items(),
-                    sequence: 1,
+                    sequence,
                     ..Default::default()
                 }),
                 ..Default::default()

@@ -117,7 +117,7 @@ impl WorldDatabase {
             &chara_make.to_json(),
             2,
             132,
-            Inventory::new(),
+            Inventory::default(),
         );
 
         tracing::info!("{} added to the world!", character.name);

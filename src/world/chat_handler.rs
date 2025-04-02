@@ -322,7 +322,7 @@ impl ChatHandler {
             "!spawnclone" => {
                 // spawn another one of us
 
-                let player = connection.player_data;
+                let player = &connection.player_data;
 
                 let mut common = connection
                     .get_player_common_spawn(Some(player.position), Some(player.rotation));

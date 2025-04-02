@@ -18,8 +18,8 @@ use kawari::world::ipc::{
     GameMasterRank, OnlineStatus, ServerZoneIpcData, ServerZoneIpcSegment, SocialListRequestType,
 };
 use kawari::world::{
-    Actor, ClientHandle, ClientId, EffectsBuilder, FromServer, Inventory, LuaPlayer, PlayerData,
-    ServerHandle, StatusEffects, ToServer, WorldDatabase,
+    Actor, ClientHandle, ClientId, EffectsBuilder, FromServer, Inventory, Item, LuaPlayer,
+    PlayerData, ServerHandle, StatusEffects, ToServer, WorldDatabase,
 };
 use kawari::world::{
     ChatHandler, Zone, ZoneConnection,
@@ -615,8 +615,7 @@ async fn client_loop(
                                                 })
                                                 .await,
                                             GameMasterCommandType::GiveItem => {
-                                                connection.player_data.inventory.extra_slot.id = *arg;
-                                                connection.player_data.inventory.extra_slot.quantity = 1;
+                                                connection.player_data.inventory.add_in_next_free_slot(Item { id: *arg, quantity: 1 });
                                                 connection.send_inventory(false).await;
                                             }
                                         }
@@ -816,7 +815,7 @@ async fn client_loop(
                                                 game_data.get_citystate(chara_make.classjob_id as u16);
                                         }
 
-                                        let mut inventory = Inventory::new();
+                                        let mut inventory = Inventory::default();
 
                                         // fill inventory
                                         inventory.equip_racial_items(
@@ -1002,7 +1001,7 @@ async fn client_loop(
                     connection.process_effects_list().await;
 
                     // update lua player
-                    lua_player.player_data = connection.player_data;
+                    lua_player.player_data = connection.player_data.clone();
                     lua_player.status_effects = connection.status_effects.clone();
                 }
             }

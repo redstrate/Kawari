@@ -3,7 +3,7 @@ use binrw::binrw;
 #[binrw]
 #[brw(little)]
 #[brw(repr = u16)]
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum ContainerType {
     #[default]
     Inventory0 = 0,

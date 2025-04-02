@@ -8,6 +8,12 @@ use crate::config::get_config;
 
 use super::ipc::{ContainerType, InventoryModify};
 
+// TODO: rename to storage?
+pub trait Container {
+    fn num_items(&self) -> u32;
+    fn get_slot<'a>(&'a mut self, index: u16) -> &'a mut Item;
+}
+
 #[derive(Default, Copy, Clone, Serialize, Deserialize, Debug)]
 pub struct Item {
     pub quantity: u32,
@@ -37,8 +43,8 @@ pub struct EquippedContainer {
     pub soul_crystal: Item,
 }
 
-impl EquippedContainer {
-    pub fn num_items(&self) -> u32 {
+impl Container for EquippedContainer {
+    fn num_items(&self) -> u32 {
         self.main_hand.quantity
             + self.off_hand.quantity
             + self.head.quantity
@@ -54,7 +60,7 @@ impl EquippedContainer {
             + self.soul_crystal.quantity
     }
 
-    pub fn get_slot(&mut self, index: u16) -> &mut Item {
+    fn get_slot(&mut self, index: u16) -> &mut Item {
         match index {
             0 => &mut self.main_hand,
             1 => &mut self.off_hand,
@@ -74,26 +80,45 @@ impl EquippedContainer {
     }
 }
 
-#[derive(Debug, Clone, Copy, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct InventoryPage {
+    pub slots: Vec<Item>,
+}
+
+impl InventoryPage {
+    fn default() -> Self {
+        Self {
+            slots: vec![Item::default(); 35],
+        }
+    }
+}
+
+impl Container for InventoryPage {
+    fn num_items(&self) -> u32 {
+        self.slots.iter().filter(|item| item.quantity > 0).count() as u32
+    }
+
+    fn get_slot(&mut self, index: u16) -> &mut Item {
+        self.slots.get_mut(index as usize).unwrap()
+    }
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Inventory {
     pub equipped: EquippedContainer,
-    pub extra_slot: Item, // WIP for inventory pages
+    pub pages: [InventoryPage; 4],
 }
 
 impl Default for Inventory {
     fn default() -> Self {
-        Self::new()
+        Self {
+            equipped: EquippedContainer::default(),
+            pages: std::array::from_fn(|_| InventoryPage::default()),
+        }
     }
 }
 
 impl Inventory {
-    pub fn new() -> Self {
-        Self {
-            equipped: EquippedContainer::default(),
-            extra_slot: Item::default(),
-        }
-    }
-
     /// Equip the starting items for a given race
     pub fn equip_racial_items(&mut self, race_id: u8, gender: u8) {
         let config = get_config();
@@ -138,16 +163,60 @@ impl Inventory {
     }
 
     pub fn process_action(&mut self, action: &InventoryModify) {
-        // equipped
-        if action.src_storage_id == ContainerType::Equipped {
-            let src_slot = self.equipped.get_slot(action.src_container_index);
-
-            // it only unequips for now, doesn't move the item
+        if action.operation_type == 571 {
+            // discard
+            let src_container = self.get_container(&action.src_storage_id);
+            let src_slot = src_container.get_slot(action.src_container_index);
             *src_slot = Item::default();
-        } else if action.src_storage_id == ContainerType::Inventory0 {
-            let dst_slot = self.equipped.get_slot(action.dst_container_index);
+        } else {
+            // NOTE: only swaps items for now
 
-            *dst_slot = self.extra_slot;
+            let src_item;
+            // get the source item
+            {
+                let src_container = self.get_container(&action.src_storage_id);
+                let src_slot = src_container.get_slot(action.src_container_index);
+                src_item = src_slot.clone();
+            }
+
+            let dst_item;
+            // move into dst item
+            {
+                let dst_container = self.get_container(&action.dst_storage_id);
+                let dst_slot = dst_container.get_slot(action.dst_container_index);
+
+                dst_item = dst_slot.clone();
+                dst_slot.clone_from(&src_item);
+            }
+
+            // move dst item into src slot
+            {
+                let src_container = self.get_container(&action.src_storage_id);
+                let src_slot = src_container.get_slot(action.src_container_index);
+                src_slot.clone_from(&dst_item);
+            }
+        }
+    }
+
+    pub fn add_in_next_free_slot(&mut self, item: Item) {
+        for page in &mut self.pages {
+            for slot in &mut page.slots {
+                if slot.quantity == 0 {
+                    slot.clone_from(&item);
+                    return;
+                }
+            }
+        }
+    }
+
+    fn get_container(&mut self, container_type: &ContainerType) -> &mut dyn Container {
+        match container_type {
+            ContainerType::Inventory0 => &mut self.pages[0],
+            ContainerType::Inventory1 => &mut self.pages[1],
+            ContainerType::Inventory2 => &mut self.pages[2],
+            ContainerType::Inventory3 => &mut self.pages[3],
+            ContainerType::Equipped => &mut self.equipped,
+            ContainerType::ArmouryBody => todo!(),
         }
     }
 }
