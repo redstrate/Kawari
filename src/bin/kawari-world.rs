@@ -122,6 +122,9 @@ async fn main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::io::Error> {
                     }
                 }
             }
+            ToServer::Disconnected(from_id) => {
+                to_remove.push(from_id);
+            }
             ToServer::FatalError(err) => return Err(err),
         }
     }
@@ -573,6 +576,8 @@ async fn client_loop(
                                     }
                                     ClientZoneIpcData::Disconnected { .. } => {
                                         tracing::info!("Client disconnected!");
+
+                                        connection.handle.send(ToServer::Disconnected(connection.id)).await;
                                     }
                                     ClientZoneIpcData::ChatMessage(chat_message) => {
                                         connection.handle.send(ToServer::Message(connection.id, chat_message.message.clone())).await;

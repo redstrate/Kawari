@@ -99,6 +99,7 @@ pub enum ToServer {
     ActorSpawned(ClientId, Actor, CommonSpawn),
     ActorMoved(ClientId, u32, Position, f32),
     ZoneLoaded(ClientId),
+    Disconnected(ClientId),
     FatalError(std::io::Error),
 }
 
