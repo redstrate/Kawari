@@ -22,6 +22,11 @@ fn setup_default_environment() -> Environment<'static> {
     .unwrap();
     env.add_template("account.html", include_str!("../../templates/account.html"))
         .unwrap();
+    env.add_template(
+        "changepassword.html",
+        include_str!("../../templates/changepassword.html"),
+    )
+    .unwrap();
 
     env
 }
@@ -193,6 +198,18 @@ async fn logout(State(state): State<LoginServerState>, jar: CookieJar) -> (Cooki
     )
 }
 
+async fn change_password() -> Html<String> {
+    // TODO: actually change password
+    let environment = setup_default_environment();
+    let template = environment.get_template("changepassword.html").unwrap();
+    Html(template.render(context! {}).unwrap())
+}
+
+async fn cancel_account(jar: CookieJar) -> (CookieJar, Redirect) {
+    // TODO: actually delete account
+    (jar.remove("cis_sessid"), Redirect::to("/"))
+}
+
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
@@ -215,6 +232,8 @@ async fn main() {
         .route("/oauth/oa/registlist", post(do_register))
         .route("/account/app/svc/manage", get(account))
         .route("/account/app/svc/logout", get(logout))
+        .route("/account/app/svc/mbrPasswd", get(change_password))
+        .route("/account/app/svc/mbrCancel", get(cancel_account))
         .with_state(state);
 
     let config = get_config();
