@@ -77,5 +77,6 @@ jobs:
           !target/release/*.d
           resources/
           !resources/tests
+          !resources/opcodes.json
           scripts/
         if-no-files-found: error
