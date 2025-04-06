@@ -90,3 +90,6 @@ mlua = { version = "0.10", features = ["lua51", "vendored", "send", "async"], de
 
 # For character backup decompression
 zip = { version = "2.5", features = ["deflate", "lzma", "bzip2"], default-features = false }
+
+# For some login<->lobby server communication
+reqwest = "0.12.15"

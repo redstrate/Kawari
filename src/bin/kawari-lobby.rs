@@ -5,6 +5,7 @@ use kawari::common::custom_ipc::CustomIpcSegment;
 use kawari::common::custom_ipc::CustomIpcType;
 use kawari::config::get_config;
 use kawari::lobby::LobbyConnection;
+use kawari::lobby::ipc::ServiceAccount;
 use kawari::lobby::ipc::{ClientLobbyIpcData, ServerLobbyIpcSegment};
 use kawari::lobby::send_custom_world_packet;
 use kawari::oodle::OodleNetwork;
@@ -43,6 +44,8 @@ async fn main() {
             session_id: None,
             stored_character_creation_name: String::new(),
             world_name: world_name.clone(),
+            service_accounts: Vec::new(),
+            selected_service_account: None,
         };
 
         tokio::spawn(async move {
@@ -63,22 +66,42 @@ async fn main() {
                             }
                             SegmentType::Ipc { data } => match &data.data {
                                 ClientLobbyIpcData::ClientVersionInfo {
+                                    sequence,
                                     session_id,
                                     version_info,
-                                    ..
                                 } => {
                                     tracing::info!(
                                         "Client {session_id} ({version_info}) logging in!"
                                     );
 
-                                    connection.session_id = Some(session_id.clone());
+                                    let config = get_config();
 
-                                    connection.send_account_list().await;
+                                    let body = reqwest::get(format!(
+                                        "http://{}/_private/service_accounts?sid={}",
+                                        config.login.get_socketaddr(),
+                                        session_id
+                                    ))
+                                    .await
+                                    .unwrap()
+                                    .text()
+                                    .await
+                                    .unwrap();
 
-                                    // request an update
-                                    //connection.send_error(*sequence, 1012, 13101).await;
+                                    let service_accounts: Option<Vec<ServiceAccount>> =
+                                        serde_json::from_str(&body).ok();
+                                    if let Some(service_accounts) = service_accounts {
+                                        connection.service_accounts = service_accounts;
+                                        connection.session_id = Some(session_id.clone());
+                                        connection.send_account_list().await;
+                                    } else {
+                                        // request an update, wrong error message lol
+                                        connection.send_error(*sequence, 1012, 13101).await;
+                                    }
                                 }
                                 ClientLobbyIpcData::RequestCharacterList { sequence } => {
+                                    // TODO: support selecting a service account
+                                    connection.selected_service_account =
+                                        Some(connection.service_accounts[0].id);
                                     connection.send_lobby_info(*sequence).await
                                 }
                                 ClientLobbyIpcData::LobbyCharacterAction(character_action) => {

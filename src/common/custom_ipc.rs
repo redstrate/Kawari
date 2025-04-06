@@ -61,6 +61,7 @@ pub enum CustomIpcType {
 pub enum CustomIpcData {
     #[br(pre_assert(*magic == CustomIpcType::RequestCreateCharacter))]
     RequestCreateCharacter {
+        service_account_id: u32,
         #[bw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
         #[br(count = CHAR_NAME_MAX_LENGTH)]
         #[br(map = read_string)]
@@ -107,6 +108,7 @@ pub enum CustomIpcData {
 impl Default for CustomIpcData {
     fn default() -> CustomIpcData {
         CustomIpcData::RequestCreateCharacter {
+            service_account_id: 0,
             chara_make_json: String::new(),
             name: String::new(),
         }

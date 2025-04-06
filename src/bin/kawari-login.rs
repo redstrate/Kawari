@@ -105,11 +105,8 @@ async fn check_session(
     State(state): State<LoginServerState>,
     Query(params): Query<CheckSessionParams>,
 ) -> String {
-    if state.database.check_session(&params.sid) {
-        "1".to_string()
-    } else {
-        "0".to_string()
-    }
+    let accounts = state.database.check_session(&params.sid);
+    serde_json::to_string(&accounts).unwrap_or(String::new())
 }
 
 #[tokio::main]
@@ -125,7 +122,7 @@ async fn main() {
         .route("/oauth/ffxivarr/login/login.send", post(login_send))
         .route("/register", post(do_register))
         // TODO: make these actually private
-        .route("/private/check_session", get(check_session))
+        .route("/_private/service_accounts", get(check_session))
         .with_state(state);
 
     let config = get_config();

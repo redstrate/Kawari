@@ -805,6 +805,7 @@ async fn client_loop(
                             SegmentType::CustomIpc { data } => {
                                 match &data.data {
                                     CustomIpcData::RequestCreateCharacter {
+                                        service_account_id,
                                         name,
                                         chara_make_json,
                                     } => {
@@ -829,6 +830,7 @@ async fn client_loop(
                                         );
 
                                         let (content_id, actor_id) = database.create_player_data(
+                                            *service_account_id,
                                             name,
                                             chara_make_json,
                                             city_state,

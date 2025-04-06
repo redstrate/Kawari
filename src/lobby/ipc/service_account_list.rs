@@ -1,9 +1,10 @@
 use binrw::binrw;
+use serde::{Deserialize, Serialize};
 
 use crate::common::{read_string, write_string};
 
 #[binrw]
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
 pub struct ServiceAccount {
     pub id: u32,
     pub unk1: u32,

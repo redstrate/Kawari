@@ -37,6 +37,10 @@ pub struct LobbyConnection {
     pub stored_character_creation_name: String,
 
     pub world_name: String,
+
+    pub service_accounts: Vec<ServiceAccount>,
+
+    pub selected_service_account: Option<u32>,
 }
 
 impl LobbyConnection {
@@ -79,22 +83,13 @@ impl LobbyConnection {
 
     /// Send the service account list to the client.
     pub async fn send_account_list(&mut self) {
-        // send the client the service account list
-        let service_accounts = [ServiceAccount {
-            id: 0x002E4A2B,
-            unk1: 0,
-            index: 0,
-            name: "FINAL FANTASY XIV".to_string(),
-        }]
-        .to_vec();
-
         let service_account_list =
             ServerLobbyIpcData::LobbyServiceAccountList(LobbyServiceAccountList {
                 sequence: 0,
-                num_service_accounts: service_accounts.len() as u8,
+                num_service_accounts: self.service_accounts.len() as u8,
                 unk1: 3,
                 unk2: 0x99,
-                service_accounts: service_accounts.to_vec(),
+                service_accounts: self.service_accounts.to_vec(),
             });
 
         let ipc = ServerLobbyIpcSegment {
@@ -196,7 +191,7 @@ impl LobbyConnection {
                 server_id: 0,
                 timestamp: 0,
                 data: CustomIpcData::RequestCharacterList {
-                    service_account_id: 0x1, // TODO: placeholder
+                    service_account_id: self.selected_service_account.unwrap(),
                 },
             };
 
@@ -441,6 +436,7 @@ impl LobbyConnection {
                         server_id: 0,
                         timestamp: 0,
                         data: CustomIpcData::RequestCreateCharacter {
+                            service_account_id: self.selected_service_account.unwrap(),
                             name: self.stored_character_creation_name.clone(), // TODO: worth double-checking, but AFAIK we have to store it this way?
                             chara_make_json: character_action.json.clone(),
                         },

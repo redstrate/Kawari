@@ -127,6 +127,7 @@ impl WorldDatabase {
 
         // TODO: import inventory
         self.create_player_data(
+            0x1,
             &character.name,
             &chara_make.to_json(),
             character.city_state.value as u8,
@@ -322,6 +323,7 @@ impl WorldDatabase {
     /// Gives (content_id, actor_id)
     pub fn create_player_data(
         &self,
+        service_account_id: u32,
         name: &str,
         chara_make: &str,
         city_state: u8,
@@ -337,7 +339,7 @@ impl WorldDatabase {
         connection
             .execute(
                 "INSERT INTO characters VALUES (?1, ?2, ?3);",
-                (content_id, 0x1, actor_id),
+                (content_id, service_account_id, actor_id),
             )
             .unwrap();
 
