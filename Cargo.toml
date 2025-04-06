@@ -50,6 +50,7 @@ serde_json = { version = "1.0", features = ["std"], default-features = false }
 [dependencies]
 # Used for the web servers
 axum = { version = "0.8", features = ["json", "tokio", "http1", "form", "query"], default-features = false }
+axum-extra = { version = "0.10", features = ["cookie"], default-features = false }
 
 # Serialization used in almost every server
 serde = { version = "1.0", features = ["derive"], default-features = false }

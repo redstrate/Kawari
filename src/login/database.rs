@@ -10,6 +10,7 @@ pub struct LoginDatabase {
     connection: Mutex<Connection>,
 }
 
+#[derive(Debug)]
 pub enum LoginError {
     WrongUsername,
     WrongPassword,
@@ -189,5 +190,25 @@ impl LoginDatabase {
             stmt.query_row((username,), |row| Ok(row.get(0)?));
 
         selected_row.is_ok()
+    }
+
+    pub fn get_user_id(&self, sid: &str) -> u32 {
+        let connection = self.connection.lock().unwrap();
+
+        let mut stmt = connection
+            .prepare("SELECT user_id FROM sessions WHERE sid = ?1")
+            .ok()
+            .unwrap();
+        stmt.query_row((sid,), |row| Ok(row.get(0)?)).unwrap()
+    }
+
+    pub fn get_username(&self, user_id: u32) -> String {
+        let connection = self.connection.lock().unwrap();
+
+        let mut stmt = connection
+            .prepare("SELECT username FROM users WHERE id = ?1")
+            .ok()
+            .unwrap();
+        stmt.query_row((user_id,), |row| Ok(row.get(0)?)).unwrap()
     }
 }

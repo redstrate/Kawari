@@ -4,9 +4,27 @@ use axum::extract::{Query, State};
 use axum::response::{Html, Redirect};
 use axum::routing::post;
 use axum::{Form, Router, routing::get};
+use axum_extra::extract::CookieJar;
+use axum_extra::extract::cookie::{Cookie, Expiration};
 use kawari::config::get_config;
 use kawari::login::{LoginDatabase, LoginError};
+use minijinja::{Environment, context};
 use serde::Deserialize;
+
+fn setup_default_environment() -> Environment<'static> {
+    let mut env = Environment::new();
+    env.add_template("login.html", include_str!("../../templates/login.html"))
+        .unwrap();
+    env.add_template(
+        "register.html",
+        include_str!("../../templates/register.html"),
+    )
+    .unwrap();
+    env.add_template("account.html", include_str!("../../templates/account.html"))
+        .unwrap();
+
+    env
+}
 
 #[derive(Clone)]
 struct LoginServerState {
@@ -109,6 +127,72 @@ async fn check_session(
     serde_json::to_string(&accounts).unwrap_or(String::new())
 }
 
+async fn login() -> Html<String> {
+    let environment = setup_default_environment();
+    let template = environment.get_template("login.html").unwrap();
+    Html(template.render(context! {}).unwrap())
+}
+
+async fn register() -> Html<String> {
+    let environment = setup_default_environment();
+    let template = environment.get_template("register.html").unwrap();
+    Html(template.render(context! {}).unwrap())
+}
+
+#[derive(Deserialize, Debug)]
+#[allow(dead_code)]
+struct LoginInput {
+    username: Option<String>,
+    password: Option<String>,
+}
+
+async fn do_login(
+    State(state): State<LoginServerState>,
+    jar: CookieJar,
+    Form(input): Form<LoginInput>,
+) -> (CookieJar, Redirect) {
+    tracing::info!("{:#?} logging in!", input.username,);
+
+    let Some(username) = input.username else {
+        panic!("Expected username!");
+    };
+    let Some(password) = input.password else {
+        panic!("Expected password!");
+    };
+
+    let sid = state.database.login_user(&username, &password).unwrap();
+
+    let cookie = Cookie::build(("cis_sessid", sid))
+        .path("/")
+        .secure(false)
+        .expires(Expiration::Session)
+        .http_only(true);
+
+    (jar.add(cookie), Redirect::to("/account/app/svc/manage"))
+}
+
+async fn account(State(state): State<LoginServerState>, jar: CookieJar) -> Html<String> {
+    if let Some(session_id) = jar.get("cis_sessid") {
+        let user_id = state.database.get_user_id(session_id.value());
+        let username = state.database.get_username(user_id);
+
+        let environment = setup_default_environment();
+        let template = environment.get_template("account.html").unwrap();
+        Html(template.render(context! { username => username }).unwrap())
+    } else {
+        Html("You need to be logged in!".to_string())
+    }
+}
+
+async fn logout(State(state): State<LoginServerState>, jar: CookieJar) -> (CookieJar, Redirect) {
+    let config = get_config();
+    // TODO: remove session from database
+    (
+        jar.remove("cis_sessid"),
+        Redirect::to(&format!("http://{}/", config.web.server_name)),
+    )
+}
+
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
@@ -118,11 +202,19 @@ async fn main() {
     };
 
     let app = Router::new()
+        // retail API
         .route("/oauth/ffxivarr/login/top", get(top))
         .route("/oauth/ffxivarr/login/login.send", post(login_send))
-        .route("/register", post(do_register))
+        // private server<->server API
         // TODO: make these actually private
         .route("/_private/service_accounts", get(check_session))
+        // public website
+        .route("/oauth/oa/oauthlogin", get(login))
+        .route("/oauth/oa/oauthlogin", post(do_login))
+        .route("/oauth/oa/registligt", get(register))
+        .route("/oauth/oa/registlist", post(do_register))
+        .route("/account/app/svc/manage", get(account))
+        .route("/account/app/svc/logout", get(logout))
         .with_state(state);
 
     let config = get_config();

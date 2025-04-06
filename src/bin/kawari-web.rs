@@ -9,18 +9,13 @@ fn setup_default_environment() -> Environment<'static> {
     let mut env = Environment::new();
     env.add_template("web.html", include_str!("../../templates/web.html"))
         .unwrap();
-    env.add_template("login.html", include_str!("../../templates/login.html"))
-        .unwrap();
-    env.add_template(
-        "register.html",
-        include_str!("../../templates/register.html"),
-    )
-    .unwrap();
     env.add_template(
         "worldstatus.html",
         include_str!("../../templates/worldstatus.html"),
     )
     .unwrap();
+    env.add_template("account.html", include_str!("../../templates/account.html"))
+        .unwrap();
 
     env
 }
@@ -31,21 +26,15 @@ struct GateStatus {
 }
 
 async fn root() -> Html<String> {
+    let config = get_config();
+
     let environment = setup_default_environment();
     let template = environment.get_template("web.html").unwrap();
-    Html(template.render(context! {}).unwrap())
-}
-
-async fn login() -> Html<String> {
-    let environment = setup_default_environment();
-    let template = environment.get_template("login.html").unwrap();
-    Html(template.render(context! {}).unwrap())
-}
-
-async fn register() -> Html<String> {
-    let environment = setup_default_environment();
-    let template = environment.get_template("register.html").unwrap();
-    Html(template.render(context! {}).unwrap())
+    Html(
+        template
+            .render(context! { login_server => config.login.server_name })
+            .unwrap(),
+    )
 }
 
 async fn world_status() -> Html<String> {
@@ -66,8 +55,6 @@ async fn main() {
 
     let app = Router::new()
         .route("/", get(root))
-        .route("/login", get(login))
-        .route("/register", get(register))
         .route("/worldstatus", get(world_status));
 
     let config = get_config();

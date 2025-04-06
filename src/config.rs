@@ -92,6 +92,8 @@ impl LobbyConfig {
 pub struct LoginConfig {
     pub port: u16,
     pub listen_address: String,
+    /// Public-facing domain of the server.
+    pub server_name: String,
 }
 
 impl Default for LoginConfig {
@@ -99,6 +101,7 @@ impl Default for LoginConfig {
         Self {
             port: 6700,
             listen_address: "127.0.0.1".to_string(),
+            server_name: "ffxiv-login.square.localhost".to_string(),
         }
     }
 }
@@ -157,6 +160,8 @@ impl PatchConfig {
 pub struct WebConfig {
     pub port: u16,
     pub listen_address: String,
+    /// Public-facing domain of the server.
+    pub server_name: String,
 }
 
 impl Default for WebConfig {
@@ -164,6 +169,7 @@ impl Default for WebConfig {
         Self {
             port: 5801,
             listen_address: "127.0.0.1".to_string(),
+            server_name: "ffxiv.localhost".to_string(),
         }
     }
 }
