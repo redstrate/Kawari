@@ -35,7 +35,7 @@ game_location: pathtogamedir
 More configuration options can be found in `config.rs`, such as changing the ports services run on. Finally, run Kawari with the helper script:
 
 ```shell
-$ ./run.sh
+$ ./scripts/run.sh
 ```
 
 ## Reverse proxy setup
@@ -43,7 +43,7 @@ $ ./run.sh
 Kawari is useless if it's not behind a domain or other address accessible to a launcher. Even something like Caddy is good enough, and we provide an example setup in the root of the repository.
 
 ```shell
-$ caddy run
+$ caddy run resources/Caddyfile
 ```
 
 This Caddyfile hosts several domains, most notably `ffxiv.localhost`, on port 80. If you get a "permission denied" error starting Caddy, you must either start Caddy with elevated privileges or set the `CAP_NET_BIND_SERVICE` capability. See [here](https://caddyserver.com/docs/quick-starts/caddyfile) for more information on how to do this.

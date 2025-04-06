@@ -75,5 +75,7 @@ jobs:
           target/release/kawari-web*
           target/release/kawari-world*
           !target/release/*.d
-          resources/scripts
+          resources/
+          !resources/tests
+          scripts/
         if-no-files-found: error
