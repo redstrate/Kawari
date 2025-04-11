@@ -60,8 +60,11 @@ mod tests {
 
         let chara_make = CharaMake::from_json(json);
         assert_eq!(chara_make.customize.gender, 0);
-        assert_eq!(chara_make.unk1, 1);
-
-        // TODO: add more asserts
+        assert_eq!(chara_make.voice_id, 1);
+        assert_eq!(chara_make.guardian, 1);
+        assert_eq!(chara_make.birth_month, 1);
+        assert_eq!(chara_make.birth_day, 1);
+        assert_eq!(chara_make.classjob_id, 1);
+        assert_eq!(chara_make.unk2, 1);
     }
 }
