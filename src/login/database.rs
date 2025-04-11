@@ -163,15 +163,13 @@ impl LoginDatabase {
             let accounts = stmt.query_map((user_id,), |row| row.get(0)).unwrap();
 
             let mut service_accounts = Vec::new();
-            let mut index = 0;
-            for id in accounts {
+            for (index, id) in accounts.enumerate() {
                 service_accounts.push(ServiceAccount {
                     id: id.unwrap(),
                     unk1: 0,
-                    index,
+                    index: index as u32,
                     name: format!("FINAL FANTASY XIV {}", index + 1), // TODO: don't add the "1" if you only have one service account
                 });
-                index += 1
             }
 
             service_accounts

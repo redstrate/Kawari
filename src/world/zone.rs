@@ -50,9 +50,7 @@ impl Zone {
         let mut load_lgb = |name: &str| -> Option<LayerGroup> {
             let path = format!("bg/{}/level/{}.lgb", &bg_path[..level_index], name);
             tracing::info!("Loading {path}");
-            let Some(lgb) = game_data.extract(&path) else {
-                return None;
-            };
+            let lgb = game_data.extract(&path)?;
             LayerGroup::from_existing(&lgb)
         };
 

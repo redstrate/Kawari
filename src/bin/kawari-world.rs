@@ -68,7 +68,7 @@ async fn main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::io::Error> {
                             let msg =
                                 FromServer::ActorSpawn(Actor { id: *id, hp: 100 }, common.clone());
 
-                            let _ = handle.send(msg).unwrap();
+                            handle.send(msg).unwrap();
                         }
 
                         break;
@@ -724,7 +724,7 @@ async fn client_loop(
                                                     }
                                                 }
 
-                                                let actor = actor.clone();
+                                                let actor = *actor;
                                                 connection.update_hp_mp(actor.id, actor.hp, 10000).await;
                                             }
 
@@ -784,7 +784,7 @@ async fn client_loop(
                                     ClientZoneIpcData::InventoryModify(action) => {
                                         tracing::info!("Client is modifying inventory! {action:#?}");
 
-                                        connection.player_data.inventory.process_action(&action);
+                                        connection.player_data.inventory.process_action(action);
                                         connection.send_inventory(true).await;
                                     }
                                 }

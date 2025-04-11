@@ -63,7 +63,7 @@ pub(crate) fn write_string(str: &String) -> Vec<u8> {
 
 /// Converts a quantized rotation to degrees in f32
 pub(crate) fn read_quantized_rotation(quantized: u16) -> f32 {
-    let max = std::u16::MAX as f32;
+    let max = u16::MAX as f32;
     let pi = std::f32::consts::PI;
 
     quantized as f32 / max * (2.0 * pi) - pi
@@ -71,7 +71,7 @@ pub(crate) fn read_quantized_rotation(quantized: u16) -> f32 {
 
 /// Converts a rotation (in degrees) to
 pub(crate) fn write_quantized_rotation(quantized: &f32) -> u16 {
-    let max = std::u16::MAX as f32;
+    let max = u16::MAX as f32;
     let pi = std::f32::consts::PI;
 
     ((quantized + pi / (2.0 * pi)) * max) as u16

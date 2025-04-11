@@ -11,7 +11,7 @@ use super::ipc::{ContainerType, InventoryModify};
 // TODO: rename to storage?
 pub trait Container {
     fn num_items(&self) -> u32;
-    fn get_slot<'a>(&'a mut self, index: u16) -> &'a mut Item;
+    fn get_slot(&mut self, index: u16) -> &mut Item;
 }
 
 #[derive(Default, Copy, Clone, Serialize, Deserialize, Debug)]
@@ -176,7 +176,7 @@ impl Inventory {
             {
                 let src_container = self.get_container(&action.src_storage_id);
                 let src_slot = src_container.get_slot(action.src_container_index);
-                src_item = src_slot.clone();
+                src_item = *src_slot;
             }
 
             let dst_item;
@@ -185,7 +185,7 @@ impl Inventory {
                 let dst_container = self.get_container(&action.dst_storage_id);
                 let dst_slot = dst_container.get_slot(action.dst_container_index);
 
-                dst_item = dst_slot.clone();
+                dst_item = *dst_slot;
                 dst_slot.clone_from(&src_item);
             }
 

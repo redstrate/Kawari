@@ -688,13 +688,7 @@ impl ZoneConnection {
     }
 
     pub fn get_actor(&mut self, id: ObjectId) -> Option<&mut Actor> {
-        for actor in &mut self.actors {
-            if actor.id == id {
-                return Some(actor);
-            }
-        }
-
-        None
+        self.actors.iter_mut().find(|actor| actor.id == id)
     }
 
     pub async fn actor_control_self(&mut self, actor_control: ActorControlSelf) {
@@ -746,7 +740,7 @@ impl ZoneConnection {
                 game_data.get_primary_model_id(equipped.left_ring.id) as u32,
                 game_data.get_primary_model_id(equipped.right_ring.id) as u32,
             ],
-            pos: exit_position.unwrap_or(Position::default()),
+            pos: exit_position.unwrap_or_default(),
             rotation: exit_rotation.unwrap_or(0.0),
             ..Default::default()
         }
