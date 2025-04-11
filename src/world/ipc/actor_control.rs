@@ -1,5 +1,7 @@
 use binrw::binrw;
 
+use crate::common::{read_bool_from, write_bool_as};
+
 use super::OnlineStatus;
 
 // See https://github.com/awgil/ffxiv_reverse/blob/f35b6226c1478234ca2b7149f82d251cffca2f56/vnetlog/vnetlog/ServerIPC.cs#L266 for a REALLY useful list of known values
@@ -9,7 +11,9 @@ pub enum ActorControlCategory {
     #[brw(magic = 0x26u16)]
     ToggleInvisibility {
         #[brw(pad_before = 2)]
-        invisible: u32, // FIXME: change to bool
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        invisible: bool,
     },
     #[brw(magic = 0xC8u16)]
     ZoneIn {
@@ -43,7 +47,7 @@ pub struct ActorControl {
 impl Default for ActorControl {
     fn default() -> Self {
         Self {
-            category: ActorControlCategory::ToggleInvisibility { invisible: 1 },
+            category: ActorControlCategory::ToggleInvisibility { invisible: false },
         }
     }
 }
@@ -60,7 +64,7 @@ pub struct ActorControlSelf {
 impl Default for ActorControlSelf {
     fn default() -> Self {
         Self {
-            category: ActorControlCategory::ToggleInvisibility { invisible: 1 },
+            category: ActorControlCategory::ToggleInvisibility { invisible: false },
         }
     }
 }

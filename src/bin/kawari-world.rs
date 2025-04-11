@@ -608,7 +608,7 @@ async fn client_loop(
                                                     .actor_control_self(ActorControlSelf {
                                                         category:
                                                             ActorControlCategory::ToggleInvisibility {
-                                                                invisible: 1,
+                                                                invisible: true,
                                                             },
                                                     })
                                                     .await
