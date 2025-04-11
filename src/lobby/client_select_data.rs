@@ -40,7 +40,7 @@ pub struct ClientSelectData {
     pub remake_mode: RemakeMode, // TODO: upstream a comment about this to FFXIVClientStructs
     /// If above 0, then a message warns the user that they have X minutes left to remake their character.
     pub remake_minutes_remaining: i32,
-    pub unk19: i32,
+    pub voice_id: i32, // presumably
     pub unk20: i32,
     pub world_name: String,
     pub unk22: i32,
@@ -71,7 +71,7 @@ impl ClientSelectData {
             self.unk16.to_string(),
             (self.remake_mode as i32).to_string(),
             self.remake_minutes_remaining.to_string(),
-            self.unk19.to_string(),
+            self.voice_id.to_string(),
             self.unk20.to_string(),
             self.world_name,
             self.unk22.to_string(),

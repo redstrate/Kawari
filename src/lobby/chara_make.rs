@@ -5,7 +5,7 @@ use crate::common::CustomizeData;
 #[derive(Debug)]
 pub struct CharaMake {
     pub customize: CustomizeData,
-    pub unk1: i32,
+    pub voice_id: i32,
     pub guardian: i32,
     pub birth_month: i32, // TODO: wrong?
     pub birth_day: i32,
@@ -20,7 +20,7 @@ impl CharaMake {
 
         Self {
             customize: CustomizeData::from_json(&content[0]),
-            unk1: content[1].as_str().unwrap().parse::<i32>().unwrap(),
+            voice_id: content[1].as_str().unwrap().parse::<i32>().unwrap(),
             guardian: content[2].as_str().unwrap().parse::<i32>().unwrap(),
             birth_month: content[3].as_str().unwrap().parse::<i32>().unwrap(),
             birth_day: content[4].as_str().unwrap().parse::<i32>().unwrap(),
@@ -32,7 +32,7 @@ impl CharaMake {
     pub fn to_json(&self) -> String {
         let content = json!([
             self.customize.to_json(),
-            self.unk1.to_string(),
+            self.voice_id.to_string(),
             self.guardian.to_string(),
             self.birth_month.to_string(),
             self.birth_day.to_string(),

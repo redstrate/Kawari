@@ -117,7 +117,7 @@ impl WorldDatabase {
 
         let chara_make = CharaMake {
             customize,
-            unk1: 73,
+            voice_id: character.voice,
             guardian: character.guardian.value,
             birth_month: character.nameday.month,
             birth_day: character.nameday.day,
@@ -284,7 +284,7 @@ impl WorldDatabase {
                     unk16: 0,
                     remake_mode: RemakeMode::None,
                     remake_minutes_remaining: 0,
-                    unk19: 0,
+                    voice_id: chara_make.voice_id,
                     unk20: 0,
                     world_name: String::new(),
                     unk22: 0,
