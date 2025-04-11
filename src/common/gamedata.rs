@@ -107,7 +107,7 @@ impl GameData {
     }
 
     /// Gets the primary model ID for a given item ID
-    pub fn get_primary_model_id(&mut self, item_id: u32) -> u16 {
+    pub fn get_primary_model_id(&mut self, item_id: u32) -> Option<u16> {
         for page in &self.item_pages {
             if let Some(row) = page.read_row(&self.item_exh, item_id) {
                 let item_row = &row[0];
@@ -116,13 +116,10 @@ impl GameData {
                     panic!("Unexpected type!");
                 };
 
-                return *id as u16;
+                return Some(*id as u16);
             }
         }
 
-        // TODO: just turn this into an Option<>
-        tracing::warn!("Failed to get model id for {item_id}, this is most likely a bug!");
-
-        0
+        None
     }
 }

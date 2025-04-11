@@ -577,16 +577,36 @@ impl ZoneConnection {
                         crest_enable: 0,
                         pattern_invalid: 0,
                         model_ids: [
-                            game_data.get_primary_model_id(equipped.head.id) as u32,
-                            game_data.get_primary_model_id(equipped.body.id) as u32,
-                            game_data.get_primary_model_id(equipped.hands.id) as u32,
-                            game_data.get_primary_model_id(equipped.legs.id) as u32,
-                            game_data.get_primary_model_id(equipped.feet.id) as u32,
-                            game_data.get_primary_model_id(equipped.ears.id) as u32,
-                            game_data.get_primary_model_id(equipped.neck.id) as u32,
-                            game_data.get_primary_model_id(equipped.wrists.id) as u32,
-                            game_data.get_primary_model_id(equipped.left_ring.id) as u32,
-                            game_data.get_primary_model_id(equipped.right_ring.id) as u32,
+                            game_data
+                                .get_primary_model_id(equipped.head.id)
+                                .unwrap_or(0) as u32,
+                            game_data
+                                .get_primary_model_id(equipped.body.id)
+                                .unwrap_or(0) as u32,
+                            game_data
+                                .get_primary_model_id(equipped.hands.id)
+                                .unwrap_or(0) as u32,
+                            game_data
+                                .get_primary_model_id(equipped.legs.id)
+                                .unwrap_or(0) as u32,
+                            game_data
+                                .get_primary_model_id(equipped.feet.id)
+                                .unwrap_or(0) as u32,
+                            game_data
+                                .get_primary_model_id(equipped.ears.id)
+                                .unwrap_or(0) as u32,
+                            game_data
+                                .get_primary_model_id(equipped.neck.id)
+                                .unwrap_or(0) as u32,
+                            game_data
+                                .get_primary_model_id(equipped.wrists.id)
+                                .unwrap_or(0) as u32,
+                            game_data
+                                .get_primary_model_id(equipped.left_ring.id)
+                                .unwrap_or(0) as u32,
+                            game_data
+                                .get_primary_model_id(equipped.right_ring.id)
+                                .unwrap_or(0) as u32,
                         ],
                     }),
                     ..Default::default()
@@ -729,16 +749,36 @@ impl ZoneConnection {
             look: chara_details.chara_make.customize,
             display_flags: DisplayFlag::UNK,
             models: [
-                game_data.get_primary_model_id(equipped.head.id) as u32,
-                game_data.get_primary_model_id(equipped.body.id) as u32,
-                game_data.get_primary_model_id(equipped.hands.id) as u32,
-                game_data.get_primary_model_id(equipped.legs.id) as u32,
-                game_data.get_primary_model_id(equipped.feet.id) as u32,
-                game_data.get_primary_model_id(equipped.ears.id) as u32,
-                game_data.get_primary_model_id(equipped.neck.id) as u32,
-                game_data.get_primary_model_id(equipped.wrists.id) as u32,
-                game_data.get_primary_model_id(equipped.left_ring.id) as u32,
-                game_data.get_primary_model_id(equipped.right_ring.id) as u32,
+                game_data
+                    .get_primary_model_id(equipped.head.id)
+                    .unwrap_or(0) as u32,
+                game_data
+                    .get_primary_model_id(equipped.body.id)
+                    .unwrap_or(0) as u32,
+                game_data
+                    .get_primary_model_id(equipped.hands.id)
+                    .unwrap_or(0) as u32,
+                game_data
+                    .get_primary_model_id(equipped.legs.id)
+                    .unwrap_or(0) as u32,
+                game_data
+                    .get_primary_model_id(equipped.feet.id)
+                    .unwrap_or(0) as u32,
+                game_data
+                    .get_primary_model_id(equipped.ears.id)
+                    .unwrap_or(0) as u32,
+                game_data
+                    .get_primary_model_id(equipped.neck.id)
+                    .unwrap_or(0) as u32,
+                game_data
+                    .get_primary_model_id(equipped.wrists.id)
+                    .unwrap_or(0) as u32,
+                game_data
+                    .get_primary_model_id(equipped.left_ring.id)
+                    .unwrap_or(0) as u32,
+                game_data
+                    .get_primary_model_id(equipped.right_ring.id)
+                    .unwrap_or(0) as u32,
             ],
             pos: exit_position.unwrap_or_default(),
             rotation: exit_rotation.unwrap_or(0.0),
