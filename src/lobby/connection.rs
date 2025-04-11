@@ -363,10 +363,7 @@ impl LobbyConnection {
 
                 tracing::info!("Is name free? {free}");
 
-                // TODO: use read_bool_as
-                let free: bool = *free == 1u8;
-
-                if free {
+                if *free {
                     self.stored_character_creation_name = character_action.name.clone();
 
                     let ipc = ServerLobbyIpcSegment {

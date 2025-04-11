@@ -51,6 +51,14 @@ pub const INVALID_OBJECT_ID: ObjectId = ObjectId(0xE0000000);
 /// Maxmimum length of a character's name.
 pub const CHAR_NAME_MAX_LENGTH: usize = 32;
 
+pub(crate) fn read_bool_from<T: std::convert::From<u8> + std::cmp::PartialEq>(x: T) -> bool {
+    x == T::from(1u8)
+}
+
+pub(crate) fn write_bool_as<T: std::convert::From<u8>>(x: &bool) -> T {
+    if *x { T::from(1u8) } else { T::from(0u8) }
+}
+
 pub(crate) fn read_string(byte_stream: Vec<u8>) -> String {
     let str = String::from_utf8(byte_stream).unwrap();
     str.trim_matches(char::from(0)).to_string() // trim \0 from the end of strings
@@ -145,6 +153,20 @@ pub struct Attributes {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    const DATA: [u8; 2] = [0u8, 1u8];
+
+    #[test]
+    fn read_bool_u8() {
+        assert!(!read_bool_from::<u8>(DATA[0]));
+        assert!(read_bool_from::<u8>(DATA[1]));
+    }
+
+    #[test]
+    fn write_bool_u8() {
+        assert_eq!(write_bool_as::<u8>(&false), DATA[0]);
+        assert_eq!(write_bool_as::<u8>(&true), DATA[1]);
+    }
 
     // "FOO\0"
     const STRING_DATA: [u8; 4] = [0x46u8, 0x4Fu8, 0x4Fu8, 0x0u8];

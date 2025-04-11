@@ -1,7 +1,7 @@
 use binrw::binrw;
 
 use crate::{
-    common::{CHAR_NAME_MAX_LENGTH, read_string},
+    common::{CHAR_NAME_MAX_LENGTH, read_bool_from, read_string, write_bool_as},
     lobby::ipc::CharacterDetails,
     packet::{IpcSegment, ReadWriteIpcSegment},
 };
@@ -88,7 +88,11 @@ pub enum CustomIpcData {
         name: String,
     },
     #[br(pre_assert(*magic == CustomIpcType::NameIsAvailableResponse))]
-    NameIsAvailableResponse { free: u8 },
+    NameIsAvailableResponse {
+        #[br(map = read_bool_from::<u8>)]
+        #[bw(map = write_bool_as::<u8>)]
+        free: bool,
+    },
     #[br(pre_assert(*magic == CustomIpcType::RequestCharacterList))]
     RequestCharacterList { service_account_id: u32 },
     #[br(pre_assert(*magic == CustomIpcType::RequestCharacterListRepsonse))]

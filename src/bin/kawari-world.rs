@@ -890,7 +890,6 @@ async fn client_loop(
                                     }
                                     CustomIpcData::CheckNameIsAvailable { name } => {
                                         let is_name_free = database.check_is_name_free(name);
-                                        let is_name_free = if is_name_free { 1 } else { 0 };
 
                                         // send response
                                         {
