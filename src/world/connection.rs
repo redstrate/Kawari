@@ -290,7 +290,12 @@ impl ZoneConnection {
             op_code: ServerZoneIpcType::ActorMove,
             timestamp: timestamp_secs(),
             data: ServerZoneIpcData::ActorMove(ActorMove {
-                speed: 24,
+                rotation,
+                dir_before_slip: 0x7F,
+                flag1: 0,
+                flag2: 0,
+                speed: 0x3C,
+                unk1: 0xEA,
                 position,
                 ..Default::default()
             }),
