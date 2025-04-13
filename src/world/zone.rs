@@ -71,7 +71,7 @@ impl Zone {
         instance_id: u32,
     ) -> Option<(&InstanceObject, &ExitRangeInstanceObject)> {
         // TODO: also check position!
-        for group in &self.planmap.as_ref().unwrap().layers {
+        for group in &self.planmap.as_ref().unwrap().chunks[0].layers {
             for object in &group.objects {
                 if let LayerEntryData::ExitRange(exit_range) = &object.data {
                     if object.instance_id == instance_id {
@@ -89,7 +89,7 @@ impl Zone {
         instance_id: u32,
     ) -> Option<(&InstanceObject, &PopRangeInstanceObject)> {
         // TODO: also check position!
-        for group in &self.planmap.as_ref().unwrap().layers {
+        for group in &self.planmap.as_ref().unwrap().chunks[0].layers {
             for object in &group.objects {
                 if let LayerEntryData::PopRange(pop_range) = &object.data {
                     if object.instance_id == instance_id {
@@ -100,7 +100,7 @@ impl Zone {
         }
 
         // For certain PopRanges (e.g. the starting position in the opening zones)
-        for group in &self.planevent.as_ref().unwrap().layers {
+        for group in &self.planevent.as_ref().unwrap().chunks[0].layers {
             for object in &group.objects {
                 if let LayerEntryData::PopRange(pop_range) = &object.data {
                     if object.instance_id == instance_id {
