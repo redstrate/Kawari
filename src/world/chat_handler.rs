@@ -203,13 +203,6 @@ impl ChatHandler {
                     .await;
             }
             "!spawnmonster" => {
-                let actor = Actor {
-                    id: ObjectId(0x106ad804),
-                    hp: 100,
-                };
-
-                connection.add_actor(actor);
-
                 // spawn a tiny mandragora
                 {
                     let ipc = ServerZoneIpcSegment {

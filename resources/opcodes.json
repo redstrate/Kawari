@@ -154,6 +154,11 @@
             "name": "Equip",
             "opcode": 468,
             "size": 72
+        },
+        {
+            "name": "ActorFreeSpawn",
+            "opcode": 144,
+            "size": 8
         }
     ],
     "ClientZoneIpcType": [

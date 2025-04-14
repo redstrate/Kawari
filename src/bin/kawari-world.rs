@@ -65,8 +65,14 @@ async fn main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::io::Error> {
                     if id == from_id {
                         // send existing player data
                         for (id, common) in &data.actors {
-                            let msg =
-                                FromServer::ActorSpawn(Actor { id: *id, hp: 100 }, common.clone());
+                            let msg = FromServer::ActorSpawn(
+                                Actor {
+                                    id: *id,
+                                    hp: 100,
+                                    spawn_index: 0,
+                                },
+                                common.clone(),
+                            );
 
                             handle.send(msg).unwrap();
                         }
@@ -101,6 +107,23 @@ async fn main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::io::Error> {
                     }
 
                     let msg = FromServer::ActorSpawn(actor, common.clone());
+
+                    if handle.send(msg).is_err() {
+                        to_remove.push(id);
+                    }
+                }
+            }
+            ToServer::ActorDespawned(from_id, actor_id) => {
+                data.actors.remove(&ObjectId(actor_id));
+
+                for (id, handle) in &mut data.clients {
+                    let id = *id;
+
+                    if id == from_id {
+                        continue;
+                    }
+
+                    let msg = FromServer::ActorDespawn(actor_id);
 
                     if handle.send(msg).is_err() {
                         to_remove.push(id);
@@ -453,7 +476,7 @@ async fn client_loop(
                                         exit_rotation = None;
 
                                         // tell the other players we're here
-                                        connection.handle.send(ToServer::ActorSpawned(connection.id, Actor { id: ObjectId(connection.player_data.actor_id), hp: 100 }, connection.get_player_common_spawn(None, None))).await;
+                                        connection.handle.send(ToServer::ActorSpawned(connection.id, Actor { id: ObjectId(connection.player_data.actor_id), hp: 100, spawn_index: 0 }, connection.get_player_common_spawn(None, None))).await;
                                     }
                                     ClientZoneIpcData::Unk1 {
                                         category, param1, ..
@@ -713,7 +736,7 @@ async fn client_loop(
                                                 .copy_from_slice(&effects_builder.effects);
 
                                             if let Some(actor) =
-                                                connection.get_actor(request.target.object_id)
+                                                connection.get_actor_mut(request.target.object_id)
                                             {
                                                 for effect in &effects_builder.effects {
                                                     match effect.kind {
@@ -1014,10 +1037,9 @@ async fn client_loop(
             msg = internal_recv.recv() => match msg {
                 Some(msg) => match msg {
                     FromServer::Message(msg)=> connection.send_message(&msg).await,
-                    FromServer::ActorSpawn(actor, common) => {
-                        connection.spawn_actor(actor, common).await
-                    },
+                    FromServer::ActorSpawn(actor, common) => connection.spawn_actor(actor, common).await,
                     FromServer::ActorMove(actor_id, position, rotation) => connection.set_actor_position(actor_id, position, rotation).await,
+                    FromServer::ActorDespawn(actor_id) => connection.remove_actor(actor_id).await
                 },
                 None => break,
             }

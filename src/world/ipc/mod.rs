@@ -214,6 +214,8 @@ pub enum ServerZoneIpcData {
     ActionResult(ActionResult),
     /// Sent to to the client to update their appearance
     Equip(Equip),
+    /// Sent to the client to free up a spawn index
+    ActorFreeSpawn { spawn_index: u32, actor_id: u32 },
 }
 
 #[binrw]

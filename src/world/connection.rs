@@ -60,6 +60,8 @@ pub enum FromServer {
     ActorSpawn(Actor, CommonSpawn),
     /// An actor moved to a new position.
     ActorMove(u32, Position, f32),
+    // An actor has despawned.
+    ActorDespawn(u32),
 }
 
 #[derive(Debug, Clone)]
@@ -98,6 +100,7 @@ pub enum ToServer {
     Message(ClientId, String),
     ActorSpawned(ClientId, Actor, CommonSpawn),
     ActorMoved(ClientId, u32, Position, f32),
+    ActorDespawned(ClientId, u32),
     ZoneLoaded(ClientId),
     Disconnected(ClientId),
     FatalError(std::io::Error),
@@ -310,11 +313,12 @@ impl ZoneConnection {
         .await;
     }
 
-    pub async fn spawn_actor(&mut self, actor: Actor, mut common: CommonSpawn) {
+    pub async fn spawn_actor(&mut self, mut actor: Actor, mut common: CommonSpawn) {
         // There is no reason for us to spawn our own player again. It's probably a bug!'
         assert!(actor.id.0 != self.player_data.actor_id);
 
-        common.spawn_index = self.get_free_spawn_index();
+        actor.spawn_index = self.get_free_spawn_index() as u32;
+        common.spawn_index = actor.spawn_index as u8;
 
         let ipc = ServerZoneIpcSegment {
             unk1: 20,
@@ -334,6 +338,38 @@ impl ZoneConnection {
             segment_type: SegmentType::Ipc { data: ipc },
         })
         .await;
+
+        self.actors.push(actor);
+    }
+
+    pub async fn remove_actor(&mut self, actor_id: u32) {
+        if let Some(actor) = self.get_actor(ObjectId(actor_id)).cloned() {
+            let ipc = ServerZoneIpcSegment {
+                unk1: 20,
+                unk2: 0,
+                op_code: ServerZoneIpcType::ActorFreeSpawn,
+                server_id: 0,
+                timestamp: timestamp_secs(),
+                data: ServerZoneIpcData::ActorFreeSpawn {
+                    spawn_index: actor.spawn_index,
+                    actor_id,
+                },
+            };
+
+            self.send_segment(PacketSegment {
+                source_actor: actor.id.0,
+                target_actor: self.player_data.actor_id,
+                segment_type: SegmentType::Ipc { data: ipc },
+            })
+            .await;
+
+            self.actors.remove(
+                self.actors
+                    .iter()
+                    .position(|actor| actor.id == ObjectId(actor_id))
+                    .unwrap(),
+            );
+        }
     }
 
     pub async fn update_class_info(&mut self) {
@@ -359,6 +395,13 @@ impl ZoneConnection {
     }
 
     pub async fn change_zone(&mut self, new_zone_id: u16) {
+        // tell everyone we're gone
+        // TODO: check if we ever sent an initial ActorSpawn packet first, before sending this.
+        // the connection already checks to see if the actor already exists, so it's seems harmless if we do
+        self.handle
+            .send(ToServer::ActorDespawned(self.id, self.player_data.actor_id))
+            .await;
+
         {
             let mut game_data = self.gamedata.lock().unwrap();
             self.zone = Some(Zone::load(&mut game_data.game_data, new_zone_id));
@@ -708,12 +751,12 @@ impl ZoneConnection {
         .await;
     }
 
-    pub fn add_actor(&mut self, actor: Actor) {
-        self.actors.push(actor);
+    pub fn get_actor_mut(&mut self, id: ObjectId) -> Option<&mut Actor> {
+        self.actors.iter_mut().find(|actor| actor.id == id)
     }
 
-    pub fn get_actor(&mut self, id: ObjectId) -> Option<&mut Actor> {
-        self.actors.iter_mut().find(|actor| actor.id == id)
+    pub fn get_actor(&mut self, id: ObjectId) -> Option<&Actor> {
+        self.actors.iter().find(|actor| actor.id == id)
     }
 
     pub async fn actor_control_self(&mut self, actor_control: ActorControlSelf) {
