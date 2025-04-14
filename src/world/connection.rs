@@ -18,13 +18,13 @@ use crate::{
 };
 
 use super::{
-    Actor, Event, Inventory, Item, LuaPlayer, StatusEffects, WorldDatabase, Zone,
+    Actor, CharacterData, Event, Inventory, Item, LuaPlayer, StatusEffects, WorldDatabase, Zone,
     inventory::Container,
     ipc::{
         ActorControlSelf, ActorMove, ActorSetPos, ClientZoneIpcSegment, CommonSpawn, ContainerInfo,
-        ContainerType, DisplayFlag, Equip, InitZone, ItemInfo, NpcSpawn, ObjectKind, PlayerSubKind,
-        ServerZoneIpcData, ServerZoneIpcSegment, StatusEffect, StatusEffectList, UpdateClassInfo,
-        WeatherChange,
+        ContainerType, DisplayFlag, Equip, InitZone, ItemInfo, NpcSpawn, ObjectKind, PlayerStats,
+        PlayerSubKind, ServerZoneIpcData, ServerZoneIpcSegment, StatusEffect, StatusEffectList,
+        UpdateClassInfo, WeatherChange,
     },
 };
 
@@ -832,5 +832,38 @@ impl ZoneConnection {
             rotation: exit_rotation.unwrap_or(0.0),
             ..Default::default()
         }
+    }
+
+    pub async fn send_stats(&mut self, chara_details: &CharacterData) {
+        let attributes;
+        {
+            let mut game_data = self.gamedata.lock().unwrap();
+
+            attributes =
+                game_data.get_racial_base_attributes(chara_details.chara_make.customize.subrace);
+        }
+
+        let ipc = ServerZoneIpcSegment {
+            op_code: ServerZoneIpcType::PlayerStats,
+            timestamp: timestamp_secs(),
+            data: ServerZoneIpcData::PlayerStats(PlayerStats {
+                strength: attributes.strength,
+                dexterity: attributes.dexterity,
+                vitality: attributes.vitality,
+                intelligence: attributes.intelligence,
+                mind: attributes.mind,
+                hp: self.player_data.max_hp,
+                mp: self.player_data.max_mp as u32,
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+
+        self.send_segment(PacketSegment {
+            source_actor: self.player_data.actor_id,
+            target_actor: self.player_data.actor_id,
+            segment_type: SegmentType::Ipc { data: ipc },
+        })
+        .await;
     }
 }

@@ -151,7 +151,7 @@ impl LoginDatabase {
                 .prepare("SELECT user_id FROM sessions WHERE sid = ?1")
                 .ok()
                 .unwrap();
-            user_id = stmt.query_row((sid,), |row| Ok(row.get(0)?)).unwrap();
+            user_id = stmt.query_row((sid,), |row| row.get(0)).unwrap();
         }
 
         // service accounts
@@ -185,7 +185,7 @@ impl LoginDatabase {
             .ok()
             .unwrap();
         let selected_row: Result<u32, rusqlite::Error> =
-            stmt.query_row((username,), |row| Ok(row.get(0)?));
+            stmt.query_row((username,), |row| row.get(0));
 
         selected_row.is_ok()
     }
@@ -197,7 +197,7 @@ impl LoginDatabase {
             .prepare("SELECT user_id FROM sessions WHERE sid = ?1")
             .ok()
             .unwrap();
-        stmt.query_row((sid,), |row| Ok(row.get(0)?)).unwrap()
+        stmt.query_row((sid,), |row| row.get(0)).unwrap()
     }
 
     pub fn get_username(&self, user_id: u32) -> String {
@@ -207,6 +207,6 @@ impl LoginDatabase {
             .prepare("SELECT username FROM users WHERE id = ?1")
             .ok()
             .unwrap();
-        stmt.query_row((user_id,), |row| Ok(row.get(0)?)).unwrap()
+        stmt.query_row((user_id,), |row| row.get(0)).unwrap()
     }
 }

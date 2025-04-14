@@ -4,7 +4,7 @@ use crate::{
     opcodes::ServerZoneIpcType,
     packet::{PacketSegment, SegmentType},
     world::{
-        Actor, Event,
+        Event,
         ipc::{
             ActorControl, ActorControlCategory, BattleNpcSubKind, CommonSpawn, DisplayFlag,
             EventStart, NpcSpawn, ObjectKind, OnlineStatus, PlayerSpawn, PlayerSubKind,

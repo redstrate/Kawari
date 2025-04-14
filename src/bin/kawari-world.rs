@@ -336,40 +336,7 @@ async fn client_loop(
                                             .await;
 
                                         // Stats
-                                        {
-                                            let attributes;
-                                            {
-                                                let mut game_data = game_data.lock().unwrap();
-
-                                                attributes = game_data.get_racial_base_attributes(
-                                                    chara_details.chara_make.customize.subrace,
-                                                );
-                                            }
-
-                                            let ipc = ServerZoneIpcSegment {
-                                                op_code: ServerZoneIpcType::PlayerStats,
-                                                timestamp: timestamp_secs(),
-                                                data: ServerZoneIpcData::PlayerStats(PlayerStats {
-                                                    strength: attributes.strength,
-                                                    dexterity: attributes.dexterity,
-                                                    vitality: attributes.vitality,
-                                                    intelligence: attributes.intelligence,
-                                                    mind: attributes.mind,
-                                                    hp: connection.player_data.max_hp,
-                                                    mp: connection.player_data.max_mp as u32,
-                                                    ..Default::default()
-                                                }),
-                                                ..Default::default()
-                                            };
-
-                                            connection
-                                                .send_segment(PacketSegment {
-                                                    source_actor: connection.player_data.actor_id,
-                                                    target_actor: connection.player_data.actor_id,
-                                                    segment_type: SegmentType::Ipc { data: ipc },
-                                                })
-                                                .await;
-                                        }
+                                        connection.send_stats(&chara_details).await;
 
                                         // Player Setup
                                         {
