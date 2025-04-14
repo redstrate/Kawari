@@ -189,7 +189,7 @@ async fn account(State(state): State<LoginServerState>, jar: CookieJar) -> Html<
     }
 }
 
-async fn logout(State(state): State<LoginServerState>, jar: CookieJar) -> (CookieJar, Redirect) {
+async fn logout(jar: CookieJar) -> (CookieJar, Redirect) {
     let config = get_config();
     // TODO: remove session from database
     (

@@ -25,7 +25,7 @@ use kawari::world::{
     ChatHandler, Zone, ZoneConnection,
     ipc::{
         ActorControlCategory, ActorControlSelf, CommonSpawn, PlayerEntry, PlayerSetup, PlayerSpawn,
-        PlayerStats, SocialList,
+        SocialList,
     },
 };
 
@@ -238,11 +238,8 @@ async fn client_server_loop(
     mut data: Receiver<FromServer>,
     internal_send: UnboundedSender<FromServer>,
 ) {
-    loop {
-        match data.recv().await {
-            Some(msg) => internal_send.send(msg).unwrap(),
-            None => break,
-        }
+    while let Some(msg) = data.recv().await {
+        internal_send.send(msg).unwrap()
     }
 }
 
@@ -446,17 +443,17 @@ async fn client_loop(
                                         connection.handle.send(ToServer::ActorSpawned(connection.id, Actor { id: ObjectId(connection.player_data.actor_id), hp: 100, spawn_index: 0 }, connection.get_player_common_spawn(None, None))).await;
                                     }
                                     ClientZoneIpcData::Unk1 {
-                                        category, param1, ..
+                                        category, ..
                                     } => {
                                         tracing::info!("Recieved Unk1! {category:#?}");
 
-                                        match category {
+                                        /*match category {
                                             3 => {
                                                 // set target
                                                 tracing::info!("Targeting actor {param1}");
                                             }
                                             _ => {}
-                                        }
+                                        }*/
                                     }
                                     ClientZoneIpcData::Unk2 { .. } => {
                                         tracing::info!("Recieved Unk2!");

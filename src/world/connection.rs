@@ -300,7 +300,6 @@ impl ZoneConnection {
                 speed: 0x3C,
                 unk1: 0xEA,
                 position,
-                ..Default::default()
             }),
             ..Default::default()
         };

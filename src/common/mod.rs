@@ -99,7 +99,7 @@ pub(crate) fn write_packed_rotation_float(float: &f32) -> u8 {
     (0x80 as f32 * (float + pi) / pi) as u8
 }
 
-pub(crate) fn read_packed_rotation_float(packed: u8) -> f32 {
+pub(crate) fn read_packed_rotation_float(_packed: u8) -> f32 {
     0.0
 }
 
