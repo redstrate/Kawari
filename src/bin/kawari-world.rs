@@ -131,6 +131,15 @@ async fn main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::io::Error> {
                 }
             }
             ToServer::ActorMoved(from_id, actor_id, position, rotation) => {
+                if let Some((_, common)) = data
+                    .actors
+                    .iter_mut()
+                    .find(|actor| *actor.0 == ObjectId(actor_id))
+                {
+                    common.pos = position;
+                    common.rotation = rotation;
+                }
+
                 for (id, handle) in &mut data.clients {
                     let id = *id;
 
@@ -388,6 +397,8 @@ async fn client_loop(
                                         // tell the server we loaded into the zone, so it can start sending us acors
                                         connection.handle.send(ToServer::ZoneLoaded(connection.id)).await;
 
+                                        let common = connection.get_player_common_spawn(exit_position, exit_rotation);
+
                                         // send player spawn
                                         {
                                             let ipc = ServerZoneIpcSegment {
@@ -400,7 +411,7 @@ async fn client_loop(
                                                         home_world_id: config.world.world_id,
                                                         gm_rank: GameMasterRank::Debug,
                                                         online_status: OnlineStatus::GameMasterBlue,
-                                                        common: connection.get_player_common_spawn(exit_position, exit_rotation),
+                                                        common: common.clone(),
                                                         ..Default::default()
                                                     }),
                                                     ..Default::default()
@@ -440,7 +451,7 @@ async fn client_loop(
                                         exit_rotation = None;
 
                                         // tell the other players we're here
-                                        connection.handle.send(ToServer::ActorSpawned(connection.id, Actor { id: ObjectId(connection.player_data.actor_id), hp: 100, spawn_index: 0 }, connection.get_player_common_spawn(None, None))).await;
+                                        connection.handle.send(ToServer::ActorSpawned(connection.id, Actor { id: ObjectId(connection.player_data.actor_id), hp: 100, spawn_index: 0 }, common)).await;
                                     }
                                     ClientZoneIpcData::Unk1 {
                                         category, ..
