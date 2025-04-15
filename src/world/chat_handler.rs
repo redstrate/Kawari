@@ -4,7 +4,7 @@ use crate::{
     opcodes::ServerZoneIpcType,
     packet::{PacketSegment, SegmentType},
     world::{
-        Event,
+        Actor, Event,
         ipc::{
             ActorControl, ActorControlCategory, BattleNpcSubKind, CommonSpawn, DisplayFlag,
             EventStart, NpcSpawn, ObjectKind, OnlineStatus, PlayerSpawn, PlayerSubKind,
@@ -203,6 +203,8 @@ impl ChatHandler {
                     .await;
             }
             "!spawnmonster" => {
+                let spawn_index = connection.get_free_spawn_index();
+
                 // spawn a tiny mandragora
                 {
                     let ipc = ServerZoneIpcSegment {
@@ -218,7 +220,7 @@ impl ChatHandler {
                                 hp_max: 91,
                                 mp_curr: 100,
                                 mp_max: 100,
-                                spawn_index: connection.get_free_spawn_index(),
+                                spawn_index,
                                 bnpc_base: 13498, // TODO: changing this prevents it from spawning...
                                 bnpc_name: 405,
                                 object_kind: ObjectKind::BattleNpc(BattleNpcSubKind::Enemy),
@@ -240,6 +242,12 @@ impl ChatHandler {
                         })
                         .await;
                 }
+
+                connection.actors.push(Actor {
+                    id: ObjectId(0x106ad804),
+                    hp: 91,
+                    spawn_index: spawn_index as u32,
+                });
             }
             "!playscene" => {
                 let parts: Vec<&str> = chat_message.message.split(' ').collect();
