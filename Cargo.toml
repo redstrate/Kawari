@@ -96,4 +96,4 @@ zip = { version = "2.6", features = ["deflate", "lzma", "bzip2"], default-featur
 reqwest = { version = "0.12", default-features = false }
 
 # For RCON
-rkon = { git = "https://codeberg.org/redstrate/rkon" }
+rkon = { version = "0.1" }
