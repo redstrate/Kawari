@@ -187,23 +187,61 @@ impl WebConfig {
 /// Configuration for the world server.
 #[derive(Serialize, Deserialize)]
 pub struct WorldConfig {
+    #[serde(default = "WorldConfig::default_port")]
     pub port: u16,
+    #[serde(default = "WorldConfig::default_listen_address")]
     pub listen_address: String,
     /// See the World Excel sheet.
+    #[serde(default = "WorldConfig::default_world_id")]
     pub world_id: u16,
     /// Location of the scripts directory.
     /// Defaults to a sensible value if the project is self-built.
+    #[serde(default = "WorldConfig::default_scripts_location")]
     pub scripts_location: String,
+    /// Port of the RCON server.
+    #[serde(default = "WorldConfig::default_rcon_port")]
+    pub rcon_port: u16,
+    /// Password of the RCON server, if left blank (the default) RCON is disabled.
+    #[serde(default = "WorldConfig::default_rcon_password")]
+    pub rcon_password: String,
 }
 
 impl Default for WorldConfig {
     fn default() -> Self {
         Self {
-            port: 7100,
-            listen_address: "127.0.0.1".to_string(),
-            world_id: 63, // Gilgamesh
-            scripts_location: "resources/scripts".to_string(),
+            port: Self::default_port(),
+            listen_address: Self::default_listen_address(),
+            world_id: Self::default_world_id(),
+            scripts_location: Self::default_scripts_location(),
+            rcon_port: Self::default_rcon_port(),
+            rcon_password: Self::default_rcon_password(),
         }
+    }
+}
+
+impl WorldConfig {
+    fn default_port() -> u16 {
+        7100
+    }
+
+    fn default_listen_address() -> String {
+        "127.0.0.1".to_string()
+    }
+
+    fn default_world_id() -> u16 {
+        63 // Gilgamesh
+    }
+
+    fn default_scripts_location() -> String {
+        "resources/scripts".to_string()
+    }
+
+    fn default_rcon_port() -> u16 {
+        25575
+    }
+
+    fn default_rcon_password() -> String {
+        String::default()
     }
 }
 
@@ -213,6 +251,14 @@ impl WorldConfig {
         SocketAddr::from((
             IpAddr::from_str(&self.listen_address).expect("Invalid IP address format in config!"),
             self.port,
+        ))
+    }
+
+    /// Returns the configured IP address & port as a `SocketAddr` for RCON.
+    pub fn get_rcon_socketaddr(&self) -> SocketAddr {
+        SocketAddr::from((
+            IpAddr::from_str(&self.listen_address).expect("Invalid IP address format in config!"),
+            self.rcon_port,
         ))
     }
 }

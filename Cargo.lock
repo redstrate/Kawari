@@ -737,6 +737,7 @@ dependencies = [
  "physis",
  "rand",
  "reqwest",
+ "rkon",
  "rusqlite",
  "serde",
  "serde_json",
@@ -1125,6 +1126,11 @@ dependencies = [
  "web-sys",
  "windows-registry",
 ]
+
+[[package]]
+name = "rkon"
+version = "0.1.0"
+source = "git+https://codeberg.org/redstrate/rkon#23b998a070d2f8d626e0a19d48232e9dde641533"
 
 [[package]]
 name = "rusqlite"

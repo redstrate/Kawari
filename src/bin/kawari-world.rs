@@ -30,7 +30,7 @@ use kawari::world::{
 };
 
 use mlua::{Function, Lua};
-use tokio::io::AsyncReadExt;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::join;
 use tokio::net::TcpListener;
 use tokio::sync::mpsc::{Receiver, UnboundedReceiver, UnboundedSender, channel, unbounded_channel};
@@ -1032,6 +1032,16 @@ async fn main() {
 
     let listener = TcpListener::bind(addr).await.unwrap();
 
+    let rcon_listener = if !config.world.rcon_password.is_empty() {
+        Some(
+            TcpListener::bind(config.world.get_rcon_socketaddr())
+                .await
+                .unwrap(),
+        )
+    } else {
+        None
+    };
+
     tracing::info!("Server started on {addr}");
 
     let database = Arc::new(WorldDatabase::new());
@@ -1072,30 +1082,84 @@ async fn main() {
     let (handle, _) = spawn_main_loop();
 
     loop {
-        let (socket, ip) = listener.accept().await.unwrap();
-        let id = handle.next_id();
+        tokio::select! {
+            Ok((socket, ip)) = listener.accept() => {
+                let id = handle.next_id();
 
-        let state = PacketState {
-            client_key: None,
-            clientbound_oodle: OodleNetwork::new(),
-            serverbound_oodle: OodleNetwork::new(),
+                let state = PacketState {
+                    client_key: None,
+                    clientbound_oodle: OodleNetwork::new(),
+                    serverbound_oodle: OodleNetwork::new(),
+                };
+
+                spawn_client(ZoneConnection {
+                    socket,
+                    state,
+                    player_data: PlayerData::default(),
+                    spawn_index: 0,
+                    zone: None,
+                    status_effects: StatusEffects::default(),
+                    event: None,
+                    actors: Vec::new(),
+                    ip,
+                    id,
+                    handle: handle.clone(),
+                    database: database.clone(),
+                    lua: lua.clone(),
+                    gamedata: game_data.clone(),
+                });
+            }
+            Ok((mut socket, _)) = rcon_listener.as_ref().unwrap().accept(), if rcon_listener.is_some() => {
+                let mut authenticated = false;
+
+                loop {
+                    // read from client
+                    let mut resp_bytes = [0u8; rkon::MAX_PACKET_SIZE];
+                    let n = socket.read(&mut resp_bytes).await.unwrap();
+                    if n > 0 {
+                        let request = rkon::Packet::decode(&resp_bytes).unwrap();
+
+                        match request.packet_type {
+                            rkon::PacketType::Command => {
+                                if authenticated {
+                                    let response = rkon::Packet {
+                                        request_id: request.request_id,
+                                        packet_type: rkon::PacketType::Command,
+                                        body: "hello world!".to_string()
+                                    };
+                                    let encoded = response.encode();
+                                    socket.write_all(&encoded).await.unwrap();
+                                }
+                            },
+                            rkon::PacketType::Login => {
+                                let config = get_config();
+                                if request.body == config.world.rcon_password {
+                                    authenticated = true;
+
+                                    let response = rkon::Packet {
+                                        request_id: request.request_id,
+                                        packet_type: rkon::PacketType::Command,
+                                        body: String::default()
+                                    };
+                                    let encoded = response.encode();
+                                    socket.write_all(&encoded).await.unwrap();
+                                } else {
+                                    authenticated = false;
+
+                                    let response = rkon::Packet {
+                                        request_id: -1,
+                                        packet_type: rkon::PacketType::Command,
+                                        body: String::default()
+                                    };
+                                    let encoded = response.encode();
+                                    socket.write_all(&encoded).await.unwrap();
+                                }
+                            },
+                            _ => tracing::warn!("Ignoring unknown RCON packet")
+                        }
+                    }
+                }
+            }
         };
-
-        spawn_client(ZoneConnection {
-            socket,
-            state,
-            player_data: PlayerData::default(),
-            spawn_index: 0,
-            zone: None,
-            status_effects: StatusEffects::default(),
-            event: None,
-            actors: Vec::new(),
-            ip,
-            id,
-            handle: handle.clone(),
-            database: database.clone(),
-            lua: lua.clone(),
-            gamedata: game_data.clone(),
-        });
     }
 }
