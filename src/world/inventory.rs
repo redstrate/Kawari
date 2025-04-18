@@ -11,7 +11,8 @@ use super::ipc::{ContainerType, InventoryModify};
 // TODO: rename to storage?
 pub trait Container {
     fn num_items(&self) -> u32;
-    fn get_slot(&mut self, index: u16) -> &mut Item;
+    fn get_slot_mut(&mut self, index: u16) -> &mut Item;
+    fn get_slot(&self, index: u16) -> &Item;
 }
 
 #[derive(Default, Copy, Clone, Serialize, Deserialize, Debug)]
@@ -41,6 +42,9 @@ pub struct EquippedContainer {
     pub right_ring: Item,
     pub left_ring: Item,
     pub soul_crystal: Item,
+
+    // only for the iterator, so it can skip over it
+    pub belt: Item,
 }
 
 impl Container for EquippedContainer {
@@ -60,7 +64,7 @@ impl Container for EquippedContainer {
             + self.soul_crystal.quantity
     }
 
-    fn get_slot(&mut self, index: u16) -> &mut Item {
+    fn get_slot_mut(&mut self, index: u16) -> &mut Item {
         match index {
             0 => &mut self.main_hand,
             1 => &mut self.off_hand,
@@ -75,8 +79,59 @@ impl Container for EquippedContainer {
             11 => &mut self.right_ring,
             12 => &mut self.left_ring,
             13 => &mut self.soul_crystal,
-            _ => panic!("Not a valid src_container_index?!?"),
+            _ => panic!("{} is not a valid src_container_index?!?", index),
         }
+    }
+
+    fn get_slot(&self, index: u16) -> &Item {
+        match index {
+            0 => &self.main_hand,
+            1 => &self.off_hand,
+            2 => &self.head,
+            3 => &self.body,
+            4 => &self.hands,
+            5 => &self.belt,
+            6 => &self.legs,
+            7 => &self.feet,
+            8 => &self.ears,
+            9 => &self.neck,
+            10 => &self.wrists,
+            11 => &self.right_ring,
+            12 => &self.left_ring,
+            13 => &self.soul_crystal,
+            _ => panic!("{} is not a valid src_container_index?!?", index),
+        }
+    }
+}
+
+impl<'a> IntoIterator for &'a EquippedContainer {
+    type Item = &'a Item;
+    type IntoIter = EquippedContainerIterator<'a>;
+    fn into_iter(self) -> EquippedContainerIterator<'a> {
+        EquippedContainerIterator {
+            equipped: self,
+            curr: 0,
+        }
+    }
+}
+
+pub struct EquippedContainerIterator<'a> {
+    equipped: &'a EquippedContainer,
+    curr: u16,
+}
+
+impl<'a> Iterator for EquippedContainerIterator<'a> {
+    type Item = &'a Item;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let curr = self.curr;
+        self.curr += 1;
+
+        if self.curr >= 14 {
+            return None;
+        }
+
+        Some(self.equipped.get_slot(curr))
     }
 }
 
@@ -98,8 +153,12 @@ impl Container for InventoryPage {
         self.slots.iter().filter(|item| item.quantity > 0).count() as u32
     }
 
-    fn get_slot(&mut self, index: u16) -> &mut Item {
+    fn get_slot_mut(&mut self, index: u16) -> &mut Item {
         self.slots.get_mut(index as usize).unwrap()
+    }
+
+    fn get_slot(&self, index: u16) -> &Item {
+        self.slots.get(index as usize).unwrap()
     }
 }
 
@@ -166,7 +225,7 @@ impl Inventory {
         if action.operation_type == 571 {
             // discard
             let src_container = self.get_container(&action.src_storage_id);
-            let src_slot = src_container.get_slot(action.src_container_index);
+            let src_slot = src_container.get_slot_mut(action.src_container_index);
             *src_slot = Item::default();
         } else {
             // NOTE: only swaps items for now
@@ -175,7 +234,7 @@ impl Inventory {
             // get the source item
             {
                 let src_container = self.get_container(&action.src_storage_id);
-                let src_slot = src_container.get_slot(action.src_container_index);
+                let src_slot = src_container.get_slot_mut(action.src_container_index);
                 src_item = *src_slot;
             }
 
@@ -183,7 +242,7 @@ impl Inventory {
             // move into dst item
             {
                 let dst_container = self.get_container(&action.dst_storage_id);
-                let dst_slot = dst_container.get_slot(action.dst_container_index);
+                let dst_slot = dst_container.get_slot_mut(action.dst_container_index);
 
                 dst_item = *dst_slot;
                 dst_slot.clone_from(&src_item);
@@ -192,7 +251,7 @@ impl Inventory {
             // move dst item into src slot
             {
                 let src_container = self.get_container(&action.src_storage_id);
-                let src_slot = src_container.get_slot(action.src_container_index);
+                let src_slot = src_container.get_slot_mut(action.src_container_index);
                 src_slot.clone_from(&dst_item);
             }
         }

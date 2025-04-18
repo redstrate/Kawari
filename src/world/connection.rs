@@ -572,20 +572,9 @@ impl ZoneConnection {
                 .await;
             };
 
-            // TODO: make containers enumerable to vastly simplify this code
-            send_slot(0, &equipped.main_hand).await;
-            send_slot(1, &equipped.off_hand).await;
-            send_slot(2, &equipped.head).await;
-            send_slot(3, &equipped.body).await;
-            send_slot(4, &equipped.hands).await;
-            send_slot(6, &equipped.legs).await;
-            send_slot(7, &equipped.feet).await;
-            send_slot(8, &equipped.ears).await;
-            send_slot(9, &equipped.neck).await;
-            send_slot(10, &equipped.wrists).await;
-            send_slot(11, &equipped.right_ring).await;
-            send_slot(12, &equipped.left_ring).await;
-            send_slot(13, &equipped.soul_crystal).await;
+            for (i, slot) in equipped.into_iter().enumerate() {
+                send_slot(i as u16, &slot).await;
+            }
         }
 
         // inform the client they have items equipped
