@@ -718,6 +718,9 @@ async fn client_loop(
                                                         _ => todo!()
                                                     }
                                                 }
+
+                                                let actor = *actor;
+                                                connection.update_hp_mp(actor.id, actor.hp, 10000).await;
                                             }
 
                                             let ipc = ServerZoneIpcSegment {
@@ -733,6 +736,9 @@ async fn client_loop(
                                                     flag: 1,
                                                     effect_count: effects_builder.effects.len() as u8,
                                                     effects,
+                                                    unk1: 2662353,
+                                                    unk2: 3758096384,
+                                                    hidden_animation: 1,
                                                     ..Default::default()
                                                 }),
                                                 ..Default::default()

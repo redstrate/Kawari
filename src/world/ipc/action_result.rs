@@ -69,17 +69,20 @@ mod tests {
         let mut buffer = Cursor::new(&buffer);
 
         let action_result = ActionResult::read_le(&mut buffer).unwrap();
-        assert_eq!(action_result.main_target.object_id, ObjectId(0x400097d0));
-        assert_eq!(
-            action_result.target_id_again.object_id,
-            ObjectId(0x400097d0)
-        );
+        assert_eq!(action_result.main_target.object_id, ObjectId(0x40070E42));
         assert_eq!(action_result.action_id, 31);
+        assert_eq!(action_result.unk1, 2662353); // TODO: probably means this field is wrong
         assert_eq!(action_result.animation_lock_time, 0.6);
-        assert_eq!(action_result.rotation, 1.9694216);
+        assert_eq!(action_result.unk2, 3758096384); // TODO: ditto
+        assert_eq!(action_result.hidden_animation, 1);
+        assert_eq!(action_result.rotation, 1.207309);
         assert_eq!(action_result.action_animation_id, 31);
+        assert_eq!(action_result.variation, 0);
         assert_eq!(action_result.flag, 1);
+        assert_eq!(action_result.unk3, 0);
         assert_eq!(action_result.effect_count, 1);
+        assert_eq!(action_result.unk4, 0);
+        assert_eq!(action_result.unk5, [0; 6]);
 
         // effect 0: attack
         assert_eq!(action_result.effects[0].kind, EffectKind::Damage);
@@ -92,5 +95,10 @@ mod tests {
 
         // effect 1: start action combo
         assert_eq!(action_result.effects[1].kind, EffectKind::BeginCombo);
+
+        assert_eq!(
+            action_result.target_id_again.object_id,
+            ObjectId(0x40070E42)
+        );
     }
 }
