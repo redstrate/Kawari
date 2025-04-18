@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 
 use kawari::RECEIVE_BUFFER_SIZE;
@@ -32,7 +33,7 @@ use kawari::world::{
 use mlua::{Function, Lua};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::join;
-use tokio::net::TcpListener;
+use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::mpsc::{Receiver, UnboundedReceiver, UnboundedSender, channel, unbounded_channel};
 use tokio::sync::oneshot;
 use tokio::task::JoinHandle;
@@ -716,14 +717,14 @@ async fn client_loop(
                                                 for effect in &effects_builder.effects {
                                                     match effect.kind {
                                                         EffectKind::Damage => {
-                                                            actor.hp -= effect.value as u32;
+                                                            actor.hp = effect.value as u32;
                                                         }
                                                         _ => todo!()
                                                     }
                                                 }
 
                                                 let actor = *actor;
-                                                connection.update_hp_mp(actor.id, actor.hp, 10000).await;
+                                                //connection.update_hp_mp(actor.id, actor.hp, 10000).await;
                                             }
 
                                             let ipc = ServerZoneIpcSegment {
@@ -1022,6 +1023,13 @@ async fn client_loop(
     }
 }
 
+async fn handle_rcon(listener: &Option<TcpListener>) -> Option<(TcpStream, SocketAddr)> {
+    match listener {
+        Some(listener) => Some(listener.accept().await.ok()?),
+        None => None,
+    }
+}
+
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
@@ -1109,7 +1117,7 @@ async fn main() {
                     gamedata: game_data.clone(),
                 });
             }
-            Ok((mut socket, _)) = rcon_listener.as_ref().unwrap().accept(), if rcon_listener.is_some() => {
+            Some((mut socket, _)) = handle_rcon(&rcon_listener) => {
                 let mut authenticated = false;
 
                 loop {
