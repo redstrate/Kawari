@@ -2,27 +2,110 @@ use binrw::binrw;
 
 use crate::common::{ObjectTypeId, read_quantized_rotation, write_quantized_rotation};
 
+// TODO: this might be a flag?
 #[binrw]
 #[derive(Debug, Eq, PartialEq, Clone, Copy, Default)]
 #[brw(repr = u8)]
+pub enum DamageKind {
+    #[default]
+    Normal = 0x0,
+    Critical = 0x1,
+    DirectHit = 0x2,
+}
+
+#[binrw]
+#[derive(Debug, Eq, PartialEq, Clone, Copy, Default)]
 pub enum EffectKind {
     #[default]
-    Miss = 0, // FIXME: is this correct?
-    Damage = 3,
-    BeginCombo = 27,
+    #[brw(magic = 0u8)]
+    Miss, // FIXME: is this correct?
+    #[brw(magic = 3u8)]
+    Damage {
+        damage_kind: DamageKind,
+        #[br(temp)]
+        #[bw(calc = 0)]
+        param1: u8,
+        #[br(calc = DamageType::from(param1 & 0x0F))]
+        #[bw(ignore)]
+        damage_type: DamageType,
+        #[br(calc = DamageElement::from(param1 >> 4))]
+        #[bw(ignore)]
+        damage_element: DamageElement,
+        bonus_percent: u8,
+        unk3: u8,
+        unk4: u8,
+        amount: u16,
+    },
+    #[brw(magic = 27u8)]
+    BeginCombo,
+}
+
+#[derive(Debug, Eq, PartialEq, Clone, Copy, Default)]
+pub enum DamageType {
+    Unknown,
+    Slashing,
+    Piercing,
+    Blunt,
+    Shot,
+    Magic,
+    Breath,
+    #[default]
+    Physical,
+    LimitBreak,
+}
+
+impl From<u8> for DamageType {
+    fn from(value: u8) -> Self {
+        match value {
+            0 => Self::Unknown,
+            1 => Self::Slashing,
+            2 => Self::Piercing,
+            3 => Self::Blunt,
+            4 => Self::Shot,
+            5 => Self::Magic,
+            6 => Self::Breath,
+            7 => Self::Physical,
+            8 => Self::LimitBreak,
+            _ => Self::Unknown,
+        }
+    }
+}
+
+#[derive(Debug, Eq, PartialEq, Clone, Copy, Default)]
+pub enum DamageElement {
+    Unknown,
+    Fire,
+    Ice,
+    Air,
+    Earth,
+    Lightning,
+    Water,
+    #[default]
+    Unaspected,
+}
+
+impl From<u8> for DamageElement {
+    fn from(value: u8) -> Self {
+        match value {
+            0 => Self::Unknown,
+            1 => Self::Fire,
+            2 => Self::Ice,
+            3 => Self::Air,
+            4 => Self::Earth,
+            5 => Self::Lightning,
+            6 => Self::Water,
+            7 => Self::Unaspected,
+            _ => Self::Unknown,
+        }
+    }
 }
 
 #[binrw]
 #[brw(little)]
 #[derive(Debug, Clone, Copy, Default)]
 pub struct ActionEffect {
+    #[brw(pad_size_to = 8)]
     pub kind: EffectKind,
-    pub param0: u8,
-    pub param1: u8,
-    pub param2: u8,
-    pub param3: u8,
-    pub param4: u8,
-    pub value: u16,
 }
 
 #[binrw]
@@ -85,13 +168,18 @@ mod tests {
         assert_eq!(action_result.unk5, [0; 6]);
 
         // effect 0: attack
-        assert_eq!(action_result.effects[0].kind, EffectKind::Damage);
-        assert_eq!(action_result.effects[0].param0, 0);
-        assert_eq!(action_result.effects[0].param1, 113);
-        assert_eq!(action_result.effects[0].param2, 0);
-        assert_eq!(action_result.effects[0].param3, 0);
-        assert_eq!(action_result.effects[0].param4, 0);
-        assert_eq!(action_result.effects[0].value, 22);
+        assert_eq!(
+            action_result.effects[0].kind,
+            EffectKind::Damage {
+                damage_kind: DamageKind::Normal,
+                damage_type: DamageType::Slashing,
+                damage_element: DamageElement::Unaspected,
+                bonus_percent: 0,
+                unk3: 0,
+                unk4: 0,
+                amount: 22
+            }
+        );
 
         // effect 1: start action combo
         assert_eq!(action_result.effects[1].kind, EffectKind::BeginCombo);

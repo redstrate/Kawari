@@ -9,7 +9,8 @@ use crate::{
 use super::{
     PlayerData, StatusEffects, Zone,
     ipc::{
-        ActionEffect, ActorSetPos, EffectKind, EventPlay, ServerZoneIpcData, ServerZoneIpcSegment,
+        ActionEffect, ActorSetPos, DamageElement, DamageKind, DamageType, EffectKind, EventPlay,
+        ServerZoneIpcData, ServerZoneIpcSegment,
     },
 };
 
@@ -173,9 +174,15 @@ impl UserData for EffectsBuilder {
     fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
         methods.add_method_mut("damage", |_, this, amount: u16| {
             this.effects.push(ActionEffect {
-                kind: EffectKind::Damage,
-                value: amount,
-                param1: 133,
+                kind: EffectKind::Damage {
+                    damage_kind: DamageKind::Normal,
+                    damage_type: DamageType::Slashing,
+                    damage_element: DamageElement::Unaspected,
+                    bonus_percent: 0,
+                    unk3: 0,
+                    unk4: 0,
+                    amount,
+                },
                 ..Default::default()
             });
             Ok(())

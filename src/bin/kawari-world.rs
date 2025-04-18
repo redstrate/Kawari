@@ -712,8 +712,8 @@ async fn client_loop(
                                             {
                                                 for effect in &effects_builder.effects {
                                                     match effect.kind {
-                                                        EffectKind::Damage => {
-                                                            actor.hp = actor.hp.saturating_sub(effect.value as u32);
+                                                        EffectKind::Damage { amount, .. } => {
+                                                            actor.hp = actor.hp.saturating_sub(amount as u32);
                                                         }
                                                         _ => todo!()
                                                     }

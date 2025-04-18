@@ -60,7 +60,9 @@ mod event_start;
 pub use event_start::EventStart;
 
 mod action_result;
-pub use action_result::{ActionEffect, ActionResult, EffectKind};
+pub use action_result::{
+    ActionEffect, ActionResult, DamageElement, DamageKind, DamageType, EffectKind,
+};
 
 mod actor_move;
 pub use actor_move::ActorMove;
