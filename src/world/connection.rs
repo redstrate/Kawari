@@ -343,6 +343,8 @@ impl ZoneConnection {
 
     pub async fn remove_actor(&mut self, actor_id: u32) {
         if let Some(actor) = self.get_actor(ObjectId(actor_id)).cloned() {
+            tracing::info!("Removing actor {actor_id} {}!", actor.spawn_index);
+
             let ipc = ServerZoneIpcSegment {
                 unk1: 20,
                 unk2: 0,
@@ -754,7 +756,7 @@ impl ZoneConnection {
         self.actors.iter_mut().find(|actor| actor.id == id)
     }
 
-    pub fn get_actor(&mut self, id: ObjectId) -> Option<&Actor> {
+    pub fn get_actor(&self, id: ObjectId) -> Option<&Actor> {
         self.actors.iter().find(|actor| actor.id == id)
     }
 

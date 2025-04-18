@@ -120,10 +120,6 @@ async fn main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::io::Error> {
                 for (id, handle) in &mut data.clients {
                     let id = *id;
 
-                    if id == from_id {
-                        continue;
-                    }
-
                     let msg = FromServer::ActorDespawn(actor_id);
 
                     if handle.send(msg).is_err() {
@@ -717,14 +713,11 @@ async fn client_loop(
                                                 for effect in &effects_builder.effects {
                                                     match effect.kind {
                                                         EffectKind::Damage => {
-                                                            actor.hp = effect.value as u32;
+                                                            actor.hp = actor.hp.saturating_sub(effect.value as u32);
                                                         }
                                                         _ => todo!()
                                                     }
                                                 }
-
-                                                let actor = *actor;
-                                                //connection.update_hp_mp(actor.id, actor.hp, 10000).await;
                                             }
 
                                             let ipc = ServerZoneIpcSegment {
@@ -752,6 +745,18 @@ async fn client_loop(
                                                     segment_type: SegmentType::Ipc { data: ipc },
                                                 })
                                                 .await;
+
+                                            if let Some(actor) =
+                                                connection.get_actor(request.target.object_id)
+                                            {
+                                                if actor.hp == 0 {
+                                                    tracing::info!("Despawning {} because they died!", actor.id.0);
+                                                    // if the actor died, despawn them
+                                                    connection.handle
+                                                        .send(ToServer::ActorDespawned(connection.id, actor.id.0))
+                                                        .await;
+                                                }
+                                            }
                                         }
                                     }
                                     ClientZoneIpcData::Unk16 { .. } => {
