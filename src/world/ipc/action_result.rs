@@ -1,10 +1,11 @@
 use binrw::binrw;
+use serde::{Deserialize, Serialize};
 
 use crate::common::{ObjectTypeId, read_quantized_rotation, write_quantized_rotation};
 
 // TODO: this might be a flag?
 #[binrw]
-#[derive(Debug, Eq, PartialEq, Clone, Copy, Default)]
+#[derive(Debug, Eq, PartialEq, Clone, Copy, Default, Deserialize, Serialize)]
 #[brw(repr = u8)]
 pub enum DamageKind {
     #[default]
@@ -40,7 +41,7 @@ pub enum EffectKind {
     BeginCombo,
 }
 
-#[derive(Debug, Eq, PartialEq, Clone, Copy, Default)]
+#[derive(Debug, Eq, PartialEq, Clone, Copy, Default, Deserialize, Serialize)]
 pub enum DamageType {
     Unknown,
     Slashing,
@@ -71,7 +72,7 @@ impl From<u8> for DamageType {
     }
 }
 
-#[derive(Debug, Eq, PartialEq, Clone, Copy, Default)]
+#[derive(Debug, Eq, PartialEq, Clone, Copy, Default, Deserialize, Serialize)]
 pub enum DamageElement {
     Unknown,
     Fire,

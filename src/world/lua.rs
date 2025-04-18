@@ -1,4 +1,4 @@
-use mlua::{FromLua, Lua, UserData, UserDataMethods, Value};
+use mlua::{FromLua, Lua, LuaSerdeExt, UserData, UserDataMethods, Value};
 
 use crate::{
     common::{ObjectId, ObjectTypeId, Position, timestamp_secs},
@@ -172,12 +172,16 @@ pub struct EffectsBuilder {
 
 impl UserData for EffectsBuilder {
     fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
-        methods.add_method_mut("damage", |_, this, amount: u16| {
+        methods.add_method_mut("damage", |lua, this, (damage_kind, damage_type, damage_element, amount): (Value, Value, Value, u16)| {
+            let damage_kind: DamageKind = lua.from_value(damage_kind).unwrap();
+            let damage_type: DamageType = lua.from_value(damage_type).unwrap();
+            let damage_element: DamageElement = lua.from_value(damage_element).unwrap();
+
             this.effects.push(ActionEffect {
                 kind: EffectKind::Damage {
-                    damage_kind: DamageKind::Normal,
-                    damage_type: DamageType::Slashing,
-                    damage_element: DamageElement::Unaspected,
+                    damage_kind,
+                    damage_type,
+                    damage_element,
                     bonus_percent: 0,
                     unk3: 0,
                     unk4: 0,
