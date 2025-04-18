@@ -621,7 +621,9 @@ impl ZoneConnection {
                     op_code: ServerZoneIpcType::Equip,
                     timestamp: timestamp_secs(),
                     data: ServerZoneIpcData::Equip(Equip {
-                        main_weapon_id: 0,
+                        main_weapon_id: game_data
+                            .get_primary_model_id(equipped.main_hand.id)
+                            .unwrap_or(0),
                         sub_weapon_id: 0,
                         crest_enable: 0,
                         pattern_invalid: 0,
@@ -797,6 +799,9 @@ impl ZoneConnection {
             object_kind: ObjectKind::Player(PlayerSubKind::Player),
             look: chara_details.chara_make.customize,
             display_flags: DisplayFlag::UNK,
+            main_weapon_model: game_data
+                .get_primary_model_id(equipped.main_hand.id)
+                .unwrap_or(0),
             models: [
                 game_data
                     .get_primary_model_id(equipped.head.id)
