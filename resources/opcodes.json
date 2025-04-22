@@ -330,6 +330,11 @@
             "name": "LobbyCharacterAction",
             "opcode": 11,
             "size": 496
+        },
+        {
+            "name": "ShandaLogin",
+            "opcode": 6,
+            "size": 1456
         }
     ]
 }

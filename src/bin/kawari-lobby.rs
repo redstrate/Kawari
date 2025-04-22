@@ -107,6 +107,11 @@ async fn main() {
                                 ClientLobbyIpcData::LobbyCharacterAction(character_action) => {
                                     connection.handle_character_action(character_action).await
                                 }
+                                ClientLobbyIpcData::ShandaLogin { unk } => {
+                                    dbg!(unk);
+
+                                    connection.send_account_list().await;
+                                }
                                 ClientLobbyIpcData::RequestEnterWorld {
                                     sequence,
                                     content_id,

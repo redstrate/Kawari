@@ -115,6 +115,12 @@ pub enum ClientLobbyIpcData {
         content_id: u64,
         // TODO: what else is in here?
     },
+    #[br(pre_assert(*magic == ClientLobbyIpcType::ShandaLogin))]
+    ShandaLogin {
+        #[bw(pad_size_to = 1456)]
+        #[br(count = 1456)]
+        unk: Vec<u8>,
+    },
 }
 
 #[binrw]
