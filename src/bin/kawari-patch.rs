@@ -10,6 +10,7 @@ use kawari::config::get_config;
 use kawari::patch::Version;
 use kawari::{SUPPORTED_BOOT_VERSION, SUPPORTED_GAME_VERSION, get_supported_expac_versions};
 use physis::patchlist::{PatchEntry, PatchList, PatchListType};
+use reqwest::header::USER_AGENT;
 
 fn list_patch_files(dir_path: &str) -> Vec<String> {
     // If the dir doesn't exist, pretend there is no patch files
@@ -65,11 +66,12 @@ fn list_patch_files(dir_path: &str) -> Vec<String> {
 
 /// Check if it's a valid patch client connecting
 fn check_valid_patch_client(headers: &HeaderMap) -> bool {
-    let Some(user_agent) = headers.get("User-Agent") else {
+    let Some(user_agent) = headers.get(USER_AGENT) else {
         return false;
     };
 
-    user_agent == "FFXIV PATCH CLIENT"
+    // FFXIV_Patch is used by sqexPatch.dll
+    user_agent == "FFXIV PATCH CLIENT" || user_agent == "FFXIV_Patch"
 }
 
 async fn verify_session(
@@ -136,6 +138,7 @@ async fn verify_boot(
     Path((platform, channel, boot_version)): Path<(String, String, String)>,
 ) -> impl IntoResponse {
     if !check_valid_patch_client(&headers) {
+        tracing::warn!("Invalid patch client! {headers:#?}");
         return StatusCode::INTERNAL_SERVER_ERROR.into_response();
     }
 
@@ -143,6 +146,7 @@ async fn verify_boot(
 
     let config = get_config();
     if !config.supports_platform(&platform) {
+        tracing::warn!("Invalid platform! {platform}");
         return StatusCode::INTERNAL_SERVER_ERROR.into_response();
     }
 
@@ -202,7 +206,7 @@ async fn main() {
             post(verify_session),
         )
         .route(
-            "/http/{platform}/{channel}/{boot_version}",
+            "/http/{platform}/{channel}/{boot_version}/",
             get(verify_boot),
         );
 
