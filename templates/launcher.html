@@ -11,6 +11,8 @@
 
         <input type="button" value="System Info" onclick="window.external.user('systemInfo');" />
         <input type="button" value="Play" onclick="window.external.user('startPlay');" />
+        <input type="button" value="Login" onclick="window.external.user('login=auth,ok,sid,{session_id},terms,1,region,2,etmadd,0,playable,1,ps3pkg,0,maxex,5,product,1');" />
+        <input type="button" value="Login Error" onclick="window.external.user('login=auth,ng,err,The data has already been sent.rnIf the screen still has not displayed after waiting a few moments, please refresh the page on your browser.');" />
         <input type="button" value="Exit" onclick="window.external.user('requestExit');" />
         <input type="button" value="Reboot" onclick="window.external.user('requestReboot');" />
         <input type="button" value="Open Google" onclick="window.external.user('link=https://google.com/');" />
@@ -20,6 +22,7 @@
         <input type="button" value="Request Config" onclick="window.external.user('requestConfig');" />
         <input type="button" value="Request Login Url" onclick="window.external.user('requestLoginUrl');" />
         <input type="button" value="Request Platform" onclick="window.external.user('requestDP');" />
+        <input type="button" value="Config Tool" onclick="window.external.user('configTransport');" />
 
         <p id="replace-me">meh</p>
 
