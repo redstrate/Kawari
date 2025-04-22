@@ -1,8 +1,10 @@
+use axum::extract::Query;
 use axum::response::Html;
 use axum::{Router, routing::get};
 use kawari::config::get_config;
 use minijinja::Environment;
 use minijinja::context;
+use serde::Deserialize;
 
 fn setup_default_environment() -> Environment<'static> {
     let mut env = Environment::new();
@@ -15,7 +17,14 @@ fn setup_default_environment() -> Environment<'static> {
     env
 }
 
-async fn root() -> Html<String> {
+#[derive(Deserialize)]
+#[allow(dead_code)]
+struct Params {
+    rc_lang: String,
+    time: String,
+}
+
+async fn root(Query(_): Query<Params>) -> Html<String> {
     let config = get_config();
 
     let environment = setup_default_environment();
@@ -31,7 +40,7 @@ async fn root() -> Html<String> {
 async fn main() {
     tracing_subscriber::fmt::init();
 
-    let app = Router::new().route("/v700", get(root));
+    let app = Router::new().route("/v700/index.html", get(root));
 
     let config = get_config();
 
