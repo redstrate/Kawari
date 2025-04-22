@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang=en>
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge;">
+        <title>Kawari Launcher</title>
+    </head>
+
+    <body>
+        <p>Welcome to Kawari!</p>
+
+        <input type="button" value="System Info" onclick="window.external.user('systemInfo');" />
+        <input type="button" value="Play" onclick="window.external.user('startPlay');" />
+        <input type="button" value="Exit" onclick="window.external.user('requestExit');" />
+        <input type="button" value="Reboot" onclick="window.external.user('requestReboot');" />
+        <input type="button" value="Open Google" onclick="window.external.user('link=https://google.com/');" />
+        <input type="button" value="Accept EULA" onclick="window.external.user('eulaOk');" />
+        <input type="button" value="Disable DX11" onclick="window.external.user('config=dx11enabled=0');" />
+        <input type="button" value="Enable DX11" onclick="window.external.user('config=dx11enabled=1');" />
+        <input type="button" value="Request Config" onclick="window.external.user('requestConfig');" />
+        <input type="button" value="Request Login Url" onclick="window.external.user('requestLoginUrl');" />
+        <input type="button" value="Request Platform" onclick="window.external.user('requestDP');" />
+
+        <p id="replace-me">meh</p>
+
+        <script type="text/javascript">
+            function checkHandlerType(e) {
+              if ('function' != typeof e) throw new Error('Protocol Callback is not function.');
+              return e
+            }
+
+            function fromAppConfig(thing) {
+                document.getElementById('replace-me').innerText += "config: " + JSON.stringify(thing);
+            }
+            window.fromAppConfig = this.checkHandlerType(fromAppConfig);
+
+            function fromAppWarn(thing) {
+                document.getElementById('replace-me').innerText += "warn: " + JSON.stringify(thing);
+            }
+            window.fromAppWarn = this.checkHandlerType(fromAppWarn);
+
+            function fromAppStartVersionCheck(thing) {
+                document.getElementById('replace-me').innerText += "version: " + JSON.stringify(thing);
+            }
+            window.fromAppStartVersionCheck = this.checkHandlerType(fromAppStartVersionCheck);
+
+            function fromAppDP(thing) {
+                document.getElementById('replace-me').innerText += "dp: " + JSON.stringify(thing);
+            }
+            window.fromAppDP = this.checkHandlerType(fromAppDP);
+
+            function fromAppDisplaySettings(thing) {
+                document.getElementById('replace-me').innerText += "display settings: " + JSON.stringify(thing);
+            }
+            window.fromAppDisplaySettings = this.checkHandlerType(fromAppDisplaySettings);
+
+            function fromAppResumeInfo(thing) {
+                document.getElementById('replace-me').innerText += "resume info: " + JSON.stringify(thing);
+            }
+            window.fromAppResumeInfo = this.checkHandlerType(fromAppResumeInfo);
+
+            // this is what the retail launcher does
+            window.external.user('permissionFromApp=1');
+            window.external.user('requestDP');
+            window.external.user('requestConfig');
+            window.external.user('requestDisplaySettings');
+            window.external.user('requestResumeInfo');
+        </script>
+    </body>
+</html>

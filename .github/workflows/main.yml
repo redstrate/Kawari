@@ -74,6 +74,7 @@ jobs:
           target/release/kawari-patch*
           target/release/kawari-web*
           target/release/kawari-world*
+          target/release/kawari-launcher*
           !target/release/*.d
           resources/
           !resources/tests

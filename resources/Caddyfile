@@ -10,6 +10,10 @@ ffxiv.localhost:80 {
     reverse_proxy :5801
 }
 
+launcher.ffxiv.localhost:80 {
+    reverse_proxy :5802
+}
+
 frontier.ffxiv.localhost:80 {
     reverse_proxy :5857
 }

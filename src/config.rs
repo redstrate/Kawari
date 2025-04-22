@@ -263,6 +263,32 @@ impl WorldConfig {
     }
 }
 
+/// Configuration for the launcher server.
+#[derive(Serialize, Deserialize)]
+pub struct LauncherConfig {
+    pub port: u16,
+    pub listen_address: String,
+}
+
+impl Default for LauncherConfig {
+    fn default() -> Self {
+        Self {
+            port: 5802,
+            listen_address: "127.0.0.1".to_string(),
+        }
+    }
+}
+
+impl LauncherConfig {
+    /// Returns the configured IP address & port as a `SocketAddr`.
+    pub fn get_socketaddr(&self) -> SocketAddr {
+        SocketAddr::from((
+            IpAddr::from_str(&self.listen_address).expect("Invalid IP address format in config!"),
+            self.port,
+        ))
+    }
+}
+
 /// Global and all-encompassing config.
 /// Settings that affect all servers belong here.
 #[derive(Serialize, Deserialize)]
@@ -294,6 +320,9 @@ pub struct Config {
     #[serde(default)]
     pub world: WorldConfig,
 
+    #[serde(default)]
+    pub launcher: LauncherConfig,
+
     /// Enable various packet debug functions. This will clutter your working directory!
     #[serde(default)]
     pub packet_debugging: bool,
@@ -311,6 +340,7 @@ impl Default for Config {
             patch: PatchConfig::default(),
             web: WebConfig::default(),
             world: WorldConfig::default(),
+            launcher: LauncherConfig::default(),
             packet_debugging: false,
         }
     }

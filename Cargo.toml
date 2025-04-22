@@ -31,6 +31,9 @@ name = "kawari-lobby"
 name = "kawari-world"
 required-features = ["oodle"]
 
+[[bin]]
+name = "kawari-launcher"
+
 [profile.release]
 lto = true
 strip = true

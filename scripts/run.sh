@@ -9,4 +9,5 @@ cargo run -q --package kawari --features oodle --bin kawari-patch &
 cargo run -q --package kawari --features oodle --bin kawari-web &
 cargo run -q --package kawari --features oodle --bin kawari-lobby &
 cargo run -q --package kawari --features oodle --bin kawari-world &
+cargo run -q --package kawari --features oodle --bin kawari-launcher &
 wait
