@@ -7,32 +7,32 @@
         },
         {
             "name": "InitZone",
-            "opcode": 636,
+            "opcode": 790,
             "size": 112
         },
         {
             "name": "ActorControlSelf",
-            "opcode": 178,
+            "opcode": 738,
             "size": 32
         },
         {
             "name": "PlayerStats",
-            "opcode": 308,
+            "opcode": 176,
             "size": 144
         },
         {
             "name": "PlayerSetup",
-            "opcode": 990,
+            "opcode": 311,
             "size": 2808
         },
         {
             "name": "UpdateClassInfo",
-            "opcode": 633,
+            "opcode": 921,
             "size": 16
         },
         {
             "name": "PlayerSpawn",
-            "opcode": 932,
+            "opcode": 884,
             "size": 664
         },
         {
@@ -47,7 +47,7 @@
         },
         {
             "name": "ActorSetPos",
-            "opcode": 197,
+            "opcode": 121,
             "size": 24
         },
         {
@@ -72,7 +72,7 @@
         },
         {
             "name": "PrepareZoning",
-            "opcode": 190,
+            "opcode": 196,
             "size": 16
         },
         {
@@ -87,12 +87,12 @@
         },
         {
             "name": "ActorControl",
-            "opcode": 623,
+            "opcode": 156,
             "size": 24
         },
         {
             "name": "ActorMove",
-            "opcode": 401,
+            "opcode": 487,
             "size": 16
         },
         {
@@ -107,22 +107,22 @@
         },
         {
             "name": "NpcSpawn",
-            "opcode": 860,
+            "opcode": 606,
             "size": 656
         },
         {
             "name": "StatusEffectList",
-            "opcode": 424,
+            "opcode": 635,
             "size": 384
         },
         {
             "name": "WeatherChange",
-            "opcode": 900,
+            "opcode": 580,
             "size": 8
         },
         {
             "name": "ItemInfo",
-            "opcode": 195,
+            "opcode": 404,
             "size": 64
         },
         {
@@ -132,17 +132,17 @@
         },
         {
             "name": "EventPlay",
-            "opcode": 147,
+            "opcode": 269,
             "size": 40
         },
         {
             "name": "EventStart",
-            "opcode": 610,
+            "opcode": 295,
             "size": 24
         },
         {
             "name": "UpdateHpMpTp",
-            "opcode": 162,
+            "opcode": 540,
             "size": 8
         },
         {
@@ -214,7 +214,7 @@
         },
         {
             "name": "LogOut",
-            "opcode": 127,
+            "opcode": 637,
             "size": 8
         },
         {
