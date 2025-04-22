@@ -289,6 +289,32 @@ impl LauncherConfig {
     }
 }
 
+/// Configuration for the save data bank server.
+#[derive(Serialize, Deserialize)]
+pub struct SaveDataBankConfig {
+    pub port: u16,
+    pub listen_address: String,
+}
+
+impl Default for SaveDataBankConfig {
+    fn default() -> Self {
+        Self {
+            port: 5803,
+            listen_address: "127.0.0.1".to_string(),
+        }
+    }
+}
+
+impl SaveDataBankConfig {
+    /// Returns the configured IP address & port as a `SocketAddr`.
+    pub fn get_socketaddr(&self) -> SocketAddr {
+        SocketAddr::from((
+            IpAddr::from_str(&self.listen_address).expect("Invalid IP address format in config!"),
+            self.port,
+        ))
+    }
+}
+
 /// Global and all-encompassing config.
 /// Settings that affect all servers belong here.
 #[derive(Serialize, Deserialize)]
@@ -323,6 +349,9 @@ pub struct Config {
     #[serde(default)]
     pub launcher: LauncherConfig,
 
+    #[serde(default)]
+    pub save_data_bank: SaveDataBankConfig,
+
     /// Enable various packet debug functions. This will clutter your working directory!
     #[serde(default)]
     pub packet_debugging: bool,
@@ -341,6 +370,7 @@ impl Default for Config {
             web: WebConfig::default(),
             world: WorldConfig::default(),
             launcher: LauncherConfig::default(),
+            save_data_bank: SaveDataBankConfig::default(),
             packet_debugging: false,
         }
     }

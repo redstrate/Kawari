@@ -14,6 +14,10 @@ launcher.ffxiv.localhost:80 {
     reverse_proxy :5802
 }
 
+config-dl.ffxiv.localhost:80 {
+    reverse_proxy :5803
+}
+
 frontier.ffxiv.localhost:80 {
     reverse_proxy :5857
 }
