@@ -15,6 +15,8 @@ pub use position::Position;
 mod gamedata;
 pub use gamedata::GameData;
 
+pub mod workdefinitions;
+
 #[binrw]
 #[brw(little)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

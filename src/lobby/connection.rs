@@ -8,9 +8,9 @@ use crate::{
     common::{
         custom_ipc::{CustomIpcData, CustomIpcSegment, CustomIpcType},
         timestamp_secs,
+        workdefinitions::CharaMake,
     },
     config::get_config,
-    lobby::CharaMake,
     oodle::OodleNetwork,
     opcodes::ServerLobbyIpcType,
     packet::{

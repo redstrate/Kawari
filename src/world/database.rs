@@ -4,11 +4,11 @@ use rusqlite::Connection;
 use serde::Deserialize;
 
 use crate::{
-    common::{CustomizeData, Position},
-    lobby::{
-        CharaMake, ClientSelectData, RemakeMode,
-        ipc::{CharacterDetails, CharacterFlag},
+    common::{
+        CustomizeData, Position,
+        workdefinitions::{CharaMake, ClientSelectData, RemakeMode},
     },
+    lobby::ipc::{CharacterDetails, CharacterFlag},
 };
 
 use super::{Inventory, PlayerData};

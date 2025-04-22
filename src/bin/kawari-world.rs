@@ -4,10 +4,10 @@ use std::sync::{Arc, Mutex};
 
 use kawari::RECEIVE_BUFFER_SIZE;
 use kawari::common::custom_ipc::{CustomIpcData, CustomIpcSegment, CustomIpcType};
+use kawari::common::workdefinitions::CharaMake;
 use kawari::common::{GameData, ObjectId, timestamp_secs};
 use kawari::common::{Position, determine_initial_starting_zone};
 use kawari::config::get_config;
-use kawari::lobby::CharaMake;
 use kawari::oodle::OodleNetwork;
 use kawari::opcodes::ServerZoneIpcType;
 use kawari::packet::{
