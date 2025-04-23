@@ -164,22 +164,22 @@
     "ClientZoneIpcType": [
         {
             "name": "InitRequest",
-            "opcode": 959,
+            "opcode": 722,
             "size": 120
         },
         {
             "name": "FinishLoading",
-            "opcode": 912,
+            "opcode": 592,
             "size": 72
         },
         {
             "name": "Unk1",
-            "opcode": 387,
+            "opcode": 428,
             "size": 32
         },
         {
             "name": "Unk2",
-            "opcode": 935,
+            "opcode": 230,
             "size": 16
         },
         {
