@@ -1,5 +1,11 @@
-use axum::{Json, Router, routing::get};
+use axum::{
+    Json, Router,
+    http::{HeaderValue, Uri},
+    response::{IntoResponse, Response},
+    routing::{get, post},
+};
 use kawari::config::get_config;
+use reqwest::{StatusCode, header};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -65,6 +71,67 @@ async fn get_headline() -> Json<Headline> {
     })
 }
 
+async fn fallback(uri: Uri) -> (StatusCode, String) {
+    tracing::warn!("{}", uri);
+    (StatusCode::NOT_FOUND, format!("No route for {uri}"))
+}
+
+#[derive(Clone, Copy, Debug)]
+#[must_use]
+
+pub struct Xml<T>(pub T);
+
+impl<T> IntoResponse for Xml<T>
+where
+    T: IntoResponse,
+{
+    fn into_response(self) -> Response {
+        (
+            [(header::CONTENT_TYPE, HeaderValue::from_static("text/xml"))],
+            self.0,
+        )
+            .into_response()
+    }
+}
+
+impl<T> From<T> for Xml<T> {
+    fn from(inner: T) -> Self {
+        Self(inner)
+    }
+}
+
+async fn session_get_init() -> Xml<String> {
+    // TODO: just a guess
+    Xml("<result>
+<return_code>OK</return_code>
+<information/>
+<inquiry_categoryList/>
+<inquiry_itemList/>
+<report_itemList/>
+</result>"
+        .to_string())
+}
+
+async fn view_get_init() -> Xml<String> {
+    Xml("<result>
+<return_code>OK</return_code>
+<information/>
+<inquiry_categoryList/>
+<inquiry_itemList/>
+<report_itemList/>
+</result>"
+        .to_string())
+}
+
+async fn get_headline_all() -> Xml<String> {
+    Xml("<result>
+<return_code>OK</return_code>
+<information>
+</information>
+</result>"
+        .to_string())
+}
+
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
@@ -72,7 +139,21 @@ async fn main() {
     let app = Router::new()
         .route("/worldStatus/gate_status.json", get(get_world_status))
         .route("/worldStatus/login_status.json", get(get_login_status))
-        .route("/news/headline.json", get(get_headline));
+        .route("/news/headline.json", get(get_headline))
+        // used by the client
+        .route(
+            "/frontier-api/ffxivsupport/session/get_init",
+            post(session_get_init),
+        )
+        .route(
+            "/frontier-api/ffxivsupport/view/get_init",
+            get(view_get_init),
+        )
+        .route(
+            "/frontier-api/ffxivsupport/information/get_headline_all",
+            get(get_headline_all),
+        )
+        .fallback(fallback);
 
     let config = get_config();
 
