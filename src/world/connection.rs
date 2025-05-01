@@ -9,7 +9,9 @@ use std::{
 use tokio::{net::TcpStream, sync::mpsc::Sender};
 
 use crate::{
+    OBFUSCATION_ENABLED_MODE,
     common::{GameData, ObjectId, Position, timestamp_secs},
+    config::get_config,
     opcodes::ServerZoneIpcType,
     packet::{
         CompressionType, ConnectionType, PacketSegment, PacketState, SegmentType, parse_packet,
@@ -433,6 +435,8 @@ impl ZoneConnection {
 
         // Init Zone
         {
+            let config = get_config();
+
             let ipc = ServerZoneIpcSegment {
                 op_code: ServerZoneIpcType::InitZone,
                 timestamp: timestamp_secs(),
@@ -440,6 +444,11 @@ impl ZoneConnection {
                     server_id: 0,
                     zone_id: self.zone.as_ref().unwrap().id,
                     weather_id: 1,
+                    obsfucation_mode: if config.world.enable_packet_obsfucation {
+                        OBFUSCATION_ENABLED_MODE
+                    } else {
+                        0
+                    },
                     ..Default::default()
                 }),
                 ..Default::default()

@@ -204,6 +204,9 @@ pub struct WorldConfig {
     /// Password of the RCON server, if left blank (the default) RCON is disabled.
     #[serde(default = "WorldConfig::default_rcon_password")]
     pub rcon_password: String,
+    /// Enable packet obsfucation. There's literally no reason to do this!
+    #[serde(default = "WorldConfig::default_packet_obsfucation")]
+    pub enable_packet_obsfucation: bool,
 }
 
 impl Default for WorldConfig {
@@ -215,6 +218,7 @@ impl Default for WorldConfig {
             scripts_location: Self::default_scripts_location(),
             rcon_port: Self::default_rcon_port(),
             rcon_password: Self::default_rcon_password(),
+            enable_packet_obsfucation: Self::default_packet_obsfucation(),
         }
     }
 }
@@ -242,6 +246,10 @@ impl WorldConfig {
 
     fn default_rcon_password() -> String {
         String::default()
+    }
+
+    fn default_packet_obsfucation() -> bool {
+        false
     }
 }
 

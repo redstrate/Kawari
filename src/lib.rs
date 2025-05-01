@@ -59,3 +59,6 @@ const SUPPORTED_EXPAC_VERSIONS: [(&str, Version); 5] = [
 pub fn get_supported_expac_versions() -> HashMap<&'static str, Version<'static>> {
     HashMap::from(SUPPORTED_EXPAC_VERSIONS)
 }
+
+/// Constant to enable packet obsfucation. Changes every patch.
+pub const OBFUSCATION_ENABLED_MODE: u8 = 41;
