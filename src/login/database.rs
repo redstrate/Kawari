@@ -209,4 +209,15 @@ impl LoginDatabase {
             .unwrap();
         stmt.query_row((user_id,), |row| row.get(0)).unwrap()
     }
+
+    /// TODO: only works for one
+    pub fn get_service_account(&self, user_id: u32) -> u32 {
+        let connection = self.connection.lock().unwrap();
+
+        let mut stmt = connection
+            .prepare("SELECT id FROM service_accounts WHERE user_id = ?1")
+            .ok()
+            .unwrap();
+        stmt.query_row((user_id,), |row| row.get(0)).unwrap()
+    }
 }

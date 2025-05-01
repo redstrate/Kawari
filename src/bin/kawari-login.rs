@@ -1,12 +1,14 @@
 use std::sync::Arc;
 
-use axum::extract::{Query, State};
+use axum::extract::{Multipart, Query, State};
 use axum::response::{Html, Redirect};
 use axum::routing::post;
 use axum::{Form, Router, routing::get};
 use axum_extra::extract::CookieJar;
 use axum_extra::extract::cookie::{Cookie, Expiration};
+use kawari::common::custom_ipc::{CustomIpcData, CustomIpcSegment, CustomIpcType};
 use kawari::config::get_config;
+use kawari::lobby::send_custom_world_packet;
 use kawari::login::{LoginDatabase, LoginError};
 use minijinja::{Environment, context};
 use serde::Deserialize;
@@ -189,6 +191,42 @@ async fn account(State(state): State<LoginServerState>, jar: CookieJar) -> Html<
     }
 }
 
+async fn upload_character_backup(
+    State(state): State<LoginServerState>,
+    jar: CookieJar,
+    mut multipart: Multipart,
+) -> Redirect {
+    if let Some(session_id) = jar.get("cis_sessid") {
+        let user_id = state.database.get_user_id(session_id.value());
+        let service_account_id = state.database.get_service_account(user_id);
+
+        while let Some(field) = multipart.next_field().await.unwrap() {
+            let name = field.name().unwrap().to_string();
+            let data = field.bytes().await.unwrap();
+
+            std::fs::write("temp.zip", data).unwrap();
+
+            if name == "charbak" {
+                let ipc_segment = CustomIpcSegment {
+                    unk1: 0,
+                    unk2: 0,
+                    op_code: CustomIpcType::ImportCharacter,
+                    server_id: 0,
+                    timestamp: 0,
+                    data: CustomIpcData::ImportCharacter {
+                        service_account_id,
+                        path: "temp.zip".to_string(),
+                    },
+                };
+
+                send_custom_world_packet(ipc_segment).await.unwrap();
+            }
+        }
+    }
+
+    Redirect::to("/account/app/svc/manage")
+}
+
 async fn logout(jar: CookieJar) -> (CookieJar, Redirect) {
     let config = get_config();
     // TODO: remove session from database
@@ -231,6 +269,7 @@ async fn main() {
         .route("/oauth/oa/registligt", get(register))
         .route("/oauth/oa/registlist", post(do_register))
         .route("/account/app/svc/manage", get(account))
+        .route("/account/app/svc/manage", post(upload_character_backup))
         .route("/account/app/svc/logout", get(logout))
         .route("/account/app/svc/mbrPasswd", get(change_password))
         .route("/account/app/svc/mbrCancel", get(cancel_account))

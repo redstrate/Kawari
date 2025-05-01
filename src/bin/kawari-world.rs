@@ -1005,6 +1005,9 @@ async fn client_loop(
                                             .await;
                                         }
                                     }
+                                    CustomIpcData::ImportCharacter { service_account_id, path } => {
+                                        database.import_character(*service_account_id, path);
+                                    }
                                     _ => {
                                         panic!("The server is recieving a response or unknown custom IPC!")
                                     }

@@ -51,24 +51,11 @@ impl WorldDatabase {
             connection: Mutex::new(connection),
         };
 
-        // Import any backups
-        // NOTE: This won't make sense when service accounts are a real thing, so the functionality will probably be moved
-        {
-            if let Ok(paths) = std::fs::read_dir("./backups") {
-                for path in paths {
-                    let path = path.unwrap().path();
-                    if path.extension().unwrap() == "zip" {
-                        this.import_character(path.to_str().unwrap());
-                    }
-                }
-            }
-        }
-
         this
     }
 
-    fn import_character(&self, path: &str) {
-        tracing::info!("Importing character backup {path}...");
+    pub fn import_character(&self, service_account_id: u32, path: &str) {
+        tracing::info!("Importing character backup from {path}...");
 
         let file = std::fs::File::open(path).unwrap();
 
@@ -105,7 +92,8 @@ impl WorldDatabase {
         }
 
         if !self.check_is_name_free(&character.name) {
-            tracing::warn!("* Skipping since this character already exists.");
+            let name = character.name;
+            tracing::warn!("* Skipping since {name} already exists.");
             return;
         }
 
@@ -127,7 +115,7 @@ impl WorldDatabase {
 
         // TODO: import inventory
         self.create_player_data(
-            0x1,
+            service_account_id,
             &character.name,
             &chara_make.to_json(),
             character.city_state.value as u8,

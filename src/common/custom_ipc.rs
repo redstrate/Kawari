@@ -24,6 +24,7 @@ impl ReadWriteIpcSegment for CustomIpcSegment {
             CustomIpcType::RequestCharacterListRepsonse => 1 + (1184 * 8),
             CustomIpcType::DeleteCharacter => 4,
             CustomIpcType::CharacterDeleted => 1,
+            CustomIpcType::ImportCharacter => 132,
         }
     }
 }
@@ -53,6 +54,8 @@ pub enum CustomIpcType {
     DeleteCharacter = 0x9,
     /// Response to DeleteCharacter
     CharacterDeleted = 0x10,
+    /// Request to import a character backup
+    ImportCharacter = 0x11,
 }
 
 #[binrw]
@@ -107,6 +110,15 @@ pub enum CustomIpcData {
     DeleteCharacter { content_id: u64 },
     #[br(pre_assert(*magic == CustomIpcType::CharacterDeleted))]
     CharacterDeleted { deleted: u8 },
+    #[br(pre_assert(*magic == CustomIpcType::ImportCharacter))]
+    ImportCharacter {
+        service_account_id: u32,
+        #[bw(pad_size_to = 128)]
+        #[br(count = 128)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        path: String,
+    },
 }
 
 impl Default for CustomIpcData {

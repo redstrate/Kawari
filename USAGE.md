@@ -74,7 +74,7 @@ Some other launchers (like XIVLauncher) will allow you to specify these extra ar
 
 ## Importing characters from retail
 
-It's possible to import existing characters from the retail server using [Auracite](https://auracite.xiv.zone). Place the backup ZIP under `backups/` and the World server will import it into the database the next time it's started.
+It's possible to import existing characters from the retail server using [Auracite](https://auracite.xiv.zone). Upload the backup ZIP on the account management page on the login server.
 
 This feature is still a work-in-progress, and not all data is imported yet.
 
