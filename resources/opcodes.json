@@ -42,7 +42,7 @@
         },
         {
             "name": "LogOutComplete",
-            "opcode": 296,
+            "opcode": 637,
             "size": 8
         },
         {
@@ -52,7 +52,7 @@
         },
         {
             "name": "ServerChatMessage",
-            "opcode": 712,
+            "opcode": 910,
             "size": 776
         },
         {
@@ -97,7 +97,7 @@
         },
         {
             "name": "Unk17",
-            "opcode": 466,
+            "opcode": 467,
             "size": 104
         },
         {
@@ -127,7 +127,7 @@
         },
         {
             "name": "ContainerInfo",
-            "opcode": 403,
+            "opcode": 687,
             "size": 16
         },
         {
@@ -147,17 +147,17 @@
         },
         {
             "name": "ActionResult",
-            "opcode": 447,
+            "opcode": 245,
             "size": 124
         },
         {
             "name": "Equip",
-            "opcode": 468,
+            "opcode": 843,
             "size": 72
         },
         {
             "name": "ActorFreeSpawn",
-            "opcode": 144,
+            "opcode": 149,
             "size": 8
         }
     ],
@@ -184,22 +184,22 @@
         },
         {
             "name": "Unk3",
-            "opcode": 240,
+            "opcode": 651,
             "size": 8
         },
         {
             "name": "Unk4",
-            "opcode": 929,
+            "opcode": 715,
             "size": 8
         },
         {
-            "name": "SetSearchInfoHandler",
-            "opcode": 405,
+            "name": "Unk18",
+            "opcode": 815,
             "size": 8
         },
         {
             "name": "Unk5",
-            "opcode": 629,
+            "opcode": 128,
             "size": 8
         },
         {
@@ -209,52 +209,52 @@
         },
         {
             "name": "UpdatePositionHandler",
-            "opcode": 675,
+            "opcode": 644,
             "size": 24
         },
         {
             "name": "LogOut",
-            "opcode": 637,
+            "opcode": 828,
             "size": 8
         },
         {
             "name": "Disconnected",
-            "opcode": 335,
+            "opcode": 695,
             "size": 8
         },
         {
             "name": "ChatMessage",
-            "opcode": 293,
+            "opcode": 213,
             "size": 58
         },
         {
             "name": "GameMasterCommand",
-            "opcode": 939,
+            "opcode": 266,
             "size": 32
         },
         {
             "name": "EnterZoneLine",
-            "opcode": 136,
+            "opcode": 609,
             "size": 24
         },
         {
             "name": "ActionRequest",
-            "opcode": 643,
+            "opcode": 396,
             "size": 32
         },
         {
             "name": "Unk16",
-            "opcode": 953,
+            "opcode": 389,
             "size": 8
         },
         {
             "name": "Unk17",
-            "opcode": 985,
+            "opcode": 636,
             "size": 32
         },
         {
-            "name": "Unk18",
-            "opcode": 409,
+            "name": "SetSearchInfoHandler",
+            "opcode": 669,
             "size": 8
         },
         {
@@ -269,7 +269,7 @@
         },
         {
             "name": "InventoryModify",
-            "opcode": 564,
+            "opcode": 583,
             "size": 48
         }
     ],
