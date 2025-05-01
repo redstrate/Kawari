@@ -1,10 +1,7 @@
-use physis::{
-    common::{Language, Platform},
-    gamedata::GameData,
-};
+use physis::common::Language;
 use serde::{Deserialize, Serialize};
 
-use crate::config::get_config;
+use crate::common::GameData;
 
 use super::ipc::{ContainerType, InventoryModify};
 
@@ -179,14 +176,10 @@ impl Default for Inventory {
 
 impl Inventory {
     /// Equip the starting items for a given race
-    pub fn equip_racial_items(&mut self, race_id: u8, gender: u8) {
-        let config = get_config();
-
-        let mut game_data =
-            GameData::from_existing(Platform::Win32, &config.game_location).unwrap();
-
-        let exh = game_data.read_excel_sheet_header("Race").unwrap();
+    pub fn equip_racial_items(&mut self, race_id: u8, gender: u8, game_data: &mut GameData) {
+        let exh = game_data.game_data.read_excel_sheet_header("Race").unwrap();
         let exd = game_data
+            .game_data
             .read_excel_sheet("Race", &exh, Language::English, 0)
             .unwrap();
 
@@ -277,5 +270,46 @@ impl Inventory {
             ContainerType::Equipped => &mut self.equipped,
             ContainerType::ArmouryBody => todo!(),
         }
+    }
+
+    pub fn get_main_weapon_id(&self, game_data: &mut GameData) -> u64 {
+        game_data
+            .get_primary_model_id(self.equipped.main_hand.id)
+            .unwrap_or(0)
+    }
+
+    pub fn get_model_ids(&self, game_data: &mut GameData) -> [u32; 10] {
+        [
+            game_data
+                .get_primary_model_id(self.equipped.head.id)
+                .unwrap_or(0) as u32,
+            game_data
+                .get_primary_model_id(self.equipped.body.id)
+                .unwrap_or(0) as u32,
+            game_data
+                .get_primary_model_id(self.equipped.hands.id)
+                .unwrap_or(0) as u32,
+            game_data
+                .get_primary_model_id(self.equipped.legs.id)
+                .unwrap_or(0) as u32,
+            game_data
+                .get_primary_model_id(self.equipped.feet.id)
+                .unwrap_or(0) as u32,
+            game_data
+                .get_primary_model_id(self.equipped.ears.id)
+                .unwrap_or(0) as u32,
+            game_data
+                .get_primary_model_id(self.equipped.neck.id)
+                .unwrap_or(0) as u32,
+            game_data
+                .get_primary_model_id(self.equipped.wrists.id)
+                .unwrap_or(0) as u32,
+            game_data
+                .get_primary_model_id(self.equipped.left_ring.id)
+                .unwrap_or(0) as u32,
+            game_data
+                .get_primary_model_id(self.equipped.right_ring.id)
+                .unwrap_or(0) as u32,
+        ]
     }
 }

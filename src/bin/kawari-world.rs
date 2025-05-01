@@ -832,12 +832,16 @@ async fn client_loop(
                                         }
 
                                         let mut inventory = Inventory::default();
+                                        {
+                                            let mut game_data = game_data.lock().unwrap();
 
-                                        // fill inventory
-                                        inventory.equip_racial_items(
-                                            chara_make.customize.race,
-                                            chara_make.customize.gender,
-                                        );
+                                            // fill inventory
+                                            inventory.equip_racial_items(
+                                                chara_make.customize.race,
+                                                chara_make.customize.gender,
+                                                &mut game_data,
+                                            );
+                                        }
 
                                         let (content_id, actor_id) = database.create_player_data(
                                             *service_account_id,
@@ -932,11 +936,17 @@ async fn client_loop(
                                             world_name = game_data.get_world_name(config.world.world_id);
                                         }
 
-                                        let characters = database.get_character_list(
-                                            *service_account_id,
-                                            config.world.world_id,
-                                            &world_name,
-                                        );
+                                        let characters;
+                                        {
+                                            let mut game_data = game_data.lock().unwrap();
+
+                                            characters = database.get_character_list(
+                                                *service_account_id,
+                                                config.world.world_id,
+                                                &world_name,
+                                                &mut game_data,
+                                            );
+                                        }
 
                                         // send response
                                         {

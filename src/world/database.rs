@@ -5,7 +5,7 @@ use serde::Deserialize;
 
 use crate::{
     common::{
-        CustomizeData, Position,
+        CustomizeData, GameData, Position,
         workdefinitions::{CharaMake, ClientSelectData, RemakeMode},
     },
     lobby::ipc::{CharacterDetails, CharacterFlag},
@@ -225,6 +225,7 @@ impl WorldDatabase {
         service_account_id: u32,
         world_id: u16,
         world_name: &str,
+        game_data: &mut GameData,
     ) -> Vec<CharacterDetails> {
         let connection = self.connection.lock().unwrap();
 
@@ -250,22 +251,24 @@ impl WorldDatabase {
         for (index, (content_id, actor_id)) in content_actor_ids.iter().enumerate() {
             let mut stmt = connection
                 .prepare(
-                    "SELECT name, chara_make, zone_id FROM character_data WHERE content_id = ?1",
+                    "SELECT name, chara_make, zone_id, inventory FROM character_data WHERE content_id = ?1",
                 )
                 .unwrap();
 
-            let result: Result<(String, String, u16), rusqlite::Error> = stmt
+            let result: Result<(String, String, u16, String), rusqlite::Error> = stmt
                 .query_row((content_id,), |row| {
-                    Ok((row.get(0)?, row.get(1)?, row.get(2)?))
+                    Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?))
                 });
 
-            if let Ok((name, chara_make, zone_id)) = result {
+            if let Ok((name, chara_make, zone_id, inventory_json)) = result {
                 let chara_make = CharaMake::from_json(&chara_make);
 
+                let inventory: Inventory = serde_json::from_str(&inventory_json).unwrap();
+
                 let select_data = ClientSelectData {
-                    game_name_unk: "Final Fantasy".to_string(),
+                    character_name: name.clone(),
                     current_class: 2,
-                    class_levels: [5; 30],
+                    class_levels: [5; 32],
                     race: chara_make.customize.race as i32,
                     subrace: chara_make.customize.subrace as i32,
                     gender: chara_make.customize.gender as i32,
@@ -277,9 +280,11 @@ impl WorldDatabase {
                     zone_id: zone_id as i32,
                     content_finder_condition: 0,
                     customize: chara_make.customize,
-                    model_main_weapon: 0,
+                    model_main_weapon: inventory.get_main_weapon_id(game_data),
                     model_sub_weapon: 0,
-                    unk14: [0; 10],
+                    model_ids: inventory.get_model_ids(game_data),
+                    equip_stain: [0; 10],
+                    glasses: [0; 2],
                     unk15: 0,
                     unk16: 0,
                     remake_mode: RemakeMode::None,
@@ -288,7 +293,6 @@ impl WorldDatabase {
                     unk20: 0,
                     world_name: String::new(),
                     unk22: 0,
-                    unk23: 0,
                 };
 
                 characters.push(CharacterDetails {

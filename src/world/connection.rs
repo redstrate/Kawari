@@ -613,50 +613,17 @@ impl ZoneConnection {
             let ipc;
             {
                 let mut game_data = self.gamedata.lock().unwrap();
-                let equipped = &self.player_data.inventory.equipped;
+                let inventory = &self.player_data.inventory;
 
                 ipc = ServerZoneIpcSegment {
                     op_code: ServerZoneIpcType::Equip,
                     timestamp: timestamp_secs(),
                     data: ServerZoneIpcData::Equip(Equip {
-                        main_weapon_id: game_data
-                            .get_primary_model_id(equipped.main_hand.id)
-                            .unwrap_or(0),
+                        main_weapon_id: inventory.get_main_weapon_id(&mut game_data),
                         sub_weapon_id: 0,
                         crest_enable: 0,
                         pattern_invalid: 0,
-                        model_ids: [
-                            game_data
-                                .get_primary_model_id(equipped.head.id)
-                                .unwrap_or(0) as u32,
-                            game_data
-                                .get_primary_model_id(equipped.body.id)
-                                .unwrap_or(0) as u32,
-                            game_data
-                                .get_primary_model_id(equipped.hands.id)
-                                .unwrap_or(0) as u32,
-                            game_data
-                                .get_primary_model_id(equipped.legs.id)
-                                .unwrap_or(0) as u32,
-                            game_data
-                                .get_primary_model_id(equipped.feet.id)
-                                .unwrap_or(0) as u32,
-                            game_data
-                                .get_primary_model_id(equipped.ears.id)
-                                .unwrap_or(0) as u32,
-                            game_data
-                                .get_primary_model_id(equipped.neck.id)
-                                .unwrap_or(0) as u32,
-                            game_data
-                                .get_primary_model_id(equipped.wrists.id)
-                                .unwrap_or(0) as u32,
-                            game_data
-                                .get_primary_model_id(equipped.left_ring.id)
-                                .unwrap_or(0) as u32,
-                            game_data
-                                .get_primary_model_id(equipped.right_ring.id)
-                                .unwrap_or(0) as u32,
-                        ],
+                        model_ids: inventory.get_model_ids(&mut game_data),
                     }),
                     ..Default::default()
                 };
@@ -785,7 +752,8 @@ impl ZoneConnection {
 
         let chara_details = self.database.find_chara_make(self.player_data.content_id);
 
-        let equipped = &self.player_data.inventory.equipped;
+        let inventory = &self.player_data.inventory;
+
         CommonSpawn {
             class_job: self.player_data.classjob_id,
             name: chara_details.name,
@@ -797,41 +765,8 @@ impl ZoneConnection {
             object_kind: ObjectKind::Player(PlayerSubKind::Player),
             look: chara_details.chara_make.customize,
             display_flags: DisplayFlag::UNK,
-            main_weapon_model: game_data
-                .get_primary_model_id(equipped.main_hand.id)
-                .unwrap_or(0),
-            models: [
-                game_data
-                    .get_primary_model_id(equipped.head.id)
-                    .unwrap_or(0) as u32,
-                game_data
-                    .get_primary_model_id(equipped.body.id)
-                    .unwrap_or(0) as u32,
-                game_data
-                    .get_primary_model_id(equipped.hands.id)
-                    .unwrap_or(0) as u32,
-                game_data
-                    .get_primary_model_id(equipped.legs.id)
-                    .unwrap_or(0) as u32,
-                game_data
-                    .get_primary_model_id(equipped.feet.id)
-                    .unwrap_or(0) as u32,
-                game_data
-                    .get_primary_model_id(equipped.ears.id)
-                    .unwrap_or(0) as u32,
-                game_data
-                    .get_primary_model_id(equipped.neck.id)
-                    .unwrap_or(0) as u32,
-                game_data
-                    .get_primary_model_id(equipped.wrists.id)
-                    .unwrap_or(0) as u32,
-                game_data
-                    .get_primary_model_id(equipped.left_ring.id)
-                    .unwrap_or(0) as u32,
-                game_data
-                    .get_primary_model_id(equipped.right_ring.id)
-                    .unwrap_or(0) as u32,
-            ],
+            main_weapon_model: inventory.get_main_weapon_id(&mut game_data),
+            models: inventory.get_model_ids(&mut game_data),
             pos: exit_position.unwrap_or_default(),
             rotation: exit_rotation.unwrap_or(0.0),
             ..Default::default()
