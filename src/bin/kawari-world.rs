@@ -114,7 +114,7 @@ async fn main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::io::Error> {
                     }
                 }
             }
-            ToServer::ActorDespawned(from_id, actor_id) => {
+            ToServer::ActorDespawned(_from_id, actor_id) => {
                 data.actors.remove(&ObjectId(actor_id));
 
                 for (id, handle) in &mut data.clients {
