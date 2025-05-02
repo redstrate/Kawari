@@ -1,11 +1,6 @@
 {
     "ServerZoneIpcType": [
         {
-            "name": "InitializeChat",
-            "opcode": 2,
-            "size": 8
-        },
-        {
             "name": "InitZone",
             "opcode": 790,
             "size": 112
@@ -271,6 +266,13 @@
             "name": "ItemOperation",
             "opcode": 583,
             "size": 48
+        }
+    ],
+    "ServerChatIpcType": [
+        {
+            "name": "LoginReply",
+            "opcode": 2,
+            "size": 8
         }
     ],
     "ServerLobbyIpcType": [

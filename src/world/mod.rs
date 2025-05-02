@@ -28,3 +28,5 @@ pub use actor::Actor;
 
 mod status_effects;
 pub use status_effects::StatusEffects;
+
+pub mod chat;

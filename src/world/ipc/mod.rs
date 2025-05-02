@@ -122,10 +122,10 @@ impl Default for ServerZoneIpcSegment {
         Self {
             unk1: 0x14,
             unk2: 0,
-            op_code: ServerZoneIpcType::InitializeChat,
+            op_code: ServerZoneIpcType::InitZone,
             server_id: 0,
             timestamp: 0,
-            data: ServerZoneIpcData::InitializeChat { unk: [0; 8] },
+            data: ServerZoneIpcData::InitZone(InitZone::default()),
         }
     }
 }
@@ -146,8 +146,6 @@ pub enum GameMasterCommandType {
 #[br(import(_magic: &ServerZoneIpcType))]
 #[derive(Debug, Clone)]
 pub enum ServerZoneIpcData {
-    /// Sent by the server to Initialize something chat-related?
-    InitializeChat { unk: [u8; 8] },
     /// Sent by the server as response to ZoneInitRequest.
     InitResponse {
         unk1: u64,
@@ -372,10 +370,6 @@ mod tests {
     fn world_ipc_sizes() {
         let ipc_types = [
             (
-                ServerZoneIpcType::InitializeChat,
-                ServerZoneIpcData::InitializeChat { unk: [0; 8] },
-            ),
-            (
                 ServerZoneIpcType::InitResponse,
                 ServerZoneIpcData::InitResponse {
                     unk1: 0,
@@ -396,8 +390,8 @@ mod tests {
                 ServerZoneIpcData::PlayerStats(PlayerStats::default()),
             ),
             (
-                ServerZoneIpcType::PlayerSetup,
-                ServerZoneIpcData::PlayerSetup(PlayerSetup::default()),
+                ServerZoneIpcType::PlayerStatus,
+                ServerZoneIpcData::PlayerStatus(PlayerSetup::default()),
             ),
             (
                 ServerZoneIpcType::UpdateClassInfo,
@@ -412,8 +406,8 @@ mod tests {
                 ServerZoneIpcData::LogOutComplete { unk: [0; 8] },
             ),
             (
-                ServerZoneIpcType::ActorSetPos,
-                ServerZoneIpcData::ActorSetPos(ActorSetPos::default()),
+                ServerZoneIpcType::Warp,
+                ServerZoneIpcData::Warp(ActorSetPos::default()),
             ),
             (
                 ServerZoneIpcType::ServerChatMessage,
@@ -432,7 +426,7 @@ mod tests {
             ),
             (
                 ServerZoneIpcType::Move,
-                ServerZoneIpcData::ActorMove(ActorMove::default()),
+                ServerZoneIpcData::Move(ActorMove::default()),
             ),
             (
                 ServerZoneIpcType::NpcSpawn,
@@ -443,20 +437,20 @@ mod tests {
                 ServerZoneIpcData::StatusEffectList(StatusEffectList::default()),
             ),
             (
-                ServerZoneIpcType::WeatherChange,
-                ServerZoneIpcData::WeatherChange(WeatherChange::default()),
+                ServerZoneIpcType::WeatherId,
+                ServerZoneIpcData::WeatherId(WeatherChange::default()),
             ),
             (
-                ServerZoneIpcType::ItemInfo,
-                ServerZoneIpcData::ItemInfo(ItemInfo::default()),
+                ServerZoneIpcType::UpdateItem,
+                ServerZoneIpcData::UpdateItem(ItemInfo::default()),
             ),
             (
                 ServerZoneIpcType::ContainerInfo,
                 ServerZoneIpcData::ContainerInfo(ContainerInfo::default()),
             ),
             (
-                ServerZoneIpcType::EventPlay,
-                ServerZoneIpcData::EventPlay(EventPlay::default()),
+                ServerZoneIpcType::EventScene,
+                ServerZoneIpcData::EventScene(EventPlay::default()),
             ),
             (
                 ServerZoneIpcType::EventStart,

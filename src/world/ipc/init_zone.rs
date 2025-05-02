@@ -49,7 +49,9 @@ mod tests {
         let mut buffer = Cursor::new(&buffer);
 
         let init_zone = InitZone::read_le(&mut buffer).unwrap();
-        assert_eq!(init_zone.zone_id, 182);
+        assert_eq!(init_zone.zone_id, 1);
+        assert_eq!(init_zone.territory_type, 182);
+        assert_eq!(init_zone.territory_index, 0);
         assert_eq!(init_zone.weather_id, 2);
         assert_eq!(init_zone.position.x, 40.519722);
         assert_eq!(init_zone.position.y, 4.0);

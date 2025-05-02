@@ -12,11 +12,12 @@ use crate::{
     OBFUSCATION_ENABLED_MODE,
     common::{GameData, ObjectId, Position, timestamp_secs},
     config::get_config,
-    opcodes::ServerZoneIpcType,
+    opcodes::{ServerChatIpcType, ServerZoneIpcType},
     packet::{
         CompressionType, ConnectionType, PacketSegment, PacketState, SegmentType, parse_packet,
         send_packet,
     },
+    world::chat::{ServerChatIpcData, ServerChatIpcSegment},
 };
 
 use super::{
@@ -169,7 +170,7 @@ impl ZoneConnection {
         .await;
     }
 
-    pub async fn send_chat_segment(&mut self, segment: PacketSegment<ServerZoneIpcSegment>) {
+    pub async fn send_chat_segment(&mut self, segment: PacketSegment<ServerChatIpcSegment>) {
         send_packet(
             &mut self.socket,
             &mut self.state,
@@ -248,10 +249,13 @@ impl ZoneConnection {
                 assert!(self.player_data.actor_id != 0);
 
                 {
-                    let ipc = ServerZoneIpcSegment {
-                        op_code: ServerZoneIpcType::InitializeChat,
+                    let ipc = ServerChatIpcSegment {
+                        op_code: ServerChatIpcType::LoginReply,
                         timestamp: timestamp_secs(),
-                        data: ServerZoneIpcData::InitializeChat { unk: [0; 8] },
+                        data: ServerChatIpcData::LoginReply {
+                            timestamp: 0,
+                            sid: 0,
+                        },
                         ..Default::default()
                     };
 
