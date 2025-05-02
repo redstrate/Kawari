@@ -312,17 +312,17 @@
     ],
     "ClientLobbyIpcType": [
         {
-            "name": "RequestCharacterList",
+            "name": "ServiceLogin",
             "opcode": 3,
             "size": 24
         },
         {
-            "name": "RequestEnterWorld",
+            "name": "GameLogin",
             "opcode": 4,
             "size": 32
         },
         {
-            "name": "ClientVersionInfo",
+            "name": "LoginEx",
             "opcode": 5,
             "size": 1144
         },

@@ -157,7 +157,7 @@ pub async fn send_packet<T: ReadWriteIpcSegment>(
         size: size as u32,
         connection_type,
         segment_count: segments.len() as u16,
-        unk3: 0,
+        version: 0,
         compression_type,
         unk4: 0,
         uncompressed_size: uncompressed_size as u32,

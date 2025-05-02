@@ -65,7 +65,7 @@ async fn main() {
                                 connection.initialize_encryption(phrase, key).await
                             }
                             SegmentType::Ipc { data } => match &data.data {
-                                ClientLobbyIpcData::ClientVersionInfo {
+                                ClientLobbyIpcData::LoginEx {
                                     sequence,
                                     session_id,
                                     version_info,
@@ -98,7 +98,7 @@ async fn main() {
                                         connection.send_error(*sequence, 1012, 13101).await;
                                     }
                                 }
-                                ClientLobbyIpcData::RequestCharacterList { sequence } => {
+                                ClientLobbyIpcData::ServiceLogin { sequence } => {
                                     // TODO: support selecting a service account
                                     connection.selected_service_account =
                                         Some(connection.service_accounts[0].id);
@@ -112,7 +112,7 @@ async fn main() {
 
                                     connection.send_account_list().await;
                                 }
-                                ClientLobbyIpcData::RequestEnterWorld {
+                                ClientLobbyIpcData::GameLogin {
                                     sequence,
                                     content_id,
                                 } => {

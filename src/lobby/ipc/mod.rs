@@ -35,10 +35,10 @@ impl Default for ClientLobbyIpcSegment {
         Self {
             unk1: 0x14,
             unk2: 0,
-            op_code: ClientLobbyIpcType::ClientVersionInfo,
+            op_code: ClientLobbyIpcType::LoginEx,
             server_id: 0,
             timestamp: 0,
-            data: ClientLobbyIpcData::ClientVersionInfo {
+            data: ClientLobbyIpcData::LoginEx {
                 sequence: 0,
                 session_id: String::new(),
                 version_info: String::new(),
@@ -81,8 +81,8 @@ impl Default for ServerLobbyIpcSegment {
 #[derive(Debug, Clone)]
 pub enum ClientLobbyIpcData {
     /// Sent by the client after exchanging encryption information with the lobby server.
-    #[br(pre_assert(*magic == ClientLobbyIpcType::ClientVersionInfo))]
-    ClientVersionInfo {
+    #[br(pre_assert(*magic == ClientLobbyIpcType::LoginEx))]
+    LoginEx {
         sequence: u64,
 
         #[brw(pad_before = 10)] // full of nonsense i don't understand yet
@@ -99,8 +99,8 @@ pub enum ClientLobbyIpcData {
         // unknown stuff at the end, it's not completely empty
     },
     /// Sent by the client when it requests the character list in the lobby.
-    #[br(pre_assert(*magic == ClientLobbyIpcType::RequestCharacterList))]
-    RequestCharacterList {
+    #[br(pre_assert(*magic == ClientLobbyIpcType::ServiceLogin))]
+    ServiceLogin {
         #[brw(pad_before = 16)]
         sequence: u64,
         // TODO: what is in here?
@@ -109,8 +109,8 @@ pub enum ClientLobbyIpcData {
     #[br(pre_assert(*magic == ClientLobbyIpcType::LobbyCharacterAction))]
     LobbyCharacterAction(LobbyCharacterAction),
     /// Sent by the client when it requests to enter a world.
-    #[br(pre_assert(*magic == ClientLobbyIpcType::RequestEnterWorld))]
-    RequestEnterWorld {
+    #[br(pre_assert(*magic == ClientLobbyIpcType::GameLogin))]
+    GameLogin {
         sequence: u64,
         content_id: u64,
         // TODO: what else is in here?
