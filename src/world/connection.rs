@@ -271,10 +271,9 @@ impl ZoneConnection {
         // set pos
         {
             let ipc = ServerZoneIpcSegment {
-                op_code: ServerZoneIpcType::ActorSetPos,
+                op_code: ServerZoneIpcType::Warp,
                 timestamp: timestamp_secs(),
-                data: ServerZoneIpcData::ActorSetPos(ActorSetPos {
-                    unk: 0x020fa3b8,
+                data: ServerZoneIpcData::Warp(ActorSetPos {
                     position,
                     ..Default::default()
                 }),
@@ -292,15 +291,14 @@ impl ZoneConnection {
 
     pub async fn set_actor_position(&mut self, actor_id: u32, position: Position, rotation: f32) {
         let ipc = ServerZoneIpcSegment {
-            op_code: ServerZoneIpcType::ActorMove,
+            op_code: ServerZoneIpcType::Move,
             timestamp: timestamp_secs(),
-            data: ServerZoneIpcData::ActorMove(ActorMove {
+            data: ServerZoneIpcData::Move(ActorMove {
                 rotation,
                 dir_before_slip: 0x7F,
                 flag1: 0,
                 flag2: 0,
                 speed: 0x3C,
-                unk1: 0xEA,
                 position,
             }),
             ..Default::default()
@@ -350,11 +348,11 @@ impl ZoneConnection {
             let ipc = ServerZoneIpcSegment {
                 unk1: 20,
                 unk2: 0,
-                op_code: ServerZoneIpcType::ActorFreeSpawn,
+                op_code: ServerZoneIpcType::Delete,
                 server_id: 0,
                 timestamp: timestamp_secs(),
-                data: ServerZoneIpcData::ActorFreeSpawn {
-                    spawn_index: actor.spawn_index,
+                data: ServerZoneIpcData::Delete {
+                    spawn_index: actor.spawn_index as u8,
                     actor_id,
                 },
             };
@@ -441,8 +439,7 @@ impl ZoneConnection {
                 op_code: ServerZoneIpcType::InitZone,
                 timestamp: timestamp_secs(),
                 data: ServerZoneIpcData::InitZone(InitZone {
-                    server_id: 0,
-                    zone_id: self.zone.as_ref().unwrap().id,
+                    territory_type: self.zone.as_ref().unwrap().id,
                     weather_id: 1,
                     obsfucation_mode: if config.world.enable_packet_obsfucation {
                         OBFUSCATION_ENABLED_MODE
@@ -465,9 +462,9 @@ impl ZoneConnection {
 
     pub async fn change_weather(&mut self, new_weather_id: u16) {
         let ipc = ServerZoneIpcSegment {
-            op_code: ServerZoneIpcType::WeatherChange,
+            op_code: ServerZoneIpcType::WeatherId,
             timestamp: timestamp_secs(),
-            data: ServerZoneIpcData::WeatherChange(WeatherChange {
+            data: ServerZoneIpcData::WeatherId(WeatherChange {
                 weather_id: new_weather_id,
                 transistion_time: 1.0,
             }),
@@ -502,9 +499,9 @@ impl ZoneConnection {
 
             let mut send_slot = async |slot_index: u16, item: &Item| {
                 let ipc = ServerZoneIpcSegment {
-                    op_code: ServerZoneIpcType::ItemInfo,
+                    op_code: ServerZoneIpcType::UpdateItem,
                     timestamp: timestamp_secs(),
-                    data: ServerZoneIpcData::ItemInfo(ItemInfo {
+                    data: ServerZoneIpcData::UpdateItem(ItemInfo {
                         sequence,
                         container: kind,
                         slot: slot_index,
@@ -559,9 +556,9 @@ impl ZoneConnection {
 
             let mut send_slot = async |slot_index: u16, item: &Item| {
                 let ipc = ServerZoneIpcSegment {
-                    op_code: ServerZoneIpcType::ItemInfo,
+                    op_code: ServerZoneIpcType::UpdateItem,
                     timestamp: timestamp_secs(),
-                    data: ServerZoneIpcData::ItemInfo(ItemInfo {
+                    data: ServerZoneIpcData::UpdateItem(ItemInfo {
                         sequence,
                         container: ContainerType::Equipped,
                         slot: slot_index,

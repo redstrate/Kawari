@@ -6,9 +6,9 @@ use super::ContainerType;
 #[derive(Debug, Clone, Default)]
 pub struct InventoryModify {
     pub context_id: u32,
-    pub operation_type: u16,
+    pub operation_type: u8,
 
-    #[brw(pad_before = 2)]
+    #[brw(pad_before = 3)]
     pub src_actor_id: u32,
     #[brw(pad_size_to = 4)]
     pub src_storage_id: ContainerType,
@@ -44,7 +44,7 @@ mod tests {
 
         let modify_inventory = InventoryModify::read_le(&mut buffer).unwrap();
         assert_eq!(modify_inventory.context_id, 0x10000000);
-        assert_eq!(modify_inventory.operation_type, 572);
+        assert_eq!(modify_inventory.operation_type, 128);
         assert_eq!(modify_inventory.src_actor_id, 0);
         assert_eq!(modify_inventory.src_storage_id, ContainerType::Equipped);
         assert_eq!(modify_inventory.src_container_index, 3);

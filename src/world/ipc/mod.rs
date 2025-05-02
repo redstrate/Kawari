@@ -131,7 +131,7 @@ impl Default for ServerZoneIpcSegment {
 }
 
 #[binrw]
-#[brw(repr = u8)]
+#[brw(repr = u32)]
 #[derive(Clone, PartialEq, Debug)]
 pub enum GameMasterCommandType {
     SetLevel = 0x1,
@@ -161,7 +161,7 @@ pub enum ServerZoneIpcData {
     /// Sent by the server containing character stats
     PlayerStats(PlayerStats),
     /// Sent by the server to setup the player on the client
-    PlayerSetup(PlayerSetup),
+    PlayerStatus(PlayerSetup),
     /// Sent by the server to setup class info
     UpdateClassInfo(UpdateClassInfo),
     /// Sent by the server to spawn the player in
@@ -172,7 +172,7 @@ pub enum ServerZoneIpcData {
         unk: [u8; 8],
     },
     /// Sent by the server to modify the client's position
-    ActorSetPos(ActorSetPos),
+    Warp(ActorSetPos),
     /// Sent by the server when they send a chat message
     ServerChatMessage {
         unk: u8, // channel?
@@ -189,7 +189,7 @@ pub enum ServerZoneIpcData {
     /// Sent by the server
     ActorControl(ActorControl),
     /// Sent by the server
-    ActorMove(ActorMove),
+    Move(ActorMove),
     /// Sent by the server in response to SocialListRequest
     SocialList(SocialList),
     /// Sent by the server to spawn an NPC
@@ -197,13 +197,13 @@ pub enum ServerZoneIpcData {
     /// Sent by the server to update an actor's status effect list
     StatusEffectList(StatusEffectList),
     /// Sent by the server when it's time to change the weather
-    WeatherChange(WeatherChange),
+    WeatherId(WeatherChange),
     /// Sent to inform the client of an inventory item
-    ItemInfo(ItemInfo),
+    UpdateItem(ItemInfo),
     /// Sent to inform the client of container status
     ContainerInfo(ContainerInfo),
     /// Sent to tell the client to play a scene
-    EventPlay(EventPlay),
+    EventScene(EventPlay),
     /// Sent to tell the client to load a scene, but not play it
     EventStart(EventStart),
     /// Sent to update an actor's hp & mp values
@@ -217,7 +217,11 @@ pub enum ServerZoneIpcData {
     /// Sent to to the client to update their appearance
     Equip(Equip),
     /// Sent to the client to free up a spawn index
-    ActorFreeSpawn { spawn_index: u32, actor_id: u32 },
+    Delete {
+        spawn_index: u8,
+        #[brw(pad_before = 3)] // padding
+        actor_id: u32,
+    },
 }
 
 #[binrw]
@@ -305,20 +309,21 @@ pub enum ClientZoneIpcData {
     #[br(pre_assert(*magic == ClientZoneIpcType::ChatMessage))]
     ChatMessage(ChatMessage),
     /// Sent by the client when they send a GM command. This can only be sent by the client if they are sent a GM rank.
-    #[br(pre_assert(*magic == ClientZoneIpcType::GameMasterCommand))]
+    #[br(pre_assert(*magic == ClientZoneIpcType::GMCommand))]
     GameMasterCommand {
-        // TODO: incomplete
         command: GameMasterCommandType,
-        #[br(pad_before = 3)] // idk, not empty though
-        arg: u32,
-        unk: [u8; 24],
+        arg0: u32,
+        arg1: u32,
+        arg2: u32,
+        arg3: u32,
+        target: u64,
     },
     /// Sent by the client when the character walks into a zone transistion
-    #[br(pre_assert(*magic == ClientZoneIpcType::EnterZoneLine))]
-    EnterZoneLine {
-        exit_box_id: u32,
+    #[br(pre_assert(*magic == ClientZoneIpcType::ZoneJump))]
+    ZoneJump {
+        exit_box: u32,
         position: Position,
-        #[brw(pad_after = 4)] // empty
+        #[brw(pad_after = 4)] // padding
         landset_index: i32,
     },
     /// Sent by the client when a character performs an action
@@ -348,8 +353,8 @@ pub enum ClientZoneIpcData {
     Unk19 {
         unk: [u8; 16], // TODO: unknown
     },
-    #[br(pre_assert(*magic == ClientZoneIpcType::InventoryModify))]
-    InventoryModify(InventoryModify),
+    #[br(pre_assert(*magic == ClientZoneIpcType::ItemOperation))]
+    ItemOperation(InventoryModify),
 }
 
 #[cfg(test)]
@@ -426,7 +431,7 @@ mod tests {
                 ServerZoneIpcData::ActorControl(ActorControl::default()),
             ),
             (
-                ServerZoneIpcType::ActorMove,
+                ServerZoneIpcType::Move,
                 ServerZoneIpcData::ActorMove(ActorMove::default()),
             ),
             (

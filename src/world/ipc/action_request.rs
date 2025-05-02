@@ -16,8 +16,8 @@ pub enum ActionKind {
 pub struct ActionRequest {
     pub exec_proc: u8, // what?
     pub action_kind: ActionKind,
-    #[brw(pad_before = 2)] // this ISNT empty
-    pub action_id: u32, // See Action Excel sheet
+    #[brw(pad_before = 2)] // padding, i think it's filled with GARBAGE
+    pub action_key: u32, // See Action Excel sheet
     pub request_id: u16,
     #[br(map = read_quantized_rotation)]
     #[bw(map = write_quantized_rotation)]

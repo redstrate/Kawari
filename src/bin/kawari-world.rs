@@ -344,9 +344,9 @@ async fn client_loop(
                                         // Player Setup
                                         {
                                             let ipc = ServerZoneIpcSegment {
-                                                op_code: ServerZoneIpcType::PlayerSetup,
+                                                op_code: ServerZoneIpcType::PlayerStatus,
                                                 timestamp: timestamp_secs(),
-                                                data: ServerZoneIpcData::PlayerSetup(PlayerSetup {
+                                                data: ServerZoneIpcData::PlayerStatus(PlayerSetup {
                                                     content_id: connection.player_data.content_id,
                                                     exp: [10000; 32],
                                                     levels: [100; 32],
@@ -584,19 +584,19 @@ async fn client_loop(
                                         )
                                         .await
                                     }
-                                    ClientZoneIpcData::GameMasterCommand { command, arg, .. } => {
+                                    ClientZoneIpcData::GameMasterCommand { command, arg0, .. } => {
                                         tracing::info!("Got a game master command!");
 
                                         match &command {
                                             GameMasterCommandType::SetLevel => {
-                                                connection.player_data.level = *arg as u8;
+                                                connection.player_data.level = *arg0 as u8;
                                                 connection.update_class_info().await;
                                             }
                                             GameMasterCommandType::ChangeWeather => {
-                                                connection.change_weather(*arg as u16).await
+                                                connection.change_weather(*arg0 as u16).await
                                             }
                                             GameMasterCommandType::ChangeTerritory => {
-                                                connection.change_zone(*arg as u16).await
+                                                connection.change_zone(*arg0 as u16).await
                                             }
                                             GameMasterCommandType::ToggleInvisibility => {
                                                 connection
@@ -615,18 +615,18 @@ async fn client_loop(
                                                 })
                                                 .await,
                                             GameMasterCommandType::GiveItem => {
-                                                connection.player_data.inventory.add_in_next_free_slot(Item { id: *arg, quantity: 1 });
+                                                connection.player_data.inventory.add_in_next_free_slot(Item { id: *arg0, quantity: 1 });
                                                 connection.send_inventory(false).await;
                                             }
                                         }
                                     }
-                                    ClientZoneIpcData::EnterZoneLine {
-                                        exit_box_id,
+                                    ClientZoneIpcData::ZoneJump {
+                                        exit_box,
                                         position,
                                         ..
                                     } => {
                                         tracing::info!(
-                                            "Character entered {exit_box_id} with a position of {position:#?}!"
+                                            "Character entered {exit_box} with a position of {position:#?}!"
                                         );
 
                                         // find the exit box id
@@ -636,7 +636,7 @@ async fn client_loop(
                                                 .zone
                                                 .as_ref()
                                                 .unwrap()
-                                                .find_exit_box(*exit_box_id)
+                                                .find_exit_box(*exit_box)
                                                 .unwrap();
 
                                             // find the pop range on the other side
@@ -666,7 +666,7 @@ async fn client_loop(
                                             let state = lua.app_data_ref::<ExtraLuaState>().unwrap();
 
                                             if let Some(action_script) =
-                                                state.action_scripts.get(&request.action_id)
+                                                state.action_scripts.get(&request.action_key)
                                             {
                                                 lua.scope(|scope| {
                                                     let connection_data = scope
@@ -729,10 +729,10 @@ async fn client_loop(
                                                 data: ServerZoneIpcData::ActionResult(ActionResult {
                                                     main_target: request.target,
                                                     target_id_again: request.target,
-                                                    action_id: request.action_id,
+                                                    action_id: request.action_key,
                                                     animation_lock_time: 0.6,
                                                     rotation: connection.player_data.rotation,
-                                                    action_animation_id: request.action_id as u16, // assuming action id == animation id
+                                                    action_animation_id: request.action_key as u16, // assuming action id == animation id
                                                     flag: 1,
                                                     effect_count: effects_builder.effects.len() as u8,
                                                     effects,
@@ -791,7 +791,7 @@ async fn client_loop(
                                     ClientZoneIpcData::Unk19 { .. } => {
                                         tracing::info!("Recieved Unk19!");
                                     }
-                                    ClientZoneIpcData::InventoryModify(action) => {
+                                    ClientZoneIpcData::ItemOperation(action) => {
                                         tracing::info!("Client is modifying inventory! {action:#?}");
 
                                         connection.player_data.inventory.process_action(action);

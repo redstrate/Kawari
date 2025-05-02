@@ -57,10 +57,10 @@ impl LuaPlayer {
         let ipc = ServerZoneIpcSegment {
             unk1: 20,
             unk2: 0,
-            op_code: ServerZoneIpcType::EventPlay,
+            op_code: ServerZoneIpcType::EventScene,
             server_id: 0,
             timestamp: timestamp_secs(),
-            data: ServerZoneIpcData::EventPlay(EventPlay {
+            data: ServerZoneIpcData::EventScene(EventPlay {
                 actor_id: ObjectTypeId {
                     object_id: ObjectId(self.player_data.actor_id),
                     object_type: 0,
@@ -82,10 +82,9 @@ impl LuaPlayer {
 
     fn set_position(&mut self, position: Position) {
         let ipc = ServerZoneIpcSegment {
-            op_code: ServerZoneIpcType::ActorSetPos,
+            op_code: ServerZoneIpcType::Warp,
             timestamp: timestamp_secs(),
-            data: ServerZoneIpcData::ActorSetPos(ActorSetPos {
-                unk: 0x020fa3b8,
+            data: ServerZoneIpcData::Warp(ActorSetPos {
                 position,
                 ..Default::default()
             }),

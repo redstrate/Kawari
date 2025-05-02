@@ -5,9 +5,9 @@ use super::Position;
 #[binrw]
 #[derive(Debug, Clone, Default)]
 pub struct InitZone {
-    pub server_id: u16,
     pub zone_id: u16,
-    pub zone_index: u16,
+    pub territory_type: u16,
+    pub territory_index: u16,
     pub content_finder_condition_id: u16,
     pub layer_set_id: u32,
     pub layout_id: u32,

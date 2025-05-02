@@ -21,7 +21,7 @@
             "size": 144
         },
         {
-            "name": "PlayerSetup",
+            "name": "PlayerStatus",
             "opcode": 311,
             "size": 2808
         },
@@ -46,7 +46,7 @@
             "size": 8
         },
         {
-            "name": "ActorSetPos",
+            "name": "Warp",
             "opcode": 121,
             "size": 24
         },
@@ -91,7 +91,7 @@
             "size": 24
         },
         {
-            "name": "ActorMove",
+            "name": "Move",
             "opcode": 487,
             "size": 16
         },
@@ -116,12 +116,12 @@
             "size": 384
         },
         {
-            "name": "WeatherChange",
+            "name": "WeatherId",
             "opcode": 580,
             "size": 8
         },
         {
-            "name": "ItemInfo",
+            "name": "UpdateItem",
             "opcode": 404,
             "size": 64
         },
@@ -131,7 +131,7 @@
             "size": 16
         },
         {
-            "name": "EventPlay",
+            "name": "EventScene",
             "opcode": 269,
             "size": 40
         },
@@ -156,7 +156,7 @@
             "size": 72
         },
         {
-            "name": "ActorFreeSpawn",
+            "name": "Delete",
             "opcode": 149,
             "size": 8
         }
@@ -228,12 +228,12 @@
             "size": 58
         },
         {
-            "name": "GameMasterCommand",
+            "name": "GMCommand",
             "opcode": 266,
             "size": 32
         },
         {
-            "name": "EnterZoneLine",
+            "name": "ZoneJump",
             "opcode": 609,
             "size": 24
         },
@@ -268,7 +268,7 @@
             "size": 16
         },
         {
-            "name": "InventoryModify",
+            "name": "ItemOperation",
             "opcode": 583,
             "size": 48
         }
