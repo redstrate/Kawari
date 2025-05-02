@@ -108,8 +108,8 @@ impl<T: ReadWriteIpcSegment> Default for SegmentData<T> {
 #[binrw]
 #[derive(Debug)]
 pub struct PacketHeader {
-    pub unk1: u64,
-    pub unk2: u64,
+    // unknown purpose
+    pub prefix: [u8; 16],
     pub timestamp: u64,
     pub size: u32,
     pub connection_type: ConnectionType,
@@ -189,8 +189,7 @@ pub async fn send_packet<T: ReadWriteIpcSegment>(
     let size = std::mem::size_of::<PacketHeader>() + data.len();
 
     let header = PacketHeader {
-        unk1: 0xE2465DFF41A05252, // wtf?
-        unk2: 0x75C4997B4D642A7F, // wtf? x2
+        prefix: [0; 16],
         timestamp: timestamp_msecs(),
         size: size as u32,
         connection_type,
