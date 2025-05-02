@@ -275,39 +275,39 @@
     ],
     "ServerLobbyIpcType": [
         {
-            "name": "LobbyError",
+            "name": "NackReply",
             "opcode": 2,
             "size": 536
         },
         {
-            "name": "LobbyServiceAccountList",
+            "name": "LoginReply",
             "opcode": 12,
             "size": 656
         },
         {
-            "name": "LobbyCharacterList",
+            "name": "ServiceLoginReply",
             "opcode": 13,
             "size": 2472
         },
         {
-            "name": "LobbyEnterWorld",
+            "name": "CharaMakeReply",
+            "opcode": 14,
+            "size": 2568
+        },
+        {
+            "name": "GameLoginReply",
             "opcode": 15,
             "size": 160
         },
         {
-            "name": "LobbyServerList",
+            "name": "DistWorldInfo",
             "opcode": 21,
             "size": 528
         },
         {
-            "name": "LobbyRetainerList",
+            "name": "DistRetainerInfo",
             "opcode": 23,
             "size": 210
-        },
-        {
-            "name": "CharacterCreated",
-            "opcode": 14,
-            "size": 2568
         }
     ],
     "ClientLobbyIpcType": [
@@ -327,14 +327,14 @@
             "size": 1144
         },
         {
-            "name": "LobbyCharacterAction",
-            "opcode": 11,
-            "size": 496
-        },
-        {
             "name": "ShandaLogin",
             "opcode": 6,
             "size": 1456
+        },
+        {
+            "name": "CharaMake",
+            "opcode": 11,
+            "size": 496
         }
     ]
 }

@@ -62,10 +62,10 @@ impl Default for ServerLobbyIpcSegment {
         Self {
             unk1: 0x14,
             unk2: 0,
-            op_code: ServerLobbyIpcType::LobbyError,
+            op_code: ServerLobbyIpcType::NackReply,
             server_id: 0,
             timestamp: 0,
-            data: ServerLobbyIpcData::LobbyError {
+            data: ServerLobbyIpcData::NackReply {
                 sequence: 0,
                 error: 0,
                 value: 0,
@@ -80,6 +80,20 @@ impl Default for ServerLobbyIpcSegment {
 #[br(import(magic: &ClientLobbyIpcType))]
 #[derive(Debug, Clone)]
 pub enum ClientLobbyIpcData {
+    /// Sent by the client when it requests the character list in the lobby.
+    #[br(pre_assert(*magic == ClientLobbyIpcType::ServiceLogin))]
+    ServiceLogin {
+        #[brw(pad_before = 16)]
+        sequence: u64,
+        // TODO: what is in here?
+    },
+    /// Sent by the client when it requests to enter a world.
+    #[br(pre_assert(*magic == ClientLobbyIpcType::GameLogin))]
+    GameLogin {
+        sequence: u64,
+        content_id: u64,
+        // TODO: what else is in here?
+    },
     /// Sent by the client after exchanging encryption information with the lobby server.
     #[br(pre_assert(*magic == ClientLobbyIpcType::LoginEx))]
     LoginEx {
@@ -98,50 +112,47 @@ pub enum ClientLobbyIpcData {
         version_info: String,
         // unknown stuff at the end, it's not completely empty
     },
-    /// Sent by the client when it requests the character list in the lobby.
-    #[br(pre_assert(*magic == ClientLobbyIpcType::ServiceLogin))]
-    ServiceLogin {
-        #[brw(pad_before = 16)]
-        sequence: u64,
-        // TODO: what is in here?
-    },
-    /// Sent by the client when they request something about the character (e.g. deletion.)
-    #[br(pre_assert(*magic == ClientLobbyIpcType::LobbyCharacterAction))]
-    LobbyCharacterAction(LobbyCharacterAction),
-    /// Sent by the client when it requests to enter a world.
-    #[br(pre_assert(*magic == ClientLobbyIpcType::GameLogin))]
-    GameLogin {
-        sequence: u64,
-        content_id: u64,
-        // TODO: what else is in here?
-    },
     #[br(pre_assert(*magic == ClientLobbyIpcType::ShandaLogin))]
     ShandaLogin {
         #[bw(pad_size_to = 1456)]
         #[br(count = 1456)]
         unk: Vec<u8>,
     },
+    /// Sent by the client when they request something about the character (e.g. deletion.)
+    #[br(pre_assert(*magic == ClientLobbyIpcType::CharaMake))]
+    CharaMake(LobbyCharacterAction),
 }
 
 #[binrw]
 #[br(import(_magic: &ServerLobbyIpcType))]
 #[derive(Debug, Clone)]
 pub enum ServerLobbyIpcData {
-    /// Sent by the server to inform the client of their service accounts.
-    LobbyServiceAccountList(LobbyServiceAccountList),
-    /// Sent by the server to inform the client of their servers.
-    LobbyServerList(LobbyServerList),
-    /// Sent by the server to inform the client of their retainers.
-    LobbyRetainerList {
-        // TODO: what is in here?
-        #[brw(pad_before = 7)]
-        #[brw(pad_after = 202)]
-        unk1: u8,
+    /// Sent by the server to indicate an lobby error occured.
+    NackReply {
+        sequence: u64,
+        error: u32,
+        value: u32,
+        exd_error_id: u16,
+        #[brw(pad_after = 516)] // empty and garbage
+        unk1: u16,
     },
+    /// Sent by the server to inform the client of their service accounts.
+    LoginReply(LobbyServiceAccountList),
     /// Sent by the server to inform the client of their characters.
-    LobbyCharacterList(LobbyCharacterList),
+    ServiceLoginReply(LobbyCharacterList),
+    // Assumed what this is, but probably incorrect
+    CharaMakeReply {
+        sequence: u64,
+        unk1: u8,
+        unk2: u8,
+        #[brw(pad_after = 1)] // empty
+        action: LobbyCharacterActionKind,
+        #[brw(pad_before = 36)] // empty
+        #[brw(pad_after = 1336)] // empty and garbage
+        details: CharacterDetails,
+    },
     /// Sent by the server to tell the client how to connect to the world server.
-    LobbyEnterWorld {
+    GameLoginReply {
         sequence: u64,
         actor_id: u32,
         #[brw(pad_before = 4)]
@@ -160,25 +171,14 @@ pub enum ServerLobbyIpcData {
         #[bw(map = write_string)]
         host: String,
     },
-    /// Sent by the server to indicate an lobby error occured.
-    LobbyError {
-        sequence: u64,
-        error: u32,
-        value: u32,
-        exd_error_id: u16,
-        #[brw(pad_after = 516)] // empty and garbage
-        unk1: u16,
-    },
-    // Assumed what this is, but probably incorrect
-    CharacterCreated {
-        sequence: u64,
+    /// Sent by the server to inform the client of their servers.
+    DistWorldInfo(LobbyServerList),
+    /// Sent by the server to inform the client of their retainers.
+    DistRetainerInfo {
+        // TODO: what is in here?
+        #[brw(pad_before = 7)]
+        #[brw(pad_after = 202)]
         unk1: u8,
-        unk2: u8,
-        #[brw(pad_after = 1)] // empty
-        action: LobbyCharacterActionKind,
-        #[brw(pad_before = 36)] // empty
-        #[brw(pad_after = 1336)] // empty and garbage
-        details: CharacterDetails,
     },
 }
 
@@ -195,24 +195,24 @@ mod tests {
     fn lobby_ipc_sizes() {
         let ipc_types = [
             (
-                ServerLobbyIpcType::LobbyServiceAccountList,
-                ServerLobbyIpcData::LobbyServiceAccountList(LobbyServiceAccountList::default()),
+                ServerLobbyIpcType::LoginReply,
+                ServerLobbyIpcData::LoginReply(LobbyServiceAccountList::default()),
             ),
             (
-                ServerLobbyIpcType::LobbyServerList,
-                ServerLobbyIpcData::LobbyServerList(LobbyServerList::default()),
+                ServerLobbyIpcType::DistWorldInfo,
+                ServerLobbyIpcData::DistWorldInfo(LobbyServerList::default()),
             ),
             (
-                ServerLobbyIpcType::LobbyRetainerList,
-                ServerLobbyIpcData::LobbyRetainerList { unk1: 0 },
+                ServerLobbyIpcType::DistRetainerInfo,
+                ServerLobbyIpcData::DistRetainerInfo { unk1: 0 },
             ),
             (
-                ServerLobbyIpcType::LobbyCharacterList,
-                ServerLobbyIpcData::LobbyCharacterList(LobbyCharacterList::default()),
+                ServerLobbyIpcType::ServiceLoginReply,
+                ServerLobbyIpcData::ServiceLoginReply(LobbyCharacterList::default()),
             ),
             (
-                ServerLobbyIpcType::LobbyEnterWorld,
-                ServerLobbyIpcData::LobbyEnterWorld {
+                ServerLobbyIpcType::GameLoginReply,
+                ServerLobbyIpcData::GameLoginReply {
                     sequence: 0,
                     actor_id: 0,
                     content_id: 0,
@@ -222,8 +222,8 @@ mod tests {
                 },
             ),
             (
-                ServerLobbyIpcType::LobbyError,
-                ServerLobbyIpcData::LobbyError {
+                ServerLobbyIpcType::NackReply,
+                ServerLobbyIpcData::NackReply {
                     sequence: 0,
                     error: 0,
                     value: 0,
@@ -232,8 +232,8 @@ mod tests {
                 },
             ),
             (
-                ServerLobbyIpcType::CharacterCreated,
-                ServerLobbyIpcData::CharacterCreated {
+                ServerLobbyIpcType::CharaMakeReply,
+                ServerLobbyIpcData::CharaMakeReply {
                     sequence: 0,
                     unk1: 0,
                     unk2: 0,

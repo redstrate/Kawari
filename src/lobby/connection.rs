@@ -83,19 +83,18 @@ impl LobbyConnection {
 
     /// Send the service account list to the client.
     pub async fn send_account_list(&mut self) {
-        let service_account_list =
-            ServerLobbyIpcData::LobbyServiceAccountList(LobbyServiceAccountList {
-                sequence: 0,
-                num_service_accounts: self.service_accounts.len() as u8,
-                unk1: 3,
-                unk2: 0x99,
-                service_accounts: self.service_accounts.to_vec(),
-            });
+        let service_account_list = ServerLobbyIpcData::LoginReply(LobbyServiceAccountList {
+            sequence: 0,
+            num_service_accounts: self.service_accounts.len() as u8,
+            unk1: 3,
+            unk2: 0x99,
+            service_accounts: self.service_accounts.to_vec(),
+        });
 
         let ipc = ServerLobbyIpcSegment {
             unk1: 0,
             unk2: 0,
-            op_code: ServerLobbyIpcType::LobbyServiceAccountList,
+            op_code: ServerLobbyIpcType::LoginReply,
             server_id: 0,
             timestamp: timestamp_secs(),
             data: service_account_list,
@@ -127,7 +126,7 @@ impl LobbyConnection {
             // add any empty boys
             servers.resize(6, Server::default());
 
-            let lobby_server_list = ServerLobbyIpcData::LobbyServerList(LobbyServerList {
+            let lobby_server_list = ServerLobbyIpcData::DistWorldInfo(LobbyServerList {
                 sequence: 0,
                 unk1: 1,
                 offset: 0,
@@ -138,7 +137,7 @@ impl LobbyConnection {
             let ipc = ServerLobbyIpcSegment {
                 unk1: 0,
                 unk2: 0,
-                op_code: ServerLobbyIpcType::LobbyServerList,
+                op_code: ServerLobbyIpcType::DistWorldInfo,
                 server_id: 0,
                 timestamp: timestamp_secs(),
                 data: lobby_server_list,
@@ -154,12 +153,12 @@ impl LobbyConnection {
 
         // send them the retainer list
         {
-            let lobby_retainer_list = ServerLobbyIpcData::LobbyRetainerList { unk1: 1 };
+            let lobby_retainer_list = ServerLobbyIpcData::DistRetainerInfo { unk1: 1 };
 
             let ipc = ServerLobbyIpcSegment {
                 unk1: 0,
                 unk2: 0,
-                op_code: ServerLobbyIpcType::LobbyRetainerList,
+                op_code: ServerLobbyIpcType::DistRetainerInfo,
                 server_id: 0,
                 timestamp: timestamp_secs(),
                 data: lobby_retainer_list,
@@ -261,10 +260,10 @@ impl LobbyConnection {
                 let ipc = ServerLobbyIpcSegment {
                     unk1: 0,
                     unk2: 0,
-                    op_code: ServerLobbyIpcType::LobbyCharacterList,
+                    op_code: ServerLobbyIpcType::ServiceLoginReply,
                     server_id: 0,
                     timestamp: timestamp_secs(),
-                    data: ServerLobbyIpcData::LobbyCharacterList(lobby_character_list),
+                    data: ServerLobbyIpcData::ServiceLoginReply(lobby_character_list),
                 };
 
                 self.send_segment(PacketSegment {
@@ -281,7 +280,7 @@ impl LobbyConnection {
     pub async fn send_enter_world(&mut self, sequence: u64, content_id: u64, actor_id: u32) {
         let config = get_config();
 
-        let enter_world = ServerLobbyIpcData::LobbyEnterWorld {
+        let enter_world = ServerLobbyIpcData::GameLoginReply {
             sequence,
             actor_id,
             content_id,
@@ -293,7 +292,7 @@ impl LobbyConnection {
         let ipc = ServerLobbyIpcSegment {
             unk1: 0,
             unk2: 0,
-            op_code: ServerLobbyIpcType::LobbyEnterWorld,
+            op_code: ServerLobbyIpcType::GameLoginReply,
             server_id: 0,
             timestamp: timestamp_secs(),
             data: enter_world,
@@ -309,7 +308,7 @@ impl LobbyConnection {
 
     /// Send a lobby error to the client.
     pub async fn send_error(&mut self, sequence: u64, error: u32, exd_error: u16) {
-        let lobby_error = ServerLobbyIpcData::LobbyError {
+        let lobby_error = ServerLobbyIpcData::NackReply {
             sequence,
             error,
             value: 0,
@@ -320,7 +319,7 @@ impl LobbyConnection {
         let ipc = ServerLobbyIpcSegment {
             unk1: 0,
             unk2: 0,
-            op_code: ServerLobbyIpcType::LobbyError,
+            op_code: ServerLobbyIpcType::NackReply,
             server_id: 0,
             timestamp: timestamp_secs(),
             data: lobby_error,
@@ -369,10 +368,10 @@ impl LobbyConnection {
                     let ipc = ServerLobbyIpcSegment {
                         unk1: 0,
                         unk2: 0,
-                        op_code: ServerLobbyIpcType::CharacterCreated,
+                        op_code: ServerLobbyIpcType::CharaMakeReply,
                         server_id: 0,
                         timestamp: 0,
-                        data: ServerLobbyIpcData::CharacterCreated {
+                        data: ServerLobbyIpcData::CharaMakeReply {
                             sequence: character_action.sequence + 1,
                             unk1: 0x1,
                             unk2: 0x1,
@@ -396,10 +395,10 @@ impl LobbyConnection {
                     let ipc = ServerLobbyIpcSegment {
                         unk1: 0,
                         unk2: 0,
-                        op_code: ServerLobbyIpcType::LobbyError,
+                        op_code: ServerLobbyIpcType::NackReply,
                         server_id: 0,
                         timestamp: 0,
-                        data: ServerLobbyIpcData::LobbyError {
+                        data: ServerLobbyIpcData::NackReply {
                             sequence: character_action.sequence,
                             error: 0x00000bdb,
                             exd_error_id: 0x32cc,
@@ -461,10 +460,10 @@ impl LobbyConnection {
                     let ipc = ServerLobbyIpcSegment {
                         unk1: 0,
                         unk2: 0,
-                        op_code: ServerLobbyIpcType::CharacterCreated,
+                        op_code: ServerLobbyIpcType::CharaMakeReply,
                         server_id: 0,
                         timestamp: 0,
-                        data: ServerLobbyIpcData::CharacterCreated {
+                        data: ServerLobbyIpcData::CharaMakeReply {
                             sequence: character_action.sequence + 1,
                             unk1: 0x1,
                             unk2: 0x1,
@@ -513,10 +512,10 @@ impl LobbyConnection {
                     let ipc = ServerLobbyIpcSegment {
                         unk1: 0,
                         unk2: 0,
-                        op_code: ServerLobbyIpcType::CharacterCreated, // FIXME: a TERRIBLE name for this packet
+                        op_code: ServerLobbyIpcType::CharaMakeReply,
                         server_id: 0,
                         timestamp: 0,
-                        data: ServerLobbyIpcData::CharacterCreated {
+                        data: ServerLobbyIpcData::CharaMakeReply {
                             sequence: character_action.sequence + 1,
                             unk1: 0x1,
                             unk2: 0x1,

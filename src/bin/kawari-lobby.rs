@@ -104,7 +104,7 @@ async fn main() {
                                         Some(connection.service_accounts[0].id);
                                     connection.send_lobby_info(*sequence).await
                                 }
-                                ClientLobbyIpcData::LobbyCharacterAction(character_action) => {
+                                ClientLobbyIpcData::CharaMake(character_action) => {
                                     connection.handle_character_action(character_action).await
                                 }
                                 ClientLobbyIpcData::ShandaLogin { unk } => {
