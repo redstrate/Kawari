@@ -1,7 +1,7 @@
 use mlua::{FromLua, Lua, LuaSerdeExt, UserData, UserDataMethods, Value};
 
 use crate::{
-    common::{ObjectId, ObjectTypeId, Position, timestamp_secs},
+    common::{ObjectId, ObjectTypeId, Position, timestamp_secs, workdefinitions::RemakeMode},
     ipc::zone::{
         ActionEffect, ActorSetPos, DamageElement, DamageKind, DamageType, EffectKind, EventPlay,
         ServerZoneIpcData, ServerZoneIpcSegment,
@@ -12,8 +12,9 @@ use crate::{
 
 use super::{PlayerData, StatusEffects, Zone};
 
-pub struct ChangeTerritoryTask {
-    pub zone_id: u16,
+pub enum Task {
+    ChangeTerritory { zone_id: u16 },
+    SetRemakeMode(RemakeMode),
 }
 
 #[derive(Default)]
@@ -21,7 +22,7 @@ pub struct LuaPlayer {
     pub player_data: PlayerData,
     pub status_effects: StatusEffects,
     pub queued_segments: Vec<PacketSegment<ServerZoneIpcSegment>>,
-    pub queued_tasks: Vec<ChangeTerritoryTask>,
+    pub queued_tasks: Vec<Task>,
 }
 
 impl LuaPlayer {
@@ -100,7 +101,11 @@ impl LuaPlayer {
     }
 
     fn change_territory(&mut self, zone_id: u16) {
-        self.queued_tasks.push(ChangeTerritoryTask { zone_id });
+        self.queued_tasks.push(Task::ChangeTerritory { zone_id });
+    }
+
+    fn set_remake_mode(&mut self, mode: RemakeMode) {
+        self.queued_tasks.push(Task::SetRemakeMode(mode));
     }
 }
 
@@ -130,6 +135,11 @@ impl UserData for LuaPlayer {
         });
         methods.add_method_mut("change_territory", |_, this, zone_id: u16| {
             this.change_territory(zone_id);
+            Ok(())
+        });
+        methods.add_method_mut("set_remake_mode", |lua, this, mode: Value| {
+            let mode: RemakeMode = lua.from_value(mode).unwrap();
+            this.set_remake_mode(mode);
             Ok(())
         });
     }

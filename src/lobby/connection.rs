@@ -417,8 +417,6 @@ impl LobbyConnection {
                 let our_actor_id;
                 let our_content_id;
 
-                dbg!(CharaMake::from_json(&character_action.json));
-
                 // tell the world server to create this character
                 {
                     let ipc_segment = CustomIpcSegment {
@@ -537,7 +535,58 @@ impl LobbyConnection {
             }
             LobbyCharacterActionKind::Move => todo!(),
             LobbyCharacterActionKind::RemakeRetainer => todo!(),
-            LobbyCharacterActionKind::RemakeChara => todo!(),
+            LobbyCharacterActionKind::RemakeChara => {
+                // tell the world server to turn this guy into a catgirl
+                {
+                    let ipc_segment = CustomIpcSegment {
+                        unk1: 0,
+                        unk2: 0,
+                        op_code: CustomIpcType::RemakeCharacter,
+                        option: 0,
+                        timestamp: 0,
+                        data: CustomIpcData::RemakeCharacter {
+                            content_id: character_action.content_id,
+                            chara_make_json: character_action.json.clone(),
+                        },
+                    };
+
+                    let _ = send_custom_world_packet(ipc_segment).await.unwrap();
+
+                    // we intentionally don't care about the response right now, it's not expected to fail
+                }
+
+                // send a confirmation that the remakewas successful
+                {
+                    let ipc = ServerLobbyIpcSegment {
+                        unk1: 0,
+                        unk2: 0,
+                        op_code: ServerLobbyIpcType::CharaMakeReply,
+                        option: 0,
+                        timestamp: 0,
+                        data: ServerLobbyIpcData::CharaMakeReply {
+                            sequence: character_action.sequence + 1,
+                            unk1: 0x1,
+                            unk2: 0x1,
+                            action: LobbyCharacterActionKind::RemakeChara,
+                            details: CharacterDetails {
+                                actor_id: 0, // TODO: fill maybe?
+                                content_id: character_action.content_id,
+                                character_name: character_action.name.clone(),
+                                origin_server_name: self.world_name.clone(),
+                                current_server_name: self.world_name.clone(),
+                                ..Default::default()
+                            },
+                        },
+                    };
+
+                    self.send_segment(PacketSegment {
+                        segment_type: SegmentType::Ipc,
+                        data: SegmentData::Ipc { data: ipc },
+                        ..Default::default()
+                    })
+                    .await;
+                }
+            }
             LobbyCharacterActionKind::SettingsUploadBegin => todo!(),
             LobbyCharacterActionKind::SettingsUpload => todo!(),
             LobbyCharacterActionKind::WorldVisit => todo!(),

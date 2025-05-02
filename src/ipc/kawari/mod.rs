@@ -23,6 +23,8 @@ impl ReadWriteIpcSegment for CustomIpcSegment {
             CustomIpcType::DeleteCharacter => 4,
             CustomIpcType::CharacterDeleted => 1,
             CustomIpcType::ImportCharacter => 132,
+            CustomIpcType::RemakeCharacter => 1024 + 8,
+            CustomIpcType::CharacterRemade => 8,
         }
     }
 }
@@ -54,6 +56,10 @@ pub enum CustomIpcType {
     CharacterDeleted = 0x10,
     /// Request to import a character backup
     ImportCharacter = 0x11,
+    /// Remake a character
+    RemakeCharacter = 0x12,
+    // Character has been remade
+    CharacterRemade = 0x13,
 }
 
 #[binrw]
@@ -117,6 +123,17 @@ pub enum CustomIpcData {
         #[bw(map = write_string)]
         path: String,
     },
+    #[br(pre_assert(*magic == CustomIpcType::RemakeCharacter))]
+    RemakeCharacter {
+        content_id: u64,
+        #[bw(pad_size_to = 1024)]
+        #[br(count = 1024)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        chara_make_json: String,
+    },
+    #[br(pre_assert(*magic == CustomIpcType::CharacterRemade))]
+    CharacterRemade { content_id: u64 },
 }
 
 impl Default for CustomIpcData {

@@ -43,7 +43,7 @@ impl WorldDatabase {
 
         // Create characters data table
         {
-            let query = "CREATE TABLE IF NOT EXISTS character_data (content_id INTEGER PRIMARY KEY, name STRING, chara_make STRING, city_state INTEGER, zone_id INTEGER, pos_x REAL, pos_y REAL, pos_z REAL, rotation REAL, inventory STRING);";
+            let query = "CREATE TABLE IF NOT EXISTS character_data (content_id INTEGER PRIMARY KEY, name STRING, chara_make STRING, city_state INTEGER, zone_id INTEGER, pos_x REAL, pos_y REAL, pos_z REAL, rotation REAL, inventory STRING, remake_mode INTEGER);";
             connection.execute(query, ()).unwrap();
         }
 
@@ -239,16 +239,22 @@ impl WorldDatabase {
         for (index, (content_id, actor_id)) in content_actor_ids.iter().enumerate() {
             let mut stmt = connection
                 .prepare(
-                    "SELECT name, chara_make, zone_id, inventory FROM character_data WHERE content_id = ?1",
+                    "SELECT name, chara_make, zone_id, inventory, remake_mode FROM character_data WHERE content_id = ?1",
                 )
                 .unwrap();
 
-            let result: Result<(String, String, u16, String), rusqlite::Error> = stmt
+            let result: Result<(String, String, u16, String, i32), rusqlite::Error> = stmt
                 .query_row((content_id,), |row| {
-                    Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?))
+                    Ok((
+                        row.get(0)?,
+                        row.get(1)?,
+                        row.get(2)?,
+                        row.get(3)?,
+                        row.get(4)?,
+                    ))
                 });
 
-            if let Ok((name, chara_make, zone_id, inventory_json)) = result {
+            if let Ok((name, chara_make, zone_id, inventory_json, remake_mode)) = result {
                 let chara_make = CharaMake::from_json(&chara_make);
 
                 let inventory: Inventory = serde_json::from_str(&inventory_json).unwrap();
@@ -273,9 +279,7 @@ impl WorldDatabase {
                     model_ids: inventory.get_model_ids(game_data),
                     equip_stain: [0; 10],
                     glasses: [0; 2],
-                    unk15: 0,
-                    unk16: 0,
-                    remake_mode: RemakeMode::None,
+                    remake_mode: RemakeMode::try_from(remake_mode).unwrap(),
                     remake_minutes_remaining: 0,
                     voice_id: chara_make.voice_id,
                     unk20: 0,
@@ -338,7 +342,7 @@ impl WorldDatabase {
         // insert char data
         connection
             .execute(
-                "INSERT INTO character_data VALUES (?1, ?2, ?3, ?4, ?5, 0.0, 0.0, 0.0, 0.0, ?6);",
+                "INSERT INTO character_data VALUES (?1, ?2, ?3, ?4, ?5, 0.0, 0.0, 0.0, 0.0, ?6, 0);",
                 (
                     content_id,
                     name,
@@ -415,5 +419,25 @@ impl WorldDatabase {
             .prepare("DELETE FROM character_data WHERE content_id = ?1; DELETE FROM characters WHERE content_id = ?1;")
             .unwrap();
         stmt.execute((content_id,)).unwrap();
+    }
+
+    /// Sets the remake mode for a character
+    pub fn set_remake_mode(&self, content_id: u64, mode: RemakeMode) {
+        let connection = self.connection.lock().unwrap();
+
+        let mut stmt = connection
+            .prepare("UPDATE character_data SET remake_mode=?1 WHERE content_id = ?2")
+            .unwrap();
+        stmt.execute((mode as i32, content_id)).unwrap();
+    }
+
+    /// Sets the chara make JSON for a character
+    pub fn set_chara_make(&self, content_id: u64, chara_make_json: &str) {
+        let connection = self.connection.lock().unwrap();
+
+        let mut stmt = connection
+            .prepare("UPDATE character_data SET chara_make=?1 WHERE content_id = ?2")
+            .unwrap();
+        stmt.execute((chara_make_json, content_id)).unwrap();
     }
 }

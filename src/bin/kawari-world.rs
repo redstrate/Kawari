@@ -3,7 +3,7 @@ use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 
 use kawari::RECEIVE_BUFFER_SIZE;
-use kawari::common::workdefinitions::CharaMake;
+use kawari::common::workdefinitions::{CharaMake, RemakeMode};
 use kawari::common::{GameData, ObjectId, timestamp_secs};
 use kawari::common::{Position, determine_initial_starting_zone};
 use kawari::config::get_config;
@@ -712,8 +712,9 @@ async fn client_loop(
                                             let lua = lua.lock().unwrap();
                                             let state = lua.app_data_ref::<ExtraLuaState>().unwrap();
 
+                                            let key = request.action_key;
                                             if let Some(action_script) =
-                                                state.action_scripts.get(&request.action_key)
+                                                state.action_scripts.get(&key)
                                             {
                                                 lua.scope(|scope| {
                                                     let connection_data = scope
@@ -745,6 +746,8 @@ async fn client_loop(
                                                     Ok(())
                                                 })
                                                 .unwrap();
+                                            } else {
+                                                tracing::warn!("Action {key} isn't scripted yet! Ignoring...");
                                             }
                                         }
 
@@ -1055,6 +1058,40 @@ async fn client_loop(
                                     }
                                     CustomIpcData::ImportCharacter { service_account_id, path } => {
                                         database.import_character(*service_account_id, path);
+                                    }
+                                    CustomIpcData::RemakeCharacter { content_id, chara_make_json } => {
+                                        // overwrite it in the database
+                                        database.set_chara_make(*content_id, chara_make_json);
+
+                                        // reset flag
+                                        database.set_remake_mode(*content_id, RemakeMode::None);
+
+                                        // send response
+                                        {
+                                            send_packet::<CustomIpcSegment>(
+                                                &mut connection.socket,
+                                                &mut connection.state,
+                                                ConnectionType::None,
+                                                CompressionType::Uncompressed,
+                                                &[PacketSegment {
+                                                    segment_type: SegmentType::KawariIpc,
+                                                    data: SegmentData::KawariIpc {
+                                                        data: CustomIpcSegment {
+                                                            unk1: 0,
+                                                            unk2: 0,
+                                                            op_code: CustomIpcType::CharacterRemade,
+                                                            option: 0,
+                                                            timestamp: 0,
+                                                            data: CustomIpcData::CharacterRemade {
+                                                                content_id: *content_id,
+                                                            },
+                                                        },
+                                                    },
+                                                    ..Default::default()
+                                                }],
+                                            )
+                                            .await;
+                                        }
                                     }
                                     _ => {
                                         panic!("The server is recieving a response or unknown custom IPC!")

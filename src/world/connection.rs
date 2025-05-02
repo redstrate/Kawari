@@ -28,7 +28,7 @@ use crate::{
 
 use super::{
     Actor, CharacterData, Event, Inventory, Item, LuaPlayer, StatusEffects, WorldDatabase, Zone,
-    inventory::Container,
+    inventory::Container, lua::Task,
 };
 
 #[derive(Debug, Default, Clone)]
@@ -623,7 +623,12 @@ impl ZoneConnection {
         player.queued_segments.clear();
 
         for task in &player.queued_tasks {
-            self.change_zone(task.zone_id).await;
+            match task {
+                Task::ChangeTerritory { zone_id } => self.change_zone(*zone_id).await,
+                Task::SetRemakeMode(remake_mode) => self
+                    .database
+                    .set_remake_mode(player.player_data.content_id, *remake_mode),
+            }
         }
         player.queued_tasks.clear();
     }
