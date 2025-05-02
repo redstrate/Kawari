@@ -7,12 +7,12 @@ use crate::{
     common::{read_string, timestamp_msecs, write_string},
     config::get_config,
     ipc::kawari::CustomIpcSegment,
-    oodle::OodleNetwork,
     packet::{compression::compress, encryption::decrypt},
 };
 
 use super::{
     CompressionType, compression::decompress, encryption::encrypt, ipc::ReadWriteIpcSegment,
+    oodle::OodleNetwork,
 };
 
 #[binrw]

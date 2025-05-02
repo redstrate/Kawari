@@ -17,8 +17,8 @@ use kawari::ipc::zone::{
     ActorControlCategory, ActorControlSelf, CommonSpawn, PlayerEntry, PlayerSetup, PlayerSpawn,
     SocialList,
 };
-use kawari::oodle::OodleNetwork;
 use kawari::opcodes::{ServerChatIpcType, ServerZoneIpcType};
+use kawari::packet::oodle::OodleNetwork;
 use kawari::packet::{
     CompressionType, ConnectionType, PacketSegment, PacketState, SegmentData, SegmentType,
     send_keep_alive, send_packet,

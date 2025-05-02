@@ -15,9 +15,6 @@ pub mod common;
 /// Config management.
 pub mod config;
 
-/// Bindings for Oodle network compression.
-pub mod oodle;
-
 /// Lobby server-specific code.
 pub mod lobby;
 

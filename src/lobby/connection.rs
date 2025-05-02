@@ -7,8 +7,8 @@ use crate::{
     blowfish::Blowfish,
     common::{timestamp_secs, workdefinitions::CharaMake},
     config::get_config,
-    oodle::OodleNetwork,
     opcodes::ServerLobbyIpcType,
+    packet::oodle::OodleNetwork,
     packet::{
         CompressionType, ConnectionType, PacketSegment, PacketState, SegmentData, SegmentType,
         generate_encryption_key, parse_packet, send_packet,

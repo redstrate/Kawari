@@ -5,11 +5,10 @@ use binrw::{BinRead, BinResult};
 
 use crate::{
     config::get_config,
-    oodle::OodleNetwork,
     packet::{PacketHeader, PacketSegment},
 };
 
-use super::{PacketState, ReadWriteIpcSegment};
+use super::{PacketState, ReadWriteIpcSegment, oodle::OodleNetwork};
 
 #[binrw]
 #[brw(repr = u8)]
