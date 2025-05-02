@@ -4,7 +4,7 @@ use rand::Rng;
 use rand::distr::Alphanumeric;
 use rusqlite::Connection;
 
-use crate::lobby::ipc::ServiceAccount;
+use crate::ipc::lobby::ServiceAccount;
 
 pub struct LoginDatabase {
     connection: Mutex<Connection>,

@@ -8,7 +8,7 @@ use crate::{
         CustomizeData, GameData, Position,
         workdefinitions::{CharaMake, ClientSelectData, RemakeMode},
     },
-    lobby::ipc::{CharacterDetails, CharacterFlag},
+    ipc::lobby::{CharacterDetails, CharacterFlag},
 };
 
 use super::{Inventory, PlayerData};

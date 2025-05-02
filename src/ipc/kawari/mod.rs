@@ -1,12 +1,10 @@
 use binrw::binrw;
 
 use crate::{
-    common::{CHAR_NAME_MAX_LENGTH, read_bool_from, read_string, write_bool_as},
-    lobby::ipc::CharacterDetails,
+    common::{CHAR_NAME_MAX_LENGTH, read_bool_from, read_string, write_bool_as, write_string},
+    ipc::lobby::CharacterDetails,
     packet::{IpcSegment, ReadWriteIpcSegment},
 };
-
-use super::write_string;
 
 pub type CustomIpcSegment = IpcSegment<CustomIpcType, CustomIpcData>;
 

@@ -12,6 +12,13 @@ use crate::{
     OBFUSCATION_ENABLED_MODE,
     common::{GameData, ObjectId, Position, timestamp_secs},
     config::get_config,
+    ipc::chat::ServerChatIpcSegment,
+    ipc::zone::{
+        ActorControlSelf, ActorMove, ActorSetPos, ClientZoneIpcSegment, CommonSpawn, ContainerInfo,
+        ContainerType, DisplayFlag, Equip, InitZone, ItemInfo, NpcSpawn, ObjectKind, PlayerStats,
+        PlayerSubKind, ServerZoneIpcData, ServerZoneIpcSegment, StatusEffect, StatusEffectList,
+        UpdateClassInfo, WeatherChange,
+    },
     opcodes::ServerZoneIpcType,
     packet::{
         CompressionType, ConnectionType, PacketSegment, PacketState, SegmentData, SegmentType,
@@ -21,14 +28,7 @@ use crate::{
 
 use super::{
     Actor, CharacterData, Event, Inventory, Item, LuaPlayer, StatusEffects, WorldDatabase, Zone,
-    chat::ServerChatIpcSegment,
     inventory::Container,
-    ipc::{
-        ActorControlSelf, ActorMove, ActorSetPos, ClientZoneIpcSegment, CommonSpawn, ContainerInfo,
-        ContainerType, DisplayFlag, Equip, InitZone, ItemInfo, NpcSpawn, ObjectKind, PlayerStats,
-        PlayerSubKind, ServerZoneIpcData, ServerZoneIpcSegment, StatusEffect, StatusEffectList,
-        UpdateClassInfo, WeatherChange,
-    },
 };
 
 #[derive(Debug, Default, Clone)]

@@ -7,8 +7,6 @@ mod customize_data;
 use binrw::binrw;
 pub use customize_data::CustomizeData;
 
-pub mod custom_ipc;
-
 mod position;
 pub use position::Position;
 

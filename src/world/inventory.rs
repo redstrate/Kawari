@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::common::GameData;
 
-use super::ipc::{ContainerType, InventoryModify};
+use crate::ipc::zone::{ContainerType, InventoryModify};
 
 // TODO: rename to storage?
 pub trait Container {

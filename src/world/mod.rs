@@ -1,5 +1,3 @@
-pub mod ipc;
-
 mod zone;
 pub use zone::Zone;
 
@@ -28,5 +26,3 @@ pub use actor::Actor;
 
 mod status_effects;
 pub use status_effects::StatusEffects;
-
-pub mod chat;

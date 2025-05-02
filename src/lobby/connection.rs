@@ -5,11 +5,7 @@ use tokio::{io::AsyncReadExt, net::TcpStream};
 use crate::{
     RECEIVE_BUFFER_SIZE,
     blowfish::Blowfish,
-    common::{
-        custom_ipc::{CustomIpcData, CustomIpcSegment, CustomIpcType},
-        timestamp_secs,
-        workdefinitions::CharaMake,
-    },
+    common::{timestamp_secs, workdefinitions::CharaMake},
     config::get_config,
     oodle::OodleNetwork,
     opcodes::ServerLobbyIpcType,
@@ -19,12 +15,12 @@ use crate::{
     },
 };
 
-use super::ipc::{
-    CharacterDetails, LobbyCharacterAction, LobbyCharacterActionKind, LobbyCharacterList,
-    LobbyServerList, LobbyServiceAccountList, Server, ServerLobbyIpcData, ServerLobbyIpcSegment,
-    ServiceAccount,
+use crate::ipc::kawari::{CustomIpcData, CustomIpcSegment, CustomIpcType};
+use crate::ipc::lobby::{
+    CharacterDetails, ClientLobbyIpcSegment, LobbyCharacterAction, LobbyCharacterActionKind,
+    LobbyCharacterList, LobbyServerList, LobbyServiceAccountList, Server, ServerLobbyIpcData,
+    ServerLobbyIpcSegment, ServiceAccount,
 };
-use crate::lobby::ipc::ClientLobbyIpcSegment;
 
 /// Represents a single connection between an instance of the client and the lobby server.
 pub struct LobbyConnection {

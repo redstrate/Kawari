@@ -3,33 +3,31 @@ use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 
 use kawari::RECEIVE_BUFFER_SIZE;
-use kawari::common::custom_ipc::{CustomIpcData, CustomIpcSegment, CustomIpcType};
 use kawari::common::workdefinitions::CharaMake;
 use kawari::common::{GameData, ObjectId, timestamp_secs};
 use kawari::common::{Position, determine_initial_starting_zone};
 use kawari::config::get_config;
+use kawari::ipc::chat::{ServerChatIpcData, ServerChatIpcSegment};
+use kawari::ipc::kawari::{CustomIpcData, CustomIpcSegment, CustomIpcType};
+use kawari::ipc::zone::{
+    ActionEffect, ActionResult, ClientZoneIpcData, EffectKind, GameMasterCommandType,
+    GameMasterRank, OnlineStatus, ServerZoneIpcData, ServerZoneIpcSegment, SocialListRequestType,
+};
+use kawari::ipc::zone::{
+    ActorControlCategory, ActorControlSelf, CommonSpawn, PlayerEntry, PlayerSetup, PlayerSpawn,
+    SocialList,
+};
 use kawari::oodle::OodleNetwork;
 use kawari::opcodes::{ServerChatIpcType, ServerZoneIpcType};
 use kawari::packet::{
     CompressionType, ConnectionType, PacketSegment, PacketState, SegmentData, SegmentType,
     send_keep_alive, send_packet,
 };
-use kawari::world::chat::{ServerChatIpcData, ServerChatIpcSegment};
-use kawari::world::ipc::{
-    ActionEffect, ActionResult, ClientZoneIpcData, EffectKind, GameMasterCommandType,
-    GameMasterRank, OnlineStatus, ServerZoneIpcData, ServerZoneIpcSegment, SocialListRequestType,
-};
 use kawari::world::{
     Actor, ClientHandle, ClientId, EffectsBuilder, FromServer, Inventory, Item, LuaPlayer,
     PlayerData, ServerHandle, StatusEffects, ToServer, WorldDatabase,
 };
-use kawari::world::{
-    ChatHandler, Zone, ZoneConnection,
-    ipc::{
-        ActorControlCategory, ActorControlSelf, CommonSpawn, PlayerEntry, PlayerSetup, PlayerSpawn,
-        SocialList,
-    },
-};
+use kawari::world::{ChatHandler, Zone, ZoneConnection};
 
 use mlua::{Function, Lua};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};

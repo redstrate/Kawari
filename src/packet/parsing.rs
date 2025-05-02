@@ -4,8 +4,9 @@ use binrw::{BinRead, BinWrite, binrw};
 use tokio::{io::AsyncWriteExt, net::TcpStream};
 
 use crate::{
-    common::{custom_ipc::CustomIpcSegment, read_string, timestamp_msecs, write_string},
+    common::{read_string, timestamp_msecs, write_string},
     config::get_config,
+    ipc::kawari::CustomIpcSegment,
     oodle::OodleNetwork,
     packet::{compression::compress, encryption::decrypt},
 };

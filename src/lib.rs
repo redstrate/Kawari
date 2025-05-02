@@ -36,6 +36,9 @@ pub mod patch;
 /// Opcodes, see `resources/opcodes.json`
 pub mod opcodes;
 
+/// IPC
+pub mod ipc;
+
 /// Used in the encryption key.
 const GAME_VERSION: u16 = 7000;
 

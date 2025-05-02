@@ -1,12 +1,12 @@
 use kawari::RECEIVE_BUFFER_SIZE;
 use kawari::common::GameData;
-use kawari::common::custom_ipc::CustomIpcData;
-use kawari::common::custom_ipc::CustomIpcSegment;
-use kawari::common::custom_ipc::CustomIpcType;
 use kawari::config::get_config;
+use kawari::ipc::kawari::CustomIpcData;
+use kawari::ipc::kawari::CustomIpcSegment;
+use kawari::ipc::kawari::CustomIpcType;
+use kawari::ipc::lobby::ServiceAccount;
+use kawari::ipc::lobby::{ClientLobbyIpcData, ServerLobbyIpcSegment};
 use kawari::lobby::LobbyConnection;
-use kawari::lobby::ipc::ServiceAccount;
-use kawari::lobby::ipc::{ClientLobbyIpcData, ServerLobbyIpcSegment};
 use kawari::lobby::send_custom_world_packet;
 use kawari::oodle::OodleNetwork;
 use kawari::packet::ConnectionType;

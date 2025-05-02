@@ -1,4 +1,4 @@
-use crate::world::ipc::StatusEffect;
+use crate::ipc::zone::StatusEffect;
 
 #[derive(Debug, Default, Clone)]
 pub struct StatusEffects {

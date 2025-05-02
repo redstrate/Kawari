@@ -1,19 +1,17 @@
 use crate::{
     common::{CustomizeData, ObjectId, ObjectTypeId, Position, timestamp_secs},
     config::get_config,
+    ipc::zone::{
+        ActorControl, ActorControlCategory, BattleNpcSubKind, ChatMessage, CommonSpawn,
+        DisplayFlag, EventStart, NpcSpawn, ObjectKind, OnlineStatus, PlayerSpawn, PlayerSubKind,
+        ServerZoneIpcData, ServerZoneIpcSegment,
+    },
     opcodes::ServerZoneIpcType,
     packet::{PacketSegment, SegmentData, SegmentType},
-    world::{
-        Actor, Event,
-        ipc::{
-            ActorControl, ActorControlCategory, BattleNpcSubKind, CommonSpawn, DisplayFlag,
-            EventStart, NpcSpawn, ObjectKind, OnlineStatus, PlayerSpawn, PlayerSubKind,
-            ServerZoneIpcData, ServerZoneIpcSegment,
-        },
-    },
+    world::{Actor, Event},
 };
 
-use super::{LuaPlayer, ZoneConnection, ipc::ChatMessage};
+use super::{LuaPlayer, ZoneConnection};
 
 pub const CUSTOMIZE_DATA: CustomizeData = CustomizeData {
     race: 4,
