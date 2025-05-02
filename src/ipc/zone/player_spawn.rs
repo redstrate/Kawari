@@ -39,7 +39,7 @@ mod tests {
 
     use binrw::BinRead;
 
-    use crate::world::ipc::{CharacterMode, DisplayFlag, ObjectKind, OnlineStatus, PlayerSubKind};
+    use crate::ipc::zone::{CharacterMode, DisplayFlag, ObjectKind, OnlineStatus, PlayerSubKind};
 
     use super::*;
 

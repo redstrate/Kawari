@@ -31,7 +31,7 @@ mod tests {
 
     use crate::{
         common::INVALID_OBJECT_ID,
-        world::ipc::{BattleNpcSubKind, CharacterMode, DisplayFlag, ObjectKind, OnlineStatus},
+        ipc::zone::{BattleNpcSubKind, CharacterMode, DisplayFlag, ObjectKind, OnlineStatus},
     };
 
     use super::*;
