@@ -923,7 +923,7 @@ async fn client_loop(
                                                             unk1: 0,
                                                             unk2: 0,
                                                             op_code: CustomIpcType::CharacterCreated,
-                                                            server_id: 0,
+                                                            option: 0,
                                                             timestamp: 0,
                                                             data: CustomIpcData::CharacterCreated {
                                                                 actor_id,
@@ -952,7 +952,7 @@ async fn client_loop(
                                                             unk1: 0,
                                                             unk2: 0,
                                                             op_code: CustomIpcType::ActorIdFound,
-                                                            server_id: 0,
+                                                            option: 0,
                                                             timestamp: 0,
                                                             data: CustomIpcData::ActorIdFound { actor_id },
                                                         },
@@ -976,7 +976,7 @@ async fn client_loop(
                                                             unk1: 0,
                                                             unk2: 0,
                                                             op_code: CustomIpcType::NameIsAvailableResponse,
-                                                            server_id: 0,
+                                                            option: 0,
                                                             timestamp: 0,
                                                             data: CustomIpcData::NameIsAvailableResponse {
                                                                 free: is_name_free,
@@ -1024,7 +1024,7 @@ async fn client_loop(
                                                                     unk1: 0,
                                                                     unk2: 0,
                                                                     op_code: CustomIpcType::RequestCharacterListRepsonse,
-                                                                    server_id: 0,
+                                                                    option: 0,
                                                                     timestamp: 0,
                                                                     data: CustomIpcData::RequestCharacterListRepsonse {
                                                                         characters
@@ -1055,7 +1055,7 @@ async fn client_loop(
                                                             unk1: 0,
                                                             unk2: 0,
                                                             op_code: CustomIpcType::CharacterDeleted,
-                                                            server_id: 0,
+                                                            option: 0,
                                                             timestamp: 0,
                                                             data: CustomIpcData::CharacterDeleted {
                                                                 deleted: 1,

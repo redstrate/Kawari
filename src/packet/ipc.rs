@@ -48,7 +48,7 @@ where
     pub op_code: OpCode,
     #[brw(pad_before = 2)] // empty
     /// Unknown purpose, but safe to keep 0.
-    pub server_id: u16,
+    pub option: u16,
     /// The timestamp of this packet in seconds since UNIX epoch.
     pub timestamp: u32,
     /// The data associated with the opcode.

@@ -59,7 +59,7 @@ impl LuaPlayer {
             unk1: 20,
             unk2: 0,
             op_code: ServerZoneIpcType::EventScene,
-            server_id: 0,
+            option: 0,
             timestamp: timestamp_secs(),
             data: ServerZoneIpcData::EventScene(EventPlay {
                 actor_id: ObjectTypeId {

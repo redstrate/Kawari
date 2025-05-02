@@ -211,7 +211,7 @@ async fn upload_character_backup(
                     unk1: 0,
                     unk2: 0,
                     op_code: CustomIpcType::ImportCharacter,
-                    server_id: 0,
+                    option: 0,
                     timestamp: 0,
                     data: CustomIpcData::ImportCharacter {
                         service_account_id,

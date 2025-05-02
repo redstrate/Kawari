@@ -21,7 +21,7 @@ impl Default for ServerChatIpcSegment {
             unk1: 0x14,
             unk2: 0,
             op_code: ServerChatIpcType::LoginReply,
-            server_id: 0,
+            option: 0,
             timestamp: 0,
             data: ServerChatIpcData::LoginReply {
                 timestamp: 0,

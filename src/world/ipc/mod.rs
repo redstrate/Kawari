@@ -100,7 +100,7 @@ impl Default for ClientZoneIpcSegment {
             unk1: 0x14,
             unk2: 0,
             op_code: ClientZoneIpcType::InitRequest,
-            server_id: 0,
+            option: 0,
             timestamp: 0,
             data: ClientZoneIpcData::InitRequest { unk: [0; 120] },
         }
@@ -123,7 +123,7 @@ impl Default for ServerZoneIpcSegment {
             unk1: 0x14,
             unk2: 0,
             op_code: ServerZoneIpcType::InitZone,
-            server_id: 0,
+            option: 0,
             timestamp: 0,
             data: ServerZoneIpcData::InitZone(InitZone::default()),
         }
@@ -481,7 +481,7 @@ mod tests {
                 unk1: 0,
                 unk2: 0,
                 op_code: opcode.clone(), // doesn't matter for this test
-                server_id: 0,
+                option: 0,
                 timestamp: 0,
                 data: data.clone(),
             };

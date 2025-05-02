@@ -78,7 +78,7 @@ impl ChatHandler {
                         unk1: 20,
                         unk2: 0,
                         op_code: ServerZoneIpcType::PlayerSpawn,
-                        server_id: 0,
+                        option: 0,
                         timestamp: timestamp_secs(),
                         data: ServerZoneIpcData::PlayerSpawn(PlayerSpawn {
                             account_id: 1000000,
@@ -134,7 +134,7 @@ impl ChatHandler {
                         unk1: 20,
                         unk2: 0,
                         op_code: ServerZoneIpcType::ActorControl,
-                        server_id: 0,
+                        option: 0,
                         timestamp: timestamp_secs(),
                         data: ServerZoneIpcData::ActorControl(ActorControl {
                             category: ActorControlCategory::ZoneIn {
@@ -159,7 +159,7 @@ impl ChatHandler {
                     unk1: 20,
                     unk2: 0,
                     op_code: ServerZoneIpcType::NpcSpawn,
-                    server_id: 0,
+                    option: 0,
                     timestamp: timestamp_secs(),
                     data: ServerZoneIpcData::NpcSpawn(NpcSpawn {
                         common: CommonSpawn {
@@ -214,7 +214,7 @@ impl ChatHandler {
                         unk1: 20,
                         unk2: 0,
                         op_code: ServerZoneIpcType::NpcSpawn,
-                        server_id: 0,
+                        option: 0,
                         timestamp: timestamp_secs(),
                         data: ServerZoneIpcData::NpcSpawn(NpcSpawn {
                             aggression_mode: 1,
@@ -263,7 +263,7 @@ impl ChatHandler {
                         unk1: 20,
                         unk2: 0,
                         op_code: ServerZoneIpcType::EventStart,
-                        server_id: 0,
+                        option: 0,
                         timestamp: timestamp_secs(),
                         data: ServerZoneIpcData::EventStart(EventStart {
                             target_id: ObjectTypeId {
@@ -293,7 +293,7 @@ impl ChatHandler {
                         unk1: 20,
                         unk2: 0,
                         op_code: ServerZoneIpcType::ActorControl,
-                        server_id: 0,
+                        option: 0,
                         timestamp: timestamp_secs(),
                         data: ServerZoneIpcData::ActorControl(ActorControl {
                             category: ActorControlCategory::SetStatusIcon {
@@ -338,7 +338,7 @@ impl ChatHandler {
                     unk1: 20,
                     unk2: 0,
                     op_code: ServerZoneIpcType::NpcSpawn,
-                    server_id: 0,
+                    option: 0,
                     timestamp: timestamp_secs(),
                     data: ServerZoneIpcData::NpcSpawn(NpcSpawn {
                         common,

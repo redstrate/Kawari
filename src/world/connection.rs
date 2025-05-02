@@ -276,7 +276,7 @@ impl ZoneConnection {
             unk1: 20,
             unk2: 0,
             op_code: ServerZoneIpcType::NpcSpawn,
-            server_id: 0,
+            option: 0,
             timestamp: timestamp_secs(),
             data: ServerZoneIpcData::NpcSpawn(NpcSpawn {
                 common,
@@ -303,7 +303,7 @@ impl ZoneConnection {
                 unk1: 20,
                 unk2: 0,
                 op_code: ServerZoneIpcType::Delete,
-                server_id: 0,
+                option: 0,
                 timestamp: timestamp_secs(),
                 data: ServerZoneIpcData::Delete {
                     spawn_index: actor.spawn_index as u8,

@@ -127,7 +127,7 @@ async fn main() {
                                             unk1: 0,
                                             unk2: 0,
                                             op_code: CustomIpcType::GetActorId,
-                                            server_id: 0,
+                                            option: 0,
                                             timestamp: 0,
                                             data: CustomIpcData::GetActorId {
                                                 content_id: *content_id,

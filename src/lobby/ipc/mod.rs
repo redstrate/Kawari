@@ -36,7 +36,7 @@ impl Default for ClientLobbyIpcSegment {
             unk1: 0x14,
             unk2: 0,
             op_code: ClientLobbyIpcType::LoginEx,
-            server_id: 0,
+            option: 0,
             timestamp: 0,
             data: ClientLobbyIpcData::LoginEx {
                 sequence: 0,
@@ -63,7 +63,7 @@ impl Default for ServerLobbyIpcSegment {
             unk1: 0x14,
             unk2: 0,
             op_code: ServerLobbyIpcType::NackReply,
-            server_id: 0,
+            option: 0,
             timestamp: 0,
             data: ServerLobbyIpcData::NackReply {
                 sequence: 0,
@@ -250,7 +250,7 @@ mod tests {
                 unk1: 0,
                 unk2: 0,
                 op_code: opcode.clone(),
-                server_id: 0,
+                option: 0,
                 timestamp: 0,
                 data: ipc.clone(),
             };

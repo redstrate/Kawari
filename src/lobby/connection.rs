@@ -96,7 +96,7 @@ impl LobbyConnection {
             unk1: 0,
             unk2: 0,
             op_code: ServerLobbyIpcType::LoginReply,
-            server_id: 0,
+            option: 0,
             timestamp: timestamp_secs(),
             data: service_account_list,
         };
@@ -140,7 +140,7 @@ impl LobbyConnection {
                 unk1: 0,
                 unk2: 0,
                 op_code: ServerLobbyIpcType::DistWorldInfo,
-                server_id: 0,
+                option: 0,
                 timestamp: timestamp_secs(),
                 data: lobby_server_list,
             };
@@ -162,7 +162,7 @@ impl LobbyConnection {
                 unk1: 0,
                 unk2: 0,
                 op_code: ServerLobbyIpcType::DistRetainerInfo,
-                server_id: 0,
+                option: 0,
                 timestamp: timestamp_secs(),
                 data: lobby_retainer_list,
             };
@@ -191,7 +191,7 @@ impl LobbyConnection {
                 unk1: 0,
                 unk2: 0,
                 op_code: CustomIpcType::RequestCharacterList,
-                server_id: 0,
+                option: 0,
                 timestamp: 0,
                 data: CustomIpcData::RequestCharacterList {
                     service_account_id: self.selected_service_account.unwrap(),
@@ -265,7 +265,7 @@ impl LobbyConnection {
                     unk1: 0,
                     unk2: 0,
                     op_code: ServerLobbyIpcType::ServiceLoginReply,
-                    server_id: 0,
+                    option: 0,
                     timestamp: timestamp_secs(),
                     data: ServerLobbyIpcData::ServiceLoginReply(lobby_character_list),
                 };
@@ -298,7 +298,7 @@ impl LobbyConnection {
             unk1: 0,
             unk2: 0,
             op_code: ServerLobbyIpcType::GameLoginReply,
-            server_id: 0,
+            option: 0,
             timestamp: timestamp_secs(),
             data: enter_world,
         };
@@ -326,7 +326,7 @@ impl LobbyConnection {
             unk1: 0,
             unk2: 0,
             op_code: ServerLobbyIpcType::NackReply,
-            server_id: 0,
+            option: 0,
             timestamp: timestamp_secs(),
             data: lobby_error,
         };
@@ -353,7 +353,7 @@ impl LobbyConnection {
                     unk1: 0,
                     unk2: 0,
                     op_code: CustomIpcType::CheckNameIsAvailable,
-                    server_id: 0,
+                    option: 0,
                     timestamp: 0,
                     data: CustomIpcData::CheckNameIsAvailable {
                         name: character_action.name.clone(),
@@ -376,7 +376,7 @@ impl LobbyConnection {
                         unk1: 0,
                         unk2: 0,
                         op_code: ServerLobbyIpcType::CharaMakeReply,
-                        server_id: 0,
+                        option: 0,
                         timestamp: 0,
                         data: ServerLobbyIpcData::CharaMakeReply {
                             sequence: character_action.sequence + 1,
@@ -404,7 +404,7 @@ impl LobbyConnection {
                         unk1: 0,
                         unk2: 0,
                         op_code: ServerLobbyIpcType::NackReply,
-                        server_id: 0,
+                        option: 0,
                         timestamp: 0,
                         data: ServerLobbyIpcData::NackReply {
                             sequence: character_action.sequence,
@@ -438,7 +438,7 @@ impl LobbyConnection {
                         unk1: 0,
                         unk2: 0,
                         op_code: CustomIpcType::RequestCreateCharacter,
-                        server_id: 0,
+                        option: 0,
                         timestamp: 0,
                         data: CustomIpcData::RequestCreateCharacter {
                             service_account_id: self.selected_service_account.unwrap(),
@@ -470,7 +470,7 @@ impl LobbyConnection {
                         unk1: 0,
                         unk2: 0,
                         op_code: ServerLobbyIpcType::CharaMakeReply,
-                        server_id: 0,
+                        option: 0,
                         timestamp: 0,
                         data: ServerLobbyIpcData::CharaMakeReply {
                             sequence: character_action.sequence + 1,
@@ -505,7 +505,7 @@ impl LobbyConnection {
                         unk1: 0,
                         unk2: 0,
                         op_code: CustomIpcType::DeleteCharacter,
-                        server_id: 0,
+                        option: 0,
                         timestamp: 0,
                         data: CustomIpcData::DeleteCharacter {
                             content_id: character_action.content_id,
@@ -523,7 +523,7 @@ impl LobbyConnection {
                         unk1: 0,
                         unk2: 0,
                         op_code: ServerLobbyIpcType::CharaMakeReply,
-                        server_id: 0,
+                        option: 0,
                         timestamp: 0,
                         data: ServerLobbyIpcData::CharaMakeReply {
                             sequence: character_action.sequence + 1,
