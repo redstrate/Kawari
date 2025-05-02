@@ -195,25 +195,23 @@ impl ZoneConnection {
         // We have send THEM a keep alive
         {
             self.send_segment(PacketSegment {
-                source_actor: 0,
-                target_actor: 0,
                 segment_type: SegmentType::KeepAliveRequest,
                 data: SegmentData::KeepAliveRequest {
                     id: 0xE0037603u32,
                     timestamp: timestamp_secs(),
                 },
+                ..Default::default()
             })
             .await;
         }
 
         self.send_segment(PacketSegment {
-            source_actor: 0,
-            target_actor: 0,
             segment_type: SegmentType::Initialize,
             data: SegmentData::Initialize {
                 player_id: self.player_data.actor_id,
                 timestamp: timestamp_secs(),
             },
+            ..Default::default()
         })
         .await;
     }

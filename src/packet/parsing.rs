@@ -26,8 +26,10 @@ pub enum ConnectionType {
 
 #[binrw]
 #[brw(repr = u16)]
-#[derive(Debug, PartialEq, Copy, Clone)]
+#[derive(Debug, PartialEq, Copy, Clone, Default)]
 pub enum SegmentType {
+    #[default]
+    None = 0x0,
     Setup = 0x1,
     Initialize = 0x2,
     // Also known as "UPLAYER"
@@ -46,6 +48,8 @@ pub enum SegmentType {
 #[brw(import(kind: &SegmentType, size: u32, encryption_key: Option<&[u8]>))]
 #[derive(Debug, Clone)]
 pub enum SegmentData<T: ReadWriteIpcSegment> {
+    #[br(pre_assert(*kind == SegmentType::None))]
+    None(),
     #[br(pre_assert(*kind == SegmentType::Setup))]
     Setup {
         #[brw(pad_before = 4)] // empty
@@ -95,6 +99,12 @@ pub enum SegmentData<T: ReadWriteIpcSegment> {
     KawariIpc { data: CustomIpcSegment },
 }
 
+impl<T: ReadWriteIpcSegment> Default for SegmentData<T> {
+    fn default() -> Self {
+        Self::None()
+    }
+}
+
 #[binrw]
 #[derive(Debug)]
 pub struct PacketHeader {
@@ -124,11 +134,23 @@ pub struct PacketSegment<T: ReadWriteIpcSegment> {
     pub data: SegmentData<T>,
 }
 
+impl<T: ReadWriteIpcSegment> Default for PacketSegment<T> {
+    fn default() -> Self {
+        Self {
+            source_actor: 0,
+            target_actor: 0,
+            segment_type: SegmentType::default(),
+            data: SegmentData::default(),
+        }
+    }
+}
+
 impl<T: ReadWriteIpcSegment> PacketSegment<T> {
     pub fn calc_size(&self) -> u32 {
         let header = std::mem::size_of::<u32>() * 4;
         header as u32
             + match &self.data {
+                SegmentData::None() => 16,
                 SegmentData::SecuritySetup { .. } => 616,
                 SegmentData::SecurityInitialize { .. } => 640,
                 SegmentData::Ipc { data } => data.calc_size(),
@@ -231,10 +253,9 @@ pub async fn send_keep_alive<T: ReadWriteIpcSegment>(
     timestamp: u32,
 ) {
     let response_packet: PacketSegment<T> = PacketSegment {
-        source_actor: 0,
-        target_actor: 0,
         segment_type: SegmentType::KeepAliveResponse,
         data: SegmentData::KeepAliveResponse { id, timestamp },
+        ..Default::default()
     };
     send_packet(
         socket,
@@ -297,10 +318,9 @@ mod tests {
             let mut cursor = Cursor::new(Vec::new());
 
             let packet_segment: PacketSegment<ClientLobbyIpcSegment> = PacketSegment {
-                source_actor: 0,
-                target_actor: 0,
-                segment_type: SegmentType::Setup,
+                segment_type: SegmentType::None,
                 data: packet.clone(),
+                ..Default::default()
             };
             packet_segment.write_le(&mut cursor).unwrap();
 

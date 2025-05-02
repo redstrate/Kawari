@@ -74,10 +74,9 @@ impl LobbyConnection {
         blowfish.encrypt(&mut data);
 
         self.send_segment(PacketSegment {
-            source_actor: 0,
-            target_actor: 0,
             segment_type: SegmentType::SecurityInitialize,
             data: SegmentData::SecurityInitialize { data },
+            ..Default::default()
         })
         .await;
     }
@@ -102,10 +101,9 @@ impl LobbyConnection {
         };
 
         self.send_segment(PacketSegment {
-            source_actor: 0,
-            target_actor: 0,
             segment_type: SegmentType::Ipc,
             data: SegmentData::Ipc { data: ipc },
+            ..Default::default()
         })
         .await;
     }
@@ -146,10 +144,9 @@ impl LobbyConnection {
             };
 
             let response_packet = PacketSegment {
-                source_actor: 0,
-                target_actor: 0,
                 segment_type: SegmentType::Ipc,
                 data: SegmentData::Ipc { data: ipc },
+                ..Default::default()
             };
             packets.push(response_packet);
         }
@@ -168,10 +165,9 @@ impl LobbyConnection {
             };
 
             let response_packet = PacketSegment {
-                source_actor: 0,
-                target_actor: 0,
                 segment_type: SegmentType::Ipc,
                 data: SegmentData::Ipc { data: ipc },
+                ..Default::default()
             };
             packets.push(response_packet);
         }
@@ -271,10 +267,9 @@ impl LobbyConnection {
                 };
 
                 self.send_segment(PacketSegment {
-                    source_actor: 0,
-                    target_actor: 0,
                     segment_type: SegmentType::Ipc,
                     data: SegmentData::Ipc { data: ipc },
+                    ..Default::default()
                 })
                 .await;
             }
@@ -304,10 +299,9 @@ impl LobbyConnection {
         };
 
         self.send_segment(PacketSegment {
-            source_actor: 0,
-            target_actor: 0,
             segment_type: SegmentType::Ipc,
             data: SegmentData::Ipc { data: ipc },
+            ..Default::default()
         })
         .await;
     }
@@ -332,10 +326,9 @@ impl LobbyConnection {
         };
 
         self.send_segment(PacketSegment {
-            source_actor: 0,
-            target_actor: 0,
             segment_type: SegmentType::Ipc,
             data: SegmentData::Ipc { data: ipc },
+            ..Default::default()
         })
         .await;
     }
@@ -393,10 +386,9 @@ impl LobbyConnection {
                     };
 
                     self.send_segment(PacketSegment {
-                        source_actor: 0x0,
-                        target_actor: 0x0,
                         segment_type: SegmentType::Ipc,
                         data: SegmentData::Ipc { data: ipc },
+                        ..Default::default()
                     })
                     .await;
                 } else {
@@ -416,10 +408,9 @@ impl LobbyConnection {
                     };
 
                     let response_packet = PacketSegment {
-                        source_actor: 0x0,
-                        target_actor: 0x0,
                         segment_type: SegmentType::Ipc,
                         data: SegmentData::Ipc { data: ipc },
+                        ..Default::default()
                     };
                     self.send_segment(response_packet).await;
                 }
@@ -489,10 +480,9 @@ impl LobbyConnection {
                     };
 
                     self.send_segment(PacketSegment {
-                        source_actor: 0x0,
-                        target_actor: 0x0,
                         segment_type: SegmentType::Ipc,
                         data: SegmentData::Ipc { data: ipc },
+                        ..Default::default()
                     })
                     .await;
                 }
@@ -542,10 +532,9 @@ impl LobbyConnection {
                     };
 
                     self.send_segment(PacketSegment {
-                        source_actor: 0x0,
-                        target_actor: 0x0,
                         segment_type: SegmentType::Ipc,
                         data: SegmentData::Ipc { data: ipc },
+                        ..Default::default()
                     })
                     .await;
                 }
@@ -578,10 +567,9 @@ pub async fn send_custom_world_packet(segment: CustomIpcSegment) -> Option<Custo
     };
 
     let segment: PacketSegment<CustomIpcSegment> = PacketSegment {
-        source_actor: 0,
-        target_actor: 0,
         segment_type: SegmentType::KawariIpc,
         data: SegmentData::KawariIpc { data: segment },
+        ..Default::default()
     };
 
     send_packet(

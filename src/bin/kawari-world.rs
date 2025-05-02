@@ -295,25 +295,23 @@ async fn client_loop(
                                 } else if connection_type == ConnectionType::Chat {
                                     // We have send THEM a keep alive
                                     connection.send_chat_segment(PacketSegment {
-                                        source_actor: 0,
-                                        target_actor: 0,
                                         segment_type: SegmentType::KeepAliveRequest,
                                         data: SegmentData::KeepAliveRequest {
                                             id: 0xE0037603u32,
                                             timestamp: timestamp_secs(),
                                         },
+                                        ..Default::default()
                                     })
                                     .await;
 
                                     // initialize connection
                                     connection.send_chat_segment(PacketSegment {
-                                        source_actor: 0,
-                                        target_actor: 0,
                                         segment_type: SegmentType::Initialize,
                                         data: SegmentData::Initialize {
                                             player_id: connection.player_data.actor_id,
                                             timestamp: timestamp_secs(),
                                         },
+                                        ..Default::default()
                                     })
                                     .await;
 
@@ -915,8 +913,6 @@ async fn client_loop(
                                         {
                                             connection
                                                 .send_segment(PacketSegment {
-                                                    source_actor: 0,
-                                                    target_actor: 0,
                                                     segment_type: SegmentType::KawariIpc,
                                                     data: SegmentData::KawariIpc {
                                                         data: CustomIpcSegment {
@@ -931,6 +927,7 @@ async fn client_loop(
                                                             },
                                                         },
                                                     },
+                                                    ..Default::default()
                                                 })
                                                 .await;
                                         }
@@ -944,8 +941,6 @@ async fn client_loop(
                                         {
                                             connection
                                                 .send_segment(PacketSegment {
-                                                    source_actor: 0,
-                                                    target_actor: 0,
                                                     segment_type: SegmentType::KawariIpc,
                                                     data: SegmentData::KawariIpc {
                                                         data: CustomIpcSegment {
@@ -957,6 +952,7 @@ async fn client_loop(
                                                             data: CustomIpcData::ActorIdFound { actor_id },
                                                         },
                                                     },
+                                                    ..Default::default()
                                                 })
                                                 .await;
                                         }
@@ -968,8 +964,6 @@ async fn client_loop(
                                         {
                                             connection
                                                 .send_segment(PacketSegment {
-                                                    source_actor: 0,
-                                                    target_actor: 0,
                                                     segment_type: SegmentType::KawariIpc,
                                                     data: SegmentData::KawariIpc {
                                                         data: CustomIpcSegment {
@@ -983,6 +977,7 @@ async fn client_loop(
                                                             },
                                                         },
                                                     },
+                                                    ..Default::default()
                                                 })
                                                 .await;
                                         }
@@ -1016,8 +1011,6 @@ async fn client_loop(
                                                         ConnectionType::None,
                                                         CompressionType::Uncompressed,
                                                         &[PacketSegment {
-                                                            source_actor: 0,
-                                                            target_actor: 0,
                                                             segment_type: SegmentType::KawariIpc,
                                                             data: SegmentData::KawariIpc {
                                                                 data: CustomIpcSegment {
@@ -1031,6 +1024,7 @@ async fn client_loop(
                                                                     },
                                                                 },
                                                             },
+                                                            ..Default::default()
                                                         }],
                                                     )
                                                     .await;
@@ -1047,8 +1041,6 @@ async fn client_loop(
                                                 ConnectionType::None,
                                                 CompressionType::Uncompressed,
                                                 &[PacketSegment {
-                                                    source_actor: 0,
-                                                    target_actor: 0,
                                                     segment_type: SegmentType::KawariIpc,
                                                     data: SegmentData::KawariIpc {
                                                         data: CustomIpcSegment {
@@ -1062,6 +1054,7 @@ async fn client_loop(
                                                             },
                                                         },
                                                     },
+                                                    ..Default::default()
                                                 }],
                                             )
                                             .await;
