@@ -90,7 +90,7 @@ pub struct PacketHeader {
     pub size: u32,
     pub connection_type: ConnectionType,
     pub segment_count: u16,
-    pub unk3: u8,
+    pub version: u8, // it's just called this, but unsure what this is actually for?
     pub compression_type: CompressionType,
     pub unk4: u16,
     pub uncompressed_size: u32,
