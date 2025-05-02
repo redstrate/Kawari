@@ -12,9 +12,6 @@ pub use connection::{
 mod database;
 pub use database::{CharacterData, WorldDatabase};
 
-mod inventory;
-pub use inventory::{EquippedContainer, Inventory, Item};
-
 mod lua;
 pub use lua::{EffectsBuilder, LuaPlayer};
 

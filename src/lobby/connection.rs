@@ -5,7 +5,7 @@ use tokio::{io::AsyncReadExt, net::TcpStream};
 use crate::{
     RECEIVE_BUFFER_SIZE,
     blowfish::Blowfish,
-    common::{timestamp_secs, workdefinitions::CharaMake},
+    common::timestamp_secs,
     config::get_config,
     opcodes::ServerLobbyIpcType,
     packet::oodle::OodleNetwork,

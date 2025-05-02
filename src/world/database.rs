@@ -8,10 +8,11 @@ use crate::{
         CustomizeData, GameData, Position,
         workdefinitions::{CharaMake, ClientSelectData, RemakeMode},
     },
+    inventory::Inventory,
     ipc::lobby::{CharacterDetails, CharacterFlag},
 };
 
-use super::{Inventory, PlayerData};
+use super::PlayerData;
 
 pub struct WorldDatabase {
     connection: Mutex<Connection>,

@@ -36,6 +36,9 @@ pub mod opcodes;
 /// IPC
 pub mod ipc;
 
+/// Inventory and storage management.
+pub mod inventory;
+
 /// Used in the encryption key.
 const GAME_VERSION: u16 = 7000;
 

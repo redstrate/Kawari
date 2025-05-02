@@ -1,6 +1,6 @@
 use binrw::binrw;
 
-use super::ContainerType;
+use crate::inventory::ContainerType;
 
 #[binrw]
 #[brw(little)]

@@ -7,6 +7,7 @@ use kawari::common::workdefinitions::{CharaMake, RemakeMode};
 use kawari::common::{GameData, ObjectId, timestamp_secs};
 use kawari::common::{Position, determine_initial_starting_zone};
 use kawari::config::get_config;
+use kawari::inventory::{Inventory, Item};
 use kawari::ipc::chat::{ServerChatIpcData, ServerChatIpcSegment};
 use kawari::ipc::kawari::{CustomIpcData, CustomIpcSegment, CustomIpcType};
 use kawari::ipc::zone::{
@@ -24,8 +25,8 @@ use kawari::packet::{
     send_keep_alive, send_packet,
 };
 use kawari::world::{
-    Actor, ClientHandle, ClientId, EffectsBuilder, FromServer, Inventory, Item, LuaPlayer,
-    PlayerData, ServerHandle, StatusEffects, ToServer, WorldDatabase,
+    Actor, ClientHandle, ClientId, EffectsBuilder, FromServer, LuaPlayer, PlayerData, ServerHandle,
+    StatusEffects, ToServer, WorldDatabase,
 };
 use kawari::world::{ChatHandler, Zone, ZoneConnection};
 

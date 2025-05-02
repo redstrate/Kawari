@@ -1,18 +1,6 @@
 use binrw::binrw;
 
-#[binrw]
-#[brw(little)]
-#[brw(repr = u16)]
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
-pub enum ContainerType {
-    #[default]
-    Inventory0 = 0,
-    Inventory1 = 1,
-    Inventory2 = 2,
-    Inventory3 = 3,
-    Equipped = 1000,
-    ArmouryBody = 3202,
-}
+use crate::inventory::ContainerType;
 
 #[binrw]
 #[brw(little)]

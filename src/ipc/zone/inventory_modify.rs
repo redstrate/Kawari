@@ -1,6 +1,6 @@
 use binrw::binrw;
 
-use super::ContainerType;
+use crate::inventory::ContainerType;
 
 #[binrw]
 #[derive(Debug, Clone, Default)]
@@ -51,7 +51,7 @@ mod tests {
         assert_eq!(modify_inventory.src_stack, 1);
         assert_eq!(modify_inventory.src_catalog_id, 0);
         assert_eq!(modify_inventory.dst_actor_id, 0);
-        assert_eq!(modify_inventory.dst_storage_id, ContainerType::ArmouryBody);
+        assert_eq!(modify_inventory.dst_storage_id, ContainerType::ArmoryBody);
         assert_eq!(modify_inventory.dst_container_index, 0);
         assert_eq!(modify_inventory.dst_stack, 0);
         assert_eq!(modify_inventory.dst_catalog_id, 0);
