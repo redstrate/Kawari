@@ -12,16 +12,16 @@ use crate::{
     OBFUSCATION_ENABLED_MODE,
     common::{GameData, ObjectId, Position, timestamp_secs},
     config::get_config,
-    opcodes::{ServerChatIpcType, ServerZoneIpcType},
+    opcodes::ServerZoneIpcType,
     packet::{
         CompressionType, ConnectionType, PacketSegment, PacketState, SegmentData, SegmentType,
         parse_packet, send_packet,
     },
-    world::chat::{ServerChatIpcData, ServerChatIpcSegment},
 };
 
 use super::{
     Actor, CharacterData, Event, Inventory, Item, LuaPlayer, StatusEffects, WorldDatabase, Zone,
+    chat::ServerChatIpcSegment,
     inventory::Container,
     ipc::{
         ActorControlSelf, ActorMove, ActorSetPos, ClientZoneIpcSegment, CommonSpawn, ContainerInfo,
@@ -181,7 +181,7 @@ impl ZoneConnection {
         .await;
     }
 
-    pub async fn initialize(&mut self, connection_type: &ConnectionType, actor_id: u32) {
+    pub async fn initialize(&mut self, actor_id: u32) {
         // some still hardcoded values
         self.player_data.classjob_id = 1;
         self.player_data.level = 5;
@@ -190,90 +190,32 @@ impl ZoneConnection {
         self.player_data.curr_mp = 10000;
         self.player_data.max_mp = 10000;
 
-        match connection_type {
-            ConnectionType::Zone => {
-                tracing::info!("Client {actor_id} is initializing zone session...");
+        tracing::info!("Client {actor_id} is initializing zone session...");
 
-                // We have send THEM a keep alive
-                {
-                    self.send_segment(PacketSegment {
-                        source_actor: 0,
-                        target_actor: 0,
-                        segment_type: SegmentType::KeepAliveRequest,
-                        data: SegmentData::KeepAliveRequest {
-                            id: 0xE0037603u32,
-                            timestamp: timestamp_secs(),
-                        },
-                    })
-                    .await;
-                }
-
-                self.send_segment(PacketSegment {
-                    source_actor: 0,
-                    target_actor: 0,
-                    segment_type: SegmentType::Initialize,
-                    data: SegmentData::Initialize {
-                        player_id: self.player_data.actor_id,
-                        timestamp: timestamp_secs(),
-                    },
-                })
-                .await;
-            }
-            ConnectionType::Chat => {
-                tracing::info!("Client {actor_id} is initializing chat session...");
-
-                // We have send THEM a keep alive
-                {
-                    self.send_chat_segment(PacketSegment {
-                        source_actor: 0,
-                        target_actor: 0,
-                        segment_type: SegmentType::KeepAliveRequest,
-                        data: SegmentData::KeepAliveRequest {
-                            id: 0xE0037603u32,
-                            timestamp: timestamp_secs(),
-                        },
-                    })
-                    .await;
-                }
-
-                {
-                    self.send_chat_segment(PacketSegment {
-                        source_actor: 0,
-                        target_actor: 0,
-                        segment_type: SegmentType::Initialize,
-                        data: SegmentData::Initialize {
-                            player_id: self.player_data.actor_id,
-                            timestamp: timestamp_secs(),
-                        },
-                    })
-                    .await;
-                }
-
-                // we need the actor id at this point!
-                assert!(self.player_data.actor_id != 0);
-
-                {
-                    let ipc = ServerChatIpcSegment {
-                        op_code: ServerChatIpcType::LoginReply,
-                        timestamp: timestamp_secs(),
-                        data: ServerChatIpcData::LoginReply {
-                            timestamp: 0,
-                            sid: 0,
-                        },
-                        ..Default::default()
-                    };
-
-                    self.send_chat_segment(PacketSegment {
-                        source_actor: self.player_data.actor_id,
-                        target_actor: self.player_data.actor_id,
-                        segment_type: SegmentType::Ipc,
-                        data: SegmentData::Ipc { data: ipc },
-                    })
-                    .await;
-                }
-            }
-            _ => panic!("The client is trying to initialize the wrong connection?!"),
+        // We have send THEM a keep alive
+        {
+            self.send_segment(PacketSegment {
+                source_actor: 0,
+                target_actor: 0,
+                segment_type: SegmentType::KeepAliveRequest,
+                data: SegmentData::KeepAliveRequest {
+                    id: 0xE0037603u32,
+                    timestamp: timestamp_secs(),
+                },
+            })
+            .await;
         }
+
+        self.send_segment(PacketSegment {
+            source_actor: 0,
+            target_actor: 0,
+            segment_type: SegmentType::Initialize,
+            data: SegmentData::Initialize {
+                player_id: self.player_data.actor_id,
+                timestamp: timestamp_secs(),
+            },
+        })
+        .await;
     }
 
     pub async fn set_player_position(&mut self, position: Position) {

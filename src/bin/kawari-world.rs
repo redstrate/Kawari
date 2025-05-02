@@ -9,11 +9,12 @@ use kawari::common::{GameData, ObjectId, timestamp_secs};
 use kawari::common::{Position, determine_initial_starting_zone};
 use kawari::config::get_config;
 use kawari::oodle::OodleNetwork;
-use kawari::opcodes::ServerZoneIpcType;
+use kawari::opcodes::{ServerChatIpcType, ServerZoneIpcType};
 use kawari::packet::{
     CompressionType, ConnectionType, PacketSegment, PacketState, SegmentData, SegmentType,
     send_keep_alive, send_packet,
 };
+use kawari::world::chat::{ServerChatIpcData, ServerChatIpcSegment};
 use kawari::world::ipc::{
     ActionEffect, ActionResult, ClientZoneIpcData, EffectKind, GameMasterCommandType,
     GameMasterRank, OnlineStatus, ServerZoneIpcData, ServerZoneIpcSegment, SocialListRequestType,
@@ -282,15 +283,63 @@ async fn client_loop(
                                     connection.player_data = database.find_player_data(actor_id);
                                 }
 
-                                // collect actor data
-                                connection.initialize(&connection_type, actor_id).await;
-
                                 if connection_type == ConnectionType::Zone {
+                                    // collect actor data
+                                    connection.initialize(actor_id).await;
+
                                     exit_position = Some(connection.player_data.position);
                                     exit_rotation = Some(connection.player_data.rotation);
 
                                     // tell the server we exist, now that we confirmed we are a legitimate connection
                                     connection.handle.send(ToServer::NewClient(client_handle.clone())).await;
+                                } else if connection_type == ConnectionType::Chat {
+                                    // We have send THEM a keep alive
+                                    connection.send_chat_segment(PacketSegment {
+                                        source_actor: 0,
+                                        target_actor: 0,
+                                        segment_type: SegmentType::KeepAliveRequest,
+                                        data: SegmentData::KeepAliveRequest {
+                                            id: 0xE0037603u32,
+                                            timestamp: timestamp_secs(),
+                                        },
+                                    })
+                                    .await;
+
+                                    // initialize connection
+                                    connection.send_chat_segment(PacketSegment {
+                                        source_actor: 0,
+                                        target_actor: 0,
+                                        segment_type: SegmentType::Initialize,
+                                        data: SegmentData::Initialize {
+                                            player_id: connection.player_data.actor_id,
+                                            timestamp: timestamp_secs(),
+                                        },
+                                    })
+                                    .await;
+
+                                    // we need the actor id at this point!
+                                    assert!(connection.player_data.actor_id != 0);
+
+                                    // send login reply
+                                    {
+                                        let ipc = ServerChatIpcSegment {
+                                            op_code: ServerChatIpcType::LoginReply,
+                                            timestamp: timestamp_secs(),
+                                            data: ServerChatIpcData::LoginReply {
+                                                timestamp: 0,
+                                                sid: 0,
+                                            },
+                                            ..Default::default()
+                                        };
+
+                                        connection.send_chat_segment(PacketSegment {
+                                            source_actor: connection.player_data.actor_id,
+                                            target_actor: connection.player_data.actor_id,
+                                            segment_type: SegmentType::Ipc,
+                                            data: SegmentData::Ipc { data: ipc },
+                                        })
+                                        .await;
+                                    }
                                 }
                             }
                             SegmentData::Ipc { data } => {
