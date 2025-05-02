@@ -131,7 +131,7 @@ impl Default for ServerZoneIpcSegment {
 }
 
 #[binrw]
-#[brw(repr = u32)]
+#[brw(repr = u8)]
 #[derive(Clone, PartialEq, Debug)]
 pub enum GameMasterCommandType {
     SetLevel = 0x1,
@@ -309,6 +309,7 @@ pub enum ClientZoneIpcData {
     /// Sent by the client when they send a GM command. This can only be sent by the client if they are sent a GM rank.
     #[br(pre_assert(*magic == ClientZoneIpcType::GMCommand))]
     GameMasterCommand {
+        #[brw(pad_after = 3)] // padding
         command: GameMasterCommandType,
         arg0: u32,
         arg1: u32,
