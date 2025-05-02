@@ -588,11 +588,6 @@ async fn client_loop(
                                         }
                                     }
                                     ClientZoneIpcData::UpdatePositionHandler { position, rotation } => {
-                                        tracing::info!(
-                                            "Character moved to {position:#?} {}",
-                                            rotation.to_degrees()
-                                        );
-
                                         connection.player_data.rotation = *rotation;
                                         connection.player_data.position = *position;
 
