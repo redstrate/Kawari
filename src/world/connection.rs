@@ -14,8 +14,8 @@ use crate::{
     config::get_config,
     opcodes::{ServerChatIpcType, ServerZoneIpcType},
     packet::{
-        CompressionType, ConnectionType, PacketSegment, PacketState, SegmentType, parse_packet,
-        send_packet,
+        CompressionType, ConnectionType, PacketSegment, PacketState, SegmentData, SegmentType,
+        parse_packet, send_packet,
     },
     world::chat::{ServerChatIpcData, ServerChatIpcSegment},
 };
@@ -199,7 +199,8 @@ impl ZoneConnection {
                     self.send_segment(PacketSegment {
                         source_actor: 0,
                         target_actor: 0,
-                        segment_type: SegmentType::KeepAlive {
+                        segment_type: SegmentType::KeepAliveRequest,
+                        data: SegmentData::KeepAliveRequest {
                             id: 0xE0037603u32,
                             timestamp: timestamp_secs(),
                         },
@@ -210,7 +211,8 @@ impl ZoneConnection {
                 self.send_segment(PacketSegment {
                     source_actor: 0,
                     target_actor: 0,
-                    segment_type: SegmentType::ZoneInitialize {
+                    segment_type: SegmentType::Initialize,
+                    data: SegmentData::Initialize {
                         player_id: self.player_data.actor_id,
                         timestamp: timestamp_secs(),
                     },
@@ -225,7 +227,8 @@ impl ZoneConnection {
                     self.send_chat_segment(PacketSegment {
                         source_actor: 0,
                         target_actor: 0,
-                        segment_type: SegmentType::KeepAlive {
+                        segment_type: SegmentType::KeepAliveRequest,
+                        data: SegmentData::KeepAliveRequest {
                             id: 0xE0037603u32,
                             timestamp: timestamp_secs(),
                         },
@@ -237,7 +240,8 @@ impl ZoneConnection {
                     self.send_chat_segment(PacketSegment {
                         source_actor: 0,
                         target_actor: 0,
-                        segment_type: SegmentType::ZoneInitialize {
+                        segment_type: SegmentType::Initialize,
+                        data: SegmentData::Initialize {
                             player_id: self.player_data.actor_id,
                             timestamp: timestamp_secs(),
                         },
@@ -262,7 +266,8 @@ impl ZoneConnection {
                     self.send_chat_segment(PacketSegment {
                         source_actor: self.player_data.actor_id,
                         target_actor: self.player_data.actor_id,
-                        segment_type: SegmentType::Ipc { data: ipc },
+                        segment_type: SegmentType::Ipc,
+                        data: SegmentData::Ipc { data: ipc },
                     })
                     .await;
                 }
@@ -287,7 +292,8 @@ impl ZoneConnection {
             self.send_segment(PacketSegment {
                 source_actor: self.player_data.actor_id,
                 target_actor: self.player_data.actor_id,
-                segment_type: SegmentType::Ipc { data: ipc },
+                segment_type: SegmentType::Ipc,
+                data: SegmentData::Ipc { data: ipc },
             })
             .await;
         }
@@ -311,7 +317,8 @@ impl ZoneConnection {
         self.send_segment(PacketSegment {
             source_actor: actor_id,
             target_actor: actor_id,
-            segment_type: SegmentType::Ipc { data: ipc },
+            segment_type: SegmentType::Ipc,
+            data: SegmentData::Ipc { data: ipc },
         })
         .await;
     }
@@ -338,7 +345,8 @@ impl ZoneConnection {
         self.send_segment(PacketSegment {
             source_actor: actor.id.0,
             target_actor: self.player_data.actor_id,
-            segment_type: SegmentType::Ipc { data: ipc },
+            segment_type: SegmentType::Ipc,
+            data: SegmentData::Ipc { data: ipc },
         })
         .await;
 
@@ -364,7 +372,8 @@ impl ZoneConnection {
             self.send_segment(PacketSegment {
                 source_actor: actor.id.0,
                 target_actor: self.player_data.actor_id,
-                segment_type: SegmentType::Ipc { data: ipc },
+                segment_type: SegmentType::Ipc,
+                data: SegmentData::Ipc { data: ipc },
             })
             .await;
 
@@ -394,7 +403,8 @@ impl ZoneConnection {
         self.send_segment(PacketSegment {
             source_actor: self.player_data.actor_id,
             target_actor: self.player_data.actor_id,
-            segment_type: SegmentType::Ipc { data: ipc },
+            segment_type: SegmentType::Ipc,
+            data: SegmentData::Ipc { data: ipc },
         })
         .await;
     }
@@ -458,7 +468,8 @@ impl ZoneConnection {
             self.send_segment(PacketSegment {
                 source_actor: self.player_data.actor_id,
                 target_actor: self.player_data.actor_id,
-                segment_type: SegmentType::Ipc { data: ipc },
+                segment_type: SegmentType::Ipc,
+                data: SegmentData::Ipc { data: ipc },
             })
             .await;
         }
@@ -478,7 +489,8 @@ impl ZoneConnection {
         self.send_segment(PacketSegment {
             source_actor: self.player_data.actor_id,
             target_actor: self.player_data.actor_id,
-            segment_type: SegmentType::Ipc { data: ipc },
+            segment_type: SegmentType::Ipc,
+            data: SegmentData::Ipc { data: ipc },
         })
         .await;
     }
@@ -520,7 +532,8 @@ impl ZoneConnection {
                 self.send_segment(PacketSegment {
                     source_actor: self.player_data.actor_id,
                     target_actor: self.player_data.actor_id,
-                    segment_type: SegmentType::Ipc { data: ipc },
+                    segment_type: SegmentType::Ipc,
+                    data: SegmentData::Ipc { data: ipc },
                 })
                 .await;
             };
@@ -546,7 +559,8 @@ impl ZoneConnection {
                 self.send_segment(PacketSegment {
                     source_actor: self.player_data.actor_id,
                     target_actor: self.player_data.actor_id,
-                    segment_type: SegmentType::Ipc { data: ipc },
+                    segment_type: SegmentType::Ipc,
+                    data: SegmentData::Ipc { data: ipc },
                 })
                 .await;
             }
@@ -577,7 +591,8 @@ impl ZoneConnection {
                 self.send_segment(PacketSegment {
                     source_actor: self.player_data.actor_id,
                     target_actor: self.player_data.actor_id,
-                    segment_type: SegmentType::Ipc { data: ipc },
+                    segment_type: SegmentType::Ipc,
+                    data: SegmentData::Ipc { data: ipc },
                 })
                 .await;
             };
@@ -604,7 +619,8 @@ impl ZoneConnection {
             self.send_segment(PacketSegment {
                 source_actor: self.player_data.actor_id,
                 target_actor: self.player_data.actor_id,
-                segment_type: SegmentType::Ipc { data: ipc },
+                segment_type: SegmentType::Ipc,
+                data: SegmentData::Ipc { data: ipc },
             })
             .await;
         }
@@ -633,7 +649,8 @@ impl ZoneConnection {
             self.send_segment(PacketSegment {
                 source_actor: self.player_data.actor_id,
                 target_actor: self.player_data.actor_id,
-                segment_type: SegmentType::Ipc { data: ipc },
+                segment_type: SegmentType::Ipc,
+                data: SegmentData::Ipc { data: ipc },
             })
             .await;
         }
@@ -653,7 +670,8 @@ impl ZoneConnection {
         self.send_segment(PacketSegment {
             source_actor: self.player_data.actor_id,
             target_actor: self.player_data.actor_id,
-            segment_type: SegmentType::Ipc { data: ipc },
+            segment_type: SegmentType::Ipc,
+            data: SegmentData::Ipc { data: ipc },
         })
         .await;
     }
@@ -696,7 +714,8 @@ impl ZoneConnection {
             self.send_segment(PacketSegment {
                 source_actor: self.player_data.actor_id,
                 target_actor: self.player_data.actor_id,
-                segment_type: SegmentType::Ipc { data: ipc },
+                segment_type: SegmentType::Ipc,
+                data: SegmentData::Ipc { data: ipc },
             })
             .await;
 
@@ -715,7 +734,8 @@ impl ZoneConnection {
         self.send_segment(PacketSegment {
             source_actor: actor_id.0,
             target_actor: self.player_data.actor_id,
-            segment_type: SegmentType::Ipc { data: ipc },
+            segment_type: SegmentType::Ipc,
+            data: SegmentData::Ipc { data: ipc },
         })
         .await;
     }
@@ -739,7 +759,8 @@ impl ZoneConnection {
         self.send_segment(PacketSegment {
             source_actor: self.player_data.actor_id,
             target_actor: self.player_data.actor_id,
-            segment_type: SegmentType::Ipc { data: ipc },
+            segment_type: SegmentType::Ipc,
+            data: SegmentData::Ipc { data: ipc },
         })
         .await;
     }
@@ -802,7 +823,8 @@ impl ZoneConnection {
         self.send_segment(PacketSegment {
             source_actor: self.player_data.actor_id,
             target_actor: self.player_data.actor_id,
-            segment_type: SegmentType::Ipc { data: ipc },
+            segment_type: SegmentType::Ipc,
+            data: SegmentData::Ipc { data: ipc },
         })
         .await;
     }

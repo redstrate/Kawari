@@ -25,21 +25,44 @@ pub enum ConnectionType {
 }
 
 #[binrw]
-#[brw(import(size: u32, encryption_key: Option<&[u8]>))]
+#[brw(repr = u16)]
+#[derive(Debug, PartialEq, Copy, Clone)]
+pub enum SegmentType {
+    Setup = 0x1,
+    Initialize = 0x2,
+    // Also known as "UPLAYER"
+    Ipc = 0x3,
+    KeepAliveRequest = 0x7,
+    KeepAliveResponse = 0x8,
+    // Also known as "SECSETUP"
+    SecuritySetup = 0x9,
+    // Also known as "SECINIT"
+    SecurityInitialize = 0xA,
+    // This isn't in retail!
+    KawariIpc = 0xAAAA,
+}
+
+#[binrw]
+#[brw(import(kind: &SegmentType, size: u32, encryption_key: Option<&[u8]>))]
 #[derive(Debug, Clone)]
-pub enum SegmentType<T: ReadWriteIpcSegment> {
-    // Client->Server Packets
-    #[brw(magic = 0x1u32)]
-    InitializeSession {
+pub enum SegmentData<T: ReadWriteIpcSegment> {
+    #[br(pre_assert(*kind == SegmentType::Setup))]
+    Setup {
         #[brw(pad_before = 4)] // empty
         #[brw(pad_size_to = 36)]
         #[br(count = 36)]
         #[br(map = read_string)]
         #[bw(map = write_string)]
-        actor_id: String, // square enix in their infinite wisdom has this as a STRING REPRESENTATION of an integer. what
+        ticket: String, // square enix in their infinite wisdom has this as a STRING REPRESENTATION of an integer. what
     },
-    #[brw(magic = 0x9u32)]
-    InitializeEncryption {
+    #[br(pre_assert(*kind == SegmentType::Initialize))]
+    Initialize {
+        player_id: u32,
+        #[brw(pad_after = 32)]
+        timestamp: u32,
+    },
+    #[br(pre_assert(*kind == SegmentType::SecuritySetup))]
+    SecuritySetup {
         #[brw(pad_before = 36)] // empty
         #[brw(pad_size_to = 32)]
         #[br(count = 32)]
@@ -51,34 +74,25 @@ pub enum SegmentType<T: ReadWriteIpcSegment> {
         #[brw(pad_after = 512)] // empty
         key: [u8; 4],
     },
-    #[brw(magic = 0x3u32)]
+    #[br(pre_assert(*kind == SegmentType::Ipc))]
     Ipc {
         #[br(parse_with = decrypt, args(size, encryption_key))]
         #[bw(write_with = encrypt, args(size, encryption_key))]
         data: T,
     },
-    #[brw(magic = 0x7u32)]
-    KeepAlive { id: u32, timestamp: u32 },
-
-    // Server->Client Packets
-    #[brw(magic = 0xAu32)]
-    InitializationEncryptionResponse {
+    #[br(pre_assert(*kind == SegmentType::KeepAliveRequest))]
+    KeepAliveRequest { id: u32, timestamp: u32 },
+    #[br(pre_assert(*kind == SegmentType::SecurityInitialize))]
+    SecurityInitialize {
         #[br(count = 0x280)]
         #[brw(pad_size_to = 640)]
         data: Vec<u8>,
     },
-    #[brw(magic = 0x8u32)]
+    #[br(pre_assert(*kind == SegmentType::KeepAliveResponse))]
     KeepAliveResponse { id: u32, timestamp: u32 },
-    #[brw(magic = 0x2u32)]
-    ZoneInitialize {
-        player_id: u32,
-        #[brw(pad_after = 32)]
-        timestamp: u32,
-    },
 
-    // Custom Packets
-    #[brw(magic = 0xAAAAu32)]
-    CustomIpc { data: CustomIpcSegment },
+    #[br(pre_assert(*kind == SegmentType::KawariIpc))]
+    KawariIpc { data: CustomIpcSegment },
 }
 
 #[binrw]
@@ -104,23 +118,25 @@ pub struct PacketSegment<T: ReadWriteIpcSegment> {
     pub size: u32,
     pub source_actor: u32,
     pub target_actor: u32,
-    #[brw(args(size, encryption_key))]
-    pub segment_type: SegmentType<T>,
+    #[brw(pad_after = 2)] // padding
+    pub segment_type: SegmentType,
+    #[brw(args(&segment_type, size, encryption_key))]
+    pub data: SegmentData<T>,
 }
 
 impl<T: ReadWriteIpcSegment> PacketSegment<T> {
     pub fn calc_size(&self) -> u32 {
         let header = std::mem::size_of::<u32>() * 4;
         header as u32
-            + match &self.segment_type {
-                SegmentType::InitializeEncryption { .. } => 616,
-                SegmentType::InitializationEncryptionResponse { .. } => 640,
-                SegmentType::Ipc { data } => data.calc_size(),
-                SegmentType::KeepAlive { .. } => 0x8,
-                SegmentType::KeepAliveResponse { .. } => 0x8,
-                SegmentType::ZoneInitialize { .. } => 40,
-                SegmentType::InitializeSession { .. } => 40,
-                SegmentType::CustomIpc { data } => data.calc_size(),
+            + match &self.data {
+                SegmentData::SecuritySetup { .. } => 616,
+                SegmentData::SecurityInitialize { .. } => 640,
+                SegmentData::Ipc { data } => data.calc_size(),
+                SegmentData::KeepAliveRequest { .. } => 0x8,
+                SegmentData::KeepAliveResponse { .. } => 0x8,
+                SegmentData::Initialize { .. } => 40,
+                SegmentData::Setup { .. } => 40,
+                SegmentData::KawariIpc { data } => data.calc_size(),
             }
     }
 }
@@ -217,7 +233,8 @@ pub async fn send_keep_alive<T: ReadWriteIpcSegment>(
     let response_packet: PacketSegment<T> = PacketSegment {
         source_actor: 0,
         target_actor: 0,
-        segment_type: SegmentType::KeepAliveResponse { id, timestamp },
+        segment_type: SegmentType::KeepAliveResponse,
+        data: SegmentData::KeepAliveResponse { id, timestamp },
     };
     send_packet(
         socket,
@@ -261,16 +278,16 @@ mod tests {
         }
 
         let packet_types = [
-            SegmentType::InitializeEncryption {
+            SegmentData::SecuritySetup {
                 phrase: String::new(),
                 key: [0; 4],
             },
-            SegmentType::InitializationEncryptionResponse { data: Vec::new() },
-            SegmentType::KeepAlive {
+            SegmentData::SecurityInitialize { data: Vec::new() },
+            SegmentData::KeepAliveRequest {
                 id: 0,
                 timestamp: 0,
             },
-            SegmentType::KeepAliveResponse {
+            SegmentData::KeepAliveResponse {
                 id: 0,
                 timestamp: 0,
             },
@@ -282,7 +299,8 @@ mod tests {
             let packet_segment: PacketSegment<ClientLobbyIpcSegment> = PacketSegment {
                 source_actor: 0,
                 target_actor: 0,
-                segment_type: packet.clone(),
+                segment_type: SegmentType::Setup,
+                data: packet.clone(),
             };
             packet_segment.write_le(&mut cursor).unwrap();
 

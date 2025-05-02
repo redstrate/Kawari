@@ -2,7 +2,7 @@ use crate::{
     common::{CustomizeData, ObjectId, ObjectTypeId, Position, timestamp_secs},
     config::get_config,
     opcodes::ServerZoneIpcType,
-    packet::{PacketSegment, SegmentType},
+    packet::{PacketSegment, SegmentData, SegmentType},
     world::{
         Actor, Event,
         ipc::{
@@ -122,7 +122,8 @@ impl ChatHandler {
                         .send_segment(PacketSegment {
                             source_actor: 0x106ad804,
                             target_actor: connection.player_data.actor_id,
-                            segment_type: SegmentType::Ipc { data: ipc },
+                            segment_type: SegmentType::Ipc,
+                            data: SegmentData::Ipc { data: ipc },
                         })
                         .await;
                 }
@@ -147,7 +148,8 @@ impl ChatHandler {
                         .send_segment(PacketSegment {
                             source_actor: 0x106ad804,
                             target_actor: connection.player_data.actor_id,
-                            segment_type: SegmentType::Ipc { data: ipc },
+                            segment_type: SegmentType::Ipc,
+                            data: SegmentData::Ipc { data: ipc },
                         })
                         .await;
                 }
@@ -198,7 +200,8 @@ impl ChatHandler {
                     .send_segment(PacketSegment {
                         source_actor: 0x106ad804,
                         target_actor: connection.player_data.actor_id,
-                        segment_type: SegmentType::Ipc { data: ipc },
+                        segment_type: SegmentType::Ipc,
+                        data: SegmentData::Ipc { data: ipc },
                     })
                     .await;
             }
@@ -238,7 +241,8 @@ impl ChatHandler {
                         .send_segment(PacketSegment {
                             source_actor: 0x106ad804,
                             target_actor: connection.player_data.actor_id,
-                            segment_type: SegmentType::Ipc { data: ipc },
+                            segment_type: SegmentType::Ipc,
+                            data: SegmentData::Ipc { data: ipc },
                         })
                         .await;
                 }
@@ -277,7 +281,8 @@ impl ChatHandler {
                         .send_segment(PacketSegment {
                             source_actor: connection.player_data.actor_id,
                             target_actor: connection.player_data.actor_id,
-                            segment_type: SegmentType::Ipc { data: ipc },
+                            segment_type: SegmentType::Ipc,
+                            data: SegmentData::Ipc { data: ipc },
                         })
                         .await;
                 }
@@ -301,7 +306,8 @@ impl ChatHandler {
                         .send_segment(PacketSegment {
                             source_actor: connection.player_data.actor_id,
                             target_actor: connection.player_data.actor_id,
-                            segment_type: SegmentType::Ipc { data: ipc },
+                            segment_type: SegmentType::Ipc,
+                            data: SegmentData::Ipc { data: ipc },
                         })
                         .await;
                 }
@@ -344,7 +350,8 @@ impl ChatHandler {
                     .send_segment(PacketSegment {
                         source_actor: 0x106ad804,
                         target_actor: connection.player_data.actor_id,
-                        segment_type: SegmentType::Ipc { data: ipc },
+                        segment_type: SegmentType::Ipc,
+                        data: SegmentData::Ipc { data: ipc },
                     })
                     .await;
             }

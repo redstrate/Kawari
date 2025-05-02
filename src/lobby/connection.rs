@@ -14,7 +14,7 @@ use crate::{
     oodle::OodleNetwork,
     opcodes::ServerLobbyIpcType,
     packet::{
-        CompressionType, ConnectionType, PacketSegment, PacketState, SegmentType,
+        CompressionType, ConnectionType, PacketSegment, PacketState, SegmentData, SegmentType,
         generate_encryption_key, parse_packet, send_packet,
     },
 };
@@ -76,7 +76,8 @@ impl LobbyConnection {
         self.send_segment(PacketSegment {
             source_actor: 0,
             target_actor: 0,
-            segment_type: SegmentType::InitializationEncryptionResponse { data },
+            segment_type: SegmentType::SecurityInitialize,
+            data: SegmentData::SecurityInitialize { data },
         })
         .await;
     }
@@ -103,7 +104,8 @@ impl LobbyConnection {
         self.send_segment(PacketSegment {
             source_actor: 0,
             target_actor: 0,
-            segment_type: SegmentType::Ipc { data: ipc },
+            segment_type: SegmentType::Ipc,
+            data: SegmentData::Ipc { data: ipc },
         })
         .await;
     }
@@ -146,7 +148,8 @@ impl LobbyConnection {
             let response_packet = PacketSegment {
                 source_actor: 0,
                 target_actor: 0,
-                segment_type: SegmentType::Ipc { data: ipc },
+                segment_type: SegmentType::Ipc,
+                data: SegmentData::Ipc { data: ipc },
             };
             packets.push(response_packet);
         }
@@ -167,7 +170,8 @@ impl LobbyConnection {
             let response_packet = PacketSegment {
                 source_actor: 0,
                 target_actor: 0,
-                segment_type: SegmentType::Ipc { data: ipc },
+                segment_type: SegmentType::Ipc,
+                data: SegmentData::Ipc { data: ipc },
             };
             packets.push(response_packet);
         }
@@ -269,7 +273,8 @@ impl LobbyConnection {
                 self.send_segment(PacketSegment {
                     source_actor: 0,
                     target_actor: 0,
-                    segment_type: SegmentType::Ipc { data: ipc },
+                    segment_type: SegmentType::Ipc,
+                    data: SegmentData::Ipc { data: ipc },
                 })
                 .await;
             }
@@ -301,7 +306,8 @@ impl LobbyConnection {
         self.send_segment(PacketSegment {
             source_actor: 0,
             target_actor: 0,
-            segment_type: SegmentType::Ipc { data: ipc },
+            segment_type: SegmentType::Ipc,
+            data: SegmentData::Ipc { data: ipc },
         })
         .await;
     }
@@ -328,7 +334,8 @@ impl LobbyConnection {
         self.send_segment(PacketSegment {
             source_actor: 0,
             target_actor: 0,
-            segment_type: SegmentType::Ipc { data: ipc },
+            segment_type: SegmentType::Ipc,
+            data: SegmentData::Ipc { data: ipc },
         })
         .await;
     }
@@ -388,7 +395,8 @@ impl LobbyConnection {
                     self.send_segment(PacketSegment {
                         source_actor: 0x0,
                         target_actor: 0x0,
-                        segment_type: SegmentType::Ipc { data: ipc },
+                        segment_type: SegmentType::Ipc,
+                        data: SegmentData::Ipc { data: ipc },
                     })
                     .await;
                 } else {
@@ -410,7 +418,8 @@ impl LobbyConnection {
                     let response_packet = PacketSegment {
                         source_actor: 0x0,
                         target_actor: 0x0,
-                        segment_type: SegmentType::Ipc { data: ipc },
+                        segment_type: SegmentType::Ipc,
+                        data: SegmentData::Ipc { data: ipc },
                     };
                     self.send_segment(response_packet).await;
                 }
@@ -482,7 +491,8 @@ impl LobbyConnection {
                     self.send_segment(PacketSegment {
                         source_actor: 0x0,
                         target_actor: 0x0,
-                        segment_type: SegmentType::Ipc { data: ipc },
+                        segment_type: SegmentType::Ipc,
+                        data: SegmentData::Ipc { data: ipc },
                     })
                     .await;
                 }
@@ -534,7 +544,8 @@ impl LobbyConnection {
                     self.send_segment(PacketSegment {
                         source_actor: 0x0,
                         target_actor: 0x0,
-                        segment_type: SegmentType::Ipc { data: ipc },
+                        segment_type: SegmentType::Ipc,
+                        data: SegmentData::Ipc { data: ipc },
                     })
                     .await;
                 }
@@ -569,7 +580,8 @@ pub async fn send_custom_world_packet(segment: CustomIpcSegment) -> Option<Custo
     let segment: PacketSegment<CustomIpcSegment> = PacketSegment {
         source_actor: 0,
         target_actor: 0,
-        segment_type: SegmentType::CustomIpc { data: segment },
+        segment_type: SegmentType::KawariIpc,
+        data: SegmentData::KawariIpc { data: segment },
     };
 
     send_packet(
@@ -587,8 +599,8 @@ pub async fn send_custom_world_packet(segment: CustomIpcSegment) -> Option<Custo
     if n != 0 {
         let (segments, _) = parse_packet::<CustomIpcSegment>(&buf[..n], &mut packet_state).await;
 
-        return match &segments[0].segment_type {
-            SegmentType::CustomIpc { data } => Some(data.clone()),
+        return match &segments[0].data {
+            SegmentData::KawariIpc { data } => Some(data.clone()),
             _ => None,
         };
     }

@@ -3,7 +3,7 @@ use mlua::{FromLua, Lua, LuaSerdeExt, UserData, UserDataMethods, Value};
 use crate::{
     common::{ObjectId, ObjectTypeId, Position, timestamp_secs},
     opcodes::ServerZoneIpcType,
-    packet::{PacketSegment, SegmentType},
+    packet::{PacketSegment, SegmentData, SegmentType},
 };
 
 use super::{
@@ -45,7 +45,8 @@ impl LuaPlayer {
         self.queue_segment(PacketSegment {
             source_actor: self.player_data.actor_id,
             target_actor: self.player_data.actor_id,
-            segment_type: SegmentType::Ipc { data: ipc },
+            segment_type: SegmentType::Ipc,
+            data: SegmentData::Ipc { data: ipc },
         });
     }
 
@@ -76,7 +77,8 @@ impl LuaPlayer {
         self.queue_segment(PacketSegment {
             source_actor: self.player_data.actor_id,
             target_actor: self.player_data.actor_id,
-            segment_type: SegmentType::Ipc { data: ipc },
+            segment_type: SegmentType::Ipc,
+            data: SegmentData::Ipc { data: ipc },
         });
     }
 
@@ -94,7 +96,8 @@ impl LuaPlayer {
         self.queue_segment(PacketSegment {
             source_actor: self.player_data.actor_id,
             target_actor: self.player_data.actor_id,
-            segment_type: SegmentType::Ipc { data: ipc },
+            segment_type: SegmentType::Ipc,
+            data: SegmentData::Ipc { data: ipc },
         });
     }
 

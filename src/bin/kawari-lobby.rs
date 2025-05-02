@@ -10,7 +10,7 @@ use kawari::lobby::ipc::{ClientLobbyIpcData, ServerLobbyIpcSegment};
 use kawari::lobby::send_custom_world_packet;
 use kawari::oodle::OodleNetwork;
 use kawari::packet::ConnectionType;
-use kawari::packet::{PacketState, SegmentType, send_keep_alive};
+use kawari::packet::{PacketState, SegmentData, send_keep_alive};
 use tokio::io::AsyncReadExt;
 use tokio::net::TcpListener;
 
@@ -60,11 +60,11 @@ async fn main() {
                 if n != 0 {
                     let (segments, _) = connection.parse_packet(&buf[..n]).await;
                     for segment in &segments {
-                        match &segment.segment_type {
-                            SegmentType::InitializeEncryption { phrase, key } => {
+                        match &segment.data {
+                            SegmentData::SecuritySetup { phrase, key } => {
                                 connection.initialize_encryption(phrase, key).await
                             }
-                            SegmentType::Ipc { data } => match &data.data {
+                            SegmentData::Ipc { data } => match &data.data {
                                 ClientLobbyIpcData::LoginEx {
                                     sequence,
                                     session_id,
@@ -150,7 +150,7 @@ async fn main() {
                                         .await;
                                 }
                             },
-                            SegmentType::KeepAlive { id, timestamp } => {
+                            SegmentData::KeepAliveRequest { id, timestamp } => {
                                 send_keep_alive::<ServerLobbyIpcSegment>(
                                     &mut connection.socket,
                                     &mut connection.state,
