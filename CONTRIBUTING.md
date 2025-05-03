@@ -27,7 +27,7 @@ Here are the various things that should be checked when updating Kawari to a new
 
 ## IPC Opcodes
 
-Since the Zone IPC opcodes change every patch, it's extremely easy to change the opcodes in Kawari. Edit the values under `resources/opcodes.json` and recompile Kawari. You still have to change the structs themselves (located under `src/<connection>/ipc`) if needed though.
+Since the Zone IPC opcodes change every patch, it's extremely easy to change the opcodes in Kawari. Edit the values under `resources/opcodes.json` and recompile Kawari. You still have to change the structs themselves (located under `src/ipc`) if needed though.
 
 Opcodes can be updated from (from least to most pain): 
 * The [opcodediff](https://github.com/xivdev/opcodediff) and the [opcode-update tool from XIVPacketTools](https://github.com/redstrate/XIVPacketTools) once they update.
