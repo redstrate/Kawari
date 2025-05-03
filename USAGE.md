@@ -46,21 +46,21 @@ Run `run.sh` in a terminal.
 
 ### Development
 
-Run `scripts/run.sh`.
+Run `scripts/run.sh` in a terminal.
 
 ## Reverse proxy setup
 
-Kawari isn't very useful unless it's addressable to a launcher. We provide a sample Caddyfile reverse proxy setup for this:
+Kawari isn't very useful unless it's addressable to a launcher, so we have to setup a "reverse proxy". We suggest using [Caddy](https://caddyserver.com/download) and we also have a configuration that works on most local setups. Run this in your operating system's terminal. If you're on Windows, point it to the Caddy `.exe`.
 
 ```shell
-$ caddy run --config resources/Caddyfile
+caddy run --config resources/Caddyfile
 ```
 
-This Caddyfile hosts several domains required for normal operation, most notably `ffxiv.localhost`, on port 80. If you get a "permission denied" error starting Caddy, you must either start Caddy with elevated privileges (`sudo`) or set the `CAP_NET_BIND_SERVICE` capability. See [here](https://caddyserver.com/docs/quick-starts/caddyfile) for more information on how to do this.
+This Caddyfile hosts several domains required for normal operation, for example `ffxiv.localhost` on port 80. If you get a "permission denied" error starting Caddy, you must either start Caddy with elevated privileges (`sudo`) or set the `CAP_NET_BIND_SERVICE` capability. See [here](https://caddyserver.com/docs/quick-starts/caddyfile) for more information on how to do this.
 
 ## Logging in
 
-Navigate to [http://ffxiv.localhost](http://ffxiv.localhost), and register for an account. In order to actually log in, navigate to the Setup page and follow the instructions there.
+Navigate to [http://ffxiv.localhost](http://ffxiv.localhost), and register for an account. In order to actually log in, navigate to the Setup page and follow the instructions there. If you get an error in your web browser, ensure you're connecting via **http://** and not **https://**.
 
 ## Importing characters from retail
 
