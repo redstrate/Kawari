@@ -15,8 +15,7 @@ use kawari::ipc::zone::{
     GameMasterRank, OnlineStatus, ServerZoneIpcData, ServerZoneIpcSegment, SocialListRequestType,
 };
 use kawari::ipc::zone::{
-    ActorControlCategory, ActorControlSelf, CommonSpawn, PlayerEntry, PlayerSpawn, PlayerStatus,
-    SocialList,
+    ActorControlCategory, ActorControlSelf, PlayerEntry, PlayerSpawn, PlayerStatus, SocialList,
 };
 use kawari::opcodes::{ServerChatIpcType, ServerZoneIpcType};
 use kawari::packet::oodle::OodleNetwork;
@@ -25,8 +24,8 @@ use kawari::packet::{
     send_keep_alive, send_packet,
 };
 use kawari::world::{
-    Actor, ClientHandle, ClientId, EffectsBuilder, FromServer, LuaPlayer, PlayerData, ServerHandle,
-    StatusEffects, ToServer, WorldDatabase,
+    Actor, ClientHandle, EffectsBuilder, FromServer, LuaPlayer, PlayerData, ServerHandle,
+    StatusEffects, ToServer, WorldDatabase, server_main_loop,
 };
 use kawari::world::{ChatHandler, Zone, ZoneConnection};
 
@@ -43,127 +42,6 @@ struct ExtraLuaState {
     action_scripts: HashMap<u32, String>,
 }
 
-#[derive(Default, Debug)]
-struct Data {
-    clients: HashMap<ClientId, ClientHandle>,
-    // structure temporary, of course
-    actors: HashMap<ObjectId, CommonSpawn>,
-}
-
-async fn main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::io::Error> {
-    let mut data = Data::default();
-    let mut to_remove = Vec::new();
-
-    while let Some(msg) = recv.recv().await {
-        match msg {
-            ToServer::NewClient(handle) => {
-                data.clients.insert(handle.id, handle);
-            }
-            ToServer::ZoneLoaded(from_id) => {
-                for (id, handle) in &mut data.clients {
-                    let id = *id;
-
-                    if id == from_id {
-                        // send existing player data
-                        for (id, common) in &data.actors {
-                            let msg = FromServer::ActorSpawn(
-                                Actor {
-                                    id: *id,
-                                    hp: 100,
-                                    spawn_index: 0,
-                                },
-                                common.clone(),
-                            );
-
-                            handle.send(msg).unwrap();
-                        }
-
-                        break;
-                    }
-                }
-            }
-            ToServer::Message(from_id, msg) => {
-                for (id, handle) in &mut data.clients {
-                    let id = *id;
-
-                    if id == from_id {
-                        continue;
-                    }
-
-                    let msg = FromServer::Message(msg.clone());
-
-                    if handle.send(msg).is_err() {
-                        to_remove.push(id);
-                    }
-                }
-            }
-            ToServer::ActorSpawned(from_id, actor, common) => {
-                data.actors.insert(actor.id, common.clone());
-
-                for (id, handle) in &mut data.clients {
-                    let id = *id;
-
-                    if id == from_id {
-                        continue;
-                    }
-
-                    let msg = FromServer::ActorSpawn(actor, common.clone());
-
-                    if handle.send(msg).is_err() {
-                        to_remove.push(id);
-                    }
-                }
-            }
-            ToServer::ActorDespawned(_from_id, actor_id) => {
-                data.actors.remove(&ObjectId(actor_id));
-
-                for (id, handle) in &mut data.clients {
-                    let id = *id;
-
-                    let msg = FromServer::ActorDespawn(actor_id);
-
-                    if handle.send(msg).is_err() {
-                        to_remove.push(id);
-                    }
-                }
-            }
-            ToServer::ActorMoved(from_id, actor_id, position, rotation) => {
-                if let Some((_, common)) = data
-                    .actors
-                    .iter_mut()
-                    .find(|actor| *actor.0 == ObjectId(actor_id))
-                {
-                    common.pos = position;
-                    common.rotation = rotation;
-                }
-
-                for (id, handle) in &mut data.clients {
-                    let id = *id;
-
-                    if id == from_id {
-                        continue;
-                    }
-
-                    let msg = FromServer::ActorMove(actor_id, position, rotation);
-
-                    if handle.send(msg).is_err() {
-                        to_remove.push(id);
-                    }
-                }
-            }
-            ToServer::Disconnected(from_id) => {
-                to_remove.push(from_id);
-            }
-            ToServer::FatalError(err) => return Err(err),
-        }
-    }
-    // Remove any clients that errored out
-    for id in to_remove {
-        data.clients.remove(&id);
-    }
-    Ok(())
-}
-
 fn spawn_main_loop() -> (ServerHandle, JoinHandle<()>) {
     let (send, recv) = channel(64);
 
@@ -173,7 +51,7 @@ fn spawn_main_loop() -> (ServerHandle, JoinHandle<()>) {
     };
 
     let join = tokio::spawn(async move {
-        let res = main_loop(recv).await;
+        let res = server_main_loop(recv).await;
         match res {
             Ok(()) => {}
             Err(err) => {
