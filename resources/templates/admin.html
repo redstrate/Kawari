@@ -1,3 +1,8 @@
+{% extends "layout.html" %}
+
+{% block title %}Kawari Admin Panel{% endblock %}
+
+{% block body %}
 <p>Gate open:{{ worlds_open }}</p>
 <p>Gate open:{{ login_open }}</p>
 <p>Boot patch location:{{ boot_patch_location }}</p>
@@ -16,3 +21,4 @@
     </label>
     <button type='submit'>Apply</button>
 </form>
+{% endblock %}

@@ -12,9 +12,16 @@ use kawari::lobby::send_custom_world_packet;
 use kawari::login::{LoginDatabase, LoginError};
 use minijinja::{Environment, context};
 use serde::Deserialize;
+use tower_http::services::ServeDir;
 
 fn setup_default_environment() -> Environment<'static> {
     let mut env = Environment::new();
+    env.add_template_owned(
+        "layout.html",
+        std::fs::read_to_string("resources/templates/layout.html")
+            .expect("Failed to find template!"),
+    )
+    .unwrap();
     env.add_template_owned(
         "login.html",
         std::fs::read_to_string("resources/templates/login.html")
@@ -283,7 +290,8 @@ async fn main() {
         .route("/account/app/svc/logout", get(logout))
         .route("/account/app/svc/mbrPasswd", get(change_password))
         .route("/account/app/svc/mbrCancel", get(cancel_account))
-        .with_state(state);
+        .with_state(state)
+        .nest_service("/static", ServeDir::new("resources/static"));
 
     let config = get_config();
 

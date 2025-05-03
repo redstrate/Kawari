@@ -1,11 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Kawari - Login</title>
-</head>
-<body>
+{% extends "layout.html" %}
 
+{% block title %}Kawari - Login{% endblock %}
+
+{% block body %}
 <form method='post'>
     <label for="username">Username:</label><br>
     <input type='text' id='username' name='username'/><br>
@@ -14,5 +11,4 @@
     <button type='submit'>Login</button>
 </form>
 
-</body>
-</html>
+{% endblock %}

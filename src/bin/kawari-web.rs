@@ -4,9 +4,16 @@ use kawari::config::get_config;
 use minijinja::Environment;
 use minijinja::context;
 use serde::{Deserialize, Serialize};
+use tower_http::services::ServeDir;
 
 fn setup_default_environment() -> Environment<'static> {
     let mut env = Environment::new();
+    env.add_template_owned(
+        "layout.html",
+        std::fs::read_to_string("resources/templates/layout.html")
+            .expect("Failed to find template!"),
+    )
+    .unwrap();
     env.add_template_owned(
         "web.html",
         std::fs::read_to_string("resources/templates/web.html").expect("Failed to find template!"),
@@ -63,7 +70,8 @@ async fn main() {
 
     let app = Router::new()
         .route("/", get(root))
-        .route("/worldstatus", get(world_status));
+        .route("/worldstatus", get(world_status))
+        .nest_service("/static", ServeDir::new("resources/static"));
 
     let config = get_config();
 

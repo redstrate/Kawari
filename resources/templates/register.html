@@ -1,11 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Kawari -Register</title>
-</head>
-<body>
+{% extends "layout.html" %}
 
+{% block title %}Kawari - Register{% endblock %}
+
+{% block body %}
 <form action='/oauth/oa/registlist' method='post'>
     <label for="username">Username:</label><br>
     <input type='text' id='username' name='username'/><br>
@@ -13,6 +10,4 @@
     <input type='text' id='password' name='password'/><br>
     <button type='submit'>Register</button>
 </form>
-
-</body>
-</html>
+{% endblock %}

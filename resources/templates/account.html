@@ -1,3 +1,8 @@
+{% extends "layout.html" %}
+
+{% block title %}Manage Account{% endblock %}
+
+{% block body %}
 <p>Managing account {{ username }}</p>
 <a href="/account/app/svc/logout">Logout</a>
 <a href="/account/app/svc/mbrPasswd">Change Password</a>
@@ -9,3 +14,4 @@
     <input type="file" id="charbak" name="charbak" accept="application/zip" />
     <button type='submit'>Upload</button>
 </form>
+{% endblock %}

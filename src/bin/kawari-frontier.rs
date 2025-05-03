@@ -7,6 +7,7 @@ use axum::{
 use kawari::config::get_config;
 use reqwest::{StatusCode, header};
 use serde::{Deserialize, Serialize};
+use tower_http::services::ServeDir;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct GateStatus {
@@ -153,7 +154,8 @@ async fn main() {
             "/frontier-api/ffxivsupport/information/get_headline_all",
             get(get_headline_all),
         )
-        .fallback(fallback);
+        .fallback(fallback)
+        .nest_service("/static", ServeDir::new("resources/static"));
 
     let config = get_config();
 

@@ -1,13 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Kawari - World Status</title>
-</head>
-<body>
+{% extends "layout.html" %}
 
+{% block title %}Kawari - World Status{% endblock %}
+
+{% block body %}
 <p>Worlds open: {{ worlds_open }}</p>
 <p>Login open: {{ login_open }}</p>
-
-</body>
-</html>
+{% endblock %}

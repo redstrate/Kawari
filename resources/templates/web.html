@@ -1,16 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Kawari</title>
-</head>
-<body>
+{% extends "layout.html" %}
 
+{% block title %}Kawari{% endblock %}
+
+{% block body %}
 <p>Welcome to Kawari!</p>
 
 <a href="http://{{ login_server }}/oauth/oa/oauthlogin">Login</a>
 <a href="http://{{ login_server }}/oauth/oa/registligt">Signup</a>
 <a href="/worldstatus">World Status</a>
-
-</body>
-</html>
+{% endblock %}
