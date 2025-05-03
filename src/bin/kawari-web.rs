@@ -7,15 +7,23 @@ use serde::{Deserialize, Serialize};
 
 fn setup_default_environment() -> Environment<'static> {
     let mut env = Environment::new();
-    env.add_template("web.html", include_str!("../../templates/web.html"))
-        .unwrap();
-    env.add_template(
-        "worldstatus.html",
-        include_str!("../../templates/worldstatus.html"),
+    env.add_template_owned(
+        "web.html",
+        std::fs::read_to_string("resources/templates/web.html").expect("Failed to find template!"),
     )
     .unwrap();
-    env.add_template("account.html", include_str!("../../templates/account.html"))
-        .unwrap();
+    env.add_template_owned(
+        "worldstatus.html",
+        std::fs::read_to_string("resources/templates/worldstatus.html")
+            .expect("Failed to find template!"),
+    )
+    .unwrap();
+    env.add_template_owned(
+        "account.html",
+        std::fs::read_to_string("resources/templates/account.html")
+            .expect("Failed to find template!"),
+    )
+    .unwrap();
 
     env
 }

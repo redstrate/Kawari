@@ -8,8 +8,12 @@ use serde::{Deserialize, Serialize};
 
 fn setup_default_environment() -> Environment<'static> {
     let mut env = Environment::new();
-    env.add_template("admin.html", include_str!("../../templates/admin.html"))
-        .unwrap();
+    env.add_template_owned(
+        "admin.html",
+        std::fs::read_to_string("resources/templates/admin.html")
+            .expect("Failed to find template!"),
+    )
+    .unwrap();
 
     env
 }
