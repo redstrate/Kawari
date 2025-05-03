@@ -15,18 +15,28 @@ use serde::Deserialize;
 
 fn setup_default_environment() -> Environment<'static> {
     let mut env = Environment::new();
-    env.add_template("login.html", include_str!("../../templates/login.html"))
-        .unwrap();
-    env.add_template(
-        "register.html",
-        include_str!("../../templates/register.html"),
+    env.add_template_owned(
+        "login.html",
+        std::fs::read_to_string("resources/templates/login.html")
+            .expect("Failed to find template!"),
     )
     .unwrap();
-    env.add_template("account.html", include_str!("../../templates/account.html"))
-        .unwrap();
-    env.add_template(
+    env.add_template_owned(
+        "register.html",
+        std::fs::read_to_string("resources/templates/register.html")
+            .expect("Failed to find template!"),
+    )
+    .unwrap();
+    env.add_template_owned(
+        "account.html",
+        std::fs::read_to_string("resources/templates/account.html")
+            .expect("Failed to find template!"),
+    )
+    .unwrap();
+    env.add_template_owned(
         "changepassword.html",
-        include_str!("../../templates/changepassword.html"),
+        std::fs::read_to_string("resources/templates/changepassword.html")
+            .expect("Failed to find template!"),
     )
     .unwrap();
 

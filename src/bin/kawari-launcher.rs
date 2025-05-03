@@ -8,9 +8,10 @@ use serde::Deserialize;
 
 fn setup_default_environment() -> Environment<'static> {
     let mut env = Environment::new();
-    env.add_template(
+    env.add_template_owned(
         "launcher.html",
-        include_str!("../../templates/launcher.html"),
+        std::fs::read_to_string("resources/templates/launcher.html")
+            .expect("Failed to find template!"),
     )
     .unwrap();
 

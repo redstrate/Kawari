@@ -71,7 +71,7 @@ tracing-subscriber = { version = "0.3", features = ["fmt"], default-features = f
 fastrand = { version = "2.3", features = ["std"], default-features = false }
 
 # HTML templates used in the web servers
-minijinja = { version = "2.9", features = ["serde"], default-features = false }
+minijinja = { version = "2.9", features = ["serde", "loader"], default-features = false }
 
 # Serialization of packets
 binrw = { version = "0.14", features = ["std"], default-features = false }
