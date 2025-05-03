@@ -1,17 +1,16 @@
-{% extends "layout.html" %}
+{% extends "account_base.html" %}
 
 {% block title %}Manage Account{% endblock %}
+{% set current_page = "home" %}
 
-{% block body %}
-<p>Managing account {{ username }}</p>
-<a href="/account/app/svc/logout">Logout</a>
-<a href="/account/app/svc/mbrPasswd">Change Password</a>
-<a href="/account/app/svc/mbrCancel">Cancel Account</a>
-
+{% block accountbody %}
 <!-- TODO: Move to it's own page. -->
+<h2>Upload Character Backup</h2>
 <form method='post' enctype="multipart/form-data">
-    <label for="charbak">Upload character backup:</label>
-    <input type="file" id="charbak" name="charbak" accept="application/zip" />
-    <button type='submit'>Upload</button>
+    <div class="mb-3">
+        <label for="charbak" class="form-label">Backup file</label>
+        <input type="file" id="charbak" name="charbak" accept="application/zip" class="form-control"/>
+    </div>
+    <button type='submit' class="btn btn-primary">Upload</button>
 </form>
 {% endblock %}

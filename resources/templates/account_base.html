@@ -1,0 +1,41 @@
+{% extends "layout.html" %}
+
+{% block body %}
+<main class="d-flex" style="height: 100vh">
+    <div class="d-flex flex-column p-3 text-bg-dark" style="width: 280px;">
+        <a href="/account/app/svc/manage" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+            <span class="fs-4">Manage Account</span>
+        </a>
+        <hr>
+        <ul class="nav nav-pills flex-column mb-auto">
+            <li class="nav-item">
+                <a href="/account/app/svc/manage" class="nav-link {% if current_page == 'home' %}active{% endif %}" >
+                    Home
+                </a>
+            </li>
+            <li>
+                <a href="/account/app/svc/mbrPasswd" class="nav-link {% if current_page == 'changepassword' %}active{% endif %}">
+                    Change Password
+                </a>
+            </li>
+            <li>
+                <a href="/account/app/svc/mbrCancel" class="nav-link {% if current_page == 'cancel' %}active{% endif %}">
+                    Cancel Account
+                </a>
+            </li>
+            <li>
+                <a href="/account/app/svc/logout" class="nav-link">
+                    Log Out
+                </a>
+            </li>
+        </ul>
+        <hr>
+        <div>
+            <strong> {{ username }}</strong>
+        </div>
+    </div>
+    <div class="d-flex flex-column flex-fill p-3">
+        {% block accountbody %}{% endblock %}
+    </div>
+</main>
+{% endblock %}
