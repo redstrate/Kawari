@@ -1,8 +1,8 @@
 # Usage
 
-Kawari is designed to be easy to run, with the goal of being accessible to anyone who wants to run a local server for themselves.
+Kawari is designed to be easy to run, and should be accessible to anyone who wants to run a local server for themselves.
 
-**Note:** Persisted data (logins, characters, etc) is _not_ stable or secure. Treat all data as disposable.
+**Note:** Persisted data (logins, characters, etc) are expected to _not_ be stable or secure. Treat all data as disposable.
 
 ## Copyright Notice
 
@@ -29,7 +29,7 @@ For the World server to function, Kawari needs to be built with `--features oodl
 Afterwards, create a `config.yaml` in the current directory. Currently the minimal config you need to run most services looks like this:
 
 ```yaml
-game_location: pathtogamedir
+game_location: /path/to/gamedir/
 ```
 
 More configuration options can be found in `config.rs`, such as changing the ports services run on. Finally, run Kawari with the helper script:
@@ -40,15 +40,19 @@ $ ./scripts/run.sh
 
 ## Reverse proxy setup
 
-Kawari is useless if it's not behind a domain or other address accessible to a launcher. Even something like Caddy is good enough, and we provide an example setup in the root of the repository.
+Kawari isn't very useful unless it's addressable to a launcher. We provide a sample Caddyfile reverse proxy setup for this:
 
 ```shell
 $ caddy run --config resources/Caddyfile
 ```
 
-This Caddyfile hosts several domains, most notably `ffxiv.localhost`, on port 80. If you get a "permission denied" error starting Caddy, you must either start Caddy with elevated privileges or set the `CAP_NET_BIND_SERVICE` capability. See [here](https://caddyserver.com/docs/quick-starts/caddyfile) for more information on how to do this.
+This Caddyfile hosts several domains, most notably `ffxiv.localhost`, on port 80. If you get a "permission denied" error starting Caddy, you must either start Caddy with elevated privileges (`sudo`) or set the `CAP_NET_BIND_SERVICE` capability. See [here](https://caddyserver.com/docs/quick-starts/caddyfile) for more information on how to do this.
 
 ## Logging in
+
+### Account Setup
+
+You need to create an account first, which can be done on http://ffxiv.localhost/. Then you can login with any of the following methods:
 
 ### Astra
 
@@ -62,13 +66,13 @@ Any username and password combination will work, as there is no actual login dat
 
 ### Manual
 
-Advanced users can specify required command line arguments directly to the game executable. This skips most of the Kawari login process and should only be used if you know what you're doing. Right now, the lobby server does not check for authentication, but in the future you must complete the login process manually to get a valid session ID.
+Advanced users can specify required command line arguments directly to the game executable. This skips most of the Kawari login process and should only be used as a last resort. You also need a valid SID, which you can get by logging in through http://ffxiv.localhost and grabbing your `cis_sessid` cookie.
 
 In this example, lobby number 4 will replace the **Aether data center**, but the other data centers will still try (and fail) to connect.
 
 * `DEV.LobbyHost04=127.0.0.1`
 * `DEV.LobbyPort04=7000`
-* `DEV.TestSID=0` (this must be a valid session ID in the future)
+* `DEV.TestSID=your_cis_sessid`
 
 Some other launchers (like XIVLauncher) will allow you to specify these extra arguments, but they will still authenticate to the retail servers. You can still connect to Kawari with this way, but **make sure to specify your own session ID, or your retail account's session ID will be sent to the lobby server**!
 
