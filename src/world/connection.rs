@@ -11,14 +11,16 @@ use tokio::{net::TcpStream, sync::mpsc::Sender};
 use crate::{
     OBFUSCATION_ENABLED_MODE,
     common::{GameData, ObjectId, Position, timestamp_secs},
-    config::get_config,
+    config::{WorldConfig, get_config},
     inventory::{Inventory, Item},
-    ipc::chat::ServerChatIpcSegment,
-    ipc::zone::{
-        ActorControlSelf, ActorMove, ActorSetPos, ClientZoneIpcSegment, CommonSpawn, ContainerInfo,
-        DisplayFlag, Equip, InitZone, ItemInfo, NpcSpawn, ObjectKind, PlayerStats, PlayerSubKind,
-        ServerZoneIpcData, ServerZoneIpcSegment, StatusEffect, StatusEffectList, UpdateClassInfo,
-        WeatherChange,
+    ipc::{
+        chat::ServerChatIpcSegment,
+        zone::{
+            ActorControlSelf, ActorMove, ActorSetPos, ClientZoneIpcSegment, CommonSpawn,
+            ContainerInfo, DisplayFlag, Equip, InitZone, ItemInfo, NpcSpawn, ObjectKind,
+            PlayerStats, PlayerSubKind, ServerZoneIpcData, ServerZoneIpcSegment, StatusEffect,
+            StatusEffectList, UpdateClassInfo, WeatherChange,
+        },
     },
     opcodes::ServerZoneIpcType,
     packet::{
@@ -129,6 +131,7 @@ impl ServerHandle {
 
 /// Represents a single connection between an instance of the client and the world server
 pub struct ZoneConnection {
+    pub config: WorldConfig,
     pub socket: TcpStream,
 
     pub state: PacketState,
@@ -164,7 +167,11 @@ impl ZoneConnection {
             &mut self.socket,
             &mut self.state,
             ConnectionType::Zone,
-            CompressionType::Oodle,
+            if self.config.enable_packet_compression {
+                CompressionType::Oodle
+            } else {
+                CompressionType::Uncompressed
+            },
             &[segment],
         )
         .await;
@@ -175,7 +182,11 @@ impl ZoneConnection {
             &mut self.socket,
             &mut self.state,
             ConnectionType::Chat,
-            CompressionType::Oodle,
+            if self.config.enable_packet_compression {
+                CompressionType::Oodle
+            } else {
+                CompressionType::Uncompressed
+            },
             &[segment],
         )
         .await;

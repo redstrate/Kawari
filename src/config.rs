@@ -207,6 +207,9 @@ pub struct WorldConfig {
     /// Enable packet obsfucation. There's literally no reason to do this!
     #[serde(default = "WorldConfig::default_packet_obsfucation")]
     pub enable_packet_obsfucation: bool,
+    /// Enable packet compression for packets from the server. It's recommended to keep this on.
+    #[serde(default = "WorldConfig::default_packet_compression")]
+    pub enable_packet_compression: bool,
 }
 
 impl Default for WorldConfig {
@@ -219,6 +222,7 @@ impl Default for WorldConfig {
             rcon_port: Self::default_rcon_port(),
             rcon_password: Self::default_rcon_password(),
             enable_packet_obsfucation: Self::default_packet_obsfucation(),
+            enable_packet_compression: Self::default_packet_compression(),
         }
     }
 }
@@ -250,6 +254,10 @@ impl WorldConfig {
 
     fn default_packet_obsfucation() -> bool {
         false
+    }
+
+    fn default_packet_compression() -> bool {
+        true
     }
 }
 

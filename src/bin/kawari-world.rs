@@ -1211,6 +1211,7 @@ async fn main() {
                 };
 
                 spawn_client(ZoneConnection {
+                    config: get_config().world,
                     socket,
                     state,
                     player_data: PlayerData::default(),
