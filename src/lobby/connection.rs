@@ -17,9 +17,9 @@ use crate::{
 
 use crate::ipc::kawari::{CustomIpcData, CustomIpcSegment, CustomIpcType};
 use crate::ipc::lobby::{
-    CharacterDetails, ClientLobbyIpcSegment, LobbyCharacterAction, LobbyCharacterActionKind,
-    LobbyCharacterList, LobbyServerList, LobbyServiceAccountList, Server, ServerLobbyIpcData,
-    ServerLobbyIpcSegment, ServiceAccount,
+    CharaMake, CharacterDetails, ClientLobbyIpcSegment, DistWorldInfo, LobbyCharacterActionKind,
+    LoginReply, Server, ServerLobbyIpcData, ServerLobbyIpcSegment, ServiceAccount,
+    ServiceLoginReply,
 };
 
 /// Represents a single connection between an instance of the client and the lobby server.
@@ -79,7 +79,7 @@ impl LobbyConnection {
 
     /// Send the service account list to the client.
     pub async fn send_account_list(&mut self) {
-        let service_account_list = ServerLobbyIpcData::LoginReply(LobbyServiceAccountList {
+        let service_account_list = ServerLobbyIpcData::LoginReply(LoginReply {
             sequence: 0,
             num_service_accounts: self.service_accounts.len() as u8,
             unk1: 3,
@@ -122,7 +122,7 @@ impl LobbyConnection {
             // add any empty boys
             servers.resize(6, Server::default());
 
-            let lobby_server_list = ServerLobbyIpcData::DistWorldInfo(LobbyServerList {
+            let lobby_server_list = ServerLobbyIpcData::DistWorldInfo(DistWorldInfo {
                 sequence: 0,
                 unk1: 1,
                 offset: 0,
@@ -210,7 +210,7 @@ impl LobbyConnection {
 
                 let lobby_character_list = if i == 3 {
                     // On the last packet, add the account-wide information
-                    LobbyCharacterList {
+                    ServiceLoginReply {
                         sequence,
                         counter: (i * 4) + 1, // TODO: why the + 1 here?
                         num_in_packet: characters_in_packet.len() as u8,
@@ -231,7 +231,7 @@ impl LobbyConnection {
                         characters: characters_in_packet,
                     }
                 } else {
-                    LobbyCharacterList {
+                    ServiceLoginReply {
                         sequence,
                         counter: i * 4,
                         num_in_packet: characters_in_packet.len() as u8,
@@ -329,7 +329,7 @@ impl LobbyConnection {
         .await;
     }
 
-    pub async fn handle_character_action(&mut self, character_action: &LobbyCharacterAction) {
+    pub async fn handle_character_action(&mut self, character_action: &CharaMake) {
         match &character_action.action {
             LobbyCharacterActionKind::ReserveName => {
                 tracing::info!(

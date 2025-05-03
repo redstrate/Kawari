@@ -18,7 +18,7 @@ pub struct ServiceAccount {
 
 #[binrw]
 #[derive(Debug, Clone, Default)]
-pub struct LobbyServiceAccountList {
+pub struct LoginReply {
     pub sequence: u64,
     #[brw(pad_before = 1)]
     pub num_service_accounts: u8,

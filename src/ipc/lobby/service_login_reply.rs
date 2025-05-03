@@ -67,7 +67,7 @@ pub struct CharacterDetails {
 
 #[binrw]
 #[derive(Debug, Clone, Default)]
-pub struct LobbyCharacterList {
+pub struct ServiceLoginReply {
     pub sequence: u64,
     pub counter: u8,
     #[brw(pad_after = 2)]

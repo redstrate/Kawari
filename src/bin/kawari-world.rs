@@ -15,7 +15,7 @@ use kawari::ipc::zone::{
     GameMasterRank, OnlineStatus, ServerZoneIpcData, ServerZoneIpcSegment, SocialListRequestType,
 };
 use kawari::ipc::zone::{
-    ActorControlCategory, ActorControlSelf, CommonSpawn, PlayerEntry, PlayerSetup, PlayerSpawn,
+    ActorControlCategory, ActorControlSelf, CommonSpawn, PlayerEntry, PlayerSpawn, PlayerStatus,
     SocialList,
 };
 use kawari::opcodes::{ServerChatIpcType, ServerZoneIpcType};
@@ -393,7 +393,7 @@ async fn client_loop(
                                             let ipc = ServerZoneIpcSegment {
                                                 op_code: ServerZoneIpcType::PlayerStatus,
                                                 timestamp: timestamp_secs(),
-                                                data: ServerZoneIpcData::PlayerStatus(PlayerSetup {
+                                                data: ServerZoneIpcData::PlayerStatus(PlayerStatus {
                                                     content_id: connection.player_data.content_id,
                                                     exp: [10000; 32],
                                                     levels: [100; 32],
@@ -632,7 +632,7 @@ async fn client_loop(
                                         )
                                         .await
                                     }
-                                    ClientZoneIpcData::GameMasterCommand { command, arg0, .. } => {
+                                    ClientZoneIpcData::GMCommand { command, arg0, .. } => {
                                         tracing::info!("Got a game master command!");
 
                                         match &command {

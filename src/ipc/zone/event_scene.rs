@@ -5,7 +5,7 @@ use crate::common::ObjectTypeId;
 #[binrw]
 #[brw(little)]
 #[derive(Debug, Clone, Default)]
-pub struct EventPlay {
+pub struct EventScene {
     pub actor_id: ObjectTypeId,
     pub event_id: u32,
     pub scene: u16,
@@ -37,7 +37,7 @@ mod tests {
         let buffer = read(d).unwrap();
         let mut buffer = Cursor::new(&buffer);
 
-        let event_play = EventPlay::read_le(&mut buffer).unwrap();
+        let event_play = EventScene::read_le(&mut buffer).unwrap();
         assert_eq!(
             event_play.actor_id,
             ObjectTypeId {

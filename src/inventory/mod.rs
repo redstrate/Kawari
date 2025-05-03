@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::common::GameData;
 
-use crate::ipc::zone::InventoryModify;
+use crate::ipc::zone::ItemOperation;
 
 mod equipped;
 pub use equipped::EquippedStorage;
@@ -159,7 +159,7 @@ impl Inventory {
         self.equipped.left_ring = Item::new(1, 0x00003b1d);
     }
 
-    pub fn process_action(&mut self, action: &InventoryModify) {
+    pub fn process_action(&mut self, action: &ItemOperation) {
         if action.operation_type == 78 {
             // discard
             let src_container = self.get_container_mut(&action.src_storage_id);

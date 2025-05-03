@@ -4,7 +4,7 @@ use crate::inventory::ContainerType;
 
 #[binrw]
 #[derive(Debug, Clone, Default)]
-pub struct InventoryModify {
+pub struct ItemOperation {
     pub context_id: u32,
     pub operation_type: u8,
 
@@ -42,7 +42,7 @@ mod tests {
         let buffer = read(d).unwrap();
         let mut buffer = Cursor::new(&buffer);
 
-        let modify_inventory = InventoryModify::read_le(&mut buffer).unwrap();
+        let modify_inventory = ItemOperation::read_le(&mut buffer).unwrap();
         assert_eq!(modify_inventory.context_id, 0x10000000);
         assert_eq!(modify_inventory.operation_type, 60);
         assert_eq!(modify_inventory.src_actor_id, 0);

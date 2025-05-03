@@ -16,10 +16,10 @@ use crate::{
     ipc::{
         chat::ServerChatIpcSegment,
         zone::{
-            ActorControlSelf, ActorMove, ActorSetPos, ClientZoneIpcSegment, CommonSpawn,
-            ContainerInfo, DisplayFlag, Equip, InitZone, ItemInfo, NpcSpawn, ObjectKind,
-            PlayerStats, PlayerSubKind, ServerZoneIpcData, ServerZoneIpcSegment, StatusEffect,
-            StatusEffectList, UpdateClassInfo, WeatherChange,
+            ActorControlSelf, ClientZoneIpcSegment, CommonSpawn, ContainerInfo, DisplayFlag, Equip,
+            InitZone, ItemInfo, Move, NpcSpawn, ObjectKind, PlayerStats, PlayerSubKind,
+            ServerZoneIpcData, ServerZoneIpcSegment, StatusEffect, StatusEffectList,
+            UpdateClassInfo, Warp, WeatherChange,
         },
     },
     opcodes::ServerZoneIpcType,
@@ -233,7 +233,7 @@ impl ZoneConnection {
             let ipc = ServerZoneIpcSegment {
                 op_code: ServerZoneIpcType::Warp,
                 timestamp: timestamp_secs(),
-                data: ServerZoneIpcData::Warp(ActorSetPos {
+                data: ServerZoneIpcData::Warp(Warp {
                     position,
                     ..Default::default()
                 }),
@@ -254,7 +254,7 @@ impl ZoneConnection {
         let ipc = ServerZoneIpcSegment {
             op_code: ServerZoneIpcType::Move,
             timestamp: timestamp_secs(),
-            data: ServerZoneIpcData::Move(ActorMove {
+            data: ServerZoneIpcData::Move(Move {
                 rotation,
                 dir_before_slip: 0x7F,
                 flag1: 0,

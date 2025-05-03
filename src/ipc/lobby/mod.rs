@@ -1,18 +1,16 @@
 use binrw::binrw;
 
-mod character_action;
-pub use character_action::{LobbyCharacterAction, LobbyCharacterActionKind};
+mod chara_make;
+pub use chara_make::{CharaMake, LobbyCharacterActionKind};
 
-mod character_list;
-pub use character_list::{CharacterDetails, CharacterFlag, LobbyCharacterList};
-
-mod client_version_info;
+mod service_login_reply;
+pub use service_login_reply::{CharacterDetails, CharacterFlag, ServiceLoginReply};
 
 mod server_list;
-pub use server_list::{LobbyServerList, Server};
+pub use server_list::{DistWorldInfo, Server};
 
-mod service_account_list;
-pub use service_account_list::{LobbyServiceAccountList, ServiceAccount};
+mod login_reply;
+pub use login_reply::{LoginReply, ServiceAccount};
 
 use crate::{
     common::{read_string, write_string},
@@ -120,7 +118,7 @@ pub enum ClientLobbyIpcData {
     },
     /// Sent by the client when they request something about the character (e.g. deletion.)
     #[br(pre_assert(*magic == ClientLobbyIpcType::CharaMake))]
-    CharaMake(LobbyCharacterAction),
+    CharaMake(CharaMake),
 }
 
 #[binrw]
@@ -137,9 +135,9 @@ pub enum ServerLobbyIpcData {
         unk1: u16,
     },
     /// Sent by the server to inform the client of their service accounts.
-    LoginReply(LobbyServiceAccountList),
+    LoginReply(LoginReply),
     /// Sent by the server to inform the client of their characters.
-    ServiceLoginReply(LobbyCharacterList),
+    ServiceLoginReply(ServiceLoginReply),
     // Assumed what this is, but probably incorrect
     CharaMakeReply {
         sequence: u64,
@@ -172,7 +170,7 @@ pub enum ServerLobbyIpcData {
         host: String,
     },
     /// Sent by the server to inform the client of their servers.
-    DistWorldInfo(LobbyServerList),
+    DistWorldInfo(DistWorldInfo),
     /// Sent by the server to inform the client of their retainers.
     DistRetainerInfo {
         // TODO: what is in here?
@@ -196,11 +194,11 @@ mod tests {
         let ipc_types = [
             (
                 ServerLobbyIpcType::LoginReply,
-                ServerLobbyIpcData::LoginReply(LobbyServiceAccountList::default()),
+                ServerLobbyIpcData::LoginReply(LoginReply::default()),
             ),
             (
                 ServerLobbyIpcType::DistWorldInfo,
-                ServerLobbyIpcData::DistWorldInfo(LobbyServerList::default()),
+                ServerLobbyIpcData::DistWorldInfo(DistWorldInfo::default()),
             ),
             (
                 ServerLobbyIpcType::DistRetainerInfo,
@@ -208,7 +206,7 @@ mod tests {
             ),
             (
                 ServerLobbyIpcType::ServiceLoginReply,
-                ServerLobbyIpcData::ServiceLoginReply(LobbyCharacterList::default()),
+                ServerLobbyIpcData::ServiceLoginReply(ServiceLoginReply::default()),
             ),
             (
                 ServerLobbyIpcType::GameLoginReply,

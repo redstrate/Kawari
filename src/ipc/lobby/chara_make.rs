@@ -35,7 +35,7 @@ pub enum LobbyCharacterActionKind {
 
 #[binrw]
 #[derive(Clone, PartialEq, Debug)]
-pub struct LobbyCharacterAction {
+pub struct CharaMake {
     pub sequence: u64,
     pub content_id: u64,
     #[br(pad_before = 8)]

@@ -20,7 +20,7 @@ pub struct Server {
 
 #[binrw]
 #[derive(Debug, Clone, Default)]
-pub struct LobbyServerList {
+pub struct DistWorldInfo {
     pub sequence: u64,
     pub unk1: u16,
     pub offset: u16,

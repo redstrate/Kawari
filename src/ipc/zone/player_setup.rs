@@ -4,7 +4,7 @@ use crate::common::{CHAR_NAME_MAX_LENGTH, read_string, write_string};
 
 #[binrw]
 #[derive(Debug, Clone, Default)]
-pub struct PlayerSetup {
+pub struct PlayerStatus {
     pub content_id: u64,
     pub crest: u64,
     pub unknown10: u64,
@@ -180,7 +180,7 @@ mod tests {
         let buffer = read(d).unwrap();
         let mut buffer = Cursor::new(&buffer);
 
-        let player_setup = PlayerSetup::read_le(&mut buffer).unwrap();
+        let player_setup = PlayerStatus::read_le(&mut buffer).unwrap();
         assert_eq!(player_setup.content_id, 0x004000174c50560d);
         assert_eq!(player_setup.char_id, 0x107476e7);
         assert_eq!(player_setup.name, "Lavenaa Warren");

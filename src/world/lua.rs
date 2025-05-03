@@ -3,8 +3,8 @@ use mlua::{FromLua, Lua, LuaSerdeExt, UserData, UserDataMethods, Value};
 use crate::{
     common::{ObjectId, ObjectTypeId, Position, timestamp_secs, workdefinitions::RemakeMode},
     ipc::zone::{
-        ActionEffect, ActorSetPos, DamageElement, DamageKind, DamageType, EffectKind, EventPlay,
-        ServerZoneIpcData, ServerZoneIpcSegment,
+        ActionEffect, DamageElement, DamageKind, DamageType, EffectKind, EventScene,
+        ServerZoneIpcData, ServerZoneIpcSegment, Warp,
     },
     opcodes::ServerZoneIpcType,
     packet::{PacketSegment, SegmentData, SegmentType},
@@ -60,7 +60,7 @@ impl LuaPlayer {
             op_code: ServerZoneIpcType::EventScene,
             option: 0,
             timestamp: timestamp_secs(),
-            data: ServerZoneIpcData::EventScene(EventPlay {
+            data: ServerZoneIpcData::EventScene(EventScene {
                 actor_id: ObjectTypeId {
                     object_id: ObjectId(self.player_data.actor_id),
                     object_type: 0,
@@ -85,7 +85,7 @@ impl LuaPlayer {
         let ipc = ServerZoneIpcSegment {
             op_code: ServerZoneIpcType::Warp,
             timestamp: timestamp_secs(),
-            data: ServerZoneIpcData::Warp(ActorSetPos {
+            data: ServerZoneIpcData::Warp(Warp {
                 position,
                 ..Default::default()
             }),

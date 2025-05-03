@@ -4,7 +4,7 @@ use crate::common::Position;
 
 #[binrw]
 #[derive(Debug, Clone, Default)]
-pub struct ActorSetPos {
+pub struct Warp {
     pub dir: u16,
     pub warp_type: u8,
     pub warp_type_arg: u8,

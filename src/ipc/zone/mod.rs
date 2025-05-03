@@ -18,7 +18,7 @@ mod update_class_info;
 pub use update_class_info::UpdateClassInfo;
 
 mod player_setup;
-pub use player_setup::PlayerSetup;
+pub use player_setup::PlayerStatus;
 
 mod player_stats;
 pub use player_stats::PlayerStats;
@@ -53,8 +53,8 @@ pub use container_info::ContainerInfo;
 mod item_info;
 pub use item_info::ItemInfo;
 
-mod event_play;
-pub use event_play::EventPlay;
+mod event_scene;
+pub use event_scene::EventScene;
 
 mod event_start;
 pub use event_start::EventStart;
@@ -64,14 +64,14 @@ pub use action_result::{
     ActionEffect, ActionResult, DamageElement, DamageKind, DamageType, EffectKind,
 };
 
-mod actor_move;
-pub use actor_move::ActorMove;
+mod r#move;
+pub use r#move::Move;
 
-mod actor_set_pos;
-pub use actor_set_pos::ActorSetPos;
+mod warp;
+pub use warp::Warp;
 
-mod inventory_modify;
-pub use inventory_modify::InventoryModify;
+mod item_operation;
+pub use item_operation::ItemOperation;
 
 mod equip;
 pub use equip::Equip;
@@ -159,7 +159,7 @@ pub enum ServerZoneIpcData {
     /// Sent by the server containing character stats
     PlayerStats(PlayerStats),
     /// Sent by the server to setup the player on the client
-    PlayerStatus(PlayerSetup),
+    PlayerStatus(PlayerStatus),
     /// Sent by the server to setup class info
     UpdateClassInfo(UpdateClassInfo),
     /// Sent by the server to spawn the player in
@@ -170,7 +170,7 @@ pub enum ServerZoneIpcData {
         unk: [u8; 8],
     },
     /// Sent by the server to modify the client's position
-    Warp(ActorSetPos),
+    Warp(Warp),
     /// Sent by the server when they send a chat message
     ServerChatMessage {
         unk: u8, // channel?
@@ -187,7 +187,7 @@ pub enum ServerZoneIpcData {
     /// Sent by the server
     ActorControl(ActorControl),
     /// Sent by the server
-    Move(ActorMove),
+    Move(Move),
     /// Sent by the server in response to SocialListRequest
     SocialList(SocialList),
     /// Sent by the server to spawn an NPC
@@ -201,7 +201,7 @@ pub enum ServerZoneIpcData {
     /// Sent to inform the client of container status
     ContainerInfo(ContainerInfo),
     /// Sent to tell the client to play a scene
-    EventScene(EventPlay),
+    EventScene(EventScene),
     /// Sent to tell the client to load a scene, but not play it
     EventStart(EventStart),
     /// Sent to update an actor's hp & mp values
@@ -308,7 +308,7 @@ pub enum ClientZoneIpcData {
     ChatMessage(ChatMessage),
     /// Sent by the client when they send a GM command. This can only be sent by the client if they are sent a GM rank.
     #[br(pre_assert(*magic == ClientZoneIpcType::GMCommand))]
-    GameMasterCommand {
+    GMCommand {
         #[brw(pad_after = 3)] // padding
         command: GameMasterCommandType,
         arg0: u32,
@@ -353,7 +353,7 @@ pub enum ClientZoneIpcData {
         unk: [u8; 16], // TODO: unknown
     },
     #[br(pre_assert(*magic == ClientZoneIpcType::ItemOperation))]
-    ItemOperation(InventoryModify),
+    ItemOperation(ItemOperation),
 }
 
 #[cfg(test)]
@@ -392,7 +392,7 @@ mod tests {
             ),
             (
                 ServerZoneIpcType::PlayerStatus,
-                ServerZoneIpcData::PlayerStatus(PlayerSetup::default()),
+                ServerZoneIpcData::PlayerStatus(PlayerStatus::default()),
             ),
             (
                 ServerZoneIpcType::UpdateClassInfo,
@@ -408,7 +408,7 @@ mod tests {
             ),
             (
                 ServerZoneIpcType::Warp,
-                ServerZoneIpcData::Warp(ActorSetPos::default()),
+                ServerZoneIpcData::Warp(Warp::default()),
             ),
             (
                 ServerZoneIpcType::ServerChatMessage,
@@ -427,7 +427,7 @@ mod tests {
             ),
             (
                 ServerZoneIpcType::Move,
-                ServerZoneIpcData::Move(ActorMove::default()),
+                ServerZoneIpcData::Move(Move::default()),
             ),
             (
                 ServerZoneIpcType::NpcSpawn,
@@ -451,7 +451,7 @@ mod tests {
             ),
             (
                 ServerZoneIpcType::EventScene,
-                ServerZoneIpcData::EventScene(EventPlay::default()),
+                ServerZoneIpcData::EventScene(EventScene::default()),
             ),
             (
                 ServerZoneIpcType::EventStart,
