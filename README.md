@@ -34,4 +34,4 @@ Pull requests for new features, patch updates, and documentation are welcome. A 
 
 ## License
 
-This project is licensed under the [GNU Affero General Public License 3](https://github.com/redstrate/Kawari/blob/master/LICENSE). Some code or assets may be licensed differently.
+This project is licensed under the [GNU Affero General Public License 3](LICENSE). Some code or assets may be licensed differently.
