@@ -282,15 +282,13 @@ impl ZoneConnection {
         common.spawn_index = actor.spawn_index as u8;
 
         let ipc = ServerZoneIpcSegment {
-            unk1: 20,
-            unk2: 0,
             op_code: ServerZoneIpcType::NpcSpawn,
-            option: 0,
             timestamp: timestamp_secs(),
             data: ServerZoneIpcData::NpcSpawn(NpcSpawn {
                 common,
                 ..Default::default()
             }),
+            ..Default::default()
         };
 
         self.send_segment(PacketSegment {
@@ -309,15 +307,13 @@ impl ZoneConnection {
             tracing::info!("Removing actor {actor_id} {}!", actor.spawn_index);
 
             let ipc = ServerZoneIpcSegment {
-                unk1: 20,
-                unk2: 0,
                 op_code: ServerZoneIpcType::Delete,
-                option: 0,
                 timestamp: timestamp_secs(),
                 data: ServerZoneIpcData::Delete {
                     spawn_index: actor.spawn_index as u8,
                     actor_id,
                 },
+                ..Default::default()
             };
 
             self.send_segment(PacketSegment {

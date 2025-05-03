@@ -29,6 +29,19 @@ impl ReadWriteIpcSegment for CustomIpcSegment {
     }
 }
 
+impl Default for CustomIpcSegment {
+    fn default() -> Self {
+        Self {
+            unk1: 0,
+            unk2: 0,
+            op_code: CustomIpcType::GetActorId,
+            option: 0,
+            timestamp: 0,
+            data: CustomIpcData::GetActorId { content_id: 0 },
+        }
+    }
+}
+
 #[binrw]
 #[brw(repr = u16)]
 #[derive(Default, Clone, PartialEq, Debug)]

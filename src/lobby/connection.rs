@@ -88,12 +88,10 @@ impl LobbyConnection {
         });
 
         let ipc = ServerLobbyIpcSegment {
-            unk1: 0,
-            unk2: 0,
             op_code: ServerLobbyIpcType::LoginReply,
-            option: 0,
             timestamp: timestamp_secs(),
             data: service_account_list,
+            ..Default::default()
         };
 
         self.send_segment(PacketSegment {
@@ -113,10 +111,8 @@ impl LobbyConnection {
 
             let mut servers = [Server {
                 id: config.world.world_id,
-                index: 0,
-                flags: 0,
-                icon: 0,
                 name: self.world_name.clone(),
+                ..Default::default()
             }]
             .to_vec();
             // add any empty boys
@@ -125,18 +121,16 @@ impl LobbyConnection {
             let lobby_server_list = ServerLobbyIpcData::DistWorldInfo(DistWorldInfo {
                 sequence: 0,
                 unk1: 1,
-                offset: 0,
                 num_servers: 1,
                 servers,
+                ..Default::default()
             });
 
             let ipc = ServerLobbyIpcSegment {
-                unk1: 0,
-                unk2: 0,
                 op_code: ServerLobbyIpcType::DistWorldInfo,
-                option: 0,
                 timestamp: timestamp_secs(),
                 data: lobby_server_list,
+                ..Default::default()
             };
 
             let response_packet = PacketSegment {
@@ -152,12 +146,10 @@ impl LobbyConnection {
             let lobby_retainer_list = ServerLobbyIpcData::DistRetainerInfo { unk1: 1 };
 
             let ipc = ServerLobbyIpcSegment {
-                unk1: 0,
-                unk2: 0,
                 op_code: ServerLobbyIpcType::DistRetainerInfo,
-                option: 0,
                 timestamp: timestamp_secs(),
                 data: lobby_retainer_list,
+                ..Default::default()
             };
 
             let response_packet = PacketSegment {
@@ -180,14 +172,11 @@ impl LobbyConnection {
         // now send them the character list
         {
             let charlist_request = CustomIpcSegment {
-                unk1: 0,
-                unk2: 0,
                 op_code: CustomIpcType::RequestCharacterList,
-                option: 0,
-                timestamp: 0,
                 data: CustomIpcData::RequestCharacterList {
                     service_account_id: self.selected_service_account.unwrap(),
                 },
+                ..Default::default()
             };
 
             let name_response = send_custom_world_packet(charlist_request)
@@ -214,14 +203,7 @@ impl LobbyConnection {
                         sequence,
                         counter: (i * 4) + 1, // TODO: why the + 1 here?
                         num_in_packet: characters_in_packet.len() as u8,
-                        unk1: 0,
-                        unk2: 0,
-                        unk3: 0,
                         unk4: 128,
-                        unk5: [0; 7],
-                        unk6: 0,
-                        veteran_rank: 0,
-                        unk7: 0,
                         days_subscribed: 30,
                         remaining_days: 30,
                         days_to_next_rank: 0,
@@ -229,37 +211,23 @@ impl LobbyConnection {
                         max_characters_on_world: 8,
                         entitled_expansion: 5,
                         characters: characters_in_packet,
+                        ..Default::default()
                     }
                 } else {
                     ServiceLoginReply {
                         sequence,
                         counter: i * 4,
                         num_in_packet: characters_in_packet.len() as u8,
-                        unk1: 0,
-                        unk2: 0,
-                        unk3: 0,
-                        unk4: 0,
-                        unk5: [0; 7],
-                        unk6: 0,
-                        veteran_rank: 0,
-                        unk7: 0,
-                        days_subscribed: 0,
-                        remaining_days: 0,
-                        days_to_next_rank: 0,
-                        max_characters_on_world: 0,
-                        unk8: 0,
-                        entitled_expansion: 0,
                         characters: characters_in_packet,
+                        ..Default::default()
                     }
                 };
 
                 let ipc = ServerLobbyIpcSegment {
-                    unk1: 0,
-                    unk2: 0,
                     op_code: ServerLobbyIpcType::ServiceLoginReply,
-                    option: 0,
                     timestamp: timestamp_secs(),
                     data: ServerLobbyIpcData::ServiceLoginReply(lobby_character_list),
+                    ..Default::default()
                 };
 
                 self.send_segment(PacketSegment {
@@ -286,12 +254,10 @@ impl LobbyConnection {
         };
 
         let ipc = ServerLobbyIpcSegment {
-            unk1: 0,
-            unk2: 0,
             op_code: ServerLobbyIpcType::GameLoginReply,
-            option: 0,
             timestamp: timestamp_secs(),
             data: enter_world,
+            ..Default::default()
         };
 
         self.send_segment(PacketSegment {
@@ -313,12 +279,10 @@ impl LobbyConnection {
         };
 
         let ipc = ServerLobbyIpcSegment {
-            unk1: 0,
-            unk2: 0,
             op_code: ServerLobbyIpcType::NackReply,
-            option: 0,
             timestamp: timestamp_secs(),
             data: lobby_error,
+            ..Default::default()
         };
 
         self.send_segment(PacketSegment {
@@ -339,14 +303,11 @@ impl LobbyConnection {
 
                 // check with the world server if the name is available
                 let name_request = CustomIpcSegment {
-                    unk1: 0,
-                    unk2: 0,
                     op_code: CustomIpcType::CheckNameIsAvailable,
-                    option: 0,
-                    timestamp: 0,
                     data: CustomIpcData::CheckNameIsAvailable {
                         name: character_action.name.clone(),
                     },
+                    ..Default::default()
                 };
 
                 let name_response = send_custom_world_packet(name_request)
@@ -362,11 +323,7 @@ impl LobbyConnection {
                     self.stored_character_creation_name = character_action.name.clone();
 
                     let ipc = ServerLobbyIpcSegment {
-                        unk1: 0,
-                        unk2: 0,
                         op_code: ServerLobbyIpcType::CharaMakeReply,
-                        option: 0,
-                        timestamp: 0,
                         data: ServerLobbyIpcData::CharaMakeReply {
                             sequence: character_action.sequence + 1,
                             unk1: 0x1,
@@ -379,6 +336,7 @@ impl LobbyConnection {
                                 ..Default::default()
                             },
                         },
+                        ..Default::default()
                     };
 
                     self.send_segment(PacketSegment {
@@ -389,11 +347,7 @@ impl LobbyConnection {
                     .await;
                 } else {
                     let ipc = ServerLobbyIpcSegment {
-                        unk1: 0,
-                        unk2: 0,
                         op_code: ServerLobbyIpcType::NackReply,
-                        option: 0,
-                        timestamp: 0,
                         data: ServerLobbyIpcData::NackReply {
                             sequence: character_action.sequence,
                             error: 0x00000bdb,
@@ -401,6 +355,7 @@ impl LobbyConnection {
                             value: 0,
                             unk1: 0,
                         },
+                        ..Default::default()
                     };
 
                     let response_packet = PacketSegment {
@@ -420,16 +375,13 @@ impl LobbyConnection {
                 // tell the world server to create this character
                 {
                     let ipc_segment = CustomIpcSegment {
-                        unk1: 0,
-                        unk2: 0,
                         op_code: CustomIpcType::RequestCreateCharacter,
-                        option: 0,
-                        timestamp: 0,
                         data: CustomIpcData::RequestCreateCharacter {
                             service_account_id: self.selected_service_account.unwrap(),
                             name: self.stored_character_creation_name.clone(), // TODO: worth double-checking, but AFAIK we have to store it this way?
                             chara_make_json: character_action.json.clone(),
                         },
+                        ..Default::default()
                     };
 
                     let response_segment = send_custom_world_packet(ipc_segment).await.unwrap();
@@ -452,11 +404,7 @@ impl LobbyConnection {
                 // a slightly different character created packet now
                 {
                     let ipc = ServerLobbyIpcSegment {
-                        unk1: 0,
-                        unk2: 0,
                         op_code: ServerLobbyIpcType::CharaMakeReply,
-                        option: 0,
-                        timestamp: 0,
                         data: ServerLobbyIpcData::CharaMakeReply {
                             sequence: character_action.sequence + 1,
                             unk1: 0x1,
@@ -471,6 +419,7 @@ impl LobbyConnection {
                                 ..Default::default()
                             },
                         },
+                        ..Default::default()
                     };
 
                     self.send_segment(PacketSegment {
@@ -486,14 +435,11 @@ impl LobbyConnection {
                 // tell the world server to yeet this guy
                 {
                     let ipc_segment = CustomIpcSegment {
-                        unk1: 0,
-                        unk2: 0,
                         op_code: CustomIpcType::DeleteCharacter,
-                        option: 0,
-                        timestamp: 0,
                         data: CustomIpcData::DeleteCharacter {
                             content_id: character_action.content_id,
                         },
+                        ..Default::default()
                     };
 
                     let _ = send_custom_world_packet(ipc_segment).await.unwrap();
@@ -504,11 +450,7 @@ impl LobbyConnection {
                 // send a confirmation that the deletion was successful
                 {
                     let ipc = ServerLobbyIpcSegment {
-                        unk1: 0,
-                        unk2: 0,
                         op_code: ServerLobbyIpcType::CharaMakeReply,
-                        option: 0,
-                        timestamp: 0,
                         data: ServerLobbyIpcData::CharaMakeReply {
                             sequence: character_action.sequence + 1,
                             unk1: 0x1,
@@ -523,6 +465,7 @@ impl LobbyConnection {
                                 ..Default::default()
                             },
                         },
+                        ..Default::default()
                     };
 
                     self.send_segment(PacketSegment {
@@ -539,15 +482,12 @@ impl LobbyConnection {
                 // tell the world server to turn this guy into a catgirl
                 {
                     let ipc_segment = CustomIpcSegment {
-                        unk1: 0,
-                        unk2: 0,
                         op_code: CustomIpcType::RemakeCharacter,
-                        option: 0,
-                        timestamp: 0,
                         data: CustomIpcData::RemakeCharacter {
                             content_id: character_action.content_id,
                             chara_make_json: character_action.json.clone(),
                         },
+                        ..Default::default()
                     };
 
                     let _ = send_custom_world_packet(ipc_segment).await.unwrap();
@@ -558,11 +498,7 @@ impl LobbyConnection {
                 // send a confirmation that the remakewas successful
                 {
                     let ipc = ServerLobbyIpcSegment {
-                        unk1: 0,
-                        unk2: 0,
                         op_code: ServerLobbyIpcType::CharaMakeReply,
-                        option: 0,
-                        timestamp: 0,
                         data: ServerLobbyIpcData::CharaMakeReply {
                             sequence: character_action.sequence + 1,
                             unk1: 0x1,
@@ -577,6 +513,7 @@ impl LobbyConnection {
                                 ..Default::default()
                             },
                         },
+                        ..Default::default()
                     };
 
                     self.send_segment(PacketSegment {

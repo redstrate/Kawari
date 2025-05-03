@@ -913,15 +913,12 @@ async fn client_loop(
                                                     segment_type: SegmentType::KawariIpc,
                                                     data: SegmentData::KawariIpc {
                                                         data: CustomIpcSegment {
-                                                            unk1: 0,
-                                                            unk2: 0,
                                                             op_code: CustomIpcType::CharacterCreated,
-                                                            option: 0,
-                                                            timestamp: 0,
                                                             data: CustomIpcData::CharacterCreated {
                                                                 actor_id,
                                                                 content_id,
                                                             },
+                                                            ..Default::default()
                                                         },
                                                     },
                                                     ..Default::default()
@@ -941,12 +938,9 @@ async fn client_loop(
                                                     segment_type: SegmentType::KawariIpc,
                                                     data: SegmentData::KawariIpc {
                                                         data: CustomIpcSegment {
-                                                            unk1: 0,
-                                                            unk2: 0,
                                                             op_code: CustomIpcType::ActorIdFound,
-                                                            option: 0,
-                                                            timestamp: 0,
                                                             data: CustomIpcData::ActorIdFound { actor_id },
+                                                            ..Default::default()
                                                         },
                                                     },
                                                     ..Default::default()
@@ -964,14 +958,11 @@ async fn client_loop(
                                                     segment_type: SegmentType::KawariIpc,
                                                     data: SegmentData::KawariIpc {
                                                         data: CustomIpcSegment {
-                                                            unk1: 0,
-                                                            unk2: 0,
                                                             op_code: CustomIpcType::NameIsAvailableResponse,
-                                                            option: 0,
-                                                            timestamp: 0,
                                                             data: CustomIpcData::NameIsAvailableResponse {
                                                                 free: is_name_free,
                                                             },
+                                                            ..Default::default()
                                                         },
                                                     },
                                                     ..Default::default()
@@ -1011,14 +1002,11 @@ async fn client_loop(
                                                             segment_type: SegmentType::KawariIpc,
                                                             data: SegmentData::KawariIpc {
                                                                 data: CustomIpcSegment {
-                                                                    unk1: 0,
-                                                                    unk2: 0,
                                                                     op_code: CustomIpcType::RequestCharacterListRepsonse,
-                                                                    option: 0,
-                                                                    timestamp: 0,
                                                                     data: CustomIpcData::RequestCharacterListRepsonse {
                                                                         characters
                                                                     },
+                                                                    ..Default::default()
                                                                 },
                                                             },
                                                             ..Default::default()
@@ -1041,14 +1029,11 @@ async fn client_loop(
                                                     segment_type: SegmentType::KawariIpc,
                                                     data: SegmentData::KawariIpc {
                                                         data: CustomIpcSegment {
-                                                            unk1: 0,
-                                                            unk2: 0,
                                                             op_code: CustomIpcType::CharacterDeleted,
-                                                            option: 0,
-                                                            timestamp: 0,
                                                             data: CustomIpcData::CharacterDeleted {
                                                                 deleted: 1,
                                                             },
+                                                            ..Default::default()
                                                         },
                                                     },
                                                     ..Default::default()
@@ -1078,14 +1063,11 @@ async fn client_loop(
                                                     segment_type: SegmentType::KawariIpc,
                                                     data: SegmentData::KawariIpc {
                                                         data: CustomIpcSegment {
-                                                            unk1: 0,
-                                                            unk2: 0,
                                                             op_code: CustomIpcType::CharacterRemade,
-                                                            option: 0,
-                                                            timestamp: 0,
                                                             data: CustomIpcData::CharacterRemade {
                                                                 content_id: *content_id,
                                                             },
+                                                            ..Default::default()
                                                         },
                                                     },
                                                     ..Default::default()

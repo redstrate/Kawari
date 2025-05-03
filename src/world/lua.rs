@@ -55,10 +55,7 @@ impl LuaPlayer {
 
     fn play_scene(&mut self, event_id: u32, scene: u16, scene_flags: u32, param: u8) {
         let ipc = ServerZoneIpcSegment {
-            unk1: 20,
-            unk2: 0,
             op_code: ServerZoneIpcType::EventScene,
-            option: 0,
             timestamp: timestamp_secs(),
             data: ServerZoneIpcData::EventScene(EventScene {
                 actor_id: ObjectTypeId {
@@ -71,6 +68,7 @@ impl LuaPlayer {
                 unk2: param,
                 ..Default::default()
             }),
+            ..Default::default()
         };
 
         self.queue_segment(PacketSegment {

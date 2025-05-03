@@ -129,10 +129,7 @@ impl ChatHandler {
                 // zone in
                 {
                     let ipc = ServerZoneIpcSegment {
-                        unk1: 20,
-                        unk2: 0,
                         op_code: ServerZoneIpcType::ActorControl,
-                        option: 0,
                         timestamp: timestamp_secs(),
                         data: ServerZoneIpcData::ActorControl(ActorControl {
                             category: ActorControlCategory::ZoneIn {
@@ -140,6 +137,7 @@ impl ChatHandler {
                                 raise_anim: 0x0,
                             },
                         }),
+                        ..Default::default()
                     };
 
                     connection
@@ -154,10 +152,7 @@ impl ChatHandler {
             }
             "!spawnnpc" => {
                 let ipc = ServerZoneIpcSegment {
-                    unk1: 20,
-                    unk2: 0,
                     op_code: ServerZoneIpcType::NpcSpawn,
-                    option: 0,
                     timestamp: timestamp_secs(),
                     data: ServerZoneIpcData::NpcSpawn(NpcSpawn {
                         common: CommonSpawn {
@@ -192,6 +187,7 @@ impl ChatHandler {
                         },
                         ..Default::default()
                     }),
+                    ..Default::default()
                 };
 
                 connection
@@ -209,10 +205,7 @@ impl ChatHandler {
                 // spawn a tiny mandragora
                 {
                     let ipc = ServerZoneIpcSegment {
-                        unk1: 20,
-                        unk2: 0,
                         op_code: ServerZoneIpcType::NpcSpawn,
-                        option: 0,
                         timestamp: timestamp_secs(),
                         data: ServerZoneIpcData::NpcSpawn(NpcSpawn {
                             aggression_mode: 1,
@@ -233,6 +226,7 @@ impl ChatHandler {
                             },
                             ..Default::default()
                         }),
+                        ..Default::default()
                     };
 
                     connection
@@ -258,10 +252,7 @@ impl ChatHandler {
                 // Load the game script for this event on the client
                 {
                     let ipc = ServerZoneIpcSegment {
-                        unk1: 20,
-                        unk2: 0,
                         op_code: ServerZoneIpcType::EventStart,
-                        option: 0,
                         timestamp: timestamp_secs(),
                         data: ServerZoneIpcData::EventStart(EventStart {
                             target_id: ObjectTypeId {
@@ -273,6 +264,7 @@ impl ChatHandler {
                             flags: 0,
                             event_arg: 182, // zone?
                         }),
+                        ..Default::default()
                     };
 
                     connection
@@ -288,16 +280,14 @@ impl ChatHandler {
                 // set our status icon to viewing cutscene
                 {
                     let ipc = ServerZoneIpcSegment {
-                        unk1: 20,
-                        unk2: 0,
                         op_code: ServerZoneIpcType::ActorControl,
-                        option: 0,
                         timestamp: timestamp_secs(),
                         data: ServerZoneIpcData::ActorControl(ActorControl {
                             category: ActorControlCategory::SetStatusIcon {
                                 icon: OnlineStatus::ViewingCutscene,
                             },
                         }),
+                        ..Default::default()
                     };
 
                     connection
@@ -333,15 +323,13 @@ impl ChatHandler {
                 common.spawn_index = connection.get_free_spawn_index();
 
                 let ipc = ServerZoneIpcSegment {
-                    unk1: 20,
-                    unk2: 0,
                     op_code: ServerZoneIpcType::NpcSpawn,
-                    option: 0,
                     timestamp: timestamp_secs(),
                     data: ServerZoneIpcData::NpcSpawn(NpcSpawn {
                         common,
                         ..Default::default()
                     }),
+                    ..Default::default()
                 };
 
                 connection
