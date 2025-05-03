@@ -34,6 +34,20 @@ game_location: /path/to/gamedir/
 
 More configuration options can be found in `config.rs`, such as changing the ports services run on. If you plan on just running it locally for yourself, you don't need to set anything else.
 
+Kawari is made up of multiple executables, to simplify running we have a script to start all of them.
+
+### Windows
+
+Double-click `run.bat`.
+
+### Linux
+
+Run `run.sh` in a terminal.
+
+### Development
+
+Run `scripts/run.sh`.
+
 ## Reverse proxy setup
 
 Kawari isn't very useful unless it's addressable to a launcher. We provide a sample Caddyfile reverse proxy setup for this:
