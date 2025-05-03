@@ -32,11 +32,7 @@ Afterwards, create a `config.yaml` in the current directory. Currently the minim
 game_location: /path/to/gamedir/
 ```
 
-More configuration options can be found in `config.rs`, such as changing the ports services run on. Finally, run Kawari with the helper script:
-
-```shell
-$ ./scripts/run.sh
-```
+More configuration options can be found in `config.rs`, such as changing the ports services run on. If you plan on just running it locally for yourself, you don't need to set anything else.
 
 ## Reverse proxy setup
 
@@ -46,35 +42,11 @@ Kawari isn't very useful unless it's addressable to a launcher. We provide a sam
 $ caddy run --config resources/Caddyfile
 ```
 
-This Caddyfile hosts several domains, most notably `ffxiv.localhost`, on port 80. If you get a "permission denied" error starting Caddy, you must either start Caddy with elevated privileges (`sudo`) or set the `CAP_NET_BIND_SERVICE` capability. See [here](https://caddyserver.com/docs/quick-starts/caddyfile) for more information on how to do this.
+This Caddyfile hosts several domains required for normal operation, most notably `ffxiv.localhost`, on port 80. If you get a "permission denied" error starting Caddy, you must either start Caddy with elevated privileges (`sudo`) or set the `CAP_NET_BIND_SERVICE` capability. See [here](https://caddyserver.com/docs/quick-starts/caddyfile) for more information on how to do this.
 
 ## Logging in
 
-### Account Setup
-
-You need to create an account first, which can be done on http://ffxiv.localhost/. Then you can login with any of the following methods:
-
-### Astra
-
-[Astra](https://github.com/redstrate/Astra) is the only launcher known to fully implement the login process, and it requires compiling the unreleased master branch. **If you don't know what any of that means, then wait for a new release of Astra before trying Kawari.**
-
-1. Enable "Developer Settings" under "General".
-2. Under "Developer Settings", enter the addresses of your servers in the section indicated below. If you used the default Caddy setup, tapping the "Set to localhost" button will fill these fields for you with the correct addresses.
-3. In "Game Server" and "Game Server Port", set it to "127.0.0.1" and "7000" respectively. This is the address and port of your **Lobby** server.
-
-Any username and password combination will work, as there is no actual login database yet. In the client, make sure to select the **Aether data center**.
-
-### Manual
-
-Advanced users can specify required command line arguments directly to the game executable. This skips most of the Kawari login process and should only be used as a last resort. You also need a valid SID, which you can get by logging in through http://ffxiv.localhost and grabbing your `cis_sessid` cookie.
-
-In this example, lobby number 4 will replace the **Aether data center**, but the other data centers will still try (and fail) to connect.
-
-* `DEV.LobbyHost04=127.0.0.1`
-* `DEV.LobbyPort04=7000`
-* `DEV.TestSID=your_cis_sessid`
-
-Some other launchers (like XIVLauncher) will allow you to specify these extra arguments, but they will still authenticate to the retail servers. You can still connect to Kawari with this way, but **make sure to specify your own session ID, or your retail account's session ID will be sent to the lobby server**!
+Navigate to [http://ffxiv.localhost](http://ffxiv.localhost), and register for an account. In order to actually log in, navigate to the Setup page and follow the instructions there.
 
 ## Importing characters from retail
 
