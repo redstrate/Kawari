@@ -1,3 +1,4 @@
+use axum::extract::Query;
 use axum::response::Html;
 use axum::{Router, routing::get};
 use kawari::config::get_config;
@@ -37,6 +38,18 @@ fn setup_default_environment() -> Environment<'static> {
             .expect("Failed to find template!"),
     )
     .unwrap();
+    env.add_template_owned(
+        "setup.html",
+        std::fs::read_to_string("resources/templates/setup.html")
+            .expect("Failed to find template!"),
+    )
+    .unwrap();
+    env.add_template_owned(
+        "launchertweaks.toml",
+        std::fs::read_to_string("resources/templates/launchertweaks.toml")
+            .expect("Failed to find template!"),
+    )
+    .unwrap();
 
     env
 }
@@ -70,6 +83,28 @@ async fn world_status() -> Html<String> {
     )
 }
 
+async fn setup() -> Html<String> {
+    let environment = setup_default_environment();
+    let template = environment.get_template("setup.html").unwrap();
+    Html(template.render({}).unwrap())
+}
+
+#[derive(Deserialize)]
+#[allow(dead_code)]
+struct Params {
+    r#type: String,
+}
+
+async fn launcher_config(Query(params): Query<Params>) -> String {
+    let config = get_config();
+
+    let environment = setup_default_environment();
+    let template = environment.get_template("launchertweaks.toml").unwrap();
+    template
+            .render(context! { launcher_url => config.launcher.server_name, enable_webview2 => if params.r#type == "webview2" { false } else { true }, game_patch_server => config.patch.game_server_name, boot_patch_server => config.patch.boot_server_name, lobby_port => config.lobby.port })
+            .unwrap()
+}
+
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
@@ -77,6 +112,8 @@ async fn main() {
     let app = Router::new()
         .route("/", get(root))
         .route("/worldstatus", get(world_status))
+        .route("/setup", get(setup))
+        .route("/launcherconfig", get(launcher_config))
         .nest_service("/static", ServeDir::new("resources/static"));
 
     let config = get_config();

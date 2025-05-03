@@ -1,0 +1,7 @@
+launcher_url = "http://{{ launcher_url }}/v700/"
+disable_webview2_install = {{ enable_webview2 }}
+disable_boot_version_check = true
+force_http = true
+game_patch_server = "{{ game_patch_server }}"
+boot_patch_server = "{{ boot_patch_server }}"
+extra_game_arguments = " /DEV.LobbyHost04 =127.0.0.1 /DEV.LobbyPort04 ={{ lobby_port }}"

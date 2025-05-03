@@ -132,6 +132,8 @@ pub struct PatchConfig {
     /// ...
     /// ```
     pub patches_location: String,
+    pub game_server_name: String,
+    pub boot_server_name: String,
 }
 
 impl Default for PatchConfig {
@@ -141,6 +143,8 @@ impl Default for PatchConfig {
             listen_address: "127.0.0.1".to_string(),
             patch_dl_url: "patch-dl.ffxiv.localhost".to_string(),
             patches_location: String::new(),
+            boot_server_name: "patch-bootver.ffxiv.localhost".to_string(),
+            game_server_name: "patch-gamever.ffxiv.localhost".to_string(),
         }
     }
 }
@@ -284,6 +288,7 @@ impl WorldConfig {
 pub struct LauncherConfig {
     pub port: u16,
     pub listen_address: String,
+    pub server_name: String,
 }
 
 impl Default for LauncherConfig {
@@ -291,6 +296,7 @@ impl Default for LauncherConfig {
         Self {
             port: 5802,
             listen_address: "127.0.0.1".to_string(),
+            server_name: "launcher.ffxiv.localhost".to_string(),
         }
     }
 }

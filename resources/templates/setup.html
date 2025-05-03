@@ -1,0 +1,20 @@
+{% extends "web_base.html" %}
+
+{% block title %}Kawari - Setup{% endblock %}
+
+{% block webbody %}
+<section class="py-5 text-center container">
+    <h2>Official Launcher</h2>
+
+    <p>First, download <a href="https://github.com/redstrate/LauncherTweaks">LauncherTweaks</a> and place the <code>winmm.dll</code> next to <code>ffxivboot64.exe</code>. Download the config below, and place it in the same folder.</p>
+
+    <p><a href="/launcherconfig?type=webview2" download="launchertweaks.toml" class="btn btn-primary">Download Config (WebView2)</a></p>
+    <p><a href="/launcherconfig?type=ie11" download="launchertweaks.toml" class="btn btn-secondary">Download Config (IE)</a></p>
+
+    <p><small>If you're using Linux and have problems with WebView2, download the "IE" config. If you don't know what this means, then download the WebView2 config.</small></p>
+
+    <h2>Astra</h2>
+
+    <p>Instructions coming soon!</p>
+</section>
+{% endblock %}
