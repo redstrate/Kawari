@@ -58,6 +58,9 @@ jobs:
       run: cargo clippy --features oodle
     - name: Run tests
       run: cargo test --verbose --features oodle
+    - name: Prepare Artifacts
+      run: |
+        mv target/release/* .
     - name: Archive artifacts
       uses: actions/upload-artifact@v4
       with:
@@ -67,15 +70,16 @@ jobs:
           USAGE.md
           README.md
           Caddyfile
-          target/release/kawari-admin*
-          target/release/kawari-frontier*
-          target/release/kawari-lobby*
-          target/release/kawari-login*
-          target/release/kawari-patch*
-          target/release/kawari-web*
-          target/release/kawari-world*
-          target/release/kawari-launcher*
-          !target/release/*.d
+          kawari-admin*
+          kawari-frontier*
+          kawari-lobby*
+          kawari-login*
+          kawari-patch*
+          kawari-web*
+          kawari-world*
+          kawari-launcher*
+          kawari-savedatabank*
+          !*.d
           resources/
           !resources/tests
           !resources/opcodes.json
