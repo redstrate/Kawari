@@ -11,12 +11,13 @@
 
         <input type="button" value="System Info" onclick="window.external.user('systemInfo');" />
         <input type="button" value="Play" onclick="window.external.user('startPlay');" />
-        <input type="button" value="Login" onclick="window.external.user('login=auth,ok,sid,{session_id},terms,1,region,2,etmadd,0,playable,1,ps3pkg,0,maxex,5,product,1');" />
-        <input type="button" value="Login Error" onclick="window.external.user('login=auth,ng,err,The data has already been sent.rnIf the screen still has not displayed after waiting a few moments, please refresh the page on your browser.');" />
+        <input type="button" value="Login" onclick="window.external.user('login=auth,ok,sid,9001,terms,1,region,2,etmadd,0,playable,1,ps3pkg,0,maxex,5,product,1');" />
+        <input type="button" value="Login Error" onclick="window.external.user('login=auth,ng,err,Test error.');" />
         <input type="button" value="Exit" onclick="window.external.user('requestExit');" />
         <input type="button" value="Reboot" onclick="window.external.user('requestReboot');" />
         <input type="button" value="Open Google" onclick="window.external.user('link=https://google.com/');" />
         <input type="button" value="Accept EULA" onclick="window.external.user('eulaOk');" />
+        <input type="button" value="Accept Ex EULA" onclick="window.external.user('eulaExOk');" />
         <input type="button" value="Disable DX11" onclick="window.external.user('config=dx11enabled=0');" />
         <input type="button" value="Enable DX11" onclick="window.external.user('config=dx11enabled=1');" />
         <input type="button" value="Request Config" onclick="window.external.user('requestConfig');" />
@@ -44,6 +45,9 @@
 
             function fromAppStartVersionCheck(thing) {
                 document.getElementById('replace-me').innerText += "version: " + JSON.stringify(thing);
+
+                // the official launcher does some preparation stuff here, and when it's finished it tells it the ID it just recieved
+                window.external.user('received=' + thing.ID);
             }
             window.fromAppStartVersionCheck = this.checkHandlerType(fromAppStartVersionCheck);
 
@@ -59,8 +63,77 @@
 
             function fromAppResumeInfo(thing) {
                 document.getElementById('replace-me').innerText += "resume info: " + JSON.stringify(thing);
+
+                // acknowledge
+                window.external.user('received=' + thing.ID);
             }
             window.fromAppResumeInfo = this.checkHandlerType(fromAppResumeInfo);
+
+            function fromAppLoginUrl(thing) {
+                document.getElementById('replace-me').innerText += "login info: " + JSON.stringify(thing);
+            }
+            window.fromAppLoginUrl = this.checkHandlerType(fromAppLoginUrl);
+
+            function fromAppExAgree(thing) {
+                document.getElementById('replace-me').innerText += "ex agree: " + JSON.stringify(thing);
+            }
+            window.fromAppExAgree = this.checkHandlerType(fromAppExAgree);
+
+            function fromAppStartDownload(thing) {
+                document.getElementById('replace-me').innerText += "start download: " + JSON.stringify(thing);
+            }
+            window.fromAppStartDownload = this.checkHandlerType(fromAppStartDownload);
+
+            function fromAppDownloadProgress(thing) {
+                document.getElementById('replace-me').innerText += "download prog: " + JSON.stringify(thing);
+            }
+            window.fromAppDownloadProgress = this.checkHandlerType(fromAppDownloadProgress);
+
+            function fromAppInstallProgress(thing) {
+                document.getElementById('replace-me').innerText += "install prog: " + JSON.stringify(thing);
+            }
+            window.fromAppInstallProgress = this.checkHandlerType(fromAppInstallProgress);
+
+            function fromAppStartInstall(thing) {
+                document.getElementById('replace-me').innerText += "start install: " + JSON.stringify(thing);
+            }
+            window.fromAppStartInstall = this.checkHandlerType(fromAppStartInstall);
+
+            function fromAppWaitPlay(thing) {
+                document.getElementById('replace-me').innerText += "wait play: " + JSON.stringify(thing);
+
+                // the official launcher does some preparation stuff here, and when it's finished it tells it the ID it just recieved
+                window.external.user('received=' + thing.ID);
+
+                // it requests the config again?
+                window.external.user('requestConfig');
+            }
+            window.fromAppWaitPlay = this.checkHandlerType(fromAppWaitPlay);
+
+            function fromAppStartFileCheck(thing) {
+                document.getElementById('replace-me').innerText += "file check: " + JSON.stringify(thing);
+            }
+            window.fromAppStartFileCheck = this.checkHandlerType(fromAppStartFileCheck);
+
+            function fromAppFileCheckProgress(thing) {
+                document.getElementById('replace-me').innerText += "file check prog: " + JSON.stringify(thing);
+            }
+            window.fromAppFileCheckProgress = this.checkHandlerType(fromAppFileCheckProgress);
+
+            function fromAppFinishedFileCheck(thing) {
+                document.getElementById('replace-me').innerText += "file check finished: " + JSON.stringify(thing);
+            }
+            window.fromAppFinishedFileCheck = this.checkHandlerType(fromAppFinishedFileCheck);
+
+            function fromAppServiceAgreement(thing) {
+                document.getElementById('replace-me').innerText += "agreement: " + JSON.stringify(thing);
+            }
+            window.fromAppServiceAgreement = this.checkHandlerType(fromAppServiceAgreement);
+
+            function fromAppDialog(thing) {
+                document.getElementById('replace-me').innerText += "dialog: " + JSON.stringify(thing);
+            }
+            window.fromAppDialog = this.checkHandlerType(fromAppDialog);
 
             // this is what the retail launcher does
             window.external.user('permissionFromApp=1');
