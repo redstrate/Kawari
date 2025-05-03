@@ -5,9 +5,16 @@ use kawari::config::get_config;
 use minijinja::Environment;
 use minijinja::context;
 use serde::Deserialize;
+use tower_http::services::ServeDir;
 
 fn setup_default_environment() -> Environment<'static> {
     let mut env = Environment::new();
+    env.add_template_owned(
+        "layout.html",
+        std::fs::read_to_string("resources/templates/layout.html")
+            .expect("Failed to find template!"),
+    )
+    .unwrap();
     env.add_template_owned(
         "launcher.html",
         std::fs::read_to_string("resources/templates/launcher.html")
@@ -41,7 +48,9 @@ async fn root(Query(_): Query<Params>) -> Html<String> {
 async fn main() {
     tracing_subscriber::fmt::init();
 
-    let app = Router::new().route("/v700/index.html", get(root));
+    let app = Router::new()
+        .route("/v700/index.html", get(root))
+        .nest_service("/static", ServeDir::new("resources/static"));
 
     let config = get_config();
 
