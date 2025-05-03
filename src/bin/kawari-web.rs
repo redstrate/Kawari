@@ -15,6 +15,12 @@ fn setup_default_environment() -> Environment<'static> {
     )
     .unwrap();
     env.add_template_owned(
+        "web_base.html",
+        std::fs::read_to_string("resources/templates/web_base.html")
+            .expect("Failed to find template!"),
+    )
+    .unwrap();
+    env.add_template_owned(
         "web.html",
         std::fs::read_to_string("resources/templates/web.html").expect("Failed to find template!"),
     )

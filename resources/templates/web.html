@@ -1,11 +1,9 @@
-{% extends "layout.html" %}
+{% extends "web_base.html" %}
 
 {% block title %}Kawari{% endblock %}
 
-{% block body %}
-<p>Welcome to Kawari!</p>
-
-<a href="http://{{ login_server }}/oauth/oa/oauthlogin">Login</a>
-<a href="http://{{ login_server }}/oauth/oa/registligt">Signup</a>
-<a href="/worldstatus">World Status</a>
+{% block webbody %}
+<section class="py-5 text-center container">
+    <p>Welcome to Kawari!</p>
+</section>
 {% endblock %}

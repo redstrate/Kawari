@@ -1,8 +1,10 @@
-{% extends "layout.html" %}
+{% extends "web_base.html" %}
 
 {% block title %}Kawari - World Status{% endblock %}
 
-{% block body %}
-<p>Worlds open: {{ worlds_open }}</p>
-<p>Login open: {{ login_open }}</p>
+{% block webbody %}
+<section class="py-5 text-center container">
+    <p>Worlds open: {{ worlds_open }}</p>
+    <p>Login open: {{ login_open }}</p>
+</section>
 {% endblock %}

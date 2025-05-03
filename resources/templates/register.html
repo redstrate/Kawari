@@ -1,13 +1,13 @@
-{% extends "layout.html" %}
+{% extends "login_base.html" %}
 
 {% block title %}Kawari - Register{% endblock %}
 
-{% block body %}
+{% block loginbody %}
 <form action='/oauth/oa/registlist' method='post'>
-    <label for="username">Username:</label><br>
-    <input type='text' id='username' name='username'/><br>
-    <label for="password">Password:</label><br>
-    <input type='text' id='password' name='password'/><br>
-    <button type='submit'>Register</button>
+    <label for="username" class="form-label">Username:</label><br>
+    <input type='text' id='username' name='username' class="form-control"/><br>
+    <label for="password" class="form-label">Password:</label><br>
+    <input id='password' name='password' class="form-control" type="password"/><br>
+    <button type='submit'  class="btn btn-primary">Register</button>
 </form>
 {% endblock %}
