@@ -60,8 +60,15 @@ jobs:
     - name: Run tests
       run: cargo test --verbose --features oodle
     - name: Prepare Artifacts
+      if: runner.os == 'Windows'
       run: |
         mv target/release/* .
+        mv scripts/run_artifacts_windows.bat run.bat
+    - name: Prepare Artifacts
+      if: runner.os == 'Linux'
+      run: |
+        mv target/release/* .
+        mv scripts/run_artifacts_linux.sh run.sh
     - name: Archive artifacts
       uses: actions/upload-artifact@v4
       with:
@@ -84,4 +91,5 @@ jobs:
           resources/
           !resources/tests
           !resources/opcodes.json
-        if-no-files-found: error
+          run.sh
+          run.bat
