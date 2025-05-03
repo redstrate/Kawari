@@ -1,7 +1,5 @@
 use std::sync::Mutex;
 
-use rand::Rng;
-use rand::distr::Alphanumeric;
 use rusqlite::Connection;
 
 use crate::ipc::lobby::ServiceAccount;
@@ -52,7 +50,7 @@ impl LoginDatabase {
     }
 
     fn generate_account_id() -> u32 {
-        rand::random()
+        fastrand::u32(..)
     }
 
     /// Adds a new user to the database.
@@ -114,11 +112,8 @@ impl LoginDatabase {
     }
 
     fn generate_sid() -> String {
-        let random_id: String = rand::rng()
-            .sample_iter(&Alphanumeric)
-            .take(56)
-            .map(char::from)
-            .collect();
+        let random_id: String = String::from_utf8([fastrand::alphanumeric() as u8; 56].to_vec())
+            .expect("Failed to create random SID");
         random_id.to_lowercase()
     }
 

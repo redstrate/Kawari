@@ -68,7 +68,7 @@ tracing = { version = "0.1", default-features = false }
 tracing-subscriber = { version = "0.3", features = ["fmt"], default-features = false }
 
 # Used currently for SID generation
-rand = { version = "0.9", features = ["std", "thread_rng"], default-features = false }
+fastrand = { version = "2.3", features = ["std"], default-features = false }
 
 # HTML templates used in the web servers
 minijinja = { version = "2.9", features = ["serde"], default-features = false }

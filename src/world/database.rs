@@ -310,11 +310,11 @@ impl WorldDatabase {
     }
 
     fn generate_content_id() -> u32 {
-        rand::random()
+        fastrand::u32(..)
     }
 
     fn generate_actor_id() -> u32 {
-        rand::random()
+        fastrand::u32(..)
     }
 
     /// Gives (content_id, actor_id)
