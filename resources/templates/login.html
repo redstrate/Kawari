@@ -3,12 +3,14 @@
 {% block title %}Kawari - Login{% endblock %}
 
 {% block loginbody %}
-<form method='post'>
+<form method='post' class="mb-3">
     <label for="username" class="form-label">Username</label><br>
     <input type='text' id='username' name='username' class="form-control"/><br>
     <label for="password" class="form-label">Password</label><br>
     <input id='password' name='password' class="form-control" type="password"/><br>
     <button type='submit'  class="btn btn-primary">Login</button>
 </form>
+
+<p><small>This is not an official login page. It will <i>not</i> accept your official account's credentials, please do not enter them here!</small></p>
 
 {% endblock %}

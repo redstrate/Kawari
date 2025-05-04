@@ -3,11 +3,14 @@
 {% block title %}Kawari - Register{% endblock %}
 
 {% block loginbody %}
-<form action='/oauth/oa/registlist' method='post'>
+<form action='/oauth/oa/registlist' method='post' class="mb-3">
     <label for="username" class="form-label">Username:</label><br>
     <input type='text' id='username' name='username' class="form-control"/><br>
     <label for="password" class="form-label">Password:</label><br>
     <input id='password' name='password' class="form-control" type="password"/><br>
     <button type='submit'  class="btn btn-primary">Register</button>
 </form>
+
+<p><small>This is not an official registration page.</small></p>
+
 {% endblock %}
