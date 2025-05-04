@@ -3,36 +3,35 @@
 {% block title %}Kawari Launcher{% endblock %}
 
 {% block body %}
-<p>Welcome to Kawari!</p>
+<main class="p-3">
+<h1>Kawari</h1>
 
-<form id="login">
+<div class="alert alert-primary" role="alert" id="alert" style="display: none">
+    <p id="statusMessage"></p>
+</div>
+
+<form id="login" style="max-width: 300px;" class="mt-3 mb-3">
     <label for="sqexid" class="form-label">Username</label><br>
     <input type='text' id='sqexid' name='sqexid' class="form-control"/><br>
     <label for="password" class="form-label">Password</label><br>
     <input id='password' name='password' class="form-control" type="password"/><br>
-    <label for="otppw" class="form-label">One-Time Password</label><br>
-    <input type='text' id='otppw' name='otppw' class="form-control"/><br>
     <input type="hidden" id="_STORED_" name="_STORED_" value="34657" />
     <button type='submit'  class="btn btn-primary">Login</button>
 </form>
 
-<input type="button" value="System Info" onclick="window.external.user('systemInfo');" />
-<input type="button" value="Play" onclick="window.external.user('startPlay');" />
-<input type="button" value="Login" onclick="window.external.user('login=auth,ok,sid,9001,terms,1,region,2,etmadd,0,playable,1,ps3pkg,0,maxex,5,product,1');" />
-<input type="button" value="Login Error" onclick="window.external.user('login=auth,ng,err,Test error.');" />
-<input type="button" value="Exit" onclick="window.external.user('requestExit');" />
-<input type="button" value="Reboot" onclick="window.external.user('requestReboot');" />
-<input type="button" value="Open Google" onclick="window.external.user('link=https://google.com/');" />
-<input type="button" value="Accept EULA" onclick="window.external.user('eulaOk');" />
-<input type="button" value="Accept Ex EULA" onclick="window.external.user('eulaExOk');" />
-<input type="button" value="Disable DX11" onclick="window.external.user('config=dx11enabled=0');" />
-<input type="button" value="Enable DX11" onclick="window.external.user('config=dx11enabled=1');" />
-<input type="button" value="Request Config" onclick="window.external.user('requestConfig');" />
-<input type="button" value="Request Login Url" onclick="window.external.user('requestLoginUrl');" />
-<input type="button" value="Request Platform" onclick="window.external.user('requestDP');" />
-<input type="button" value="Config Tool" onclick="window.external.user('configTransport');" />
+<input type="button" class="btn btn-primary btn-lg mt-3 mb-3" id="play" value="Play" onclick="window.external.user('startPlay');" style="display: none"/>
 
-<p id="replace-me">meh</p>
+<div class="btn-group" role="group">
+    <input type="button" class="btn btn-secondary" value="System Info" onclick="window.external.user('systemInfo');" />
+    <input type="button" class="btn btn-secondary" value="Config Tool" onclick="window.external.user('configTransport');" />
+</div>
+
+<div class="btn-group" role="group">
+    <input type="button" class="btn btn-outline-secondary" value="Accept EULA" onclick="window.external.user('eulaOk');" />
+    <input type="button" class="btn btn-outline-secondary" value="Accept Ex EULAs" onclick="window.external.user('eulaExOk');" />
+</div>
+
+</main>
 
 <script type="text/javascript">
     let req;
@@ -44,13 +43,13 @@
     }
 
     function error(event) {
-        document.getElementById('replace-me').innerText += "login error: " + event;
+        window.external.user('login=auth,ng,err,' + req.response);
     }
 
     function login() {
         let sqexid = document.getElementById('sqexid').value;
         let password = document.getElementById('password').value;
-        let otppw = document.getElementById('otppw').value;
+        let otppw = "";
         let stored = document.getElementById('_STORED_').value;
 
         req = new XMLHttpRequest();
@@ -61,23 +60,28 @@
         req.send("sqexid=" + sqexid + "&password=" + password + "&otppw=" + otppw + "&_STORED_=" + stored);
     }
 
+    function sendAlert(text) {
+        document.getElementById('statusMessage').innerText = text;
+        document.getElementById('alert').style.display = "block";
+    }
+
     function checkHandlerType(e) {
         if ('function' != typeof e) throw new Error('Protocol Callback is not function.');
         return e
     }
 
     function fromAppConfig(thing) {
-        document.getElementById('replace-me').innerText += "config: " + JSON.stringify(thing);
+        //document.getElementById('replace-me').innerText += "config: " + JSON.stringify(thing);
     }
     window.fromAppConfig = this.checkHandlerType(fromAppConfig);
 
     function fromAppWarn(thing) {
-        document.getElementById('replace-me').innerText += "warn: " + JSON.stringify(thing);
+        document.getElementById('statusMessage').innerText += "warn: " + JSON.stringify(thing);
     }
     window.fromAppWarn = this.checkHandlerType(fromAppWarn);
 
     function fromAppStartVersionCheck(thing) {
-        document.getElementById('replace-me').innerText += "version: " + JSON.stringify(thing);
+        sendAlert(thing.versionChecking);
 
         // the official launcher does some preparation stuff here, and when it's finished it tells it the ID it just recieved
         window.external.user('received=' + thing.ID);
@@ -85,17 +89,21 @@
     window.fromAppStartVersionCheck = this.checkHandlerType(fromAppStartVersionCheck);
 
     function fromAppDP(thing) {
-        document.getElementById('replace-me').innerText += "dp: " + JSON.stringify(thing);
+        //document.getElementById('replace-me').innerText += "dp: " + JSON.stringify(thing);
     }
     window.fromAppDP = this.checkHandlerType(fromAppDP);
 
     function fromAppDisplaySettings(thing) {
-        document.getElementById('replace-me').innerText += "display settings: " + JSON.stringify(thing);
+        //document.getElementById('replace-me').innerText += "display settings: " + JSON.stringify(thing);
     }
     window.fromAppDisplaySettings = this.checkHandlerType(fromAppDisplaySettings);
 
     function fromAppResumeInfo(thing) {
-        document.getElementById('replace-me').innerText += "resume info: " + JSON.stringify(thing);
+        // 3 means "ready to play"
+        if (thing.state == 3) {
+            document.getElementById("login").style.display = "none";
+            document.getElementById("play").style.display = "block";
+        }
 
         // acknowledge
         window.external.user('received=' + thing.ID);
@@ -103,37 +111,37 @@
     window.fromAppResumeInfo = this.checkHandlerType(fromAppResumeInfo);
 
     function fromAppLoginUrl(thing) {
-        document.getElementById('replace-me').innerText += "login info: " + JSON.stringify(thing);
+        //document.getElementById('replace-me').innerText += "login info: " + JSON.stringify(thing);
     }
     window.fromAppLoginUrl = this.checkHandlerType(fromAppLoginUrl);
 
     function fromAppExAgree(thing) {
-        document.getElementById('replace-me').innerText += "ex agree: " + JSON.stringify(thing);
+        sendAlert("You need to accept the following Ex EULAs: " + thing.notAgreedExEulas);
     }
     window.fromAppExAgree = this.checkHandlerType(fromAppExAgree);
 
     function fromAppStartDownload(thing) {
-        document.getElementById('replace-me').innerText += "start download: " + JSON.stringify(thing);
+        //document.getElementById('replace-me').innerText += "start download: " + JSON.stringify(thing);
     }
     window.fromAppStartDownload = this.checkHandlerType(fromAppStartDownload);
 
     function fromAppDownloadProgress(thing) {
-        document.getElementById('replace-me').innerText += "download prog: " + JSON.stringify(thing);
+        //document.getElementById('replace-me').innerText += "download prog: " + JSON.stringify(thing);
     }
     window.fromAppDownloadProgress = this.checkHandlerType(fromAppDownloadProgress);
 
     function fromAppInstallProgress(thing) {
-        document.getElementById('replace-me').innerText += "install prog: " + JSON.stringify(thing);
+        //document.getElementById('replace-me').innerText += "install prog: " + JSON.stringify(thing);
     }
     window.fromAppInstallProgress = this.checkHandlerType(fromAppInstallProgress);
 
     function fromAppStartInstall(thing) {
-        document.getElementById('replace-me').innerText += "start install: " + JSON.stringify(thing);
+        //document.getElementById('replace-me').innerText += "start install: " + JSON.stringify(thing);
     }
     window.fromAppStartInstall = this.checkHandlerType(fromAppStartInstall);
 
     function fromAppWaitPlay(thing) {
-        document.getElementById('replace-me').innerText += "wait play: " + JSON.stringify(thing);
+        //document.getElementById('replace-me').innerText += "wait play: " + JSON.stringify(thing);
 
         // the official launcher does some preparation stuff here, and when it's finished it tells it the ID it just recieved
         window.external.user('received=' + thing.ID);
@@ -144,27 +152,27 @@
     window.fromAppWaitPlay = this.checkHandlerType(fromAppWaitPlay);
 
     function fromAppStartFileCheck(thing) {
-        document.getElementById('replace-me').innerText += "file check: " + JSON.stringify(thing);
+        //document.getElementById('replace-me').innerText += "file check: " + JSON.stringify(thing);
     }
     window.fromAppStartFileCheck = this.checkHandlerType(fromAppStartFileCheck);
 
     function fromAppFileCheckProgress(thing) {
-        document.getElementById('replace-me').innerText += "file check prog: " + JSON.stringify(thing);
+        //document.getElementById('replace-me').innerText += "file check prog: " + JSON.stringify(thing);
     }
     window.fromAppFileCheckProgress = this.checkHandlerType(fromAppFileCheckProgress);
 
     function fromAppFinishedFileCheck(thing) {
-        document.getElementById('replace-me').innerText += "file check finished: " + JSON.stringify(thing);
+        //document.getElementById('replace-me').innerText += "file check finished: " + JSON.stringify(thing);
     }
     window.fromAppFinishedFileCheck = this.checkHandlerType(fromAppFinishedFileCheck);
 
     function fromAppServiceAgreement(thing) {
-        document.getElementById('replace-me').innerText += "agreement: " + JSON.stringify(thing);
+        //document.getElementById('replace-me').innerText += "agreement: " + JSON.stringify(thing);
     }
     window.fromAppServiceAgreement = this.checkHandlerType(fromAppServiceAgreement);
 
     function fromAppDialog(thing) {
-        document.getElementById('replace-me').innerText += "dialog: " + JSON.stringify(thing);
+        //document.getElementById('replace-me').innerText += "dialog: " + JSON.stringify(thing);
     }
     window.fromAppDialog = this.checkHandlerType(fromAppDialog);
 
