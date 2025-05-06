@@ -11,18 +11,22 @@ Kawari is designed to be easy to run, and should be accessible to anyone who wan
 ## Prerequisites
 
 * Windows or Linux
-* Copy of the game updated to the supported game version (see README)
-* Oodle Network Compression (can be obtained from [here](https://github.com/WorkingRobot/OodleUE))
+* Copy of the game updated to the supported game version (see [README](README.md))
+* Oodle Network Compression (see below)
+
+### Getting Oodle
+
+Get the [latest release from this repository](https://github.com/WorkingRobot/OodleUE/releases/latest). You want the "gcc.zip" for Linux, and "msvc.zip" for Windows.
 
 ## Download Artifact
 
-Windows and Linux artifacts are built on every commit, under [Github Actions](https://github.com/redstrate/Kawari/actions). You will have to download the Oodle Network `.dll` (Windows) or `.so` (Linux) yourself however.
+Windows and Linux artifacts are built on every commit, under [Github Actions](https://github.com/redstrate/Kawari/actions). Place the `oodle-network-shared.dll` (Windows) or `oodle-network-shared.so` (Linux) in the same directory as the executables.
 
 ## Building
 
 Build Kawari with `cargo build`.
 
-For the World server to function, Kawari needs to be built with `--features oodle`. Place the `.so` (Linux) or `.lib` (Windows) into the `oodle` directory when building. The library must be named "oodle-network-shared".
+For the World server to function, Kawari needs to be built with `--features oodle`. Place the `oodle-network-shared.dll` (Windows) or `oodle-network-shared.so` (Linux) into the `oodle` directory when building.
 
 ## Setup
 
