@@ -112,8 +112,9 @@ impl LoginDatabase {
     }
 
     fn generate_sid() -> String {
-        let random_id: String = String::from_utf8([fastrand::alphanumeric() as u8; 56].to_vec())
-            .expect("Failed to create random SID");
+        let random_id: String =
+            String::from_utf8((0..56).map(|_| fastrand::alphanumeric() as u8).collect())
+                .expect("Failed to create random SID");
         random_id.to_lowercase()
     }
 
