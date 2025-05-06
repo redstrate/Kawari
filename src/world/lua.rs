@@ -1,7 +1,7 @@
-use mlua::{FromLua, Lua, LuaSerdeExt, UserData, UserDataMethods, Value};
+use mlua::{FromLua, Lua, LuaSerdeExt, UserData, UserDataFields, UserDataMethods, Value};
 
 use crate::{
-    common::{ObjectTypeId, Position, timestamp_secs, workdefinitions::RemakeMode},
+    common::{ObjectId, ObjectTypeId, Position, timestamp_secs, workdefinitions::RemakeMode},
     ipc::zone::{
         ActionEffect, DamageElement, DamageKind, DamageType, EffectKind, EventScene,
         ServerZoneIpcData, ServerZoneIpcSegment, Warp,
@@ -152,6 +152,15 @@ impl UserData for LuaPlayer {
         methods.add_method_mut("warp", |_, this, warp_id: u32| {
             this.warp(warp_id);
             Ok(())
+        });
+    }
+
+    fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
+        fields.add_field_method_get("id", |_, this| {
+            Ok(ObjectTypeId {
+                object_id: ObjectId(this.player_data.actor_id),
+                object_type: 0,
+            })
         });
     }
 }
