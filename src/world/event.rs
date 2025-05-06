@@ -9,7 +9,7 @@ pub struct Event {
 }
 
 impl Event {
-    pub fn new(path: &str) -> Self {
+    pub fn new(id: u32, path: &str) -> Self {
         let lua = Lua::new();
 
         let config = get_config();
@@ -18,6 +18,8 @@ impl Event {
             .set_name("@".to_string() + &file_name)
             .exec()
             .unwrap();
+
+        lua.globals().set("EVENT_ID", id).unwrap();
 
         Self { lua }
     }

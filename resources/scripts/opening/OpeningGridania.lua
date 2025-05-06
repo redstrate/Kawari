@@ -1,6 +1,3 @@
---- TODO: find a way to hardcode it this way
-EVENT_ID = 1245186
-
 --- load defines from Opening Excel sheet, which has this and we don't need to hardcode it'
 POS_START = 2299848
 

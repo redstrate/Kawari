@@ -301,9 +301,9 @@ impl ChatHandler {
                 }
 
                 let event = match event_id {
-                    1245185 => Event::new("opening/OpeningLimsaLominsa.lua"),
-                    1245186 => Event::new("opening/OpeningGridania.lua"),
-                    1245187 => Event::new("opening/OpeningUldah.lua"),
+                    1245185 => Event::new(1245185, "opening/OpeningLimsaLominsa.lua"),
+                    1245186 => Event::new(1245186, "opening/OpeningGridania.lua"),
+                    1245187 => Event::new(1245187, "opening/OpeningUldah.lua"),
                     _ => panic!("Unsupported event!"),
                 };
 

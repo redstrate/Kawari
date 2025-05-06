@@ -28,6 +28,9 @@ function onReturn(scene, results, player)
 
         player:finish_event(EVENT_ID)
     elseif scene == 1 then -- sleep anim
+        -- play log out scene
+        player:play_scene(player.id, EVENT_ID, 2, 8192, 0)
+    elseif scene == 2 then -- log out
         player:finish_event(EVENT_ID)
     end
 end
