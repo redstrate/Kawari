@@ -15,6 +15,7 @@ use super::{PlayerData, StatusEffects, Zone};
 pub enum Task {
     ChangeTerritory { zone_id: u16 },
     SetRemakeMode(RemakeMode),
+    Warp { warp_id: u32 },
 }
 
 #[derive(Default)]
@@ -109,6 +110,10 @@ impl LuaPlayer {
     fn set_remake_mode(&mut self, mode: RemakeMode) {
         self.queued_tasks.push(Task::SetRemakeMode(mode));
     }
+
+    fn warp(&mut self, warp_id: u32) {
+        self.queued_tasks.push(Task::Warp { warp_id });
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -142,6 +147,10 @@ impl UserData for LuaPlayer {
         methods.add_method_mut("set_remake_mode", |lua, this, mode: Value| {
             let mode: RemakeMode = lua.from_value(mode).unwrap();
             this.set_remake_mode(mode);
+            Ok(())
+        });
+        methods.add_method_mut("warp", |_, this, warp_id: u32| {
+            this.warp(warp_id);
             Ok(())
         });
     }

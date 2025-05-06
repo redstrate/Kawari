@@ -135,9 +135,6 @@ async fn client_loop(
     let lua = connection.lua.clone();
     let config = get_config();
 
-    let mut exit_position = None;
-    let mut exit_rotation = None;
-
     let mut lua_player = LuaPlayer::default();
 
     let mut buf = vec![0; RECEIVE_BUFFER_SIZE];
@@ -162,8 +159,8 @@ async fn client_loop(
                                     // collect actor data
                                     connection.initialize(actor_id).await;
 
-                                    exit_position = Some(connection.player_data.position);
-                                    exit_rotation = Some(connection.player_data.rotation);
+                                    connection.exit_position = Some(connection.player_data.position);
+                                    connection.exit_rotation = Some(connection.player_data.rotation);
 
                                     // tell the server we exist, now that we confirmed we are a legitimate connection
                                     connection.handle.send(ToServer::NewClient(client_handle.clone())).await;
@@ -318,7 +315,7 @@ async fn client_loop(
                                         // tell the server we loaded into the zone, so it can start sending us acors
                                         connection.handle.send(ToServer::ZoneLoaded(connection.id)).await;
 
-                                        let common = connection.get_player_common_spawn(exit_position, exit_rotation);
+                                        let common = connection.get_player_common_spawn(connection.exit_position, connection.exit_rotation);
 
                                         // send player spawn
                                         {
@@ -370,8 +367,8 @@ async fn client_loop(
                                         }
 
                                         // wipe any exit position so it isn't accidentally reused
-                                        exit_position = None;
-                                        exit_rotation = None;
+                                        connection.exit_position = None;
+                                        connection.exit_rotation = None;
 
                                         // tell the other players we're here
                                         connection.handle.send(ToServer::ActorSpawned(connection.id, Actor { id: ObjectId(connection.player_data.actor_id), hp: 100, spawn_index: 0 }, common)).await;
@@ -571,7 +568,7 @@ async fn client_loop(
                                                 .unwrap();
 
                                             // set the exit position
-                                            exit_position = Some(Position {
+                                            connection.exit_position = Some(Position {
                                                 x: destination_object.transform.translation[0],
                                                 y: destination_object.transform.translation[1],
                                                 z: destination_object.transform.translation[2],
@@ -768,6 +765,12 @@ async fn client_loop(
                                     }
                                     ClientZoneIpcData::EventHandlerReturn { handler_id, scene, error_code, num_results, results } => {
                                         tracing::info!("Finishing this event... {handler_id} {scene} {error_code} {num_results} {results:#?}");
+
+                                        connection
+                                            .event
+                                            .as_mut()
+                                            .unwrap()
+                                            .finish(results, &mut lua_player);
 
                                         {
                                             // TODO: handle in lua script
@@ -969,6 +972,8 @@ async fn main() {
                     database: database.clone(),
                     lua: lua.clone(),
                     gamedata: game_data.clone(),
+                             exit_position: None,
+                             exit_rotation: None,
                 });
             }
             Some((mut socket, _)) = handle_rcon(&rcon_listener) => {

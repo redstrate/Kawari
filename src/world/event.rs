@@ -64,4 +64,18 @@ impl Event {
             })
             .unwrap();
     }
+
+    pub fn finish(&mut self, results: &[u32], player: &mut LuaPlayer) {
+        self.lua
+            .scope(|scope| {
+                let player = scope.create_userdata_ref_mut(player).unwrap();
+
+                let func: Function = self.lua.globals().get("onReturn").unwrap();
+
+                func.call::<()>((results, player)).unwrap();
+
+                Ok(())
+            })
+            .unwrap();
+    }
 }
