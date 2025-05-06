@@ -128,9 +128,10 @@ struct RegisterInput {
 }
 
 async fn do_register(
+    jar: CookieJar,
     State(state): State<LoginServerState>,
     Form(input): Form<RegisterInput>,
-) -> Redirect {
+) -> (CookieJar, Redirect) {
     tracing::info!(
         "Registering with {:#?} and {:#?}!",
         input.username,
@@ -146,7 +147,15 @@ async fn do_register(
 
     state.database.add_user(&username, &password);
 
-    Redirect::to("/")
+    // redirect to account management page
+    let sid = state.database.login_user(&username, &password).unwrap();
+
+    let cookie = Cookie::build(("cis_sessid", sid))
+        .path("/")
+        .secure(false)
+        .expires(Expiration::Session)
+        .http_only(true);
+    (jar.add(cookie), Redirect::to("/account/app/svc/manage"))
 }
 
 #[derive(Deserialize)]
