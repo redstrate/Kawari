@@ -601,51 +601,53 @@ impl ZoneConnection {
                     self.warp(*warp_id).await;
                 }
                 Task::BeginLogOut => self.begin_log_out().await,
-                Task::FinishEvent { handler_id } => {
-                    // sent event finish
-                    {
-                        let ipc = ServerZoneIpcSegment {
-                            op_code: ServerZoneIpcType::EventFinish,
-                            timestamp: timestamp_secs(),
-                            data: ServerZoneIpcData::EventFinish {
-                                handler_id: *handler_id,
-                                event: 1,
-                                result: 1,
-                                arg: 0,
-                            },
-                            ..Default::default()
-                        };
-
-                        self.send_segment(PacketSegment {
-                            source_actor: self.player_data.actor_id,
-                            target_actor: self.player_data.actor_id,
-                            segment_type: SegmentType::Ipc,
-                            data: SegmentData::Ipc { data: ipc },
-                        })
-                        .await;
-                    }
-
-                    // give back control to the player
-                    {
-                        let ipc = ServerZoneIpcSegment {
-                            op_code: ServerZoneIpcType::Unk18,
-                            timestamp: timestamp_secs(),
-                            data: ServerZoneIpcData::Unk18 { unk: [0; 16] },
-                            ..Default::default()
-                        };
-
-                        self.send_segment(PacketSegment {
-                            source_actor: self.player_data.actor_id,
-                            target_actor: self.player_data.actor_id,
-                            segment_type: SegmentType::Ipc,
-                            data: SegmentData::Ipc { data: ipc },
-                        })
-                        .await;
-                    }
-                }
+                Task::FinishEvent { handler_id } => self.event_finish(*handler_id).await,
             }
         }
         player.queued_tasks.clear();
+    }
+
+    pub async fn event_finish(&mut self, handler_id: u32) {
+        // sent event finish
+        {
+            let ipc = ServerZoneIpcSegment {
+                op_code: ServerZoneIpcType::EventFinish,
+                timestamp: timestamp_secs(),
+                data: ServerZoneIpcData::EventFinish {
+                    handler_id,
+                    event: 1,
+                    result: 1,
+                    arg: 0,
+                },
+                ..Default::default()
+            };
+
+            self.send_segment(PacketSegment {
+                source_actor: self.player_data.actor_id,
+                target_actor: self.player_data.actor_id,
+                segment_type: SegmentType::Ipc,
+                data: SegmentData::Ipc { data: ipc },
+            })
+            .await;
+        }
+
+        // give back control to the player
+        {
+            let ipc = ServerZoneIpcSegment {
+                op_code: ServerZoneIpcType::Unk18,
+                timestamp: timestamp_secs(),
+                data: ServerZoneIpcData::Unk18 { unk: [0; 16] },
+                ..Default::default()
+            };
+
+            self.send_segment(PacketSegment {
+                source_actor: self.player_data.actor_id,
+                target_actor: self.player_data.actor_id,
+                segment_type: SegmentType::Ipc,
+                data: SegmentData::Ipc { data: ipc },
+            })
+            .await;
+        }
     }
 
     pub async fn begin_log_out(&mut self) {

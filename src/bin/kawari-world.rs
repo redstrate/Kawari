@@ -727,6 +727,8 @@ async fn client_loop(
                                             .await;
                                         }
 
+                                        let mut should_cancel = false;
+                                        {
                                         let lua = lua.lock().unwrap();
                                         let state = lua.app_data_ref::<ExtraLuaState>().unwrap();
 
@@ -741,6 +743,14 @@ async fn client_loop(
                                                     .talk(*actor_id, &mut lua_player);
                                             } else {
                                                 tracing::warn!("Event {event_id} isn't scripted yet! Ignoring...");
+
+                                                should_cancel = true;
+                                            }
+                                        }
+
+                                        if should_cancel {
+                                                // give control back to the player so they aren't stuck
+                                                connection.event_finish(*event_id).await;
                                             }
                                     }
                                     ClientZoneIpcData::EventHandlerReturn { handler_id, scene, error_code, num_results, results } => {

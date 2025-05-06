@@ -1,5 +1,3 @@
--- TODO: maybe de-duplicare this for all inns?
-
 function onTalk(target, player)
     -- has inn access
     player:play_scene(target, EVENT_ID, 00001, 8192, 0)
