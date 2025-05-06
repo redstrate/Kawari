@@ -53,14 +53,21 @@ impl LuaPlayer {
         self.status_effects.add(effect_id, duration);
     }
 
-    fn play_scene(&mut self, event_id: u32, scene: u16, scene_flags: u32, param: u8) {
+    fn play_scene(
+        &mut self,
+        actor_id: u32,
+        event_id: u32,
+        scene: u16,
+        scene_flags: u32,
+        param: u8,
+    ) {
         let ipc = ServerZoneIpcSegment {
             op_code: ServerZoneIpcType::EventScene,
             timestamp: timestamp_secs(),
             data: ServerZoneIpcData::EventScene(EventScene {
                 actor_id: ObjectTypeId {
-                    object_id: ObjectId(self.player_data.actor_id),
-                    object_type: 0,
+                    object_id: ObjectId(actor_id),
+                    object_type: 1,
                 },
                 event_id,
                 scene,
@@ -70,6 +77,8 @@ impl LuaPlayer {
             }),
             ..Default::default()
         };
+
+        dbg!(&ipc);
 
         self.queue_segment(PacketSegment {
             source_actor: self.player_data.actor_id,
@@ -122,8 +131,8 @@ impl UserData for LuaPlayer {
         );
         methods.add_method_mut(
             "play_scene",
-            |_, this, (event_id, scene, scene_flags, param): (u32, u16, u32, u8)| {
-                this.play_scene(event_id, scene, scene_flags, param);
+            |_, this, (actor_id, event_id, scene, scene_flags, param): (u32, u32, u16, u32, u8)| {
+                this.play_scene(actor_id, event_id, scene, scene_flags, param);
                 Ok(())
             },
         );

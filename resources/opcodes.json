@@ -154,6 +154,16 @@
             "name": "Delete",
             "opcode": 149,
             "size": 8
+        },
+        {
+            "name": "EventFinish",
+            "opcode": 375,
+            "size": 16
+        },
+        {
+            "name": "Unk18",
+            "opcode": 116,
+            "size": 16
         }
     ],
     "ClientZoneIpcType": [
@@ -266,6 +276,16 @@
             "name": "ItemOperation",
             "opcode": 583,
             "size": 48
+        },
+        {
+            "name": "StartTalkEvent",
+            "opcode": 300,
+            "size": 16
+        },
+        {
+            "name": "EventHandlerReturn",
+            "opcode": 281,
+            "size": 16
         }
     ],
     "ServerChatIpcType": [

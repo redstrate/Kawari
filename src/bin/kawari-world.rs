@@ -11,7 +11,7 @@ use kawari::inventory::{Inventory, Item};
 use kawari::ipc::chat::{ServerChatIpcData, ServerChatIpcSegment};
 use kawari::ipc::kawari::{CustomIpcData, CustomIpcSegment, CustomIpcType};
 use kawari::ipc::zone::{
-    ActionEffect, ActionResult, ClientZoneIpcData, EffectKind, GameMasterCommandType,
+    ActionEffect, ActionResult, ClientZoneIpcData, EffectKind, EventStart, GameMasterCommandType,
     GameMasterRank, OnlineStatus, ServerZoneIpcData, ServerZoneIpcSegment, SocialListRequestType,
 };
 use kawari::ipc::zone::{
@@ -40,6 +40,7 @@ use tokio::task::JoinHandle;
 #[derive(Default)]
 struct ExtraLuaState {
     action_scripts: HashMap<u32, String>,
+    event_scripts: HashMap<u32, String>,
 }
 
 fn spawn_main_loop() -> (ServerHandle, JoinHandle<()>) {
@@ -727,6 +728,119 @@ async fn client_loop(
                                         connection.player_data.inventory.process_action(action);
                                         connection.send_inventory(true).await;
                                     }
+                                    ClientZoneIpcData::StartTalkEvent { actor_id, event_id } => {
+                                        // load scene
+                                        {
+                                            let ipc = ServerZoneIpcSegment {
+                                                op_code: ServerZoneIpcType::EventStart,
+                                                timestamp: timestamp_secs(),
+                                                data: ServerZoneIpcData::EventStart(EventStart {
+                                                    target_id: *actor_id,
+                                                    event_id: *event_id,
+                                                    event_type: 1, // talk?
+                                                    ..Default::default()
+                                                }),
+                                                ..Default::default()
+                                            };
+
+                                            dbg!(&ipc);
+
+                                            connection
+                                            .send_segment(PacketSegment {
+                                                source_actor: connection.player_data.actor_id,
+                                                target_actor: connection.player_data.actor_id,
+                                                segment_type: SegmentType::Ipc,
+                                                data: SegmentData::Ipc { data: ipc },
+                                            })
+                                            .await;
+                                        }
+
+                                        let lua = lua.lock().unwrap();
+                                        let state = lua.app_data_ref::<ExtraLuaState>().unwrap();
+
+                                        if let Some(event_script) =
+                                            state.event_scripts.get(&event_id)
+                                            {
+                                                // run script
+                                                lua.scope(|scope| {
+                                                    let connection_data = scope
+                                                    .create_userdata_ref_mut(&mut lua_player)
+                                                    .unwrap();
+
+                                                    let config = get_config();
+
+                                                    let file_name = format!(
+                                                        "{}/{}",
+                                                        &config.world.scripts_location, event_script
+                                                    );
+                                                    lua.load(
+                                                        std::fs::read(&file_name)
+                                                        .expect("Failed to locate scripts directory!"),
+                                                    )
+                                                    .set_name("@".to_string() + &file_name)
+                                                    .exec()
+                                                    .unwrap();
+
+                                                    let func: Function =
+                                                    lua.globals().get("onTalk").unwrap();
+
+                                                    func.call::<()>((actor_id.object_id.0, &connection_data))
+                                                        .unwrap();
+
+                                                    Ok(())
+                                                })
+                                                .unwrap();
+                                            } else {
+                                                tracing::warn!("Event {event_id} isn't scripted yet! Ignoring...");
+                                            }
+                                    }
+                                    ClientZoneIpcData::EventHandlerReturn { handler_id, scene, error_code, num_results, results } => {
+                                        tracing::info!("Finishing this event... {handler_id} {scene} {error_code} {num_results} {results:#?}");
+
+                                        {
+                                            // TODO: handle in lua script
+                                            let ipc = ServerZoneIpcSegment {
+                                                op_code: ServerZoneIpcType::EventFinish,
+                                                timestamp: timestamp_secs(),
+                                                data: ServerZoneIpcData::EventFinish {
+                                                    handler_id: *handler_id,
+                                                    event: 1,
+                                                    result: 1,
+                                                    arg: 0
+                                                },
+                                                ..Default::default()
+                                            };
+
+                                            connection
+                                            .send_segment(PacketSegment {
+                                                source_actor: connection.player_data.actor_id,
+                                                target_actor: connection.player_data.actor_id,
+                                                segment_type: SegmentType::Ipc,
+                                                data: SegmentData::Ipc { data: ipc },
+                                            })
+                                            .await;
+                                        }
+
+                                        {
+                                            let ipc = ServerZoneIpcSegment {
+                                                op_code: ServerZoneIpcType::Unk18,
+                                                timestamp: timestamp_secs(),
+                                                data: ServerZoneIpcData::Unk18 {
+                                                    unk: [0; 16]
+                                                },
+                                                ..Default::default()
+                                            };
+
+                                            connection
+                                            .send_segment(PacketSegment {
+                                                source_actor: connection.player_data.actor_id,
+                                                target_actor: connection.player_data.actor_id,
+                                                segment_type: SegmentType::Ipc,
+                                                data: SegmentData::Ipc { data: ipc },
+                                            })
+                                            .await;
+                                        }
+                                    }
                                 }
                             }
                             SegmentData::KeepAliveRequest { id, timestamp } => {
@@ -1038,9 +1152,21 @@ async fn main() {
             })
             .unwrap();
 
+        let register_event_func = lua
+            .create_function(|lua, (event_id, event_script): (u32, String)| {
+                tracing::info!("Registering {event_id} with {event_script}!");
+                let mut state = lua.app_data_mut::<ExtraLuaState>().unwrap();
+                let _ = state.event_scripts.insert(event_id, event_script);
+                Ok(())
+            })
+            .unwrap();
+
         lua.set_app_data(ExtraLuaState::default());
         lua.globals()
             .set("registerAction", register_action_func)
+            .unwrap();
+        lua.globals()
+            .set("registerEvent", register_event_func)
             .unwrap();
 
         let effectsbuilder_constructor = lua

@@ -76,6 +76,7 @@ pub use item_operation::ItemOperation;
 mod equip;
 pub use equip::Equip;
 
+use crate::common::ObjectTypeId;
 use crate::common::Position;
 use crate::common::read_string;
 use crate::common::write_string;
@@ -220,6 +221,19 @@ pub enum ServerZoneIpcData {
         #[brw(pad_before = 3)] // padding
         actor_id: u32,
     },
+    /// Sent to the client to stop their currently playing event.
+    EventFinish {
+        handler_id: u32,
+        event: u8,
+        result: u8,
+        #[brw(pad_before = 2)] // padding
+        #[brw(pad_after = 4)] // padding
+        arg: u32,
+    },
+    /// Sent after EventFinish? it un-occupies the character lol
+    Unk18 {
+        unk: [u8; 16], // all zero...
+    },
 }
 
 #[binrw]
@@ -354,6 +368,21 @@ pub enum ClientZoneIpcData {
     },
     #[br(pre_assert(*magic == ClientZoneIpcType::ItemOperation))]
     ItemOperation(ItemOperation),
+    #[br(pre_assert(*magic == ClientZoneIpcType::StartTalkEvent))]
+    StartTalkEvent {
+        actor_id: ObjectTypeId,
+        #[brw(pad_after = 4)] // padding
+        event_id: u32,
+    },
+    #[br(pre_assert(*magic == ClientZoneIpcType::EventHandlerReturn))]
+    EventHandlerReturn {
+        handler_id: u32,
+        scene: u16,
+        error_code: u8,
+        num_results: u8,
+        #[brw(pad_after = 4)] // padding
+        results: [u32; 1],
+    },
 }
 
 #[cfg(test)]

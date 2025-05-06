@@ -10,3 +10,9 @@ registerAction(9, "actions/FastBlade.lua")
 -- Items
 registerAction(6221, "items/Fantasia.lua")
 
+-- Events
+registerEvent(1245185, "opening/OpeningLimsaLominsa.lua")
+registerEvent(1245186, "opening/OpeningGridania.lua")
+registerEvent(1245187, "opening/OpeningUldah.lua")
+registerEvent(131078, "warp/WarpInnGridania.lua")
+registerEvent(131079, "warp/WarpInnLimsaLominsa.lua")
