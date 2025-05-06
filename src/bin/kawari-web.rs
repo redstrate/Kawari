@@ -78,15 +78,21 @@ async fn world_status() -> Html<String> {
     let template = environment.get_template("worldstatus.html").unwrap();
     Html(
         template
-            .render(context! { login_open => config.frontier.login_open, worlds_open => config.frontier.worlds_open })
+            .render(context! { login_server => config.login.server_name, login_open => config.frontier.login_open, worlds_open => config.frontier.worlds_open })
             .unwrap(),
     )
 }
 
 async fn setup() -> Html<String> {
+    let config = get_config();
+
     let environment = setup_default_environment();
     let template = environment.get_template("setup.html").unwrap();
-    Html(template.render(()).unwrap())
+    Html(
+        template
+            .render(context! { login_server => config.login.server_name })
+            .unwrap(),
+    )
 }
 
 #[derive(Deserialize)]
