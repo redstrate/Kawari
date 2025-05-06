@@ -173,15 +173,25 @@ async fn check_session(
 }
 
 async fn login() -> Html<String> {
+    let config = get_config();
     let environment = setup_default_environment();
     let template = environment.get_template("login.html").unwrap();
-    Html(template.render(context! {}).unwrap())
+    Html(
+        template
+            .render(context! { web_server_name => config.web.server_name })
+            .unwrap(),
+    )
 }
 
 async fn register() -> Html<String> {
+    let config = get_config();
     let environment = setup_default_environment();
     let template = environment.get_template("register.html").unwrap();
-    Html(template.render(context! {}).unwrap())
+    Html(
+        template
+            .render(context! { web_server_name => config.web.server_name })
+            .unwrap(),
+    )
 }
 
 #[derive(Deserialize, Debug)]
