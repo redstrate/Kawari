@@ -1,7 +1,7 @@
 use mlua::{FromLua, Lua, LuaSerdeExt, UserData, UserDataMethods, Value};
 
 use crate::{
-    common::{ObjectId, ObjectTypeId, Position, timestamp_secs, workdefinitions::RemakeMode},
+    common::{ObjectTypeId, Position, timestamp_secs, workdefinitions::RemakeMode},
     ipc::zone::{
         ActionEffect, DamageElement, DamageKind, DamageType, EffectKind, EventScene,
         ServerZoneIpcData, ServerZoneIpcSegment, Warp,
@@ -55,7 +55,7 @@ impl LuaPlayer {
 
     fn play_scene(
         &mut self,
-        actor_id: u32,
+        target: ObjectTypeId,
         event_id: u32,
         scene: u16,
         scene_flags: u32,
@@ -65,10 +65,7 @@ impl LuaPlayer {
             op_code: ServerZoneIpcType::EventScene,
             timestamp: timestamp_secs(),
             data: ServerZoneIpcData::EventScene(EventScene {
-                actor_id: ObjectTypeId {
-                    object_id: ObjectId(actor_id),
-                    object_type: 1,
-                },
+                actor_id: target,
                 event_id,
                 scene,
                 scene_flags,
@@ -77,8 +74,6 @@ impl LuaPlayer {
             }),
             ..Default::default()
         };
-
-        dbg!(&ipc);
 
         self.queue_segment(PacketSegment {
             source_actor: self.player_data.actor_id,
@@ -131,8 +126,8 @@ impl UserData for LuaPlayer {
         );
         methods.add_method_mut(
             "play_scene",
-            |_, this, (actor_id, event_id, scene, scene_flags, param): (u32, u32, u16, u32, u8)| {
-                this.play_scene(actor_id, event_id, scene, scene_flags, param);
+            |_, this, (target, event_id, scene, scene_flags, param): (ObjectTypeId, u32, u16, u32, u8)| {
+                this.play_scene(target, event_id, scene, scene_flags, param);
                 Ok(())
             },
         );
@@ -155,6 +150,17 @@ impl UserData for LuaPlayer {
 impl UserData for Position {}
 
 impl FromLua for Position {
+    fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
+        match value {
+            Value::UserData(ud) => Ok(*ud.borrow::<Self>()?),
+            _ => unreachable!(),
+        }
+    }
+}
+
+impl UserData for ObjectTypeId {}
+
+impl FromLua for ObjectTypeId {
     fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
         match value {
             Value::UserData(ud) => Ok(*ud.borrow::<Self>()?),

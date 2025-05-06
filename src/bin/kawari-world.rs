@@ -21,7 +21,7 @@ use kawari::packet::{
     ConnectionType, PacketSegment, PacketState, SegmentData, SegmentType, send_keep_alive,
 };
 use kawari::world::{
-    Actor, ClientHandle, EffectsBuilder, FromServer, LuaPlayer, PlayerData, ServerHandle,
+    Actor, ClientHandle, EffectsBuilder, Event, FromServer, LuaPlayer, PlayerData, ServerHandle,
     StatusEffects, ToServer, WorldDatabase, handle_custom_ipc, server_main_loop,
 };
 use kawari::world::{ChatHandler, Zone, ZoneConnection};
@@ -726,7 +726,7 @@ async fn client_loop(
                                         connection.send_inventory(true).await;
                                     }
                                     ClientZoneIpcData::StartTalkEvent { actor_id, event_id } => {
-                                        // load scene
+                                        // load event
                                         {
                                             let ipc = ServerZoneIpcSegment {
                                                 op_code: ServerZoneIpcType::EventStart,
@@ -739,8 +739,6 @@ async fn client_loop(
                                                 }),
                                                 ..Default::default()
                                             };
-
-                                            dbg!(&ipc);
 
                                             connection
                                             .send_segment(PacketSegment {
@@ -758,35 +756,12 @@ async fn client_loop(
                                         if let Some(event_script) =
                                             state.event_scripts.get(event_id)
                                             {
-                                                // run script
-                                                lua.scope(|scope| {
-                                                    let connection_data = scope
-                                                    .create_userdata_ref_mut(&mut lua_player)
-                                                    .unwrap();
-
-                                                    let config = get_config();
-
-                                                    let file_name = format!(
-                                                        "{}/{}",
-                                                        &config.world.scripts_location, event_script
-                                                    );
-                                                    lua.load(
-                                                        std::fs::read(&file_name)
-                                                        .expect("Failed to locate scripts directory!"),
-                                                    )
-                                                    .set_name("@".to_string() + &file_name)
-                                                    .exec()
-                                                    .unwrap();
-
-                                                    let func: Function =
-                                                    lua.globals().get("onTalk").unwrap();
-
-                                                    func.call::<()>((actor_id.object_id.0, &connection_data))
-                                                        .unwrap();
-
-                                                    Ok(())
-                                                })
-                                                .unwrap();
+                                                connection.event = Some(Event::new(&event_script));
+                                                connection
+                                                    .event
+                                                    .as_mut()
+                                                    .unwrap()
+                                                    .talk(*actor_id, &mut lua_player);
                                             } else {
                                                 tracing::warn!("Event {event_id} isn't scripted yet! Ignoring...");
                                             }
@@ -818,6 +793,7 @@ async fn client_loop(
                                             .await;
                                         }
 
+                                        // give back control to the player
                                         {
                                             let ipc = ServerZoneIpcSegment {
                                                 op_code: ServerZoneIpcType::Unk18,
