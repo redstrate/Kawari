@@ -468,27 +468,7 @@ async fn client_loop(
                                     ClientZoneIpcData::LogOut { .. } => {
                                         tracing::info!("Recieved log out from client!");
 
-                                        // write the player back to the database
-                                        database.commit_player_data(&connection.player_data);
-
-                                        // tell the client to disconnect
-                                        {
-                                            let ipc = ServerZoneIpcSegment {
-                                                op_code: ServerZoneIpcType::LogOutComplete,
-                                                timestamp: timestamp_secs(),
-                                                data: ServerZoneIpcData::LogOutComplete { unk: [0; 8] },
-                                                ..Default::default()
-                                            };
-
-                                            connection
-                                                .send_segment(PacketSegment {
-                                                    source_actor: connection.player_data.actor_id,
-                                                    target_actor: connection.player_data.actor_id,
-                                                    segment_type: SegmentType::Ipc,
-                                                    data: SegmentData::Ipc { data: ipc },
-                                                })
-                                                .await;
-                                        }
+                                        connection.begin_log_out().await;
                                     }
                                     ClientZoneIpcData::Disconnected { .. } => {
                                         tracing::info!("Client disconnected!");
@@ -770,52 +750,7 @@ async fn client_loop(
                                             .event
                                             .as_mut()
                                             .unwrap()
-                                            .finish(results, &mut lua_player);
-
-                                        {
-                                            // TODO: handle in lua script
-                                            let ipc = ServerZoneIpcSegment {
-                                                op_code: ServerZoneIpcType::EventFinish,
-                                                timestamp: timestamp_secs(),
-                                                data: ServerZoneIpcData::EventFinish {
-                                                    handler_id: *handler_id,
-                                                    event: 1,
-                                                    result: 1,
-                                                    arg: 0
-                                                },
-                                                ..Default::default()
-                                            };
-
-                                            connection
-                                            .send_segment(PacketSegment {
-                                                source_actor: connection.player_data.actor_id,
-                                                target_actor: connection.player_data.actor_id,
-                                                segment_type: SegmentType::Ipc,
-                                                data: SegmentData::Ipc { data: ipc },
-                                            })
-                                            .await;
-                                        }
-
-                                        // give back control to the player
-                                        {
-                                            let ipc = ServerZoneIpcSegment {
-                                                op_code: ServerZoneIpcType::Unk18,
-                                                timestamp: timestamp_secs(),
-                                                data: ServerZoneIpcData::Unk18 {
-                                                    unk: [0; 16]
-                                                },
-                                                ..Default::default()
-                                            };
-
-                                            connection
-                                            .send_segment(PacketSegment {
-                                                source_actor: connection.player_data.actor_id,
-                                                target_actor: connection.player_data.actor_id,
-                                                segment_type: SegmentType::Ipc,
-                                                data: SegmentData::Ipc { data: ipc },
-                                            })
-                                            .await;
-                                        }
+                                            .finish(*scene, results, &mut lua_player);
                                     }
                                 }
                             }

@@ -16,6 +16,8 @@ pub enum Task {
     ChangeTerritory { zone_id: u16 },
     SetRemakeMode(RemakeMode),
     Warp { warp_id: u32 },
+    BeginLogOut,
+    FinishEvent { handler_id: u32 },
 }
 
 #[derive(Default)]
@@ -114,6 +116,14 @@ impl LuaPlayer {
     fn warp(&mut self, warp_id: u32) {
         self.queued_tasks.push(Task::Warp { warp_id });
     }
+
+    fn begin_log_out(&mut self) {
+        self.queued_tasks.push(Task::BeginLogOut);
+    }
+
+    fn finish_event(&mut self, handler_id: u32) {
+        self.queued_tasks.push(Task::FinishEvent { handler_id });
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -151,6 +161,14 @@ impl UserData for LuaPlayer {
         });
         methods.add_method_mut("warp", |_, this, warp_id: u32| {
             this.warp(warp_id);
+            Ok(())
+        });
+        methods.add_method_mut("begin_log_out", |_, this, _: ()| {
+            this.begin_log_out();
+            Ok(())
+        });
+        methods.add_method_mut("finish_event", |_, this, handler_id: u32| {
+            this.finish_event(handler_id);
             Ok(())
         });
     }
