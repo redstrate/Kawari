@@ -45,7 +45,7 @@
     }
 
     function error(event) {
-        window.external.user('login=auth,ng,err,' + req.response);
+        window.external.user('login=auth,ng,err,' + req.statusText);
     }
 
     function login() {
