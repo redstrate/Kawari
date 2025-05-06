@@ -26,3 +26,6 @@ pub use status_effects::StatusEffects;
 
 mod server;
 pub use server::server_main_loop;
+
+mod custom_ipc_handler;
+pub use custom_ipc_handler::handle_custom_ipc;

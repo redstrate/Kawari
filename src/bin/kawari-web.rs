@@ -86,7 +86,7 @@ async fn world_status() -> Html<String> {
 async fn setup() -> Html<String> {
     let environment = setup_default_environment();
     let template = environment.get_template("setup.html").unwrap();
-    Html(template.render({}).unwrap())
+    Html(template.render(()).unwrap())
 }
 
 #[derive(Deserialize)]
@@ -101,7 +101,7 @@ async fn launcher_config(Query(params): Query<Params>) -> String {
     let environment = setup_default_environment();
     let template = environment.get_template("launchertweaks.toml").unwrap();
     template
-            .render(context! { launcher_url => config.launcher.server_name, enable_webview2 => if params.r#type == "webview2" { false } else { true }, game_patch_server => config.patch.game_server_name, boot_patch_server => config.patch.boot_server_name, lobby_port => config.lobby.port })
+            .render(context! { launcher_url => config.launcher.server_name, enable_webview2 => params.r#type != "webview2", game_patch_server => config.patch.game_server_name, boot_patch_server => config.patch.boot_server_name, lobby_port => config.lobby.port })
             .unwrap()
 }
 
