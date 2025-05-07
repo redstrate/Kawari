@@ -38,6 +38,7 @@ use tokio::task::JoinHandle;
 struct ExtraLuaState {
     action_scripts: HashMap<u32, String>,
     event_scripts: HashMap<u32, String>,
+    command_scripts: HashMap<String, String>,
 }
 
 fn spawn_main_loop() -> (ServerHandle, JoinHandle<()>) {
@@ -478,12 +479,60 @@ async fn client_loop(
                                     ClientZoneIpcData::ChatMessage(chat_message) => {
                                         connection.handle.send(ToServer::Message(connection.id, chat_message.message.clone())).await;
 
-                                        ChatHandler::handle_chat_message(
-                                            &mut connection,
-                                            &mut lua_player,
-                                            chat_message,
-                                        )
-                                        .await
+                                        let mut handled = false;
+                                        {
+                                        let parts: Vec<&str> = chat_message.message.split(' ').collect();
+                                        let command_name = &parts[0][1..];
+
+                                        let lua = lua.lock().unwrap();
+                                        let state = lua.app_data_ref::<ExtraLuaState>().unwrap();
+
+                                        if let Some(command_script) =
+                                            state.command_scripts.get(command_name)
+                                            {
+                                                handled = true;
+
+                                                lua.scope(|scope| {
+                                                    let connection_data = scope
+                                                    .create_userdata_ref_mut(&mut lua_player)
+                                                    .unwrap();
+
+                                                    let config = get_config();
+
+                                                    let file_name = format!(
+                                                        "{}/{}",
+                                                        &config.world.scripts_location, command_script
+                                                    );
+                                                    lua.load(
+                                                        std::fs::read(&file_name)
+                                                        .expect("Failed to locate scripts directory!"),
+                                                    )
+                                                    .set_name("@".to_string() + &file_name)
+                                                    .exec()
+                                                    .unwrap();
+
+                                                    let func: Function =
+                                                    lua.globals().get("onCommand").unwrap();
+
+                                                    tracing::info!("{}", &chat_message.message[command_name.len() + 2..]);
+
+                                                    func.call::<()>((&chat_message.message[command_name.len() + 2..], connection_data))
+                                                        .unwrap();
+
+                                                    Ok(())
+                                                })
+                                                .unwrap();
+                                            }
+                                        }
+
+                                        if !handled {
+                                            ChatHandler::handle_chat_message(
+                                                &mut connection,
+                                                &mut lua_player,
+                                                chat_message,
+                                            )
+                                            .await;
+                                        }
                                     }
                                     ClientZoneIpcData::GMCommand { command, arg0, .. } => {
                                         tracing::info!("Got a game master command!");
@@ -866,12 +915,24 @@ async fn main() {
             })
             .unwrap();
 
+        let register_command_func = lua
+            .create_function(|lua, (command_name, command_script): (String, String)| {
+                tracing::info!("Registering {command_name} with {command_script}!");
+                let mut state = lua.app_data_mut::<ExtraLuaState>().unwrap();
+                let _ = state.command_scripts.insert(command_name, command_script);
+                Ok(())
+            })
+            .unwrap();
+
         lua.set_app_data(ExtraLuaState::default());
         lua.globals()
             .set("registerAction", register_action_func)
             .unwrap();
         lua.globals()
             .set("registerEvent", register_event_func)
+            .unwrap();
+        lua.globals()
+            .set("registerCommand", register_command_func)
             .unwrap();
 
         let effectsbuilder_constructor = lua

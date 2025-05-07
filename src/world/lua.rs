@@ -146,7 +146,8 @@ impl UserData for LuaPlayer {
                 Ok(())
             },
         );
-        methods.add_method_mut("set_position", |_, this, position: Position| {
+        methods.add_method_mut("set_position", |lua, this, position: Value| {
+            let position: Position = lua.from_value(position).unwrap();
             this.set_position(position);
             Ok(())
         });
@@ -184,15 +185,6 @@ impl UserData for LuaPlayer {
 }
 
 impl UserData for Position {}
-
-impl FromLua for Position {
-    fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
-        match value {
-            Value::UserData(ud) => Ok(*ud.borrow::<Self>()?),
-            _ => unreachable!(),
-        }
-    }
-}
 
 impl UserData for ObjectTypeId {}
 

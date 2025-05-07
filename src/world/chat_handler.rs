@@ -54,19 +54,6 @@ impl ChatHandler {
 
         let parts: Vec<&str> = chat_message.message.split(' ').collect();
         match parts[0] {
-            "!setpos" => {
-                let pos_x = parts[1].parse::<f32>().unwrap();
-                let pos_y = parts[2].parse::<f32>().unwrap();
-                let pos_z = parts[3].parse::<f32>().unwrap();
-
-                connection
-                    .set_player_position(Position {
-                        x: pos_x,
-                        y: pos_y,
-                        z: pos_z,
-                    })
-                    .await;
-            }
             "!spawnplayer" => {
                 let config = get_config();
 

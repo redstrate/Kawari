@@ -3,6 +3,19 @@ function onBeginLogin(player)
     player:send_message("Welcome to Kawari!")
 end
 
+function split(input, separator)
+    if separator == nil then
+        separator = '%s'
+    end
+
+    local t = {}
+    for str in string.gmatch(input, '([^'..separator..']+)') do
+        table.insert(t, str)
+    end
+
+    return t
+end
+
 -- please keep these ids sorted!
 
 -- Actions
@@ -28,3 +41,6 @@ registerEvent(1245186, "opening/OpeningGridania.lua")
 registerEvent(1245187, "opening/OpeningUldah.lua")
 
 -- TODO: Generic warps might be decided through ArrayEventHandler?
+
+-- Commands
+registerCommand("setpos", "commands/debug/SetPos.lua")
