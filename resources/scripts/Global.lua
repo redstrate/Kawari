@@ -27,6 +27,7 @@ registerAction(6221, "items/Fantasia.lua")
 
 -- Events
 registerEvent(721028, "tosort/UnendingJourney.lua")
+registerEvent(721044, "tosort/CrystalBell.lua")
 registerEvent(131079, "warp/WarpInnLimsaLominsa.lua")
 registerEvent(131080, "warp/WarpInnGridania.lua")
 registerEvent(131081, "warp/WarpInnUldah.lua")

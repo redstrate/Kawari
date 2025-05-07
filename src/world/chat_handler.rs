@@ -1,10 +1,8 @@
 use crate::{
     common::{CustomizeData, ObjectId, ObjectTypeId, timestamp_secs},
-    config::get_config,
     ipc::zone::{
-        ActorControl, ActorControlCategory, BattleNpcSubKind, ChatMessage, CommonSpawn,
-        DisplayFlag, EventStart, NpcSpawn, ObjectKind, OnlineStatus, PlayerSpawn, PlayerSubKind,
-        ServerZoneIpcData, ServerZoneIpcSegment,
+        ActorControl, ActorControlCategory, BattleNpcSubKind, ChatMessage, CommonSpawn, EventStart,
+        NpcSpawn, ObjectKind, OnlineStatus, ServerZoneIpcData, ServerZoneIpcSegment,
     },
     opcodes::ServerZoneIpcType,
     packet::{PacketSegment, SegmentData, SegmentType},
