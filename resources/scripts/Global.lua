@@ -26,6 +26,7 @@ registerAction(9, "actions/FastBlade.lua")
 registerAction(6221, "items/Fantasia.lua")
 
 -- Events
+registerEvent(721028, "tosort/UnendingJourney.lua")
 registerEvent(131079, "warp/WarpInnLimsaLominsa.lua")
 registerEvent(131080, "warp/WarpInnGridania.lua")
 registerEvent(131081, "warp/WarpInnUldah.lua")
@@ -45,3 +46,4 @@ registerEvent(1245187, "opening/OpeningUldah.lua")
 -- Commands
 registerCommand("setpos", "commands/debug/SetPos.lua")
 registerCommand("classjob", "commands/debug/ClassJob.lua")
+registerCommand("setspeed", "commands/debug/SetSpeed.lua")

@@ -79,7 +79,6 @@ This feature is still a work-in-progress, and not all data is imported yet.
 These special debug commands start with `!` and are custom to Kawari.
 
 * `!setpos <x> <y> <z>`: Teleport to the specified location
-* `!spawnplayer`: Spawn another player for debugging, not known to work at the moment
 * `!spawnnpc`: Spawn a NPC for debugging
 * `!spawnmonster`: Spawn a monster for debugging
 * `!playscene <id>`: Plays an event. Only some events are supported for now:
