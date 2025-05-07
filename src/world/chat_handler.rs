@@ -1,5 +1,5 @@
 use crate::{
-    common::{CustomizeData, ObjectId, ObjectTypeId, Position, timestamp_secs},
+    common::{CustomizeData, ObjectId, ObjectTypeId, timestamp_secs},
     config::get_config,
     ipc::zone::{
         ActorControl, ActorControlCategory, BattleNpcSubKind, ChatMessage, CommonSpawn,
@@ -328,13 +328,7 @@ impl ChatHandler {
                     })
                     .await;
             }
-            "!classjob" => {
-                let parts: Vec<&str> = chat_message.message.split(' ').collect();
-
-                connection.player_data.classjob_id = parts[1].parse::<u8>().unwrap();
-                connection.update_class_info().await;
-            }
-            _ => tracing::info!("Unrecognized debug command!"),
+            _ => {}
         }
     }
 }

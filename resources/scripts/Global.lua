@@ -44,3 +44,4 @@ registerEvent(1245187, "opening/OpeningUldah.lua")
 
 -- Commands
 registerCommand("setpos", "commands/debug/SetPos.lua")
+registerCommand("classjob", "commands/debug/ClassJob.lua")

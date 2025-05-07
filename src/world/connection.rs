@@ -602,6 +602,10 @@ impl ZoneConnection {
                 }
                 Task::BeginLogOut => self.begin_log_out().await,
                 Task::FinishEvent { handler_id } => self.event_finish(*handler_id).await,
+                Task::SetClassJob { classjob_id } => {
+                    self.player_data.classjob_id = *classjob_id;
+                    self.update_class_info().await;
+                }
             }
         }
         player.queued_tasks.clear();

@@ -18,6 +18,7 @@ pub enum Task {
     Warp { warp_id: u32 },
     BeginLogOut,
     FinishEvent { handler_id: u32 },
+    SetClassJob { classjob_id: u8 },
 }
 
 #[derive(Default)]
@@ -124,6 +125,10 @@ impl LuaPlayer {
     fn finish_event(&mut self, handler_id: u32) {
         self.queued_tasks.push(Task::FinishEvent { handler_id });
     }
+
+    fn set_classjob(&mut self, classjob_id: u8) {
+        self.queued_tasks.push(Task::SetClassJob { classjob_id });
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -170,6 +175,10 @@ impl UserData for LuaPlayer {
         });
         methods.add_method_mut("finish_event", |_, this, handler_id: u32| {
             this.finish_event(handler_id);
+            Ok(())
+        });
+        methods.add_method_mut("set_classjob", |_, this, classjob_id: u8| {
+            this.set_classjob(classjob_id);
             Ok(())
         });
     }
