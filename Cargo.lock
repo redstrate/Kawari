@@ -1028,7 +1028,7 @@ dependencies = [
 [[package]]
 name = "physis-sheets"
 version = "0.0.0"
-source = "git+https://github.com/redstrate/PhysisSheets#1b746c17e8ae8abf4ac613165e63de9f047e567e"
+source = "git+https://github.com/redstrate/PhysisSheets#ca42d72fc8a76211d67f6bd4698a45c7da0037fb"
 dependencies = [
  "physis",
 ]
