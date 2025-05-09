@@ -10,11 +10,60 @@ use crate::{
 
 use super::{Actor, ClientHandle, ClientId, FromServer, ToServer};
 
-#[derive(Default, Debug)]
-struct WorldServer {
-    clients: HashMap<ClientId, ClientHandle>,
+#[derive(Default, Debug, Clone)]
+struct Instance {
+    zone_id: u16,
     // structure temporary, of course
     actors: HashMap<ObjectId, CommonSpawn>,
+}
+
+#[derive(Default, Debug, Clone)]
+struct ClientState {
+    zone_id: u16,
+}
+
+#[derive(Default, Debug)]
+struct WorldServer {
+    clients: HashMap<ClientId, (ClientHandle, ClientState)>,
+    /// Indexed by zone id
+    instances: HashMap<u16, Instance>,
+}
+
+impl WorldServer {
+    /// Finds the instance associated with a zone, or None if it doesn't exist yet.
+    fn find_instance(&self, zone_id: u16) -> Option<&Instance> {
+        self.instances.get(&zone_id)
+    }
+
+    /// Finds the instance associated with a zone, or creates it if it doesn't exist yet
+    fn find_instance_mut(&mut self, zone_id: u16) -> &mut Instance {
+        if self.instances.contains_key(&zone_id) {
+            self.instances.get_mut(&zone_id).unwrap()
+        } else {
+            self.instances.insert(zone_id, Instance::default());
+            self.instances.get_mut(&zone_id).unwrap()
+        }
+    }
+
+    /// Finds the instance associated with an actor, or returns None if they are not found.
+    fn find_actor_instance(&self, actor_id: u32) -> Option<&Instance> {
+        for (_, instance) in &self.instances {
+            if instance.actors.contains_key(&ObjectId(actor_id)) {
+                return Some(instance);
+            }
+        }
+        None
+    }
+
+    /// Finds the instance associated with an actor, or returns None if they are not found.
+    fn find_actor_instance_mut(&mut self, actor_id: u32) -> Option<&mut Instance> {
+        for (_, instance) in &mut self.instances {
+            if instance.actors.contains_key(&ObjectId(actor_id)) {
+                return Some(instance);
+            }
+        }
+        None
+    }
 }
 
 pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::io::Error> {
@@ -24,33 +73,70 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
     while let Some(msg) = recv.recv().await {
         match msg {
             ToServer::NewClient(handle) => {
-                data.clients.insert(handle.id, handle);
+                data.clients
+                    .insert(handle.id, (handle, ClientState::default()));
             }
-            ToServer::ZoneLoaded(from_id) => {
-                for (id, handle) in &mut data.clients {
+            ToServer::ZoneLoaded(from_id, zone_id) => {
+                // create a new instance if nessecary
+                if !data.instances.contains_key(&zone_id) {
+                    data.instances.insert(zone_id, Instance::default());
+                }
+
+                // Send existing player data, if any
+                if let Some(instance) = data.find_instance(zone_id).cloned() {
+                    for (id, (handle, state)) in &mut data.clients {
+                        let id = *id;
+
+                        if id == from_id {
+                            state.zone_id = zone_id;
+
+                            // send existing player data
+                            for (id, common) in &instance.actors {
+                                let msg = FromServer::ActorSpawn(
+                                    Actor {
+                                        id: *id,
+                                        hp: 100,
+                                        spawn_index: 0,
+                                    },
+                                    common.clone(),
+                                );
+
+                                handle.send(msg).unwrap();
+                            }
+
+                            break;
+                        }
+                    }
+                }
+            }
+            ToServer::LeftZone(from_id, actor_id, zone_id) => {
+                // when the actor leaves the zone, remove them from the instance
+                let current_instance = data.find_actor_instance_mut(actor_id).unwrap();
+                current_instance.actors.remove(&ObjectId(actor_id));
+
+                // Then tell any clients in the zone that we left
+                for (id, (handle, state)) in &mut data.clients {
                     let id = *id;
 
+                    // don't bother telling the client who told us
                     if id == from_id {
-                        // send existing player data
-                        for (id, common) in &data.actors {
-                            let msg = FromServer::ActorSpawn(
-                                Actor {
-                                    id: *id,
-                                    hp: 100,
-                                    spawn_index: 0,
-                                },
-                                common.clone(),
-                            );
+                        continue;
+                    }
 
-                            handle.send(msg).unwrap();
-                        }
+                    // skip any clients not in our zone
+                    if state.zone_id != zone_id {
+                        continue;
+                    }
 
-                        break;
+                    let msg = FromServer::ActorDespawn(actor_id);
+
+                    if handle.send(msg).is_err() {
+                        to_remove.push(id);
                     }
                 }
             }
             ToServer::Message(from_id, msg) => {
-                for (id, handle) in &mut data.clients {
+                for (id, (handle, _)) in &mut data.clients {
                     let id = *id;
 
                     if id == from_id {
@@ -64,13 +150,21 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     }
                 }
             }
-            ToServer::ActorSpawned(from_id, actor, common) => {
-                data.actors.insert(actor.id, common.clone());
+            ToServer::ActorSpawned(from_id, zone_id, actor, common) => {
+                let instance = data.find_instance_mut(zone_id);
+                instance.actors.insert(actor.id, common.clone());
 
-                for (id, handle) in &mut data.clients {
+                // Then tell any clients in the zone that we spawned
+                for (id, (handle, state)) in &mut data.clients {
                     let id = *id;
 
+                    // don't bother telling the client who told us
                     if id == from_id {
+                        continue;
+                    }
+
+                    // skip any clients not in our zone
+                    if state.zone_id != zone_id {
                         continue;
                     }
 
@@ -81,11 +175,26 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     }
                 }
             }
-            ToServer::ActorDespawned(_from_id, actor_id) => {
-                data.actors.remove(&ObjectId(actor_id));
+            ToServer::ActorDespawned(from_id, actor_id) => {
+                // NOTE: the order of operations here is very intentional
+                // the client will send actordespawn before we get a ZoneLoaded from the server
+                let current_instance = data.find_actor_instance_mut(actor_id).unwrap();
+                let instance = current_instance.clone();
+                current_instance.actors.remove(&ObjectId(actor_id));
 
-                for (id, handle) in &mut data.clients {
+                // Then tell any clients in the zone that we left
+                for (id, (handle, state)) in &mut data.clients {
                     let id = *id;
+
+                    // don't bother telling the client who told us
+                    if id == from_id {
+                        continue;
+                    }
+
+                    // skip any clients not in our zone
+                    if state.zone_id != instance.zone_id {
+                        continue;
+                    }
 
                     let msg = FromServer::ActorDespawn(actor_id);
 
@@ -95,31 +204,33 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 }
             }
             ToServer::ActorMoved(from_id, actor_id, position, rotation) => {
-                if let Some((_, common)) = data
-                    .actors
-                    .iter_mut()
-                    .find(|actor| *actor.0 == ObjectId(actor_id))
-                {
-                    common.pos = position;
-                    common.rotation = rotation;
-                }
-
-                for (id, handle) in &mut data.clients {
-                    let id = *id;
-
-                    if id == from_id {
-                        continue;
+                if let Some(instance) = data.find_actor_instance_mut(actor_id) {
+                    if let Some((_, common)) = instance
+                        .actors
+                        .iter_mut()
+                        .find(|actor| *actor.0 == ObjectId(actor_id))
+                    {
+                        common.pos = position;
+                        common.rotation = rotation;
                     }
 
-                    let msg = FromServer::ActorMove(actor_id, position, rotation);
+                    for (id, (handle, _)) in &mut data.clients {
+                        let id = *id;
 
-                    if handle.send(msg).is_err() {
-                        to_remove.push(id);
+                        if id == from_id {
+                            continue;
+                        }
+
+                        let msg = FromServer::ActorMove(actor_id, position, rotation);
+
+                        if handle.send(msg).is_err() {
+                            to_remove.push(id);
+                        }
                     }
                 }
             }
             ToServer::ClientTrigger(from_id, from_actor_id, trigger) => {
-                for (id, handle) in &mut data.clients {
+                for (id, (handle, _)) in &mut data.clients {
                     let id = *id;
 
                     // there's no reason to tell the actor what it just did

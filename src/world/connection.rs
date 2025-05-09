@@ -79,6 +79,7 @@ pub struct ClientHandle {
     pub id: ClientId,
     pub ip: SocketAddr,
     pub channel: Sender<FromServer>,
+    pub actor_id: u32,
     // TODO: restore, i guess
     //pub kill: JoinHandle<()>,
 }
@@ -108,11 +109,14 @@ impl ClientHandle {
 pub enum ToServer {
     NewClient(ClientHandle),
     Message(ClientId, String),
-    ActorSpawned(ClientId, Actor, CommonSpawn),
+    // TODO: ditto, zone id should not be here
+    ActorSpawned(ClientId, u16, Actor, CommonSpawn),
     ActorMoved(ClientId, u32, Position, f32),
     ActorDespawned(ClientId, u32),
     ClientTrigger(ClientId, u32, ClientTrigger),
-    ZoneLoaded(ClientId),
+    // TODO: the connection should not be in charge and telling the global server what zone they just loaded in! but this will work for now
+    ZoneLoaded(ClientId, u16),
+    LeftZone(ClientId, u32, u16),
     Disconnected(ClientId),
     FatalError(std::io::Error),
 }
@@ -365,12 +369,16 @@ impl ZoneConnection {
 
     pub async fn change_zone(&mut self, new_zone_id: u16) {
         // tell everyone we're gone
-        // TODO: check if we ever sent an initial ActorSpawn packet first, before sending this.
         // the connection already checks to see if the actor already exists, so it's seems harmless if we do
-        self.handle
-            .send(ToServer::ActorDespawned(self.id, self.player_data.actor_id))
-            .await;
-
+        if self.zone.is_some() {
+            self.handle
+                .send(ToServer::LeftZone(
+                    self.id,
+                    self.player_data.actor_id,
+                    self.zone.as_ref().unwrap().id,
+                ))
+                .await;
+        }
         {
             let mut game_data = self.gamedata.lock().unwrap();
             self.zone = Some(Zone::load(&mut game_data.game_data, new_zone_id));

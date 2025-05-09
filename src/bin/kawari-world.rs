@@ -76,6 +76,7 @@ pub fn spawn_client(connection: ZoneConnection) {
 
     let id = &connection.id.clone();
     let ip = &connection.ip.clone();
+    let actor_id = connection.player_data.actor_id;
 
     let data = ClientData {
         //id: connection.id,
@@ -93,6 +94,7 @@ pub fn spawn_client(connection: ZoneConnection) {
         id: *id,
         ip: *ip,
         channel: send,
+        actor_id,
         //kill,
     };
     let _ = my_send.send(handle);
@@ -163,8 +165,11 @@ async fn client_loop(
                                     connection.exit_position = Some(connection.player_data.position);
                                     connection.exit_rotation = Some(connection.player_data.rotation);
 
+                                    let mut client_handle = client_handle.clone();
+                                    client_handle.actor_id = actor_id;
+
                                     // tell the server we exist, now that we confirmed we are a legitimate connection
-                                    connection.handle.send(ToServer::NewClient(client_handle.clone())).await;
+                                    connection.handle.send(ToServer::NewClient(client_handle)).await;
                                 } else if connection_type == ConnectionType::Chat {
                                     // We have send THEM a keep alive
                                     connection.send_chat_segment(PacketSegment {
@@ -314,7 +319,7 @@ async fn client_loop(
                                     }
                                     ClientZoneIpcData::FinishLoading { .. } => {
                                         // tell the server we loaded into the zone, so it can start sending us acors
-                                        connection.handle.send(ToServer::ZoneLoaded(connection.id)).await;
+                                        connection.handle.send(ToServer::ZoneLoaded(connection.id, connection.zone.as_ref().unwrap().id)).await;
 
                                         let common = connection.get_player_common_spawn(connection.exit_position, connection.exit_rotation);
 
@@ -372,7 +377,7 @@ async fn client_loop(
                                         connection.exit_rotation = None;
 
                                         // tell the other players we're here
-                                        connection.handle.send(ToServer::ActorSpawned(connection.id, Actor { id: ObjectId(connection.player_data.actor_id), hp: 100, spawn_index: 0 }, common)).await;
+                                        connection.handle.send(ToServer::ActorSpawned(connection.id, connection.zone.as_ref().unwrap().id, Actor { id: ObjectId(connection.player_data.actor_id), hp: 100, spawn_index: 0 }, common)).await;
                                     }
                                     ClientZoneIpcData::ClientTrigger(trigger) => {
                                         // inform the server of our trigger, it will handle sending it to other clients
