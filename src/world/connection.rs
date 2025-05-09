@@ -1,12 +1,9 @@
 use std::{
     net::SocketAddr,
-    sync::{
-        Arc, Mutex,
-        atomic::{AtomicUsize, Ordering},
-    },
+    sync::{Arc, Mutex},
 };
 
-use tokio::{net::TcpStream, sync::mpsc::Sender};
+use tokio::net::TcpStream;
 
 use crate::{
     OBFUSCATION_ENABLED_MODE,
@@ -16,11 +13,10 @@ use crate::{
     ipc::{
         chat::ServerChatIpcSegment,
         zone::{
-            ActorControl, ActorControlSelf, ActorControlTarget, ClientTrigger,
-            ClientZoneIpcSegment, CommonSpawn, ContainerInfo, DisplayFlag, Equip, InitZone,
-            ItemInfo, Move, NpcSpawn, ObjectKind, PlayerStats, PlayerSubKind, ServerZoneIpcData,
-            ServerZoneIpcSegment, StatusEffect, StatusEffectList, UpdateClassInfo, Warp,
-            WeatherChange,
+            ActorControl, ActorControlSelf, ActorControlTarget, ClientZoneIpcSegment, CommonSpawn,
+            ContainerInfo, DisplayFlag, Equip, InitZone, ItemInfo, Move, NpcSpawn, ObjectKind,
+            PlayerStats, PlayerSubKind, ServerZoneIpcData, ServerZoneIpcSegment, StatusEffect,
+            StatusEffectList, UpdateClassInfo, Warp, WeatherChange,
         },
     },
     opcodes::ServerZoneIpcType,
@@ -31,7 +27,9 @@ use crate::{
 };
 
 use super::{
-    Actor, CharacterData, Event, LuaPlayer, StatusEffects, WorldDatabase, Zone, lua::Task,
+    Actor, CharacterData, Event, LuaPlayer, StatusEffects, ToServer, WorldDatabase, Zone,
+    common::{ClientId, ServerHandle},
+    lua::Task,
 };
 
 #[derive(Debug, Default, Clone)]
@@ -54,95 +52,6 @@ pub struct PlayerData {
     pub rotation: f32,
     pub zone_id: u16,
     pub inventory: Inventory,
-}
-
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
-pub struct ClientId(usize);
-
-pub enum FromServer {
-    /// A chat message.
-    Message(String),
-    /// An actor has been spawned.
-    ActorSpawn(Actor, CommonSpawn),
-    /// An actor moved to a new position.
-    ActorMove(u32, Position, f32),
-    // An actor has despawned.
-    ActorDespawn(u32),
-    /// We need to update an actor
-    ActorControl(u32, ActorControl),
-    /// We need to update an actor's target'
-    ActorControlTarget(u32, ActorControlTarget),
-}
-
-#[derive(Debug, Clone)]
-pub struct ClientHandle {
-    pub id: ClientId,
-    pub ip: SocketAddr,
-    pub channel: Sender<FromServer>,
-    pub actor_id: u32,
-    pub common: CommonSpawn,
-    // TODO: restore, i guess
-    //pub kill: JoinHandle<()>,
-}
-
-impl ClientHandle {
-    /// Send a message to this client actor. Will emit an error if sending does
-    /// not succeed immediately, as this means that forwarding messages to the
-    /// tcp connection cannot keep up.
-    pub fn send(&mut self, msg: FromServer) -> Result<(), std::io::Error> {
-        if self.channel.try_send(msg).is_err() {
-            Err(std::io::Error::new(
-                std::io::ErrorKind::BrokenPipe,
-                "Can't keep up or dead",
-            ))
-        } else {
-            Ok(())
-        }
-    }
-
-    /// Kill the actor.
-    pub fn kill(self) {
-        // run the destructor
-        drop(self);
-    }
-}
-
-pub enum ToServer {
-    /// A new connection has started.
-    NewClient(ClientHandle),
-    /// The connection sent a message.
-    Message(ClientId, String),
-    /// The connection's player moved.
-    ActorMoved(ClientId, u32, Position, f32),
-    /// The connection has recieved a client trigger.
-    ClientTrigger(ClientId, u32, ClientTrigger),
-    /// The connection loaded into a zone.
-    // TODO: the connection should not be in charge and telling the global server what zone they just loaded in! but this will work for now
-    ZoneLoaded(ClientId, u16),
-    /// The connection left a zone.
-    LeftZone(ClientId, u32, u16),
-    /// The connection disconnected.
-    Disconnected(ClientId),
-    /// A fatal error occured.
-    FatalError(std::io::Error),
-}
-
-#[derive(Clone, Debug)]
-pub struct ServerHandle {
-    pub chan: Sender<ToServer>,
-    pub next_id: Arc<AtomicUsize>,
-}
-
-impl ServerHandle {
-    pub async fn send(&mut self, msg: ToServer) {
-        if self.chan.send(msg).await.is_err() {
-            panic!("Main loop has shut down.");
-        }
-    }
-    pub fn next_id(&self) -> ClientId {
-        let id = self.next_id.fetch_add(1, Ordering::Relaxed);
-        ClientId(id)
-    }
 }
 
 /// Represents a single connection between an instance of the client and the world server
