@@ -164,6 +164,11 @@
             "name": "Unk18",
             "opcode": 116,
             "size": 16
+        },
+        {
+            "name": "ActorControlTarget",
+            "opcode": 277,
+            "size": 28
         }
     ],
     "ClientZoneIpcType": [
@@ -178,7 +183,7 @@
             "size": 72
         },
         {
-            "name": "Unk1",
+            "name": "ClientTrigger",
             "opcode": 428,
             "size": 32
         },

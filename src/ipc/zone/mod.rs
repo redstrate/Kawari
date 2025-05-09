@@ -24,7 +24,7 @@ mod player_stats;
 pub use player_stats::PlayerStats;
 
 mod actor_control;
-pub use actor_control::{ActorControl, ActorControlCategory, ActorControlSelf};
+pub use actor_control::{ActorControl, ActorControlCategory, ActorControlSelf, ActorControlTarget};
 
 mod init_zone;
 pub use init_zone::InitZone;
@@ -75,6 +75,9 @@ pub use item_operation::ItemOperation;
 
 mod equip;
 pub use equip::Equip;
+
+mod client_trigger;
+pub use client_trigger::{ClientTrigger, ClientTriggerCommand};
 
 use crate::common::ObjectTypeId;
 use crate::common::Position;
@@ -234,6 +237,8 @@ pub enum ServerZoneIpcData {
     Unk18 {
         unk: [u8; 16], // all zero...
     },
+    /// Used to control target information
+    ActorControlTarget(ActorControlTarget),
 }
 
 #[binrw]
@@ -252,19 +257,8 @@ pub enum ClientZoneIpcData {
         // TODO: full of possibly interesting information
         unk: [u8; 72],
     },
-    /// FIXME: 32 bytes of something from the client, not sure what yet
-    #[br(pre_assert(*magic == ClientZoneIpcType::Unk1))]
-    Unk1 {
-        // 3 = target
-        category: u32,
-        param1: u32,
-        param2: u32,
-        param3: u32,
-        param4: u32,
-        param5: u32,
-        param6: u32,
-        param7: u32,
-    },
+    #[br(pre_assert(*magic == ClientZoneIpcType::ClientTrigger))]
+    ClientTrigger(ClientTrigger),
     /// FIXME: 16 bytes of something from the client, not sure what yet
     #[br(pre_assert(*magic == ClientZoneIpcType::Unk2))]
     Unk2 {

@@ -1,7 +1,10 @@
 use std::collections::HashMap;
 use tokio::sync::mpsc::Receiver;
 
-use crate::{common::ObjectId, ipc::zone::CommonSpawn};
+use crate::{
+    common::ObjectId,
+    ipc::zone::{ActorControlCategory, ActorControlTarget, ClientTriggerCommand, CommonSpawn},
+};
 
 use super::{Actor, ClientHandle, ClientId, FromServer, ToServer};
 
@@ -110,6 +113,36 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
 
                     if handle.send(msg).is_err() {
                         to_remove.push(id);
+                    }
+                }
+            }
+            ToServer::ClientTrigger(from_id, from_actor_id, trigger) => {
+                for (id, handle) in &mut data.clients {
+                    let id = *id;
+
+                    // there's no reason to tell the actor what it just did
+                    if id == from_id {
+                        continue;
+                    }
+
+                    tracing::info!("{:#?}", trigger);
+
+                    match &trigger.trigger {
+                        ClientTriggerCommand::SetTarget { actor_id } => {
+                            let msg = FromServer::ActorControlTarget(
+                                from_actor_id,
+                                ActorControlTarget {
+                                    category: ActorControlCategory::SetTarget {
+                                        actor_id: *actor_id,
+                                    },
+                                },
+                            );
+
+                            if handle.send(msg).is_err() {
+                                to_remove.push(id);
+                            }
+                        }
+                        _ => tracing::warn!("Server doesn't know what to do with {:#?}", trigger),
                     }
                 }
             }

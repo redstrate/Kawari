@@ -374,18 +374,9 @@ async fn client_loop(
                                         // tell the other players we're here
                                         connection.handle.send(ToServer::ActorSpawned(connection.id, Actor { id: ObjectId(connection.player_data.actor_id), hp: 100, spawn_index: 0 }, common)).await;
                                     }
-                                    ClientZoneIpcData::Unk1 {
-                                        category, ..
-                                    } => {
-                                        tracing::info!("Recieved Unk1! {category:#?}");
-
-                                        /*match category {
-                                            3 => {
-                                                // set target
-                                                tracing::info!("Targeting actor {param1}");
-                                            }
-                                            _ => {}
-                                        }*/
+                                    ClientZoneIpcData::ClientTrigger(trigger) => {
+                                        // inform the server of our trigger, it will handle sending it to other clients
+                                        connection.handle.send(ToServer::ClientTrigger(connection.id, connection.player_data.actor_id, trigger.clone())).await;
                                     }
                                     ClientZoneIpcData::Unk2 { .. } => {
                                         tracing::info!("Recieved Unk2!");
@@ -853,7 +844,9 @@ async fn client_loop(
                     FromServer::Message(msg)=> connection.send_message(&msg).await,
                     FromServer::ActorSpawn(actor, common) => connection.spawn_actor(actor, common).await,
                     FromServer::ActorMove(actor_id, position, rotation) => connection.set_actor_position(actor_id, position, rotation).await,
-                    FromServer::ActorDespawn(actor_id) => connection.remove_actor(actor_id).await
+                    FromServer::ActorDespawn(actor_id) => connection.remove_actor(actor_id).await,
+                    FromServer::ActorControl(actor_id, actor_control) => connection.actor_control(actor_id, actor_control).await,
+                    FromServer::ActorControlTarget(actor_id, actor_control) => connection.actor_control_target(actor_id, actor_control).await,
                 },
                 None => break,
             }

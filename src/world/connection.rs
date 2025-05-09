@@ -16,10 +16,11 @@ use crate::{
     ipc::{
         chat::ServerChatIpcSegment,
         zone::{
-            ActorControlSelf, ClientZoneIpcSegment, CommonSpawn, ContainerInfo, DisplayFlag, Equip,
-            InitZone, ItemInfo, Move, NpcSpawn, ObjectKind, PlayerStats, PlayerSubKind,
-            ServerZoneIpcData, ServerZoneIpcSegment, StatusEffect, StatusEffectList,
-            UpdateClassInfo, Warp, WeatherChange,
+            ActorControl, ActorControlSelf, ActorControlTarget, ClientTrigger,
+            ClientZoneIpcSegment, CommonSpawn, ContainerInfo, DisplayFlag, Equip, InitZone,
+            ItemInfo, Move, NpcSpawn, ObjectKind, PlayerStats, PlayerSubKind, ServerZoneIpcData,
+            ServerZoneIpcSegment, StatusEffect, StatusEffectList, UpdateClassInfo, Warp,
+            WeatherChange,
         },
     },
     opcodes::ServerZoneIpcType,
@@ -67,6 +68,10 @@ pub enum FromServer {
     ActorMove(u32, Position, f32),
     // An actor has despawned.
     ActorDespawn(u32),
+    /// We need to update an actor
+    ActorControl(u32, ActorControl),
+    /// We need to update an actor's target'
+    ActorControlTarget(u32, ActorControlTarget),
 }
 
 #[derive(Debug, Clone)]
@@ -106,6 +111,7 @@ pub enum ToServer {
     ActorSpawned(ClientId, Actor, CommonSpawn),
     ActorMoved(ClientId, u32, Position, f32),
     ActorDespawned(ClientId, u32),
+    ClientTrigger(ClientId, u32, ClientTrigger),
     ZoneLoaded(ClientId),
     Disconnected(ClientId),
     FatalError(std::io::Error),
@@ -745,6 +751,45 @@ impl ZoneConnection {
 
         self.send_segment(PacketSegment {
             source_actor: self.player_data.actor_id,
+            target_actor: self.player_data.actor_id,
+            segment_type: SegmentType::Ipc,
+            data: SegmentData::Ipc { data: ipc },
+        })
+        .await;
+    }
+
+    pub async fn actor_control(&mut self, actor_id: u32, actor_control: ActorControl) {
+        let ipc = ServerZoneIpcSegment {
+            op_code: ServerZoneIpcType::ActorControl,
+            timestamp: timestamp_secs(),
+            data: ServerZoneIpcData::ActorControl(actor_control),
+            ..Default::default()
+        };
+
+        self.send_segment(PacketSegment {
+            source_actor: actor_id,
+            target_actor: self.player_data.actor_id,
+            segment_type: SegmentType::Ipc,
+            data: SegmentData::Ipc { data: ipc },
+        })
+        .await;
+    }
+
+    pub async fn actor_control_target(&mut self, actor_id: u32, actor_control: ActorControlTarget) {
+        tracing::info!(
+            "we are sending actor control target to {actor_id}: {actor_control:#?} and WE ARE {:#?}",
+            self.player_data.actor_id
+        );
+
+        let ipc = ServerZoneIpcSegment {
+            op_code: ServerZoneIpcType::ActorControlTarget,
+            timestamp: timestamp_secs(),
+            data: ServerZoneIpcData::ActorControlTarget(actor_control),
+            ..Default::default()
+        };
+
+        self.send_segment(PacketSegment {
+            source_actor: actor_id,
             target_actor: self.player_data.actor_id,
             segment_type: SegmentType::Ipc,
             data: SegmentData::Ipc { data: ipc },

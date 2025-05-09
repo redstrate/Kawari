@@ -4,6 +4,8 @@ use crate::common::{read_bool_from, write_bool_as};
 
 use super::OnlineStatus;
 
+// TODO: these are all somewhat related, but maybe should be separated?
+
 // See https://github.com/awgil/ffxiv_reverse/blob/f35b6226c1478234ca2b7149f82d251cffca2f56/vnetlog/vnetlog/ServerIPC.cs#L266 for a REALLY useful list of known values
 #[binrw]
 #[derive(Debug, Eq, PartialEq, Clone)]
@@ -34,6 +36,11 @@ pub enum ActorControlCategory {
     },
     #[brw(magic = 0x261u16)]
     ToggleWireframeRendering(),
+    #[brw(magic = 0x32u16)]
+    SetTarget {
+        #[brw(pad_before = 22)] // actually full of info, and 2 bytes of padding at the beginning
+        actor_id: u32,
+    },
 }
 
 #[binrw]
@@ -62,6 +69,22 @@ pub struct ActorControlSelf {
 }
 
 impl Default for ActorControlSelf {
+    fn default() -> Self {
+        Self {
+            category: ActorControlCategory::ToggleInvisibility { invisible: false },
+        }
+    }
+}
+
+// Has more padding than ActorControl?
+#[binrw]
+#[derive(Debug, Clone)]
+pub struct ActorControlTarget {
+    #[brw(pad_size_to = 28)] // take into account categories without params
+    pub category: ActorControlCategory,
+}
+
+impl Default for ActorControlTarget {
     fn default() -> Self {
         Self {
             category: ActorControlCategory::ToggleInvisibility { invisible: false },
