@@ -82,7 +82,7 @@ pub(crate) fn write_quantized_rotation(quantized: &f32) -> u16 {
     let max = u16::MAX as f32;
     let pi = std::f32::consts::PI;
 
-    ((quantized + pi / (2.0 * pi)) * max) as u16
+    (((quantized + pi) / (2.0 * pi)) * max) as u16
 }
 
 pub(crate) fn read_packed_float(packed: u16) -> f32 {
@@ -91,16 +91,6 @@ pub(crate) fn read_packed_float(packed: u16) -> f32 {
 
 pub(crate) fn write_packed_float(float: &f32) -> u16 {
     (((float + 1000.0) * 100.0) * 0.327675) as u16
-}
-
-pub(crate) fn write_packed_rotation_float(float: &f32) -> u8 {
-    let pi = std::f32::consts::PI;
-
-    (0x80 as f32 * (float + pi) / pi) as u8
-}
-
-pub(crate) fn read_packed_rotation_float(_packed: u8) -> f32 {
-    0.0
 }
 
 pub(crate) fn read_packed_position(packed: [u16; 3]) -> Position {
@@ -212,9 +202,5 @@ mod tests {
     fn packed_floats() {
         assert_eq!(read_packed_float(32931), 4.989685);
         assert_eq!(write_packed_float(&5.0), 32931);
-
-        assert_eq!(write_packed_rotation_float(&0.0), 128);
-        assert_eq!(write_packed_rotation_float(&-2.7768986), 14);
-        assert_eq!(write_packed_rotation_float(&3.128286), 255);
     }
 }

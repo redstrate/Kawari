@@ -259,10 +259,8 @@ impl ZoneConnection {
             timestamp: timestamp_secs(),
             data: ServerZoneIpcData::Move(Move {
                 rotation,
-                dir_before_slip: 0x7F,
-                flag1: 0,
-                flag2: 0,
-                speed: 0x3C,
+                flag1: 128,
+                flag2: 60,
                 position,
             }),
             ..Default::default()
