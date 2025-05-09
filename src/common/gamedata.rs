@@ -132,19 +132,14 @@ impl GameData {
     }
 
     /// Returns the pop range object id that's associated with the warp id
-    pub fn get_warp(&mut self, warp_id: u32) -> (u32, u16) {
+    pub fn get_warp(&mut self, warp_id: u32) -> Option<(u32, u16)> {
         let warp_sheet = Warp::read_from(&mut self.game_data, Language::English);
 
         let row = warp_sheet.get_row(warp_id);
 
-        let physis::exd::ColumnData::UInt32(pop_range_id) = row.PopRange() else {
-            panic!("Unexpected type!");
-        };
+        let pop_range_id = row.PopRange().into_u32()?;
+        let zone_id = row.TerritoryType().into_u16()?;
 
-        let physis::exd::ColumnData::UInt16(zone_id) = row.TerritoryType() else {
-            panic!("Unexpected type!");
-        };
-
-        (*pop_range_id, *zone_id)
+        Some((*pop_range_id, *zone_id))
     }
 }

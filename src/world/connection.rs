@@ -434,7 +434,9 @@ impl ZoneConnection {
         // find the pop range on the other side
         {
             let mut game_data = self.gamedata.lock().unwrap();
-            let (pop_range_id, zone_id) = game_data.get_warp(warp_id);
+            let (pop_range_id, zone_id) = game_data
+                .get_warp(warp_id)
+                .expect("Failed to find the warp!");
 
             let new_zone = Zone::load(&mut game_data.game_data, zone_id);
 
