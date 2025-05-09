@@ -28,7 +28,9 @@ pub async fn handle_custom_ipc(connection: &mut ZoneConnection, data: &CustomIpc
             {
                 let mut game_data = connection.gamedata.lock().unwrap();
 
-                city_state = game_data.get_citystate(chara_make.classjob_id as u16);
+                city_state = game_data
+                    .get_citystate(chara_make.classjob_id as u16)
+                    .expect("Unknown citystate");
             }
 
             let mut inventory = Inventory::default();
@@ -122,7 +124,9 @@ pub async fn handle_custom_ipc(connection: &mut ZoneConnection, data: &CustomIpc
             let world_name;
             {
                 let mut game_data = connection.gamedata.lock().unwrap();
-                world_name = game_data.get_world_name(config.world.world_id);
+                world_name = game_data
+                    .get_world_name(config.world.world_id)
+                    .expect("Couldn't read world name");
             }
 
             let characters;

@@ -834,8 +834,9 @@ impl ZoneConnection {
         {
             let mut game_data = self.gamedata.lock().unwrap();
 
-            attributes =
-                game_data.get_racial_base_attributes(chara_details.chara_make.customize.subrace);
+            attributes = game_data
+                .get_racial_base_attributes(chara_details.chara_make.customize.subrace)
+                .expect("Failed to read racial attributes");
         }
 
         let ipc = ServerZoneIpcSegment {

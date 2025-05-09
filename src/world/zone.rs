@@ -1,11 +1,11 @@
 use physis::{
     common::Language,
-    exd::ExcelRowKind,
     gamedata::GameData,
     layer::{
         ExitRangeInstanceObject, InstanceObject, LayerEntryData, LayerGroup, PopRangeInstanceObject,
     },
 };
+use physis_sheets::TerritoryType::TerritoryTypeSheet;
 
 /// Represents a loaded zone
 #[derive(Default)]
@@ -27,25 +27,11 @@ impl Zone {
             ..Default::default()
         };
 
-        let Some(exh) = game_data.read_excel_sheet_header("TerritoryType") else {
-            return zone;
-        };
-        let Some(exd) = game_data.read_excel_sheet("TerritoryType", &exh, Language::None, 0) else {
-            return zone;
-        };
-
-        let Some(territory_type_row) = &exd.get_row(id as u32) else {
-            return zone;
-        };
-
-        let ExcelRowKind::SingleRow(territory_type_row) = territory_type_row else {
-            panic!("Expected a single row!")
-        };
+        let sheet = TerritoryTypeSheet::read_from(game_data, Language::None).unwrap();
+        let row = sheet.get_row(id as u32).unwrap();
 
         // e.g. ffxiv/fst_f1/fld/f1f3/level/f1f3
-        let physis::exd::ColumnData::String(bg_path) = &territory_type_row.columns[1] else {
-            panic!("Unexpected type!");
-        };
+        let bg_path = row.Bg().into_string().unwrap();
 
         let Some(level_index) = bg_path.find("/level/") else {
             return zone;

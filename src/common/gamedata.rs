@@ -1,7 +1,9 @@
 use physis::common::{Language, Platform};
 use physis::exd::{EXD, ExcelRowKind};
 use physis::exh::EXH;
-use physis_sheets::Warp::Warp;
+use physis_sheets::ClassJob::ClassJobSheet;
+use physis_sheets::World::WorldSheet;
+use physis_sheets::{Tribe::TribeSheet, Warp::WarpSheet};
 
 use crate::{common::Attributes, config::get_config};
 
@@ -44,72 +46,35 @@ impl GameData {
     }
 
     /// Gets the world name from an id into the World Excel sheet.
-    pub fn get_world_name(&mut self, world_id: u16) -> String {
-        let exh = self.game_data.read_excel_sheet_header("World").unwrap();
-        let exd = self
-            .game_data
-            .read_excel_sheet("World", &exh, Language::None, 0)
-            .unwrap();
+    pub fn get_world_name(&mut self, world_id: u16) -> Option<String> {
+        let sheet = WorldSheet::read_from(&mut self.game_data, Language::None)?;
+        let row = sheet.get_row(world_id as u32)?;
 
-        let ExcelRowKind::SingleRow(world_row) = &exd.get_row(world_id as u32).unwrap() else {
-            panic!("Expected a single row!")
-        };
-
-        let physis::exd::ColumnData::String(name) = &world_row.columns[1] else {
-            panic!("Unexpected type!");
-        };
-
-        name.clone()
+        row.Name().into_string().map(|x| x.clone())
     }
 
     /// Gets the starting city-state from a given class/job id.
-    pub fn get_citystate(&mut self, classjob_id: u16) -> u8 {
-        let exh = self.game_data.read_excel_sheet_header("ClassJob").unwrap();
-        let exd = self
-            .game_data
-            .read_excel_sheet("ClassJob", &exh, Language::English, 0)
-            .unwrap();
+    pub fn get_citystate(&mut self, classjob_id: u16) -> Option<u8> {
+        let sheet = ClassJobSheet::read_from(&mut self.game_data, Language::English)?;
+        let row = sheet.get_row(classjob_id as u32)?;
 
-        let ExcelRowKind::SingleRow(world_row) = &exd.get_row(classjob_id as u32).unwrap() else {
-            panic!("Expected a single row!")
-        };
-
-        let physis::exd::ColumnData::UInt8(town_id) = &world_row.columns[33] else {
-            panic!("Unexpected type!");
-        };
-
-        *town_id
+        row.StartingTown().into_u8().map(|x| *x)
     }
 
-    pub fn get_racial_base_attributes(&mut self, tribe_id: u8) -> Attributes {
+    pub fn get_racial_base_attributes(&mut self, tribe_id: u8) -> Option<Attributes> {
         // The Tribe Excel sheet only has deltas (e.g. 2 or -2) which are applied to a base 20 number... from somewhere
         let base_stat = 20;
 
-        let exh = self.game_data.read_excel_sheet_header("Tribe").unwrap();
-        let exd = self
-            .game_data
-            .read_excel_sheet("Tribe", &exh, Language::English, 0)
-            .unwrap();
+        let sheet = TribeSheet::read_from(&mut self.game_data, Language::English)?;
+        let row = sheet.get_row(tribe_id as u32)?;
 
-        let ExcelRowKind::SingleRow(tribe_row) = &exd.get_row(tribe_id as u32).unwrap() else {
-            panic!("Expected a single row!")
-        };
-
-        let get_column = |column_index: usize| {
-            let physis::exd::ColumnData::Int8(delta) = &tribe_row.columns[column_index] else {
-                panic!("Unexpected type!");
-            };
-
-            *delta
-        };
-
-        Attributes {
-            strength: (base_stat + get_column(4)) as u32,
-            dexterity: (base_stat + get_column(6)) as u32,
-            vitality: (base_stat + get_column(5)) as u32,
-            intelligence: (base_stat + get_column(7)) as u32,
-            mind: (base_stat + get_column(8)) as u32,
-        }
+        Some(Attributes {
+            strength: (base_stat + row.STR().into_i8()?) as u32,
+            dexterity: (base_stat + row.DEX().into_i8()?) as u32,
+            vitality: (base_stat + row.VIT().into_i8()?) as u32,
+            intelligence: (base_stat + row.INT().into_i8()?) as u32,
+            mind: (base_stat + row.MND().into_i8()?) as u32,
+        })
     }
 
     /// Gets the primary model ID for a given item ID
@@ -133,9 +98,8 @@ impl GameData {
 
     /// Returns the pop range object id that's associated with the warp id
     pub fn get_warp(&mut self, warp_id: u32) -> Option<(u32, u16)> {
-        let warp_sheet = Warp::read_from(&mut self.game_data, Language::English)?;
-
-        let row = warp_sheet.get_row(warp_id)?;
+        let sheet = WarpSheet::read_from(&mut self.game_data, Language::English)?;
+        let row = sheet.get_row(warp_id)?;
 
         let pop_range_id = row.PopRange().into_u32()?;
         let zone_id = row.TerritoryType().into_u16()?;

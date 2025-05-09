@@ -1,4 +1,5 @@
-use physis::{common::Language, exd::ExcelRowKind};
+use physis::common::Language;
+use physis_sheets::Race::RaceSheet;
 use serde::{Deserialize, Serialize};
 
 use crate::common::GameData;
@@ -122,34 +123,19 @@ impl<'a> Iterator for InventoryIterator<'a> {
 impl Inventory {
     /// Equip the starting items for a given race
     pub fn equip_racial_items(&mut self, race_id: u8, gender: u8, game_data: &mut GameData) {
-        let exh = game_data.game_data.read_excel_sheet_header("Race").unwrap();
-        let exd = game_data
-            .game_data
-            .read_excel_sheet("Race", &exh, Language::English, 0)
-            .unwrap();
-
-        let ExcelRowKind::SingleRow(world_row) = &exd.get_row(race_id as u32).unwrap() else {
-            panic!("Expected a single row!")
-        };
-
-        let get_column = |column_index: usize| {
-            let physis::exd::ColumnData::Int32(item_id) = &world_row.columns[column_index] else {
-                panic!("Unexpected type!");
-            };
-
-            *item_id
-        };
+        let sheet = RaceSheet::read_from(&mut game_data.game_data, Language::English).unwrap();
+        let row = sheet.get_row(race_id as u32).unwrap();
 
         if gender == 0 {
-            self.equipped.body = Item::new(1, get_column(2) as u32);
-            self.equipped.hands = Item::new(1, get_column(3) as u32);
-            self.equipped.legs = Item::new(1, get_column(4) as u32);
-            self.equipped.feet = Item::new(1, get_column(5) as u32);
+            self.equipped.body = Item::new(1, *row.RSEMBody().into_i32().unwrap() as u32);
+            self.equipped.hands = Item::new(1, *row.RSEMHands().into_i32().unwrap() as u32);
+            self.equipped.legs = Item::new(1, *row.RSEMLegs().into_i32().unwrap() as u32);
+            self.equipped.feet = Item::new(1, *row.RSEMFeet().into_i32().unwrap() as u32);
         } else {
-            self.equipped.body = Item::new(1, get_column(6) as u32);
-            self.equipped.hands = Item::new(1, get_column(7) as u32);
-            self.equipped.legs = Item::new(1, get_column(8) as u32);
-            self.equipped.feet = Item::new(1, get_column(9) as u32);
+            self.equipped.body = Item::new(1, *row.RSEFBody().into_i32().unwrap() as u32);
+            self.equipped.hands = Item::new(1, *row.RSEFHands().into_i32().unwrap() as u32);
+            self.equipped.legs = Item::new(1, *row.RSEFLegs().into_i32().unwrap() as u32);
+            self.equipped.feet = Item::new(1, *row.RSEFFeet().into_i32().unwrap() as u32);
         }
 
         // TODO: don't hardcode
