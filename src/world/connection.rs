@@ -376,42 +376,26 @@ impl ZoneConnection {
     pub async fn change_zone(&mut self, new_zone_id: u16) {
         // tell everyone we're gone
         // the connection already checks to see if the actor already exists, so it's seems harmless if we do
-        if self.zone.is_some() {
+        if let Some(zone) = &self.zone {
             self.handle
                 .send(ToServer::LeftZone(
                     self.id,
                     self.player_data.actor_id,
-                    self.zone.as_ref().unwrap().id,
+                    zone.id,
                 ))
                 .await;
         }
+
+        // load the new zone now
         {
             let mut game_data = self.gamedata.lock().unwrap();
             self.zone = Some(Zone::load(&mut game_data.game_data, new_zone_id));
         }
+
         self.player_data.zone_id = new_zone_id;
 
         // Player Class Info
         self.update_class_info().await;
-
-        // link shell information
-        /*{
-            let ipc = ServerZoneIpcSegment {
-                op_code: ServerZoneIpcType::LinkShellInformation,
-                timestamp: timestamp_secs(),
-                data: ServerZoneIpcData::LinkShellInformation { unk: [0; 456] },
-                ..Default::default()
-            };
-
-            self.send_segment(PacketSegment {
-                source_actor: self.player_data.actor_id,
-                target_actor: self.player_data.actor_id,
-                segment_type: SegmentType::Ipc { data: ipc },
-            })
-            .await;
-        }*/
-
-        // TODO: send unk16?
 
         // Init Zone
         {

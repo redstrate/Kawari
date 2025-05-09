@@ -4,7 +4,7 @@ use std::sync::{Arc, Mutex};
 
 use kawari::RECEIVE_BUFFER_SIZE;
 use kawari::common::Position;
-use kawari::common::{GameData, ObjectId, timestamp_secs};
+use kawari::common::{GameData, timestamp_secs};
 use kawari::config::get_config;
 use kawari::inventory::Item;
 use kawari::ipc::chat::{ServerChatIpcData, ServerChatIpcSegment};
@@ -21,11 +21,11 @@ use kawari::packet::oodle::OodleNetwork;
 use kawari::packet::{
     ConnectionType, PacketSegment, PacketState, SegmentData, SegmentType, send_keep_alive,
 };
+use kawari::world::{ChatHandler, Zone, ZoneConnection};
 use kawari::world::{
-    Actor, ClientHandle, EffectsBuilder, Event, FromServer, LuaPlayer, PlayerData, ServerHandle,
+    ClientHandle, EffectsBuilder, Event, FromServer, LuaPlayer, PlayerData, ServerHandle,
     StatusEffects, ToServer, WorldDatabase, handle_custom_ipc, server_main_loop,
 };
-use kawari::world::{ChatHandler, Zone, ZoneConnection};
 
 use mlua::{Function, Lua};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -64,8 +64,6 @@ fn spawn_main_loop() -> (ServerHandle, JoinHandle<()>) {
 }
 
 struct ClientData {
-    //id: ClientId,
-    // handle: ServerHandle,
     /// Socket for data recieved from the global server
     recv: Receiver<FromServer>,
     connection: ZoneConnection,
@@ -78,12 +76,7 @@ pub fn spawn_client(connection: ZoneConnection) {
     let id = &connection.id.clone();
     let ip = &connection.ip.clone();
 
-    let data = ClientData {
-        //id: connection.id,
-        //handle: connection.handle.clone(),
-        recv,
-        connection,
-    };
+    let data = ClientData { recv, connection };
 
     // Spawn a new client task
     let (my_send, my_recv) = oneshot::channel();
@@ -96,7 +89,6 @@ pub fn spawn_client(connection: ZoneConnection) {
         channel: send,
         actor_id: 0,
         common: CommonSpawn::default(),
-        //kill,
     };
     let _ = my_send.send(handle);
 }
