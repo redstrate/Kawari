@@ -9,8 +9,9 @@ use kawari::config::get_config;
 use kawari::inventory::Item;
 use kawari::ipc::chat::{ServerChatIpcData, ServerChatIpcSegment};
 use kawari::ipc::zone::{
-    ActionEffect, ActionResult, ClientZoneIpcData, EffectKind, EventStart, GameMasterCommandType,
-    GameMasterRank, OnlineStatus, ServerZoneIpcData, ServerZoneIpcSegment, SocialListRequestType,
+    ActionEffect, ActionResult, ClientZoneIpcData, CommonSpawn, EffectKind, EventStart,
+    GameMasterCommandType, GameMasterRank, OnlineStatus, ServerZoneIpcData, ServerZoneIpcSegment,
+    SocialListRequestType,
 };
 use kawari::ipc::zone::{
     ActorControlCategory, ActorControlSelf, PlayerEntry, PlayerSpawn, PlayerStatus, SocialList,
@@ -76,7 +77,6 @@ pub fn spawn_client(connection: ZoneConnection) {
 
     let id = &connection.id.clone();
     let ip = &connection.ip.clone();
-    let actor_id = connection.player_data.actor_id;
 
     let data = ClientData {
         //id: connection.id,
@@ -94,7 +94,8 @@ pub fn spawn_client(connection: ZoneConnection) {
         id: *id,
         ip: *ip,
         channel: send,
-        actor_id,
+        actor_id: 0,
+        common: CommonSpawn::default(),
         //kill,
     };
     let _ = my_send.send(handle);
@@ -167,6 +168,7 @@ async fn client_loop(
 
                                     let mut client_handle = client_handle.clone();
                                     client_handle.actor_id = actor_id;
+                                    client_handle.common = connection.get_player_common_spawn(connection.exit_position, connection.exit_rotation);
 
                                     // tell the server we exist, now that we confirmed we are a legitimate connection
                                     connection.handle.send(ToServer::NewClient(client_handle)).await;
@@ -375,9 +377,6 @@ async fn client_loop(
                                         // wipe any exit position so it isn't accidentally reused
                                         connection.exit_position = None;
                                         connection.exit_rotation = None;
-
-                                        // tell the other players we're here
-                                        connection.handle.send(ToServer::ActorSpawned(connection.id, connection.zone.as_ref().unwrap().id, Actor { id: ObjectId(connection.player_data.actor_id), hp: 100, spawn_index: 0 }, common)).await;
                                     }
                                     ClientZoneIpcData::ClientTrigger(trigger) => {
                                         // inform the server of our trigger, it will handle sending it to other clients

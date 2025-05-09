@@ -97,6 +97,44 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         }
                     }
                 }
+
+                let (client, _) = data.clients.get(&from_id).unwrap().clone();
+
+                // add the connection's actor to the table
+                {
+                    let instance = data.find_instance_mut(zone_id);
+                    instance
+                        .actors
+                        .insert(ObjectId(client.actor_id), client.common.clone());
+                }
+
+                // Then tell any clients in the zone that we spawned
+                for (id, (handle, state)) in &mut data.clients {
+                    let id = *id;
+
+                    // don't bother telling the client who told us
+                    if id == from_id {
+                        continue;
+                    }
+
+                    // skip any clients not in our zone
+                    if state.zone_id != zone_id {
+                        continue;
+                    }
+
+                    let msg = FromServer::ActorSpawn(
+                        Actor {
+                            id: ObjectId(client.actor_id),
+                            hp: 0,
+                            spawn_index: 0,
+                        },
+                        client.common.clone(),
+                    );
+
+                    if handle.send(msg).is_err() {
+                        to_remove.push(id);
+                    }
+                }
             }
             ToServer::LeftZone(from_id, actor_id, zone_id) => {
                 // when the actor leaves the zone, remove them from the instance
@@ -133,31 +171,6 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     }
 
                     let msg = FromServer::Message(msg.clone());
-
-                    if handle.send(msg).is_err() {
-                        to_remove.push(id);
-                    }
-                }
-            }
-            ToServer::ActorSpawned(from_id, zone_id, actor, common) => {
-                let instance = data.find_instance_mut(zone_id);
-                instance.actors.insert(actor.id, common.clone());
-
-                // Then tell any clients in the zone that we spawned
-                for (id, (handle, state)) in &mut data.clients {
-                    let id = *id;
-
-                    // don't bother telling the client who told us
-                    if id == from_id {
-                        continue;
-                    }
-
-                    // skip any clients not in our zone
-                    if state.zone_id != zone_id {
-                        continue;
-                    }
-
-                    let msg = FromServer::ActorSpawn(actor, common.clone());
 
                     if handle.send(msg).is_err() {
                         to_remove.push(id);

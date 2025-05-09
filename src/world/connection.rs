@@ -80,6 +80,7 @@ pub struct ClientHandle {
     pub ip: SocketAddr,
     pub channel: Sender<FromServer>,
     pub actor_id: u32,
+    pub common: CommonSpawn,
     // TODO: restore, i guess
     //pub kill: JoinHandle<()>,
 }
@@ -107,16 +108,22 @@ impl ClientHandle {
 }
 
 pub enum ToServer {
+    /// A new connection has started.
     NewClient(ClientHandle),
+    /// The connection sent a message.
     Message(ClientId, String),
-    // TODO: ditto, zone id should not be here
-    ActorSpawned(ClientId, u16, Actor, CommonSpawn),
+    /// The connection's player moved.
     ActorMoved(ClientId, u32, Position, f32),
+    /// The connection has recieved a client trigger.
     ClientTrigger(ClientId, u32, ClientTrigger),
+    /// The connection loaded into a zone.
     // TODO: the connection should not be in charge and telling the global server what zone they just loaded in! but this will work for now
     ZoneLoaded(ClientId, u16),
+    /// The connection left a zone.
     LeftZone(ClientId, u32, u16),
+    /// The connection disconnected.
     Disconnected(ClientId),
+    /// A fatal error occured.
     FatalError(std::io::Error),
 }
 
