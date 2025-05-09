@@ -147,7 +147,11 @@ impl LoginDatabase {
                 .prepare("SELECT user_id FROM sessions WHERE sid = ?1")
                 .ok()
                 .unwrap();
-            user_id = stmt.query_row((sid,), |row| row.get(0)).unwrap();
+            if let Ok(found_user_id) = stmt.query_row((sid,), |row| row.get(0)) {
+                user_id = found_user_id;
+            } else {
+                return Vec::default();
+            }
         }
 
         // service accounts
