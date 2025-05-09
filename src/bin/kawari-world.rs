@@ -708,9 +708,9 @@ async fn client_loop(
                                                 if actor.hp == 0 {
                                                     tracing::info!("Despawning {} because they died!", actor.id.0);
                                                     // if the actor died, despawn them
-                                                    connection.handle
+                                                    /*connection.handle
                                                         .send(ToServer::ActorDespawned(connection.id, actor.id.0))
-                                                        .await;
+                                                        .await;*/
                                                 }
                                             }
                                         }

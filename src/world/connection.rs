@@ -112,7 +112,6 @@ pub enum ToServer {
     // TODO: ditto, zone id should not be here
     ActorSpawned(ClientId, u16, Actor, CommonSpawn),
     ActorMoved(ClientId, u32, Position, f32),
-    ActorDespawned(ClientId, u32),
     ClientTrigger(ClientId, u32, ClientTrigger),
     // TODO: the connection should not be in charge and telling the global server what zone they just loaded in! but this will work for now
     ZoneLoaded(ClientId, u16),

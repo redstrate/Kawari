@@ -12,7 +12,6 @@ use super::{Actor, ClientHandle, ClientId, FromServer, ToServer};
 
 #[derive(Default, Debug, Clone)]
 struct Instance {
-    zone_id: u16,
     // structure temporary, of course
     actors: HashMap<ObjectId, CommonSpawn>,
 }
@@ -43,16 +42,6 @@ impl WorldServer {
             self.instances.insert(zone_id, Instance::default());
             self.instances.get_mut(&zone_id).unwrap()
         }
-    }
-
-    /// Finds the instance associated with an actor, or returns None if they are not found.
-    fn find_actor_instance(&self, actor_id: u32) -> Option<&Instance> {
-        for (_, instance) in &self.instances {
-            if instance.actors.contains_key(&ObjectId(actor_id)) {
-                return Some(instance);
-            }
-        }
-        None
     }
 
     /// Finds the instance associated with an actor, or returns None if they are not found.
@@ -169,34 +158,6 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     }
 
                     let msg = FromServer::ActorSpawn(actor, common.clone());
-
-                    if handle.send(msg).is_err() {
-                        to_remove.push(id);
-                    }
-                }
-            }
-            ToServer::ActorDespawned(from_id, actor_id) => {
-                // NOTE: the order of operations here is very intentional
-                // the client will send actordespawn before we get a ZoneLoaded from the server
-                let current_instance = data.find_actor_instance_mut(actor_id).unwrap();
-                let instance = current_instance.clone();
-                current_instance.actors.remove(&ObjectId(actor_id));
-
-                // Then tell any clients in the zone that we left
-                for (id, (handle, state)) in &mut data.clients {
-                    let id = *id;
-
-                    // don't bother telling the client who told us
-                    if id == from_id {
-                        continue;
-                    }
-
-                    // skip any clients not in our zone
-                    if state.zone_id != instance.zone_id {
-                        continue;
-                    }
-
-                    let msg = FromServer::ActorDespawn(actor_id);
 
                     if handle.send(msg).is_err() {
                         to_remove.push(id);
