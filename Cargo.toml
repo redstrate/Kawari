@@ -61,7 +61,7 @@ serde_json = { version = "1.0", default-features = false }
 serde_yaml_ng = { version = "0.10", default-features = false }
 
 # Async runtime
-tokio = { version = "1.44", features = ["macros", "rt", "rt-multi-thread", "io-util"], default-features = false }
+tokio = { version = "1.45", features = ["macros", "rt", "rt-multi-thread", "io-util"], default-features = false }
 
 # Logging
 tracing = { version = "0.1", default-features = false }
@@ -71,10 +71,10 @@ tracing-subscriber = { version = "0.3", features = ["fmt"], default-features = f
 fastrand = { version = "2.3", features = ["std"], default-features = false }
 
 # HTML templates used in the web servers
-minijinja = { version = "2.9", features = ["serde", "loader", "multi_template"], default-features = false }
+minijinja = { version = "2.10", features = ["serde", "loader", "multi_template"], default-features = false }
 
 # Serialization of packets
-binrw = { version = "0.14", features = ["std"], default-features = false }
+binrw = { version = "0.15", features = ["std"], default-features = false }
 
 # Used in encryption of packets
 md5 = { version = "0.7", default-features = false }
@@ -86,8 +86,7 @@ physis = { git = "https://github.com/redstrate/physis", default-features = false
 rusqlite = { version = "0.35", features = ["bundled"], default-features = false }
 
 # needed for c-style bitflags
-# cannot upgrade to 2.0.0, breaking changes that aren't recoverable: https://github.com/bitflags/bitflags/issues/314
-bitflags = { version = "1.3", default-features = false }
+bitflags = { version = "2.9", default-features = false }
 
 # For server-side scripting
 mlua = { version = "0.10", features = ["lua51", "vendored", "send", "async", "serialize"], default-features = false }

@@ -1,5 +1,6 @@
 use physis::{
     common::Language,
+    exd::ExcelRowKind,
     gamedata::GameData,
     layer::{
         ExitRangeInstanceObject, InstanceObject, LayerEntryData, LayerGroup, PopRangeInstanceObject,
@@ -33,13 +34,16 @@ impl Zone {
             return zone;
         };
 
-        let Some(territory_type_row) = &exd.read_row(&exh, id as u32) else {
+        let Some(territory_type_row) = &exd.get_row(id as u32) else {
             return zone;
         };
-        let territory_type_row = &territory_type_row[0];
+
+        let ExcelRowKind::SingleRow(territory_type_row) = territory_type_row else {
+            panic!("Expected a single row!")
+        };
 
         // e.g. ffxiv/fst_f1/fld/f1f3/level/f1f3
-        let physis::exd::ColumnData::String(bg_path) = &territory_type_row.data[1] else {
+        let physis::exd::ColumnData::String(bg_path) = &territory_type_row.columns[1] else {
             panic!("Unexpected type!");
         };
 

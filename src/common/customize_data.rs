@@ -32,8 +32,8 @@ pub struct CustomizeData {
     pub face_paint_color: u8,
 }
 
-impl From<physis::chardat::CustomizeData> for CustomizeData {
-    fn from(value: physis::chardat::CustomizeData) -> Self {
+impl From<physis::savedata::chardat::CustomizeData> for CustomizeData {
+    fn from(value: physis::savedata::chardat::CustomizeData) -> Self {
         Self {
             race: value.race as u8,
             gender: value.gender as u8,

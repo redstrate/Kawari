@@ -116,9 +116,12 @@ pub enum GameMasterRank {
     Debug = 90,
 }
 
+#[binrw]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct DisplayFlag(u32);
+
 bitflags! {
-    #[binrw]
-    pub struct DisplayFlag : u32 {
+    impl DisplayFlag : u32 {
         const NONE = 0x0;
         // Can be made visible with ActorControl I think
         const INVISIBLE = 0x20;

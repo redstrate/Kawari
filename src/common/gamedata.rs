@@ -1,5 +1,5 @@
 use physis::common::{Language, Platform};
-use physis::exd::EXD;
+use physis::exd::{EXD, ExcelRowKind};
 use physis::exh::EXH;
 
 use crate::{common::Attributes, config::get_config};
@@ -22,8 +22,7 @@ impl GameData {
         let config = get_config();
 
         let mut game_data =
-            physis::gamedata::GameData::from_existing(Platform::Win32, &config.game_location)
-                .unwrap();
+            physis::gamedata::GameData::from_existing(Platform::Win32, &config.game_location);
 
         let mut item_pages = Vec::new();
 
@@ -51,9 +50,11 @@ impl GameData {
             .read_excel_sheet("World", &exh, Language::None, 0)
             .unwrap();
 
-        let world_row = &exd.read_row(&exh, world_id as u32).unwrap()[0];
+        let ExcelRowKind::SingleRow(world_row) = &exd.get_row(world_id as u32).unwrap() else {
+            panic!("Expected a single row!")
+        };
 
-        let physis::exd::ColumnData::String(name) = &world_row.data[1] else {
+        let physis::exd::ColumnData::String(name) = &world_row.columns[1] else {
             panic!("Unexpected type!");
         };
 
@@ -68,9 +69,11 @@ impl GameData {
             .read_excel_sheet("ClassJob", &exh, Language::English, 0)
             .unwrap();
 
-        let world_row = &exd.read_row(&exh, classjob_id as u32).unwrap()[0];
+        let ExcelRowKind::SingleRow(world_row) = &exd.get_row(classjob_id as u32).unwrap() else {
+            panic!("Expected a single row!")
+        };
 
-        let physis::exd::ColumnData::UInt8(town_id) = &world_row.data[33] else {
+        let physis::exd::ColumnData::UInt8(town_id) = &world_row.columns[33] else {
             panic!("Unexpected type!");
         };
 
@@ -87,10 +90,12 @@ impl GameData {
             .read_excel_sheet("Tribe", &exh, Language::English, 0)
             .unwrap();
 
-        let tribe_row = &exd.read_row(&exh, tribe_id as u32).unwrap()[0];
+        let ExcelRowKind::SingleRow(tribe_row) = &exd.get_row(tribe_id as u32).unwrap() else {
+            panic!("Expected a single row!")
+        };
 
         let get_column = |column_index: usize| {
-            let physis::exd::ColumnData::Int8(delta) = &tribe_row.data[column_index] else {
+            let physis::exd::ColumnData::Int8(delta) = &tribe_row.columns[column_index] else {
                 panic!("Unexpected type!");
             };
 
@@ -109,10 +114,12 @@ impl GameData {
     /// Gets the primary model ID for a given item ID
     pub fn get_primary_model_id(&mut self, item_id: u32) -> Option<u64> {
         for page in &self.item_pages {
-            if let Some(row) = page.read_row(&self.item_exh, item_id) {
-                let item_row = &row[0];
+            if let Some(row) = page.get_row(item_id) {
+                let ExcelRowKind::SingleRow(item_row) = row else {
+                    panic!("Expected a single row!")
+                };
 
-                let physis::exd::ColumnData::UInt64(id) = &item_row.data[47] else {
+                let physis::exd::ColumnData::UInt64(id) = &item_row.columns[47] else {
                     panic!("Unexpected type!");
                 };
 
@@ -131,13 +138,15 @@ impl GameData {
             .read_excel_sheet("Warp", &exh, Language::English, 0)
             .unwrap();
 
-        let row = &exd.read_row(&exh, warp_id).unwrap()[0];
+        let ExcelRowKind::SingleRow(row) = &exd.get_row(warp_id).unwrap() else {
+            panic!("Expected a single row!")
+        };
 
-        let physis::exd::ColumnData::UInt32(pop_range_id) = &row.data[0] else {
+        let physis::exd::ColumnData::UInt32(pop_range_id) = &row.columns[0] else {
             panic!("Unexpected type!");
         };
 
-        let physis::exd::ColumnData::UInt16(zone_id) = &row.data[1] else {
+        let physis::exd::ColumnData::UInt16(zone_id) = &row.columns[1] else {
             panic!("Unexpected type!");
         };
 

@@ -1,4 +1,4 @@
-use physis::common::Language;
+use physis::{common::Language, exd::ExcelRowKind};
 use serde::{Deserialize, Serialize};
 
 use crate::common::GameData;
@@ -128,10 +128,12 @@ impl Inventory {
             .read_excel_sheet("Race", &exh, Language::English, 0)
             .unwrap();
 
-        let world_row = &exd.read_row(&exh, race_id as u32).unwrap()[0];
+        let ExcelRowKind::SingleRow(world_row) = &exd.get_row(race_id as u32).unwrap() else {
+            panic!("Expected a single row!")
+        };
 
         let get_column = |column_index: usize| {
-            let physis::exd::ColumnData::Int32(item_id) = &world_row.data[column_index] else {
+            let physis::exd::ColumnData::Int32(item_id) = &world_row.columns[column_index] else {
                 panic!("Unexpected type!");
             };
 

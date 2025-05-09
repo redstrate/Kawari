@@ -5,9 +5,12 @@ use crate::common::CHAR_NAME_MAX_LENGTH;
 
 use super::{read_string, write_string};
 
+#[binrw]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CharacterFlag(u8);
+
 bitflags! {
-    #[binrw]
-    pub struct CharacterFlag : u8 {
+    impl CharacterFlag : u8 {
         const NONE = 0;
         /// "You cannot select this character with your current account."
         const LOCKED = 1;

@@ -100,7 +100,8 @@ impl WorldDatabase {
 
         let charsave_file = archive.by_name("FFXIV_CHARA_01.dat").unwrap();
         let charsave_bytes: Vec<u8> = charsave_file.bytes().map(|x| x.unwrap()).collect();
-        let charsave = physis::chardat::CharacterData::from_existing(&charsave_bytes).unwrap();
+        let charsave =
+            physis::savedata::chardat::CharacterData::from_existing(&charsave_bytes).unwrap();
 
         let customize = CustomizeData::from(charsave.customize);
 
