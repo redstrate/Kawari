@@ -1,6 +1,7 @@
 use physis::common::{Language, Platform};
 use physis::exd::{EXD, ExcelRowKind};
 use physis::exh::EXH;
+use physis_sheets::Warp::Warp;
 
 use crate::{common::Attributes, config::get_config};
 
@@ -132,21 +133,15 @@ impl GameData {
 
     /// Returns the pop range object id that's associated with the warp id
     pub fn get_warp(&mut self, warp_id: u32) -> (u32, u16) {
-        let exh = self.game_data.read_excel_sheet_header("Warp").unwrap();
-        let exd = self
-            .game_data
-            .read_excel_sheet("Warp", &exh, Language::English, 0)
-            .unwrap();
+        let warp_sheet = Warp::read_from(&mut self.game_data, Language::English);
 
-        let ExcelRowKind::SingleRow(row) = &exd.get_row(warp_id).unwrap() else {
-            panic!("Expected a single row!")
-        };
+        let row = warp_sheet.get_row(warp_id);
 
-        let physis::exd::ColumnData::UInt32(pop_range_id) = &row.columns[0] else {
+        let physis::exd::ColumnData::UInt32(pop_range_id) = row.PopRange() else {
             panic!("Unexpected type!");
         };
 
-        let physis::exd::ColumnData::UInt16(zone_id) = &row.columns[1] else {
+        let physis::exd::ColumnData::UInt16(zone_id) = row.TerritoryType() else {
             panic!("Unexpected type!");
         };
 

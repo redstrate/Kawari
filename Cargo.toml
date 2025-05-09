@@ -102,3 +102,6 @@ rkon = { version = "0.1" }
 
 # For serving static files on the website
 tower-http = { version = "0.6", features = ["fs"] }
+
+# excel sheet data
+physis-sheets = { git = "https://github.com/redstrate/PhysisSheets", features = ["Warp"], default-features = false }
