@@ -12,6 +12,18 @@ pub enum ClientTriggerCommand {
     Unk1 {},
     #[brw(magic = 0xC9u16)]
     Unk2 {},
+    #[brw(magic = 0x1F9u16)]
+    ChangePose {
+        #[brw(pad_before = 2)] // padding
+        unk1: u32,
+        pose: u32,
+    },
+    #[brw(magic = 0x1FAu16)]
+    ReapplyPose {
+        #[brw(pad_before = 2)] // padding
+        unk1: u32,
+        pose: u32,
+    },
 }
 
 #[binrw]

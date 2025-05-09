@@ -3,7 +3,9 @@ use tokio::sync::mpsc::Receiver;
 
 use crate::{
     common::ObjectId,
-    ipc::zone::{ActorControlCategory, ActorControlTarget, ClientTriggerCommand, CommonSpawn},
+    ipc::zone::{
+        ActorControl, ActorControlCategory, ActorControlTarget, ClientTriggerCommand, CommonSpawn,
+    },
 };
 
 use super::{Actor, ClientHandle, ClientId, FromServer, ToServer};
@@ -134,6 +136,36 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                                 ActorControlTarget {
                                     category: ActorControlCategory::SetTarget {
                                         actor_id: *actor_id,
+                                    },
+                                },
+                            );
+
+                            if handle.send(msg).is_err() {
+                                to_remove.push(id);
+                            }
+                        }
+                        ClientTriggerCommand::ChangePose { unk1, pose } => {
+                            let msg = FromServer::ActorControl(
+                                from_actor_id,
+                                ActorControl {
+                                    category: ActorControlCategory::Pose {
+                                        unk1: *unk1,
+                                        pose: *pose,
+                                    },
+                                },
+                            );
+
+                            if handle.send(msg).is_err() {
+                                to_remove.push(id);
+                            }
+                        }
+                        ClientTriggerCommand::ReapplyPose { unk1, pose } => {
+                            let msg = FromServer::ActorControl(
+                                from_actor_id,
+                                ActorControl {
+                                    category: ActorControlCategory::Pose {
+                                        unk1: *unk1,
+                                        pose: *pose,
                                     },
                                 },
                             );
