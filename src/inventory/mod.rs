@@ -1,5 +1,5 @@
+use icarus::Race::RaceSheet;
 use physis::common::Language;
-use physis_sheets::Race::RaceSheet;
 use serde::{Deserialize, Serialize};
 
 use crate::common::GameData;

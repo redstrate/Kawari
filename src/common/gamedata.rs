@@ -1,9 +1,9 @@
+use icarus::ClassJob::ClassJobSheet;
+use icarus::World::WorldSheet;
+use icarus::{Tribe::TribeSheet, Warp::WarpSheet};
 use physis::common::{Language, Platform};
 use physis::exd::{EXD, ExcelRowKind};
 use physis::exh::EXH;
-use physis_sheets::ClassJob::ClassJobSheet;
-use physis_sheets::World::WorldSheet;
-use physis_sheets::{Tribe::TribeSheet, Warp::WarpSheet};
 
 use crate::{common::Attributes, config::get_config};
 

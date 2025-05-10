@@ -1,3 +1,4 @@
+use icarus::TerritoryType::TerritoryTypeSheet;
 use physis::{
     common::Language,
     gamedata::GameData,
@@ -5,7 +6,6 @@ use physis::{
         ExitRangeInstanceObject, InstanceObject, LayerEntryData, LayerGroup, PopRangeInstanceObject,
     },
 };
-use physis_sheets::TerritoryType::TerritoryTypeSheet;
 
 /// Represents a loaded zone
 #[derive(Default)]

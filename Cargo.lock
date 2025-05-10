@@ -573,6 +573,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "icarus"
+version = "0.0.0"
+source = "git+https://github.com/redstrate/Icarus?branch=ver%2F2025.04.16.0000.0000#5d5f1dded6949b790307546c9ddc0604af636451"
+dependencies = [
+ "physis",
+]
+
+[[package]]
 name = "icu_collections"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -720,11 +728,11 @@ dependencies = [
  "binrw",
  "bitflags",
  "fastrand",
+ "icarus",
  "md5",
  "minijinja",
  "mlua",
  "physis",
- "physis-sheets",
  "reqwest",
  "rkon",
  "rusqlite",
@@ -1023,14 +1031,6 @@ dependencies = [
  "bitflags",
  "half",
  "libz-rs-sys",
-]
-
-[[package]]
-name = "physis-sheets"
-version = "0.0.0"
-source = "git+https://github.com/redstrate/PhysisSheets#4d11e27a1e31bb482184626d1e7a51fc5e673674"
-dependencies = [
- "physis",
 ]
 
 [[package]]
