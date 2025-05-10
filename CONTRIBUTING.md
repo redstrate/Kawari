@@ -21,9 +21,10 @@ Here are the various things that should be checked when updating Kawari to a new
 
 * Bump the supported game versions in `lib.rs` so the patch server lets you through.
 * Double check IPC struct sizes in `calc_size()` if the structures changed.
-* Replace testing data in `resources/tests` and re-run the tests.
+* Replace testing data in `resources/tests` and re-run the tests as needed.
 * The IPC opcodes _will_ change and must all be replaced.
-* Check the game version used in the encryption key in `lib.rs`.
+* Check and update the various constants in `lib.rs`.
+* If the Excel schema changed, update the Icarus version in `Cargo.toml`.
 
 ## IPC Opcodes
 
