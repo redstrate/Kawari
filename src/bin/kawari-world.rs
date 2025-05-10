@@ -837,12 +837,13 @@ async fn client_loop(
             }
             msg = internal_recv.recv() => match msg {
                 Some(msg) => match msg {
-                    FromServer::Message(msg)=> connection.send_message(&msg).await,
+                    FromServer::Message(msg) => connection.send_message(&msg).await,
                     FromServer::ActorSpawn(actor, common) => connection.spawn_actor(actor, common).await,
                     FromServer::ActorMove(actor_id, position, rotation) => connection.set_actor_position(actor_id, position, rotation).await,
                     FromServer::ActorDespawn(actor_id) => connection.remove_actor(actor_id).await,
                     FromServer::ActorControl(actor_id, actor_control) => connection.actor_control(actor_id, actor_control).await,
                     FromServer::ActorControlTarget(actor_id, actor_control) => connection.actor_control_target(actor_id, actor_control).await,
+                    FromServer::SpawnNPC(npc) => connection.send_npc(npc).await,
                 },
                 None => break,
             }

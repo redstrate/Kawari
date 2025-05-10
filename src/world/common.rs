@@ -10,7 +10,7 @@ use tokio::sync::mpsc::Sender;
 
 use crate::{
     common::Position,
-    ipc::zone::{ActorControl, ActorControlTarget, ClientTrigger, CommonSpawn},
+    ipc::zone::{ActorControl, ActorControlTarget, ClientTrigger, CommonSpawn, NpcSpawn},
 };
 
 use super::Actor;
@@ -31,6 +31,8 @@ pub enum FromServer {
     ActorControl(u32, ActorControl),
     /// We need to update an actor's target'
     ActorControlTarget(u32, ActorControlTarget),
+    /// Spawn an NPC
+    SpawnNPC(NpcSpawn),
 }
 
 #[derive(Debug, Clone)]
@@ -82,6 +84,7 @@ pub enum ToServer {
     Disconnected(ClientId),
     /// A fatal error occured.
     FatalError(std::io::Error),
+    DebugNewNpc(ClientId),
 }
 
 #[derive(Clone, Debug)]

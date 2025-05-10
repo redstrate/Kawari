@@ -770,4 +770,24 @@ impl ZoneConnection {
         })
         .await;
     }
+
+    pub async fn send_npc(&mut self, mut npc: NpcSpawn) {
+        // the one from the global state is useless, of course
+        npc.common.spawn_index = self.get_free_spawn_index();
+
+        let ipc = ServerZoneIpcSegment {
+            op_code: ServerZoneIpcType::NpcSpawn,
+            timestamp: timestamp_secs(),
+            data: ServerZoneIpcData::NpcSpawn(npc),
+            ..Default::default()
+        };
+
+        self.send_segment(PacketSegment {
+            source_actor: 0x106ad804,
+            target_actor: self.player_data.actor_id,
+            segment_type: SegmentType::Ipc,
+            data: SegmentData::Ipc { data: ipc },
+        })
+        .await;
+    }
 }

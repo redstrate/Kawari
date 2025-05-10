@@ -2,9 +2,10 @@ use std::collections::HashMap;
 use tokio::sync::mpsc::Receiver;
 
 use crate::{
-    common::ObjectId,
+    common::{ObjectId, Position},
     ipc::zone::{
-        ActorControl, ActorControlCategory, ActorControlTarget, ClientTriggerCommand, CommonSpawn,
+        ActorControl, ActorControlCategory, ActorControlTarget, BattleNpcSubKind,
+        ClientTriggerCommand, CommonSpawn, NpcSpawn, ObjectKind,
     },
 };
 
@@ -260,6 +261,35 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                             }
                         }
                         _ => tracing::warn!("Server doesn't know what to do with {:#?}", trigger),
+                    }
+                }
+            }
+            ToServer::DebugNewNpc(_from_id) => {
+                for (id, (handle, _)) in &mut data.clients {
+                    let id = *id;
+
+                    let msg = FromServer::SpawnNPC(NpcSpawn {
+                        aggression_mode: 1,
+                        common: CommonSpawn {
+                            hp_curr: 91,
+                            hp_max: 91,
+                            mp_curr: 100,
+                            mp_max: 100,
+                            spawn_index: 0,   // not needed at this level
+                            bnpc_base: 13498, // TODO: changing this prevents it from spawning...
+                            bnpc_name: 405,
+                            object_kind: ObjectKind::BattleNpc(BattleNpcSubKind::Enemy),
+                            level: 1,
+                            battalion: 4,
+                            model_chara: 297,
+                            pos: Position::default(),
+                            ..Default::default()
+                        },
+                        ..Default::default()
+                    });
+
+                    if handle.send(msg).is_err() {
+                        to_remove.push(id);
                     }
                 }
             }
