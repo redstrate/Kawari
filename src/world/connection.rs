@@ -33,6 +33,11 @@ use super::{
 };
 
 #[derive(Debug, Default, Clone)]
+pub struct TeleportQuery {
+    pub aetheryte_id: u16,
+}
+
+#[derive(Debug, Default, Clone)]
 pub struct PlayerData {
     // Static data
     pub actor_id: u32,
@@ -52,6 +57,8 @@ pub struct PlayerData {
     pub rotation: f32,
     pub zone_id: u16,
     pub inventory: Inventory,
+
+    pub teleport_query: TeleportQuery,
 }
 
 /// Represents a single connection between an instance of the client and the world server
@@ -363,6 +370,35 @@ impl ZoneConnection {
         self.change_zone(territory_type as u16).await;
     }
 
+    pub async fn warp_aetheryte(&mut self, aetheryte_id: u32) {
+        tracing::info!("Warping to aetheryte {}", aetheryte_id);
+
+        let territory_type;
+        // find the pop range on the other side
+        {
+            let mut game_data = self.gamedata.lock().unwrap();
+            let (pop_range_id, zone_id) = game_data
+                .get_aetheryte(aetheryte_id)
+                .expect("Failed to find the aetheryte!");
+
+            let new_zone = Zone::load(&mut game_data.game_data, zone_id);
+
+            // find it on the other side
+            let (object, _) = new_zone.find_pop_range(pop_range_id).unwrap();
+
+            // set the exit position
+            self.exit_position = Some(Position {
+                x: object.transform.translation[0],
+                y: object.transform.translation[1],
+                z: object.transform.translation[2],
+            });
+
+            territory_type = zone_id;
+        }
+
+        self.change_zone(territory_type as u16).await;
+    }
+
     pub async fn change_weather(&mut self, new_weather_id: u16) {
         let ipc = ServerZoneIpcSegment {
             op_code: ServerZoneIpcType::WeatherId,
@@ -518,6 +554,9 @@ impl ZoneConnection {
                 Task::SetClassJob { classjob_id } => {
                     self.player_data.classjob_id = *classjob_id;
                     self.update_class_info().await;
+                }
+                Task::WarpAetheryte { aetheryte_id } => {
+                    self.warp_aetheryte(*aetheryte_id).await;
                 }
             }
         }

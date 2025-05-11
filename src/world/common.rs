@@ -10,7 +10,9 @@ use tokio::sync::mpsc::Sender;
 
 use crate::{
     common::Position,
-    ipc::zone::{ActorControl, ActorControlTarget, ClientTrigger, CommonSpawn, NpcSpawn},
+    ipc::zone::{
+        ActorControl, ActorControlSelf, ActorControlTarget, ClientTrigger, CommonSpawn, NpcSpawn,
+    },
 };
 
 use super::Actor;
@@ -29,8 +31,10 @@ pub enum FromServer {
     ActorDespawn(u32),
     /// We need to update an actor
     ActorControl(u32, ActorControl),
-    /// We need to update an actor's target'
+    /// We need to update an actor's target
     ActorControlTarget(u32, ActorControlTarget),
+    /// We need to update the player actor
+    ActorControlSelf(ActorControlSelf),
     /// Spawn an NPC
     SpawnNPC(NpcSpawn),
 }

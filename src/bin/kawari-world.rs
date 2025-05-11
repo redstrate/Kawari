@@ -9,9 +9,9 @@ use kawari::config::get_config;
 use kawari::inventory::Item;
 use kawari::ipc::chat::{ServerChatIpcData, ServerChatIpcSegment};
 use kawari::ipc::zone::{
-    ActionEffect, ActionResult, ClientZoneIpcData, CommonSpawn, EffectKind, EventStart,
-    GameMasterCommandType, GameMasterRank, OnlineStatus, ServerZoneIpcData, ServerZoneIpcSegment,
-    SocialListRequestType,
+    ActionEffect, ActionResult, ClientTriggerCommand, ClientZoneIpcData, CommonSpawn, EffectKind,
+    EventStart, GameMasterCommandType, GameMasterRank, OnlineStatus, ServerZoneIpcData,
+    ServerZoneIpcSegment, SocialListRequestType,
 };
 use kawari::ipc::zone::{
     ActorControlCategory, ActorControlSelf, PlayerEntry, PlayerSpawn, PlayerStatus, SocialList,
@@ -371,6 +371,11 @@ async fn client_loop(
                                         connection.exit_rotation = None;
                                     }
                                     ClientZoneIpcData::ClientTrigger(trigger) => {
+                                        // store the query for scripts
+                                        if let ClientTriggerCommand::TeleportQuery { aetheryte_id } = trigger.trigger {
+                                            connection.player_data.teleport_query.aetheryte_id = aetheryte_id as u16;
+                                        }
+
                                         // inform the server of our trigger, it will handle sending it to other clients
                                         connection.handle.send(ToServer::ClientTrigger(connection.id, connection.player_data.actor_id, trigger.clone())).await;
                                     }
@@ -851,6 +856,7 @@ async fn client_loop(
                     FromServer::ActorControl(actor_id, actor_control) => connection.actor_control(actor_id, actor_control).await,
                     FromServer::ActorControlTarget(actor_id, actor_control) => connection.actor_control_target(actor_id, actor_control).await,
                     FromServer::SpawnNPC(npc) => connection.send_npc(npc).await,
+                    FromServer::ActorControlSelf(actor_control) => connection.actor_control_self(actor_control).await,
                 },
                 None => break,
             }

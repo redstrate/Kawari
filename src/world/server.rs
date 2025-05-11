@@ -4,7 +4,7 @@ use tokio::sync::mpsc::Receiver;
 use crate::{
     common::{ObjectId, Position},
     ipc::zone::{
-        ActorControl, ActorControlCategory, ActorControlTarget, BattleNpcSubKind,
+        ActorControl, ActorControlCategory, ActorControlSelf, ActorControlTarget, BattleNpcSubKind,
         ClientTriggerCommand, CommonSpawn, NpcSpawn, ObjectKind,
     },
 };
@@ -208,12 +208,27 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 for (id, (handle, _)) in &mut data.clients {
                     let id = *id;
 
-                    // there's no reason to tell the actor what it just did
+                    tracing::info!("{:#?}", trigger);
+
+                    // handle player-to-server actions
                     if id == from_id {
+                        match &trigger.trigger {
+                            ClientTriggerCommand::TeleportQuery { aetheryte_id } => {
+                                let msg = FromServer::ActorControlSelf(ActorControlSelf {
+                                    category: ActorControlCategory::TeleportStart {
+                                        insufficient_gil: 0,
+                                        aetheryte_id: *aetheryte_id,
+                                    },
+                                });
+
+                                if handle.send(msg).is_err() {
+                                    to_remove.push(id);
+                                }
+                            }
+                            _ => {}
+                        }
                         continue;
                     }
-
-                    tracing::info!("{:#?}", trigger);
 
                     match &trigger.trigger {
                         ClientTriggerCommand::SetTarget { actor_id } => {

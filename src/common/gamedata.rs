@@ -1,3 +1,4 @@
+use icarus::Aetheryte::AetheryteSheet;
 use icarus::ClassJob::ClassJobSheet;
 use icarus::World::WorldSheet;
 use icarus::{Tribe::TribeSheet, Warp::WarpSheet};
@@ -103,6 +104,17 @@ impl GameData {
 
         let pop_range_id = row.PopRange().into_u32()?;
         let zone_id = row.TerritoryType().into_u16()?;
+
+        Some((*pop_range_id, *zone_id))
+    }
+
+    pub fn get_aetheryte(&mut self, aetheryte_id: u32) -> Option<(u32, u16)> {
+        let sheet = AetheryteSheet::read_from(&mut self.game_data, Language::English)?;
+        let row = sheet.get_row(aetheryte_id)?;
+
+        // TODO: just look in the level sheet?
+        let pop_range_id = row.Level()[0].into_u32()?;
+        let zone_id = row.Territory().into_u16()?;
 
         Some((*pop_range_id, *zone_id))
     }

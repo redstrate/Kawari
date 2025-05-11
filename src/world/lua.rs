@@ -10,7 +10,7 @@ use crate::{
     packet::{PacketSegment, SegmentData, SegmentType},
 };
 
-use super::{PlayerData, StatusEffects, Zone};
+use super::{PlayerData, StatusEffects, Zone, connection::TeleportQuery};
 
 pub enum Task {
     ChangeTerritory { zone_id: u16 },
@@ -19,6 +19,7 @@ pub enum Task {
     BeginLogOut,
     FinishEvent { handler_id: u32 },
     SetClassJob { classjob_id: u8 },
+    WarpAetheryte { aetheryte_id: u32 },
 }
 
 #[derive(Default)]
@@ -129,6 +130,10 @@ impl LuaPlayer {
     fn set_classjob(&mut self, classjob_id: u8) {
         self.queued_tasks.push(Task::SetClassJob { classjob_id });
     }
+
+    fn warp_aetheryte(&mut self, aetheryte_id: u32) {
+        self.queued_tasks.push(Task::WarpAetheryte { aetheryte_id });
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -181,6 +186,10 @@ impl UserData for LuaPlayer {
             this.set_classjob(classjob_id);
             Ok(())
         });
+        methods.add_method_mut("warp_aetheryte", |_, this, aetheryte_id: u32| {
+            this.warp_aetheryte(aetheryte_id);
+            Ok(())
+        });
     }
 
     fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
@@ -190,6 +199,16 @@ impl UserData for LuaPlayer {
                 object_type: 0,
             })
         });
+
+        fields.add_field_method_get("teleport_query", |_, this| {
+            Ok(this.player_data.teleport_query.clone())
+        });
+    }
+}
+
+impl UserData for TeleportQuery {
+    fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
+        fields.add_field_method_get("aetheryte_id", |_, this| Ok(this.aetheryte_id));
     }
 }
 

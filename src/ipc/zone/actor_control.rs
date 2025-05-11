@@ -63,6 +63,12 @@ pub enum ActorControlCategory {
         #[bw(map = write_bool_as::<u32>)]
         unlocked: bool,
     },
+    #[brw(magic = 0xCBu16)]
+    TeleportStart {
+        #[brw(pad_before = 2)] //padding
+        insufficient_gil: u32,
+        aetheryte_id: u32,
+    },
 }
 
 #[binrw]

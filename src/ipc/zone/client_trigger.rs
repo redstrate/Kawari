@@ -24,6 +24,12 @@ pub enum ClientTriggerCommand {
         unk1: u32,
         pose: u32,
     },
+    #[brw(magic = 0xCAu16)]
+    TeleportQuery {
+        #[brw(pad_before = 2)]
+        aetheryte_id: u32,
+        // TODO: fill out the rest
+    },
 }
 
 #[binrw]

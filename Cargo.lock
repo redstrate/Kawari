@@ -575,7 +575,7 @@ dependencies = [
 [[package]]
 name = "icarus"
 version = "0.0.0"
-source = "git+https://github.com/redstrate/Icarus?branch=ver%2F2025.04.16.0000.0000#5d5f1dded6949b790307546c9ddc0604af636451"
+source = "git+https://github.com/redstrate/Icarus?branch=ver%2F2025.04.16.0000.0000#76c7c6c18bee63927fc723d4a99e2e1fba96fcb9"
 dependencies = [
  "physis",
 ]
@@ -1025,7 +1025,7 @@ checksum = "e3148f5046208a5d56bcfc03053e3ca6334e51da8dfb19b6cdc8b306fae3283e"
 [[package]]
 name = "physis"
 version = "0.4.0"
-source = "git+https://github.com/redstrate/physis#309726163a0d76f26831236f43740a2c8bd1b01d"
+source = "git+https://github.com/redstrate/physis#76120b2dd0843c16af648f7b18ba0f92c5d56460"
 dependencies = [
  "binrw",
  "bitflags",
@@ -1472,9 +1472,9 @@ dependencies = [
 
 [[package]]
 name = "tower-http"
-version = "0.6.2"
+version = "0.6.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "403fa3b783d4b626a8ad51d766ab03cb6d2dbfc46b1c5d4448395e6628dc9697"
+checksum = "0fdb0c213ca27a9f57ab69ddb290fd80d970922355b83ae380b395d3986b8a2e"
 dependencies = [
  "bitflags",
  "bytes",
