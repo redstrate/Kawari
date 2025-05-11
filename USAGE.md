@@ -87,6 +87,7 @@ These special debug commands start with `!` and are custom to Kawari.
     * Territory `183`, Event `1245186` plays the Gridania opening sequence
 * `!spawnclone`: Spawn a clone of yourself
 * `!classjob <id>`: Changes to another class/job
+* `!unlockaction <id>`: Unlock an action, for example: `1` for Return and `4` for Teleport.
     
 ### GM commands
 
@@ -97,3 +98,4 @@ These GM commands are implemented in the FFXIV protocol, but only some of them a
 * `//gm wireframe`: Toggle wireframe rendering for the environment
 * `//gm item <id>`: Gives yourself an item. This can only place a single item in the first page of your inventory currently.
 * `//gm lv <level>`: Sets your current level
+* `//gm aetheryte <on/off> <id>`: Unlock an Aetheryte.

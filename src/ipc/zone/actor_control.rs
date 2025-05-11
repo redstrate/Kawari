@@ -47,6 +47,22 @@ pub enum ActorControlCategory {
         unk1: u32,
         pose: u32,
     },
+    #[brw(magic = 0x1FDu16)]
+    LearnTeleport {
+        #[brw(pad_before = 2)] //padding
+        id: u32,
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        unlocked: bool,
+    },
+    #[brw(magic = 0x29u16)]
+    ToggleActionUnlock {
+        #[brw(pad_before = 2)] //padding
+        id: u32,
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        unlocked: bool,
+    },
 }
 
 #[binrw]

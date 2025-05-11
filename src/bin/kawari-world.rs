@@ -521,7 +521,7 @@ async fn client_loop(
                                             .await;
                                         }
                                     }
-                                    ClientZoneIpcData::GMCommand { command, arg0, .. } => {
+                                    ClientZoneIpcData::GMCommand { command, arg0, arg1, .. } => {
                                         tracing::info!("Got a game master command!");
 
                                         match &command {
@@ -554,6 +554,13 @@ async fn client_loop(
                                             GameMasterCommandType::GiveItem => {
                                                 connection.player_data.inventory.add_in_next_free_slot(Item { id: *arg0, quantity: 1 });
                                                 connection.send_inventory(false).await;
+                                            }
+                                            GameMasterCommandType::Aetheryte => {
+                                                let on = *arg0 == 0;
+                                                let id = *arg1;
+
+                                                connection.actor_control_self(ActorControlSelf {
+                                                    category: ActorControlCategory::LearnTeleport { id, unlocked: on } }).await;
                                             }
                                         }
                                     }

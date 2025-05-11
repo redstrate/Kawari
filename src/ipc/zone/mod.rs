@@ -144,6 +144,7 @@ pub enum GameMasterCommandType {
     ToggleWireframe = 0x26,
     ChangeTerritory = 0x58,
     GiveItem = 0xC8,
+    Aetheryte = 0x5E,
 }
 
 #[binrw]

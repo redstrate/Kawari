@@ -1,8 +1,9 @@
 use crate::{
     common::{CustomizeData, ObjectId, ObjectTypeId, timestamp_secs},
     ipc::zone::{
-        ActorControl, ActorControlCategory, BattleNpcSubKind, ChatMessage, CommonSpawn, EventStart,
-        NpcSpawn, ObjectKind, OnlineStatus, ServerZoneIpcData, ServerZoneIpcSegment,
+        ActorControl, ActorControlCategory, ActorControlSelf, BattleNpcSubKind, ChatMessage,
+        CommonSpawn, EventStart, NpcSpawn, ObjectKind, OnlineStatus, ServerZoneIpcData,
+        ServerZoneIpcSegment,
     },
     opcodes::ServerZoneIpcType,
     packet::{PacketSegment, SegmentData, SegmentType},
@@ -200,6 +201,16 @@ impl ChatHandler {
                         target_actor: connection.player_data.actor_id,
                         segment_type: SegmentType::Ipc,
                         data: SegmentData::Ipc { data: ipc },
+                    })
+                    .await;
+            }
+            "!unlockaction" => {
+                let parts: Vec<&str> = chat_message.message.split(' ').collect();
+                let id = parts[1].parse::<u32>().unwrap();
+
+                connection
+                    .actor_control_self(ActorControlSelf {
+                        category: ActorControlCategory::ToggleActionUnlock { id, unlocked: true },
                     })
                     .await;
             }
