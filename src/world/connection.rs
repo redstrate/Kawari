@@ -384,14 +384,19 @@ impl ZoneConnection {
             let new_zone = Zone::load(&mut game_data.game_data, zone_id);
 
             // find it on the other side
-            let (object, _) = new_zone.find_pop_range(pop_range_id).unwrap();
-
-            // set the exit position
-            self.exit_position = Some(Position {
-                x: object.transform.translation[0],
-                y: object.transform.translation[1],
-                z: object.transform.translation[2],
-            });
+            if let Some((object, _)) = new_zone.find_pop_range(pop_range_id) {
+                // set the exit position
+                self.exit_position = Some(Position {
+                    x: object.transform.translation[0],
+                    y: object.transform.translation[1],
+                    z: object.transform.translation[2],
+                });
+            } else {
+                tracing::warn!(
+                    "Failed to find pop range in {}. Falling back to 0,0,0!",
+                    new_zone.id
+                );
+            }
 
             territory_type = zone_id;
         }
