@@ -79,22 +79,26 @@ impl Zone {
         instance_id: u32,
     ) -> Option<(&InstanceObject, &PopRangeInstanceObject)> {
         // TODO: also check position!
-        for group in &self.planmap.as_ref().unwrap().chunks[0].layers {
-            for object in &group.objects {
-                if let LayerEntryData::PopRange(pop_range) = &object.data {
-                    if object.instance_id == instance_id {
-                        return Some((object, pop_range));
+        if let Some(planmap) = self.planmap.as_ref() {
+            for group in &planmap.chunks[0].layers {
+                for object in &group.objects {
+                    if let LayerEntryData::PopRange(pop_range) = &object.data {
+                        if object.instance_id == instance_id {
+                            return Some((object, pop_range));
+                        }
                     }
                 }
             }
         }
 
-        // For certain PopRanges (e.g. the starting position in the opening zones)
-        for group in &self.planevent.as_ref().unwrap().chunks[0].layers {
-            for object in &group.objects {
-                if let LayerEntryData::PopRange(pop_range) = &object.data {
-                    if object.instance_id == instance_id {
-                        return Some((object, pop_range));
+        if let Some(planevent) = self.planevent.as_ref() {
+            // For certain PopRanges (e.g. the starting position in the opening zones)
+            for group in &planevent.chunks[0].layers {
+                for object in &group.objects {
+                    if let LayerEntryData::PopRange(pop_range) = &object.data {
+                        if object.instance_id == instance_id {
+                            return Some((object, pop_range));
+                        }
                     }
                 }
             }
