@@ -317,6 +317,11 @@ async fn client_loop(
 
                                         let common = connection.get_player_common_spawn(connection.exit_position, connection.exit_rotation);
 
+                                        let chara_details = database.find_chara_make(connection.player_data.content_id);
+
+                                        connection.send_inventory(false).await;
+                                        connection.send_stats(&chara_details).await;
+
                                         // send player spawn
                                         {
                                             let ipc = ServerZoneIpcSegment {
@@ -564,8 +569,16 @@ async fn client_loop(
                                                 let on = *arg0 == 0;
                                                 let id = *arg1;
 
-                                                connection.actor_control_self(ActorControlSelf {
-                                                    category: ActorControlCategory::LearnTeleport { id, unlocked: on } }).await;
+                                                // id == 0 means "all"
+                                                if id == 0 {
+                                                    for i in 1..239 {
+                                                        connection.actor_control_self(ActorControlSelf {
+                                                            category: ActorControlCategory::LearnTeleport { id: i, unlocked: on } }).await;
+                                                    }
+                                                } else {
+                                                    connection.actor_control_self(ActorControlSelf {
+                                                        category: ActorControlCategory::LearnTeleport { id, unlocked: on } }).await;
+                                                }
                                             }
                                         }
                                     }
