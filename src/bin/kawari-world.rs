@@ -336,6 +336,12 @@ async fn client_loop(
                                                 connection.send_inventory(false).await;
                                                 connection.send_stats(&chara_details).await;
 
+                                                let online_status = if connection.player_data.gm_rank == GameMasterRank::NormalUser {
+                                                    OnlineStatus::Online
+                                                } else {
+                                                    OnlineStatus::GameMasterBlue
+                                                };
+
                                                 // send player spawn
                                                 {
                                                     let ipc = ServerZoneIpcSegment {
@@ -346,8 +352,8 @@ async fn client_loop(
                                                             content_id: connection.player_data.content_id,
                                                             current_world_id: config.world.world_id,
                                                             home_world_id: config.world.world_id,
-                                                            gm_rank: GameMasterRank::Debug,
-                                                            online_status: OnlineStatus::GameMasterBlue,
+                                                            gm_rank: connection.player_data.gm_rank,
+                                                            online_status,
                                                             common: common.clone(),
                                                                                              ..Default::default()
                                                         }),

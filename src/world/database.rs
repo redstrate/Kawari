@@ -9,7 +9,10 @@ use crate::{
         workdefinitions::{CharaMake, ClientSelectData, RemakeMode},
     },
     inventory::Inventory,
-    ipc::lobby::{CharacterDetails, CharacterFlag},
+    ipc::{
+        lobby::{CharacterDetails, CharacterFlag},
+        zone::GameMasterRank,
+    },
 };
 
 use super::PlayerData;
@@ -44,7 +47,7 @@ impl WorldDatabase {
 
         // Create characters data table
         {
-            let query = "CREATE TABLE IF NOT EXISTS character_data (content_id INTEGER PRIMARY KEY, name STRING, chara_make STRING, city_state INTEGER, zone_id INTEGER, pos_x REAL, pos_y REAL, pos_z REAL, rotation REAL, inventory STRING, remake_mode INTEGER);";
+            let query = "CREATE TABLE IF NOT EXISTS character_data (content_id INTEGER PRIMARY KEY, name STRING, chara_make STRING, city_state INTEGER, zone_id INTEGER, pos_x REAL, pos_y REAL, pos_z REAL, rotation REAL, inventory STRING, remake_mode INTEGER, gm_rank INTEGER);";
             connection.execute(query, ()).unwrap();
         }
 
@@ -139,15 +142,16 @@ impl WorldDatabase {
             .unwrap();
 
         stmt = connection
-            .prepare("SELECT pos_x, pos_y, pos_z, rotation, zone_id, inventory FROM character_data WHERE content_id = ?1")
+            .prepare("SELECT pos_x, pos_y, pos_z, rotation, zone_id, inventory, gm_rank FROM character_data WHERE content_id = ?1")
             .unwrap();
-        let (pos_x, pos_y, pos_z, rotation, zone_id, inventory_json): (
+        let (pos_x, pos_y, pos_z, rotation, zone_id, inventory_json, gm_rank): (
             f32,
             f32,
             f32,
             f32,
             u16,
             String,
+            u8,
         ) = stmt
             .query_row((content_id,), |row| {
                 Ok((
@@ -157,6 +161,7 @@ impl WorldDatabase {
                     row.get(3)?,
                     row.get(4)?,
                     row.get(5)?,
+                    row.get(6)?,
                 ))
             })
             .unwrap();
@@ -175,6 +180,7 @@ impl WorldDatabase {
             rotation,
             zone_id,
             inventory,
+            gm_rank: GameMasterRank::try_from(gm_rank).unwrap(),
             ..Default::default()
         }
     }
@@ -344,7 +350,7 @@ impl WorldDatabase {
         // insert char data
         connection
             .execute(
-                "INSERT INTO character_data VALUES (?1, ?2, ?3, ?4, ?5, 0.0, 0.0, 0.0, 0.0, ?6, 0);",
+                "INSERT INTO character_data VALUES (?1, ?2, ?3, ?4, ?5, 0.0, 0.0, 0.0, 0.0, ?6, 0, 0);",
                 (
                     content_id,
                     name,

@@ -15,9 +15,9 @@ use crate::{
         chat::ServerChatIpcSegment,
         zone::{
             ActorControl, ActorControlSelf, ActorControlTarget, ClientZoneIpcSegment, CommonSpawn,
-            ContainerInfo, DisplayFlag, Equip, InitZone, ItemInfo, Move, NpcSpawn, ObjectKind,
-            PlayerStats, PlayerSubKind, ServerZoneIpcData, ServerZoneIpcSegment, StatusEffect,
-            StatusEffectList, UpdateClassInfo, Warp, WeatherChange,
+            ContainerInfo, DisplayFlag, Equip, GameMasterRank, InitZone, ItemInfo, Move, NpcSpawn,
+            ObjectKind, PlayerStats, PlayerSubKind, ServerZoneIpcData, ServerZoneIpcSegment,
+            StatusEffect, StatusEffectList, UpdateClassInfo, Warp, WeatherChange,
         },
     },
     opcodes::ServerZoneIpcType,
@@ -60,6 +60,7 @@ pub struct PlayerData {
     pub inventory: Inventory,
 
     pub teleport_query: TeleportQuery,
+    pub gm_rank: GameMasterRank,
 }
 
 /// Represents a single connection between an instance of the client and the world server

@@ -104,7 +104,7 @@ pub enum OnlineStatus {
 #[binrw]
 #[brw(little)]
 #[brw(repr = u8)]
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq)]
 pub enum GameMasterRank {
     #[default]
     NormalUser,
@@ -114,6 +114,23 @@ pub enum GameMasterRank {
     Support = 5,
     Senior = 7,
     Debug = 90,
+}
+
+impl TryFrom<u8> for GameMasterRank {
+    type Error = ();
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(Self::NormalUser),
+            1 => Ok(Self::GameMaster),
+            3 => Ok(Self::EventJunior),
+            4 => Ok(Self::EventSenior),
+            5 => Ok(Self::Support),
+            7 => Ok(Self::Senior),
+            90 => Ok(Self::Debug),
+            _ => Err(()),
+        }
+    }
 }
 
 #[binrw]
