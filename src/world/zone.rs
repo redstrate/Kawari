@@ -8,7 +8,7 @@ use physis::{
 };
 
 /// Represents a loaded zone
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Zone {
     pub id: u16,
     planevent: Option<LayerGroup>,

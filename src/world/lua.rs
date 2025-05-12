@@ -237,6 +237,8 @@ impl UserData for Zone {
                         y: trans[1],
                         z: trans[2],
                     });
+                } else {
+                    tracing::warn!("Failed to find pop range for {id}!");
                 }
                 Ok(mlua::Nil)
             },
