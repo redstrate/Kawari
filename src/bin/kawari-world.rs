@@ -134,6 +134,9 @@ async fn client_loop(
 
     let mut lua_player = LuaPlayer::default();
 
+    // TODO: this is terrible, just have a separate zone/chat connection
+    let mut is_zone_connection = false;
+
     let mut buf = vec![0; RECEIVE_BUFFER_SIZE];
     loop {
         tokio::select! {
@@ -145,7 +148,7 @@ async fn client_loop(
                         if n == 0 {
                             let now = Instant::now();
                             if now.duration_since(connection.last_keep_alive) > Duration::from_secs(5) {
-                                tracing::info!("Connection was killed because of timeout");
+                                tracing::info!("Connection {:#?} was killed because of timeout", client_handle.id);
                                 break;
                             }
                         }
@@ -166,6 +169,8 @@ async fn client_loop(
                                         }
 
                                         if connection_type == ConnectionType::Zone {
+                                            is_zone_connection = true;
+
                                             // collect actor data
                                             connection.initialize(actor_id).await;
 
@@ -883,7 +888,7 @@ async fn client_loop(
                         }
                     },
                     Err(_) => {
-                        tracing::info!("Connection was killed because of a network error!");
+                        tracing::info!("Connection {:#?} was killed because of a network error!", client_handle.id);
                         break;
                     },
                 }
@@ -905,8 +910,14 @@ async fn client_loop(
     }
 
     // forcefully log out the player if they weren't logging out but force D/C'd
-    if connection.player_data.actor_id != 0 && !connection.gracefully_logged_out {
-        tracing::info!("Forcefully logging out player...");
+    if connection.player_data.actor_id != 0
+        && !connection.gracefully_logged_out
+        && is_zone_connection
+    {
+        tracing::info!(
+            "Forcefully logging out connection {:#?}...",
+            client_handle.id
+        );
         connection.begin_log_out().await;
         connection
             .handle
