@@ -57,8 +57,10 @@ pub struct ClientSelectData {
     pub remake_minutes_remaining: i32,
     pub voice_id: i32, // presumably
     pub unk20: i32,
+    pub unk21: i32,
     pub world_name: String,
     pub unk22: i32,
+    pub unk23: i32,
 }
 
 impl ClientSelectData {
@@ -87,8 +89,10 @@ impl ClientSelectData {
             self.remake_minutes_remaining.to_string(),
             self.voice_id.to_string(),
             self.unk20.to_string(),
+            self.unk21.to_string(),
             self.world_name,
             self.unk22.to_string(),
+            self.unk23.to_string(),
         ]);
 
         let obj = json!({

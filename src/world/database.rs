@@ -291,8 +291,10 @@ impl WorldDatabase {
                     remake_minutes_remaining: 0,
                     voice_id: chara_make.voice_id,
                     unk20: 0,
+                    unk21: 0,
                     world_name: String::new(),
                     unk22: 0,
+                    unk23: 0,
                 };
 
                 characters.push(CharacterDetails {
