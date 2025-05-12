@@ -1,6 +1,7 @@
 use std::{
     net::SocketAddr,
     sync::{Arc, Mutex},
+    time::Instant,
 };
 
 use tokio::net::TcpStream;
@@ -87,6 +88,11 @@ pub struct ZoneConnection {
 
     pub exit_position: Option<Position>,
     pub exit_rotation: Option<f32>,
+
+    pub last_keep_alive: Instant,
+
+    /// Whether the player was gracefully logged out
+    pub gracefully_logged_out: bool,
 }
 
 impl ZoneConnection {
@@ -612,6 +618,8 @@ impl ZoneConnection {
     }
 
     pub async fn begin_log_out(&mut self) {
+        self.gracefully_logged_out = true;
+
         // write the player back to the database
         self.database.commit_player_data(&self.player_data);
 

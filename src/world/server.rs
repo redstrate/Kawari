@@ -313,10 +313,25 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
             }
             ToServer::FatalError(err) => return Err(err),
         }
-    }
-    // Remove any clients that errored out
-    for id in to_remove {
-        data.clients.remove(&id);
+
+        // Remove any clients that errored out
+        for remove_id in &to_remove {
+            // remove any actors they had
+            let mut actor_id = None;
+            for (id, (handle, _)) in &mut data.clients {
+                if *id == *remove_id {
+                    actor_id = Some(handle.actor_id);
+                }
+            }
+
+            if let Some(actor_id) = actor_id {
+                // remove them from the instance
+                let current_instance = data.find_actor_instance_mut(actor_id).unwrap();
+                current_instance.actors.remove(&ObjectId(actor_id));
+            }
+
+            data.clients.remove(&remove_id);
+        }
     }
     Ok(())
 }

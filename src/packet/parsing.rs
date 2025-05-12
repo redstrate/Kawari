@@ -207,7 +207,9 @@ pub async fn send_packet<T: ReadWriteIpcSegment>(
 
     let buffer = cursor.into_inner();
 
-    socket.write_all(&buffer).await.unwrap();
+    if let Err(e) = socket.write_all(&buffer).await {
+        tracing::warn!("Failed to send packet: {e}");
+    }
 }
 
 // temporary
