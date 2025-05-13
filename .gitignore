@@ -7,3 +7,4 @@ config.json
 config.yaml
 src/opcodes.rs
 backups/
+temp.zip
