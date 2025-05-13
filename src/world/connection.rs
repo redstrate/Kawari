@@ -785,6 +785,7 @@ impl ZoneConnection {
             models: inventory.get_model_ids(&mut game_data),
             pos: exit_position.unwrap_or_default(),
             rotation: exit_rotation.unwrap_or(0.0),
+            voice: chara_details.chara_make.voice_id as u8,
             ..Default::default()
         }
     }
