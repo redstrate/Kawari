@@ -1,5 +1,6 @@
 use icarus::Aetheryte::AetheryteSheet;
 use icarus::ClassJob::ClassJobSheet;
+use icarus::EquipSlotCategory::EquipSlotCategorySheet;
 use icarus::World::WorldSheet;
 use icarus::{Tribe::TribeSheet, Warp::WarpSheet};
 use physis::common::{Language, Platform};
@@ -117,5 +118,105 @@ impl GameData {
         let zone_id = row.Territory().into_u16()?;
 
         Some((*pop_range_id, *zone_id))
+    }
+
+    /// Find an item's equip category and id by name, if it exists.
+    pub fn get_item_by_name(&mut self, name: &str) -> Option<(u8, u32)> {
+        for page in &self.item_pages {
+            for row in &page.rows {
+                let ExcelRowKind::SingleRow(single_row) = &row.kind else {
+                    panic!("Expected a single row!")
+                };
+
+                let physis::exd::ColumnData::String(item_name) = &single_row.columns[9] else {
+                    panic!("Unexpected type!");
+                };
+
+                if !item_name.to_lowercase().contains(&name.to_lowercase()) {
+                    continue;
+                }
+
+                let physis::exd::ColumnData::UInt8(equip_category) = &single_row.columns[17] else {
+                    panic!("Unexpected type!");
+                };
+
+                return Some((*equip_category, row.row_id));
+            }
+        }
+
+        None
+    }
+
+    /// Turn an equip slot category id into a slot for the equipped inventory
+    pub fn get_equipslot_category(&mut self, equipslot_id: u8) -> Option<u16> {
+        let sheet = EquipSlotCategorySheet::read_from(&mut self.game_data, Language::None)?;
+        let row = sheet.get_row(equipslot_id as u32)?;
+
+        let main_hand = row.MainHand().into_i8()?;
+        if *main_hand == 1 {
+            return Some(0);
+        }
+
+        let off_hand = row.OffHand().into_i8()?;
+        if *off_hand == 1 {
+            return Some(1);
+        }
+
+        let head = row.Head().into_i8()?;
+        if *head == 1 {
+            return Some(2);
+        }
+
+        let body = row.Body().into_i8()?;
+        if *body == 1 {
+            return Some(3);
+        }
+
+        let gloves = row.Gloves().into_i8()?;
+        if *gloves == 1 {
+            return Some(4);
+        }
+
+        let legs = row.Legs().into_i8()?;
+        if *legs == 1 {
+            return Some(6);
+        }
+
+        let feet = row.Feet().into_i8()?;
+        if *feet == 1 {
+            return Some(7);
+        }
+
+        let ears = row.Ears().into_i8()?;
+        if *ears == 1 {
+            return Some(8);
+        }
+
+        let neck = row.Neck().into_i8()?;
+        if *neck == 1 {
+            return Some(9);
+        }
+
+        let wrists = row.Wrists().into_i8()?;
+        if *wrists == 1 {
+            return Some(10);
+        }
+
+        let right_finger = row.FingerR().into_i8()?;
+        if *right_finger == 1 {
+            return Some(11);
+        }
+
+        let left_finger = row.FingerL().into_i8()?;
+        if *left_finger == 1 {
+            return Some(12);
+        }
+
+        let soul_crystal = row.FingerL().into_i8()?;
+        if *soul_crystal == 1 {
+            return Some(13);
+        }
+
+        None
     }
 }

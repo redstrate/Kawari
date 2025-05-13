@@ -88,6 +88,7 @@ These special debug commands start with `!` and are custom to Kawari.
 * `!spawnclone`: Spawn a clone of yourself
 * `!classjob <id>`: Changes to another class/job
 * `!unlockaction <id>`: Unlock an action, for example: `1` for Return and `4` for Teleport.
+* `!equip <name>`: Forcefully equip an item, useful for bypassing class/job and other client restrictions. This will *overwrite* any item in that slot!
     
 ### GM commands
 

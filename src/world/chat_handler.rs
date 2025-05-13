@@ -1,5 +1,6 @@
 use crate::{
     common::{CustomizeData, ObjectId, ObjectTypeId, timestamp_secs},
+    inventory::Storage,
     ipc::zone::{
         ActorControl, ActorControlCategory, ActorControlSelf, BattleNpcSubKind, ChatMessage,
         CommonSpawn, EventStart, NpcSpawn, ObjectKind, OnlineStatus, ServerZoneIpcData,
@@ -213,6 +214,32 @@ impl ChatHandler {
                         category: ActorControlCategory::ToggleActionUnlock { id, unlocked: true },
                     })
                     .await;
+            }
+            "!equip" => {
+                let (_, name) = chat_message.message.split_once(' ').unwrap();
+
+                {
+                    let mut gamedata = connection.gamedata.lock().unwrap();
+
+                    if let Some((equip_category, id)) = gamedata.get_item_by_name(name) {
+                        let slot = gamedata.get_equipslot_category(equip_category).unwrap();
+
+                        connection
+                            .player_data
+                            .inventory
+                            .equipped
+                            .get_slot_mut(slot as u16)
+                            .id = id;
+                        connection
+                            .player_data
+                            .inventory
+                            .equipped
+                            .get_slot_mut(slot as u16)
+                            .quantity = 1;
+                    }
+                }
+
+                connection.send_inventory(true).await;
             }
             _ => {}
         }
