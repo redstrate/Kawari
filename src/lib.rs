@@ -45,17 +45,17 @@ const GAME_VERSION: u16 = 7000;
 pub const RECEIVE_BUFFER_SIZE: usize = 32000;
 
 /// Supported boot version.
-pub const SUPPORTED_BOOT_VERSION: Version = Version("2025.04.25.0000.0001");
+pub const SUPPORTED_BOOT_VERSION: Version = Version("2025.05.01.0000.0001");
 
 /// Supported game version.
-pub const SUPPORTED_GAME_VERSION: Version = Version("2025.04.16.0000.0000");
+pub const SUPPORTED_GAME_VERSION: Version = Version("2025.05.17.0000.0000");
 
 const SUPPORTED_EXPAC_VERSIONS: [(&str, Version); 5] = [
-    ("ex1", Version("2025.04.10.0000.0000")),
-    ("ex2", Version("2025.04.10.0000.0000")),
-    ("ex3", Version("2025.04.16.0000.0000")),
-    ("ex4", Version("2025.04.16.0000.0000")),
-    ("ex5", Version("2025.04.16.0000.0000")),
+    ("ex1", Version("2025.05.01.0000.0000")),
+    ("ex2", Version("2025.05.09.0000.0000")),
+    ("ex3", Version("2025.05.17.0000.0000")),
+    ("ex4", Version("2025.05.17.0000.0000")),
+    ("ex5", Version("2025.05.17.0000.0000")),
 ];
 
 /// Supported expansion versions.
