@@ -83,7 +83,7 @@ md5 = { version = "0.7", default-features = false }
 physis = { git = "https://github.com/redstrate/physis", default-features = false }
 
 # Used for data persistence
-rusqlite = { version = "0.35", features = ["bundled"], default-features = false }
+rusqlite = { version = "0.36", features = ["bundled"], default-features = false }
 
 # needed for c-style bitflags
 bitflags = { version = "2.9", default-features = false }
@@ -92,7 +92,7 @@ bitflags = { version = "2.9", default-features = false }
 mlua = { version = "0.10", features = ["lua51", "vendored", "send", "async", "serialize"], default-features = false }
 
 # For character backup decompression
-zip = { version = "2.6", features = ["deflate", "lzma", "bzip2"], default-features = false }
+zip = { version = "4.0", features = ["deflate", "lzma", "bzip2"], default-features = false }
 
 # For some login<->lobby server communication
 reqwest = { version = "0.12", default-features = false }
