@@ -29,7 +29,7 @@ Kawari is primarily a research project, but also a way to preserve the modern cl
 
 ## Supported Game Version
 
-Kawari currently supports patch **7.21** (2025.04.16.0000.0000.) Kawari will never "roll back" to a previous patch. There are other servers (e.g. Sapphire) that support older versions of the game. As Kawari moves to a new major patch, the previous patch is moved to a branch (e.g. 7.1) These branches are for archival: effectively unsupported, but still useful.
+Kawari currently supports patch **7.25** (2025.05.17.0000.0000.) Kawari will never "roll back" to a previous patch. There are other servers (e.g. Sapphire) that support older versions of the game. As Kawari moves to a new major patch, the previous patch is moved to a branch (e.g. 7.1) These branches are for archival: effectively unsupported, but still useful.
 
 Only the Global region is supported. Only the Windows client is supported. Supporting other regions or clients are currently out of scope of this project, but might work anyway.
 
