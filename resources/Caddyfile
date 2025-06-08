@@ -33,3 +33,8 @@ patch-gamever.ffxiv.localhost:80 {
 ffxiv-login.square.localhost:80 {
     reverse_proxy :6700
 }
+
+patch-dl.ffxiv.localhost:80 {
+    root * ./patches
+    file_server browse
+}
