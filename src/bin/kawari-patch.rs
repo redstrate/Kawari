@@ -166,30 +166,42 @@ async fn verify_boot(
     }
 
     // check if we need any patching
-    let patches = list_patch_files(&config.patch.patches_location);
+    let mut send_patches = Vec::new();
+    let patches = list_patch_files(&*format!("{}/boot", &config.patch.patches_location));
     for patch in patches {
         let patch_str: &str = &patch;
         if actual_boot_version.partial_cmp(patch_str).unwrap() == Ordering::Less {
-            // not up to date!
-            let patch_list = PatchList {
-                id: "477D80B1_38BC_41d4_8B48_5273ADB89CAC".to_string(),
-                requested_version: boot_version.to_string().clone(),
-                patch_length: 0,
-                content_location: String::new(),
-                patches: vec![PatchEntry {
-                    url: format!("http://{}/{}", config.patch.patch_dl_url, patch).to_string(),
-                    version: "2023.09.15.0000.0000".to_string(),
-                    hash_block_size: 50000000,
-                    length: 1479062470,
-                    size_on_disk: 0,
-                    hashes: vec![],
-                    unknown_a: 0,
-                    unknown_b: 0,
-                }],
-            };
-            let patch_list_str = patch_list.to_string(PatchListType::Boot);
-            return patch_list_str.into_response();
+            let file = std::fs::File::open(&*format!(
+                "{}/boot/{}.patch",
+                &config.patch.patches_location, patch_str
+            ))
+            .unwrap();
+            let metadata = file.metadata().unwrap();
+
+            send_patches.push(PatchEntry {
+                url: format!("http://{}/boot/{}.patch", config.patch.patch_dl_url, patch)
+                    .to_string(),
+                version: patch_str.to_string(),
+                hash_block_size: 50000000,
+                length: metadata.len() as i64,
+                size_on_disk: metadata.len() as i64, // NOTE: wrong but it should be fine to lie
+                hashes: vec![],
+                unknown_a: 0,
+                unknown_b: 0,
+            });
         }
+    }
+
+    if !send_patches.is_empty() {
+        let patch_list = PatchList {
+            id: "477D80B1_38BC_41d4_8B48_5273ADB89CAC".to_string(),
+            requested_version: boot_version.to_string().clone(),
+            content_location: format!("ffxivpatch/boot/metainfo/{}.http", boot_version.0), // FIXME: i think this is actually supposed to be the target version
+            patch_length: 0,
+            patches: send_patches,
+        };
+        let patch_list_str = patch_list.to_string(PatchListType::Boot);
+        return patch_list_str.into_response();
     }
 
     let headers = HeaderMap::new();

@@ -142,7 +142,7 @@ impl Default for PatchConfig {
             port: 6900,
             listen_address: "127.0.0.1".to_string(),
             patch_dl_url: "patch-dl.ffxiv.localhost".to_string(),
-            patches_location: String::new(),
+            patches_location: "patches".to_string(),
             boot_server_name: "patch-bootver.ffxiv.localhost".to_string(),
             game_server_name: "patch-gamever.ffxiv.localhost".to_string(),
         }
