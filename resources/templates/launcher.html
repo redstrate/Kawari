@@ -73,16 +73,20 @@
     }
 
     function fromAppConfig(thing) {
-        //document.getElementById('replace-me').innerText += "config: " + JSON.stringify(thing);
+        console.debug("fromAppConfig(" + JSON.stringify(thing) + ")")
     }
     window.fromAppConfig = this.checkHandlerType(fromAppConfig);
 
     function fromAppWarn(thing) {
+        console.debug("fromAppWarn(" + JSON.stringify(thing) + ")")
+
         document.getElementById('statusMessage').innerText += "warn: " + JSON.stringify(thing);
     }
     window.fromAppWarn = this.checkHandlerType(fromAppWarn);
 
     function fromAppStartVersionCheck(thing) {
+        console.debug("fromAppStartVersionCheck(" + JSON.stringify(thing) + ")")
+
         sendAlert(thing.versionChecking);
 
         // the official launcher does some preparation stuff here, and when it's finished it tells it the ID it just recieved
@@ -91,16 +95,18 @@
     window.fromAppStartVersionCheck = this.checkHandlerType(fromAppStartVersionCheck);
 
     function fromAppDP(thing) {
-        //document.getElementById('replace-me').innerText += "dp: " + JSON.stringify(thing);
+        console.debug("fromAppDP(" + JSON.stringify(thing) + ")")
     }
     window.fromAppDP = this.checkHandlerType(fromAppDP);
 
     function fromAppDisplaySettings(thing) {
-        //document.getElementById('replace-me').innerText += "display settings: " + JSON.stringify(thing);
+        console.debug("fromAppDisplaySettings(" + JSON.stringify(thing) + ")")
     }
     window.fromAppDisplaySettings = this.checkHandlerType(fromAppDisplaySettings);
 
     function fromAppResumeInfo(thing) {
+        console.debug("fromAppResumeInfo(" + JSON.stringify(thing) + ")")
+
         // 3 means "ready to play"
         if (thing.state == 3) {
             document.getElementById("login").style.display = "none";
@@ -113,37 +119,39 @@
     window.fromAppResumeInfo = this.checkHandlerType(fromAppResumeInfo);
 
     function fromAppLoginUrl(thing) {
-        //document.getElementById('replace-me').innerText += "login info: " + JSON.stringify(thing);
+        console.debug("fromAppLoginUrl(" + JSON.stringify(thing) + ")")
     }
     window.fromAppLoginUrl = this.checkHandlerType(fromAppLoginUrl);
 
     function fromAppExAgree(thing) {
+        console.debug("fromAppExAgree(" + JSON.stringify(thing) + ")")
+
         sendAlert("You need to accept the following Ex EULAs: " + thing.notAgreedExEulas);
     }
     window.fromAppExAgree = this.checkHandlerType(fromAppExAgree);
 
     function fromAppStartDownload(thing) {
-        //document.getElementById('replace-me').innerText += "start download: " + JSON.stringify(thing);
+        console.debug("fromAppStartDownload(" + JSON.stringify(thing) + ")")
     }
     window.fromAppStartDownload = this.checkHandlerType(fromAppStartDownload);
 
     function fromAppDownloadProgress(thing) {
-        //document.getElementById('replace-me').innerText += "download prog: " + JSON.stringify(thing);
+        console.debug("fromAppDownloadProgress(" + JSON.stringify(thing) + ")")
     }
     window.fromAppDownloadProgress = this.checkHandlerType(fromAppDownloadProgress);
 
     function fromAppInstallProgress(thing) {
-        //document.getElementById('replace-me').innerText += "install prog: " + JSON.stringify(thing);
+        console.debug("fromAppInstallProgress(" + JSON.stringify(thing) + ")")
     }
     window.fromAppInstallProgress = this.checkHandlerType(fromAppInstallProgress);
 
     function fromAppStartInstall(thing) {
-        //document.getElementById('replace-me').innerText += "start install: " + JSON.stringify(thing);
+        console.debug("fromAppStartInstall(" + JSON.stringify(thing) + ")")
     }
     window.fromAppStartInstall = this.checkHandlerType(fromAppStartInstall);
 
     function fromAppWaitPlay(thing) {
-        //document.getElementById('replace-me').innerText += "wait play: " + JSON.stringify(thing);
+        console.debug("fromAppWaitPlay(" + JSON.stringify(thing) + ")")
 
         // the official launcher does some preparation stuff here, and when it's finished it tells it the ID it just recieved
         window.external.user('received=' + thing.ID);
@@ -154,27 +162,27 @@
     window.fromAppWaitPlay = this.checkHandlerType(fromAppWaitPlay);
 
     function fromAppStartFileCheck(thing) {
-        //document.getElementById('replace-me').innerText += "file check: " + JSON.stringify(thing);
+        console.debug("fromAppStartFileCheck(" + JSON.stringify(thing) + ")")
     }
     window.fromAppStartFileCheck = this.checkHandlerType(fromAppStartFileCheck);
 
     function fromAppFileCheckProgress(thing) {
-        //document.getElementById('replace-me').innerText += "file check prog: " + JSON.stringify(thing);
+        console.debug("fromAppFileCheckProgress(" + JSON.stringify(thing) + ")")
     }
     window.fromAppFileCheckProgress = this.checkHandlerType(fromAppFileCheckProgress);
 
     function fromAppFinishedFileCheck(thing) {
-        //document.getElementById('replace-me').innerText += "file check finished: " + JSON.stringify(thing);
+        console.debug("fromAppFinishedFileCheck(" + JSON.stringify(thing) + ")")
     }
     window.fromAppFinishedFileCheck = this.checkHandlerType(fromAppFinishedFileCheck);
 
     function fromAppServiceAgreement(thing) {
-        //document.getElementById('replace-me').innerText += "agreement: " + JSON.stringify(thing);
+        console.debug("fromAppServiceAgreement(" + JSON.stringify(thing) + ")")
     }
     window.fromAppServiceAgreement = this.checkHandlerType(fromAppServiceAgreement);
 
     function fromAppDialog(thing) {
-        //document.getElementById('replace-me').innerText += "dialog: " + JSON.stringify(thing);
+        console.debug("fromAppDialog(" + JSON.stringify(thing) + ")")
     }
     window.fromAppDialog = this.checkHandlerType(fromAppDialog);
 
