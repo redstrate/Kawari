@@ -62,6 +62,22 @@ caddy run --config resources/Caddyfile
 
 This Caddyfile hosts several domains required for normal operation, for example `ffxiv.localhost` on port 80. If you get a "permission denied" error starting Caddy, you must either start Caddy with elevated privileges (`sudo`) or set the `CAP_NET_BIND_SERVICE` capability. See [here](https://caddyserver.com/docs/quick-starts/caddyfile) for more information on how to do this.
 
+You'll notice that your browser can connect to the `.localhost` sites without any additional configuration, e.g. `ffxiv.localhost`. Whatever magic Caddy does to make this happen _only works in browsers_, so the WinHTTP-based code in FFXIV will fail. To work around this, you will have to edit your hosts file:
+
+```
+127.0.0.1 admin.ffxiv.localhost
+127.0.0.1 ffxiv.localhost
+127.0.0.1 launcher.ffxiv.localhost
+127.0.0.1 config-dl.ffxiv.localhost
+127.0.0.1 frontier.ffxiv.localhost
+127.0.0.1 patch-bootver.ffxiv.localhost
+127.0.0.1 patch-gamever.ffxiv.localhost
+127.0.0.1 ffxiv-login.square.localhost
+127.0.0.1 patch-dl.ffxiv.localhost
+```
+
+On Windows this file is located under `C:\Windows\System32\Drivers\etc\hosts` and on Linux it's located under `/etc/hosts`. **If you plan on using Astra to connect to Kawari, this is not needed.**
+
 ## Logging in
 
 Navigate to [http://ffxiv.localhost](http://ffxiv.localhost), and register for an account. In order to actually log in, navigate to the Setup page and follow the instructions there. If you get an error in your web browser, ensure you're connecting via **http://** and not **https://**.
