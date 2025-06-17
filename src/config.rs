@@ -16,7 +16,7 @@ impl Default for AdminConfig {
     fn default() -> Self {
         Self {
             port: 5800,
-            listen_address: "127.0.0.1".to_string(),
+            listen_address: "0.0.0.0".to_string(),
         }
     }
 }
@@ -44,7 +44,7 @@ impl Default for FrontierConfig {
     fn default() -> Self {
         Self {
             port: 5857,
-            listen_address: "127.0.0.1".to_string(),
+            listen_address: "0.0.0.0".to_string(),
             worlds_open: true,
             login_open: true,
         }
@@ -72,7 +72,7 @@ impl Default for LobbyConfig {
     fn default() -> Self {
         Self {
             port: 7000,
-            listen_address: "127.0.0.1".to_string(),
+            listen_address: "0.0.0.0".to_string(),
         }
     }
 }
@@ -100,7 +100,7 @@ impl Default for LoginConfig {
     fn default() -> Self {
         Self {
             port: 6700,
-            listen_address: "127.0.0.1".to_string(),
+            listen_address: "0.0.0.0".to_string(),
             server_name: "ffxiv-login.square.localhost".to_string(),
         }
     }
@@ -140,7 +140,7 @@ impl Default for PatchConfig {
     fn default() -> Self {
         Self {
             port: 6900,
-            listen_address: "127.0.0.1".to_string(),
+            listen_address: "0.0.0.0".to_string(),
             patch_dl_url: "patch-dl.ffxiv.localhost".to_string(),
             patches_location: "patches".to_string(),
             boot_server_name: "patch-bootver.ffxiv.localhost".to_string(),
@@ -172,7 +172,7 @@ impl Default for WebConfig {
     fn default() -> Self {
         Self {
             port: 5801,
-            listen_address: "127.0.0.1".to_string(),
+            listen_address: "0.0.0.0".to_string(),
             server_name: "ffxiv.localhost".to_string(),
         }
     }
@@ -237,7 +237,7 @@ impl WorldConfig {
     }
 
     fn default_listen_address() -> String {
-        "127.0.0.1".to_string()
+        "0.0.0.0".to_string()
     }
 
     fn default_world_id() -> u16 {
@@ -295,7 +295,7 @@ impl Default for LauncherConfig {
     fn default() -> Self {
         Self {
             port: 5802,
-            listen_address: "127.0.0.1".to_string(),
+            listen_address: "0.0.0.0".to_string(),
             server_name: "launcher.ffxiv.localhost".to_string(),
         }
     }
@@ -322,7 +322,7 @@ impl Default for SaveDataBankConfig {
     fn default() -> Self {
         Self {
             port: 5803,
-            listen_address: "127.0.0.1".to_string(),
+            listen_address: "0.0.0.0".to_string(),
         }
     }
 }
