@@ -12,6 +12,7 @@ use kawari::lobby::send_custom_world_packet;
 use kawari::login::{LoginDatabase, LoginError};
 use minijinja::{Environment, context};
 use serde::Deserialize;
+use tower_http::cors::{Any, CorsLayer};
 use tower_http::services::ServeDir;
 
 fn setup_default_environment() -> Environment<'static> {
@@ -304,6 +305,8 @@ async fn main() {
         database: Arc::new(LoginDatabase::new()),
     };
 
+    let cors = CorsLayer::new().allow_origin(Any);
+
     let app = Router::new()
         // retail API
         .route("/oauth/ffxivarr/login/top", get(top))
@@ -322,7 +325,8 @@ async fn main() {
         .route("/account/app/svc/mbrPasswd", get(change_password))
         .route("/account/app/svc/mbrCancel", get(cancel_account))
         .with_state(state)
-        .nest_service("/static", ServeDir::new("resources/static"));
+        .nest_service("/static", ServeDir::new("resources/static"))
+        .layer(cors);
 
     let config = get_config();
 

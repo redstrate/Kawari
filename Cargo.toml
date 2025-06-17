@@ -101,7 +101,7 @@ reqwest = { version = "0.12", default-features = false }
 rkon = { version = "0.1" }
 
 # For serving static files on the website
-tower-http = { version = "0.6", features = ["fs"] }
+tower-http = { version = "0.6", features = ["fs", "cors"] }
 
 # excel sheet data
 icarus = { git = "https://github.com/redstrate/Icarus", branch = "ver/2025.04.16.0000.0000", features = ["Warp", "Tribe", "ClassJob", "World", "TerritoryType", "Race", "Aetheryte", "EquipSlotCategory"], default-features = false }
