@@ -26,7 +26,7 @@ function onCommand(args, player)
         ["-"] = -1,
         ["DESCEND"] = -1,
     }
-    local usage = "Usage: !nudge <distance> <up|u|+|ascend/down|d|-|descend>"
+    local usage = "Moves the user in a specified direction. Defaults to 5 yalms forward.\nUsage: !nudge <distance> <up|u|+|ascend/down|d|-|descend>"
 
     if argc == 1 then
         if checkArg1 then
