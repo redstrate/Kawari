@@ -26,53 +26,52 @@ function onCommand(args, player)
         ["-"] = -1,
         ["DESCEND"] = -1,
     }
+    local usage = "Usage: !nudge <distance> <up|u|+|ascend/down|d|-|descend>"
 
     if argc == 1 then
         if checkArg1 then
             distance = checkArg1
         else
-            send_msg("Error parsing direction! Usage: !nudge <distance> <up|u|+|ascend/down|d|-|descend>", player)
+            send_msg("Error parsing distance! \n"..usage, player)
             return
         end
     end
 
     if argc == 2 then
-        if checkArg1 and checkArg2 then
+        if checkArg1 and checkArg2 then           -- If both are numbers, just ignore second argument
             distance = checkArg1
-        elseif checkArg1 and not checkArg2 then
+        elseif checkArg1 and not checkArg2 then   -- If first is number and second is string
             distance = checkArg1
-            if vertical[string.upper(arg2)] then
+            if vertical[string.upper(arg2)] then  -- Check vertical direction on string, otherwise throw param error
                 direction = vertical[string.upper(arg2)]
             else
-                send_msg("Error parsing direction! Usage: !nudge <distance> <up|u|+|ascend/down|d|-|descend>", player)
+                send_msg("Error parsing direction! \n"..usage, player)
                 return
             end
         else
-            send_msg("Error parsing parameters! Usage: !nudge <distance> <up/u/+/ascend/down/d/-/descend>", player)
+            send_msg("Error parsing parameters! \n"..usage, player)
             return
         end
     end
 
-    local message = string.format("Positioning forward %s yalms", distance)
-    local position = { x = 0.0, y = 0.0, z = 0.0 }
+    local direction_str = "forward"
+    local new_position = { x = pos.x, y = pos.y, z = pos.z }
 
     if direction == 1 then
-        local py = pos.y + distance
-        message = string.format("Positioning up %s yalms.", distance)
-        position = { x = pos.x, y = py, z = pos.z }
+        direction_str = "up"
+        new_position.y = pos.y + distance
     elseif direction == -1 then
-        local py = pos.y - distance
-        message = string.format("Positioning down %s yalms.", distance)
-        position = { x = pos.x, y = py, z = pos.z }
+        direction_str = "down"
+        new_position.y = pos.y - distance
     else
-        local px = pos.x - distance * math.cos(angle)
-        local pz = pos.z + distance * math.sin(angle)
         if distance < 1 then
-            message = string.format("Positioning back %s yalms.", distance)
+            direction_str = "back"
         end
-        position = { x = px, y = pos.y, z = pz }
+        new_position.x = pos.x - distance * math.cos(angle)
+        new_position.z = pos.z + distance * math.sin(angle)
     end
 
-    player:set_position(position, player.rotation)
+    player:set_position(new_position, player.rotation)
+    local message = string.format("Positioning %s %s yalms.", direction_str, distance)
     send_msg(message, player)
 end
