@@ -1,7 +1,7 @@
 use mlua::{FromLua, Lua, LuaSerdeExt, UserData, UserDataFields, UserDataMethods, Value};
 
 use crate::{
-    common::{ObjectId, ObjectTypeId, Position, timestamp_secs, workdefinitions::RemakeMode},
+    common::{ObjectId, ObjectTypeId, Position, timestamp_secs, workdefinitions::RemakeMode, write_quantized_rotation},
     ipc::zone::{
         ActionEffect, DamageElement, DamageKind, DamageType, EffectKind, EventScene,
         ServerZoneIpcData, ServerZoneIpcSegment, Warp,
@@ -88,12 +88,13 @@ impl LuaPlayer {
         });
     }
 
-    fn set_position(&mut self, position: Position) {
+    fn set_position(&mut self, position: Position, rotation: f32) {
         let ipc = ServerZoneIpcSegment {
             op_code: ServerZoneIpcType::Warp,
             timestamp: timestamp_secs(),
             data: ServerZoneIpcData::Warp(Warp {
-                position,
+                dir: write_quantized_rotation(&rotation),
+                position: position,
                 ..Default::default()
             }),
             ..Default::default()
@@ -156,9 +157,10 @@ impl UserData for LuaPlayer {
                 Ok(())
             },
         );
-        methods.add_method_mut("set_position", |lua, this, position: Value| {
+        methods.add_method_mut("set_position", |lua, this, (position, rotation): (Value, Value)| {
             let position: Position = lua.from_value(position).unwrap();
-            this.set_position(position);
+            let rotation: f32 = lua.from_value(rotation).unwrap();
+            this.set_position(position, rotation);
             Ok(())
         });
         methods.add_method_mut("change_territory", |_, this, zone_id: u16| {
@@ -203,6 +205,12 @@ impl UserData for LuaPlayer {
         fields.add_field_method_get("teleport_query", |_, this| {
             Ok(this.player_data.teleport_query.clone())
         });
+        fields.add_field_method_get("rotation", |_, this| {
+            Ok(this.player_data.rotation)
+        });
+        fields.add_field_method_get("position", |_, this| {
+            Ok(this.player_data.position)
+        });
     }
 }
 
@@ -212,7 +220,13 @@ impl UserData for TeleportQuery {
     }
 }
 
-impl UserData for Position {}
+impl UserData for Position {
+    fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
+        fields.add_field_method_get("x", |_, this| Ok(this.x));
+        fields.add_field_method_get("y", |_, this| Ok(this.y));
+        fields.add_field_method_get("z", |_, this| Ok(this.z));
+    }
+}
 
 impl UserData for ObjectTypeId {}
 
