@@ -189,7 +189,7 @@
         },
         {
             "name": "Unk2",
-            "opcode": 758,
+            "opcode": 162,
             "size": 16
         },
         {
@@ -229,7 +229,7 @@
         },
         {
             "name": "Disconnected",
-            "opcode": 945,
+            "opcode": 436,
             "size": 8
         },
         {
