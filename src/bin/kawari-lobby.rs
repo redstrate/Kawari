@@ -78,16 +78,27 @@ async fn main() {
 
                                     let config = get_config();
 
-                                    let body = reqwest::get(format!(
+                                    let Ok(login_reply) = reqwest::get(format!(
                                         "http://{}/_private/service_accounts?sid={}",
                                         config.login.get_socketaddr(),
                                         session_id
                                     ))
                                     .await
-                                    .unwrap()
-                                    .text()
-                                    .await
-                                    .unwrap();
+                                    else {
+                                        tracing::warn!(
+                                            "Failed to contact login server, is it running?"
+                                        );
+                                        connection.send_error(*sequence, 1012, 13101).await;
+                                        break;
+                                    };
+
+                                    let Ok(body) = login_reply.text().await else {
+                                        tracing::warn!(
+                                            "Failed to contact login server, is it running?"
+                                        );
+                                        connection.send_error(*sequence, 1012, 13101).await;
+                                        break;
+                                    };
 
                                     let service_accounts: Option<Vec<ServiceAccount>> =
                                         serde_json::from_str(&body).ok();

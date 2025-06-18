@@ -1,7 +1,10 @@
 use mlua::{FromLua, Lua, LuaSerdeExt, UserData, UserDataFields, UserDataMethods, Value};
 
 use crate::{
-    common::{ObjectId, ObjectTypeId, Position, timestamp_secs, workdefinitions::RemakeMode, write_quantized_rotation},
+    common::{
+        ObjectId, ObjectTypeId, Position, timestamp_secs, workdefinitions::RemakeMode,
+        write_quantized_rotation,
+    },
     ipc::zone::{
         ActionEffect, DamageElement, DamageKind, DamageType, EffectKind, EventScene,
         ServerZoneIpcData, ServerZoneIpcSegment, Warp,
@@ -157,12 +160,15 @@ impl UserData for LuaPlayer {
                 Ok(())
             },
         );
-        methods.add_method_mut("set_position", |lua, this, (position, rotation): (Value, Value)| {
-            let position: Position = lua.from_value(position).unwrap();
-            let rotation: f32 = lua.from_value(rotation).unwrap();
-            this.set_position(position, rotation);
-            Ok(())
-        });
+        methods.add_method_mut(
+            "set_position",
+            |lua, this, (position, rotation): (Value, Value)| {
+                let position: Position = lua.from_value(position).unwrap();
+                let rotation: f32 = lua.from_value(rotation).unwrap();
+                this.set_position(position, rotation);
+                Ok(())
+            },
+        );
         methods.add_method_mut("change_territory", |_, this, zone_id: u16| {
             this.change_territory(zone_id);
             Ok(())
@@ -205,12 +211,8 @@ impl UserData for LuaPlayer {
         fields.add_field_method_get("teleport_query", |_, this| {
             Ok(this.player_data.teleport_query.clone())
         });
-        fields.add_field_method_get("rotation", |_, this| {
-            Ok(this.player_data.rotation)
-        });
-        fields.add_field_method_get("position", |_, this| {
-            Ok(this.player_data.position)
-        });
+        fields.add_field_method_get("rotation", |_, this| Ok(this.player_data.rotation));
+        fields.add_field_method_get("position", |_, this| Ok(this.player_data.position));
     }
 }
 
