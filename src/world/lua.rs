@@ -94,7 +94,7 @@ impl LuaPlayer {
             timestamp: timestamp_secs(),
             data: ServerZoneIpcData::Warp(Warp {
                 dir: write_quantized_rotation(&rotation),
-                position: position,
+                position,
                 ..Default::default()
             }),
             ..Default::default()
