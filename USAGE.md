@@ -82,6 +82,13 @@ On Windows this file is located under `C:\Windows\System32\Drivers\etc\hosts` an
 
 Navigate to [http://ffxiv.localhost](http://ffxiv.localhost), and register for an account. In order to actually log in, navigate to the Setup page and follow the instructions there. If you get an error in your web browser, ensure you're connecting via **http://** and not **https://**.
 
+**In the game client, you must select the Aether data center.** By default, the World server advertises itself as Gilgamesh but this can be changed in `config.yaml`:
+
+```yaml
+world:
+    world_id: 63
+```
+
 ## Importing characters from retail
 
 It's possible to import existing characters from the retail server using [Auracite](https://auracite.xiv.zone). Upload the backup ZIP on the account management page on the login server.
