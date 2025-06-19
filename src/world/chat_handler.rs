@@ -106,7 +106,10 @@ impl ChatHandler {
             "!spawnmonster" => {
                 connection
                     .handle
-                    .send(ToServer::DebugNewNpc(connection.id))
+                    .send(ToServer::DebugNewNpc(
+                        connection.id,
+                        connection.player_data.actor_id,
+                    ))
                     .await;
             }
             "!playscene" => {

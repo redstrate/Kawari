@@ -24,7 +24,7 @@ pub enum FromServer {
     /// A chat message.
     Message(String),
     /// An actor has been spawned.
-    ActorSpawn(Actor, CommonSpawn),
+    ActorSpawn(Actor, NpcSpawn),
     /// An actor moved to a new position.
     ActorMove(u32, Position, f32),
     // An actor has despawned.
@@ -88,7 +88,7 @@ pub enum ToServer {
     Disconnected(ClientId),
     /// A fatal error occured.
     FatalError(std::io::Error),
-    DebugNewNpc(ClientId),
+    DebugNewNpc(ClientId, u32),
 }
 
 #[derive(Clone, Debug)]

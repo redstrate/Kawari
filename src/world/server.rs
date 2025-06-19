@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use tokio::sync::mpsc::Receiver;
 
 use crate::{
-    common::{ObjectId, Position},
+    common::ObjectId,
     ipc::zone::{
         ActorControl, ActorControlCategory, ActorControlSelf, ActorControlTarget, BattleNpcSubKind,
         ClientTriggerCommand, CommonSpawn, NpcSpawn, ObjectKind,
@@ -11,10 +11,26 @@ use crate::{
 
 use super::{Actor, ClientHandle, ClientId, FromServer, ToServer};
 
+#[derive(Debug, Clone)]
+enum NetworkedActor {
+    Player(NpcSpawn),
+    NPC(NpcSpawn),
+}
+
 #[derive(Default, Debug, Clone)]
 struct Instance {
     // structure temporary, of course
-    actors: HashMap<ObjectId, CommonSpawn>,
+    actors: HashMap<ObjectId, NetworkedActor>,
+}
+
+impl Instance {
+    fn find_actor(&self, id: ObjectId) -> Option<&NetworkedActor> {
+        self.actors.get(&id)
+    }
+
+    fn insert_npc(&mut self, id: ObjectId, spawn: NpcSpawn) {
+        self.actors.insert(id, NetworkedActor::NPC(spawn));
+    }
 }
 
 #[derive(Default, Debug, Clone)]
@@ -81,14 +97,20 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                             state.zone_id = zone_id;
 
                             // send existing player data
-                            for (id, common) in &instance.actors {
+                            for (id, spawn) in &instance.actors {
+                                let npc_spawn = match spawn {
+                                    NetworkedActor::Player(npc_spawn) => npc_spawn,
+                                    NetworkedActor::NPC(npc_spawn) => npc_spawn,
+                                };
+
+                                // Note that we currently only support spawning via the NPC packet, hence why we don't need to differentiate here
                                 let msg = FromServer::ActorSpawn(
                                     Actor {
                                         id: *id,
                                         hp: 100,
                                         spawn_index: 0,
                                     },
-                                    common.clone(),
+                                    npc_spawn.clone(),
                                 );
 
                                 handle.send(msg).unwrap();
@@ -104,9 +126,13 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 // add the connection's actor to the table
                 {
                     let instance = data.find_instance_mut(zone_id);
-                    instance
-                        .actors
-                        .insert(ObjectId(client.actor_id), client.common.clone());
+                    instance.actors.insert(
+                        ObjectId(client.actor_id),
+                        NetworkedActor::Player(NpcSpawn {
+                            common: client.common.clone(),
+                            ..Default::default()
+                        }),
+                    );
                 }
 
                 // Then tell any clients in the zone that we spawned
@@ -129,7 +155,10 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                             hp: 0,
                             spawn_index: 0,
                         },
-                        client.common.clone(),
+                        NpcSpawn {
+                            common: client.common.clone(),
+                            ..Default::default()
+                        },
                     );
 
                     if handle.send(msg).is_err() {
@@ -180,11 +209,15 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
             }
             ToServer::ActorMoved(from_id, actor_id, position, rotation) => {
                 if let Some(instance) = data.find_actor_instance_mut(actor_id) {
-                    if let Some((_, common)) = instance
+                    if let Some((_, spawn)) = instance
                         .actors
                         .iter_mut()
                         .find(|actor| *actor.0 == ObjectId(actor_id))
                     {
+                        let common = match spawn {
+                            NetworkedActor::Player(npc_spawn) => &mut npc_spawn.common,
+                            NetworkedActor::NPC(npc_spawn) => &mut npc_spawn.common,
+                        };
                         common.pos = position;
                         common.rotation = rotation;
                     }
@@ -279,11 +312,22 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     }
                 }
             }
-            ToServer::DebugNewNpc(_from_id) => {
-                for (id, (handle, _)) in &mut data.clients {
-                    let id = *id;
+            ToServer::DebugNewNpc(_from_id, from_actor_id) => {
+                let spawn;
+                {
+                    let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
+                        break;
+                    };
 
-                    let msg = FromServer::SpawnNPC(NpcSpawn {
+                    let Some(actor) = instance.find_actor(ObjectId(from_actor_id)) else {
+                        break;
+                    };
+
+                    let NetworkedActor::Player(player) = actor else {
+                        break;
+                    };
+
+                    spawn = NpcSpawn {
                         aggression_mode: 1,
                         common: CommonSpawn {
                             hp_curr: 91,
@@ -297,11 +341,19 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                             level: 1,
                             battalion: 4,
                             model_chara: 297,
-                            pos: Position::default(),
+                            pos: player.common.pos,
                             ..Default::default()
                         },
                         ..Default::default()
-                    });
+                    };
+
+                    instance.insert_npc(ObjectId(1), spawn.clone());
+                }
+
+                for (id, (handle, _)) in &mut data.clients {
+                    let id = *id;
+
+                    let msg = FromServer::SpawnNPC(spawn.clone());
 
                     if handle.send(msg).is_err() {
                         to_remove.push(id);

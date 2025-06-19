@@ -214,20 +214,17 @@ impl ZoneConnection {
         .await;
     }
 
-    pub async fn spawn_actor(&mut self, mut actor: Actor, mut common: CommonSpawn) {
+    pub async fn spawn_actor(&mut self, mut actor: Actor, mut spawn: NpcSpawn) {
         // There is no reason for us to spawn our own player again. It's probably a bug!'
         assert!(actor.id.0 != self.player_data.actor_id);
 
         actor.spawn_index = self.get_free_spawn_index() as u32;
-        common.spawn_index = actor.spawn_index as u8;
+        spawn.common.spawn_index = actor.spawn_index as u8;
 
         let ipc = ServerZoneIpcSegment {
             op_code: ServerZoneIpcType::NpcSpawn,
             timestamp: timestamp_secs(),
-            data: ServerZoneIpcData::NpcSpawn(NpcSpawn {
-                common,
-                ..Default::default()
-            }),
+            data: ServerZoneIpcData::NpcSpawn(spawn),
             ..Default::default()
         };
 
