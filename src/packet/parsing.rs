@@ -132,6 +132,7 @@ pub struct PacketSegment<T: ReadWriteIpcSegment> {
     #[brw(pad_after = 2)] // padding
     pub segment_type: SegmentType,
     #[brw(args(&segment_type, size, encryption_key))]
+    #[br(err_context("segment size = {}", size))]
     pub data: SegmentData<T>,
 }
 
