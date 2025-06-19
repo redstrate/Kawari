@@ -107,7 +107,7 @@ async fn launcher_config(Query(params): Query<Params>) -> String {
     let environment = setup_default_environment();
     let template = environment.get_template("launchertweaks.toml").unwrap();
     template
-            .render(context! { launcher_url => config.launcher.server_name, enable_webview2 => params.r#type != "webview2", game_patch_server => config.patch.game_server_name, boot_patch_server => config.patch.boot_server_name, lobby_port => config.lobby.port })
+            .render(context! { launcher_url => config.launcher.server_name, enable_webview2 => params.r#type != "webview2", game_patch_server => config.patch.game_server_name, boot_patch_server => config.patch.boot_server_name, lobby_port => config.lobby.port, lobby_host => config.lobby.listen_address })
             .unwrap()
 }
 

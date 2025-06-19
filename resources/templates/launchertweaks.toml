@@ -4,4 +4,4 @@ disable_boot_version_check = true
 force_http = true
 game_patch_server = "{{ game_patch_server }}"
 boot_patch_server = "{{ boot_patch_server }}"
-extra_game_arguments = " /DEV.LobbyHost04 =127.0.0.1 /DEV.LobbyPort04 ={{ lobby_port }}"
+extra_game_arguments = " /DEV.LobbyHost01 ={{ lobby_host }} /DEV.LobbyPort01 ={{ lobby_port }} /DEV.LobbyHost02 ={{ lobby_host }} /DEV.LobbyPort02 ={{ lobby_port }} /DEV.LobbyHost03 ={{ lobby_host }} /DEV.LobbyPort03 ={{ lobby_port }} /DEV.LobbyHost04 ={{ lobby_host }} /DEV.LobbyPort04 ={{ lobby_port }} /DEV.LobbyHost05 ={{ lobby_host }} /DEV.LobbyPort05 ={{ lobby_port }} /DEV.LobbyHost06 ={{ lobby_host }} /DEV.LobbyPort06 ={{ lobby_port }} /DEV.LobbyHost07 ={{ lobby_host }} /DEV.LobbyPort07 ={{ lobby_port }} /DEV.LobbyHost08 ={{ lobby_host }} /DEV.LobbyPort08 ={{ lobby_port }} /DEV.LobbyHost09 ={{ lobby_host }} /DEV.LobbyPort09 ={{ lobby_port }} /DEV.LobbyHost10 ={{ lobby_host }} /DEV.LobbyPort10 ={{ lobby_port }} /DEV.LobbyHost11 ={{ lobby_host }} /DEV.LobbyPort11 ={{ lobby_port }} /DEV.LobbyHost12 ={{ lobby_host }} /DEV.LobbyPort12 ={{ lobby_port }} "
