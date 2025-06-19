@@ -61,6 +61,11 @@ impl Instance {
     fn insert_npc(&mut self, id: ObjectId, spawn: NpcSpawn) {
         self.actors.insert(id, NetworkedActor::NPC(spawn));
     }
+
+    fn generate_actor_id() -> u32 {
+        // TODO: ensure we don't collide with another actor
+        fastrand::u32(..)
+    }
 }
 
 #[derive(Default, Debug, Clone)]
@@ -103,12 +108,12 @@ impl WorldServer {
     }
 
     /// Tell all the clients that a new NPC spawned.
-    fn send_npc(&mut self, spawn: NpcSpawn) {
+    fn send_npc(&mut self, actor: Actor, spawn: NpcSpawn) {
         // TODO: only send in the relevant instance
         for (id, (handle, _)) in &mut self.clients {
             let id = *id;
 
-            let msg = FromServer::SpawnNPC(spawn.clone());
+            let msg = FromServer::ActorSpawn(actor, spawn.clone());
 
             if handle.send(msg).is_err() {
                 self.to_remove.push(id);
@@ -357,6 +362,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 }
             }
             ToServer::DebugNewNpc(_from_id, from_actor_id) => {
+                let actor_id = Instance::generate_actor_id();
                 let spawn;
                 {
                     let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
@@ -405,12 +411,19 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         ..Default::default()
                     };
 
-                    instance.insert_npc(ObjectId(1), spawn.clone());
+                    instance.insert_npc(ObjectId(actor_id), spawn.clone());
                 }
 
-                data.send_npc(spawn);
+                data.send_npc(
+                    Actor {
+                        id: ObjectId(actor_id),
+                        ..Default::default()
+                    },
+                    spawn,
+                );
             }
             ToServer::DebugNewEnemy(_from_id, from_actor_id) => {
+                let actor_id = Instance::generate_actor_id();
                 let spawn;
                 {
                     let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
@@ -445,10 +458,16 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         ..Default::default()
                     };
 
-                    instance.insert_npc(ObjectId(1), spawn.clone());
+                    instance.insert_npc(ObjectId(actor_id), spawn.clone());
                 }
 
-                data.send_npc(spawn);
+                data.send_npc(
+                    Actor {
+                        id: ObjectId(actor_id),
+                        ..Default::default()
+                    },
+                    spawn,
+                );
             }
             ToServer::Disconnected(from_id) => {
                 data.to_remove.push(from_id);

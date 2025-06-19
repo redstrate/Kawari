@@ -901,7 +901,6 @@ async fn client_loop(
                     FromServer::ActorDespawn(actor_id) => connection.remove_actor(actor_id).await,
                     FromServer::ActorControl(actor_id, actor_control) => connection.actor_control(actor_id, actor_control).await,
                     FromServer::ActorControlTarget(actor_id, actor_control) => connection.actor_control_target(actor_id, actor_control).await,
-                    FromServer::SpawnNPC(npc) => connection.send_npc(npc).await,
                     FromServer::ActorControlSelf(actor_control) => connection.actor_control_self(actor_control).await,
                 },
                 None => break,

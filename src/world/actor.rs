@@ -1,6 +1,6 @@
 use crate::common::ObjectId;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct Actor {
     pub id: ObjectId,
     pub hp: u32,

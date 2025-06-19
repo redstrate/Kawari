@@ -35,8 +35,6 @@ pub enum FromServer {
     ActorControlTarget(u32, ActorControlTarget),
     /// We need to update the player actor
     ActorControlSelf(ActorControlSelf),
-    /// Spawn an NPC
-    SpawnNPC(NpcSpawn),
 }
 
 #[derive(Debug, Clone)]
