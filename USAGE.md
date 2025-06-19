@@ -104,10 +104,6 @@ These special debug commands start with `!` and are custom to Kawari.
 * `!setpos <x> <y> <z>`: Teleport to the specified location
 * `!spawnnpc`: Spawn a NPC for debugging
 * `!spawnmonster`: Spawn a monster for debugging
-* `!playscene <id>`: Plays an event. Only some events are supported for now:
-    * Territory `181`, Event `1245185` plays the Limsa opening sequence
-    * Territory `182`, Event `1245187` plays the Ul'dah opening sequence
-    * Territory `183`, Event `1245186` plays the Gridania opening sequence
 * `!spawnclone`: Spawn a clone of yourself
 * `!classjob <id>`: Changes to another class/job
 * `!unlockaction <id>`: Unlock an action, for example: `1` for Return and `4` for Teleport.

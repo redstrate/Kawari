@@ -1,25 +1,21 @@
 use crate::{
-    common::{ObjectId, ObjectTypeId, timestamp_secs},
+    common::timestamp_secs,
     inventory::Storage,
     ipc::zone::{
-        ActorControl, ActorControlCategory, ActorControlSelf, ChatMessage, EventStart, NpcSpawn,
-        OnlineStatus, ServerZoneIpcData, ServerZoneIpcSegment,
+        ActorControlCategory, ActorControlSelf, ChatMessage, NpcSpawn, ServerZoneIpcData,
+        ServerZoneIpcSegment,
     },
     opcodes::ServerZoneIpcType,
     packet::{PacketSegment, SegmentData, SegmentType},
-    world::{Event, ToServer},
+    world::ToServer,
 };
 
-use super::{LuaPlayer, ZoneConnection};
+use super::ZoneConnection;
 
 pub struct ChatHandler {}
 
 impl ChatHandler {
-    pub async fn handle_chat_message(
-        connection: &mut ZoneConnection,
-        lua_player: &mut LuaPlayer,
-        chat_message: &ChatMessage,
-    ) {
+    pub async fn handle_chat_message(connection: &mut ZoneConnection, chat_message: &ChatMessage) {
         tracing::info!("Client sent chat message: {}!", chat_message.message);
 
         let parts: Vec<&str> = chat_message.message.split(' ').collect();
@@ -41,75 +37,6 @@ impl ChatHandler {
                         connection.player_data.actor_id,
                     ))
                     .await;
-            }
-            "!playscene" => {
-                let parts: Vec<&str> = chat_message.message.split(' ').collect();
-                let event_id = parts[1].parse::<u32>().unwrap();
-
-                // Load the game script for this event on the client
-                {
-                    let ipc = ServerZoneIpcSegment {
-                        op_code: ServerZoneIpcType::EventStart,
-                        timestamp: timestamp_secs(),
-                        data: ServerZoneIpcData::EventStart(EventStart {
-                            target_id: ObjectTypeId {
-                                object_id: ObjectId(connection.player_data.actor_id),
-                                object_type: 0,
-                            },
-                            event_type: 15,
-                            event_id,
-                            flags: 0,
-                            event_arg: 182, // zone?
-                        }),
-                        ..Default::default()
-                    };
-
-                    connection
-                        .send_segment(PacketSegment {
-                            source_actor: connection.player_data.actor_id,
-                            target_actor: connection.player_data.actor_id,
-                            segment_type: SegmentType::Ipc,
-                            data: SegmentData::Ipc { data: ipc },
-                        })
-                        .await;
-                }
-
-                // set our status icon to viewing cutscene
-                {
-                    let ipc = ServerZoneIpcSegment {
-                        op_code: ServerZoneIpcType::ActorControl,
-                        timestamp: timestamp_secs(),
-                        data: ServerZoneIpcData::ActorControl(ActorControl {
-                            category: ActorControlCategory::SetStatusIcon {
-                                icon: OnlineStatus::ViewingCutscene,
-                            },
-                        }),
-                        ..Default::default()
-                    };
-
-                    connection
-                        .send_segment(PacketSegment {
-                            source_actor: connection.player_data.actor_id,
-                            target_actor: connection.player_data.actor_id,
-                            segment_type: SegmentType::Ipc,
-                            data: SegmentData::Ipc { data: ipc },
-                        })
-                        .await;
-                }
-
-                let event = match event_id {
-                    1245185 => Event::new(1245185, "opening/OpeningLimsaLominsa.lua"),
-                    1245186 => Event::new(1245186, "opening/OpeningGridania.lua"),
-                    1245187 => Event::new(1245187, "opening/OpeningUldah.lua"),
-                    _ => panic!("Unsupported event!"),
-                };
-
-                connection.event = Some(event);
-                connection
-                    .event
-                    .as_mut()
-                    .unwrap()
-                    .enter_territory(lua_player, connection.zone.as_ref().unwrap());
             }
             "!spawnclone" => {
                 // spawn another one of us

@@ -552,7 +552,6 @@ async fn client_loop(
                                                 if !handled {
                                                     ChatHandler::handle_chat_message(
                                                         &mut connection,
-                                                        &mut lua_player,
                                                         chat_message,
                                                     )
                                                     .await;
