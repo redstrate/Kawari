@@ -61,6 +61,7 @@ pub struct PlayerData {
 
     pub teleport_query: TeleportQuery,
     pub gm_rank: GameMasterRank,
+    pub gm_invisible: bool,
 }
 
 /// Represents a single connection between an instance of the client and the world server

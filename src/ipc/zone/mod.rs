@@ -140,6 +140,7 @@ impl Default for ServerZoneIpcSegment {
 pub enum GameMasterCommandType {
     SetLevel = 0x1,
     ChangeWeather = 0x6,
+    Speed = 0x9,
     ToggleInvisibility = 0xD,
     ToggleWireframe = 0x26,
     ChangeTerritory = 0x58,
