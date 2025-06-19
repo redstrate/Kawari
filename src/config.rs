@@ -195,8 +195,8 @@ pub struct WorldConfig {
     pub port: u16,
     #[serde(default = "WorldConfig::default_listen_address")]
     pub listen_address: String,
-    #[serde(default = "WorldConfig::default_world_address")]
-    pub world_address: String,
+    #[serde(default = "WorldConfig::default_server_name")]
+    pub server_name: String,
     /// See the World Excel sheet.
     #[serde(default = "WorldConfig::default_world_id")]
     pub world_id: u16,
@@ -223,7 +223,7 @@ impl Default for WorldConfig {
         Self {
             port: Self::default_port(),
             listen_address: Self::default_listen_address(),
-            world_address: Self::default_world_address(),
+            server_name: Self::default_server_name(),
             world_id: Self::default_world_id(),
             scripts_location: Self::default_scripts_location(),
             rcon_port: Self::default_rcon_port(),
@@ -243,7 +243,7 @@ impl WorldConfig {
         "0.0.0.0".to_string()
     }
 
-    fn default_world_address() -> String {
+    fn default_server_name() -> String {
         "127.0.0.1".to_string()
     }
 
@@ -281,9 +281,9 @@ impl WorldConfig {
         ))
     }
 
-    pub fn get_world_socketaddr(&self) -> SocketAddr {
+    pub fn get_public_socketaddr(&self) -> SocketAddr {
         SocketAddr::from((
-            IpAddr::from_str(&self.world_address).expect("Invalid IP address format in config!"),
+            IpAddr::from_str(&self.server_name).expect("Invalid IP address format in config!"),
             self.port,
         ))
     }
