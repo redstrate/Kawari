@@ -7,7 +7,7 @@ use crate::{
     },
     ipc::zone::{
         ActionEffect, DamageElement, DamageKind, DamageType, EffectKind, EventScene,
-        ServerZoneIpcData, ServerZoneIpcSegment, Warp,
+        ServerZoneIpcData, ServerZoneIpcSegment, Warp, ActorControlSelf, ActorControlCategory
     },
     opcodes::ServerZoneIpcType,
     packet::{PacketSegment, SegmentData, SegmentType},
@@ -104,6 +104,20 @@ impl LuaPlayer {
         self.create_segment_self(op_code, data);
     }
 
+    fn set_festival(&mut self, festival1: u32, festival2: u32, festival3: u32, festival4: u32) {
+        let op_code = ServerZoneIpcType::ActorControlSelf;
+        let data = ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
+            category: ActorControlCategory::SetFestival {
+                festival1,
+                festival2,
+                festival3,
+                festival4
+            },
+        });
+
+        self.create_segment_self(op_code, data);
+    }
+
     fn change_territory(&mut self, zone_id: u16) {
         self.queued_tasks.push(Task::ChangeTerritory { zone_id });
     }
@@ -159,6 +173,13 @@ impl UserData for LuaPlayer {
                 let position: Position = lua.from_value(position).unwrap();
                 let rotation: f32 = lua.from_value(rotation).unwrap();
                 this.set_position(position, rotation);
+                Ok(())
+            },
+        );
+        methods.add_method_mut(
+            "set_festival",
+            |_, this, (festival1, festival2, festival3, festival4): (u32, u32, u32, u32)| {
+                this.set_festival(festival1, festival2, festival3, festival4);
                 Ok(())
             },
         );

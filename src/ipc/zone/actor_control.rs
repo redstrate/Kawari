@@ -73,7 +73,15 @@ pub enum ActorControlCategory {
     Flee {
         #[brw(pad_before = 2)] // padding
         speed: u16,
-    }
+    },
+    #[brw(magic=0x386u16)]
+    SetFestival {
+        #[brw(pad_before = 2)] // padding
+        festival1: u32, // Multiple festivals can be set at the same time.
+        festival2: u32,
+        festival3: u32,
+        festival4: u32,
+    },
 }
 
 #[binrw]
