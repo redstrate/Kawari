@@ -89,6 +89,10 @@ world:
     world_id: 63
 ```
 
+## How to login on the server
+
+If you had already played FF14, you'll be on the database you choose on the official server, for the other you'll need to chose an database, in both case, you need to go on Aether database for less issue and also you can play without any connexion error
+
 ## Importing characters from retail
 
 It's possible to import existing characters from the retail server using [Auracite](https://auracite.xiv.zone). Upload the backup ZIP on the account management page on the login server.
