@@ -10,8 +10,6 @@ pub struct ChatHandler {}
 
 impl ChatHandler {
     pub async fn handle_chat_message(connection: &mut ZoneConnection, chat_message: &ChatMessage) {
-        tracing::info!("Client sent chat message: {}!", chat_message.message);
-
         let parts: Vec<&str> = chat_message.message.split(' ').collect();
         match parts[0] {
             "!spawnnpc" => {
