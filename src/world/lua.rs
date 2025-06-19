@@ -113,7 +113,6 @@ impl LuaPlayer {
                 arg2,
                 arg3
             },
-            ..Default::default()
         });
 
         self.create_segment_self(op_code, data);
