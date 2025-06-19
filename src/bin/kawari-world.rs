@@ -568,15 +568,27 @@ async fn client_loop(
                                                     GameMasterCommandType::ChangeWeather => {
                                                         connection.change_weather(*arg0 as u16).await
                                                     }
+                                                    GameMasterCommandType::Speed => {
+                                                        // TODO: Maybe allow setting the speed of a targeted player too?
+                                                        connection
+                                                        .actor_control_self(ActorControlSelf {
+                                                            category:
+                                                            ActorControlCategory::Flee {
+                                                                speed: *arg0 as u16,
+                                                            },
+                                                        })
+                                                        .await
+                                                    }
                                                     GameMasterCommandType::ChangeTerritory => {
                                                         connection.change_zone(*arg0 as u16).await
                                                     }
                                                     GameMasterCommandType::ToggleInvisibility => {
+                                                        connection.player_data.gm_invisible = !connection.player_data.gm_invisible;
                                                         connection
                                                         .actor_control_self(ActorControlSelf {
                                                             category:
                                                             ActorControlCategory::ToggleInvisibility {
-                                                                invisible: true,
+                                                                invisible: connection.player_data.gm_invisible,
                                                             },
                                                         })
                                                         .await
