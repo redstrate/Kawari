@@ -80,7 +80,7 @@ async fn main() {
 
                                     let Ok(login_reply) = reqwest::get(format!(
                                         "http://{}/_private/service_accounts?sid={}",
-                                        config.login.get_socketaddr(),
+                                        config.login.server_name,
                                         session_id
                                     ))
                                     .await
