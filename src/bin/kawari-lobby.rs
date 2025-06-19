@@ -104,6 +104,8 @@ async fn main() {
                                         serde_json::from_str(&body).ok();
                                     if let Some(service_accounts) = service_accounts {
                                         if service_accounts.is_empty() {
+                                            tracing::warn!("This account has no service accounts attached, how did this happen?");
+
                                             // request an update, wrong error message lol
                                             connection.send_error(*sequence, 1012, 13101).await;
                                         } else {
@@ -112,6 +114,8 @@ async fn main() {
                                             connection.send_account_list().await;
                                         }
                                     } else {
+                                        tracing::warn!("Failed to parse service accounts from the login server!");
+
                                         // request an update, wrong error message lol
                                         connection.send_error(*sequence, 1012, 13101).await;
                                     }
