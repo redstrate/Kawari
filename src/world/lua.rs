@@ -7,7 +7,7 @@ use crate::{
     },
     ipc::zone::{
         ActionEffect, DamageElement, DamageKind, DamageType, EffectKind, EventScene,
-        ServerZoneIpcData, ServerZoneIpcSegment, Warp,
+        ServerZoneIpcData, ServerZoneIpcSegment, Warp, ActorControlSelf, ActorControlCategory
     },
     opcodes::ServerZoneIpcType,
     packet::{PacketSegment, SegmentData, SegmentType},
@@ -104,6 +104,21 @@ impl LuaPlayer {
         self.create_segment_self(op_code, data);
     }
 
+    fn set_festival(&mut self, festival_id: u16, arg1: u16, arg2: u16, arg3: u16) {
+        let op_code = ServerZoneIpcType::ActorControlSelf;
+        let data = ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
+            category: ActorControlCategory::SetFestival {
+                festival_id,
+                arg1,
+                arg2,
+                arg3
+            },
+            ..Default::default()
+        });
+
+        self.create_segment_self(op_code, data);
+    }
+
     fn change_territory(&mut self, zone_id: u16) {
         self.queued_tasks.push(Task::ChangeTerritory { zone_id });
     }
@@ -159,6 +174,13 @@ impl UserData for LuaPlayer {
                 let position: Position = lua.from_value(position).unwrap();
                 let rotation: f32 = lua.from_value(rotation).unwrap();
                 this.set_position(position, rotation);
+                Ok(())
+            },
+        );
+        methods.add_method_mut(
+            "set_festival",
+            |_, this, (festival_id, arg1, arg2, arg3): (u16, u16, u16, u16)| {
+                this.set_festival(festival_id, arg1, arg2, arg3);
                 Ok(())
             },
         );
