@@ -120,3 +120,4 @@ These GM commands are implemented in the FFXIV protocol, but only some of them a
 * `//gm item <id>`: Gives yourself an item. This can only place a single item in the first page of your inventory currently.
 * `//gm lv <level>`: Sets your current level
 * `//gm aetheryte <on/off> <id>`: Unlock an Aetheryte.
+* `//gm speed <multiplier>`: Increases your movement speed by `multiplier`.
