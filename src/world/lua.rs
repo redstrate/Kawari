@@ -104,14 +104,14 @@ impl LuaPlayer {
         self.create_segment_self(op_code, data);
     }
 
-    fn set_festival(&mut self, festival_id: u16, arg1: u16, arg2: u16, arg3: u16) {
+    fn set_festival(&mut self, festival1: u32, festival2: u32, festival3: u32, festival4: u32) {
         let op_code = ServerZoneIpcType::ActorControlSelf;
         let data = ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
             category: ActorControlCategory::SetFestival {
-                festival_id,
-                arg1,
-                arg2,
-                arg3
+                festival1,
+                festival2,
+                festival3,
+                festival4
             },
         });
 
@@ -178,7 +178,7 @@ impl UserData for LuaPlayer {
         );
         methods.add_method_mut(
             "set_festival",
-            |_, this, (festival_id, arg1, arg2, arg3): (u16, u16, u16, u16)| {
+            |_, this, (festival_id, arg1, arg2, arg3): (u32, u32, u32, u32)| {
                 this.set_festival(festival_id, arg1, arg2, arg3);
                 Ok(())
             },

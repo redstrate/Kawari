@@ -77,10 +77,10 @@ pub enum ActorControlCategory {
     #[brw(magic=0x386u16)]
     SetFestival {
         #[brw(pad_before = 2)] // padding
-        festival_id: u16, // TODO: Does this category have 2 or 4 parameters? Sources have conflicting info.
-        arg1: u16,
-        arg2: u16,
-        arg3: u16
+        festival1: u32, // Multiple festivals can be set at the same time.
+        festival2: u32,
+        festival3: u32,
+        festival4: u32,
     },
 }
 
