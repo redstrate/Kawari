@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use tokio::sync::mpsc::Receiver;
 
 use crate::{
-    common::ObjectId,
+    common::{CustomizeData, ObjectId, ObjectTypeId},
     ipc::zone::{
         ActorControl, ActorControlCategory, ActorControlSelf, ActorControlTarget, BattleNpcSubKind,
         ClientTriggerCommand, CommonSpawn, NpcSpawn, ObjectKind,
@@ -10,6 +10,36 @@ use crate::{
 };
 
 use super::{Actor, ClientHandle, ClientId, FromServer, ToServer};
+
+/// Used for the debug NPC.
+pub const CUSTOMIZE_DATA: CustomizeData = CustomizeData {
+    race: 4,
+    gender: 1,
+    age: 1,
+    height: 50,
+    subrace: 7,
+    face: 3,
+    hair: 5,
+    enable_highlights: 0,
+    skin_tone: 10,
+    right_eye_color: 75,
+    hair_tone: 50,
+    highlights: 0,
+    facial_features: 1,
+    facial_feature_color: 19,
+    eyebrows: 1,
+    left_eye_color: 75,
+    eyes: 1,
+    nose: 0,
+    jaw: 1,
+    mouth: 1,
+    lips_tone_fur_pattern: 169,
+    race_feature_size: 100,
+    race_feature_type: 1,
+    bust: 100,
+    face_paint: 0,
+    face_paint_color: 167,
+};
 
 #[derive(Debug, Clone)]
 enum NetworkedActor {
@@ -40,6 +70,7 @@ struct ClientState {
 
 #[derive(Default, Debug)]
 struct WorldServer {
+    to_remove: Vec<ClientId>,
     clients: HashMap<ClientId, (ClientHandle, ClientState)>,
     /// Indexed by zone id
     instances: HashMap<u16, Instance>,
@@ -70,11 +101,24 @@ impl WorldServer {
         }
         None
     }
+
+    /// Tell all the clients that a new NPC spawned.
+    fn send_npc(&mut self, spawn: NpcSpawn) {
+        // TODO: only send in the relevant instance
+        for (id, (handle, _)) in &mut self.clients {
+            let id = *id;
+
+            let msg = FromServer::SpawnNPC(spawn.clone());
+
+            if handle.send(msg).is_err() {
+                self.to_remove.push(id);
+            }
+        }
+    }
 }
 
 pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::io::Error> {
     let mut data = WorldServer::default();
-    let mut to_remove = Vec::new();
 
     while let Some(msg) = recv.recv().await {
         match msg {
@@ -162,7 +206,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     );
 
                     if handle.send(msg).is_err() {
-                        to_remove.push(id);
+                        data.to_remove.push(id);
                     }
                 }
             }
@@ -188,7 +232,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     let msg = FromServer::ActorDespawn(actor_id);
 
                     if handle.send(msg).is_err() {
-                        to_remove.push(id);
+                        data.to_remove.push(id);
                     }
                 }
             }
@@ -203,7 +247,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     let msg = FromServer::Message(msg.clone());
 
                     if handle.send(msg).is_err() {
-                        to_remove.push(id);
+                        data.to_remove.push(id);
                     }
                 }
             }
@@ -232,7 +276,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         let msg = FromServer::ActorMove(actor_id, position, rotation);
 
                         if handle.send(msg).is_err() {
-                            to_remove.push(id);
+                            data.to_remove.push(id);
                         }
                     }
                 }
@@ -255,7 +299,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                                 });
 
                                 if handle.send(msg).is_err() {
-                                    to_remove.push(id);
+                                    data.to_remove.push(id);
                                 }
                             }
                             _ => {}
@@ -275,7 +319,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                             );
 
                             if handle.send(msg).is_err() {
-                                to_remove.push(id);
+                                data.to_remove.push(id);
                             }
                         }
                         ClientTriggerCommand::ChangePose { unk1, pose } => {
@@ -290,7 +334,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                             );
 
                             if handle.send(msg).is_err() {
-                                to_remove.push(id);
+                                data.to_remove.push(id);
                             }
                         }
                         ClientTriggerCommand::ReapplyPose { unk1, pose } => {
@@ -305,7 +349,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                             );
 
                             if handle.send(msg).is_err() {
-                                to_remove.push(id);
+                                data.to_remove.push(id);
                             }
                         }
                         _ => tracing::warn!("Server doesn't know what to do with {:#?}", trigger),
@@ -313,6 +357,60 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 }
             }
             ToServer::DebugNewNpc(_from_id, from_actor_id) => {
+                let spawn;
+                {
+                    let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
+                        break;
+                    };
+
+                    let Some(actor) = instance.find_actor(ObjectId(from_actor_id)) else {
+                        break;
+                    };
+
+                    let NetworkedActor::Player(player) = actor else {
+                        break;
+                    };
+
+                    spawn = NpcSpawn {
+                        aggression_mode: 1,
+                        common: CommonSpawn {
+                            hp_curr: 100,
+                            hp_max: 100,
+                            mp_curr: 100,
+                            mp_max: 100,
+                            look: CUSTOMIZE_DATA,
+                            bnpc_base: 13498,
+                            bnpc_name: 10261,
+                            object_kind: ObjectKind::BattleNpc(BattleNpcSubKind::Enemy),
+                            target_id: ObjectTypeId {
+                                object_id: ObjectId(from_actor_id),
+                                object_type: 0,
+                            }, // target the player
+                            level: 1,
+                            models: [
+                                0,  // head
+                                89, // body
+                                89, // hands
+                                89, // legs
+                                89, // feet
+                                0,  // ears
+                                0,  // neck
+                                0,  // wrists
+                                0,  // left finger
+                                0,  // right finger
+                            ],
+                            pos: player.common.pos,
+                            ..Default::default()
+                        },
+                        ..Default::default()
+                    };
+
+                    instance.insert_npc(ObjectId(1), spawn.clone());
+                }
+
+                data.send_npc(spawn);
+            }
+            ToServer::DebugNewEnemy(_from_id, from_actor_id) => {
                 let spawn;
                 {
                     let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
@@ -350,28 +448,20 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     instance.insert_npc(ObjectId(1), spawn.clone());
                 }
 
-                for (id, (handle, _)) in &mut data.clients {
-                    let id = *id;
-
-                    let msg = FromServer::SpawnNPC(spawn.clone());
-
-                    if handle.send(msg).is_err() {
-                        to_remove.push(id);
-                    }
-                }
+                data.send_npc(spawn);
             }
             ToServer::Disconnected(from_id) => {
-                to_remove.push(from_id);
+                data.to_remove.push(from_id);
             }
             ToServer::FatalError(err) => return Err(err),
         }
 
         // Remove any clients that errored out
-        for remove_id in &to_remove {
+        for remove_id in data.to_remove.clone() {
             // remove any actors they had
             let mut actor_id = None;
             for (id, (handle, _)) in &mut data.clients {
-                if *id == *remove_id {
+                if *id == remove_id {
                     actor_id = Some(handle.actor_id);
                 }
             }
