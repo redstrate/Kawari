@@ -538,10 +538,15 @@ async fn client_loop(
                                                                 let func: Function =
                                                                 lua.globals().get("onCommand").unwrap();
 
-                                                                tracing::info!("{}", &chat_message.message[command_name.len() + 2..]);
-
-                                                                func.call::<()>((&chat_message.message[command_name.len() + 2..], connection_data))
-                                                                .unwrap();
+                                                                let mut func_args = "";
+                                                                if parts.len() > 1 {
+                                                                    func_args = &chat_message.message[command_name.len() + 2..];
+                                                                    tracing::info!("Args passed to Lua command {}: {}", command_name, func_args);
+                                                                } else {
+                                                                    tracing::info!("No additional args passed to Lua command {}.", command_name);
+                                                                }
+                                                                func.call::<()>((func_args, connection_data)).
+                                                                unwrap();
 
                                                                 Ok(())
                                                             })
