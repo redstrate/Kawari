@@ -1,6 +1,6 @@
 use crate::{
     inventory::Storage,
-    ipc::zone::{ActorControlCategory, ActorControlSelf, ChatMessage},
+    ipc::zone::{ActorControlCategory, ActorControlSelf, ChatMessage, GameMasterRank},
     world::ToServer,
 };
 
@@ -10,6 +10,11 @@ pub struct ChatHandler {}
 
 impl ChatHandler {
     pub async fn handle_chat_message(connection: &mut ZoneConnection, chat_message: &ChatMessage) {
+        if connection.player_data.gm_rank == GameMasterRank::NormalUser {
+            tracing::info!("Rejecting debug command because the user is not GM!");
+            return;
+        }
+
         let parts: Vec<&str> = chat_message.message.split(' ').collect();
         match parts[0] {
             "!spawnnpc" => {
