@@ -6,8 +6,8 @@ use crate::{
         write_quantized_rotation,
     },
     ipc::zone::{
-        ActionEffect, DamageElement, DamageKind, DamageType, EffectKind, EventScene,
-        ServerZoneIpcData, ServerZoneIpcSegment, Warp, ActorControlSelf, ActorControlCategory
+        ActionEffect, ActorControlCategory, ActorControlSelf, DamageElement, DamageKind,
+        DamageType, EffectKind, EventScene, ServerZoneIpcData, ServerZoneIpcSegment, Warp,
     },
     opcodes::ServerZoneIpcType,
     packet::{PacketSegment, SegmentData, SegmentType},
@@ -38,7 +38,13 @@ impl LuaPlayer {
         self.queued_segments.push(segment);
     }
 
-    fn create_segment_target(&mut self, op_code: ServerZoneIpcType, data: ServerZoneIpcData, source_actor: u32, target_actor: u32) {
+    fn create_segment_target(
+        &mut self,
+        op_code: ServerZoneIpcType,
+        data: ServerZoneIpcData,
+        source_actor: u32,
+        target_actor: u32,
+    ) {
         let ipc = ServerZoneIpcSegment {
             op_code,
             timestamp: timestamp_secs(),
@@ -55,7 +61,12 @@ impl LuaPlayer {
     }
 
     fn create_segment_self(&mut self, op_code: ServerZoneIpcType, data: ServerZoneIpcData) {
-        self.create_segment_target(op_code, data, self.player_data.actor_id, self.player_data.actor_id);
+        self.create_segment_target(
+            op_code,
+            data,
+            self.player_data.actor_id,
+            self.player_data.actor_id,
+        );
     }
 
     fn send_message(&mut self, message: &str) {
@@ -111,7 +122,7 @@ impl LuaPlayer {
                 festival1,
                 festival2,
                 festival3,
-                festival4
+                festival4,
             },
         });
 

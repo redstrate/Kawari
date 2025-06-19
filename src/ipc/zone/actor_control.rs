@@ -69,12 +69,12 @@ pub enum ActorControlCategory {
         insufficient_gil: u32,
         aetheryte_id: u32,
     },
-    #[brw(magic=0x1Bu16)]
+    #[brw(magic = 0x1Bu16)]
     Flee {
         #[brw(pad_before = 2)] // padding
         speed: u16,
     },
-    #[brw(magic=0x386u16)]
+    #[brw(magic = 0x386u16)]
     SetFestival {
         #[brw(pad_before = 2)] // padding
         festival1: u32, // Multiple festivals can be set at the same time.
