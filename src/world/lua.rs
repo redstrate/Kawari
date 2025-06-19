@@ -178,8 +178,8 @@ impl UserData for LuaPlayer {
         );
         methods.add_method_mut(
             "set_festival",
-            |_, this, (festival_id, arg1, arg2, arg3): (u32, u32, u32, u32)| {
-                this.set_festival(festival_id, arg1, arg2, arg3);
+            |_, this, (festival1, festival2, festival3, festival4): (u32, u32, u32, u32)| {
+                this.set_festival(festival1, festival2, festival3, festival4);
                 Ok(())
             },
         );
