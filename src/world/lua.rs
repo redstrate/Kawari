@@ -38,23 +38,34 @@ impl LuaPlayer {
         self.queued_segments.push(segment);
     }
 
-    fn send_message(&mut self, message: &str) {
+    fn create_segment_target(&mut self, op_code: ServerZoneIpcType, data: ServerZoneIpcData, source_actor: u32, target_actor: u32) {
         let ipc = ServerZoneIpcSegment {
-            op_code: ServerZoneIpcType::ServerChatMessage,
+            op_code,
             timestamp: timestamp_secs(),
-            data: ServerZoneIpcData::ServerChatMessage {
-                message: message.to_string(),
-                unk: 0,
-            },
+            data,
             ..Default::default()
         };
 
         self.queue_segment(PacketSegment {
-            source_actor: self.player_data.actor_id,
-            target_actor: self.player_data.actor_id,
+            source_actor,
+            target_actor,
             segment_type: SegmentType::Ipc,
             data: SegmentData::Ipc { data: ipc },
         });
+    }
+
+    fn create_segment_self(&mut self, op_code: ServerZoneIpcType, data: ServerZoneIpcData) {
+        self.create_segment_target(op_code, data, self.player_data.actor_id, self.player_data.actor_id);
+    }
+
+    fn send_message(&mut self, message: &str) {
+        let op_code = ServerZoneIpcType::ServerChatMessage;
+        let data = ServerZoneIpcData::ServerChatMessage {
+            message: message.to_string(),
+            unk: 0,
+        };
+
+        self.create_segment_self(op_code, data);
     }
 
     fn give_status_effect(&mut self, effect_id: u16, duration: f32) {
@@ -69,46 +80,28 @@ impl LuaPlayer {
         scene_flags: u32,
         param: u8,
     ) {
-        let ipc = ServerZoneIpcSegment {
-            op_code: ServerZoneIpcType::EventScene,
-            timestamp: timestamp_secs(),
-            data: ServerZoneIpcData::EventScene(EventScene {
-                actor_id: target,
-                event_id,
-                scene,
-                scene_flags,
-                unk2: param,
-                ..Default::default()
-            }),
+        let op_code = ServerZoneIpcType::EventScene;
+        let data = ServerZoneIpcData::EventScene(EventScene {
+            actor_id: target,
+            event_id,
+            scene,
+            scene_flags,
+            unk2: param,
             ..Default::default()
-        };
-
-        self.queue_segment(PacketSegment {
-            source_actor: self.player_data.actor_id,
-            target_actor: self.player_data.actor_id,
-            segment_type: SegmentType::Ipc,
-            data: SegmentData::Ipc { data: ipc },
         });
+
+        self.create_segment_self(op_code, data);
     }
 
     fn set_position(&mut self, position: Position, rotation: f32) {
-        let ipc = ServerZoneIpcSegment {
-            op_code: ServerZoneIpcType::Warp,
-            timestamp: timestamp_secs(),
-            data: ServerZoneIpcData::Warp(Warp {
-                dir: write_quantized_rotation(&rotation),
-                position,
-                ..Default::default()
-            }),
+        let op_code = ServerZoneIpcType::Warp;
+        let data = ServerZoneIpcData::Warp(Warp {
+            dir: write_quantized_rotation(&rotation),
+            position,
             ..Default::default()
-        };
-
-        self.queue_segment(PacketSegment {
-            source_actor: self.player_data.actor_id,
-            target_actor: self.player_data.actor_id,
-            segment_type: SegmentType::Ipc,
-            data: SegmentData::Ipc { data: ipc },
         });
+
+        self.create_segment_self(op_code, data);
     }
 
     fn change_territory(&mut self, zone_id: u16) {
