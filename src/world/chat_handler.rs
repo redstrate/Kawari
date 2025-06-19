@@ -1,12 +1,6 @@
 use crate::{
-    common::timestamp_secs,
     inventory::Storage,
-    ipc::zone::{
-        ActorControlCategory, ActorControlSelf, ChatMessage, NpcSpawn, ServerZoneIpcData,
-        ServerZoneIpcSegment,
-    },
-    opcodes::ServerZoneIpcType,
-    packet::{PacketSegment, SegmentData, SegmentType},
+    ipc::zone::{ActorControlCategory, ActorControlSelf, ChatMessage},
     world::ToServer,
 };
 
@@ -39,30 +33,12 @@ impl ChatHandler {
                     .await;
             }
             "!spawnclone" => {
-                // spawn another one of us
-                let player = &connection.player_data;
-
-                let mut common = connection
-                    .get_player_common_spawn(Some(player.position), Some(player.rotation));
-                common.spawn_index = connection.get_free_spawn_index();
-
-                let ipc = ServerZoneIpcSegment {
-                    op_code: ServerZoneIpcType::NpcSpawn,
-                    timestamp: timestamp_secs(),
-                    data: ServerZoneIpcData::NpcSpawn(NpcSpawn {
-                        common,
-                        ..Default::default()
-                    }),
-                    ..Default::default()
-                };
-
                 connection
-                    .send_segment(PacketSegment {
-                        source_actor: 0x106ad804,
-                        target_actor: connection.player_data.actor_id,
-                        segment_type: SegmentType::Ipc,
-                        data: SegmentData::Ipc { data: ipc },
-                    })
+                    .handle
+                    .send(ToServer::DebugSpawnClone(
+                        connection.id,
+                        connection.player_data.actor_id,
+                    ))
                     .await;
             }
             "!unlockaction" => {

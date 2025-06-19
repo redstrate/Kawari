@@ -90,6 +90,8 @@ pub enum ToServer {
     DebugNewNpc(ClientId, u32),
     /// Spawn an enemy debug NPC.
     DebugNewEnemy(ClientId, u32),
+    /// Spawn a debug clone.
+    DebugSpawnClone(ClientId, u32),
 }
 
 #[derive(Clone, Debug)]

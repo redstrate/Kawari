@@ -469,6 +469,39 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     spawn,
                 );
             }
+            ToServer::DebugSpawnClone(_from_id, from_actor_id) => {
+                let actor_id = Instance::generate_actor_id();
+                let spawn;
+                {
+                    let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
+                        break;
+                    };
+
+                    let Some(actor) = instance.find_actor(ObjectId(from_actor_id)) else {
+                        break;
+                    };
+
+                    let NetworkedActor::Player(player) = actor else {
+                        break;
+                    };
+
+                    spawn = NpcSpawn {
+                        aggression_mode: 1,
+                        common: player.common.clone(),
+                        ..Default::default()
+                    };
+
+                    instance.insert_npc(ObjectId(actor_id), spawn.clone());
+                }
+
+                data.send_npc(
+                    Actor {
+                        id: ObjectId(actor_id),
+                        ..Default::default()
+                    },
+                    spawn,
+                );
+            }
             ToServer::Disconnected(from_id) => {
                 data.to_remove.push(from_id);
             }
