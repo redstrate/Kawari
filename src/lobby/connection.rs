@@ -250,7 +250,7 @@ impl LobbyConnection {
             content_id,
             token: String::new(),
             port: config.world.port,
-            host: config.world.listen_address,
+            host: config.world.world_address,
         };
 
         let ipc = ServerLobbyIpcSegment {
@@ -538,7 +538,7 @@ impl LobbyConnection {
 pub async fn send_custom_world_packet(segment: CustomIpcSegment) -> Option<CustomIpcSegment> {
     let config = get_config();
 
-    let addr = config.world.get_socketaddr();
+    let addr = config.world.get_world_socketaddr();
 
     let mut stream = TcpStream::connect(addr).await.unwrap();
 
