@@ -410,19 +410,19 @@ async fn client_loop(
                                                 connection.handle.send(ToServer::ClientTrigger(connection.id, connection.player_data.actor_id, trigger.clone())).await;
                                             }
                                             ClientZoneIpcData::Unk2 { .. } => {
-                                                tracing::info!("Recieved Unk2!");
+                                                // no-op
                                             }
                                             ClientZoneIpcData::Unk3 { .. } => {
-                                                tracing::info!("Recieved Unk3!");
+                                                // no-op
                                             }
                                             ClientZoneIpcData::Unk4 { .. } => {
-                                                tracing::info!("Recieved Unk4!");
+                                                // no-op
                                             }
                                             ClientZoneIpcData::SetSearchInfoHandler { .. } => {
                                                 tracing::info!("Recieved SetSearchInfoHandler!");
                                             }
                                             ClientZoneIpcData::Unk5 { .. } => {
-                                                tracing::info!("Recieved Unk5!");
+                                                // no-op
                                             }
                                             ClientZoneIpcData::SocialListRequest(request) => {
                                                 tracing::info!("Recieved social list request!");
@@ -775,13 +775,13 @@ async fn client_loop(
                                                 }
                                             }
                                             ClientZoneIpcData::Unk16 { .. } => {
-                                                tracing::info!("Recieved Unk16!");
+                                                // no-op
                                             }
                                             ClientZoneIpcData::Unk17 { .. } => {
-                                                tracing::info!("Recieved Unk17!");
+                                                // no-op
                                             }
                                             ClientZoneIpcData::Unk18 { .. } => {
-                                                tracing::info!("Recieved Unk18!");
+                                                // no-op
                                             }
                                             ClientZoneIpcData::EventRelatedUnk {
                                                 unk1,
@@ -798,7 +798,7 @@ async fn client_loop(
                                                 }
                                             }
                                             ClientZoneIpcData::Unk19 { .. } => {
-                                                tracing::info!("Recieved Unk19!");
+                                                // no-op
                                             }
                                             ClientZoneIpcData::ItemOperation(action) => {
                                                 tracing::info!("Client is modifying inventory! {action:#?}");
