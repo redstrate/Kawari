@@ -535,20 +535,29 @@ async fn client_loop(
                                                                 .exec()
                                                                 .unwrap();
 
-                                                                let func: Function =
-                                                                lua.globals().get("onCommand").unwrap();
+                                                                let permissions: u8 = lua.globals().get("permissions")
+                                                                .expect("Script does not have permissions variable set");
 
-                                                                let mut func_args = "";
-                                                                if parts.len() > 1 {
-                                                                    func_args = &chat_message.message[command_name.len() + 2..];
-                                                                    tracing::info!("Args passed to Lua command {}: {}", command_name, func_args);
+                                                                if connection.player_data.gm_rank as u8 >= permissions {
+                                                                    let mut func_args = "";
+                                                                    if parts.len() > 1 {
+                                                                        func_args = &chat_message.message[command_name.len() + 2..];
+                                                                        tracing::info!("Args passed to Lua command {}: {}", command_name, func_args);
+                                                                    } else {
+                                                                        tracing::info!("No additional args passed to Lua command {}.", command_name);
+                                                                    }
+                                                                    let func: Function =
+                                                                    lua.globals().get("onCommand").unwrap();
+                                                                    func.call::<()>((func_args, connection_data)).
+                                                                    unwrap();
+                                                                    Ok(())
                                                                 } else {
-                                                                    tracing::info!("No additional args passed to Lua command {}.", command_name);
+                                                                    tracing::info!("User with account_id {} tried to invoke GM command they have no permissions for!!!", connection.player_data.account_id);
+                                                                    let func: Function =
+                                                                    lua.globals().get("onCommandPermissionError").unwrap();
+                                                                    func.call::<()>(connection_data).unwrap();
+                                                                    Ok(())
                                                                 }
-                                                                func.call::<()>((func_args, connection_data)).
-                                                                unwrap();
-
-                                                                Ok(())
                                                             })
                                                             .unwrap();
                                                         }
