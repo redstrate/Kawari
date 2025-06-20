@@ -552,7 +552,8 @@ async fn client_loop(
                                                                     unwrap();
                                                                     Ok(())
                                                                 } else {
-                                                                    tracing::info!("User with account_id {} tried to invoke GM command they have no permissions for!!!", connection.player_data.account_id);
+                                                                    tracing::info!("User with account_id {} tried to invoke GM command {} they have no permissions for!",
+                                                                    connection.player_data.account_id, command_name);
                                                                     let func: Function =
                                                                     lua.globals().get("onCommandPermissionError").unwrap();
                                                                     func.call::<()>(connection_data).unwrap();
