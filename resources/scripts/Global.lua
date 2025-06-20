@@ -3,8 +3,14 @@ function onBeginLogin(player)
     player:send_message("Welcome to Kawari!")
 end
 
-function onCommandPermissionError(player)
+function onCommandRequiredRankInsufficientError(player)
     player:send_message("You do not have permission to run this command.")
+end
+
+function onCommandRequiredRankMissingError(additional_information, player)
+    local error_msg = "Your script does not define the required_rank variable. Please define it in your script for it to run."
+
+    player:send_message(string.format("%s\nAdditional information: %s", error_msg, additional_information))
 end
 
 function split(input, separator)

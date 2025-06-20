@@ -1,6 +1,6 @@
 -- A list of festival ids can be found in Hyperborea's source tree:
 -- https://github.com/kawaii/Hyperborea/blob/main/Hyperborea/festivals.yaml
-permissions = GM_RANK_DEBUG
+required_rank = GM_RANK_DEBUG
 
 function onCommand(args, player)
     local parts = split(args)

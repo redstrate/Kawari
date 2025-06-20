@@ -1,6 +1,6 @@
 -- Ported from Ioncannon's Project Meteor Server 
 -- https://bitbucket.org/Ioncannon/project-meteor-server/src/develop/Data/scripts/commands/gm/nudge.lua
-permissions = GM_RANK_DEBUG
+required_rank = GM_RANK_DEBUG
 
 function send_msg(message, player)
     player:send_message(string.format("[nudge] %s", message))
