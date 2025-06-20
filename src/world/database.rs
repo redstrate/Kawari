@@ -47,7 +47,7 @@ impl WorldDatabase {
 
         // Create characters data table
         {
-            let query = "CREATE TABLE IF NOT EXISTS character_data (content_id INTEGER PRIMARY KEY, name STRING, chara_make STRING, city_state INTEGER, zone_id INTEGER, pos_x REAL, pos_y REAL, pos_z REAL, rotation REAL, inventory STRING, remake_mode INTEGER, gm_rank INTEGER);";
+            let query = "CREATE TABLE IF NOT EXISTS character_data (content_id INTEGER PRIMARY KEY, name STRING, chara_make STRING, city_state INTEGER, zone_id INTEGER, pos_x REAL, pos_y REAL, pos_z REAL, rotation REAL, inventory STRING, remake_mode INTEGER, gm_rank INTEGER, classjob_id INTEGER, classjob_levels STRING);";
             connection.execute(query, ()).unwrap();
         }
 
@@ -142,17 +142,19 @@ impl WorldDatabase {
             .unwrap();
 
         stmt = connection
-            .prepare("SELECT pos_x, pos_y, pos_z, rotation, zone_id, inventory, gm_rank FROM character_data WHERE content_id = ?1")
+            .prepare("SELECT pos_x, pos_y, pos_z, rotation, zone_id, inventory, gm_rank, classjob_id, classjob_levels FROM character_data WHERE content_id = ?1")
             .unwrap();
-        let (pos_x, pos_y, pos_z, rotation, zone_id, inventory_json, gm_rank): (
-            f32,
-            f32,
-            f32,
-            f32,
-            u16,
-            String,
-            u8,
-        ) = stmt
+        let (
+            pos_x,
+            pos_y,
+            pos_z,
+            rotation,
+            zone_id,
+            inventory_json,
+            gm_rank,
+            classjob_id,
+            classjob_levels,
+        ): (f32, f32, f32, f32, u16, String, u8, i32, String) = stmt
             .query_row((content_id,), |row| {
                 Ok((
                     row.get(0)?,
@@ -162,6 +164,8 @@ impl WorldDatabase {
                     row.get(4)?,
                     row.get(5)?,
                     row.get(6)?,
+                    row.get(7)?,
+                    row.get(8)?,
                 ))
             })
             .unwrap();
@@ -181,6 +185,8 @@ impl WorldDatabase {
             zone_id,
             inventory,
             gm_rank: GameMasterRank::try_from(gm_rank).unwrap(),
+            classjob_id: classjob_id as u8,
+            classjob_levels: serde_json::from_str(&classjob_levels).unwrap(),
             ..Default::default()
         }
     }
@@ -190,7 +196,7 @@ impl WorldDatabase {
         let connection = self.connection.lock().unwrap();
 
         let mut stmt = connection
-            .prepare("UPDATE character_data SET zone_id=?1, pos_x=?2, pos_y=?3, pos_z=?4, rotation=?5, inventory=?6 WHERE content_id = ?7")
+            .prepare("UPDATE character_data SET zone_id=?1, pos_x=?2, pos_y=?3, pos_z=?4, rotation=?5, inventory=?6, classjob_id=?7, classjob_levels=?8 WHERE content_id = ?9")
             .unwrap();
         stmt.execute((
             data.zone_id,
@@ -199,6 +205,8 @@ impl WorldDatabase {
             data.position.z,
             data.rotation,
             serde_json::to_string(&data.inventory).unwrap(),
+            data.classjob_id,
+            serde_json::to_string(&data.classjob_levels).unwrap(),
             data.content_id,
         ))
         .unwrap();
@@ -247,30 +255,41 @@ impl WorldDatabase {
         for (index, (content_id, actor_id)) in content_actor_ids.iter().enumerate() {
             let mut stmt = connection
                 .prepare(
-                    "SELECT name, chara_make, zone_id, inventory, remake_mode FROM character_data WHERE content_id = ?1",
+                    "SELECT name, chara_make, zone_id, inventory, remake_mode, classjob_id, classjob_levels FROM character_data WHERE content_id = ?1",
                 )
                 .unwrap();
 
-            let result: Result<(String, String, u16, String, i32), rusqlite::Error> = stmt
-                .query_row((content_id,), |row| {
+            let result: Result<(String, String, u16, String, i32, i32, String), rusqlite::Error> =
+                stmt.query_row((content_id,), |row| {
                     Ok((
                         row.get(0)?,
                         row.get(1)?,
                         row.get(2)?,
                         row.get(3)?,
                         row.get(4)?,
+                        row.get(5)?,
+                        row.get(6)?,
                     ))
                 });
 
-            if let Ok((name, chara_make, zone_id, inventory_json, remake_mode)) = result {
+            if let Ok((
+                name,
+                chara_make,
+                zone_id,
+                inventory_json,
+                remake_mode,
+                classjob_id,
+                classjob_levels,
+            )) = result
+            {
                 let chara_make = CharaMake::from_json(&chara_make);
 
                 let inventory: Inventory = serde_json::from_str(&inventory_json).unwrap();
 
                 let select_data = ClientSelectData {
                     character_name: name.clone(),
-                    current_class: 2,
-                    class_levels: [5; 32],
+                    current_class: classjob_id,
+                    class_levels: serde_json::from_str(&classjob_levels).unwrap(),
                     race: chara_make.customize.race as i32,
                     subrace: chara_make.customize.subrace as i32,
                     gender: chara_make.customize.gender as i32,
@@ -331,7 +350,7 @@ impl WorldDatabase {
         &self,
         service_account_id: u32,
         name: &str,
-        chara_make: &str,
+        chara_make_str: &str,
         city_state: u8,
         zone_id: u16,
         inventory: Inventory,
@@ -340,6 +359,11 @@ impl WorldDatabase {
         let actor_id = Self::generate_actor_id();
 
         let connection = self.connection.lock().unwrap();
+
+        // fill out the initial classjob
+        let chara_make = CharaMake::from_json(chara_make_str);
+        let mut classjob_levels = [0i32; 32];
+        classjob_levels[chara_make.classjob_id as usize] = 1; // inital level
 
         // insert ids
         connection
@@ -352,14 +376,16 @@ impl WorldDatabase {
         // insert char data
         connection
             .execute(
-                "INSERT INTO character_data VALUES (?1, ?2, ?3, ?4, ?5, 0.0, 0.0, 0.0, 0.0, ?6, 0, 90);",
+                "INSERT INTO character_data VALUES (?1, ?2, ?3, ?4, ?5, 0.0, 0.0, 0.0, 0.0, ?6, 0, 90, ?7, ?8);",
                 (
                     content_id,
                     name,
-                    chara_make,
+                    chara_make_str,
                     city_state,
                     zone_id,
                     serde_json::to_string(&inventory).unwrap(),
+                    chara_make.classjob_id,
+                    serde_json::to_string(&classjob_levels).unwrap(),
                 ),
             )
             .unwrap();

@@ -587,7 +587,7 @@ async fn client_loop(
 
                                                 match &command {
                                                     GameMasterCommandType::SetLevel => {
-                                                        connection.player_data.level = *arg0 as u8;
+                                                        connection.player_data.set_current_level(*arg0 as i32);
                                                         connection.update_class_info().await;
                                                     }
                                                     GameMasterCommandType::ChangeWeather => {

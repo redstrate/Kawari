@@ -46,7 +46,7 @@ pub struct PlayerData {
     pub account_id: u32,
 
     pub classjob_id: u8,
-    pub level: u8,
+    pub classjob_levels: [i32; 32],
     pub curr_hp: u32,
     pub max_hp: u32,
     pub curr_mp: u16,
@@ -62,6 +62,16 @@ pub struct PlayerData {
     pub teleport_query: TeleportQuery,
     pub gm_rank: GameMasterRank,
     pub gm_invisible: bool,
+}
+
+impl PlayerData {
+    pub fn current_level(&self) -> i32 {
+        self.classjob_levels[self.classjob_id as usize]
+    }
+
+    pub fn set_current_level(&mut self, level: i32) {
+        self.classjob_levels[self.classjob_id as usize] = level;
+    }
 }
 
 /// Represents a single connection between an instance of the client and the world server
@@ -137,8 +147,6 @@ impl ZoneConnection {
 
     pub async fn initialize(&mut self, actor_id: u32) {
         // some still hardcoded values
-        self.player_data.classjob_id = 1;
-        self.player_data.level = 5;
         self.player_data.curr_hp = 100;
         self.player_data.max_hp = 100;
         self.player_data.curr_mp = 10000;
@@ -282,8 +290,8 @@ impl ZoneConnection {
             data: ServerZoneIpcData::UpdateClassInfo(UpdateClassInfo {
                 class_id: self.player_data.classjob_id as u16,
                 unknown: 1,
-                synced_level: self.player_data.level as u16,
-                class_level: self.player_data.level as u16,
+                synced_level: self.player_data.current_level() as u16,
+                class_level: self.player_data.current_level() as u16,
                 ..Default::default()
             }),
             ..Default::default()
@@ -658,7 +666,7 @@ impl ZoneConnection {
                 data: ServerZoneIpcData::StatusEffectList(StatusEffectList {
                     statues: list,
                     classjob_id: self.player_data.classjob_id,
-                    level: self.player_data.level,
+                    level: self.player_data.current_level() as u8,
                     curr_hp: self.player_data.curr_hp,
                     max_hp: self.player_data.max_hp,
                     curr_mp: self.player_data.curr_mp,
@@ -779,7 +787,7 @@ impl ZoneConnection {
             hp_max: self.player_data.max_hp,
             mp_curr: self.player_data.curr_mp,
             mp_max: self.player_data.max_mp,
-            level: self.player_data.level,
+            level: self.player_data.current_level() as u8,
             object_kind: ObjectKind::Player(PlayerSubKind::Player),
             look: chara_details.chara_make.customize,
             display_flags: DisplayFlag::UNK,
