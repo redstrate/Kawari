@@ -3,6 +3,10 @@ function onBeginLogin(player)
     player:send_message("Welcome to Kawari!")
 end
 
+function onCommandPermissionError(player)
+    player:send_message("You do not have permission to run this command.")
+end
+
 function split(input, separator)
     if separator == nil then
         separator = '%s'
@@ -15,6 +19,17 @@ function split(input, separator)
 
     return t
 end
+
+-- Constants
+GM_RANK_NORMALUSER = 0
+GM_RANK_GAMEMASTER = 1
+GM_RANK_EVENTJUNIOR = 3
+GM_RANK_EVENTSENIOR = 4
+GM_RANK_SUPPORT = 5
+GM_RANK_SENIOR = 7
+GM_RANK_DEBUG = 90
+GM_RANK_MAX = 255 -- Doesn't exist, used for purposes of testing permissions in scripts
+
 
 -- please keep these ids sorted!
 
@@ -51,3 +66,4 @@ registerCommand("classjob", "commands/debug/ClassJob.lua")
 registerCommand("setspeed", "commands/debug/SetSpeed.lua")
 registerCommand("nudge", "commands/debug/Nudge.lua")
 registerCommand("festival", "commands/debug/Festival.lua")
+registerCommand("permtest", "commands/debug/PermissionTest.lua")
