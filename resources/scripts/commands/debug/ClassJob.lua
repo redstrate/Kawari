@@ -1,4 +1,4 @@
-permissions = GM_RANK_DEBUG
+required_rank = GM_RANK_DEBUG
 
 function onCommand(args, player)
     local parts = split(args)

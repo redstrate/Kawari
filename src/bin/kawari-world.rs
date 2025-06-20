@@ -535,10 +535,20 @@ async fn client_loop(
                                                                 .exec()
                                                                 .unwrap();
 
-                                                                let permissions: u8 = lua.globals().get("permissions")
-                                                                .expect("Script does not have permissions variable set");
+                                                               let required_rank = lua.globals().get("required_rank");
+                                                               if let Err(error) = required_rank {
+                                                                   tracing::info!("Script is missing required_rank! Unable to run command, sending error to user. Additional information: {}", error);
+                                                                   let func: Function =
+                                                                   lua.globals().get("onCommandRequiredRankMissingError").unwrap();
+                                                                   func.call::<()>((error.to_string(), connection_data)).unwrap();
+                                                                   return Ok(());
+                                                                }
 
-                                                                if connection.player_data.gm_rank as u8 >= permissions {
+                                                                /* Reset state for future commands. Without this it'll stay set to the last value
+                                                                 * and allow other commands that omit required_rank to run, which is undesirable. */
+                                                                lua.globals().set("required_rank", mlua::Value::Nil).unwrap();
+
+                                                                if connection.player_data.gm_rank as u8 >= required_rank.unwrap() {
                                                                     let mut func_args = "";
                                                                     if parts.len() > 1 {
                                                                         func_args = &chat_message.message[command_name.len() + 2..];
@@ -552,10 +562,10 @@ async fn client_loop(
                                                                     unwrap();
                                                                     Ok(())
                                                                 } else {
-                                                                    tracing::info!("User with account_id {} tried to invoke GM command {} they have no permissions for!",
+                                                                    tracing::info!("User with account_id {} tried to invoke GM command {} with insufficient privileges!",
                                                                     connection.player_data.account_id, command_name);
                                                                     let func: Function =
-                                                                    lua.globals().get("onCommandPermissionError").unwrap();
+                                                                    lua.globals().get("onCommandRequiredRankInsufficientError").unwrap();
                                                                     func.call::<()>(connection_data).unwrap();
                                                                     Ok(())
                                                                 }
