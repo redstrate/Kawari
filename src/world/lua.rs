@@ -160,12 +160,6 @@ impl LuaPlayer {
         self.create_segment_self(op_code, data);
     }
 
-    fn toggle_invisiblity(&mut self) {
-        self.queued_tasks.push(Task::ToggleInvisibility {
-            invisible: !self.player_data.gm_invisible,
-        });
-    }
-
     fn unlock_aetheryte(&mut self, unlocked: u32, id: u32) {
         let op_code = ServerZoneIpcType::ActorControlSelf;
         let on = unlocked == 0;
@@ -221,6 +215,11 @@ impl LuaPlayer {
 
     fn reload_scripts(&mut self) {
         self.queued_tasks.push(Task::ReloadScripts);
+    }
+    fn toggle_invisiblity(&mut self) {
+        self.queued_tasks.push(Task::ToggleInvisibility {
+            invisible: !self.player_data.gm_invisible,
+        });
     }
 }
 
