@@ -173,6 +173,33 @@ impl LuaPlayer {
         self.create_segment_self(op_code, data);
     }
 
+    fn unlock_aetheryte(&mut self, unlocked: u32, id: u32) {
+        let op_code = ServerZoneIpcType::ActorControlSelf;
+        let on = unlocked == 0;
+        if id == 0 {
+            for i in 1..239 {
+                let data = ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
+                    category: ActorControlCategory::LearnTeleport {
+                        id: i,
+                        unlocked: on,
+                    },
+                });
+
+                // this might make the server explode, needs testing lmao
+                self.create_segment_self(op_code.clone(), data);
+            }
+        } else {
+            let data = ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
+                category: ActorControlCategory::LearnTeleport {
+                    id,
+                    unlocked: on,
+                },
+            });
+
+            self.create_segment_self(op_code, data);
+        }
+    }
+
     fn change_territory(&mut self, zone_id: u16) {
         self.queued_tasks.push(Task::ChangeTerritory { zone_id });
     }
@@ -239,6 +266,13 @@ impl UserData for LuaPlayer {
             "set_festival",
             |_, this, (festival1, festival2, festival3, festival4): (u32, u32, u32, u32)| {
                 this.set_festival(festival1, festival2, festival3, festival4);
+                Ok(())
+            },
+        );
+        methods.add_method_mut(
+            "unlock_aetheryte",
+            |_, this, (unlock, id): (u32, u32)| {
+                this.unlock_aetheryte(unlock, id);
                 Ok(())
             },
         );
