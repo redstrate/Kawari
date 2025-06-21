@@ -163,6 +163,7 @@ impl LuaPlayer {
         let op_code = ServerZoneIpcType::ActorControlSelf;
         /* TODO: This doesn't actually act as a toggle right now, because we can't update
          * the player's gm_invisible state from this side it seems. How should this be resolved..? */
+        self.player_data.gm_invisible = !self.player_data.gm_invisible;
         let data = ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
             category: ActorControlCategory::ToggleInvisibility {
                 invisible: self.player_data.gm_invisible,
