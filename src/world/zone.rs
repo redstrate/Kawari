@@ -39,9 +39,13 @@ impl Zone {
 
         let mut load_lgb = |name: &str| -> Option<LayerGroup> {
             let path = format!("bg/{}/level/{}.lgb", &bg_path[..level_index], name);
+            let lgb_file = game_data.extract(&path)?;
             tracing::info!("Loading {path}");
-            let lgb = game_data.extract(&path)?;
-            LayerGroup::from_existing(&lgb)
+            let lgb = LayerGroup::from_existing(&lgb_file);
+            if lgb.is_none() {
+                tracing::warn!("Failed to parse {path}, this is most likely a bug in Physis and should be reported somewhere!")
+            }
+            lgb
         };
 
         zone.planevent = load_lgb("planevent");
