@@ -71,6 +71,25 @@ registerEvent(131402, "common/GenericWarp.lua") -- Exit Andron to Old Sharlayan
 registerEvent(131428, "common/GenericWarp.lua") -- Mothercrystal Exit (note: warp doesn't work for some reason?)
 registerEvent(131578, "common/GenericWarp.lua") -- Exit The For'ard Cabins to Tuliyollal
 registerEvent(327683, "common/GenericAetheryte.lua") -- Bentbranch Meadows Aetheryte
+registerEvent(327880, "common/GenericAetheryte.lua") -- Wachunpelo Aetheryte
+registerEvent(327881, "common/GenericAetheryte.lua") -- Worlar's Echo Aetheryte
+registerEvent(327882, "common/GenericAetheryte.lua") -- Ok'hanu Aetheryte
+registerEvent(327883, "common/GenericAetheryte.lua") -- Many Fires Aetheryte
+registerEvent(327884, "common/GenericAetheryte.lua") -- Earthenshire Aetheryte
+registerEvent(327885, "common/GenericAetheryte.lua") -- Iq Br'aax Aetheryte
+registerEvent(327886, "common/GenericAetheryte.lua") -- Mamook Aetheryte
+registerEvent(327887, "common/GenericAetheryte.lua") -- Hhusatahwi Aetheryte
+registerEvent(327888, "common/GenericAetheryte.lua") -- Sheshenewezi Springs Aetheryte
+registerEvent(327889, "common/GenericAetheryte.lua") -- Mehwahhetsoan Aetheryte
+registerEvent(327890, "common/GenericAetheryte.lua") -- Yyasulani Station Aetheryte
+registerEvent(327891, "common/GenericAetheryte.lua") -- The Outskirts Aetheryte
+registerEvent(327892, "common/GenericAetheryte.lua") -- Electrope Strike Aetheryte
+registerEvent(327893, "common/GenericAetheryte.lua") -- Leynode Mnemo Aetheryte
+registerEvent(327894, "common/GenericAetheryte.lua") -- Leynode Pyro Aetheryte
+registerEvent(327895, "common/GenericAetheryte.lua") -- Leynode Aero Aetheryte
+registerEvent(327896, "common/GenericAetheryte.lua") -- Tuliyollal Aetheryte
+registerEvent(327897, "common/GenericAetheryte.lua") -- Solution Nine Aetheryte
+registerEvent(327918, "common/GenericAetheryte.lua") -- Dock Poga Aetheryte
 registerEvent(720916, "custom/000/cmndefinnbed_00020.lua")
 registerEvent(1179657, "tosort/Chocobokeep.lua") -- Chocobokeep in Central Shroud
 registerEvent(1245185, "opening/OpeningLimsaLominsa.lua")
