@@ -1,8 +1,12 @@
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex},
+    time::Duration,
+};
 use tokio::sync::mpsc::Receiver;
 
 use crate::{
-    common::{CustomizeData, ObjectId, ObjectTypeId},
+    common::{CustomizeData, GameData, ObjectId, ObjectTypeId},
     ipc::zone::{
         ActorControl, ActorControlCategory, ActorControlSelf, ActorControlTarget, BattleNpcSubKind,
         ClientTriggerCommand, CommonSpawn, NpcSpawn, ObjectKind,
@@ -123,16 +127,23 @@ impl WorldServer {
 }
 
 pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::io::Error> {
-    let mut data = WorldServer::default();
+    let data = Arc::new(Mutex::new(WorldServer::default()));
+    let game_data = Arc::new(Mutex::new(GameData::new()));
 
     while let Some(msg) = recv.recv().await {
+        let mut to_remove = Vec::new();
+
         match msg {
             ToServer::NewClient(handle) => {
+                let mut data = data.lock().unwrap();
+
                 data.clients
                     .insert(handle.id, (handle, ClientState::default()));
             }
             ToServer::ZoneLoaded(from_id, zone_id) => {
-                // create a new instance if nessecary
+                let mut data = data.lock().unwrap();
+
+                // create a new instance if necessary
                 if !data.instances.contains_key(&zone_id) {
                     data.instances.insert(zone_id, Instance::default());
                 }
@@ -211,11 +222,13 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     );
 
                     if handle.send(msg).is_err() {
-                        data.to_remove.push(id);
+                        to_remove.push(id);
                     }
                 }
             }
             ToServer::LeftZone(from_id, actor_id, zone_id) => {
+                let mut data = data.lock().unwrap();
+
                 // when the actor leaves the zone, remove them from the instance
                 let current_instance = data.find_actor_instance_mut(actor_id).unwrap();
                 current_instance.actors.remove(&ObjectId(actor_id));
@@ -237,11 +250,13 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     let msg = FromServer::ActorDespawn(actor_id);
 
                     if handle.send(msg).is_err() {
-                        data.to_remove.push(id);
+                        to_remove.push(id);
                     }
                 }
             }
             ToServer::Message(from_id, msg) => {
+                let mut data = data.lock().unwrap();
+
                 for (id, (handle, _)) in &mut data.clients {
                     let id = *id;
 
@@ -252,11 +267,13 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     let msg = FromServer::Message(msg.clone());
 
                     if handle.send(msg).is_err() {
-                        data.to_remove.push(id);
+                        to_remove.push(id);
                     }
                 }
             }
             ToServer::ActorMoved(from_id, actor_id, position, rotation) => {
+                let mut data = data.lock().unwrap();
+
                 if let Some(instance) = data.find_actor_instance_mut(actor_id) {
                     if let Some((_, spawn)) = instance
                         .actors
@@ -281,12 +298,14 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         let msg = FromServer::ActorMove(actor_id, position, rotation);
 
                         if handle.send(msg).is_err() {
-                            data.to_remove.push(id);
+                            to_remove.push(id);
                         }
                     }
                 }
             }
             ToServer::ClientTrigger(from_id, from_actor_id, trigger) => {
+                let mut data = data.lock().unwrap();
+
                 for (id, (handle, _)) in &mut data.clients {
                     let id = *id;
 
@@ -304,7 +323,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                                 });
 
                                 if handle.send(msg).is_err() {
-                                    data.to_remove.push(id);
+                                    to_remove.push(id);
                                 }
                             }
                             _ => {}
@@ -324,7 +343,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                             );
 
                             if handle.send(msg).is_err() {
-                                data.to_remove.push(id);
+                                to_remove.push(id);
                             }
                         }
                         ClientTriggerCommand::ChangePose { unk1, pose } => {
@@ -339,7 +358,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                             );
 
                             if handle.send(msg).is_err() {
-                                data.to_remove.push(id);
+                                to_remove.push(id);
                             }
                         }
                         ClientTriggerCommand::ReapplyPose { unk1, pose } => {
@@ -354,7 +373,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                             );
 
                             if handle.send(msg).is_err() {
-                                data.to_remove.push(id);
+                                to_remove.push(id);
                             }
                         }
                         _ => tracing::warn!("Server doesn't know what to do with {:#?}", trigger),
@@ -362,6 +381,8 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 }
             }
             ToServer::DebugNewNpc(_from_id, from_actor_id) => {
+                let mut data = data.lock().unwrap();
+
                 let actor_id = Instance::generate_actor_id();
                 let spawn;
                 {
@@ -423,6 +444,8 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 );
             }
             ToServer::DebugNewEnemy(_from_id, from_actor_id) => {
+                let mut data = data.lock().unwrap();
+
                 let actor_id = Instance::generate_actor_id();
                 let spawn;
                 {
@@ -470,6 +493,8 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 );
             }
             ToServer::DebugSpawnClone(_from_id, from_actor_id) => {
+                let mut data = data.lock().unwrap();
+
                 let actor_id = Instance::generate_actor_id();
                 let spawn;
                 {
@@ -503,43 +528,83 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 );
             }
             ToServer::ActionRequest(from_id, _from_actor_id, request) => {
-                // immediately send back to the client, for now
-                for (id, (handle, _)) in &mut data.clients {
-                    let id = *id;
+                let mut game_data = game_data.lock().unwrap();
+                let cast_time = game_data.get_casttime(request.action_key).unwrap();
 
-                    if id == from_id {
-                        let msg = FromServer::ActionComplete(request);
+                let send_execution = |from_id: ClientId, data: Arc<Mutex<WorldServer>>| {
+                    let mut data = data.lock().unwrap();
 
-                        if handle.send(msg).is_err() {
-                            data.to_remove.push(id);
+                    tracing::info!("Now finishing delayed cast!");
+
+                    for (id, (handle, _)) in &mut data.clients {
+                        let id = *id;
+
+                        if id == from_id {
+                            let msg = FromServer::ActionComplete(request);
+
+                            if handle.send(msg).is_err() {
+                                data.to_remove.push(id);
+                            }
+                            break;
                         }
-                        break;
                     }
+                };
+
+                if cast_time == 0 {
+                    // If instantaneous, send right back
+                    send_execution(from_id.clone(), data.clone());
+                } else {
+                    // Otherwise, delay
+                    // NOTE: I know this won't scale, but it's a fine hack for now
+
+                    tracing::info!(
+                        "Delaying spell cast for {} milliseconds",
+                        cast_time as u64 * 100
+                    );
+
+                    // we have to shadow these variables to tell rust not to move them into the async closure
+                    let cast_time = cast_time.clone();
+                    let from_id = from_id.clone();
+                    let data = data.clone();
+                    tokio::task::spawn(async move {
+                        let mut interval =
+                            tokio::time::interval(Duration::from_millis(cast_time as u64 * 100));
+                        interval.tick().await;
+                        interval.tick().await;
+                        send_execution(from_id, data);
+                    });
                 }
             }
             ToServer::Disconnected(from_id) => {
+                let mut data = data.lock().unwrap();
+
                 data.to_remove.push(from_id);
             }
             ToServer::FatalError(err) => return Err(err),
         }
 
         // Remove any clients that errored out
-        for remove_id in data.to_remove.clone() {
-            // remove any actors they had
-            let mut actor_id = None;
-            for (id, (handle, _)) in &mut data.clients {
-                if *id == remove_id {
-                    actor_id = Some(handle.actor_id);
+        {
+            let mut data = data.lock().unwrap();
+            data.to_remove.append(&mut to_remove);
+
+            for remove_id in data.to_remove.clone() {
+                // remove any actors they had
+                let mut actor_id = None;
+                for (id, (handle, _)) in &mut data.clients {
+                    if *id == remove_id {
+                        actor_id = Some(handle.actor_id);
+                    }
                 }
-            }
 
-            if let Some(actor_id) = actor_id {
-                // remove them from the instance
-                let current_instance = data.find_actor_instance_mut(actor_id).unwrap();
-                current_instance.actors.remove(&ObjectId(actor_id));
-            }
+                if let Some(actor_id) = actor_id {
+                    // remove them from the instance
+                    let current_instance = data.find_actor_instance_mut(actor_id).unwrap();
+                    current_instance.actors.remove(&ObjectId(actor_id));
+                }
 
-            data.clients.remove(&remove_id);
+                data.clients.remove(&remove_id);
+            }
         }
     }
     Ok(())
