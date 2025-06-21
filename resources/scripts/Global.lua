@@ -68,6 +68,7 @@ registerEvent(131205, "common/GenericWarp.lua") -- Exit Cloud Nine to Ishgard: F
 registerEvent(131246, "common/GenericWarp.lua") -- Exit Bokairo Inn to Kugane
 registerEvent(131312, "common/GenericWarp.lua") -- Exit The Pendants Personal Suite to Crystarium
 registerEvent(131402, "common/GenericWarp.lua") -- Exit Andron to Old Sharlayan
+registerEvent(131428, "common/GenericWarp.lua") -- Mothercrystal Exit (note: warp doesn't work for some reason?)
 registerEvent(131578, "common/GenericWarp.lua") -- Exit The For'ard Cabins to Tuliyollal
 registerEvent(327683, "common/GenericAetheryte.lua") -- Bentbranch Meadows Aetheryte
 registerEvent(720916, "custom/000/cmndefinnbed_00020.lua")

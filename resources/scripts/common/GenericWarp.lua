@@ -9,6 +9,6 @@ function onReturn(scene, results, player)
 
     if results[1] == 1 then
         -- get warp
-    player:warp(EVENT_ID)
+        player:warp(EVENT_ID)
     end
 end
