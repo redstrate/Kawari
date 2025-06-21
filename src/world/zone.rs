@@ -28,7 +28,10 @@ impl Zone {
         };
 
         let sheet = TerritoryTypeSheet::read_from(game_data, Language::None).unwrap();
-        let row = sheet.get_row(id as u32).unwrap();
+        let Some(row) = sheet.get_row(id as u32) else {
+            tracing::warn!("Invalid zone id {id}, allowing anyway...");
+            return zone;
+        };
 
         // e.g. ffxiv/fst_f1/fld/f1f3/level/f1f3
         let bg_path = row.Bg().into_string().unwrap();
