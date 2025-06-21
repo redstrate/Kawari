@@ -92,7 +92,7 @@ bitflags = { version = "2.9", default-features = false }
 mlua = { version = "0.10", features = ["lua51", "vendored", "send", "async", "serialize"], default-features = false }
 
 # For character backup decompression
-zip = { version = "4.0", features = ["deflate", "lzma", "bzip2"], default-features = false }
+zip = { version = "4.1", features = ["deflate", "lzma", "bzip2"], default-features = false }
 
 # For some login<->lobby server communication
 reqwest = { version = "0.12", default-features = false }
