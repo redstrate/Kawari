@@ -19,5 +19,5 @@ function onCommand(args, player)
     end
 
     player:unlock_action(id)
-    player:send_message(sender.."Action unlocked!")
+    player:send_message(string.format("%s Action %s unlocked!", sender, id)
 end
