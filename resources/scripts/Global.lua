@@ -72,6 +72,28 @@ registerEvent(131428, "common/GenericWarp.lua") -- Mothercrystal Exit (note: war
 registerEvent(131578, "common/GenericWarp.lua") -- Exit The For'ard Cabins to Tuliyollal
 -- A Realm Reborn Aetherytes
 registerEvent(327683, "common/GenericAetheryte.lua") -- Bentbranch Meadows Aetheryte
+
+-- Shadowbringers Aetherytes
+registerEvent(327812, "common/GenericAetheryte.lua") -- Fort Jobb Aetheryte
+registerEvent(327813, "common/GenericAetheryte.lua") -- Aetheryte
+registerEvent(327814, "common/GenericAetheryte.lua") -- Eulmore Aetheryte
+registerEvent(327815, "common/GenericAetheryte.lua") -- Aetheryte
+registerEvent(327816, "common/GenericAetheryte.lua") -- The Ostal Imperative Aetheryte
+registerEvent(327817, "common/GenericAetheryte.lua") -- Stilltide Aetheryte
+registerEvent(327818, "common/GenericAetheryte.lua") -- Wright Aetheryte
+registerEvent(327819, "common/GenericAetheryte.lua") -- Tomra Aetheryte
+registerEvent(327820, "common/GenericAetheryte.lua") -- Mord Souq Aetheryte
+registerEvent(327821, "common/GenericAetheryte.lua") -- Twine Aetheryte
+registerEvent(327822, "common/GenericAetheryte.lua") -- Slitherbough Aetheryte
+registerEvent(327823, "common/GenericAetheryte.lua") -- Fanow Aetheryte
+registerEvent(327824, "common/GenericAetheryte.lua") -- Lydha Lran Aetheryte
+registerEvent(327825, "common/GenericAetheryte.lua") -- Pla Enni Aetheryte
+registerEvent(327826, "common/GenericAetheryte.lua") -- Wolekdorf Aetheryte
+registerEvent(327827, "common/GenericAetheryte.lua") -- The Ondo Cups Aetheryte
+registerEvent(327828, "common/GenericAetheryte.lua") -- The Macarenses Angle Aetheryte
+registerEvent(327841, "common/GenericAetheryte.lua") -- The Inn at Journey's Head Aetheryte
+-- registerEvent(3278??, "common/GenericAetheryte.lua") -- The Crystarium Aetheryte, currently unknown due to the entity not spawning
+
 -- Endwalker Aetherytes
 registerEvent(327846, "common/GenericAetheryte.lua") -- The Archeion Aetheryte
 registerEvent(327847, "common/GenericAetheryte.lua") -- Sharlayan Hamlet Aetheryte
