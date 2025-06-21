@@ -12,8 +12,8 @@ function onCommand(args, player)
 
     local id = tonumber(parts[1])
 
-    if not id then
-        player:send_message(sender.."Error parsing territory id! Make sure your input is an integer."..usage)
+    if not id or id < 0 or id > 65535 then -- Must be in range of unsigned 16-bit value
+        player:send_message(sender.."Error parsing territory id! Make sure your input is an integer between 0 and 65535."..usage)
         return
     end
 
