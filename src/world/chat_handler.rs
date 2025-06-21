@@ -44,16 +44,6 @@ impl ChatHandler {
                     ))
                     .await;
             }
-            "!unlockaction" => {
-                let parts: Vec<&str> = chat_message.message.split(' ').collect();
-                let id = parts[1].parse::<u32>().unwrap();
-
-                connection
-                    .actor_control_self(ActorControlSelf {
-                        category: ActorControlCategory::ToggleActionUnlock { id, unlocked: true },
-                    })
-                    .await;
-            }
             "!equip" => {
                 let (_, name) = chat_message.message.split_once(' ').unwrap();
 
