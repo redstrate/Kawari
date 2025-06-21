@@ -9,6 +9,8 @@ function onCommand(args, player)
     local on = tonumber(parts[1])
     local id = tonumber(parts[2])
 
+    -- TODO: Refine this script more once it's understood why it doesn't seem to work properly
+
     player:unlock_aetheryte(on, id)
     player:send_message(string.format("%s Aetheryte(s) %s had their unlocked status changed!", sender, id))
 end
