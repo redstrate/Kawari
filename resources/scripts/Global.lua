@@ -13,6 +13,10 @@ function onCommandRequiredRankMissingError(additional_information, player)
     player:send_message(string.format("%s\nAdditional information: %s", error_msg, additional_information))
 end
 
+function onUnknownCommandError(command_name, player)
+    player:send_message(string.format("Unknown command %s", command_name))
+end
+
 function split(input, separator)
     if separator == nil then
         separator = '%s'

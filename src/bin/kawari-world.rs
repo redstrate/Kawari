@@ -564,6 +564,18 @@ async fn client_loop(
                                                                 }
                                                             })
                                                             .unwrap();
+                                                        } else {
+                                                            tracing::info!("Unknown command {command_name}");
+
+                                                            lua.scope(|scope| {
+                                                                let connection_data = scope
+                                                                    .create_userdata_ref_mut(&mut lua_player)
+                                                                    .unwrap();
+                                                                let func: Function =
+                                                                    lua.globals().get("onUnknownCommandError").unwrap();
+                                                                func.call::<()>((command_name, connection_data)).unwrap();
+                                                                Ok(())
+                                                            }).unwrap();
                                                         }
                                                 }
 
