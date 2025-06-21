@@ -26,6 +26,7 @@ pub enum Task {
     SetClassJob { classjob_id: u8 },
     WarpAetheryte { aetheryte_id: u32 },
     ReloadScripts,
+    ToggleInvisibility { invisible:bool },
 }
 
 #[derive(Default)]
@@ -160,17 +161,7 @@ impl LuaPlayer {
     }
 
     fn toggle_invisiblity(&mut self) {
-        let op_code = ServerZoneIpcType::ActorControlSelf;
-        /* TODO: This doesn't actually act as a toggle right now, because we can't update
-         * the player's gm_invisible state from this side it seems. How should this be resolved..? */
-        self.player_data.gm_invisible = !self.player_data.gm_invisible;
-        let data = ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
-            category: ActorControlCategory::ToggleInvisibility {
-                invisible: self.player_data.gm_invisible,
-            },
-        });
-
-        self.create_segment_self(op_code, data);
+        self.queued_tasks.push(Task::ToggleInvisibility { invisible: !self.player_data.gm_invisible });
     }
 
     fn unlock_aetheryte(&mut self, unlocked: u32, id: u32) {
