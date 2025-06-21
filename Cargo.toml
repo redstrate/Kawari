@@ -104,4 +104,4 @@ rkon = { version = "0.1" }
 tower-http = { version = "0.6", features = ["fs", "cors"] }
 
 # excel sheet data
-icarus = { git = "https://github.com/redstrate/Icarus", branch = "ver/2025.04.16.0000.0000", features = ["Warp", "Tribe", "ClassJob", "World", "TerritoryType", "Race", "Aetheryte", "EquipSlotCategory"], default-features = false }
+icarus = { git = "https://github.com/redstrate/Icarus", branch = "ver/2025.04.16.0000.0000", features = ["Warp", "Tribe", "ClassJob", "World", "TerritoryType", "Race", "Aetheryte", "EquipSlotCategory", "Action"], default-features = false }

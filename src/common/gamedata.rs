@@ -1,3 +1,4 @@
+use icarus::Action::ActionSheet;
 use icarus::Aetheryte::AetheryteSheet;
 use icarus::ClassJob::ClassJobSheet;
 use icarus::EquipSlotCategory::EquipSlotCategorySheet;
@@ -218,5 +219,12 @@ impl GameData {
         }
 
         None
+    }
+
+    pub fn get_casttime(&mut self, action_id: u32) -> Option<u16> {
+        let sheet = ActionSheet::read_from(&mut self.game_data, Language::English)?;
+        let row = sheet.get_row(action_id)?;
+
+        row.Cast100ms().into_u16().copied()
     }
 }
