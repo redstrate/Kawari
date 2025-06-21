@@ -52,8 +52,6 @@ registerAction(9, "actions/FastBlade.lua")
 registerAction(6221, "items/Fantasia.lua")
 
 -- Events
-registerEvent(721028, "tosort/UnendingJourney.lua")
-registerEvent(721044, "tosort/CrystalBell.lua")
 registerEvent(131079, "warp/WarpInnGeneric.lua") -- Exit Limsa Upper Decks to Mizzenmast Inn room
 registerEvent(131080, "warp/WarpInnGeneric.lua") -- Exit New Gridania to The Roost Inn room
 registerEvent(131081, "warp/WarpInnGeneric.lua") -- Exit Ul'dah: Steps of Nald to The Hourglass Inn room
@@ -63,6 +61,9 @@ registerEvent(131084, "common/GenericWarp.lua") -- Exit The Hourglass to Ul'dah:
 registerEvent(131092, "common/GenericWarp.lua")
 registerEvent(131093, "common/GenericWarp.lua")
 registerEvent(131094, "common/GenericWarp.lua")
+--registerEvent(131113, "common/GenericWarp.lua") -- (currently doesn't react, seems to need different handling) Ferry Skipper from Upper La Noscea: Memeroon's Trading Post to Upper La Noscea: Jijiroon's Trading Post
+--registerEvent(131114, "common/GenericWarp.lua") -- (currently doesn't react, seems to need different handling) Ferry Skipper from Upper La Noscea: Jijiroon's Trading Post to Upper La Noscea: Memeroon's Trading Post
+registerEvent(131126, "common/GenericWarp.lua") -- Gatekeeper from Southern Thanalan: Nald's Reflection to Southern Thanalan: The Minotaur Malm
 registerEvent(131204, "warp/WarpInnGeneric.lua") -- Exit Ishgard: Foundation to Cloud Nine Inn room
 registerEvent(131205, "common/GenericWarp.lua") -- Exit Cloud Nine to Ishgard: Foundation
 registerEvent(131246, "common/GenericWarp.lua") -- Exit Bokairo Inn to Kugane
@@ -70,10 +71,34 @@ registerEvent(131250, "common/GenericWarp.lua") -- Gatekeeper from The Fringes: 
 registerEvent(131312, "common/GenericWarp.lua") -- Exit The Pendants Personal Suite to Crystarium
 registerEvent(131402, "common/GenericWarp.lua") -- Exit Andron to Old Sharlayan
 registerEvent(131428, "common/GenericWarp.lua") -- Mothercrystal Exit (note: warp doesn't work for some reason?)
+registerEvent(131519, "common/GenericWarp.lua") -- Faire Adventurer from Eastern La Noscea: bottom of the Moonfire Festival (2023) tower to the first tier of the tower
 registerEvent(131578, "common/GenericWarp.lua") -- Exit The For'ard Cabins to Tuliyollal
 -- A Realm Reborn Aetherytes
 registerEvent(327683, "common/GenericAetheryte.lua") -- Bentbranch Meadows Aetheryte
+registerEvent(327684, "common/GenericAetheryte.lua") -- The Hawthorne Hut Aetheryte
+registerEvent(327685, "common/GenericAetheryte.lua") -- Quarrymill Aetheryte
+registerEvent(327686, "common/GenericAetheryte.lua") -- Camp Tranquil Aetheryte
+registerEvent(327687, "common/GenericAetheryte.lua") -- Fallgourd Float Aetheryte
+registerEvent(327690, "common/GenericAetheryte.lua") -- Moraby Drydocks Aetheryte
+registerEvent(327691, "common/GenericAetheryte.lua") -- Costa del Sol Aetheryte
+-- registerEvent(327???, "common/GenericAetheryte.lua") -- Wineport Aetheryte, currently unknown due to only being able to load ELN once. Now it loads into purgatory...
+registerEvent(327693, "common/GenericAetheryte.lua") -- Swiftperch Aetheryte
+registerEvent(327694, "common/GenericAetheryte.lua") -- Aleport Aetheryte
+registerEvent(327695, "common/GenericAetheryte.lua") -- Camp Bronze Lake Aetheryte
+registerEvent(327696, "common/GenericAetheryte.lua") -- Camp Overlook Aetheryte
+registerEvent(327697, "common/GenericAetheryte.lua") -- Horizon Aetheryte
+registerEvent(327698, "common/GenericAetheryte.lua") -- Camp Drybone Aetheryte
+registerEvent(327699, "common/GenericAetheryte.lua") -- Little Ala Mhigo Aetheryte
+registerEvent(327700, "common/GenericAetheryte.lua") -- Forgotten Springs Aetheryte
+registerEvent(327701, "common/GenericAetheryte.lua") -- Camp Bluefog Aetheryte
+registerEvent(327702, "common/GenericAetheryte.lua") -- Ceruleum Processing Plant Aetheryte
 registerEvent(327703, "common/GenericAetheryte.lua") -- Camp Dragonhead Aetheryte
+registerEvent(327732, "common/GenericAetheryte.lua") -- Summerford Farms Aetheryte
+registerEvent(327733, "common/GenericAetheryte.lua") -- Black Brush Station Aetheryte
+registerEvent(327735, "common/GenericAetheryte.lua") -- Wolves' Den Pier Aetheryte
+-- registerevent(327???, "common/GenericAetheryte.lua") -- Ul'dah: Steps of Nald Aetheryte, currently unknown due to the entity not spawning
+-- registerevent(327???, "common/GenericAetheryte.lua") -- Limsa Lominsa: The Lower Decks Aetheryte, currently unknown due to the entity not spawning
+registerEvent(327742, "common/GenericAetheryte.lua") -- The Gold Saucer Aetheryte
 
 -- Heavensward Aetherytes
 registerEvent(327750, "common/GenericAetheryte.lua") -- Ishgard: Foundation Aetheryte
@@ -167,6 +192,8 @@ registerEvent(327918, "common/GenericAetheryte.lua") -- Dock Poga Aetheryte
 
 -- Misc. Events
 registerEvent(720916, "custom/000/cmndefinnbed_00020.lua")
+registerEvent(721028, "tosort/UnendingJourney.lua")
+registerEvent(721044, "tosort/CrystalBell.lua")
 registerEvent(1179657, "tosort/Chocobokeep.lua") -- Chocobokeep in Central Shroud
 registerEvent(1245185, "opening/OpeningLimsaLominsa.lua")
 registerEvent(1245186, "opening/OpeningGridania.lua")
