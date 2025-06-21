@@ -70,7 +70,28 @@ registerEvent(131312, "common/GenericWarp.lua") -- Exit The Pendants Personal Su
 registerEvent(131402, "common/GenericWarp.lua") -- Exit Andron to Old Sharlayan
 registerEvent(131428, "common/GenericWarp.lua") -- Mothercrystal Exit (note: warp doesn't work for some reason?)
 registerEvent(131578, "common/GenericWarp.lua") -- Exit The For'ard Cabins to Tuliyollal
+-- A Realm Reborn Aetherytes
 registerEvent(327683, "common/GenericAetheryte.lua") -- Bentbranch Meadows Aetheryte
+-- Endwalker Aetherytes
+registerEvent(327846, "common/GenericAetheryte.lua") -- The Archeion Aetheryte
+registerEvent(327847, "common/GenericAetheryte.lua") -- Sharlayan Hamlet Aetheryte
+registerEvent(327848, "common/GenericAetheryte.lua") -- Aporia Aetheryte
+registerEvent(327849, "common/GenericAetheryte.lua") -- Yedlihmad Aetheryte
+registerEvent(327850, "common/GenericAetheryte.lua") -- The Great Work Aetheryte
+registerEvent(327851, "common/GenericAetheryte.lua") -- Palaka's Stand Aetheryte
+registerEvent(327852, "common/GenericAetheryte.lua") -- Camp Broken Glass Aetheryte
+registerEvent(327853, "common/GenericAetheryte.lua") -- Tertium Aetheryte
+registerEvent(327854, "common/GenericAetheryte.lua") -- Sinus Lacrimarum Aetheryte
+registerEvent(327855, "common/GenericAetheryte.lua") -- Bestways Burrow Aetheryte
+registerEvent(327856, "common/GenericAetheryte.lua") -- Anagnorisis Aetheryte
+registerEvent(327857, "common/GenericAetheryte.lua") -- The Twelve Wonders Aetheryte
+registerEvent(327858, "common/GenericAetheryte.lua") -- Poieten Oikos Aetheryte
+registerEvent(327859, "common/GenericAetheryte.lua") -- Reah Tahra Aetheryte
+registerEvent(327860, "common/GenericAetheryte.lua") -- Abode of the Ea Aetheryte
+registerEvent(327861, "common/GenericAetheryte.lua") -- Base Omicron Aetheryte
+registerEvent(327862, "common/GenericAetheryte.lua") -- Old Sharlayan Aetheryte
+registerEvent(327863, "common/GenericAetheryte.lua") -- Radz-at-Han Aetheryte
+-- Dawntrail Aetherytes
 registerEvent(327880, "common/GenericAetheryte.lua") -- Wachunpelo Aetheryte
 registerEvent(327881, "common/GenericAetheryte.lua") -- Worlar's Echo Aetheryte
 registerEvent(327882, "common/GenericAetheryte.lua") -- Ok'hanu Aetheryte
