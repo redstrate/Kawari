@@ -144,6 +144,17 @@ impl LuaPlayer {
         self.create_segment_self(op_code, data);
     }
 
+    fn set_speed(&mut self, speed: u16) {
+        let op_code = ServerZoneIpcType::ActorControlSelf;
+        let data = ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
+            category: ActorControlCategory::Flee {
+                speed,
+            },
+        });
+
+        self.create_segment_self(op_code, data);
+    }
+
     fn change_territory(&mut self, zone_id: u16) {
         self.queued_tasks.push(Task::ChangeTerritory { zone_id });
     }
@@ -217,6 +228,13 @@ impl UserData for LuaPlayer {
             "unlock_action",
             |_, this, action_id: u32| {
                 this.unlock_action(action_id);
+                Ok(())
+            },
+        );
+        methods.add_method_mut(
+            "set_speed",
+            |_, this, speed: u16| {
+                this.set_speed(speed)
                 Ok(())
             },
         );
