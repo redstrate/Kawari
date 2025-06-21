@@ -152,7 +152,7 @@ impl<T: ReadWriteIpcSegment> PacketSegment<T> {
         let header = std::mem::size_of::<u32>() * 4;
         header as u32
             + match &self.data {
-                SegmentData::None() => 16,
+                SegmentData::None() => 0,
                 SegmentData::SecuritySetup { .. } => 616,
                 SegmentData::SecurityInitialize { .. } => 640,
                 SegmentData::Ipc { data } => data.calc_size(),
