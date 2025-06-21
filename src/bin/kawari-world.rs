@@ -150,6 +150,7 @@ async fn client_loop(
                             let (segments, connection_type) = connection.parse_packet(&buf[..n]).await;
                             for segment in &segments {
                                 match &segment.data {
+                                    SegmentData::None() => {},
                                     SegmentData::Setup { ticket } => {
                                         // for some reason they send a string representation
                                         let actor_id = ticket.parse::<u32>().unwrap();
@@ -807,7 +808,7 @@ async fn client_loop(
                                     }
                                     SegmentData::KawariIpc { data } => handle_custom_ipc(&mut connection, data).await,
                                     _ => {
-                                        panic!("The server is recieving a response or unknown packet!")
+                                        panic!("The server is recieving a response or unknown packet: {segment:#?}")
                                     }
                                 }
                             }
