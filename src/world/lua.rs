@@ -191,10 +191,7 @@ impl LuaPlayer {
             }
         } else {
             let data = ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
-                category: ActorControlCategory::LearnTeleport {
-                    id,
-                    unlocked: on,
-                },
+                category: ActorControlCategory::LearnTeleport { id, unlocked: on },
             });
 
             self.create_segment_self(op_code, data);
@@ -270,13 +267,10 @@ impl UserData for LuaPlayer {
                 Ok(())
             },
         );
-        methods.add_method_mut(
-            "unlock_aetheryte",
-            |_, this, (unlock, id): (u32, u32)| {
-                this.unlock_aetheryte(unlock, id);
-                Ok(())
-            },
-        );
+        methods.add_method_mut("unlock_aetheryte", |_, this, (unlock, id): (u32, u32)| {
+            this.unlock_aetheryte(unlock, id);
+            Ok(())
+        });
         methods.add_method_mut("unlock_action", |_, this, action_id: u32| {
             this.unlock_action(action_id);
             Ok(())
