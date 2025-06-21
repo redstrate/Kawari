@@ -75,9 +75,7 @@ registerEvent(327683, "common/GenericAetheryte.lua") -- Bentbranch Meadows Aethe
 
 -- Shadowbringers Aetherytes
 registerEvent(327812, "common/GenericAetheryte.lua") -- Fort Jobb Aetheryte
-registerEvent(327813, "common/GenericAetheryte.lua") -- Aetheryte
 registerEvent(327814, "common/GenericAetheryte.lua") -- Eulmore Aetheryte
-registerEvent(327815, "common/GenericAetheryte.lua") -- Aetheryte
 registerEvent(327816, "common/GenericAetheryte.lua") -- The Ostal Imperative Aetheryte
 registerEvent(327817, "common/GenericAetheryte.lua") -- Stilltide Aetheryte
 registerEvent(327818, "common/GenericAetheryte.lua") -- Wright Aetheryte
