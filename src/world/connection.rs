@@ -346,12 +346,20 @@ impl ZoneConnection {
         {
             let config = get_config();
 
+            let weather_id;
+            {
+                let mut game_data = self.gamedata.lock().unwrap();
+                weather_id = game_data
+                    .get_weather(self.zone.as_ref().unwrap().id.into())
+                    .unwrap_or(1) as u16;
+            }
+
             let ipc = ServerZoneIpcSegment {
                 op_code: ServerZoneIpcType::InitZone,
                 timestamp: timestamp_secs(),
                 data: ServerZoneIpcData::InitZone(InitZone {
                     territory_type: self.zone.as_ref().unwrap().id,
-                    weather_id: 1,
+                    weather_id,
                     obsfucation_mode: if config.world.enable_packet_obsfucation {
                         OBFUSCATION_ENABLED_MODE
                     } else {

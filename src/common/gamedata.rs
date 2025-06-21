@@ -2,6 +2,8 @@ use icarus::Action::ActionSheet;
 use icarus::Aetheryte::AetheryteSheet;
 use icarus::ClassJob::ClassJobSheet;
 use icarus::EquipSlotCategory::EquipSlotCategorySheet;
+use icarus::TerritoryType::TerritoryTypeSheet;
+use icarus::WeatherRate::WeatherRateSheet;
 use icarus::World::WorldSheet;
 use icarus::{Tribe::TribeSheet, Warp::WarpSheet};
 use physis::common::{Language, Platform};
@@ -9,6 +11,8 @@ use physis::exd::{EXD, ExcelRowKind};
 use physis::exh::EXH;
 
 use crate::{common::Attributes, config::get_config};
+
+use super::timestamp_secs;
 
 /// Convenient methods built on top of Physis to access data relevant to the server
 pub struct GameData {
@@ -226,5 +230,64 @@ impl GameData {
         let row = sheet.get_row(action_id)?;
 
         row.Cast100ms().into_u16().copied()
+    }
+
+    /// Calculates the current weather at the current time
+    // TODO: instead allow targetting a specific time to calculate forcecasts
+    pub fn get_weather_rate(&mut self, weather_rate_id: u32) -> Option<i32> {
+        let sheet = WeatherRateSheet::read_from(&mut self.game_data, Language::None)?;
+        let row = sheet.get_row(weather_rate_id)?;
+
+        let target = Self::calculate_target();
+        let weather_and_rates: Vec<(i32, i32)> = row
+            .Weather()
+            .iter()
+            .cloned()
+            .zip(row.Rate().clone())
+            .map(|(x, y)| (*x.into_i32().unwrap(), *y.into_u8().unwrap() as i32))
+            .collect();
+
+        Some(
+            weather_and_rates
+                .iter()
+                .filter(|(_, rate)| target < *rate)
+                .take(1)
+                .collect::<Vec<&(i32, i32)>>()
+                .first()?
+                .0,
+        )
+    }
+
+    /// Calculate target window for weather calculations
+    fn calculate_target() -> i32 {
+        // Based off of https://github.com/Rogueadyn/SaintCoinach/blob/master/SaintCoinach/Xiv/WeatherRate.cs
+        // TODO: this isn't correct still and doesn't seem to match up with the retail server
+
+        let real_to_eorzean_factor = (60.0 * 24.0) / 70.0;
+        let unix = (timestamp_secs() as f32 / real_to_eorzean_factor) as u64;
+        // Get Eorzea hour for weather start
+        let bell = unix / 175;
+        // Do the magic 'cause for calculations 16:00 is 0, 00:00 is 8 and 08:00 is 16
+        let increment = ((bell + 8 - (bell % 8)) as u32) % 24;
+
+        // Take Eorzea days since unix epoch
+        let total_days = (unix / 4200) as u32;
+
+        let calc_base = (total_days * 0x64) + increment;
+
+        let step1 = (calc_base << 0xB) ^ calc_base;
+        let step2 = (step1 >> 8) ^ step1;
+
+        (step2 % 0x64) as i32
+    }
+
+    /// Gets the current weather for the given zone id
+    pub fn get_weather(&mut self, zone_id: u32) -> Option<i32> {
+        let sheet = TerritoryTypeSheet::read_from(&mut self.game_data, Language::None)?;
+        let row = sheet.get_row(zone_id)?;
+
+        let weather_rate_id = row.WeatherRate().into_u8()?;
+
+        self.get_weather_rate(*weather_rate_id as u32)
     }
 }
