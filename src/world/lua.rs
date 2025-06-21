@@ -150,6 +150,15 @@ impl LuaPlayer {
         self.create_segment_self(op_code, data);
     }
 
+    fn toggle_wireframe(&mut self) {
+        let op_code = ServerZoneIpcType::ActorControlSelf;
+        let data = ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
+            category: ActorControlCategory::ToggleWireframeRendering(),
+        });
+
+        self.create_segment_self(op_code, data);
+    }
+
     fn change_territory(&mut self, zone_id: u16) {
         self.queued_tasks.push(Task::ChangeTerritory { zone_id });
     }
@@ -225,6 +234,10 @@ impl UserData for LuaPlayer {
         });
         methods.add_method_mut("set_speed", |_, this, speed: u16| {
             this.set_speed(speed);
+            Ok(())
+        });
+        methods.add_method_mut("toggle_wireframe", |_, this, _: Value| {
+            this.toggle_wireframe();
             Ok(())
         });
         methods.add_method_mut("change_territory", |_, this, zone_id: u16| {
