@@ -26,8 +26,10 @@ We have a working implementation for most of FFXIV's servers:
 Kawari is primarily a research project, but also a way to preserve the modern client. Kawari is...
 * **FOR** preservation of the game, in the event that the servers are permanently unavailable.
 * **FOR** exploring the packet structure for legitimate purposes (e.g. archival and preservation.)
-* **NOT** a way to play the game without a valid subscription.
+* **NOT** a way to play the game without a valid subscription. The server can't, nor ever will be a suitable replacement for the real game.
 * **NOT** for creating bots, packet modifications or doing anything on the retail servers.
+
+Also please don't Kawari use it to spoil unreleased or new content, thanks.
 
 ## Supported Game Version
 
