@@ -189,8 +189,14 @@ mod tests {
         assert_eq!(player_setup.race, 1);
         assert_eq!(player_setup.tribe, 2);
         assert_eq!(player_setup.expansion, 5);
-        assert_eq!(player_setup.current_job, 1); // adventurer
+        assert_eq!(player_setup.current_job, 1); // gladiator
         assert_eq!(player_setup.current_class, 1); // ditto
-        assert_eq!(player_setup.levels[1], 1); // adventurer
+        assert_eq!(
+            player_setup.levels,
+            [
+                0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0
+            ]
+        ); // only GLA
     }
 }

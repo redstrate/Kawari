@@ -278,8 +278,7 @@ async fn client_loop(
                                                         timestamp: timestamp_secs(),
                                                         data: ServerZoneIpcData::PlayerStatus(PlayerStatus {
                                                             content_id: connection.player_data.content_id,
-                                                            exp: [10000; 32],
-                                                            levels: [100; 32],
+                                                            exp: [0; 32],
                                                             name: chara_details.name,
                                                             char_id: connection.player_data.actor_id,
                                                             race: chara_details.chara_make.customize.race,
@@ -290,6 +289,9 @@ async fn client_loop(
                                                             as u8,
                                                             nameday_day: chara_details.chara_make.birth_day as u8,
                                                             deity: chara_details.chara_make.guardian as u8,
+                                                            current_class: connection.player_data.classjob_id,
+                                                            current_job: connection.player_data.classjob_id,
+                                                            levels: connection.player_data.classjob_levels.map(|x| x as u16),
                                                             ..Default::default()
                                                         }),
                                                         ..Default::default()
