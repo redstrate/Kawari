@@ -1,6 +1,6 @@
 use crate::{
     inventory::Storage,
-    ipc::zone::{ActorControlCategory, ActorControlSelf, ChatMessage, GameMasterRank},
+    ipc::zone::{ChatMessage, GameMasterRank},
     world::ToServer,
 };
 
@@ -42,16 +42,6 @@ impl ChatHandler {
                         connection.id,
                         connection.player_data.actor_id,
                     ))
-                    .await;
-            }
-            "!unlockaction" => {
-                let parts: Vec<&str> = chat_message.message.split(' ').collect();
-                let id = parts[1].parse::<u32>().unwrap();
-
-                connection
-                    .actor_control_self(ActorControlSelf {
-                        category: ActorControlCategory::ToggleActionUnlock { id, unlocked: true },
-                    })
                     .await;
             }
             "!equip" => {

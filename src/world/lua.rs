@@ -26,6 +26,7 @@ pub enum Task {
     SetClassJob { classjob_id: u8 },
     WarpAetheryte { aetheryte_id: u32 },
     ReloadScripts,
+    ToggleInvisibility { invisible: bool },
 }
 
 #[derive(Default)]
@@ -132,6 +133,58 @@ impl LuaPlayer {
         self.create_segment_self(op_code, data);
     }
 
+    fn unlock_action(&mut self, id: u32) {
+        let op_code = ServerZoneIpcType::ActorControlSelf;
+        let data = ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
+            category: ActorControlCategory::ToggleActionUnlock { id, unlocked: true },
+        });
+
+        self.create_segment_self(op_code, data);
+    }
+
+    fn set_speed(&mut self, speed: u16) {
+        let op_code = ServerZoneIpcType::ActorControlSelf;
+        let data = ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
+            category: ActorControlCategory::Flee { speed },
+        });
+
+        self.create_segment_self(op_code, data);
+    }
+
+    fn toggle_wireframe(&mut self) {
+        let op_code = ServerZoneIpcType::ActorControlSelf;
+        let data = ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
+            category: ActorControlCategory::ToggleWireframeRendering(),
+        });
+
+        self.create_segment_self(op_code, data);
+    }
+
+    fn unlock_aetheryte(&mut self, unlocked: u32, id: u32) {
+        let op_code = ServerZoneIpcType::ActorControlSelf;
+        let on = unlocked == 0;
+        if id == 0 {
+            for i in 1..239 {
+                let data = ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
+                    category: ActorControlCategory::LearnTeleport {
+                        id: i,
+                        unlocked: on,
+                    },
+                });
+
+                /* Unknown if this will make the server panic from a flood of packets.
+                 * Needs testing once toggling aetherytes actually works. */
+                self.create_segment_self(op_code.clone(), data);
+            }
+        } else {
+            let data = ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
+                category: ActorControlCategory::LearnTeleport { id, unlocked: on },
+            });
+
+            self.create_segment_self(op_code, data);
+        }
+    }
+
     fn change_territory(&mut self, zone_id: u16) {
         self.queued_tasks.push(Task::ChangeTerritory { zone_id });
     }
@@ -162,6 +215,11 @@ impl LuaPlayer {
 
     fn reload_scripts(&mut self) {
         self.queued_tasks.push(Task::ReloadScripts);
+    }
+    fn toggle_invisiblity(&mut self) {
+        self.queued_tasks.push(Task::ToggleInvisibility {
+            invisible: !self.player_data.gm_invisible,
+        });
     }
 }
 
@@ -201,6 +259,26 @@ impl UserData for LuaPlayer {
                 Ok(())
             },
         );
+        methods.add_method_mut("unlock_aetheryte", |_, this, (unlock, id): (u32, u32)| {
+            this.unlock_aetheryte(unlock, id);
+            Ok(())
+        });
+        methods.add_method_mut("unlock_action", |_, this, action_id: u32| {
+            this.unlock_action(action_id);
+            Ok(())
+        });
+        methods.add_method_mut("set_speed", |_, this, speed: u16| {
+            this.set_speed(speed);
+            Ok(())
+        });
+        methods.add_method_mut("toggle_wireframe", |_, this, _: Value| {
+            this.toggle_wireframe();
+            Ok(())
+        });
+        methods.add_method_mut("toggle_invisibility", |_, this, _: Value| {
+            this.toggle_invisiblity();
+            Ok(())
+        });
         methods.add_method_mut("change_territory", |_, this, zone_id: u16| {
             this.change_territory(zone_id);
             Ok(())

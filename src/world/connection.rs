@@ -568,6 +568,26 @@ impl ZoneConnection {
         .await;
     }
 
+    pub async fn toggle_invisibility(&mut self, invisible: bool) {
+        self.player_data.gm_invisible = invisible;
+        let ipc = ServerZoneIpcSegment {
+            op_code: ServerZoneIpcType::ActorControlSelf,
+            timestamp: timestamp_secs(),
+            data: ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
+                category: ActorControlCategory::ToggleInvisibility { invisible },
+            }),
+            ..Default::default()
+        };
+
+        self.send_segment(PacketSegment {
+            source_actor: self.player_data.actor_id,
+            target_actor: self.player_data.actor_id,
+            segment_type: SegmentType::Ipc,
+            data: SegmentData::Ipc { data: ipc },
+        })
+        .await;
+    }
+
     pub async fn process_lua_player(&mut self, player: &mut LuaPlayer) {
         for segment in &player.queued_segments {
             self.send_segment(segment.clone()).await;
@@ -595,6 +615,9 @@ impl ZoneConnection {
                 Task::ReloadScripts => {
                     let mut lua = self.lua.lock().unwrap();
                     load_global_script(&mut lua);
+                }
+                Task::ToggleInvisibility { invisible } => {
+                    self.toggle_invisibility(*invisible).await;
                 }
             }
         }
