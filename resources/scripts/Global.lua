@@ -66,12 +66,44 @@ registerEvent(131094, "common/GenericWarp.lua")
 registerEvent(131204, "warp/WarpInnGeneric.lua") -- Exit Ishgard: Foundation to Cloud Nine Inn room
 registerEvent(131205, "common/GenericWarp.lua") -- Exit Cloud Nine to Ishgard: Foundation
 registerEvent(131246, "common/GenericWarp.lua") -- Exit Bokairo Inn to Kugane
+registerEvent(131250, "common/GenericWarp.lua") -- Gatekeeper from The Fringes: Castrum Oriens to East Shroud: Amarissaaix's Spire
 registerEvent(131312, "common/GenericWarp.lua") -- Exit The Pendants Personal Suite to Crystarium
 registerEvent(131402, "common/GenericWarp.lua") -- Exit Andron to Old Sharlayan
 registerEvent(131428, "common/GenericWarp.lua") -- Mothercrystal Exit (note: warp doesn't work for some reason?)
 registerEvent(131578, "common/GenericWarp.lua") -- Exit The For'ard Cabins to Tuliyollal
 -- A Realm Reborn Aetherytes
 registerEvent(327683, "common/GenericAetheryte.lua") -- Bentbranch Meadows Aetheryte
+registerEvent(327703, "common/GenericAetheryte.lua") -- Camp Dragonhead Aetheryte
+
+-- Heavensward Aetherytes
+registerEvent(327750, "common/GenericAetheryte.lua") -- Ishgard: Foundation Aetheryte
+registerEvent(327751, "common/GenericAetheryte.lua") -- Falcon's Nest Aetheryte
+registerEvent(327752, "common/GenericAetheryte.lua") -- Camp Cloudtop Aetheryte
+registerEvent(327753, "common/GenericAetheryte.lua") -- Ok' Zundu Aetheryte
+registerEvent(327754, "common/GenericAetheryte.lua") -- Helix Aetheryte
+registerEvent(327755, "common/GenericAetheryte.lua") -- Idyllshire Aetheryte
+registerEvent(327756, "common/GenericAetheryte.lua") -- Tailfeather Aetheryte
+registerEvent(327757, "common/GenericAetheryte.lua") -- Anyx Trine Aetheryte
+registerEvent(327758, "common/GenericAetheryte.lua") -- Moghome Aetheryte
+registerEvent(327759, "common/GenericAetheryte.lua") -- Zenith Aetheryte
+
+-- Stormblood Aetherytes
+registerEvent(327778, "common/GenericAetheryte.lua") -- Castrum Oriens Aetheryte
+registerEvent(327779, "common/GenericAetheryte.lua") -- The Peering Stones Aetheryte
+registerEvent(327780, "common/GenericAetheryte.lua") -- Ala Gannha Aetheryte
+registerEvent(327781, "common/GenericAetheryte.lua") -- Ala Ghiri Aetheryte
+registerEvent(327782, "common/GenericAetheryte.lua") -- Porta Praetoria Aetheryte
+registerEvent(327783, "common/GenericAetheryte.lua") -- The Ala Mhigan Quarter Aetheryte
+registerEvent(327784, "common/GenericAetheryte.lua") -- Rhalgr's Reach Aetheryte
+registerEvent(327785, "common/GenericAetheryte.lua") -- Tamamizu Aetheryte
+registerEvent(327786, "common/GenericAetheryte.lua") -- Onokoro Aetheryte
+registerEvent(327787, "common/GenericAetheryte.lua") -- Namai Aetheryte
+registerEvent(327788, "common/GenericAetheryte.lua") -- The House of the Fierce Aetheryte
+-- registerEvent(3277??, "common/GenericAetheryte.lua") -- Reunion Aetheryte, all Azim Steppe aetherytes cannot be accessed because the client thinks it's underwater and throws the error "Cannot execute command. Environment different."
+-- registerEvent(3277??, "common/GenericAetheryte.lua") -- The Dawn Throne Aetheryte
+-- registerEvent(3277??, "common/GenericAetheryte.lua") -- Dhoro Iloh Aetheryte
+registerEvent(327791, "common/GenericAetheryte.lua") -- Kugane Aetheryte
+registerEvent(327807, "common/GenericAetheryte.lua") -- The Doman Enclave Aetheryte
 
 -- Shadowbringers Aetherytes
 registerEvent(327812, "common/GenericAetheryte.lua") -- Fort Jobb Aetheryte
@@ -111,6 +143,7 @@ registerEvent(327860, "common/GenericAetheryte.lua") -- Abode of the Ea Aetheryt
 registerEvent(327861, "common/GenericAetheryte.lua") -- Base Omicron Aetheryte
 registerEvent(327862, "common/GenericAetheryte.lua") -- Old Sharlayan Aetheryte
 registerEvent(327863, "common/GenericAetheryte.lua") -- Radz-at-Han Aetheryte
+
 -- Dawntrail Aetherytes
 registerEvent(327880, "common/GenericAetheryte.lua") -- Wachunpelo Aetheryte
 registerEvent(327881, "common/GenericAetheryte.lua") -- Worlar's Echo Aetheryte
@@ -131,6 +164,8 @@ registerEvent(327895, "common/GenericAetheryte.lua") -- Leynode Aero Aetheryte
 registerEvent(327896, "common/GenericAetheryte.lua") -- Tuliyollal Aetheryte
 registerEvent(327897, "common/GenericAetheryte.lua") -- Solution Nine Aetheryte
 registerEvent(327918, "common/GenericAetheryte.lua") -- Dock Poga Aetheryte
+
+-- Misc. Events
 registerEvent(720916, "custom/000/cmndefinnbed_00020.lua")
 registerEvent(1179657, "tosort/Chocobokeep.lua") -- Chocobokeep in Central Shroud
 registerEvent(1245185, "opening/OpeningLimsaLominsa.lua")
