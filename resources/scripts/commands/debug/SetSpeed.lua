@@ -22,5 +22,5 @@ function onCommand(args, player)
     end
 
     player:set_speed(speed_multiplier)
-    player:send_message(string.format("%sSpeed multiplier set to %s.", sender, speed_multiplier)
+    player:send_message(string.format("%sSpeed multiplier set to %s.", sender, speed_multiplier))
 end

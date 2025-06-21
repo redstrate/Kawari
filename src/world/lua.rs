@@ -234,7 +234,7 @@ impl UserData for LuaPlayer {
         methods.add_method_mut(
             "set_speed",
             |_, this, speed: u16| {
-                this.set_speed(speed)
+                this.set_speed(speed);
                 Ok(())
             },
         );
