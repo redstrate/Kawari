@@ -159,6 +159,19 @@ impl LuaPlayer {
         self.create_segment_self(op_code, data);
     }
 
+    fn toggle_invisiblity(&mut self) {
+        let op_code = ServerZoneIpcType::ActorControlSelf;
+        /* TODO: This doesn't actually act as a toggle right now, because we can't update
+         * the player's gm_invisible state from this side it seems. How should this be resolved..? */
+        let data = ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
+            category: ActorControlCategory::ToggleInvisibility {
+                invisible: self.player_data.gm_invisible,
+            },
+        });
+
+        self.create_segment_self(op_code, data);
+    }
+
     fn change_territory(&mut self, zone_id: u16) {
         self.queued_tasks.push(Task::ChangeTerritory { zone_id });
     }
@@ -238,6 +251,10 @@ impl UserData for LuaPlayer {
         });
         methods.add_method_mut("toggle_wireframe", |_, this, _: Value| {
             this.toggle_wireframe();
+            Ok(())
+        });
+        methods.add_method_mut("toggle_invisibility", |_, this, _: Value| {
+            this.toggle_invisiblity();
             Ok(())
         });
         methods.add_method_mut("change_territory", |_, this, zone_id: u16| {
