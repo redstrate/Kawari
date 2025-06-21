@@ -66,6 +66,7 @@ registerEvent(131312, "common/GenericWarp.lua") -- Exit The Pendants Personal Su
 registerEvent(131402, "common/GenericWarp.lua") -- Exit Andron to Old Sharlayan
 registerEvent(131578, "common/GenericWarp.lua") -- Exit The For'ard Cabins to Tuliyollal
 registerEvent(720916, "custom/000/cmndefinnbed_00020.lua")
+registerEvent(1179657, "tosort/Chocobokeep.lua") -- Chocobokeep in Central Shroud
 registerEvent(1245185, "opening/OpeningLimsaLominsa.lua")
 registerEvent(1245186, "opening/OpeningGridania.lua")
 registerEvent(1245187, "opening/OpeningUldah.lua")
