@@ -82,6 +82,8 @@ pub enum ActorControlCategory {
         festival3: u32,
         festival4: u32,
     },
+    #[brw(magic = 0xFu16)]
+    CancelCast {},
 }
 
 #[binrw]

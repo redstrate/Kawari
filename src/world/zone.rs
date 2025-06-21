@@ -43,7 +43,9 @@ impl Zone {
             tracing::info!("Loading {path}");
             let lgb = LayerGroup::from_existing(&lgb_file);
             if lgb.is_none() {
-                tracing::warn!("Failed to parse {path}, this is most likely a bug in Physis and should be reported somewhere!")
+                tracing::warn!(
+                    "Failed to parse {path}, this is most likely a bug in Physis and should be reported somewhere!"
+                )
             }
             lgb
         };

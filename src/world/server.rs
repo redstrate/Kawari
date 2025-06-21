@@ -502,6 +502,21 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     spawn,
                 );
             }
+            ToServer::ActionRequest(from_id, _from_actor_id, request) => {
+                // immediately send back to the client, for now
+                for (id, (handle, _)) in &mut data.clients {
+                    let id = *id;
+
+                    if id == from_id {
+                        let msg = FromServer::ActionComplete(request);
+
+                        if handle.send(msg).is_err() {
+                            data.to_remove.push(id);
+                        }
+                        break;
+                    }
+                }
+            }
             ToServer::Disconnected(from_id) => {
                 data.to_remove.push(from_id);
             }

@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -10,19 +9,18 @@ use kawari::config::get_config;
 use kawari::inventory::Item;
 use kawari::ipc::chat::{ServerChatIpcData, ServerChatIpcSegment};
 use kawari::ipc::zone::{
-    ActionEffect, ActionResult, ClientTriggerCommand, ClientZoneIpcData, CommonSpawn, EffectKind,
-    EventStart, GameMasterCommandType, GameMasterRank, OnlineStatus, ServerZoneIpcData,
-    ServerZoneIpcSegment, SocialListRequestType,
+    ActorControlCategory, ActorControlSelf, PlayerEntry, PlayerSpawn, PlayerStatus, SocialList,
 };
 use kawari::ipc::zone::{
-    ActorControlCategory, ActorControlSelf, PlayerEntry, PlayerSpawn, PlayerStatus, SocialList,
+    ClientTriggerCommand, ClientZoneIpcData, CommonSpawn, EventStart, GameMasterCommandType,
+    GameMasterRank, OnlineStatus, ServerZoneIpcData, ServerZoneIpcSegment, SocialListRequestType,
 };
 use kawari::opcodes::{ServerChatIpcType, ServerZoneIpcType};
 use kawari::packet::oodle::OodleNetwork;
 use kawari::packet::{
     ConnectionType, PacketSegment, PacketState, SegmentData, SegmentType, send_keep_alive,
 };
-use kawari::world::{ChatHandler, Zone, ZoneConnection};
+use kawari::world::{ChatHandler, ExtraLuaState, Zone, ZoneConnection};
 use kawari::world::{
     ClientHandle, EffectsBuilder, Event, FromServer, LuaPlayer, PlayerData, ServerHandle,
     StatusEffects, ToServer, WorldDatabase, handle_custom_ipc, server_main_loop,
@@ -35,13 +33,6 @@ use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::mpsc::{Receiver, UnboundedReceiver, UnboundedSender, channel, unbounded_channel};
 use tokio::sync::oneshot;
 use tokio::task::JoinHandle;
-
-#[derive(Default)]
-struct ExtraLuaState {
-    action_scripts: HashMap<u32, String>,
-    event_scripts: HashMap<u32, String>,
-    command_scripts: HashMap<String, String>,
-}
 
 fn spawn_main_loop() -> (ServerHandle, JoinHandle<()>) {
     let (send, recv) = channel(64);
@@ -683,116 +674,14 @@ async fn client_loop(
                                                 connection.change_zone(new_territory).await;
                                             }
                                             ClientZoneIpcData::ActionRequest(request) => {
-                                                let mut effects_builder = None;
-
-                                                // run action script
-                                                {
-                                                    let lua = lua.lock().unwrap();
-                                                    let state = lua.app_data_ref::<ExtraLuaState>().unwrap();
-
-                                                    let key = request.action_key;
-                                                    if let Some(action_script) =
-                                                        state.action_scripts.get(&key)
-                                                        {
-                                                            lua.scope(|scope| {
-                                                                let connection_data = scope
-                                                                .create_userdata_ref_mut(&mut lua_player)
-                                                                .unwrap();
-
-                                                                let config = get_config();
-
-                                                                let file_name = format!(
-                                                                    "{}/{}",
-                                                                    &config.world.scripts_location, action_script
-                                                                );
-                                                                lua.load(
-                                                                    std::fs::read(&file_name)
-                                                                    .expect("Failed to locate scripts directory!"),
-                                                                )
-                                                                .set_name("@".to_string() + &file_name)
-                                                                .exec()
-                                                                .unwrap();
-
-                                                                let func: Function =
-                                                                lua.globals().get("doAction").unwrap();
-
-                                                                effects_builder = Some(
-                                                                    func.call::<EffectsBuilder>(connection_data)
-                                                                    .unwrap(),
-                                                                );
-
-                                                                Ok(())
-                                                            })
-                                                            .unwrap();
-                                                        } else {
-                                                            tracing::warn!("Action {key} isn't scripted yet! Ignoring...");
-                                                        }
-                                                }
-
-                                                // tell them the action results
-                                                if let Some(effects_builder) = effects_builder {
-                                                    let mut effects = [ActionEffect::default(); 8];
-                                                    effects[..effects_builder.effects.len()]
-                                                    .copy_from_slice(&effects_builder.effects);
-
-                                                    if let Some(actor) =
-                                                        connection.get_actor_mut(request.target.object_id)
-                                                        {
-                                                            for effect in &effects_builder.effects {
-                                                                match effect.kind {
-                                                                    EffectKind::Damage { amount, .. } => {
-                                                                        actor.hp = actor.hp.saturating_sub(amount as u32);
-                                                                    }
-                                                                    _ => todo!()
-                                                                }
-                                                            }
-
-                                                            let actor = *actor;
-                                                            connection.update_hp_mp(actor.id, actor.hp, 10000).await;
-                                                        }
-
-                                                        let ipc = ServerZoneIpcSegment {
-                                                            op_code: ServerZoneIpcType::ActionResult,
-                                                            timestamp: timestamp_secs(),
-                                                            data: ServerZoneIpcData::ActionResult(ActionResult {
-                                                                main_target: request.target,
-                                                                target_id_again: request.target,
-                                                                action_id: request.action_key,
-                                                                animation_lock_time: 0.6,
-                                                                rotation: connection.player_data.rotation,
-                                                                action_animation_id: request.action_key as u16, // assuming action id == animation id
-                                                                flag: 1,
-                                                                effect_count: effects_builder.effects.len() as u8,
-                                                                                                  effects,
-                                                                                                  unk1: 2662353,
-                                                                                                  unk2: 3758096384,
-                                                                                                  hidden_animation: 1,
-                                                                                                  ..Default::default()
-                                                            }),
-                                                            ..Default::default()
-                                                        };
-
-                                                        connection
-                                                        .send_segment(PacketSegment {
-                                                            source_actor: connection.player_data.actor_id,
-                                                            target_actor: connection.player_data.actor_id,
-                                                            segment_type: SegmentType::Ipc,
-                                                            data: SegmentData::Ipc { data: ipc },
-                                                        })
-                                                        .await;
-
-                                                        if let Some(actor) =
-                                                            connection.get_actor(request.target.object_id)
-                                                            {
-                                                                if actor.hp == 0 {
-                                                                    tracing::info!("Despawning {} because they died!", actor.id.0);
-                                                                    // if the actor died, despawn them
-                                                                    /*connection.handle
-                                                                     *                                       .send(ToServer::ActorDespawned(connection.id, actor.id.0))
-                                                                     *                                       .await;*/
-                                                                }
-                                                            }
-                                                }
+                                                connection
+                                                    .handle
+                                                    .send(ToServer::ActionRequest(
+                                                        connection.id,
+                                                        connection.player_data.actor_id,
+                                                        request.clone(),
+                                                    ))
+                                                    .await;
                                             }
                                             ClientZoneIpcData::Unk16 { .. } => {
                                                 // no-op
@@ -938,6 +827,8 @@ async fn client_loop(
                     FromServer::ActorControl(actor_id, actor_control) => connection.actor_control(actor_id, actor_control).await,
                     FromServer::ActorControlTarget(actor_id, actor_control) => connection.actor_control_target(actor_id, actor_control).await,
                     FromServer::ActorControlSelf(actor_control) => connection.actor_control_self(actor_control).await,
+                    FromServer::ActionComplete(request) => connection.execute_action(request, &mut lua_player).await,
+                    FromServer::ActionCancelled() => connection.cancel_action().await,
                 },
                 None => break,
             }

@@ -11,7 +11,8 @@ use tokio::sync::mpsc::Sender;
 use crate::{
     common::Position,
     ipc::zone::{
-        ActorControl, ActorControlSelf, ActorControlTarget, ClientTrigger, CommonSpawn, NpcSpawn,
+        ActionRequest, ActorControl, ActorControlSelf, ActorControlTarget, ClientTrigger,
+        CommonSpawn, NpcSpawn,
     },
 };
 
@@ -35,6 +36,10 @@ pub enum FromServer {
     ActorControlTarget(u32, ActorControlTarget),
     /// We need to update the player actor
     ActorControlSelf(ActorControlSelf),
+    /// Action has completed and needs to be executed
+    ActionComplete(ActionRequest),
+    /// Action has been cancelled
+    ActionCancelled(),
 }
 
 #[derive(Debug, Clone)]
@@ -92,6 +97,8 @@ pub enum ToServer {
     DebugNewEnemy(ClientId, u32),
     /// Spawn a debug clone.
     DebugSpawnClone(ClientId, u32),
+    /// Request to perform an action
+    ActionRequest(ClientId, u32, ActionRequest),
 }
 
 #[derive(Clone, Debug)]

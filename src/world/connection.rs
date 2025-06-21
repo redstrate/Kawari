@@ -1,9 +1,11 @@
 use std::{
+    collections::HashMap,
     net::SocketAddr,
     sync::{Arc, Mutex},
     time::Instant,
 };
 
+use mlua::Function;
 use tokio::net::TcpStream;
 
 use crate::{
@@ -14,8 +16,9 @@ use crate::{
     ipc::{
         chat::ServerChatIpcSegment,
         zone::{
-            ActorControl, ActorControlSelf, ActorControlTarget, ClientZoneIpcSegment, CommonSpawn,
-            ContainerInfo, DisplayFlag, Equip, GameMasterRank, InitZone, ItemInfo, Move, NpcSpawn,
+            ActionEffect, ActionRequest, ActionResult, ActorControl, ActorControlCategory,
+            ActorControlSelf, ActorControlTarget, ClientZoneIpcSegment, CommonSpawn, ContainerInfo,
+            DisplayFlag, EffectKind, Equip, GameMasterRank, InitZone, ItemInfo, Move, NpcSpawn,
             ObjectKind, PlayerStats, PlayerSubKind, ServerZoneIpcData, ServerZoneIpcSegment,
             StatusEffect, StatusEffectList, UpdateClassInfo, Warp, WeatherChange,
         },
@@ -28,10 +31,18 @@ use crate::{
 };
 
 use super::{
-    Actor, CharacterData, Event, LuaPlayer, StatusEffects, ToServer, WorldDatabase, Zone,
+    Actor, CharacterData, EffectsBuilder, Event, LuaPlayer, StatusEffects, ToServer, WorldDatabase,
+    Zone,
     common::{ClientId, ServerHandle},
     lua::Task,
 };
+
+#[derive(Default)]
+pub struct ExtraLuaState {
+    pub action_scripts: HashMap<u32, String>,
+    pub event_scripts: HashMap<u32, String>,
+    pub command_scripts: HashMap<String, String>,
+}
 
 #[derive(Debug, Default, Clone)]
 pub struct TeleportQuery {
@@ -831,6 +842,108 @@ impl ZoneConnection {
             target_actor: self.player_data.actor_id,
             segment_type: SegmentType::Ipc,
             data: SegmentData::Ipc { data: ipc },
+        })
+        .await;
+    }
+
+    pub async fn execute_action(&mut self, request: ActionRequest, lua_player: &mut LuaPlayer) {
+        let mut effects_builder = None;
+
+        // run action script
+        {
+            let lua = self.lua.lock().unwrap();
+            let state = lua.app_data_ref::<ExtraLuaState>().unwrap();
+
+            let key = request.action_key;
+            if let Some(action_script) = state.action_scripts.get(&key) {
+                lua.scope(|scope| {
+                    let connection_data = scope.create_userdata_ref_mut(lua_player).unwrap();
+
+                    let config = get_config();
+
+                    let file_name = format!("{}/{}", &config.world.scripts_location, action_script);
+                    lua.load(
+                        std::fs::read(&file_name).expect("Failed to locate scripts directory!"),
+                    )
+                    .set_name("@".to_string() + &file_name)
+                    .exec()
+                    .unwrap();
+
+                    let func: Function = lua.globals().get("doAction").unwrap();
+
+                    effects_builder = Some(func.call::<EffectsBuilder>(connection_data).unwrap());
+
+                    Ok(())
+                })
+                .unwrap();
+            } else {
+                tracing::warn!("Action {key} isn't scripted yet! Ignoring...");
+            }
+        }
+
+        // tell them the action results
+        if let Some(effects_builder) = effects_builder {
+            let mut effects = [ActionEffect::default(); 8];
+            effects[..effects_builder.effects.len()].copy_from_slice(&effects_builder.effects);
+
+            if let Some(actor) = self.get_actor_mut(request.target.object_id) {
+                for effect in &effects_builder.effects {
+                    match effect.kind {
+                        EffectKind::Damage { amount, .. } => {
+                            actor.hp = actor.hp.saturating_sub(amount as u32);
+                        }
+                        _ => todo!(),
+                    }
+                }
+
+                let actor = *actor;
+                self.update_hp_mp(actor.id, actor.hp, 10000).await;
+            }
+
+            let ipc = ServerZoneIpcSegment {
+                op_code: ServerZoneIpcType::ActionResult,
+                timestamp: timestamp_secs(),
+                data: ServerZoneIpcData::ActionResult(ActionResult {
+                    main_target: request.target,
+                    target_id_again: request.target,
+                    action_id: request.action_key,
+                    animation_lock_time: 0.6,
+                    rotation: self.player_data.rotation,
+                    action_animation_id: request.action_key as u16, // assuming action id == animation id
+                    flag: 1,
+                    effect_count: effects_builder.effects.len() as u8,
+                    effects,
+                    unk1: 2662353,
+                    unk2: 3758096384,
+                    hidden_animation: 1,
+                    ..Default::default()
+                }),
+                ..Default::default()
+            };
+
+            self.send_segment(PacketSegment {
+                source_actor: self.player_data.actor_id,
+                target_actor: self.player_data.actor_id,
+                segment_type: SegmentType::Ipc,
+                data: SegmentData::Ipc { data: ipc },
+            })
+            .await;
+
+            if let Some(actor) = self.get_actor(request.target.object_id) {
+                if actor.hp == 0 {
+                    tracing::info!("Despawning {} because they died!", actor.id.0);
+                    // if the actor died, despawn them
+                    /*connection.handle
+                     *                                       .send(ToServer::ActorDespawned(connection.id, actor.id.0))
+                     *                                       .await;*/
+                }
+            }
+        }
+    }
+
+    pub async fn cancel_action(&mut self) {
+        self.actor_control_self(ActorControlSelf {
+            category: ActorControlCategory::CancelCast {},
         })
         .await;
     }
