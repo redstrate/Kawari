@@ -574,12 +574,10 @@ impl ZoneConnection {
             op_code: ServerZoneIpcType::ActorControlSelf,
             timestamp: timestamp_secs(),
             data: ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
-                    category: ActorControlCategory::ToggleInvisibility {
-                        invisible,
-                    }
-                }),
-                ..Default::default()
-            };
+                category: ActorControlCategory::ToggleInvisibility { invisible },
+            }),
+            ..Default::default()
+        };
 
         self.send_segment(PacketSegment {
             source_actor: self.player_data.actor_id,

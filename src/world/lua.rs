@@ -26,7 +26,7 @@ pub enum Task {
     SetClassJob { classjob_id: u8 },
     WarpAetheryte { aetheryte_id: u32 },
     ReloadScripts,
-    ToggleInvisibility { invisible:bool },
+    ToggleInvisibility { invisible: bool },
 }
 
 #[derive(Default)]
@@ -161,7 +161,9 @@ impl LuaPlayer {
     }
 
     fn toggle_invisiblity(&mut self) {
-        self.queued_tasks.push(Task::ToggleInvisibility { invisible: !self.player_data.gm_invisible });
+        self.queued_tasks.push(Task::ToggleInvisibility {
+            invisible: !self.player_data.gm_invisible,
+        });
     }
 
     fn unlock_aetheryte(&mut self, unlocked: u32, id: u32) {
