@@ -34,6 +34,7 @@ use super::{
     Actor, CharacterData, EffectsBuilder, Event, LuaPlayer, StatusEffects, ToServer, WorldDatabase,
     Zone,
     common::{ClientId, ServerHandle},
+    load_global_script,
     lua::Task,
 };
 
@@ -590,6 +591,10 @@ impl ZoneConnection {
                 }
                 Task::WarpAetheryte { aetheryte_id } => {
                     self.warp_aetheryte(*aetheryte_id).await;
+                }
+                Task::ReloadScripts => {
+                    let mut lua = self.lua.lock().unwrap();
+                    load_global_script(&mut lua);
                 }
             }
         }

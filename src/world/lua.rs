@@ -5,12 +5,14 @@ use crate::{
         ObjectId, ObjectTypeId, Position, timestamp_secs, workdefinitions::RemakeMode,
         write_quantized_rotation,
     },
+    config::get_config,
     ipc::zone::{
         ActionEffect, ActorControlCategory, ActorControlSelf, DamageElement, DamageKind,
         DamageType, EffectKind, EventScene, ServerZoneIpcData, ServerZoneIpcSegment, Warp,
     },
     opcodes::ServerZoneIpcType,
     packet::{PacketSegment, SegmentData, SegmentType},
+    world::ExtraLuaState,
 };
 
 use super::{PlayerData, StatusEffects, Zone, connection::TeleportQuery};
@@ -23,6 +25,7 @@ pub enum Task {
     FinishEvent { handler_id: u32 },
     SetClassJob { classjob_id: u8 },
     WarpAetheryte { aetheryte_id: u32 },
+    ReloadScripts,
 }
 
 #[derive(Default)]
@@ -156,6 +159,10 @@ impl LuaPlayer {
     fn warp_aetheryte(&mut self, aetheryte_id: u32) {
         self.queued_tasks.push(Task::WarpAetheryte { aetheryte_id });
     }
+
+    fn reload_scripts(&mut self) {
+        self.queued_tasks.push(Task::ReloadScripts);
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -221,6 +228,10 @@ impl UserData for LuaPlayer {
         });
         methods.add_method_mut("warp_aetheryte", |_, this, aetheryte_id: u32| {
             this.warp_aetheryte(aetheryte_id);
+            Ok(())
+        });
+        methods.add_method_mut("reload_scripts", |_, this, _: ()| {
+            this.reload_scripts();
             Ok(())
         });
     }
@@ -323,4 +334,59 @@ impl FromLua for EffectsBuilder {
             _ => unreachable!(),
         }
     }
+}
+
+/// Loads `Global.lua`
+pub fn load_global_script(lua: &mut Lua) {
+    let register_action_func = lua
+        .create_function(|lua, (action_id, action_script): (u32, String)| {
+            tracing::info!("Registering {action_id} with {action_script}!");
+            let mut state = lua.app_data_mut::<ExtraLuaState>().unwrap();
+            let _ = state.action_scripts.insert(action_id, action_script);
+            Ok(())
+        })
+        .unwrap();
+
+    let register_event_func = lua
+        .create_function(|lua, (event_id, event_script): (u32, String)| {
+            tracing::info!("Registering {event_id} with {event_script}!");
+            let mut state = lua.app_data_mut::<ExtraLuaState>().unwrap();
+            let _ = state.event_scripts.insert(event_id, event_script);
+            Ok(())
+        })
+        .unwrap();
+
+    let register_command_func = lua
+        .create_function(|lua, (command_name, command_script): (String, String)| {
+            tracing::info!("Registering {command_name} with {command_script}!");
+            let mut state = lua.app_data_mut::<ExtraLuaState>().unwrap();
+            let _ = state.command_scripts.insert(command_name, command_script);
+            Ok(())
+        })
+        .unwrap();
+
+    lua.set_app_data(ExtraLuaState::default());
+    lua.globals()
+        .set("registerAction", register_action_func)
+        .unwrap();
+    lua.globals()
+        .set("registerEvent", register_event_func)
+        .unwrap();
+    lua.globals()
+        .set("registerCommand", register_command_func)
+        .unwrap();
+
+    let effectsbuilder_constructor = lua
+        .create_function(|_, ()| Ok(EffectsBuilder::default()))
+        .unwrap();
+    lua.globals()
+        .set("EffectsBuilder", effectsbuilder_constructor)
+        .unwrap();
+
+    let config = get_config();
+    let file_name = format!("{}/Global.lua", &config.world.scripts_location);
+    lua.load(std::fs::read(&file_name).expect("Failed to locate scripts directory!"))
+        .set_name("@".to_string() + &file_name)
+        .exec()
+        .unwrap();
 }

@@ -20,10 +20,10 @@ use kawari::packet::oodle::OodleNetwork;
 use kawari::packet::{
     ConnectionType, PacketSegment, PacketState, SegmentData, SegmentType, send_keep_alive,
 };
-use kawari::world::{ChatHandler, ExtraLuaState, Zone, ZoneConnection};
+use kawari::world::{ChatHandler, ExtraLuaState, Zone, ZoneConnection, load_global_script};
 use kawari::world::{
-    ClientHandle, EffectsBuilder, Event, FromServer, LuaPlayer, PlayerData, ServerHandle,
-    StatusEffects, ToServer, WorldDatabase, handle_custom_ipc, server_main_loop,
+    ClientHandle, Event, FromServer, LuaPlayer, PlayerData, ServerHandle, StatusEffects, ToServer,
+    WorldDatabase, handle_custom_ipc, server_main_loop,
 };
 
 use mlua::{Function, Lua};
@@ -888,58 +888,8 @@ async fn main() {
     let game_data = Arc::new(Mutex::new(GameData::new()));
 
     {
-        let lua = lua.lock().unwrap();
-
-        let register_action_func = lua
-            .create_function(|lua, (action_id, action_script): (u32, String)| {
-                tracing::info!("Registering {action_id} with {action_script}!");
-                let mut state = lua.app_data_mut::<ExtraLuaState>().unwrap();
-                let _ = state.action_scripts.insert(action_id, action_script);
-                Ok(())
-            })
-            .unwrap();
-
-        let register_event_func = lua
-            .create_function(|lua, (event_id, event_script): (u32, String)| {
-                tracing::info!("Registering {event_id} with {event_script}!");
-                let mut state = lua.app_data_mut::<ExtraLuaState>().unwrap();
-                let _ = state.event_scripts.insert(event_id, event_script);
-                Ok(())
-            })
-            .unwrap();
-
-        let register_command_func = lua
-            .create_function(|lua, (command_name, command_script): (String, String)| {
-                tracing::info!("Registering {command_name} with {command_script}!");
-                let mut state = lua.app_data_mut::<ExtraLuaState>().unwrap();
-                let _ = state.command_scripts.insert(command_name, command_script);
-                Ok(())
-            })
-            .unwrap();
-
-        lua.set_app_data(ExtraLuaState::default());
-        lua.globals()
-            .set("registerAction", register_action_func)
-            .unwrap();
-        lua.globals()
-            .set("registerEvent", register_event_func)
-            .unwrap();
-        lua.globals()
-            .set("registerCommand", register_command_func)
-            .unwrap();
-
-        let effectsbuilder_constructor = lua
-            .create_function(|_, ()| Ok(EffectsBuilder::default()))
-            .unwrap();
-        lua.globals()
-            .set("EffectsBuilder", effectsbuilder_constructor)
-            .unwrap();
-
-        let file_name = format!("{}/Global.lua", &config.world.scripts_location);
-        lua.load(std::fs::read(&file_name).expect("Failed to locate scripts directory!"))
-            .set_name("@".to_string() + &file_name)
-            .exec()
-            .unwrap();
+        let mut lua = lua.lock().unwrap();
+        load_global_script(&mut lua);
     }
 
     let (handle, _) = spawn_main_loop();
