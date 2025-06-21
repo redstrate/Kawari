@@ -51,7 +51,7 @@ registerAction(6221, "items/Fantasia.lua")
 registerEvent(721028, "tosort/UnendingJourney.lua")
 registerEvent(721044, "tosort/CrystalBell.lua")
 registerEvent(131079, "warp/WarpInnGeneric.lua") -- Exit Limsa Upper Decks to Mizzenmast Inn room
-registerEvent(131080, "warp/WarpInnGeneric.lua") -- Exit New Gridania to Inn room
+registerEvent(131080, "warp/WarpInnGeneric.lua") -- Exit New Gridania to The Roost Inn room
 registerEvent(131081, "warp/WarpInnGeneric.lua") -- Exit Ul'dah: Steps of Nald to The Hourglass Inn room
 registerEvent(131082, "common/GenericWarp.lua") -- Exit Mizzenmast Inn to Limsa Upper Decks
 registerEvent(131083, "common/GenericWarp.lua") -- Exit The Roost to New Gridania
