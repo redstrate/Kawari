@@ -74,7 +74,6 @@ registerEvent(131428, "common/GenericWarp.lua") -- Mothercrystal Exit (note: war
 registerEvent(131519, "common/GenericWarp.lua") -- Faire Adventurer from Eastern La Noscea: bottom of the Moonfire Festival (2023) tower to the first tier of the tower
 registerEvent(131578, "common/GenericWarp.lua") -- Exit The For'ard Cabins to Tuliyollal
 -- A Realm Reborn Aetherytes
-registerEvent(327692, "common/GenericAetheryte.lua") -- Wineport Aetheryte
 registerEvent(327683, "common/GenericAetheryte.lua") -- Bentbranch Meadows Aetheryte
 registerEvent(327684, "common/GenericAetheryte.lua") -- The Hawthorne Hut Aetheryte
 registerEvent(327685, "common/GenericAetheryte.lua") -- Quarrymill Aetheryte
@@ -82,6 +81,7 @@ registerEvent(327686, "common/GenericAetheryte.lua") -- Camp Tranquil Aetheryte
 registerEvent(327687, "common/GenericAetheryte.lua") -- Fallgourd Float Aetheryte
 registerEvent(327690, "common/GenericAetheryte.lua") -- Moraby Drydocks Aetheryte
 registerEvent(327691, "common/GenericAetheryte.lua") -- Costa del Sol Aetheryte
+registerEvent(327692, "common/GenericAetheryte.lua") -- Wineport Aetheryte
 -- registerEvent(327???, "common/GenericAetheryte.lua") -- Wineport Aetheryte, currently unknown due to only being able to load ELN once. Now it loads into purgatory...
 registerEvent(327693, "common/GenericAetheryte.lua") -- Swiftperch Aetheryte
 registerEvent(327694, "common/GenericAetheryte.lua") -- Aleport Aetheryte
