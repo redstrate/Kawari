@@ -185,7 +185,8 @@ impl LuaPlayer {
                     },
                 });
 
-                // this might make the server explode, needs testing lmao
+                /* Unknown if this will make the server panic from a flood of packets.
+                 * Needs testing once toggling aetherytes actually works. */
                 self.create_segment_self(op_code.clone(), data);
             }
         } else {
