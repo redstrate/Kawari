@@ -74,6 +74,7 @@ registerEvent(131428, "common/GenericWarp.lua") -- Mothercrystal Exit (note: war
 registerEvent(131519, "common/GenericWarp.lua") -- Faire Adventurer from Eastern La Noscea: bottom of the Moonfire Festival (2023) tower to the first tier of the tower
 registerEvent(131578, "common/GenericWarp.lua") -- Exit The For'ard Cabins to Tuliyollal
 -- A Realm Reborn Aetherytes
+registerEvent(327692, "common/GenericAetheryte.lua") -- Wineport Aetheryte
 registerEvent(327683, "common/GenericAetheryte.lua") -- Bentbranch Meadows Aetheryte
 registerEvent(327684, "common/GenericAetheryte.lua") -- The Hawthorne Hut Aetheryte
 registerEvent(327685, "common/GenericAetheryte.lua") -- Quarrymill Aetheryte
