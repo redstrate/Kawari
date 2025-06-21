@@ -135,10 +135,7 @@ impl LuaPlayer {
     fn unlock_action(&mut self, id: u32) {
         let op_code = ServerZoneIpcType::ActorControlSelf;
         let data = ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
-            category: ActorControlCategory::ToggleActionUnlock {
-                id,
-                unlocked: true,
-            },
+            category: ActorControlCategory::ToggleActionUnlock { id, unlocked: true },
         });
 
         self.create_segment_self(op_code, data);
@@ -147,9 +144,7 @@ impl LuaPlayer {
     fn set_speed(&mut self, speed: u16) {
         let op_code = ServerZoneIpcType::ActorControlSelf;
         let data = ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
-            category: ActorControlCategory::Flee {
-                speed,
-            },
+            category: ActorControlCategory::Flee { speed },
         });
 
         self.create_segment_self(op_code, data);
@@ -224,20 +219,14 @@ impl UserData for LuaPlayer {
                 Ok(())
             },
         );
-        methods.add_method_mut(
-            "unlock_action",
-            |_, this, action_id: u32| {
-                this.unlock_action(action_id);
-                Ok(())
-            },
-        );
-        methods.add_method_mut(
-            "set_speed",
-            |_, this, speed: u16| {
-                this.set_speed(speed);
-                Ok(())
-            },
-        );
+        methods.add_method_mut("unlock_action", |_, this, action_id: u32| {
+            this.unlock_action(action_id);
+            Ok(())
+        });
+        methods.add_method_mut("set_speed", |_, this, speed: u16| {
+            this.set_speed(speed);
+            Ok(())
+        });
         methods.add_method_mut("change_territory", |_, this, zone_id: u16| {
             this.change_territory(zone_id);
             Ok(())
