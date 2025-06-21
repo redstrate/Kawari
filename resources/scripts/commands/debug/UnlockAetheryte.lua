@@ -4,7 +4,7 @@ function onCommand(args, player)
     local parts = split(args)
     local argc = table.getn(parts)
     local sender = "[unlockaetheryte] "
-    local usage = "\nThis command unlocks an aetheryte for the user.\nUsage: !unlockaetheryte <id>"
+    local usage = "\nThis command unlocks an aetheryte for the user.\nUsage: !unlockaetheryte <on=0/off=1> <id>"
 
     local on = tonumber(parts[1])
     local id = tonumber(parts[2])

@@ -115,7 +115,7 @@ These special debug commands start with `!` and are custom to Kawari.
 * `!reload`: Reloads `Global.lua` that is normally only loaded once at start-up.
 *`!wireframe: Toggles the hidden GM wireframe rendering mode on or off.`
 *`!invis: Toggles the hidden GM invisibility mode on or off for your character.`
-*`!unlockaetheryte <on/off> <id>`: Unlock an aetheryte.
+*`!unlockaetheryte <on=0/off=1> <id>`: Unlock an aetheryte. For the first parameter, `0` unlocks, `1` re-locks. (yes, really, it's how `//gm teri` handles it).
 *`!teri <id>`: Changes to the specified territory.
 >>>>>>> cd92f2e (Update USAGE.md to reflect the new commands)
 
