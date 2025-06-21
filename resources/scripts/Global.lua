@@ -50,15 +50,21 @@ registerAction(6221, "items/Fantasia.lua")
 -- Events
 registerEvent(721028, "tosort/UnendingJourney.lua")
 registerEvent(721044, "tosort/CrystalBell.lua")
-registerEvent(131079, "warp/WarpInnLimsaLominsa.lua")
-registerEvent(131080, "warp/WarpInnGridania.lua")
-registerEvent(131081, "warp/WarpInnUldah.lua")
-registerEvent(131082, "common/GenericWarp.lua")
-registerEvent(131083, "common/GenericWarp.lua")
-registerEvent(131084, "common/GenericWarp.lua")
+registerEvent(131079, "warp/WarpInnGeneric.lua") -- Exit Limsa Upper Decks to Mizzenmast Inn room
+registerEvent(131080, "warp/WarpInnGeneric.lua") -- Exit New Gridania to Inn room
+registerEvent(131081, "warp/WarpInnGeneric.lua") -- Exit Ul'dah: Steps of Nald to The Hourglass Inn room
+registerEvent(131082, "common/GenericWarp.lua") -- Exit Mizzenmast Inn to Limsa Upper Decks
+registerEvent(131083, "common/GenericWarp.lua") -- Exit The Roost to New Gridania
+registerEvent(131084, "common/GenericWarp.lua") -- Exit The Hourglass to Ul'dah: Steps of Nald
 registerEvent(131092, "common/GenericWarp.lua")
 registerEvent(131093, "common/GenericWarp.lua")
 registerEvent(131094, "common/GenericWarp.lua")
+registerEvent(131204, "warp/WarpInnGeneric.lua") -- Exit Ishgard: Foundation to Cloud Nine Inn room
+registerEvent(131205, "common/GenericWarp.lua") -- Exit Cloud Nine to Ishgard: Foundation
+registerEvent(131246, "common/GenericWarp.lua") -- Exit Bokairo Inn to Kugane
+registerEvent(131312, "common/GenericWarp.lua") -- Exit The Pendants Personal Suite to Crystarium
+registerEvent(131402, "common/GenericWarp.lua") -- Exit Andron to Old Sharlayan
+registerEvent(131578, "common/GenericWarp.lua") -- Exit The For'ard Cabins to Tuliyollal
 registerEvent(720916, "custom/000/cmndefinnbed_00020.lua")
 registerEvent(1245185, "opening/OpeningLimsaLominsa.lua")
 registerEvent(1245186, "opening/OpeningGridania.lua")
