@@ -1,4 +1,4 @@
--- generic aetheryte, use this for all of the mini aetherytes
+-- generic aetheryte, use this for all of the aethernet shards
 
 --- scene 02 - aetheryte menu
 --- scene 03 - "you have aethernet access" message and vfx
