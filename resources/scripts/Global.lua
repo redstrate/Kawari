@@ -162,9 +162,8 @@ registerEvent(327785, "common/GenericAetheryte.lua") -- Tamamizu Aetheryte
 registerEvent(327786, "common/GenericAetheryte.lua") -- Onokoro Aetheryte
 registerEvent(327787, "common/GenericAetheryte.lua") -- Namai Aetheryte
 registerEvent(327788, "common/GenericAetheryte.lua") -- The House of the Fierce Aetheryte
--- registerEvent(3277??, "common/GenericAetheryte.lua") -- Reunion Aetheryte, all Azim Steppe aetherytes cannot be accessed because the client thinks it's underwater and throws the error "Cannot execute command. Environment different."
--- registerEvent(3277??, "common/GenericAetheryte.lua") -- The Dawn Throne Aetheryte
--- registerEvent(3277??, "common/GenericAetheryte.lua") -- Dhoro Iloh Aetheryte
+registerEvent(327789, "common/GenericAetheryte.lua") -- Reunion Aetheryte
+registerEvent(327790, "common/GenericAetheryte.lua") -- The Dawn Throne Aetheryte
 registerEvent(327791, "common/GenericAetheryte.lua") -- Kugane Aetheryte
 registerEvent(327792, "common/GenericAethernetShard.lua") -- Kugane: Shiokaze Hostelry Aethernet shard
 registerEvent(327793, "common/GenericAethernetShard.lua") -- Kugane: Pier #1 Aethernet shard
@@ -178,6 +177,7 @@ registerEvent(327801, "common/GenericAethernetShard.lua") -- Rhalgr's Reach: Wes
 registerEvent(327802, "common/GenericAethernetShard.lua") -- Rhalgr's Reach: Northeastern Rhalgr's Reach Aethernet shard
 registerEvent(327805, "common/GenericAethernetShard.lua") -- Ul'dah: Sapphire Avenue Exchange Aethernet shard
 registerEvent(327807, "common/GenericAetheryte.lua") -- The Doman Enclave Aetheryte
+registerEvent(327808, "common/GenericAetheryte.lua") -- Dhoro Iloh Aetheryte
 registerEvent(327809, "common/GenericAethernetShard.lua") -- The Doman Enclave: The Northern Enclave Aethernet shard
 registerEvent(327810, "common/GenericAethernetShard.lua") -- The Doman Enclave: The Southern Enclave Aethernet shard
 
