@@ -905,7 +905,9 @@ async fn main() {
 
     {
         let mut lua = lua.lock().unwrap();
-        load_global_script(&mut lua);
+        if let Err(err) = load_global_script(&mut lua) {
+            tracing::warn!("Failed to load Global.lua: {:?}", err);
+        }
     }
 
     let (handle, _) = spawn_main_loop();

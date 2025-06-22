@@ -626,7 +626,9 @@ impl ZoneConnection {
                 }
                 Task::ReloadScripts => {
                     let mut lua = self.lua.lock().unwrap();
-                    load_global_script(&mut lua);
+                    if let Err(err) = load_global_script(&mut lua) {
+                        tracing::warn!("Failed to load Global.lua: {:?}", err);
+                    }
                 }
                 Task::ToggleInvisibility { invisible } => {
                     self.toggle_invisibility(*invisible).await;
