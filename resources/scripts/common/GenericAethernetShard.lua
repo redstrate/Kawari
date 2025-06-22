@@ -9,7 +9,7 @@ end
 
 function onReturn(scene, results, player)
     local AETHERNET_MENU_CANCEL = 0
-    local destination = tonumber(results[1])
+    local destination = results[1]
     player:finish_event(EVENT_ID)
     
     if destination ~= AETHERNET_MENU_CANCEL then
