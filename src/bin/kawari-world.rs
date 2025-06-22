@@ -573,15 +573,21 @@ async fn client_loop(
                                                         } else {
                                                             tracing::info!("Unknown command {command_name}");
 
-                                                            lua.scope(|scope| {
-                                                                let connection_data = scope
-                                                                    .create_userdata_ref_mut(&mut lua_player)
-                                                                    .unwrap();
-                                                                let func: Function =
-                                                                    lua.globals().get("onUnknownCommandError").unwrap();
-                                                                func.call::<()>((command_name, connection_data)).unwrap();
-                                                                Ok(())
-                                                            }).unwrap();
+                                                            let mut call_func = || {
+                                                                lua.scope(|scope| {
+                                                                    let connection_data = scope
+                                                                        .create_userdata_ref_mut(&mut lua_player)?;;
+                                                                    let func: Function =
+                                                                        lua.globals().get("onUnknownCommandError")?;
+                                                                    func.call::<()>((command_name, connection_data))?;
+                                                                    Ok(())
+                                                                })
+                                                            };
+
+                                                            if let Err(err) = call_func() {
+                                                                tracing::warn!("Lua error in Global.lua: {:?}", err);
+                                                                handled = false;
+                                                            }
                                                         }
                                                 }
 
