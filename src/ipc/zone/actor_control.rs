@@ -63,7 +63,9 @@ pub enum ActorControlCategory {
         unlocked: bool,
     },
     #[brw(magic = 0x29u16)]
-    ToggleActionUnlock {
+    ToggleUnlock {
+        /// Corresponds to an UnlockLink. Could be a spell, action, emote, etc.
+        // See https://github.com/Haselnussbomber/HaselDebug/blob/main/HaselDebug/Tabs/UnlocksTabs/UnlockLinks/UnlockLinksTable.cs
         #[brw(pad_before = 2)] //padding
         id: u32,
         #[br(map = read_bool_from::<u32>)]
