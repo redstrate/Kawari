@@ -10,6 +10,13 @@ use super::OnlineStatus;
 #[binrw]
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub enum ActorControlCategory {
+    #[brw(magic = 0x0u16)]
+    ToggleWeapon {
+        #[brw(pad_before = 2)]
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        shown: bool,
+    },
     #[brw(magic = 0x26u16)]
     ToggleInvisibility {
         #[brw(pad_before = 2)]
