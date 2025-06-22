@@ -191,6 +191,7 @@ registerEvent(327897, "common/GenericAetheryte.lua") -- Solution Nine Aetheryte
 registerEvent(327918, "common/GenericAetheryte.lua") -- Dock Poga Aetheryte
 
 -- Misc. Events
+registerEvent(720898, "tosort/DeliveryMoogle.lua")
 registerEvent(720915, "common/GenericMender.lua")
 registerEvent(720916, "custom/000/cmndefinnbed_00020.lua")
 registerEvent(721096, "tosort/ToyChest.lua")
