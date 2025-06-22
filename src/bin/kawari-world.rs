@@ -498,6 +498,8 @@ async fn client_loop(
                                                 connection.handle.send(ToServer::Message(connection.id, chat_message.message.clone())).await;
 
                                                 let mut handled = false;
+                                                let command_trigger: char = '!';
+                                                if chat_message.message.starts_with(command_trigger)
                                                 {
                                                     let parts: Vec<&str> = chat_message.message.split(' ').collect();
                                                     let command_name = &parts[0][1..];
