@@ -21,15 +21,18 @@ We have a working implementation for most of FFXIV's servers:
 * World
     * Still limited, but supports basic multiplayer and can explore zones.
 
+Kawari is extendable, and content can be easily scripted using our Lua API. See the `resources/scripts` folder for examples.
+    
 ## Goals
 
 Kawari is primarily a research project, but also a way to preserve the modern client. Kawari is...
+
 * **FOR** preservation of the game, in the event that the servers are permanently unavailable.
 * **FOR** exploring the packet structure for legitimate purposes (e.g. archival and preservation.)
 * **NOT** a way to play the game without a valid subscription. The server can't, nor ever will be a suitable replacement for the real game.
 * **NOT** for creating bots, packet modifications or doing anything on the retail servers.
 
-Also please don't Kawari use it to spoil unreleased or new content, thanks.
+Also please don't use Kawari to spoil new or unreleased content, thanks.
 
 ## Supported Game Version
 
@@ -43,7 +46,7 @@ Kawari is designed to be easy to run. A guide to running Kawari can be followed 
 
 ## Contributing
 
-Pull requests for new features, patch updates, and documentation are welcome. A guide for contributing and updating Kawari can be found [here](CONTRIBUTING.md).
+Pull requests for new scripts, features, patch updates, and documentation are welcome. A guide for contributing and updating Kawari can be found [here](CONTRIBUTING.md).
 
 ## Credits & Thank You
 
