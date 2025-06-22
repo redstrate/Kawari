@@ -95,6 +95,11 @@ pub enum ActorControlCategory {
         #[bw(map = write_bool_as::<u32>)]
         unlocked: bool,
     },
+    #[brw(magic = 0x122u16)]
+    Emote {
+        #[brw(pad_before = 2)] // padding
+        emote: u32,
+    },
 }
 
 #[binrw]

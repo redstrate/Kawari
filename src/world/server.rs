@@ -376,6 +376,18 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                                 to_remove.push(id);
                             }
                         }
+                        ClientTriggerCommand::Emote { emote } => {
+                            let msg = FromServer::ActorControl(
+                                from_actor_id,
+                                ActorControl {
+                                    category: ActorControlCategory::Emote { emote: *emote },
+                                },
+                            );
+
+                            if handle.send(msg).is_err() {
+                                to_remove.push(id);
+                            }
+                        }
                         _ => tracing::warn!("Server doesn't know what to do with {:#?}", trigger),
                     }
                 }
