@@ -576,7 +576,7 @@ async fn client_loop(
                                                             let mut call_func = || {
                                                                 lua.scope(|scope| {
                                                                     let connection_data = scope
-                                                                        .create_userdata_ref_mut(&mut lua_player)?;;
+                                                                        .create_userdata_ref_mut(&mut lua_player)?;
                                                                     let func: Function =
                                                                         lua.globals().get("onUnknownCommandError")?;
                                                                     func.call::<()>((command_name, connection_data))?;

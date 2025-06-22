@@ -17,11 +17,14 @@ impl Event {
         let config = get_config();
         let file_name = format!("{}/{}", &config.world.scripts_location, path);
 
-        if let Err(err) = lua
-            .load(std::fs::read(&file_name).expect("Failed to locate scripts directory!"))
-            .set_name("@".to_string() + &file_name)
-            .exec()
-        {
+        let result = std::fs::read(&file_name);
+        if let Err(err) = std::fs::read(&file_name) {
+            tracing::warn!("Failed to load {}: {:?}", file_name, err);
+            return Self { file_name, lua, id };
+        }
+        let file = result.unwrap();
+
+        if let Err(err) = lua.load(file).set_name("@".to_string() + &file_name).exec() {
             tracing::warn!("Syntax error in {}: {:?}", file_name, err);
             return Self { file_name, lua, id };
         }
