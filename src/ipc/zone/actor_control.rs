@@ -84,6 +84,17 @@ pub enum ActorControlCategory {
     },
     #[brw(magic = 0xFu16)]
     CancelCast {},
+    #[brw(magic = 0x396u16)]
+    ToggleOrchestrionUnlock {
+        #[brw(pad_before = 2)] // padding
+        song_id: u16,
+        /* TODO: guessed, Sapphire suggests it's an u32 item id,
+         * but it behaves as an unlock boolean like aetherytes, so
+         perhaps it's been repurposed since Shadowbringers. */
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        unlocked: bool,
+    },
 }
 
 #[binrw]

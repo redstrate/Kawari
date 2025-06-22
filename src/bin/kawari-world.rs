@@ -636,6 +636,27 @@ async fn client_loop(
                                                         connection.player_data.inventory.add_in_next_free_slot(Item { id: *arg0, quantity: 1 });
                                                         connection.send_inventory(false).await;
                                                     }
+                                                    GameMasterCommandType::Orchestrion => {
+                                                        let on = *arg0 == 1; // This command uses 1 for on, 2 for off.
+                                                        let id = *arg1 as u16;
+
+                                                        // id == 0 means "all"
+                                                        if id == 0 {
+                                                            /* Currently 792 songs ingame.
+                                                             * Commented out because this learns literally zero songs
+                                                             * for some unknown reason. */
+                                                            /*for i in 1..793 {
+                                                                let idd = i as u16;
+                                                                connection.send_message("test!").await;
+                                                                connection.actor_control_self(ActorControlSelf {
+                                                                    category: ActorControlCategory::ToggleOrchestrionUnlock { song_id: id, unlocked: on } }).await;
+                                                            }*/
+                                                        } else {
+                                                            connection.actor_control_self(ActorControlSelf {
+                                                                    category: ActorControlCategory::ToggleOrchestrionUnlock { song_id: id, unlocked: on }
+                                                            }).await;
+                                                        }
+                                                    }
                                                     GameMasterCommandType::Aetheryte => {
                                                         let on = *arg0 == 0;
                                                         let id = *arg1;

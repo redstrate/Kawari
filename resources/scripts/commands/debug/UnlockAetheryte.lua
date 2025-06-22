@@ -29,7 +29,7 @@ function onCommand(args, player)
         if id == "all" then
             id = 0
         else
-            player:send_message(sender.."Error parsing id parameter. Must be a territory id or the word 'all'."..usage)
+            player:send_message(sender.."Error parsing id parameter. Must be an aetheryte id or the word 'all'."..usage)
             return
         end
     end
