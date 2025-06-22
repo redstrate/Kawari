@@ -9,14 +9,18 @@ use super::ZoneConnection;
 pub struct ChatHandler {}
 
 impl ChatHandler {
-    pub async fn handle_chat_message(connection: &mut ZoneConnection, chat_message: &ChatMessage) {
+    /// Returns true if the command is handled, otherwise false.
+    pub async fn handle_chat_message(
+        connection: &mut ZoneConnection,
+        chat_message: &ChatMessage,
+    ) -> bool {
         if connection.player_data.gm_rank == GameMasterRank::NormalUser {
             tracing::info!("Rejecting debug command because the user is not GM!");
-            return;
+            return true;
         }
 
         let parts: Vec<&str> = chat_message.message.split(' ').collect();
-        match parts[0] {
+        return match parts[0] {
             "!spawnnpc" => {
                 connection
                     .handle
@@ -25,6 +29,7 @@ impl ChatHandler {
                         connection.player_data.actor_id,
                     ))
                     .await;
+                true
             }
             "!spawnmonster" => {
                 connection
@@ -34,6 +39,7 @@ impl ChatHandler {
                         connection.player_data.actor_id,
                     ))
                     .await;
+                true
             }
             "!spawnclone" => {
                 connection
@@ -43,6 +49,7 @@ impl ChatHandler {
                         connection.player_data.actor_id,
                     ))
                     .await;
+                true
             }
             "!equip" => {
                 let (_, name) = chat_message.message.split_once(' ').unwrap();
@@ -69,10 +76,12 @@ impl ChatHandler {
                 }
 
                 connection.send_inventory(true).await;
+                true
             }
             "!reload" => {
                 connection.reload_scripts();
                 connection.send_message("Scripts reloaded!").await;
+                true
             }
             "!finishevent" => {
                 if let Some(event) = &connection.event {
@@ -81,8 +90,9 @@ impl ChatHandler {
                         .send_message("Current event forcefully finished.")
                         .await;
                 }
+                true
             }
-            _ => {}
-        }
+            _ => false,
+        };
     }
 }

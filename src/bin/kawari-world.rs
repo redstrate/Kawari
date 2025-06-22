@@ -504,12 +504,13 @@ async fn client_loop(
                                                     let parts: Vec<&str> = chat_message.message.split(' ').collect();
                                                     let command_name = &parts[0][1..];
 
-                                                    let lua = lua.lock().unwrap();
-                                                    let state = lua.app_data_ref::<ExtraLuaState>().unwrap();
+                                                    {
+                                                        let lua = lua.lock().unwrap();
+                                                        let state = lua.app_data_ref::<ExtraLuaState>().unwrap();
 
-                                                    // If a Lua command exists, try using that first
-                                                    if let Some(command_script) =
-                                                        state.command_scripts.get(command_name)
+                                                        // If a Lua command exists, try using that first
+                                                        if let Some(command_script) =
+                                                            state.command_scripts.get(command_name)
                                                         {
                                                             handled = true;
 
@@ -568,36 +569,40 @@ async fn client_loop(
 
                                                             if let Err(err) = run_script() {
                                                                 tracing::warn!("Lua error in {file_name}: {:?}", err);
-                                                                handled = false;
-                                                            }
-                                                        } else {
-                                                            tracing::info!("Unknown command {command_name}");
-
-                                                            let mut call_func = || {
-                                                                lua.scope(|scope| {
-                                                                    let connection_data = scope
-                                                                        .create_userdata_ref_mut(&mut lua_player)?;
-                                                                    let func: Function =
-                                                                        lua.globals().get("onUnknownCommandError")?;
-                                                                    func.call::<()>((command_name, connection_data))?;
-                                                                    Ok(())
-                                                                })
-                                                            };
-
-                                                            if let Err(err) = call_func() {
-                                                                tracing::warn!("Lua error in Global.lua: {:?}", err);
-                                                                handled = false;
                                                             }
                                                         }
-                                                }
+                                                    }
 
-                                                // Fallback to Rust implemented commands
-                                                if !handled {
-                                                    ChatHandler::handle_chat_message(
-                                                        &mut connection,
-                                                        chat_message,
-                                                    )
-                                                    .await;
+                                                    // Fallback to Rust implemented commands
+                                                    if !handled {
+                                                        handled = ChatHandler::handle_chat_message(
+                                                            &mut connection,
+                                                            chat_message,
+                                                        )
+                                                        .await;
+                                                    }
+
+                                                    // If it's truly not existent:
+                                                    if !handled {
+                                                        tracing::info!("Unknown command {command_name}");
+
+                                                        let lua = lua.lock().unwrap();
+
+                                                        let mut call_func = || {
+                                                            lua.scope(|scope| {
+                                                                let connection_data = scope
+                                                                .create_userdata_ref_mut(&mut lua_player)?;
+                                                                let func: Function =
+                                                                lua.globals().get("onUnknownCommandError")?;
+                                                                func.call::<()>((command_name, connection_data))?;
+                                                                Ok(())
+                                                            })
+                                                        };
+
+                                                        if let Err(err) = call_func() {
+                                                            tracing::warn!("Lua error in Global.lua: {:?}", err);
+                                                        }
+                                                    }
                                                 }
                                             }
                                             ClientZoneIpcData::GMCommand { command, arg0, arg1, .. } => {
