@@ -418,7 +418,6 @@ impl FromLua for EffectsBuilder {
 pub fn load_global_script(lua: &mut Lua) -> mlua::Result<()> {
     let register_action_func =
         lua.create_function(|lua, (action_id, action_script): (u32, String)| {
-            tracing::info!("Registering {action_id} with {action_script}!");
             let mut state = lua.app_data_mut::<ExtraLuaState>().unwrap();
             let _ = state.action_scripts.insert(action_id, action_script);
             Ok(())
@@ -426,7 +425,6 @@ pub fn load_global_script(lua: &mut Lua) -> mlua::Result<()> {
 
     let register_event_func =
         lua.create_function(|lua, (event_id, event_script): (u32, String)| {
-            tracing::info!("Registering {event_id} with {event_script}!");
             let mut state = lua.app_data_mut::<ExtraLuaState>().unwrap();
             let _ = state.event_scripts.insert(event_id, event_script);
             Ok(())
@@ -434,7 +432,6 @@ pub fn load_global_script(lua: &mut Lua) -> mlua::Result<()> {
 
     let register_command_func =
         lua.create_function(|lua, (command_name, command_script): (String, String)| {
-            tracing::info!("Registering {command_name} with {command_script}!");
             let mut state = lua.app_data_mut::<ExtraLuaState>().unwrap();
             let _ = state.command_scripts.insert(command_name, command_script);
             Ok(())
