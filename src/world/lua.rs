@@ -136,7 +136,7 @@ impl LuaPlayer {
     fn unlock_action(&mut self, id: u32) {
         let op_code = ServerZoneIpcType::ActorControlSelf;
         let data = ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
-            category: ActorControlCategory::ToggleActionUnlock { id, unlocked: true },
+            category: ActorControlCategory::ToggleUnlock { id, unlocked: true },
         });
 
         self.create_segment_self(op_code, data);
