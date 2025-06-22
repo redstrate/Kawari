@@ -70,6 +70,18 @@ impl ChatHandler {
 
                 connection.send_inventory(true).await;
             }
+            "!reload" => {
+                connection.reload_scripts();
+                connection.send_message("Scripts reloaded!").await;
+            }
+            "!finishevent" => {
+                if let Some(event) = &connection.event {
+                    connection.event_finish(event.id).await;
+                    connection
+                        .send_message("Current event forcefully finished.")
+                        .await;
+                }
+            }
             _ => {}
         }
     }

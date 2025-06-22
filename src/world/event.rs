@@ -5,8 +5,9 @@ use crate::{common::ObjectTypeId, config::get_config};
 use super::{LuaPlayer, Zone};
 
 pub struct Event {
-    file_name: String,
+    pub file_name: String,
     lua: Lua,
+    pub id: u32,
 }
 
 impl Event {
@@ -22,12 +23,12 @@ impl Event {
             .exec()
         {
             tracing::warn!("Syntax error in {}: {:?}", file_name, err);
-            return Self { file_name, lua };
+            return Self { file_name, lua, id };
         }
 
         lua.globals().set("EVENT_ID", id).unwrap();
 
-        Self { file_name, lua }
+        Self { file_name, lua, id }
     }
 
     pub fn enter_territory(&mut self, player: &mut LuaPlayer, zone: &Zone) {

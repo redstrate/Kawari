@@ -117,6 +117,7 @@ These special debug commands start with `!` and are custom to Kawari.
 * `!invis: Toggles the hidden GM invisibility mode on or off for your character.`
 * `!unlockaetheryte <on/off> <id>`: Unlock an aetheryte. For the first parameter, the literal words are required.
 * `!teri <id>`: Changes to the specified territory.
+* `!finishevent`: Forcefully finishes the current event, useful if the script has an error and you're stuck talking to something.
 
 ### GM commands
 

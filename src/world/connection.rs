@@ -625,10 +625,7 @@ impl ZoneConnection {
                     self.warp_aetheryte(*aetheryte_id).await;
                 }
                 Task::ReloadScripts => {
-                    let mut lua = self.lua.lock().unwrap();
-                    if let Err(err) = load_global_script(&mut lua) {
-                        tracing::warn!("Failed to load Global.lua: {:?}", err);
-                    }
+                    self.reload_scripts();
                 }
                 Task::ToggleInvisibility { invisible } => {
                     self.toggle_invisibility(*invisible).await;
@@ -636,6 +633,14 @@ impl ZoneConnection {
             }
         }
         player.queued_tasks.clear();
+    }
+
+    /// Reloads Global.lua
+    pub fn reload_scripts(&mut self) {
+        let mut lua = self.lua.lock().unwrap();
+        if let Err(err) = load_global_script(&mut lua) {
+            tracing::warn!("Failed to load Global.lua: {:?}", err);
+        }
     }
 
     pub async fn event_finish(&mut self, handler_id: u32) {
