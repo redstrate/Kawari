@@ -144,6 +144,7 @@ pub enum GameMasterCommandType {
     ToggleInvisibility = 0xD,
     ToggleWireframe = 0x26,
     ChangeTerritory = 0x58,
+    EXP = 0x68,
     Orchestrion = 0x74,
     GiveItem = 0xC8,
     Aetheryte = 0x5E,

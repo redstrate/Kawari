@@ -59,6 +59,7 @@ pub struct PlayerData {
 
     pub classjob_id: u8,
     pub classjob_levels: [i32; 32],
+    pub classjob_exp: [u32; 32],
     pub curr_hp: u32,
     pub max_hp: u32,
     pub curr_mp: u16,
@@ -83,6 +84,14 @@ impl PlayerData {
 
     pub fn set_current_level(&mut self, level: i32) {
         self.classjob_levels[self.classjob_id as usize] = level;
+    }
+
+    pub fn current_exp(&self) -> u32 {
+        self.classjob_exp[self.classjob_id as usize]
+    }
+
+    pub fn set_current_exp(&mut self, exp: u32) {
+        self.classjob_exp[self.classjob_id as usize] = exp;
     }
 }
 
@@ -300,10 +309,11 @@ impl ZoneConnection {
             op_code: ServerZoneIpcType::UpdateClassInfo,
             timestamp: timestamp_secs(),
             data: ServerZoneIpcData::UpdateClassInfo(UpdateClassInfo {
-                class_id: self.player_data.classjob_id as u16,
-                unknown: 1,
+                class_id: self.player_data.classjob_id,
                 synced_level: self.player_data.current_level() as u16,
                 class_level: self.player_data.current_level() as u16,
+                current_level: self.player_data.current_level() as u16,
+                current_exp: self.player_data.current_exp(),
                 ..Default::default()
             }),
             ..Default::default()

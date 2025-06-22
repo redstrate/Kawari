@@ -279,7 +279,7 @@ async fn client_loop(
                                                         timestamp: timestamp_secs(),
                                                         data: ServerZoneIpcData::PlayerStatus(PlayerStatus {
                                                             content_id: connection.player_data.content_id,
-                                                            exp: [0; 32],
+                                                            exp: connection.player_data.classjob_exp,
                                                             name: chara_details.name,
                                                             char_id: connection.player_data.actor_id,
                                                             race: chara_details.chara_make.customize.race,
@@ -681,6 +681,11 @@ async fn client_loop(
                                                             connection.actor_control_self(ActorControlSelf {
                                                                 category: ActorControlCategory::LearnTeleport { id, unlocked: on } }).await;
                                                         }
+                                                    }
+                                                    GameMasterCommandType::EXP => {
+                                                        let amount = *arg0;
+                                                        connection.player_data.set_current_exp(connection.player_data.current_exp() + amount);
+                                                        connection.update_class_info().await;
                                                     }
                                                 }
                                             }
