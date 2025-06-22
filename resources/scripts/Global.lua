@@ -82,7 +82,6 @@ registerEvent(327687, "common/GenericAetheryte.lua") -- Fallgourd Float Aetheryt
 registerEvent(327690, "common/GenericAetheryte.lua") -- Moraby Drydocks Aetheryte
 registerEvent(327691, "common/GenericAetheryte.lua") -- Costa del Sol Aetheryte
 registerEvent(327692, "common/GenericAetheryte.lua") -- Wineport Aetheryte
--- registerEvent(327???, "common/GenericAetheryte.lua") -- Wineport Aetheryte, currently unknown due to only being able to load ELN once. Now it loads into purgatory...
 registerEvent(327693, "common/GenericAetheryte.lua") -- Swiftperch Aetheryte
 registerEvent(327694, "common/GenericAetheryte.lua") -- Aleport Aetheryte
 registerEvent(327695, "common/GenericAetheryte.lua") -- Camp Bronze Lake Aetheryte
@@ -192,6 +191,7 @@ registerEvent(327897, "common/GenericAetheryte.lua") -- Solution Nine Aetheryte
 registerEvent(327918, "common/GenericAetheryte.lua") -- Dock Poga Aetheryte
 
 -- Misc. Events
+registerEvent(720915, "common/GenericMender.lua")
 registerEvent(720916, "custom/000/cmndefinnbed_00020.lua")
 registerEvent(721028, "tosort/UnendingJourney.lua")
 registerEvent(721044, "tosort/CrystalBell.lua")
