@@ -640,6 +640,15 @@ impl ZoneConnection {
                 Task::ToggleInvisibility { invisible } => {
                     self.toggle_invisibility(*invisible).await;
                 }
+                Task::OpenUnendingJourney => {
+                    self.actor_control_self(crate::ipc::zone::ActorControlSelf {
+                        category: ActorControlCategory::OpenUnendingJourney {
+                            unk1: 2,
+                            actor_id: self.player_data.actor_id,
+                        },
+                    })
+                    .await;
+                }
             }
         }
         player.queued_tasks.clear();

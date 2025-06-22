@@ -27,6 +27,7 @@ pub enum Task {
     WarpAetheryte { aetheryte_id: u32 },
     ReloadScripts,
     ToggleInvisibility { invisible: bool },
+    OpenUnendingJourney,
 }
 
 #[derive(Default)]
@@ -216,10 +217,15 @@ impl LuaPlayer {
     fn reload_scripts(&mut self) {
         self.queued_tasks.push(Task::ReloadScripts);
     }
+
     fn toggle_invisiblity(&mut self) {
         self.queued_tasks.push(Task::ToggleInvisibility {
             invisible: !self.player_data.gm_invisible,
         });
+    }
+
+    fn open_unending_journey(&mut self) {
+        self.queued_tasks.push(Task::OpenUnendingJourney);
     }
 }
 
@@ -310,6 +316,10 @@ impl UserData for LuaPlayer {
         });
         methods.add_method_mut("reload_scripts", |_, this, _: ()| {
             this.reload_scripts();
+            Ok(())
+        });
+        methods.add_method_mut("open_unending_journey", |_, this, _: ()| {
+            this.open_unending_journey();
             Ok(())
         });
     }
