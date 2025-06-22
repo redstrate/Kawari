@@ -69,12 +69,14 @@ registerEvent(131097, "common/GenericWarp.lua") -- Exit from Ul'dah Airship Land
 --registerEvent(131114, "common/GenericWarp.lua") -- (currently doesn't react, seems to need different handling) Ferry Skipper from Upper La Noscea: Jijiroon's Trading Post to Upper La Noscea: Memeroon's Trading Post
 registerEvent(131126, "common/GenericWarp.lua") -- Gatekeeper from Southern Thanalan: Nald's Reflection to Southern Thanalan: The Minotaur Malm
 --registerEvent(131158, None) -- Ferry Skipper from Old Gridania to The Lavender Beds, needs special handling for housing
+--registerEvent(131169, "common/GenericWarp.lua") -- Ferry Skipper from Eastern La Noscea: Costa Del Sol to ELN: Rhotano Privateer (currently broken)
 registerEvent(131195, "common/GenericWarp.lua") -- Exit from Fortemps manor to Ishgard: The Pillars
 registerEvent(131204, "warp/WarpInnGeneric.lua") -- Exit Ishgard: Foundation to Cloud Nine Inn room
 registerEvent(131205, "common/GenericWarp.lua") -- Exit Cloud Nine to Ishgard: Foundation
 registerEvent(131245, "warp/WarpInnGeneric.lua") -- Exit Kugane to Bokairo Inn room
 registerEvent(131246, "common/GenericWarp.lua") -- Exit Bokairo Inn to Kugane
 registerEvent(131250, "common/GenericWarp.lua") -- Gatekeeper from The Fringes: Castrum Oriens to East Shroud: Amarissaaix's Spire
+registerEvent(131266, "common/GenericWarp.lua") -- Gatekeeper from The House of the Fierce to dead-end cave (unable to dive currently)
 registerEvent(131268, "common/GenericWarp.lua") -- Enclave Skiff Captain from The Doman Enclave to Yanxia: The Glittering Basin
 registerEvent(131312, "common/GenericWarp.lua") -- Exit The Pendants Personal Suite to Crystarium
 registerEvent(131402, "common/GenericWarp.lua") -- Exit Andron to Old Sharlayan
@@ -289,6 +291,7 @@ registerEvent(721028, "tosort/UnendingJourney.lua")
 registerEvent(721044, "tosort/CrystalBell.lua")
 registerEvent(721226, "tosort/Orchestrion.lua")
 registerEvent(721347, "tosort/GlamourDresser.lua")
+registerEvent(720935, "tosort/MarketBoard.lua")
 registerEvent(1179657, "tosort/Chocobokeep.lua") -- Chocobokeep in Central Shroud
 registerEvent(1245185, "opening/OpeningLimsaLominsa.lua")
 registerEvent(1245186, "opening/OpeningGridania.lua")
