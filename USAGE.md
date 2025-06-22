@@ -129,3 +129,4 @@ These GM commands are implemented in the FFXIV protocol, but only some of them a
 * `//gm lv <level>`: Sets your current level
 * `//gm aetheryte <on/off> <id>`: Unlock an Aetheryte.
 * `//gm speed <multiplier>`: Increases your movement speed by `multiplier`.
+* `//gm orchestrion <on/off> <id>`: Unlock an Orchestrion song.

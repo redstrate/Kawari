@@ -193,8 +193,11 @@ registerEvent(327918, "common/GenericAetheryte.lua") -- Dock Poga Aetheryte
 -- Misc. Events
 registerEvent(720915, "common/GenericMender.lua")
 registerEvent(720916, "custom/000/cmndefinnbed_00020.lua")
+registerEvent(721096, "tosort/ToyChest.lua")
 registerEvent(721028, "tosort/UnendingJourney.lua")
 registerEvent(721044, "tosort/CrystalBell.lua")
+registerEvent(721226, "tosort/Orchestrion.lua")
+registerEvent(721347, "tosort/GlamourDresser.lua")
 registerEvent(1179657, "tosort/Chocobokeep.lua") -- Chocobokeep in Central Shroud
 registerEvent(1245185, "opening/OpeningLimsaLominsa.lua")
 registerEvent(1245186, "opening/OpeningGridania.lua")
