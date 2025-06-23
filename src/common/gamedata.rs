@@ -137,7 +137,7 @@ impl GameData {
 
         let offset = match which {
             TerritoryNameKinds::Internal => {
-                return row.Name().into_string().cloned(); // This feels really ugly, but is it worth doing another comparison just for aesthetics..?
+                return row.Name().into_string().cloned();
             }
             TerritoryNameKinds::Region => row.PlaceNameRegion().into_u16()?,
             TerritoryNameKinds::Place => row.PlaceName().into_u16()?,
