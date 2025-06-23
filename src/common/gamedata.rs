@@ -319,7 +319,7 @@ impl GameData {
 }
 
 // Simple enum for GameData::get_territory_name
-pub enum TerritoryNameKinds {
+pub enum TerritoryNameKind {
     Internal,
     Region,
     Place,
