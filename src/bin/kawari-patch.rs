@@ -167,7 +167,7 @@ async fn verify_boot(
 
     // check if we need any patching
     let mut send_patches = Vec::new();
-    let patches = list_patch_files(&*format!("{}/boot", &config.patch.patches_location));
+    let patches = list_patch_files(&format!("{}/boot", &config.patch.patches_location));
     for patch in patches {
         let patch_str: &str = &patch;
         if actual_boot_version.partial_cmp(patch_str).unwrap() == Ordering::Less {
