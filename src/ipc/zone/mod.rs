@@ -148,6 +148,7 @@ pub enum GameMasterCommandType {
     Orchestrion = 0x74,
     GiveItem = 0xC8,
     Aetheryte = 0x5E,
+    TerritoryInfo = 0x25D,
 }
 
 #[binrw]

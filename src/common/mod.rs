@@ -12,6 +12,7 @@ pub use position::Position;
 
 mod gamedata;
 pub use gamedata::GameData;
+pub use gamedata::TerritoryNameKinds;
 
 pub mod workdefinitions;
 
