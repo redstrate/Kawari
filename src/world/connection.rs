@@ -418,7 +418,7 @@ impl ZoneConnection {
             territory_type = zone_id;
         }
 
-        self.change_zone(territory_type as u16).await;
+        self.change_zone(territory_type).await;
     }
 
     pub async fn warp_aetheryte(&mut self, aetheryte_id: u32) {
@@ -452,7 +452,7 @@ impl ZoneConnection {
             territory_type = zone_id;
         }
 
-        self.change_zone(territory_type as u16).await;
+        self.change_zone(territory_type).await;
     }
 
     pub async fn change_weather(&mut self, new_weather_id: u16) {

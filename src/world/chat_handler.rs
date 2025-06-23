@@ -64,13 +64,13 @@ impl ChatHandler {
                             .player_data
                             .inventory
                             .equipped
-                            .get_slot_mut(slot as u16)
+                            .get_slot_mut(slot)
                             .id = id;
                         connection
                             .player_data
                             .inventory
                             .equipped
-                            .get_slot_mut(slot as u16)
+                            .get_slot_mut(slot)
                             .quantity = 1;
                     }
                 }
