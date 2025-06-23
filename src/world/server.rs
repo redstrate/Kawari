@@ -93,17 +93,12 @@ impl WorldServer {
 
     /// Finds the instance associated with a zone, or creates it if it doesn't exist yet
     fn find_instance_mut(&mut self, zone_id: u16) -> &mut Instance {
-        if self.instances.contains_key(&zone_id) {
-            self.instances.get_mut(&zone_id).unwrap()
-        } else {
-            self.instances.insert(zone_id, Instance::default());
-            self.instances.get_mut(&zone_id).unwrap()
-        }
+        self.instances.entry(zone_id).or_insert(Instance::default())
     }
 
     /// Finds the instance associated with an actor, or returns None if they are not found.
     fn find_actor_instance_mut(&mut self, actor_id: u32) -> Option<&mut Instance> {
-        for (_, instance) in &mut self.instances {
+        for instance in self.instances.values_mut() {
             if instance.actors.contains_key(&ObjectId(actor_id)) {
                 return Some(instance);
             }
