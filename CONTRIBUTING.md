@@ -7,7 +7,7 @@ Here are various helpful resources and tips when working on Kawari.
 Here are some Dalamud plugins that will make your life easier:
 
 * [AllowLoginFail](https://codeberg.org/redstrate/AllowLoginFail) to stop the game from rage quitting after hitting lobby errors.
-* [Scripter](https://github.com/redstrate/Scripter) for inspecting the client's Lua state.
+* [Scripter](https://codeberg.org/redstrate/Scripter) for inspecting the client's Lua state.
 
 ## Packet capture
 
