@@ -79,7 +79,6 @@ async fn fallback(uri: Uri) -> (StatusCode, String) {
 
 #[derive(Clone, Copy, Debug)]
 #[must_use]
-
 pub struct Xml<T>(pub T);
 
 impl<T> IntoResponse for Xml<T>
