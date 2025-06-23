@@ -398,7 +398,6 @@ impl UserData for EffectsBuilder {
                     unk4: 0,
                     amount,
                 },
-                ..Default::default()
             });
             Ok(())
         });
