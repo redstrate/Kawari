@@ -48,7 +48,7 @@ pub const CUSTOMIZE_DATA: CustomizeData = CustomizeData {
 #[derive(Debug, Clone)]
 enum NetworkedActor {
     Player(NpcSpawn),
-    NPC(NpcSpawn),
+    Npc(NpcSpawn),
 }
 
 #[derive(Default, Debug, Clone)]
@@ -63,7 +63,7 @@ impl Instance {
     }
 
     fn insert_npc(&mut self, id: ObjectId, spawn: NpcSpawn) {
-        self.actors.insert(id, NetworkedActor::NPC(spawn));
+        self.actors.insert(id, NetworkedActor::Npc(spawn));
     }
 
     fn generate_actor_id() -> u32 {
@@ -160,7 +160,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                             for (id, spawn) in &instance.actors {
                                 let npc_spawn = match spawn {
                                     NetworkedActor::Player(npc_spawn) => npc_spawn,
-                                    NetworkedActor::NPC(npc_spawn) => npc_spawn,
+                                    NetworkedActor::Npc(npc_spawn) => npc_spawn,
                                 };
 
                                 // Note that we currently only support spawning via the NPC packet, hence why we don't need to differentiate here
@@ -282,7 +282,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     {
                         let common = match spawn {
                             NetworkedActor::Player(npc_spawn) => &mut npc_spawn.common,
-                            NetworkedActor::NPC(npc_spawn) => &mut npc_spawn.common,
+                            NetworkedActor::Npc(npc_spawn) => &mut npc_spawn.common,
                         };
                         common.pos = position;
                         common.rotation = rotation;
