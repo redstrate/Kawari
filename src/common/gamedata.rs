@@ -130,17 +130,17 @@ impl GameData {
     pub fn get_territory_name(
         &mut self,
         zone_id: u32,
-        which: TerritoryNameKinds,
+        which: TerritoryNameKind,
     ) -> Option<String> {
         let sheet = TerritoryTypeSheet::read_from(&mut self.game_data, Language::None)?;
         let row = sheet.get_row(zone_id)?;
 
         let offset = match which {
-            TerritoryNameKinds::Internal => {
+            TerritoryNameKind::Internal => {
                 return row.Name().into_string().cloned();
             }
-            TerritoryNameKinds::Region => row.PlaceNameRegion().into_u16()?,
-            TerritoryNameKinds::Place => row.PlaceName().into_u16()?,
+            TerritoryNameKind::Region => row.PlaceNameRegion().into_u16()?,
+            TerritoryNameKind::Place => row.PlaceName().into_u16()?,
         };
 
         let sheet = PlaceNameSheet::read_from(&mut self.game_data, Language::English)?;

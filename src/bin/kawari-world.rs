@@ -4,7 +4,7 @@ use std::time::{Duration, Instant};
 
 use kawari::RECEIVE_BUFFER_SIZE;
 use kawari::common::Position;
-use kawari::common::{GameData, TerritoryNameKinds, timestamp_secs};
+use kawari::common::{GameData, TerritoryNameKind, timestamp_secs};
 use kawari::config::get_config;
 use kawari::inventory::Item;
 use kawari::ipc::chat::{ServerChatIpcData, ServerChatIpcSegment};
@@ -706,9 +706,9 @@ async fn client_loop(
                                                                     .get_weather(id)
                                                                     .unwrap_or(1) as u16;
                                                             let fallback = "<Unable to load name!>";
-                                                            internal_name = game_data.get_territory_name(id, TerritoryNameKinds::Internal).unwrap_or(fallback.to_string());
-                                                            region_name = game_data.get_territory_name(id, TerritoryNameKinds::Region).unwrap_or(fallback.to_string());
-                                                            place_name = game_data.get_territory_name(id, TerritoryNameKinds::Place).unwrap_or(fallback.to_string());
+                                                            internal_name = game_data.get_territory_name(id, TerritoryNameKind::Internal).unwrap_or(fallback.to_string());
+                                                            region_name = game_data.get_territory_name(id, TerritoryNameKind::Region).unwrap_or(fallback.to_string());
+                                                            place_name = game_data.get_territory_name(id, TerritoryNameKind::Place).unwrap_or(fallback.to_string());
                                                         }
 
                                                         connection.send_message(format!(concat!("Territory Info for zone {}:\n",
