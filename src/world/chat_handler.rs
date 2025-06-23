@@ -20,7 +20,7 @@ impl ChatHandler {
         }
 
         let parts: Vec<&str> = chat_message.message.split(' ').collect();
-        return match parts[0] {
+        match parts[0] {
             "!spawnnpc" => {
                 connection
                     .handle
@@ -93,6 +93,6 @@ impl ChatHandler {
                 true
             }
             _ => false,
-        };
+        }
     }
 }
