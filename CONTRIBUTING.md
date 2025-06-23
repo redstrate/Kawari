@@ -6,7 +6,7 @@ Here are various helpful resources and tips when working on Kawari.
 
 Here are some Dalamud plugins that will make your life easier:
 
-* [AllowLoginFail](https://github.com/redstrate/AllowLoginFail) to stop the game from rage quitting after hitting lobby errors.
+* [AllowLoginFail](https://codeberg.org/redstrate/AllowLoginFail) to stop the game from rage quitting after hitting lobby errors.
 * [Scripter](https://github.com/redstrate/Scripter) for inspecting the client's Lua state.
 
 ## Packet capture
@@ -31,7 +31,7 @@ Here are the various things that should be checked when updating Kawari to a new
 Since the Zone IPC opcodes change every patch, it's extremely easy to change the opcodes in Kawari. Edit the values under `resources/opcodes.json` and recompile Kawari. You still have to change the structs themselves (located under `src/ipc`) if needed though.
 
 Opcodes can be updated from (from least to most pain): 
-* The [opcodediff](https://github.com/xivdev/opcodediff) and the [opcode-update tool from XIVPacketTools](https://github.com/redstrate/XIVPacketTools) once they update.
+* The [opcodediff](https://github.com/xivdev/opcodediff) and the [opcode-update tool from XIVPacketTools](https://codeberg.org/redstrate/XIVPacketTools) once they update.
 * The [FFXIVOpcodes repository](https://github.com/karashiiro/FFXIVOpcodes/blob/master/opcodes.json) once they update.
 * Manual testing using tools like Chronofoil.
 
