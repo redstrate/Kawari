@@ -4,7 +4,7 @@ use std::time::{Duration, Instant};
 
 use kawari::RECEIVE_BUFFER_SIZE;
 use kawari::common::Position;
-use kawari::common::{GameData, timestamp_secs};
+use kawari::common::{GameData, TerritoryNameKind, timestamp_secs};
 use kawari::config::get_config;
 use kawari::inventory::Item;
 use kawari::ipc::chat::{ServerChatIpcData, ServerChatIpcSegment};
@@ -691,6 +691,31 @@ async fn client_loop(
                                                         let amount = *arg0;
                                                         connection.player_data.set_current_exp(connection.player_data.current_exp() + amount);
                                                         connection.update_class_info().await;
+                                                    }
+
+                                                    GameMasterCommandType::TerritoryInfo => {
+                                                        let id: u32 = connection.zone.as_ref().unwrap().id.into();
+                                                        let weather_id;
+                                                        let internal_name;
+                                                        let place_name;
+                                                        let region_name;
+                                                        {
+                                                            let mut game_data = connection.gamedata.lock().unwrap();
+                                                            // TODO: Maybe the current weather should be cached somewhere like the zone id?
+                                                            weather_id = game_data
+                                                                    .get_weather(id)
+                                                                    .unwrap_or(1) as u16;
+                                                            let fallback = "<Unable to load name!>";
+                                                            internal_name = game_data.get_territory_name(id, TerritoryNameKind::Internal).unwrap_or(fallback.to_string());
+                                                            region_name = game_data.get_territory_name(id, TerritoryNameKind::Region).unwrap_or(fallback.to_string());
+                                                            place_name = game_data.get_territory_name(id, TerritoryNameKind::Place).unwrap_or(fallback.to_string());
+                                                        }
+
+                                                        connection.send_message(format!(concat!("Territory Info for zone {}:\n",
+                                                                                                "Current weather: {}\n",
+                                                                                                "Internal name: {}\n",
+                                                                                                "Region name: {}\n",
+                                                                                                "Place name: {}"), id, weather_id, internal_name, region_name, place_name).as_str()).await;
                                                     }
                                                 }
                                             }

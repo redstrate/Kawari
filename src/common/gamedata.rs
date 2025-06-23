@@ -2,6 +2,7 @@ use icarus::Action::ActionSheet;
 use icarus::Aetheryte::AetheryteSheet;
 use icarus::ClassJob::ClassJobSheet;
 use icarus::EquipSlotCategory::EquipSlotCategorySheet;
+use icarus::PlaceName::PlaceNameSheet;
 use icarus::TerritoryType::TerritoryTypeSheet;
 use icarus::WeatherRate::WeatherRateSheet;
 use icarus::World::WorldSheet;
@@ -125,6 +126,31 @@ impl GameData {
         Some((*pop_range_id, *zone_id))
     }
 
+    // Retrieves a zone's internal name, place name or parent region name.
+    pub fn get_territory_name(
+        &mut self,
+        zone_id: u32,
+        which: TerritoryNameKind,
+    ) -> Option<String> {
+        let sheet = TerritoryTypeSheet::read_from(&mut self.game_data, Language::None)?;
+        let row = sheet.get_row(zone_id)?;
+
+        let offset = match which {
+            TerritoryNameKind::Internal => {
+                return row.Name().into_string().cloned();
+            }
+            TerritoryNameKind::Region => row.PlaceNameRegion().into_u16()?,
+            TerritoryNameKind::Place => row.PlaceName().into_u16()?,
+        };
+
+        let sheet = PlaceNameSheet::read_from(&mut self.game_data, Language::English)?;
+        let row = sheet.get_row(*offset as u32)?;
+
+        let value = row.Name().into_string()?;
+
+        Some(value.clone())
+    }
+
     /// Find an item's equip category and id by name, if it exists.
     pub fn get_item_by_name(&mut self, name: &str) -> Option<(u8, u32)> {
         for page in &self.item_pages {
@@ -217,7 +243,7 @@ impl GameData {
             return Some(12);
         }
 
-        let soul_crystal = row.FingerL().into_i8()?;
+        let soul_crystal = row.SoulCrystal().into_i8()?;
         if *soul_crystal == 1 {
             return Some(13);
         }
@@ -290,4 +316,11 @@ impl GameData {
 
         self.get_weather_rate(*weather_rate_id as u32)
     }
+}
+
+// Simple enum for GameData::get_territory_name
+pub enum TerritoryNameKind {
+    Internal,
+    Region,
+    Place,
 }
