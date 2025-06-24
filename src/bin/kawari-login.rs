@@ -59,6 +59,12 @@ fn setup_default_environment() -> Environment<'static> {
             .expect("Failed to find template!"),
     )
     .unwrap();
+    env.add_template_owned(
+        "restore.html",
+        std::fs::read_to_string("resources/templates/restore.html")
+            .expect("Failed to find template!"),
+    )
+    .unwrap();
 
     env
 }
@@ -297,6 +303,12 @@ async fn cancel_account(jar: CookieJar) -> (CookieJar, Redirect) {
     (jar.remove("cis_sessid"), Redirect::to("/"))
 }
 
+async fn restore_backup() -> Html<String> {
+    let environment = setup_default_environment();
+    let template = environment.get_template("restore.html").unwrap();
+    Html(template.render(context! {}).unwrap())
+}
+
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
@@ -320,10 +332,11 @@ async fn main() {
         .route("/oauth/oa/registligt", get(register))
         .route("/oauth/oa/registlist", post(do_register))
         .route("/account/app/svc/manage", get(account))
-        .route("/account/app/svc/manage", post(upload_character_backup))
         .route("/account/app/svc/logout", get(logout))
         .route("/account/app/svc/mbrPasswd", get(change_password))
         .route("/account/app/svc/mbrCancel", get(cancel_account))
+        .route("/account/app/svc/restore", get(restore_backup))
+        .route("/account/app/svc/restore", post(upload_character_backup))
         .with_state(state)
         .nest_service("/static", ServeDir::new("resources/static"))
         .layer(cors);
