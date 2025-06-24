@@ -229,7 +229,7 @@
         },
         {
             "name": "Disconnected",
-            "opcode": 436,
+            "opcode": 370,
             "size": 8
         },
         {
