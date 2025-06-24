@@ -850,14 +850,14 @@ async fn client_loop(
                                                     connection.send_message(&*format!("Event {event_id} tried to start, but it doesn't have a script associated with it!")).await;
                                                 }
                                             }
-                                            ClientZoneIpcData::EventHandlerReturn { handler_id, scene, error_code, num_results, results } => {
-                                                tracing::info!("Finishing this event... {handler_id} {scene} {error_code} {num_results} {results:#?}");
+                                            ClientZoneIpcData::EventHandlerReturn { handler_id, scene, error_code, num_results, params } => {
+                                                tracing::info!("Finishing this event... {handler_id} {error_code} {scene} {params:#?}");
 
                                                 connection
                                                 .event
                                                 .as_mut()
                                                 .unwrap()
-                                                .finish(*scene, results, &mut lua_player);
+                                                .finish(*scene, &params[..*num_results as usize], &mut lua_player);
                                             }
                                         }
                                     }

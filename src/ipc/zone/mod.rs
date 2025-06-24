@@ -379,8 +379,7 @@ pub enum ClientZoneIpcData {
         scene: u16,
         error_code: u8,
         num_results: u8,
-        #[brw(pad_after = 4)] // padding
-        results: [u32; 1],
+        params: [u32; 2],
     },
 }
 
