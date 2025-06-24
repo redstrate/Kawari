@@ -2,6 +2,8 @@
 
 --- scene 02 - aetheryte menu
 --- scene 03 - "you have aethernet access" message and vfx
+--- scene 100 - "According to the message engraved in the base, special permission is required to use this aetheryte." (Eulmore-specific)
+--- scene 200 - "The aetheryte has ceased functioning." (Eulmore-specific)
 
 function onTalk(target, player)
     --- param has to be 1 for the menu to even show up
