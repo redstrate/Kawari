@@ -48,6 +48,8 @@ Kawari is designed to be easy to run. A guide to running Kawari can be followed 
 
 Pull requests for new scripts, features, patch updates, and documentation are welcome. A guide for contributing and updating Kawari can be found [here](CONTRIBUTING.md).
 
+For informal development discussion outside of GitHub, join the [Kawari Dev Chat](https://matrix.to/#/#kawari-welcome:pyra.sh).
+
 ## Credits & Thank You
 
 * [Sapphire](https://github.com/SapphireServer/Sapphire) for reference.
