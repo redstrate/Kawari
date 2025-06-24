@@ -374,7 +374,7 @@ pub enum ClientZoneIpcData {
         event_id: u32,
     },
     #[br(pre_assert(*magic == ClientZoneIpcType::EventHandlerReturn))]
-    EventHandlerReturn {
+    EventHandlerReturn { // TODO: This is actually EventYieldHandler
         handler_id: u32,
         scene: u16,
         error_code: u8,
