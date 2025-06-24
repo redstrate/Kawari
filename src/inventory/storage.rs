@@ -15,6 +15,8 @@ pub enum ContainerType {
 
     Equipped = 1000,
 
+    Currency = 2000,
+
     ArmoryOffWeapon = 3200,
     ArmoryHead = 3201,
     ArmoryBody = 3202,

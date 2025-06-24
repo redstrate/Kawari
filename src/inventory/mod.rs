@@ -18,6 +18,9 @@ pub use item::Item;
 mod storage;
 pub use storage::{ContainerType, Storage};
 
+mod currency;
+pub use currency::CurrencyStorage;
+
 const MAX_NORMAL_STORAGE: usize = 35;
 const MAX_LARGE_STORAGE: usize = 50;
 
@@ -37,6 +40,7 @@ pub struct Inventory {
     pub armoury_bracelet: GenericStorage<MAX_NORMAL_STORAGE>,
     pub armoury_rings: GenericStorage<MAX_LARGE_STORAGE>,
     pub armoury_soul_crystal: GenericStorage<MAX_NORMAL_STORAGE>,
+    pub currency: CurrencyStorage,
 }
 
 impl Default for Inventory {
@@ -56,6 +60,7 @@ impl Default for Inventory {
             armoury_bracelet: GenericStorage::default(),
             armoury_rings: GenericStorage::default(),
             armoury_soul_crystal: GenericStorage::default(),
+            currency: CurrencyStorage::default(),
         }
     }
 }
@@ -201,6 +206,7 @@ impl Inventory {
             ContainerType::Inventory2 => &mut self.pages[2],
             ContainerType::Inventory3 => &mut self.pages[3],
             ContainerType::Equipped => &mut self.equipped,
+            ContainerType::Currency => &mut self.currency,
             ContainerType::ArmoryOffWeapon => &mut self.armoury_off_hand,
             ContainerType::ArmoryHead => &mut self.armoury_head,
             ContainerType::ArmoryBody => &mut self.armoury_body,
@@ -223,6 +229,7 @@ impl Inventory {
             ContainerType::Inventory2 => &self.pages[2],
             ContainerType::Inventory3 => &self.pages[3],
             ContainerType::Equipped => &self.equipped,
+            ContainerType::Currency => &self.currency,
             ContainerType::ArmoryOffWeapon => &self.armoury_off_hand,
             ContainerType::ArmoryHead => &self.armoury_head,
             ContainerType::ArmoryBody => &self.armoury_body,

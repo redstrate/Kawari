@@ -6,7 +6,7 @@ use kawari::RECEIVE_BUFFER_SIZE;
 use kawari::common::Position;
 use kawari::common::{GameData, TerritoryNameKind, timestamp_secs};
 use kawari::config::get_config;
-use kawari::inventory::Item;
+use kawari::inventory::{Item, Storage};
 use kawari::ipc::chat::{ServerChatIpcData, ServerChatIpcSegment};
 use kawari::ipc::zone::{
     ActorControlCategory, ActorControlSelf, PlayerEntry, PlayerSpawn, PlayerStatus, SocialList,
@@ -716,7 +716,12 @@ async fn client_loop(
                                                                                                 "Internal name: {}\n",
                                                                                                 "Region name: {}\n",
                                                                                                 "Place name: {}"), id, weather_id, internal_name, region_name, place_name).as_str()).await;
-                                                    }
+                                                    },
+                                                    GameMasterCommandType::Gil => {
+                                                        let amount = *arg0;
+                                                        connection.player_data.inventory.currency.get_slot_mut(0).quantity += amount;
+                                                        connection.send_inventory(false).await;
+                                                    },
                                                 }
                                             }
                                             ClientZoneIpcData::ZoneJump {

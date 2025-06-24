@@ -79,6 +79,9 @@ pub use equip::Equip;
 mod client_trigger;
 pub use client_trigger::{ClientTrigger, ClientTriggerCommand};
 
+mod currency_info;
+pub use currency_info::CurrencyInfo;
+
 use crate::common::ObjectTypeId;
 use crate::common::Position;
 use crate::common::read_string;
@@ -149,6 +152,7 @@ pub enum GameMasterCommandType {
     GiveItem = 0xC8,
     Aetheryte = 0x5E,
     TerritoryInfo = 0x25D,
+    Gil = 0xC9,
 }
 
 #[binrw]
@@ -244,6 +248,8 @@ pub enum ServerZoneIpcData {
     },
     /// Used to control target information
     ActorControlTarget(ActorControlTarget),
+    /// Used to update the player's currencies
+    CurrencyCrystalInfo(CurrencyInfo),
 }
 
 #[binrw]
@@ -374,7 +380,8 @@ pub enum ClientZoneIpcData {
         event_id: u32,
     },
     #[br(pre_assert(*magic == ClientZoneIpcType::EventHandlerReturn))]
-    EventHandlerReturn { // TODO: This is actually EventYieldHandler
+    EventHandlerReturn {
+        // TODO: This is actually EventYieldHandler
         handler_id: u32,
         scene: u16,
         error_code: u8,

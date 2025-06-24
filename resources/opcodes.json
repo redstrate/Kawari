@@ -169,6 +169,11 @@
             "name": "ActorControlTarget",
             "opcode": 593,
             "size": 28
+        },
+        {
+            "name": "CurrencyCrystalInfo",
+            "opcode": 548,
+            "size": 32
         }
     ],
     "ClientZoneIpcType": [

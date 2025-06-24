@@ -12,15 +12,16 @@ use crate::{
     OBFUSCATION_ENABLED_MODE,
     common::{GameData, ObjectId, ObjectTypeId, Position, timestamp_secs},
     config::{WorldConfig, get_config},
-    inventory::{Inventory, Item},
+    inventory::{ContainerType, Inventory, Item},
     ipc::{
         chat::ServerChatIpcSegment,
         zone::{
             ActionEffect, ActionRequest, ActionResult, ActorControl, ActorControlCategory,
             ActorControlSelf, ActorControlTarget, ClientZoneIpcSegment, CommonSpawn, ContainerInfo,
-            DisplayFlag, EffectKind, Equip, GameMasterRank, InitZone, ItemInfo, Move, NpcSpawn,
-            ObjectKind, PlayerStats, PlayerSubKind, ServerZoneIpcData, ServerZoneIpcSegment,
-            StatusEffect, StatusEffectList, UpdateClassInfo, Warp, WeatherChange,
+            CurrencyInfo, DisplayFlag, EffectKind, Equip, GameMasterRank, InitZone, ItemInfo, Move,
+            NpcSpawn, ObjectKind, PlayerStats, PlayerSubKind, ServerZoneIpcData,
+            ServerZoneIpcSegment, StatusEffect, StatusEffectList, UpdateClassInfo, Warp,
+            WeatherChange,
         },
     },
     opcodes::ServerZoneIpcType,
@@ -484,33 +485,66 @@ impl ZoneConnection {
         let mut sequence = 0;
 
         for (container_type, container) in &self.player_data.inventory.clone() {
-            let mut send_slot = async |slot_index: u16, item: &Item| {
-                let ipc = ServerZoneIpcSegment {
-                    op_code: ServerZoneIpcType::UpdateItem,
-                    timestamp: timestamp_secs(),
-                    data: ServerZoneIpcData::UpdateItem(ItemInfo {
-                        sequence,
-                        container: container_type,
-                        slot: slot_index,
-                        quantity: item.quantity,
-                        catalog_id: item.id,
-                        condition: 30000,
+            // currencies
+            if container_type == ContainerType::Currency {
+                let mut send_currency = async |slot_index: u16, item: &Item| {
+                    let ipc = ServerZoneIpcSegment {
+                        op_code: ServerZoneIpcType::CurrencyCrystalInfo,
+                        timestamp: timestamp_secs(),
+                        data: ServerZoneIpcData::CurrencyCrystalInfo(CurrencyInfo {
+                            sequence,
+                            container: item.id as u16,
+                            slot: slot_index,
+                            quantity: item.quantity,
+                            catalog_id: item.id,
+                            ..Default::default()
+                        }),
                         ..Default::default()
-                    }),
-                    ..Default::default()
+                    };
+
+                    self.send_segment(PacketSegment {
+                        source_actor: self.player_data.actor_id,
+                        target_actor: self.player_data.actor_id,
+                        segment_type: SegmentType::Ipc,
+                        data: SegmentData::Ipc { data: ipc },
+                    })
+                    .await;
                 };
 
-                self.send_segment(PacketSegment {
-                    source_actor: self.player_data.actor_id,
-                    target_actor: self.player_data.actor_id,
-                    segment_type: SegmentType::Ipc,
-                    data: SegmentData::Ipc { data: ipc },
-                })
-                .await;
-            };
+                for i in 0..container.max_slots() {
+                    send_currency(i as u16, container.get_slot(i as u16)).await;
+                }
+            } else {
+                // items
 
-            for i in 0..container.max_slots() {
-                send_slot(i as u16, container.get_slot(i as u16)).await;
+                let mut send_slot = async |slot_index: u16, item: &Item| {
+                    let ipc = ServerZoneIpcSegment {
+                        op_code: ServerZoneIpcType::UpdateItem,
+                        timestamp: timestamp_secs(),
+                        data: ServerZoneIpcData::UpdateItem(ItemInfo {
+                            sequence,
+                            container: container_type,
+                            slot: slot_index,
+                            quantity: item.quantity,
+                            catalog_id: item.id,
+                            condition: 30000,
+                            ..Default::default()
+                        }),
+                        ..Default::default()
+                    };
+
+                    self.send_segment(PacketSegment {
+                        source_actor: self.player_data.actor_id,
+                        target_actor: self.player_data.actor_id,
+                        segment_type: SegmentType::Ipc,
+                        data: SegmentData::Ipc { data: ipc },
+                    })
+                    .await;
+                };
+
+                for i in 0..container.max_slots() {
+                    send_slot(i as u16, container.get_slot(i as u16)).await;
+                }
             }
 
             // inform the client of container state

@@ -133,3 +133,4 @@ These GM commands are implemented in the FFXIV protocol, but only some of them a
 * `//gm orchestrion <on/off> <id>`: Unlock an Orchestrion song.
 * `//gm exp <amount>`: Adds the specified amount of EXP to the current class/job.
 * `//gm teri_info`: Displays information about the current zone. Currently displays zone id, weather, internal zone name, parent region name, and place/display name.
+* `//gm gil <amount>`: Adds the specified amount of gil to the player
