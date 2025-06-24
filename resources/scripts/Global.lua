@@ -79,6 +79,7 @@ registerEvent(131250, "common/GenericWarp.lua") -- Gatekeeper from The Fringes: 
 registerEvent(131266, "common/GenericWarp.lua") -- Gatekeeper from The House of the Fierce to dead-end cave (unable to dive currently)
 registerEvent(131268, "common/GenericWarp.lua") -- Enclave Skiff Captain from The Doman Enclave to Yanxia: The Glittering Basin
 registerEvent(131312, "common/GenericWarp.lua") -- Exit The Pendants Personal Suite to Crystarium
+registerEvent(131313, "common/GenericWarp.lua") -- Exit from The Crown Lift (Lift Operator) to Eulmore: The Canopy
 registerEvent(131402, "common/GenericWarp.lua") -- Exit Andron to Old Sharlayan
 registerEvent(131428, "common/GenericWarp.lua") -- Mothercrystal Exit (note: warp doesn't work for some reason?)
 registerEvent(131519, "common/GenericWarp.lua") -- Faire Adventurer from Eastern La Noscea: bottom of the Moonfire Festival (2023) tower to the first tier of the tower
