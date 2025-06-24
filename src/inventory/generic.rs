@@ -2,17 +2,9 @@ use serde::{Deserialize, Serialize};
 
 use super::{Item, Storage};
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
 pub struct GenericStorage<const N: usize> {
     pub slots: Vec<Item>,
-}
-
-impl<const N: usize> GenericStorage<N> {
-    pub fn default() -> Self {
-        Self {
-            slots: vec![Item::default(); N],
-        }
-    }
 }
 
 impl<const N: usize> Storage for GenericStorage<N> {

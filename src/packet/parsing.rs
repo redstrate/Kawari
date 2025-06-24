@@ -46,12 +46,12 @@ pub enum SegmentType {
 }
 
 #[binrw]
-#[brw(import(kind: &SegmentType, size: u32, encryption_key: Option<&[u8]>))]
+#[brw(import(kind: SegmentType, size: u32, encryption_key: Option<&[u8]>))]
 #[derive(Debug, Clone)]
 pub enum SegmentData<T: ReadWriteIpcSegment> {
-    #[br(pre_assert(*kind == SegmentType::None))]
+    #[br(pre_assert(kind == SegmentType::None))]
     None(),
-    #[br(pre_assert(*kind == SegmentType::Setup))]
+    #[br(pre_assert(kind == SegmentType::Setup))]
     Setup {
         #[brw(pad_before = 4)] // empty
         #[brw(pad_size_to = 36)]
@@ -60,13 +60,13 @@ pub enum SegmentData<T: ReadWriteIpcSegment> {
         #[bw(map = write_string)]
         ticket: String, // square enix in their infinite wisdom has this as a STRING REPRESENTATION of an integer. what
     },
-    #[br(pre_assert(*kind == SegmentType::Initialize))]
+    #[br(pre_assert(kind == SegmentType::Initialize))]
     Initialize {
         player_id: u32,
         #[brw(pad_after = 32)]
         timestamp: u32,
     },
-    #[br(pre_assert(*kind == SegmentType::SecuritySetup))]
+    #[br(pre_assert(kind == SegmentType::SecuritySetup))]
     SecuritySetup {
         #[brw(pad_before = 36)] // empty
         #[brw(pad_size_to = 32)]
@@ -79,24 +79,24 @@ pub enum SegmentData<T: ReadWriteIpcSegment> {
         #[brw(pad_after = 512)] // empty
         key: [u8; 4],
     },
-    #[br(pre_assert(*kind == SegmentType::Ipc))]
+    #[br(pre_assert(kind == SegmentType::Ipc))]
     Ipc {
         #[br(parse_with = decrypt, args(size, encryption_key))]
         #[bw(write_with = encrypt, args(size, encryption_key))]
         data: T,
     },
-    #[br(pre_assert(*kind == SegmentType::KeepAliveRequest))]
+    #[br(pre_assert(kind == SegmentType::KeepAliveRequest))]
     KeepAliveRequest { id: u32, timestamp: u32 },
-    #[br(pre_assert(*kind == SegmentType::SecurityInitialize))]
+    #[br(pre_assert(kind == SegmentType::SecurityInitialize))]
     SecurityInitialize {
         #[br(count = 0x280)]
         #[brw(pad_size_to = 640)]
         data: Vec<u8>,
     },
-    #[br(pre_assert(*kind == SegmentType::KeepAliveResponse))]
+    #[br(pre_assert(kind == SegmentType::KeepAliveResponse))]
     KeepAliveResponse { id: u32, timestamp: u32 },
 
-    #[br(pre_assert(*kind == SegmentType::KawariIpc))]
+    #[br(pre_assert(kind == SegmentType::KawariIpc))]
     KawariIpc { data: CustomIpcSegment },
 }
 
@@ -131,7 +131,8 @@ pub struct PacketSegment<T: ReadWriteIpcSegment> {
     pub target_actor: u32,
     #[brw(pad_after = 2)] // padding
     pub segment_type: SegmentType,
-    #[brw(args(&segment_type, size, encryption_key))]
+    #[bw(args(*segment_type, size, encryption_key))]
+    #[br(args(segment_type, size, encryption_key))]
     #[br(err_context("segment size = {}", size))]
     pub data: SegmentData<T>,
 }

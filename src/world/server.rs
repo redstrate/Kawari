@@ -93,17 +93,14 @@ impl WorldServer {
 
     /// Finds the instance associated with a zone, or creates it if it doesn't exist yet
     fn find_instance_mut(&mut self, zone_id: u16) -> &mut Instance {
-        self.instances.entry(zone_id).or_insert(Instance::default())
+        self.instances.entry(zone_id).or_default()
     }
 
     /// Finds the instance associated with an actor, or returns None if they are not found.
     fn find_actor_instance_mut(&mut self, actor_id: u32) -> Option<&mut Instance> {
-        for instance in self.instances.values_mut() {
-            if instance.actors.contains_key(&ObjectId(actor_id)) {
-                return Some(instance);
-            }
-        }
-        None
+        self.instances
+            .values_mut()
+            .find(|instance| instance.actors.contains_key(&ObjectId(actor_id)))
     }
 
     /// Tell all the clients that a new NPC spawned.
@@ -139,9 +136,9 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 let mut data = data.lock().unwrap();
 
                 // create a new instance if necessary
-                if !data.instances.contains_key(&zone_id) {
-                    data.instances.insert(zone_id, Instance::default());
-                }
+                data.instances
+                    .entry(zone_id)
+                    .or_insert_with(Instance::default);
 
                 // Send existing player data, if any
                 if let Some(instance) = data.find_instance(zone_id).cloned() {
@@ -571,7 +568,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
 
                 if cast_time == 0 {
                     // If instantaneous, send right back
-                    send_execution(from_id.clone(), data.clone());
+                    send_execution(from_id, data.clone());
                 } else {
                     // Otherwise, delay
                     // NOTE: I know this won't scale, but it's a fine hack for now
@@ -582,8 +579,6 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     );
 
                     // we have to shadow these variables to tell rust not to move them into the async closure
-                    let cast_time = cast_time.clone();
-                    let from_id = from_id.clone();
                     let data = data.clone();
                     tokio::task::spawn(async move {
                         let mut interval =

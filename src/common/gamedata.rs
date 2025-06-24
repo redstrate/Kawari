@@ -58,7 +58,7 @@ impl GameData {
         let sheet = WorldSheet::read_from(&mut self.game_data, Language::None)?;
         let row = sheet.get_row(world_id as u32)?;
 
-        row.Name().into_string().map(|x| x.clone())
+        row.Name().into_string().cloned()
     }
 
     /// Gets the starting city-state from a given class/job id.
@@ -66,7 +66,7 @@ impl GameData {
         let sheet = ClassJobSheet::read_from(&mut self.game_data, Language::English)?;
         let row = sheet.get_row(classjob_id as u32)?;
 
-        row.StartingTown().into_u8().map(|x| *x)
+        row.StartingTown().into_u8().copied()
     }
 
     pub fn get_racial_base_attributes(&mut self, tribe_id: u8) -> Option<Attributes> {
@@ -127,11 +127,7 @@ impl GameData {
     }
 
     // Retrieves a zone's internal name, place name or parent region name.
-    pub fn get_territory_name(
-        &mut self,
-        zone_id: u32,
-        which: TerritoryNameKind,
-    ) -> Option<String> {
+    pub fn get_territory_name(&mut self, zone_id: u32, which: TerritoryNameKind) -> Option<String> {
         let sheet = TerritoryTypeSheet::read_from(&mut self.game_data, Language::None)?;
         let row = sheet.get_row(zone_id)?;
 
@@ -269,7 +265,7 @@ impl GameData {
             .Weather()
             .iter()
             .cloned()
-            .zip(row.Rate().clone())
+            .zip(row.Rate())
             .map(|(x, y)| (*x.into_i32().unwrap(), *y.into_u8().unwrap() as i32))
             .collect();
 

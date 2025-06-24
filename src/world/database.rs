@@ -51,11 +51,9 @@ impl WorldDatabase {
             connection.execute(query, ()).unwrap();
         }
 
-        let this = Self {
+        Self {
             connection: Mutex::new(connection),
-        };
-
-        this
+        }
     }
 
     pub fn import_character(&self, service_account_id: u32, path: &str) {
