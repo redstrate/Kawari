@@ -11,7 +11,7 @@ mod database;
 pub use database::{CharacterData, WorldDatabase};
 
 mod lua;
-pub use lua::{EffectsBuilder, LuaPlayer, load_global_script};
+pub use lua::{EffectsBuilder, LuaPlayer, load_init_script};
 
 mod event;
 pub use event::Event;

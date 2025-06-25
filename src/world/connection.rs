@@ -35,7 +35,7 @@ use super::{
     Actor, CharacterData, EffectsBuilder, Event, LuaPlayer, StatusEffects, ToServer, WorldDatabase,
     Zone,
     common::{ClientId, ServerHandle},
-    load_global_script,
+    load_init_script,
     lua::Task,
 };
 
@@ -682,8 +682,8 @@ impl ZoneConnection {
     /// Reloads Global.lua
     pub fn reload_scripts(&mut self) {
         let mut lua = self.lua.lock().unwrap();
-        if let Err(err) = load_global_script(&mut lua) {
-            tracing::warn!("Failed to load Global.lua: {:?}", err);
+        if let Err(err) = load_init_script(&mut lua) {
+            tracing::warn!("Failed to load Init.lua: {:?}", err);
         }
     }
 
