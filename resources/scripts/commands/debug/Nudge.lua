@@ -1,10 +1,7 @@
 -- Ported from Ioncannon's Project Meteor Server 
 -- https://bitbucket.org/Ioncannon/project-meteor-server/src/develop/Data/scripts/commands/gm/nudge.lua
 required_rank = GM_RANK_DEBUG
-
-function send_msg(message, player)
-    player:send_message(string.format("[nudge] %s", message))
-end
+sender = "[nudge] "
 
 function onCommand(args, player)
     local parts = split(args)
@@ -33,7 +30,7 @@ function onCommand(args, player)
         if checkArg1 then
             distance = checkArg1
         else
-            send_msg("Error parsing distance! \n"..usage, player)
+            printf(player, "Error parsing distance!\n"..usage)
             return
         end
     end
@@ -46,11 +43,11 @@ function onCommand(args, player)
             if vertical[string.upper(arg2)] then  -- Check vertical direction on string, otherwise throw param error
                 direction = vertical[string.upper(arg2)]
             else
-                send_msg("Error parsing direction! \n"..usage, player)
+                printf(player, "Error parsing direction! \n"..usage)
                 return
             end
         else
-            send_msg("Error parsing parameters! \n"..usage, player)
+            printf(player, "Error parsing parameters! \n"..usage)
             return
         end
     end
@@ -73,6 +70,5 @@ function onCommand(args, player)
     end
 
     player:set_position(new_position, player.rotation)
-    local message = string.format("Positioning %s %s yalms.", direction_str, distance)
-    send_msg(message, player)
+    printf(player, "Positioning %s %s yalms.", direction_str, distance)
 end

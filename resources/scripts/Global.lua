@@ -24,6 +24,21 @@ function getTableSize(tbl)
     return count
 end
 
+function printf(player, fmt_str, ...)
+    -- Sender would be defined elsewhere, if at all
+    if sender == nil then
+        sender = ""
+    end
+
+    if ... ~= nil then
+        player:send_message(sender..fmt_str:format(...))
+    else
+        player:send_message(sender..fmt_str)
+    end
+
+    sender = nil -- Reset the sender, it's not required to have for printf to work, and not all users of printf will be commands, most likely.
+end
+
 -- Constants
 GM_RANK_NORMALUSER = 0
 GM_RANK_GAMEMASTER = 1

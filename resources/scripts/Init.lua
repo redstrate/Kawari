@@ -18,10 +18,9 @@ end
 
 function onCommandRequiredRankMissingError(additional_information, player)
     local error_msg = "Your script does not define the required_rank variable. Please define it in your script for it to run."
-
-    player:send_message(string.format("%s\nAdditional information: %s", error_msg, additional_information))
+    printf(player, "%s\nAdditional information: %s", error_msg, additional_information)
 end
 
 function onUnknownCommandError(command_name, player)
-    player:send_message(string.format("Unknown command %s", command_name))
+    printf(player, "Unknown command %s", command_name)
 end
