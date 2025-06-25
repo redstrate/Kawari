@@ -20,7 +20,7 @@ use kawari::packet::oodle::OodleNetwork;
 use kawari::packet::{
     ConnectionType, PacketSegment, PacketState, SegmentData, SegmentType, send_keep_alive,
 };
-use kawari::world::{ChatHandler, ExtraLuaState, Zone, ZoneConnection, load_global_script};
+use kawari::world::{ChatHandler, ExtraLuaState, Zone, ZoneConnection, load_init_script};
 use kawari::world::{
     ClientHandle, Event, FromServer, LuaPlayer, PlayerData, ServerHandle, StatusEffects, ToServer,
     WorldDatabase, handle_custom_ipc, server_main_loop,
@@ -526,7 +526,7 @@ async fn client_loop(
 
                                                                     lua.load(
                                                                         std::fs::read(&file_name)
-                                                                        .expect("Failed to locate scripts directory!"),
+                                                                        .expect(format!("Failed to load script file {}!", &file_name).as_str()),
                                                                     )
                                                                     .set_name("@".to_string() + &file_name)
                                                                     .exec()?;
@@ -976,8 +976,8 @@ async fn main() {
 
     {
         let mut lua = lua.lock().unwrap();
-        if let Err(err) = load_global_script(&mut lua) {
-            tracing::warn!("Failed to load Global.lua: {:?}", err);
+        if let Err(err) = load_init_script(&mut lua) {
+            tracing::warn!("Failed to load Init.lua: {:?}", err);
         }
     }
 

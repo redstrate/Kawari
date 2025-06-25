@@ -414,8 +414,8 @@ impl FromLua for EffectsBuilder {
     }
 }
 
-/// Loads `Global.lua`
-pub fn load_global_script(lua: &mut Lua) -> mlua::Result<()> {
+/// Loads `Init.lua`
+pub fn load_init_script(lua: &mut Lua) -> mlua::Result<()> {
     let register_action_func =
         lua.create_function(|lua, (action_id, action_script): (u32, String)| {
             let mut state = lua.app_data_mut::<ExtraLuaState>().unwrap();
@@ -448,7 +448,7 @@ pub fn load_global_script(lua: &mut Lua) -> mlua::Result<()> {
         .set("EffectsBuilder", effectsbuilder_constructor)?;
 
     let config = get_config();
-    let file_name = format!("{}/Global.lua", &config.world.scripts_location);
+    let file_name = format!("{}/Init.lua", &config.world.scripts_location);
     lua.load(std::fs::read(&file_name).expect("Failed to locate scripts directory!"))
         .set_name("@".to_string() + &file_name)
         .exec()?;
