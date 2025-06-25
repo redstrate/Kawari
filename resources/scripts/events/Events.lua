@@ -273,7 +273,7 @@ to_sort = {
     [1179657] = "Chocobokeep.lua", -- Chocobokeep in Central Shroud
 }
 
--- Events in /common that aren't already get covered by other tables
+-- Events in /common that aren't already covered by other tables
 common_events = {
     [720915] = "GenericMender.lua",
 }
