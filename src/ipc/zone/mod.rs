@@ -186,7 +186,20 @@ pub enum ServerZoneIpcData {
     Warp(Warp),
     /// Sent by the server when they send a chat message
     ServerChatMessage {
-        unk: u8, // channel?
+        /*
+         * bits (properties will apply when set, but a final base 10 value of zero defaults to chat log only):
+         * 76543210
+         * xxxxxSxC
+         * x = don't care/unused
+         * S = on-screen
+         * C = chat log
+         * all other bits are unused, therefore some possible examples are (base 10 values follow):
+         * 1 = chat log only
+         * 4 = on-screen only
+         * 5 = both
+         * ref: https://github.com/SapphireServer/Sapphire/blob/bf3368224a00c180cbb7ba413b52395eba58ec0b/src/common/Network/PacketDef/Zone/ServerZoneDef.h#L250
+         */
+        param: u8,
         #[brw(pad_after = 774)]
         #[br(count = 774)]
         #[br(map = read_string)]
