@@ -1,5 +1,5 @@
 required_rank = GM_RANK_DEBUG
-sender = "[setspeed] "
+command_sender = "[setspeed] "
 
 function onCommand(args, player)
     local parts = split(args)

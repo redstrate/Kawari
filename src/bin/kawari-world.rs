@@ -555,6 +555,16 @@ async fn client_loop(
                                                                         let func: Function =
                                                                             lua.globals().get("onCommand")?;
                                                                         func.call::<()>((func_args, connection_data))?;
+
+                                                                        /* `command_sender` is an optional variable scripts can define to identify themselves in print messages.
+                                                                         * It's okay if this global isn't set. We also don't care what its value is, just that it exists.
+                                                                         * This is reset -after- running the command intentionally. Resetting beforehand will never display the command's identifier.
+                                                                         */
+                                                                        let command_sender: Result<mlua::prelude::LuaValue, mlua::prelude::LuaError> = lua.globals().get("command_sender");
+                                                                        if let Ok(_) = command_sender {
+                                                                            // tracing::info!("Resetting command_sender for next script run.");
+                                                                            lua.globals().set("command_sender", mlua::Value::Nil)?;
+                                                                        }
                                                                         Ok(())
                                                                     } else {
                                                                         tracing::info!("User with account_id {} tried to invoke GM command {} with insufficient privileges!",
