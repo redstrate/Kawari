@@ -109,6 +109,12 @@ pub enum ActorControlCategory {
         #[brw(pad_before = 2)] // padding
         emote: u32,
     },
+    #[brw(magic = 0x40Eu16)]
+    OpenUnendingJourney {
+        #[brw(pad_before = 2)] // padding
+        unk1: u16,
+        actor_id: u32,
+    },
 }
 
 #[binrw]
