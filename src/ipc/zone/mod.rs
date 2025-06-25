@@ -460,7 +460,7 @@ mod tests {
             (
                 ServerZoneIpcType::ServerChatMessage,
                 ServerZoneIpcData::ServerChatMessage {
-                    unk: 0,
+                    param: 0,
                     message: String::new(),
                 },
             ),
