@@ -1,13 +1,13 @@
 required_rank = GM_RANK_DEBUG
+sender = "[unlockaetheryte] "
 
 function onCommand(args, player)
     local parts = split(args)
     local argc = #parts
-    local sender = "[unlockaetheryte] "
     local usage = "\nThis command unlocks an aetheryte for the user.\nUsage: !unlockaetheryte <on/off> <id>"
 
     if argc < 2 then
-        player:send_message(sender.."This command requires two parameters."..usage)
+        printf(player, "This command requires two parameters."..usage)
         return
     end
 
@@ -18,7 +18,7 @@ function onCommand(args, player)
     elseif on == "off" then
         on = 1
     else
-        player:send_message(sender.."Error parsing first parameter. Must be either of the words: 'on' or 'off'."..usage)
+        printf(player, "Error parsing first parameter. Must be either of the words: 'on' or 'off'."..usage)
         return
     end
 
@@ -29,11 +29,11 @@ function onCommand(args, player)
         if id == "all" then
             id = 0
         else
-            player:send_message(sender.."Error parsing id parameter. Must be an aetheryte id or the word 'all'."..usage)
+            printf(player, "Error parsing id parameter. Must be an aetheryte id or the word 'all'."..usage)
             return
         end
     end
 
     player:unlock_aetheryte(on, id)
-    player:send_message(string.format("%s Aetheryte(s) %s had their unlocked status changed!", sender, id))
+    printf(player, "Aetheryte(s) %s had their unlocked status changed!", id)
 end
