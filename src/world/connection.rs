@@ -610,7 +610,7 @@ impl ZoneConnection {
             timestamp: timestamp_secs(),
             data: ServerZoneIpcData::ServerChatMessage {
                 message: message.to_string(),
-                unk: 0,
+                param: 0,
             },
             ..Default::default()
         };
