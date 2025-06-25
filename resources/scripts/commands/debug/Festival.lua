@@ -4,7 +4,7 @@ required_rank = GM_RANK_DEBUG
 
 function onCommand(args, player)
     local parts = split(args)
-    local argc = table.getn(parts)
+    local argc = #parts
     local usage = "\nUsage: !festival <id1> <id2> <id3> <id4>"
     local sender = "[festival] "
 
@@ -14,8 +14,7 @@ function onCommand(args, player)
     local id4 = tonumber(parts[4])
 
     if not id1 then
-        player:send_message(sender.."At least one festival must be specified (for now, until the server has support for commands with no args)."..usage)
-        return
+        id1 = 0
     end
 
     if not id2 then

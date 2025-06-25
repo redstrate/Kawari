@@ -8,7 +8,7 @@ end
 
 function onCommand(args, player)
     local parts = split(args)
-    local argc = table.getn(parts)
+    local argc = #parts
     local pos = player.position
     local angle = player.rotation + (math.pi / 2)
     local distance = 5
