@@ -487,16 +487,16 @@ impl ZoneConnection {
         for (container_type, container) in &self.player_data.inventory.clone() {
             // currencies
             if container_type == ContainerType::Currency {
-                let mut send_currency = async |slot_index: u16, item: &Item| {
+                let mut send_currency = async |item: &Item| {
                     let ipc = ServerZoneIpcSegment {
                         op_code: ServerZoneIpcType::CurrencyCrystalInfo,
                         timestamp: timestamp_secs(),
                         data: ServerZoneIpcData::CurrencyCrystalInfo(CurrencyInfo {
                             sequence,
-                            container: item.id as u16,
-                            slot: slot_index,
+                            container: container_type,
                             quantity: item.quantity,
                             catalog_id: item.id,
+                            unk1: 1,
                             ..Default::default()
                         }),
                         ..Default::default()
@@ -512,7 +512,7 @@ impl ZoneConnection {
                 };
 
                 for i in 0..container.max_slots() {
-                    send_currency(i as u16, container.get_slot(i as u16)).await;
+                    send_currency(container.get_slot(i as u16)).await;
                 }
             } else {
                 // items

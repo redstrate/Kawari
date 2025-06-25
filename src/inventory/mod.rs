@@ -88,7 +88,7 @@ impl<'a> Iterator for InventoryIterator<'a> {
         let curr = self.curr;
         self.curr += 1;
 
-        if curr >= 17 {
+        if curr >= 18 {
             return None;
         }
 
@@ -115,6 +115,9 @@ impl<'a> Iterator for InventoryIterator<'a> {
 
             // equipped
             16 => ContainerType::Equipped,
+
+            // currency
+            17 => ContainerType::Currency,
             _ => panic!("Inventory iterator invalid!"),
         };
 

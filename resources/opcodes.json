@@ -173,7 +173,7 @@
         {
             "name": "CurrencyCrystalInfo",
             "opcode": 548,
-            "size": 32
+            "size": 24
         }
     ],
     "ClientZoneIpcType": [

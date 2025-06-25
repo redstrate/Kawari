@@ -1,11 +1,13 @@
 use binrw::binrw;
 
+use crate::inventory::ContainerType;
+
 #[binrw]
 #[brw(little)]
 #[derive(Debug, Clone, Default)]
 pub struct CurrencyInfo {
     pub sequence: u32,
-    pub container: u16,
+    pub container: ContainerType,
     pub slot: u16,
     pub quantity: u32,
     pub unk1: u32,

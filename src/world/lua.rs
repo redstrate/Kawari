@@ -225,11 +225,14 @@ impl LuaPlayer {
 
 impl UserData for LuaPlayer {
     fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
-        methods.add_method_mut("send_message", |lua, this, (message, param): (String, Value)| {
-            let param: u8 = lua.from_value(param).unwrap_or(0);
-            this.send_message(&message, param);
-            Ok(())
-        });
+        methods.add_method_mut(
+            "send_message",
+            |lua, this, (message, param): (String, Value)| {
+                let param: u8 = lua.from_value(param).unwrap_or(0);
+                this.send_message(&message, param);
+                Ok(())
+            },
+        );
         methods.add_method_mut(
             "give_status_effect",
             |_, this, (effect_id, duration): (u16, f32)| {

@@ -21,7 +21,7 @@ impl Storage for CurrencyStorage {
     }
 
     fn num_items(&self) -> u32 {
-        self.gil.quantity
+        1
     }
 
     fn get_slot_mut(&mut self, index: u16) -> &mut Item {
