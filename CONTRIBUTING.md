@@ -13,7 +13,7 @@ Here are some Dalamud plugins that will make your life easier:
 
 The well-tested packet capturing solutions are [TemporalStasis](https://github.com/WorkingRobot/TemporalStasis/) and [Project Chronofoil](https://github.com/ProjectChronofoil). You should use Project Chronofoil under most circumstances, but it requires Dalamud. TemporalStasis works like a standalone proxy server, and can work with a vanilla game.
 
-To extract `.cfcap` captures from Project Chronofoil, use `cfcap-expand` from [XIVPacketTools](https://github.com/redstrate/XIVPacketTools).
+To extract `.cfcap` captures from Project Chronofoil, use `cfcap-expand` from [XIVPacketTools](https://codeberg.org/redstrate/XIVPacketTools).
 
 ## Updating to new patches
 
