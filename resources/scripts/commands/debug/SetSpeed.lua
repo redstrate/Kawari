@@ -2,7 +2,7 @@ required_rank = GM_RANK_DEBUG
 
 function onCommand(args, player)
     local parts = split(args)
-    local argc = table.getn(parts)
+    local argc = #parts
     local sender = "[setspeed] "
     local usage = "\nThis command sets the user's speed to a desired multiplier.\nUsage: !setspeed <multiplier>"
     local SPEED_MAX = 10 -- Arbitrary, but it's more or less unplayable even at this amount

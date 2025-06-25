@@ -2,7 +2,7 @@ required_rank = GM_RANK_DEBUG
 
 function onCommand(args, player)
     local parts = split(args)
-    local argc = table.getn(parts)
+    local argc = #parts
     local sender = "[teri] "
     local usage = "\nThis command moves the user to a new zone/territory.\nUsage: !teri <id>"
 

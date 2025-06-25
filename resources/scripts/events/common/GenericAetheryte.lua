@@ -24,7 +24,7 @@ function onReturn(scene, results, player)
     -- local REGISTER_FAVORITE_DSTN = ??? -- Unable to obtain right now, seems to return 0 regardless
     -- local REGISTER_SECURITY_TOKEN_DSTN = ??? -- Unable to obtain right now, seems to return 0 regardless
 
-    local resultc = table.getn(results) -- TODO: Do we need to check this still? Can the favorite/security menus return more than 2, once they work?
+    local resultc = #results -- TODO: Do we need to check this still? Can the favorite/security menus return more than 2, once they work?
 
     local menu_option = results[1]
     local decision = results[2]

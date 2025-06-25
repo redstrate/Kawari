@@ -14,6 +14,16 @@ function split(input, separator)
     return t
 end
 
+function getTableSize(tbl)
+    local count = 0
+
+    for _, _ in pairs(tbl) do
+        count = count + 1
+    end
+
+    return count
+end
+
 -- Constants
 GM_RANK_NORMALUSER = 0
 GM_RANK_GAMEMASTER = 1

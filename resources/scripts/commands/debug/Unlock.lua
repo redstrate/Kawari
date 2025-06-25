@@ -2,7 +2,7 @@ required_rank = GM_RANK_DEBUG
 
 function onCommand(args, player)
     local parts = split(args)
-    local argc = table.getn(parts)
+    local argc = #parts
     local sender = "[unlockaction] "
     local usage = "\nThis command teaches the user an action, emote, etc.\nUsage: !useaction <id/all>"
 
