@@ -1,7 +1,7 @@
 -- Ported from Ioncannon's Project Meteor Server 
 -- https://bitbucket.org/Ioncannon/project-meteor-server/src/develop/Data/scripts/commands/gm/nudge.lua
 required_rank = GM_RANK_DEBUG
-sender = "[nudge] "
+command_sender = "[nudge] "
 
 function onCommand(args, player)
     local parts = split(args)
@@ -70,5 +70,6 @@ function onCommand(args, player)
     end
 
     player:set_position(new_position, player.rotation)
+
     printf(player, "Positioning %s %s yalms.", direction_str, distance)
 end

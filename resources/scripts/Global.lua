@@ -26,17 +26,15 @@ end
 
 function printf(player, fmt_str, ...)
     -- Sender would be defined elsewhere, if at all
-    if sender == nil then
-        sender = ""
+    if command_sender == nil then
+        command_sender = ""
     end
 
     if ... ~= nil then
-        player:send_message(sender..fmt_str:format(...))
+        player:send_message(command_sender..fmt_str:format(...))
     else
-        player:send_message(sender..fmt_str)
+        player:send_message(command_sender..fmt_str)
     end
-
-    sender = nil -- Reset the sender, it's not required to have for printf to work, and not all users of printf will be commands, most likely.
 end
 
 -- Constants

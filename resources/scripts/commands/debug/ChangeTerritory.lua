@@ -1,5 +1,5 @@
 required_rank = GM_RANK_DEBUG
-sender = "[teri] "
+command_sender = "[teri] "
 
 function onCommand(args, player)
     local parts = split(args)

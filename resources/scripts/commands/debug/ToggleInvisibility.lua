@@ -1,5 +1,5 @@
 required_rank = GM_RANK_DEBUG
-sender = "[invis] "
+command_sender = "[invis] "
 
 function onCommand(args, player)
     local usage = "\nThis command makes the user invisible to all other actors."

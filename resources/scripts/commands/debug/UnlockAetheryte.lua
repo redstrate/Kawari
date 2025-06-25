@@ -1,5 +1,5 @@
 required_rank = GM_RANK_DEBUG
-sender = "[unlockaetheryte] "
+command_sender = "[unlockaetheryte] "
 
 function onCommand(args, player)
     local parts = split(args)
