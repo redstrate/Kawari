@@ -20,7 +20,13 @@ function onTalk(target, player)
 end
 
 function onReturn(scene, results, player)
-    if scene == 1 then
+    if scene == 0 then
+        -- results[1] is 1 if you want to summon, otherwise 0
+        if results[1] == 1 then
+            player:play_scene(player.id, EVENT_ID, 00001, FADE_OUT + HIDE_UI + CONDITION_CUTSCENE, 0)
+            return
+        end
+    elseif scene == 1 then
         player:play_scene(player.id, EVENT_ID, 00002, FADE_OUT + HIDE_UI + CONDITION_CUTSCENE, 0)
     elseif scene == 2 then
         player:play_scene(player.id, EVENT_ID, 00003, FADE_OUT + HIDE_UI + CONDITION_CUTSCENE, 0)
