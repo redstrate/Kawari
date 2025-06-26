@@ -22,7 +22,7 @@ pub enum ClientTriggerCommand {
     #[brw(magic = 0xC81u16)]
     Unk1 {},
     #[brw(magic = 0xC9u16)]
-    Unk2 {},
+    FinishZoning {},
     /// The player begins an emote.
     #[brw(magic = 0x1F4u16)]
     Emote {
