@@ -265,6 +265,8 @@ to_sort = {
     [720898] = "DeliveryMoogle.lua",
     [721096] = "ToyChest.lua",
     [721028] = "UnendingJourney.lua",
+    [721044] = "CrystalBell.lua",
+    [721098] = "HuntBoard.lua",
     [721226] = "Orchestrion.lua",
     [721347] = "GlamourDresser.lua",
     [721440] = "SummoningBell.lua",
@@ -276,6 +278,30 @@ to_sort = {
 -- Events in /common that aren't already covered by other tables
 common_events = {
     [720915] = "GenericMender.lua",
+    [721480] = "GenericGemstoneTrader.lua", -- Generic Shadowbringers in-city gemstone traders
+    [721479] = "GenericGemstoneTrader.lua", -- Generic Shadowbringers per-zone gemstone traders
+    -- [721619] = "GenericGemstoneTrader.lua", -- Generic Endwalker & Dawntrail per-zone gemstone traders, but they do nothing when interacted with right now
+    -- [721620] = "GenericGemstoneTrader.lua", -- Generic Endwalker & Dawntrail in-city gemstone traders, but they do nothing when interacted with right now
+}
+
+-- Not all Hunt NPCs are spawning right now, unfortunately.
+generic_hunt_exchange = {
+    1769660, -- Ishgard: Yolaine -> Doman Gear Exchange (DoW, IL 180)
+    1769661, -- Ishgard: Yolaine -> Doman Gear Exchange (DoM, IL 180)
+    1769715, -- Ishgard: Yolaine -> Artifact Gear Exchange I (DoW, IL 210)
+    1769716, -- Ishgard: Yolaine -> Artifact Gear Exchange II (DoW, IL 210)
+    1769717, -- Ishgard: Yolaine -> Artifact Gear Exchange (DoM, IL 210)
+    1769783, -- Kugane: Satsuya -> Centurio Seal Exchange II
+    1769864, -- Kugane: Satsuya -> Ala Mhigan Gear Exchange (DoW, IL 310)
+    1769865, -- Kugane: Satsuya -> Ala Mhigan Gear Exchange (DoM, IL 310)
+    1769914, -- Kugane: Satsuya -> Lost Allagan Gear (DoW, IL 340)
+    1769915, -- Kugane: Satsuya -> Lost Allagan Gear (DoM, IL 340)
+    1770476, -- Radz-at-Han: Wilmetta -> Sacks of Nuts Exchange
+    1770619, -- Radz-at-Han: Wilmetta -> Moonward Gear Exchange (DoW, IL 570)
+    1770620, -- Radz-at-Han: Wilmetta -> Moonward Gear Exchange (DoW, IL 570)
+    1770704, -- Radz-at-Han: Wilmetta -> Radiant's Gear (DoW, IL 600)
+    1770705, -- Radz-at-Han: Wilmetta -> Radiant's Gear (DoM, IL 600)
+    1770761, -- Tuliyollal: Ryubool Ja -> Dawn Hunt Vendor
 }
 
 -- Not custom in the sense of non-SQEX content, just going based off the directory name
@@ -315,6 +341,10 @@ end
 
 for _, event_id in pairs(generic_anetshards) do
     registerEvent(event_id, "events/common/GenericAethernetShard.lua")
+end
+
+for _, event_id in pairs(generic_hunt_exchange) do
+    registerEvent(event_id, "events/common/GenericHuntCurrencyExchange.lua")
 end
 
 for event_id, script_file in pairs(to_sort) do
