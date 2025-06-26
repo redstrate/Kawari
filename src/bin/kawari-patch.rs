@@ -119,6 +119,11 @@ async fn verify_session(
         return StatusCode::INTERNAL_SERVER_ERROR.into_response();
     }
 
+    if game_version < SUPPORTED_GAME_VERSION {
+        tracing::warn!("{game_version} is below supported game version {SUPPORTED_GAME_VERSION}!");
+        return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+    }
+
     // If we are up to date, yay!
     if game_version == SUPPORTED_GAME_VERSION {
         let mut headers = HeaderMap::new();
