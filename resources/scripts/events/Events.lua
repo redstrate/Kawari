@@ -265,7 +265,6 @@ to_sort = {
     [720898] = "DeliveryMoogle.lua",
     [721096] = "ToyChest.lua",
     [721028] = "UnendingJourney.lua",
-    [721044] = "CrystalBell.lua",
     [721226] = "Orchestrion.lua",
     [721347] = "GlamourDresser.lua",
     [721440] = "SummoningBell.lua",
@@ -284,6 +283,10 @@ custom0_events = {
     [720916] = "cmndefinnbed_00020.lua",
 }
 
+custom1_events = {
+    [721044] = "cmndefbeautysalon_00148.lua",
+}
+
 -- Events in quests/*
 quests = {
     [1245185] = "OpeningLimsaLominsa.lua",
@@ -296,6 +299,7 @@ WARP_DIR = "events/warp/"
 TOSORT_DIR = "events/tosort/"
 OPENING_DIR = "events/quest/opening/"
 CUSTOM0_DIR = "events/custom/000/"
+CUSTOM1_DIR = "events/custom/001/"
 
 for _, event_id in pairs(generic_warps) do
     registerEvent(event_id, "events/common/GenericWarp.lua")
@@ -323,6 +327,10 @@ end
 
 for event_id, script_file in pairs(custom0_events) do
     registerEvent(event_id, CUSTOM0_DIR..script_file)
+end
+
+for event_id, script_file in pairs(custom1_events) do
+    registerEvent(event_id, CUSTOM1_DIR..script_file)
 end
 
 for event_id, script_file in pairs(quests) do
