@@ -562,7 +562,6 @@ async fn client_loop(
                                                                          */
                                                                         let command_sender: Result<mlua::prelude::LuaValue, mlua::prelude::LuaError> = lua.globals().get("command_sender");
                                                                         if let Ok(_) = command_sender {
-                                                                            // tracing::info!("Resetting command_sender for next script run.");
                                                                             lua.globals().set("command_sender", mlua::Value::Nil)?;
                                                                         }
                                                                         Ok(())
