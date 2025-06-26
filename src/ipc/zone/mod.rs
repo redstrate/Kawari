@@ -418,7 +418,7 @@ pub enum ClientZoneIpcData {
         scene: u16,
         error_code: u8,
         num_results: u8,
-        params: [u32; 2],
+        params: [i32; 2],
     },
     #[br(pre_assert(*magic == ClientZoneIpcType::Config))]
     Config(Config),

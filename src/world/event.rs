@@ -86,7 +86,7 @@ impl Event {
         }
     }
 
-    pub fn finish(&mut self, scene: u16, results: &[u32], player: &mut LuaPlayer) {
+    pub fn finish(&mut self, scene: u16, results: &[i32], player: &mut LuaPlayer) {
         let mut run_script = || {
             self.lua.scope(|scope| {
                 let player = scope.create_userdata_ref_mut(player)?;

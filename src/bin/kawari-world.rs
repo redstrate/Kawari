@@ -874,7 +874,7 @@ async fn client_loop(
                                                 }
                                             }
                                             ClientZoneIpcData::EventHandlerReturn { handler_id, scene, error_code, num_results, params } => {
-                                                tracing::info!("Finishing this event... {handler_id} {error_code} {scene} {params:#?}");
+                                                tracing::info!("Finishing this event... {handler_id} {error_code} {scene} {:?}", &params[..*num_results as usize]);
 
                                                 connection
                                                 .event
