@@ -589,6 +589,18 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     });
                 }
             }
+            ToServer::Config(_from_id, from_actor_id, config) => {
+                let mut data = data.lock().unwrap();
+                for (id, (handle, _)) in &mut data.clients {
+                    let id = *id;
+
+                    let msg = FromServer::UpdateConfig(from_actor_id, config.clone());
+
+                    if handle.send(msg).is_err() {
+                        to_remove.push(id);
+                    }
+                }
+            }
             ToServer::Disconnected(from_id) => {
                 let mut data = data.lock().unwrap();
 

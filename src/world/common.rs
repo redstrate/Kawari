@@ -12,7 +12,7 @@ use crate::{
     common::Position,
     ipc::zone::{
         ActionRequest, ActorControl, ActorControlSelf, ActorControlTarget, ClientTrigger,
-        CommonSpawn, NpcSpawn,
+        CommonSpawn, Config, NpcSpawn,
     },
 };
 
@@ -40,6 +40,8 @@ pub enum FromServer {
     ActionComplete(ActionRequest),
     /// Action has been cancelled
     ActionCancelled(),
+    /// Update an actor's equip display flags.
+    UpdateConfig(u32, Config),
 }
 
 #[derive(Debug, Clone)]
@@ -99,6 +101,8 @@ pub enum ToServer {
     DebugSpawnClone(ClientId, u32),
     /// Request to perform an action
     ActionRequest(ClientId, u32, ActionRequest),
+    /// We want to update our own equip display flags.
+    Config(ClientId, u32, Config),
 }
 
 #[derive(Clone, Debug)]

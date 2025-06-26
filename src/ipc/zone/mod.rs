@@ -82,6 +82,9 @@ pub use client_trigger::{ClientTrigger, ClientTriggerCommand};
 mod currency_info;
 pub use currency_info::CurrencyInfo;
 
+mod config;
+pub use config::Config;
+
 use crate::common::ObjectTypeId;
 use crate::common::Position;
 use crate::common::read_string;
@@ -263,6 +266,8 @@ pub enum ServerZoneIpcData {
     ActorControlTarget(ActorControlTarget),
     /// Used to update the player's currencies
     CurrencyCrystalInfo(CurrencyInfo),
+    /// Used to update an actor's equip display flags
+    Config(Config),
 }
 
 #[binrw]
@@ -401,6 +406,8 @@ pub enum ClientZoneIpcData {
         num_results: u8,
         params: [u32; 2],
     },
+    #[br(pre_assert(*magic == ClientZoneIpcType::Config))]
+    Config(Config),
 }
 
 #[cfg(test)]

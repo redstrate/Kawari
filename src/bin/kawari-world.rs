@@ -864,6 +864,16 @@ async fn client_loop(
                                                 .unwrap()
                                                 .finish(*scene, &params[..*num_results as usize], &mut lua_player);
                                             }
+                                            ClientZoneIpcData::Config(config) => {
+                                                connection
+                                                    .handle
+                                                    .send(ToServer::Config(
+                                                        connection.id,
+                                                        connection.player_data.actor_id,
+                                                        config.clone(),
+                                                    ))
+                                                    .await;
+                                            }
                                         }
                                     }
                                     SegmentData::KeepAliveRequest { id, timestamp } => {
@@ -918,6 +928,7 @@ async fn client_loop(
                     FromServer::ActorControlSelf(actor_control) => connection.actor_control_self(actor_control).await,
                     FromServer::ActionComplete(request) => connection.execute_action(request, &mut lua_player).await,
                     FromServer::ActionCancelled() => connection.cancel_action().await,
+                    FromServer::UpdateConfig(actor_id, config) => connection.update_config(actor_id, config).await,
                 },
                 None => break,
             }

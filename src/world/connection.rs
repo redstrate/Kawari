@@ -17,9 +17,9 @@ use crate::{
         chat::ServerChatIpcSegment,
         zone::{
             ActionEffect, ActionRequest, ActionResult, ActorControl, ActorControlCategory,
-            ActorControlSelf, ActorControlTarget, ClientZoneIpcSegment, CommonSpawn, ContainerInfo,
-            CurrencyInfo, DisplayFlag, EffectKind, Equip, GameMasterRank, InitZone, ItemInfo, Move,
-            NpcSpawn, ObjectKind, PlayerStats, PlayerSubKind, ServerZoneIpcData,
+            ActorControlSelf, ActorControlTarget, ClientZoneIpcSegment, CommonSpawn, Config,
+            ContainerInfo, CurrencyInfo, DisplayFlag, EffectKind, Equip, GameMasterRank, InitZone,
+            ItemInfo, Move, NpcSpawn, ObjectKind, PlayerStats, PlayerSubKind, ServerZoneIpcData,
             ServerZoneIpcSegment, StatusEffect, StatusEffectList, UpdateClassInfo, Warp,
             WeatherChange,
         },
@@ -859,6 +859,23 @@ impl ZoneConnection {
             op_code: ServerZoneIpcType::ActorControlTarget,
             timestamp: timestamp_secs(),
             data: ServerZoneIpcData::ActorControlTarget(actor_control),
+            ..Default::default()
+        };
+
+        self.send_segment(PacketSegment {
+            source_actor: actor_id,
+            target_actor: self.player_data.actor_id,
+            segment_type: SegmentType::Ipc,
+            data: SegmentData::Ipc { data: ipc },
+        })
+        .await;
+    }
+
+    pub async fn update_config(&mut self, actor_id: u32, config: Config) {
+        let ipc = ServerZoneIpcSegment {
+            op_code: ServerZoneIpcType::Config,
+            timestamp: timestamp_secs(),
+            data: ServerZoneIpcData::Config(config),
             ..Default::default()
         };
 
