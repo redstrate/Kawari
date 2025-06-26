@@ -130,11 +130,11 @@ pub struct ZoneConnection {
 }
 
 impl ZoneConnection {
-    pub async fn parse_packet(
+    pub fn parse_packet(
         &mut self,
         data: &[u8],
     ) -> (Vec<PacketSegment<ClientZoneIpcSegment>>, ConnectionType) {
-        parse_packet(data, &mut self.state).await
+        parse_packet(data, &mut self.state)
     }
 
     pub async fn send_segment(&mut self, segment: PacketSegment<ServerZoneIpcSegment>) {

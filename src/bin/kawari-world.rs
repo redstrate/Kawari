@@ -147,7 +147,7 @@ async fn client_loop(
                         if n > 0 {
                             connection.last_keep_alive = Instant::now();
 
-                            let (segments, connection_type) = connection.parse_packet(&buf[..n]).await;
+                            let (segments, connection_type) = connection.parse_packet(&buf[..n]);
                             for segment in &segments {
                                 match &segment.data {
                                     SegmentData::None() => {},

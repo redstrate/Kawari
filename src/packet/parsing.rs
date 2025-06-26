@@ -222,7 +222,7 @@ pub struct PacketState {
     pub clientbound_oodle: OodleNetwork,
 }
 
-pub async fn parse_packet<T: ReadWriteIpcSegment>(
+pub fn parse_packet<T: ReadWriteIpcSegment>(
     data: &[u8],
     state: &mut PacketState,
 ) -> (Vec<PacketSegment<T>>, ConnectionType) {

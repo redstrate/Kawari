@@ -60,7 +60,7 @@ async fn main() {
                     .expect("Failed to read data!");
 
                 if n != 0 {
-                    let (segments, _) = connection.parse_packet(&buf[..n]).await;
+                    let (segments, _) = connection.parse_packet(&buf[..n]);
                     for segment in &segments {
                         match &segment.data {
                             SegmentData::SecuritySetup { phrase, key } => {

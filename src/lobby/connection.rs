@@ -40,11 +40,11 @@ pub struct LobbyConnection {
 }
 
 impl LobbyConnection {
-    pub async fn parse_packet(
+    pub fn parse_packet(
         &mut self,
         data: &[u8],
     ) -> (Vec<PacketSegment<ClientLobbyIpcSegment>>, ConnectionType) {
-        parse_packet(data, &mut self.state).await
+        parse_packet(data, &mut self.state)
     }
 
     pub async fn send_segment(&mut self, segment: PacketSegment<ServerLobbyIpcSegment>) {
@@ -567,7 +567,7 @@ pub async fn send_custom_world_packet(segment: CustomIpcSegment) -> Option<Custo
     let mut buf = vec![0; RECEIVE_BUFFER_SIZE];
     let n = stream.read(&mut buf).await.expect("Failed to read data!");
     if n != 0 {
-        let (segments, _) = parse_packet::<CustomIpcSegment>(&buf[..n], &mut packet_state).await;
+        let (segments, _) = parse_packet::<CustomIpcSegment>(&buf[..n], &mut packet_state);
 
         return match &segments[0].data {
             SegmentData::KawariIpc { data } => Some(data.clone()),
