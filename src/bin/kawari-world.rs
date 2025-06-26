@@ -774,8 +774,26 @@ async fn client_loop(
                                             ClientZoneIpcData::Unk16 { .. } => {
                                                 // no-op
                                             }
-                                            ClientZoneIpcData::Unk17 { .. } => {
-                                                // no-op
+                                            ClientZoneIpcData::Unk17 { unk1, .. } => {
+                                                // this is *usually* sent in response, but not always
+                                                let ipc = ServerZoneIpcSegment {
+                                                    op_code: ServerZoneIpcType::UnkCall,
+                                                    timestamp: timestamp_secs(),
+                                                    data: ServerZoneIpcData::UnkCall {
+                                                        unk1: *unk1, // copied from here
+                                                        unk2: 333, // always this for some reason
+                                                    },
+                                                    ..Default::default()
+                                                };
+
+                                                connection
+                                                .send_segment(PacketSegment {
+                                                    source_actor: connection.player_data.actor_id,
+                                                    target_actor: connection.player_data.actor_id,
+                                                    segment_type: SegmentType::Ipc,
+                                                    data: SegmentData::Ipc { data: ipc },
+                                                })
+                                                .await;
                                             }
                                             ClientZoneIpcData::Unk18 { .. } => {
                                                 // no-op
@@ -872,6 +890,28 @@ async fn client_loop(
                                                         connection.player_data.actor_id,
                                                         config.clone(),
                                                     ))
+                                                    .await;
+                                            }
+                                            ClientZoneIpcData::EventUnkRequest { event_id, unk1, unk2, unk3 } => {
+                                                 let ipc = ServerZoneIpcSegment {
+                                                        op_code: ServerZoneIpcType::EventUnkReply,
+                                                        timestamp: timestamp_secs(),
+                                                        data: ServerZoneIpcData::EventUnkReply {
+                                                            event_id: *event_id,
+                                                            unk1: *unk1,
+                                                            unk2: *unk2,
+                                                            unk3: *unk3 + 1,
+                                                        },
+                                                        ..Default::default()
+                                                    };
+
+                                                    connection
+                                                    .send_segment(PacketSegment {
+                                                        source_actor: connection.player_data.actor_id,
+                                                        target_actor: connection.player_data.actor_id,
+                                                        segment_type: SegmentType::Ipc,
+                                                        data: SegmentData::Ipc { data: ipc },
+                                                    })
                                                     .await;
                                             }
                                         }

@@ -50,6 +50,15 @@ pub enum ClientTriggerCommand {
         aetheryte_id: u32,
         // TODO: fill out the rest
     },
+    #[brw(magic = 0x033Eu16)]
+    EventRelatedUnk {
+        // seen in haircut event
+        #[brw(pad_before = 2)] // padding
+        unk1: u32,
+        unk2: u32,
+        unk3: u32,
+        unk4: u32,
+    },
 }
 
 #[binrw]

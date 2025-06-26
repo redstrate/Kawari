@@ -109,6 +109,12 @@ pub enum ActorControlCategory {
         #[brw(pad_before = 2)] // padding
         emote: u32,
     },
+    #[brw(magic = 0x207u16)]
+    TestActorControl {
+        #[brw(pad_before = 2)] // padding
+        actor_id: u32,
+        unk1: u32,
+    },
 }
 
 #[binrw]

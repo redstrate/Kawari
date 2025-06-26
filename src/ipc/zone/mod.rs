@@ -268,6 +268,19 @@ pub enum ServerZoneIpcData {
     CurrencyCrystalInfo(CurrencyInfo),
     /// Used to update an actor's equip display flags
     Config(Config),
+    /// Unknown, seen in haircut event
+    EventUnkReply {
+        event_id: u32,
+        unk1: u16,
+        unk2: u8,
+        #[brw(pad_after = 8)]
+        unk3: u8,
+    },
+    UnkCall {
+        unk1: u32,
+        #[brw(pad_after = 26)]
+        unk2: u16,
+    },
 }
 
 #[binrw]
@@ -371,7 +384,8 @@ pub enum ClientZoneIpcData {
     },
     #[br(pre_assert(*magic == ClientZoneIpcType::Unk17))]
     Unk17 {
-        unk: [u8; 32], // TODO: unknown
+        unk1: u32,
+        unk2: [u8; 28], // TODO: unknown
     },
     #[br(pre_assert(*magic == ClientZoneIpcType::Unk18))]
     Unk18 {
@@ -408,6 +422,14 @@ pub enum ClientZoneIpcData {
     },
     #[br(pre_assert(*magic == ClientZoneIpcType::Config))]
     Config(Config),
+    #[br(pre_assert(*magic == ClientZoneIpcType::EventUnkRequest))]
+    EventUnkRequest {
+        event_id: u32,
+        unk1: u16,
+        unk2: u8,
+        #[brw(pad_after = 8)]
+        unk3: u8,
+    },
 }
 
 #[cfg(test)]

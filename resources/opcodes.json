@@ -179,6 +179,16 @@
             "name": "Config",
             "opcode": 153,
             "size": 8
+        },
+        {
+            "name": "EventUnkReply",
+            "opcode": 337,
+            "size": 16
+        },
+        {
+            "name": "UnkCall",
+            "opcode": 886,
+            "size": 32
         }
     ],
     "ClientZoneIpcType": [
@@ -306,6 +316,11 @@
             "name": "Config",
             "opcode": 534,
             "size": 8
+        },
+        {
+            "name": "EventUnkRequest",
+            "opcode": 448,
+            "size": 16
         }
     ],
     "ServerLobbyIpcType": [
