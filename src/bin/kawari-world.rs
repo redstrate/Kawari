@@ -923,6 +923,7 @@ async fn client_loop(
                                                     })
                                                     .await;
                                             }
+                                            _ => {},
                                         }
                                     }
                                     SegmentData::KeepAliveRequest { id, timestamp } => {

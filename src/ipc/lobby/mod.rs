@@ -127,13 +127,15 @@ pub enum ClientLobbyIpcData {
     /// Sent by the client when they request something about the character (e.g. deletion.)
     #[br(pre_assert(*magic == ClientLobbyIpcType::CharaMake))]
     CharaMake(CharaMake),
+    Unknown,
 }
 
 #[binrw]
-#[br(import(_magic: &ServerLobbyIpcType))]
+#[br(import(magic: &ServerLobbyIpcType))]
 #[derive(Debug, Clone)]
 pub enum ServerLobbyIpcData {
     /// Sent by the server to indicate an lobby error occured.
+    #[br(pre_assert(*magic == ServerLobbyIpcType::NackReply))]
     NackReply {
         sequence: u64,
         error: u32,
@@ -143,10 +145,13 @@ pub enum ServerLobbyIpcData {
         unk1: u16,
     },
     /// Sent by the server to inform the client of their service accounts.
+    #[br(pre_assert(*magic == ServerLobbyIpcType::LoginReply))]
     LoginReply(LoginReply),
     /// Sent by the server to inform the client of their characters.
+    #[br(pre_assert(*magic == ServerLobbyIpcType::ServiceLoginReply))]
     ServiceLoginReply(ServiceLoginReply),
     // Assumed what this is, but probably incorrect
+    #[br(pre_assert(*magic == ServerLobbyIpcType::CharaMakeReply))]
     CharaMakeReply {
         sequence: u64,
         unk1: u8,
@@ -158,6 +163,7 @@ pub enum ServerLobbyIpcData {
         details: CharacterDetails,
     },
     /// Sent by the server to tell the client how to connect to the world server.
+    #[br(pre_assert(*magic == ServerLobbyIpcType::GameLoginReply))]
     GameLoginReply {
         sequence: u64,
         actor_id: u32,
@@ -178,14 +184,17 @@ pub enum ServerLobbyIpcData {
         host: String,
     },
     /// Sent by the server to inform the client of their servers.
+    #[br(pre_assert(*magic == ServerLobbyIpcType::DistWorldInfo))]
     DistWorldInfo(DistWorldInfo),
     /// Sent by the server to inform the client of their retainers.
+    #[br(pre_assert(*magic == ServerLobbyIpcType::DistRetainerInfo))]
     DistRetainerInfo {
         // TODO: what is in here?
         #[brw(pad_before = 7)]
         #[brw(pad_after = 202)]
         unk1: u8,
     },
+    Unknown,
 }
 
 #[cfg(test)]

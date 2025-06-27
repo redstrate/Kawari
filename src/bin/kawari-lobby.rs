@@ -174,6 +174,7 @@ async fn main() {
                                         .send_enter_world(*sequence, *content_id, our_actor_id)
                                         .await;
                                 }
+                                _ => {}
                             },
                             SegmentData::KeepAliveRequest { id, timestamp } => {
                                 send_keep_alive::<ServerLobbyIpcSegment>(
