@@ -24,7 +24,6 @@ fn main() {
             if !opcodes.is_empty() {
                 // beginning
                 output_str.push_str("#[binrw]\n");
-                output_str.push_str("#[brw(repr = u16)]\n");
                 output_str.push_str("#[derive(Clone, PartialEq, Debug)]\n");
                 output_str.push_str(&format!("pub enum {key} {{\n"));
 
@@ -33,14 +32,18 @@ fn main() {
                     let name = opcode.get("name").unwrap().as_str().unwrap();
                     let opcode = opcode.get("opcode").unwrap().as_number().unwrap();
 
-                    output_str.push_str(&format!("{name} = {opcode},\n"));
+                    output_str.push_str(&format!("#[brw(magic = {opcode}u16)]\n"));
+                    output_str.push_str(&format!("{name},\n"));
                 }
+
+                output_str.push_str(&format!("Unknown,\n"));
 
                 // end
                 output_str.push_str("}\n\n");
 
-                // sizes
                 output_str.push_str(&format!("impl {key} {{\n"));
+
+                // sizes
                 output_str.push_str("/// Returns the expected size of the data segment of this IPC opcode, _without_ any headers.\n");
                 output_str.push_str("pub fn calc_size(&self) -> u32 {\n");
                 output_str.push_str("match self {\n");
@@ -53,8 +56,29 @@ fn main() {
                     output_str.push_str(&format!("{key}::{name} => {size},\n"));
                 }
 
+                output_str.push_str(&format!("{key}::Unknown => 0,\n"));
+
                 output_str.push_str("}\n\n");
                 output_str.push_str("}\n\n");
+
+                // names
+                output_str.push_str("/// Returns a human-readable name of the opcode.\n");
+                output_str.push_str("pub fn get_name(&self) -> &'static str {\n");
+                output_str.push_str("match self {\n");
+
+                for opcode in opcodes {
+                    let opcode = opcode.as_object().unwrap();
+                    let name = opcode.get("name").unwrap().as_str().unwrap();
+
+                    output_str.push_str(&format!("{key}::{name} => \"{name}\",\n"));
+                }
+
+                output_str.push_str(&format!("{key}::Unknown => \"Unknown\",\n"));
+
+                output_str.push_str("}\n\n");
+                output_str.push_str("}\n\n");
+
+                // end impl
                 output_str.push_str("}\n\n");
             }
         }

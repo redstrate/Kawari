@@ -12,6 +12,10 @@ impl ReadWriteIpcSegment for ServerChatIpcSegment {
         // 16 is the size of the IPC header
         16 + self.op_code.calc_size()
     }
+
+    fn get_name(&self) -> &'static str {
+        self.op_code.get_name()
+    }
 }
 
 // TODO: make generic

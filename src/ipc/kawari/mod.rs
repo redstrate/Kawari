@@ -27,6 +27,10 @@ impl ReadWriteIpcSegment for CustomIpcSegment {
             CustomIpcType::CharacterRemade => 8,
         }
     }
+
+    fn get_name(&self) -> &'static str {
+        ""
+    }
 }
 
 impl Default for CustomIpcSegment {

@@ -101,6 +101,10 @@ impl ReadWriteIpcSegment for ClientZoneIpcSegment {
         // 16 is the size of the IPC header
         16 + self.op_code.calc_size()
     }
+
+    fn get_name(&self) -> &'static str {
+        self.op_code.get_name()
+    }
 }
 
 // TODO: make generic
@@ -123,6 +127,10 @@ impl ReadWriteIpcSegment for ServerZoneIpcSegment {
     fn calc_size(&self) -> u32 {
         // 16 is the size of the IPC header
         16 + self.op_code.calc_size()
+    }
+
+    fn get_name(&self) -> &'static str {
+        self.op_code.get_name()
     }
 }
 
@@ -159,35 +167,45 @@ pub enum GameMasterCommandType {
 }
 
 #[binrw]
-#[br(import(_magic: &ServerZoneIpcType))]
+#[br(import(magic: &ServerZoneIpcType))]
 #[derive(Debug, Clone)]
 pub enum ServerZoneIpcData {
     /// Sent by the server as response to ZoneInitRequest.
+    #[br(pre_assert(*magic == ServerZoneIpcType::InitResponse))]
     InitResponse {
         unk1: u64,
         character_id: u32,
         unk2: u32,
     },
     /// Sent by the server that tells the client which zone to load
+    #[br(pre_assert(*magic == ServerZoneIpcType::InitZone))]
     InitZone(InitZone),
     /// Sent by the server for... something
+    #[br(pre_assert(*magic == ServerZoneIpcType::ActorControlSelf))]
     ActorControlSelf(ActorControlSelf),
     /// Sent by the server containing character stats
+    #[br(pre_assert(*magic == ServerZoneIpcType::PlayerStats))]
     PlayerStats(PlayerStats),
     /// Sent by the server to setup the player on the client
+    #[br(pre_assert(*magic == ServerZoneIpcType::PlayerStatus))]
     PlayerStatus(PlayerStatus),
     /// Sent by the server to setup class info
+    #[br(pre_assert(*magic == ServerZoneIpcType::UpdateClassInfo))]
     UpdateClassInfo(UpdateClassInfo),
     /// Sent by the server to spawn the player in
+    #[br(pre_assert(*magic == ServerZoneIpcType::PlayerSpawn))]
     PlayerSpawn(PlayerSpawn),
     /// Sent by the server to indicate the log out is complete
+    #[br(pre_assert(*magic == ServerZoneIpcType::LogOutComplete))]
     LogOutComplete {
         // TODO: guessed
         unk: [u8; 8],
     },
     /// Sent by the server to modify the client's position
+    #[br(pre_assert(*magic == ServerZoneIpcType::Warp))]
     Warp(Warp),
     /// Sent by the server when they send a chat message
+    #[br(pre_assert(*magic == ServerZoneIpcType::ServerChatMessage))]
     ServerChatMessage {
         /*
          * bits (properties will apply when set, but a final base 10 value of zero defaults to chat log only):
@@ -210,46 +228,67 @@ pub enum ServerZoneIpcData {
         message: String,
     },
     /// Unknown, but seems to contain information on cross-world linkshells
-    LinkShellInformation { unk: [u8; 456] },
+    #[br(pre_assert(*magic == ServerZoneIpcType::LinkShellInformation))]
+    LinkShellInformation {
+        unk: [u8; 456],
+    },
     /// Sent by the server when it wants the client to... prepare to zone?
-    PrepareZoning { unk: [u32; 4] },
+    #[br(pre_assert(*magic == ServerZoneIpcType::PrepareZoning))]
+    PrepareZoning {
+        unk: [u32; 4],
+    },
     /// Sent by the server
+    #[br(pre_assert(*magic == ServerZoneIpcType::ActorControl))]
     ActorControl(ActorControl),
     /// Sent by the server
+    #[br(pre_assert(*magic == ServerZoneIpcType::Move))]
     Move(Move),
     /// Sent by the server in response to SocialListRequest
+    #[br(pre_assert(*magic == ServerZoneIpcType::SocialList))]
     SocialList(SocialList),
     /// Sent by the server to spawn an NPC
+    #[br(pre_assert(*magic == ServerZoneIpcType::NpcSpawn))]
     NpcSpawn(NpcSpawn),
     /// Sent by the server to update an actor's status effect list
+    #[br(pre_assert(*magic == ServerZoneIpcType::StatusEffectList))]
     StatusEffectList(StatusEffectList),
     /// Sent by the server when it's time to change the weather
+    #[br(pre_assert(*magic == ServerZoneIpcType::WeatherId))]
     WeatherId(WeatherChange),
     /// Sent to inform the client of an inventory item
+    #[br(pre_assert(*magic == ServerZoneIpcType::UpdateItem))]
     UpdateItem(ItemInfo),
     /// Sent to inform the client of container status
+    #[br(pre_assert(*magic == ServerZoneIpcType::ContainerInfo))]
     ContainerInfo(ContainerInfo),
     /// Sent to tell the client to play a scene
+    #[br(pre_assert(*magic == ServerZoneIpcType::EventScene))]
     EventScene(EventScene),
     /// Sent to tell the client to load a scene, but not play it
+    #[br(pre_assert(*magic == ServerZoneIpcType::EventStart))]
     EventStart(EventStart),
     /// Sent to update an actor's hp & mp values
+    #[br(pre_assert(*magic == ServerZoneIpcType::UpdateHpMpTp))]
     UpdateHpMpTp {
         hp: u32,
         mp: u16,
         unk: u16, // it's filled with... something
     },
     /// Sent to inform the client the consequences of their actions
+    #[br(pre_assert(*magic == ServerZoneIpcType::ActionResult))]
     ActionResult(ActionResult),
     /// Sent to to the client to update their appearance
+    #[br(pre_assert(*magic == ServerZoneIpcType::Equip))]
     Equip(Equip),
     /// Sent to the client to free up a spawn index
+    #[br(pre_assert(*magic == ServerZoneIpcType::Delete))]
     Delete {
         spawn_index: u8,
         #[brw(pad_before = 3)] // padding
         actor_id: u32,
     },
     /// Sent to the client to stop their currently playing event.
+    #[br(pre_assert(*magic == ServerZoneIpcType::EventFinish))]
     EventFinish {
         handler_id: u32,
         event: u8,
@@ -259,16 +298,21 @@ pub enum ServerZoneIpcData {
         arg: u32,
     },
     /// Sent after EventFinish? it un-occupies the character lol
+    #[br(pre_assert(*magic == ServerZoneIpcType::Unk18))]
     Unk18 {
         unk: [u8; 16], // all zero...
     },
     /// Used to control target information
+    #[br(pre_assert(*magic == ServerZoneIpcType::ActorControlTarget))]
     ActorControlTarget(ActorControlTarget),
     /// Used to update the player's currencies
+    #[br(pre_assert(*magic == ServerZoneIpcType::CurrencyCrystalInfo))]
     CurrencyCrystalInfo(CurrencyInfo),
     /// Used to update an actor's equip display flags
+    #[br(pre_assert(*magic == ServerZoneIpcType::Config))]
     Config(Config),
     /// Unknown, seen in haircut event
+    #[br(pre_assert(*magic == ServerZoneIpcType::EventUnkReply))]
     EventUnkReply {
         event_id: u32,
         unk1: u16,
@@ -276,11 +320,13 @@ pub enum ServerZoneIpcData {
         #[brw(pad_after = 8)]
         unk3: u8,
     },
+    #[br(pre_assert(*magic == ServerZoneIpcType::UnkCall))]
     UnkCall {
         unk1: u32,
         #[brw(pad_after = 26)]
         unk2: u16,
     },
+    Unknown,
 }
 
 #[binrw]
@@ -430,6 +476,7 @@ pub enum ClientZoneIpcData {
         #[brw(pad_after = 8)]
         unk3: u8,
     },
+    Unknown,
 }
 
 #[cfg(test)]

@@ -7,6 +7,9 @@ pub trait ReadWriteIpcSegment:
     /// Calculate the size of this Ipc segment *including* the 16 byte header.
     /// When implementing this, please use the size seen in retail instead of guessing.
     fn calc_size(&self) -> u32;
+
+    /// Returns a human-readable name of the opcode.
+    fn get_name(&self) -> &'static str;
 }
 
 /// An IPC packet segment.

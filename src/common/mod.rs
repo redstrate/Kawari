@@ -61,8 +61,12 @@ pub(crate) fn write_bool_as<T: std::convert::From<u8>>(x: &bool) -> T {
 }
 
 pub(crate) fn read_string(byte_stream: Vec<u8>) -> String {
-    let str = String::from_utf8(byte_stream).unwrap();
-    str.trim_matches(char::from(0)).to_string() // trim \0 from the end of strings
+    // TODO: better error handling here
+    if let Ok(str) = String::from_utf8(byte_stream) {
+        str.trim_matches(char::from(0)).to_string() // trim \0 from the end of strings
+    } else {
+        String::default()
+    }
 }
 
 pub(crate) fn write_string(str: &String) -> Vec<u8> {

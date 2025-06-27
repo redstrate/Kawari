@@ -115,6 +115,7 @@ pub enum ActorControlCategory {
         actor_id: u32,
         unk1: u32,
     },
+    Unknown {},
 }
 
 #[binrw]
