@@ -366,7 +366,7 @@ for _, event_id in pairs(generic_anetshards) do
     registerEvent(event_id, "events/common/GenericAethernetShard.lua")
 end
 
-for _, event_id in pairs(generic_hunt_exchange) do
+for _, event_id in pairs(generic_currency_exchange) do
     registerEvent(event_id, "events/common/GenericHuntCurrencyExchange.lua") --TODO: Should probably rename this since it now covers other generic currency vendors like Gold Saucer ones
 end
 
