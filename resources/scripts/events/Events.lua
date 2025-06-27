@@ -21,20 +21,22 @@ generic_warps = {
     131126,  -- Gatekeeper from Southern Thanalan: Nald's Reflection to Southern Thanalan: The Minotaur Malm
     --131158, None -- Ferry Skipper from Old Gridania to The Lavender Beds, needs special handling for housing
     --131169,  -- Ferry Skipper from Eastern La Noscea: Costa Del Sol to ELN: Rhotano Privateer (currently broken
+    131177,  -- Exit from The Gold Saucer (Lift Operator) to The Gold Saucer: Chocobo Square
+    131178,  -- Exit from The Gold Saucer: Chocobo Square (Lift Operator) to The Gold Saucer
     131195,  -- Exit from Fortemps manor to Ishgard: The Pillars
-    131204, -- Exit Ishgard: Foundation to Cloud Nine Inn room
+    131204,  -- Exit Ishgard: Foundation to Cloud Nine Inn room
     131205,  -- Exit Cloud Nine to Ishgard: Foundation
-    131245, -- Exit Kugane to Bokairo Inn room
+    131245,  -- Exit Kugane to Bokairo Inn room
     131246,  -- Exit Bokairo Inn to Kugane
     131250,  -- Gatekeeper from The Fringes: Castrum Oriens to East Shroud: Amarissaaix's Spire
     131266,  -- Gatekeeper from The House of the Fierce to dead-end cave (unable to dive currently
     131268,  -- Enclave Skiff Captain from The Doman Enclave to Yanxia: The Glittering Basin
     131312,  -- Exit The Pendants Personal Suite to Crystarium
-    131313,  -- Exit from The Crown Lift (Lift Operator to Eulmore: The Canopy
+    131313,  -- Exit from The Crown Lift (Lift Operator) to Eulmore: The Canopy
     131402,  -- Exit Andron to Old Sharlayan
     131428,  -- Mothercrystal Exit (note: warp doesn't work for some reason?
     131519,  -- Faire Adventurer from Eastern La Noscea: bottom of the Moonfire Festival (2023 tower to the first tier of the tower
-    131578,  -- Exit The For'ard Cabins to Tuliyollal    
+    131578,  -- Exit The For'ard Cabins to Tuliyollal
 }
 
 generic_inns = {
@@ -187,7 +189,13 @@ generic_anetshards = {
     327729,  -- Limsa Lominsa: Hawker's Alley Aethernet shard
     327730,  -- Ul'dah: Goldsmith's Guild Aethernet shard
     327731,  -- Ul'dah: The Chamber of Rule Aethernet shard
-
+    327743,  -- The Gold Saucer: Entrance & Card Squares Aethernet shard
+    327744,  -- The Gold Saucer: Wonder Square East Aethernet shard
+    327745,  -- The Gold Saucer: Wonder Square West Aethernet shard
+    327746,  -- The Gold Saucer: Event Square Aethernet shard
+    327747,  -- The Gold Saucer: Cactpot Board Aethernet shard
+    327748,  -- The Gold Saucer: Round Square Aethernet shard
+    327749,  -- The Gold Saucer: Chocobo Square Aethernet shard
     -- Heavensward Aetherytes
     327760,  -- Ishgard: The Forgotten Knight Aethernet shard
     327761,  -- Ishgard: Skysteel Manufactory Aethernet shard
@@ -197,6 +205,7 @@ generic_anetshards = {
     327765,  -- Ishgard: Saint Reymanaud's Cathedral Aethernet shard
     327766,  -- Ishgard: The Tribunal Aethernet shard
     327767,  -- Ishgard: The Last Vigil Aethernet shard
+    327769,  -- The Gold Saucer: Minion Square Aethernet shard
     327770,  -- Idyllshire: West Idyllshire Aethernet shard
 
     -- Stormblood Aetherytes
@@ -285,23 +294,37 @@ common_events = {
 }
 
 -- Not all Hunt NPCs are spawning right now, unfortunately.
-generic_hunt_exchange = {
+generic_currency_exchange = {
+    1769533, -- Gold Saucer Attendant <Prize Claim> (behind counter) -> Prize Exchange (Gear)
+    1769544, -- Gold Saucer Attendant <Prize Claim> (behind counter) -> Prize Exchange (Weapons)
+    1769545, -- Triple Triad Trader (Gold Saucer, behind counter) -> Prize Exchange (Weapons)
+    1769546, -- Tack & Feed Trader (Gold Saucer, Chocobo Square) -> Race Items
+    1769547, -- Tack & Feed Trader (Gold Saucer, Chocobo Square) -> Chocobo Training Manuals I
+    1769548, -- Tack & Feed Trader (Gold Saucer, Chocobo Square) -> Chocobo Training Manuals II
+    1769626, -- Minion Trader (Gold Saucer, Minion Square) -> Purchase Minions (MGP)
+    1769637, -- Modern Aesthetics Saleswoman (Gold Saucer) -> Prize Exchange III
     1769660, -- Ishgard: Yolaine -> Doman Gear Exchange (DoW, IL 180)
     1769661, -- Ishgard: Yolaine -> Doman Gear Exchange (DoM, IL 180)
     1769715, -- Ishgard: Yolaine -> Artifact Gear Exchange I (DoW, IL 210)
     1769716, -- Ishgard: Yolaine -> Artifact Gear Exchange II (DoW, IL 210)
     1769717, -- Ishgard: Yolaine -> Artifact Gear Exchange (DoM, IL 210)
+    1769751, -- Gold Saucer Attendant <Prize Claim> (by Modern Aestherics Saleswoman) -> Prize Exchange I
+    1769752, -- Gold Saucer Attendant <Prize Claim> (by Modern Aestherics Saleswoman) -> Prize Exchange III
     1769783, -- Kugane: Satsuya -> Centurio Seal Exchange II
     1769864, -- Kugane: Satsuya -> Ala Mhigan Gear Exchange (DoW, IL 310)
     1769865, -- Kugane: Satsuya -> Ala Mhigan Gear Exchange (DoM, IL 310)
     1769914, -- Kugane: Satsuya -> Lost Allagan Gear (DoW, IL 340)
     1769915, -- Kugane: Satsuya -> Lost Allagan Gear (DoM, IL 340)
     1770476, -- Radz-at-Han: Wilmetta -> Sacks of Nuts Exchange
+    1770538, -- Gold Saucer Attendant <Prize Claim> (by Modern Aestherics Saleswoman) -> Prize Exchange II
+    1770599, -- Gold Saucer Attendant <Prize Claim> (behind counter) -> Prize Exchange (Registrable Miscellany)
+    1770600, -- Gold Saucer Attendant <Prize Claim> (behind counter) -> Prize Exchange (Music/Furnishings)
     1770619, -- Radz-at-Han: Wilmetta -> Moonward Gear Exchange (DoW, IL 570)
     1770620, -- Radz-at-Han: Wilmetta -> Moonward Gear Exchange (DoW, IL 570)
     1770704, -- Radz-at-Han: Wilmetta -> Radiant's Gear (DoW, IL 600)
     1770705, -- Radz-at-Han: Wilmetta -> Radiant's Gear (DoM, IL 600)
     1770761, -- Tuliyollal: Ryubool Ja -> Dawn Hunt Vendor
+    -- 3539075, -- Dibourdier <Mahjong Vendor> doesn't respond when interacted with right now, probably needs special handling
 }
 
 -- Not custom in the sense of non-SQEX content, just going based off the directory name
@@ -344,7 +367,7 @@ for _, event_id in pairs(generic_anetshards) do
 end
 
 for _, event_id in pairs(generic_hunt_exchange) do
-    registerEvent(event_id, "events/common/GenericHuntCurrencyExchange.lua")
+    registerEvent(event_id, "events/common/GenericHuntCurrencyExchange.lua") --TODO: Should probably rename this since it now covers other generic currency vendors like Gold Saucer ones
 end
 
 for event_id, script_file in pairs(to_sort) do
