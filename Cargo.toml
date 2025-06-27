@@ -51,27 +51,13 @@ serde = { version = "1.0", features = ["derive"], default-features = false }
 serde_json = { version = "1.0", features = ["std"], default-features = false }
 
 [dependencies]
-# Used for the web servers
-axum = { version = "0.8", features = ["json", "tokio", "http1", "form", "query", "multipart"], default-features = false }
-axum-extra = { version = "0.10", features = ["cookie"], default-features = false }
-
 # Serialization used in almost every server
 serde = { version = "1.0", features = ["derive"], default-features = false }
-serde_json = { version = "1.0", default-features = false }
+serde_json = { version = "1.0", features = ["std"], default-features = false }
 serde_yaml_ng = { version = "0.10", default-features = false }
-
-# Async runtime
-tokio = { version = "1.45", features = ["macros", "rt", "rt-multi-thread", "io-util"], default-features = false }
 
 # Logging
 tracing = { version = "0.1", default-features = false }
-tracing-subscriber = { version = "0.3", features = ["fmt"], default-features = false }
-
-# Used currently for SID generation
-fastrand = { version = "2.3", features = ["std"], default-features = false }
-
-# HTML templates used in the web servers
-minijinja = { version = "2.10", features = ["serde", "loader", "multi_template"], default-features = false }
 
 # Serialization of packets
 binrw = { version = "0.15", features = ["std"], default-features = false }
@@ -82,11 +68,31 @@ md5 = { version = "0.7", default-features = false }
 # Used to access game data
 physis = { git = "https://github.com/redstrate/physis", default-features = false }
 
-# Used for data persistence
-rusqlite = { version = "0.36", features = ["bundled"], default-features = false }
-
 # needed for c-style bitflags
 bitflags = { version = "2.9", default-features = false }
+
+# excel sheet data
+icarus = { git = "https://github.com/redstrate/Icarus", branch = "ver/2025.04.16.0000.0000", features = ["Warp", "Tribe", "ClassJob", "World", "TerritoryType", "Race", "Aetheryte", "EquipSlotCategory", "Action", "WeatherRate", "PlaceName"], default-features = false }
+
+[target.'cfg(not(target_family = "wasm"))'.dependencies]
+# Used for the web servers
+axum = { version = "0.8", features = ["json", "tokio", "http1", "form", "query", "multipart"], default-features = false }
+axum-extra = { version = "0.10", features = ["cookie"], default-features = false }
+
+# Async runtime
+tokio = { version = "1.45", features = ["macros", "rt", "rt-multi-thread", "io-util"], default-features = false }
+
+# Logging
+tracing-subscriber = { version = "0.3", features = ["fmt"], default-features = false }
+
+# Used currently for SID generation
+fastrand = { version = "2.3", features = ["std"], default-features = false }
+
+# HTML templates used in the web servers
+minijinja = { version = "2.10", features = ["serde", "loader", "multi_template"], default-features = false }
+
+# Used for data persistence
+rusqlite = { version = "0.36", features = ["bundled"], default-features = false }
 
 # For server-side scripting
 mlua = { version = "0.10", features = ["lua54", "vendored", "send", "async", "serialize"], default-features = false }
@@ -102,6 +108,3 @@ rkon = { version = "0.1" }
 
 # For serving static files on the website
 tower-http = { version = "0.6", features = ["fs", "cors"] }
-
-# excel sheet data
-icarus = { git = "https://github.com/redstrate/Icarus", branch = "ver/2025.04.16.0000.0000", features = ["Warp", "Tribe", "ClassJob", "World", "TerritoryType", "Race", "Aetheryte", "EquipSlotCategory", "Action", "WeatherRate", "PlaceName"], default-features = false }
