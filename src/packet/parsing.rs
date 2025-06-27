@@ -1,12 +1,12 @@
 use std::{fs::write, io::Cursor};
 
-use binrw::{BinRead, BinWrite, binrw};
+use binrw::{BinRead, binrw};
 
 use crate::{
-    common::{read_string, timestamp_msecs, write_string},
+    common::{read_string, write_string},
     config::get_config,
     ipc::kawari::CustomIpcSegment,
-    packet::{compression::compress, encryption::decrypt},
+    packet::encryption::decrypt,
 };
 
 use super::{
@@ -218,6 +218,7 @@ pub fn parse_packet<T: ReadWriteIpcSegment>(
 #[cfg(test)]
 mod tests {
     use crate::packet::IpcSegment;
+    use binrw::BinWrite;
 
     use super::*;
 
@@ -242,6 +243,10 @@ mod tests {
 
         impl ReadWriteIpcSegment for ClientLobbyIpcSegment {
             fn calc_size(&self) -> u32 {
+                todo!()
+            }
+
+            fn get_name(&self) -> &'static str {
                 todo!()
             }
         }
