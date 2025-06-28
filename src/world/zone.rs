@@ -15,6 +15,7 @@ pub struct Zone {
     pub internal_name: String,
     pub region_name: String,
     pub place_name: String,
+    pub intended_use: u8,
     planevent: Option<LayerGroup>,
     vfx: Option<LayerGroup>,
     planmap: Option<LayerGroup>,
@@ -37,6 +38,8 @@ impl Zone {
             tracing::warn!("Invalid zone id {id}, allowing anyway...");
             return zone;
         };
+
+        zone.intended_use = *row.TerritoryIntendedUse().into_u8().unwrap();
 
         // e.g. ffxiv/fst_f1/fld/f1f3/level/f1f3
         let bg_path = row.Bg().into_string().unwrap();

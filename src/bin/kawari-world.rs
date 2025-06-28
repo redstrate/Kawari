@@ -918,6 +918,7 @@ async fn client_loop(
                                     internal_name: zone.internal_name.clone(),
                                     region_name: zone.region_name.clone(),
                                     place_name: zone.place_name.clone(),
+                                    intended_use: zone.intended_use,
                                 };
                             }
                         }

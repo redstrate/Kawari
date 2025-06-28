@@ -42,6 +42,7 @@ pub struct LuaZone {
     pub internal_name: String,
     pub region_name: String,
     pub place_name: String,
+    pub intended_use: u8,
 }
 
 impl UserData for LuaZone {
@@ -51,6 +52,7 @@ impl UserData for LuaZone {
         fields.add_field_method_get("internal_name", |_, this| Ok(this.internal_name.clone()));
         fields.add_field_method_get("region_name", |_, this| Ok(this.region_name.clone()));
         fields.add_field_method_get("place_name", |_, this| Ok(this.place_name.clone()));
+        fields.add_field_method_get("intended_use", |_, this| Ok(this.intended_use));
     }
 }
 
