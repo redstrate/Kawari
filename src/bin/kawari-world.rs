@@ -3,8 +3,8 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use kawari::RECEIVE_BUFFER_SIZE;
-use kawari::common::Position;
 use kawari::common::{GameData, TerritoryNameKind, timestamp_secs};
+use kawari::common::{Position, value_to_flag_byte_index_value};
 use kawari::config::get_config;
 use kawari::inventory::{Item, Storage};
 use kawari::ipc::chat::{ServerChatIpcData, ServerChatIpcSegment};
@@ -294,6 +294,7 @@ async fn client_loop(
                                                             current_job: connection.player_data.classjob_id,
                                                             levels: connection.player_data.classjob_levels.map(|x| x as u16),
                                                             unlocks: connection.player_data.unlocks.clone(),
+                                                            aetherytes: connection.player_data.aetherytes.clone(),
                                                             ..Default::default()
                                                         }),
                                                         ..Default::default()
@@ -689,10 +690,16 @@ async fn client_loop(
                                                         // id == 0 means "all"
                                                         if id == 0 {
                                                             for i in 1..239 {
+                                                                let (value, index) = value_to_flag_byte_index_value(id);
+                                                                connection.player_data.aetherytes[index as usize] |= value;
+
                                                                 connection.actor_control_self(ActorControlSelf {
                                                                     category: ActorControlCategory::LearnTeleport { id: i, unlocked: on } }).await;
                                                             }
                                                         } else {
+                                                            let (value, index) = value_to_flag_byte_index_value(id);
+                                                            connection.player_data.aetherytes[index as usize] |= value;
+
                                                             connection.actor_control_self(ActorControlSelf {
                                                                 category: ActorControlCategory::LearnTeleport { id, unlocked: on } }).await;
                                                         }

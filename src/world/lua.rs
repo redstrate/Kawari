@@ -28,6 +28,7 @@ pub enum Task {
     ReloadScripts,
     ToggleInvisibility { invisible: bool },
     Unlock { id: u32 },
+    UnlockAetheryte { id: u32, on: bool },
 }
 
 #[derive(Default)]
@@ -159,28 +160,10 @@ impl LuaPlayer {
     }
 
     fn unlock_aetheryte(&mut self, unlocked: u32, id: u32) {
-        let op_code = ServerZoneIpcType::ActorControlSelf;
-        let on = unlocked == 0;
-        if id == 0 {
-            for i in 1..239 {
-                let data = ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
-                    category: ActorControlCategory::LearnTeleport {
-                        id: i,
-                        unlocked: on,
-                    },
-                });
-
-                /* Unknown if this will make the server panic from a flood of packets.
-                 * Needs testing once toggling aetherytes actually works. */
-                self.create_segment_self(op_code.clone(), data);
-            }
-        } else {
-            let data = ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
-                category: ActorControlCategory::LearnTeleport { id, unlocked: on },
-            });
-
-            self.create_segment_self(op_code, data);
-        }
+        self.queued_tasks.push(Task::UnlockAetheryte {
+            id,
+            on: unlocked == 1,
+        });
     }
 
     fn change_territory(&mut self, zone_id: u16) {

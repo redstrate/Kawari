@@ -91,7 +91,10 @@ pub struct PlayerStatus {
     #[br(count = 64)]
     #[bw(pad_size_to = 64)]
     pub unlocks: Vec<u8>,
-    pub aetheryte: [u8; 26],
+    pub unknown10e: [u8; 28],
+    #[br(count = 29)]
+    #[bw(pad_size_to = 29)]
+    pub aetherytes: Vec<u8>,
     pub favorite_aetheryte_ids: [u16; 4],
     pub free_aetheryte_id: u16,
     pub ps_plus_free_aetheryte_id: u16,
