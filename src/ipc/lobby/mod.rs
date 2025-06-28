@@ -83,7 +83,7 @@ impl Default for ServerLobbyIpcSegment {
 }
 
 #[binrw]
-#[br(import(magic: &ClientLobbyIpcType, _size: &u32))]
+#[br(import(magic: &ClientLobbyIpcType, size: &u32))]
 #[derive(Debug, Clone)]
 pub enum ClientLobbyIpcData {
     /// Sent by the client when it requests the character list in the lobby.
@@ -127,11 +127,14 @@ pub enum ClientLobbyIpcData {
     /// Sent by the client when they request something about the character (e.g. deletion.)
     #[br(pre_assert(*magic == ClientLobbyIpcType::CharaMake))]
     CharaMake(CharaMake),
-    Unknown,
+    Unknown {
+        #[br(count = size - 32)]
+        unk: Vec<u8>,
+    },
 }
 
 #[binrw]
-#[br(import(magic: &ServerLobbyIpcType, _size: &u32))]
+#[br(import(magic: &ServerLobbyIpcType, size: &u32))]
 #[derive(Debug, Clone)]
 pub enum ServerLobbyIpcData {
     /// Sent by the server to indicate an lobby error occured.
@@ -194,7 +197,10 @@ pub enum ServerLobbyIpcData {
         #[brw(pad_after = 202)]
         unk1: u8,
     },
-    Unknown,
+    Unknown {
+        #[br(count = size - 32)]
+        unk: Vec<u8>,
+    },
 }
 
 #[cfg(test)]

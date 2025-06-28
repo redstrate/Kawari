@@ -149,7 +149,7 @@ impl Default for ServerZoneIpcSegment {
 }
 
 #[binrw]
-#[br(import(magic: &ServerZoneIpcType, _size: &u32))]
+#[br(import(magic: &ServerZoneIpcType, size: &u32))]
 #[derive(Debug, Clone)]
 pub enum ServerZoneIpcData {
     /// Sent by the server as response to ZoneInitRequest.
@@ -211,14 +211,10 @@ pub enum ServerZoneIpcData {
     },
     /// Unknown, but seems to contain information on cross-world linkshells
     #[br(pre_assert(*magic == ServerZoneIpcType::LinkShellInformation))]
-    LinkShellInformation {
-        unk: [u8; 456],
-    },
+    LinkShellInformation { unk: [u8; 456] },
     /// Sent by the server when it wants the client to... prepare to zone?
     #[br(pre_assert(*magic == ServerZoneIpcType::PrepareZoning))]
-    PrepareZoning {
-        unk: [u32; 4],
-    },
+    PrepareZoning { unk: [u32; 4] },
     /// Sent by the server
     #[br(pre_assert(*magic == ServerZoneIpcType::ActorControl))]
     ActorControl(ActorControl),
@@ -308,7 +304,10 @@ pub enum ServerZoneIpcData {
         #[brw(pad_after = 26)]
         unk2: u16,
     },
-    Unknown,
+    Unknown {
+        #[br(count = size - 32)]
+        unk: Vec<u8>,
+    },
 }
 
 #[binrw]

@@ -36,14 +36,14 @@ impl Default for ServerChatIpcSegment {
 }
 
 #[binrw]
-#[br(import(magic: &ServerChatIpcType, _size: &u32))]
+#[br(import(magic: &ServerChatIpcType, size: &u32))]
 #[derive(Debug, Clone)]
 pub enum ServerChatIpcData {
     /// Sent by the server to Initialize something chat-related?
     #[br(pre_assert(*magic == ServerChatIpcType::LoginReply))]
-    LoginReply {
-        timestamp: u32,
-        sid: u32,
+    LoginReply { timestamp: u32, sid: u32 },
+    Unknown {
+        #[br(count = size - 32)]
+        unk: Vec<u8>,
     },
-    Unknown,
 }
