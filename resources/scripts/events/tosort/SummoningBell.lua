@@ -12,7 +12,7 @@
 -- Scene 01003 - Unknown, does nothing right now
 
 function onTalk(target, player)
-    player:play_scene(target, EVENT_ID, 01000, 0, 0)
+    player:play_scene(target, EVENT_ID, 01000, 0, {0})
 end
 
 function onReturn(scene, results, player)

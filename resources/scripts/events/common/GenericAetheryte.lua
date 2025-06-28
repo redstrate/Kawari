@@ -11,8 +11,7 @@ SCENE_SHOW_MENU = 00000
 SCENE_HAVE_AETHERNET_ACCESS = 00003
 
 function onTalk(target, player)
-    --- param has to be 1 for the menu to even show up
-    player:play_scene(target, EVENT_ID, SCENE_SHOW_MENU, 8192, 1)
+    player:play_scene(target, EVENT_ID, SCENE_SHOW_MENU, 8192, {0})
 end
 
 function onReturn(scene, results, player)

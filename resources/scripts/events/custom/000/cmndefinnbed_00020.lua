@@ -20,7 +20,7 @@ WAKE_UP_ANIM = 00100
 
 
 function onTalk(target, player)
-    player:play_scene(target, EVENT_ID, SHOW_MENU, HIDE_HOTBAR, 0)
+    player:play_scene(target, EVENT_ID, SHOW_MENU, HIDE_HOTBAR, {0})
 end
 
 function onReturn(scene, results, player)
@@ -29,13 +29,13 @@ function onReturn(scene, results, player)
             -- nothing
         elseif results[1] == 2 then
             -- Dreamfitting partially implemented. It works completely when played in onTalk, but does not trigger in onReturn. Unsure why.
-            player:play_scene(player.id, EVENT_ID, DREAMFITTING, FADE_OUT + HIDE_UI + CONDITION_CUTSCENE, 0)        
+            player:play_scene(player.id, EVENT_ID, DREAMFITTING, FADE_OUT + HIDE_UI + CONDITION_CUTSCENE, {0})
         elseif results[1] == 3 then -- log out
-            player:play_scene(player.id, EVENT_ID, SLEEP_ANIM, FADE_OUT + HIDE_UI + CONDITION_CUTSCENE, 0)
+            player:play_scene(player.id, EVENT_ID, SLEEP_ANIM, FADE_OUT + HIDE_UI + CONDITION_CUTSCENE, {0})
             player:begin_log_out()
             return
         elseif results[1] == 4 then -- exit game
-            player:play_scene(player.id, EVENT_ID, SLEEP_ANIM, FADE_OUT + HIDE_UI + CONDITION_CUTSCENE, 0)
+            player:play_scene(player.id, EVENT_ID, SLEEP_ANIM, FADE_OUT + HIDE_UI + CONDITION_CUTSCENE, {0})
             player:begin_log_out()
             return
         end
@@ -43,11 +43,11 @@ function onReturn(scene, results, player)
         player:finish_event(EVENT_ID)
     elseif scene == SLEEP_ANIM then
         -- play log out scene
-        player:play_scene(player.id, EVENT_ID, LOG_OUT, FADE_OUT + HIDE_UI + CONDITION_CUTSCENE, 0)
+        player:play_scene(player.id, EVENT_ID, LOG_OUT, FADE_OUT + HIDE_UI + CONDITION_CUTSCENE, {0})
     elseif scene == LOG_OUT then
         player:finish_event(EVENT_ID)
     elseif scene == DREAMFITTING then
-       player:play_scene(player.id, EVENT_ID, WAKE_UP_ANIM, FADE_OUT + HIDE_UI + CONDITION_CUTSCENE, 0)
+       player:play_scene(player.id, EVENT_ID, WAKE_UP_ANIM, FADE_OUT + HIDE_UI + CONDITION_CUTSCENE, {0})
     elseif scene == WAKE_UP_ANIM then -- wake up anim
         player:finish_event(EVENT_ID)
     end
