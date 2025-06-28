@@ -392,6 +392,7 @@ pub enum ClientZoneIpcData {
         arg1: u32,
         arg2: u32,
         arg3: u32,
+        #[brw(pad_after = 4)]
         target: u64,
     },
     /// Sent by the client when the character walks into a zone transistion
