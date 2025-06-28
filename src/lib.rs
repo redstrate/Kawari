@@ -73,4 +73,5 @@ pub const OBFUSCATION_ENABLED_MODE: u8 = 41;
 pub const UNLOCK_BITMASK_SIZE: usize = 64;
 
 /// The size of the aetheryte unlock bitmask.
-pub const AETHERYTE_UNLOCK_BITMASK_SIZE: usize = 29;
+// TODO: this can be automatically derived from game data
+pub const AETHERYTE_UNLOCK_BITMASK_SIZE: usize = 30;

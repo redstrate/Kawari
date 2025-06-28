@@ -694,7 +694,7 @@ impl ZoneConnection {
                 Task::UnlockAetheryte { id, on } => {
                     let unlock_all = *id == 0;
                     if unlock_all {
-                        for i in 1..231 {
+                        for i in 1..239 {
                             let (value, index) = value_to_flag_byte_index_value(i);
                             if *on {
                                 self.player_data.aetherytes[index as usize] |= value;

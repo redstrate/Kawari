@@ -164,8 +164,8 @@ pub struct PlayerStatus {
     pub cleared_pvp: [u8; 5],
 
     // meh, this is where i put all of the new data
-    #[br(count = 160)]
-    #[bw(pad_size_to = 160)]
+    #[br(count = 159)]
+    #[bw(pad_size_to = 159)]
     pub unknown948: Vec<u8>,
 }
 

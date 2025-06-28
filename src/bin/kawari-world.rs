@@ -689,7 +689,7 @@ async fn client_loop(
 
                                                         // id == 0 means "all"
                                                         if id == 0 {
-                                                            for i in 1..231 {
+                                                            for i in 1..239 {
                                                                 let (value, index) = value_to_flag_byte_index_value(i);
                                                                 if on {
                                                                     connection.player_data.aetherytes[index as usize] |= value;
