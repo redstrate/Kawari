@@ -4,6 +4,7 @@ use rusqlite::Connection;
 use serde::Deserialize;
 
 use crate::{
+    AETHERYTE_UNLOCK_BITMASK_SIZE, UNLOCK_BITMASK_SIZE,
     common::{
         CustomizeData, GameData, Position,
         workdefinitions::{CharaMake, ClientSelectData, RemakeMode},
@@ -384,10 +385,10 @@ impl WorldDatabase {
         classjob_levels[chara_make.classjob_id as usize] = 1; // inital level
 
         // fill out initial unlocks
-        let unlocks = vec![0u8; 64];
+        let unlocks = vec![0u8; UNLOCK_BITMASK_SIZE];
 
         // fill out initial aetherytes
-        let aetherytes = vec![0u8; 29];
+        let aetherytes = vec![0u8; AETHERYTE_UNLOCK_BITMASK_SIZE];
 
         // insert ids
         connection

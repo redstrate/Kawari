@@ -68,3 +68,9 @@ pub fn get_supported_expac_versions() -> HashMap<&'static str, Version<'static>>
 
 /// Constant to enable packet obsfucation. Changes every patch.
 pub const OBFUSCATION_ENABLED_MODE: u8 = 41;
+
+/// The size of the unlock bitmask.
+pub const UNLOCK_BITMASK_SIZE: usize = 64;
+
+/// The size of the aetheryte unlock bitmask.
+pub const AETHERYTE_UNLOCK_BITMASK_SIZE: usize = 29;

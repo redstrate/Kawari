@@ -1,6 +1,9 @@
 use binrw::binrw;
 
-use crate::common::{CHAR_NAME_MAX_LENGTH, read_string, write_string};
+use crate::{
+    AETHERYTE_UNLOCK_BITMASK_SIZE, UNLOCK_BITMASK_SIZE,
+    common::{CHAR_NAME_MAX_LENGTH, read_string, write_string},
+};
 
 #[binrw]
 #[derive(Debug, Clone, Default)]
@@ -88,12 +91,12 @@ pub struct PlayerStatus {
     #[bw(map = write_string)]
     pub name: String,
     pub unknown293: [u8; 32],
-    #[br(count = 64)]
-    #[bw(pad_size_to = 64)]
+    #[br(count = UNLOCK_BITMASK_SIZE)]
+    #[bw(pad_size_to = UNLOCK_BITMASK_SIZE)]
     pub unlocks: Vec<u8>,
     pub unknown10e: [u8; 28],
-    #[br(count = 29)]
-    #[bw(pad_size_to = 29)]
+    #[br(count = AETHERYTE_UNLOCK_BITMASK_SIZE)]
+    #[bw(pad_size_to = AETHERYTE_UNLOCK_BITMASK_SIZE)]
     pub aetherytes: Vec<u8>,
     pub favorite_aetheryte_ids: [u16; 4],
     pub free_aetheryte_id: u16,
@@ -161,8 +164,8 @@ pub struct PlayerStatus {
     pub cleared_pvp: [u8; 5],
 
     // meh, this is where i put all of the new data
-    #[br(count = 191)]
-    #[bw(pad_size_to = 191)]
+    #[br(count = 160)]
+    #[bw(pad_size_to = 160)]
     pub unknown948: Vec<u8>,
 }
 
