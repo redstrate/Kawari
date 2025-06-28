@@ -269,6 +269,12 @@ async fn client_loop(
                                                 // Stats
                                                 connection.send_stats(&chara_details).await;
 
+                                                let current_class;
+                                                {
+                                                    let game_data = connection.gamedata.lock().unwrap();
+                                                    current_class = game_data.get_exp_array_index(connection.player_data.classjob_id as u16).unwrap();
+                                                }
+
                                                 // Player Setup
                                                 {
                                                     let ipc = ServerZoneIpcSegment {
@@ -278,6 +284,7 @@ async fn client_loop(
                                                             content_id: connection.player_data.content_id,
                                                             exp: connection.player_data.classjob_exp,
                                                             max_level: 100,
+                                                            expansion: 5,
                                                             name: chara_details.name,
                                                             char_id: connection.player_data.actor_id,
                                                             race: chara_details.chara_make.customize.race,
@@ -288,7 +295,7 @@ async fn client_loop(
                                                             as u8,
                                                             nameday_day: chara_details.chara_make.birth_day as u8,
                                                             deity: chara_details.chara_make.guardian as u8,
-                                                            current_class: connection.player_data.classjob_id,
+                                                            current_class: current_class as u8,
                                                             current_job: connection.player_data.classjob_id,
                                                             levels: connection.player_data.classjob_levels.map(|x| x as u16),
                                                             unlocks: connection.player_data.unlocks.clone(),
