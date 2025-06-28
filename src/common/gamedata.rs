@@ -20,6 +20,7 @@ pub struct GameData {
     pub game_data: physis::gamedata::GameData,
     pub item_exh: EXH,
     pub item_pages: Vec<EXD>,
+    pub classjob_exp_indexes: Vec<i8>,
 }
 
 impl Default for GameData {
@@ -46,10 +47,21 @@ impl GameData {
             );
         }
 
+        let mut classjob_exp_indexes = Vec::new();
+
+        let sheet = ClassJobSheet::read_from(&mut game_data, Language::English).unwrap();
+        // TODO: ids are hardcoded until we have API in Icarus to do this
+        for i in 0..43 {
+            let row = sheet.get_row(i).unwrap();
+
+            classjob_exp_indexes.push(*row.ExpArrayIndex().into_i8().unwrap());
+        }
+
         Self {
             game_data,
             item_exh,
             item_pages,
+            classjob_exp_indexes,
         }
     }
 
@@ -314,11 +326,8 @@ impl GameData {
     }
 
     /// Gets the array index used in EXP & levels.
-    pub fn get_exp_array_index(&mut self, classjob_id: u16) -> Option<i8> {
-        let sheet = ClassJobSheet::read_from(&mut self.game_data, Language::English)?;
-        let row = sheet.get_row(classjob_id as u32)?;
-
-        row.ExpArrayIndex().into_i8().copied()
+    pub fn get_exp_array_index(&self, classjob_id: u16) -> Option<i8> {
+        self.classjob_exp_indexes.get(classjob_id as usize).copied()
     }
 }
 

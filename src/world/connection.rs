@@ -84,24 +84,6 @@ pub struct PlayerData {
     pub aetherytes: Vec<u8>,
 }
 
-impl PlayerData {
-    pub fn current_level(&self) -> i32 {
-        self.classjob_levels[self.classjob_id as usize]
-    }
-
-    pub fn set_current_level(&mut self, level: i32) {
-        self.classjob_levels[self.classjob_id as usize] = level;
-    }
-
-    pub fn current_exp(&self) -> u32 {
-        self.classjob_exp[self.classjob_id as usize]
-    }
-
-    pub fn set_current_exp(&mut self, exp: u32) {
-        self.classjob_exp[self.classjob_id as usize] = exp;
-    }
-}
-
 /// Represents a single connection between an instance of the client and the world server
 pub struct ZoneConnection {
     pub config: WorldConfig,
@@ -315,19 +297,24 @@ impl ZoneConnection {
     }
 
     pub async fn update_class_info(&mut self) {
-        let ipc = ServerZoneIpcSegment {
-            op_code: ServerZoneIpcType::UpdateClassInfo,
-            timestamp: timestamp_secs(),
-            data: ServerZoneIpcData::UpdateClassInfo(UpdateClassInfo {
-                class_id: self.player_data.classjob_id,
-                synced_level: self.player_data.current_level() as u16,
-                class_level: self.player_data.current_level() as u16,
-                current_level: self.player_data.current_level() as u16,
-                current_exp: self.player_data.current_exp(),
+        let ipc;
+        {
+            let game_data = self.gamedata.lock().unwrap();
+
+            ipc = ServerZoneIpcSegment {
+                op_code: ServerZoneIpcType::UpdateClassInfo,
+                timestamp: timestamp_secs(),
+                data: ServerZoneIpcData::UpdateClassInfo(UpdateClassInfo {
+                    class_id: self.player_data.classjob_id,
+                    synced_level: self.current_level(&game_data) as u16,
+                    class_level: self.current_level(&game_data) as u16,
+                    current_level: self.current_level(&game_data) as u16,
+                    current_exp: self.current_exp(&game_data),
+                    ..Default::default()
+                }),
                 ..Default::default()
-            }),
-            ..Default::default()
-        };
+            };
+        }
 
         self.send_segment(PacketSegment {
             source_actor: self.player_data.actor_id,
@@ -748,7 +735,7 @@ impl ZoneConnection {
                     }
                 }
                 Task::SetLevel { level } => {
-                    self.player_data.set_current_level(*level);
+                    self.set_current_level(*level);
                     self.update_class_info().await;
                 }
                 Task::ChangeWeather { id } => {
@@ -875,21 +862,26 @@ impl ZoneConnection {
             list[..self.status_effects.status_effects.len()]
                 .copy_from_slice(&self.status_effects.status_effects);
 
-            let ipc = ServerZoneIpcSegment {
-                op_code: ServerZoneIpcType::StatusEffectList,
-                timestamp: timestamp_secs(),
-                data: ServerZoneIpcData::StatusEffectList(StatusEffectList {
-                    statues: list,
-                    classjob_id: self.player_data.classjob_id,
-                    level: self.player_data.current_level() as u8,
-                    curr_hp: self.player_data.curr_hp,
-                    max_hp: self.player_data.max_hp,
-                    curr_mp: self.player_data.curr_mp,
-                    max_mp: self.player_data.max_mp,
+            let ipc;
+            {
+                let game_data = self.gamedata.lock().unwrap();
+
+                ipc = ServerZoneIpcSegment {
+                    op_code: ServerZoneIpcType::StatusEffectList,
+                    timestamp: timestamp_secs(),
+                    data: ServerZoneIpcData::StatusEffectList(StatusEffectList {
+                        statues: list,
+                        classjob_id: self.player_data.classjob_id,
+                        level: self.current_level(&game_data) as u8,
+                        curr_hp: self.player_data.curr_hp,
+                        max_hp: self.player_data.max_hp,
+                        curr_mp: self.player_data.curr_mp,
+                        max_mp: self.player_data.max_mp,
+                        ..Default::default()
+                    }),
                     ..Default::default()
-                }),
-                ..Default::default()
-            };
+                };
+            }
 
             self.send_segment(PacketSegment {
                 source_actor: self.player_data.actor_id,
@@ -1019,7 +1011,7 @@ impl ZoneConnection {
             hp_max: self.player_data.max_hp,
             mp_curr: self.player_data.curr_mp,
             mp_max: self.player_data.max_mp,
-            level: self.player_data.current_level() as u8,
+            level: self.current_level(&game_data) as u8,
             object_kind: ObjectKind::Player(PlayerSubKind::Player),
             look: chara_details.chara_make.customize,
             display_flags: DisplayFlag::UNK,
@@ -1167,5 +1159,37 @@ impl ZoneConnection {
             category: ActorControlCategory::CancelCast {},
         })
         .await;
+    }
+
+    pub fn current_level(&self, game_data: &GameData) -> i32 {
+        let index = game_data
+            .get_exp_array_index(self.player_data.classjob_id as u16)
+            .unwrap();
+        self.player_data.classjob_levels[index as usize]
+    }
+
+    pub fn set_current_level(&mut self, level: i32) {
+        let game_data = self.gamedata.lock().unwrap();
+
+        let index = game_data
+            .get_exp_array_index(self.player_data.classjob_id as u16)
+            .unwrap();
+        self.player_data.classjob_levels[index as usize] = level;
+    }
+
+    pub fn current_exp(&self, game_data: &GameData) -> u32 {
+        let index = game_data
+            .get_exp_array_index(self.player_data.classjob_id as u16)
+            .unwrap();
+        self.player_data.classjob_exp[index as usize]
+    }
+
+    pub fn set_current_exp(&mut self, exp: u32) {
+        let game_data = self.gamedata.lock().unwrap();
+
+        let index = game_data
+            .get_exp_array_index(self.player_data.classjob_id as u16)
+            .unwrap();
+        self.player_data.classjob_exp[index as usize] = exp;
     }
 }
