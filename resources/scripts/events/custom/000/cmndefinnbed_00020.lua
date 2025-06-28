@@ -1,54 +1,49 @@
---- TODO: find a way to hardcode it this way
-EVENT_ID = 720916
-
 -- Event flags, courtesy of Sapphire
 -- https://github.com/SapphireServer/Sapphire/blob/bf3368224a00c180cbb7ba413b52395eba58ec0b/src/world/Event/EventDefs.h#L9
-FADE_OUT = 0x00000002
-HIDE_UI = 0x00000800
-HIDE_HOTBAR = 0x2000 -- 8192
+
+-- Cutscene flags, TODO: move these to Global.lua, or maybe a new file named Cutscene.lua or something along those lines, to store all of them
+FADE_OUT           = 0x00000002
+HIDE_UI            = 0x00000800
+HIDE_HOTBAR        = 0x00002000
 CONDITION_CUTSCENE = 0x00000400
-SET_BASE = 0xF8400EFB
+SET_BASE           = 0xF8400EFB -- Pulled from Sapphire, perhaps the default flags the server sends for most cutscenes?
 
-SHOW_MENU = 00000
-SLEEP_ANIM = 00001
-LOG_OUT = 00002
-DREAMFITTING = 00003
-EXIT_GAME = 00004
-WAKE_UP_ANIM = 00100
-
--- TODO: in retail, there is a fade in/out between the prompt and the sleep anim?
-
+-- Scene numbers
+SCENE_SHOW_MENU    = 00000
+SCENE_SLEEP_ANIM   = 00001
+SCENE_LOG_OUT      = 00002
+SCENE_DREAMFITTING = 00003
+SCENE_AWAKEN_ANIM  = 00100
 
 function onTalk(target, player)
-    player:play_scene(target, EVENT_ID, SHOW_MENU, HIDE_HOTBAR, {0})
+    player:play_scene(target, EVENT_ID, SCENE_SHOW_MENU, HIDE_HOTBAR, {0})
 end
 
 function onReturn(scene, results, player)
-    if scene == SHOW_MENU then -- prompt
-        if results[1] == 1 then
-            -- nothing
-        elseif results[1] == 2 then
-            -- Dreamfitting partially implemented. It works completely when played in onTalk, but does not trigger in onReturn. Unsure why.
-            player:play_scene(player.id, EVENT_ID, DREAMFITTING, FADE_OUT + HIDE_UI + CONDITION_CUTSCENE, {0})
-        elseif results[1] == 3 then -- log out
-            player:play_scene(player.id, EVENT_ID, SLEEP_ANIM, FADE_OUT + HIDE_UI + CONDITION_CUTSCENE, {0})
-            player:begin_log_out()
-            return
-        elseif results[1] == 4 then -- exit game
-            player:play_scene(player.id, EVENT_ID, SLEEP_ANIM, FADE_OUT + HIDE_UI + CONDITION_CUTSCENE, {0})
-            player:begin_log_out()
-            return
-        end
+    local CUTSCENE_FLAGS <const> = FADE_OUT | HIDE_UI | CONDITION_CUTSCENE
+    -- Decision values the player can choose
+    local NOTHING        <const> = 1
+    local DREAMFITTING   <const> = 2
+    local LOG_OUT        <const> = 3
+    local EXIT_GAME      <const> = 4 -- LOG_OUT and EXIT_GAME are unused by us in this script, but they are provided here as documentation for the decison values
+    local decision       <const> = results[1]
 
-        player:finish_event(EVENT_ID)
-    elseif scene == SLEEP_ANIM then
-        -- play log out scene
-        player:play_scene(player.id, EVENT_ID, LOG_OUT, FADE_OUT + HIDE_UI + CONDITION_CUTSCENE, {0})
-    elseif scene == LOG_OUT then
-        player:finish_event(EVENT_ID)
-    elseif scene == DREAMFITTING then
-       player:play_scene(player.id, EVENT_ID, WAKE_UP_ANIM, FADE_OUT + HIDE_UI + CONDITION_CUTSCENE, {0})
-    elseif scene == WAKE_UP_ANIM then -- wake up anim
+    if scene == SCENE_SHOW_MENU then
+        if decision == NOTHING then
+            player:finish_event(EVENT_ID)
+        else
+            player:play_scene(player.id, EVENT_ID, SCENE_SLEEP_ANIM, CUTSCENE_FLAGS, {decision})
+        end
+    elseif scene == SCENE_SLEEP_ANIM then
+        if decision == DREAMFITTING then
+            player:play_scene(player.id, EVENT_ID, SCENE_DREAMFITTING, CUTSCENE_FLAGS, {0})
+        else
+            -- The player decided to log out or exit the game. The server don't care which, as the client handles itself, so pass along the decision.
+            player:play_scene(player.id, EVENT_ID, SCENE_LOG_OUT, CUTSCENE_FLAGS, {decision})
+        end
+    elseif scene == SCENE_DREAMFITTING then
+        player:play_scene(player.id, EVENT_ID, SCENE_AWAKEN_ANIM, CUTSCENE_FLAGS, {0})
+    else
         player:finish_event(EVENT_ID)
     end
 end
