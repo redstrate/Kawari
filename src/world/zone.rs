@@ -1,16 +1,20 @@
 use icarus::TerritoryType::TerritoryTypeSheet;
 use physis::{
     common::Language,
-    gamedata::GameData,
     layer::{
         ExitRangeInstanceObject, InstanceObject, LayerEntryData, LayerGroup, PopRangeInstanceObject,
     },
 };
 
+use crate::common::{GameData, TerritoryNameKind};
+
 /// Represents a loaded zone
 #[derive(Default, Debug)]
 pub struct Zone {
     pub id: u16,
+    pub internal_name: String,
+    pub region_name: String,
+    pub place_name: String,
     planevent: Option<LayerGroup>,
     vfx: Option<LayerGroup>,
     planmap: Option<LayerGroup>,
@@ -27,7 +31,8 @@ impl Zone {
             ..Default::default()
         };
 
-        let sheet = TerritoryTypeSheet::read_from(game_data, Language::None).unwrap();
+        let sheet =
+            TerritoryTypeSheet::read_from(&mut game_data.game_data, Language::None).unwrap();
         let Some(row) = sheet.get_row(id as u32) else {
             tracing::warn!("Invalid zone id {id}, allowing anyway...");
             return zone;
@@ -42,7 +47,7 @@ impl Zone {
 
         let mut load_lgb = |name: &str| -> Option<LayerGroup> {
             let path = format!("bg/{}/level/{}.lgb", &bg_path[..level_index], name);
-            let lgb_file = game_data.extract(&path)?;
+            let lgb_file = game_data.game_data.extract(&path)?;
             tracing::info!("Loading {path}");
             let lgb = LayerGroup::from_existing(&lgb_file);
             if lgb.is_none() {
@@ -60,6 +65,18 @@ impl Zone {
         zone.bg = load_lgb("bg");
         zone.sound = load_lgb("sound");
         zone.planlive = load_lgb("planlive");
+
+        // load names
+        let fallback = "<Unable to load name!>";
+        zone.internal_name = game_data
+            .get_territory_name(id as u32, TerritoryNameKind::Internal)
+            .unwrap_or(fallback.to_string());
+        zone.region_name = game_data
+            .get_territory_name(id as u32, TerritoryNameKind::Region)
+            .unwrap_or(fallback.to_string());
+        zone.place_name = game_data
+            .get_territory_name(id as u32, TerritoryNameKind::Place)
+            .unwrap_or(fallback.to_string());
 
         zone
     }

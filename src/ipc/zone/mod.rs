@@ -149,24 +149,6 @@ impl Default for ServerZoneIpcSegment {
 }
 
 #[binrw]
-#[brw(repr = u8)]
-#[derive(Clone, PartialEq, Debug)]
-pub enum GameMasterCommandType {
-    SetLevel = 0x1,
-    ChangeWeather = 0x6,
-    Speed = 0x9,
-    ToggleInvisibility = 0xD,
-    ToggleWireframe = 0x26,
-    ChangeTerritory = 0x58,
-    EXP = 0x68,
-    Orchestrion = 0x74,
-    GiveItem = 0xC8,
-    Aetheryte = 0x5E,
-    TerritoryInfo = 0x25D,
-    Gil = 0xC9,
-}
-
-#[binrw]
 #[br(import(magic: &ServerZoneIpcType, _size: &u32))]
 #[derive(Debug, Clone)]
 pub enum ServerZoneIpcData {
@@ -405,8 +387,7 @@ pub enum ClientZoneIpcData {
     /// Sent by the client when they send a GM command. This can only be sent by the client if they are sent a GM rank.
     #[br(pre_assert(*magic == ClientZoneIpcType::GMCommand))]
     GMCommand {
-        #[brw(pad_after = 3)] // padding
-        command: GameMasterCommandType,
+        command: u32,
         arg0: u32,
         arg1: u32,
         arg2: u32,

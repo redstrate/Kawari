@@ -29,6 +29,29 @@ pub enum Task {
     ToggleInvisibility { invisible: bool },
     Unlock { id: u32 },
     UnlockAetheryte { id: u32, on: bool },
+    SetLevel { level: i32 },
+    ChangeWeather { id: u16 },
+    AddGil { amount: u32 },
+    UnlockOrchestrion { id: u16, on: bool },
+}
+
+#[derive(Default, Clone)]
+pub struct LuaZone {
+    pub zone_id: u16,
+    pub weather_id: u16,
+    pub internal_name: String,
+    pub region_name: String,
+    pub place_name: String,
+}
+
+impl UserData for LuaZone {
+    fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
+        fields.add_field_method_get("id", |_, this| Ok(this.zone_id));
+        fields.add_field_method_get("weather_id", |_, this| Ok(this.weather_id));
+        fields.add_field_method_get("internal_name", |_, this| Ok(this.internal_name.clone()));
+        fields.add_field_method_get("region_name", |_, this| Ok(this.region_name.clone()));
+        fields.add_field_method_get("place_name", |_, this| Ok(this.place_name.clone()));
+    }
 }
 
 #[derive(Default)]
@@ -37,6 +60,7 @@ pub struct LuaPlayer {
     pub status_effects: StatusEffects,
     pub queued_segments: Vec<PacketSegment<ServerZoneIpcSegment>>,
     pub queued_tasks: Vec<Task>,
+    pub zone_data: LuaZone,
 }
 
 impl LuaPlayer {
@@ -197,9 +221,29 @@ impl LuaPlayer {
     fn reload_scripts(&mut self) {
         self.queued_tasks.push(Task::ReloadScripts);
     }
+
     fn toggle_invisiblity(&mut self) {
         self.queued_tasks.push(Task::ToggleInvisibility {
             invisible: !self.player_data.gm_invisible,
+        });
+    }
+
+    fn set_level(&mut self, level: i32) {
+        self.queued_tasks.push(Task::SetLevel { level });
+    }
+
+    fn change_weather(&mut self, id: u16) {
+        self.queued_tasks.push(Task::ChangeWeather { id });
+    }
+
+    fn add_gil(&mut self, amount: u32) {
+        self.queued_tasks.push(Task::AddGil { amount });
+    }
+
+    fn unlock_orchestrion(&mut self, unlocked: u32, id: u16) {
+        self.queued_tasks.push(Task::UnlockOrchestrion {
+            id,
+            on: unlocked == 1,
         });
     }
 }
@@ -317,6 +361,22 @@ impl UserData for LuaPlayer {
             this.reload_scripts();
             Ok(())
         });
+        methods.add_method_mut("set_level", |_, this, level: i32| {
+            this.set_level(level);
+            Ok(())
+        });
+        methods.add_method_mut("change_weather", |_, this, id: u16| {
+            this.change_weather(id);
+            Ok(())
+        });
+        methods.add_method_mut("add_gil", |_, this, amount: u32| {
+            this.add_gil(amount);
+            Ok(())
+        });
+        methods.add_method_mut("unlock_orchestrion", |_, this, (unlock, id): (u32, u16)| {
+            this.unlock_orchestrion(unlock, id);
+            Ok(())
+        });
     }
 
     fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
@@ -332,6 +392,7 @@ impl UserData for LuaPlayer {
         });
         fields.add_field_method_get("rotation", |_, this| Ok(this.player_data.rotation));
         fields.add_field_method_get("position", |_, this| Ok(this.player_data.position));
+        fields.add_field_method_get("zone", |_, this| Ok(this.zone_data.clone()));
     }
 }
 
@@ -441,11 +502,22 @@ pub fn load_init_script(lua: &mut Lua) -> mlua::Result<()> {
             Ok(())
         })?;
 
+    let register_gm_command_func =
+        lua.create_function(|lua, (command_type, command_script): (u32, String)| {
+            let mut state = lua.app_data_mut::<ExtraLuaState>().unwrap();
+            let _ = state
+                .gm_command_scripts
+                .insert(command_type, command_script);
+            Ok(())
+        })?;
+
     lua.set_app_data(ExtraLuaState::default());
     lua.globals().set("registerAction", register_action_func)?;
     lua.globals().set("registerEvent", register_event_func)?;
     lua.globals()
         .set("registerCommand", register_command_func)?;
+    lua.globals()
+        .set("registerGMCommand", register_gm_command_func)?;
 
     let effectsbuilder_constructor = lua.create_function(|_, ()| Ok(EffectsBuilder::default()))?;
     lua.globals()
