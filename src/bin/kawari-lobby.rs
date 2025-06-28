@@ -132,9 +132,7 @@ async fn main() {
                                 ClientLobbyIpcData::CharaMake(character_action) => {
                                     connection.handle_character_action(character_action).await
                                 }
-                                ClientLobbyIpcData::ShandaLogin { unk } => {
-                                    dbg!(unk);
-
+                                ClientLobbyIpcData::ShandaLogin { .. } => {
                                     connection.send_account_list().await;
                                 }
                                 ClientLobbyIpcData::GameLogin {

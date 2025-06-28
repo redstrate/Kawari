@@ -327,7 +327,7 @@ impl WorldDatabase {
 
         let inventory = serde_json::from_str(&inventory_json).unwrap();
 
-        let data = PlayerData {
+        PlayerData {
             actor_id,
             content_id,
             account_id,
@@ -346,11 +346,7 @@ impl WorldDatabase {
             unlocks: serde_json::from_str(&unlocks).unwrap(),
             aetherytes: serde_json::from_str(&aetherytes).unwrap(),
             ..Default::default()
-        };
-
-        dbg!(&data);
-
-        data
+        }
     }
 
     /// Commit the dynamic player data back to the database
