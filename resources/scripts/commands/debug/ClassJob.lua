@@ -1,6 +1,5 @@
 required_rank = GM_RANK_DEBUG
 
 function onCommand(args, player)
-    local parts = split(args)
-    player:set_classjob(parts[1])
+    player:set_classjob(tonumber(args[1]))
 end

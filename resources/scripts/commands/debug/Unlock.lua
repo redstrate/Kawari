@@ -2,8 +2,7 @@ required_rank = GM_RANK_DEBUG
 command_sender = "[unlock] "
 
 function onCommand(args, player)
-    local parts = split(args)
-    local argc = #parts
+    local argc = #args
 
     local usage = "\nThis command teaches the user an action, emote, etc.\nUsage: !useaction <id/all>"
 
@@ -12,13 +11,13 @@ function onCommand(args, player)
         return
     end
 
-    if parts[1] == "all" then
+    if args[1] == "all" then
         for i = 0, 511, 1 do
             player:unlock(i)
         end
         printf(player, "Everything is unlocked!", id)
     else
-        local id = tonumber(parts[1])
+        local id = tonumber(args[1])
 
         if not id then
             printf(player, "Error parsing unlock id! Make sure the id is an integer."..usage)

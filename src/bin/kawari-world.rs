@@ -546,10 +546,10 @@ async fn client_loop(
                                                                     lua.globals().set("required_rank", mlua::Value::Nil)?;
 
                                                                     if connection.player_data.gm_rank as u8 >= required_rank? {
-                                                                        let mut func_args = "";
+                                                                        let mut func_args = Vec::new();
                                                                         if parts.len() > 1 {
-                                                                            func_args = &chat_message.message[command_name.len() + 2..];
-                                                                            tracing::info!("Args passed to Lua command {}: {}", command_name, func_args);
+                                                                            func_args = (&parts[1..]).to_vec();
+                                                                            tracing::info!("Args passed to Lua command {}: {:?}", command_name, func_args);
                                                                         } else {
                                                                             tracing::info!("No additional args passed to Lua command {}.", command_name);
                                                                         }
