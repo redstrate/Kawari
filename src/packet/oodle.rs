@@ -7,7 +7,8 @@
 use std::{ffi::c_void, ptr::null};
 
 #[cfg(feature = "oodle")]
-#[link(name = "oodle-network-shared")]
+#[cfg_attr(windows, link(name = "oodle-network-shared", kind = "raw-dylib"))]
+#[cfg_attr(not(windows), link(name = "oodle-network-shared"))]
 unsafe extern "C" {
     pub fn OodleNetwork1TCP_State_Size() -> isize;
     pub fn OodleNetwork1_Shared_Size(htbits: i32) -> isize;
