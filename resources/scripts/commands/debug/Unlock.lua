@@ -13,7 +13,7 @@ function onCommand(args, player)
     end
 
     if parts[1] == "all" then
-        for i = 0, 1000, 1 do
+        for i = 0, 511, 1 do
             player:unlock(i)
         end
         printf(player, "Everything is unlocked!", id)
