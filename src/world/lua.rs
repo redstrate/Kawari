@@ -93,7 +93,8 @@ impl LuaPlayer {
         event_id: u32,
         scene: u16,
         scene_flags: u32,
-        param: u8,
+        params_count: u8,
+        params: [u32; 2],
     ) {
         let op_code = ServerZoneIpcType::EventScene;
         let data = ServerZoneIpcData::EventScene(EventScene {
@@ -101,7 +102,8 @@ impl LuaPlayer {
             event_id,
             scene,
             scene_flags,
-            unk2: param,
+            params_count,
+            params,
             ..Default::default()
         });
 
@@ -242,9 +244,29 @@ impl UserData for LuaPlayer {
         );
         methods.add_method_mut(
             "play_scene",
-            |_, this, (target, event_id, scene, scene_flags, param): (ObjectTypeId, u32, u16, u32, u8)| {
-                this.play_scene(target, event_id, scene, scene_flags, param);
-                Ok(())
+            |_,
+             this,
+             (target, event_id, scene, scene_flags, params): (
+                ObjectTypeId,
+                u32,
+                u16,
+                u32,
+                Vec<u32>,
+            )| {
+                let params_arr: [u32; 2];
+                if params.len() == 2 {
+                    params_arr = [params[0], params[1]];
+                } else if params.len() == 1 {
+                    params_arr = [params[0], 0];
+                } else {
+                    this.finish_event(event_id);
+                    let message = "Script params are invalid, it contains either more than 2 parameters or no parameters at all!";
+                    tracing::error!(message);
+                    this.send_message(message, 0);
+                    return Ok(());
+                }
+                this.play_scene(target, event_id, scene, scene_flags, params.len() as u8, params_arr);
+                return Ok(());
             },
         );
         methods.add_method_mut(
