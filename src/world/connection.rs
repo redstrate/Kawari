@@ -14,7 +14,7 @@ use crate::{
         GameData, ObjectId, ObjectTypeId, Position, timestamp_secs, value_to_flag_byte_index_value,
     },
     config::{WorldConfig, get_config},
-    inventory::{ContainerType, Inventory, Item},
+    inventory::{ContainerType, Inventory, Item, Storage},
     ipc::{
         chat::ServerChatIpcSegment,
         zone::{
@@ -46,6 +46,7 @@ pub struct ExtraLuaState {
     pub action_scripts: HashMap<u32, String>,
     pub event_scripts: HashMap<u32, String>,
     pub command_scripts: HashMap<String, String>,
+    pub gm_command_scripts: HashMap<u32, String>,
 }
 
 #[derive(Debug, Default, Clone)]
@@ -132,6 +133,9 @@ pub struct ZoneConnection {
 
     /// Whether the player was gracefully logged out
     pub gracefully_logged_out: bool,
+
+    // TODO: really needs to be moved somewhere else
+    pub weather_id: u16,
 }
 
 impl ZoneConnection {
@@ -350,7 +354,7 @@ impl ZoneConnection {
         // load the new zone now
         {
             let mut game_data = self.gamedata.lock().unwrap();
-            self.zone = Some(Zone::load(&mut game_data.game_data, new_zone_id));
+            self.zone = Some(Zone::load(&mut game_data, new_zone_id));
         }
 
         self.player_data.zone_id = new_zone_id;
@@ -362,10 +366,9 @@ impl ZoneConnection {
         {
             let config = get_config();
 
-            let weather_id;
             {
                 let mut game_data = self.gamedata.lock().unwrap();
-                weather_id = game_data
+                self.weather_id = game_data
                     .get_weather(self.zone.as_ref().unwrap().id.into())
                     .unwrap_or(1) as u16;
             }
@@ -375,7 +378,7 @@ impl ZoneConnection {
                 timestamp: timestamp_secs(),
                 data: ServerZoneIpcData::InitZone(InitZone {
                     territory_type: self.zone.as_ref().unwrap().id,
-                    weather_id,
+                    weather_id: self.weather_id,
                     obsfucation_mode: if config.world.enable_packet_obsfucation {
                         OBFUSCATION_ENABLED_MODE
                     } else {
@@ -405,7 +408,7 @@ impl ZoneConnection {
                 .get_warp(warp_id)
                 .expect("Failed to find the warp!");
 
-            let new_zone = Zone::load(&mut game_data.game_data, zone_id);
+            let new_zone = Zone::load(&mut game_data, zone_id);
 
             // find it on the other side
             if let Some((object, _)) = new_zone.find_pop_range(pop_range_id) {
@@ -438,7 +441,7 @@ impl ZoneConnection {
                 .get_aetheryte(aetheryte_id)
                 .expect("Failed to find the aetheryte!");
 
-            let new_zone = Zone::load(&mut game_data.game_data, zone_id);
+            let new_zone = Zone::load(&mut game_data, zone_id);
 
             // find it on the other side
             if let Some((object, _)) = new_zone.find_pop_range(pop_range_id) {
@@ -462,6 +465,8 @@ impl ZoneConnection {
     }
 
     pub async fn change_weather(&mut self, new_weather_id: u16) {
+        self.weather_id = new_weather_id;
+
         let ipc = ServerZoneIpcSegment {
             op_code: ServerZoneIpcType::WeatherId,
             timestamp: timestamp_secs(),
@@ -723,6 +728,39 @@ impl ZoneConnection {
                         self.actor_control_self(ActorControlSelf {
                             category: ActorControlCategory::LearnTeleport {
                                 id: *id,
+                                unlocked: *on,
+                            },
+                        })
+                        .await;
+                    }
+                }
+                Task::SetLevel { level } => {
+                    self.player_data.set_current_level(*level);
+                    self.update_class_info().await;
+                }
+                Task::ChangeWeather { id } => {
+                    self.change_weather(*id).await;
+                }
+                Task::AddGil { amount } => {
+                    self.player_data.inventory.currency.get_slot_mut(0).quantity += *amount as u32;
+                    self.send_inventory(false).await;
+                }
+                Task::UnlockOrchestrion { id, on } => {
+                    // id == 0 means "all"
+                    if *id == 0 {
+                        /* Currently 792 songs ingame.
+                         * Commented out because this learns literally zero songs
+                         * for some unknown reason. */
+                        /*for i in 1..793 {
+                            let idd = i as u16;
+                            connection.send_message("test!").await;
+                            connection.actor_control_self(ActorControlSelf {
+                                category: ActorControlCategory::ToggleOrchestrionUnlock { song_id: id, unlocked: on } }).await;
+                        }*/
+                    } else {
+                        self.actor_control_self(ActorControlSelf {
+                            category: ActorControlCategory::ToggleOrchestrionUnlock {
+                                song_id: *id,
                                 unlocked: *on,
                             },
                         })

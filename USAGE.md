@@ -113,10 +113,6 @@ These special debug commands start with `!` and are custom to Kawari.
 * `!nudge <distance> <up/down (optional)>`: Teleport forward, back, up or down `distance` yalms. Specifying up or down will move the player up or down instead of forward or back. Examples: `!nudge 5 up` to move up 5 yalms, `!nudge 5` to move forward 5 yalms, `!nudge -5` to move backward 5 yalms.
 * `!festival <id1> <id2> <id3> <id4>`: Sets the festival in the current zone. Multiple festivals can be set together to create interesting effects.
 * `!reload`: Reloads `Global.lua` that is normally only loaded once at start-up.
-* `!wireframe: Toggles the hidden GM wireframe rendering mode on or off.`
-* `!invis: Toggles the hidden GM invisibility mode on or off for your character.`
-* `!unlockaetheryte <on/off> <id>`: Unlock an aetheryte. For the first parameter, the literal words are required.
-* `!teri <id>`: Changes to the specified territory.
 * `!finishevent`: Forcefully finishes the current event, useful if the script has an error and you're stuck talking to something.
 
 ### GM commands

@@ -3,24 +3,23 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use kawari::RECEIVE_BUFFER_SIZE;
-use kawari::common::{GameData, TerritoryNameKind, timestamp_secs};
-use kawari::common::{Position, value_to_flag_byte_index_value};
+use kawari::common::Position;
+use kawari::common::{GameData, timestamp_secs};
 use kawari::config::get_config;
-use kawari::inventory::{Item, Storage};
 use kawari::ipc::chat::{ServerChatIpcData, ServerChatIpcSegment};
 use kawari::ipc::zone::{
     ActorControlCategory, ActorControlSelf, PlayerEntry, PlayerSpawn, PlayerStatus, SocialList,
 };
 use kawari::ipc::zone::{
-    ClientTriggerCommand, ClientZoneIpcData, CommonSpawn, EventStart, GameMasterCommandType,
-    GameMasterRank, OnlineStatus, ServerZoneIpcData, ServerZoneIpcSegment, SocialListRequestType,
+    ClientTriggerCommand, ClientZoneIpcData, CommonSpawn, EventStart, GameMasterRank, OnlineStatus,
+    ServerZoneIpcData, ServerZoneIpcSegment, SocialListRequestType,
 };
 use kawari::opcodes::{ServerChatIpcType, ServerZoneIpcType};
 use kawari::packet::oodle::OodleNetwork;
 use kawari::packet::{
     ConnectionType, PacketSegment, PacketState, SegmentData, SegmentType, send_keep_alive,
 };
-use kawari::world::{ChatHandler, ExtraLuaState, Zone, ZoneConnection, load_init_script};
+use kawari::world::{ChatHandler, ExtraLuaState, LuaZone, Zone, ZoneConnection, load_init_script};
 use kawari::world::{
     ClientHandle, Event, FromServer, LuaPlayer, PlayerData, ServerHandle, StatusEffects, ToServer,
     WorldDatabase, handle_custom_ipc, server_main_loop,
@@ -617,136 +616,70 @@ async fn client_loop(
                                                 }
                                             }
                                             ClientZoneIpcData::GMCommand { command, arg0, arg1, .. } => {
-                                                tracing::info!("Got a game master command!");
+                                                let lua = lua.lock().unwrap();
+                                                let state = lua.app_data_ref::<ExtraLuaState>().unwrap();
 
-                                                match &command {
-                                                    GameMasterCommandType::SetLevel => {
-                                                        connection.player_data.set_current_level(*arg0 as i32);
-                                                        connection.update_class_info().await;
-                                                    }
-                                                    GameMasterCommandType::ChangeWeather => {
-                                                        connection.change_weather(*arg0 as u16).await
-                                                    }
-                                                    GameMasterCommandType::Speed => {
-                                                        // TODO: Maybe allow setting the speed of a targeted player too?
-                                                        connection
-                                                        .actor_control_self(ActorControlSelf {
-                                                            category:
-                                                            ActorControlCategory::Flee {
-                                                                speed: *arg0 as u16,
-                                                            },
-                                                        })
-                                                        .await
-                                                    }
-                                                    GameMasterCommandType::ChangeTerritory => {
-                                                        connection.change_zone(*arg0 as u16).await
-                                                    }
-                                                    GameMasterCommandType::ToggleInvisibility => {
-                                                        connection.player_data.gm_invisible = !connection.player_data.gm_invisible;
-                                                        connection
-                                                        .actor_control_self(ActorControlSelf {
-                                                            category:
-                                                            ActorControlCategory::ToggleInvisibility {
-                                                                invisible: connection.player_data.gm_invisible,
-                                                            },
-                                                        })
-                                                        .await
-                                                    }
-                                                    GameMasterCommandType::ToggleWireframe => connection
-                                                    .actor_control_self(ActorControlSelf {
-                                                        category:
-                                                        ActorControlCategory::ToggleWireframeRendering(),
-                                                    })
-                                                    .await,
-                                                    GameMasterCommandType::GiveItem => {
-                                                        connection.player_data.inventory.add_in_next_free_slot(Item { id: *arg0, quantity: 1 });
-                                                        connection.send_inventory(false).await;
-                                                    }
-                                                    GameMasterCommandType::Orchestrion => {
-                                                        let on = *arg0 == 1; // This command uses 1 for on, 2 for off.
-                                                        let id = *arg1 as u16;
+                                                if let Some(command_script) =
+                                                    state.gm_command_scripts.get(command)
+                                                {
+                                                    let file_name = format!(
+                                                        "{}/{}",
+                                                        &config.world.scripts_location, command_script
+                                                    );
 
-                                                        // id == 0 means "all"
-                                                        if id == 0 {
-                                                            /* Currently 792 songs ingame.
-                                                             * Commented out because this learns literally zero songs
-                                                             * for some unknown reason. */
-                                                            /*for i in 1..793 {
-                                                                let idd = i as u16;
-                                                                connection.send_message("test!").await;
-                                                                connection.actor_control_self(ActorControlSelf {
-                                                                    category: ActorControlCategory::ToggleOrchestrionUnlock { song_id: id, unlocked: on } }).await;
-                                                            }*/
-                                                        } else {
-                                                            connection.actor_control_self(ActorControlSelf {
-                                                                    category: ActorControlCategory::ToggleOrchestrionUnlock { song_id: id, unlocked: on }
-                                                            }).await;
-                                                        }
-                                                    }
-                                                    GameMasterCommandType::Aetheryte => {
-                                                        let on = *arg0 == 0;
-                                                        let id = *arg1;
+                                                    let mut run_script = || -> mlua::Result<()> {
+                                                        lua.scope(|scope| {
+                                                            let connection_data = scope
+                                                            .create_userdata_ref_mut(&mut lua_player)?;
 
-                                                        // id == 0 means "all"
-                                                        if id == 0 {
-                                                            for i in 1..239 {
-                                                                let (value, index) = value_to_flag_byte_index_value(i);
-                                                                if on {
-                                                                    connection.player_data.aetherytes[index as usize] |= value;
-                                                                } else {
-                                                                    connection.player_data.aetherytes[index as usize] ^= value;
+                                                            lua.load(
+                                                                std::fs::read(&file_name)
+                                                                .expect(format!("Failed to load script file {}!", &file_name).as_str()),
+                                                            )
+                                                            .set_name("@".to_string() + &file_name)
+                                                            .exec()?;
+
+                                                            let required_rank = lua.globals().get("required_rank");
+                                                            if let Err(error) = required_rank {
+                                                                tracing::info!("Script is missing required_rank! Unable to run command, sending error to user. Additional information: {}", error);
+                                                                let func: Function =
+                                                                    lua.globals().get("onCommandRequiredRankMissingError")?;
+                                                                func.call::<()>((error.to_string(), connection_data))?;
+                                                                return Ok(());
+                                                            }
+
+                                                            /* Reset state for future commands. Without this it'll stay set to the last value
+                                                            * and allow other commands that omit required_rank to run, which is undesirable. */
+                                                            lua.globals().set("required_rank", mlua::Value::Nil)?;
+
+                                                            if connection.player_data.gm_rank as u8 >= required_rank? {
+                                                                let func: Function =
+                                                                    lua.globals().get("onCommand")?;
+                                                                func.call::<()>(([*arg0, *arg1], connection_data))?;
+
+                                                                /* `command_sender` is an optional variable scripts can define to identify themselves in print messages.
+                                                                    * It's okay if this global isn't set. We also don't care what its value is, just that it exists.
+                                                                    * This is reset -after- running the command intentionally. Resetting beforehand will never display the command's identifier.
+                                                                    */
+                                                                let command_sender: Result<mlua::prelude::LuaValue, mlua::prelude::LuaError> = lua.globals().get("command_sender");
+                                                                if let Ok(_) = command_sender {
+                                                                    lua.globals().set("command_sender", mlua::Value::Nil)?;
                                                                 }
-
-                                                                connection.actor_control_self(ActorControlSelf {
-                                                                    category: ActorControlCategory::LearnTeleport { id: i, unlocked: on } }).await;
-                                                            }
-                                                        } else {
-                                                            let (value, index) = value_to_flag_byte_index_value(id);
-                                                            if on {
-                                                                connection.player_data.aetherytes[index as usize] |= value;
+                                                                Ok(())
                                                             } else {
-                                                                connection.player_data.aetherytes[index as usize] ^= value;
+                                                                tracing::info!("User with account_id {} tried to invoke GM command {} with insufficient privileges!",
+                                                                connection.player_data.account_id, command);
+                                                                let func: Function =
+                                                                    lua.globals().get("onCommandRequiredRankInsufficientError")?;
+                                                                func.call::<()>(connection_data)?;
+                                                                Ok(())
                                                             }
+                                                        })
+                                                    };
 
-                                                            connection.actor_control_self(ActorControlSelf {
-                                                                category: ActorControlCategory::LearnTeleport { id, unlocked: on } }).await;
-                                                        }
+                                                    if let Err(err) = run_script() {
+                                                        tracing::warn!("Lua error in {file_name}: {:?}", err);
                                                     }
-                                                    GameMasterCommandType::EXP => {
-                                                        let amount = *arg0;
-                                                        connection.player_data.set_current_exp(connection.player_data.current_exp() + amount);
-                                                        connection.update_class_info().await;
-                                                    }
-
-                                                    GameMasterCommandType::TerritoryInfo => {
-                                                        let id: u32 = connection.zone.as_ref().unwrap().id.into();
-                                                        let weather_id;
-                                                        let internal_name;
-                                                        let place_name;
-                                                        let region_name;
-                                                        {
-                                                            let mut game_data = connection.gamedata.lock().unwrap();
-                                                            // TODO: Maybe the current weather should be cached somewhere like the zone id?
-                                                            weather_id = game_data
-                                                                    .get_weather(id)
-                                                                    .unwrap_or(1) as u16;
-                                                            let fallback = "<Unable to load name!>";
-                                                            internal_name = game_data.get_territory_name(id, TerritoryNameKind::Internal).unwrap_or(fallback.to_string());
-                                                            region_name = game_data.get_territory_name(id, TerritoryNameKind::Region).unwrap_or(fallback.to_string());
-                                                            place_name = game_data.get_territory_name(id, TerritoryNameKind::Place).unwrap_or(fallback.to_string());
-                                                        }
-
-                                                        connection.send_message(format!(concat!("Territory Info for zone {}:\n",
-                                                                                                "Current weather: {}\n",
-                                                                                                "Internal name: {}\n",
-                                                                                                "Region name: {}\n",
-                                                                                                "Place name: {}"), id, weather_id, internal_name, region_name, place_name).as_str()).await;
-                                                    },
-                                                    GameMasterCommandType::Gil => {
-                                                        let amount = *arg0;
-                                                        connection.player_data.inventory.currency.get_slot_mut(0).quantity += amount;
-                                                        connection.send_inventory(false).await;
-                                                    },
                                                 }
                                             }
                                             ClientZoneIpcData::ZoneJump {
@@ -770,7 +703,7 @@ async fn client_loop(
 
                                                     // find the pop range on the other side
                                                     let mut game_data = game_data.lock().unwrap();
-                                                    let new_zone = Zone::load(&mut game_data.game_data, exit_box.territory_type);
+                                                    let new_zone = Zone::load(&mut game_data, exit_box.territory_type);
                                                     let (destination_object, _) = new_zone
                                                     .find_pop_range(exit_box.destination_instance_id)
                                                     .unwrap();
@@ -977,6 +910,16 @@ async fn client_loop(
                             // update lua player
                             lua_player.player_data = connection.player_data.clone();
                             lua_player.status_effects = connection.status_effects.clone();
+
+                            if let Some(zone) = &connection.zone {
+                                lua_player.zone_data = LuaZone {
+                                    zone_id: zone.id,
+                                    weather_id: connection.weather_id,
+                                    internal_name: zone.internal_name.clone(),
+                                    region_name: zone.region_name.clone(),
+                                    place_name: zone.place_name.clone(),
+                                };
+                            }
                         }
                     },
                     Err(_) => {
@@ -1092,7 +1035,8 @@ async fn main() {
                     exit_position: None,
                     exit_rotation: None,
                     last_keep_alive: Instant::now(),
-                    gracefully_logged_out: false
+                    gracefully_logged_out: false,
+                    weather_id: 0,
                 });
             }
             Some((mut socket, _)) = handle_rcon(&rcon_listener) => {
