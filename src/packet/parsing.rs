@@ -96,7 +96,10 @@ pub enum SegmentData<T: ReadWriteIpcSegment> {
     KeepAliveResponse { id: u32, timestamp: u32 },
 
     #[br(pre_assert(kind == SegmentType::KawariIpc))]
-    KawariIpc { data: CustomIpcSegment },
+    KawariIpc {
+        #[br(args(&0))] // this being zero is okay, custom ipc segments don't use the size arg
+        data: CustomIpcSegment,
+    },
 }
 
 impl<T: ReadWriteIpcSegment> Default for SegmentData<T> {

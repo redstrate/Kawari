@@ -2,7 +2,7 @@ use binrw::{BinRead, BinWrite, binrw};
 
 /// Required to implement for specializations of `IpcSegment`. These should be read/writeable, however for client packets you can leave calc_size() unimplemented.
 pub trait ReadWriteIpcSegment:
-    for<'a> BinRead<Args<'a> = ()> + for<'a> BinWrite<Args<'a> = ()> + std::fmt::Debug + 'static
+    for<'a> BinRead<Args<'a> = (&'a u32,)> + for<'a> BinWrite<Args<'a> = ()> + std::fmt::Debug + 'static
 {
     /// Calculate the size of this Ipc segment *including* the 16 byte header.
     /// When implementing this, please use the size seen in retail instead of guessing.
@@ -36,11 +36,12 @@ pub trait ReadWriteIpcSegment:
 /// ```
 #[binrw]
 #[derive(Debug, Clone)]
+#[br(import(size: &u32))]
 pub struct IpcSegment<OpCode, Data>
 where
     for<'a> OpCode: BinRead<Args<'a> = ()> + 'a + std::fmt::Debug,
     for<'a> OpCode: BinWrite<Args<'a> = ()> + 'a + std::fmt::Debug,
-    for<'a> Data: BinRead<Args<'a> = (&'a OpCode,)> + 'a + std::fmt::Debug,
+    for<'a> Data: BinRead<Args<'a> = (&'a OpCode, &'a u32)> + 'a + std::fmt::Debug,
     for<'a> Data: BinWrite<Args<'a> = ()> + 'a + std::fmt::Debug,
 {
     /// Unknown purpose, but usually 20.
@@ -56,6 +57,6 @@ where
     pub timestamp: u32,
     /// The data associated with the opcode.
     #[brw(pad_before = 4)]
-    #[br(args(&op_code))]
+    #[br(args(&op_code, size))]
     pub data: Data,
 }

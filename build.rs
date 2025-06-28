@@ -36,7 +36,7 @@ fn main() {
                     output_str.push_str(&format!("{name},\n"));
                 }
 
-                output_str.push_str(&format!("Unknown,\n"));
+                output_str.push_str(&format!("Unknown(u16),\n"));
 
                 // end
                 output_str.push_str("}\n\n");
@@ -56,7 +56,7 @@ fn main() {
                     output_str.push_str(&format!("{key}::{name} => {size},\n"));
                 }
 
-                output_str.push_str(&format!("{key}::Unknown => 0,\n"));
+                output_str.push_str(&format!("{key}::Unknown(_) => 0,\n"));
 
                 output_str.push_str("}\n\n");
                 output_str.push_str("}\n\n");
@@ -73,7 +73,7 @@ fn main() {
                     output_str.push_str(&format!("{key}::{name} => \"{name}\",\n"));
                 }
 
-                output_str.push_str(&format!("{key}::Unknown => \"Unknown\",\n"));
+                output_str.push_str(&format!("{key}::Unknown(_) => \"Unknown\",\n"));
 
                 output_str.push_str("}\n\n");
                 output_str.push_str("}\n\n");

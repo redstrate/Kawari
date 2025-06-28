@@ -939,7 +939,9 @@ async fn client_loop(
                                                     })
                                                     .await;
                                             }
-                                            _ => {},
+                                            ClientZoneIpcData::Unknown { .. } => {
+                                                tracing::warn!("Unknown packet {:?} recieved, this should be handled!", data.op_code);
+                                            }
                                         }
                                     }
                                     SegmentData::KeepAliveRequest { id, timestamp } => {

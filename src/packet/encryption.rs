@@ -31,9 +31,9 @@ pub(crate) fn decrypt<T: ReadWriteIpcSegment>(
         blowfish.decrypt(&mut data);
 
         let mut cursor = Cursor::new(&data);
-        T::read_options(&mut cursor, endian, ())
+        T::read_options(&mut cursor, endian, (&size,))
     } else {
-        T::read_options(reader, endian, ())
+        T::read_options(reader, endian, (&size,))
     }
 }
 

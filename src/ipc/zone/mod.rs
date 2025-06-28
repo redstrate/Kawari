@@ -167,7 +167,7 @@ pub enum GameMasterCommandType {
 }
 
 #[binrw]
-#[br(import(magic: &ServerZoneIpcType))]
+#[br(import(magic: &ServerZoneIpcType, _size: &u32))]
 #[derive(Debug, Clone)]
 pub enum ServerZoneIpcData {
     /// Sent by the server as response to ZoneInitRequest.
@@ -330,7 +330,7 @@ pub enum ServerZoneIpcData {
 }
 
 #[binrw]
-#[br(import(magic: &ClientZoneIpcType))]
+#[br(import(magic: &ClientZoneIpcType, size: &u32))]
 #[derive(Debug, Clone)]
 pub enum ClientZoneIpcData {
     /// Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load)
@@ -476,7 +476,10 @@ pub enum ClientZoneIpcData {
         #[brw(pad_after = 8)]
         unk3: u8,
     },
-    Unknown,
+    Unknown {
+        #[br(count = size - 32)]
+        unk: Vec<u8>,
+    },
 }
 
 #[cfg(test)]

@@ -80,7 +80,7 @@ pub enum CustomIpcType {
 }
 
 #[binrw]
-#[br(import(magic: &CustomIpcType))]
+#[br(import(magic: &CustomIpcType, _size: &u32))]
 #[derive(Debug, Clone)]
 pub enum CustomIpcData {
     #[br(pre_assert(*magic == CustomIpcType::RequestCreateCharacter))]

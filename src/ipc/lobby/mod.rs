@@ -83,7 +83,7 @@ impl Default for ServerLobbyIpcSegment {
 }
 
 #[binrw]
-#[br(import(magic: &ClientLobbyIpcType))]
+#[br(import(magic: &ClientLobbyIpcType, _size: &u32))]
 #[derive(Debug, Clone)]
 pub enum ClientLobbyIpcData {
     /// Sent by the client when it requests the character list in the lobby.
@@ -131,7 +131,7 @@ pub enum ClientLobbyIpcData {
 }
 
 #[binrw]
-#[br(import(magic: &ServerLobbyIpcType))]
+#[br(import(magic: &ServerLobbyIpcType, _size: &u32))]
 #[derive(Debug, Clone)]
 pub enum ServerLobbyIpcData {
     /// Sent by the server to indicate an lobby error occured.

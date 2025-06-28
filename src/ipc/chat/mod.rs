@@ -36,7 +36,7 @@ impl Default for ServerChatIpcSegment {
 }
 
 #[binrw]
-#[br(import(magic: &ServerChatIpcType))]
+#[br(import(magic: &ServerChatIpcType, _size: &u32))]
 #[derive(Debug, Clone)]
 pub enum ServerChatIpcData {
     /// Sent by the server to Initialize something chat-related?
