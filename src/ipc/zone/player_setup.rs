@@ -191,7 +191,7 @@ mod tests {
         assert_eq!(player_setup.max_level, 100);
         assert_eq!(player_setup.gender, 1);
         assert_eq!(player_setup.race, 1);
-        assert_eq!(player_setup.tribe, 3);
+        assert_eq!(player_setup.tribe, 2);
         assert_eq!(player_setup.expansion, 5);
         assert_eq!(player_setup.current_job, 1); // gladiator
         assert_eq!(player_setup.current_class, 1); // ditto
