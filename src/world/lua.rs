@@ -33,6 +33,7 @@ pub enum Task {
     ChangeWeather { id: u16 },
     AddGil { amount: u32 },
     UnlockOrchestrion { id: u16, on: bool },
+    AddItem { id: u32 },
 }
 
 #[derive(Default, Clone)]
@@ -248,6 +249,10 @@ impl LuaPlayer {
             on: unlocked == 1,
         });
     }
+
+    fn add_item(&mut self, id: u32) {
+        self.queued_tasks.push(Task::AddItem { id });
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -377,6 +382,10 @@ impl UserData for LuaPlayer {
         });
         methods.add_method_mut("unlock_orchestrion", |_, this, (unlock, id): (u32, u16)| {
             this.unlock_orchestrion(unlock, id);
+            Ok(())
+        });
+        methods.add_method_mut("add_item", |_, this, id: u32| {
+            this.add_item(id);
             Ok(())
         });
     }

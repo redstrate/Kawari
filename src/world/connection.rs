@@ -780,6 +780,13 @@ impl ZoneConnection {
                         .await;
                     }
                 }
+                Task::AddItem { id } => {
+                    self.player_data.inventory.add_in_next_free_slot(Item {
+                        id: *id,
+                        quantity: 1,
+                    });
+                    self.send_inventory(false).await;
+                }
             }
         }
         player.queued_tasks.clear();
