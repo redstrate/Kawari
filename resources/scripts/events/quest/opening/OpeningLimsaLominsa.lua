@@ -2,11 +2,11 @@
 POS_START = 4101800
 
 function Scene00000(player)
-    player:play_scene(EVENT_ID, 00000, 4959237, 1)
+    player:play_scene(EVENT_ID, 00000, 4959237, {0})
 end
 
 function Scene00001(player)
-    player:play_scene(EVENT_ID, 00001, 4959237, 1)
+    player:play_scene(EVENT_ID, 00001, 4959237, {0})
 end
 
 function onEnterTerritory(player, zone)
