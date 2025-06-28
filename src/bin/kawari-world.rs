@@ -293,6 +293,7 @@ async fn client_loop(
                                                             current_class: connection.player_data.classjob_id,
                                                             current_job: connection.player_data.classjob_id,
                                                             levels: connection.player_data.classjob_levels.map(|x| x as u16),
+                                                            unlocks: connection.player_data.unlocks.clone(),
                                                             ..Default::default()
                                                         }),
                                                         ..Default::default()

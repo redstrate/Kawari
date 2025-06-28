@@ -10,7 +10,9 @@ use tokio::net::TcpStream;
 
 use crate::{
     OBFUSCATION_ENABLED_MODE,
-    common::{GameData, ObjectId, ObjectTypeId, Position, timestamp_secs},
+    common::{
+        GameData, ObjectId, ObjectTypeId, Position, timestamp_secs, value_to_flag_byte_index_value,
+    },
     config::{WorldConfig, get_config},
     inventory::{ContainerType, Inventory, Item},
     ipc::{
@@ -76,6 +78,8 @@ pub struct PlayerData {
     pub teleport_query: TeleportQuery,
     pub gm_rank: GameMasterRank,
     pub gm_invisible: bool,
+
+    pub unlocks: Vec<u8>,
 }
 
 impl PlayerData {
@@ -673,6 +677,18 @@ impl ZoneConnection {
                 }
                 Task::ToggleInvisibility { invisible } => {
                     self.toggle_invisibility(*invisible).await;
+                }
+                Task::Unlock { id } => {
+                    let (value, index) = value_to_flag_byte_index_value(*id);
+                    self.player_data.unlocks[index as usize] |= value;
+
+                    self.actor_control_self(ActorControlSelf {
+                        category: ActorControlCategory::ToggleUnlock {
+                            id: *id,
+                            unlocked: true,
+                        },
+                    })
+                    .await;
                 }
             }
         }

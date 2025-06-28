@@ -47,7 +47,7 @@ impl WorldDatabase {
 
         // Create characters data table
         {
-            let query = "CREATE TABLE IF NOT EXISTS character_data (content_id INTEGER PRIMARY KEY, name STRING, chara_make STRING, city_state INTEGER, zone_id INTEGER, pos_x REAL, pos_y REAL, pos_z REAL, rotation REAL, inventory STRING, remake_mode INTEGER, gm_rank INTEGER, classjob_id INTEGER, classjob_levels STRING);";
+            let query = "CREATE TABLE IF NOT EXISTS character_data (content_id INTEGER PRIMARY KEY, name STRING, chara_make STRING, city_state INTEGER, zone_id INTEGER, pos_x REAL, pos_y REAL, pos_z REAL, rotation REAL, inventory STRING, remake_mode INTEGER, gm_rank INTEGER, classjob_id INTEGER, classjob_levels STRING, unlocks STRING);";
             connection.execute(query, ()).unwrap();
         }
 
@@ -140,7 +140,7 @@ impl WorldDatabase {
             .unwrap();
 
         stmt = connection
-            .prepare("SELECT pos_x, pos_y, pos_z, rotation, zone_id, inventory, gm_rank, classjob_id, classjob_levels FROM character_data WHERE content_id = ?1")
+            .prepare("SELECT pos_x, pos_y, pos_z, rotation, zone_id, inventory, gm_rank, classjob_id, classjob_levels, unlocks FROM character_data WHERE content_id = ?1")
             .unwrap();
         let (
             pos_x,
@@ -152,7 +152,8 @@ impl WorldDatabase {
             gm_rank,
             classjob_id,
             classjob_levels,
-        ): (f32, f32, f32, f32, u16, String, u8, i32, String) = stmt
+            unlocks,
+        ): (f32, f32, f32, f32, u16, String, u8, i32, String, String) = stmt
             .query_row((content_id,), |row| {
                 Ok((
                     row.get(0)?,
@@ -164,6 +165,7 @@ impl WorldDatabase {
                     row.get(6)?,
                     row.get(7)?,
                     row.get(8)?,
+                    row.get(9)?,
                 ))
             })
             .unwrap();
@@ -185,6 +187,7 @@ impl WorldDatabase {
             gm_rank: GameMasterRank::try_from(gm_rank).unwrap(),
             classjob_id: classjob_id as u8,
             classjob_levels: serde_json::from_str(&classjob_levels).unwrap(),
+            unlocks: serde_json::from_str(&unlocks).unwrap(),
             ..Default::default()
         }
     }
@@ -194,7 +197,7 @@ impl WorldDatabase {
         let connection = self.connection.lock().unwrap();
 
         let mut stmt = connection
-            .prepare("UPDATE character_data SET zone_id=?1, pos_x=?2, pos_y=?3, pos_z=?4, rotation=?5, inventory=?6, classjob_id=?7, classjob_levels=?8 WHERE content_id = ?9")
+            .prepare("UPDATE character_data SET zone_id=?1, pos_x=?2, pos_y=?3, pos_z=?4, rotation=?5, inventory=?6, classjob_id=?7, classjob_levels=?8, unlocks=?9 WHERE content_id = ?10")
             .unwrap();
         stmt.execute((
             data.zone_id,
@@ -205,6 +208,7 @@ impl WorldDatabase {
             serde_json::to_string(&data.inventory).unwrap(),
             data.classjob_id,
             serde_json::to_string(&data.classjob_levels).unwrap(),
+            serde_json::to_string(&data.unlocks).unwrap(),
             data.content_id,
         ))
         .unwrap();
@@ -363,6 +367,9 @@ impl WorldDatabase {
         let mut classjob_levels = [0i32; 32];
         classjob_levels[chara_make.classjob_id as usize] = 1; // inital level
 
+        // fill out initial unlocks
+        let unlocks = vec![0u8; 64];
+
         // insert ids
         connection
             .execute(
@@ -374,7 +381,7 @@ impl WorldDatabase {
         // insert char data
         connection
             .execute(
-                "INSERT INTO character_data VALUES (?1, ?2, ?3, ?4, ?5, 0.0, 0.0, 0.0, 0.0, ?6, 0, 90, ?7, ?8);",
+                "INSERT INTO character_data VALUES (?1, ?2, ?3, ?4, ?5, 0.0, 0.0, 0.0, 0.0, ?6, 0, 90, ?7, ?8, ?9);",
                 (
                     content_id,
                     name,
@@ -384,6 +391,7 @@ impl WorldDatabase {
                     serde_json::to_string(&inventory).unwrap(),
                     chara_make.classjob_id,
                     serde_json::to_string(&classjob_levels).unwrap(),
+                    serde_json::to_string(&unlocks).unwrap(),
                 ),
             )
             .unwrap();

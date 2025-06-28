@@ -27,6 +27,7 @@ pub enum Task {
     WarpAetheryte { aetheryte_id: u32 },
     ReloadScripts,
     ToggleInvisibility { invisible: bool },
+    Unlock { id: u32 },
 }
 
 #[derive(Default)]
@@ -135,13 +136,8 @@ impl LuaPlayer {
         self.create_segment_self(op_code, data);
     }
 
-    fn unlock_action(&mut self, id: u32) {
-        let op_code = ServerZoneIpcType::ActorControlSelf;
-        let data = ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
-            category: ActorControlCategory::ToggleUnlock { id, unlocked: true },
-        });
-
-        self.create_segment_self(op_code, data);
+    fn unlock(&mut self, id: u32) {
+        self.queued_tasks.push(Task::Unlock { id });
     }
 
     fn set_speed(&mut self, speed: u16) {
@@ -289,8 +285,8 @@ impl UserData for LuaPlayer {
             this.unlock_aetheryte(unlock, id);
             Ok(())
         });
-        methods.add_method_mut("unlock_action", |_, this, action_id: u32| {
-            this.unlock_action(action_id);
+        methods.add_method_mut("unlock", |_, this, action_id: u32| {
+            this.unlock(action_id);
             Ok(())
         });
         methods.add_method_mut("set_speed", |_, this, speed: u16| {

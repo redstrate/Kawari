@@ -79,19 +79,18 @@ pub struct PlayerStatus {
     #[bw(pad_size_to = 33)]
     pub mount_guide_mask: Vec<u8>,
     pub ornament_mask: [u8; 4],
-    #[br(count = 85)]
-    #[bw(pad_size_to = 85)]
+    #[br(count = 95)]
+    #[bw(pad_size_to = 95)]
     pub unknown281: Vec<u8>,
     #[br(count = CHAR_NAME_MAX_LENGTH)]
     #[bw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
     #[br(map = read_string)]
     #[bw(map = write_string)]
     pub name: String,
-    pub unknown293: [u8; 16],
-    pub unknown2a3: u8,
+    pub unknown293: [u8; 32],
     #[br(count = 64)]
     #[bw(pad_size_to = 64)]
-    pub unlock_bitmask: Vec<u8>,
+    pub unlocks: Vec<u8>,
     pub aetheryte: [u8; 26],
     pub favorite_aetheryte_ids: [u16; 4],
     pub free_aetheryte_id: u16,
@@ -159,8 +158,8 @@ pub struct PlayerStatus {
     pub cleared_pvp: [u8; 5],
 
     // meh, this is where i put all of the new data
-    #[br(count = 216)]
-    #[bw(pad_size_to = 216)]
+    #[br(count = 191)]
+    #[bw(pad_size_to = 191)]
     pub unknown948: Vec<u8>,
 }
 
