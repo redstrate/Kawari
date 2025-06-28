@@ -594,6 +594,25 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 }
             }
             ToServer::Config(_from_id, from_actor_id, config) => {
+                // update their stored state so it's correctly sent on new spawns
+                {
+                    let mut data = data.lock().unwrap();
+
+                    let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
+                        break;
+                    };
+
+                    let Some(actor) = instance.find_actor_mut(ObjectId(from_actor_id)) else {
+                        break;
+                    };
+
+                    let NetworkedActor::Player(player) = actor else {
+                        break;
+                    };
+
+                    player.common.display_flags = config.display_flag;
+                }
+
                 let mut data = data.lock().unwrap();
                 for (id, (handle, _)) in &mut data.clients {
                     let id = *id;
