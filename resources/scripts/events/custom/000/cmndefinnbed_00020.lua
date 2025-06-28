@@ -22,6 +22,7 @@ end
 function onReturn(scene, results, player)
     local CUTSCENE_FLAGS <const> = FADE_OUT | HIDE_UI | CONDITION_CUTSCENE
     -- Decision values the player can choose
+    local CANCEL_SCENE   <const> = 0 -- If the player hits escape/cancel on controller to cancel the menu
     local NOTHING        <const> = 1
     local DREAMFITTING   <const> = 2
     local LOG_OUT        <const> = 3
@@ -29,7 +30,7 @@ function onReturn(scene, results, player)
     local decision       <const> = results[1]
 
     if scene == SCENE_SHOW_MENU then
-        if decision == NOTHING then
+        if decision == NOTHING or decision == CANCEL_SCENE then
             player:finish_event(EVENT_ID)
         else
             if decision == LOG_OUT or decision == EXIT_GAME then
