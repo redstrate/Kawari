@@ -22,6 +22,8 @@ generic_warps = {
     131119,  -- Ferry Skipper from Eastern La Noscea: Hidden Falls Docks to Eastern La Noscea: Raincatcher Gully Docks
     131120,  -- Ferry Skipper from Eastern La Noscea: Hidden Falls Docks to Eastern La Noscea: Raincatcher Gully Docks
     131126,  -- Gatekeeper from Southern Thanalan: Nald's Reflection to Southern Thanalan: The Minotaur Malm
+    131131,  -- Ferry Skipper from Moraby Drydocks to Wolves' Den Pier
+    131132,  -- Ferry Skipper from Wolves' Den Pier to Moraby Drydocks
     --131158, None -- Ferry Skipper from Old Gridania to The Lavender Beds, needs special handling for housing
     131169,  -- Ferry Skipper from Eastern La Noscea: Costa Del Sol to ELN: Rhotano Privateer
     131177,  -- Exit from The Gold Saucer (Lift Operator) to The Gold Saucer: Chocobo Square
@@ -36,6 +38,7 @@ generic_warps = {
     131268,  -- Enclave Skiff Captain from The Doman Enclave to Yanxia: The Glittering Basin
     131312,  -- Exit The Pendants Personal Suite to Crystarium
     131313,  -- Exit from The Crown Lift (Lift Operator) to Eulmore: The Canopy
+    131390,  -- Exit via Pawlin <Dreamer's Run Doorman> from Old Gridania: Dreamer's Run (old Hatchingtide event area which is now out of bounds) to Old Gridania: Botanists' Guild
     131402,  -- Exit Andron to Old Sharlayan
     131428,  -- Mothercrystal Exit (note: warp doesn't work for some reason?)
     131519,  -- Faire Adventurer from Eastern La Noscea: bottom of the Moonfire Festival (2023 tower to the first tier of the tower
