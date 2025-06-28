@@ -689,16 +689,24 @@ async fn client_loop(
 
                                                         // id == 0 means "all"
                                                         if id == 0 {
-                                                            for i in 1..239 {
-                                                                let (value, index) = value_to_flag_byte_index_value(id);
-                                                                connection.player_data.aetherytes[index as usize] |= value;
+                                                            for i in 1..231 {
+                                                                let (value, index) = value_to_flag_byte_index_value(i);
+                                                                if on {
+                                                                    connection.player_data.aetherytes[index as usize] |= value;
+                                                                } else {
+                                                                    connection.player_data.aetherytes[index as usize] ^= value;
+                                                                }
 
                                                                 connection.actor_control_self(ActorControlSelf {
                                                                     category: ActorControlCategory::LearnTeleport { id: i, unlocked: on } }).await;
                                                             }
                                                         } else {
                                                             let (value, index) = value_to_flag_byte_index_value(id);
-                                                            connection.player_data.aetherytes[index as usize] |= value;
+                                                            if on {
+                                                                connection.player_data.aetherytes[index as usize] |= value;
+                                                            } else {
+                                                                connection.player_data.aetherytes[index as usize] ^= value;
+                                                            }
 
                                                             connection.actor_control_self(ActorControlSelf {
                                                                 category: ActorControlCategory::LearnTeleport { id, unlocked: on } }).await;

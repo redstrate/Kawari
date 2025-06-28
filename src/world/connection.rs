@@ -694,9 +694,13 @@ impl ZoneConnection {
                 Task::UnlockAetheryte { id, on } => {
                     let unlock_all = *id == 0;
                     if unlock_all {
-                        for i in 1..239 {
-                            let (value, index) = value_to_flag_byte_index_value(*id);
-                            self.player_data.aetherytes[index as usize] |= value;
+                        for i in 1..231 {
+                            let (value, index) = value_to_flag_byte_index_value(i);
+                            if *on {
+                                self.player_data.aetherytes[index as usize] |= value;
+                            } else {
+                                self.player_data.aetherytes[index as usize] ^= value;
+                            }
 
                             /* Unknown if this will make the server panic from a flood of packets.
                              * Needs testing once toggling aetherytes actually works. */
@@ -710,7 +714,11 @@ impl ZoneConnection {
                         }
                     } else {
                         let (value, index) = value_to_flag_byte_index_value(*id);
-                        self.player_data.aetherytes[index as usize] |= value;
+                        if *on {
+                            self.player_data.aetherytes[index as usize] |= value;
+                        } else {
+                            self.player_data.aetherytes[index as usize] ^= value;
+                        }
 
                         self.actor_control_self(ActorControlSelf {
                             category: ActorControlCategory::LearnTeleport {
