@@ -12,11 +12,10 @@ pub struct EventScene {
     #[brw(pad_before = 2)] // FIXME: um, i don't think this is empty!!
     pub scene_flags: u32,
     pub unk1: u32,
-    pub unk2: u8,
-    #[brw(pad_before = 3)]
-    pub unk3: u32,
-    pub unk4: u32,
-    pub unk5: u32,
+    pub params_count: u8,
+    // Extra padding seems needed after or the client will seemingly softlock even with 2 params, possibly used for alignment?
+    #[brw(pad_before = 3, pad_after = 4)]
+    pub params: [u32; 2],
 }
 
 #[cfg(test)]
@@ -49,9 +48,8 @@ mod tests {
         assert_eq!(event_play.scene, 0);
         assert_eq!(event_play.scene_flags, 4959237);
         assert_eq!(event_play.unk1, 0);
-        assert_eq!(event_play.unk2, 1);
-        assert_eq!(event_play.unk3, 0);
-        assert_eq!(event_play.unk4, 0);
-        assert_eq!(event_play.unk5, 0);
+        assert_eq!(event_play.params_count, 1);
+        assert_eq!(event_play.params[0], 0);
+        assert_eq!(event_play.params[1], 0);
     }
 }
