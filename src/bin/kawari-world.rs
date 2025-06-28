@@ -615,7 +615,7 @@ async fn client_loop(
                                                     }
                                                 }
                                             }
-                                            ClientZoneIpcData::GMCommand { command, arg0, arg1, .. } => {
+                                            ClientZoneIpcData::GMCommand { command, arg0, arg1, arg2, arg3, .. } => {
                                                 let lua = lua.lock().unwrap();
                                                 let state = lua.app_data_ref::<ExtraLuaState>().unwrap();
 
@@ -655,7 +655,7 @@ async fn client_loop(
                                                             if connection.player_data.gm_rank as u8 >= required_rank? {
                                                                 let func: Function =
                                                                     lua.globals().get("onCommand")?;
-                                                                func.call::<()>(([*arg0, *arg1], connection_data))?;
+                                                                func.call::<()>(([*arg0, *arg1, *arg2, *arg3], connection_data))?;
 
                                                                 /* `command_sender` is an optional variable scripts can define to identify themselves in print messages.
                                                                     * It's okay if this global isn't set. We also don't care what its value is, just that it exists.
