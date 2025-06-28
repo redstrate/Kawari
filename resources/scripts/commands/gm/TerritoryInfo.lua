@@ -7,5 +7,6 @@ function onCommand(args, player)
     local internal_name = "Internal name: "..player.zone.internal_name
     local region_name = "Region name: "..player.zone.region_name
     local place_name = "Place name: "..player.zone.place_name
-    printf(player, teri_info.."\n"..current_weather.."\n"..internal_name.."\n"..region_name.."\n"..place_name)
+    local intended_use = "Intended Use: "..player.zone.intended_use
+    printf(player, teri_info.."\n"..current_weather.."\n"..internal_name.."\n"..region_name.."\n"..place_name.."\n"..intended_use)
 end
