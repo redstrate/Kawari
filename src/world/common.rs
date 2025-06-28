@@ -42,6 +42,8 @@ pub enum FromServer {
     ActionCancelled(),
     /// Update an actor's equip display flags.
     UpdateConfig(u32, Config),
+    /// Update an actor's model IDs.
+    ActorEquip(u32, u64, [u32; 10]),
 }
 
 #[derive(Debug, Clone)]
@@ -50,7 +52,6 @@ pub struct ClientHandle {
     pub ip: SocketAddr,
     pub channel: Sender<FromServer>,
     pub actor_id: u32,
-    pub common: CommonSpawn,
 }
 
 impl ClientHandle {
@@ -86,7 +87,7 @@ pub enum ToServer {
     ClientTrigger(ClientId, u32, ClientTrigger),
     /// The connection loaded into a zone.
     // TODO: the connection should not be in charge and telling the global server what zone they just loaded in! but this will work for now
-    ZoneLoaded(ClientId, u16),
+    ZoneLoaded(ClientId, u16, CommonSpawn),
     /// The connection left a zone.
     LeftZone(ClientId, u32, u16),
     /// The connection disconnected.
@@ -103,6 +104,8 @@ pub enum ToServer {
     ActionRequest(ClientId, u32, ActionRequest),
     /// We want to update our own equip display flags.
     Config(ClientId, u32, Config),
+    /// Tell the server what models IDs we have equipped.
+    Equip(ClientId, u32, u64, [u32; 10]),
 }
 
 #[derive(Clone, Debug)]

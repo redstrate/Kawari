@@ -585,33 +585,46 @@ impl ZoneConnection {
 
         // send them an appearance update
         if send_appearance_update {
-            let ipc;
+            let main_weapon_id;
+            let model_ids;
             {
                 let mut game_data = self.gamedata.lock().unwrap();
                 let inventory = &self.player_data.inventory;
 
-                ipc = ServerZoneIpcSegment {
-                    op_code: ServerZoneIpcType::Equip,
-                    timestamp: timestamp_secs(),
-                    data: ServerZoneIpcData::Equip(Equip {
-                        main_weapon_id: inventory.get_main_weapon_id(&mut game_data),
-                        sub_weapon_id: 0,
-                        crest_enable: 0,
-                        pattern_invalid: 0,
-                        model_ids: inventory.get_model_ids(&mut game_data),
-                    }),
-                    ..Default::default()
-                };
+                main_weapon_id = inventory.get_main_weapon_id(&mut game_data);
+                model_ids = inventory.get_model_ids(&mut game_data);
             }
 
-            self.send_segment(PacketSegment {
-                source_actor: self.player_data.actor_id,
-                target_actor: self.player_data.actor_id,
-                segment_type: SegmentType::Ipc,
-                data: SegmentData::Ipc { data: ipc },
-            })
-            .await;
+            self.handle
+                .send(ToServer::Equip(
+                    self.id,
+                    self.player_data.actor_id,
+                    main_weapon_id,
+                    model_ids,
+                ))
+                .await;
         }
+    }
+
+    pub async fn update_equip(&mut self, actor_id: u32, main_weapon_id: u64, model_ids: [u32; 10]) {
+        let ipc = ServerZoneIpcSegment {
+            op_code: ServerZoneIpcType::Equip,
+            timestamp: timestamp_secs(),
+            data: ServerZoneIpcData::Equip(Equip {
+                main_weapon_id,
+                model_ids,
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+
+        self.send_segment(PacketSegment {
+            source_actor: actor_id,
+            target_actor: self.player_data.actor_id,
+            segment_type: SegmentType::Ipc,
+            data: SegmentData::Ipc { data: ipc },
+        })
+        .await;
     }
 
     pub async fn send_message(&mut self, message: &str) {

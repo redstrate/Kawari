@@ -62,6 +62,10 @@ impl Instance {
         self.actors.get(&id)
     }
 
+    fn find_actor_mut(&mut self, id: ObjectId) -> Option<&mut NetworkedActor> {
+        self.actors.get_mut(&id)
+    }
+
     fn insert_npc(&mut self, id: ObjectId, spawn: NpcSpawn) {
         self.actors.insert(id, NetworkedActor::Npc(spawn));
     }
@@ -132,7 +136,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 data.clients
                     .insert(handle.id, (handle, ClientState::default()));
             }
-            ToServer::ZoneLoaded(from_id, zone_id) => {
+            ToServer::ZoneLoaded(from_id, zone_id, common_spawn) => {
                 let mut data = data.lock().unwrap();
 
                 // create a new instance if necessary
@@ -181,7 +185,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     instance.actors.insert(
                         ObjectId(client.actor_id),
                         NetworkedActor::Player(NpcSpawn {
-                            common: client.common.clone(),
+                            common: common_spawn.clone(),
                             ..Default::default()
                         }),
                     );
@@ -208,7 +212,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                             spawn_index: 0,
                         },
                         NpcSpawn {
-                            common: client.common.clone(),
+                            common: common_spawn.clone(),
                             ..Default::default()
                         },
                     );
@@ -595,6 +599,39 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     let id = *id;
 
                     let msg = FromServer::UpdateConfig(from_actor_id, config.clone());
+
+                    if handle.send(msg).is_err() {
+                        to_remove.push(id);
+                    }
+                }
+            }
+            ToServer::Equip(_from_id, from_actor_id, main_weapon_id, model_ids) => {
+                // update their stored state so it's correctly sent on new spawns
+                {
+                    let mut data = data.lock().unwrap();
+
+                    let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
+                        break;
+                    };
+
+                    let Some(actor) = instance.find_actor_mut(ObjectId(from_actor_id)) else {
+                        break;
+                    };
+
+                    let NetworkedActor::Player(player) = actor else {
+                        break;
+                    };
+
+                    player.common.main_weapon_model = main_weapon_id;
+                    player.common.models = model_ids.clone();
+                }
+
+                // Inform all clients about their new equipped model ids
+                let mut data = data.lock().unwrap();
+                for (id, (handle, _)) in &mut data.clients {
+                    let id = *id;
+
+                    let msg = FromServer::ActorEquip(from_actor_id, main_weapon_id, model_ids);
 
                     if handle.send(msg).is_err() {
                         to_remove.push(id);

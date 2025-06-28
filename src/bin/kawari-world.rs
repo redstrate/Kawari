@@ -11,7 +11,7 @@ use kawari::ipc::zone::{
     ActorControlCategory, ActorControlSelf, PlayerEntry, PlayerSpawn, PlayerStatus, SocialList,
 };
 use kawari::ipc::zone::{
-    ClientTriggerCommand, ClientZoneIpcData, CommonSpawn, EventStart, GameMasterRank, OnlineStatus,
+    ClientTriggerCommand, ClientZoneIpcData, EventStart, GameMasterRank, OnlineStatus,
     ServerZoneIpcData, ServerZoneIpcSegment, SocialListRequestType,
 };
 use kawari::opcodes::{ServerChatIpcType, ServerZoneIpcType};
@@ -79,7 +79,6 @@ pub fn spawn_client(connection: ZoneConnection) {
         ip: *ip,
         channel: send,
         actor_id: 0,
-        common: CommonSpawn::default(),
     };
     let _ = my_send.send(handle);
 }
@@ -170,7 +169,6 @@ async fn client_loop(
 
                                             let mut client_handle = client_handle.clone();
                                             client_handle.actor_id = actor_id;
-                                            client_handle.common = connection.get_player_common_spawn(connection.exit_position, connection.exit_rotation);
 
                                             // tell the server we exist, now that we confirmed we are a legitimate connection
                                             connection.handle.send(ToServer::NewClient(client_handle)).await;
@@ -326,10 +324,10 @@ async fn client_loop(
                                                 .unwrap();
                                             }
                                             ClientZoneIpcData::FinishLoading { .. } => {
-                                                // tell the server we loaded into the zone, so it can start sending us acors
-                                                connection.handle.send(ToServer::ZoneLoaded(connection.id, connection.zone.as_ref().unwrap().id)).await;
-
                                                 let common = connection.get_player_common_spawn(connection.exit_position, connection.exit_rotation);
+
+                                                // tell the server we loaded into the zone, so it can start sending us acors
+                                                connection.handle.send(ToServer::ZoneLoaded(connection.id, connection.zone.as_ref().unwrap().id, common.clone())).await;
 
                                                 let chara_details = database.find_chara_make(connection.player_data.content_id);
 
@@ -941,6 +939,7 @@ async fn client_loop(
                     FromServer::ActionComplete(request) => connection.execute_action(request, &mut lua_player).await,
                     FromServer::ActionCancelled() => connection.cancel_action().await,
                     FromServer::UpdateConfig(actor_id, config) => connection.update_config(actor_id, config).await,
+                    FromServer::ActorEquip(actor_id, main_weapon_id, model_ids) => connection.update_equip(actor_id, main_weapon_id, model_ids).await,
                 },
                 None => break,
             }
