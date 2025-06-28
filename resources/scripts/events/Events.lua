@@ -16,15 +16,18 @@ generic_warps = {
     131095,  -- Exit from Ul'dah Hustings Strip and/or Ruby Road Exchange to Airship Landing, these three events get reused in several places to ensure thay all connect
     131096,  -- Exit from Ul'dah Airship Landing and/or Ruby Road Exchange to Hustings Strip
     131097,  -- Exit from Ul'dah Airship Landing and/or Husting Strip to Ruby Road Exchange
+    --131109, -- Rerenasu <Ferry Skipper> from Limsa Lominsa: The Lower Decks to Western La Noscea: Aleport, currently doesn't respond for unknown reasons
+    --131111, -- Rerenasu <Ferry Skipper> from Limsa Lominsa: The Lower Decks to Eastern La Noscea: Costa Del Sol, currently doesn't respond for unknown reasons'
     --131112, -- Ferry Skipper from Eastern La Noscea: Costa Del Sol to Limsa Lominsa: The Lower Decks, currently doesn't respond for unknown reasons
     131113,  -- Ferry Skipper from Upper La Noscea: Memeroon's Trading Post to Upper La Noscea: Jijiroon's Trading Post
     131114,  -- Ferry Skipper from Upper La Noscea: Jijiroon's Trading Post to Upper La Noscea: Memeroon's Trading Post
     131119,  -- Ferry Skipper from Eastern La Noscea: Hidden Falls Docks to Eastern La Noscea: Raincatcher Gully Docks
-    131120,  -- Ferry Skipper from Eastern La Noscea: Hidden Falls Docks to Eastern La Noscea: Raincatcher Gully Docks
+    131120,  -- Ferry Skipper from Eastern La Noscea: Raincatcher Gully Docks to Eastern La Noscea: Hidden Falls Docks
     131126,  -- Gatekeeper from Southern Thanalan: Nald's Reflection to Southern Thanalan: The Minotaur Malm
     131131,  -- Ferry Skipper from Moraby Drydocks to Wolves' Den Pier
     131132,  -- Ferry Skipper from Wolves' Den Pier to Moraby Drydocks
-    --131158, None -- Ferry Skipper from Old Gridania to The Lavender Beds, needs special handling for housing
+    -- 131158, None -- Ferry Skipper from Old Gridania to The Lavender Beds, needs special handling for housing
+    -- 131160, None -- Rerenasu <Ferry Skipper> from Limsa Lominsa: The Lower Decks to Mist, needs special handling for housing
     131169,  -- Ferry Skipper from Eastern La Noscea: Costa Del Sol to ELN: Rhotano Privateer
     131177,  -- Exit from The Gold Saucer (Lift Operator) to The Gold Saucer: Chocobo Square
     131178,  -- Exit from The Gold Saucer: Chocobo Square (Lift Operator) to The Gold Saucer
