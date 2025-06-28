@@ -194,9 +194,11 @@ pub async fn handle_custom_ipc(connection: &mut ZoneConnection, data: &CustomIpc
             service_account_id,
             path,
         } => {
+            let mut game_data = connection.gamedata.lock().unwrap();
+
             connection
                 .database
-                .import_character(*service_account_id, path);
+                .import_character(&mut game_data, *service_account_id, path);
         }
         CustomIpcData::RemakeCharacter {
             content_id,

@@ -70,7 +70,7 @@ pub fn get_supported_expac_versions() -> HashMap<&'static str, Version<'static>>
 pub const OBFUSCATION_ENABLED_MODE: u8 = 41;
 
 /// The size of the unlock bitmask.
-pub const UNLOCK_BITMASK_SIZE: usize = 64;
+pub const UNLOCK_BITMASK_SIZE: usize = 92;
 
 /// The size of the aetheryte unlock bitmask.
 // TODO: this can be automatically derived from game data

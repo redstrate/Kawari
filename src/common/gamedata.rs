@@ -312,6 +312,14 @@ impl GameData {
 
         self.get_weather_rate(*weather_rate_id as u32)
     }
+
+    /// Gets the array index used in EXP & levels.
+    pub fn get_exp_array_index(&mut self, classjob_id: u16) -> Option<i8> {
+        let sheet = ClassJobSheet::read_from(&mut self.game_data, Language::English)?;
+        let row = sheet.get_row(classjob_id as u32)?;
+
+        row.ExpArrayIndex().into_i8().copied()
+    }
 }
 
 // Simple enum for GameData::get_territory_name

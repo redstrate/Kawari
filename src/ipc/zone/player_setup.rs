@@ -94,7 +94,6 @@ pub struct PlayerStatus {
     #[br(count = UNLOCK_BITMASK_SIZE)]
     #[bw(pad_size_to = UNLOCK_BITMASK_SIZE)]
     pub unlocks: Vec<u8>,
-    pub unknown10e: [u8; 28],
     #[br(count = AETHERYTE_UNLOCK_BITMASK_SIZE)]
     #[bw(pad_size_to = AETHERYTE_UNLOCK_BITMASK_SIZE)]
     pub aetherytes: Vec<u8>,

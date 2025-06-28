@@ -9,7 +9,7 @@ use crate::{
         CustomizeData, GameData, Position,
         workdefinitions::{CharaMake, ClientSelectData, RemakeMode},
     },
-    inventory::Inventory,
+    inventory::{Inventory, Item, Storage},
     ipc::{
         lobby::{CharacterDetails, CharacterFlag},
         zone::GameMasterRank,
@@ -57,7 +57,7 @@ impl WorldDatabase {
         }
     }
 
-    pub fn import_character(&self, service_account_id: u32, path: &str) {
+    pub fn import_character(&self, game_data: &mut GameData, service_account_id: u32, path: &str) {
         tracing::info!("Importing character backup from {path}...");
 
         let file = std::fs::File::open(path).unwrap();
@@ -76,12 +76,57 @@ impl WorldDatabase {
         }
 
         #[derive(Deserialize)]
+        struct ClassJobLevelValue {
+            level: i32,
+            exp: Option<u32>,
+            value: i32,
+        }
+
+        #[derive(Deserialize)]
+        struct InventoryItem {
+            slot: i32,
+            quantity: u32,
+            condition: i32,
+            id: u32,
+            glamour_id: u32,
+        }
+
+        #[derive(Deserialize)]
+        struct InventoryContainer {
+            items: Vec<InventoryItem>,
+        }
+
+        #[derive(Deserialize)]
         struct CharacterJson {
             name: String,
             city_state: GenericValue,
             nameday: NamedayValue,
             guardian: GenericValue,
             voice: i32,
+            classjob_levels: Vec<ClassJobLevelValue>,
+
+            inventory1: InventoryContainer,
+            inventory2: InventoryContainer,
+            inventory3: InventoryContainer,
+            inventory4: InventoryContainer,
+            equipped_items: InventoryContainer,
+
+            currency: InventoryContainer,
+
+            armory_off_hand: InventoryContainer,
+            armory_head: InventoryContainer,
+            armory_body: InventoryContainer,
+            armory_hands: InventoryContainer,
+            armory_legs: InventoryContainer,
+            armory_ear: InventoryContainer,
+            armory_neck: InventoryContainer,
+            armory_wrist: InventoryContainer,
+            armory_rings: InventoryContainer,
+            armory_soul_crystal: InventoryContainer,
+            armory_main_hand: InventoryContainer,
+
+            unlock_flags: Vec<u8>,
+            unlock_aetherytes: Vec<u8>,
         }
 
         let character: CharacterJson;
@@ -117,8 +162,7 @@ impl WorldDatabase {
             unk2: 1,
         };
 
-        // TODO: import inventory
-        self.create_player_data(
+        let (_, actor_id) = self.create_player_data(
             service_account_id,
             &character.name,
             &chara_make.to_json(),
@@ -126,6 +170,97 @@ impl WorldDatabase {
             132,
             Inventory::default(),
         );
+
+        let mut player_data = self.find_player_data(actor_id);
+
+        // import jobs
+        for classjob in &character.classjob_levels {
+            // find the array index of the job
+            let index = game_data
+                .get_exp_array_index(classjob.value as u16)
+                .unwrap();
+
+            player_data.classjob_levels[index as usize] = classjob.level;
+            if let Some(exp) = classjob.exp {
+                player_data.classjob_exp[index as usize] = exp;
+            }
+        }
+
+        let process_inventory_container =
+            |container: &InventoryContainer, target: &mut dyn Storage| {
+                for item in &container.items {
+                    if item.slot as u32 > target.max_slots() {
+                        continue;
+                    }
+                    *target.get_slot_mut(item.slot as u16) = Item {
+                        quantity: item.quantity,
+                        id: item.id,
+                    };
+                }
+            };
+
+        // import inventory
+        process_inventory_container(&character.inventory1, &mut player_data.inventory.pages[0]);
+        process_inventory_container(&character.inventory2, &mut player_data.inventory.pages[1]);
+        process_inventory_container(&character.inventory3, &mut player_data.inventory.pages[2]);
+        process_inventory_container(&character.inventory4, &mut player_data.inventory.pages[3]);
+        process_inventory_container(
+            &character.equipped_items,
+            &mut player_data.inventory.equipped,
+        );
+
+        process_inventory_container(&character.currency, &mut player_data.inventory.currency);
+
+        process_inventory_container(
+            &character.armory_off_hand,
+            &mut player_data.inventory.armoury_off_hand,
+        );
+        process_inventory_container(
+            &character.armory_head,
+            &mut player_data.inventory.armoury_head,
+        );
+        process_inventory_container(
+            &character.armory_body,
+            &mut player_data.inventory.armoury_body,
+        );
+        process_inventory_container(
+            &character.armory_hands,
+            &mut player_data.inventory.armoury_hands,
+        );
+        process_inventory_container(
+            &character.armory_legs,
+            &mut player_data.inventory.armoury_legs,
+        );
+        process_inventory_container(
+            &character.armory_ear,
+            &mut player_data.inventory.armoury_earring,
+        );
+        process_inventory_container(
+            &character.armory_neck,
+            &mut player_data.inventory.armoury_necklace,
+        );
+        process_inventory_container(
+            &character.armory_wrist,
+            &mut player_data.inventory.armoury_bracelet,
+        );
+        process_inventory_container(
+            &character.armory_rings,
+            &mut player_data.inventory.armoury_rings,
+        );
+        process_inventory_container(
+            &character.armory_soul_crystal,
+            &mut player_data.inventory.armoury_soul_crystal,
+        );
+        process_inventory_container(
+            &character.armory_main_hand,
+            &mut player_data.inventory.armoury_main_hand,
+        );
+
+        // import unlock flags
+        player_data.unlocks = character.unlock_flags;
+        player_data.aetherytes = character.unlock_aetherytes;
+
+        self.commit_player_data(&player_data);
 
         tracing::info!("{} added to the world!", character.name);
     }
