@@ -48,7 +48,7 @@ impl WorldDatabase {
 
         // Create characters data table
         {
-            let query = "CREATE TABLE IF NOT EXISTS character_data (content_id INTEGER PRIMARY KEY, name STRING, chara_make STRING, city_state INTEGER, zone_id INTEGER, pos_x REAL, pos_y REAL, pos_z REAL, rotation REAL, inventory STRING, remake_mode INTEGER, gm_rank INTEGER, classjob_id INTEGER, classjob_levels STRING, unlocks STRING, aetherytes STRING);";
+            let query = "CREATE TABLE IF NOT EXISTS character_data (content_id INTEGER PRIMARY KEY, name STRING, chara_make STRING, city_state INTEGER, zone_id INTEGER, pos_x REAL, pos_y REAL, pos_z REAL, rotation REAL, inventory STRING, remake_mode INTEGER, gm_rank INTEGER, classjob_id INTEGER, classjob_levels STRING, classjob_exp STRING, unlocks STRING, aetherytes STRING);";
             connection.execute(query, ()).unwrap();
         }
 
@@ -278,7 +278,7 @@ impl WorldDatabase {
             .unwrap();
 
         stmt = connection
-            .prepare("SELECT pos_x, pos_y, pos_z, rotation, zone_id, inventory, gm_rank, classjob_id, classjob_levels, unlocks, aetherytes FROM character_data WHERE content_id = ?1")
+            .prepare("SELECT pos_x, pos_y, pos_z, rotation, zone_id, inventory, gm_rank, classjob_id, classjob_levels, classjob_exp, unlocks, aetherytes FROM character_data WHERE content_id = ?1")
             .unwrap();
         let (
             pos_x,
@@ -290,6 +290,7 @@ impl WorldDatabase {
             gm_rank,
             classjob_id,
             classjob_levels,
+            classjob_exp,
             unlocks,
             aetherytes,
         ): (
@@ -301,6 +302,7 @@ impl WorldDatabase {
             String,
             u8,
             i32,
+            String,
             String,
             String,
             String,
@@ -318,13 +320,14 @@ impl WorldDatabase {
                     row.get(8)?,
                     row.get(9)?,
                     row.get(10)?,
+                    row.get(11)?,
                 ))
             })
             .unwrap();
 
         let inventory = serde_json::from_str(&inventory_json).unwrap();
 
-        PlayerData {
+        let data = PlayerData {
             actor_id,
             content_id,
             account_id,
@@ -339,10 +342,15 @@ impl WorldDatabase {
             gm_rank: GameMasterRank::try_from(gm_rank).unwrap(),
             classjob_id: classjob_id as u8,
             classjob_levels: serde_json::from_str(&classjob_levels).unwrap(),
+            classjob_exp: serde_json::from_str(&classjob_exp).unwrap(),
             unlocks: serde_json::from_str(&unlocks).unwrap(),
             aetherytes: serde_json::from_str(&aetherytes).unwrap(),
             ..Default::default()
-        }
+        };
+
+        dbg!(&data);
+
+        data
     }
 
     /// Commit the dynamic player data back to the database
@@ -350,7 +358,7 @@ impl WorldDatabase {
         let connection = self.connection.lock().unwrap();
 
         let mut stmt = connection
-            .prepare("UPDATE character_data SET zone_id=?1, pos_x=?2, pos_y=?3, pos_z=?4, rotation=?5, inventory=?6, classjob_id=?7, classjob_levels=?8, unlocks=?9, aetherytes=?10 WHERE content_id = ?11")
+            .prepare("UPDATE character_data SET zone_id=?1, pos_x=?2, pos_y=?3, pos_z=?4, rotation=?5, inventory=?6, classjob_id=?7, classjob_levels=?8, classjob_exp=?9, unlocks=?10, aetherytes=?11 WHERE content_id = ?12")
             .unwrap();
         stmt.execute((
             data.zone_id,
@@ -361,6 +369,7 @@ impl WorldDatabase {
             serde_json::to_string(&data.inventory).unwrap(),
             data.classjob_id,
             serde_json::to_string(&data.classjob_levels).unwrap(),
+            serde_json::to_string(&data.classjob_exp).unwrap(),
             serde_json::to_string(&data.unlocks).unwrap(),
             serde_json::to_string(&data.aetherytes).unwrap(),
             data.content_id,
@@ -521,6 +530,8 @@ impl WorldDatabase {
         let mut classjob_levels = [0i32; 32];
         classjob_levels[chara_make.classjob_id as usize] = 1; // inital level
 
+        let classjob_exp = [0u32; 32];
+
         // fill out initial unlocks
         let unlocks = vec![0u8; UNLOCK_BITMASK_SIZE];
 
@@ -538,7 +549,7 @@ impl WorldDatabase {
         // insert char data
         connection
             .execute(
-                "INSERT INTO character_data VALUES (?1, ?2, ?3, ?4, ?5, 0.0, 0.0, 0.0, 0.0, ?6, 0, 90, ?7, ?8, ?9, ?10);",
+                "INSERT INTO character_data VALUES (?1, ?2, ?3, ?4, ?5, 0.0, 0.0, 0.0, 0.0, ?6, 0, 90, ?7, ?8, ?9, ?10, ?11);",
                 (
                     content_id,
                     name,
@@ -548,6 +559,7 @@ impl WorldDatabase {
                     serde_json::to_string(&inventory).unwrap(),
                     chara_make.classjob_id,
                     serde_json::to_string(&classjob_levels).unwrap(),
+                    serde_json::to_string(&classjob_exp).unwrap(),
                     serde_json::to_string(&unlocks).unwrap(),
                     serde_json::to_string(&aetherytes).unwrap(),
                 ),

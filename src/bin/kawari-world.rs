@@ -276,7 +276,8 @@ async fn client_loop(
                                                         timestamp: timestamp_secs(),
                                                         data: ServerZoneIpcData::PlayerStatus(PlayerStatus {
                                                             content_id: connection.player_data.content_id,
-                                                            exp: connection.player_data.classjob_exp,
+                                                            // for some reason the client really doesn't like us setting this?
+                                                            //exp: connection.player_data.classjob_exp,
                                                             name: chara_details.name,
                                                             char_id: connection.player_data.actor_id,
                                                             race: chara_details.chara_make.customize.race,
