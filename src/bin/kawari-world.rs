@@ -282,7 +282,8 @@ async fn client_loop(
                                                         timestamp: timestamp_secs(),
                                                         data: ServerZoneIpcData::PlayerStatus(PlayerStatus {
                                                             content_id: connection.player_data.content_id,
-                                                            exp: connection.player_data.classjob_exp,
+                                                            // Disabled for now until the client stops freaking out
+                                                            //exp: connection.player_data.classjob_exp,
                                                             max_level: 100,
                                                             expansion: 5,
                                                             name: chara_details.name,
