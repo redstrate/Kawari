@@ -131,6 +131,41 @@
             "size": 40
         },
         {
+            "name": "EventScene4",
+            "opcode": 964,
+            "size": 48
+        },
+        {
+            "name": "EventScene8",
+            "opcode": 787,
+            "size": 64
+        },
+        {
+            "name": "EventScene16",
+            "opcode": 186,
+            "size": 96
+        },
+        {
+            "name": "EventScene32",
+            "opcode": 281,
+            "size": 160
+        },
+        {
+            "name": "EventScene64",
+            "opcode": 988,
+            "size": 288
+        },
+        {
+            "name": "EventScene128",
+            "opcode": 880,
+            "size": 544
+        },
+        {
+            "name": "EventScene255",
+            "opcode": 243,
+            "size": 1052
+        },
+        {
             "name": "EventStart",
             "opcode": 656,
             "size": 24
