@@ -478,10 +478,21 @@ impl WorldDatabase {
     pub fn delete_character(&self, content_id: u64) {
         let connection = self.connection.lock().unwrap();
 
-        let mut stmt = connection
-            .prepare("DELETE FROM character_data WHERE content_id = ?1; DELETE FROM characters WHERE content_id = ?1;")
-            .unwrap();
-        stmt.execute((content_id,)).unwrap();
+        // delete data
+        {
+            let mut stmt = connection
+                .prepare("DELETE FROM character_data WHERE content_id = ?1")
+                .unwrap();
+            stmt.execute((content_id,)).unwrap();
+        }
+
+        // delete char
+        {
+            let mut stmt = connection
+                .prepare("DELETE FROM characters WHERE content_id = ?1")
+                .unwrap();
+            stmt.execute((content_id,)).unwrap();
+        }
     }
 
     /// Sets the remake mode for a character

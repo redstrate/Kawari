@@ -20,7 +20,7 @@ impl ReadWriteIpcSegment for CustomIpcSegment {
             CustomIpcType::NameIsAvailableResponse => 1,
             CustomIpcType::RequestCharacterList => 4,
             CustomIpcType::RequestCharacterListRepsonse => 1 + (1184 * 8),
-            CustomIpcType::DeleteCharacter => 4,
+            CustomIpcType::DeleteCharacter => 8,
             CustomIpcType::CharacterDeleted => 1,
             CustomIpcType::ImportCharacter => 132,
             CustomIpcType::RemakeCharacter => 1024 + 8,
