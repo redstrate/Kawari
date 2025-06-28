@@ -286,6 +286,7 @@ to_sort = {
 
 -- Events in /common that aren't already covered by other tables
 common_events = {
+    [393227] = "GenericLevemete.lua",
     [720915] = "GenericMender.lua",
     [721480] = "GenericGemstoneTrader.lua", -- Generic Shadowbringers in-city gemstone traders
     [721479] = "GenericGemstoneTrader.lua", -- Generic Shadowbringers per-zone gemstone traders
