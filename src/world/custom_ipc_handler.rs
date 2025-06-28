@@ -37,6 +37,8 @@ pub async fn handle_custom_ipc(connection: &mut ZoneConnection, data: &CustomIpc
             {
                 let mut game_data = connection.gamedata.lock().unwrap();
 
+                inventory.equip_classjob_items(chara_make.classjob_id as u16, &mut game_data);
+
                 // fill inventory
                 inventory.equip_racial_items(
                     chara_make.customize.race,
