@@ -4,9 +4,9 @@
 generic_warps = {
     131077,  -- Ferry Skipper from Old Gridania to East Shroud: Sweetbloom Pier
     131078,  -- Ferry Skipper from East Shroud: Sweetbloom Pier to Old Gridania
-    131079, -- Exit Limsa Upper Decks to Mizzenmast Inn room
-    131080, -- Exit New Gridania to The Roost Inn room
-    131081, -- Exit Ul'dah: Steps of Nald to The Hourglass Inn room
+    131079,  -- Exit Limsa Upper Decks to Mizzenmast Inn room
+    131080,  -- Exit New Gridania to The Roost Inn room
+    131081,  -- Exit Ul'dah: Steps of Nald to The Hourglass Inn room
     131082,  -- Exit Mizzenmast Inn to Limsa Upper Decks
     131083,  -- Exit The Roost to New Gridania
     131084,  -- Exit The Hourglass to Ul'dah: Steps of Nald
@@ -16,11 +16,14 @@ generic_warps = {
     131095,  -- Exit from Ul'dah Hustings Strip and/or Ruby Road Exchange to Airship Landing, these three events get reused in several places to ensure thay all connect
     131096,  -- Exit from Ul'dah Airship Landing and/or Ruby Road Exchange to Hustings Strip
     131097,  -- Exit from Ul'dah Airship Landing and/or Husting Strip to Ruby Road Exchange
-    --131113,  -- (currently doesn't react, seems to need different handling Ferry Skipper from Upper La Noscea: Memeroon's Trading Post to Upper La Noscea: Jijiroon's Trading Post
-    --131114,  -- (currently doesn't react, seems to need different handling Ferry Skipper from Upper La Noscea: Jijiroon's Trading Post to Upper La Noscea: Memeroon's Trading Post
+    --131112, -- Ferry Skipper from Eastern La Noscea: Costa Del Sol to Limsa Lominsa: The Lower Decks, currently doesn't respond for unknown reasons
+    131113,  -- Ferry Skipper from Upper La Noscea: Memeroon's Trading Post to Upper La Noscea: Jijiroon's Trading Post
+    131114,  -- Ferry Skipper from Upper La Noscea: Jijiroon's Trading Post to Upper La Noscea: Memeroon's Trading Post
+    131119,  -- Ferry Skipper from Eastern La Noscea: Hidden Falls Docks to Eastern La Noscea: Raincatcher Gully Docks
+    131120,  -- Ferry Skipper from Eastern La Noscea: Hidden Falls Docks to Eastern La Noscea: Raincatcher Gully Docks
     131126,  -- Gatekeeper from Southern Thanalan: Nald's Reflection to Southern Thanalan: The Minotaur Malm
     --131158, None -- Ferry Skipper from Old Gridania to The Lavender Beds, needs special handling for housing
-    --131169,  -- Ferry Skipper from Eastern La Noscea: Costa Del Sol to ELN: Rhotano Privateer (currently broken
+    131169,  -- Ferry Skipper from Eastern La Noscea: Costa Del Sol to ELN: Rhotano Privateer
     131177,  -- Exit from The Gold Saucer (Lift Operator) to The Gold Saucer: Chocobo Square
     131178,  -- Exit from The Gold Saucer: Chocobo Square (Lift Operator) to The Gold Saucer
     131195,  -- Exit from Fortemps manor to Ishgard: The Pillars
@@ -29,12 +32,12 @@ generic_warps = {
     131245,  -- Exit Kugane to Bokairo Inn room
     131246,  -- Exit Bokairo Inn to Kugane
     131250,  -- Gatekeeper from The Fringes: Castrum Oriens to East Shroud: Amarissaaix's Spire
-    131266,  -- Gatekeeper from The House of the Fierce to dead-end cave (unable to dive currently
+    131266,  -- Gatekeeper from The House of the Fierce to dead-end cave (unable to dive currently)
     131268,  -- Enclave Skiff Captain from The Doman Enclave to Yanxia: The Glittering Basin
     131312,  -- Exit The Pendants Personal Suite to Crystarium
     131313,  -- Exit from The Crown Lift (Lift Operator) to Eulmore: The Canopy
     131402,  -- Exit Andron to Old Sharlayan
-    131428,  -- Mothercrystal Exit (note: warp doesn't work for some reason?
+    131428,  -- Mothercrystal Exit (note: warp doesn't work for some reason?)
     131519,  -- Faire Adventurer from Eastern La Noscea: bottom of the Moonfire Festival (2023 tower to the first tier of the tower
     131578,  -- Exit The For'ard Cabins to Tuliyollal
 }
