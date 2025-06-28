@@ -114,6 +114,7 @@ These special debug commands start with `!` and are custom to Kawari.
 * `!festival <id1> <id2> <id3> <id4>`: Sets the festival in the current zone. Multiple festivals can be set together to create interesting effects.
 * `!reload`: Reloads `Global.lua` that is normally only loaded once at start-up.
 * `!finishevent`: Forcefully finishes the current event, useful if the script has an error and you're stuck talking to something.
+* `!item <name>`: Gives you an item matching by name.
 
 ### GM commands
 

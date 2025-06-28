@@ -1,5 +1,5 @@
 use crate::{
-    inventory::Storage,
+    inventory::{Item, Storage},
     ipc::zone::{ChatMessage, GameMasterRank},
     world::ToServer,
 };
@@ -76,6 +76,23 @@ impl ChatHandler {
                 }
 
                 connection.send_inventory(true).await;
+                true
+            }
+            "!item" => {
+                let (_, name) = chat_message.message.split_once(' ').unwrap();
+
+                {
+                    let mut gamedata = connection.gamedata.lock().unwrap();
+
+                    if let Some((_, id)) = gamedata.get_item_by_name(name) {
+                        connection
+                            .player_data
+                            .inventory
+                            .add_in_next_free_slot(Item { quantity: 1, id });
+                    }
+                }
+
+                connection.send_inventory(false).await;
                 true
             }
             "!reload" => {
