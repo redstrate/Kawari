@@ -236,7 +236,7 @@ mod tests {
         }
 
         #[binrw]
-        #[br(import(_magic: &ClientLobbyIpcType))]
+        #[br(import(_magic: &ClientLobbyIpcType, _size: &u32))]
         #[derive(Debug, Clone)]
         enum ClientLobbyIpcData {
             Dummy(),
