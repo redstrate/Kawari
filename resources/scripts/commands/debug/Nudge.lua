@@ -4,14 +4,13 @@ required_rank = GM_RANK_DEBUG
 command_sender = "[nudge] "
 
 function onCommand(args, player)
-    local parts = split(args)
-    local argc = #parts
+    local argc = #args
     local pos = player.position
     local angle = player.rotation + (math.pi / 2)
     local distance = 5
     local direction = 0
-    local arg1 = parts[1]
-    local arg2 = parts[2]
+    local arg1 = args[1]
+    local arg2 = args[2]
     local checkArg1 = tonumber(arg1)
     local checkArg2 = tonumber(arg2)
     local vertical = {
