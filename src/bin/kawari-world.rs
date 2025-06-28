@@ -838,14 +838,23 @@ async fn client_loop(
                                                     connection.send_message(&*format!("Event {event_id} tried to start, but it doesn't have a script associated with it!")).await;
                                                 }
                                             }
-                                            ClientZoneIpcData::EventHandlerReturn { handler_id, scene, error_code, num_results, params } => {
-                                                tracing::info!("Finishing this event... {handler_id} {error_code} {scene} {:?}", &params[..*num_results as usize]);
+                                            ClientZoneIpcData::EventYieldHandler(handler) => {
+                                                tracing::info!("Finishing this event... {} {} {} {:?}", handler.handler_id, handler.error_code, handler.scene, &handler.params[..handler.num_results as usize]);
 
                                                 connection
                                                 .event
-                                                .as_mut()
-                                                .unwrap()
-                                                .finish(*scene, &params[..*num_results as usize], &mut lua_player);
+                                                    .as_mut()
+                                                    .unwrap()
+                                                    .finish(handler.scene, &handler.params[..handler.num_results as usize], &mut lua_player);
+                                            }
+                                            ClientZoneIpcData::EventYieldHandler8(handler) => {
+                                                tracing::info!("Finishing this event... {} {} {} {:?}", handler.handler_id, handler.error_code, handler.scene, &handler.params[..handler.num_results as usize]);
+
+                                                connection
+                                                    .event
+                                                    .as_mut()
+                                                    .unwrap()
+                                                    .finish(handler.scene, &handler.params[..handler.num_results as usize], &mut lua_player);
                                             }
                                             ClientZoneIpcData::Config(config) => {
                                                 connection

@@ -85,6 +85,9 @@ pub use currency_info::CurrencyInfo;
 mod config;
 pub use config::Config;
 
+mod event_yield_handler;
+pub use event_yield_handler::EventYieldHandler;
+
 use crate::common::ObjectTypeId;
 use crate::common::Position;
 use crate::common::read_string;
@@ -241,7 +244,7 @@ pub enum ServerZoneIpcData {
     ContainerInfo(ContainerInfo),
     /// Sent to tell the client to play a scene
     #[br(pre_assert(*magic == ServerZoneIpcType::EventScene))]
-    EventScene(EventScene),
+    EventScene(EventScene<2>),
     /// Sent to tell the client to load a scene, but not play it
     #[br(pre_assert(*magic == ServerZoneIpcType::EventStart))]
     EventStart(EventStart),
@@ -438,15 +441,10 @@ pub enum ClientZoneIpcData {
         #[brw(pad_after = 4)] // padding
         event_id: u32,
     },
-    #[br(pre_assert(*magic == ClientZoneIpcType::EventHandlerReturn))]
-    EventHandlerReturn {
-        // TODO: This is actually EventYieldHandler
-        handler_id: u32,
-        scene: u16,
-        error_code: u8,
-        num_results: u8,
-        params: [i32; 2],
-    },
+    #[br(pre_assert(*magic == ClientZoneIpcType::EventYieldHandler))]
+    EventYieldHandler(EventYieldHandler<2>),
+    #[br(pre_assert(*magic == ClientZoneIpcType::EventYieldHandler8))]
+    EventYieldHandler8(EventYieldHandler<8>),
     #[br(pre_assert(*magic == ClientZoneIpcType::Config))]
     Config(Config),
     #[br(pre_assert(*magic == ClientZoneIpcType::EventUnkRequest))]
@@ -475,7 +473,7 @@ mod tests {
 
     /// Ensure that the IPC data size as reported matches up with what we write
     #[test]
-    fn world_ipc_sizes() {
+    fn server_zone_ipc_sizes() {
         let ipc_types = [
             (
                 ServerZoneIpcType::InitResponse,
@@ -586,6 +584,38 @@ mod tests {
             let mut cursor = Cursor::new(Vec::new());
 
             let ipc_segment = ServerZoneIpcSegment {
+                unk1: 0,
+                unk2: 0,
+                op_code: opcode.clone(), // doesn't matter for this test
+                option: 0,
+                timestamp: 0,
+                data: data.clone(),
+            };
+            ipc_segment.write_le(&mut cursor).unwrap();
+
+            let buffer = cursor.into_inner();
+
+            assert_eq!(
+                buffer.len(),
+                ipc_segment.calc_size() as usize,
+                "{:#?} did not match size!",
+                opcode
+            );
+        }
+    }
+
+    /// Ensure that the IPC data size as reported matches up with what we write
+    #[test]
+    fn client_zone_ipc_sizes() {
+        let ipc_types = [(
+            ClientZoneIpcType::EventYieldHandler8,
+            ClientZoneIpcData::EventYieldHandler8(EventYieldHandler::<8>::default()),
+        )];
+
+        for (opcode, data) in &ipc_types {
+            let mut cursor = Cursor::new(Vec::new());
+
+            let ipc_segment = ClientZoneIpcSegment {
                 unk1: 0,
                 unk2: 0,
                 op_code: opcode.clone(), // doesn't matter for this test

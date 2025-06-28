@@ -4,8 +4,8 @@ use crate::common::ObjectTypeId;
 
 #[binrw]
 #[brw(little)]
-#[derive(Debug, Clone, Default)]
-pub struct EventScene {
+#[derive(Debug, Clone)]
+pub struct EventScene<const MAX_PARAMS: usize> {
     pub actor_id: ObjectTypeId,
     pub event_id: u32,
     pub scene: u16,
@@ -15,7 +15,21 @@ pub struct EventScene {
     pub params_count: u8,
     // Extra padding seems needed after or the client will seemingly softlock even with 2 params, possibly used for alignment?
     #[brw(pad_before = 3, pad_after = 4)]
-    pub params: [u32; 2],
+    pub params: [u32; MAX_PARAMS],
+}
+
+impl<const MAX_PARAMS: usize> Default for EventScene<{ MAX_PARAMS }> {
+    fn default() -> Self {
+        Self {
+            actor_id: ObjectTypeId::default(),
+            event_id: 0,
+            scene: 0,
+            scene_flags: 0,
+            unk1: 0,
+            params_count: 0,
+            params: [0u32; MAX_PARAMS],
+        }
+    }
 }
 
 #[cfg(test)]
@@ -36,7 +50,7 @@ mod tests {
         let buffer = read(d).unwrap();
         let mut buffer = Cursor::new(&buffer);
 
-        let event_play = EventScene::read_le(&mut buffer).unwrap();
+        let event_play = EventScene::<2>::read_le(&mut buffer).unwrap();
         assert_eq!(
             event_play.actor_id,
             ObjectTypeId {

@@ -308,9 +308,14 @@
             "size": 16
         },
         {
-            "name": "EventHandlerReturn",
+            "name": "EventYieldHandler",
             "opcode": 840,
             "size": 16
+        },
+        {
+            "name": "EventYieldHandler8",
+            "opcode": 441,
+            "size": 40
         },
         {
             "name": "Config",
