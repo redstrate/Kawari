@@ -17,7 +17,7 @@ generic_warps = {
     131096,  -- Exit from Ul'dah Airship Landing and/or Ruby Road Exchange to Hustings Strip
     131097,  -- Exit from Ul'dah Airship Landing and/or Husting Strip to Ruby Road Exchange
     --131109, -- Rerenasu <Ferry Skipper> from Limsa Lominsa: The Lower Decks to Western La Noscea: Aleport, currently doesn't respond for unknown reasons
-    --131111, -- Rerenasu <Ferry Skipper> from Limsa Lominsa: The Lower Decks to Eastern La Noscea: Costa Del Sol, currently doesn't respond for unknown reasons'
+    --131111, -- Rerenasu <Ferry Skipper> from Limsa Lominsa: The Lower Decks to Eastern La Noscea: Costa Del Sol, currently doesn't respond for unknown reasons
     --131112, -- Ferry Skipper from Eastern La Noscea: Costa Del Sol to Limsa Lominsa: The Lower Decks, currently doesn't respond for unknown reasons
     131113,  -- Ferry Skipper from Upper La Noscea: Memeroon's Trading Post to Upper La Noscea: Jijiroon's Trading Post
     131114,  -- Ferry Skipper from Upper La Noscea: Jijiroon's Trading Post to Upper La Noscea: Memeroon's Trading Post
@@ -43,7 +43,7 @@ generic_warps = {
     131313,  -- Exit from The Crown Lift (Lift Operator) to Eulmore: The Canopy
     131390,  -- Exit via Pawlin <Dreamer's Run Doorman> from Old Gridania: Dreamer's Run (old Hatchingtide event area which is now out of bounds) to Old Gridania: Botanists' Guild
     131402,  -- Exit Andron to Old Sharlayan
-    131428,  -- Mothercrystal Exit (note: warp doesn't work for some reason?)
+    131428,  -- Exit from The Mothercrystal to Labyrinthos: The Aitiascope (outside, on overworld): probably supposed to drop you into a cutscene zone instead.
     131519,  -- Faire Adventurer from Eastern La Noscea: bottom of the Moonfire Festival (2023 tower to the first tier of the tower
     131578,  -- Exit The For'ard Cabins to Tuliyollal
 }
@@ -54,6 +54,7 @@ generic_inns = {
     131081, -- Exit Ul'dah: Steps of Nald to The Hourglass Inn room
     131204, -- Exit Ishgard: Foundation to Cloud Nine Inn room
     131245, -- Exit Kugane to Bokairo Inn room
+    -- TODO: We're missing the ids for Old Sharlayan's Andron and Tuliyollal's exit-to-inn NPCs/actors because they aren't spawned by the client (currently?).
 }
 
 generic_aetherytes = {
