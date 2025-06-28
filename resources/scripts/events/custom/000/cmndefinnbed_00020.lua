@@ -32,6 +32,9 @@ function onReturn(scene, results, player)
         if decision == NOTHING then
             player:finish_event(EVENT_ID)
         else
+            if decision == LOG_OUT or decision == EXIT_GAME then
+                player:begin_log_out()
+            end
             player:play_scene(player.id, EVENT_ID, SCENE_SLEEP_ANIM, CUTSCENE_FLAGS, {decision})
         end
     elseif scene == SCENE_SLEEP_ANIM then
