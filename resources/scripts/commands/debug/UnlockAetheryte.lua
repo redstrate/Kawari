@@ -14,9 +14,9 @@ function onCommand(args, player)
     local on = parts[1]
 
     if on == "on" then
-        on = 0
-    elseif on == "off" then
         on = 1
+    elseif on == "off" then
+        on = 0
     else
         printf(player, "Error parsing first parameter. Must be either of the words: 'on' or 'off'."..usage)
         return
