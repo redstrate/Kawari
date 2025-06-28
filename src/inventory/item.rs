@@ -5,10 +5,25 @@ use serde::{Deserialize, Serialize};
 pub struct Item {
     pub quantity: u32,
     pub id: u32,
+    pub condition: u16,
+    pub glamour_catalog_id: u32,
 }
 
 impl Item {
     pub fn new(quantity: u32, id: u32) -> Self {
-        Self { quantity, id }
+        Self {
+            quantity,
+            id,
+            condition: 30000,
+            ..Default::default()
+        }
+    }
+
+    /// Returns the catalog ID of the glamour, if applicable.
+    pub fn apparent_id(&self) -> u32 {
+        if self.glamour_catalog_id > 0 {
+            return self.glamour_catalog_id;
+        }
+        self.id
     }
 }

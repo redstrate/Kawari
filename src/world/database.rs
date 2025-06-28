@@ -86,7 +86,7 @@ impl WorldDatabase {
         struct InventoryItem {
             slot: i32,
             quantity: u32,
-            condition: i32,
+            condition: u16,
             id: u32,
             glamour_id: u32,
         }
@@ -195,6 +195,8 @@ impl WorldDatabase {
                     *target.get_slot_mut(item.slot as u16) = Item {
                         quantity: item.quantity,
                         id: item.id,
+                        condition: item.condition,
+                        glamour_catalog_id: item.glamour_id,
                     };
                 }
             };

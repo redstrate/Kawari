@@ -524,7 +524,8 @@ impl ZoneConnection {
                             slot: slot_index,
                             quantity: item.quantity,
                             catalog_id: item.id,
-                            condition: 30000,
+                            condition: item.condition,
+                            glamour_catalog_id: item.glamour_catalog_id,
                             ..Default::default()
                         }),
                         ..Default::default()
@@ -768,10 +769,9 @@ impl ZoneConnection {
                     }
                 }
                 Task::AddItem { id } => {
-                    self.player_data.inventory.add_in_next_free_slot(Item {
-                        id: *id,
-                        quantity: 1,
-                    });
+                    self.player_data
+                        .inventory
+                        .add_in_next_free_slot(Item::new(1, *id));
                     self.send_inventory(false).await;
                 }
             }

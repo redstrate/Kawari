@@ -10,7 +10,7 @@ pub struct CurrencyStorage {
 impl Default for CurrencyStorage {
     fn default() -> Self {
         Self {
-            gil: Item { quantity: 0, id: 1 },
+            gil: Item::new(0, 1),
         }
     }
 }

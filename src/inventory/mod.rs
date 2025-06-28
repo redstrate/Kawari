@@ -258,41 +258,41 @@ impl Inventory {
 
     pub fn get_main_weapon_id(&self, game_data: &mut GameData) -> u64 {
         game_data
-            .get_primary_model_id(self.equipped.main_hand.id)
+            .get_primary_model_id(self.equipped.main_hand.apparent_id())
             .unwrap_or(0)
     }
 
     pub fn get_model_ids(&self, game_data: &mut GameData) -> [u32; 10] {
         [
             game_data
-                .get_primary_model_id(self.equipped.head.id)
+                .get_primary_model_id(self.equipped.head.apparent_id())
                 .unwrap_or(0) as u32,
             game_data
-                .get_primary_model_id(self.equipped.body.id)
+                .get_primary_model_id(self.equipped.body.apparent_id())
                 .unwrap_or(0) as u32,
             game_data
-                .get_primary_model_id(self.equipped.hands.id)
+                .get_primary_model_id(self.equipped.hands.apparent_id())
                 .unwrap_or(0) as u32,
             game_data
-                .get_primary_model_id(self.equipped.legs.id)
+                .get_primary_model_id(self.equipped.legs.apparent_id())
                 .unwrap_or(0) as u32,
             game_data
-                .get_primary_model_id(self.equipped.feet.id)
+                .get_primary_model_id(self.equipped.feet.apparent_id())
                 .unwrap_or(0) as u32,
             game_data
-                .get_primary_model_id(self.equipped.ears.id)
+                .get_primary_model_id(self.equipped.ears.apparent_id())
                 .unwrap_or(0) as u32,
             game_data
-                .get_primary_model_id(self.equipped.neck.id)
+                .get_primary_model_id(self.equipped.neck.apparent_id())
                 .unwrap_or(0) as u32,
             game_data
-                .get_primary_model_id(self.equipped.wrists.id)
+                .get_primary_model_id(self.equipped.wrists.apparent_id())
                 .unwrap_or(0) as u32,
             game_data
-                .get_primary_model_id(self.equipped.left_ring.id)
+                .get_primary_model_id(self.equipped.left_ring.apparent_id())
                 .unwrap_or(0) as u32,
             game_data
-                .get_primary_model_id(self.equipped.right_ring.id)
+                .get_primary_model_id(self.equipped.right_ring.apparent_id())
                 .unwrap_or(0) as u32,
         ]
     }

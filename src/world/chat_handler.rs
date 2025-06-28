@@ -88,7 +88,7 @@ impl ChatHandler {
                         connection
                             .player_data
                             .inventory
-                            .add_in_next_free_slot(Item { quantity: 1, id });
+                            .add_in_next_free_slot(Item::new(1, id));
                     }
                 }
 
