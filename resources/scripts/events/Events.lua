@@ -16,9 +16,9 @@ generic_warps = {
     131095,  -- Exit from Ul'dah Hustings Strip and/or Ruby Road Exchange to Airship Landing, these three events get reused in several places to ensure thay all connect
     131096,  -- Exit from Ul'dah Airship Landing and/or Ruby Road Exchange to Hustings Strip
     131097,  -- Exit from Ul'dah Airship Landing and/or Husting Strip to Ruby Road Exchange
-    --131109, -- Rerenasu <Ferry Skipper> from Limsa Lominsa: The Lower Decks to Western La Noscea: Aleport, currently doesn't respond for unknown reasons
-    --131111, -- Rerenasu <Ferry Skipper> from Limsa Lominsa: The Lower Decks to Eastern La Noscea: Costa Del Sol, currently doesn't respond for unknown reasons
-    --131112, -- Ferry Skipper from Eastern La Noscea: Costa Del Sol to Limsa Lominsa: The Lower Decks, currently doesn't respond for unknown reasons
+    -- 131109, -- Rerenasu <Ferry Skipper> from Limsa Lominsa: The Lower Decks to Western La Noscea: Aleport, currently doesn't respond because we currently can't chain differing cutscene ids yet?
+    -- 131111, -- Rerenasu <Ferry Skipper> from Limsa Lominsa: The Lower Decks to Eastern La Noscea: Costa Del Sol, currently doesn't respond because we currently can't chain differing cutscene ids yet?
+    -- 131112, -- Ferry Skipper from Eastern La Noscea: Costa Del Sol to Limsa Lominsa: The Lower Decks, currently doesn't respond because we currently can't chain differing cutscene ids yet?
     131113,  -- Ferry Skipper from Upper La Noscea: Memeroon's Trading Post to Upper La Noscea: Jijiroon's Trading Post
     131114,  -- Ferry Skipper from Upper La Noscea: Jijiroon's Trading Post to Upper La Noscea: Memeroon's Trading Post
     131119,  -- Ferry Skipper from Eastern La Noscea: Hidden Falls Docks to Eastern La Noscea: Raincatcher Gully Docks
@@ -59,11 +59,14 @@ generic_inns = {
 
 generic_aetherytes = {
     -- A Realm Reborn Aetherytes
+    327682, -- New Gridania Aetheryte, currently not working due to the aetheryte actor not spawning
     327683,  -- Bentbranch Meadows Aetheryte
     327684,  -- The Hawthorne Hut Aetheryte
     327685,  -- Quarrymill Aetheryte
     327686,  -- Camp Tranquil Aetheryte
     327687,  -- Fallgourd Float Aetheryte
+    327688,  -- Limsa Lominsa: The Lower Decks Aetheryte, currently not working due to the aetheryte actor not spawning
+    327689,  -- Ul'dah: Steps of Nald Aetheryte, currently not working due to the aetheryte actor not spawning
     327690,  -- Moraby Drydocks Aetheryte
     327691,  -- Costa del Sol Aetheryte
     327692,  -- Wineport Aetheryte
@@ -81,8 +84,6 @@ generic_aetherytes = {
     327732,  -- Summerford Farms Aetheryte
     327733,  -- Black Brush Station Aetheryte
     327735,  -- Wolves' Den Pier Aetheryte
-    -- registerevent(327???,  -- Ul'dah: Steps of Nald Aetheryte, currently unknown due to the entity not spawning
-    -- registerevent(327???,  -- Limsa Lominsa: The Lower Decks Aetheryte, currently unknown due to the entity not spawning
     327742,  -- The Gold Saucer Aetheryte
 
     -- Heavensward Aetherytes
@@ -117,6 +118,7 @@ generic_aetherytes = {
 
     -- Shadowbringers Aetherytes
     327812,  -- Fort Jobb Aetheryte
+    327813,  -- The Crystarium Aetheryte,currently not working due to the aetheryte actor not spawning
     327814,  -- Eulmore Aetheryte
     327816,  -- The Ostal Imperative Aetheryte
     327817,  -- Stilltide Aetheryte
@@ -133,7 +135,6 @@ generic_aetherytes = {
     327828,  -- The Macarenses Angle Aetheryte
     327841,  -- The Inn at Journey's Head Aetheryte
     327842,  -- The Doman Enclave: Ferry Docks Aethernet shard
-    -- 3278??,  -- The Crystarium Aetheryte, currently unknown due to the entity not spawning
 
     -- Endwalker Aetherytes
     327846,  -- The Archeion Aetheryte
