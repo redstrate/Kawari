@@ -790,8 +790,7 @@ async fn client_loop(
                                             ClientZoneIpcData::GilShopTransaction { event_id, unk1: _, buy_sell_mode, item_index, item_quantity, unk2: _ } => {
                                                 tracing::info!("Client is interacting with a shop! {event_id:#?} {buy_sell_mode:#?} {item_quantity:#?} {item_index:#?}");
 
-
-                                                // TODO: update the client's inventory, adjust their gil,  and send the proper response packets!
+                                                // TODO: update the client's inventory, adjust their gil, and send the proper response packets!
                                                 connection.send_message("Shops are not implemented yet. Cancelling event...").await;
 
                                                 // Cancel the event for now so the client doesn't get stuck

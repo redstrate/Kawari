@@ -464,12 +464,16 @@ pub enum ClientZoneIpcData {
     #[br(pre_assert(*magic == ClientZoneIpcType::GilShopTransaction))]
     GilShopTransaction {
         event_id: u32,
-        unk1: u32,          // Seems to always be 0x300000a at gil shops
-        buy_sell_mode: u32, // 1 is buy, 2 is sell
-        item_index: u32,    // Index into the shopkeeper's or the player's inventory
-        item_quantity: u32, // Quantity of items being bought or sold
-        /* unk 2: Flags? These change quite a bit when dealing with stackable items, but are apparently always 0 when buying non-stackable
-         * Observed values so far: 0xDDDDDDDD (when buying 99 of a stackable item), 0xFFFFFFFF, 0xFFE0FFD0, 0xfffefffe, 0x0000FF64 */
+        /// Seems to always be 0x300000a at gil shops
+        unk1: u32,
+        /// 1 is buy, 2 is sell
+        buy_sell_mode: u32,
+        /// Index into the shopkeeper's or the player's inventory
+        item_index: u32,
+        /// Quantity of items being bought or sold
+        item_quantity: u32,
+        /// unk 2: Flags? These change quite a bit when dealing with stackable items, but are apparently always 0 when buying non-stackable
+        /// Observed values so far: 0xDDDDDDDD (when buying 99 of a stackable item), 0xFFFFFFFF, 0xFFE0FFD0, 0xfffefffe, 0x0000FF64
         unk2: u32,
     },
     #[br(pre_assert(*magic == ClientZoneIpcType::EventYieldHandler))]
