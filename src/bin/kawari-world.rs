@@ -786,6 +786,16 @@ async fn client_loop(
                                                 connection.player_data.inventory.process_action(action);
                                                 connection.send_inventory(true).await;
                                             }
+                                            // TODO: Likely rename this opcode if non-gil shops also use this same opcode
+                                            ClientZoneIpcData::GilShopTransaction { event_id, unk1: _, buy_sell_mode, item_index, item_quantity, unk2: _ } => {
+                                                tracing::info!("Client is interacting with a shop! {event_id:#?} {buy_sell_mode:#?} {item_quantity:#?} {item_index:#?}");
+
+                                                // TODO: update the client's inventory, adjust their gil, and send the proper response packets!
+                                                connection.send_message("Shops are not implemented yet. Cancelling event...").await;
+
+                                                // Cancel the event for now so the client doesn't get stuck
+                                                connection.event_finish(*event_id).await;
+                                            }
                                             ClientZoneIpcData::StartTalkEvent { actor_id, event_id } => {
                                                 // load event
                                                 {
@@ -810,6 +820,11 @@ async fn client_loop(
                                                     })
                                                     .await;
                                                 }
+
+                                                /* TODO: ServerZoneIpcType::Unk18 with data [64,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+                                                 * was observed to always be sent by the server upon interacting with shops. They open and function fine without
+                                                 * it, but should we send it anyway, for the sake of accuracy? It's also still unclear if this
+                                                 * happens for -every- NPC/actor. */
 
                                                 let mut should_cancel = false;
                                                 {
