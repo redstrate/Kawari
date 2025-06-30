@@ -54,7 +54,8 @@ generic_inns = {
     131081, -- Exit Ul'dah: Steps of Nald to The Hourglass Inn room
     131204, -- Exit Ishgard: Foundation to Cloud Nine Inn room
     131245, -- Exit Kugane to Bokairo Inn room
-    -- TODO: We're missing the ids for Old Sharlayan's Andron and Tuliyollal's exit-to-inn NPCs/actors because they aren't spawned by the client (currently?).
+    131401, -- Exit from Old Sharlayan to The Andron, this does not work currently because the actor doesn't spawn
+    131576, -- Exit from Tuliyollal to The For'ard Cabins, this does not work currently because the actor doesn't spawn
 }
 
 generic_aetherytes = {
