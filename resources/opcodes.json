@@ -224,6 +224,11 @@
             "name": "UnkCall",
             "opcode": 886,
             "size": 32
+        },
+        {
+            "name": "InventoryActionAck",
+            "opcode": 483,
+            "size": 16
         }
     ],
     "ClientZoneIpcType": [
@@ -361,6 +366,11 @@
             "name": "EventUnkRequest",
             "opcode": 448,
             "size": 16
+        },
+        {
+          "name": "GilShopTransaction",
+          "opcode": 108,
+          "size": 24
         }
     ],
     "ServerLobbyIpcType": [

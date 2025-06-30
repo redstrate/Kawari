@@ -304,6 +304,11 @@ common_events = {
     -- [721620] = "GenericGemstoneTrader.lua", -- Generic Endwalker & Dawntrail in-city gemstone traders, but they do nothing when interacted with right now
 }
 
+-- NPC shops that accept gil for purchasing items
+generic_gil_shops = {
+    263220, -- Neon <Air-wheeler dealer>, Solution Nine
+}
+
 -- Not all Hunt NPCs are spawning right now, unfortunately.
 generic_currency_exchange = {
     1769533, -- Gold Saucer Attendant <Prize Claim> (behind counter) -> Prize Exchange (Gear)
@@ -375,6 +380,10 @@ end
 
 for _, event_id in pairs(generic_anetshards) do
     registerEvent(event_id, "events/common/GenericAethernetShard.lua")
+end
+
+for _, event_id in pairs(generic_gil_shops) do
+    registerEvent(event_id, "events/common/GenericShopkeeper.lua") --TODO: It might be okay to combine gil shops with battle currency shops, still unclear
 end
 
 for _, event_id in pairs(generic_currency_exchange) do
