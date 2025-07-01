@@ -72,7 +72,8 @@ function onCommand(args, player)
         printf(player, "--- Page %s ---", page_num)
         for slot_num, slot in pairs(page.slots) do
             if slot.id ~= NO_ITEM then
-               printf(player, "slot %s: (id: %s, condition: %s%%)", slot_num, slot.id, getItemCondition(slot.condition))
+               printf(player, "slot %s: (id: %s, condition: %s%%, quantity: %s)",
+                    slot_num, slot.id, getItemCondition(slot.condition), slot.quantity)
             end
         end
     end
