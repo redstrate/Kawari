@@ -29,8 +29,7 @@ registerGMCommand(GM_EXP,               GM_DIR.."Exp.lua")
 registerGMCommand(GM_ORCHESTRION,       GM_DIR.."Orchestrion.lua")
 registerGMCommand(GM_GIVE_ITEM,         GM_DIR.."GiveItem.lua")
 registerGMCommand(GM_GIL,               GM_DIR.."Gil.lua")
--- TODO: Figure out how the //gm collect command works ingame, its parameters are not the same as //gm gil
---registerGMCommand(GM_COLLECT,           GM_DIR.."Collect.lua")
+registerGMCommand(GM_COLLECT,           GM_DIR.."Collect.lua")
 registerGMCommand(GM_WIREFRAME,         GM_DIR.."ToggleWireframe.lua")
 registerGMCommand(GM_TERRITORY,         GM_DIR.."ChangeTerritory.lua")
 registerGMCommand(GM_TERRITORY_INFO,    GM_DIR.."TerritoryInfo.lua")
@@ -39,7 +38,6 @@ registerGMCommand(GM_TERRITORY_INFO,    GM_DIR.."TerritoryInfo.lua")
 -- Please keep these in alphabetical order!
 
 registerCommand("classjob",        DBG_DIR.."ClassJob.lua")
-registerCommand("collect",         GM_DIR.."Collect.lua") -- TODO: remove this once we figure out the //gm collect command's parameters (see comments above)
 registerCommand("festival",        DBG_DIR.."Festival.lua")
 registerCommand("inspect",         GM_DIR.."InspectPlayer.lua") -- TODO: remove this once we figure out the GMInspect IPC opcode
 registerCommand("nudge",           DBG_DIR.."Nudge.lua")

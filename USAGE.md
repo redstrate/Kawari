@@ -116,7 +116,6 @@ These special debug commands start with `!` and are custom to Kawari.
 * `!finishevent`: Forcefully finishes the current event, useful if the script has an error and you're stuck talking to something.
 * `!item <name>`: Gives you an item matching by name.
 * `!inspect`: Prints info about the player.
-* `!collect <amount>`: Subtracts `amount` gil from the player.
 
 ### GM commands
 
@@ -133,3 +132,4 @@ These GM commands are implemented in the FFXIV protocol, but only some of them a
 * `//gm exp <amount>`: Adds the specified amount of EXP to the current class/job.
 * `//gm teri_info`: Displays information about the current zone. Currently displays zone id, weather, internal zone name, parent region name, and place/display name.
 * `//gm gil <amount>`: Adds the specified amount of gil to the player
+* `//gm collect <amount>`: Subtracts `amount` gil from the targeted player (yourself only for now).
