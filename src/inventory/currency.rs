@@ -27,14 +27,14 @@ impl Storage for CurrencyStorage {
     fn get_slot_mut(&mut self, index: u16) -> &mut Item {
         match index {
             0 => &mut self.gil,
-            _ => panic!("{} is not a valid src_container_index?!?", index),
+            _ => panic!("{index} is not a valid src_container_index?!?"),
         }
     }
 
     fn get_slot(&self, index: u16) -> &Item {
         match index {
             0 => &self.gil,
-            _ => panic!("{} is not a valid src_container_index?!?", index),
+            _ => panic!("{index} is not a valid src_container_index?!?"),
         }
     }
 }
