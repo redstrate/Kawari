@@ -36,7 +36,7 @@ fn main() {
                     output_str.push_str(&format!("{name},\n"));
                 }
 
-                output_str.push_str(&format!("Unknown(u16),\n"));
+                output_str.push_str("Unknown(u16),\n");
 
                 // end
                 output_str.push_str("}\n\n");
