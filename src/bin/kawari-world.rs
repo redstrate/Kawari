@@ -6,6 +6,7 @@ use kawari::RECEIVE_BUFFER_SIZE;
 use kawari::common::Position;
 use kawari::common::{GameData, timestamp_secs};
 use kawari::config::get_config;
+use kawari::inventory::Item;
 use kawari::ipc::chat::{ServerChatIpcData, ServerChatIpcSegment};
 use kawari::ipc::zone::{
     ActorControlCategory, ActorControlSelf, PlayerEntry, PlayerSpawn, PlayerStatus, SocialList,
@@ -790,8 +791,21 @@ async fn client_loop(
                                             ClientZoneIpcData::GilShopTransaction { event_id, unk1: _, buy_sell_mode, item_index, item_quantity, unk2: _ } => {
                                                 tracing::info!("Client is interacting with a shop! {event_id:#?} {buy_sell_mode:#?} {item_quantity:#?} {item_index:#?}");
 
-                                                // TODO: update the client's inventory, adjust their gil, and send the proper response packets!
-                                                connection.send_message("Shops are not implemented yet. Cancelling event...").await;
+                                                let item_id;
+                                                {
+                                                    let mut game_data = connection.gamedata.lock().unwrap();
+                                                    item_id = game_data.get_gilshop_item(*event_id, *item_index as u16);
+                                                }
+
+                                                if let Some(item_id) = item_id {
+                                                    // TODO: adjust their gil, and send the proper response packets!
+                                                    connection.send_message("Shops are not implemented fully yet. Giving you a free item...").await;
+
+                                                    connection.player_data.inventory.add_in_next_free_slot(Item::new(1, item_id as u32));
+                                                    connection.send_inventory(false).await;
+                                                } else {
+                                                    connection.send_message(&format!("Unable to find shop item, this is a bug in Kawari!")).await;
+                                                }
 
                                                 // Cancel the event for now so the client doesn't get stuck
                                                 connection.event_finish(*event_id).await;

@@ -2,6 +2,7 @@ use icarus::Action::ActionSheet;
 use icarus::Aetheryte::AetheryteSheet;
 use icarus::ClassJob::ClassJobSheet;
 use icarus::EquipSlotCategory::EquipSlotCategorySheet;
+use icarus::GilShopItem::GilShopItemSheet;
 use icarus::PlaceName::PlaceNameSheet;
 use icarus::TerritoryType::TerritoryTypeSheet;
 use icarus::WeatherRate::WeatherRateSheet;
@@ -328,6 +329,14 @@ impl GameData {
     /// Gets the array index used in EXP & levels.
     pub fn get_exp_array_index(&self, classjob_id: u16) -> Option<i8> {
         self.classjob_exp_indexes.get(classjob_id as usize).copied()
+    }
+
+    /// Gets the item and it's cost from the specified shop.
+    pub fn get_gilshop_item(&mut self, gilshop_id: u32, index: u16) -> Option<i32> {
+        let sheet = GilShopItemSheet::read_from(&mut self.game_data, Language::None)?;
+        let row = sheet.get_subrow(gilshop_id, index)?;
+
+        row.Item().into_i32().copied()
     }
 }
 

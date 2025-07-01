@@ -308,6 +308,7 @@ common_events = {
 
 -- NPC shops that accept gil for purchasing items
 generic_gil_shops = {
+    262157, -- Tanie <Florist>, New Gridania
     263220, -- Neon <Air-wheeler dealer>, Solution Nine
 }
 
