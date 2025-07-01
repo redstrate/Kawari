@@ -44,7 +44,7 @@ function onCommand(args, player)
     local lring = player.inventory.equipped.left_ring
     local scrystal = player.inventory.equipped.soul_crystal
 
-    printf(player, info, 
+    printf(player, info,
            player.zone.region_name, player.zone.place_name, player.zone.internal_name, player.zone.id,
            player.position.x, player.position.y, player.position.z,
            player.rotation, player.gil,
