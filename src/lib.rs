@@ -75,3 +75,6 @@ pub const UNLOCK_BITMASK_SIZE: usize = 92;
 /// The size of the aetheryte unlock bitmask.
 // TODO: this can be automatically derived from game data
 pub const AETHERYTE_UNLOCK_BITMASK_SIZE: usize = 30;
+
+/// The size of the completed quest bitmask.
+pub const COMPLETED_QUEST_BITMASK_SIZE: usize = 691;

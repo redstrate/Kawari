@@ -327,6 +327,13 @@ pub enum ServerZoneIpcData {
         #[brw(pad_after = 26)]
         unk2: u16,
     },
+    #[br(pre_assert(*magic == ServerZoneIpcType::QuestCompleteList))]
+    QuestCompleteList {
+        // TODO: what is this? a bitmask probably?
+        #[br(count = 760)]
+        #[bw(pad_size_to = 760)]
+        unk1: Vec<u8>,
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,

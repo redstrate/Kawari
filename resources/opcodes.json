@@ -229,6 +229,11 @@
             "name": "InventoryActionAck",
             "opcode": 483,
             "size": 16
+        },
+        {
+            "name": "QuestCompleteList",
+            "opcode": 240,
+            "size": 760
         }
     ],
     "ClientZoneIpcType": [

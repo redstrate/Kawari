@@ -116,6 +116,7 @@ These special debug commands start with `!` and are custom to Kawari.
 * `!finishevent`: Forcefully finishes the current event, useful if the script has an error and you're stuck talking to something.
 * `!item <name>`: Gives you an item matching by name.
 * `!inspect`: Prints info about the player.
+* `!completeallquests`: Completes every quest in the game, useful for accessing stuff gated behind quest completion.
 
 ### GM commands
 

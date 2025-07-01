@@ -317,6 +317,8 @@ async fn client_loop(
                                                     .await;
                                                 }
 
+                                                connection.send_quest_information().await;
+
                                                 let zone_id = connection.player_data.zone_id;
                                                 connection.change_zone(zone_id).await;
 

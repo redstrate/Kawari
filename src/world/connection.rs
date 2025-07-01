@@ -9,7 +9,7 @@ use mlua::Function;
 use tokio::net::TcpStream;
 
 use crate::{
-    OBFUSCATION_ENABLED_MODE,
+    COMPLETED_QUEST_BITMASK_SIZE, OBFUSCATION_ENABLED_MODE,
     common::{
         GameData, ObjectId, ObjectTypeId, Position, timestamp_secs, value_to_flag_byte_index_value,
     },
@@ -82,6 +82,7 @@ pub struct PlayerData {
 
     pub unlocks: Vec<u8>,
     pub aetherytes: Vec<u8>,
+    pub completed_quests: Vec<u8>,
 }
 
 /// Represents a single connection between an instance of the client and the world server
@@ -777,6 +778,10 @@ impl ZoneConnection {
                         .add_in_next_free_slot(Item::new(1, *id));
                     self.send_inventory(false).await;
                 }
+                Task::CompleteAllQuests {} => {
+                    self.player_data.completed_quests = vec![0xFF; COMPLETED_QUEST_BITMASK_SIZE];
+                    self.send_quest_information().await;
+                }
             }
         }
         player.queued_tasks.clear();
@@ -1194,5 +1199,27 @@ impl ZoneConnection {
             .get_exp_array_index(self.player_data.classjob_id as u16)
             .unwrap();
         self.player_data.classjob_exp[index as usize] = exp;
+    }
+
+    pub async fn send_quest_information(&mut self) {
+        // quest complete list
+        {
+            let ipc = ServerZoneIpcSegment {
+                op_code: ServerZoneIpcType::QuestCompleteList,
+                timestamp: timestamp_secs(),
+                data: ServerZoneIpcData::QuestCompleteList {
+                    unk1: self.player_data.completed_quests.clone(),
+                },
+                ..Default::default()
+            };
+
+            self.send_segment(PacketSegment {
+                source_actor: self.player_data.actor_id,
+                target_actor: self.player_data.actor_id,
+                segment_type: SegmentType::Ipc,
+                data: SegmentData::Ipc { data: ipc },
+            })
+            .await;
+        }
     }
 }

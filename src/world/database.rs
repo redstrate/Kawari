@@ -4,7 +4,7 @@ use rusqlite::Connection;
 use serde::Deserialize;
 
 use crate::{
-    AETHERYTE_UNLOCK_BITMASK_SIZE, UNLOCK_BITMASK_SIZE,
+    AETHERYTE_UNLOCK_BITMASK_SIZE, COMPLETED_QUEST_BITMASK_SIZE, UNLOCK_BITMASK_SIZE,
     common::{
         CustomizeData, GameData, Position,
         workdefinitions::{CharaMake, ClientSelectData, RemakeMode},
@@ -48,7 +48,7 @@ impl WorldDatabase {
 
         // Create characters data table
         {
-            let query = "CREATE TABLE IF NOT EXISTS character_data (content_id INTEGER PRIMARY KEY, name STRING, chara_make STRING, city_state INTEGER, zone_id INTEGER, pos_x REAL, pos_y REAL, pos_z REAL, rotation REAL, inventory STRING, remake_mode INTEGER, gm_rank INTEGER, classjob_id INTEGER, classjob_levels STRING, classjob_exp STRING, unlocks STRING, aetherytes STRING);";
+            let query = "CREATE TABLE IF NOT EXISTS character_data (content_id INTEGER PRIMARY KEY, name STRING, chara_make STRING, city_state INTEGER, zone_id INTEGER, pos_x REAL, pos_y REAL, pos_z REAL, rotation REAL, inventory STRING, remake_mode INTEGER, gm_rank INTEGER, classjob_id INTEGER, classjob_levels STRING, classjob_exp STRING, unlocks STRING, aetherytes STRING, completed_quests STRING);";
             connection.execute(query, ()).unwrap();
         }
 
@@ -278,7 +278,7 @@ impl WorldDatabase {
             .unwrap();
 
         stmt = connection
-            .prepare("SELECT pos_x, pos_y, pos_z, rotation, zone_id, inventory, gm_rank, classjob_id, classjob_levels, classjob_exp, unlocks, aetherytes FROM character_data WHERE content_id = ?1")
+            .prepare("SELECT pos_x, pos_y, pos_z, rotation, zone_id, inventory, gm_rank, classjob_id, classjob_levels, classjob_exp, unlocks, aetherytes, completed_quests FROM character_data WHERE content_id = ?1")
             .unwrap();
         let (
             pos_x,
@@ -293,6 +293,7 @@ impl WorldDatabase {
             classjob_exp,
             unlocks,
             aetherytes,
+            completed_quests,
         ): (
             f32,
             f32,
@@ -302,6 +303,7 @@ impl WorldDatabase {
             String,
             u8,
             i32,
+            String,
             String,
             String,
             String,
@@ -321,6 +323,7 @@ impl WorldDatabase {
                     row.get(9)?,
                     row.get(10)?,
                     row.get(11)?,
+                    row.get(12)?,
                 ))
             })
             .unwrap();
@@ -345,6 +348,7 @@ impl WorldDatabase {
             classjob_exp: serde_json::from_str(&classjob_exp).unwrap(),
             unlocks: serde_json::from_str(&unlocks).unwrap(),
             aetherytes: serde_json::from_str(&aetherytes).unwrap(),
+            completed_quests: serde_json::from_str(&completed_quests).unwrap(),
             ..Default::default()
         }
     }
@@ -354,7 +358,7 @@ impl WorldDatabase {
         let connection = self.connection.lock().unwrap();
 
         let mut stmt = connection
-            .prepare("UPDATE character_data SET zone_id=?1, pos_x=?2, pos_y=?3, pos_z=?4, rotation=?5, inventory=?6, classjob_id=?7, classjob_levels=?8, classjob_exp=?9, unlocks=?10, aetherytes=?11 WHERE content_id = ?12")
+            .prepare("UPDATE character_data SET zone_id=?1, pos_x=?2, pos_y=?3, pos_z=?4, rotation=?5, inventory=?6, classjob_id=?7, classjob_levels=?8, classjob_exp=?9, unlocks=?10, aetherytes=?11, completed_quests=?12 WHERE content_id = ?13")
             .unwrap();
         stmt.execute((
             data.zone_id,
@@ -368,6 +372,7 @@ impl WorldDatabase {
             serde_json::to_string(&data.classjob_exp).unwrap(),
             serde_json::to_string(&data.unlocks).unwrap(),
             serde_json::to_string(&data.aetherytes).unwrap(),
+            serde_json::to_string(&data.completed_quests).unwrap(),
             data.content_id,
         ))
         .unwrap();
@@ -534,6 +539,9 @@ impl WorldDatabase {
         // fill out initial aetherytes
         let aetherytes = vec![0u8; AETHERYTE_UNLOCK_BITMASK_SIZE];
 
+        // fill out initial completed quests`
+        let completed_quests = vec![0u8; COMPLETED_QUEST_BITMASK_SIZE];
+
         // insert ids
         connection
             .execute(
@@ -545,7 +553,7 @@ impl WorldDatabase {
         // insert char data
         connection
             .execute(
-                "INSERT INTO character_data VALUES (?1, ?2, ?3, ?4, ?5, 0.0, 0.0, 0.0, 0.0, ?6, 0, 90, ?7, ?8, ?9, ?10, ?11);",
+                "INSERT INTO character_data VALUES (?1, ?2, ?3, ?4, ?5, 0.0, 0.0, 0.0, 0.0, ?6, 0, 90, ?7, ?8, ?9, ?10, ?11, ?12);",
                 (
                     content_id,
                     name,
@@ -558,6 +566,7 @@ impl WorldDatabase {
                     serde_json::to_string(&classjob_exp).unwrap(),
                     serde_json::to_string(&unlocks).unwrap(),
                     serde_json::to_string(&aetherytes).unwrap(),
+                    serde_json::to_string(&completed_quests).unwrap(),
                 ),
             )
             .unwrap();
