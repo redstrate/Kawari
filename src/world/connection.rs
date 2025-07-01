@@ -479,9 +479,10 @@ impl ZoneConnection {
     }
 
     pub async fn send_inventory(&mut self, send_appearance_update: bool) {
-        let mut sequence = 0;
-
-        for (container_type, container) in &self.player_data.inventory.clone() {
+        for (sequence, (container_type, container)) in (&self.player_data.inventory.clone())
+            .into_iter()
+            .enumerate()
+        {
             // currencies
             if container_type == ContainerType::Currency {
                 let mut send_currency = async |item: &Item| {
@@ -489,7 +490,7 @@ impl ZoneConnection {
                         op_code: ServerZoneIpcType::CurrencyCrystalInfo,
                         timestamp: timestamp_secs(),
                         data: ServerZoneIpcData::CurrencyCrystalInfo(CurrencyInfo {
-                            sequence,
+                            sequence: sequence as u32,
                             container: container_type,
                             quantity: item.quantity,
                             catalog_id: item.id,
@@ -519,7 +520,7 @@ impl ZoneConnection {
                         op_code: ServerZoneIpcType::UpdateItem,
                         timestamp: timestamp_secs(),
                         data: ServerZoneIpcData::UpdateItem(ItemInfo {
-                            sequence,
+                            sequence: sequence as u32,
                             container: container_type,
                             slot: slot_index,
                             quantity: item.quantity,
@@ -553,7 +554,7 @@ impl ZoneConnection {
                     data: ServerZoneIpcData::ContainerInfo(ContainerInfo {
                         container: container_type,
                         num_items: container.num_items(),
-                        sequence,
+                        sequence: sequence as u32,
                         ..Default::default()
                     }),
                     ..Default::default()
@@ -567,8 +568,6 @@ impl ZoneConnection {
                 })
                 .await;
             }
-
-            sequence += 1;
         }
 
         // send them an appearance update
