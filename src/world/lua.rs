@@ -394,7 +394,7 @@ impl UserData for LuaPlayer {
                 Vec<u32>,
             )| {
                 this.play_scene(target, event_id, scene, scene_flags, &params);
-                return Ok(());
+                Ok(())
             },
         );
         methods.add_method_mut(
