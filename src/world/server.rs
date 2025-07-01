@@ -309,20 +309,17 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
 
                     // handle player-to-server actions
                     if id == from_id {
-                        match &trigger.trigger {
-                            ClientTriggerCommand::TeleportQuery { aetheryte_id } => {
-                                let msg = FromServer::ActorControlSelf(ActorControlSelf {
-                                    category: ActorControlCategory::TeleportStart {
-                                        insufficient_gil: 0,
-                                        aetheryte_id: *aetheryte_id,
-                                    },
-                                });
+                        if let ClientTriggerCommand::TeleportQuery { aetheryte_id } = &trigger.trigger {
+                            let msg = FromServer::ActorControlSelf(ActorControlSelf {
+                                category: ActorControlCategory::TeleportStart {
+                                    insufficient_gil: 0,
+                                    aetheryte_id: *aetheryte_id,
+                                },
+                            });
 
-                                if handle.send(msg).is_err() {
-                                    to_remove.push(id);
-                                }
+                            if handle.send(msg).is_err() {
+                                to_remove.push(id);
                             }
-                            _ => {}
                         }
                         continue;
                     }
