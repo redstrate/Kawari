@@ -115,6 +115,8 @@ These special debug commands start with `!` and are custom to Kawari.
 * `!reload`: Reloads `Global.lua` that is normally only loaded once at start-up.
 * `!finishevent`: Forcefully finishes the current event, useful if the script has an error and you're stuck talking to something.
 * `!item <name>`: Gives you an item matching by name.
+* `!inspect`: Prints info about the player.
+* `!collect <amount>`: Subtracts `amount` gil from the player.
 
 ### GM commands
 
