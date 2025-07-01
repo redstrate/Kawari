@@ -72,7 +72,7 @@ physis = { git = "https://github.com/redstrate/physis", default-features = false
 bitflags = { version = "2.9", default-features = false }
 
 # excel sheet data
-icarus = { git = "https://github.com/redstrate/Icarus", branch = "ver/2025.04.16.0000.0000", features = ["Warp", "Tribe", "ClassJob", "World", "TerritoryType", "Race", "Aetheryte", "EquipSlotCategory", "Action", "WeatherRate", "PlaceName"], default-features = false }
+icarus = { git = "https://github.com/redstrate/Icarus", branch = "ver/2025.06.10.0000.0000", features = ["Warp", "Tribe", "ClassJob", "World", "TerritoryType", "Race", "Aetheryte", "EquipSlotCategory", "Action", "WeatherRate", "PlaceName", "GilShopItem"], default-features = false }
 
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
 # Used for the web servers
