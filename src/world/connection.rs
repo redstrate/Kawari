@@ -743,7 +743,7 @@ impl ZoneConnection {
                     self.change_weather(*id).await;
                 }
                 Task::AddGil { amount } => {
-                    self.player_data.inventory.currency.get_slot_mut(0).quantity += *amount as u32;
+                    self.player_data.inventory.currency.get_slot_mut(0).quantity += *amount;
                     self.send_inventory(false).await;
                 }
                 Task::UnlockOrchestrion { id, on } => {
