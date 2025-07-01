@@ -56,7 +56,7 @@ impl Storage for EquippedStorage {
             11 => &mut self.right_ring,
             12 => &mut self.left_ring,
             13 => &mut self.soul_crystal,
-            _ => panic!("{} is not a valid src_container_index?!?", index),
+            _ => panic!("{index} is not a valid src_container_index?!?"),
         }
     }
 
@@ -76,7 +76,7 @@ impl Storage for EquippedStorage {
             11 => &self.right_ring,
             12 => &self.left_ring,
             13 => &self.soul_crystal,
-            _ => panic!("{} is not a valid src_container_index?!?", index),
+            _ => panic!("{index} is not a valid src_container_index?!?"),
         }
     }
 }
