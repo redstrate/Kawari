@@ -792,23 +792,43 @@ async fn client_loop(
                                             // TODO: Likely rename this opcode if non-gil shops also use this same opcode
                                             ClientZoneIpcData::GilShopTransaction { event_id, unk1: _, buy_sell_mode, item_index, item_quantity, unk2: _ } => {
                                                 tracing::info!("Client is interacting with a shop! {event_id:#?} {buy_sell_mode:#?} {item_quantity:#?} {item_index:#?}");
+                                                const BUY:  u32 = 1;
+                                                const SELL: u32 = 2;
 
-                                                let item_id;
-                                                {
-                                                    let mut game_data = connection.gamedata.lock().unwrap();
-                                                    item_id = game_data.get_gilshop_item(*event_id, *item_index as u16);
-                                                }
+                                                if *buy_sell_mode == BUY {
+                                                    let result;
+                                                    {
+                                                        let mut game_data = connection.gamedata.lock().unwrap();
+                                                        result = game_data.get_gilshop_item(*event_id, *item_index as u16);
+                                                    }
 
-                                                if let Some(item_id) = item_id {
-                                                    // TODO: adjust their gil, and send the proper response packets!
-                                                    connection.send_message("Shops are not implemented fully yet. Giving you a free item...").await;
-
-                                                    connection.player_data.inventory.add_in_next_free_slot(Item::new(1, item_id as u32));
-                                                    connection.send_inventory(false).await;
+                                                    if let Some((item_id, price_mid)) = result {
+                                                        if connection.player_data.inventory.currency.gil.quantity >= price_mid as u32 {
+                                                            // TODO: send the proper response packets!
+                                                            connection.player_data.inventory.currency.gil.quantity -= price_mid as u32;
+                                                            connection.player_data.inventory.add_in_next_free_slot(Item::new(1, item_id as u32));
+                                                            connection.send_inventory(false).await;
+                                                            // TODO: send an actual system notice, this is just a placeholder to provide feedback that the player actually bought something.
+                                                            let result;
+                                                            {
+                                                                let mut game_data = connection.gamedata.lock().unwrap();
+                                                                result = game_data.get_item_name(item_id as u32);
+                                                            }
+                                                            let fallback = "<Error loading item name!>".to_string();
+                                                            let item_name = result.unwrap_or(fallback);
+                                                            connection.send_message(&format!("You obtained one or more items: {} (id: {})!", item_name, item_id)).await;
+                                                        } else {
+                                                            connection.send_message("Insufficient gil to buy item. Nice try bypassing the client-side check!").await;
+                                                        }
+                                                    } else {
+                                                        connection.send_message(&format!("Unable to find shop item, this is a bug in Kawari!")).await;
+                                                    }
+                                                } else if *buy_sell_mode == SELL {
+                                                    // TODO: Implement selling items back to shops
+                                                    connection.send_message("Selling items to shops is not yet implemented. Cancelling event...").await;
                                                 } else {
-                                                    connection.send_message(&format!("Unable to find shop item, this is a bug in Kawari!")).await;
+                                                    tracing::error!("Received unknown transaction mode {buy_sell_mode}!");
                                                 }
-
                                                 // Cancel the event for now so the client doesn't get stuck
                                                 connection.event_finish(*event_id).await;
                                             }
