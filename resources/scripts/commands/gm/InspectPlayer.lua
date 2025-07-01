@@ -6,7 +6,7 @@ function getItemCondition(condition)
 end
 
 function onCommand(args, player)
-    info = "\z
+    local info = "\z
         --- Info for player ---\n\z
         Current region: %s\n\z
         Current zone: %s (%s, %s)\n\z
@@ -30,19 +30,19 @@ function onCommand(args, player)
         Soul Crystal: (id: %s, condition: %s%%)\z
         "
     -- Skipping belts because they don't exist anymore.
-    main_hand = player.inventory.equipped.main_hand
-    off_hand = player.inventory.equipped.off_hand
-    head = player.inventory.equipped.head
-    body = player.inventory.equipped.body
-    hands = player.inventory.equipped.hands
-    legs = player.inventory.equipped.legs
-    feet = player.inventory.equipped.feet
-    ears = player.inventory.equipped.ears
-    neck = player.inventory.equipped.neck
-    wrists = player.inventory.equipped.wrists
-    rring = player.inventory.equipped.right_ring
-    lring = player.inventory.equipped.left_ring
-    scrystal = player.inventory.equipped.soul_crystal
+    local main_hand = player.inventory.equipped.main_hand
+    local off_hand = player.inventory.equipped.off_hand
+    local head = player.inventory.equipped.head
+    local body = player.inventory.equipped.body
+    local hands = player.inventory.equipped.hands
+    local legs = player.inventory.equipped.legs
+    local feet = player.inventory.equipped.feet
+    local ears = player.inventory.equipped.ears
+    local neck = player.inventory.equipped.neck
+    local wrists = player.inventory.equipped.wrists
+    local rring = player.inventory.equipped.right_ring
+    local lring = player.inventory.equipped.left_ring
+    local scrystal = player.inventory.equipped.soul_crystal
 
     printf(player, info, 
            player.zone.region_name, player.zone.place_name, player.zone.internal_name, player.zone.id,
