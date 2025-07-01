@@ -642,7 +642,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     };
 
                     player.common.main_weapon_model = main_weapon_id;
-                    player.common.models = model_ids.clone();
+                    player.common.models = model_ids;
                 }
 
                 // Inform all clients about their new equipped model ids
