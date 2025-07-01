@@ -745,6 +745,10 @@ impl ZoneConnection {
                     self.player_data.inventory.currency.get_slot_mut(0).quantity += *amount;
                     self.send_inventory(false).await;
                 }
+                Task::RemoveGil { amount } => {
+                    self.player_data.inventory.currency.get_slot_mut(0).quantity -= *amount;
+                    self.send_inventory(false).await;
+                }
                 Task::UnlockOrchestrion { id, on } => {
                     // id == 0 means "all"
                     if *id == 0 {

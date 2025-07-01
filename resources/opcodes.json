@@ -368,9 +368,9 @@
             "size": 16
         },
         {
-          "name": "GilShopTransaction",
-          "opcode": 108,
-          "size": 24
+            "name": "GilShopTransaction",
+            "opcode": 108,
+            "size": 24
         }
     ],
     "ServerLobbyIpcType": [
