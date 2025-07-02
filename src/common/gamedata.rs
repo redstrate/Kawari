@@ -187,6 +187,23 @@ impl GameData {
         None
     }
 
+    pub fn get_item_name(&mut self, item_id: u32) -> Option<String> {
+        for page in &self.item_pages {
+            if let Some(row) = page.get_row(item_id) {
+                let ExcelRowKind::SingleRow(item_row) = row else {
+                    panic!("Expected a single row!")
+                };
+
+                let physis::exd::ColumnData::String(item_name) = &item_row.columns[9] else {
+                    panic!("Unexpected type!")
+                };
+
+                return Some(item_name.clone());
+            }
+        }
+        None
+    }
+
     /// Turn an equip slot category id into a slot for the equipped inventory
     pub fn get_equipslot_category(&mut self, equipslot_id: u8) -> Option<u16> {
         let sheet = EquipSlotCategorySheet::read_from(&mut self.game_data, Language::None)?;
@@ -331,12 +348,25 @@ impl GameData {
         self.classjob_exp_indexes.get(classjob_id as usize).copied()
     }
 
-    /// Gets the item and it's cost from the specified shop.
-    pub fn get_gilshop_item(&mut self, gilshop_id: u32, index: u16) -> Option<i32> {
+    /// Gets the item and its cost from the specified shop.
+    pub fn get_gilshop_item(&mut self, gilshop_id: u32, index: u16) -> Option<(i32, i32)> {
         let sheet = GilShopItemSheet::read_from(&mut self.game_data, Language::None)?;
         let row = sheet.get_subrow(gilshop_id, index)?;
+        let item_id = row.Item().into_i32()?;
+        for page in &self.item_pages {
+            if let Some(row) = page.get_row(*item_id as u32) {
+                let ExcelRowKind::SingleRow(item_row) = row else {
+                    panic!("Expected a single row!")
+                };
 
-        row.Item().into_i32().copied()
+                let physis::exd::ColumnData::UInt32(price_mid) = &item_row.columns[25] else {
+                    panic!("Unexpected type!")
+                };
+
+                return Some((*item_id, *price_mid as i32));
+            }
+        }
+        None
     }
 }
 
