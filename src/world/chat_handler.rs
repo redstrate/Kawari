@@ -1,4 +1,5 @@
 use crate::{
+    common::ItemInfoQuery,
     inventory::{Item, Storage},
     ipc::zone::{ChatMessage, GameMasterRank},
     world::ToServer,
@@ -57,15 +58,19 @@ impl ChatHandler {
                 {
                     let mut gamedata = connection.gamedata.lock().unwrap();
 
-                    if let Some((equip_category, id)) = gamedata.get_item_by_name(name) {
-                        let slot = gamedata.get_equipslot_category(equip_category).unwrap();
+                    if let Some(item_info) =
+                        gamedata.get_item_info(ItemInfoQuery::ByName(name.to_string()))
+                    {
+                        let slot = gamedata
+                            .get_equipslot_category(item_info.equip_category)
+                            .unwrap();
 
                         connection
                             .player_data
                             .inventory
                             .equipped
                             .get_slot_mut(slot)
-                            .id = id;
+                            .id = item_info.id;
                         connection
                             .player_data
                             .inventory
@@ -84,11 +89,13 @@ impl ChatHandler {
                 {
                     let mut gamedata = connection.gamedata.lock().unwrap();
 
-                    if let Some((_, id)) = gamedata.get_item_by_name(name) {
+                    if let Some(item_info) =
+                        gamedata.get_item_info(ItemInfoQuery::ByName(name.to_string()))
+                    {
                         connection
                             .player_data
                             .inventory
-                            .add_in_next_free_slot(Item::new(1, id));
+                            .add_in_next_free_slot(Item::new(1, item_info.id));
                     }
                 }
 
