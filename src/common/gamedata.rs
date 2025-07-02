@@ -128,7 +128,7 @@ impl GameData {
                 ItemInfoQuery::ById(ref query_item_id) => {
                     if let Some(row) = page.get_row(*query_item_id) {
                         let ExcelRowKind::SingleRow(item_row) = row else {
-                            panic!("Expected a single row!")
+                            panic!("Expected a single row!");
                         };
                         result = Some((item_row, query_item_id));
                         break 'outer;
@@ -138,7 +138,7 @@ impl GameData {
                 ItemInfoQuery::ByName(ref query_item_name) => {
                     for row in &page.rows {
                         let ExcelRowKind::SingleRow(single_row) = &row.kind else {
-                            panic!("Expected a single row!")
+                            panic!("Expected a single row!");
                         };
 
                         let physis::exd::ColumnData::String(item_name) = &single_row.columns[9]
@@ -162,7 +162,7 @@ impl GameData {
 
         if let Some((matched_row, item_id)) = result {
             let physis::exd::ColumnData::String(name) = &matched_row.columns[9] else {
-                panic!("Unexpected type!")
+                panic!("Unexpected type!");
             };
 
             let physis::exd::ColumnData::UInt8(equip_category) = &matched_row.columns[17] else {
@@ -170,11 +170,11 @@ impl GameData {
             };
 
             let physis::exd::ColumnData::UInt32(price_mid) = &matched_row.columns[25] else {
-                panic!("Unexpected type!")
+                panic!("Unexpected type!");
             };
 
             let physis::exd::ColumnData::UInt32(price_low) = &matched_row.columns[26] else {
-                panic!("Unexpected type!")
+                panic!("Unexpected type!");
             };
 
             let physis::exd::ColumnData::UInt64(primary_model_id) = &matched_row.columns[47] else {
