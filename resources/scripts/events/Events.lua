@@ -13,7 +13,7 @@ generic_warps = {
     131092,  -- Exit from Limsa Bulwark Hall and/or Drowning Wench to Airship Landing
     131093,  -- Exit from Limsa Bullwark Hall and/or Airship Landing to Drowning Wench
     131094,  -- Exit from Limsa Airship Landing and/or Drowning Wench to Bulwark Hall
-    131095,  -- Exit from Ul'dah Hustings Strip and/or Ruby Road Exchange to Airship Landing, these three events get reused in several places to ensure thay all connect
+    131095,  -- Exit from Ul'dah Hustings Strip and/or Ruby Road Exchange to Airship Landing, these three events get reused in several places to ensure they all connect
     131096,  -- Exit from Ul'dah Airship Landing and/or Ruby Road Exchange to Hustings Strip
     131097,  -- Exit from Ul'dah Airship Landing and/or Husting Strip to Ruby Road Exchange
     -- 131109, -- Rerenasu <Ferry Skipper> from Limsa Lominsa: The Lower Decks to Western La Noscea: Aleport, currently doesn't respond because we currently can't chain differing cutscene ids yet?
@@ -37,8 +37,11 @@ generic_warps = {
     131245,  -- Exit Kugane to Bokairo Inn room
     131246,  -- Exit Bokairo Inn to Kugane
     131250,  -- Gatekeeper from The Fringes: Castrum Oriens to East Shroud: Amarissaaix's Spire
+    131251,  -- Gatekeeper from East Shroud: Amarissaaix's Spire to The Fringes: Castrum Oriens
+    131255,  -- Ala Mhigan Resistance Gate Guard from The Fringes: Virdjala to The Fringes: Pike Falls
     131266,  -- Gatekeeper from The House of the Fierce to dead-end cave (unable to dive currently)
     131268,  -- Enclave Skiff Captain from The Doman Enclave to Yanxia: The Glittering Basin
+    131299,  -- Ala Mhigan Resistance Gate Guard from The Fringes: Pike Falls to The Fringes: Virdjala
     131312,  -- Exit The Pendants Personal Suite to Crystarium
     131313,  -- Exit from The Crown Lift (Lift Operator) to Eulmore: The Canopy
     131390,  -- Exit via Pawlin <Dreamer's Run Doorman> from Old Gridania: Dreamer's Run (old Hatchingtide event area which is now out of bounds) to Old Gridania: Botanists' Guild
