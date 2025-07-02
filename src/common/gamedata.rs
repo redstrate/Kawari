@@ -30,6 +30,28 @@ impl Default for GameData {
     }
 }
 
+/// Struct detailing various information about an item, pulled from the Items sheet.
+#[derive(Default)]
+pub struct ItemInfo {
+    /// The item's textual name.
+    pub name: String,
+    /// The item's id number.
+    pub id: u32,
+    /// The item's price, when sold by an NPC.
+    pub price_mid: u32,
+    /// The item's price, when sold to an NPC by the player.
+    pub price_low: u32,
+    /// The item's equip category.
+    pub equip_category: u8,
+    pub primary_model_id: u64,
+}
+
+#[derive(Debug)]
+pub enum ItemInfoQuery {
+    ById(u32),
+    ByName(String),
+}
+
 impl GameData {
     pub fn new() -> Self {
         let config = get_config();
@@ -98,20 +120,86 @@ impl GameData {
         })
     }
 
+    /// Gets various information from the Item sheet.
+    pub fn get_item_info(&mut self, query: ItemInfoQuery) -> Option<ItemInfo> {
+        let mut result = None;
+        'outer: for page in &self.item_pages {
+            match query {
+                ItemInfoQuery::ById(ref query_item_id) => {
+                    if let Some(row) = page.get_row(*query_item_id) {
+                        let ExcelRowKind::SingleRow(item_row) = row else {
+                            panic!("Expected a single row!");
+                        };
+                        result = Some((item_row, query_item_id));
+                        break 'outer;
+                    }
+                }
+
+                ItemInfoQuery::ByName(ref query_item_name) => {
+                    for row in &page.rows {
+                        let ExcelRowKind::SingleRow(single_row) = &row.kind else {
+                            panic!("Expected a single row!");
+                        };
+
+                        let physis::exd::ColumnData::String(item_name) = &single_row.columns[9]
+                        else {
+                            panic!("Unexpected type!");
+                        };
+
+                        if !item_name
+                            .to_lowercase()
+                            .contains(&query_item_name.to_lowercase())
+                        {
+                            continue;
+                        }
+
+                        result = Some((single_row.clone(), &row.row_id));
+                        break 'outer;
+                    }
+                }
+            }
+        }
+
+        if let Some((matched_row, item_id)) = result {
+            let physis::exd::ColumnData::String(name) = &matched_row.columns[9] else {
+                panic!("Unexpected type!");
+            };
+
+            let physis::exd::ColumnData::UInt8(equip_category) = &matched_row.columns[17] else {
+                panic!("Unexpected type!");
+            };
+
+            let physis::exd::ColumnData::UInt32(price_mid) = &matched_row.columns[25] else {
+                panic!("Unexpected type!");
+            };
+
+            let physis::exd::ColumnData::UInt32(price_low) = &matched_row.columns[26] else {
+                panic!("Unexpected type!");
+            };
+
+            let physis::exd::ColumnData::UInt64(primary_model_id) = &matched_row.columns[47] else {
+                panic!("Unexpected type!");
+            };
+
+            let item_info = ItemInfo {
+                id: *item_id,
+                name: name.to_string(),
+                price_mid: *price_mid,
+                price_low: *price_low,
+                equip_category: *equip_category,
+                primary_model_id: *primary_model_id,
+            };
+
+            return Some(item_info);
+        }
+
+        None
+    }
+
     /// Gets the primary model ID for a given item ID
     pub fn get_primary_model_id(&mut self, item_id: u32) -> Option<u64> {
-        for page in &self.item_pages {
-            if let Some(row) = page.get_row(item_id) {
-                let ExcelRowKind::SingleRow(item_row) = row else {
-                    panic!("Expected a single row!")
-                };
-
-                let physis::exd::ColumnData::UInt64(id) = &item_row.columns[47] else {
-                    panic!("Unexpected type!");
-                };
-
-                return Some(*id);
-            }
+        if let Some(item_info) = self.get_item_info(ItemInfoQuery::ById(item_id)) {
+            return Some(item_info.primary_model_id);
         }
 
         None
@@ -158,50 +246,6 @@ impl GameData {
         let value = row.Name().into_string()?;
 
         Some(value.clone())
-    }
-
-    /// Find an item's equip category and id by name, if it exists.
-    pub fn get_item_by_name(&mut self, name: &str) -> Option<(u8, u32)> {
-        for page in &self.item_pages {
-            for row in &page.rows {
-                let ExcelRowKind::SingleRow(single_row) = &row.kind else {
-                    panic!("Expected a single row!")
-                };
-
-                let physis::exd::ColumnData::String(item_name) = &single_row.columns[9] else {
-                    panic!("Unexpected type!");
-                };
-
-                if !item_name.to_lowercase().contains(&name.to_lowercase()) {
-                    continue;
-                }
-
-                let physis::exd::ColumnData::UInt8(equip_category) = &single_row.columns[17] else {
-                    panic!("Unexpected type!");
-                };
-
-                return Some((*equip_category, row.row_id));
-            }
-        }
-
-        None
-    }
-
-    pub fn get_item_name(&mut self, item_id: u32) -> Option<String> {
-        for page in &self.item_pages {
-            if let Some(row) = page.get_row(item_id) {
-                let ExcelRowKind::SingleRow(item_row) = row else {
-                    panic!("Expected a single row!")
-                };
-
-                let physis::exd::ColumnData::String(item_name) = &item_row.columns[9] else {
-                    panic!("Unexpected type!")
-                };
-
-                return Some(item_name.clone());
-            }
-        }
-        None
     }
 
     /// Turn an equip slot category id into a slot for the equipped inventory
@@ -349,24 +393,12 @@ impl GameData {
     }
 
     /// Gets the item and its cost from the specified shop.
-    pub fn get_gilshop_item(&mut self, gilshop_id: u32, index: u16) -> Option<(i32, i32)> {
+    pub fn get_gilshop_item(&mut self, gilshop_id: u32, index: u16) -> Option<ItemInfo> {
         let sheet = GilShopItemSheet::read_from(&mut self.game_data, Language::None)?;
         let row = sheet.get_subrow(gilshop_id, index)?;
         let item_id = row.Item().into_i32()?;
-        for page in &self.item_pages {
-            if let Some(row) = page.get_row(*item_id as u32) {
-                let ExcelRowKind::SingleRow(item_row) = row else {
-                    panic!("Expected a single row!")
-                };
 
-                let physis::exd::ColumnData::UInt32(price_mid) = &item_row.columns[25] else {
-                    panic!("Unexpected type!")
-                };
-
-                return Some((*item_id, *price_mid as i32));
-            }
-        }
-        None
+        self.get_item_info(ItemInfoQuery::ById(*item_id as u32))
     }
 }
 

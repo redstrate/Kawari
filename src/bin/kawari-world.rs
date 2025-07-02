@@ -802,21 +802,14 @@ async fn client_loop(
                                                         result = game_data.get_gilshop_item(*event_id, *item_index as u16);
                                                     }
 
-                                                    if let Some((item_id, price_mid)) = result {
-                                                        if connection.player_data.inventory.currency.gil.quantity >= price_mid as u32 {
+                                                    if let Some(item_info) = result {
+                                                        if connection.player_data.inventory.currency.gil.quantity >= item_info.price_mid as u32 {
                                                             // TODO: send the proper response packets!
-                                                            connection.player_data.inventory.currency.gil.quantity -= price_mid as u32;
-                                                            connection.player_data.inventory.add_in_next_free_slot(Item::new(1, item_id as u32));
+                                                            connection.player_data.inventory.currency.gil.quantity -= item_info.price_mid as u32;
+                                                            connection.player_data.inventory.add_in_next_free_slot(Item::new(1, item_info.id as u32));
                                                             connection.send_inventory(false).await;
                                                             // TODO: send an actual system notice, this is just a placeholder to provide feedback that the player actually bought something.
-                                                            let result;
-                                                            {
-                                                                let mut game_data = connection.gamedata.lock().unwrap();
-                                                                result = game_data.get_item_name(item_id as u32);
-                                                            }
-                                                            let fallback = "<Error loading item name!>".to_string();
-                                                            let item_name = result.unwrap_or(fallback);
-                                                            connection.send_message(&format!("You obtained one or more items: {} (id: {})!", item_name, item_id)).await;
+                                                            connection.send_message(&format!("You obtained one or more items: {} (id: {})!", item_info.name, item_info.id)).await;
                                                         } else {
                                                             connection.send_message("Insufficient gil to buy item. Nice try bypassing the client-side check!").await;
                                                         }
