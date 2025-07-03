@@ -1,6 +1,7 @@
 use kawari::RECEIVE_BUFFER_SIZE;
 use kawari::common::GameData;
 use kawari::config::get_config;
+use kawari::get_supported_expac_versions;
 use kawari::ipc::kawari::CustomIpcData;
 use kawari::ipc::kawari::CustomIpcSegment;
 use kawari::ipc::kawari::CustomIpcType;
@@ -11,8 +12,133 @@ use kawari::lobby::send_custom_world_packet;
 use kawari::packet::ConnectionType;
 use kawari::packet::oodle::OodleNetwork;
 use kawari::packet::{PacketState, SegmentData, send_keep_alive};
+use std::fs;
+use std::path::MAIN_SEPARATOR_STR;
 use tokio::io::AsyncReadExt;
 use tokio::net::TcpListener;
+
+/// Allows the lobby server to do a thorough client version check.
+/// First, it checks the local game executable's file length against the client-specified size.
+/// Second, it calculates a SHA1 hash against the locally stored game executable and compares it to the client-specified hash.
+/// Finally, it compares expansion pack version strings provided by the client against locally stored information.
+/// If, and only if, all of these checks pass, does the client get allowed in.
+fn do_game_version_check(client_version_str: &str) -> bool {
+    let config = get_config();
+    const VERSION_STR_LEN: usize = 145;
+
+    if client_version_str.len() != VERSION_STR_LEN {
+        tracing::error!(
+            "Version string sent by client is invalid or malformed, its length is {}! Rejecting session!",
+            client_version_str.len()
+        );
+        return false;
+    }
+
+    let game_exe_path = [
+        config.game_location,
+        MAIN_SEPARATOR_STR.to_string(),
+        "ffxiv_dx11.exe".to_string(),
+    ]
+    .join("");
+    if let Ok(game_md) = fs::metadata(&game_exe_path) {
+        let expected_exe_len = game_md.len();
+
+        let parts: Vec<&str> = client_version_str.split("+").collect();
+        if parts[0].starts_with("ffxiv_dx11.exe") {
+            let exe_parts: Vec<&str> = parts[0].split("/").collect();
+            match exe_parts[1].parse::<u64>() {
+                Ok(client_exe_len) => {
+                    if client_exe_len != expected_exe_len {
+                        tracing::error!(
+                            "Client's game executable length is incorrect! Rejecting session! Got {}, expected {}",
+                            client_exe_len,
+                            expected_exe_len
+                        );
+                        return false;
+                    } else {
+                        tracing::info!("Client's game executable length is OK.");
+                    }
+                }
+                Err(err) => {
+                    tracing::error!(
+                        "Game's version string is malformed, unable to parse executable length field! Rejecting session! Got {}, further info: {}",
+                        exe_parts[1],
+                        err
+                    );
+                    return false;
+                }
+            }
+
+            let client_exe_hash = exe_parts[2];
+
+            match std::fs::read(&game_exe_path) {
+                Ok(game_exe_filebuffer) => {
+                    let expected_exe_hash = sha1_smol::Sha1::from(game_exe_filebuffer)
+                        .digest()
+                        .to_string();
+                    if client_exe_hash != expected_exe_hash {
+                        tracing::error!(
+                            "Client's game executable is corrupted! Rejecting session! Got {}, expected {}",
+                            client_exe_hash,
+                            expected_exe_hash
+                        );
+                        return false;
+                    } else {
+                        tracing::info!("Client's game executable hash is OK.");
+                    }
+                }
+                Err(err) => {
+                    panic!(
+                        "Unable to read our game executable file! Stopping lobby server! Further information: {err}",
+                    );
+                }
+            }
+
+            let client_expansion_versions = &parts[1..];
+
+            let supported_expansion_versions = get_supported_expac_versions();
+            if client_expansion_versions.len() != supported_expansion_versions.len() {
+                tracing::error!(
+                    "Client sent a malformed version string! It is missing one or more expansion versions! Rejecting session!"
+                );
+                return false;
+            }
+
+            // We need these in order, and hashmaps don't guarantee this.
+            let expected_versions = [
+                &supported_expansion_versions["ex1"].0,
+                &supported_expansion_versions["ex2"].0,
+                &supported_expansion_versions["ex3"].0,
+                &supported_expansion_versions["ex4"].0,
+                &supported_expansion_versions["ex5"].0,
+            ];
+
+            for expansion in client_expansion_versions
+                .iter()
+                .zip(expected_versions.iter())
+            {
+                // The client doesn't send a patch2 value in its expansion version strings, so we just pretend it doesn't exist on our side.
+                let expected_version = &expansion.1[..expansion.1.len() - 5].to_string();
+                let client_version = *expansion.0;
+                if client_version != expected_version {
+                    tracing::error!(
+                        "One of the client's expansion versions does not match! Rejecting session! Got {}, expected {}",
+                        client_version,
+                        expected_version
+                    );
+                    return false;
+                }
+            }
+            tracing::info!("All client version checks succeeded! Allowing session!");
+            return true;
+        }
+        tracing::error!(
+            "Client sent a malformed version string! It doesn't declare the name of the game executable correctly! Rejecting session!"
+        );
+        return false;
+    }
+    panic!("Our game executable doesn't exist! We can't do version checks!");
+}
 
 #[tokio::main]
 async fn main() {
@@ -77,6 +203,15 @@ async fn main() {
                                     );
 
                                     let config = get_config();
+
+                                    // The lobby server does its own version check as well, but it can be turned off if desired.
+                                    if config.lobby.do_version_checks
+                                        && !do_game_version_check(version_info)
+                                    {
+                                        // "A version update is required."
+                                        connection.send_error(*sequence, 1012, 13101).await;
+                                        break;
+                                    }
 
                                     let Ok(login_reply) = reqwest::get(format!(
                                         "http://{}/_private/service_accounts?sid={}",
