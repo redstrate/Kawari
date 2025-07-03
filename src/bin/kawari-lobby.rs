@@ -61,7 +61,7 @@ fn do_game_version_check(client_version_str: &str) -> bool {
                 }
                 Err(err) => {
                     tracing::error!(
-                        "Game's version string is malformed, unable to parse executable length field! Rejecting session! Got {}, further info: {}",
+                        "Client's version string is malformed, unable to parse executable length field! Rejecting session! Got {}, further info: {}",
                         exe_parts[1],
                         err
                     );
