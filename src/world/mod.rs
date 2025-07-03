@@ -32,4 +32,6 @@ mod common;
 pub use common::{ClientHandle, ClientId, FromServer, ServerHandle, ToServer};
 
 mod scrambler;
-pub use scrambler::{OBFUSCATION_ENABLED_MODE, ScramblerKeyGenerator, ScramblerKeys};
+pub use scrambler::{
+    OBFUSCATION_ENABLED_MODE, ScramblerKeyGenerator, ScramblerKeys, scramble_packet,
+};

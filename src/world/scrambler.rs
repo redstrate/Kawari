@@ -94,3 +94,89 @@ impl ScramblerKeys {
         self.keys[(opcode % 3) as usize]
     }
 }
+
+/// Scrambles the packet in just the right ways.
+/// Not the greatest thing I ever implemented, it just copies what Unscrambler does. There might be a better way of doing this.
+pub fn scramble_packet(opcode_name: &str, base_key: u8, data: &mut [u8]) {
+    // NOTE: All offsets begin after the IPC segment header
+
+    unsafe {
+        match opcode_name {
+            "PlayerSpawn" => {
+                // content id
+                *std::mem::transmute::<&mut [u8; 8], &mut u64>(
+                    &mut data[24..32].try_into().unwrap(),
+                ) += base_key as u64;
+                // home world
+                *std::mem::transmute::<&mut [u8; 2], &mut u16>(
+                    &mut data[36..38].try_into().unwrap(),
+                ) += base_key as u16;
+                // current world
+                *std::mem::transmute::<&mut [u8; 2], &mut u16>(
+                    &mut data[38..40].try_into().unwrap(),
+                ) += base_key as u16;
+
+                // name
+                let name_offset = 610;
+                for i in 0..32 {
+                    data[(name_offset + i) as usize] =
+                        data[(name_offset + i) as usize].wrapping_add(base_key);
+                }
+
+                // equipment
+                let equip_offset = 556;
+                let int_key_to_use = base_key as u32 + 118426275;
+                for i in 0..10 {
+                    let offset = equip_offset + i * 4;
+                    *std::mem::transmute::<&mut [u8; 4], &mut u32>(
+                        &mut data[offset as usize..offset as usize + 4]
+                            .try_into()
+                            .unwrap(),
+                    ) ^= int_key_to_use;
+                }
+            }
+            "NpcSpawn" => {
+                // TODO: note what these fields are
+                *std::mem::transmute::<&mut [u8; 4], &mut u32>(
+                    &mut data[80..84].try_into().unwrap(),
+                ) += base_key as u32;
+                *std::mem::transmute::<&mut [u8; 4], &mut u32>(
+                    &mut data[84..88].try_into().unwrap(),
+                ) += base_key as u32;
+                *std::mem::transmute::<&mut [u8; 4], &mut u32>(
+                    &mut data[88..92].try_into().unwrap(),
+                ) += base_key as u32;
+                *std::mem::transmute::<&mut [u8; 4], &mut u32>(
+                    &mut data[96..100].try_into().unwrap(),
+                ) += base_key as u32;
+                *std::mem::transmute::<&mut [u8; 4], &mut u32>(
+                    &mut data[100..104].try_into().unwrap(),
+                ) += base_key as u32;
+                let weird_const = 0xF1E2D9C8;
+                *std::mem::transmute::<&mut [u8; 4], &mut u32>(
+                    &mut data[108..112].try_into().unwrap(),
+                ) ^= weird_const;
+
+                // ops?
+                /*let op_offset = 168;
+                for i in 0..30 {
+                    let offset = op_offset + i * 22;
+                    *std::mem::transmute::<&mut [u8; 2], &mut u16>(&mut data[offset as usize..offset as usize + 2].try_into().unwrap()) += base_key as u16;
+                }*/
+            }
+            "Equip" => {
+                let op_offset = 36;
+                let int_key_to_use = base_key as i32 - 863169860;
+                for i in 0..10 {
+                    let offset = op_offset + i * 4;
+                    *std::mem::transmute::<&mut [u8; 4], &mut i32>(
+                        &mut data[offset as usize..offset as usize + 4]
+                            .try_into()
+                            .unwrap(),
+                    ) ^= int_key_to_use;
+                }
+            }
+            _ => {}
+        }
+    }
+}

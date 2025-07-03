@@ -6,7 +6,7 @@ use binrw::{BinRead, BinResult};
 use crate::{
     config::get_config,
     packet::{PacketHeader, PacketSegment},
-    world::ScramblerKeys,
+    world::{ScramblerKeys, scramble_packet},
 };
 
 use super::{IPC_HEADER_SIZE, PacketState, ReadWriteIpcSegment, SegmentData, oodle::OodleNetwork};
@@ -102,14 +102,11 @@ pub(crate) fn compress<T: ReadWriteIpcSegment>(
                 let opcode = data.get_opcode();
                 let base_key = keys.get_base_key(opcode);
 
-                if data.get_name() == "PlayerSpawn" {
-                    let name_offset = 610;
-                    for i in 0..32 {
-                        buffer[(IPC_HEADER_SIZE + name_offset + i) as usize] = buffer
-                            [(IPC_HEADER_SIZE + name_offset + i) as usize]
-                            .wrapping_add(base_key);
-                    }
-                }
+                scramble_packet(
+                    data.get_name(),
+                    base_key,
+                    &mut buffer[IPC_HEADER_SIZE as usize..],
+                );
             }
         }
 
