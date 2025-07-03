@@ -87,7 +87,8 @@ async fn main() {
                                         tracing::warn!(
                                             "Failed to contact login server, is it running?"
                                         );
-                                        connection.send_error(*sequence, 1012, 13101).await;
+                                        // "The lobby server connection has encountered an error."
+                                        connection.send_error(*sequence, 2002, 13001).await;
                                         break;
                                     };
 
@@ -95,7 +96,8 @@ async fn main() {
                                         tracing::warn!(
                                             "Failed to contact login server, is it running?"
                                         );
-                                        connection.send_error(*sequence, 1012, 13101).await;
+                                        // "The lobby server connection has encountered an error."
+                                        connection.send_error(*sequence, 2002, 13001).await;
                                         break;
                                     };
 
@@ -107,8 +109,8 @@ async fn main() {
                                                 "This account has no service accounts attached, how did this happen?"
                                             );
 
-                                            // request an update, wrong error message lol
-                                            connection.send_error(*sequence, 1012, 13101).await;
+                                            /* "<the game> has not yet been registered on this platform or your service account's subscription has expired. Please close the application and complete the registration process. If you would like to add a platform to your service account or renew your subscription, please visit the <website>). To register another platform, you must purchase a license for the applicable platform or complete the registration process using the registration code included with your purchase." */
+                                            connection.send_error(*sequence, 2002, 13209).await;
                                         } else {
                                             connection.service_accounts = service_accounts;
                                             connection.session_id = Some(session_id.clone());
@@ -119,8 +121,8 @@ async fn main() {
                                             "Failed to parse service accounts from the login server!"
                                         );
 
-                                        // request an update, wrong error message lol
-                                        connection.send_error(*sequence, 1012, 13101).await;
+                                        // "The lobby server has encountered a problem."
+                                        connection.send_error(*sequence, 2002, 13006).await;
                                     }
                                 }
                                 ClientLobbyIpcData::ServiceLogin { sequence } => {
