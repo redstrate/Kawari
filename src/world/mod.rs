@@ -5,7 +5,7 @@ mod chat_handler;
 pub use chat_handler::ChatHandler;
 
 mod connection;
-pub use connection::{ExtraLuaState, PlayerData, ZoneConnection};
+pub use connection::{ExtraLuaState, ObsfucationData, PlayerData, ZoneConnection};
 
 mod database;
 pub use database::{CharacterData, WorldDatabase};
@@ -30,3 +30,6 @@ pub use custom_ipc_handler::handle_custom_ipc;
 
 mod common;
 pub use common::{ClientHandle, ClientId, FromServer, ServerHandle, ToServer};
+
+mod scrambler;
+pub use scrambler::{OBFUSCATION_ENABLED_MODE, ScramblerKeyGenerator, ScramblerKeys};

@@ -9,7 +9,7 @@ use mlua::Function;
 use tokio::net::TcpStream;
 
 use crate::{
-    COMPLETED_QUEST_BITMASK_SIZE, OBFUSCATION_ENABLED_MODE,
+    COMPLETED_QUEST_BITMASK_SIZE,
     common::{
         GameData, ObjectId, ObjectTypeId, Position, timestamp_secs, value_to_flag_byte_index_value,
     },
@@ -34,8 +34,8 @@ use crate::{
 };
 
 use super::{
-    Actor, CharacterData, EffectsBuilder, Event, LuaPlayer, StatusEffects, ToServer, WorldDatabase,
-    Zone,
+    Actor, CharacterData, EffectsBuilder, Event, LuaPlayer, OBFUSCATION_ENABLED_MODE,
+    ScramblerKeyGenerator, ScramblerKeys, StatusEffects, ToServer, WorldDatabase, Zone,
     common::{ClientId, ServerHandle},
     load_init_script,
     lua::Task,
@@ -85,7 +85,16 @@ pub struct PlayerData {
     pub completed_quests: Vec<u8>,
 }
 
-/// Represents a single connection between an instance of the client and the world server
+/// Various obsfucation-related bits like the seeds and keys for this connection.
+#[derive(Debug, Default, Clone)]
+pub struct ObsfucationData {
+    pub keys: Option<ScramblerKeys>,
+    pub seed1: u8,
+    pub seed2: u8,
+    pub seed3: u32,
+}
+
+/// Represents a single connection between an instance of the client and the world server.
 pub struct ZoneConnection {
     pub config: WorldConfig,
     pub socket: TcpStream,
@@ -119,6 +128,8 @@ pub struct ZoneConnection {
 
     // TODO: really needs to be moved somewhere else
     pub weather_id: u16,
+
+    pub obsfucation_data: ObsfucationData,
 }
 
 impl ZoneConnection {
@@ -140,6 +151,7 @@ impl ZoneConnection {
                 CompressionType::Uncompressed
             },
             &[segment],
+            self.obsfucation_data.keys.as_ref(),
         )
         .await;
     }
@@ -155,6 +167,7 @@ impl ZoneConnection {
                 CompressionType::Uncompressed
             },
             &[segment],
+            self.obsfucation_data.keys.as_ref(),
         )
         .await;
     }
@@ -350,6 +363,27 @@ impl ZoneConnection {
         // Player Class Info
         self.update_class_info().await;
 
+        // Generate obsfucation-related keys if needed.
+        if self.config.enable_packet_obsfucation {
+            let seed1 = fastrand::u8(..);
+            let seed2 = fastrand::u8(..);
+            let seed3 = fastrand::u32(..);
+
+            let generator = ScramblerKeyGenerator::new();
+
+            self.obsfucation_data = ObsfucationData {
+                keys: Some(generator.generate(seed1, seed2, seed3)),
+                seed1,
+                seed2,
+                seed3,
+            };
+
+            tracing::info!(
+                "You enabled packet obsfucation in your World config, things will break! {:?}",
+                self.obsfucation_data
+            );
+        }
+
         // Init Zone
         {
             let config = get_config();
@@ -372,6 +406,9 @@ impl ZoneConnection {
                     } else {
                         0
                     },
+                    seed1: !self.obsfucation_data.seed1,
+                    seed2: !self.obsfucation_data.seed2,
+                    seed3: !self.obsfucation_data.seed3,
                     ..Default::default()
                 }),
                 ..Default::default()

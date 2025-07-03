@@ -2,19 +2,22 @@ use binrw::binrw;
 
 use crate::{
     opcodes::ServerChatIpcType,
-    packet::{IpcSegment, ReadWriteIpcSegment},
+    packet::{IPC_HEADER_SIZE, IpcSegment, ReadWriteIpcSegment},
 };
 
 pub type ServerChatIpcSegment = IpcSegment<ServerChatIpcType, ServerChatIpcData>;
 
 impl ReadWriteIpcSegment for ServerChatIpcSegment {
     fn calc_size(&self) -> u32 {
-        // 16 is the size of the IPC header
-        16 + self.op_code.calc_size()
+        IPC_HEADER_SIZE + self.op_code.calc_size()
     }
 
     fn get_name(&self) -> &'static str {
         self.op_code.get_name()
+    }
+
+    fn get_opcode(&self) -> u16 {
+        self.op_code.get_opcode()
     }
 }
 

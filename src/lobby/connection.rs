@@ -54,6 +54,7 @@ impl LobbyConnection {
             ConnectionType::Lobby,
             CompressionType::Uncompressed,
             &[segment],
+            None,
         )
         .await;
     }
@@ -166,6 +167,7 @@ impl LobbyConnection {
             ConnectionType::Lobby,
             CompressionType::Uncompressed,
             &packets,
+            None,
         )
         .await;
 
@@ -560,6 +562,7 @@ pub async fn send_custom_world_packet(segment: CustomIpcSegment) -> Option<Custo
         ConnectionType::None,
         CompressionType::Uncompressed,
         &[segment],
+        None,
     )
     .await;
 

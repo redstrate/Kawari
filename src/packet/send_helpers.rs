@@ -3,7 +3,7 @@ use std::io::Cursor;
 use binrw::BinWrite;
 use tokio::{io::AsyncWriteExt, net::TcpStream};
 
-use crate::common::timestamp_msecs;
+use crate::{common::timestamp_msecs, world::ScramblerKeys};
 
 use super::{
     CompressionType, ConnectionType, PacketHeader, PacketSegment, PacketState, ReadWriteIpcSegment,
@@ -16,8 +16,9 @@ pub async fn send_packet<T: ReadWriteIpcSegment>(
     connection_type: ConnectionType,
     compression_type: CompressionType,
     segments: &[PacketSegment<T>],
+    keys: Option<&ScramblerKeys>,
 ) {
-    let (data, uncompressed_size) = compress(state, &compression_type, segments);
+    let (data, uncompressed_size) = compress(state, &compression_type, segments, keys);
     let size = std::mem::size_of::<PacketHeader>() + data.len();
 
     let header = PacketHeader {
@@ -61,6 +62,7 @@ pub async fn send_keep_alive<T: ReadWriteIpcSegment>(
         connection_type,
         CompressionType::Uncompressed,
         &[response_packet],
+        None,
     )
     .await;
 }

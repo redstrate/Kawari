@@ -6,9 +6,10 @@ use binrw::{BinRead, BinResult};
 use crate::{
     config::get_config,
     packet::{PacketHeader, PacketSegment},
+    world::ScramblerKeys,
 };
 
-use super::{PacketState, ReadWriteIpcSegment, oodle::OodleNetwork};
+use super::{IPC_HEADER_SIZE, PacketState, ReadWriteIpcSegment, SegmentData, oodle::OodleNetwork};
 
 #[binrw]
 #[brw(repr = u8)]
@@ -77,18 +78,44 @@ pub(crate) fn compress<T: ReadWriteIpcSegment>(
     state: &mut PacketState,
     compression_type: &CompressionType,
     segments: &[PacketSegment<T>],
+    keys: Option<&ScramblerKeys>,
 ) -> (Vec<u8>, usize) {
-    let mut segments_buffer = Cursor::new(Vec::new());
+    let mut segments_buffer = Vec::new();
     for segment in segments {
-        segment
-            .write_le_args(
-                &mut segments_buffer,
-                (state.client_key.as_ref().map(|s: &[u8; 16]| s.as_slice()),),
-            )
-            .unwrap();
+        let mut buffer = Vec::new();
+
+        // write to buffer
+        {
+            let mut cursor = Cursor::new(&mut buffer);
+
+            segment
+                .write_le_args(
+                    &mut cursor,
+                    (state.client_key.as_ref().map(|s: &[u8; 16]| s.as_slice()),),
+                )
+                .unwrap();
+        }
+
+        // obsfucate if needed
+        if let Some(keys) = keys {
+            if let SegmentData::Ipc { data } = &segment.data {
+                let opcode = data.get_opcode();
+                let base_key = keys.get_base_key(opcode);
+
+                if data.get_name() == "PlayerSpawn" {
+                    let name_offset = 610;
+                    for i in 0..32 {
+                        buffer[(IPC_HEADER_SIZE + name_offset + i) as usize] = buffer
+                            [(IPC_HEADER_SIZE + name_offset + i) as usize]
+                            .wrapping_add(base_key);
+                    }
+                }
+            }
+        }
+
+        segments_buffer.append(&mut buffer);
     }
 
-    let segments_buffer = segments_buffer.into_inner();
     let segments_buffer_len = segments_buffer.len();
 
     match compression_type {

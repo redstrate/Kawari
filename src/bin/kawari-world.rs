@@ -20,7 +20,9 @@ use kawari::packet::oodle::OodleNetwork;
 use kawari::packet::{
     ConnectionType, PacketSegment, PacketState, SegmentData, SegmentType, send_keep_alive,
 };
-use kawari::world::{ChatHandler, ExtraLuaState, LuaZone, Zone, ZoneConnection, load_init_script};
+use kawari::world::{
+    ChatHandler, ExtraLuaState, LuaZone, ObsfucationData, Zone, ZoneConnection, load_init_script,
+};
 use kawari::world::{
     ClientHandle, Event, FromServer, LuaPlayer, PlayerData, ServerHandle, StatusEffects, ToServer,
     WorldDatabase, handle_custom_ipc, server_main_loop,
@@ -1099,6 +1101,7 @@ async fn main() {
                     last_keep_alive: Instant::now(),
                     gracefully_logged_out: false,
                     weather_id: 0,
+                    obsfucation_data: ObsfucationData::default(),
                 });
             }
             Some((mut socket, _)) = handle_rcon(&rcon_listener) => {

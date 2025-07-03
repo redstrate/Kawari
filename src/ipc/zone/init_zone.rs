@@ -17,8 +17,12 @@ pub struct InitZone {
     /// Zero means "no obsfucation" (not really, but functionally yes.)
     /// To enable obsfucation, you need to set this to a constant that changes every patch. See lib.rs for the constant.
     pub obsfucation_mode: u8,
-    pub unk1: u8,
-    pub unk2: u32,
+    /// First seed used in deobsfucation on the client side.
+    pub seed1: u8,
+    /// Second seed used in deobsfucation on the client side.
+    pub seed2: u8,
+    /// Third seed used in deobsfucation on the client size.
+    pub seed3: u32,
     pub festival_id: u16,
     pub additional_festival_id: u16,
     pub unk3: u32,
@@ -26,7 +30,7 @@ pub struct InitZone {
     pub unk5: u32,
     pub unk6: [u32; 4],
     pub unk7: [u32; 3],
-    pub unk8_9: [u8; 9],
+    pub unk8_9: [u8; 8],
     pub position: Position,
     pub unk8: [u32; 4],
     pub unk9: u32,

@@ -10,6 +10,9 @@ pub trait ReadWriteIpcSegment:
 
     /// Returns a human-readable name of the opcode.
     fn get_name(&self) -> &'static str;
+
+    /// Returns the integer opcode.
+    fn get_opcode(&self) -> u16;
 }
 
 /// An IPC packet segment.
@@ -60,3 +63,5 @@ where
     #[br(args(&op_code, size))]
     pub data: Data,
 }
+
+pub const IPC_HEADER_SIZE: u32 = 16;

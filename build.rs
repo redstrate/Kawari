@@ -78,6 +78,24 @@ fn main() {
                 output_str.push_str("}\n\n");
                 output_str.push_str("}\n\n");
 
+                // opcodes
+                output_str.push_str("/// Returns the integer opcode.\n");
+                output_str.push_str("pub fn get_opcode(&self) -> u16 {\n");
+                output_str.push_str("match self {\n");
+
+                for opcode in opcodes {
+                    let opcode = opcode.as_object().unwrap();
+                    let name = opcode.get("name").unwrap().as_str().unwrap();
+                    let opcode = opcode.get("opcode").unwrap().as_number().unwrap();
+
+                    output_str.push_str(&format!("{key}::{name} => {opcode},\n"));
+                }
+
+                output_str.push_str(&format!("{key}::Unknown(opcode) => *opcode,\n"));
+
+                output_str.push_str("}\n\n");
+                output_str.push_str("}\n\n");
+
                 // end impl
                 output_str.push_str("}\n\n");
             }

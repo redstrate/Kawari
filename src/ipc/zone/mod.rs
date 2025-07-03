@@ -94,6 +94,7 @@ use crate::common::read_string;
 use crate::common::write_string;
 use crate::opcodes::ClientZoneIpcType;
 use crate::opcodes::ServerZoneIpcType;
+use crate::packet::IPC_HEADER_SIZE;
 use crate::packet::IpcSegment;
 use crate::packet::ReadWriteIpcSegment;
 
@@ -101,12 +102,15 @@ pub type ClientZoneIpcSegment = IpcSegment<ClientZoneIpcType, ClientZoneIpcData>
 
 impl ReadWriteIpcSegment for ClientZoneIpcSegment {
     fn calc_size(&self) -> u32 {
-        // 16 is the size of the IPC header
-        16 + self.op_code.calc_size()
+        IPC_HEADER_SIZE + self.op_code.calc_size()
     }
 
     fn get_name(&self) -> &'static str {
         self.op_code.get_name()
+    }
+
+    fn get_opcode(&self) -> u16 {
+        self.op_code.get_opcode()
     }
 }
 
@@ -128,12 +132,15 @@ pub type ServerZoneIpcSegment = IpcSegment<ServerZoneIpcType, ServerZoneIpcData>
 
 impl ReadWriteIpcSegment for ServerZoneIpcSegment {
     fn calc_size(&self) -> u32 {
-        // 16 is the size of the IPC header
-        16 + self.op_code.calc_size()
+        IPC_HEADER_SIZE + self.op_code.calc_size()
     }
 
     fn get_name(&self) -> &'static str {
         self.op_code.get_name()
+    }
+
+    fn get_opcode(&self) -> u16 {
+        self.op_code.get_opcode()
     }
 }
 

@@ -3,33 +3,37 @@ use binrw::binrw;
 use crate::{
     common::{CHAR_NAME_MAX_LENGTH, read_bool_from, read_string, write_bool_as, write_string},
     ipc::lobby::CharacterDetails,
-    packet::{IpcSegment, ReadWriteIpcSegment},
+    packet::{IPC_HEADER_SIZE, IpcSegment, ReadWriteIpcSegment},
 };
 
 pub type CustomIpcSegment = IpcSegment<CustomIpcType, CustomIpcData>;
 
 impl ReadWriteIpcSegment for CustomIpcSegment {
     fn calc_size(&self) -> u32 {
-        // 16 is the size of the IPC header
-        16 + match self.op_code {
-            CustomIpcType::RequestCreateCharacter => 1024 + CHAR_NAME_MAX_LENGTH as u32,
-            CustomIpcType::CharacterCreated => 12,
-            CustomIpcType::GetActorId => 8,
-            CustomIpcType::ActorIdFound => 4,
-            CustomIpcType::CheckNameIsAvailable => CHAR_NAME_MAX_LENGTH as u32,
-            CustomIpcType::NameIsAvailableResponse => 1,
-            CustomIpcType::RequestCharacterList => 4,
-            CustomIpcType::RequestCharacterListRepsonse => 1 + (1184 * 8),
-            CustomIpcType::DeleteCharacter => 8,
-            CustomIpcType::CharacterDeleted => 1,
-            CustomIpcType::ImportCharacter => 132,
-            CustomIpcType::RemakeCharacter => 1024 + 8,
-            CustomIpcType::CharacterRemade => 8,
-        }
+        IPC_HEADER_SIZE
+            + match self.op_code {
+                CustomIpcType::RequestCreateCharacter => 1024 + CHAR_NAME_MAX_LENGTH as u32,
+                CustomIpcType::CharacterCreated => 12,
+                CustomIpcType::GetActorId => 8,
+                CustomIpcType::ActorIdFound => 4,
+                CustomIpcType::CheckNameIsAvailable => CHAR_NAME_MAX_LENGTH as u32,
+                CustomIpcType::NameIsAvailableResponse => 1,
+                CustomIpcType::RequestCharacterList => 4,
+                CustomIpcType::RequestCharacterListRepsonse => 1 + (1184 * 8),
+                CustomIpcType::DeleteCharacter => 8,
+                CustomIpcType::CharacterDeleted => 1,
+                CustomIpcType::ImportCharacter => 132,
+                CustomIpcType::RemakeCharacter => 1024 + 8,
+                CustomIpcType::CharacterRemade => 8,
+            }
     }
 
     fn get_name(&self) -> &'static str {
         ""
+    }
+
+    fn get_opcode(&self) -> u16 {
+        todo!()
     }
 }
 

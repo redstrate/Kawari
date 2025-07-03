@@ -15,19 +15,22 @@ pub use login_reply::{LoginReply, ServiceAccount};
 use crate::{
     common::{read_string, write_string},
     opcodes::{ClientLobbyIpcType, ServerLobbyIpcType},
-    packet::{IpcSegment, ReadWriteIpcSegment},
+    packet::{IPC_HEADER_SIZE, IpcSegment, ReadWriteIpcSegment},
 };
 
 pub type ClientLobbyIpcSegment = IpcSegment<ClientLobbyIpcType, ClientLobbyIpcData>;
 
 impl ReadWriteIpcSegment for ClientLobbyIpcSegment {
     fn calc_size(&self) -> u32 {
-        // 16 is the size of the IPC header
-        16 + self.op_code.calc_size()
+        IPC_HEADER_SIZE + self.op_code.calc_size()
     }
 
     fn get_name(&self) -> &'static str {
         self.op_code.get_name()
+    }
+
+    fn get_opcode(&self) -> u16 {
+        self.op_code.get_opcode()
     }
 }
 
@@ -53,12 +56,15 @@ pub type ServerLobbyIpcSegment = IpcSegment<ServerLobbyIpcType, ServerLobbyIpcDa
 
 impl ReadWriteIpcSegment for ServerLobbyIpcSegment {
     fn calc_size(&self) -> u32 {
-        // 16 is the size of the IPC header
-        16 + self.op_code.calc_size()
+        IPC_HEADER_SIZE + self.op_code.calc_size()
     }
 
     fn get_name(&self) -> &'static str {
         self.op_code.get_name()
+    }
+
+    fn get_opcode(&self) -> u16 {
+        self.op_code.get_opcode()
     }
 }
 
