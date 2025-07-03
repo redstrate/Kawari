@@ -24,7 +24,10 @@ use tokio::net::TcpListener;
 /// If, and only if, all of these checks pass, does the client get allowed in.
 fn do_game_version_check(client_version_str: &str) -> bool {
     let config = get_config();
-    const VERSION_STR_LEN: usize = 145;
+    const VERSION_STR_LEN: usize = 144;
+    const VER_PARTS_LEN: usize = 6;
+    const EXE_PARTS_LEN: usize = 3;
+    let exe_name: String = "ffxiv_dx11.exe".to_string();
 
     if client_version_str.len() != VERSION_STR_LEN {
         tracing::error!(
@@ -37,15 +40,31 @@ fn do_game_version_check(client_version_str: &str) -> bool {
     let game_exe_path = [
         config.game_location,
         MAIN_SEPARATOR_STR.to_string(),
-        "ffxiv_dx11.exe".to_string(),
+        exe_name.to_string(),
     ]
     .join("");
     if let Ok(game_md) = fs::metadata(&game_exe_path) {
         let expected_exe_len = game_md.len();
 
         let parts: Vec<&str> = client_version_str.split("+").collect();
-        if parts[0].starts_with("ffxiv_dx11.exe") {
+        if parts.len() != VER_PARTS_LEN {
+            tracing::error!(
+                "Client's version string is malformed, it doesn't contain enough parts! Rejecting session! Got {}, expected {}",
+                parts.len(),
+                VER_PARTS_LEN
+            );
+            return false;
+        }
+        if parts[0].starts_with(&exe_name) {
             let exe_parts: Vec<&str> = parts[0].split("/").collect();
+            if exe_parts.len() != EXE_PARTS_LEN {
+                tracing::error!(
+                    "Client's version string is malformed, the exe section doesn't contain enough parts! Rejecting session! Got {}, expected {}",
+                    parts.len(),
+                    EXE_PARTS_LEN
+                );
+                return false;
+            }
             match exe_parts[1].parse::<u64>() {
                 Ok(client_exe_len) => {
                     if client_exe_len != expected_exe_len {
