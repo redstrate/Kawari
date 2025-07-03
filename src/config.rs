@@ -66,6 +66,7 @@ impl FrontierConfig {
 pub struct LobbyConfig {
     pub port: u16,
     pub listen_address: String,
+    pub do_version_checks: bool,
 }
 
 impl Default for LobbyConfig {
@@ -73,6 +74,7 @@ impl Default for LobbyConfig {
         Self {
             port: 7000,
             listen_address: "0.0.0.0".to_string(),
+            do_version_checks: true,
         }
     }
 }

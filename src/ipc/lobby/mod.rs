@@ -117,8 +117,7 @@ pub enum ClientLobbyIpcData {
         #[bw(ignore)]
         session_id: String,
 
-        #[brw(pad_before = 8)] // empty
-        #[br(count = 128)]
+        #[br(count = 145)]
         #[br(map = read_string)]
         #[bw(ignore)]
         version_info: String,

@@ -108,3 +108,6 @@ rkon = { version = "0.1" }
 
 # For serving static files on the website
 tower-http = { version = "0.6", features = ["fs", "cors"] }
+
+# For obtaining SHA1 hashes of game components
+sha1_smol = { version = "1.0.1" }
