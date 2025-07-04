@@ -68,6 +68,10 @@ pub struct CharacterDetails {
     pub unk3: [u32; 5],
 }
 
+impl CharacterDetails {
+    pub const SIZE: usize = 1196;
+}
+
 #[binrw]
 #[derive(Debug, Clone, Default)]
 pub struct ServiceLoginReply {
@@ -93,6 +97,6 @@ pub struct ServiceLoginReply {
     #[brw(pad_after = 12)]
     pub entitled_expansion: u32,
     #[br(count = 2)]
-    #[brw(pad_size_to = (1196 * 2))]
+    #[brw(pad_size_to = (CharacterDetails::SIZE * 2))]
     pub characters: Vec<CharacterDetails>,
 }

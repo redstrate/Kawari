@@ -7,11 +7,11 @@ use crate::{
     blowfish::Blowfish,
     common::timestamp_secs,
     config::get_config,
+    ipc::lobby::{DistRetainerInfo, NackReply},
     opcodes::ServerLobbyIpcType,
-    packet::oodle::OodleNetwork,
     packet::{
         CompressionType, ConnectionType, PacketSegment, PacketState, SegmentData, SegmentType,
-        generate_encryption_key, parse_packet, send_packet,
+        generate_encryption_key, oodle::OodleNetwork, parse_packet, send_packet,
     },
 };
 
@@ -120,7 +120,7 @@ impl LobbyConnection {
             servers.resize(6, Server::default());
 
             let lobby_server_list = ServerLobbyIpcData::DistWorldInfo(DistWorldInfo {
-                sequence: 0,
+                sequence,
                 unk1: 1,
                 num_servers: 1,
                 servers,
@@ -144,7 +144,8 @@ impl LobbyConnection {
 
         // send them the retainer list
         {
-            let lobby_retainer_list = ServerLobbyIpcData::DistRetainerInfo { unk1: 1 };
+            let lobby_retainer_list =
+                ServerLobbyIpcData::DistRetainerInfo(DistRetainerInfo::default());
 
             let ipc = ServerLobbyIpcSegment {
                 op_code: ServerLobbyIpcType::DistRetainerInfo,
@@ -272,13 +273,12 @@ impl LobbyConnection {
 
     /// Send a lobby error to the client.
     pub async fn send_error(&mut self, sequence: u64, error: u32, exd_error: u16) {
-        let lobby_error = ServerLobbyIpcData::NackReply {
+        let lobby_error = ServerLobbyIpcData::NackReply(NackReply {
             sequence,
             error,
-            value: 0,
             exd_error_id: exd_error,
-            unk1: 1,
-        };
+            ..Default::default()
+        });
 
         let ipc = ServerLobbyIpcSegment {
             op_code: ServerLobbyIpcType::NackReply,
@@ -350,13 +350,12 @@ impl LobbyConnection {
                 } else {
                     let ipc = ServerLobbyIpcSegment {
                         op_code: ServerLobbyIpcType::NackReply,
-                        data: ServerLobbyIpcData::NackReply {
+                        data: ServerLobbyIpcData::NackReply(NackReply {
                             sequence: character_action.sequence,
                             error: 0x00000bdb,
                             exd_error_id: 0x32cc,
-                            value: 0,
-                            unk1: 0,
-                        },
+                            ..Default::default()
+                        }),
                         ..Default::default()
                     };
 

@@ -12,6 +12,12 @@ pub use server_list::{DistWorldInfo, Server};
 mod login_reply;
 pub use login_reply::{LoginReply, ServiceAccount};
 
+mod dist_retainer_info;
+pub use dist_retainer_info::{DistRetainerInfo, RetainerInfo};
+
+mod nack_reply;
+pub use nack_reply::NackReply;
+
 use crate::{
     common::{read_string, write_string},
     opcodes::{ClientLobbyIpcType, ServerLobbyIpcType},
@@ -48,6 +54,8 @@ impl Default for ClientLobbyIpcSegment {
                 session_id: String::new(),
                 version_info: String::new(),
                 unk1: 0,
+                timestamp: 0,
+                unk2: 0,
             },
         }
     }
@@ -78,13 +86,7 @@ impl Default for ServerLobbyIpcSegment {
             op_code: ServerLobbyIpcType::NackReply,
             option: 0,
             timestamp: 0,
-            data: ServerLobbyIpcData::NackReply {
-                sequence: 0,
-                error: 0,
-                value: 0,
-                exd_error_id: 0,
-                unk1: 0,
-            },
+            data: ServerLobbyIpcData::NackReply(NackReply::default()),
         }
     }
 }
@@ -96,9 +98,12 @@ pub enum ClientLobbyIpcData {
     /// Sent by the client when it requests the character list in the lobby.
     #[br(pre_assert(*magic == ClientLobbyIpcType::ServiceLogin))]
     ServiceLogin {
-        #[brw(pad_before = 16)]
         sequence: u64,
-        // TODO: what is in here?
+        account_index: u8,
+        unk1: u8,
+        unk2: u16,
+        unk3: u32, // TODO: probably multiple params
+        account_id: u64,
     },
     /// Sent by the client when it requests to enter a world.
     #[br(pre_assert(*magic == ClientLobbyIpcType::GameLogin))]
@@ -113,8 +118,9 @@ pub enum ClientLobbyIpcData {
     #[br(pre_assert(*magic == ClientLobbyIpcType::LoginEx))]
     LoginEx {
         sequence: u64,
-
-        #[brw(pad_before = 10)] // full of nonsense i don't understand yet
+        timestamp: u32,
+        #[brw(pad_after = 2)]
+        unk1: u32,
         #[br(count = 64)]
         #[bw(pad_size_to = 64)]
         #[br(map = read_string)]
@@ -128,7 +134,7 @@ pub enum ClientLobbyIpcData {
         version_info: String,
 
         #[brw(pad_before = 910)] // empty
-        unk1: u64,
+        unk2: u64,
     },
     #[br(pre_assert(*magic == ClientLobbyIpcType::ShandaLogin))]
     ShandaLogin {
@@ -151,14 +157,7 @@ pub enum ClientLobbyIpcData {
 pub enum ServerLobbyIpcData {
     /// Sent by the server to indicate an lobby error occured.
     #[br(pre_assert(*magic == ServerLobbyIpcType::NackReply))]
-    NackReply {
-        sequence: u64,
-        error: u32,
-        value: u32,
-        exd_error_id: u16,
-        #[brw(pad_after = 516)] // empty and garbage
-        unk1: u16,
-    },
+    NackReply(NackReply),
     /// Sent by the server to inform the client of their service accounts.
     #[br(pre_assert(*magic == ServerLobbyIpcType::LoginReply))]
     LoginReply(LoginReply),
@@ -203,12 +202,7 @@ pub enum ServerLobbyIpcData {
     DistWorldInfo(DistWorldInfo),
     /// Sent by the server to inform the client of their retainers.
     #[br(pre_assert(*magic == ServerLobbyIpcType::DistRetainerInfo))]
-    DistRetainerInfo {
-        // TODO: what is in here?
-        #[brw(pad_before = 7)]
-        #[brw(pad_after = 528)]
-        unk1: u8,
-    },
+    DistRetainerInfo(DistRetainerInfo),
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -229,13 +223,7 @@ mod tests {
         let ipc_types = [
             (
                 ServerLobbyIpcType::NackReply,
-                ServerLobbyIpcData::NackReply {
-                    sequence: 0,
-                    error: 0,
-                    value: 0,
-                    exd_error_id: 0,
-                    unk1: 0,
-                },
+                ServerLobbyIpcData::NackReply(NackReply::default()),
             ),
             (
                 ServerLobbyIpcType::LoginReply,
@@ -272,7 +260,7 @@ mod tests {
             ),
             (
                 ServerLobbyIpcType::DistRetainerInfo,
-                ServerLobbyIpcData::DistRetainerInfo { unk1: 0 },
+                ServerLobbyIpcData::DistRetainerInfo(DistRetainerInfo::default()),
             ),
         ];
 
@@ -306,7 +294,14 @@ mod tests {
         let ipc_types = [
             (
                 ClientLobbyIpcType::ServiceLogin,
-                ClientLobbyIpcData::ServiceLogin { sequence: 0 },
+                ClientLobbyIpcData::ServiceLogin {
+                    sequence: 0,
+                    account_index: 0,
+                    unk1: 0,
+                    unk2: 0,
+                    account_id: 0,
+                    unk3: 0,
+                },
             ),
             (
                 ClientLobbyIpcType::GameLogin,
@@ -324,6 +319,8 @@ mod tests {
                     session_id: String::default(),
                     version_info: String::default(),
                     unk1: 0,
+                    timestamp: 0,
+                    unk2: 0,
                 },
             ),
             (

@@ -280,7 +280,7 @@ async fn main() {
                                         connection.send_error(*sequence, 2002, 13006).await;
                                     }
                                 }
-                                ClientLobbyIpcData::ServiceLogin { sequence } => {
+                                ClientLobbyIpcData::ServiceLogin { sequence, .. } => {
                                     // TODO: support selecting a service account
                                     connection.selected_service_account =
                                         Some(connection.service_accounts[0].id);
