@@ -66,7 +66,6 @@ impl FrontierConfig {
 pub struct LobbyConfig {
     pub port: u16,
     pub listen_address: String,
-    pub do_version_checks: bool,
 }
 
 impl Default for LobbyConfig {
@@ -74,7 +73,6 @@ impl Default for LobbyConfig {
         Self {
             port: 7000,
             listen_address: "0.0.0.0".to_string(),
-            do_version_checks: true,
         }
     }
 }
@@ -401,6 +399,10 @@ pub struct Config {
     /// Enable various packet debug functions. This will clutter your working directory!
     #[serde(default)]
     pub packet_debugging: bool,
+
+    /// Enable various validity checks for version and file hashes that emulate retail.
+    #[serde(default = "Config::default_enforce_validity_checks")]
+    pub enforce_validity_checks: bool,
 }
 
 impl Default for Config {
@@ -418,6 +420,7 @@ impl Default for Config {
             launcher: LauncherConfig::default(),
             save_data_bank: SaveDataBankConfig::default(),
             packet_debugging: false,
+            enforce_validity_checks: Self::default_enforce_validity_checks(),
         }
     }
 }
@@ -425,6 +428,10 @@ impl Default for Config {
 impl Config {
     pub fn supports_platform(&self, platform: &String) -> bool {
         self.supported_platforms.contains(platform)
+    }
+
+    fn default_enforce_validity_checks() -> bool {
+        true
     }
 }
 

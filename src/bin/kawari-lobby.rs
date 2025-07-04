@@ -224,7 +224,7 @@ async fn main() {
                                     let config = get_config();
 
                                     // The lobby server does its own version check as well, but it can be turned off if desired.
-                                    if config.lobby.do_version_checks
+                                    if config.enforce_validity_checks
                                         && !do_game_version_check(version_info)
                                     {
                                         // "A version update is required."
