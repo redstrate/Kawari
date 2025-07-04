@@ -75,3 +75,6 @@ pub const AETHERYTE_UNLOCK_BITMASK_SIZE: usize = 30;
 
 /// The size of the completed quest bitmask.
 pub const COMPLETED_QUEST_BITMASK_SIZE: usize = 691;
+
+/// The operation opcode/type when discarding an item from the inventory.
+pub const INVENTORY_ACTION_DISCARD: u8 = 145;

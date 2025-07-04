@@ -21,6 +21,8 @@ pub use storage::{ContainerType, Storage};
 mod currency;
 pub use currency::CurrencyStorage;
 
+use crate::INVENTORY_ACTION_DISCARD;
+
 const MAX_NORMAL_STORAGE: usize = 35;
 const MAX_LARGE_STORAGE: usize = 50;
 
@@ -164,8 +166,7 @@ impl Inventory {
     }
 
     pub fn process_action(&mut self, action: &ItemOperation) {
-        if action.operation_type == 145 {
-            // discard
+        if action.operation_type == INVENTORY_ACTION_DISCARD {
             let src_container = self.get_container_mut(&action.src_storage_id);
             let src_slot = src_container.get_slot_mut(action.src_container_index);
             *src_slot = Item::default();
