@@ -20,7 +20,7 @@ pub enum ClientTriggerCommand {
         actor_id: u32,
     },
     #[brw(magic = 0xC81u16)]
-    Unk1 {},
+    BeginLoading {},
     #[brw(magic = 0xC9u16)]
     FinishZoning {},
     /// The player begins an emote.
