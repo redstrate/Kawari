@@ -412,7 +412,7 @@
         {
             "name": "DistRetainerInfo",
             "opcode": 23,
-            "size": 210
+            "size": 536
         }
     ],
     "ClientLobbyIpcType": [

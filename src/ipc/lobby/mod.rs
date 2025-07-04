@@ -47,6 +47,7 @@ impl Default for ClientLobbyIpcSegment {
                 sequence: 0,
                 session_id: String::new(),
                 version_info: String::new(),
+                unk1: 0,
             },
         }
     }
@@ -105,6 +106,8 @@ pub enum ClientLobbyIpcData {
         sequence: u64,
         content_id: u64,
         // TODO: what else is in here?
+        unk1: u64,
+        unk2: u64,
     },
     /// Sent by the client after exchanging encryption information with the lobby server.
     #[br(pre_assert(*magic == ClientLobbyIpcType::LoginEx))]
@@ -113,15 +116,19 @@ pub enum ClientLobbyIpcData {
 
         #[brw(pad_before = 10)] // full of nonsense i don't understand yet
         #[br(count = 64)]
+        #[bw(pad_size_to = 64)]
         #[br(map = read_string)]
-        #[bw(ignore)]
+        #[bw(map = write_string)]
         session_id: String,
 
         #[br(count = 144)]
+        #[bw(pad_size_to = 144)]
         #[br(map = read_string)]
-        #[bw(ignore)]
+        #[bw(map = write_string)]
         version_info: String,
-        // unknown stuff at the end, it's not completely empty
+
+        #[brw(pad_before = 910)] // empty
+        unk1: u64,
     },
     #[br(pre_assert(*magic == ClientLobbyIpcType::ShandaLogin))]
     ShandaLogin {
@@ -199,7 +206,7 @@ pub enum ServerLobbyIpcData {
     DistRetainerInfo {
         // TODO: what is in here?
         #[brw(pad_before = 7)]
-        #[brw(pad_after = 202)]
+        #[brw(pad_after = 528)]
         unk1: u8,
     },
     Unknown {
@@ -218,23 +225,35 @@ mod tests {
 
     /// Ensure that the IPC data size as reported matches up with what we write
     #[test]
-    fn lobby_ipc_sizes() {
+    fn server_lobby_ipc_sizes() {
         let ipc_types = [
+            (
+                ServerLobbyIpcType::NackReply,
+                ServerLobbyIpcData::NackReply {
+                    sequence: 0,
+                    error: 0,
+                    value: 0,
+                    exd_error_id: 0,
+                    unk1: 0,
+                },
+            ),
             (
                 ServerLobbyIpcType::LoginReply,
                 ServerLobbyIpcData::LoginReply(LoginReply::default()),
             ),
             (
-                ServerLobbyIpcType::DistWorldInfo,
-                ServerLobbyIpcData::DistWorldInfo(DistWorldInfo::default()),
-            ),
-            (
-                ServerLobbyIpcType::DistRetainerInfo,
-                ServerLobbyIpcData::DistRetainerInfo { unk1: 0 },
-            ),
-            (
                 ServerLobbyIpcType::ServiceLoginReply,
                 ServerLobbyIpcData::ServiceLoginReply(ServiceLoginReply::default()),
+            ),
+            (
+                ServerLobbyIpcType::CharaMakeReply,
+                ServerLobbyIpcData::CharaMakeReply {
+                    sequence: 0,
+                    unk1: 0,
+                    unk2: 0,
+                    action: LobbyCharacterActionKind::ReserveName,
+                    details: CharacterDetails::default(),
+                },
             ),
             (
                 ServerLobbyIpcType::GameLoginReply,
@@ -248,24 +267,12 @@ mod tests {
                 },
             ),
             (
-                ServerLobbyIpcType::NackReply,
-                ServerLobbyIpcData::NackReply {
-                    sequence: 0,
-                    error: 0,
-                    value: 0,
-                    exd_error_id: 0,
-                    unk1: 0,
-                },
+                ServerLobbyIpcType::DistWorldInfo,
+                ServerLobbyIpcData::DistWorldInfo(DistWorldInfo::default()),
             ),
             (
-                ServerLobbyIpcType::CharaMakeReply,
-                ServerLobbyIpcData::CharaMakeReply {
-                    sequence: 0,
-                    unk1: 0,
-                    unk2: 0,
-                    action: LobbyCharacterActionKind::ReserveName,
-                    details: CharacterDetails::default(),
-                },
+                ServerLobbyIpcType::DistRetainerInfo,
+                ServerLobbyIpcData::DistRetainerInfo { unk1: 0 },
             ),
         ];
 
@@ -273,6 +280,68 @@ mod tests {
             let mut cursor = Cursor::new(Vec::new());
 
             let ipc_segment = ServerLobbyIpcSegment {
+                unk1: 0,
+                unk2: 0,
+                op_code: opcode.clone(),
+                option: 0,
+                timestamp: 0,
+                data: ipc.clone(),
+            };
+            ipc_segment.write_le(&mut cursor).unwrap();
+
+            let buffer = cursor.into_inner();
+
+            assert_eq!(
+                buffer.len(),
+                ipc_segment.calc_size() as usize,
+                "{:#?} did not match size!",
+                opcode
+            );
+        }
+    }
+
+    /// Ensure that the IPC data size as reported matches up with what we write
+    #[test]
+    fn client_lobby_ipc_sizes() {
+        let ipc_types = [
+            (
+                ClientLobbyIpcType::ServiceLogin,
+                ClientLobbyIpcData::ServiceLogin { sequence: 0 },
+            ),
+            (
+                ClientLobbyIpcType::GameLogin,
+                ClientLobbyIpcData::GameLogin {
+                    sequence: 0,
+                    content_id: 0,
+                    unk1: 0,
+                    unk2: 0,
+                },
+            ),
+            (
+                ClientLobbyIpcType::LoginEx,
+                ClientLobbyIpcData::LoginEx {
+                    sequence: 0,
+                    session_id: String::default(),
+                    version_info: String::default(),
+                    unk1: 0,
+                },
+            ),
+            (
+                ClientLobbyIpcType::ShandaLogin,
+                ClientLobbyIpcData::ShandaLogin {
+                    unk: Vec::default(),
+                },
+            ),
+            (
+                ClientLobbyIpcType::CharaMake,
+                ClientLobbyIpcData::CharaMake(CharaMake::default()),
+            ),
+        ];
+
+        for (opcode, ipc) in &ipc_types {
+            let mut cursor = Cursor::new(Vec::new());
+
+            let ipc_segment = ClientLobbyIpcSegment {
                 unk1: 0,
                 unk2: 0,
                 op_code: opcode.clone(),

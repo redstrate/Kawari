@@ -216,6 +216,7 @@ async fn main() {
                                     sequence,
                                     session_id,
                                     version_info,
+                                    ..
                                 } => {
                                     tracing::info!(
                                         "Client {session_id} ({version_info}) logging in!"
@@ -294,6 +295,7 @@ async fn main() {
                                 ClientLobbyIpcData::GameLogin {
                                     sequence,
                                     content_id,
+                                    ..
                                 } => {
                                     tracing::info!("Client is joining the world with {content_id}");
 

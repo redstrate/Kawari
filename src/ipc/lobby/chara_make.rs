@@ -5,8 +5,9 @@ use crate::common::CHAR_NAME_MAX_LENGTH;
 use super::{read_string, write_string};
 
 #[binrw]
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug, Default)]
 pub enum LobbyCharacterActionKind {
+    #[default]
     #[brw(magic = 0x1u8)]
     ReserveName,
     #[brw(magic = 0x2u8)]
@@ -34,11 +35,11 @@ pub enum LobbyCharacterActionKind {
 }
 
 #[binrw]
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug, Default)]
 pub struct CharaMake {
     pub sequence: u64,
     pub content_id: u64,
-    #[br(pad_before = 8)]
+    #[brw(pad_before = 8)]
     pub character_index: u8,
     pub action: LobbyCharacterActionKind,
     pub world_id: u16,
