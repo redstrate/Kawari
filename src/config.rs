@@ -216,6 +216,9 @@ pub struct WorldConfig {
     /// Enable packet compression for packets from the server. It's recommended to keep this on.
     #[serde(default = "WorldConfig::default_packet_compression")]
     pub enable_packet_compression: bool,
+    /// Default message received when logging into the world.
+    #[serde(default = "WorldConfig::default_login_message")]
+    pub login_message: String,
 }
 
 impl Default for WorldConfig {
@@ -230,6 +233,7 @@ impl Default for WorldConfig {
             rcon_password: Self::default_rcon_password(),
             enable_packet_obsfucation: Self::default_packet_obsfucation(),
             enable_packet_compression: Self::default_packet_compression(),
+            login_message: Self::default_login_message(),
         }
     }
 }
@@ -269,6 +273,10 @@ impl WorldConfig {
 
     fn default_packet_compression() -> bool {
         true
+    }
+
+    fn default_login_message() -> String {
+        "Welcome to Kawari!".to_string()
     }
 }
 
