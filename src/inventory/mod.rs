@@ -164,7 +164,7 @@ impl Inventory {
     }
 
     pub fn process_action(&mut self, action: &ItemOperation) {
-        if action.operation_type == 78 {
+        if action.operation_type == 145 {
             // discard
             let src_container = self.get_container_mut(&action.src_storage_id);
             let src_slot = src_container.get_slot_mut(action.src_container_index);
