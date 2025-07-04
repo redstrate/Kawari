@@ -78,3 +78,9 @@ pub const COMPLETED_QUEST_BITMASK_SIZE: usize = 691;
 
 /// The operation opcode/type when discarding an item from the inventory.
 pub const INVENTORY_ACTION_DISCARD: u8 = 145;
+
+// The operation opcode/type when moving an item to an emtpy slot in the inventory.
+pub const INVENTORY_ACTION_MOVE: u8 = 146;
+
+// The operation opcode/type when moving an item to a slot occupied by another in the inventory.
+pub const INVENTORY_ACTION_EXCHANGE: u8 = 147;
