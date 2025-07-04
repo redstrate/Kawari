@@ -28,14 +28,14 @@ use crate::{
     },
     opcodes::ServerZoneIpcType,
     packet::{
-        CompressionType, ConnectionType, PacketSegment, PacketState, SegmentData, SegmentType,
-        parse_packet, send_packet,
+        CompressionType, ConnectionType, OBFUSCATION_ENABLED_MODE, PacketSegment, PacketState,
+        ScramblerKeyGenerator, ScramblerKeys, SegmentData, SegmentType, parse_packet, send_packet,
     },
 };
 
 use super::{
-    Actor, CharacterData, EffectsBuilder, Event, LuaPlayer, OBFUSCATION_ENABLED_MODE,
-    ScramblerKeyGenerator, ScramblerKeys, StatusEffects, ToServer, WorldDatabase, Zone,
+    Actor, CharacterData, EffectsBuilder, Event, LuaPlayer, StatusEffects, ToServer, WorldDatabase,
+    Zone,
     common::{ClientId, ServerHandle},
     load_init_script,
     lua::Task,

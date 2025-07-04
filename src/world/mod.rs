@@ -30,8 +30,3 @@ pub use custom_ipc_handler::handle_custom_ipc;
 
 mod common;
 pub use common::{ClientHandle, ClientId, FromServer, ServerHandle, ToServer};
-
-mod scrambler;
-pub use scrambler::{
-    OBFUSCATION_ENABLED_MODE, ScramblerKeyGenerator, ScramblerKeys, scramble_packet,
-};

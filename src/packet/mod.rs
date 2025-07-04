@@ -21,3 +21,8 @@ pub mod oodle;
 mod send_helpers;
 #[cfg(not(target_family = "wasm"))]
 pub use send_helpers::{send_keep_alive, send_packet};
+
+mod scrambler;
+pub use scrambler::{
+    OBFUSCATION_ENABLED_MODE, ScramblerKeyGenerator, ScramblerKeys, scramble_packet,
+};

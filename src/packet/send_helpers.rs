@@ -3,11 +3,11 @@ use std::io::Cursor;
 use binrw::BinWrite;
 use tokio::{io::AsyncWriteExt, net::TcpStream};
 
-use crate::{common::timestamp_msecs, world::ScramblerKeys};
+use crate::common::timestamp_msecs;
 
 use super::{
     CompressionType, ConnectionType, PacketHeader, PacketSegment, PacketState, ReadWriteIpcSegment,
-    SegmentData, SegmentType, compression::compress,
+    ScramblerKeys, SegmentData, SegmentType, compression::compress,
 };
 
 pub async fn send_packet<T: ReadWriteIpcSegment>(

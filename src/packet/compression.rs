@@ -6,10 +6,12 @@ use binrw::{BinRead, BinResult};
 use crate::{
     config::get_config,
     packet::{PacketHeader, PacketSegment},
-    world::{ScramblerKeys, scramble_packet},
 };
 
-use super::{IPC_HEADER_SIZE, PacketState, ReadWriteIpcSegment, SegmentData, oodle::OodleNetwork};
+use super::{
+    IPC_HEADER_SIZE, PacketState, ReadWriteIpcSegment, ScramblerKeys, SegmentData,
+    oodle::OodleNetwork, scramble_packet,
+};
 
 #[binrw]
 #[brw(repr = u8)]
