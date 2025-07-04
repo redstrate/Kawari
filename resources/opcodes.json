@@ -234,6 +234,11 @@
             "name": "QuestCompleteList",
             "opcode": 637,
             "size": 760
+        },
+        {
+            "name": "UnkResponse2",
+            "opcode": 772,
+            "size": 8
         }
     ],
     "ClientZoneIpcType": [
@@ -376,6 +381,11 @@
             "name": "GilShopTransaction",
             "opcode": 327,
             "size": 24
+        },
+        {
+            "name": "UnkCall2",
+            "opcode": 632,
+            "size": 8
         }
     ],
     "ServerLobbyIpcType": [

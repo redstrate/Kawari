@@ -341,6 +341,12 @@ pub enum ServerZoneIpcData {
         #[bw(pad_size_to = 760)]
         unk1: Vec<u8>,
     },
+    /// Unsure the true purpose of this, but it's needed for the Unending Journey to function.
+    #[br(pre_assert(*magic == ServerZoneIpcType::UnkResponse2))]
+    UnkResponse2 {
+        #[brw(pad_after = 7)]
+        unk1: u8,
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -504,6 +510,9 @@ pub enum ClientZoneIpcData {
         #[brw(pad_after = 8)]
         unk3: u8,
     },
+    /// Unsure the true purpose of this, but it's needed for the Unending Journey to function.
+    #[br(pre_assert(*magic == ClientZoneIpcType::UnkCall2))]
+    UnkCall2 { unk1: [u8; 8] },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,

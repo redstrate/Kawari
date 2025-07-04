@@ -935,6 +935,25 @@ async fn client_loop(
                                                     })
                                                     .await;
                                             }
+                                            ClientZoneIpcData::UnkCall2 { .. } => {
+                                                let ipc = ServerZoneIpcSegment {
+                                                    op_code: ServerZoneIpcType::UnkResponse2,
+                                                    timestamp: timestamp_secs(),
+                                                    data: ServerZoneIpcData::UnkResponse2 {
+                                                        unk1: 1,
+                                                    },
+                                                    ..Default::default()
+                                                };
+
+                                                connection
+                                                .send_segment(PacketSegment {
+                                                    source_actor: connection.player_data.actor_id,
+                                                    target_actor: connection.player_data.actor_id,
+                                                    segment_type: SegmentType::Ipc,
+                                                    data: SegmentData::Ipc { data: ipc },
+                                                })
+                                                .await;
+                                            }
                                             ClientZoneIpcData::Unknown { .. } => {
                                                 tracing::warn!("Unknown packet {:?} recieved, this should be handled!", data.op_code);
                                             }
