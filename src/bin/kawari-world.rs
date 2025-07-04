@@ -805,10 +805,10 @@ async fn client_loop(
                                                     }
 
                                                     if let Some(item_info) = result {
-                                                        if connection.player_data.inventory.currency.gil.quantity >= item_info.price_mid as u32 {
+                                                        if connection.player_data.inventory.currency.gil.quantity >= item_info.price_mid {
                                                             // TODO: send the proper response packets!
-                                                            connection.player_data.inventory.currency.gil.quantity -= item_info.price_mid as u32;
-                                                            connection.player_data.inventory.add_in_next_free_slot(Item::new(1, item_info.id as u32));
+                                                            connection.player_data.inventory.currency.gil.quantity -= item_info.price_mid;
+                                                            connection.player_data.inventory.add_in_next_free_slot(Item::new(1, item_info.id));
                                                             connection.send_inventory(false).await;
                                                             // TODO: send an actual system notice, this is just a placeholder to provide feedback that the player actually bought something.
                                                             connection.send_message(&format!("You obtained one or more items: {} (id: {})!", item_info.name, item_info.id)).await;
