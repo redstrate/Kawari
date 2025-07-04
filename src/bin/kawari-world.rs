@@ -881,7 +881,7 @@ async fn client_loop(
                                                 if should_cancel {
                                                     // give control back to the player so they aren't stuck
                                                     connection.event_finish(*event_id).await;
-                                                    connection.send_message(&*format!("Event {event_id} tried to start, but it doesn't have a script associated with it!")).await;
+                                                    connection.send_message(&format!("Event {event_id} tried to start, but it doesn't have a script associated with it!")).await;
                                                 }
                                             }
                                             ClientZoneIpcData::EventYieldHandler(handler) => {
