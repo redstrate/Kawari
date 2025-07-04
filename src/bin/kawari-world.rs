@@ -865,7 +865,7 @@ async fn client_loop(
                                                     if let Some(event_script) =
                                                         state.event_scripts.get(event_id)
                                                         {
-                                                            connection.event = Some(Event::new(*event_id, &event_script));
+                                                            connection.event = Some(Event::new(*event_id, event_script));
                                                             connection
                                                             .event
                                                             .as_mut()
