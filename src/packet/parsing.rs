@@ -252,6 +252,10 @@ mod tests {
             fn get_name(&self) -> &'static str {
                 todo!()
             }
+
+            fn get_opcode(&self) -> u16 {
+                todo!()
+            }
         }
 
         let packet_types = [
