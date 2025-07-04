@@ -9,7 +9,7 @@ dofile(BASE_DIR.."Global.lua")
 -- Lua error handlers, and other server events like player login
 function onBeginLogin(player)
     -- send a welcome message
-    player:send_message("Welcome to Kawari!")
+    player:send_message(getLoginMessage())
 end
 
 function onCommandRequiredRankInsufficientError(player)
