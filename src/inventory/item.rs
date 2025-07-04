@@ -1,3 +1,4 @@
+use crate::ITEM_CONDITION_MAX;
 use serde::{Deserialize, Serialize};
 
 /// Represents an item, or if the quanity is zero an empty slot.
@@ -14,7 +15,7 @@ impl Item {
         Self {
             quantity,
             id,
-            condition: 30000,
+            condition: ITEM_CONDITION_MAX,
             ..Default::default()
         }
     }

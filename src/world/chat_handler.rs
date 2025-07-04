@@ -1,4 +1,5 @@
 use crate::{
+    ITEM_CONDITION_MAX,
     common::ItemInfoQuery,
     inventory::{Item, Storage},
     ipc::zone::{ChatMessage, GameMasterRank},
@@ -65,18 +66,11 @@ impl ChatHandler {
                             .get_equipslot_category(item_info.equip_category)
                             .unwrap();
 
-                        connection
-                            .player_data
-                            .inventory
-                            .equipped
-                            .get_slot_mut(slot)
-                            .id = item_info.id;
-                        connection
-                            .player_data
-                            .inventory
-                            .equipped
-                            .get_slot_mut(slot)
-                            .quantity = 1;
+                        let slot = connection.player_data.inventory.equipped.get_slot_mut(slot);
+
+                        slot.id = item_info.id;
+                        slot.quantity = 1;
+                        slot.condition = ITEM_CONDITION_MAX;
                     }
                 }
 
