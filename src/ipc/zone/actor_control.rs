@@ -115,7 +115,14 @@ pub enum ActorControlCategory {
         actor_id: u32,
         unk1: u32,
     },
-    Unknown {},
+    Unknown {
+        category: u16,
+        #[brw(pad_before = 2)] // padding
+        param1: u32,
+        param2: u32,
+        param3: u32,
+        param4: u32,
+    },
 }
 
 #[binrw]
