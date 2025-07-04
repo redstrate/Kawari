@@ -325,7 +325,7 @@ pub enum ServerZoneIpcData {
     #[br(pre_assert(*magic == ServerZoneIpcType::InventoryActionAck))]
     InventoryActionAck {
         sequence: u32,
-        #[brw(pad_after = 12)]
+        #[brw(pad_after = 10)]
         action_type: u16,
     },
     #[br(pre_assert(*magic == ServerZoneIpcType::UnkCall))]
