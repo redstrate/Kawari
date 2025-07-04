@@ -4,6 +4,7 @@ use physis::{
     layer::{
         ExitRangeInstanceObject, InstanceObject, LayerEntryData, LayerGroup, PopRangeInstanceObject,
     },
+    lvb::Lvb,
 };
 
 use crate::common::{GameData, TerritoryNameKind};
@@ -16,13 +17,7 @@ pub struct Zone {
     pub region_name: String,
     pub place_name: String,
     pub intended_use: u8,
-    planevent: Option<LayerGroup>,
-    vfx: Option<LayerGroup>,
-    planmap: Option<LayerGroup>,
-    planner: Option<LayerGroup>,
-    bg: Option<LayerGroup>,
-    sound: Option<LayerGroup>,
-    planlive: Option<LayerGroup>,
+    pub layer_groups: Vec<LayerGroup>,
 }
 
 impl Zone {
@@ -44,12 +39,11 @@ impl Zone {
         // e.g. ffxiv/fst_f1/fld/f1f3/level/f1f3
         let bg_path = row.Bg().into_string().unwrap();
 
-        let Some(level_index) = bg_path.find("/level/") else {
-            return zone;
-        };
+        let path = format!("bg/{}.lvb", &bg_path);
+        let lgb_file = game_data.game_data.extract(&path).unwrap();
+        let lgb = Lvb::from_existing(&lgb_file).unwrap();
 
-        let mut load_lgb = |name: &str| -> Option<LayerGroup> {
-            let path = format!("bg/{}/level/{}.lgb", &bg_path[..level_index], name);
+        let mut load_lgb = |path: &str| -> Option<LayerGroup> {
             let lgb_file = game_data.game_data.extract(&path)?;
             tracing::info!("Loading {path}");
             let lgb = LayerGroup::from_existing(&lgb_file);
@@ -61,13 +55,11 @@ impl Zone {
             lgb
         };
 
-        zone.planevent = load_lgb("planevent");
-        zone.vfx = load_lgb("vfx");
-        zone.planmap = load_lgb("planmap");
-        zone.planner = load_lgb("planner");
-        zone.bg = load_lgb("bg");
-        zone.sound = load_lgb("sound");
-        zone.planlive = load_lgb("planlive");
+        for path in &lgb.scns[0].header.path_layer_group_resources {
+            if let Some(lgb) = load_lgb(&path) {
+                zone.layer_groups.push(lgb);
+            }
+        }
 
         // load names
         let fallback = "<Unable to load name!>";
@@ -90,11 +82,13 @@ impl Zone {
         instance_id: u32,
     ) -> Option<(&InstanceObject, &ExitRangeInstanceObject)> {
         // TODO: also check position!
-        for group in &self.planmap.as_ref().unwrap().chunks[0].layers {
-            for object in &group.objects {
-                if let LayerEntryData::ExitRange(exit_range) = &object.data {
-                    if object.instance_id == instance_id {
-                        return Some((object, exit_range));
+        for layer_group in &self.layer_groups {
+            for layer in &layer_group.chunks[0].layers {
+                for object in &layer.objects {
+                    if let LayerEntryData::ExitRange(exit_range) = &object.data {
+                        if object.instance_id == instance_id {
+                            return Some((object, exit_range));
+                        }
                     }
                 }
             }
@@ -108,22 +102,9 @@ impl Zone {
         instance_id: u32,
     ) -> Option<(&InstanceObject, &PopRangeInstanceObject)> {
         // TODO: also check position!
-        if let Some(planmap) = self.planmap.as_ref() {
-            for group in &planmap.chunks[0].layers {
-                for object in &group.objects {
-                    if let LayerEntryData::PopRange(pop_range) = &object.data {
-                        if object.instance_id == instance_id {
-                            return Some((object, pop_range));
-                        }
-                    }
-                }
-            }
-        }
-
-        if let Some(planevent) = self.planevent.as_ref() {
-            // For certain PopRanges (e.g. the starting position in the opening zones)
-            for group in &planevent.chunks[0].layers {
-                for object in &group.objects {
+        for layer_group in &self.layer_groups {
+            for layer in &layer_group.chunks[0].layers {
+                for object in &layer.objects {
                     if let LayerEntryData::PopRange(pop_range) = &object.data {
                         if object.instance_id == instance_id {
                             return Some((object, pop_range));
