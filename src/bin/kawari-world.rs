@@ -816,7 +816,7 @@ async fn client_loop(
                                                             connection.send_message("Insufficient gil to buy item. Nice try bypassing the client-side check!").await;
                                                         }
                                                     } else {
-                                                        connection.send_message(&format!("Unable to find shop item, this is a bug in Kawari!")).await;
+                                                        connection.send_message("Unable to find shop item, this is a bug in Kawari!").await;
                                                     }
                                                 } else if *buy_sell_mode == SELL {
                                                     // TODO: Implement selling items back to shops
