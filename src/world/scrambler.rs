@@ -15,6 +15,12 @@ pub struct ScramblerKeyGenerator {
     table_max: &'static [i32],
 }
 
+impl Default for ScramblerKeyGenerator {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ScramblerKeyGenerator {
     pub fn new() -> Self {
         // Technically unsafe, but Unscrambler's tables should be correct anyway
