@@ -54,7 +54,7 @@ impl ScramblerKeyGenerator {
 
         let set_radix = self.table_radixes[set as usize];
         let set_max = self.table_max[set as usize];
-        let table_index = (set_radix as i32 * (n_seed_2 as i32 % set_max as i32)) as usize
+        let table_index = (set_radix * (n_seed_2 as i32 % set_max)) as usize
             + mid_value as usize * n_seed_1 as usize % set_radix as usize;
         let set_result = match set {
             0 => self.table0[table_index],
