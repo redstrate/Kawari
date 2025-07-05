@@ -66,6 +66,7 @@ generic_warps = {
     131406,  -- Sailor <Ferryman> from Limsa Lominsa: The Lower Decks to Old Sharlayan
     131428,  -- Exit from The Mothercrystal to Labyrinthos: The Aitiascope (outside, on overworld): probably supposed to drop you into a cutscene zone instead.
     131519,  -- Faire Adventurer from Eastern La Noscea: bottom of the Moonfire Festival (2023 tower to the first tier of the tower
+    131545,  -- Port Official from Tuliyollal to Old Sharlayan
     131578,  -- Exit The For'ard Cabins to Tuliyollal
 }
 
