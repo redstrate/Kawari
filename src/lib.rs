@@ -87,3 +87,11 @@ pub const INVENTORY_ACTION_MOVE: u8 = 146;
 
 /// The operation opcode/type when moving an item to a slot occupied by another in the inventory.
 pub const INVENTORY_ACTION_EXCHANGE: u8 = 147;
+
+/// The server's acknowledgement of a shop item being purchased.
+pub const INVENTORY_ACTION_ACK_SHOP: u8 = 6;
+
+/// The server's acknowledgement of the client modifying their inventory.
+/// In the past, many more values were used according to Sapphire:
+/// https://github.com/SapphireServer/Sapphire/blob/044bff026c01b4cc3a37cbc9b0881fadca3fc477/src/common/Common.h#L83
+pub const INVENTORY_ACTION_ACK_GENERAL: u8 = 7;
