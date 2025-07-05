@@ -59,6 +59,15 @@ pub enum ClientTriggerCommand {
         unk3: u32,
         unk4: u32,
     },
+    Unknown {
+        category: u16,
+        // seen in haircut event
+        #[brw(pad_before = 2)] // padding
+        unk1: u32,
+        unk2: u32,
+        unk3: u32,
+        unk4: u32,
+    },
 }
 
 #[binrw]
