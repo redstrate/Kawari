@@ -10,12 +10,20 @@ generic_warps = {
     131082,  -- Exit Mizzenmast Inn to Limsa Upper Decks
     131083,  -- Exit The Roost to New Gridania
     131084,  -- Exit The Hourglass to Ul'dah: Steps of Nald
+    131086,  -- Ferry Skipper from Western Thanalan: The Silver Bazaar to Western Thanalan: Cescent Cove
+    131087,  -- Ferry Skipper from Western Thanalan: Crescent Cove to Western Thanalan: The Silver Bazaar
+    131088,  -- Exit from Western Thanalan: Vesper Bay to The Waking Sands
+    131089,  -- Exit from The Waking Sands to Western Thanalan: Vesper Bay
+    131090,  -- Exit from The Waking Sands to The Solar
+    131091,  -- Exit from The Solar to The Waking Sands
     131092,  -- Exit from Limsa Bulwark Hall and/or Drowning Wench to Airship Landing
     131093,  -- Exit from Limsa Bullwark Hall and/or Airship Landing to Drowning Wench
     131094,  -- Exit from Limsa Airship Landing and/or Drowning Wench to Bulwark Hall
     131095,  -- Exit from Ul'dah Hustings Strip and/or Ruby Road Exchange to Airship Landing, these three events get reused in several places to ensure they all connect
     131096,  -- Exit from Ul'dah Airship Landing and/or Ruby Road Exchange to Hustings Strip
     131097,  -- Exit from Ul'dah Airship Landing and/or Husting Strip to Ruby Road Exchange
+    131107,  -- Nunuri <Ferry Ticketer> from Western Thanalan: Vesper Bay to Limsa Lominsa: The Lower Decks
+    131108,  -- Rhetkympf <Ferry Ticketer> from Limsa Lominsa: The Lower Decks to Western Thanalan: Vesper Bay
     131109,  -- Rerenasu <Ferry Skipper> from Limsa Lominsa: The Lower Decks to Western La Noscea: Aleport
     131110,  -- Ferry Skipper from Western La Noscea: Aleport to Limsa Lominsa: The Lower Decks
     131111,  -- Rerenasu <Ferry Skipper> from Limsa Lominsa: The Lower Decks to Eastern La Noscea: Costa Del Sol
@@ -41,8 +49,11 @@ generic_warps = {
     131205,  -- Exit Cloud Nine to Ishgard: Foundation
     131245,  -- Exit Kugane to Bokairo Inn room
     131246,  -- Exit Bokairo Inn to Kugane
+    -- 131248,  -- Kimachi <Ferry Skipper> from Kugane to Shirogane, needs special handling for housing
     131250,  -- Gatekeeper from The Fringes: Castrum Oriens to East Shroud: Amarissaaix's Spire
     131251,  -- Gatekeeper from East Shroud: Amarissaaix's Spire to The Fringes: Castrum Oriens
+    131252,  -- Uguisu <Ferry Skipper> from Kugane to Limsa Lominsa: The Lower Decks
+    131253,  -- East Aldenard Trading Company Sailor from Limsa Lominsa: The Lower Decks to Kugane
     131255,  -- Ala Mhigan Resistance Gate Guard from The Fringes: Virdjala to The Fringes: Pike Falls
     131266,  -- Gatekeeper from The House of the Fierce to dead-end cave (unable to dive currently)
     131268,  -- Enclave Skiff Captain from The Doman Enclave to Yanxia: The Glittering Basin
@@ -51,6 +62,8 @@ generic_warps = {
     131313,  -- Exit from The Crown Lift (Lift Operator) to Eulmore: The Canopy
     131390,  -- Exit via Pawlin <Dreamer's Run Doorman> from Old Gridania: Dreamer's Run (old Hatchingtide event area which is now out of bounds) to Old Gridania: Botanists' Guild
     131402,  -- Exit Andron to Old Sharlayan
+    131405,  -- Aergwynt <Ferry Ticketer> from Old Sharlayan to Limsa Lominsa: The Lower Decks
+    131406,  -- Sailor <Ferryman> from Limsa Lominsa: The Lower Decks to Old Sharlayan
     131428,  -- Exit from The Mothercrystal to Labyrinthos: The Aitiascope (outside, on overworld): probably supposed to drop you into a cutscene zone instead.
     131519,  -- Faire Adventurer from Eastern La Noscea: bottom of the Moonfire Festival (2023 tower to the first tier of the tower
     131578,  -- Exit The For'ard Cabins to Tuliyollal
