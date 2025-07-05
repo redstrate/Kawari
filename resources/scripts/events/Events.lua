@@ -44,6 +44,7 @@ generic_warps = {
     131169,  -- Ferry Skipper from Eastern La Noscea: Costa Del Sol to ELN: Rhotano Privateer
     131177,  -- Exit from The Gold Saucer (Lift Operator) to The Gold Saucer: Chocobo Square
     131178,  -- Exit from The Gold Saucer: Chocobo Square (Lift Operator) to The Gold Saucer
+    131192,  -- House Fortemps Guard <Gatekeep> From Ishgard: The Pillars to Fortemps Manor
     131195,  -- Exit from Fortemps manor to Ishgard: The Pillars
     131204,  -- Exit Ishgard: Foundation to Cloud Nine Inn room
     131205,  -- Exit Cloud Nine to Ishgard: Foundation
