@@ -92,6 +92,7 @@ use crate::common::ObjectTypeId;
 use crate::common::Position;
 use crate::common::read_string;
 use crate::common::write_string;
+use crate::inventory::ContainerType;
 use crate::opcodes::ClientZoneIpcType;
 use crate::opcodes::ServerZoneIpcType;
 use crate::packet::IPC_HEADER_SIZE;
@@ -346,6 +347,42 @@ pub enum ServerZoneIpcData {
     UnkResponse2 {
         #[brw(pad_after = 7)]
         unk1: u8,
+    },
+    #[br(pre_assert(*magic == ServerZoneIpcType::InventorySlotDiscard))]
+    InventorySlotDiscard {
+        /// This is later reused in InventorySlotDiscardFin, so it might be some sort of sequence or context id, but it's not the one sent by the client
+        unk1: u32,
+        /// Same as the one sent by the client, not the one that the server responds with in inventoryactionack!
+        operation_type: u8,
+        #[br(pad_before = 3)]
+        src_actor_id: u32,
+        src_storage_id: ContainerType,
+        src_container_index: u16,
+        #[br(pad_before = 2)]
+        src_stack: u32,
+        src_catalog_id: u32,
+
+        /// This is all static as far as I can tell, across two captures and a bunch of discards these never changed
+        /// seems to always be 3758096384 / E0 00 00 00
+        dst_actor_id: u32,
+        /// seems to always be 65535/0xFFFF
+        dst_storage_id: u16,
+        /// seems to always be 65535/0xFFFF
+        dst_container_index: u16,
+        /// seems to always be 0x0000FFFF
+        #[br(pad_after = 8)]
+        dst_catalog_id: u32,
+    },
+    #[br(pre_assert(*magic == ServerZoneIpcType::InventorySlotDiscardFin))]
+    InventorySlotDiscardFin {
+        /// Same value as unk1 in InventorySlotDiscard
+        unk1: u32,
+        /// Repeated unk1 value?
+        unk2: u32,
+        /// Unknown, seems to always be 0x00000090
+        unk3: u32,
+        /// Unknown, seems to always be 0x00000200
+        unk4: u32,
     },
     Unknown {
         #[br(count = size - 32)]

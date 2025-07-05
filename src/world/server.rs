@@ -323,6 +323,29 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                                 to_remove.push(id);
                             }
                         }
+
+                        if let ClientTriggerCommand::EventRelatedUnk {
+                            unk1: _,
+                            unk2: _,
+                            unk3: _,
+                            unk4: _,
+                        } = &trigger.trigger
+                        {
+                            let msg = FromServer::ActorControlSelf(ActorControlSelf {
+                                category: ActorControlCategory::EventRelatedUnk1 { unk1: 1 },
+                            });
+
+                            if handle.send(msg).is_err() {
+                                to_remove.push(id);
+                            }
+                            let msg = FromServer::ActorControlSelf(ActorControlSelf {
+                                category: ActorControlCategory::EventRelatedUnk2 { unk1: 0 },
+                            });
+
+                            if handle.send(msg).is_err() {
+                                to_remove.push(id);
+                            }
+                        }
                         continue;
                     }
 

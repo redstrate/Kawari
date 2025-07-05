@@ -36,6 +36,10 @@ use tokio::sync::mpsc::{Receiver, UnboundedReceiver, UnboundedSender, channel, u
 use tokio::sync::oneshot;
 use tokio::task::JoinHandle;
 
+use kawari::{
+    INVENTORY_ACTION_ACK_GENERAL, /*INVENTORY_ACTION_ACK_SHOP,*/ INVENTORY_ACTION_DISCARD,
+};
+
 fn spawn_main_loop() -> (ServerHandle, JoinHandle<()>) {
     let (send, recv) = channel(64);
 
@@ -789,7 +793,80 @@ async fn client_loop(
                                             ClientZoneIpcData::ItemOperation(action) => {
                                                 tracing::info!("Client is modifying inventory! {action:#?}");
 
+                                                let ipc = ServerZoneIpcSegment {
+                                                    op_code: ServerZoneIpcType::InventoryActionAck,
+                                                    timestamp: timestamp_secs(),
+                                                    data: ServerZoneIpcData::InventoryActionAck {
+                                                        sequence: action.context_id,
+                                                        action_type: INVENTORY_ACTION_ACK_GENERAL as u16,
+                                                    },
+                                                    ..Default::default()
+                                                };
+
+                                                connection
+                                                .send_segment(PacketSegment {
+                                                    source_actor: connection.player_data.actor_id,
+                                                    target_actor: connection.player_data.actor_id,
+                                                    segment_type: SegmentType::Ipc,
+                                                    data: SegmentData::Ipc { data: ipc },
+                                                })
+                                                .await;
+                                                if action.operation_type == INVENTORY_ACTION_DISCARD {
+                                                    tracing::info!("Player is discarding from their inventory!");
+                                                    let sequence = 0; // TODO: How is this decided? It seems to be a sequence value but it's not sent by the client! Perhaps it's a 'lifetime-of-the-character' value that simply gets increased for every inventory action ever taken?
+                                                    let ipc = ServerZoneIpcSegment {
+                                                        op_code: ServerZoneIpcType::InventorySlotDiscard,
+                                                        timestamp: timestamp_secs(),
+                                                        data: ServerZoneIpcData::InventorySlotDiscard {
+                                                            unk1: sequence,
+                                                            operation_type: action.operation_type,
+                                                            src_actor_id: action.src_actor_id,
+                                                            src_storage_id: action.src_storage_id,
+                                                            src_container_index: action.src_container_index,
+                                                            src_stack: action.src_stack,
+                                                            src_catalog_id: action.src_catalog_id,
+                                                            dst_actor_id: 0xE0000000,
+                                                            dst_storage_id: 0xFFFF,
+                                                            dst_container_index: 0xFFFF,
+                                                            dst_catalog_id: 0x0000FFFF,
+                                                        },
+                                                        ..Default::default()
+                                                    };
+
+                                                    connection
+                                                    .send_segment(PacketSegment {
+                                                        source_actor: connection.player_data.actor_id,
+                                                        target_actor: connection.player_data.actor_id,
+                                                        segment_type: SegmentType::Ipc,
+                                                        data: SegmentData::Ipc { data: ipc },
+                                                    })
+                                                    .await;
+
+                                                    let ipc = ServerZoneIpcSegment {
+                                                        op_code: ServerZoneIpcType::InventorySlotDiscard,
+                                                        timestamp: timestamp_secs(),
+                                                        data: ServerZoneIpcData::InventorySlotDiscardFin {
+                                                            unk1: sequence,
+                                                            unk2: sequence, // yes, this repeats, it's not a copy paste error
+                                                            unk3: 0x90,
+                                                            unk4: 0x200,
+                                                        },
+                                                        ..Default::default()
+                                                    };
+
+                                                    connection
+                                                    .send_segment(PacketSegment {
+                                                        source_actor: connection.player_data.actor_id,
+                                                        target_actor: connection.player_data.actor_id,
+                                                        segment_type: SegmentType::Ipc,
+                                                        data: SegmentData::Ipc { data: ipc },
+                                                    })
+                                                    .await;
+                                                }
+
                                                 connection.player_data.inventory.process_action(action);
+
+                                                // TODO: This seems incorrect, the server wasn't observed to send updates here, but if we don't then the client doesn't realize the items have been modified
                                                 connection.send_inventory(true).await;
                                             }
                                             // TODO: Likely rename this opcode if non-gil shops also use this same opcode

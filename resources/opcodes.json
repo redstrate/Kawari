@@ -239,6 +239,16 @@
             "name": "UnkResponse2",
             "opcode": 772,
             "size": 8
+        },
+        {
+            "name": "InventorySlotDiscard",
+            "opcode": 851,
+            "size": 48
+        },
+        {
+            "name": "InventorySlotDiscardFin",
+            "opcode": 854,
+            "size": 16
         }
     ],
     "ClientZoneIpcType": [
