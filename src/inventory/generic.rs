@@ -7,8 +7,8 @@ pub struct GenericStorage<const N: usize> {
     pub slots: Vec<Item>,
 }
 
-impl<const N: usize> GenericStorage<N> {
-    pub fn default() -> Self {
+impl<const N: usize> Default for GenericStorage<N> {
+    fn default() -> Self {
         Self {
             slots: vec![Item::default(); N],
         }
