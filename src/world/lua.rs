@@ -125,131 +125,26 @@ impl LuaPlayer {
         event_id: u32,
         scene: u16,
         scene_flags: u32,
-        params: &[u32],
+        params: Vec<u32>,
     ) {
-        let op_code;
-        let data;
-        match params.len() {
-            // TODO: it would be nice to de-duplicate these
-            0..=2 => {
-                let mut scene = EventScene {
-                    actor_id: target,
-                    event_id,
-                    scene,
-                    scene_flags,
-                    params_count: params.len() as u8,
-                    ..Default::default()
-                };
-                scene.params[..params.len()].copy_from_slice(&params[0..params.len()]);
+        let scene = EventScene {
+            actor_id: target,
+            event_id,
+            scene,
+            scene_flags,
+            params_count: params.len() as u8,
+            params: params.clone(),
+            ..Default::default()
+        };
 
-                op_code = ServerZoneIpcType::EventScene;
-                data = ServerZoneIpcData::EventScene(scene);
-            }
-            3..=4 => {
-                let mut scene = EventScene::<4> {
-                    actor_id: target,
-                    event_id,
-                    scene,
-                    scene_flags,
-                    params_count: params.len() as u8,
-                    ..Default::default()
-                };
-                scene.params[..params.len()].copy_from_slice(&params[0..params.len()]);
-
-                op_code = ServerZoneIpcType::EventScene4;
-                data = ServerZoneIpcData::EventScene4(scene);
-            }
-            5..=8 => {
-                let mut scene = EventScene::<8> {
-                    actor_id: target,
-                    event_id,
-                    scene,
-                    scene_flags,
-                    params_count: params.len() as u8,
-                    ..Default::default()
-                };
-                scene.params[..params.len()].copy_from_slice(&params[0..params.len()]);
-
-                op_code = ServerZoneIpcType::EventScene8;
-                data = ServerZoneIpcData::EventScene8(scene);
-            }
-            9..=16 => {
-                let mut scene = EventScene::<16> {
-                    actor_id: target,
-                    event_id,
-                    scene,
-                    scene_flags,
-                    params_count: params.len() as u8,
-                    ..Default::default()
-                };
-                scene.params[..params.len()].copy_from_slice(&params[0..params.len()]);
-
-                op_code = ServerZoneIpcType::EventScene16;
-                data = ServerZoneIpcData::EventScene16(scene);
-            }
-            17..=32 => {
-                let mut scene = EventScene::<32> {
-                    actor_id: target,
-                    event_id,
-                    scene,
-                    scene_flags,
-                    params_count: params.len() as u8,
-                    ..Default::default()
-                };
-                scene.params[..params.len()].copy_from_slice(&params[0..params.len()]);
-
-                op_code = ServerZoneIpcType::EventScene32;
-                data = ServerZoneIpcData::EventScene32(scene);
-            }
-            33..=64 => {
-                let mut scene = EventScene::<64> {
-                    actor_id: target,
-                    event_id,
-                    scene,
-                    scene_flags,
-                    params_count: params.len() as u8,
-                    ..Default::default()
-                };
-                scene.params.copy_from_slice(&params[0..params.len()]);
-
-                op_code = ServerZoneIpcType::EventScene64;
-                data = ServerZoneIpcData::EventScene64(scene);
-            }
-            65..=128 => {
-                let mut scene = EventScene::<128> {
-                    actor_id: target,
-                    event_id,
-                    scene,
-                    scene_flags,
-                    params_count: params.len() as u8,
-                    ..Default::default()
-                };
-                scene.params[..params.len()].copy_from_slice(&params[0..params.len()]);
-
-                op_code = ServerZoneIpcType::EventScene128;
-                data = ServerZoneIpcData::EventScene128(scene);
-            }
-            129..255 => {
-                let mut scene = EventScene::<255> {
-                    actor_id: target,
-                    event_id,
-                    scene,
-                    scene_flags,
-                    params_count: params.len() as u8,
-                    ..Default::default()
-                };
-                scene.params[..params.len()].copy_from_slice(&params[0..params.len()]);
-
-                op_code = ServerZoneIpcType::EventScene255;
-                data = ServerZoneIpcData::EventScene255(scene);
-            }
-            _ => {
-                tracing::warn!("Unsupported amount of parameters in play_scene!");
-                return;
-            }
+        if let Some((op_code, data)) = scene.package_scene() {
+            self.create_segment_self(op_code, data);
+        } else {
+            let error_message = "Unsupported amount of parameters in play_scene! This is likely a bug in your script! Cancelling event...".to_string();
+            tracing::warn!(error_message);
+            self.send_message(&error_message, 0);
+            self.finish_event(event_id);
         }
-
-        self.create_segment_self(op_code, data);
     }
 
     fn set_position(&mut self, position: Position, rotation: f32) {
@@ -404,7 +299,7 @@ impl UserData for LuaPlayer {
                 u32,
                 Vec<u32>,
             )| {
-                this.play_scene(target, event_id, scene, scene_flags, &params);
+                this.play_scene(target, event_id, scene, scene_flags, params);
                 Ok(())
             },
         );

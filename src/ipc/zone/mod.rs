@@ -252,21 +252,53 @@ pub enum ServerZoneIpcData {
     ContainerInfo(ContainerInfo),
     /// Sent to tell the client to play a scene
     #[br(pre_assert(*magic == ServerZoneIpcType::EventScene))]
-    EventScene(EventScene<2>),
+    #[brw(little)]
+    EventScene {
+        #[brw(args { max_params: 2 } )]
+        data: EventScene,
+    },
     #[br(pre_assert(*magic == ServerZoneIpcType::EventScene4))]
-    EventScene4(EventScene<4>),
+    #[brw(little)]
+    EventScene4 {
+        #[brw(args { max_params: 4 } )]
+        data: EventScene,
+    },
     #[br(pre_assert(*magic == ServerZoneIpcType::EventScene8))]
-    EventScene8(EventScene<8>),
+    #[brw(little)]
+    EventScene8 {
+        #[brw(args { max_params: 8 } )]
+        data: EventScene,
+    },
     #[br(pre_assert(*magic == ServerZoneIpcType::EventScene16))]
-    EventScene16(EventScene<16>),
+    #[brw(little)]
+    EventScene16 {
+        #[brw(args { max_params: 16 } )]
+        data: EventScene,
+    },
     #[br(pre_assert(*magic == ServerZoneIpcType::EventScene32))]
-    EventScene32(EventScene<32>),
+    #[brw(little)]
+    EventScene32 {
+        #[brw(args { max_params: 32 } )]
+        data: EventScene,
+    },
     #[br(pre_assert(*magic == ServerZoneIpcType::EventScene64))]
-    EventScene64(EventScene<64>),
+    #[brw(little)]
+    EventScene64 {
+        #[brw(args { max_params: 64 } )]
+        data: EventScene,
+    },
     #[br(pre_assert(*magic == ServerZoneIpcType::EventScene128))]
-    EventScene128(EventScene<128>),
+    #[brw(little)]
+    EventScene128 {
+        #[brw(args { max_params: 128 } )]
+        data: EventScene,
+    },
     #[br(pre_assert(*magic == ServerZoneIpcType::EventScene255))]
-    EventScene255(EventScene<255>),
+    #[brw(little)]
+    EventScene255 {
+        #[brw(args { max_params: 255 } )]
+        data: EventScene,
+    },
     /// Sent to tell the client to load a scene, but not play it
     #[br(pre_assert(*magic == ServerZoneIpcType::EventStart))]
     EventStart(EventStart),
@@ -651,35 +683,51 @@ mod tests {
             ),
             (
                 ServerZoneIpcType::EventScene,
-                ServerZoneIpcData::EventScene(EventScene::default()),
+                ServerZoneIpcData::EventScene {
+                    data: EventScene::default(),
+                },
             ),
             (
                 ServerZoneIpcType::EventScene4,
-                ServerZoneIpcData::EventScene4(EventScene::<4>::default()),
+                ServerZoneIpcData::EventScene4 {
+                    data: EventScene::default(),
+                },
             ),
             (
                 ServerZoneIpcType::EventScene8,
-                ServerZoneIpcData::EventScene8(EventScene::<8>::default()),
+                ServerZoneIpcData::EventScene8 {
+                    data: EventScene::default(),
+                },
             ),
             (
                 ServerZoneIpcType::EventScene16,
-                ServerZoneIpcData::EventScene16(EventScene::<16>::default()),
+                ServerZoneIpcData::EventScene16 {
+                    data: EventScene::default(),
+                },
             ),
             (
                 ServerZoneIpcType::EventScene32,
-                ServerZoneIpcData::EventScene32(EventScene::<32>::default()),
+                ServerZoneIpcData::EventScene32 {
+                    data: EventScene::default(),
+                },
             ),
             (
                 ServerZoneIpcType::EventScene64,
-                ServerZoneIpcData::EventScene64(EventScene::<64>::default()),
+                ServerZoneIpcData::EventScene64 {
+                    data: EventScene::default(),
+                },
             ),
             (
                 ServerZoneIpcType::EventScene128,
-                ServerZoneIpcData::EventScene128(EventScene::<128>::default()),
+                ServerZoneIpcData::EventScene128 {
+                    data: EventScene::default(),
+                },
             ),
             (
                 ServerZoneIpcType::EventScene255,
-                ServerZoneIpcData::EventScene255(EventScene::<255>::default()),
+                ServerZoneIpcData::EventScene255 {
+                    data: EventScene::default(),
+                },
             ),
             (
                 ServerZoneIpcType::EventStart,

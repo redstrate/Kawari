@@ -1,11 +1,14 @@
 use binrw::binrw;
 
 use crate::common::ObjectTypeId;
+use crate::ipc::zone::{ServerZoneIpcData, ServerZoneIpcType};
 
+#[derive(Debug, Clone)]
 #[binrw]
 #[brw(little)]
-#[derive(Debug, Clone)]
-pub struct EventScene<const MAX_PARAMS: usize> {
+#[brw(import{max_params: usize})]
+#[brw(assert(params.len() <= max_params, "Too many params! {} > {}", params.len(), max_params))]
+pub struct EventScene {
     pub actor_id: ObjectTypeId,
     pub event_id: u32,
     pub scene: u16,
@@ -15,10 +18,12 @@ pub struct EventScene<const MAX_PARAMS: usize> {
     pub params_count: u8,
     // Extra padding seems needed after or the client will seemingly softlock even with 2 params, possibly used for alignment?
     #[brw(pad_before = 3, pad_after = 4)]
-    pub params: [u32; MAX_PARAMS],
+    #[br(count = max_params)]
+    #[bw(pad_size_to = 4 * max_params)]
+    pub params: Vec<u32>,
 }
 
-impl<const MAX_PARAMS: usize> Default for EventScene<{ MAX_PARAMS }> {
+impl Default for EventScene {
     fn default() -> Self {
         Self {
             actor_id: ObjectTypeId::default(),
@@ -27,8 +32,55 @@ impl<const MAX_PARAMS: usize> Default for EventScene<{ MAX_PARAMS }> {
             scene_flags: 0,
             unk1: 0,
             params_count: 0,
-            params: [0u32; MAX_PARAMS],
+            params: Vec::<u32>::new(),
         }
+    }
+}
+
+impl EventScene {
+    pub fn package_scene(&self) -> Option<(ServerZoneIpcType, ServerZoneIpcData)> {
+        let op_code;
+        let data;
+        match self.params.len() {
+            // TODO: it would be nice to avoid cloning if possible
+            0..=2 => {
+                op_code = ServerZoneIpcType::EventScene;
+                data = ServerZoneIpcData::EventScene { data: self.clone() };
+            }
+            3..=4 => {
+                op_code = ServerZoneIpcType::EventScene4;
+                data = ServerZoneIpcData::EventScene4 { data: self.clone() };
+            }
+            5..=8 => {
+                op_code = ServerZoneIpcType::EventScene8;
+                data = ServerZoneIpcData::EventScene8 { data: self.clone() };
+            }
+            9..=16 => {
+                op_code = ServerZoneIpcType::EventScene16;
+                data = ServerZoneIpcData::EventScene16 { data: self.clone() };
+            }
+            17..=32 => {
+                op_code = ServerZoneIpcType::EventScene32;
+                data = ServerZoneIpcData::EventScene32 { data: self.clone() };
+            }
+            33..=64 => {
+                op_code = ServerZoneIpcType::EventScene64;
+                data = ServerZoneIpcData::EventScene64 { data: self.clone() };
+            }
+            65..=128 => {
+                op_code = ServerZoneIpcType::EventScene128;
+                data = ServerZoneIpcData::EventScene128 { data: self.clone() };
+            }
+            129..255 => {
+                op_code = ServerZoneIpcType::EventScene255;
+                data = ServerZoneIpcData::EventScene255 { data: self.clone() };
+            }
+            _ => {
+                return None;
+            }
+        }
+
+        Some((op_code, data))
     }
 }
 
@@ -50,7 +102,8 @@ mod tests {
         let buffer = read(d).unwrap();
         let mut buffer = Cursor::new(&buffer);
 
-        let event_play = EventScene::<2>::read_le(&mut buffer).unwrap();
+        let event_play =
+            EventScene::read_le_args(&mut buffer, EventSceneBinReadArgs { max_params: 2 }).unwrap();
         assert_eq!(
             event_play.actor_id,
             ObjectTypeId {

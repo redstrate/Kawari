@@ -324,8 +324,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                             }
                         }
 
-                        if let ClientTriggerCommand::EventRelatedUnk { .. } = &trigger.trigger
-                        {
+                        if let ClientTriggerCommand::EventRelatedUnk { .. } = &trigger.trigger {
                             let msg = FromServer::ActorControlSelf(ActorControlSelf {
                                 category: ActorControlCategory::EventRelatedUnk1 { unk1: 1 },
                             });
