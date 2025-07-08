@@ -3,7 +3,7 @@ use binrw::binrw;
 use crate::common::ObjectTypeId;
 use crate::ipc::zone::{ServerZoneIpcData, ServerZoneIpcType};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 #[binrw]
 #[brw(little)]
 #[brw(import{max_params: usize})]
@@ -21,20 +21,6 @@ pub struct EventScene {
     #[br(count = max_params)]
     #[bw(pad_size_to = 4 * max_params)]
     pub params: Vec<u32>,
-}
-
-impl Default for EventScene {
-    fn default() -> Self {
-        Self {
-            actor_id: ObjectTypeId::default(),
-            event_id: 0,
-            scene: 0,
-            scene_flags: 0,
-            unk1: 0,
-            params_count: 0,
-            params: Vec::<u32>::new(),
-        }
-    }
 }
 
 impl EventScene {
