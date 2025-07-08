@@ -44,7 +44,7 @@ impl Zone {
         let lgb = Lvb::from_existing(&lgb_file).unwrap();
 
         let mut load_lgb = |path: &str| -> Option<LayerGroup> {
-            let lgb_file = game_data.game_data.extract(&path)?;
+            let lgb_file = game_data.game_data.extract(path)?;
             tracing::info!("Loading {path}");
             let lgb = LayerGroup::from_existing(&lgb_file);
             if lgb.is_none() {
@@ -56,7 +56,7 @@ impl Zone {
         };
 
         for path in &lgb.scns[0].header.path_layer_group_resources {
-            if let Some(lgb) = load_lgb(&path) {
+            if let Some(lgb) = load_lgb(path) {
                 zone.layer_groups.push(lgb);
             }
         }
