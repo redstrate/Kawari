@@ -61,7 +61,7 @@ impl Zone {
             let mut nvm_path = PathBuf::from(config.filesystem.navimesh_path);
             nvm_path.push(&zone.navimesh_path);
 
-            Self::load_navimesh(&nvm_path.to_str().unwrap());
+            Self::load_navimesh(nvm_path.to_str().unwrap());
         }
 
         let mut load_lgb = |path: &str| -> Option<LayerGroup> {
