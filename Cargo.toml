@@ -34,6 +34,10 @@ required-features = ["oodle"]
 [[bin]]
 name = "kawari-launcher"
 
+[[bin]]
+name = "kawari-navimesh"
+required-features = ["visualizer"]
+
 [profile.release]
 lto = true
 strip = true
@@ -42,8 +46,14 @@ codegen-units = 1
 panic = "abort"
 
 [features]
+# Default featureset
 default = []
+
+# Oodle compression
 oodle = []
+
+# Navmesh visualizer
+visualizer = ["dep:bevy"]
 
 [build-dependencies]
 # Serialization of IPC opcodes
@@ -73,6 +83,19 @@ bitflags = { version = "2.9", default-features = false }
 
 # excel sheet data
 icarus = { git = "https://github.com/redstrate/Icarus", branch = "ver/2025.06.28.0000.0000", features = ["Warp", "Tribe", "ClassJob", "World", "TerritoryType", "Race", "Aetheryte", "EquipSlotCategory", "Action", "WeatherRate", "PlaceName", "GilShopItem"], default-features = false }
+
+# navimesh visualization
+bevy = { version = "0.16", features = ["std",
+  "bevy_asset",
+  "bevy_color",
+  "bevy_pbr",
+  "bevy_render",
+  "bevy_scene",
+  "bevy_state",
+  "bevy_window",
+  "bevy_winit",
+  "tonemapping_luts",
+  "x11"], default-features = false, optional = true }
 
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
 # Used for the web servers
