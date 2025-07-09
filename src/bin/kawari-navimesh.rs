@@ -2,6 +2,7 @@ use icarus::TerritoryType::TerritoryTypeSheet;
 use kawari::config::get_config;
 use physis::{
     common::{Language, Platform},
+    layer::{LayerEntryData, LayerGroup},
     lvb::Lvb,
     resource::{Resource, SqPackResource},
 };
@@ -34,6 +35,30 @@ fn main() {
     for path in &lvb.scns[0].header.path_layer_group_resources {
         if path.contains("bg.lgb") {
             tracing::info!("Processing {path}");
+
+            let lgb_file = sqpack_resource.read(path).unwrap();
+            let lgb = LayerGroup::from_existing(&lgb_file);
+            let Some(lgb) = lgb else {
+                tracing::error!(
+                    "Failed to parse {path}, this is most likely a bug in Physis and should be reported somewhere!"
+                );
+                return;
+            };
+
+            // TODO: i think we know which layer is specifically used for navmesh gen, better check that LVB
+            for chunk in &lgb.chunks {
+                for layer in &chunk.layers {
+                    for object in &layer.objects {
+                        if let LayerEntryData::BG(bg) = &object.data {
+                            if !bg.collision_asset_path.value.is_empty() {
+                                tracing::info!("Considering {} for navimesh", object.instance_id);
+
+                                tracing::info!("- Loading {}", bg.collision_asset_path.value);
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
