@@ -38,7 +38,7 @@ fn do_game_version_check(client_version_str: &str) -> bool {
     }
 
     let game_exe_path = [
-        config.game_location,
+        config.filesystem.game_path,
         MAIN_SEPARATOR_STR.to_string(),
         exe_name.to_string(),
     ]

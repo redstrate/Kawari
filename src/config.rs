@@ -359,6 +359,24 @@ impl SaveDataBankConfig {
     }
 }
 
+/// Configuration for the game filesystem.
+#[derive(Serialize, Deserialize, Default)]
+pub struct FilesystemConfig {
+    /// Path to the game directory. For example, "C:\Program Files (x86)\SquareEnix\FINAL FANTASY XIV - A Realm Reborn\game".
+    #[serde(default)]
+    pub game_path: String,
+
+    /// Additional search paths for *unpacked game files*.
+    /// These are ordered from highest-to-lowest, these are always preferred over retail game files.
+    #[serde(default)]
+    pub additional_search_paths: Vec<String>,
+
+    /// Unpack used files to the specified directory.
+    /// If the directory is not specified, Kawari won't save file contents.
+    #[serde(default)]
+    pub unpack_path: String,
+}
+
 /// Global and all-encompassing config.
 /// Settings that affect all servers belong here.
 #[derive(Serialize, Deserialize)]
@@ -367,7 +385,7 @@ pub struct Config {
     pub supported_platforms: Vec<String>,
 
     #[serde(default)]
-    pub game_location: String,
+    pub filesystem: FilesystemConfig,
 
     #[serde(default)]
     pub admin: AdminConfig,
@@ -409,7 +427,7 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             supported_platforms: default_supported_platforms(),
-            game_location: String::new(),
+            filesystem: FilesystemConfig::default(),
             admin: AdminConfig::default(),
             frontier: FrontierConfig::default(),
             lobby: LobbyConfig::default(),

@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use icarus::Action::ActionSheet;
 use icarus::Aetheryte::AetheryteSheet;
 use icarus::ClassJob::ClassJobSheet;
@@ -11,7 +13,10 @@ use icarus::{Tribe::TribeSheet, Warp::WarpSheet};
 use physis::common::{Language, Platform};
 use physis::exd::{EXD, ExcelRowKind};
 use physis::exh::EXH;
-use physis::resource::{SqPackResource, read_excel_sheet, read_excel_sheet_header};
+use physis::resource::{
+    Resource, ResourceResolver, SqPackResource, UnpackedResource, read_excel_sheet,
+    read_excel_sheet_header,
+};
 
 use crate::{common::Attributes, config::get_config};
 
@@ -19,7 +24,7 @@ use super::timestamp_secs;
 
 /// Convenient methods built on top of Physis to access data relevant to the server
 pub struct GameData {
-    pub resource: SqPackResource,
+    pub resource: ResourceResolver,
     pub item_exh: EXH,
     pub item_pages: Vec<EXD>,
     pub classjob_exp_indexes: Vec<i8>,
@@ -57,20 +62,39 @@ impl GameData {
     pub fn new() -> Self {
         let config = get_config();
 
-        let mut game_data = SqPackResource::from_existing(Platform::Win32, &config.game_location);
+        // setup resolvers
+        let sqpack_resource = SqPackResourceSpy::from(
+            SqPackResource::from_existing(Platform::Win32, &config.filesystem.game_path),
+            &config.filesystem.unpack_path,
+        );
+        let mut resource_resolver = ResourceResolver::new();
+        for path in config.filesystem.additional_search_paths {
+            let unpacked_resource = UnpackedResource::from_existing(&path);
+            resource_resolver.add_source(Box::new(unpacked_resource));
+        }
+        resource_resolver.add_source(Box::new(sqpack_resource));
 
         let mut item_pages = Vec::new();
 
-        let item_exh = read_excel_sheet_header(&mut game_data, "Item").unwrap();
+        let item_exh = read_excel_sheet_header(&mut resource_resolver, "Item")
+            .expect("Failed to read Item EXH, does the file exist?");
         for (i, _) in item_exh.pages.iter().enumerate() {
             item_pages.push(
-                read_excel_sheet(&mut game_data, "Item", &item_exh, Language::English, i).unwrap(),
+                read_excel_sheet(
+                    &mut resource_resolver,
+                    "Item",
+                    &item_exh,
+                    Language::English,
+                    i,
+                )
+                .expect("Failed to read Item EXD, does the file exist?"),
             );
         }
 
         let mut classjob_exp_indexes = Vec::new();
 
-        let sheet = ClassJobSheet::read_from(&mut game_data, Language::English).unwrap();
+        let sheet = ClassJobSheet::read_from(&mut resource_resolver, Language::English)
+            .expect("Failed to read ClassJobSheet, does the Excel files exist?");
         // TODO: ids are hardcoded until we have API in Icarus to do this
         for i in 0..43 {
             let row = sheet.get_row(i).unwrap();
@@ -79,7 +103,7 @@ impl GameData {
         }
 
         Self {
-            resource: game_data,
+            resource: resource_resolver,
             item_exh,
             item_pages,
             classjob_exp_indexes,
@@ -405,4 +429,47 @@ pub enum TerritoryNameKind {
     Internal,
     Region,
     Place,
+}
+
+/// Wrapper around SqPackResource to let us spy when it reads files
+struct SqPackResourceSpy {
+    sqpack_resource: SqPackResource,
+    output_directory: String,
+}
+
+impl SqPackResourceSpy {
+    pub fn from(sqpack_resource: SqPackResource, output_directory: &str) -> Self {
+        Self {
+            sqpack_resource,
+            output_directory: output_directory.to_string(),
+        }
+    }
+}
+
+impl Resource for SqPackResourceSpy {
+    fn read(&mut self, path: &str) -> Option<physis::ByteBuffer> {
+        if let Some(buffer) = self.sqpack_resource.read(path) {
+            let mut new_path = PathBuf::from(&self.output_directory);
+            new_path.push(path.to_lowercase());
+
+            if !std::fs::exists(&new_path).unwrap_or_default() {
+                // create directory if it doesn't exist'
+                let parent_directory = new_path.parent().unwrap();
+                if !std::fs::exists(parent_directory).unwrap_or_default() {
+                    std::fs::create_dir_all(parent_directory)
+                        .expect("Couldn't create directory for extraction?!");
+                }
+
+                std::fs::write(new_path, &buffer).expect("Couldn't extract file!!");
+            }
+
+            return Some(buffer);
+        }
+
+        None
+    }
+
+    fn exists(&mut self, path: &str) -> bool {
+        self.sqpack_resource.exists(path)
+    }
 }
