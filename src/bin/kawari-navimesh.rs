@@ -12,6 +12,7 @@ use physis::{
     pcb::{Pcb, ResourceNode},
     resource::{Resource, SqPackResource},
 };
+use recastnavigation_sys::rcAllocPolyMesh;
 
 #[derive(Resource)]
 struct ZoneToLoad(u16);
@@ -36,6 +37,7 @@ fn walk_node(
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
     transform: &Transformation,
+    //tile_input_builder: &mut TileInputBuilder,
 ) {
     if !node.vertices.is_empty() {
         let mut mesh = Mesh::new(
@@ -48,7 +50,7 @@ fn walk_node(
             positions.push(vec.clone());
         }
 
-        mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions);
+        mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions.clone());
 
         let mut indices = Vec::new();
         for polygon in &node.polygons {
@@ -60,8 +62,9 @@ fn walk_node(
             indices.append(&mut vec);
         }
 
-        mesh.insert_indices(Indices::U32(indices));
+        mesh.insert_indices(Indices::U32(indices.clone()));
 
+        // insert into 3d scene
         commands.spawn((
             Mesh3d(meshes.add(mesh)),
             MeshMaterial3d(materials.add(Color::srgb(
@@ -80,6 +83,12 @@ fn walk_node(
                 scale: Vec3::from_array(transform.scale),
             },
         ));
+
+        // insert into navmesh builder
+        //let tile_vertices: Vec<DtVector> = positions.iter().map(|vec| DtVector::new(vec[0], vec[1], vec[2])).collect();
+        //let tile_indices: Vec<i32> = indices.iter().map(|x| *x as i32).collect();
+
+        //tile_input_builder.append(&tile_vertices, &tile_indices, 0);
     }
 
     for child in &node.children {
@@ -113,6 +122,10 @@ fn setup(
     let path = format!("bg/{}.lvb", &bg_path);
     let lvb_file = sqpack_resource.read(&path).unwrap();
     let lvb = Lvb::from_existing(&lvb_file).unwrap();
+
+    unsafe {
+        let poly_mesh = rcAllocPolyMesh();
+    }
 
     for path in &lvb.scns[0].header.path_layer_group_resources {
         if path.contains("bg.lgb") {
@@ -150,6 +163,7 @@ fn setup(
                                     &mut meshes,
                                     &mut materials,
                                     &object.transform,
+                                    //&mut tile_input_builder,
                                 );
                             }
                         }
