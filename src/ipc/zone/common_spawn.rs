@@ -1,11 +1,11 @@
 use binrw::binrw;
 
-use bitflags::bitflags;
-
 use crate::common::{
     CHAR_NAME_MAX_LENGTH, CustomizeData, ObjectId, ObjectTypeId, Position, read_quantized_rotation,
     read_string, write_quantized_rotation, write_string,
 };
+use bitflags::bitflags;
+use rusqlite::types::{FromSql, FromSqlResult, ValueRef};
 
 use super::StatusEffect;
 
@@ -114,6 +114,12 @@ pub enum GameMasterRank {
     Support = 5,
     Senior = 7,
     Debug = 90,
+}
+
+impl FromSql for GameMasterRank {
+    fn column_result(value: ValueRef<'_>) -> FromSqlResult<Self> {
+        Ok(GameMasterRank::try_from(u8::column_result(value)?).unwrap())
+    }
 }
 
 impl TryFrom<u8> for GameMasterRank {

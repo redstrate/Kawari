@@ -10,10 +10,7 @@ use crate::{
         workdefinitions::{CharaMake, ClientSelectData, RemakeMode},
     },
     inventory::{Inventory, Item, Storage},
-    ipc::{
-        lobby::{CharacterDetails, CharacterFlag},
-        zone::GameMasterRank,
-    },
+    ipc::lobby::{CharacterDetails, CharacterFlag},
 };
 
 use super::PlayerData;
@@ -34,6 +31,10 @@ impl Default for WorldDatabase {
     fn default() -> Self {
         Self::new()
     }
+}
+
+fn json_unpack<T: for<'a> Deserialize<'a>>(json_str: String) -> T {
+    serde_json::from_str(&json_str).unwrap()
 }
 
 impl WorldDatabase {
@@ -273,84 +274,40 @@ impl WorldDatabase {
         let mut stmt = connection
             .prepare("SELECT content_id, service_account_id FROM characters WHERE actor_id = ?1")
             .unwrap();
-        let (content_id, account_id) = stmt
+        let (content_id, account_id): (u64, u32) = stmt
             .query_row((actor_id,), |row| Ok((row.get(0)?, row.get(1)?)))
             .unwrap();
 
         stmt = connection
             .prepare("SELECT pos_x, pos_y, pos_z, rotation, zone_id, inventory, gm_rank, classjob_id, classjob_levels, classjob_exp, unlocks, aetherytes, completed_quests FROM character_data WHERE content_id = ?1")
             .unwrap();
-        let (
-            pos_x,
-            pos_y,
-            pos_z,
-            rotation,
-            zone_id,
-            inventory_json,
-            gm_rank,
-            classjob_id,
-            classjob_levels,
-            classjob_exp,
-            unlocks,
-            aetherytes,
-            completed_quests,
-        ): (
-            f32,
-            f32,
-            f32,
-            f32,
-            u16,
-            String,
-            u8,
-            i32,
-            String,
-            String,
-            String,
-            String,
-            String,
-        ) = stmt
+        let player_data: PlayerData = stmt
             .query_row((content_id,), |row| {
-                Ok((
-                    row.get(0)?,
-                    row.get(1)?,
-                    row.get(2)?,
-                    row.get(3)?,
-                    row.get(4)?,
-                    row.get(5)?,
-                    row.get(6)?,
-                    row.get(7)?,
-                    row.get(8)?,
-                    row.get(9)?,
-                    row.get(10)?,
-                    row.get(11)?,
-                    row.get(12)?,
-                ))
+                Ok(PlayerData {
+                    actor_id,
+                    content_id,
+                    account_id,
+                    position: Position {
+                        x: row.get(0)?,
+                        y: row.get(1)?,
+                        z: row.get(2)?,
+                    },
+                    rotation: row.get(3)?,
+                    zone_id: row.get(4)?,
+                    inventory: row.get(5)?,
+                    gm_rank: row.get(6)?,
+                    classjob_id: row.get(7)?,
+                    classjob_levels: json_unpack::<[i32; 32]>(row.get(8)?),
+                    classjob_exp: json_unpack::<[u32; 32]>(row.get(9)?),
+                    unlocks: json_unpack::<Vec<u8>>(row.get(10)?),
+                    aetherytes: json_unpack::<Vec<u8>>(row.get(11)?),
+                    completed_quests: json_unpack::<Vec<u8>>(row.get(12)?),
+                    ..Default::default()
+                })
             })
             .unwrap();
 
-        let inventory = serde_json::from_str(&inventory_json).unwrap();
-
-        PlayerData {
-            actor_id,
-            content_id,
-            account_id,
-            position: Position {
-                x: pos_x,
-                y: pos_y,
-                z: pos_z,
-            },
-            rotation,
-            zone_id,
-            inventory,
-            gm_rank: GameMasterRank::try_from(gm_rank).unwrap(),
-            classjob_id: classjob_id as u8,
-            classjob_levels: serde_json::from_str(&classjob_levels).unwrap(),
-            classjob_exp: serde_json::from_str(&classjob_exp).unwrap(),
-            unlocks: serde_json::from_str(&unlocks).unwrap(),
-            aetherytes: serde_json::from_str(&aetherytes).unwrap(),
-            completed_quests: serde_json::from_str(&completed_quests).unwrap(),
-            ..Default::default()
-        }
+        player_data
     }
 
     /// Commit the dynamic player data back to the database

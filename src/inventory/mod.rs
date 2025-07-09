@@ -1,8 +1,8 @@
+use crate::common::GameData;
 use icarus::{ClassJob::ClassJobSheet, Race::RaceSheet};
 use physis::common::Language;
+use rusqlite::types::{FromSql, FromSqlResult, ValueRef};
 use serde::{Deserialize, Serialize};
-
-use crate::common::GameData;
 
 use crate::ipc::zone::ItemOperation;
 
@@ -75,6 +75,12 @@ impl<'a> IntoIterator for &'a Inventory {
             inventory: self,
             curr: 0,
         }
+    }
+}
+
+impl FromSql for Inventory {
+    fn column_result(value: ValueRef<'_>) -> FromSqlResult<Self> {
+        Ok(serde_json::from_str(&String::column_result(value)?).unwrap())
     }
 }
 
