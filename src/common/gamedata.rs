@@ -11,6 +11,7 @@ use icarus::{Tribe::TribeSheet, Warp::WarpSheet};
 use physis::common::{Language, Platform};
 use physis::exd::{EXD, ExcelRowKind};
 use physis::exh::EXH;
+use physis::resource::{SqPackResource, read_excel_sheet, read_excel_sheet_header};
 
 use crate::{common::Attributes, config::get_config};
 
@@ -18,7 +19,7 @@ use super::timestamp_secs;
 
 /// Convenient methods built on top of Physis to access data relevant to the server
 pub struct GameData {
-    pub game_data: physis::gamedata::GameData,
+    pub resource: SqPackResource,
     pub item_exh: EXH,
     pub item_pages: Vec<EXD>,
     pub classjob_exp_indexes: Vec<i8>,
@@ -56,17 +57,14 @@ impl GameData {
     pub fn new() -> Self {
         let config = get_config();
 
-        let mut game_data =
-            physis::gamedata::GameData::from_existing(Platform::Win32, &config.game_location);
+        let mut game_data = SqPackResource::from_existing(Platform::Win32, &config.game_location);
 
         let mut item_pages = Vec::new();
 
-        let item_exh = game_data.read_excel_sheet_header("Item").unwrap();
+        let item_exh = read_excel_sheet_header(&mut game_data, "Item").unwrap();
         for (i, _) in item_exh.pages.iter().enumerate() {
             item_pages.push(
-                game_data
-                    .read_excel_sheet("Item", &item_exh, Language::English, i)
-                    .unwrap(),
+                read_excel_sheet(&mut game_data, "Item", &item_exh, Language::English, i).unwrap(),
             );
         }
 
@@ -81,7 +79,7 @@ impl GameData {
         }
 
         Self {
-            game_data,
+            resource: game_data,
             item_exh,
             item_pages,
             classjob_exp_indexes,
@@ -90,7 +88,7 @@ impl GameData {
 
     /// Gets the world name from an id into the World Excel sheet.
     pub fn get_world_name(&mut self, world_id: u16) -> Option<String> {
-        let sheet = WorldSheet::read_from(&mut self.game_data, Language::None)?;
+        let sheet = WorldSheet::read_from(&mut self.resource, Language::None)?;
         let row = sheet.get_row(world_id as u32)?;
 
         row.Name().into_string().cloned()
@@ -98,7 +96,7 @@ impl GameData {
 
     /// Gets the starting city-state from a given class/job id.
     pub fn get_citystate(&mut self, classjob_id: u16) -> Option<u8> {
-        let sheet = ClassJobSheet::read_from(&mut self.game_data, Language::English)?;
+        let sheet = ClassJobSheet::read_from(&mut self.resource, Language::English)?;
         let row = sheet.get_row(classjob_id as u32)?;
 
         row.StartingTown().into_u8().copied()
@@ -108,7 +106,7 @@ impl GameData {
         // The Tribe Excel sheet only has deltas (e.g. 2 or -2) which are applied to a base 20 number... from somewhere
         let base_stat = 20;
 
-        let sheet = TribeSheet::read_from(&mut self.game_data, Language::English)?;
+        let sheet = TribeSheet::read_from(&mut self.resource, Language::English)?;
         let row = sheet.get_row(tribe_id as u32)?;
 
         Some(Attributes {
@@ -207,7 +205,7 @@ impl GameData {
 
     /// Returns the pop range object id that's associated with the warp id
     pub fn get_warp(&mut self, warp_id: u32) -> Option<(u32, u16)> {
-        let sheet = WarpSheet::read_from(&mut self.game_data, Language::English)?;
+        let sheet = WarpSheet::read_from(&mut self.resource, Language::English)?;
         let row = sheet.get_row(warp_id)?;
 
         let pop_range_id = row.PopRange().into_u32()?;
@@ -217,7 +215,7 @@ impl GameData {
     }
 
     pub fn get_aetheryte(&mut self, aetheryte_id: u32) -> Option<(u32, u16)> {
-        let sheet = AetheryteSheet::read_from(&mut self.game_data, Language::English)?;
+        let sheet = AetheryteSheet::read_from(&mut self.resource, Language::English)?;
         let row = sheet.get_row(aetheryte_id)?;
 
         // TODO: just look in the level sheet?
@@ -229,7 +227,7 @@ impl GameData {
 
     // Retrieves a zone's internal name, place name or parent region name.
     pub fn get_territory_name(&mut self, zone_id: u32, which: TerritoryNameKind) -> Option<String> {
-        let sheet = TerritoryTypeSheet::read_from(&mut self.game_data, Language::None)?;
+        let sheet = TerritoryTypeSheet::read_from(&mut self.resource, Language::None)?;
         let row = sheet.get_row(zone_id)?;
 
         let offset = match which {
@@ -240,7 +238,7 @@ impl GameData {
             TerritoryNameKind::Place => row.PlaceName().into_u16()?,
         };
 
-        let sheet = PlaceNameSheet::read_from(&mut self.game_data, Language::English)?;
+        let sheet = PlaceNameSheet::read_from(&mut self.resource, Language::English)?;
         let row = sheet.get_row(*offset as u32)?;
 
         let value = row.Name().into_string()?;
@@ -250,7 +248,7 @@ impl GameData {
 
     /// Turn an equip slot category id into a slot for the equipped inventory
     pub fn get_equipslot_category(&mut self, equipslot_id: u8) -> Option<u16> {
-        let sheet = EquipSlotCategorySheet::read_from(&mut self.game_data, Language::None)?;
+        let sheet = EquipSlotCategorySheet::read_from(&mut self.resource, Language::None)?;
         let row = sheet.get_row(equipslot_id as u32)?;
 
         let main_hand = row.MainHand().into_i8()?;
@@ -322,7 +320,7 @@ impl GameData {
     }
 
     pub fn get_casttime(&mut self, action_id: u32) -> Option<u16> {
-        let sheet = ActionSheet::read_from(&mut self.game_data, Language::English)?;
+        let sheet = ActionSheet::read_from(&mut self.resource, Language::English)?;
         let row = sheet.get_row(action_id)?;
 
         row.Cast100ms().into_u16().copied()
@@ -331,7 +329,7 @@ impl GameData {
     /// Calculates the current weather at the current time
     // TODO: instead allow targetting a specific time to calculate forcecasts
     pub fn get_weather_rate(&mut self, weather_rate_id: u32) -> Option<i32> {
-        let sheet = WeatherRateSheet::read_from(&mut self.game_data, Language::None)?;
+        let sheet = WeatherRateSheet::read_from(&mut self.resource, Language::None)?;
         let row = sheet.get_row(weather_rate_id)?;
 
         let target = Self::calculate_target();
@@ -379,7 +377,7 @@ impl GameData {
 
     /// Gets the current weather for the given zone id
     pub fn get_weather(&mut self, zone_id: u32) -> Option<i32> {
-        let sheet = TerritoryTypeSheet::read_from(&mut self.game_data, Language::None)?;
+        let sheet = TerritoryTypeSheet::read_from(&mut self.resource, Language::None)?;
         let row = sheet.get_row(zone_id)?;
 
         let weather_rate_id = row.WeatherRate().into_u8()?;
@@ -394,7 +392,7 @@ impl GameData {
 
     /// Gets the item and its cost from the specified shop.
     pub fn get_gilshop_item(&mut self, gilshop_id: u32, index: u16) -> Option<ItemInfo> {
-        let sheet = GilShopItemSheet::read_from(&mut self.game_data, Language::None)?;
+        let sheet = GilShopItemSheet::read_from(&mut self.resource, Language::None)?;
         let row = sheet.get_subrow(gilshop_id, index)?;
         let item_id = row.Item().into_i32()?;
 

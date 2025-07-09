@@ -133,7 +133,7 @@ impl<'a> Iterator for InventoryIterator<'a> {
 impl Inventory {
     /// Equip the starting items for a given classjob
     pub fn equip_classjob_items(&mut self, classjob_id: u16, game_data: &mut GameData) {
-        let sheet = ClassJobSheet::read_from(&mut game_data.game_data, Language::English).unwrap();
+        let sheet = ClassJobSheet::read_from(&mut game_data.resource, Language::English).unwrap();
         let row = sheet.get_row(classjob_id as u32).unwrap();
 
         self.equipped.main_hand =
@@ -149,7 +149,7 @@ impl Inventory {
 
     /// Equip the starting items for a given race
     pub fn equip_racial_items(&mut self, race_id: u8, gender: u8, game_data: &mut GameData) {
-        let sheet = RaceSheet::read_from(&mut game_data.game_data, Language::English).unwrap();
+        let sheet = RaceSheet::read_from(&mut game_data.resource, Language::English).unwrap();
         let row = sheet.get_row(race_id as u32).unwrap();
 
         if gender == 0 {

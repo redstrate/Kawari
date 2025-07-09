@@ -5,6 +5,7 @@ use physis::{
         ExitRangeInstanceObject, InstanceObject, LayerEntryData, LayerGroup, PopRangeInstanceObject,
     },
     lvb::Lvb,
+    resource::Resource,
 };
 
 use crate::common::{GameData, TerritoryNameKind};
@@ -27,8 +28,7 @@ impl Zone {
             ..Default::default()
         };
 
-        let sheet =
-            TerritoryTypeSheet::read_from(&mut game_data.game_data, Language::None).unwrap();
+        let sheet = TerritoryTypeSheet::read_from(&mut game_data.resource, Language::None).unwrap();
         let Some(row) = sheet.get_row(id as u32) else {
             tracing::warn!("Invalid zone id {id}, allowing anyway...");
             return zone;
@@ -40,11 +40,11 @@ impl Zone {
         let bg_path = row.Bg().into_string().unwrap();
 
         let path = format!("bg/{}.lvb", &bg_path);
-        let lgb_file = game_data.game_data.extract(&path).unwrap();
+        let lgb_file = game_data.resource.read(&path).unwrap();
         let lgb = Lvb::from_existing(&lgb_file).unwrap();
 
         let mut load_lgb = |path: &str| -> Option<LayerGroup> {
-            let lgb_file = game_data.game_data.extract(path)?;
+            let lgb_file = game_data.resource.read(path)?;
             tracing::info!("Loading {path}");
             let lgb = LayerGroup::from_existing(&lgb_file);
             if lgb.is_none() {
