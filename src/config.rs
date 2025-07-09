@@ -375,6 +375,10 @@ pub struct FilesystemConfig {
     /// If the directory is not specified, Kawari won't save file contents.
     #[serde(default)]
     pub unpack_path: String,
+
+    /// Navimesh file directory.
+    #[serde(default)]
+    pub navimesh_path: String,
 }
 
 /// Global and all-encompassing config.

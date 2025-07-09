@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use icarus::TerritoryType::TerritoryTypeSheet;
 use physis::{
     common::Language,
@@ -8,7 +10,10 @@ use physis::{
     resource::Resource,
 };
 
-use crate::common::{GameData, TerritoryNameKind};
+use crate::{
+    common::{GameData, TerritoryNameKind},
+    config::get_config,
+};
 
 /// Represents a loaded zone
 #[derive(Default, Debug)]
@@ -19,6 +24,7 @@ pub struct Zone {
     pub place_name: String,
     pub intended_use: u8,
     pub layer_groups: Vec<LayerGroup>,
+    pub navimesh_path: String,
 }
 
 impl Zone {
@@ -42,6 +48,21 @@ impl Zone {
         let path = format!("bg/{}.lvb", &bg_path);
         let lgb_file = game_data.resource.read(&path).unwrap();
         let lgb = Lvb::from_existing(&lgb_file).unwrap();
+
+        for layer_set in &lgb.scns[0].unk3.unk2 {
+            // FIXME: this is wrong. I think there might be multiple, separate navimeshes in really big zones but I'm not sure yet.
+            zone.navimesh_path = layer_set.path_nvm.replace("/server/data/", "").to_string();
+        }
+
+        let config = get_config();
+        if config.filesystem.navimesh_path.is_empty() {
+            tracing::warn!("Navimesh path is not set! Monsters will not function correctly!");
+        } else {
+            let mut nvm_path = PathBuf::from(config.filesystem.navimesh_path);
+            nvm_path.push(&zone.navimesh_path);
+
+            Self::load_navimesh(&nvm_path.to_str().unwrap());
+        }
 
         let mut load_lgb = |path: &str| -> Option<LayerGroup> {
             let lgb_file = game_data.resource.read(path)?;
@@ -115,5 +136,15 @@ impl Zone {
         }
 
         None
+    }
+
+    // TODO: add better error handling here
+    fn load_navimesh(path: &str) -> Option<()> {
+        if !std::fs::exists(path).unwrap_or_default() {
+            tracing::warn!("Navimesh {path} does not exist, monsters will not function correctly!");
+            return None;
+        }
+
+        Some(())
     }
 }
