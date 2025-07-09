@@ -150,7 +150,9 @@ impl WorldDatabase {
         let mut charsave_bytes = Vec::<u8>::new();
         let mut bufrdr = BufReader::new(charsave_file);
         if let Err(err) = bufrdr.read_to_end(&mut charsave_bytes) {
-            tracing::error!("Unable to read FFXIV_CHARA_01.dat from archive! Additional information: {err}");
+            tracing::error!(
+                "Unable to read FFXIV_CHARA_01.dat from archive! Additional information: {err}"
+            );
             return;
         };
 
