@@ -1,3 +1,4 @@
+use rusqlite::types::{FromSql, FromSqlResult, ValueRef};
 use serde_json::{Value, json};
 
 use crate::common::CustomizeData;
@@ -11,6 +12,12 @@ pub struct CharaMake {
     pub birth_day: i32,
     pub classjob_id: i32,
     pub unk2: i32,
+}
+
+impl FromSql for CharaMake {
+    fn column_result(value: ValueRef<'_>) -> FromSqlResult<Self> {
+        Ok(CharaMake::from_json(&String::column_result(value)?))
+    }
 }
 
 impl CharaMake {

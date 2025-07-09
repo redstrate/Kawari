@@ -1,3 +1,4 @@
+use rusqlite::types::{FromSql, FromSqlResult, ValueRef};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -25,6 +26,12 @@ impl TryFrom<i32> for RemakeMode {
             4 => Ok(Self::EditAppearance),
             _ => Err(()),
         }
+    }
+}
+
+impl FromSql for RemakeMode {
+    fn column_result(value: ValueRef<'_>) -> FromSqlResult<Self> {
+        Ok(RemakeMode::try_from(i32::column_result(value)?).unwrap())
     }
 }
 
