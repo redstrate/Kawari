@@ -12,7 +12,12 @@ use physis::{
     pcb::{Pcb, ResourceNode},
     resource::{Resource, SqPackResource},
 };
-use recastnavigation_sys::rcAllocPolyMesh;
+use recastnavigation_sys::{
+    CreateContext, rcAllocCompactHeightfield, rcAllocContourSet, rcAllocHeightfield,
+    rcAllocPolyMesh, rcAllocPolyMeshDetail, rcBuildCompactHeightfield, rcBuildContours,
+    rcBuildPolyMesh, rcBuildPolyMeshDetail, rcContext, rcCreateHeightfield, rcHeightfield,
+    rcRasterizeTriangles,
+};
 
 #[derive(Resource)]
 struct ZoneToLoad(u16);
@@ -37,7 +42,8 @@ fn walk_node(
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
     transform: &Transformation,
-    //tile_input_builder: &mut TileInputBuilder,
+    context: *mut rcContext,
+    height_field: *mut rcHeightfield,
 ) {
     if !node.vertices.is_empty() {
         let mut mesh = Mesh::new(
@@ -84,15 +90,34 @@ fn walk_node(
             },
         ));
 
-        // insert into navmesh builder
-        //let tile_vertices: Vec<DtVector> = positions.iter().map(|vec| DtVector::new(vec[0], vec[1], vec[2])).collect();
-        //let tile_indices: Vec<i32> = indices.iter().map(|x| *x as i32).collect();
+        // Step 2: insert geoemtry into heightfield
+        let tile_indices: Vec<i32> = indices.iter().map(|x| *x as i32).collect();
+        let tri_area_ids: Vec<u8> = vec![0; tile_indices.len() / 3];
 
-        //tile_input_builder.append(&tile_vertices, &tile_indices, 0);
+        unsafe {
+            assert!(rcRasterizeTriangles(
+                context,
+                std::mem::transmute::<*const [f32; 3], *const f32>(positions.as_ptr()),
+                positions.len() as i32,
+                tile_indices.as_ptr(),
+                tri_area_ids.as_ptr(),
+                tile_indices.len() as i32 / 3,
+                height_field,
+                1
+            ));
+        }
     }
 
     for child in &node.children {
-        walk_node(&child, commands, meshes, materials, transform);
+        walk_node(
+            &child,
+            commands,
+            meshes,
+            materials,
+            transform,
+            context,
+            height_field,
+        );
     }
 }
 
@@ -123,8 +148,30 @@ fn setup(
     let lvb_file = sqpack_resource.read(&path).unwrap();
     let lvb = Lvb::from_existing(&lvb_file).unwrap();
 
+    let context;
+    let height_field;
     unsafe {
-        let poly_mesh = rcAllocPolyMesh();
+        context = CreateContext(true);
+
+        // Step 1: Create a heightfield
+        let size_x = 100;
+        let size_z = 100;
+        let min_bounds = [-100.0, -100.0, -100.0];
+        let max_bounds = [100.0, 100.0, 100.0];
+        let cell_size = 10.0;
+        let cell_height = 10.0;
+
+        height_field = rcAllocHeightfield();
+        assert!(rcCreateHeightfield(
+            context,
+            height_field,
+            size_x,
+            size_z,
+            min_bounds.as_ptr(),
+            max_bounds.as_ptr(),
+            cell_size,
+            cell_height
+        ));
     }
 
     for path in &lvb.scns[0].header.path_layer_group_resources {
@@ -163,7 +210,8 @@ fn setup(
                                     &mut meshes,
                                     &mut materials,
                                     &object.transform,
-                                    //&mut tile_input_builder,
+                                    context,
+                                    height_field,
                                 );
                             }
                         }
@@ -171,6 +219,52 @@ fn setup(
                 }
             }
         }
+    }
+
+    unsafe {
+        // Step 3: Build a compact heightfield out of the normal heightfield
+        let compact_heightfield = rcAllocCompactHeightfield();
+        let walkable_height = 1;
+        let walkable_climb = 1;
+        assert!(rcBuildCompactHeightfield(
+            context,
+            walkable_height,
+            walkable_climb,
+            height_field,
+            compact_heightfield
+        ));
+
+        // Step 4: Build the contour set from the compact heightfield
+        let contour_set = rcAllocContourSet();
+        let max_error = 1.0;
+        let max_edge_len = 0;
+        let build_flags = 0;
+        assert!(rcBuildContours(
+            context,
+            compact_heightfield,
+            max_error,
+            max_edge_len,
+            contour_set,
+            build_flags
+        ));
+
+        // Step 5: Build the polymesh out of the contour set
+        let poly_mesh = rcAllocPolyMesh();
+        let nvp = 3;
+        assert!(rcBuildPolyMesh(context, contour_set, nvp, poly_mesh));
+
+        // Step 6: Build the polymesh detail
+        let poly_mesh_detail = rcAllocPolyMeshDetail();
+        let sample_dist = 0.0;
+        let sample_max_error = 0.0;
+        assert!(rcBuildPolyMeshDetail(
+            context,
+            poly_mesh,
+            compact_heightfield,
+            sample_dist,
+            sample_max_error,
+            poly_mesh_detail
+        ));
     }
 
     // camera
