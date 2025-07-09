@@ -1,4 +1,4 @@
-use std::{io::Read, sync::Mutex};
+use std::{io::BufReader, io::Read, sync::Mutex};
 
 use rusqlite::Connection;
 use serde::Deserialize;
@@ -147,7 +147,13 @@ impl WorldDatabase {
         }
 
         let charsave_file = archive.by_name("FFXIV_CHARA_01.dat").unwrap();
-        let charsave_bytes: Vec<u8> = charsave_file.bytes().map(|x| x.unwrap()).collect();
+        let mut charsave_bytes = Vec::<u8>::new();
+        let mut bufrdr = BufReader::new(charsave_file);
+        if let Err(err) = bufrdr.read_to_end(&mut charsave_bytes) {
+            tracing::error!("Unable to read FFXIV_CHARA_01.dat from archive! Additional information: {err}");
+            return;
+        };
+
         let charsave =
             physis::savedata::chardat::CharacterData::from_existing(&charsave_bytes).unwrap();
 
