@@ -95,6 +95,9 @@ bevy = { version = "0.16", features = ["std",
   "bevy_window",
   "bevy_winit",
   "tonemapping_luts",
+  "bevy_picking",
+  "bevy_mesh_picking_backend",
+  "bevy_gizmos",
   "x11"], default-features = false, optional = true }
 
 # for navimesh generation

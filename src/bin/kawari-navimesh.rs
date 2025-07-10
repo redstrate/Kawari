@@ -2,6 +2,8 @@ use std::ptr::{null, null_mut};
 
 use bevy::{
     asset::RenderAssetUsages,
+    color::palettes::tailwind::{PINK_100, RED_500},
+    picking::pointer::PointerInteraction,
     prelude::*,
     render::mesh::{Indices, PrimitiveTopology},
 };
@@ -17,17 +19,89 @@ use physis::{
 use recastnavigation_sys::{
     CreateContext, DT_SUCCESS, dtAllocNavMesh, dtAllocNavMeshQuery, dtCreateNavMeshData,
     dtNavMesh_addTile, dtNavMesh_init, dtNavMeshCreateParams, dtNavMeshParams, dtNavMeshQuery,
-    dtNavMeshQuery_findNearestPoly, dtNavMeshQuery_findPath, dtNavMeshQuery_init, dtPolyRef,
-    dtQueryFilter, dtQueryFilter_dtQueryFilter, rcAllocCompactHeightfield, rcAllocContourSet,
-    rcAllocHeightfield, rcAllocPolyMesh, rcAllocPolyMeshDetail, rcBuildCompactHeightfield,
-    rcBuildContours, rcBuildContoursFlags_RC_CONTOUR_TESS_WALL_EDGES, rcBuildDistanceField,
-    rcBuildPolyMesh, rcBuildPolyMeshDetail, rcBuildRegions, rcCalcGridSize, rcContext,
-    rcCreateHeightfield, rcErodeWalkableArea, rcHeightfield, rcMarkWalkableTriangles,
-    rcRasterizeTriangles,
+    dtNavMeshQuery_findNearestPoly, dtNavMeshQuery_findPath, dtNavMeshQuery_findStraightPath,
+    dtNavMeshQuery_init, dtPolyRef, dtQueryFilter, dtQueryFilter_dtQueryFilter,
+    rcAllocCompactHeightfield, rcAllocContourSet, rcAllocHeightfield, rcAllocPolyMesh,
+    rcAllocPolyMeshDetail, rcBuildCompactHeightfield, rcBuildContours,
+    rcBuildContoursFlags_RC_CONTOUR_TESS_WALL_EDGES, rcBuildDistanceField, rcBuildPolyMesh,
+    rcBuildPolyMeshDetail, rcBuildRegions, rcCalcGridSize, rcContext, rcCreateHeightfield,
+    rcErodeWalkableArea, rcHeightfield, rcMarkWalkableTriangles, rcRasterizeTriangles,
 };
 
 #[derive(Resource)]
 struct ZoneToLoad(u16);
+
+#[derive(Resource, Default)]
+struct NavigationState {
+    query: *mut dtNavMeshQuery,
+    path: Vec<Vec3>,
+}
+
+impl NavigationState {
+    pub fn calculate_path(&mut self, from_position: Vec3) {
+        unsafe {
+            let start_pos = [from_position.x, from_position.y, from_position.z];
+            let end_pos = [0.0, 0.0, 0.0];
+
+            let mut filter = dtQueryFilter {
+                m_areaCost: [0.0; 64],
+                m_includeFlags: 0,
+                m_excludeFlags: 0,
+            };
+            dtQueryFilter_dtQueryFilter(&mut filter);
+
+            let (start_poly, start_poly_pos) =
+                get_polygon_at_location(self.query, start_pos, &filter);
+            let (end_poly, end_poly_pos) = get_polygon_at_location(self.query, end_pos, &filter);
+
+            let mut path = [0; 128];
+            let mut path_count = 0;
+            dtNavMeshQuery_findPath(
+                self.query,
+                start_poly,
+                end_poly,
+                start_poly_pos.as_ptr(),
+                end_poly_pos.as_ptr(),
+                &filter,
+                path.as_mut_ptr(),
+                &mut path_count,
+                128,
+            ); // TODO: error check
+
+            let mut straight_path = [0.0; 128 * 3];
+            let mut straight_path_count = 0;
+
+            // now calculate the positions in the path
+            dtNavMeshQuery_findStraightPath(
+                self.query,
+                start_poly_pos.as_ptr(),
+                end_poly_pos.as_ptr(),
+                path.as_ptr(),
+                path_count,
+                straight_path.as_mut_ptr(),
+                null_mut(),
+                null_mut(),
+                &mut straight_path_count,
+                128,
+                0,
+            );
+
+            dbg!(&straight_path[..straight_path_count as usize * 3]);
+
+            self.path.clear();
+            for pos in straight_path[..straight_path_count as usize * 3].chunks(3) {
+                self.path.push(Vec3 {
+                    x: pos[0],
+                    y: pos[1],
+                    z: pos[2],
+                });
+            }
+        }
+    }
+}
+
+unsafe impl Send for NavigationState {}
+unsafe impl Sync for NavigationState {}
 
 fn main() {
     tracing_subscriber::fmt::init();
@@ -36,11 +110,17 @@ fn main() {
     let zone_id: u16 = args[1].parse().unwrap();
 
     App::new()
-        .add_plugins(DefaultPlugins)
+        .add_event::<Navigate>()
+        .add_plugins((DefaultPlugins, MeshPickingPlugin))
         .add_systems(Startup, setup)
+        .add_systems(Update, draw_mesh_intersections)
         .insert_resource(ZoneToLoad(zone_id))
+        .insert_resource(NavigationState::default())
         .run();
 }
+
+#[derive(Event, Reflect, Clone, Debug)]
+struct Navigate(Vec3);
 
 /// Walk each node, add it's collision model to the scene.
 fn walk_node(
@@ -53,10 +133,7 @@ fn walk_node(
     height_field: *mut rcHeightfield,
 ) {
     if !node.vertices.is_empty() {
-        let mut mesh = Mesh::new(
-            PrimitiveTopology::TriangleList,
-            RenderAssetUsages::RENDER_WORLD,
-        );
+        let mut mesh = Mesh::new(PrimitiveTopology::TriangleList, RenderAssetUsages::all());
 
         let mut positions = Vec::new();
         for vec in &node.vertices {
@@ -77,25 +154,35 @@ fn walk_node(
 
         mesh.insert_indices(Indices::U32(indices.clone()));
 
+        mesh.compute_normals();
+
         // insert into 3d scene
-        commands.spawn((
-            Mesh3d(meshes.add(mesh)),
-            MeshMaterial3d(materials.add(Color::srgb(
-                fastrand::f32(),
-                fastrand::f32(),
-                fastrand::f32(),
-            ))),
-            Transform {
-                translation: Vec3::from_array(transform.translation),
-                rotation: Quat::from_euler(
-                    EulerRot::XYZ,
-                    transform.rotation[0],
-                    transform.rotation[1],
-                    transform.rotation[2],
-                ),
-                scale: Vec3::from_array(transform.scale),
-            },
-        ));
+        commands
+            .spawn((
+                Mesh3d(meshes.add(mesh)),
+                MeshMaterial3d(materials.add(Color::srgb(
+                    fastrand::f32(),
+                    fastrand::f32(),
+                    fastrand::f32(),
+                ))),
+                Transform {
+                    translation: Vec3::from_array(transform.translation),
+                    rotation: Quat::from_euler(
+                        EulerRot::XYZ,
+                        transform.rotation[0],
+                        transform.rotation[1],
+                        transform.rotation[2],
+                    ),
+                    scale: Vec3::from_array(transform.scale),
+                },
+            ))
+            .observe(
+                |mut trigger: Trigger<Pointer<Click>>, mut events: EventWriter<Navigate>| {
+                    let click_event: &Pointer<Click> = trigger.event();
+                    events.write(Navigate(click_event.hit.position.unwrap()));
+                    trigger.propagate(false);
+                },
+            );
 
         // Step 2: insert geoemtry into heightfield
         let tile_indices: Vec<i32> = indices.iter().map(|x| *x as i32).collect();
@@ -161,7 +248,6 @@ fn get_polygon_at_location(
                 nearest_pt.as_mut_ptr()
             ) == DT_SUCCESS
         );
-        assert!(nearest_ref != 0);
 
         return (nearest_ref, nearest_pt);
     }
@@ -173,6 +259,7 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     zone_id: Res<ZoneToLoad>,
+    mut navigation_state: ResMut<NavigationState>,
 ) {
     let zone_id = zone_id.0;
     let config = get_config();
@@ -418,38 +505,8 @@ fn setup(
             dtNavMesh_addTile(navmesh, out_data, out_data_size, 0, 0, null_mut()) == DT_SUCCESS
         );
 
-        let query = dtAllocNavMeshQuery();
-        dtNavMeshQuery_init(query, navmesh, 1024);
-
-        let start_pos = [0.0, 0.0, 0.0];
-        let end_pos = [5.0, 0.0, 0.0];
-
-        let mut filter = dtQueryFilter {
-            m_areaCost: [0.0; 64],
-            m_includeFlags: 0,
-            m_excludeFlags: 0,
-        };
-        dtQueryFilter_dtQueryFilter(&mut filter);
-
-        let (start_poly, start_poly_pos) = get_polygon_at_location(query, start_pos, &filter);
-        let (end_poly, end_poly_pos) = get_polygon_at_location(query, end_pos, &filter);
-
-        let mut path = [0; 128];
-        let mut path_count = 0;
-        dtNavMeshQuery_findPath(
-            query,
-            start_poly,
-            end_poly,
-            start_poly_pos.as_ptr(),
-            end_poly_pos.as_ptr(),
-            &filter,
-            path.as_mut_ptr(),
-            &mut path_count,
-            128,
-        ); // TODO: error check
-        assert!(path_count > 0);
-
-        dbg!(path);
+        navigation_state.query = dtAllocNavMeshQuery();
+        dtNavMeshQuery_init(navigation_state.query, navmesh, 1024);
     }
 
     // camera
@@ -457,4 +514,28 @@ fn setup(
         Camera3d::default(),
         Transform::from_xyz(15.0, 15.0, 15.0).looking_at(Vec3::ZERO, Vec3::Y),
     ));
+}
+
+fn draw_mesh_intersections(
+    pointers: Query<&PointerInteraction>,
+    mut gizmos: Gizmos,
+    mut navigate_events: EventReader<Navigate>,
+    mut navigation_state: ResMut<NavigationState>,
+) {
+    for pos in &navigation_state.path {
+        gizmos.sphere(*pos, 0.05, RED_500);
+    }
+
+    for (point, normal) in pointers
+        .iter()
+        .filter_map(|interaction| interaction.get_nearest_hit())
+        .filter_map(|(_entity, hit)| hit.position.zip(hit.normal))
+    {
+        gizmos.sphere(point, 0.05, RED_500);
+        gizmos.arrow(point, point + normal.normalize() * 0.5, PINK_100);
+    }
+
+    for event in navigate_events.read() {
+        navigation_state.calculate_path(event.0);
+    }
 }
