@@ -15,12 +15,14 @@ use physis::{
     resource::{Resource, SqPackResource},
 };
 use recastnavigation_sys::{
-    CreateContext, DT_SUCCESS, dtAllocNavMesh, dtCreateNavMeshData, dtNavMesh_addTile,
-    dtNavMesh_init, dtNavMeshCreateParams, dtNavMeshParams, rcAllocCompactHeightfield,
-    rcAllocContourSet, rcAllocHeightfield, rcAllocPolyMesh, rcAllocPolyMeshDetail,
-    rcBuildCompactHeightfield, rcBuildContours, rcBuildContoursFlags_RC_CONTOUR_TESS_WALL_EDGES,
-    rcBuildDistanceField, rcBuildPolyMesh, rcBuildPolyMeshDetail, rcBuildRegions, rcCalcGridSize,
-    rcContext, rcCreateHeightfield, rcErodeWalkableArea, rcHeightfield, rcMarkWalkableTriangles,
+    CreateContext, DT_SUCCESS, dtAllocNavMesh, dtAllocNavMeshQuery, dtCreateNavMeshData,
+    dtNavMesh_addTile, dtNavMesh_init, dtNavMeshCreateParams, dtNavMeshParams, dtNavMeshQuery,
+    dtNavMeshQuery_findNearestPoly, dtNavMeshQuery_findPath, dtNavMeshQuery_init, dtPolyRef,
+    dtQueryFilter, dtQueryFilter_dtQueryFilter, rcAllocCompactHeightfield, rcAllocContourSet,
+    rcAllocHeightfield, rcAllocPolyMesh, rcAllocPolyMeshDetail, rcBuildCompactHeightfield,
+    rcBuildContours, rcBuildContoursFlags_RC_CONTOUR_TESS_WALL_EDGES, rcBuildDistanceField,
+    rcBuildPolyMesh, rcBuildPolyMeshDetail, rcBuildRegions, rcCalcGridSize, rcContext,
+    rcCreateHeightfield, rcErodeWalkableArea, rcHeightfield, rcMarkWalkableTriangles,
     rcRasterizeTriangles,
 };
 
@@ -136,6 +138,32 @@ fn walk_node(
             context,
             height_field,
         );
+    }
+}
+
+fn get_polygon_at_location(
+    query: *const dtNavMeshQuery,
+    position: [f32; 3],
+    filter: &dtQueryFilter,
+) -> (dtPolyRef, [f32; 3]) {
+    let extents = [3.0, 5.0, 3.0];
+
+    unsafe {
+        let mut nearest_ref = 0;
+        let mut nearest_pt = [0.0; 3];
+        assert!(
+            dtNavMeshQuery_findNearestPoly(
+                query,
+                position.as_ptr(),
+                extents.as_ptr(),
+                filter,
+                &mut nearest_ref,
+                nearest_pt.as_mut_ptr()
+            ) == DT_SUCCESS
+        );
+        assert!(nearest_ref != 0);
+
+        return (nearest_ref, nearest_pt);
     }
 }
 
@@ -389,6 +417,39 @@ fn setup(
         assert!(
             dtNavMesh_addTile(navmesh, out_data, out_data_size, 0, 0, null_mut()) == DT_SUCCESS
         );
+
+        let query = dtAllocNavMeshQuery();
+        dtNavMeshQuery_init(query, navmesh, 1024);
+
+        let start_pos = [0.0, 0.0, 0.0];
+        let end_pos = [5.0, 0.0, 0.0];
+
+        let mut filter = dtQueryFilter {
+            m_areaCost: [0.0; 64],
+            m_includeFlags: 0,
+            m_excludeFlags: 0,
+        };
+        dtQueryFilter_dtQueryFilter(&mut filter);
+
+        let (start_poly, start_poly_pos) = get_polygon_at_location(query, start_pos, &filter);
+        let (end_poly, end_poly_pos) = get_polygon_at_location(query, end_pos, &filter);
+
+        let mut path = [0; 128];
+        let mut path_count = 0;
+        dtNavMeshQuery_findPath(
+            query,
+            start_poly,
+            end_poly,
+            start_poly_pos.as_ptr(),
+            end_poly_pos.as_ptr(),
+            &filter,
+            path.as_mut_ptr(),
+            &mut path_count,
+            128,
+        ); // TODO: error check
+        assert!(path_count > 0);
+
+        dbg!(path);
     }
 
     // camera
