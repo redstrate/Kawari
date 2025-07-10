@@ -1,4 +1,5 @@
 use crate::common::GameData;
+use binrw::binrw;
 use icarus::{ClassJob::ClassJobSheet, Race::RaceSheet};
 use physis::common::Language;
 use serde::{Deserialize, Serialize};
@@ -20,10 +21,45 @@ pub use storage::{ContainerType, Storage};
 mod currency;
 pub use currency::CurrencyStorage;
 
-use crate::INVENTORY_ACTION_DISCARD;
+use crate::{
+    INVENTORY_ACTION_COMBINE_STACK, INVENTORY_ACTION_DISCARD, INVENTORY_ACTION_EXCHANGE,
+    INVENTORY_ACTION_MOVE, INVENTORY_ACTION_SPLIT_STACK,
+};
 
 const MAX_NORMAL_STORAGE: usize = 35;
 const MAX_LARGE_STORAGE: usize = 50;
+
+#[binrw]
+#[derive(Debug, Clone, Default, Copy, PartialEq)]
+#[brw(repr = u8)]
+#[repr(u8)]
+pub enum ItemOperationKind {
+    /// The operation opcode/type when discarding an item from the inventory.
+    Discard = INVENTORY_ACTION_DISCARD,
+    #[default]
+    /// The operation opcode/type when moving an item to an emtpy slot in the inventory.
+    Move = INVENTORY_ACTION_MOVE,
+    /// The operation opcode/type when moving an item to a slot occupied by another in the inventory.
+    Exchange = INVENTORY_ACTION_EXCHANGE,
+    /// The operation opcode/type when splitting stacks of identical items.
+    SplitStack = INVENTORY_ACTION_SPLIT_STACK,
+    /// The operation opcode/type when combining stacks of identical items.
+    CombineStack = INVENTORY_ACTION_COMBINE_STACK,
+}
+
+impl TryFrom<u8> for ItemOperationKind {
+    type Error = ();
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        match value {
+            x if x == ItemOperationKind::Discard as u8 => Ok(ItemOperationKind::Discard),
+            x if x == ItemOperationKind::Move as u8 => Ok(ItemOperationKind::Move),
+            x if x == ItemOperationKind::Exchange as u8 => Ok(ItemOperationKind::Exchange),
+            x if x == ItemOperationKind::SplitStack as u8 => Ok(ItemOperationKind::SplitStack),
+            x if x == ItemOperationKind::CombineStack as u8 => Ok(ItemOperationKind::CombineStack),
+            _ => Err(()),
+        }
+    }
+}
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Inventory {
@@ -171,36 +207,67 @@ impl Inventory {
         }
     }
 
+    /// Helper functions to reduce boilerplate
+    fn get_item_mut(&mut self, storage_id: ContainerType, storage_index: u16) -> &mut Item {
+        let container = self.get_container_mut(&storage_id);
+        container.get_slot_mut(storage_index)
+    }
+
+    fn get_item(&self, storage_id: ContainerType, storage_index: u16) -> Item {
+        let container = self.get_container(&storage_id);
+        *container.get_slot(storage_index)
+    }
+
     pub fn process_action(&mut self, action: &ItemOperation) {
-        if action.operation_type == INVENTORY_ACTION_DISCARD {
-            let src_container = self.get_container_mut(&action.src_storage_id);
-            let src_slot = src_container.get_slot_mut(action.src_container_index);
-            *src_slot = Item::default();
-        } else {
-            // NOTE: only swaps items for now
-
-            let src_item;
-            // get the source item
-            {
-                let src_container = self.get_container_mut(&action.src_storage_id);
-                let src_slot = src_container.get_slot_mut(action.src_container_index);
-                src_item = *src_slot;
+        match action.operation_type {
+            ItemOperationKind::Discard => {
+                let src_item = self.get_item_mut(action.src_storage_id, action.src_container_index);
+                *src_item = Item::default();
             }
+            ItemOperationKind::CombineStack => {
+                let src_item;
+                {
+                    let original_item =
+                        self.get_item_mut(action.src_storage_id, action.src_container_index);
+                    src_item = *original_item;
+                    *original_item = Item::default();
+                }
 
-            let dst_item;
-            // move into dst item
-            {
-                let dst_container = self.get_container_mut(&action.dst_storage_id);
-                let dst_slot = dst_container.get_slot_mut(action.dst_container_index);
+                let dst_item = self.get_item_mut(action.dst_storage_id, action.dst_container_index);
+                // TODO: We ought to check the max stack size for a given item id and disallow overflow
+                dst_item.quantity += src_item.quantity;
+            }
+            ItemOperationKind::SplitStack => {
+                let mut src_item;
+                {
+                    let original_item =
+                        self.get_item_mut(action.src_storage_id, action.src_container_index);
+                    if original_item.quantity >= action.dst_stack {
+                        original_item.quantity -= action.dst_stack;
+                        src_item = *original_item;
+                        src_item.quantity = action.dst_stack
+                    } else {
+                        tracing::warn!(
+                            "Client sent a bogus split amount: {}! Rejecting item operation!",
+                            action.dst_stack
+                        );
+                        return;
+                    }
+                }
 
-                dst_item = *dst_slot;
+                let dst_item = self.get_item_mut(action.dst_storage_id, action.dst_container_index);
+                dst_item.clone_from(&src_item);
+            }
+            ItemOperationKind::Exchange | ItemOperationKind::Move => {
+                let src_item = self.get_item(action.src_storage_id, action.src_container_index);
+
+                // move src item into dst slot
+                let dst_slot = self.get_item_mut(action.dst_storage_id, action.dst_container_index);
+                let dst_item = *dst_slot;
                 dst_slot.clone_from(&src_item);
-            }
 
-            // move dst item into src slot
-            {
-                let src_container = self.get_container_mut(&action.src_storage_id);
-                let src_slot = src_container.get_slot_mut(action.src_container_index);
+                // move dst item into src slot
+                let src_slot = self.get_item_mut(action.src_storage_id, action.src_container_index);
                 src_slot.clone_from(&dst_item);
             }
         }

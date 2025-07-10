@@ -1,12 +1,13 @@
 use binrw::binrw;
 
 use crate::inventory::ContainerType;
+use crate::inventory::ItemOperationKind;
 
 #[binrw]
 #[derive(Debug, Clone, Default)]
 pub struct ItemOperation {
     pub context_id: u32,
-    pub operation_type: u8,
+    pub operation_type: ItemOperationKind,
 
     #[brw(pad_before = 3)]
     pub src_actor_id: u32,
@@ -44,7 +45,7 @@ mod tests {
 
         let modify_inventory = ItemOperation::read_le(&mut buffer).unwrap();
         assert_eq!(modify_inventory.context_id, 0x10000000);
-        assert_eq!(modify_inventory.operation_type, 60);
+        assert_eq!(modify_inventory.operation_type, ItemOperationKind::Move);
         assert_eq!(modify_inventory.src_actor_id, 0);
         assert_eq!(modify_inventory.src_storage_id, ContainerType::Equipped);
         assert_eq!(modify_inventory.src_container_index, 3);
