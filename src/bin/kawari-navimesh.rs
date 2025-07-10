@@ -15,7 +15,8 @@ use physis::{
     resource::{Resource, SqPackResource},
 };
 use recastnavigation_sys::{
-    CreateContext, dtCreateNavMeshData, dtNavMeshCreateParams, rcAllocCompactHeightfield,
+    CreateContext, DT_SUCCESS, dtAllocNavMesh, dtCreateNavMeshData, dtNavMesh_addTile,
+    dtNavMesh_init, dtNavMeshCreateParams, dtNavMeshParams, rcAllocCompactHeightfield,
     rcAllocContourSet, rcAllocHeightfield, rcAllocPolyMesh, rcAllocPolyMeshDetail,
     rcBuildCompactHeightfield, rcBuildContours, rcBuildContoursFlags_RC_CONTOUR_TESS_WALL_EDGES,
     rcBuildDistanceField, rcBuildPolyMesh, rcBuildPolyMeshDetail, rcBuildRegions, rcCalcGridSize,
@@ -373,6 +374,21 @@ fn setup(
         ));
         assert!(out_data != null_mut());
         assert!(out_data_size > 0);
+
+        let navmesh_params = dtNavMeshParams {
+            orig: [0.0; 3],
+            tileWidth: 100.0,
+            tileHeight: 100.0,
+            maxTiles: 1000,
+            maxPolys: 1000,
+        };
+
+        let navmesh = dtAllocNavMesh();
+        assert!(dtNavMesh_init(navmesh, &navmesh_params) == DT_SUCCESS);
+
+        assert!(
+            dtNavMesh_addTile(navmesh, out_data, out_data_size, 0, 0, null_mut()) == DT_SUCCESS
+        );
     }
 
     // camera
