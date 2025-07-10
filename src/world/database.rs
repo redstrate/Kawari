@@ -1,4 +1,4 @@
-use std::{io::Read, sync::Mutex};
+use std::{io::BufReader, io::Read, sync::Mutex};
 
 use rusqlite::Connection;
 use serde::Deserialize;
@@ -10,10 +10,7 @@ use crate::{
         workdefinitions::{CharaMake, ClientSelectData, RemakeMode},
     },
     inventory::{Inventory, Item, Storage},
-    ipc::{
-        lobby::{CharacterDetails, CharacterFlag},
-        zone::GameMasterRank,
-    },
+    ipc::lobby::{CharacterDetails, CharacterFlag},
 };
 
 use super::PlayerData;
@@ -34,6 +31,10 @@ impl Default for WorldDatabase {
     fn default() -> Self {
         Self::new()
     }
+}
+
+fn json_unpack<T: for<'a> Deserialize<'a>>(json_str: String) -> T {
+    serde_json::from_str(&json_str).unwrap()
 }
 
 impl WorldDatabase {
@@ -146,7 +147,15 @@ impl WorldDatabase {
         }
 
         let charsave_file = archive.by_name("FFXIV_CHARA_01.dat").unwrap();
-        let charsave_bytes: Vec<u8> = charsave_file.bytes().map(|x| x.unwrap()).collect();
+        let mut charsave_bytes = Vec::<u8>::new();
+        let mut bufrdr = BufReader::new(charsave_file);
+        if let Err(err) = bufrdr.read_to_end(&mut charsave_bytes) {
+            tracing::error!(
+                "Unable to read FFXIV_CHARA_01.dat from archive! Additional information: {err}"
+            );
+            return;
+        };
+
         let charsave =
             physis::savedata::chardat::CharacterData::from_existing(&charsave_bytes).unwrap();
 
@@ -273,84 +282,40 @@ impl WorldDatabase {
         let mut stmt = connection
             .prepare("SELECT content_id, service_account_id FROM characters WHERE actor_id = ?1")
             .unwrap();
-        let (content_id, account_id) = stmt
+        let (content_id, account_id): (u64, u32) = stmt
             .query_row((actor_id,), |row| Ok((row.get(0)?, row.get(1)?)))
             .unwrap();
 
         stmt = connection
             .prepare("SELECT pos_x, pos_y, pos_z, rotation, zone_id, inventory, gm_rank, classjob_id, classjob_levels, classjob_exp, unlocks, aetherytes, completed_quests FROM character_data WHERE content_id = ?1")
             .unwrap();
-        let (
-            pos_x,
-            pos_y,
-            pos_z,
-            rotation,
-            zone_id,
-            inventory_json,
-            gm_rank,
-            classjob_id,
-            classjob_levels,
-            classjob_exp,
-            unlocks,
-            aetherytes,
-            completed_quests,
-        ): (
-            f32,
-            f32,
-            f32,
-            f32,
-            u16,
-            String,
-            u8,
-            i32,
-            String,
-            String,
-            String,
-            String,
-            String,
-        ) = stmt
+        let player_data: PlayerData = stmt
             .query_row((content_id,), |row| {
-                Ok((
-                    row.get(0)?,
-                    row.get(1)?,
-                    row.get(2)?,
-                    row.get(3)?,
-                    row.get(4)?,
-                    row.get(5)?,
-                    row.get(6)?,
-                    row.get(7)?,
-                    row.get(8)?,
-                    row.get(9)?,
-                    row.get(10)?,
-                    row.get(11)?,
-                    row.get(12)?,
-                ))
+                Ok(PlayerData {
+                    actor_id,
+                    content_id,
+                    account_id,
+                    position: Position {
+                        x: row.get(0)?,
+                        y: row.get(1)?,
+                        z: row.get(2)?,
+                    },
+                    rotation: row.get(3)?,
+                    zone_id: row.get(4)?,
+                    inventory: row.get(5)?,
+                    gm_rank: row.get(6)?,
+                    classjob_id: row.get(7)?,
+                    classjob_levels: json_unpack::<[i32; 32]>(row.get(8)?),
+                    classjob_exp: json_unpack::<[u32; 32]>(row.get(9)?),
+                    unlocks: json_unpack::<Vec<u8>>(row.get(10)?),
+                    aetherytes: json_unpack::<Vec<u8>>(row.get(11)?),
+                    completed_quests: json_unpack::<Vec<u8>>(row.get(12)?),
+                    ..Default::default()
+                })
             })
             .unwrap();
 
-        let inventory = serde_json::from_str(&inventory_json).unwrap();
-
-        PlayerData {
-            actor_id,
-            content_id,
-            account_id,
-            position: Position {
-                x: pos_x,
-                y: pos_y,
-                z: pos_z,
-            },
-            rotation,
-            zone_id,
-            inventory,
-            gm_rank: GameMasterRank::try_from(gm_rank).unwrap(),
-            classjob_id: classjob_id as u8,
-            classjob_levels: serde_json::from_str(&classjob_levels).unwrap(),
-            classjob_exp: serde_json::from_str(&classjob_exp).unwrap(),
-            unlocks: serde_json::from_str(&unlocks).unwrap(),
-            aetherytes: serde_json::from_str(&aetherytes).unwrap(),
-            completed_quests: serde_json::from_str(&completed_quests).unwrap(),
-            ..Default::default()
-        }
+        player_data
     }
 
     /// Commit the dynamic player data back to the database
@@ -425,56 +390,53 @@ impl WorldDatabase {
                 )
                 .unwrap();
 
-            let result: Result<(String, String, u16, String, i32, i32, String), rusqlite::Error> =
+            struct CharaListQuery {
+                name: String,
+                chara_make: CharaMake,
+                zone_id: u16,
+                inventory: Inventory,
+                remake_mode: RemakeMode,
+                classjob_id: i32,
+                classjob_levels: [i32; 32],
+            }
+
+            let result: Result<CharaListQuery, rusqlite::Error> =
                 stmt.query_row((content_id,), |row| {
-                    Ok((
-                        row.get(0)?,
-                        row.get(1)?,
-                        row.get(2)?,
-                        row.get(3)?,
-                        row.get(4)?,
-                        row.get(5)?,
-                        row.get(6)?,
-                    ))
+                    Ok(CharaListQuery {
+                        name: row.get(0)?,
+                        chara_make: row.get(1)?,
+                        zone_id: row.get(2)?,
+                        inventory: row.get(3)?,
+                        remake_mode: row.get(4)?,
+                        classjob_id: row.get(5)?,
+                        classjob_levels: json_unpack::<[i32; 32]>(row.get(6)?),
+                    })
                 });
 
-            if let Ok((
-                name,
-                chara_make,
-                zone_id,
-                inventory_json,
-                remake_mode,
-                classjob_id,
-                classjob_levels,
-            )) = result
-            {
-                let chara_make = CharaMake::from_json(&chara_make);
-
-                let inventory: Inventory = serde_json::from_str(&inventory_json).unwrap();
-
+            if let Ok(query) = result {
                 let select_data = ClientSelectData {
-                    character_name: name.clone(),
-                    current_class: classjob_id,
-                    class_levels: serde_json::from_str(&classjob_levels).unwrap(),
-                    race: chara_make.customize.race as i32,
-                    subrace: chara_make.customize.subrace as i32,
-                    gender: chara_make.customize.gender as i32,
-                    birth_month: chara_make.birth_month,
-                    birth_day: chara_make.birth_day,
-                    guardian: chara_make.guardian,
+                    character_name: query.name.clone(),
+                    current_class: query.classjob_id,
+                    class_levels: query.classjob_levels,
+                    race: query.chara_make.customize.race as i32,
+                    subrace: query.chara_make.customize.subrace as i32,
+                    gender: query.chara_make.customize.gender as i32,
+                    birth_month: query.chara_make.birth_month,
+                    birth_day: query.chara_make.birth_day,
+                    guardian: query.chara_make.guardian,
                     unk8: 0,
                     unk9: 0,
-                    zone_id: zone_id as i32,
+                    zone_id: query.zone_id as i32,
                     content_finder_condition: 0,
-                    customize: chara_make.customize,
-                    model_main_weapon: inventory.get_main_weapon_id(game_data),
+                    customize: query.chara_make.customize,
+                    model_main_weapon: query.inventory.get_main_weapon_id(game_data),
                     model_sub_weapon: 0,
-                    model_ids: inventory.get_model_ids(game_data),
+                    model_ids: query.inventory.get_model_ids(game_data),
                     equip_stain: [0; 10],
                     glasses: [0; 2],
-                    remake_mode: RemakeMode::try_from(remake_mode).unwrap(),
+                    remake_mode: query.remake_mode,
                     remake_minutes_remaining: 0,
-                    voice_id: chara_make.voice_id,
+                    voice_id: query.chara_make.voice_id,
                     unk20: 0,
                     unk21: 0,
                     world_name: String::new(),
@@ -490,7 +452,7 @@ impl WorldDatabase {
                     unk1: [255; 6],
                     origin_server_id: world_id,
                     current_server_id: world_id,
-                    character_name: name.clone(),
+                    character_name: query.name.clone(),
                     origin_server_name: world_name.to_string(),
                     current_server_name: world_name.to_string(),
                     character_detail_json: select_data.to_json(),
