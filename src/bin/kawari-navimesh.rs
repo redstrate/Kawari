@@ -1,3 +1,5 @@
+use std::ptr::{null, null_mut};
+
 use bevy::{
     asset::RenderAssetUsages,
     prelude::*,
@@ -13,9 +15,11 @@ use physis::{
     resource::{Resource, SqPackResource},
 };
 use recastnavigation_sys::{
-    CreateContext, rcAllocCompactHeightfield, rcAllocContourSet, rcAllocHeightfield,
-    rcAllocPolyMesh, rcAllocPolyMeshDetail, rcBuildCompactHeightfield, rcBuildContours,
-    rcBuildPolyMesh, rcBuildPolyMeshDetail, rcContext, rcCreateHeightfield, rcHeightfield,
+    CreateContext, dtCreateNavMeshData, dtNavMeshCreateParams, rcAllocCompactHeightfield,
+    rcAllocContourSet, rcAllocHeightfield, rcAllocPolyMesh, rcAllocPolyMeshDetail,
+    rcBuildCompactHeightfield, rcBuildContours, rcBuildContoursFlags_RC_CONTOUR_TESS_WALL_EDGES,
+    rcBuildDistanceField, rcBuildPolyMesh, rcBuildPolyMeshDetail, rcBuildRegions, rcCalcGridSize,
+    rcContext, rcCreateHeightfield, rcErodeWalkableArea, rcHeightfield, rcMarkWalkableTriangles,
     rcRasterizeTriangles,
 };
 
@@ -92,18 +96,31 @@ fn walk_node(
 
         // Step 2: insert geoemtry into heightfield
         let tile_indices: Vec<i32> = indices.iter().map(|x| *x as i32).collect();
-        let tri_area_ids: Vec<u8> = vec![0; tile_indices.len() / 3];
+        let mut tri_area_ids: Vec<u8> = vec![0; tile_indices.len() / 3];
 
         unsafe {
+            let ntris = tile_indices.len() as i32 / 3;
+
+            // mark areas as walkable
+            rcMarkWalkableTriangles(
+                context,
+                45.0,
+                std::mem::transmute::<*const [f32; 3], *const f32>(positions.as_ptr()),
+                positions.len() as i32,
+                tile_indices.as_ptr(),
+                ntris,
+                tri_area_ids.as_mut_ptr(),
+            );
+
             assert!(rcRasterizeTriangles(
                 context,
                 std::mem::transmute::<*const [f32; 3], *const f32>(positions.as_ptr()),
                 positions.len() as i32,
                 tile_indices.as_ptr(),
                 tri_area_ids.as_ptr(),
-                tile_indices.len() as i32 / 3,
+                ntris,
                 height_field,
-                1
+                2
             ));
         }
     }
@@ -150,16 +167,24 @@ fn setup(
 
     let context;
     let height_field;
+    let cell_size = 0.25;
+    let cell_height = 0.25;
     unsafe {
         context = CreateContext(true);
 
         // Step 1: Create a heightfield
-        let size_x = 100;
-        let size_z = 100;
+        let mut size_x: i32 = 0;
+        let mut size_z: i32 = 0;
         let min_bounds = [-100.0, -100.0, -100.0];
         let max_bounds = [100.0, 100.0, 100.0];
-        let cell_size = 10.0;
-        let cell_height = 10.0;
+
+        rcCalcGridSize(
+            min_bounds.as_ptr(),
+            max_bounds.as_ptr(),
+            cell_size,
+            &mut size_x,
+            &mut size_z,
+        );
 
         height_field = rcAllocHeightfield();
         assert!(rcCreateHeightfield(
@@ -224,8 +249,9 @@ fn setup(
     unsafe {
         // Step 3: Build a compact heightfield out of the normal heightfield
         let compact_heightfield = rcAllocCompactHeightfield();
-        let walkable_height = 1;
+        let walkable_height = 2;
         let walkable_climb = 1;
+        let walkable_radius = 0.5;
         assert!(rcBuildCompactHeightfield(
             context,
             walkable_height,
@@ -233,12 +259,32 @@ fn setup(
             height_field,
             compact_heightfield
         ));
+        assert!((*compact_heightfield).spanCount > 0);
+
+        assert!(rcErodeWalkableArea(
+            context,
+            walkable_radius as i32,
+            compact_heightfield
+        ));
+
+        assert!(rcBuildDistanceField(context, compact_heightfield));
+
+        let border_size = 2;
+        let min_region_area = 1;
+        let merge_region_area = 0;
+        assert!(rcBuildRegions(
+            context,
+            compact_heightfield,
+            border_size,
+            min_region_area,
+            merge_region_area
+        ));
 
         // Step 4: Build the contour set from the compact heightfield
         let contour_set = rcAllocContourSet();
-        let max_error = 1.0;
-        let max_edge_len = 0;
-        let build_flags = 0;
+        let max_error = 1.5;
+        let max_edge_len = (12.0 / cell_size) as i32;
+        let build_flags = rcBuildContoursFlags_RC_CONTOUR_TESS_WALL_EDGES as i32;
         assert!(rcBuildContours(
             context,
             compact_heightfield,
@@ -247,16 +293,25 @@ fn setup(
             contour_set,
             build_flags
         ));
+        assert!((*contour_set).nconts > 0);
 
         // Step 5: Build the polymesh out of the contour set
         let poly_mesh = rcAllocPolyMesh();
-        let nvp = 3;
+        let nvp = 6;
         assert!(rcBuildPolyMesh(context, contour_set, nvp, poly_mesh));
+        assert!((*poly_mesh).verts != null_mut());
+        assert!((*poly_mesh).nverts > 0);
+
+        let flags =
+            std::slice::from_raw_parts_mut((*poly_mesh).flags, (*poly_mesh).npolys as usize);
+        for flag in flags {
+            *flag = 1;
+        }
 
         // Step 6: Build the polymesh detail
         let poly_mesh_detail = rcAllocPolyMeshDetail();
-        let sample_dist = 0.0;
-        let sample_max_error = 0.0;
+        let sample_dist = 1.0;
+        let sample_max_error = 0.1;
         assert!(rcBuildPolyMeshDetail(
             context,
             poly_mesh,
@@ -265,6 +320,59 @@ fn setup(
             sample_max_error,
             poly_mesh_detail
         ));
+
+        let mut create_params = dtNavMeshCreateParams {
+            // Polygon Mesh Attributes
+            verts: (*poly_mesh).verts,
+            vertCount: (*poly_mesh).nverts,
+            polys: (*poly_mesh).polys,
+            polyFlags: (*poly_mesh).flags,
+            polyAreas: (*poly_mesh).areas,
+            polyCount: (*poly_mesh).npolys,
+            nvp: (*poly_mesh).nvp,
+
+            // Height Detail Attributes
+            detailMeshes: (*poly_mesh_detail).meshes,
+            detailVerts: (*poly_mesh_detail).verts,
+            detailVertsCount: (*poly_mesh_detail).nverts,
+            detailTris: (*poly_mesh_detail).tris,
+            detailTriCount: (*poly_mesh_detail).ntris,
+
+            // Off-Mesh Connections Attributes
+            offMeshConVerts: null(),
+            offMeshConRad: null(),
+            offMeshConFlags: null(),
+            offMeshConAreas: null(),
+            offMeshConDir: null(),
+            offMeshConUserID: null(),
+            offMeshConCount: 0,
+
+            // Tile Attributes
+            userId: 0,
+            tileX: 0,
+            tileY: 0,
+            tileLayer: 0,
+            bmin: (*poly_mesh).bmin,
+            bmax: (*poly_mesh).bmax,
+
+            // General Configuration Attributes
+            walkableHeight: walkable_height as f32,
+            walkableRadius: walkable_radius,
+            walkableClimb: walkable_climb as f32,
+            cs: cell_size,
+            ch: cell_height,
+            buildBvTree: true,
+        };
+
+        let mut out_data: *mut u8 = null_mut();
+        let mut out_data_size = 0;
+        assert!(dtCreateNavMeshData(
+            &mut create_params,
+            &mut out_data,
+            &mut out_data_size
+        ));
+        assert!(out_data != null_mut());
+        assert!(out_data_size > 0);
     }
 
     // camera

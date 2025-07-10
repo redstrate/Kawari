@@ -98,7 +98,7 @@ bevy = { version = "0.16", features = ["std",
   "x11"], default-features = false, optional = true }
 
 # for navimesh generation
-recastnavigation-sys = { git = "https://github.com/redstrate/recastnavigation-rs-sys", features = ["recast"], optional = true }
+recastnavigation-sys = { git = "https://github.com/redstrate/recastnavigation-rs-sys", features = ["recast", "detour"], optional = true }
 
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
 # Used for the web servers
