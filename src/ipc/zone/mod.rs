@@ -380,8 +380,8 @@ pub enum ServerZoneIpcData {
         #[brw(pad_after = 7)]
         unk1: u8,
     },
-    #[br(pre_assert(*magic == ServerZoneIpcType::InventorySlotDiscard))]
-    InventorySlotDiscard {
+    #[br(pre_assert(*magic == ServerZoneIpcType::InventoryTransaction))]
+    InventoryTransaction {
         /// This is later reused in InventorySlotDiscardFin, so it might be some sort of sequence or context id, but it's not the one sent by the client
         unk1: u32,
         /// Same as the one sent by the client, not the one that the server responds with in inventoryactionack!
@@ -405,8 +405,8 @@ pub enum ServerZoneIpcData {
         #[br(pad_after = 8)]
         dst_catalog_id: u32,
     },
-    #[br(pre_assert(*magic == ServerZoneIpcType::InventorySlotDiscardFin))]
-    InventorySlotDiscardFin {
+    #[br(pre_assert(*magic == ServerZoneIpcType::InventoryTransactionFinish))]
+    InventoryTransactionFinish {
         /// Same value as unk1 in InventorySlotDiscard
         unk1: u32,
         /// Repeated unk1 value?
@@ -564,6 +564,15 @@ pub enum ClientZoneIpcData {
         /// unk 2: Flags? These change quite a bit when dealing with stackable items, but are apparently always 0 when buying non-stackable
         /// Observed values so far: 0xDDDDDDDD (when buying 99 of a stackable item), 0xFFFFFFFF, 0xFFE0FFD0, 0xfffefffe, 0x0000FF64
         unk2: u32,
+    },
+    /// This packet is sent by the client when they pivot left or right on standard controls.
+    /// It is sent once when beginning to pivot, and once when pivoting ends.
+    #[br(pre_assert(*magic == ClientZoneIpcType::StandardControlsPivot))]
+    StandardControlsPivot {
+        /// Set to 4 when beginning to pivot.
+        /// Set to 0 when pivoting ends.
+        #[brw(pad_after = 4)]
+        is_pivoting: u32,
     },
     #[br(pre_assert(*magic == ClientZoneIpcType::EventYieldHandler))]
     EventYieldHandler(EventYieldHandler<2>),

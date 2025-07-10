@@ -241,12 +241,12 @@
             "size": 8
         },
         {
-            "name": "InventorySlotDiscard",
+            "name": "InventoryTransaction",
             "opcode": 851,
             "size": 48
         },
         {
-            "name": "InventorySlotDiscardFin",
+            "name": "InventoryTransactionFinish",
             "opcode": 854,
             "size": 16
         }
@@ -395,6 +395,11 @@
         {
             "name": "UnkCall2",
             "opcode": 632,
+            "size": 8
+        },
+        {
+            "name": "StandardControlsPivot",
+            "opcode": 836,
             "size": 8
         }
     ],
