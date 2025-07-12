@@ -6,7 +6,7 @@
 
 use std::{ffi::c_void, ptr::null};
 
-#[cfg(feature = "oodle")]
+#[cfg(all(not(doc), feature = "oodle"))]
 #[cfg_attr(windows, link(name = "oodle-network-shared", kind = "raw-dylib"))]
 #[cfg_attr(not(windows), link(name = "oodle-network-shared"))]
 unsafe extern "C" {
@@ -44,17 +44,17 @@ unsafe extern "C" {
 }
 
 // dummy functions for CI mostly
-#[cfg(not(feature = "oodle"))]
+#[cfg(any(doc, not(feature = "oodle")))]
 pub fn OodleNetwork1TCP_State_Size() -> isize {
     panic!("Something is trying to use Oodle but the feature isn't enabled!")
 }
 
-#[cfg(not(feature = "oodle"))]
+#[cfg(any(doc, not(feature = "oodle")))]
 pub fn OodleNetwork1_Shared_Size(htbits: i32) -> isize {
     panic!("Something is trying to use Oodle but the feature isn't enabled!")
 }
 
-#[cfg(not(feature = "oodle"))]
+#[cfg(any(doc, not(feature = "oodle")))]
 pub fn OodleNetwork1_Shared_SetWindow(
     shared: *mut c_void,
     htbits: i32,
@@ -64,7 +64,7 @@ pub fn OodleNetwork1_Shared_SetWindow(
     panic!("Something is trying to use Oodle but the feature isn't enabled!")
 }
 
-#[cfg(not(feature = "oodle"))]
+#[cfg(any(doc, not(feature = "oodle")))]
 pub fn OodleNetwork1TCP_Train(
     state: *mut c_void,
     shared: *const c_void,
@@ -75,7 +75,7 @@ pub fn OodleNetwork1TCP_Train(
     panic!("Something is trying to use Oodle but the feature isn't enabled!")
 }
 
-#[cfg(not(feature = "oodle"))]
+#[cfg(any(doc, not(feature = "oodle")))]
 pub fn OodleNetwork1TCP_Decode(
     state: *mut c_void,
     shared: *const c_void,
@@ -87,7 +87,7 @@ pub fn OodleNetwork1TCP_Decode(
     panic!("Something is trying to use Oodle but the feature isn't enabled!")
 }
 
-#[cfg(not(feature = "oodle"))]
+#[cfg(any(doc, not(feature = "oodle")))]
 pub fn OodleNetwork1TCP_Encode(
     state: *mut c_void,
     shared: *const c_void,
@@ -98,7 +98,7 @@ pub fn OodleNetwork1TCP_Encode(
     panic!("Something is trying to use Oodle but the feature isn't enabled!")
 }
 
-#[cfg(not(feature = "oodle"))]
+#[cfg(any(doc, not(feature = "oodle")))]
 pub fn OodleNetwork1_CompressedBufferSizeNeeded(rawLen: isize) -> isize {
     panic!("Something is trying to use Oodle but the feature isn't enabled!")
 }
