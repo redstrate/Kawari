@@ -73,7 +73,7 @@ tracing = { version = "0.1", default-features = false }
 binrw = { version = "0.15", features = ["std"], default-features = false }
 
 # Used in encryption of packets
-md5 = { version = "0.7", default-features = false }
+md5 = { version = "0.8", default-features = false }
 
 # Used to access game data
 physis = { git = "https://github.com/redstrate/physis", default-features = false }
@@ -109,7 +109,7 @@ axum = { version = "0.8", features = ["json", "tokio", "http1", "form", "query",
 axum-extra = { version = "0.10", features = ["cookie"], default-features = false }
 
 # Async runtime
-tokio = { version = "1.45", features = ["macros", "rt", "rt-multi-thread", "io-util"], default-features = false }
+tokio = { version = "1.46", features = ["macros", "rt", "rt-multi-thread", "io-util"], default-features = false }
 
 # Logging
 tracing-subscriber = { version = "0.3", features = ["fmt"], default-features = false }
@@ -118,16 +118,16 @@ tracing-subscriber = { version = "0.3", features = ["fmt"], default-features = f
 fastrand = { version = "2.3", features = ["std"], default-features = false }
 
 # HTML templates used in the web servers
-minijinja = { version = "2.10", features = ["serde", "loader", "multi_template"], default-features = false }
+minijinja = { version = "2.11", features = ["serde", "loader", "multi_template"], default-features = false }
 
 # Used for data persistence
-rusqlite = { version = "0.36", features = ["bundled"], default-features = false }
+rusqlite = { version = "0.37", features = ["bundled"], default-features = false }
 
 # For server-side scripting
 mlua = { version = "0.10", features = ["lua54", "vendored", "send", "async", "serialize"], default-features = false }
 
 # For character backup decompression
-zip = { version = "4.1", features = ["deflate", "lzma", "bzip2"], default-features = false }
+zip = { version = "4.3", features = ["deflate", "lzma", "bzip2"], default-features = false }
 
 # For some login<->lobby server communication
 reqwest = { version = "0.12", default-features = false }
@@ -139,4 +139,4 @@ rkon = { version = "0.1" }
 tower-http = { version = "0.6", features = ["fs", "cors"] }
 
 # For obtaining SHA1 hashes of game components
-sha1_smol = { version = "1.0.1" }
+sha1_smol = { version = "1.0" }
