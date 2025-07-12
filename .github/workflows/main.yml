@@ -10,6 +10,28 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  build-webassembly:
+    name: "Build (WebAssembly)"
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Add WebAssembly Target
+      run: |
+        rustup target add wasm32-unknown-unknown
+    - uses: actions/cache@v4
+      id: cache-deps
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+    - name: Build
+      run: cargo build --release --verbose --target=wasm32-unknown-unknown --lib
+
   build:
     name: "Build"
     runs-on: ${{ matrix.os }}
