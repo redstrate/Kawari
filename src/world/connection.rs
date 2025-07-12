@@ -1245,7 +1245,8 @@ impl ZoneConnection {
                 op_code: ServerZoneIpcType::QuestCompleteList,
                 timestamp: timestamp_secs(),
                 data: ServerZoneIpcData::QuestCompleteList {
-                    unk1: self.player_data.completed_quests.clone(),
+                    completed_quests: self.player_data.completed_quests.clone(),
+                    unk2: vec![0xFF; 69],
                 },
                 ..Default::default()
             };

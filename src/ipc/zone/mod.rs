@@ -88,6 +88,7 @@ pub use config::Config;
 mod event_yield_handler;
 pub use event_yield_handler::EventYieldHandler;
 
+use crate::COMPLETED_QUEST_BITMASK_SIZE;
 use crate::common::ObjectTypeId;
 use crate::common::Position;
 use crate::common::read_string;
@@ -369,10 +370,13 @@ pub enum ServerZoneIpcData {
     },
     #[br(pre_assert(*magic == ServerZoneIpcType::QuestCompleteList))]
     QuestCompleteList {
-        // TODO: what is this? a bitmask probably?
-        #[br(count = 760)]
-        #[bw(pad_size_to = 760)]
-        unk1: Vec<u8>,
+        #[br(count = COMPLETED_QUEST_BITMASK_SIZE)]
+        #[bw(pad_size_to = COMPLETED_QUEST_BITMASK_SIZE)]
+        completed_quests: Vec<u8>,
+        // TODO: what is in ehre?
+        #[br(count = 69)]
+        #[bw(pad_size_to = 69)]
+        unk2: Vec<u8>,
     },
     /// Unsure the true purpose of this, but it's needed for the Unending Journey to function.
     #[br(pre_assert(*magic == ServerZoneIpcType::UnkResponse2))]
