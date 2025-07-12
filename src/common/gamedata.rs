@@ -449,18 +449,20 @@ impl SqPackResourceSpy {
 impl Resource for SqPackResourceSpy {
     fn read(&mut self, path: &str) -> Option<physis::ByteBuffer> {
         if let Some(buffer) = self.sqpack_resource.read(path) {
-            let mut new_path = PathBuf::from(&self.output_directory);
-            new_path.push(path.to_lowercase());
+            if !self.output_directory.is_empty() {
+                let mut new_path = PathBuf::from(&self.output_directory);
+                new_path.push(path.to_lowercase());
 
-            if !std::fs::exists(&new_path).unwrap_or_default() {
-                // create directory if it doesn't exist'
-                let parent_directory = new_path.parent().unwrap();
-                if !std::fs::exists(parent_directory).unwrap_or_default() {
-                    std::fs::create_dir_all(parent_directory)
-                        .expect("Couldn't create directory for extraction?!");
+                if !std::fs::exists(&new_path).unwrap_or_default() {
+                    // create directory if it doesn't exist'
+                    let parent_directory = new_path.parent().unwrap();
+                    if !std::fs::exists(parent_directory).unwrap_or_default() {
+                        std::fs::create_dir_all(parent_directory)
+                            .expect("Couldn't create directory for extraction?!");
+                    }
+
+                    std::fs::write(new_path, &buffer).expect("Couldn't extract file!!");
                 }
-
-                std::fs::write(new_path, &buffer).expect("Couldn't extract file!!");
             }
 
             return Some(buffer);
