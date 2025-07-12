@@ -4,7 +4,8 @@ use rusqlite::Connection;
 use serde::Deserialize;
 
 use crate::{
-    AETHERYTE_UNLOCK_BITMASK_SIZE, COMPLETED_QUEST_BITMASK_SIZE, UNLOCK_BITMASK_SIZE,
+    AETHERYTE_UNLOCK_BITMASK_SIZE, CLASSJOB_ARRAY_SIZE, COMPLETED_QUEST_BITMASK_SIZE,
+    UNLOCK_BITMASK_SIZE,
     common::{
         CustomizeData, GameData, Position,
         workdefinitions::{CharaMake, ClientSelectData, RemakeMode},
@@ -305,8 +306,8 @@ impl WorldDatabase {
                     inventory: row.get(5)?,
                     gm_rank: row.get(6)?,
                     classjob_id: row.get(7)?,
-                    classjob_levels: json_unpack::<[i32; 32]>(row.get(8)?),
-                    classjob_exp: json_unpack::<[u32; 32]>(row.get(9)?),
+                    classjob_levels: json_unpack::<[i32; CLASSJOB_ARRAY_SIZE]>(row.get(8)?),
+                    classjob_exp: json_unpack::<[u32; CLASSJOB_ARRAY_SIZE]>(row.get(9)?),
                     unlocks: json_unpack::<Vec<u8>>(row.get(10)?),
                     aetherytes: json_unpack::<Vec<u8>>(row.get(11)?),
                     completed_quests: json_unpack::<Vec<u8>>(row.get(12)?),
@@ -397,7 +398,7 @@ impl WorldDatabase {
                 inventory: Inventory,
                 remake_mode: RemakeMode,
                 classjob_id: i32,
-                classjob_levels: [i32; 32],
+                classjob_levels: [i32; CLASSJOB_ARRAY_SIZE],
             }
 
             let result: Result<CharaListQuery, rusqlite::Error> =
@@ -409,7 +410,7 @@ impl WorldDatabase {
                         inventory: row.get(3)?,
                         remake_mode: row.get(4)?,
                         classjob_id: row.get(5)?,
-                        classjob_levels: json_unpack::<[i32; 32]>(row.get(6)?),
+                        classjob_levels: json_unpack::<[i32; CLASSJOB_ARRAY_SIZE]>(row.get(6)?),
                     })
                 });
 
@@ -490,10 +491,10 @@ impl WorldDatabase {
 
         // fill out the initial classjob
         let chara_make = CharaMake::from_json(chara_make_str);
-        let mut classjob_levels = [0i32; 32];
+        let mut classjob_levels = [0i32; CLASSJOB_ARRAY_SIZE];
         classjob_levels[chara_make.classjob_id as usize] = 1; // inital level
 
-        let classjob_exp = [0u32; 32];
+        let classjob_exp = [0u32; CLASSJOB_ARRAY_SIZE];
 
         // fill out initial unlocks
         let unlocks = vec![0u8; UNLOCK_BITMASK_SIZE];

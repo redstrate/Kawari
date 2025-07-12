@@ -9,7 +9,7 @@ use mlua::Function;
 use tokio::net::TcpStream;
 
 use crate::{
-    COMPLETED_QUEST_BITMASK_SIZE,
+    CLASSJOB_ARRAY_SIZE, COMPLETED_QUEST_BITMASK_SIZE,
     common::{
         GameData, ObjectId, ObjectTypeId, Position, timestamp_secs, value_to_flag_byte_index_value,
     },
@@ -62,8 +62,8 @@ pub struct PlayerData {
     pub account_id: u32,
 
     pub classjob_id: u8,
-    pub classjob_levels: [i32; 32],
-    pub classjob_exp: [u32; 32],
+    pub classjob_levels: [i32; CLASSJOB_ARRAY_SIZE],
+    pub classjob_exp: [u32; CLASSJOB_ARRAY_SIZE],
     pub curr_hp: u32,
     pub max_hp: u32,
     pub curr_mp: u16,

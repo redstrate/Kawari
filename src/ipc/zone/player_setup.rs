@@ -1,7 +1,7 @@
 use binrw::binrw;
 
 use crate::{
-    AETHERYTE_UNLOCK_BITMASK_SIZE, UNLOCK_BITMASK_SIZE,
+    AETHERYTE_UNLOCK_BITMASK_SIZE, CLASSJOB_ARRAY_SIZE, UNLOCK_BITMASK_SIZE,
     common::{CHAR_NAME_MAX_LENGTH, read_string, write_string},
 };
 
@@ -64,13 +64,13 @@ pub struct PlayerStatus {
     pub sightseeing21_to_80_unlock: u8,
     pub sightseeing_heavensward_unlock: u8,
     pub unknown9e: [u8; 26],
-    pub exp: [u32; 32],
+    pub exp: [u32; CLASSJOB_ARRAY_SIZE],
     pub pvp_total_exp: u32,
     pub unknown_pvp124: u32,
     pub pvp_exp: u32,
     pub pvp_frontline_overall_ranks: [u32; 3],
     pub unknown138: u32,
-    pub levels: [u16; 32],
+    pub levels: [u16; CLASSJOB_ARRAY_SIZE],
     #[br(count = 218)]
     #[bw(pad_size_to = 218)]
     pub unknown194: Vec<u8>,

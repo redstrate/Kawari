@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-use crate::common::CustomizeData;
+use crate::{CLASSJOB_ARRAY_SIZE, common::CustomizeData};
 
 // TODO: this isn't really an enum in the game, nor is it a flag either. it's weird!
 #[derive(Debug, Clone, Copy, Deserialize, Serialize)]
@@ -39,7 +39,7 @@ impl rusqlite::types::FromSql for RemakeMode {
 pub struct ClientSelectData {
     pub character_name: String,
     pub current_class: i32,
-    pub class_levels: [i32; 32],
+    pub class_levels: [i32; CLASSJOB_ARRAY_SIZE],
     pub race: i32,
     pub subrace: i32,
     pub gender: i32,

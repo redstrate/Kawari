@@ -76,6 +76,9 @@ pub const AETHERYTE_UNLOCK_BITMASK_SIZE: usize = 30;
 /// The size of the completed quest bitmask.
 pub const COMPLETED_QUEST_BITMASK_SIZE: usize = 691;
 
+/// The size of various classjob arrays.
+pub const CLASSJOB_ARRAY_SIZE: usize = 32;
+
 /// The maximum durability of an item.
 pub const ITEM_CONDITION_MAX: u16 = 30000;
 
