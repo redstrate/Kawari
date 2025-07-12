@@ -215,7 +215,7 @@ pub enum ServerZoneIpcData {
          * ref: https://github.com/SapphireServer/Sapphire/blob/bf3368224a00c180cbb7ba413b52395eba58ec0b/src/common/Network/PacketDef/Zone/ServerZoneDef.h#L250
          */
         param: u8,
-        #[brw(pad_after = 774)]
+        #[brw(pad_size_to = 774)]
         #[br(count = 774)]
         #[br(map = read_string)]
         #[bw(map = write_string)]
