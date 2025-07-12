@@ -814,9 +814,9 @@ async fn client_loop(
                                                     tracing::info!("Player is discarding from their inventory!");
                                                     let sequence = 0; // TODO: How is this decided? It seems to be a sequence value but it's not sent by the client! Perhaps it's a 'lifetime-of-the-character' value that simply gets increased for every inventory action ever taken?
                                                     let ipc = ServerZoneIpcSegment {
-                                                        op_code: ServerZoneIpcType::InventorySlotDiscard,
+                                                        op_code: ServerZoneIpcType::InventoryTransaction,
                                                         timestamp: timestamp_secs(),
-                                                        data: ServerZoneIpcData::InventorySlotDiscard {
+                                                        data: ServerZoneIpcData::InventoryTransaction {
                                                             unk1: sequence,
                                                             operation_type: action.operation_type,
                                                             src_actor_id: action.src_actor_id,
@@ -842,9 +842,9 @@ async fn client_loop(
                                                     .await;
 
                                                     let ipc = ServerZoneIpcSegment {
-                                                        op_code: ServerZoneIpcType::InventorySlotDiscard,
+                                                        op_code: ServerZoneIpcType::InventoryTransactionFinish,
                                                         timestamp: timestamp_secs(),
-                                                        data: ServerZoneIpcData::InventorySlotDiscardFin {
+                                                        data: ServerZoneIpcData::InventoryTransactionFinish {
                                                             unk1: sequence,
                                                             unk2: sequence, // yes, this repeats, it's not a copy paste error
                                                             unk3: 0x90,
@@ -988,6 +988,10 @@ async fn client_loop(
                                                         config.clone(),
                                                     ))
                                                     .await;
+                                            }
+                                            ClientZoneIpcData::StandardControlsPivot { .. } => {
+                                                /* No-op because we already seem to handle this, other nearby clients can see the sending player
+                                                 * pivoting anyway. */
                                             }
                                             ClientZoneIpcData::EventUnkRequest { event_id, unk1, unk2, unk3 } => {
                                                  let ipc = ServerZoneIpcSegment {
