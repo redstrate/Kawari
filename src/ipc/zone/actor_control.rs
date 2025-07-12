@@ -119,6 +119,15 @@ pub enum ActorControlCategory {
         #[brw(pad_before = 2)] // padding
         unk1: u32,
     },
+    #[brw(magic = 0x83u16)]
+    UnlockInstanceContent {
+        #[brw(pad_before = 2)] // padding
+        /// Index into InstanceContent Excel sheet
+        id: u32,
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        unlocked: bool,
+    },
     Unknown {
         category: u16,
         #[brw(pad_before = 2)] // padding

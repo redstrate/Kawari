@@ -37,6 +37,7 @@ pub enum Task {
     UnlockOrchestrion { id: u16, on: bool },
     AddItem { id: u32 },
     CompleteAllQuests {},
+    UnlockContent { id: u16 },
 }
 
 #[derive(Default, Clone)]
@@ -269,6 +270,10 @@ impl LuaPlayer {
     fn complete_all_quests(&mut self) {
         self.queued_tasks.push(Task::CompleteAllQuests {});
     }
+
+    fn unlock_content(&mut self, id: u16) {
+        self.queued_tasks.push(Task::UnlockContent { id });
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -398,6 +403,10 @@ impl UserData for LuaPlayer {
         });
         methods.add_method_mut("complete_all_quests", |_, this, _: ()| {
             this.complete_all_quests();
+            Ok(())
+        });
+        methods.add_method_mut("unlock_content", |_, this, id: u16| {
+            this.unlock_content(id);
             Ok(())
         });
     }

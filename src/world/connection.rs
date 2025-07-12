@@ -821,6 +821,15 @@ impl ZoneConnection {
                     self.player_data.completed_quests = vec![0xFF; COMPLETED_QUEST_BITMASK_SIZE];
                     self.send_quest_information().await;
                 }
+                Task::UnlockContent { id } => {
+                    self.actor_control_self(ActorControlSelf {
+                        category: ActorControlCategory::UnlockInstanceContent {
+                            id: *id as u32,
+                            unlocked: true,
+                        },
+                    })
+                    .await;
+                }
             }
         }
         player.queued_tasks.clear();
