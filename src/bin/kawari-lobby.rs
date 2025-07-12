@@ -1,5 +1,6 @@
 use kawari::RECEIVE_BUFFER_SIZE;
 use kawari::common::GameData;
+use kawari::common::timestamp_secs;
 use kawari::config::get_config;
 use kawari::get_supported_expac_versions;
 use kawari::ipc::kawari::CustomIpcData;
@@ -10,6 +11,8 @@ use kawari::ipc::lobby::{ClientLobbyIpcData, ServerLobbyIpcSegment};
 use kawari::lobby::LobbyConnection;
 use kawari::lobby::send_custom_world_packet;
 use kawari::packet::ConnectionType;
+use kawari::packet::PacketSegment;
+use kawari::packet::SegmentType;
 use kawari::packet::oodle::OodleNetwork;
 use kawari::packet::{PacketState, SegmentData, send_keep_alive};
 use std::fs;
@@ -195,6 +198,21 @@ async fn main() {
             selected_service_account: None,
         };
 
+        // as seen in retail, the server sends a KeepAliveRequest before doing *anything*
+        // TODO: i think the zone server does this too, but in the wrong order
+        {
+            connection
+                .send_segment(PacketSegment {
+                    segment_type: SegmentType::KeepAliveRequest,
+                    data: SegmentData::KeepAliveRequest {
+                        id: 0xE0037603u32,
+                        timestamp: timestamp_secs(),
+                    },
+                    ..Default::default()
+                })
+                .await;
+        }
+
         tokio::spawn(async move {
             let mut buf = vec![0; RECEIVE_BUFFER_SIZE];
             loop {
@@ -341,6 +359,9 @@ async fn main() {
                                     *timestamp,
                                 )
                                 .await
+                            }
+                            SegmentData::KeepAliveResponse { .. } => {
+                                // we can throw this away
                             }
                             _ => {
                                 panic!("The server is recieving a response packet!")
