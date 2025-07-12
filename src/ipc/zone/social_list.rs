@@ -4,14 +4,15 @@ use crate::common::{CHAR_NAME_MAX_LENGTH, read_string, write_string};
 
 #[binrw]
 #[brw(repr = u8)]
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub enum SocialListRequestType {
+    #[default]
     Party = 0x1,
     Friends = 0x2,
 }
 
 #[binrw]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct SocialListRequest {
     #[brw(pad_before = 10)] // empty
     pub request_type: SocialListRequestType,
@@ -47,7 +48,7 @@ pub struct PlayerEntry {
 }
 
 #[binrw]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct SocialList {
     #[brw(pad_before = 12)] // empty
     pub request_type: SocialListRequestType,

@@ -13,6 +13,4 @@ pub struct CurrencyInfo {
     pub unk1: u32,
     pub catalog_id: u32,
     pub unk2: u32,
-    pub unk3: u32,
-    pub unk4: u32,
 }

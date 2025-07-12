@@ -90,3 +90,47 @@ pub enum ClientChatIpcData {
         unk: Vec<u8>,
     },
 }
+
+#[cfg(test)]
+mod tests {
+    use std::io::Cursor;
+
+    use binrw::BinWrite;
+
+    use super::*;
+
+    /// Ensure that the IPC data size as reported matches up with what we write
+    #[test]
+    fn server_chat_ipc_sizes() {
+        let ipc_types = [(
+            ServerChatIpcType::LoginReply,
+            ServerChatIpcData::LoginReply {
+                timestamp: 0,
+                sid: 0,
+            },
+        )];
+
+        for (opcode, ipc) in &ipc_types {
+            let mut cursor = Cursor::new(Vec::new());
+
+            let ipc_segment = ServerChatIpcSegment {
+                unk1: 0,
+                unk2: 0,
+                op_code: opcode.clone(),
+                option: 0,
+                timestamp: 0,
+                data: ipc.clone(),
+            };
+            ipc_segment.write_le(&mut cursor).unwrap();
+
+            let buffer = cursor.into_inner();
+
+            assert_eq!(
+                buffer.len(),
+                ipc_segment.calc_size() as usize,
+                "{:#?} did not match size!",
+                opcode
+            );
+        }
+    }
+}

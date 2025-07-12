@@ -390,11 +390,11 @@ pub enum ServerZoneIpcData {
         unk1: u32,
         /// Same as the one sent by the client, not the one that the server responds with in inventoryactionack!
         operation_type: u8,
-        #[br(pad_before = 3)]
+        #[brw(pad_before = 3)]
         src_actor_id: u32,
         src_storage_id: ContainerType,
         src_container_index: u16,
-        #[br(pad_before = 2)]
+        #[brw(pad_before = 2)]
         src_stack: u32,
         src_catalog_id: u32,
 
@@ -406,7 +406,7 @@ pub enum ServerZoneIpcData {
         /// seems to always be 65535/0xFFFF
         dst_container_index: u16,
         /// seems to always be 0x0000FFFF
-        #[br(pad_after = 8)]
+        #[brw(pad_after = 10)]
         dst_catalog_id: u32,
     },
     #[br(pre_assert(*magic == ServerZoneIpcType::InventorySlotDiscardFin))]
@@ -654,6 +654,10 @@ mod tests {
                 },
             ),
             (
+                ServerZoneIpcType::LinkShellInformation,
+                ServerZoneIpcData::LinkShellInformation { unk: [0; 456] },
+            ),
+            (
                 ServerZoneIpcType::PrepareZoning,
                 ServerZoneIpcData::PrepareZoning { unk: [0; 4] },
             ),
@@ -664,6 +668,10 @@ mod tests {
             (
                 ServerZoneIpcType::Move,
                 ServerZoneIpcData::Move(Move::default()),
+            ),
+            (
+                ServerZoneIpcType::SocialList,
+                ServerZoneIpcData::SocialList(SocialList::default()),
             ),
             (
                 ServerZoneIpcType::NpcSpawn,
@@ -746,12 +754,96 @@ mod tests {
                 },
             ),
             (
+                ServerZoneIpcType::Equip,
+                ServerZoneIpcData::Equip(Equip::default()),
+            ),
+            (
                 ServerZoneIpcType::ActionResult,
                 ServerZoneIpcData::ActionResult(ActionResult::default()),
             ),
             (
-                ServerZoneIpcType::Equip,
-                ServerZoneIpcData::Equip(Equip::default()),
+                ServerZoneIpcType::Delete,
+                ServerZoneIpcData::Delete {
+                    spawn_index: 0,
+                    actor_id: 0,
+                },
+            ),
+            (
+                ServerZoneIpcType::EventFinish,
+                ServerZoneIpcData::EventFinish {
+                    handler_id: 0,
+                    event: 0,
+                    result: 0,
+                    arg: 0,
+                },
+            ),
+            (
+                ServerZoneIpcType::Unk18,
+                ServerZoneIpcData::Unk18 { unk: [0; 16] },
+            ),
+            (
+                ServerZoneIpcType::ActorControlTarget,
+                ServerZoneIpcData::ActorControlTarget(ActorControlTarget::default()),
+            ),
+            (
+                ServerZoneIpcType::CurrencyCrystalInfo,
+                ServerZoneIpcData::CurrencyCrystalInfo(CurrencyInfo::default()),
+            ),
+            (
+                ServerZoneIpcType::EventUnkReply,
+                ServerZoneIpcData::EventUnkReply {
+                    event_id: 0,
+                    unk1: 0,
+                    unk2: 0,
+                    unk3: 0,
+                },
+            ),
+            (
+                ServerZoneIpcType::InventoryActionAck,
+                ServerZoneIpcData::InventoryActionAck {
+                    sequence: 0,
+                    action_type: 0,
+                },
+            ),
+            (
+                ServerZoneIpcType::UnkCall,
+                ServerZoneIpcData::UnkCall { unk1: 0, unk2: 0 },
+            ),
+            (
+                ServerZoneIpcType::QuestCompleteList,
+                ServerZoneIpcData::QuestCompleteList {
+                    completed_quests: Vec::default(),
+                    unk2: Vec::default(),
+                },
+            ),
+            (
+                ServerZoneIpcType::UnkResponse2,
+                ServerZoneIpcData::UnkResponse2 { unk1: 0 },
+            ),
+            (
+                ServerZoneIpcType::InventorySlotDiscard,
+                ServerZoneIpcData::InventorySlotDiscard {
+                    unk1: 0,
+                    operation_type: 0,
+                    src_actor_id: 0,
+                    src_storage_id: ContainerType::Inventory0,
+                    src_container_index: 0,
+                    src_stack: 0,
+                    src_catalog_id: 0,
+                    dst_actor_id: 0,
+                    dst_storage_id: 0,
+                    dst_container_index: 0,
+                    dst_catalog_id: 0,
+                },
+            ),
+            (
+                ServerZoneIpcType::InventorySlotDiscardFin,
+                ServerZoneIpcData::InventorySlotDiscardFin {
+                    unk1: 0,
+                    unk2: 0,
+                    unk3: 0,
+                    unk4: 0,
+                },
             ),
         ];
 
@@ -782,10 +874,157 @@ mod tests {
     /// Ensure that the IPC data size as reported matches up with what we write
     #[test]
     fn client_zone_ipc_sizes() {
-        let ipc_types = [(
-            ClientZoneIpcType::EventYieldHandler8,
-            ClientZoneIpcData::EventYieldHandler8(EventYieldHandler::<8>::default()),
-        )];
+        let ipc_types = [
+            (
+                ClientZoneIpcType::InitRequest,
+                ClientZoneIpcData::InitRequest { unk: [0; 120] },
+            ),
+            (
+                ClientZoneIpcType::FinishLoading,
+                ClientZoneIpcData::FinishLoading { unk: [0; 72] },
+            ),
+            (
+                ClientZoneIpcType::ClientTrigger,
+                ClientZoneIpcData::ClientTrigger(ClientTrigger::default()),
+            ),
+            (
+                ClientZoneIpcType::Unk2,
+                ClientZoneIpcData::Unk2 { unk: [0; 16] },
+            ),
+            (
+                ClientZoneIpcType::Unk3,
+                ClientZoneIpcData::Unk3 { unk: [0; 8] },
+            ),
+            (
+                ClientZoneIpcType::Unk4,
+                ClientZoneIpcData::Unk4 { unk: [0; 8] },
+            ),
+            (
+                ClientZoneIpcType::SetSearchInfoHandler,
+                ClientZoneIpcData::SetSearchInfoHandler { unk: [0; 8] },
+            ),
+            (
+                ClientZoneIpcType::Unk5,
+                ClientZoneIpcData::Unk5 { unk: [0; 8] },
+            ),
+            (
+                ClientZoneIpcType::SocialListRequest,
+                ClientZoneIpcData::SocialListRequest(SocialListRequest::default()),
+            ),
+            (
+                ClientZoneIpcType::UpdatePositionHandler,
+                ClientZoneIpcData::UpdatePositionHandler {
+                    rotation: 0.0,
+                    position: Position::default(),
+                },
+            ),
+            (
+                ClientZoneIpcType::LogOut,
+                ClientZoneIpcData::LogOut { unk: [0; 8] },
+            ),
+            (
+                ClientZoneIpcType::Disconnected,
+                ClientZoneIpcData::Disconnected { unk: [0; 8] },
+            ),
+            (
+                ClientZoneIpcType::ChatMessage,
+                ClientZoneIpcData::ChatMessage(ChatMessage::default()),
+            ),
+            (
+                ClientZoneIpcType::GMCommand,
+                ClientZoneIpcData::GMCommand {
+                    command: 0,
+                    arg0: 0,
+                    arg1: 0,
+                    arg2: 0,
+                    arg3: 0,
+                    target: 0,
+                },
+            ),
+            (
+                ClientZoneIpcType::ZoneJump,
+                ClientZoneIpcData::ZoneJump {
+                    exit_box: 0,
+                    position: Position::default(),
+                    landset_index: 0,
+                },
+            ),
+            (
+                ClientZoneIpcType::ActionRequest,
+                ClientZoneIpcData::ActionRequest(ActionRequest::default()),
+            ),
+            (
+                ClientZoneIpcType::Unk16,
+                ClientZoneIpcData::Unk16 { unk: [0; 8] },
+            ),
+            (
+                ClientZoneIpcType::Unk17,
+                ClientZoneIpcData::Unk17 {
+                    unk1: 0,
+                    unk2: [0; 28],
+                },
+            ),
+            (
+                ClientZoneIpcType::Unk18,
+                ClientZoneIpcData::Unk18 { unk: [0; 8] },
+            ),
+            (
+                ClientZoneIpcType::EventRelatedUnk,
+                ClientZoneIpcData::EventRelatedUnk {
+                    unk1: 0,
+                    unk2: 0,
+                    unk3: 0,
+                    unk4: 0,
+                },
+            ),
+            (
+                ClientZoneIpcType::Unk19,
+                ClientZoneIpcData::Unk19 { unk: [0; 16] },
+            ),
+            (
+                ClientZoneIpcType::ItemOperation,
+                ClientZoneIpcData::ItemOperation(ItemOperation::default()),
+            ),
+            (
+                ClientZoneIpcType::StartTalkEvent,
+                ClientZoneIpcData::StartTalkEvent {
+                    actor_id: ObjectTypeId::default(),
+                    event_id: 0,
+                },
+            ),
+            (
+                ClientZoneIpcType::GilShopTransaction,
+                ClientZoneIpcData::GilShopTransaction {
+                    event_id: 0,
+                    unk1: 0,
+                    buy_sell_mode: 0,
+                    item_index: 0,
+                    item_quantity: 0,
+                    unk2: 0,
+                },
+            ),
+            (
+                ClientZoneIpcType::EventYieldHandler,
+                ClientZoneIpcData::EventYieldHandler(EventYieldHandler::<2>::default()),
+            ),
+            (
+                ClientZoneIpcType::EventYieldHandler8,
+                ClientZoneIpcData::EventYieldHandler8(EventYieldHandler::<8>::default()),
+            ),
+            (
+                ClientZoneIpcType::EventUnkRequest,
+                ClientZoneIpcData::EventUnkRequest {
+                    event_id: 0,
+                    unk1: 0,
+                    unk2: 0,
+                    unk3: 0,
+                },
+            ),
+            (
+                ClientZoneIpcType::UnkCall2,
+                ClientZoneIpcData::UnkCall2 { unk1: [0; 8] },
+            ),
+        ];
 
         for (opcode, data) in &ipc_types {
             let mut cursor = Cursor::new(Vec::new());
