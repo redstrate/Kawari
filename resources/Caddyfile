@@ -33,6 +33,7 @@ frontier.ffxiv.localhost:80 {
     header {
         Server nginx
         -Via
+        Connection keep-alive
     }
 }
 

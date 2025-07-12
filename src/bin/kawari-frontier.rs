@@ -87,7 +87,10 @@ where
 {
     fn into_response(self) -> Response {
         (
-            [(header::CONTENT_TYPE, HeaderValue::from_static("text/xml"))],
+            [(
+                header::CONTENT_TYPE,
+                HeaderValue::from_static("application/xml"),
+            )],
             self.0,
         )
             .into_response()
@@ -100,36 +103,85 @@ impl<T> From<T> for Xml<T> {
     }
 }
 
-async fn session_get_init() -> Xml<String> {
+async fn session_get_init(body: String) -> Xml<Vec<u8>> {
+    dbg!(body);
     // TODO: just a guess
-    Xml("<result>
+    Xml(
+        "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><result>
 <return_code>OK</return_code>
 <information/>
 <inquiry_categoryList/>
 <inquiry_itemList/>
 <report_itemList/>
 </result>"
-        .to_string())
+            .as_bytes()
+            .to_vec(),
+    )
 }
 
-async fn view_get_init() -> Xml<String> {
-    Xml("<result>
+async fn view_get_init() -> Xml<Vec<u8>> {
+    Xml(
+        "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><result>
 <return_code>OK</return_code>
 <information/>
 <inquiry_categoryList/>
 <inquiry_itemList/>
 <report_itemList/>
 </result>"
-        .to_string())
+            .as_bytes()
+            .to_vec(),
+    )
 }
 
-async fn get_headline_all() -> Xml<String> {
-    Xml("<result>
-<return_code>OK</return_code>
-<information>
-</information>
-</result>"
-        .to_string())
+#[derive(Serialize)]
+#[serde(rename = "item")]
+struct Item {
+    title: String,
+    published: i64,
+    updated: i64,
+    lsb_id: String,
+    lsb_parentid: Option<String>,
+    lsb_tag: Option<String>,
+    #[serde(rename = "catId")]
+    cat_id: i32,
+    content: String,
+}
+
+#[derive(Serialize)]
+#[serde(rename = "information")]
+struct Information {
+    #[serde(rename = "#content")]
+    items: Vec<Item>,
+}
+
+#[derive(Serialize)]
+#[serde(rename = "result")]
+struct Result {
+    return_code: String,
+    information: Information,
+}
+
+async fn get_headline_all() -> Xml<Vec<u8>> {
+    let result = Result {
+        return_code: "OK".to_string(),
+        information: Information {
+            items: vec![Item {
+                title: "Test".to_string(),
+                published: 1752130800,
+                updated: 1752130800,
+                lsb_id: "c8819ec6f93f6c56d760b42c2ba2f43fe6598fc8".to_string(),
+                lsb_parentid: None,
+                lsb_tag: None,
+                cat_id: 1,
+                content: "Hello, world!".to_string(),
+            }],
+        },
+    };
+
+    Xml(serde_xml_rs::to_string(&result)
+        .unwrap()
+        .as_bytes()
+        .to_vec())
 }
 
 #[tokio::main]
