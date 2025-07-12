@@ -34,6 +34,7 @@ pub async fn handle_custom_ipc(connection: &mut ZoneConnection, data: &CustomIpc
             }
 
             let mut inventory = Inventory::default();
+            let (content_id, actor_id);
             {
                 let mut game_data = connection.gamedata.lock().unwrap();
 
@@ -45,16 +46,17 @@ pub async fn handle_custom_ipc(connection: &mut ZoneConnection, data: &CustomIpc
                     chara_make.customize.gender,
                     &mut game_data,
                 );
-            }
 
-            let (content_id, actor_id) = connection.database.create_player_data(
-                *service_account_id,
-                name,
-                chara_make_json,
-                city_state,
-                determine_initial_starting_zone(city_state),
-                inventory,
-            );
+                (content_id, actor_id) = connection.database.create_player_data(
+                    *service_account_id,
+                    name,
+                    chara_make_json,
+                    city_state,
+                    determine_initial_starting_zone(city_state),
+                    inventory,
+                    &mut game_data,
+                );
+            }
 
             tracing::info!("Created new player: {content_id} {actor_id}");
 

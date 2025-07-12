@@ -179,6 +179,7 @@ impl WorldDatabase {
             character.city_state.value as u8,
             132,
             Inventory::default(),
+            game_data,
         );
 
         let mut player_data = self.find_player_data(actor_id);
@@ -483,6 +484,7 @@ impl WorldDatabase {
         city_state: u8,
         zone_id: u16,
         inventory: Inventory,
+        game_data: &mut GameData,
     ) -> (u64, u32) {
         let content_id = Self::generate_content_id();
         let actor_id = Self::generate_actor_id();
@@ -492,7 +494,14 @@ impl WorldDatabase {
         // fill out the initial classjob
         let chara_make = CharaMake::from_json(chara_make_str);
         let mut classjob_levels = [0i32; CLASSJOB_ARRAY_SIZE];
-        classjob_levels[chara_make.classjob_id as usize] = 1; // inital level
+
+        {
+            let index = game_data
+                .get_exp_array_index(chara_make.classjob_id as u16)
+                .unwrap();
+
+            classjob_levels[index as usize] = 1; // inital level
+        }
 
         let classjob_exp = [0u32; CLASSJOB_ARRAY_SIZE];
 
