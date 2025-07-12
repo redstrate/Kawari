@@ -298,10 +298,14 @@ async fn main() {
                                         connection.send_error(*sequence, 2002, 13006).await;
                                     }
                                 }
-                                ClientLobbyIpcData::ServiceLogin { sequence, .. } => {
-                                    // TODO: support selecting a service account
-                                    connection.selected_service_account =
-                                        Some(connection.service_accounts[0].id);
+                                ClientLobbyIpcData::ServiceLogin {
+                                    sequence,
+                                    account_index,
+                                    ..
+                                } => {
+                                    connection.selected_service_account = Some(
+                                        connection.service_accounts[*account_index as usize].id,
+                                    );
                                     connection.send_lobby_info(*sequence).await
                                 }
                                 ClientLobbyIpcData::CharaMake(character_action) => {
