@@ -93,7 +93,7 @@ use crate::common::ObjectTypeId;
 use crate::common::Position;
 use crate::common::read_string;
 use crate::common::write_string;
-use crate::inventory::ContainerType;
+use crate::inventory::{ContainerType, ItemOperationKind};
 use crate::opcodes::ClientZoneIpcType;
 use crate::opcodes::ServerZoneIpcType;
 use crate::packet::IPC_HEADER_SIZE;
@@ -384,24 +384,26 @@ pub enum ServerZoneIpcData {
         #[brw(pad_after = 7)]
         unk1: u8,
     },
-    #[br(pre_assert(*magic == ServerZoneIpcType::InventorySlotDiscard))]
-    InventorySlotDiscard {
-        /// This is later reused in InventorySlotDiscardFin, so it might be some sort of sequence or context id, but it's not the one sent by the client
+    #[br(pre_assert(*magic == ServerZoneIpcType::InventoryTransaction))]
+    InventoryTransaction {
+        /// This is later reused in InventoryTransactionFinish, so it might be some sort of sequence or context id, but it's not the one sent by the client
         unk1: u32,
-        /// Same as the one sent by the client, not the one that the server responds with in inventoryactionack!
-        operation_type: u8,
+        /// Same as the one sent by the client, not the one that the server responds with in InventoryActionAck!
+        operation_type: ItemOperationKind,
         #[brw(pad_before = 3)]
         src_actor_id: u32,
         src_storage_id: ContainerType,
         src_container_index: u16,
         #[brw(pad_before = 2)]
-        src_stack: u32,
-        src_catalog_id: u32,
+        /// On retail, this contains very strange values that don't make sense (in regards to stack size). It's possible this field is a different size or isn't intended for stack size.
+        unk2: u32,
+        /// On retail, this contains very strange values that don't make sense (in regards to catalog id). It's possible this field is a different size or isn't intended for catalog id.
+        unk3: u32,
 
         /// This is all static as far as I can tell, across two captures and a bunch of discards these never changed
-        /// seems to always be 3758096384 / E0 00 00 00
+        /// seems to always be 0
         dst_actor_id: u32,
-        /// seems to always be 65535/0xFFFF
+        /// seems to always be 57344/0xE000
         dst_storage_id: u16,
         /// seems to always be 65535/0xFFFF
         dst_container_index: u16,
@@ -409,15 +411,15 @@ pub enum ServerZoneIpcData {
         #[brw(pad_after = 10)]
         dst_catalog_id: u32,
     },
-    #[br(pre_assert(*magic == ServerZoneIpcType::InventorySlotDiscardFin))]
-    InventorySlotDiscardFin {
-        /// Same value as unk1 in InventorySlotDiscard
+    #[br(pre_assert(*magic == ServerZoneIpcType::InventoryTransactionFinish))]
+    InventoryTransactionFinish {
+        /// Same value as unk1 in InventoryTransaction.
         unk1: u32,
-        /// Repeated unk1 value?
+        /// Repeated unk1 value.
         unk2: u32,
-        /// Unknown, seems to always be 0x00000090
+        /// Unknown, seems to always be 0x00000090.
         unk3: u32,
-        /// Unknown, seems to always be 0x00000200
+        /// Unknown, seems to always be 0x00000200.
         unk4: u32,
     },
     Unknown {
@@ -568,6 +570,15 @@ pub enum ClientZoneIpcData {
         /// unk 2: Flags? These change quite a bit when dealing with stackable items, but are apparently always 0 when buying non-stackable
         /// Observed values so far: 0xDDDDDDDD (when buying 99 of a stackable item), 0xFFFFFFFF, 0xFFE0FFD0, 0xfffefffe, 0x0000FF64
         unk2: u32,
+    },
+    /// This packet is sent by the client when they pivot left or right on standard controls.
+    /// It is sent once when beginning to pivot, and once when pivoting ends.
+    #[br(pre_assert(*magic == ClientZoneIpcType::StandardControlsPivot))]
+    StandardControlsPivot {
+        /// Set to 4 when beginning to pivot.
+        /// Set to 0 when pivoting ends.
+        #[brw(pad_after = 4)]
+        is_pivoting: u32,
     },
     #[br(pre_assert(*magic == ClientZoneIpcType::EventYieldHandler))]
     EventYieldHandler(EventYieldHandler<2>),
@@ -821,15 +832,15 @@ mod tests {
                 ServerZoneIpcData::UnkResponse2 { unk1: 0 },
             ),
             (
-                ServerZoneIpcType::InventorySlotDiscard,
-                ServerZoneIpcData::InventorySlotDiscard {
+                ServerZoneIpcType::InventoryTransaction,
+                ServerZoneIpcData::InventoryTransaction {
                     unk1: 0,
-                    operation_type: 0,
+                    operation_type: ItemOperationKind::Move,
                     src_actor_id: 0,
                     src_storage_id: ContainerType::Inventory0,
                     src_container_index: 0,
-                    src_stack: 0,
-                    src_catalog_id: 0,
+                    unk2: 0,
+                    unk3: 0,
                     dst_actor_id: 0,
                     dst_storage_id: 0,
                     dst_container_index: 0,
@@ -837,8 +848,8 @@ mod tests {
                 },
             ),
             (
-                ServerZoneIpcType::InventorySlotDiscardFin,
-                ServerZoneIpcData::InventorySlotDiscardFin {
+                ServerZoneIpcType::InventoryTransactionFinish,
+                ServerZoneIpcData::InventoryTransactionFinish {
                     unk1: 0,
                     unk2: 0,
                     unk3: 0,

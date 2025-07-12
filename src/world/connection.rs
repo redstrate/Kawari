@@ -83,6 +83,7 @@ pub struct PlayerData {
     pub unlocks: Vec<u8>,
     pub aetherytes: Vec<u8>,
     pub completed_quests: Vec<u8>,
+    pub item_sequence: u32,
 }
 
 /// Various obsfucation-related bits like the seeds and keys for this connection.
@@ -178,6 +179,7 @@ impl ZoneConnection {
         self.player_data.max_hp = 100;
         self.player_data.curr_mp = 10000;
         self.player_data.max_mp = 10000;
+        self.player_data.item_sequence = 0;
 
         tracing::info!("Client {actor_id} is initializing zone session...");
 

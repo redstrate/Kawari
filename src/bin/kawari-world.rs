@@ -6,7 +6,7 @@ use kawari::RECEIVE_BUFFER_SIZE;
 use kawari::common::Position;
 use kawari::common::{GameData, timestamp_secs};
 use kawari::config::get_config;
-use kawari::inventory::Item;
+use kawari::inventory::{Item, ItemOperationKind};
 use kawari::ipc::chat::{ServerChatIpcData, ServerChatIpcSegment};
 use kawari::ipc::zone::{
     ActorControlCategory, ActorControlSelf, PlayerEntry, PlayerSpawn, PlayerStatus, SocialList,
@@ -36,9 +36,7 @@ use tokio::sync::mpsc::{Receiver, UnboundedReceiver, UnboundedSender, channel, u
 use tokio::sync::oneshot;
 use tokio::task::JoinHandle;
 
-use kawari::{
-    INVENTORY_ACTION_ACK_GENERAL, /*INVENTORY_ACTION_ACK_SHOP,*/ INVENTORY_ACTION_DISCARD,
-};
+use kawari::INVENTORY_ACTION_ACK_GENERAL;
 
 fn spawn_main_loop() -> (ServerHandle, JoinHandle<()>) {
     let (send, recv) = channel(64);
@@ -810,24 +808,27 @@ async fn client_loop(
                                                     data: SegmentData::Ipc { data: ipc },
                                                 })
                                                 .await;
-                                                if action.operation_type == INVENTORY_ACTION_DISCARD {
+
+                                                connection.player_data.inventory.process_action(action);
+
+                                                if action.operation_type == ItemOperationKind::Discard {
                                                     tracing::info!("Player is discarding from their inventory!");
-                                                    let sequence = 0; // TODO: How is this decided? It seems to be a sequence value but it's not sent by the client! Perhaps it's a 'lifetime-of-the-character' value that simply gets increased for every inventory action ever taken?
+
                                                     let ipc = ServerZoneIpcSegment {
-                                                        op_code: ServerZoneIpcType::InventorySlotDiscard,
+                                                        op_code: ServerZoneIpcType::InventoryTransaction,
                                                         timestamp: timestamp_secs(),
-                                                        data: ServerZoneIpcData::InventorySlotDiscard {
-                                                            unk1: sequence,
+                                                        data: ServerZoneIpcData::InventoryTransaction {
+                                                            unk1: connection.player_data.item_sequence,
                                                             operation_type: action.operation_type,
-                                                            src_actor_id: action.src_actor_id,
+                                                            src_actor_id: connection.player_data.actor_id,
                                                             src_storage_id: action.src_storage_id,
                                                             src_container_index: action.src_container_index,
-                                                            src_stack: action.src_stack,
-                                                            src_catalog_id: action.src_catalog_id,
-                                                            dst_actor_id: 0xE0000000,
-                                                            dst_storage_id: 0xFFFF,
-                                                            dst_container_index: 0xFFFF,
-                                                            dst_catalog_id: 0x0000FFFF,
+                                                            unk2: action.src_stack,
+                                                            unk3: action.src_catalog_id, // TODO: unk2 and unk3 are not being set accurately here, but the client doesn't seem to care what they are
+                                                            dst_actor_id: 0,
+                                                            dst_storage_id: 0xE000,
+                                                            dst_container_index: u16::MAX,
+                                                            dst_catalog_id: u32::MAX,
                                                         },
                                                         ..Default::default()
                                                     };
@@ -842,11 +843,11 @@ async fn client_loop(
                                                     .await;
 
                                                     let ipc = ServerZoneIpcSegment {
-                                                        op_code: ServerZoneIpcType::InventorySlotDiscard,
+                                                        op_code: ServerZoneIpcType::InventoryTransactionFinish,
                                                         timestamp: timestamp_secs(),
-                                                        data: ServerZoneIpcData::InventorySlotDiscardFin {
-                                                            unk1: sequence,
-                                                            unk2: sequence, // yes, this repeats, it's not a copy paste error
+                                                        data: ServerZoneIpcData::InventoryTransactionFinish {
+                                                            unk1: connection.player_data.item_sequence,
+                                                            unk2: connection.player_data.item_sequence, // yes, this repeats, it's not a copy paste error
                                                             unk3: 0x90,
                                                             unk4: 0x200,
                                                         },
@@ -863,10 +864,7 @@ async fn client_loop(
                                                     .await;
                                                 }
 
-                                                connection.player_data.inventory.process_action(action);
-
-                                                // TODO: This seems incorrect, the server wasn't observed to send updates here, but if we don't then the client doesn't realize the items have been modified
-                                                connection.send_inventory(true).await;
+                                                connection.player_data.item_sequence += 1;
                                             }
                                             // TODO: Likely rename this opcode if non-gil shops also use this same opcode
                                             ClientZoneIpcData::GilShopTransaction { event_id, unk1: _, buy_sell_mode, item_index, item_quantity, unk2: _ } => {
@@ -988,6 +986,10 @@ async fn client_loop(
                                                         config.clone(),
                                                     ))
                                                     .await;
+                                            }
+                                            ClientZoneIpcData::StandardControlsPivot { .. } => {
+                                                /* No-op because we already seem to handle this, other nearby clients can see the sending player
+                                                 * pivoting anyway. */
                                             }
                                             ClientZoneIpcData::EventUnkRequest { event_id, unk1, unk2, unk3 } => {
                                                  let ipc = ServerZoneIpcSegment {
