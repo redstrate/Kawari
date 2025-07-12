@@ -4,7 +4,10 @@ use serde_json::Value;
 
 fn main() {
     // Add link search directory for Oodle
-    println!("cargo:rustc-link-search=./oodle");
+    println!(
+        "cargo:rustc-link-search={}/oodle",
+        env!("CARGO_MANIFEST_DIR")
+    );
 
     // Generate IPC opcodes
     {
