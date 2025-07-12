@@ -80,7 +80,7 @@ jobs:
     - name: Run clippy
       run: cargo clippy --features oodle
     - name: Run tests
-      run: cargo test --verbose --features oodle
+      run: cargo test --verbose
     - name: Prepare Artifacts
       if: runner.os == 'Windows'
       run: |
