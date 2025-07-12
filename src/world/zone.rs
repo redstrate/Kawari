@@ -46,6 +46,7 @@ impl Zone {
         let bg_path = row.Bg().into_string().unwrap();
 
         let path = format!("bg/{}.lvb", &bg_path);
+        tracing::info!("Loading {}", path);
         let lgb_file = game_data.resource.read(&path).unwrap();
         let lgb = Lvb::from_existing(&lgb_file).unwrap();
 

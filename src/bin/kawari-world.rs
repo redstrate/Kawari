@@ -721,16 +721,15 @@ async fn client_loop(
                                                     // find the pop range on the other side
                                                     let mut game_data = game_data.lock().unwrap();
                                                     let new_zone = Zone::load(&mut game_data, exit_box.territory_type);
-                                                    let (destination_object, _) = new_zone
-                                                    .find_pop_range(exit_box.destination_instance_id)
-                                                    .unwrap();
-
-                                                    // set the exit position
-                                                    connection.exit_position = Some(Position {
-                                                        x: destination_object.transform.translation[0],
-                                                        y: destination_object.transform.translation[1],
-                                                        z: destination_object.transform.translation[2],
-                                                    });
+                                                    if let Some((destination_object, _)) = new_zone
+                                                        .find_pop_range(exit_box.destination_instance_id) {
+                                                        // set the exit position
+                                                        connection.exit_position = Some(Position {
+                                                            x: destination_object.transform.translation[0],
+                                                            y: destination_object.transform.translation[1],
+                                                            z: destination_object.transform.translation[2],
+                                                        });
+                                                    }
                                                     new_territory = exit_box.territory_type;
                                                 }
 
