@@ -28,6 +28,12 @@ config-dl.ffxiv.localhost:80 {
 
 frontier.ffxiv.localhost:80 {
     reverse_proxy :5857
+
+    # to match retail
+    header {
+        Server nginx
+        -Via
+    }
 }
 
 patch-bootver.ffxiv.localhost:80 {
