@@ -5,7 +5,6 @@ use crate::common::{
     read_string, write_quantized_rotation, write_string,
 };
 use bitflags::bitflags;
-use rusqlite::types::{FromSql, FromSqlResult, ValueRef};
 
 use super::StatusEffect;
 
@@ -116,9 +115,10 @@ pub enum GameMasterRank {
     Debug = 90,
 }
 
-impl FromSql for GameMasterRank {
-    fn column_result(value: ValueRef<'_>) -> FromSqlResult<Self> {
-        Ok(GameMasterRank::try_from(u8::column_result(value)?).unwrap())
+#[cfg(not(target_family = "wasm"))]
+impl rusqlite::types::FromSql for GameMasterRank {
+    fn column_result(value: rusqlite::types::ValueRef<'_>) -> rusqlite::types::FromSqlResult<Self> {
+        Ok(Self::try_from(u8::column_result(value)?).unwrap())
     }
 }
 
