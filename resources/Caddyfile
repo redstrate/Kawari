@@ -1,5 +1,13 @@
 {
   auto_https off
+  servers {
+    protocols h1
+  }
+  log default {
+    output stdout
+    format json
+    include http.log.access
+  }
 }
 
 admin.ffxiv.localhost:80 {
@@ -23,11 +31,29 @@ frontier.ffxiv.localhost:80 {
 }
 
 patch-bootver.ffxiv.localhost:80 {
+    log
     reverse_proxy :6900
+
+    # to match retail
+    header {
+        Server nginx
+        -Via
+        Connection keep-alive
+        ETag f0ad4edf149fce33b842f1104bedfd22
+    }
 }
 
 patch-gamever.ffxiv.localhost:80 {
+    log
     reverse_proxy :6900
+
+    # to match retail
+    header {
+        Server nginx
+        -Via
+        Connection keep-alive
+        ETag f0ad4edf149fce33b842f1104bedfd22
+    }
 }
 
 ffxiv-login.square.localhost:80 {
@@ -35,6 +61,7 @@ ffxiv-login.square.localhost:80 {
 }
 
 patch-dl.ffxiv.localhost:80 {
+    log
     root * ./patches
-    file_server browse
+    file_server
 }

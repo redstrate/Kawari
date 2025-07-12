@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 use std::fs::read_dir;
 
 use axum::extract::Path;
-use axum::http::{HeaderMap, StatusCode};
+use axum::http::{HeaderMap, StatusCode, Uri};
 use axum::response::IntoResponse;
 use axum::routing::post;
 use axum::{Router, routing::get};
@@ -157,8 +157,23 @@ async fn verify_boot(
 
     let config = get_config();
     if !config.supports_platform(&platform) {
+        tracing::warn!("Invalid platform! {platform}");
         return StatusCode::INTERNAL_SERVER_ERROR.into_response();
     }
+
+    // TODO: these are all very useful and should be documented somewhere
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "Content-Location",
+        "ffxivpatch/2b5cbc63/vercheck.dat".parse().unwrap(),
+    );
+    headers.insert(
+        "X-Repository",
+        "ffxivneo/win32/release/boot".parse().unwrap(),
+    );
+    headers.insert("X-Patch-Module", "ZiPatch".parse().unwrap());
+    headers.insert("X-Protocol", "http".parse().unwrap());
+    headers.insert("X-Latest-Version", boot_version.parse().unwrap());
 
     if config.enforce_validity_checks {
         tracing::info!("Verifying boot components for {platform} {channel} {boot_version}...");
@@ -174,7 +189,6 @@ async fn verify_boot(
 
         // If we are up to date, yay!
         if boot_version == SUPPORTED_BOOT_VERSION {
-            let headers = HeaderMap::new();
             return (headers).into_response();
         }
 
@@ -189,6 +203,7 @@ async fn verify_boot(
         // check if we need any patching
         let mut send_patches = Vec::new();
         let patches = list_patch_files(&format!("{}/boot", &config.patch.patches_location));
+        let mut patch_length = 0;
         for patch in patches {
             let patch_str: &str = &patch;
             if actual_boot_version.partial_cmp(patch_str).unwrap() == Ordering::Less {
@@ -203,31 +218,44 @@ async fn verify_boot(
                     url: format!("http://{}/boot/{}.patch", config.patch.patch_dl_url, patch)
                         .to_string(),
                     version: patch_str.to_string(),
-                    hash_block_size: 50000000,
+                    hash_block_size: 0,
                     length: metadata.len() as i64,
                     size_on_disk: metadata.len() as i64, // NOTE: wrong but it should be fine to lie
                     hashes: vec![],
-                    unknown_a: 0,
-                    unknown_b: 0,
+                    unknown_a: 19,
+                    unknown_b: 18,
                 });
+                patch_length += metadata.len();
             }
         }
 
         if !send_patches.is_empty() {
+            headers.insert(
+                "Content-Type",
+                "multipart/mixed; boundary=477D80B1_38BC_41d4_8B48_5273ADB89CAC"
+                    .parse()
+                    .unwrap(),
+            );
+
             let patch_list = PatchList {
                 id: "477D80B1_38BC_41d4_8B48_5273ADB89CAC".to_string(),
                 requested_version: boot_version.to_string().clone(),
-                content_location: format!("ffxivpatch/boot/metainfo/{}.http", boot_version.0), // FIXME: i think this is actually supposed to be the target version
-                patch_length: 0,
+                content_location: format!("ffxivpatch/2b5cbc63/metainfo/{}.http", boot_version.0), // FIXME: i think this is actually supposed to be the target version
+                patch_length,
                 patches: send_patches,
             };
             let patch_list_str = patch_list.to_string(PatchListType::Boot);
-            return patch_list_str.into_response();
+            dbg!(&patch_list_str);
+            return (headers, patch_list_str).into_response();
         }
     }
 
-    let headers = HeaderMap::new();
     (headers).into_response()
+}
+
+async fn fallback(uri: Uri) -> (StatusCode, String) {
+    tracing::warn!("{}", uri);
+    (StatusCode::NOT_FOUND, format!("No route for {uri}"))
 }
 
 #[tokio::main]
@@ -242,7 +270,8 @@ async fn main() {
         .route(
             "/http/{platform}/{channel}/{boot_version}/",
             get(verify_boot),
-        );
+        )
+        .fallback(fallback);
 
     let config = get_config();
 
