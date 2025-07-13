@@ -203,6 +203,9 @@ pub enum ServerLobbyIpcData {
     /// Sent by the server to inform the client of their retainers.
     #[br(pre_assert(*magic == ServerLobbyIpcType::DistRetainerInfo))]
     DistRetainerInfo(DistRetainerInfo),
+    /// Unknown purpose
+    #[br(pre_assert(*magic == ServerLobbyIpcType::XiCharacterInfo))]
+    XiCharacterInfo { unk: [u8; 496] },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,

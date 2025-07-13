@@ -473,6 +473,11 @@
             "name": "DistRetainerInfo",
             "opcode": 23,
             "size": 536
+        },
+        {
+            "name": "XiCharacterInfo",
+            "opcode": 22,
+            "size": 496
         }
     ],
     "ClientLobbyIpcType": [
