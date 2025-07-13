@@ -20,10 +20,10 @@ use crate::{
         zone::{
             ActionEffect, ActionRequest, ActionResult, ActorControl, ActorControlCategory,
             ActorControlSelf, ActorControlTarget, ClientZoneIpcSegment, CommonSpawn, Config,
-            ContainerInfo, CurrencyInfo, DisplayFlag, EffectKind, Equip, GameMasterRank, InitZone,
-            ItemInfo, Move, NpcSpawn, ObjectKind, PlayerStats, PlayerSubKind, QuestActiveList,
-            ServerZoneIpcData, ServerZoneIpcSegment, StatusEffect, StatusEffectList,
-            UpdateClassInfo, Warp, WeatherChange,
+            ContainerInfo, CurrencyInfo, DisplayFlag, EffectKind, Equip, EventScene,
+            GameMasterRank, InitZone, ItemInfo, Move, NpcSpawn, ObjectKind, PlayerStats,
+            PlayerSubKind, QuestActiveList, ServerZoneIpcData, ServerZoneIpcSegment, StatusEffect,
+            StatusEffectList, UpdateClassInfo, Warp, WeatherChange,
         },
     },
     opcodes::ServerZoneIpcType,
@@ -84,6 +84,9 @@ pub struct PlayerData {
     pub aetherytes: Vec<u8>,
     pub completed_quests: Vec<u8>,
     pub item_sequence: u32,
+    pub shop_sequence: u32,
+    /// Store the target actor id for the purpose of chaining cutscenes.
+    pub target_actorid: ObjectTypeId,
 }
 
 /// Various obsfucation-related bits like the seeds and keys for this connection.
@@ -888,7 +891,49 @@ impl ZoneConnection {
         }
     }
 
+    pub async fn event_scene(
+        &mut self,
+        target: &ObjectTypeId,
+        event_id: u32,
+        scene: u16,
+        scene_flags: u32,
+        params: Vec<u32>,
+    ) {
+        let scene = EventScene {
+            actor_id: *target,
+            event_id,
+            scene,
+            scene_flags,
+            params_count: params.len() as u8,
+            params,
+            ..Default::default()
+        };
+        if let Some((op_code, data)) = scene.package_scene() {
+            let ipc = ServerZoneIpcSegment {
+                op_code,
+                timestamp: timestamp_secs(),
+                data,
+                ..Default::default()
+            };
+
+            self.send_segment(PacketSegment {
+                source_actor: self.player_data.actor_id,
+                target_actor: self.player_data.actor_id,
+                segment_type: SegmentType::Ipc,
+                data: SegmentData::Ipc { data: ipc },
+            })
+            .await;
+        } else {
+            tracing::error!(
+                "Unable to play event {event_id}, scene {:?}, scene_flags {scene_flags}!",
+                scene
+            );
+            self.event_finish(event_id).await;
+        }
+    }
+
     pub async fn event_finish(&mut self, handler_id: u32) {
+        self.player_data.target_actorid = ObjectTypeId::default();
         // sent event finish
         {
             let ipc = ServerZoneIpcSegment {
@@ -929,6 +974,89 @@ impl ZoneConnection {
             })
             .await;
         }
+    }
+
+    pub async fn send_inventory_ack(&mut self, sequence: u32, action_type: u16) {
+        let ipc = ServerZoneIpcSegment {
+            op_code: ServerZoneIpcType::InventoryActionAck,
+            timestamp: timestamp_secs(),
+            data: ServerZoneIpcData::InventoryActionAck {
+                sequence,
+                action_type,
+            },
+            ..Default::default()
+        };
+        self.send_segment(PacketSegment {
+            source_actor: self.player_data.actor_id,
+            target_actor: self.player_data.actor_id,
+            segment_type: SegmentType::Ipc,
+            data: SegmentData::Ipc { data: ipc },
+        })
+        .await;
+
+        self.player_data.item_sequence += 1;
+    }
+
+    pub async fn send_gilshop_ack(
+        &mut self,
+        event_id: u32,
+        item_id: u32,
+        item_quantity: u32,
+        price_per_item: u32,
+    ) {
+        let ipc = ServerZoneIpcSegment {
+            op_code: ServerZoneIpcType::GilShopTransactionAck,
+            timestamp: timestamp_secs(),
+            data: ServerZoneIpcData::GilShopTransactionAck {
+                event_id,
+                unk1: 0x697,
+                unk2: 3,
+                item_id,
+                item_quantity,
+                total_sale_cost: item_quantity * price_per_item,
+            },
+            ..Default::default()
+        };
+
+        self.send_segment(PacketSegment {
+            source_actor: self.player_data.actor_id,
+            target_actor: self.player_data.actor_id,
+            segment_type: SegmentType::Ipc,
+            data: SegmentData::Ipc { data: ipc },
+        })
+        .await;
+    }
+
+    pub async fn send_gilshop_unk(
+        &mut self,
+        unk1_and_dst_storage_id: u16,
+        unk2_and_dst_slot: u16,
+        gil_and_item_quantity: u32,
+        unk3_and_item_id: u32,
+    ) {
+        let ipc = ServerZoneIpcSegment {
+            op_code: ServerZoneIpcType::GilShopRelatedUnk,
+            timestamp: timestamp_secs(),
+            data: ServerZoneIpcData::GilShopRelatedUnk {
+                sequence: self.player_data.shop_sequence,
+                unk1_and_dst_storage_id,
+                unk2_and_dst_slot,
+                gil_and_item_quantity,
+                unk3_and_item_id,
+                unk4: 0x7530_0000,
+            },
+            ..Default::default()
+        };
+
+        self.send_segment(PacketSegment {
+            source_actor: self.player_data.actor_id,
+            target_actor: self.player_data.actor_id,
+            segment_type: SegmentType::Ipc,
+            data: SegmentData::Ipc { data: ipc },
+        })
+        .await;
+
+        self.player_data.shop_sequence += 1;
     }
 
     pub async fn begin_log_out(&mut self) {
