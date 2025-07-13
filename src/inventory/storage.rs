@@ -96,6 +96,8 @@ pub enum ContainerType {
     HousingInteriorStoreroom6 = 27006,
     HousingInteriorStoreroom7 = 27007,
     HousingInteriorStoreroom8 = 27008,
+
+    DiscardingItemSentinel = 65535,
 }
 
 /// Represents a generic item storage.

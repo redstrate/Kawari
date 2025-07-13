@@ -37,7 +37,7 @@ use tokio::sync::mpsc::{Receiver, UnboundedReceiver, UnboundedSender, channel, u
 use tokio::sync::oneshot;
 use tokio::task::JoinHandle;
 
-use kawari::{INVENTORY_ACTION_ACK_GENERAL, INVENTORY_ACTION_ACK_SHOP};
+use kawari::{INVALID_ACTOR_ID, INVENTORY_ACTION_ACK_GENERAL, INVENTORY_ACTION_ACK_SHOP};
 
 fn spawn_main_loop() -> (ServerHandle, JoinHandle<()>) {
     let (send, recv) = channel(64);
@@ -815,25 +815,7 @@ async fn client_loop(
                                             }
                                             ClientZoneIpcData::ItemOperation(action) => {
                                                 tracing::info!("Client is modifying inventory! {action:#?}");
-
-                                                let ipc = ServerZoneIpcSegment {
-                                                    op_code: ServerZoneIpcType::InventoryActionAck,
-                                                    timestamp: timestamp_secs(),
-                                                    data: ServerZoneIpcData::InventoryActionAck {
-                                                        sequence: action.context_id,
-                                                        action_type: INVENTORY_ACTION_ACK_GENERAL as u16,
-                                                    },
-                                                    ..Default::default()
-                                                };
-
-                                                connection
-                                                .send_segment(PacketSegment {
-                                                    source_actor: connection.player_data.actor_id,
-                                                    target_actor: connection.player_data.actor_id,
-                                                    segment_type: SegmentType::Ipc,
-                                                    data: SegmentData::Ipc { data: ipc },
-                                                })
-                                                .await;
+                                                connection.send_inventory_ack(action.context_id, INVENTORY_ACTION_ACK_GENERAL as u16).await;
 
                                                 connection.player_data.inventory.process_action(action);
 
@@ -843,23 +825,25 @@ async fn client_loop(
                                                 }
 
                                                 if action.operation_type == ItemOperationKind::Discard {
-                                                    tracing::info!("Player is discarding from their inventory!");
+                                                    tracing::info!("Client is discarding from their inventory!");
 
                                                     let ipc = ServerZoneIpcSegment {
                                                         op_code: ServerZoneIpcType::InventoryTransaction,
                                                         timestamp: timestamp_secs(),
                                                         data: ServerZoneIpcData::InventoryTransaction {
-                                                            unk1: connection.player_data.item_sequence,
+                                                            sequence: connection.player_data.item_sequence,
                                                             operation_type: action.operation_type,
                                                             src_actor_id: connection.player_data.actor_id,
                                                             src_storage_id: action.src_storage_id,
                                                             src_container_index: action.src_container_index,
-                                                            unk2: action.src_stack,
-                                                            unk3: action.src_catalog_id, // TODO: unk2 and unk3 are not being set accurately here, but the client doesn't seem to care what they are
-                                                            dst_actor_id: 0,
-                                                            dst_storage_id: 0xE000,
+                                                            src_stack: action.src_stack,
+                                                            src_catalog_id: action.src_catalog_id,
+                                                            dst_actor_id: INVALID_ACTOR_ID,
+                                                            dummy_container: ContainerType::DiscardingItemSentinel,
+                                                            dst_storage_id: ContainerType::DiscardingItemSentinel,
                                                             dst_container_index: u16::MAX,
-                                                            dst_catalog_id: u32::MAX,
+                                                            dst_stack: 0,
+                                                            dst_catalog_id: 0,
                                                         },
                                                         ..Default::default()
                                                     };
@@ -877,8 +861,8 @@ async fn client_loop(
                                                         op_code: ServerZoneIpcType::InventoryTransactionFinish,
                                                         timestamp: timestamp_secs(),
                                                         data: ServerZoneIpcData::InventoryTransactionFinish {
-                                                            unk1: connection.player_data.item_sequence,
-                                                            unk2: connection.player_data.item_sequence, // yes, this repeats, it's not a copy paste error
+                                                            sequence: connection.player_data.item_sequence,
+                                                            sequence_repeat: connection.player_data.item_sequence,
                                                             unk3: 0x90,
                                                             unk4: 0x200,
                                                         },
