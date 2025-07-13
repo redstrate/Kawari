@@ -304,6 +304,7 @@ impl Inventory {
             ContainerType::ArmoryRing => &mut self.armoury_rings,
             ContainerType::ArmorySoulCrystal => &mut self.armoury_soul_crystal,
             ContainerType::ArmoryWeapon => &mut self.armoury_main_hand,
+            _ => todo!(),
         }
     }
 
@@ -327,6 +328,7 @@ impl Inventory {
             ContainerType::ArmoryRing => &self.armoury_rings,
             ContainerType::ArmorySoulCrystal => &self.armoury_soul_crystal,
             ContainerType::ArmoryWeapon => &self.armoury_main_hand,
+            _ => todo!(),
         }
     }
 
