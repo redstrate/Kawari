@@ -301,7 +301,7 @@
             "size": 32
         },
         {
-            "name": "GilShopRelatedUnk",
+            "name": "UpdateInventorySlot",
             "opcode": 435,
             "size": 64
         }

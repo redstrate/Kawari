@@ -497,8 +497,8 @@ pub enum ServerZoneIpcData {
         total_sale_cost: u32,
     },
     #[brw(little)]
-    #[br(pre_assert(*magic == ServerZoneIpcType::GilShopRelatedUnk))]
-    GilShopRelatedUnk {
+    #[br(pre_assert(*magic == ServerZoneIpcType::UpdateInventorySlot))]
+    UpdateInventorySlot {
         /// Starts from zero and increases by one for each of these packets during this gameplay session
         sequence: u32,
         #[brw(pad_before = 4)]
@@ -1013,8 +1013,8 @@ mod tests {
                 },
             ),
             (
-                ServerZoneIpcType::GilShopRelatedUnk,
-                ServerZoneIpcData::GilShopRelatedUnk {
+                ServerZoneIpcType::UpdateInventorySlot,
+                ServerZoneIpcData::UpdateInventorySlot {
                     sequence: 0,
                     unk1_and_dst_storage_id: 0,
                     unk2_and_dst_slot: 0,
