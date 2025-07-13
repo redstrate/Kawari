@@ -88,6 +88,9 @@ pub use config::Config;
 mod event_yield_handler;
 pub use event_yield_handler::EventYieldHandler;
 
+mod object_spawn;
+pub use object_spawn::ObjectSpawn;
+
 use crate::COMPLETED_QUEST_BITMASK_SIZE;
 use crate::common::ObjectTypeId;
 use crate::common::Position;
@@ -436,6 +439,8 @@ pub enum ServerZoneIpcData {
     },
     #[br(pre_assert(*magic == ServerZoneIpcType::ContentFinderFound2))]
     ContentFinderFound2 { unk1: [u8; 8] },
+    #[br(pre_assert(*magic == ServerZoneIpcType::ObjectSpawn))]
+    ObjectSpawn(ObjectSpawn),
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -871,6 +876,10 @@ mod tests {
                     unk3: 0,
                     unk4: 0,
                 },
+            ),
+            (
+                ServerZoneIpcType::ObjectSpawn,
+                ServerZoneIpcData::ObjectSpawn(ObjectSpawn::default()),
             ),
         ];
 

@@ -259,6 +259,11 @@
             "name": "ContentFinderFound2",
             "opcode": 619,
             "size": 812
+        },
+        {
+            "name": "ObjectSpawn",
+            "opcode": 425,
+            "size": 64
         }
     ],
     "ClientZoneIpcType": [
