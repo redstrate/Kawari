@@ -111,6 +111,12 @@ impl ChatHandler {
                 }
                 true
             }
+            "!replay" => {
+                let (_, path) = chat_message.message.split_once(' ').unwrap();
+                connection.replay_packets(path).await;
+
+                true
+            }
             _ => false,
         }
     }

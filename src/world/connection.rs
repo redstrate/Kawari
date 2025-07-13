@@ -1,6 +1,7 @@
 use std::{
-    collections::HashMap,
+    collections::{HashMap, VecDeque},
     net::SocketAddr,
+    path::PathBuf,
     sync::{Arc, Mutex},
     time::Instant,
 };
@@ -134,6 +135,8 @@ pub struct ZoneConnection {
     pub weather_id: u16,
 
     pub obsfucation_data: ObsfucationData,
+
+    pub replay_entries: VecDeque<PathBuf>,
 }
 
 impl ZoneConnection {
@@ -256,8 +259,11 @@ impl ZoneConnection {
     }
 
     pub async fn spawn_actor(&mut self, mut actor: Actor, mut spawn: NpcSpawn) {
-        // There is no reason for us to spawn our own player again. It's probably a bug!'
-        assert!(actor.id.0 != self.player_data.actor_id);
+        // skip during replay
+        if self.replay_entries.is_empty() {
+            // There is no reason for us to spawn our own player again. It's probably a bug!'
+            assert!(actor.id.0 != self.player_data.actor_id);
+        }
 
         actor.spawn_index = self.get_free_spawn_index() as u32;
         spawn.common.spawn_index = actor.spawn_index as u8;
@@ -1483,5 +1489,42 @@ impl ZoneConnection {
             })
             .await;
         }
+    }
+
+    pub async fn replay_packets(&mut self, path: &str) {
+        tracing::info!("Beginning replay from {path}...");
+
+        let mut entries = std::fs::read_dir(path)
+            .unwrap()
+            .map(|res| res.map(|e| e.path()))
+            .collect::<Result<Vec<_>, std::io::Error>>()
+            .unwrap();
+
+        entries.sort_by(|a, b| {
+            let a_seq = a
+                .file_name()
+                .unwrap()
+                .to_str()
+                .unwrap()
+                .split_once('-')
+                .unwrap()
+                .0
+                .parse::<i32>()
+                .unwrap();
+            let b_seq = b
+                .file_name()
+                .unwrap()
+                .to_str()
+                .unwrap()
+                .split_once('-')
+                .unwrap()
+                .0
+                .parse::<i32>()
+                .unwrap();
+
+            a_seq.cmp(&b_seq)
+        });
+
+        self.replay_entries = entries.into();
     }
 }
