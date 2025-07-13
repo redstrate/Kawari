@@ -264,6 +264,11 @@
             "name": "ObjectSpawn",
             "opcode": 425,
             "size": 64
+        },
+        {
+            "name": "ActorGauge",
+            "opcode": 424,
+            "size": 16
         }
     ],
     "ClientZoneIpcType": [

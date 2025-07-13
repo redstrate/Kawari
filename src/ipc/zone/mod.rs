@@ -441,6 +441,8 @@ pub enum ServerZoneIpcData {
     ContentFinderFound2 { unk1: [u8; 8] },
     #[br(pre_assert(*magic == ServerZoneIpcType::ObjectSpawn))]
     ObjectSpawn(ObjectSpawn),
+    #[br(pre_assert(*magic == ServerZoneIpcType::ActorGauge))]
+    ActorGauge { classjob_id: u8, data: [u8; 15] },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -880,6 +882,13 @@ mod tests {
             (
                 ServerZoneIpcType::ObjectSpawn,
                 ServerZoneIpcData::ObjectSpawn(ObjectSpawn::default()),
+            ),
+            (
+                ServerZoneIpcType::ActorGauge,
+                ServerZoneIpcData::ActorGauge {
+                    classjob_id: 0,
+                    data: [0; 15],
+                },
             ),
         ];
 
