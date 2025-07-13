@@ -74,7 +74,7 @@ impl ChatHandler {
                     }
                 }
 
-                connection.send_inventory(true).await;
+                connection.send_inventory(true, false).await;
                 true
             }
             "!item" => {
@@ -93,7 +93,7 @@ impl ChatHandler {
                     }
                 }
 
-                connection.send_inventory(false).await;
+                connection.send_inventory(false, false).await;
                 true
             }
             "!reload" => {

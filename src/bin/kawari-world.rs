@@ -259,7 +259,7 @@ async fn client_loop(
                                                 database.find_chara_make(connection.player_data.content_id);
 
                                                 // Send inventory
-                                                connection.send_inventory(false).await;
+                                                connection.send_inventory(false, true).await;
 
                                                 // set chara gear param
                                                 connection
@@ -347,7 +347,7 @@ async fn client_loop(
 
                                                 let chara_details = database.find_chara_make(connection.player_data.content_id);
 
-                                                connection.send_inventory(false).await;
+                                                connection.send_inventory(false, false).await;
                                                 connection.send_stats(&chara_details).await;
 
                                                 let online_status = if connection.player_data.gm_rank == GameMasterRank::NormalUser {
@@ -884,7 +884,7 @@ async fn client_loop(
                                                             // TODO: send the proper response packets!
                                                             connection.player_data.inventory.currency.gil.quantity -= item_info.price_mid;
                                                             connection.player_data.inventory.add_in_next_free_slot(Item::new(1, item_info.id));
-                                                            connection.send_inventory(false).await;
+                                                            connection.send_inventory(false, false).await;
                                                             // TODO: send an actual system notice, this is just a placeholder to provide feedback that the player actually bought something.
                                                             connection.send_message(&format!("You obtained one or more items: {} (id: {})!", item_info.name, item_info.id)).await;
                                                         } else {

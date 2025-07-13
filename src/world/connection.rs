@@ -518,7 +518,7 @@ impl ZoneConnection {
         self.spawn_index
     }
 
-    pub async fn send_inventory(&mut self, send_appearance_update: bool) {
+    pub async fn send_inventory(&mut self, send_appearance_update: bool, first_update: bool) {
         for (sequence, (container_type, container)) in (&self.player_data.inventory.clone())
             .into_iter()
             .enumerate()
@@ -526,6 +526,11 @@ impl ZoneConnection {
             // currencies
             if container_type == ContainerType::Currency {
                 let mut send_currency = async |item: &Item| {
+                    // skip telling the client what they don't have
+                    if item.quantity == 0 && first_update {
+                        return;
+                    }
+
                     let ipc = ServerZoneIpcSegment {
                         op_code: ServerZoneIpcType::CurrencyCrystalInfo,
                         timestamp: timestamp_secs(),
@@ -556,6 +561,11 @@ impl ZoneConnection {
                 // items
 
                 let mut send_slot = async |slot_index: u16, item: &Item| {
+                    // skip telling the client what they don't have
+                    if item.quantity == 0 && first_update {
+                        return;
+                    }
+
                     let ipc = ServerZoneIpcSegment {
                         op_code: ServerZoneIpcType::UpdateItem,
                         timestamp: timestamp_secs(),
@@ -783,11 +793,11 @@ impl ZoneConnection {
                 }
                 Task::AddGil { amount } => {
                     self.player_data.inventory.currency.get_slot_mut(0).quantity += *amount;
-                    self.send_inventory(false).await;
+                    self.send_inventory(false, false).await;
                 }
                 Task::RemoveGil { amount } => {
                     self.player_data.inventory.currency.get_slot_mut(0).quantity -= *amount;
-                    self.send_inventory(false).await;
+                    self.send_inventory(false, false).await;
                 }
                 Task::UnlockOrchestrion { id, on } => {
                     // id == 0 means "all"
@@ -815,7 +825,7 @@ impl ZoneConnection {
                     self.player_data
                         .inventory
                         .add_in_next_free_slot(Item::new(1, *id));
-                    self.send_inventory(false).await;
+                    self.send_inventory(false, false).await;
                 }
                 Task::CompleteAllQuests {} => {
                     self.player_data.completed_quests = vec![0xFF; COMPLETED_QUEST_BITMASK_SIZE];
