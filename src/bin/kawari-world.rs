@@ -259,7 +259,7 @@ async fn client_loop(
                                                 database.find_chara_make(connection.player_data.content_id);
 
                                                 // Send inventory
-                                                connection.send_inventory(false, true).await;
+                                                connection.send_inventory(true).await;
 
                                                 // set chara gear param
                                                 connection
@@ -347,7 +347,7 @@ async fn client_loop(
 
                                                 let chara_details = database.find_chara_make(connection.player_data.content_id);
 
-                                                connection.send_inventory(false, false).await;
+                                                connection.send_inventory(false).await;
                                                 connection.send_stats(&chara_details).await;
 
                                                 let online_status = if connection.player_data.gm_rank == GameMasterRank::NormalUser {
@@ -813,24 +813,7 @@ async fn client_loop(
 
                                                 // if updated equipped items, we have to process that
                                                 if action.src_storage_id == ContainerType::Equipped || action.dst_storage_id == ContainerType::Equipped {
-                                                    let main_weapon_id;
-                                                    let model_ids;
-                                                    {
-                                                        let mut game_data = connection.gamedata.lock().unwrap();
-                                                        let inventory = &connection.player_data.inventory;
-
-                                                        main_weapon_id = inventory.get_main_weapon_id(&mut game_data);
-                                                        model_ids = inventory.get_model_ids(&mut game_data);
-                                                    }
-
-                                                    connection.handle
-                                                    .send(ToServer::Equip(
-                                                        connection.id,
-                                                        connection.player_data.actor_id,
-                                                        main_weapon_id,
-                                                        model_ids,
-                                                    ))
-                                                    .await;
+                                                    connection.inform_equip().await;
                                                 }
 
                                                 if action.operation_type == ItemOperationKind::Discard {
@@ -906,7 +889,7 @@ async fn client_loop(
                                                             // TODO: send the proper response packets!
                                                             connection.player_data.inventory.currency.gil.quantity -= item_info.price_mid;
                                                             connection.player_data.inventory.add_in_next_free_slot(Item::new(1, item_info.id));
-                                                            connection.send_inventory(false, false).await;
+                                                            connection.send_inventory(false).await;
                                                             // TODO: send an actual system notice, this is just a placeholder to provide feedback that the player actually bought something.
                                                             connection.send_message(&format!("You obtained one or more items: {} (id: {})!", item_info.name, item_info.id)).await;
                                                         } else {

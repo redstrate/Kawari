@@ -518,7 +518,29 @@ impl ZoneConnection {
         self.spawn_index
     }
 
-    pub async fn send_inventory(&mut self, send_appearance_update: bool, first_update: bool) {
+    /// Inform other clients (including yourself) that you changed your equipped model ids.
+    pub async fn inform_equip(&mut self) {
+        let main_weapon_id;
+        let model_ids;
+        {
+            let mut game_data = self.gamedata.lock().unwrap();
+            let inventory = &self.player_data.inventory;
+
+            main_weapon_id = inventory.get_main_weapon_id(&mut game_data);
+            model_ids = inventory.get_model_ids(&mut game_data);
+        }
+
+        self.handle
+            .send(ToServer::Equip(
+                self.id,
+                self.player_data.actor_id,
+                main_weapon_id,
+                model_ids,
+            ))
+            .await;
+    }
+
+    pub async fn send_inventory(&mut self, first_update: bool) {
         let mut last_sequence = 0;
         for (sequence, (container_type, container)) in (&self.player_data.inventory.clone())
             .into_iter()
@@ -653,28 +675,6 @@ impl ZoneConnection {
             })
             .await;
             sequence += 1;
-        }
-
-        // send them an appearance update
-        if send_appearance_update {
-            let main_weapon_id;
-            let model_ids;
-            {
-                let mut game_data = self.gamedata.lock().unwrap();
-                let inventory = &self.player_data.inventory;
-
-                main_weapon_id = inventory.get_main_weapon_id(&mut game_data);
-                model_ids = inventory.get_model_ids(&mut game_data);
-            }
-
-            self.handle
-                .send(ToServer::Equip(
-                    self.id,
-                    self.player_data.actor_id,
-                    main_weapon_id,
-                    model_ids,
-                ))
-                .await;
         }
     }
 
@@ -828,11 +828,11 @@ impl ZoneConnection {
                 }
                 Task::AddGil { amount } => {
                     self.player_data.inventory.currency.get_slot_mut(0).quantity += *amount;
-                    self.send_inventory(false, false).await;
+                    self.send_inventory(false).await;
                 }
                 Task::RemoveGil { amount } => {
                     self.player_data.inventory.currency.get_slot_mut(0).quantity -= *amount;
-                    self.send_inventory(false, false).await;
+                    self.send_inventory(false).await;
                 }
                 Task::UnlockOrchestrion { id, on } => {
                     // id == 0 means "all"
@@ -860,7 +860,7 @@ impl ZoneConnection {
                     self.player_data
                         .inventory
                         .add_in_next_free_slot(Item::new(1, *id));
-                    self.send_inventory(false, false).await;
+                    self.send_inventory(false).await;
                 }
                 Task::CompleteAllQuests {} => {
                     self.player_data.completed_quests = vec![0xFF; COMPLETED_QUEST_BITMASK_SIZE];
