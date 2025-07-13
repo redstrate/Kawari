@@ -274,6 +274,11 @@
             "name": "UpdateSearchInfo",
             "opcode": 415,
             "size": 216
+        },
+        {
+            "name": "FreeCompanyInfo",
+            "opcode": 892,
+            "size": 80
         }
     ],
     "ClientZoneIpcType": [

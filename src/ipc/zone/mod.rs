@@ -457,6 +457,8 @@ pub enum ServerZoneIpcData {
         #[bw(map = write_string)]
         message: String,
     },
+    #[br(pre_assert(*magic == ServerZoneIpcType::FreeCompanyInfo))]
+    FreeCompanyInfo { unk: [u8; 80] },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -903,6 +905,20 @@ mod tests {
                     classjob_id: 0,
                     data: [0; 15],
                 },
+            ),
+            (
+                ServerZoneIpcType::UpdateSearchInfo,
+                ServerZoneIpcData::UpdateSearchInfo {
+                    online_status_flags: 0,
+                    unk1: 0,
+                    unk2: 0,
+                    region: 0,
+                    message: String::default(),
+                },
+            ),
+            (
+                ServerZoneIpcType::FreeCompanyInfo,
+                ServerZoneIpcData::FreeCompanyInfo { unk: [0; 80] },
             ),
         ];
 
