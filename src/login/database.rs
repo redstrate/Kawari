@@ -166,7 +166,6 @@ impl LoginDatabase {
             for (index, id) in accounts.enumerate() {
                 service_accounts.push(ServiceAccount {
                     id: id.unwrap(),
-                    unk1: 0,
                     index: index as u32,
                     name: format!("FINAL FANTASY XIV {}", index + 1), // TODO: don't add the "1" if you only have one service account
                 });

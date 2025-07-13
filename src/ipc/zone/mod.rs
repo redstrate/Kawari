@@ -128,7 +128,10 @@ impl Default for ClientZoneIpcSegment {
             op_code: ClientZoneIpcType::InitRequest,
             option: 0,
             timestamp: 0,
-            data: ClientZoneIpcData::InitRequest { unk: [0; 120] },
+            data: ClientZoneIpcData::InitRequest {
+                unk1: String::default(),
+                unk2: String::default(),
+            },
         }
     }
 }
@@ -472,8 +475,17 @@ pub enum ClientZoneIpcData {
     /// Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load)
     #[br(pre_assert(*magic == ClientZoneIpcType::InitRequest))]
     InitRequest {
-        // TODO: full of possibly interesting information
-        unk: [u8; 120],
+        #[brw(pad_before = 40)] // seems to be empty?
+        #[brw(pad_size_to = 32)]
+        #[br(count = 32)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        unk1: String,
+        #[br(count = 48)]
+        #[brw(pad_size_to = 48)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        unk2: String,
     },
     /// Sent by the client when they're done loading and they need to be spawned in
     #[br(pre_assert(*magic == ClientZoneIpcType::FinishLoading))]
@@ -952,7 +964,10 @@ mod tests {
         let ipc_types = [
             (
                 ClientZoneIpcType::InitRequest,
-                ClientZoneIpcData::InitRequest { unk: [0; 120] },
+                ClientZoneIpcData::InitRequest {
+                    unk1: String::default(),
+                    unk2: String::default(),
+                },
             ),
             (
                 ClientZoneIpcType::FinishLoading,

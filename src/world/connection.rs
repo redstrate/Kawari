@@ -199,7 +199,7 @@ impl ZoneConnection {
         self.send_segment(PacketSegment {
             segment_type: SegmentType::Initialize,
             data: SegmentData::Initialize {
-                player_id: self.player_data.actor_id,
+                actor_id: self.player_data.actor_id,
                 timestamp: timestamp_secs(),
             },
             ..Default::default()

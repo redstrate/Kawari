@@ -103,7 +103,8 @@ pub enum ClientLobbyIpcData {
         unk1: u8,
         unk2: u16,
         unk3: u32, // TODO: probably multiple params
-        account_id: u64,
+        account_id: u32,
+        unk4: u32,
     },
     /// Sent by the client when it requests to enter a world.
     #[br(pre_assert(*magic == ClientLobbyIpcType::GameLogin))]
@@ -111,8 +112,10 @@ pub enum ClientLobbyIpcData {
         sequence: u64,
         content_id: u64,
         // TODO: what else is in here?
-        unk1: u64,
-        unk2: u64,
+        unk1: u32,
+        unk2: u32,
+        unk3: u32,
+        unk4: u32,
     },
     /// Sent by the client after exchanging encryption information with the lobby server.
     #[br(pre_assert(*magic == ClientLobbyIpcType::LoginEx))]
@@ -304,6 +307,7 @@ mod tests {
                     unk2: 0,
                     account_id: 0,
                     unk3: 0,
+                    unk4: 0,
                 },
             ),
             (
@@ -313,6 +317,8 @@ mod tests {
                     content_id: 0,
                     unk1: 0,
                     unk2: 0,
+                    unk3: 0,
+                    unk4: 0,
                 },
             ),
             (

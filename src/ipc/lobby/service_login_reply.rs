@@ -36,8 +36,7 @@ impl Default for CharacterFlag {
 #[binrw]
 #[derive(Debug, Clone, Default)]
 pub struct CharacterDetails {
-    #[brw(pad_after = 4)]
-    pub actor_id: u32,
+    pub player_id: u64,
     pub content_id: u64,
     pub index: u8,
     pub flags: CharacterFlag,

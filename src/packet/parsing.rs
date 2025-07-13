@@ -57,11 +57,11 @@ pub enum SegmentData<T: ReadWriteIpcSegment> {
         #[br(count = 36)]
         #[br(map = read_string)]
         #[bw(map = write_string)]
-        ticket: String, // square enix in their infinite wisdom has this as a STRING REPRESENTATION of an integer. what
+        actor_id: String, // square enix in their infinite wisdom has this as a STRING REPRESENTATION of an integer. what
     },
     #[br(pre_assert(kind == SegmentType::Initialize))]
     Initialize {
-        player_id: u32,
+        actor_id: u32,
         #[brw(pad_after = 32)]
         timestamp: u32,
     },

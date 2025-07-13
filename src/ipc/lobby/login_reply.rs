@@ -6,8 +6,7 @@ use crate::common::{read_string, write_string};
 #[binrw]
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
 pub struct ServiceAccount {
-    pub id: u32,
-    pub unk1: u32,
+    pub id: u64,
     pub index: u32,
     #[bw(pad_size_to = 0x44)]
     #[br(count = 0x44)]

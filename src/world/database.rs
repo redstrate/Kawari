@@ -447,7 +447,7 @@ impl WorldDatabase {
                 };
 
                 characters.push(CharacterDetails {
-                    actor_id: *actor_id,
+                    player_id: *actor_id as u64, // TODO: not correct
                     content_id: *content_id as u64,
                     index: index as u8,
                     flags: CharacterFlag::NONE,

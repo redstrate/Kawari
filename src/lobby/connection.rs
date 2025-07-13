@@ -412,7 +412,7 @@ impl LobbyConnection {
                             unk2: 0x1,
                             action: LobbyCharacterActionKind::Create,
                             details: CharacterDetails {
-                                actor_id: our_actor_id,
+                                player_id: our_actor_id as u64, // TODO: not correct
                                 content_id: our_content_id,
                                 character_name: character_action.name.clone(),
                                 origin_server_name: self.world_name.clone(),
@@ -458,7 +458,7 @@ impl LobbyConnection {
                             unk2: 0x1,
                             action: LobbyCharacterActionKind::Delete,
                             details: CharacterDetails {
-                                actor_id: 0, // TODO: fill maybe?
+                                player_id: 0, // TODO: fill maybe?
                                 content_id: character_action.content_id,
                                 character_name: character_action.name.clone(),
                                 origin_server_name: self.world_name.clone(),
@@ -506,7 +506,7 @@ impl LobbyConnection {
                             unk2: 0x1,
                             action: LobbyCharacterActionKind::RemakeChara,
                             details: CharacterDetails {
-                                actor_id: 0, // TODO: fill maybe?
+                                player_id: 0, // TODO: fill maybe?
                                 content_id: character_action.content_id,
                                 character_name: character_action.name.clone(),
                                 origin_server_name: self.world_name.clone(),

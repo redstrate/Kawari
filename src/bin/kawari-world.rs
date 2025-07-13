@@ -154,9 +154,9 @@ async fn client_loop(
                             for segment in &segments {
                                 match &segment.data {
                                     SegmentData::None() => {},
-                                    SegmentData::Setup { ticket } => {
+                                    SegmentData::Setup { actor_id } => {
                                         // for some reason they send a string representation
-                                        let actor_id = ticket.parse::<u32>().unwrap();
+                                        let actor_id = actor_id.parse::<u32>().unwrap();
 
                                         // initialize player data if it doesn't exist'
                                         if connection.player_data.actor_id == 0 {
@@ -193,7 +193,7 @@ async fn client_loop(
                                             connection.send_chat_segment(PacketSegment {
                                                 segment_type: SegmentType::Initialize,
                                                 data: SegmentData::Initialize {
-                                                    player_id: connection.player_data.actor_id,
+                                                    actor_id: connection.player_data.actor_id,
                                                     timestamp: timestamp_secs(),
                                                 },
                                                 ..Default::default()
