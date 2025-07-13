@@ -289,6 +289,11 @@
             "name": "QuestActiveList",
             "opcode": 398,
             "size": 480
+        },
+        {
+            "name": "LevequestCompleteList",
+            "opcode": 371,
+            "size": 232
         }
     ],
     "ClientZoneIpcType": [

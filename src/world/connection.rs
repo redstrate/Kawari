@@ -9,7 +9,7 @@ use mlua::Function;
 use tokio::net::TcpStream;
 
 use crate::{
-    CLASSJOB_ARRAY_SIZE, COMPLETED_QUEST_BITMASK_SIZE,
+    CLASSJOB_ARRAY_SIZE, COMPLETED_LEVEQUEST_BITMASK_SIZE, COMPLETED_QUEST_BITMASK_SIZE,
     common::{
         GameData, ObjectId, ObjectTypeId, Position, timestamp_secs, value_to_flag_byte_index_value,
     },
@@ -1321,6 +1321,28 @@ impl ZoneConnection {
                 data: ServerZoneIpcData::QuestCompleteList {
                     completed_quests: self.player_data.completed_quests.clone(),
                     unk2: vec![0xFF; 69],
+                },
+                ..Default::default()
+            };
+
+            self.send_segment(PacketSegment {
+                source_actor: self.player_data.actor_id,
+                target_actor: self.player_data.actor_id,
+                segment_type: SegmentType::Ipc,
+                data: SegmentData::Ipc { data: ipc },
+            })
+            .await;
+        }
+
+        // levequest complete list
+        // NOTE: all levequests are unlocked by default
+        {
+            let ipc = ServerZoneIpcSegment {
+                op_code: ServerZoneIpcType::LevequestCompleteList,
+                timestamp: timestamp_secs(),
+                data: ServerZoneIpcData::LevequestCompleteList {
+                    completed_levequests: vec![0xFF; COMPLETED_LEVEQUEST_BITMASK_SIZE],
+                    unk2: Vec::default(),
                 },
                 ..Default::default()
             };

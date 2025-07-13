@@ -79,6 +79,9 @@ pub const COMPLETED_QUEST_BITMASK_SIZE: usize = 691;
 /// The size of the unlocked title bitmask.
 pub const TITLE_UNLOCK_BITMASK_SIZE: usize = 112;
 
+/// The size of the completed levequest bitmask.
+pub const COMPLETED_LEVEQUEST_BITMASK_SIZE: usize = 226;
+
 /// The size of various classjob arrays.
 pub const CLASSJOB_ARRAY_SIZE: usize = 32;
 

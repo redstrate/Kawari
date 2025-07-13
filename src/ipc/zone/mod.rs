@@ -94,6 +94,7 @@ pub use object_spawn::ObjectSpawn;
 mod quest_active_list;
 pub use quest_active_list::QuestActiveList;
 
+use crate::COMPLETED_LEVEQUEST_BITMASK_SIZE;
 use crate::COMPLETED_QUEST_BITMASK_SIZE;
 use crate::TITLE_UNLOCK_BITMASK_SIZE;
 use crate::common::ObjectTypeId;
@@ -472,6 +473,16 @@ pub enum ServerZoneIpcData {
     },
     #[br(pre_assert(*magic == ServerZoneIpcType::QuestActiveList))]
     QuestActiveList(QuestActiveList),
+    #[br(pre_assert(*magic == ServerZoneIpcType::LevequestCompleteList))]
+    LevequestCompleteList {
+        #[br(count = COMPLETED_LEVEQUEST_BITMASK_SIZE)]
+        #[bw(pad_size_to = COMPLETED_LEVEQUEST_BITMASK_SIZE)]
+        completed_levequests: Vec<u8>,
+        // TODO: what is in ehre?
+        #[br(count = 6)]
+        #[bw(pad_size_to = 6)]
+        unk2: Vec<u8>,
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -951,6 +962,13 @@ mod tests {
             (
                 ServerZoneIpcType::QuestActiveList,
                 ServerZoneIpcData::QuestActiveList(QuestActiveList::default()),
+            ),
+            (
+                ServerZoneIpcType::LevequestCompleteList,
+                ServerZoneIpcData::LevequestCompleteList {
+                    completed_levequests: Vec::default(),
+                    unk2: Vec::default(),
+                },
             ),
         ];
 
