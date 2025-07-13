@@ -431,9 +431,9 @@ pub enum ServerZoneIpcData {
         /// Repeated unk1 value. No, it's not a copy-paste error.
         sequence_repeat: u32,
         /// Unknown, seems to always be 0x00000090.
-        unk3: u32,
+        unk1: u32,
         /// Unknown, seems to always be 0x00000200.
-        unk4: u32,
+        unk2: u32,
     },
     #[br(pre_assert(*magic == ServerZoneIpcType::ContentFinderFound))]
     ContentFinderFound {
@@ -959,8 +959,8 @@ mod tests {
                 ServerZoneIpcData::InventoryTransactionFinish {
                     sequence: 0,
                     sequence_repeat: 0,
-                    unk3: 0,
-                    unk4: 0,
+                    unk1: 0,
+                    unk2: 0,
                 },
             ),
             (

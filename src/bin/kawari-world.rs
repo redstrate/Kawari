@@ -863,8 +863,8 @@ async fn client_loop(
                                                         data: ServerZoneIpcData::InventoryTransactionFinish {
                                                             sequence: connection.player_data.item_sequence,
                                                             sequence_repeat: connection.player_data.item_sequence,
-                                                            unk3: 0x90,
-                                                            unk4: 0x200,
+                                                            unk1: 0x90,
+                                                            unk2: 0x200,
                                                         },
                                                         ..Default::default()
                                                     };
