@@ -519,6 +519,7 @@ impl ZoneConnection {
     }
 
     pub async fn send_inventory(&mut self, send_appearance_update: bool, first_update: bool) {
+        let mut last_sequence = 0;
         for (sequence, (container_type, container)) in (&self.player_data.inventory.clone())
             .into_iter()
             .enumerate()
@@ -618,6 +619,40 @@ impl ZoneConnection {
                 })
                 .await;
             }
+
+            last_sequence = sequence;
+        }
+
+        let mut sequence = last_sequence + 1;
+
+        // dummy container states that are not implemented
+        // inform the client of container state
+        for container_type in [
+            ContainerType::Crystals,
+            ContainerType::Mail,
+            ContainerType::Unk2,
+            ContainerType::ArmoryWaist,
+        ] {
+            let ipc = ServerZoneIpcSegment {
+                op_code: ServerZoneIpcType::ContainerInfo,
+                timestamp: timestamp_secs(),
+                data: ServerZoneIpcData::ContainerInfo(ContainerInfo {
+                    container: container_type,
+                    num_items: 0,
+                    sequence: sequence as u32,
+                    ..Default::default()
+                }),
+                ..Default::default()
+            };
+
+            self.send_segment(PacketSegment {
+                source_actor: self.player_data.actor_id,
+                target_actor: self.player_data.actor_id,
+                segment_type: SegmentType::Ipc,
+                data: SegmentData::Ipc { data: ipc },
+            })
+            .await;
+            sequence += 1;
         }
 
         // send them an appearance update

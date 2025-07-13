@@ -35,6 +35,7 @@ pub enum ContainerType {
     ArmoryHead = 3201,
     ArmoryBody = 3202,
     ArmoryHand = 3203,
+    ArmoryWaist = 3204,
     ArmoryLeg = 3205,
     ArmoryFoot = 3206,
     ArmoryEarring = 3207,
