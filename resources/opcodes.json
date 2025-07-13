@@ -279,6 +279,11 @@
             "name": "FreeCompanyInfo",
             "opcode": 892,
             "size": 80
+        },
+        {
+            "name": "TitleList",
+            "opcode": 731,
+            "size": 112
         }
     ],
     "ClientZoneIpcType": [

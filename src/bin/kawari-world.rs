@@ -2,7 +2,6 @@ use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-use kawari::RECEIVE_BUFFER_SIZE;
 use kawari::common::Position;
 use kawari::common::{GameData, timestamp_secs};
 use kawari::config::get_config;
@@ -27,6 +26,7 @@ use kawari::world::{
     ClientHandle, Event, FromServer, LuaPlayer, PlayerData, ServerHandle, StatusEffects, ToServer,
     WorldDatabase, handle_custom_ipc, server_main_loop,
 };
+use kawari::{RECEIVE_BUFFER_SIZE, TITLE_UNLOCK_BITMASK_SIZE};
 
 use mlua::{Function, Lua};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -415,8 +415,33 @@ async fn client_loop(
                                                     connection.player_data.teleport_query.aetheryte_id = aetheryte_id as u16;
                                                 }
 
-                                                // inform the server of our trigger, it will handle sending it to other clients
-                                                connection.handle.send(ToServer::ClientTrigger(connection.id, connection.player_data.actor_id, trigger.clone())).await;
+                                                match trigger.trigger {
+                                                    ClientTriggerCommand::RequestTitleList {} => {
+                                                        // send full title list for now
+
+                                                        let ipc = ServerZoneIpcSegment {
+                                                            op_code: ServerZoneIpcType::TitleList,
+                                                            timestamp: timestamp_secs(),
+                                                            data: ServerZoneIpcData::TitleList {
+                                                                unlock_bitmask: [0xFF; TITLE_UNLOCK_BITMASK_SIZE]
+                                                            },
+                                                            ..Default::default()
+                                                        };
+
+                                                        connection
+                                                        .send_segment(PacketSegment {
+                                                            source_actor: connection.player_data.actor_id,
+                                                            target_actor: connection.player_data.actor_id,
+                                                            segment_type: SegmentType::Ipc,
+                                                            data: SegmentData::Ipc { data: ipc },
+                                                        })
+                                                        .await;
+                                                    },
+                                                    _ => {
+                                                        // inform the server of our trigger, it will handle sending it to other clients
+                                                        connection.handle.send(ToServer::ClientTrigger(connection.id, connection.player_data.actor_id, trigger.clone())).await;
+                                                    }
+                                                }
                                             }
                                             ClientZoneIpcData::Unk2 { .. } => {
                                                 // no-op

@@ -92,6 +92,7 @@ mod object_spawn;
 pub use object_spawn::ObjectSpawn;
 
 use crate::COMPLETED_QUEST_BITMASK_SIZE;
+use crate::TITLE_UNLOCK_BITMASK_SIZE;
 use crate::common::ObjectTypeId;
 use crate::common::Position;
 use crate::common::read_string;
@@ -462,6 +463,10 @@ pub enum ServerZoneIpcData {
     },
     #[br(pre_assert(*magic == ServerZoneIpcType::FreeCompanyInfo))]
     FreeCompanyInfo { unk: [u8; 80] },
+    #[br(pre_assert(*magic == ServerZoneIpcType::TitleList))]
+    TitleList {
+        unlock_bitmask: [u8; TITLE_UNLOCK_BITMASK_SIZE],
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -926,6 +931,12 @@ mod tests {
                     unk2: 0,
                     region: 0,
                     message: String::default(),
+                },
+            ),
+            (
+                ServerZoneIpcType::TitleList,
+                ServerZoneIpcData::TitleList {
+                    unlock_bitmask: [0; TITLE_UNLOCK_BITMASK_SIZE],
                 },
             ),
             (

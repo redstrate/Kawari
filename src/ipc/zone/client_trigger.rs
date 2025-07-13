@@ -59,6 +59,8 @@ pub enum ClientTriggerCommand {
         unk3: u32,
         unk4: u32,
     },
+    #[brw(magic = 0x12Fu16)]
+    RequestTitleList {},
     Unknown {
         category: u16,
         // seen in haircut event
