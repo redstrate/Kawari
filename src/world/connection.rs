@@ -1027,7 +1027,7 @@ impl ZoneConnection {
         .await;
     }
 
-    pub async fn send_gilshop_unk(
+    pub async fn send_gilshop_item_update(
         &mut self,
         unk1_and_dst_storage_id: u16,
         unk2_and_dst_slot: u16,
@@ -1035,9 +1035,9 @@ impl ZoneConnection {
         unk3_and_item_id: u32,
     ) {
         let ipc = ServerZoneIpcSegment {
-            op_code: ServerZoneIpcType::GilShopRelatedUnk,
+            op_code: ServerZoneIpcType::UpdateInventorySlot,
             timestamp: timestamp_secs(),
-            data: ServerZoneIpcData::GilShopRelatedUnk {
+            data: ServerZoneIpcData::UpdateInventorySlot {
                 sequence: self.player_data.shop_sequence,
                 unk1_and_dst_storage_id,
                 unk2_and_dst_slot,

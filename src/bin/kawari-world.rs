@@ -917,12 +917,12 @@ async fn client_loop(
                                                             //connection.player_data.inventory.add_in_next_free_slot(Item::new(*item_quantity, item_info.id));
                                                             connection.player_data.inventory.add_in_slot(Item::new(*item_quantity, item_info.id), &ContainerType::Inventory0, 0);
 
-                                                            connection.send_gilshop_unk(0x07D0, 0, connection.player_data.inventory.currency.gil.quantity, 1).await;
+                                                            connection.send_gilshop_item_update(0x07D0, 0, connection.player_data.inventory.currency.gil.quantity, 1).await;
 
                                                             connection.send_inventory_ack(u32::MAX, INVENTORY_ACTION_ACK_SHOP as u16).await;
 
                                                             // TODO: This is hardcoded to the first item slot in the inventory, fix this
-                                                            connection.send_gilshop_unk(0, 0, *item_quantity, item_info.id).await;
+                                                            connection.send_gilshop_item_update(0, 0, *item_quantity, item_info.id).await;
                                                             connection.send_gilshop_ack(*event_id, item_info.id, *item_quantity, item_info.price_mid).await;
 
                                                             let target_id = connection.player_data.target_actorid;
