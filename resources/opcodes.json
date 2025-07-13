@@ -269,6 +269,11 @@
             "name": "ActorGauge",
             "opcode": 424,
             "size": 16
+        },
+        {
+            "name": "UpdateSearchInfo",
+            "opcode": 415,
+            "size": 216
         }
     ],
     "ClientZoneIpcType": [

@@ -443,6 +443,20 @@ pub enum ServerZoneIpcData {
     ObjectSpawn(ObjectSpawn),
     #[br(pre_assert(*magic == ServerZoneIpcType::ActorGauge))]
     ActorGauge { classjob_id: u8, data: [u8; 15] },
+    #[br(pre_assert(*magic == ServerZoneIpcType::UpdateSearchInfo))]
+    UpdateSearchInfo {
+        online_status_flags: u64,
+        unk1: u64,
+        #[brw(pad_after = 1)] // padding
+        unk2: u32,
+        region: u8,
+        #[brw(pad_after = 1)] // padding
+        #[brw(pad_size_to = 193)]
+        #[br(count = 193)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        message: String,
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
