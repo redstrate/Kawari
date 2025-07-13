@@ -284,6 +284,12 @@ impl Inventory {
         }
     }
 
+    pub fn add_in_slot(&mut self, item: Item, container_type: &ContainerType, index: u16) {
+        let container = self.get_container_mut(container_type);
+        let slot = container.get_slot_mut(index);
+        slot.clone_from(&item);
+    }
+
     fn get_container_mut(&mut self, container_type: &ContainerType) -> &mut dyn Storage {
         match container_type {
             ContainerType::Inventory0 => &mut self.pages[0],

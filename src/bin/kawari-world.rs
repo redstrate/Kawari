@@ -36,7 +36,7 @@ use tokio::sync::mpsc::{Receiver, UnboundedReceiver, UnboundedSender, channel, u
 use tokio::sync::oneshot;
 use tokio::task::JoinHandle;
 
-use kawari::INVENTORY_ACTION_ACK_GENERAL;
+use kawari::{INVENTORY_ACTION_ACK_GENERAL, INVENTORY_ACTION_ACK_SHOP};
 
 fn spawn_main_loop() -> (ServerHandle, JoinHandle<()>) {
     let (send, recv) = channel(64);
@@ -910,29 +910,42 @@ async fn client_loop(
                                                     }
 
                                                     if let Some(item_info) = result {
-                                                        if connection.player_data.inventory.currency.gil.quantity >= item_info.price_mid {
-                                                            // TODO: send the proper response packets!
-                                                            connection.player_data.inventory.currency.gil.quantity -= item_info.price_mid;
-                                                            connection.player_data.inventory.add_in_next_free_slot(Item::new(1, item_info.id));
-                                                            connection.send_inventory(false).await;
-                                                            // TODO: send an actual system notice, this is just a placeholder to provide feedback that the player actually bought something.
-                                                            connection.send_message(&format!("You obtained one or more items: {} (id: {})!", item_info.name, item_info.id)).await;
+                                                        if connection.player_data.inventory.currency.gil.quantity >= *item_quantity * item_info.price_mid {
+                                                            connection.player_data.inventory.currency.gil.quantity -= *item_quantity * item_info.price_mid;
+                                                            // TODO: We need to obtain information on where the item was added, as the client needs to be told.
+                                                            // For now we hardcode it to the very first inventory slot.
+                                                            //connection.player_data.inventory.add_in_next_free_slot(Item::new(*item_quantity, item_info.id));
+                                                            connection.player_data.inventory.add_in_slot(Item::new(*item_quantity, item_info.id), &ContainerType::Inventory0, 0);
+
+                                                            connection.send_gilshop_unk(0x07D0, 0, connection.player_data.inventory.currency.gil.quantity, 1).await;
+
+                                                            connection.send_inventory_ack(u32::MAX, INVENTORY_ACTION_ACK_SHOP as u16).await;
+
+                                                            // TODO: This is hardcoded to the first item slot in the inventory, fix this
+                                                            connection.send_gilshop_unk(0, 0, *item_quantity, item_info.id).await;
+                                                            connection.send_gilshop_ack(*event_id, item_info.id, *item_quantity, item_info.price_mid).await;
+
+                                                            let target_id = connection.player_data.target_actorid;
+                                                            connection.event_scene(&target_id, *event_id, 10, 8193, vec![1, 100]).await;
                                                         } else {
                                                             connection.send_message("Insufficient gil to buy item. Nice try bypassing the client-side check!").await;
+                                                            connection.event_finish(*event_id).await;
                                                         }
                                                     } else {
                                                         connection.send_message("Unable to find shop item, this is a bug in Kawari!").await;
+                                                        connection.event_finish(*event_id).await;
                                                     }
                                                 } else if *buy_sell_mode == SELL {
                                                     // TODO: Implement selling items back to shops
                                                     connection.send_message("Selling items to shops is not yet implemented. Cancelling event...").await;
+                                                    connection.event_finish(*event_id).await;
                                                 } else {
                                                     tracing::error!("Received unknown transaction mode {buy_sell_mode}!");
+                                                    connection.event_finish(*event_id).await;
                                                 }
-                                                // Cancel the event for now so the client doesn't get stuck
-                                                connection.event_finish(*event_id).await;
                                             }
                                             ClientZoneIpcData::StartTalkEvent { actor_id, event_id } => {
+                                                connection.player_data.target_actorid = *actor_id;
                                                 // load event
                                                 {
                                                     let ipc = ServerZoneIpcSegment {

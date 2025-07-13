@@ -294,6 +294,16 @@
             "name": "LevequestCompleteList",
             "opcode": 371,
             "size": 232
+        },
+        {
+            "name": "GilShopTransactionAck",
+            "opcode": 974,
+            "size": 32
+        },
+        {
+            "name": "GilShopRelatedUnk",
+            "opcode": 435,
+            "size": 64
         }
     ],
     "ClientZoneIpcType": [
