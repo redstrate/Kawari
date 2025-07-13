@@ -128,6 +128,29 @@ pub enum ActorControlCategory {
         #[bw(map = write_bool_as::<u32>)]
         unlocked: bool,
     },
+    #[brw(magic = 0x17Au16)]
+    PlayerCurrency {
+        #[brw(pad_before = 2)] // padding
+        unk1: u32,
+        unk2: u32,
+        unk3: u32,
+    },
+    #[brw(magic = 0x209u16)]
+    SetItemLevel {
+        #[brw(pad_before = 2)] // padding
+        level: u32,
+    },
+    #[brw(magic = 0x112u16)]
+    UpdateHater {
+        #[brw(pad_before = 2)] // padding
+        unk1: u32,
+    },
+    #[brw(magic = 0xFDu16)]
+    CompanionUnlock {
+        #[brw(pad_before = 2)] // padding
+        unk1: u32,
+        unk2: u32, // unlocked?
+    },
     Unknown {
         category: u16,
         #[brw(pad_before = 2)] // padding
