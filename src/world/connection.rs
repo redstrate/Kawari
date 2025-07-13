@@ -21,9 +21,9 @@ use crate::{
             ActionEffect, ActionRequest, ActionResult, ActorControl, ActorControlCategory,
             ActorControlSelf, ActorControlTarget, ClientZoneIpcSegment, CommonSpawn, Config,
             ContainerInfo, CurrencyInfo, DisplayFlag, EffectKind, Equip, GameMasterRank, InitZone,
-            ItemInfo, Move, NpcSpawn, ObjectKind, PlayerStats, PlayerSubKind, ServerZoneIpcData,
-            ServerZoneIpcSegment, StatusEffect, StatusEffectList, UpdateClassInfo, Warp,
-            WeatherChange,
+            ItemInfo, Move, NpcSpawn, ObjectKind, PlayerStats, PlayerSubKind, QuestActiveList,
+            ServerZoneIpcData, ServerZoneIpcSegment, StatusEffect, StatusEffectList,
+            UpdateClassInfo, Warp, WeatherChange,
         },
     },
     opcodes::ServerZoneIpcType,
@@ -1295,6 +1295,24 @@ impl ZoneConnection {
     }
 
     pub async fn send_quest_information(&mut self) {
+        // quest active list
+        {
+            let ipc = ServerZoneIpcSegment {
+                op_code: ServerZoneIpcType::QuestActiveList,
+                timestamp: timestamp_secs(),
+                data: ServerZoneIpcData::QuestActiveList(QuestActiveList::default()),
+                ..Default::default()
+            };
+
+            self.send_segment(PacketSegment {
+                source_actor: self.player_data.actor_id,
+                target_actor: self.player_data.actor_id,
+                segment_type: SegmentType::Ipc,
+                data: SegmentData::Ipc { data: ipc },
+            })
+            .await;
+        }
+
         // quest complete list
         {
             let ipc = ServerZoneIpcSegment {

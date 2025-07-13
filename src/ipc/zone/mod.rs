@@ -91,6 +91,9 @@ pub use event_yield_handler::EventYieldHandler;
 mod object_spawn;
 pub use object_spawn::ObjectSpawn;
 
+mod quest_active_list;
+pub use quest_active_list::QuestActiveList;
+
 use crate::COMPLETED_QUEST_BITMASK_SIZE;
 use crate::TITLE_UNLOCK_BITMASK_SIZE;
 use crate::common::ObjectTypeId;
@@ -467,6 +470,8 @@ pub enum ServerZoneIpcData {
     TitleList {
         unlock_bitmask: [u8; TITLE_UNLOCK_BITMASK_SIZE],
     },
+    #[br(pre_assert(*magic == ServerZoneIpcType::QuestActiveList))]
+    QuestActiveList(QuestActiveList),
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -942,6 +947,10 @@ mod tests {
             (
                 ServerZoneIpcType::FreeCompanyInfo,
                 ServerZoneIpcData::FreeCompanyInfo { unk: [0; 80] },
+            ),
+            (
+                ServerZoneIpcType::QuestActiveList,
+                ServerZoneIpcData::QuestActiveList(QuestActiveList::default()),
             ),
         ];
 

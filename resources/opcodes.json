@@ -284,6 +284,11 @@
             "name": "TitleList",
             "opcode": 731,
             "size": 112
+        },
+        {
+            "name": "QuestActiveList",
+            "opcode": 398,
+            "size": 480
         }
     ],
     "ClientZoneIpcType": [
