@@ -1032,6 +1032,66 @@ async fn client_loop(
                                                 })
                                                 .await;
                                             }
+                                            ClientZoneIpcData::ContentFinderRegister { .. } => {
+                                                let ipc = ServerZoneIpcSegment {
+                                                    op_code: ServerZoneIpcType::ContentFinderFound,
+                                                    timestamp: timestamp_secs(),
+                                                    data: ServerZoneIpcData::ContentFinderFound {
+                                                        state1: 2,
+                                                        classjob_id: 1,
+                                                        unk1: [
+                                                            5,
+                                                            2,
+                                                            5,
+                                                            2,
+                                                            5,
+                                                            2,
+                                                            96,
+                                                            4,
+                                                            5,
+                                                            64,
+                                                            2,
+                                                            5,
+                                                            2,
+                                                            5,
+                                                            2,
+                                                            2,
+                                                            2,
+                                                            2,
+                                                            4,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                        ]
+                                                    },
+                                                    ..Default::default()
+                                                };
+
+                                                connection
+                                                .send_segment(PacketSegment {
+                                                    source_actor: connection.player_data.actor_id,
+                                                    target_actor: connection.player_data.actor_id,
+                                                    segment_type: SegmentType::Ipc,
+                                                    data: SegmentData::Ipc { data: ipc },
+                                                })
+                                                .await;
+                                            }
                                             ClientZoneIpcData::Unknown { .. } => {
                                                 tracing::warn!("Unknown packet {:?} recieved, this should be handled!", data.op_code);
                                             }

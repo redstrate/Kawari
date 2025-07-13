@@ -422,6 +422,20 @@ pub enum ServerZoneIpcData {
         /// Unknown, seems to always be 0x00000200.
         unk4: u32,
     },
+    #[br(pre_assert(*magic == ServerZoneIpcType::ContentFinderFound))]
+    ContentFinderFound {
+        /// 0 = Nothing happens
+        /// 1 = Reserving server
+        /// 2 = again? ^
+        /// 3 = duty ready
+        /// 4 = checking member status
+        /// nothing appears to happen above 5
+        state1: u8,
+        classjob_id: u8,
+        unk1: [u8; 38],
+    },
+    #[br(pre_assert(*magic == ServerZoneIpcType::ContentFinderFound2))]
+    ContentFinderFound2 { unk1: [u8; 8] },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -597,6 +611,8 @@ pub enum ClientZoneIpcData {
     /// Unsure the true purpose of this, but it's needed for the Unending Journey to function.
     #[br(pre_assert(*magic == ClientZoneIpcType::UnkCall2))]
     UnkCall2 { unk1: [u8; 8] },
+    #[br(pre_assert(*magic == ClientZoneIpcType::ContentFinderRegister))]
+    ContentFinderRegister { unk1: [u8; 40] },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,

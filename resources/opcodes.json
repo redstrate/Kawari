@@ -249,6 +249,16 @@
             "name": "InventoryTransactionFinish",
             "opcode": 854,
             "size": 16
+        },
+        {
+            "name": "ContentFinderFound",
+            "opcode": 619,
+            "size": 40
+        },
+        {
+            "name": "ContentFinderFound2",
+            "opcode": 619,
+            "size": 812
         }
     ],
     "ClientZoneIpcType": [
@@ -401,6 +411,11 @@
             "name": "StandardControlsPivot",
             "opcode": 836,
             "size": 8
+        },
+        {
+            "name": "ContentFinderRegister",
+            "opcode": 991,
+            "size": 40
         }
     ],
     "ServerLobbyIpcType": [
