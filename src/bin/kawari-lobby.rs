@@ -199,7 +199,6 @@ async fn main() {
         };
 
         // as seen in retail, the server sends a KeepAliveRequest before doing *anything*
-        // TODO: i think the zone server does this too, but in the wrong order
         {
             connection
                 .send_segment(PacketSegment {
