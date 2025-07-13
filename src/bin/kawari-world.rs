@@ -6,7 +6,7 @@ use kawari::RECEIVE_BUFFER_SIZE;
 use kawari::common::Position;
 use kawari::common::{GameData, timestamp_secs};
 use kawari::config::get_config;
-use kawari::inventory::{Item, ItemOperationKind};
+use kawari::inventory::{ContainerType, Item, ItemOperationKind};
 use kawari::ipc::chat::{ServerChatIpcData, ServerChatIpcSegment};
 use kawari::ipc::zone::{
     ActorControlCategory, ActorControlSelf, PlayerEntry, PlayerSpawn, PlayerStatus, SocialList,
@@ -810,6 +810,28 @@ async fn client_loop(
                                                 .await;
 
                                                 connection.player_data.inventory.process_action(action);
+
+                                                // if updated equipped items, we have to process that
+                                                if action.src_storage_id == ContainerType::Equipped || action.dst_storage_id == ContainerType::Equipped {
+                                                    let main_weapon_id;
+                                                    let model_ids;
+                                                    {
+                                                        let mut game_data = connection.gamedata.lock().unwrap();
+                                                        let inventory = &connection.player_data.inventory;
+
+                                                        main_weapon_id = inventory.get_main_weapon_id(&mut game_data);
+                                                        model_ids = inventory.get_model_ids(&mut game_data);
+                                                    }
+
+                                                    connection.handle
+                                                    .send(ToServer::Equip(
+                                                        connection.id,
+                                                        connection.player_data.actor_id,
+                                                        main_weapon_id,
+                                                        model_ids,
+                                                    ))
+                                                    .await;
+                                                }
 
                                                 if action.operation_type == ItemOperationKind::Discard {
                                                     tracing::info!("Player is discarding from their inventory!");
