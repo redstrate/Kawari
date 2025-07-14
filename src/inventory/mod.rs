@@ -61,6 +61,12 @@ impl TryFrom<u8> for ItemOperationKind {
     }
 }
 
+pub struct ItemDestinationInfo {
+    pub container: ContainerType,
+    pub index: u16,
+    pub quantity: u32,
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Inventory {
     pub equipped: EquippedStorage,
@@ -82,9 +88,16 @@ pub struct Inventory {
 
 impl Default for Inventory {
     fn default() -> Self {
+        // TODO: Set the ContainerType for the others if needed?
+        // Right now we only use this for adding items to the main inventory.
+        let mut pages = std::array::from_fn(|_| GenericStorage::default());
+        pages[0].kind = ContainerType::Inventory0;
+        pages[1].kind = ContainerType::Inventory1;
+        pages[2].kind = ContainerType::Inventory2;
+        pages[3].kind = ContainerType::Inventory3;
         Self {
             equipped: EquippedStorage::default(),
-            pages: std::array::from_fn(|_| GenericStorage::default()),
+            pages,
             armoury_main_hand: GenericStorage::default(),
             armoury_head: GenericStorage::default(),
             armoury_body: GenericStorage::default(),
@@ -273,15 +286,44 @@ impl Inventory {
         }
     }
 
-    pub fn add_in_next_free_slot(&mut self, item: Item) {
+    fn add_in_empty_slot(&mut self, item: Item) -> Option<ItemDestinationInfo> {
         for page in &mut self.pages {
-            for slot in &mut page.slots {
+            for (slot_index, slot) in page.slots.iter_mut().enumerate() {
                 if slot.quantity == 0 {
                     slot.clone_from(&item);
-                    return;
+                    return Some(ItemDestinationInfo {
+                        container: page.kind,
+                        index: slot_index as u16,
+                        quantity: item.quantity,
+                    });
                 }
             }
         }
+        None
+    }
+
+    pub fn add_in_next_free_slot(
+        &mut self,
+        item: Item,
+        stack_size: u32,
+    ) -> Option<ItemDestinationInfo> {
+        if stack_size > 1 {
+            for page in &mut self.pages {
+                for (slot_index, slot) in page.slots.iter_mut().enumerate() {
+                    if slot.id == item.id && slot.quantity + item.quantity <= stack_size {
+                        slot.quantity += item.quantity;
+                        return Some(ItemDestinationInfo {
+                            container: page.kind,
+                            index: slot_index as u16,
+                            quantity: slot.quantity,
+                        });
+                    }
+                }
+            }
+        }
+
+        // If we didn't find any stacks, or the item isn't stackable, try again to find an empty inventory slot.
+        self.add_in_empty_slot(item)
     }
 
     pub fn add_in_slot(&mut self, item: Item, container_type: &ContainerType, index: u16) {

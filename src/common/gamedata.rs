@@ -49,7 +49,10 @@ pub struct ItemInfo {
     pub price_low: u32,
     /// The item's equip category.
     pub equip_category: u8,
+    /// The item's primary model id.
     pub primary_model_id: u64,
+    /// The item's max stack size.
+    pub stack_size: u32,
 }
 
 #[derive(Debug)]
@@ -191,6 +194,10 @@ impl GameData {
                 panic!("Unexpected type!");
             };
 
+            let physis::exd::ColumnData::UInt32(stack_size) = &matched_row.columns[20] else {
+                panic!("Unexpected type!");
+            };
+
             let physis::exd::ColumnData::UInt32(price_mid) = &matched_row.columns[25] else {
                 panic!("Unexpected type!");
             };
@@ -210,6 +217,7 @@ impl GameData {
                 price_low: *price_low,
                 equip_category: *equip_category,
                 primary_model_id: *primary_model_id,
+                stack_size: *stack_size,
             };
 
             return Some(item_info);

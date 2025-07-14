@@ -1,3 +1,4 @@
+use crate::inventory::ContainerType;
 use serde::{Deserialize, Serialize};
 
 use super::{Item, Storage};
@@ -5,12 +6,15 @@ use super::{Item, Storage};
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct GenericStorage<const N: usize> {
     pub slots: Vec<Item>,
+    #[serde(skip)]
+    pub kind: ContainerType,
 }
 
 impl<const N: usize> Default for GenericStorage<N> {
     fn default() -> Self {
         Self {
             slots: vec![Item::default(); N],
+            kind: ContainerType::Invalid,
         }
     }
 }

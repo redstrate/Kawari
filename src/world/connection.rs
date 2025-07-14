@@ -10,8 +10,10 @@ use tokio::net::TcpStream;
 
 use crate::{
     CLASSJOB_ARRAY_SIZE, COMPLETED_LEVEQUEST_BITMASK_SIZE, COMPLETED_QUEST_BITMASK_SIZE,
+    ERR_INVENTORY_ADD_FAILED,
     common::{
-        GameData, ObjectId, ObjectTypeId, Position, timestamp_secs, value_to_flag_byte_index_value,
+        GameData, ItemInfoQuery, ObjectId, ObjectTypeId, Position, timestamp_secs,
+        value_to_flag_byte_index_value,
     },
     config::{WorldConfig, get_config},
     inventory::{ContainerType, Inventory, Item, Storage},
@@ -860,10 +862,27 @@ impl ZoneConnection {
                     }
                 }
                 Task::AddItem { id } => {
-                    self.player_data
-                        .inventory
-                        .add_in_next_free_slot(Item::new(1, *id));
-                    self.send_inventory(false).await;
+                    let item_info;
+                    {
+                        let mut game_data = self.gamedata.lock().unwrap();
+                        item_info = game_data.get_item_info(ItemInfoQuery::ById(*id));
+                    }
+                    if item_info.is_some() {
+                        if self
+                            .player_data
+                            .inventory
+                            .add_in_next_free_slot(Item::new(1, *id), item_info.unwrap().stack_size)
+                            .is_some()
+                        {
+                            self.send_inventory(false).await;
+                        } else {
+                            tracing::error!(ERR_INVENTORY_ADD_FAILED);
+                            self.send_message(ERR_INVENTORY_ADD_FAILED).await;
+                        }
+                    } else {
+                        tracing::error!(ERR_INVENTORY_ADD_FAILED);
+                        self.send_message(ERR_INVENTORY_ADD_FAILED).await;
+                    }
                 }
                 Task::CompleteAllQuests {} => {
                     self.player_data.completed_quests = vec![0xFF; COMPLETED_QUEST_BITMASK_SIZE];

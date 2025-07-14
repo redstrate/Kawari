@@ -115,3 +115,7 @@ pub const INVENTORY_ACTION_ACK_SHOP: u8 = 6;
 /// In the past, many more values were used according to Sapphire:
 /// https://github.com/SapphireServer/Sapphire/blob/044bff026c01b4cc3a37cbc9b0881fadca3fc477/src/common/Common.h#L83
 pub const INVENTORY_ACTION_ACK_GENERAL: u8 = 7;
+
+/// Error messages: TODO: this should probably be moved into its own universal mod/crate?
+pub const ERR_INVENTORY_ADD_FAILED: &str =
+    "Unable to add item to inventory! Your inventory is full, or this is a bug in Kawari!";
