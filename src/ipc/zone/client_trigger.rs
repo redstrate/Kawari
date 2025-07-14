@@ -61,6 +61,12 @@ pub enum ClientTriggerCommand {
     },
     #[brw(magic = 0x12Fu16)]
     RequestTitleList {},
+    /// When the player right-clicks their status effect to remove it.
+    #[brw(magic = 0x68u16)]
+    ManuallyRemoveEffect {
+        #[brw(pad_before = 2)] // padding
+        effect_id: u32,
+    },
     Unknown {
         category: u16,
         // seen in haircut event

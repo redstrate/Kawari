@@ -418,6 +418,13 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                                 to_remove.push(id);
                             }
                         }
+                        ClientTriggerCommand::ManuallyRemoveEffect { effect_id } => {
+                            let msg = FromServer::LoseEffect(*effect_id as u16);
+
+                            if handle.send(msg).is_err() {
+                                to_remove.push(id);
+                            }
+                        }
                         _ => tracing::warn!("Server doesn't know what to do with {:#?}", trigger),
                     }
                 }
