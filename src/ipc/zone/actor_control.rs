@@ -1,6 +1,6 @@
 use binrw::binrw;
 
-use crate::common::{read_bool_from, write_bool_as};
+use crate::common::{ObjectId, read_bool_from, write_bool_as};
 
 use super::OnlineStatus;
 
@@ -161,14 +161,14 @@ pub enum ActorControlCategory {
         #[brw(pad_before = 2)] // padding
         effect_id: u32,
         unk2: u32,
-        unk3: u32,
+        source_actor_id: ObjectId,
     },
     #[brw(magic = 0x14u16)]
     GainEffect {
         #[brw(pad_before = 2)] // padding
         effect_id: u32,
         unk2: u32,
-        unk3: u32,
+        source_actor_id: ObjectId,
     },
     #[brw(magic = 0x11u16)]
     Cooldown {
