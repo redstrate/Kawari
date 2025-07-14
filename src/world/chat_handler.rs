@@ -1,5 +1,5 @@
 use crate::{
-    ITEM_CONDITION_MAX,
+    ERR_INVENTORY_ADD_FAILED, ITEM_CONDITION_MAX,
     common::ItemInfoQuery,
     inventory::{Item, Storage},
     ipc::zone::{ChatMessage, GameMasterRank},
@@ -80,22 +80,28 @@ impl ChatHandler {
             }
             "!item" => {
                 let (_, name) = chat_message.message.split_once(' ').unwrap();
-
+                let mut result = None;
                 {
                     let mut gamedata = connection.gamedata.lock().unwrap();
 
                     if let Some(item_info) =
                         gamedata.get_item_info(ItemInfoQuery::ByName(name.to_string()))
                     {
-                        connection
-                            .player_data
-                            .inventory
-                            .add_in_next_free_slot(Item::new(1, item_info.id));
+                        result = connection.player_data.inventory.add_in_next_free_slot(
+                            Item::new(1, item_info.id),
+                            item_info.stack_size,
+                        );
                     }
                 }
 
-                connection.send_inventory(false).await;
-                true
+                if result.is_some() {
+                    connection.send_inventory(false).await;
+                    true
+                } else {
+                    tracing::error!(ERR_INVENTORY_ADD_FAILED);
+                    connection.send_message(ERR_INVENTORY_ADD_FAILED).await;
+                    true
+                }
             }
             "!reload" => {
                 connection.reload_scripts();

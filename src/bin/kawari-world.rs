@@ -26,7 +26,7 @@ use kawari::world::{
     ClientHandle, Event, FromServer, LuaPlayer, PlayerData, ServerHandle, StatusEffects, ToServer,
     WorldDatabase, handle_custom_ipc, server_main_loop,
 };
-use kawari::{RECEIVE_BUFFER_SIZE, TITLE_UNLOCK_BITMASK_SIZE};
+use kawari::{ERR_INVENTORY_ADD_FAILED, RECEIVE_BUFFER_SIZE, TITLE_UNLOCK_BITMASK_SIZE};
 
 use mlua::{Function, Lua};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -895,22 +895,23 @@ async fn client_loop(
 
                                                     if let Some(item_info) = result {
                                                         if connection.player_data.inventory.currency.gil.quantity >= *item_quantity * item_info.price_mid {
-                                                            connection.player_data.inventory.currency.gil.quantity -= *item_quantity * item_info.price_mid;
-                                                            // TODO: We need to obtain information on where the item was added, as the client needs to be told.
-                                                            // For now we hardcode it to the very first inventory slot.
-                                                            //connection.player_data.inventory.add_in_next_free_slot(Item::new(*item_quantity, item_info.id));
-                                                            connection.player_data.inventory.add_in_slot(Item::new(*item_quantity, item_info.id), &ContainerType::Inventory0, 0);
+                                                            if let Some(add_result) = connection.player_data.inventory.add_in_next_free_slot(Item::new(*item_quantity, item_info.id), item_info.stack_size) {
+                                                                connection.player_data.inventory.currency.gil.quantity -= *item_quantity * item_info.price_mid;
+                                                                connection.send_gilshop_item_update(0x07D0, 0, connection.player_data.inventory.currency.gil.quantity, 1).await;
 
-                                                            connection.send_gilshop_item_update(0x07D0, 0, connection.player_data.inventory.currency.gil.quantity, 1).await;
+                                                                connection.send_inventory_ack(u32::MAX, INVENTORY_ACTION_ACK_SHOP as u16).await;
 
-                                                            connection.send_inventory_ack(u32::MAX, INVENTORY_ACTION_ACK_SHOP as u16).await;
+                                                                connection.send_gilshop_item_update(add_result.container as u16, add_result.index, add_result.quantity, item_info.id).await;
+                                                                connection.send_gilshop_ack(*event_id, item_info.id, *item_quantity, item_info.price_mid).await;
 
-                                                            // TODO: This is hardcoded to the first item slot in the inventory, fix this
-                                                            connection.send_gilshop_item_update(0, 0, *item_quantity, item_info.id).await;
-                                                            connection.send_gilshop_ack(*event_id, item_info.id, *item_quantity, item_info.price_mid).await;
-
-                                                            let target_id = connection.player_data.target_actorid;
-                                                            connection.event_scene(&target_id, *event_id, 10, 8193, vec![1, 100]).await;
+                                                                let target_id = connection.player_data.target_actorid;
+                                                                // See GenericShopkeeper.lua for information about this scene, the flags, and the params.
+                                                                connection.event_scene(&target_id, *event_id, 10, 8193, vec![1, 100]).await;
+                                                            } else {
+                                                                tracing::error!(ERR_INVENTORY_ADD_FAILED);
+                                                                connection.send_message(ERR_INVENTORY_ADD_FAILED).await;
+                                                                connection.event_finish(*event_id).await;
+                                                            }
                                                         } else {
                                                             connection.send_message("Insufficient gil to buy item. Nice try bypassing the client-side check!").await;
                                                             connection.event_finish(*event_id).await;
