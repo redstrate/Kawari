@@ -119,6 +119,7 @@ These special debug commands start with `!` and are custom to Kawari.
 * `!inspect`: Prints info about the player.
 * `!completeallquests`: Completes every quest in the game, useful for accessing stuff gated behind quest completion.
 * `!unlockcontent <id>`: Unlocks the specified instanced content.
+* `!replay <path>`: Replays packets, must be in the format generated from cfcap-capture.
 
 ### GM commands
 
