@@ -620,6 +620,13 @@ pub fn load_init_script(lua: &mut Lua) -> mlua::Result<()> {
             Ok(())
         })?;
 
+    let register_effects_func =
+        lua.create_function(|lua, (command_type, status_script): (u32, String)| {
+            let mut state = lua.app_data_mut::<ExtraLuaState>().unwrap();
+            let _ = state.effect_scripts.insert(command_type, status_script);
+            Ok(())
+        })?;
+
     let get_login_message_func = lua.create_function(|_, _: ()| {
         let config = get_config();
         Ok(config.world.login_message)
@@ -632,6 +639,7 @@ pub fn load_init_script(lua: &mut Lua) -> mlua::Result<()> {
         .set("registerCommand", register_command_func)?;
     lua.globals()
         .set("registerGMCommand", register_gm_command_func)?;
+    lua.globals().set("registerEffect", register_effects_func)?;
     lua.globals()
         .set("getLoginMessage", get_login_message_func)?;
 

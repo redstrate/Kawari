@@ -49,6 +49,7 @@ pub struct ExtraLuaState {
     pub event_scripts: HashMap<u32, String>,
     pub command_scripts: HashMap<String, String>,
     pub gm_command_scripts: HashMap<u32, String>,
+    pub effect_scripts: HashMap<u32, String>,
 }
 
 #[derive(Debug, Default, Clone)]
