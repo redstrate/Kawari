@@ -2,8 +2,8 @@ use mlua::{FromLua, Lua, LuaSerdeExt, UserData, UserDataFields, UserDataMethods,
 
 use crate::{
     common::{
-        ObjectId, ObjectTypeId, Position, timestamp_secs, workdefinitions::RemakeMode,
-        write_quantized_rotation,
+        INVALID_OBJECT_ID, ObjectId, ObjectTypeId, Position, timestamp_secs,
+        workdefinitions::RemakeMode, write_quantized_rotation,
     },
     config::get_config,
     inventory::{CurrencyStorage, EquippedStorage, GenericStorage, Inventory, Item},
@@ -117,6 +117,16 @@ impl LuaPlayer {
     }
 
     fn give_status_effect(&mut self, effect_id: u16, duration: f32) {
+        let op_code = ServerZoneIpcType::ActorControlSelf;
+        let data = ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
+            category: ActorControlCategory::GainEffect {
+                effect_id: effect_id as u32,
+                unk2: 0,
+                source_actor_id: INVALID_OBJECT_ID, // TODO: fill
+            },
+        });
+        self.create_segment_self(op_code, data);
+
         self.status_effects.add(effect_id, duration);
     }
 
@@ -287,7 +297,7 @@ impl UserData for LuaPlayer {
             },
         );
         methods.add_method_mut(
-            "give_status_effect",
+            "gain_effect",
             |_, this, (effect_id, duration): (u16, f32)| {
                 this.give_status_effect(effect_id, duration);
                 Ok(())
@@ -572,6 +582,16 @@ impl UserData for EffectsBuilder {
                     unk3: 0,
                     unk4: 0,
                     amount,
+                },
+            });
+            Ok(())
+        });
+        methods.add_method_mut("gain_effect", |_, this, effect_id: u16| {
+            this.effects.push(ActionEffect {
+                kind: EffectKind::Unk1 {
+                    unk1: 0,
+                    unk2: 7728,
+                    effect_id,
                 },
             });
             Ok(())

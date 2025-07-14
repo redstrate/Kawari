@@ -45,7 +45,10 @@ pub enum FromServer {
     UpdateConfig(u32, Config),
     /// Update an actor's model IDs.
     ActorEquip(u32, u64, [u32; 10]),
+    /// Informs the connection to replay packet data to the client.
     ReplayPacket(PacketSegment<ServerZoneIpcSegment>),
+    /// The player should lose this effect.
+    LoseEffect(u16),
 }
 
 #[derive(Debug, Clone)]
@@ -110,6 +113,8 @@ pub enum ToServer {
     Equip(ClientId, u32, u64, [u32; 10]),
     /// Begins a packet replay.
     BeginReplay(ClientId, String),
+    /// The player gains an effect.
+    GainEffect(ClientId, u32, u16, f32),
 }
 
 #[derive(Clone, Debug)]

@@ -95,7 +95,7 @@ mod quest_active_list;
 pub use quest_active_list::QuestActiveList;
 
 mod effect_result;
-pub use effect_result::EffectResult;
+pub use effect_result::{EffectEntry, EffectResult};
 
 use crate::COMPLETED_LEVEQUEST_BITMASK_SIZE;
 use crate::COMPLETED_QUEST_BITMASK_SIZE;

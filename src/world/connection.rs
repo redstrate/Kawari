@@ -12,8 +12,8 @@ use crate::{
     CLASSJOB_ARRAY_SIZE, COMPLETED_LEVEQUEST_BITMASK_SIZE, COMPLETED_QUEST_BITMASK_SIZE,
     ERR_INVENTORY_ADD_FAILED,
     common::{
-        GameData, ItemInfoQuery, ObjectId, ObjectTypeId, Position, timestamp_secs,
-        value_to_flag_byte_index_value,
+        GameData, INVALID_OBJECT_ID, ItemInfoQuery, ObjectId, ObjectTypeId, Position,
+        timestamp_secs, value_to_flag_byte_index_value,
     },
     config::{WorldConfig, get_config},
     inventory::{ContainerType, Inventory, Item, Storage},
@@ -22,10 +22,10 @@ use crate::{
         zone::{
             ActionEffect, ActionRequest, ActionResult, ActorControl, ActorControlCategory,
             ActorControlSelf, ActorControlTarget, ClientZoneIpcSegment, CommonSpawn, Config,
-            ContainerInfo, CurrencyInfo, DisplayFlag, EffectKind, Equip, EventScene,
-            GameMasterRank, InitZone, ItemInfo, Move, NpcSpawn, ObjectKind, PlayerStats,
-            PlayerSubKind, QuestActiveList, ServerZoneIpcData, ServerZoneIpcSegment, StatusEffect,
-            StatusEffectList, UpdateClassInfo, Warp, WeatherChange,
+            ContainerInfo, CurrencyInfo, DisplayFlag, EffectEntry, EffectKind, EffectResult, Equip,
+            EventScene, GameMasterRank, InitZone, ItemInfo, Move, NpcSpawn, ObjectKind,
+            PlayerStats, PlayerSubKind, QuestActiveList, ServerZoneIpcData, ServerZoneIpcSegment,
+            StatusEffect, StatusEffectList, UpdateClassInfo, Warp, WeatherChange,
         },
     },
     opcodes::ServerZoneIpcType,
@@ -1345,9 +1345,6 @@ impl ZoneConnection {
 
         // tell them the action results
         if let Some(effects_builder) = effects_builder {
-            let mut effects = [ActionEffect::default(); 8];
-            effects[..effects_builder.effects.len()].copy_from_slice(&effects_builder.effects);
-
             if let Some(actor) = self.get_actor_mut(request.target.object_id) {
                 for effect in &effects_builder.effects {
                     match effect.kind {
@@ -1362,34 +1359,102 @@ impl ZoneConnection {
                 self.update_hp_mp(actor.id, actor.hp, 10000).await;
             }
 
-            let ipc = ServerZoneIpcSegment {
-                op_code: ServerZoneIpcType::ActionResult,
-                timestamp: timestamp_secs(),
-                data: ServerZoneIpcData::ActionResult(ActionResult {
-                    main_target: request.target,
-                    target_id_again: request.target,
-                    action_id: request.action_key,
-                    animation_lock_time: 0.6,
-                    rotation: self.player_data.rotation,
-                    action_animation_id: request.action_key as u16, // assuming action id == animation id
-                    flag: 1,
-                    effect_count: effects_builder.effects.len() as u8,
-                    effects,
-                    unk1: 2662353,
-                    unk2: 3758096384,
-                    hidden_animation: 1,
-                    ..Default::default()
-                }),
-                ..Default::default()
-            };
+            // TODO: send Cooldown ActorControlSelf
 
-            self.send_segment(PacketSegment {
-                source_actor: self.player_data.actor_id,
-                target_actor: self.player_data.actor_id,
-                segment_type: SegmentType::Ipc,
-                data: SegmentData::Ipc { data: ipc },
-            })
-            .await;
+            // ActionResult
+            {
+                let mut effects = [ActionEffect::default(); 8];
+                effects[..effects_builder.effects.len()].copy_from_slice(&effects_builder.effects);
+
+                let ipc = ServerZoneIpcSegment {
+                    op_code: ServerZoneIpcType::ActionResult,
+                    timestamp: timestamp_secs(),
+                    data: ServerZoneIpcData::ActionResult(ActionResult {
+                        main_target: request.target,
+                        target_id_again: request.target,
+                        action_id: request.action_key,
+                        animation_lock_time: 0.6,
+                        rotation: self.player_data.rotation,
+                        action_animation_id: request.action_key as u16, // assuming action id == animation id
+                        flag: 1,
+                        effect_count: effects_builder.effects.len() as u8,
+                        effects,
+                        unk1: 2662353,
+                        unk2: 3758096384,
+                        hidden_animation: 1,
+                        ..Default::default()
+                    }),
+                    ..Default::default()
+                };
+
+                self.send_segment(PacketSegment {
+                    source_actor: self.player_data.actor_id,
+                    target_actor: self.player_data.actor_id,
+                    segment_type: SegmentType::Ipc,
+                    data: SegmentData::Ipc { data: ipc },
+                })
+                .await;
+            }
+
+            // EffectResult
+            // TODO: is this always sent? needs investigation
+            {
+                let mut num_entries = 0u8;
+                let mut entries = [EffectEntry::default(); 4];
+
+                for effect in &effects_builder.effects {
+                    if let EffectKind::Unk1 { effect_id, .. } = effect.kind {
+                        entries[num_entries as usize] = EffectEntry {
+                            index: num_entries,
+                            unk1: 0,
+                            id: effect_id,
+                            param: 30,
+                            unk2: 0,
+                            duration: 20.0,
+                            source_actor_id: INVALID_OBJECT_ID,
+                        };
+                        num_entries += 1;
+
+                        // also inform the server of our new status effect
+                        self.handle
+                            .send(ToServer::GainEffect(
+                                self.id,
+                                self.player_data.actor_id,
+                                effect_id,
+                                20.0, // TODO: fill out
+                            ))
+                            .await;
+                    }
+                }
+
+                let ipc = ServerZoneIpcSegment {
+                    op_code: ServerZoneIpcType::EffectResult,
+                    timestamp: timestamp_secs(),
+                    data: ServerZoneIpcData::EffectResult(EffectResult {
+                        unk1: 1,
+                        unk2: 776386,
+                        target_id: request.target.object_id,
+                        current_hp: 0,
+                        max_hp: 0,
+                        current_mp: 0,
+                        unk3: 0,
+                        class_id: 0,
+                        shield: 0,
+                        entry_count: num_entries,
+                        unk4: 0,
+                        statuses: entries,
+                    }),
+                    ..Default::default()
+                };
+
+                self.send_segment(PacketSegment {
+                    source_actor: self.player_data.actor_id,
+                    target_actor: self.player_data.actor_id,
+                    segment_type: SegmentType::Ipc,
+                    data: SegmentData::Ipc { data: ipc },
+                })
+                .await;
+            }
 
             if let Some(actor) = self.get_actor(request.target.object_id) {
                 if actor.hp == 0 {
@@ -1510,5 +1575,49 @@ impl ZoneConnection {
         self.handle
             .send(ToServer::BeginReplay(self.id, path.to_string()))
             .await;
+    }
+
+    pub async fn lose_effect(&mut self, effect_id: u16, lua_player: &mut LuaPlayer) {
+        // first, inform the effect script
+        {
+            let lua = self.lua.lock().unwrap();
+            let state = lua.app_data_ref::<ExtraLuaState>().unwrap();
+
+            let key = effect_id as u32;
+            if let Some(effect_script) = state.effect_scripts.get(&key) {
+                lua.scope(|scope| {
+                    let connection_data = scope.create_userdata_ref_mut(lua_player).unwrap();
+
+                    let config = get_config();
+
+                    let file_name = format!("{}/{}", &config.world.scripts_location, effect_script);
+                    lua.load(
+                        std::fs::read(&file_name).expect("Failed to locate scripts directory!"),
+                    )
+                    .set_name("@".to_string() + &file_name)
+                    .exec()
+                    .unwrap();
+
+                    let func: Function = lua.globals().get("onLose").unwrap();
+
+                    func.call::<()>(connection_data).unwrap();
+
+                    Ok(())
+                })
+                .unwrap();
+            } else {
+                tracing::warn!("Effect {effect_id} isn't scripted yet! Ignoring...");
+            }
+        }
+
+        // then send the actor control to lose the effect
+        self.actor_control_self(ActorControlSelf {
+            category: ActorControlCategory::LoseEffect {
+                effect_id: effect_id as u32,
+                unk2: 0,
+                source_actor_id: INVALID_OBJECT_ID, // TODO: fill
+            },
+        })
+        .await;
     }
 }

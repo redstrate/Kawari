@@ -807,6 +807,43 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     }
                 });
             }
+            ToServer::GainEffect(from_id, _from_actor_id, effect_id, effect_duration) => {
+                let send_lost_effect =
+                    |from_id: ClientId, data: Arc<Mutex<WorldServer>>, effect_id: u16| {
+                        let mut data = data.lock().unwrap();
+
+                        tracing::info!("Now losing effect {}!", effect_id);
+
+                        for (id, (handle, _)) in &mut data.clients {
+                            let id = *id;
+
+                            if id == from_id {
+                                let msg = FromServer::LoseEffect(effect_id);
+
+                                if handle.send(msg).is_err() {
+                                    data.to_remove.push(id);
+                                }
+                                break;
+                            }
+                        }
+                    };
+
+                // Eventually tell the player they lost this effect
+                // NOTE: I know this won't scale, but it's a fine hack for now
+
+                tracing::info!("Effect {effect_id} lasts for {effect_duration} seconds");
+
+                // we have to shadow these variables to tell rust not to move them into the async closure
+                let data = data.clone();
+                tokio::task::spawn(async move {
+                    let mut interval = tokio::time::interval(Duration::from_millis(
+                        (effect_duration * 1000.0) as u64,
+                    ));
+                    interval.tick().await;
+                    interval.tick().await;
+                    send_lost_effect(from_id, data, effect_id);
+                });
+            }
             ToServer::Disconnected(from_id) => {
                 let mut data = data.lock().unwrap();
 

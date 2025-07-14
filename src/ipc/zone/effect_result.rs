@@ -4,7 +4,7 @@ use crate::common::ObjectId;
 
 #[binrw]
 #[brw(little)]
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct EffectEntry {
     pub index: u8,
     pub unk1: u8,

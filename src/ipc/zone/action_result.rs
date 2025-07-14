@@ -40,7 +40,7 @@ pub enum EffectKind {
     #[brw(magic = 27u8)]
     BeginCombo,
     #[brw(magic = 14u8)]
-    Unk1 { unk1: u8, unk2: u32, effect_id: u8 }, // seen during sprint
+    Unk1 { unk1: u8, unk2: u32, effect_id: u16 }, // seen during sprint
 }
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy, Default, Deserialize, Serialize)]
