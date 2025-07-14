@@ -88,6 +88,9 @@ pub const CLASSJOB_ARRAY_SIZE: usize = 32;
 /// The maximum durability of an item.
 pub const ITEM_CONDITION_MAX: u16 = 30000;
 
+/// The invalid/nothing/none actor ID.
+pub const INVALID_ACTOR_ID: u32 = 0xE000_0000;
+
 // These operation codes/types change regularly, so update them when needed!
 
 /// The operation opcode/type when discarding an item from the inventory.

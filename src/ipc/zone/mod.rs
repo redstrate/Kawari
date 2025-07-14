@@ -405,40 +405,42 @@ pub enum ServerZoneIpcData {
     #[br(pre_assert(*magic == ServerZoneIpcType::InventoryTransaction))]
     InventoryTransaction {
         /// This is later reused in InventoryTransactionFinish, so it might be some sort of sequence or context id, but it's not the one sent by the client
-        unk1: u32,
+        sequence: u32,
         /// Same as the one sent by the client, not the one that the server responds with in InventoryActionAck!
         operation_type: ItemOperationKind,
         #[brw(pad_before = 3)]
         src_actor_id: u32,
+        #[brw(pad_size_to = 4)]
         src_storage_id: ContainerType,
         src_container_index: u16,
         #[brw(pad_before = 2)]
-        /// On retail, this contains very strange values that don't make sense (in regards to stack size). It's possible this field is a different size or isn't intended for stack size.
-        unk2: u32,
-        /// On retail, this contains very strange values that don't make sense (in regards to catalog id). It's possible this field is a different size or isn't intended for catalog id.
-        unk3: u32,
+        src_stack: u32,
+        src_catalog_id: u32,
 
-        /// This is all static as far as I can tell, across two captures and a bunch of discards these never changed
-        /// seems to always be 0
+        /// This section was observed to be static, across two captures and a bunch of discards these never changed.
+        /// Always set to 0xE000_0000, also known as no/invalid actor.
         dst_actor_id: u32,
-        /// seems to always be 57344/0xE000
-        dst_storage_id: u16,
-        /// seems to always be 65535/0xFFFF
+        /// Used in discard operations, both this dummy container and dst_storage_id are set to a container type of 0xFFFF.
+        /// While this struct is nearly identical to ItemOperation, it deviates here by not having 2 bytes of padding.
+        dummy_container: ContainerType,
+        dst_storage_id: ContainerType,
         dst_container_index: u16,
-        /// seems to always be 0x0000FFFF
-        #[brw(pad_after = 10)]
+        /// Always set to zero.
+        #[brw(pad_before = 2)]
+        dst_stack: u32,
+        /// Always set to zero.
         dst_catalog_id: u32,
     },
     #[br(pre_assert(*magic == ServerZoneIpcType::InventoryTransactionFinish))]
     InventoryTransactionFinish {
         /// Same value as unk1 in InventoryTransaction.
-        unk1: u32,
-        /// Repeated unk1 value.
-        unk2: u32,
+        sequence: u32,
+        /// Repeated unk1 value. No, it's not a copy-paste error.
+        sequence_repeat: u32,
         /// Unknown, seems to always be 0x00000090.
-        unk3: u32,
+        unk1: u32,
         /// Unknown, seems to always be 0x00000200.
-        unk4: u32,
+        unk2: u32,
     },
     #[br(pre_assert(*magic == ServerZoneIpcType::ContentFinderFound))]
     ContentFinderFound {
@@ -944,26 +946,28 @@ mod tests {
             (
                 ServerZoneIpcType::InventoryTransaction,
                 ServerZoneIpcData::InventoryTransaction {
-                    unk1: 0,
+                    sequence: 0,
                     operation_type: ItemOperationKind::Move,
                     src_actor_id: 0,
                     src_storage_id: ContainerType::Inventory0,
                     src_container_index: 0,
-                    unk2: 0,
-                    unk3: 0,
+                    src_stack: 0,
+                    src_catalog_id: 0,
                     dst_actor_id: 0,
-                    dst_storage_id: 0,
+                    dummy_container: ContainerType::Inventory0,
+                    dst_storage_id: ContainerType::Inventory0,
                     dst_container_index: 0,
+                    dst_stack: 0,
                     dst_catalog_id: 0,
                 },
             ),
             (
                 ServerZoneIpcType::InventoryTransactionFinish,
                 ServerZoneIpcData::InventoryTransactionFinish {
+                    sequence: 0,
+                    sequence_repeat: 0,
                     unk1: 0,
                     unk2: 0,
-                    unk3: 0,
-                    unk4: 0,
                 },
             ),
             (
