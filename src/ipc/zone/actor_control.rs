@@ -151,6 +151,25 @@ pub enum ActorControlCategory {
         unk1: u32,
         unk2: u32, // unlocked?
     },
+    #[brw(magic = 0x18u16)]
+    UpdateRestedExp {
+        #[brw(pad_before = 2)] // padding
+        exp: u32,
+    },
+    #[brw(magic = 0x15u16)]
+    LoseEffect {
+        #[brw(pad_before = 2)] // padding
+        effect_id: u32,
+        unk2: u32,
+        unk33: u32,
+    },
+    #[brw(magic = 0x14u16)]
+    GainEffect {
+        #[brw(pad_before = 2)] // padding
+        effect_id: u32,
+        unk2: u32,
+        unk33: u32,
+    },
     Unknown {
         category: u16,
         #[brw(pad_before = 2)] // padding
