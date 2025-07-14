@@ -161,14 +161,21 @@ pub enum ActorControlCategory {
         #[brw(pad_before = 2)] // padding
         effect_id: u32,
         unk2: u32,
-        unk33: u32,
+        unk3: u32,
     },
     #[brw(magic = 0x14u16)]
     GainEffect {
         #[brw(pad_before = 2)] // padding
         effect_id: u32,
         unk2: u32,
-        unk33: u32,
+        unk3: u32,
+    },
+    #[brw(magic = 0x11u16)]
+    Cooldown {
+        #[brw(pad_before = 2)] // padding
+        unk1: u32,
+        unk2: u32,
+        unk3: u32,
     },
     Unknown {
         category: u16,
