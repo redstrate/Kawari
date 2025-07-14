@@ -39,6 +39,8 @@ pub enum EffectKind {
     },
     #[brw(magic = 27u8)]
     BeginCombo,
+    #[brw(magic = 14u8)]
+    Unk1 { unk1: u8, unk2: u32, effect_id: u8 }, // seen during sprint
 }
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy, Default, Deserialize, Serialize)]
@@ -189,5 +191,42 @@ mod tests {
             action_result.target_id_again.object_id,
             ObjectId(0x40070E42)
         );
+    }
+
+    #[test]
+    fn read_actionresult_sprint() {
+        let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        d.push("resources/tests/action_result_sprint.bin");
+
+        let buffer = read(d).unwrap();
+        let mut buffer = Cursor::new(&buffer);
+
+        let action_result = ActionResult::read_le(&mut buffer).unwrap();
+        assert_eq!(action_result.main_target.object_id, ObjectId(277554542));
+        assert_eq!(action_result.action_id, 3);
+        assert_eq!(action_result.unk1, 776386); // TODO: probably means this field is wrong
+        assert_eq!(action_result.animation_lock_time, 0.6);
+        assert_eq!(action_result.unk2, 3758096384); // TODO: ditto
+        assert_eq!(action_result.hidden_animation, 1);
+        assert_eq!(action_result.rotation, 2.6254003);
+        assert_eq!(action_result.action_animation_id, 3);
+        assert_eq!(action_result.variation, 0);
+        assert_eq!(action_result.flag, 1);
+        assert_eq!(action_result.unk3, 0);
+        assert_eq!(action_result.effect_count, 1);
+        assert_eq!(action_result.unk4, 0);
+        assert_eq!(action_result.unk5, [0; 6]);
+
+        // effect 0: unk
+        assert_eq!(
+            action_result.effects[0].kind,
+            EffectKind::Unk1 {
+                unk1: 0,
+                unk2: 7728,
+                effect_id: 50
+            }
+        );
+
+        assert_eq!(action_result.target_id_again.object_id, ObjectId(277554542));
     }
 }

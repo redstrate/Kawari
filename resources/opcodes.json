@@ -304,6 +304,11 @@
             "name": "UpdateInventorySlot",
             "opcode": 435,
             "size": 64
+        },
+        {
+            "name": "EffectResult",
+            "opcode": 431,
+            "size": 96
         }
     ],
     "ClientZoneIpcType": [

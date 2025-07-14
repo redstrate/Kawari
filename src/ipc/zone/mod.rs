@@ -94,6 +94,9 @@ pub use object_spawn::ObjectSpawn;
 mod quest_active_list;
 pub use quest_active_list::QuestActiveList;
 
+mod effect_result;
+pub use effect_result::EffectResult;
+
 use crate::COMPLETED_LEVEQUEST_BITMASK_SIZE;
 use crate::COMPLETED_QUEST_BITMASK_SIZE;
 use crate::TITLE_UNLOCK_BITMASK_SIZE;
@@ -523,6 +526,8 @@ pub enum ServerZoneIpcData {
         /// Always 0x7530_0000
         unk4: u32,
     },
+    #[br(pre_assert(*magic == ServerZoneIpcType::EffectResult))]
+    EffectResult(EffectResult),
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -1033,6 +1038,10 @@ mod tests {
                     unk3_and_item_id: 0,
                     unk4: 0,
                 },
+            ),
+            (
+                ServerZoneIpcType::EffectResult,
+                ServerZoneIpcData::EffectResult(EffectResult::default()),
             ),
         ];
 
