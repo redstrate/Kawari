@@ -96,12 +96,12 @@ impl ChatHandler {
 
                 if result.is_some() {
                     connection.send_inventory(false).await;
-                    true
                 } else {
                     tracing::error!(ERR_INVENTORY_ADD_FAILED);
                     connection.send_message(ERR_INVENTORY_ADD_FAILED).await;
-                    true
                 }
+
+                true
             }
             "!reload" => {
                 connection.reload_scripts();
