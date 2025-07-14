@@ -333,6 +333,8 @@ common_events = {
 generic_gil_shops = {
     262157, -- Tanie <Florist>, New Gridania
     262197, -- Gerulf <Independent Culinarian>, Limsa Lominsa: The Lower Decks
+    262735, -- Sorcha <Independent Jeweler> (Limsa Lominsa: The Lower Decks), Battlecraft Accessories
+    262736, -- Sorcha <Independent Jeweler> (Limsa Lominsa: The Lower Decks), Fieldcraft/Tradecraft Accessories
     263220, -- Neon <Air-wheeler dealer>, Solution Nine
 }
 
