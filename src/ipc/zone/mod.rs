@@ -145,7 +145,14 @@ pub type ServerZoneIpcSegment = IpcSegment<ServerZoneIpcType, ServerZoneIpcData>
 
 impl ReadWriteIpcSegment for ServerZoneIpcSegment {
     fn calc_size(&self) -> u32 {
-        IPC_HEADER_SIZE + self.op_code.calc_size()
+        IPC_HEADER_SIZE
+            + match &self.op_code {
+                ServerZoneIpcType::Unknown(..) => match &self.data {
+                    ServerZoneIpcData::Unknown { unk } => unk.len() as u32,
+                    _ => panic!("Unknown packet type doesn't have unknown data?"),
+                },
+                _ => self.op_code.calc_size(),
+            }
     }
 
     fn get_name(&self) -> &'static str {

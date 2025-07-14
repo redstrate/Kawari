@@ -12,8 +12,9 @@ use crate::{
     common::Position,
     ipc::zone::{
         ActionRequest, ActorControl, ActorControlSelf, ActorControlTarget, ClientTrigger,
-        CommonSpawn, Config, NpcSpawn,
+        CommonSpawn, Config, NpcSpawn, ServerZoneIpcSegment,
     },
+    packet::PacketSegment,
 };
 
 use super::Actor;
@@ -44,6 +45,7 @@ pub enum FromServer {
     UpdateConfig(u32, Config),
     /// Update an actor's model IDs.
     ActorEquip(u32, u64, [u32; 10]),
+    ReplayPacket(PacketSegment<ServerZoneIpcSegment>),
 }
 
 #[derive(Debug, Clone)]
@@ -106,6 +108,8 @@ pub enum ToServer {
     Config(ClientId, u32, Config),
     /// Tell the server what models IDs we have equipped.
     Equip(ClientId, u32, u64, [u32; 10]),
+    /// Begins a packet replay.
+    BeginReplay(ClientId, String),
 }
 
 #[derive(Clone, Debug)]

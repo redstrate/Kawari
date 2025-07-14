@@ -1,16 +1,22 @@
+use binrw::{BinRead, BinWrite};
 use std::{
     collections::HashMap,
+    io::Cursor,
+    path::PathBuf,
     sync::{Arc, Mutex},
     time::Duration,
 };
 use tokio::sync::mpsc::Receiver;
 
 use crate::{
-    common::{CustomizeData, GameData, ObjectId, ObjectTypeId},
+    common::{CustomizeData, GameData, ObjectId, ObjectTypeId, timestamp_secs},
     ipc::zone::{
         ActorControl, ActorControlCategory, ActorControlSelf, ActorControlTarget, BattleNpcSubKind,
-        ClientTriggerCommand, CommonSpawn, NpcSpawn, ObjectKind,
+        ClientTriggerCommand, CommonSpawn, NpcSpawn, ObjectKind, ServerZoneIpcData,
+        ServerZoneIpcSegment,
     },
+    opcodes::ServerZoneIpcType,
+    packet::{PacketSegment, SegmentData, SegmentType},
 };
 
 use super::{Actor, ClientHandle, ClientId, FromServer, ToServer};
@@ -672,6 +678,134 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         to_remove.push(id);
                     }
                 }
+            }
+            ToServer::BeginReplay(from_id, path) => {
+                let mut entries = std::fs::read_dir(path)
+                    .unwrap()
+                    .map(|res| res.map(|e| e.path()))
+                    .collect::<Result<Vec<_>, std::io::Error>>()
+                    .unwrap();
+
+                entries.sort_by(|a, b| {
+                    let a_seq = a
+                        .file_name()
+                        .unwrap()
+                        .to_str()
+                        .unwrap()
+                        .split_once('-')
+                        .unwrap()
+                        .0
+                        .parse::<i32>()
+                        .unwrap();
+                    let b_seq = b
+                        .file_name()
+                        .unwrap()
+                        .to_str()
+                        .unwrap()
+                        .split_once('-')
+                        .unwrap()
+                        .0
+                        .parse::<i32>()
+                        .unwrap();
+
+                    a_seq.cmp(&b_seq)
+                });
+
+                let send_execution = |from_id: ClientId,
+                                      data: Arc<Mutex<WorldServer>>,
+                                      entry: &PathBuf| {
+                    let mut data = data.lock().unwrap();
+
+                    for (id, (handle, _)) in &mut data.clients {
+                        let id = *id;
+
+                        if id == from_id {
+                            // only care about Ipc packets
+                            let filename = entry.file_name().unwrap().to_str().unwrap();
+                            if !filename.contains("Ipc") {
+                                continue;
+                            }
+
+                            // only care about packets from the server
+                            if !filename.contains("(to client)") {
+                                continue;
+                            }
+
+                            let path = entry.to_str().unwrap();
+
+                            tracing::info!("- Replaying {path}");
+
+                            let source_actor_bytes =
+                                std::fs::read(format!("{path}/source_actor.bin")).unwrap();
+                            let target_actor_bytes =
+                                std::fs::read(format!("{path}/target_actor.bin")).unwrap();
+                            let source_actor =
+                                u32::from_le_bytes(source_actor_bytes[0..4].try_into().unwrap());
+                            let target_actor =
+                                u32::from_le_bytes(target_actor_bytes[0..4].try_into().unwrap());
+
+                            let ipc_header_bytes =
+                                std::fs::read(format!("{path}/ipc_header.bin")).unwrap();
+                            let opcode =
+                                u16::from_le_bytes(ipc_header_bytes[2..4].try_into().unwrap());
+
+                            let mut ipc_data = std::fs::read(format!("{path}/data.bin")).unwrap();
+                            let ipc_len = ipc_data.len() as u32 + 32;
+                            let mut cursor = Cursor::new(&mut ipc_data);
+                            if let Ok(parsed) =
+                                ServerZoneIpcSegment::read_le_args(&mut cursor, (&ipc_len,))
+                            {
+                                match parsed.data {
+                                    ServerZoneIpcData::InitZone(mut init_zone) => {
+                                        tracing::info!("- Fixing up InitZone");
+
+                                        // stop it from trying to initialize obsfucation
+                                        init_zone.obsfucation_mode = 0;
+                                        init_zone.seed1 = 0;
+                                        init_zone.seed2 = 0;
+                                        init_zone.seed3 = 0;
+
+                                        let mut cursor = Cursor::new(Vec::new());
+                                        init_zone.write_le(&mut cursor).unwrap();
+                                        ipc_data = cursor.into_inner().to_vec();
+                                    }
+                                    _ => {}
+                                }
+                            }
+
+                            let msg = FromServer::ReplayPacket(PacketSegment {
+                                source_actor,
+                                target_actor,
+                                segment_type: SegmentType::Ipc,
+                                data: SegmentData::Ipc {
+                                    data: ServerZoneIpcSegment {
+                                        unk1: 20,
+                                        unk2: 0,
+                                        op_code: ServerZoneIpcType::Unknown(opcode),
+                                        option: 0,
+                                        timestamp: timestamp_secs(),
+                                        data: ServerZoneIpcData::Unknown { unk: ipc_data },
+                                    },
+                                },
+                            });
+
+                            if handle.send(msg).is_err() {
+                                data.to_remove.push(id);
+                            }
+                            break;
+                        }
+                    }
+                };
+
+                let data = data.clone();
+                tokio::task::spawn(async move {
+                    for entry in &entries {
+                        let mut interval = tokio::time::interval(Duration::from_millis(100));
+                        interval.tick().await;
+                        interval.tick().await;
+                        send_execution(from_id, data.clone(), entry);
+                    }
+                });
             }
             ToServer::Disconnected(from_id) => {
                 let mut data = data.lock().unwrap();

@@ -1,4 +1,3 @@
-use std::collections::VecDeque;
 use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -1185,49 +1184,6 @@ async fn client_loop(
                                     intended_use: zone.intended_use,
                                 };
                             }
-
-                            if let Some(entry) = connection.replay_entries.pop_front() {
-                                // only care about Ipc packets
-                                let filename = entry.file_name().unwrap().to_str().unwrap();
-                                if !filename.contains("Ipc") {
-                                    continue;
-                                }
-
-                                // only care about packets from the server
-                                if !filename.contains("(to client)") {
-                                    continue;
-                                }
-
-                                let path = entry.to_str().unwrap();
-
-                                tracing::info!("- Replaying {path}");
-
-                                let source_actor_bytes = std::fs::read(format!("{path}/source_actor.bin")).unwrap();
-                                let target_actor_bytes = std::fs::read(format!("{path}/target_actor.bin")).unwrap();
-                                let source_actor = u32::from_le_bytes(source_actor_bytes[0..4].try_into().unwrap());
-                                let target_actor = u32::from_le_bytes(target_actor_bytes[0..4].try_into().unwrap());
-
-                                let ipc_header_bytes = std::fs::read(format!("{path}/ipc_header.bin")).unwrap();
-                                let opcode = u16::from_le_bytes(ipc_header_bytes[2..4].try_into().unwrap());
-
-                                let unk = std::fs::read(format!("{path}/data.bin")).unwrap();
-
-                                connection.send_segment(PacketSegment {
-                                    source_actor,
-                                    target_actor,
-                                    segment_type: SegmentType::Ipc,
-                                    data: SegmentData::Ipc {
-                                        data: ServerZoneIpcSegment {
-                                            unk1: 20,
-                                            unk2: 0,
-                                            op_code: ServerZoneIpcType::Unknown(opcode),
-                                                        option: 0,
-                                                        timestamp: timestamp_secs(),
-                                                        data: ServerZoneIpcData::Unknown { unk },
-                                        }
-                                    }
-                                }).await;
-                            }
                         }
                     },
                     Err(_) => {
@@ -1249,6 +1205,7 @@ async fn client_loop(
                     FromServer::ActionCancelled() => connection.cancel_action().await,
                     FromServer::UpdateConfig(actor_id, config) => connection.update_config(actor_id, config).await,
                     FromServer::ActorEquip(actor_id, main_weapon_id, model_ids) => connection.update_equip(actor_id, main_weapon_id, model_ids).await,
+                    FromServer::ReplayPacket(segment) => connection.send_segment(segment).await,
                 },
                 None => break,
             }
@@ -1347,7 +1304,6 @@ async fn main() {
                     gracefully_logged_out: false,
                     weather_id: 0,
                     obsfucation_data: ObsfucationData::default(),
-                    replay_entries: VecDeque::default(),
                 });
             }
             Some((mut socket, _)) = handle_rcon(&rcon_listener) => {
