@@ -7,7 +7,7 @@ use crate::common::{read_string, write_string};
 pub struct ChatMessage {
     // TODO: incomplete
     #[brw(pad_before = 4)] // empty
-    pub player_id: u32,
+    pub actor_id: u32,
 
     #[brw(pad_before = 4)] // empty
     pub timestamp: u32,
