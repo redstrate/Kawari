@@ -101,9 +101,6 @@ bevy = { version = "0.16", features = ["std",
   "bevy_gizmos",
   "x11"], default-features = false, optional = true }
 
-# for navimesh generation
-recastnavigation-sys = { git = "https://github.com/redstrate/recastnavigation-rs-sys", features = ["recast", "detour"] }
-
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
 # Used for the web servers
 axum = { version = "0.8", features = ["json", "tokio", "http1", "form", "query", "multipart"], default-features = false }
@@ -141,3 +138,6 @@ tower-http = { version = "0.6", features = ["fs", "cors"] }
 
 # For obtaining SHA1 hashes of game components
 sha1_smol = { version = "1.0" }
+
+# for navimesh generation
+recastnavigation-sys = { git = "https://github.com/redstrate/recastnavigation-rs-sys", features = ["recast", "detour"] }

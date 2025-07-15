@@ -1583,9 +1583,9 @@ dependencies = [
 
 [[package]]
 name = "crc32fast"
-version = "1.4.2"
+version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a97769d94ddab943e4510d138150169a2758b5ef3eb191a9ee688de3e23ef7b3"
+checksum = "9481c1c90cbf2ac953f07c8d4a58aa3945c425b7185c9154d67a65e4230da511"
 dependencies = [
  "cfg-if",
 ]
@@ -3627,7 +3627,7 @@ checksum = "20675572f6f24e9e76ef639bc5552774ed45f1c30e2951e1e99c59888861c539"
 [[package]]
 name = "recastnavigation-sys"
 version = "1.0.3"
-source = "git+https://github.com/redstrate/recastnavigation-rs-sys#e24975b0bfac9014b2c33bdeb011f3c7107286fc"
+source = "git+https://github.com/redstrate/recastnavigation-rs-sys#8f35a7b5869ff737e9d84419ad9edf78f663f49f"
 dependencies = [
  "bindgen 0.72.0",
  "cc",
