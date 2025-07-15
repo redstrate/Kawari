@@ -1,7 +1,7 @@
 use binrw::binrw;
 use serde::{Deserialize, Serialize};
 
-use crate::common::{ObjectTypeId, read_quantized_rotation, write_quantized_rotation};
+use crate::common::{ObjectId, ObjectTypeId, read_quantized_rotation, write_quantized_rotation};
 
 // TODO: this might be a flag?
 #[binrw]
@@ -15,7 +15,7 @@ pub enum DamageKind {
 }
 
 #[binrw]
-#[derive(Debug, Eq, PartialEq, Clone, Copy, Default)]
+#[derive(Debug, PartialEq, Clone, Copy, Default)]
 pub enum EffectKind {
     #[default]
     #[brw(magic = 0u8)]
@@ -39,8 +39,22 @@ pub enum EffectKind {
     },
     #[brw(magic = 27u8)]
     BeginCombo,
+    /// seen during sprint
     #[brw(magic = 14u8)]
-    Unk1 { unk1: u8, unk2: u32, effect_id: u16 }, // seen during sprint
+    Unk1 {
+        unk1: u8,
+        unk2: u32,
+        effect_id: u16,
+
+        // NOTE: the following is for our internal usage, this is not an actual part of the packet
+        // TODO: this shouldn't be here, instead we should maybe create a lua-specific struct for all of this information
+        #[brw(ignore)]
+        duration: f32,
+        #[brw(ignore)]
+        param: u16,
+        #[brw(ignore)]
+        source_actor_id: ObjectId,
+    },
 }
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy, Default, Deserialize, Serialize)]
@@ -223,7 +237,9 @@ mod tests {
             EffectKind::Unk1 {
                 unk1: 0,
                 unk2: 7728,
-                effect_id: 50
+                effect_id: 50,
+                duration: 0.0,
+                param: 0,
             }
         );
 

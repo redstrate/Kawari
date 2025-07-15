@@ -167,7 +167,7 @@ pub enum ActorControlCategory {
     GainEffect {
         #[brw(pad_before = 2)] // padding
         effect_id: u32,
-        unk2: u32,
+        param: u32,
         source_actor_id: ObjectId,
     },
     #[brw(magic = 0x11u16)]

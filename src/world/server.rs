@@ -418,8 +418,13 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                                 to_remove.push(id);
                             }
                         }
-                        ClientTriggerCommand::ManuallyRemoveEffect { effect_id } => {
-                            let msg = FromServer::LoseEffect(*effect_id as u16);
+                        ClientTriggerCommand::ManuallyRemoveEffect {
+                            effect_id,
+                            source_actor_id,
+                            ..
+                        } => {
+                            let msg =
+                                FromServer::LoseEffect(*effect_id as u16, 0, *source_actor_id);
 
                             if handle.send(msg).is_err() {
                                 to_remove.push(id);
@@ -814,9 +819,20 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     }
                 });
             }
-            ToServer::GainEffect(from_id, _from_actor_id, effect_id, effect_duration) => {
+            ToServer::GainEffect(
+                from_id,
+                _from_actor_id,
+                effect_id,
+                effect_duration,
+                effect_param,
+                effect_source_actor_id,
+            ) => {
                 let send_lost_effect =
-                    |from_id: ClientId, data: Arc<Mutex<WorldServer>>, effect_id: u16| {
+                    |from_id: ClientId,
+                     data: Arc<Mutex<WorldServer>>,
+                     effect_id: u16,
+                     effect_param: u16,
+                     effect_source_actor_id: ObjectId| {
                         let mut data = data.lock().unwrap();
 
                         tracing::info!("Now losing effect {}!", effect_id);
@@ -825,7 +841,11 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                             let id = *id;
 
                             if id == from_id {
-                                let msg = FromServer::LoseEffect(effect_id);
+                                let msg = FromServer::LoseEffect(
+                                    effect_id,
+                                    effect_param,
+                                    effect_source_actor_id,
+                                );
 
                                 if handle.send(msg).is_err() {
                                     data.to_remove.push(id);
@@ -848,7 +868,13 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     ));
                     interval.tick().await;
                     interval.tick().await;
-                    send_lost_effect(from_id, data, effect_id);
+                    send_lost_effect(
+                        from_id,
+                        data,
+                        effect_id,
+                        effect_param,
+                        effect_source_actor_id,
+                    );
                 });
             }
             ToServer::Disconnected(from_id) => {

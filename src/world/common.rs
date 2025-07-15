@@ -9,7 +9,7 @@ use std::{
 use tokio::sync::mpsc::Sender;
 
 use crate::{
-    common::Position,
+    common::{ObjectId, Position},
     ipc::zone::{
         ActionRequest, ActorControl, ActorControlSelf, ActorControlTarget, ClientTrigger,
         CommonSpawn, Config, NpcSpawn, ServerZoneIpcSegment,
@@ -48,7 +48,7 @@ pub enum FromServer {
     /// Informs the connection to replay packet data to the client.
     ReplayPacket(PacketSegment<ServerZoneIpcSegment>),
     /// The player should lose this effect.
-    LoseEffect(u16),
+    LoseEffect(u16, u16, ObjectId),
 }
 
 #[derive(Debug, Clone)]
@@ -114,7 +114,7 @@ pub enum ToServer {
     /// Begins a packet replay.
     BeginReplay(ClientId, String),
     /// The player gains an effect.
-    GainEffect(ClientId, u32, u16, f32),
+    GainEffect(ClientId, u32, u16, f32, u16, ObjectId),
 }
 
 #[derive(Clone, Debug)]

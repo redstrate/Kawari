@@ -1403,14 +1403,21 @@ impl ZoneConnection {
                 let mut entries = [EffectEntry::default(); 4];
 
                 for effect in &effects_builder.effects {
-                    if let EffectKind::Unk1 { effect_id, .. } = effect.kind {
+                    if let EffectKind::Unk1 {
+                        effect_id,
+                        duration,
+                        param,
+                        source_actor_id,
+                        ..
+                    } = effect.kind
+                    {
                         entries[num_entries as usize] = EffectEntry {
                             index: num_entries,
                             unk1: 0,
                             id: effect_id,
-                            param: 30,
+                            param,
                             unk2: 0,
-                            duration: 20.0,
+                            duration,
                             source_actor_id: INVALID_OBJECT_ID,
                         };
                         num_entries += 1;
@@ -1421,7 +1428,9 @@ impl ZoneConnection {
                                 self.id,
                                 self.player_data.actor_id,
                                 effect_id,
-                                20.0, // TODO: fill out
+                                duration,
+                                param,
+                                source_actor_id,
                             ))
                             .await;
                     }
@@ -1577,7 +1586,13 @@ impl ZoneConnection {
             .await;
     }
 
-    pub async fn lose_effect(&mut self, effect_id: u16, lua_player: &mut LuaPlayer) {
+    pub async fn lose_effect(
+        &mut self,
+        effect_id: u16,
+        effect_param: u16,
+        effect_source_actor_id: ObjectId,
+        lua_player: &mut LuaPlayer,
+    ) {
         // first, inform the effect script
         {
             let lua = self.lua.lock().unwrap();
@@ -1614,8 +1629,8 @@ impl ZoneConnection {
         self.actor_control_self(ActorControlSelf {
             category: ActorControlCategory::LoseEffect {
                 effect_id: effect_id as u32,
-                unk2: 0,
-                source_actor_id: INVALID_OBJECT_ID, // TODO: fill
+                unk2: effect_param as u32,
+                source_actor_id: effect_source_actor_id,
             },
         })
         .await;

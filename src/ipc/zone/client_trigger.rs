@@ -1,6 +1,6 @@
 use binrw::binrw;
 
-use crate::common::{read_bool_from, write_bool_as};
+use crate::common::{ObjectId, read_bool_from, write_bool_as};
 
 #[binrw]
 #[derive(Debug, Eq, PartialEq, Clone)]
@@ -66,6 +66,8 @@ pub enum ClientTriggerCommand {
     ManuallyRemoveEffect {
         #[brw(pad_before = 2)] // padding
         effect_id: u32,
+        unk1: u32,
+        source_actor_id: ObjectId,
     },
     Unknown {
         category: u16,

@@ -116,12 +116,12 @@ impl LuaPlayer {
         self.create_segment_self(op_code, data);
     }
 
-    fn give_status_effect(&mut self, effect_id: u16, duration: f32) {
+    fn give_status_effect(&mut self, effect_id: u16, effect_param: u16, duration: f32) {
         let op_code = ServerZoneIpcType::ActorControlSelf;
         let data = ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
             category: ActorControlCategory::GainEffect {
                 effect_id: effect_id as u32,
-                unk2: 0,
+                param: effect_param as u32,
                 source_actor_id: INVALID_OBJECT_ID, // TODO: fill
             },
         });
@@ -298,8 +298,8 @@ impl UserData for LuaPlayer {
         );
         methods.add_method_mut(
             "gain_effect",
-            |_, this, (effect_id, duration): (u16, f32)| {
-                this.give_status_effect(effect_id, duration);
+            |_, this, (effect_id, param, duration): (u16, u16, f32)| {
+                this.give_status_effect(effect_id, param, duration);
                 Ok(())
             },
         );
@@ -586,16 +586,22 @@ impl UserData for EffectsBuilder {
             });
             Ok(())
         });
-        methods.add_method_mut("gain_effect", |_, this, effect_id: u16| {
-            this.effects.push(ActionEffect {
-                kind: EffectKind::Unk1 {
-                    unk1: 0,
-                    unk2: 7728,
-                    effect_id,
-                },
-            });
-            Ok(())
-        });
+        methods.add_method_mut(
+            "gain_effect",
+            |_, this, (effect_id, param, duration): (u16, u16, f32)| {
+                this.effects.push(ActionEffect {
+                    kind: EffectKind::Unk1 {
+                        unk1: 0,
+                        unk2: 7728,
+                        effect_id,
+                        duration,
+                        param,
+                        source_actor_id: INVALID_OBJECT_ID,
+                    },
+                });
+                Ok(())
+            },
+        );
     }
 }
 

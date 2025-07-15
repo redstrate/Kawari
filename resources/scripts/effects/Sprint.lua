@@ -5,5 +5,5 @@ function onGain(player)
 end
 
 function onLose(player)
-    player:gain_effect(EFFECT_JOG, 20.0)
+    player:gain_effect(EFFECT_JOG, 20, 0.0)
 end
