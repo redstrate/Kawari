@@ -156,7 +156,7 @@ mod tests {
 
     use binrw::BinRead;
 
-    use crate::common::ObjectId;
+    use crate::common::{ObjectId, INVALID_OBJECT_ID};
 
     use super::*;
 
@@ -240,6 +240,7 @@ mod tests {
                 effect_id: 50,
                 duration: 0.0,
                 param: 0,
+                source_actor_id: INVALID_OBJECT_ID
             }
         );
 
