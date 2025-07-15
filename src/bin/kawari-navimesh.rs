@@ -2,25 +2,36 @@ use std::ptr::{null, null_mut};
 
 use bevy::{
     asset::RenderAssetUsages,
-    color::palettes::tailwind::{PINK_100, RED_500},
+    color::palettes::{
+        css::WHITE,
+        tailwind::{BLUE_100, GREEN_100, PINK_100, RED_500},
+    },
+    pbr::wireframe::{Wireframe, WireframeConfig, WireframePlugin},
     picking::pointer::PointerInteraction,
     prelude::*,
-    render::mesh::{Indices, PrimitiveTopology},
+    render::{
+        RenderPlugin,
+        mesh::{Indices, PrimitiveTopology},
+        settings::{RenderCreation, WgpuFeatures, WgpuSettings},
+    },
 };
 use icarus::TerritoryType::TerritoryTypeSheet;
-use kawari::config::get_config;
+use kawari::{
+    config::get_config,
+    world::{Navmesh, NavmeshParams},
+};
 use physis::{
     common::{Language, Platform},
     layer::{LayerEntryData, LayerGroup, ModelCollisionType, Transformation},
     lvb::Lvb,
+    model::MDL,
     pcb::{Pcb, ResourceNode},
     resource::{Resource, SqPackResource},
+    tera::{PlateModel, Terrain},
 };
 use recastnavigation_sys::{
-    CreateContext, DT_SUCCESS, dtAllocNavMesh, dtAllocNavMeshQuery, dtCreateNavMeshData,
-    dtNavMesh_addTile, dtNavMesh_init, dtNavMeshCreateParams, dtNavMeshParams, dtNavMeshQuery,
-    dtNavMeshQuery_findNearestPoly, dtNavMeshQuery_findPath, dtNavMeshQuery_findStraightPath,
-    dtNavMeshQuery_init, dtPolyRef, dtQueryFilter, dtQueryFilter_dtQueryFilter,
+    CreateContext, DT_SUCCESS, RC_MESH_NULL_IDX, dtCreateNavMeshData, dtNavMeshCreateParams,
+    dtNavMeshQuery, dtNavMeshQuery_findNearestPoly, dtPolyRef, dtQueryFilter,
     rcAllocCompactHeightfield, rcAllocContourSet, rcAllocHeightfield, rcAllocPolyMesh,
     rcAllocPolyMeshDetail, rcBuildCompactHeightfield, rcBuildContours,
     rcBuildContoursFlags_RC_CONTOUR_TESS_WALL_EDGES, rcBuildDistanceField, rcBuildPolyMesh,
@@ -33,70 +44,27 @@ struct ZoneToLoad(u16);
 
 #[derive(Resource, Default)]
 struct NavigationState {
-    query: *mut dtNavMeshQuery,
+    navmesh: Navmesh,
     path: Vec<Vec3>,
+    from_position: Vec3,
+    to_position: Vec3,
 }
 
 impl NavigationState {
-    pub fn calculate_path(&mut self, from_position: Vec3) {
-        unsafe {
-            let start_pos = [from_position.x, from_position.y, from_position.z];
-            let end_pos = [0.0, 0.0, 0.0];
+    pub fn calculate_path(&mut self) {
+        let start_pos = [
+            self.from_position.x,
+            self.from_position.y,
+            self.from_position.z,
+        ];
+        let end_pos = [self.to_position.x, self.to_position.y, self.to_position.z];
 
-            let mut filter = dtQueryFilter {
-                m_areaCost: [0.0; 64],
-                m_includeFlags: 0,
-                m_excludeFlags: 0,
-            };
-            dtQueryFilter_dtQueryFilter(&mut filter);
-
-            let (start_poly, start_poly_pos) =
-                get_polygon_at_location(self.query, start_pos, &filter);
-            let (end_poly, end_poly_pos) = get_polygon_at_location(self.query, end_pos, &filter);
-
-            let mut path = [0; 128];
-            let mut path_count = 0;
-            dtNavMeshQuery_findPath(
-                self.query,
-                start_poly,
-                end_poly,
-                start_poly_pos.as_ptr(),
-                end_poly_pos.as_ptr(),
-                &filter,
-                path.as_mut_ptr(),
-                &mut path_count,
-                128,
-            ); // TODO: error check
-
-            let mut straight_path = [0.0; 128 * 3];
-            let mut straight_path_count = 0;
-
-            // now calculate the positions in the path
-            dtNavMeshQuery_findStraightPath(
-                self.query,
-                start_poly_pos.as_ptr(),
-                end_poly_pos.as_ptr(),
-                path.as_ptr(),
-                path_count,
-                straight_path.as_mut_ptr(),
-                null_mut(),
-                null_mut(),
-                &mut straight_path_count,
-                128,
-                0,
-            );
-
-            dbg!(&straight_path[..straight_path_count as usize * 3]);
-
-            self.path.clear();
-            for pos in straight_path[..straight_path_count as usize * 3].chunks(3) {
-                self.path.push(Vec3 {
-                    x: pos[0],
-                    y: pos[1],
-                    z: pos[2],
-                });
-            }
-        }
+        self.path = self
+            .navmesh
+            .calculate_path(start_pos, end_pos)
+            .iter()
+            .map(|x| Vec3::from_slice(x))
+            .collect();
     }
 }
 
@@ -111,16 +79,38 @@ fn main() {
 
     App::new()
         .add_event::<Navigate>()
-        .add_plugins((DefaultPlugins, MeshPickingPlugin))
+        .add_event::<SetOrigin>()
+        .add_event::<SetTarget>()
+        .add_plugins((
+            DefaultPlugins.set(RenderPlugin {
+                render_creation: RenderCreation::Automatic(WgpuSettings {
+                    features: WgpuFeatures::POLYGON_MODE_LINE,
+                    ..default()
+                }),
+                ..default()
+            }),
+            MeshPickingPlugin,
+            WireframePlugin::default(),
+        ))
         .add_systems(Startup, setup)
         .add_systems(Update, draw_mesh_intersections)
+        .insert_resource(WireframeConfig {
+            global: false,
+            default_color: WHITE.into(),
+        })
         .insert_resource(ZoneToLoad(zone_id))
         .insert_resource(NavigationState::default())
         .run();
 }
 
 #[derive(Event, Reflect, Clone, Debug)]
-struct Navigate(Vec3);
+struct Navigate();
+
+#[derive(Event, Reflect, Clone, Debug)]
+struct SetOrigin(Vec3);
+
+#[derive(Event, Reflect, Clone, Debug)]
+struct SetTarget(Vec3);
 
 /// Walk each node, add it's collision model to the scene.
 fn walk_node(
@@ -137,7 +127,7 @@ fn walk_node(
 
         let mut positions = Vec::new();
         for vec in &node.vertices {
-            positions.push(vec.clone());
+            positions.push(Vec3::from_slice(vec));
         }
 
         mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions.clone());
@@ -156,6 +146,17 @@ fn walk_node(
 
         mesh.compute_normals();
 
+        let transform = Transform {
+            translation: Vec3::from_array(transform.translation),
+            rotation: Quat::from_euler(
+                EulerRot::XYZ,
+                transform.rotation[0],
+                transform.rotation[1],
+                transform.rotation[2],
+            ),
+            scale: Vec3::from_array(transform.scale),
+        };
+
         // insert into 3d scene
         commands
             .spawn((
@@ -165,21 +166,25 @@ fn walk_node(
                     fastrand::f32(),
                     fastrand::f32(),
                 ))),
-                Transform {
-                    translation: Vec3::from_array(transform.translation),
-                    rotation: Quat::from_euler(
-                        EulerRot::XYZ,
-                        transform.rotation[0],
-                        transform.rotation[1],
-                        transform.rotation[2],
-                    ),
-                    scale: Vec3::from_array(transform.scale),
-                },
+                transform,
             ))
             .observe(
-                |mut trigger: Trigger<Pointer<Click>>, mut events: EventWriter<Navigate>| {
+                |mut trigger: Trigger<Pointer<Click>>,
+                 mut navigate_events: EventWriter<Navigate>,
+                 mut target_events: EventWriter<SetTarget>,
+                 mut origin_events: EventWriter<SetOrigin>| {
                     let click_event: &Pointer<Click> = trigger.event();
-                    events.write(Navigate(click_event.hit.position.unwrap()));
+                    match click_event.button {
+                        PointerButton::Primary => {
+                            target_events.write(SetTarget(click_event.hit.position.unwrap()));
+                        }
+                        PointerButton::Secondary => {
+                            origin_events.write(SetOrigin(click_event.hit.position.unwrap()));
+                        }
+                        PointerButton::Middle => {
+                            navigate_events.write(Navigate());
+                        }
+                    }
                     trigger.propagate(false);
                 },
             );
@@ -188,6 +193,18 @@ fn walk_node(
         let tile_indices: Vec<i32> = indices.iter().map(|x| *x as i32).collect();
         let mut tri_area_ids: Vec<u8> = vec![0; tile_indices.len() / 3];
 
+        // transform the vertices on the CPU
+        let mut tile_vertices: Vec<[f32; 3]> = Vec::new();
+        let transform_matrix = transform.compute_matrix();
+        for vertex in &positions {
+            let transformed_vertex = transform_matrix.transform_point3(*vertex);
+            tile_vertices.push([
+                transformed_vertex.x,
+                transformed_vertex.y,
+                transformed_vertex.z,
+            ]);
+        }
+
         unsafe {
             let ntris = tile_indices.len() as i32 / 3;
 
@@ -195,7 +212,7 @@ fn walk_node(
             rcMarkWalkableTriangles(
                 context,
                 45.0,
-                std::mem::transmute::<*const [f32; 3], *const f32>(positions.as_ptr()),
+                std::mem::transmute::<*const [f32; 3], *const f32>(tile_vertices.as_ptr()),
                 positions.len() as i32,
                 tile_indices.as_ptr(),
                 ntris,
@@ -204,7 +221,7 @@ fn walk_node(
 
             assert!(rcRasterizeTriangles(
                 context,
-                std::mem::transmute::<*const [f32; 3], *const f32>(positions.as_ptr()),
+                std::mem::transmute::<*const [f32; 3], *const f32>(tile_vertices.as_ptr()),
                 positions.len() as i32,
                 tile_indices.as_ptr(),
                 tri_area_ids.as_ptr(),
@@ -228,12 +245,119 @@ fn walk_node(
     }
 }
 
+fn add_plate(
+    plate: &PlateModel,
+    tera_path: &str,
+    sqpack_resource: &mut SqPackResource,
+    commands: &mut Commands,
+    meshes: &mut ResMut<Assets<Mesh>>,
+    materials: &mut ResMut<Assets<StandardMaterial>>,
+    context: *mut rcContext,
+    height_field: *mut rcHeightfield,
+) {
+    let mdl_path = format!("{}/bgplate/{}", tera_path, plate.filename);
+    let mdl_bytes = sqpack_resource.read(&mdl_path).unwrap();
+    let mdl = MDL::from_existing(&mdl_bytes).unwrap();
+
+    let lod = &mdl.lods[0];
+    for part in &lod.parts {
+        let mut mesh = Mesh::new(PrimitiveTopology::TriangleList, RenderAssetUsages::all());
+
+        let mut positions = Vec::new();
+        let mut normals = Vec::new();
+        for vec in &part.vertices {
+            positions.push(Vec3::from_slice(&vec.position));
+            normals.push(Vec3::from_slice(&vec.normal));
+        }
+        mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions.clone());
+        mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals.clone());
+
+        mesh.insert_indices(Indices::U16(part.indices.clone()));
+
+        let transform = Transform::from_xyz(plate.position.0, 0.0, plate.position.1);
+
+        // insert into 3d scene
+        commands
+            .spawn((
+                Mesh3d(meshes.add(mesh)),
+                MeshMaterial3d(materials.add(Color::srgb(
+                    fastrand::f32(),
+                    fastrand::f32(),
+                    fastrand::f32(),
+                ))),
+                transform,
+            ))
+            .observe(
+                |mut trigger: Trigger<Pointer<Click>>,
+                 mut navigate_events: EventWriter<Navigate>,
+                 mut target_events: EventWriter<SetTarget>,
+                 mut origin_events: EventWriter<SetOrigin>| {
+                    let click_event: &Pointer<Click> = trigger.event();
+                    match click_event.button {
+                        PointerButton::Primary => {
+                            target_events.write(SetTarget(click_event.hit.position.unwrap()));
+                        }
+                        PointerButton::Secondary => {
+                            origin_events.write(SetOrigin(click_event.hit.position.unwrap()));
+                        }
+                        PointerButton::Middle => {
+                            navigate_events.write(Navigate());
+                        }
+                    }
+                    trigger.propagate(false);
+                },
+            );
+
+        // Step 2: insert geoemtry into heightfield
+        let tile_indices: Vec<i32> = part.indices.iter().map(|x| *x as i32).collect();
+        let mut tri_area_ids: Vec<u8> = vec![0; tile_indices.len() / 3];
+
+        // transform the vertices on the CPU
+        let mut tile_vertices: Vec<[f32; 3]> = Vec::new();
+        let transform_matrix = transform.compute_matrix();
+        for vertex in &positions {
+            let transformed_vertex = transform_matrix.transform_point3(*vertex);
+            tile_vertices.push([
+                transformed_vertex.x,
+                transformed_vertex.y,
+                transformed_vertex.z,
+            ]);
+        }
+
+        unsafe {
+            let ntris = tile_indices.len() as i32 / 3;
+
+            // mark areas as walkable
+            rcMarkWalkableTriangles(
+                context,
+                45.0,
+                std::mem::transmute::<*const [f32; 3], *const f32>(tile_vertices.as_ptr()),
+                positions.len() as i32,
+                tile_indices.as_ptr(),
+                ntris,
+                tri_area_ids.as_mut_ptr(),
+            );
+
+            assert!(rcRasterizeTriangles(
+                context,
+                std::mem::transmute::<*const [f32; 3], *const f32>(tile_vertices.as_ptr()),
+                positions.len() as i32,
+                tile_indices.as_ptr(),
+                tri_area_ids.as_ptr(),
+                ntris,
+                height_field,
+                2
+            ));
+        }
+    }
+}
+
 fn get_polygon_at_location(
     query: *const dtNavMeshQuery,
     position: [f32; 3],
     filter: &dtQueryFilter,
 ) -> (dtPolyRef, [f32; 3]) {
-    let extents = [3.0, 5.0, 3.0];
+    let extents = [2.0, 4.0, 2.0];
 
     unsafe {
         let mut nearest_ref = 0;
@@ -315,7 +439,29 @@ fn setup(
         ));
     }
 
-    for path in &lvb.scns[0].header.path_layer_group_resources {
+    let scene = &lvb.scns[0];
+
+    let tera_bytes = sqpack_resource
+        .read(&*format!(
+            "{}/bgplate/terrain.tera",
+            scene.general.path_terrain
+        ))
+        .unwrap();
+    let tera = Terrain::from_existing(&tera_bytes).unwrap();
+    for plate in tera.plates {
+        add_plate(
+            &plate,
+            &scene.general.path_terrain,
+            &mut sqpack_resource,
+            &mut commands,
+            &mut meshes,
+            &mut materials,
+            context,
+            height_field,
+        );
+    }
+
+    for path in &scene.header.path_layer_group_resources {
         if path.contains("bg.lgb") {
             tracing::info!("Processing {path}...");
 
@@ -418,6 +564,54 @@ fn setup(
         assert!((*poly_mesh).verts != null_mut());
         assert!((*poly_mesh).nverts > 0);
 
+        let nvp = (*poly_mesh).nvp;
+        let cs = (*poly_mesh).cs;
+        let ch = (*poly_mesh).ch;
+        let orig = (*poly_mesh).bmin;
+
+        // add polymesh to visualization
+        {
+            let mut mesh = Mesh::new(PrimitiveTopology::TriangleList, RenderAssetUsages::all());
+
+            let mut positions = Vec::new();
+            for i in 0..(*poly_mesh).nverts as usize {
+                let v = (*poly_mesh).verts.wrapping_add(i * 3);
+                let x = orig[0] + *v as f32 * cs as f32;
+                let y = orig[1] + (*v.wrapping_add(1) + 1) as f32 * ch as f32 + 0.1;
+                let z = orig[2] + (*v.wrapping_add(2)) as f32 * cs as f32;
+
+                positions.push(Vec3::new(x, y, z));
+            }
+
+            mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions.clone());
+
+            let mut indices = Vec::new();
+            for i in 0..(*poly_mesh).npolys as usize {
+                let p = (*poly_mesh).polys.wrapping_add(i * nvp as usize * 2);
+                for j in 2..nvp as usize {
+                    if *(p.wrapping_add(j)) == RC_MESH_NULL_IDX {
+                        break;
+                    }
+
+                    indices.push(*p);
+                    indices.push(*p.wrapping_add(j - 1));
+                    indices.push(*p.wrapping_add(j));
+                }
+            }
+
+            mesh.insert_indices(Indices::U16(indices.clone()));
+
+            //mesh.compute_normals();
+
+            // insert into 3d scene
+            commands.spawn((
+                Mesh3d(meshes.add(mesh)),
+                MeshMaterial3d(materials.add(Color::srgba(0.0, 0.0, 1.0, 0.5))),
+                Pickable::IGNORE,
+                Wireframe,
+            ));
+        }
+
         let flags =
             std::slice::from_raw_parts_mut((*poly_mesh).flags, (*poly_mesh).npolys as usize);
         for flag in flags {
@@ -490,29 +684,26 @@ fn setup(
         assert!(out_data != null_mut());
         assert!(out_data_size > 0);
 
-        let navmesh_params = dtNavMeshParams {
-            orig: [0.0; 3],
-            tileWidth: 100.0,
-            tileHeight: 100.0,
-            maxTiles: 1000,
-            maxPolys: 1000,
-        };
-
-        let navmesh = dtAllocNavMesh();
-        assert!(dtNavMesh_init(navmesh, &navmesh_params) == DT_SUCCESS);
-
-        assert!(
-            dtNavMesh_addTile(navmesh, out_data, out_data_size, 0, 0, null_mut()) == DT_SUCCESS
+        navigation_state.navmesh = Navmesh::new(
+            NavmeshParams {
+                orig: (*poly_mesh).bmin,
+                tile_width: (*poly_mesh).bmax[0] - (*poly_mesh).bmin[0],
+                tile_height: (*poly_mesh).bmax[2] - (*poly_mesh).bmin[2],
+                max_tiles: 1,
+                max_polys: (*poly_mesh).npolys,
+            },
+            Vec::from_raw_parts(out_data, out_data_size as usize, out_data_size as usize),
         );
 
-        navigation_state.query = dtAllocNavMeshQuery();
-        dtNavMeshQuery_init(navigation_state.query, navmesh, 1024);
+        // TODO: output in the correct directory
+        let serialized_navmesh = navigation_state.navmesh.write_to_buffer().unwrap();
+        std::fs::write("test.nvm", &serialized_navmesh).unwrap();
     }
 
     // camera
     commands.spawn((
         Camera3d::default(),
-        Transform::from_xyz(15.0, 15.0, 15.0).looking_at(Vec3::ZERO, Vec3::Y),
+        Transform::from_xyz(55.0, 55.0, 55.0).looking_at(Vec3::ZERO, Vec3::Y),
     ));
 }
 
@@ -520,8 +711,13 @@ fn draw_mesh_intersections(
     pointers: Query<&PointerInteraction>,
     mut gizmos: Gizmos,
     mut navigate_events: EventReader<Navigate>,
+    mut origin_events: EventReader<SetOrigin>,
+    mut target_events: EventReader<SetTarget>,
     mut navigation_state: ResMut<NavigationState>,
 ) {
+    gizmos.sphere(navigation_state.from_position, 0.05, GREEN_100);
+    gizmos.sphere(navigation_state.to_position, 0.05, BLUE_100);
+
     for pos in &navigation_state.path {
         gizmos.sphere(*pos, 0.05, RED_500);
     }
@@ -535,7 +731,15 @@ fn draw_mesh_intersections(
         gizmos.arrow(point, point + normal.normalize() * 0.5, PINK_100);
     }
 
-    for event in navigate_events.read() {
-        navigation_state.calculate_path(event.0);
+    for event in origin_events.read() {
+        navigation_state.from_position = event.0;
+    }
+
+    for event in target_events.read() {
+        navigation_state.to_position = event.0;
+    }
+
+    for _ in navigate_events.read() {
+        navigation_state.calculate_path();
     }
 }

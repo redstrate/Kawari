@@ -30,3 +30,6 @@ pub use custom_ipc_handler::handle_custom_ipc;
 
 mod common;
 pub use common::{ClientHandle, ClientId, FromServer, ServerHandle, ToServer};
+
+mod navmesh;
+pub use navmesh::{Navmesh, NavmeshParams};

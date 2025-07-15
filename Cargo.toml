@@ -53,7 +53,7 @@ default = []
 oodle = []
 
 # Navmesh visualizer
-visualizer = ["dep:bevy", "dep:recastnavigation-sys"]
+visualizer = ["dep:bevy"]
 
 [build-dependencies]
 # Serialization of IPC opcodes
@@ -102,7 +102,7 @@ bevy = { version = "0.16", features = ["std",
   "x11"], default-features = false, optional = true }
 
 # for navimesh generation
-recastnavigation-sys = { git = "https://github.com/redstrate/recastnavigation-rs-sys", features = ["recast", "detour"], optional = true }
+recastnavigation-sys = { git = "https://github.com/redstrate/recastnavigation-rs-sys", features = ["recast", "detour"] }
 
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
 # Used for the web servers

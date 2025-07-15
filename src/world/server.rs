@@ -1,6 +1,8 @@
 use binrw::{BinRead, BinWrite};
+use icarus::TerritoryType::TerritoryTypeSheet;
+use physis::{common::Language, lvb::Lvb, resource::Resource};
 use std::{
-    collections::HashMap,
+    collections::{HashMap, VecDeque},
     io::Cursor,
     path::PathBuf,
     sync::{Arc, Mutex},
@@ -9,7 +11,8 @@ use std::{
 use tokio::sync::mpsc::Receiver;
 
 use crate::{
-    common::{CustomizeData, GameData, ObjectId, ObjectTypeId, timestamp_secs},
+    common::{CustomizeData, GameData, ObjectId, ObjectTypeId, Position, timestamp_secs},
+    config::get_config,
     ipc::zone::{
         ActorControl, ActorControlCategory, ActorControlSelf, ActorControlTarget, BattleNpcSubKind,
         ClientTriggerCommand, CommonSpawn, NpcSpawn, ObjectKind, ServerZoneIpcData,
@@ -19,7 +22,7 @@ use crate::{
     packet::{PacketSegment, SegmentData, SegmentType},
 };
 
-use super::{Actor, ClientHandle, ClientId, FromServer, ToServer};
+use super::{Actor, ClientHandle, ClientId, FromServer, Navmesh, ToServer};
 
 /// Used for the debug NPC.
 pub const CUSTOMIZE_DATA: CustomizeData = CustomizeData {
@@ -54,16 +57,81 @@ pub const CUSTOMIZE_DATA: CustomizeData = CustomizeData {
 #[derive(Debug, Clone)]
 enum NetworkedActor {
     Player(NpcSpawn),
-    Npc(NpcSpawn),
+    Npc {
+        current_path: VecDeque<[f32; 3]>,
+        current_path_lerp: f32,
+        current_target: Option<ObjectId>,
+        last_position: Option<Position>,
+        spawn: NpcSpawn,
+    },
+}
+
+impl NetworkedActor {
+    pub fn get_common_spawn(&self) -> &CommonSpawn {
+        match &self {
+            NetworkedActor::Player(npc_spawn) => &npc_spawn.common,
+            NetworkedActor::Npc { spawn, .. } => &spawn.common,
+        }
+    }
 }
 
 #[derive(Default, Debug, Clone)]
 struct Instance {
     // structure temporary, of course
     actors: HashMap<ObjectId, NetworkedActor>,
+    navmesh: Navmesh,
 }
 
 impl Instance {
+    pub fn new(id: u16, game_data: &mut GameData) -> Self {
+        let mut instance = Self::default();
+
+        let sheet = TerritoryTypeSheet::read_from(&mut game_data.resource, Language::None).unwrap();
+        let Some(row) = sheet.get_row(id as u32) else {
+            tracing::warn!("Invalid zone id {id}, allowing anyway...");
+            return instance;
+        };
+
+        // e.g. ffxiv/fst_f1/fld/f1f3/level/f1f3
+        let bg_path = row.Bg().into_string().unwrap();
+
+        let path = format!("bg/{}.lvb", &bg_path);
+        tracing::info!("Loading {}", path);
+        let lgb_file = game_data.resource.read(&path).unwrap();
+        let lgb = Lvb::from_existing(&lgb_file).unwrap();
+
+        let mut navimesh_path = None;
+        for layer_set in &lgb.scns[0].unk3.unk2 {
+            // FIXME: this is wrong. I think there might be multiple, separate navimeshes in really big zones but I'm not sure yet.
+            navimesh_path = Some(layer_set.path_nvm.replace("/server/data/", "").to_string());
+        }
+
+        if navimesh_path.is_none() {
+            tracing::info!("No navimesh path found, monsters will not function correctly!");
+            return instance;
+        }
+
+        let config = get_config();
+        if config.filesystem.navimesh_path.is_empty() {
+            tracing::warn!("Navimesh path is not set! Monsters will not function correctly!");
+        } else {
+            let mut nvm_path = PathBuf::from(config.filesystem.navimesh_path);
+            nvm_path.push(&navimesh_path.unwrap());
+
+            if let Ok(nvm_bytes) = std::fs::read(&nvm_path) {
+                instance.navmesh = Navmesh::from_existing(&nvm_bytes).unwrap();
+
+                tracing::info!("Successfully loaded navimesh from {nvm_path:?}");
+            } else {
+                tracing::warn!(
+                    "Failed to read {nvm_path:?}, monsters will not function correctly!"
+                );
+            }
+        }
+
+        instance
+    }
+
     fn find_actor(&self, id: ObjectId) -> Option<&NetworkedActor> {
         self.actors.get(&id)
     }
@@ -73,12 +141,29 @@ impl Instance {
     }
 
     fn insert_npc(&mut self, id: ObjectId, spawn: NpcSpawn) {
-        self.actors.insert(id, NetworkedActor::Npc(spawn));
+        self.actors.insert(
+            id,
+            NetworkedActor::Npc {
+                current_path: VecDeque::default(),
+                current_path_lerp: 0.0,
+                current_target: None,
+                last_position: None,
+                spawn,
+            },
+        );
     }
 
     fn generate_actor_id() -> u32 {
         // TODO: ensure we don't collide with another actor
         fastrand::u32(..)
+    }
+
+    fn find_all_players(&self) -> Vec<ObjectId> {
+        self.actors
+            .iter()
+            .filter(|(_, y)| matches!(y, NetworkedActor::Player(_)))
+            .map(|(x, _)| *x)
+            .collect()
     }
 }
 
@@ -128,9 +213,144 @@ impl WorldServer {
     }
 }
 
+fn server_logic_tick(data: &mut WorldServer) {
+    for (_, instance) in &mut data.instances {
+        let mut actor_moves = Vec::new();
+        let players = instance.find_all_players();
+
+        // const pass
+        let instance_copy = instance.clone(); // TODO: refactor out please
+        for (id, actor) in &instance.actors {
+            if let NetworkedActor::Npc {
+                current_path,
+                current_path_lerp,
+                current_target,
+                spawn,
+                last_position,
+            } = actor
+            {
+                if current_target.is_some() {
+                    let needs_repath = current_path.is_empty();
+                    if !needs_repath {
+                        // follow current path
+                        let next_position = Position {
+                            x: current_path[0][0],
+                            y: current_path[0][1],
+                            z: current_path[0][2],
+                        };
+                        let current_position = last_position.unwrap_or(spawn.common.pos);
+
+                        let dir_x = current_position.x - next_position.x;
+                        let dir_z = current_position.z - next_position.z;
+                        let rotation = f32::atan2(-dir_z, dir_x).to_degrees();
+
+                        actor_moves.push(FromServer::ActorMove(
+                            id.0,
+                            Position::lerp(current_position, next_position, *current_path_lerp),
+                            rotation,
+                        ));
+                    }
+                }
+            }
+        }
+
+        // mut pass
+        for (id, actor) in &mut instance.actors {
+            if let NetworkedActor::Npc {
+                current_path,
+                current_path_lerp,
+                current_target,
+                spawn,
+                last_position,
+            } = actor
+            {
+                // switch to the next node if we passed this one
+                if *current_path_lerp >= 1.0 {
+                    *current_path_lerp = 0.0;
+                    if !current_path.is_empty() {
+                        *last_position = Some(Position {
+                            x: current_path[0][0],
+                            y: current_path[0][1],
+                            z: current_path[0][2],
+                        });
+                        current_path.pop_front();
+                    }
+                }
+
+                if current_target.is_none() {
+                    // find a player
+                    if !players.is_empty() {
+                        *current_target = Some(players[0]);
+                    }
+                } else if !current_path.is_empty() {
+                    let next_position = Position {
+                        x: current_path[0][0],
+                        y: current_path[0][1],
+                        z: current_path[0][2],
+                    };
+                    let current_position = last_position.unwrap_or(spawn.common.pos);
+                    let distance = Position::distance(current_position, next_position);
+
+                    // TODO: this doesn't work like it should
+                    *current_path_lerp += (10.0 / distance).clamp(0.0, 1.0);
+                }
+
+                let target_actor = instance_copy.find_actor(current_target.unwrap());
+                let target_pos = target_actor.unwrap().get_common_spawn().pos;
+                let distance = Position::distance(spawn.common.pos, target_pos);
+                let needs_repath = current_path.is_empty() && distance > 5.0; // TODO: confirm distance this in retail
+                if needs_repath && current_target.is_some() {
+                    let current_pos = spawn.common.pos;
+                    let target_actor = instance_copy.find_actor(current_target.unwrap());
+                    let target_pos = target_actor.unwrap().get_common_spawn().pos;
+                    *current_path = instance
+                        .navmesh
+                        .calculate_path(
+                            [current_pos.x, current_pos.y, current_pos.z],
+                            [target_pos.x, target_pos.y, target_pos.z],
+                        )
+                        .into();
+                }
+
+                // update common spawn
+                for msg in &actor_moves {
+                    if let FromServer::ActorMove(msg_id, pos, rotation) = msg {
+                        if id.0 == *msg_id {
+                            spawn.common.pos = *pos;
+                            spawn.common.rotation = *rotation;
+                        }
+                    }
+                }
+            }
+        }
+
+        // inform clients of the NPCs new positions
+        for msg in actor_moves {
+            for (_, (handle, _)) in &mut data.clients {
+                if handle.send(msg.clone()).is_err() {
+                    //to_remove.push(id);
+                }
+            }
+        }
+    }
+}
+
 pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::io::Error> {
     let data = Arc::new(Mutex::new(WorldServer::default()));
     let game_data = Arc::new(Mutex::new(GameData::new()));
+
+    {
+        let data = data.clone();
+        tokio::task::spawn(async move {
+            let mut interval = tokio::time::interval(Duration::from_millis(500));
+            interval.tick().await;
+            loop {
+                interval.tick().await;
+                let mut data = data.lock().unwrap();
+                server_logic_tick(&mut data);
+            }
+        });
+    }
 
     while let Some(msg) = recv.recv().await {
         let mut to_remove = Vec::new();
@@ -146,9 +366,11 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 let mut data = data.lock().unwrap();
 
                 // create a new instance if necessary
-                data.instances
-                    .entry(zone_id)
-                    .or_insert_with(Instance::default);
+                if !data.instances.contains_key(&zone_id) {
+                    let mut game_data = game_data.lock().unwrap();
+                    data.instances
+                        .insert(zone_id, Instance::new(zone_id, &mut game_data));
+                }
 
                 // Send existing player data, if any
                 if let Some(instance) = data.find_instance(zone_id).cloned() {
@@ -161,8 +383,8 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                             // send existing player data
                             for (id, spawn) in &instance.actors {
                                 let npc_spawn = match spawn {
-                                    NetworkedActor::Player(npc_spawn) => npc_spawn,
-                                    NetworkedActor::Npc(npc_spawn) => npc_spawn,
+                                    NetworkedActor::Player(spawn) => spawn,
+                                    NetworkedActor::Npc { spawn, .. } => spawn,
                                 };
 
                                 // Note that we currently only support spawning via the NPC packet, hence why we don't need to differentiate here
@@ -284,7 +506,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     {
                         let common = match spawn {
                             NetworkedActor::Player(npc_spawn) => &mut npc_spawn.common,
-                            NetworkedActor::Npc(npc_spawn) => &mut npc_spawn.common,
+                            NetworkedActor::Npc { spawn, .. } => &mut spawn.common,
                         };
                         common.pos = position;
                         common.rotation = rotation;

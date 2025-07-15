@@ -22,6 +22,7 @@ use super::Actor;
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub struct ClientId(usize);
 
+#[derive(Clone)]
 pub enum FromServer {
     /// A chat message.
     Message(String),
