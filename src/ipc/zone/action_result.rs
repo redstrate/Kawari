@@ -156,7 +156,7 @@ mod tests {
 
     use binrw::BinRead;
 
-    use crate::common::{ObjectId, INVALID_OBJECT_ID};
+    use crate::common::{INVALID_OBJECT_ID, ObjectId};
 
     use super::*;
 

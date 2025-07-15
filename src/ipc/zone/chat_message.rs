@@ -15,8 +15,9 @@ pub struct ChatMessage {
     #[brw(pad_before = 8)] // NOT empty
     pub channel: u16,
 
-    #[br(count = 32)]
-    #[bw(pad_size_to = 32)]
+    #[brw(pad_after = 6)] // seems to be junk?
+    #[br(count = 1024)]
+    #[bw(pad_size_to = 1024)]
     #[br(map = read_string)]
     #[bw(map = write_string)]
     pub message: String,

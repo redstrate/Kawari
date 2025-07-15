@@ -375,7 +375,7 @@
         {
             "name": "ChatMessage",
             "opcode": 492,
-            "size": 58
+            "size": 1056
         },
         {
             "name": "GMCommand",
