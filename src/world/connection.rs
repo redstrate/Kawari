@@ -368,6 +368,35 @@ impl ZoneConnection {
 
         self.player_data.zone_id = new_zone_id;
 
+        // fade in?
+        {
+            let ipc = ServerZoneIpcSegment {
+                op_code: ServerZoneIpcType::PrepareZoning,
+                timestamp: timestamp_secs(),
+                data: ServerZoneIpcData::PrepareZoning {
+                    log_message: 0,
+                    target_zone: self.player_data.zone_id,
+                    animation: 0,
+                    param4: 0,
+                    hide_character: 0,
+                    fade_out: 1,
+                    param_7: 1,
+                    fade_out_time: 1,
+                    unk1: 8,
+                    unk2: 0,
+                },
+                ..Default::default()
+            };
+
+            self.send_segment(PacketSegment {
+                source_actor: self.player_data.actor_id,
+                target_actor: self.player_data.actor_id,
+                segment_type: SegmentType::Ipc,
+                data: SegmentData::Ipc { data: ipc },
+            })
+            .await;
+        }
+
         // Player Class Info
         self.update_class_info().await;
 

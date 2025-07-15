@@ -247,7 +247,18 @@ pub enum ServerZoneIpcData {
     LinkShellInformation { unk: [u8; 456] },
     /// Sent by the server when it wants the client to... prepare to zone?
     #[br(pre_assert(*magic == ServerZoneIpcType::PrepareZoning))]
-    PrepareZoning { unk: [u32; 4] },
+    PrepareZoning {
+        log_message: u32,
+        target_zone: u16,
+        animation: u16,
+        param4: u8,
+        hide_character: u8,
+        fade_out: u8,
+        param_7: u8,
+        fade_out_time: u8,
+        unk1: u8,
+        unk2: u16,
+    },
     /// Sent by the server
     #[br(pre_assert(*magic == ServerZoneIpcType::ActorControl))]
     ActorControl(ActorControl),
@@ -787,7 +798,18 @@ mod tests {
             ),
             (
                 ServerZoneIpcType::PrepareZoning,
-                ServerZoneIpcData::PrepareZoning { unk: [0; 4] },
+                ServerZoneIpcData::PrepareZoning {
+                    log_message: 0,
+                    target_zone: 0,
+                    animation: 0,
+                    param4: 0,
+                    hide_character: 0,
+                    fade_out: 0,
+                    param_7: 0,
+                    fade_out_time: 0,
+                    unk1: 0,
+                    unk2: 0,
+                },
             ),
             (
                 ServerZoneIpcType::ActorControl,

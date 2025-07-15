@@ -384,27 +384,6 @@ async fn client_loop(
                                                     .await;
                                                 }
 
-                                                // fade in?
-                                                {
-                                                    let ipc = ServerZoneIpcSegment {
-                                                        op_code: ServerZoneIpcType::PrepareZoning,
-                                                        timestamp: timestamp_secs(),
-                                                        data: ServerZoneIpcData::PrepareZoning {
-                                                            unk: [0, 0, 0, 0],
-                                                        },
-                                                        ..Default::default()
-                                                    };
-
-                                                    connection
-                                                    .send_segment(PacketSegment {
-                                                        source_actor: connection.player_data.actor_id,
-                                                        target_actor: connection.player_data.actor_id,
-                                                        segment_type: SegmentType::Ipc,
-                                                        data: SegmentData::Ipc { data: ipc },
-                                                    })
-                                                    .await;
-                                                }
-
                                                 // wipe any exit position so it isn't accidentally reused
                                                 connection.exit_position = None;
                                                 connection.exit_rotation = None;
