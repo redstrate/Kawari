@@ -421,6 +421,19 @@ impl ZoneConnection {
             );
         }
 
+        // they send the initialize packet again for some reason
+        {
+            self.send_segment(PacketSegment {
+                segment_type: SegmentType::Initialize,
+                data: SegmentData::Initialize {
+                    actor_id: self.player_data.actor_id,
+                    timestamp: timestamp_secs(),
+                },
+                ..Default::default()
+            })
+            .await;
+        }
+
         // Init Zone
         {
             let config = get_config();
