@@ -1,12 +1,15 @@
-use mlua::{FromLua, Lua, LuaSerdeExt, UserData, UserDataFields, UserDataMethods, Value};
-
+use crate::INVENTORY_ACTION_ACK_SHOP;
 use crate::{
+    LogMessageType,
     common::{
         INVALID_OBJECT_ID, ObjectId, ObjectTypeId, Position, timestamp_secs,
         workdefinitions::RemakeMode, write_quantized_rotation,
     },
     config::get_config,
-    inventory::{CurrencyStorage, EquippedStorage, GenericStorage, Inventory, Item},
+    inventory::{
+        BuyBackList, ContainerType, CurrencyKind, CurrencyStorage, EquippedStorage, GenericStorage,
+        Inventory, Item,
+    },
     ipc::zone::{
         ActionEffect, ActorControlCategory, ActorControlSelf, DamageElement, DamageKind,
         DamageType, EffectKind, EventScene, ServerZoneIpcData, ServerZoneIpcSegment, Warp,
@@ -15,29 +18,68 @@ use crate::{
     packet::{PacketSegment, SegmentData, SegmentType},
     world::ExtraLuaState,
 };
+use mlua::{FromLua, Lua, LuaSerdeExt, UserData, UserDataFields, UserDataMethods, Value};
 
 use super::{PlayerData, StatusEffects, Zone, connection::TeleportQuery};
 
 pub enum Task {
-    ChangeTerritory { zone_id: u16 },
+    ChangeTerritory {
+        zone_id: u16,
+    },
     SetRemakeMode(RemakeMode),
-    Warp { warp_id: u32 },
+    Warp {
+        warp_id: u32,
+    },
     BeginLogOut,
-    FinishEvent { handler_id: u32 },
-    SetClassJob { classjob_id: u8 },
-    WarpAetheryte { aetheryte_id: u32 },
+    FinishEvent {
+        handler_id: u32,
+    },
+    SetClassJob {
+        classjob_id: u8,
+    },
+    WarpAetheryte {
+        aetheryte_id: u32,
+    },
     ReloadScripts,
-    ToggleInvisibility { invisible: bool },
-    Unlock { id: u32 },
-    UnlockAetheryte { id: u32, on: bool },
-    SetLevel { level: i32 },
-    ChangeWeather { id: u16 },
-    AddGil { amount: u32 },
-    RemoveGil { amount: u32 },
-    UnlockOrchestrion { id: u16, on: bool },
-    AddItem { id: u32 },
+    ToggleInvisibility {
+        invisible: bool,
+    },
+    Unlock {
+        id: u32,
+    },
+    UnlockAetheryte {
+        id: u32,
+        on: bool,
+    },
+    SetLevel {
+        level: i32,
+    },
+    ChangeWeather {
+        id: u16,
+    },
+    AddGil {
+        amount: u32,
+    },
+    RemoveGil {
+        amount: u32,
+        send_client_update: bool,
+    },
+    UnlockOrchestrion {
+        id: u16,
+        on: bool,
+    },
+    AddItem {
+        id: u32,
+        quantity: u32,
+        send_client_update: bool,
+    },
     CompleteAllQuests {},
-    UnlockContent { id: u16 },
+    UnlockContent {
+        id: u16,
+    },
+    UpdateBuyBackList {
+        list: BuyBackList,
+    },
 }
 
 #[derive(Default, Clone)]
@@ -262,8 +304,11 @@ impl LuaPlayer {
         self.queued_tasks.push(Task::AddGil { amount });
     }
 
-    fn remove_gil(&mut self, amount: u32) {
-        self.queued_tasks.push(Task::RemoveGil { amount });
+    fn remove_gil(&mut self, amount: u32, send_client_update: bool) {
+        self.queued_tasks.push(Task::RemoveGil {
+            amount,
+            send_client_update,
+        });
     }
 
     fn unlock_orchestrion(&mut self, unlocked: u32, id: u16) {
@@ -273,8 +318,12 @@ impl LuaPlayer {
         });
     }
 
-    fn add_item(&mut self, id: u32) {
-        self.queued_tasks.push(Task::AddItem { id });
+    fn add_item(&mut self, id: u32, quantity: u32, send_client_update: bool) {
+        self.queued_tasks.push(Task::AddItem {
+            id,
+            quantity,
+            send_client_update,
+        });
     }
 
     fn complete_all_quests(&mut self) {
@@ -283,6 +332,112 @@ impl LuaPlayer {
 
     fn unlock_content(&mut self, id: u16) {
         self.queued_tasks.push(Task::UnlockContent { id });
+    }
+
+    fn get_buyback_list(&mut self, shop_id: u32, shop_intro: bool) -> Vec<u32> {
+        let ret = self
+            .player_data
+            .buyback_list
+            .as_scene_params(shop_id, shop_intro);
+        if !shop_intro {
+            self.queued_tasks.push(Task::UpdateBuyBackList {
+                list: self.player_data.buyback_list.clone(),
+            })
+        }
+        ret
+    }
+
+    fn do_gilshop_buyback(&mut self, shop_id: u32, buyback_index: u32) {
+        let bb_item;
+        {
+            let Some(tmp_bb_item) = self
+                .player_data
+                .buyback_list
+                .get_buyback_item(shop_id, buyback_index)
+            else {
+                let error = "Invalid buyback index, ignoring buyback action!";
+                self.send_message(error, 0);
+                tracing::warn!(error);
+                return;
+            };
+            bb_item = tmp_bb_item.clone();
+        }
+
+        // This is a no-op since we can't edit PlayerData from the Lua side, but we can queue it up afterward.
+        // We *need* this information, though.
+        let item_to_restore = Item::new(bb_item.quantity, bb_item.id);
+        let Some(item_dst_info) = self
+            .player_data
+            .inventory
+            .add_in_next_free_slot(item_to_restore, bb_item.stack_size)
+        else {
+            let error = "Your inventory is full. Unable to restore item.";
+            self.send_message(error, 0);
+            tracing::warn!(error);
+            return;
+        };
+
+        // This is a no-op since we can't edit PlayerData from the Lua side,
+        // but we need to do it here so the shopkeeper script doesn't see stale data.
+        self.player_data
+            .buyback_list
+            .remove_item(shop_id, buyback_index);
+
+        // Queue up the item restoration, but we're not going to send an entire inventory update to the client.
+        self.add_item(bb_item.id, item_dst_info.quantity, false);
+
+        // Queue up the player's adjusted gil, but we're not going to send an entire inventory update to the client.
+        let cost = item_dst_info.quantity * bb_item.price_low;
+        let new_gil = self.player_data.inventory.currency.gil.quantity - cost;
+        self.remove_gil(cost, false);
+
+        let shop_packets_to_send = vec![
+            (
+                ServerZoneIpcType::UpdateInventorySlot,
+                ServerZoneIpcData::UpdateInventorySlot {
+                    sequence: self.player_data.shop_sequence,
+                    dst_storage_id: ContainerType::Currency as u16,
+                    dst_container_index: 0,
+                    dst_stack: new_gil,
+                    dst_catalog_id: CurrencyKind::Gil as u32,
+                    unk1: 0x7530_0000,
+                },
+            ),
+            (
+                ServerZoneIpcType::InventoryActionAck,
+                ServerZoneIpcData::InventoryActionAck {
+                    sequence: u32::MAX,
+                    action_type: INVENTORY_ACTION_ACK_SHOP as u16,
+                },
+            ),
+            (
+                ServerZoneIpcType::UpdateInventorySlot,
+                ServerZoneIpcData::UpdateInventorySlot {
+                    sequence: self.player_data.shop_sequence,
+                    dst_storage_id: item_dst_info.container as u16,
+                    dst_container_index: item_dst_info.index,
+                    dst_stack: item_dst_info.quantity,
+                    dst_catalog_id: bb_item.id,
+                    unk1: 0x7530_0000,
+                },
+            ),
+            (
+                ServerZoneIpcType::GilShopTransactionAck,
+                ServerZoneIpcData::GilShopTransactionAck {
+                    event_id: shop_id,
+                    message_type: LogMessageType::ItemBoughtBack as u32,
+                    unk1: 3,
+                    item_id: bb_item.id,
+                    item_quantity: item_dst_info.quantity,
+                    total_sale_cost: item_dst_info.quantity * bb_item.price_low,
+                },
+            ),
+        ];
+
+        // Finally, queue up the packets required to make the magic happen.
+        for (op_code, data) in shop_packets_to_send {
+            self.create_segment_self(op_code, data);
+        }
     }
 }
 
@@ -400,15 +555,17 @@ impl UserData for LuaPlayer {
             Ok(())
         });
         methods.add_method_mut("remove_gil", |_, this, amount: u32| {
-            this.remove_gil(amount);
+            // Can't think of any situations where we wouldn't want to force a client currency update after using debug commands.
+            this.remove_gil(amount, true);
             Ok(())
         });
         methods.add_method_mut("unlock_orchestrion", |_, this, (unlock, id): (u32, u16)| {
             this.unlock_orchestrion(unlock, id);
             Ok(())
         });
-        methods.add_method_mut("add_item", |_, this, id: u32| {
-            this.add_item(id);
+        methods.add_method_mut("add_item", |_, this, (id, quantity): (u32, u32)| {
+            // Can't think of any situations where we wouldn't want to force a client inventory update after using debug commands.
+            this.add_item(id, quantity, true);
             Ok(())
         });
         methods.add_method_mut("complete_all_quests", |_, this, _: ()| {
@@ -419,6 +576,19 @@ impl UserData for LuaPlayer {
             this.unlock_content(id);
             Ok(())
         });
+        methods.add_method_mut(
+            "get_buyback_list",
+            |_, this, (shop_id, shop_intro): (u32, bool)| {
+                Ok(this.get_buyback_list(shop_id, shop_intro))
+            },
+        );
+        methods.add_method_mut(
+            "do_gilshop_buyback",
+            |_, this, (shop_id, buyback_index): (u32, u32)| {
+                this.do_gilshop_buyback(shop_id, buyback_index);
+                Ok(())
+            },
+        );
     }
 
     fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {

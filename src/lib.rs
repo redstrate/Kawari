@@ -93,6 +93,9 @@ pub const INVALID_ACTOR_ID: u32 = 0xE000_0000;
 
 // These operation codes/types change regularly, so update them when needed!
 
+/// The operation opcode/type when updating the currency storage.
+pub const INVENTORY_ACTION_UPDATE_CURRENCY: u8 = 144;
+
 /// The operation opcode/type when discarding an item from the inventory.
 pub const INVENTORY_ACTION_DISCARD: u8 = 145;
 
@@ -115,6 +118,14 @@ pub const INVENTORY_ACTION_ACK_SHOP: u8 = 6;
 /// In the past, many more values were used according to Sapphire:
 /// https://github.com/SapphireServer/Sapphire/blob/044bff026c01b4cc3a37cbc9b0881fadca3fc477/src/common/Common.h#L83
 pub const INVENTORY_ACTION_ACK_GENERAL: u8 = 7;
+
+// TODO: Where should this be moved to...?
+#[repr(u32)]
+pub enum LogMessageType {
+    ItemBought = 0x697,
+    ItemSold = 0x698,
+    ItemBoughtBack = 0x699,
+}
 
 /// Error messages: TODO: this should probably be moved into its own universal mod/crate?
 pub const ERR_INVENTORY_ADD_FAILED: &str =

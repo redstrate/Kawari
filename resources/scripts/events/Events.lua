@@ -332,6 +332,7 @@ common_events = {
 -- NPC shops that accept gil for purchasing items
 generic_gil_shops = {
     262157, -- Tanie <Florist>, New Gridania
+    262190, -- Blue Lily <Independent Apothecary>, Limsa Lominsa: The Lower Decks
     262197, -- Gerulf <Independent Culinarian>, Limsa Lominsa: The Lower Decks
     262735, -- Sorcha <Independent Jeweler> (Limsa Lominsa: The Lower Decks), Battlecraft Accessories
     262736, -- Sorcha <Independent Jeweler> (Limsa Lominsa: The Lower Decks), Fieldcraft/Tradecraft Accessories
@@ -412,7 +413,7 @@ for _, event_id in pairs(generic_anetshards) do
 end
 
 for _, event_id in pairs(generic_gil_shops) do
-    registerEvent(event_id, "events/common/GenericShopkeeper.lua") --TODO: It might be okay to combine gil shops with battle currency shops, still unclear
+    registerEvent(event_id, "events/common/GilShopkeeper.lua")
 end
 
 for _, event_id in pairs(generic_currency_exchange) do
