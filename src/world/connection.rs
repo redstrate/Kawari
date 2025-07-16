@@ -10,13 +10,13 @@ use tokio::net::TcpStream;
 
 use crate::{
     CLASSJOB_ARRAY_SIZE, COMPLETED_LEVEQUEST_BITMASK_SIZE, COMPLETED_QUEST_BITMASK_SIZE,
-    ERR_INVENTORY_ADD_FAILED,
+    ERR_INVENTORY_ADD_FAILED, LogMessageType,
     common::{
         GameData, INVALID_OBJECT_ID, ItemInfoQuery, ObjectId, ObjectTypeId, Position,
         timestamp_secs, value_to_flag_byte_index_value,
     },
     config::{WorldConfig, get_config},
-    inventory::{ContainerType, Inventory, Item, Storage},
+    inventory::{BuyBackList, ContainerType, Inventory, Item, Storage},
     ipc::{
         chat::ServerChatIpcSegment,
         zone::{
@@ -90,6 +90,8 @@ pub struct PlayerData {
     pub shop_sequence: u32,
     /// Store the target actor id for the purpose of chaining cutscenes.
     pub target_actorid: ObjectTypeId,
+    /// The server-side copy of NPC shop buyback lists.
+    pub buyback_list: BuyBackList,
 }
 
 /// Various obsfucation-related bits like the seeds and keys for this connection.
@@ -186,6 +188,7 @@ impl ZoneConnection {
         self.player_data.curr_mp = 10000;
         self.player_data.max_mp = 10000;
         self.player_data.item_sequence = 0;
+        self.player_data.shop_sequence = 0;
 
         tracing::info!("Client {actor_id} is initializing zone session...");
 
@@ -433,6 +436,9 @@ impl ZoneConnection {
             })
             .await;
         }
+
+        // Clear the server's copy of the buyback list.
+        self.player_data.buyback_list = BuyBackList::default();
 
         // Init Zone
         {
@@ -878,9 +884,14 @@ impl ZoneConnection {
                     self.player_data.inventory.currency.get_slot_mut(0).quantity += *amount;
                     self.send_inventory(false).await;
                 }
-                Task::RemoveGil { amount } => {
+                Task::RemoveGil {
+                    amount,
+                    send_client_update,
+                } => {
                     self.player_data.inventory.currency.get_slot_mut(0).quantity -= *amount;
-                    self.send_inventory(false).await;
+                    if *send_client_update {
+                        self.send_inventory(false).await;
+                    }
                 }
                 Task::UnlockOrchestrion { id, on } => {
                     // id == 0 means "all"
@@ -904,7 +915,11 @@ impl ZoneConnection {
                         .await;
                     }
                 }
-                Task::AddItem { id } => {
+                Task::AddItem {
+                    id,
+                    quantity,
+                    send_client_update,
+                } => {
                     let item_info;
                     {
                         let mut game_data = self.gamedata.lock().unwrap();
@@ -914,10 +929,15 @@ impl ZoneConnection {
                         if self
                             .player_data
                             .inventory
-                            .add_in_next_free_slot(Item::new(1, *id), item_info.unwrap().stack_size)
+                            .add_in_next_free_slot(
+                                Item::new(*quantity, *id),
+                                item_info.unwrap().stack_size,
+                            )
                             .is_some()
                         {
-                            self.send_inventory(false).await;
+                            if *send_client_update {
+                                self.send_inventory(false).await;
+                            }
                         } else {
                             tracing::error!(ERR_INVENTORY_ADD_FAILED);
                             self.send_message(ERR_INVENTORY_ADD_FAILED).await;
@@ -939,6 +959,9 @@ impl ZoneConnection {
                         },
                     })
                     .await;
+                }
+                Task::UpdateBuyBackList { list } => {
+                    self.player_data.buyback_list = list.clone();
                 }
             }
         }
@@ -1065,14 +1088,15 @@ impl ZoneConnection {
         item_id: u32,
         item_quantity: u32,
         price_per_item: u32,
+        message_type: LogMessageType,
     ) {
         let ipc = ServerZoneIpcSegment {
             op_code: ServerZoneIpcType::GilShopTransactionAck,
             timestamp: timestamp_secs(),
             data: ServerZoneIpcData::GilShopTransactionAck {
                 event_id,
-                unk1: 0x697,
-                unk2: 3,
+                message_type: message_type as u32,
+                unk1: 3,
                 item_id,
                 item_quantity,
                 total_sale_cost: item_quantity * price_per_item,
@@ -1091,21 +1115,21 @@ impl ZoneConnection {
 
     pub async fn send_gilshop_item_update(
         &mut self,
-        unk1_and_dst_storage_id: u16,
-        unk2_and_dst_slot: u16,
-        gil_and_item_quantity: u32,
-        unk3_and_item_id: u32,
+        dst_storage_id: u16,
+        dst_container_index: u16,
+        dst_stack: u32,
+        dst_catalog_id: u32,
     ) {
         let ipc = ServerZoneIpcSegment {
             op_code: ServerZoneIpcType::UpdateInventorySlot,
             timestamp: timestamp_secs(),
             data: ServerZoneIpcData::UpdateInventorySlot {
                 sequence: self.player_data.shop_sequence,
-                unk1_and_dst_storage_id,
-                unk2_and_dst_slot,
-                gil_and_item_quantity,
-                unk3_and_item_id,
-                unk4: 0x7530_0000,
+                dst_storage_id,
+                dst_container_index,
+                dst_stack,
+                dst_catalog_id,
+                unk1: 0x7530_0000,
             },
             ..Default::default()
         };
@@ -1119,6 +1143,28 @@ impl ZoneConnection {
         .await;
 
         self.player_data.shop_sequence += 1;
+    }
+
+    pub async fn send_inventory_transaction_finish(&mut self, unk1: u32, unk2: u32) {
+        let ipc = ServerZoneIpcSegment {
+            op_code: ServerZoneIpcType::InventoryTransactionFinish,
+            timestamp: timestamp_secs(),
+            data: ServerZoneIpcData::InventoryTransactionFinish {
+                sequence: self.player_data.item_sequence,
+                sequence_repeat: self.player_data.item_sequence,
+                unk1,
+                unk2,
+            },
+            ..Default::default()
+        };
+
+        self.send_segment(PacketSegment {
+            source_actor: self.player_data.actor_id,
+            target_actor: self.player_data.actor_id,
+            segment_type: SegmentType::Ipc,
+            data: SegmentData::Ipc { data: ipc },
+        })
+        .await;
     }
 
     pub async fn begin_log_out(&mut self) {

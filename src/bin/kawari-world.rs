@@ -3,13 +3,17 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use kawari::common::Position;
-use kawari::common::{GameData, timestamp_secs};
+use kawari::common::{GameData, ItemInfoQuery, timestamp_secs};
 use kawari::config::get_config;
-use kawari::inventory::{ContainerType, Item, ItemOperationKind};
+use kawari::inventory::{
+    BuyBackItem, ContainerType, CurrencyKind, Item, ItemOperationKind, get_container_type,
+};
 use kawari::ipc::chat::{ServerChatIpcData, ServerChatIpcSegment};
 use kawari::ipc::zone::{
-    ActorControlCategory, ActorControlSelf, PlayerEntry, PlayerSpawn, PlayerStatus, SocialList,
+    ActorControlCategory, ActorControlSelf, ItemOperation, PlayerEntry, PlayerSpawn, PlayerStatus,
+    SocialList,
 };
+
 use kawari::ipc::zone::{
     ClientTriggerCommand, ClientZoneIpcData, EventStart, GameMasterRank, OnlineStatus,
     ServerZoneIpcData, ServerZoneIpcSegment, SocialListRequestType,
@@ -26,7 +30,9 @@ use kawari::world::{
     ClientHandle, Event, FromServer, LuaPlayer, PlayerData, ServerHandle, StatusEffects, ToServer,
     WorldDatabase, handle_custom_ipc, server_main_loop,
 };
-use kawari::{ERR_INVENTORY_ADD_FAILED, RECEIVE_BUFFER_SIZE, TITLE_UNLOCK_BITMASK_SIZE};
+use kawari::{
+    ERR_INVENTORY_ADD_FAILED, LogMessageType, RECEIVE_BUFFER_SIZE, TITLE_UNLOCK_BITMASK_SIZE,
+};
 
 use mlua::{Function, Lua};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -342,7 +348,7 @@ async fn client_loop(
                                             ClientZoneIpcData::FinishLoading { .. } => {
                                                 let common = connection.get_player_common_spawn(connection.exit_position, connection.exit_rotation);
 
-                                                // tell the server we loaded into the zone, so it can start sending us acors
+                                                // tell the server we loaded into the zone, so it can start sending us actors
                                                 connection.handle.send(ToServer::ZoneLoaded(connection.id, connection.zone.as_ref().unwrap().id, common.clone())).await;
 
                                                 let chara_details = database.find_chara_make(connection.player_data.content_id);
@@ -825,7 +831,6 @@ async fn client_loop(
                                                         },
                                                         ..Default::default()
                                                     };
-
                                                     connection
                                                     .send_segment(PacketSegment {
                                                         source_actor: connection.player_data.actor_id,
@@ -834,27 +839,7 @@ async fn client_loop(
                                                         data: SegmentData::Ipc { data: ipc },
                                                     })
                                                     .await;
-
-                                                    let ipc = ServerZoneIpcSegment {
-                                                        op_code: ServerZoneIpcType::InventoryTransactionFinish,
-                                                        timestamp: timestamp_secs(),
-                                                        data: ServerZoneIpcData::InventoryTransactionFinish {
-                                                            sequence: connection.player_data.item_sequence,
-                                                            sequence_repeat: connection.player_data.item_sequence,
-                                                            unk1: 0x90,
-                                                            unk2: 0x200,
-                                                        },
-                                                        ..Default::default()
-                                                    };
-
-                                                    connection
-                                                    .send_segment(PacketSegment {
-                                                        source_actor: connection.player_data.actor_id,
-                                                        target_actor: connection.player_data.actor_id,
-                                                        segment_type: SegmentType::Ipc,
-                                                        data: SegmentData::Ipc { data: ipc },
-                                                    })
-                                                    .await;
+                                                    connection.send_inventory_transaction_finish(0x90, 0x200).await;
                                                 }
 
                                                 connection.player_data.item_sequence += 1;
@@ -876,12 +861,12 @@ async fn client_loop(
                                                         if connection.player_data.inventory.currency.gil.quantity >= *item_quantity * item_info.price_mid {
                                                             if let Some(add_result) = connection.player_data.inventory.add_in_next_free_slot(Item::new(*item_quantity, item_info.id), item_info.stack_size) {
                                                                 connection.player_data.inventory.currency.gil.quantity -= *item_quantity * item_info.price_mid;
-                                                                connection.send_gilshop_item_update(0x07D0, 0, connection.player_data.inventory.currency.gil.quantity, 1).await;
+                                                                connection.send_gilshop_item_update(ContainerType::Currency as u16, 0, connection.player_data.inventory.currency.gil.quantity, CurrencyKind::Gil as u32).await;
 
                                                                 connection.send_inventory_ack(u32::MAX, INVENTORY_ACTION_ACK_SHOP as u16).await;
 
                                                                 connection.send_gilshop_item_update(add_result.container as u16, add_result.index, add_result.quantity, item_info.id).await;
-                                                                connection.send_gilshop_ack(*event_id, item_info.id, *item_quantity, item_info.price_mid).await;
+                                                                connection.send_gilshop_ack(*event_id, item_info.id, *item_quantity, item_info.price_mid, LogMessageType::ItemBought).await;
 
                                                                 let target_id = connection.player_data.target_actorid;
                                                                 // See GenericShopkeeper.lua for information about this scene, the flags, and the params.
@@ -900,9 +885,113 @@ async fn client_loop(
                                                         connection.event_finish(*event_id).await;
                                                     }
                                                 } else if *buy_sell_mode == SELL {
-                                                    // TODO: Implement selling items back to shops
-                                                    connection.send_message("Selling items to shops is not yet implemented. Cancelling event...").await;
-                                                    connection.event_finish(*event_id).await;
+                                                    let storage = get_container_type(*item_index).unwrap();
+                                                    let index = *item_quantity;
+                                                    let result;
+                                                    let quantity;
+                                                    {
+                                                        let item = connection.player_data.inventory.get_item(storage, index as u16);
+                                                        let mut game_data = connection.gamedata.lock().unwrap();
+                                                        result = game_data.get_item_info(ItemInfoQuery::ById(item.id));
+                                                        quantity = item.quantity;
+                                                    }
+
+                                                    if let Some(item_info) = result {
+                                                        let bb_item = BuyBackItem {
+                                                            id: item_info.id,
+                                                            quantity,
+                                                            price_low: item_info.price_low,
+                                                            stack_size: item_info.stack_size,
+                                                        };
+                                                        connection.player_data.buyback_list.push_item(*event_id, bb_item);
+
+                                                        connection.player_data.inventory.currency.gil.quantity += quantity * item_info.price_low;
+                                                        connection.send_gilshop_item_update(ContainerType::Currency as u16, 0, connection.player_data.inventory.currency.gil.quantity, CurrencyKind::Gil as u32).await;
+                                                        connection.send_gilshop_item_update(storage as u16, index as u16, 0, 0).await;
+
+                                                        // TODO: Refactor InventoryTransactions into connection.rs
+                                                        let ipc = ServerZoneIpcSegment {
+                                                            op_code: ServerZoneIpcType::InventoryTransaction,
+                                                            timestamp: timestamp_secs(),
+                                                            data: ServerZoneIpcData::InventoryTransaction {
+                                                                sequence: connection.player_data.item_sequence,
+                                                                operation_type: ItemOperationKind::UpdateCurrency,
+                                                                src_actor_id: connection.player_data.actor_id,
+                                                                src_storage_id: ContainerType::Currency,
+                                                                src_container_index: 0,
+                                                                src_stack: connection.player_data.inventory.currency.gil.quantity,
+                                                                src_catalog_id: CurrencyKind::Gil as u32,
+                                                                dst_actor_id: INVALID_ACTOR_ID,
+                                                                dummy_container: ContainerType::DiscardingItemSentinel,
+                                                                dst_storage_id: ContainerType::DiscardingItemSentinel,
+                                                                dst_container_index: u16::MAX,
+                                                                dst_stack: 0,
+                                                                dst_catalog_id: 0,
+                                                            },
+                                                            ..Default::default()
+                                                        };
+                                                        connection
+                                                        .send_segment(PacketSegment {
+                                                            source_actor: connection.player_data.actor_id,
+                                                            target_actor: connection.player_data.actor_id,
+                                                            segment_type: SegmentType::Ipc,
+                                                            data: SegmentData::Ipc { data: ipc },
+                                                        })
+                                                        .await;
+
+                                                        // Process the server's inventory first.
+                                                        let action = ItemOperation {
+                                                            operation_type: ItemOperationKind::Discard,
+                                                            src_storage_id: storage,
+                                                            src_container_index: index as u16,
+                                                            ..Default::default()
+                                                        };
+
+                                                        connection.player_data.inventory.process_action(&action);
+
+                                                        let ipc = ServerZoneIpcSegment {
+                                                            op_code: ServerZoneIpcType::InventoryTransaction,
+                                                            timestamp: timestamp_secs(),
+                                                            data: ServerZoneIpcData::InventoryTransaction {
+                                                                sequence: connection.player_data.item_sequence,
+                                                                operation_type: ItemOperationKind::Discard,
+                                                                src_actor_id: connection.player_data.actor_id,
+                                                                src_storage_id: storage,
+                                                                src_container_index: index as u16,
+                                                                src_stack: quantity,
+                                                                src_catalog_id: item_info.id,
+                                                                dst_actor_id: INVALID_ACTOR_ID,
+                                                                dummy_container: ContainerType::DiscardingItemSentinel,
+                                                                dst_storage_id: ContainerType::DiscardingItemSentinel,
+                                                                dst_container_index: u16::MAX,
+                                                                dst_stack: 0,
+                                                                dst_catalog_id: 0,
+                                                            },
+                                                            ..Default::default()
+                                                        };
+                                                        connection
+                                                        .send_segment(PacketSegment {
+                                                            source_actor: connection.player_data.actor_id,
+                                                            target_actor: connection.player_data.actor_id,
+                                                            segment_type: SegmentType::Ipc,
+                                                            data: SegmentData::Ipc { data: ipc },
+                                                        })
+                                                        .await;
+
+                                                        connection.send_inventory_transaction_finish(0x100, 0x300).await;
+
+                                                        connection.send_gilshop_ack(*event_id, item_info.id, quantity, item_info.price_low, LogMessageType::ItemSold).await;
+
+                                                        let target_id = connection.player_data.target_actorid;
+
+                                                        let mut params = connection.player_data.buyback_list.as_scene_params(*event_id, false);
+                                                        params[0] = SELL;
+                                                        params[1] = 0; // The "terminator" is 0 for sell mode.
+                                                        connection.event_scene(&target_id, *event_id, 10, 8193, params).await;
+                                                    } else {
+                                                        connection.send_message("Unable to find shop item, this is a bug in Kawari!").await;
+                                                        connection.event_finish(*event_id).await;
+                                                    }
                                                 } else {
                                                     tracing::error!("Received unknown transaction mode {buy_sell_mode}!");
                                                     connection.event_finish(*event_id).await;

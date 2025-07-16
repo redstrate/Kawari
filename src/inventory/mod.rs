@@ -6,6 +6,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::ipc::zone::ItemOperation;
 
+mod buyback;
+pub use buyback::{BuyBackItem, BuyBackList};
+
 mod equipped;
 pub use equipped::EquippedStorage;
 
@@ -19,11 +22,12 @@ mod storage;
 pub use storage::{ContainerType, Storage};
 
 mod currency;
+pub use currency::CurrencyKind;
 pub use currency::CurrencyStorage;
 
 use crate::{
     INVENTORY_ACTION_COMBINE_STACK, INVENTORY_ACTION_DISCARD, INVENTORY_ACTION_EXCHANGE,
-    INVENTORY_ACTION_MOVE, INVENTORY_ACTION_SPLIT_STACK,
+    INVENTORY_ACTION_MOVE, INVENTORY_ACTION_SPLIT_STACK, INVENTORY_ACTION_UPDATE_CURRENCY,
 };
 
 const MAX_NORMAL_STORAGE: usize = 35;
@@ -34,6 +38,8 @@ const MAX_LARGE_STORAGE: usize = 50;
 #[brw(repr = u8)]
 #[repr(u8)]
 pub enum ItemOperationKind {
+    /// The operation opcode/type when updating the currency storage.
+    UpdateCurrency = INVENTORY_ACTION_UPDATE_CURRENCY,
     /// The operation opcode/type when discarding an item from the inventory.
     Discard = INVENTORY_ACTION_DISCARD,
     #[default]
@@ -138,6 +144,37 @@ pub struct InventoryIterator<'a> {
     curr: u16,
 }
 
+pub fn get_container_type(container_index: u32) -> Option<ContainerType> {
+    match container_index {
+        // inventory
+        0 => Some(ContainerType::Inventory0),
+        1 => Some(ContainerType::Inventory1),
+        2 => Some(ContainerType::Inventory2),
+        3 => Some(ContainerType::Inventory3),
+
+        // armory
+        4 => Some(ContainerType::ArmoryOffWeapon),
+        5 => Some(ContainerType::ArmoryHead),
+        6 => Some(ContainerType::ArmoryBody),
+        7 => Some(ContainerType::ArmoryHand),
+        8 => Some(ContainerType::ArmoryLeg),
+        9 => Some(ContainerType::ArmoryFoot),
+        10 => Some(ContainerType::ArmoryEarring),
+        11 => Some(ContainerType::ArmoryNeck),
+        12 => Some(ContainerType::ArmoryWrist),
+        13 => Some(ContainerType::ArmoryRing),
+        14 => Some(ContainerType::ArmorySoulCrystal),
+        15 => Some(ContainerType::ArmoryWeapon),
+
+        // equipped
+        16 => Some(ContainerType::Equipped),
+
+        // currency
+        17 => Some(ContainerType::Currency),
+        _ => panic!("Inventory iterator invalid or the client sent a very weird packet!"),
+    }
+}
+
 impl<'a> Iterator for InventoryIterator<'a> {
     type Item = (ContainerType, &'a dyn Storage);
 
@@ -149,34 +186,7 @@ impl<'a> Iterator for InventoryIterator<'a> {
             return None;
         }
 
-        let container_type = match curr {
-            // inventory
-            0 => ContainerType::Inventory0,
-            1 => ContainerType::Inventory1,
-            2 => ContainerType::Inventory2,
-            3 => ContainerType::Inventory3,
-
-            // armory
-            4 => ContainerType::ArmoryOffWeapon,
-            5 => ContainerType::ArmoryHead,
-            6 => ContainerType::ArmoryBody,
-            7 => ContainerType::ArmoryHand,
-            8 => ContainerType::ArmoryLeg,
-            9 => ContainerType::ArmoryFoot,
-            10 => ContainerType::ArmoryEarring,
-            11 => ContainerType::ArmoryNeck,
-            12 => ContainerType::ArmoryWrist,
-            13 => ContainerType::ArmoryRing,
-            14 => ContainerType::ArmorySoulCrystal,
-            15 => ContainerType::ArmoryWeapon,
-
-            // equipped
-            16 => ContainerType::Equipped,
-
-            // currency
-            17 => ContainerType::Currency,
-            _ => panic!("Inventory iterator invalid!"),
-        };
+        let container_type = get_container_type(curr as u32).unwrap();
 
         Some((
             container_type,
@@ -226,7 +236,7 @@ impl Inventory {
         container.get_slot_mut(storage_index)
     }
 
-    fn get_item(&self, storage_id: ContainerType, storage_index: u16) -> Item {
+    pub fn get_item(&self, storage_id: ContainerType, storage_index: u16) -> Item {
         let container = self.get_container(&storage_id);
         *container.get_slot(storage_index)
     }
@@ -283,6 +293,7 @@ impl Inventory {
                 let src_slot = self.get_item_mut(action.src_storage_id, action.src_container_index);
                 src_slot.clone_from(&dst_item);
             }
+            _ => todo!(),
         }
     }
 

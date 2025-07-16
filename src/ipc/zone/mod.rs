@@ -510,10 +510,12 @@ pub enum ServerZoneIpcData {
     #[br(pre_assert(*magic == ServerZoneIpcType::GilShopTransactionAck))]
     GilShopTransactionAck {
         event_id: u32,
-        /// Always 0x697 when buying?
+        /// When buying: 0x697
+        /// When selling: 0x698
+        /// When buying back: 0x699
+        message_type: u32,
+        /// Always 3 at gil shops, regardless of the interactions going on
         unk1: u32,
-        /// Always 3 when buying?
-        unk2: u32,
         item_id: u32,
         item_quantity: u32,
         #[brw(pad_after = 8)]
@@ -525,17 +527,13 @@ pub enum ServerZoneIpcData {
         /// Starts from zero and increases by one for each of these packets during this gameplay session
         sequence: u32,
         #[brw(pad_before = 4)]
-        /// On the first pass, it's 0x07D0, and on the second pass it's the destination storage id
-        unk1_and_dst_storage_id: u16,
-        /// On the first pass it's 0x0000, and on the second pass it's the slot number within the destination storage
-        unk2_and_dst_slot: u16,
-        /// On the first pass, it's the player's remaining gil after the purchase, and on the second pass it's the number of items in that slot after purchase
-        gil_and_item_quantity: u32,
-        /// On the first pass it's 0x0000_0001 and on the second pass it's the item id
-        unk3_and_item_id: u32,
+        dst_storage_id: u16,
+        dst_container_index: u16,
+        dst_stack: u32,
+        dst_catalog_id: u32,
         #[brw(pad_before = 12, pad_after = 28)]
-        /// Always 0x7530_0000
-        unk4: u32,
+        /// Always 0x7530_0000, this number appears elsewhere in buybacks so it's probably flags, but what they mean is completely unknown for now
+        unk1: u32,
     },
     #[br(pre_assert(*magic == ServerZoneIpcType::EffectResult))]
     EffectResult(EffectResult),
@@ -1043,8 +1041,8 @@ mod tests {
                 ServerZoneIpcType::GilShopTransactionAck,
                 ServerZoneIpcData::GilShopTransactionAck {
                     event_id: 0,
+                    message_type: 0,
                     unk1: 0,
-                    unk2: 0,
                     item_id: 0,
                     item_quantity: 0,
                     total_sale_cost: 0,
@@ -1054,11 +1052,11 @@ mod tests {
                 ServerZoneIpcType::UpdateInventorySlot,
                 ServerZoneIpcData::UpdateInventorySlot {
                     sequence: 0,
-                    unk1_and_dst_storage_id: 0,
-                    unk2_and_dst_slot: 0,
-                    gil_and_item_quantity: 0,
-                    unk3_and_item_id: 0,
-                    unk4: 0,
+                    dst_storage_id: 0,
+                    dst_container_index: 0,
+                    dst_stack: 0,
+                    dst_catalog_id: 0,
+                    unk1: 0,
                 },
             ),
             (
