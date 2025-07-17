@@ -25,6 +25,7 @@ Here are the various things that should be checked when updating Kawari to a new
 * The IPC opcodes _will_ change and must all be replaced.
 * Check and update the various constants in `lib.rs`.
 * If the Excel schema changed, update the Icarus version in `Cargo.toml`.
+* If [Unscrambler](https://github.com/perchbirdd/Unscrambler/) updated, make sure to copy over the tables in `resources/`.
 
 ## IPC Opcodes
 
