@@ -1,6 +1,6 @@
 -- Scene 00000: NPC greeting (usually an animation, sometimes text too?)
 -- Scene 00010: Displays shop interface
--- Scene 00255: Unknown, but this was also observed when capturing gil shop transaction packets. When used standalone it softlocks.
+-- Scene 00255: Seems to be an event termination scene? When used standalone without the proper event sequence, it softlocks.
 
 SCENE_GREETING  = 00000
 SCENE_SHOW_SHOP = 00010
@@ -16,12 +16,12 @@ function onTalk(target, player)
 end
 
 function onReturn(scene, results, player)
-        --[[ Retail uses 221 or 222 u32s as the params to the shop cutscene, representing the buyback list and 1 or 2 additional parameters,
-            but it opens fine with a single zero u32 when the buyback list is empty.
-            22 u32s are used to represent the ten buyback items. Most of these values are still unknown in meaning, but they likely relate to melds, crafting signature, durability, and more.
-            Historically, it seems cutscene 00040 was used instead of 00010 as it is now.
-            When the client concludes business with the shop, the scene finishes and returns control to the server. The server will then have the client play scene 255 with no params.
-        ]]
+    --[[ Retail uses 221 or 222 u32s as the params to the shop cutscene, representing the buyback list and 1 or 2 additional parameters,
+        but it opens fine with a single zero u32 when the buyback list is empty.
+        22 u32s are used to represent the ten buyback items. Most of these values are still unknown in meaning, but they likely relate to melds, crafting signature, durability, and more.
+        Historically, it seems cutscene 00040 was used instead of 00010 as it is now.
+        When the client concludes business with the shop, the scene finishes and returns control to the server. The server will then have the client play scene 255 with no params.
+    ]]
     if scene == SCENE_GREETING then
         local buyback_list <const> = player:get_buyback_list(EVENT_ID, true)
         player:play_scene(player.id, EVENT_ID, SCENE_SHOW_SHOP, 1 | 0x2000, buyback_list)
