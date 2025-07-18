@@ -722,7 +722,17 @@ pub enum ClientZoneIpcData {
     #[br(pre_assert(*magic == ClientZoneIpcType::UnkCall2))]
     UnkCall2 { unk1: [u8; 8] },
     #[br(pre_assert(*magic == ClientZoneIpcType::ContentFinderRegister))]
-    ContentFinderRegister { unk1: [u8; 40] },
+    ContentFinderRegister {
+        unk1: [u8; 8],
+        flags: u32,
+        unk2: [u8; 4],
+        language_flags: u8, // TODO: turn this into a readable bitflag
+        unk3: u8,
+        classjob_id: u8,
+        unk4: [u8; 7],
+        #[brw(pad_after = 4)] // seems to empty
+        content_ids: [u16; 5],
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,

@@ -1145,7 +1145,8 @@ async fn client_loop(
                                                 })
                                                 .await;
                                             }
-                                            ClientZoneIpcData::ContentFinderRegister { .. } => {
+                                            ClientZoneIpcData::ContentFinderRegister { content_ids, .. } => {
+                                                tracing::info!("Searching for {content_ids:?}");
                                                 let ipc = ServerZoneIpcSegment {
                                                     op_code: ServerZoneIpcType::ContentFinderFound,
                                                     timestamp: timestamp_secs(),
