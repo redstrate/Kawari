@@ -1086,6 +1086,7 @@ impl ZoneConnection {
         self.player_data.item_sequence += 1;
     }
 
+    // TODO: When we add support for ItemObtainedLogMessage, rename this and update this
     pub async fn send_gilshop_ack(
         &mut self,
         event_id: u32,
@@ -1095,12 +1096,12 @@ impl ZoneConnection {
         message_type: LogMessageType,
     ) {
         let ipc = ServerZoneIpcSegment {
-            op_code: ServerZoneIpcType::GilShopTransactionAck,
+            op_code: ServerZoneIpcType::ShopLogMessage,
             timestamp: timestamp_secs(),
-            data: ServerZoneIpcData::GilShopTransactionAck {
+            data: ServerZoneIpcData::ShopLogMessage {
                 event_id,
                 message_type: message_type as u32,
-                unk1: 3,
+                params_count: 3,
                 item_id,
                 item_quantity,
                 total_sale_cost: item_quantity * price_per_item,

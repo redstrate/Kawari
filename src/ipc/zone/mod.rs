@@ -388,6 +388,7 @@ pub enum ServerZoneIpcData {
         #[brw(pad_after = 8)]
         unk3: u8,
     },
+    /// Sent by the server to acknowledge when the client is updating their inventory in some way (typically when interacting with shops).
     #[br(pre_assert(*magic == ServerZoneIpcType::InventoryActionAck))]
     InventoryActionAck {
         sequence: u32,
@@ -416,6 +417,7 @@ pub enum ServerZoneIpcData {
         #[brw(pad_after = 7)]
         unk1: u8,
     },
+    /// Send by the server to inform the client of when the inventory is being updated (typically when interacting with shops).
     #[br(pre_assert(*magic == ServerZoneIpcType::InventoryTransaction))]
     InventoryTransaction {
         /// This is later reused in InventoryTransactionFinish, so it might be some sort of sequence or context id, but it's not the one sent by the client
@@ -445,9 +447,10 @@ pub enum ServerZoneIpcData {
         /// Always set to zero.
         dst_catalog_id: u32,
     },
+    /// Sent by the server when a sequence of InventoryTransaction packets have concluded.
     #[br(pre_assert(*magic == ServerZoneIpcType::InventoryTransactionFinish))]
     InventoryTransactionFinish {
-        /// Same value as unk1 in InventoryTransaction.
+        /// Same sequence value as in InventoryTransaction.
         sequence: u32,
         /// Repeated unk1 value. No, it's not a copy-paste error.
         sequence_repeat: u32,
@@ -506,22 +509,36 @@ pub enum ServerZoneIpcData {
         #[bw(pad_size_to = 6)]
         unk2: Vec<u8>,
     },
-    #[brw(little)]
-    #[br(pre_assert(*magic == ServerZoneIpcType::GilShopTransactionAck))]
-    GilShopTransactionAck {
+    /// Sent by the server when an item is obtained from shops that accept gil.
+    #[br(pre_assert(*magic == ServerZoneIpcType::ShopLogMessage))]
+    ShopLogMessage {
         event_id: u32,
         /// When buying: 0x697
         /// When selling: 0x698
         /// When buying back: 0x699
         message_type: u32,
-        /// Always 3 at gil shops, regardless of the interactions going on
-        unk1: u32,
+        /// Always 3, regardless of the interactions going on
+        params_count: u32,
         item_id: u32,
         item_quantity: u32,
         #[brw(pad_after = 8)]
         total_sale_cost: u32,
     },
-    #[brw(little)]
+    /// Sent by the server when an item is obtained in ways other than gil shops (e.g. Poetics shops).
+    #[br(pre_assert(*magic == ServerZoneIpcType::ItemObtainedLogMessage))]
+    ItemObtainedLogMessage {
+        event_id: u32,
+        /// Non-stackable item or a single item: 750 / 0x2EE ("You obtained a .")
+        /// Stackable item: 751 / 0x2EF ("You obtained .")
+        message_type: u32,
+        /// Always 2
+        params_count: u32,
+        item_id: u32,
+        #[brw(pad_after = 2)]
+        /// Set to zero if only one item was obtained (stackable or not)
+        item_quantity: u32,
+    },
+    /// Sent by the server typically when a shop transaction takes place, usually to update currency.
     #[br(pre_assert(*magic == ServerZoneIpcType::UpdateInventorySlot))]
     UpdateInventorySlot {
         /// Starts from zero and increases by one for each of these packets during this gameplay session
@@ -1048,14 +1065,24 @@ mod tests {
                 },
             ),
             (
-                ServerZoneIpcType::GilShopTransactionAck,
-                ServerZoneIpcData::GilShopTransactionAck {
+                ServerZoneIpcType::ShopLogMessage,
+                ServerZoneIpcData::ShopLogMessage {
                     event_id: 0,
                     message_type: 0,
-                    unk1: 0,
+                    params_count: 0,
                     item_id: 0,
                     item_quantity: 0,
                     total_sale_cost: 0,
+                },
+            ),
+            (
+                ServerZoneIpcType::ItemObtainedLogMessage,
+                ServerZoneIpcData::ItemObtainedLogMessage {
+                    event_id: 0,
+                    message_type: 0,
+                    params_count: 0,
+                    item_id: 0,
+                    item_quantity: 0,
                 },
             ),
             (
