@@ -93,14 +93,26 @@ impl Default for Inventory {
     fn default() -> Self {
         // TODO: Set the ContainerType for the others if needed?
         // Right now we only use this for adding items to the main inventory.
-        let mut pages = std::array::from_fn(|_| GenericStorage::default());
-        pages[0].kind = ContainerType::Inventory0;
-        pages[1].kind = ContainerType::Inventory1;
-        pages[2].kind = ContainerType::Inventory2;
-        pages[3].kind = ContainerType::Inventory3;
         Self {
             equipped: EquippedStorage::default(),
-            pages,
+            pages: [
+                GenericStorage {
+                    kind: ContainerType::Inventory0,
+                    ..Default::default()
+                },
+                GenericStorage {
+                    kind: ContainerType::Inventory1,
+                    ..Default::default()
+                },
+                GenericStorage {
+                    kind: ContainerType::Inventory2,
+                    ..Default::default()
+                },
+                GenericStorage {
+                    kind: ContainerType::Inventory3,
+                    ..Default::default()
+                },
+            ],
             armoury_main_hand: GenericStorage::default(),
             armoury_head: GenericStorage::default(),
             armoury_body: GenericStorage::default(),
@@ -246,15 +258,15 @@ impl Inventory {
         let sheet = RaceSheet::read_from(&mut game_data.resource, Language::English).unwrap();
         let row = sheet.get_row(race_id as u32).unwrap();
 
-        let ids: Vec<u32> = if gender == 0 {
-            vec![
+        let ids = if gender == 0 {
+            [
                 *row.RSEMBody().into_i32().unwrap() as u32,
                 *row.RSEMHands().into_i32().unwrap() as u32,
                 *row.RSEMLegs().into_i32().unwrap() as u32,
                 *row.RSEMFeet().into_i32().unwrap() as u32,
             ]
         } else {
-            vec![
+            [
                 *row.RSEFBody().into_i32().unwrap() as u32,
                 *row.RSEFHands().into_i32().unwrap() as u32,
                 *row.RSEFLegs().into_i32().unwrap() as u32,
@@ -417,7 +429,7 @@ impl Inventory {
             ContainerType::ArmoryRing => &mut self.armoury_rings,
             ContainerType::ArmorySoulCrystal => &mut self.armoury_soul_crystal,
             ContainerType::ArmoryWeapon => &mut self.armoury_main_hand,
-            _ => todo!(),
+            _ => unimplemented!(),
         }
     }
 
@@ -441,7 +453,7 @@ impl Inventory {
             ContainerType::ArmoryRing => &self.armoury_rings,
             ContainerType::ArmorySoulCrystal => &self.armoury_soul_crystal,
             ContainerType::ArmoryWeapon => &self.armoury_main_hand,
-            _ => todo!(),
+            _ => unimplemented!(),
         }
     }
 
