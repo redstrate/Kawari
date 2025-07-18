@@ -25,10 +25,7 @@ mod currency;
 pub use currency::CurrencyKind;
 pub use currency::CurrencyStorage;
 
-use crate::{
-    INVENTORY_ACTION_COMBINE_STACK, INVENTORY_ACTION_DISCARD, INVENTORY_ACTION_EXCHANGE,
-    INVENTORY_ACTION_MOVE, INVENTORY_ACTION_SPLIT_STACK, INVENTORY_ACTION_UPDATE_CURRENCY,
-};
+use crate::BASE_INVENTORY_ACTION;
 
 const MAX_NORMAL_STORAGE: usize = 35;
 const MAX_LARGE_STORAGE: usize = 50;
@@ -39,18 +36,18 @@ const MAX_LARGE_STORAGE: usize = 50;
 #[repr(u8)]
 pub enum ItemOperationKind {
     /// The operation opcode/type when updating the currency storage.
-    UpdateCurrency = INVENTORY_ACTION_UPDATE_CURRENCY,
+    UpdateCurrency = BASE_INVENTORY_ACTION,
     /// The operation opcode/type when discarding an item from the inventory.
-    Discard = INVENTORY_ACTION_DISCARD,
+    Discard = BASE_INVENTORY_ACTION + 1,
     #[default]
     /// The operation opcode/type when moving an item to an emtpy slot in the inventory.
-    Move = INVENTORY_ACTION_MOVE,
+    Move = BASE_INVENTORY_ACTION + 2,
     /// The operation opcode/type when moving an item to a slot occupied by another in the inventory.
-    Exchange = INVENTORY_ACTION_EXCHANGE,
+    Exchange = BASE_INVENTORY_ACTION + 3,
     /// The operation opcode/type when splitting stacks of identical items.
-    SplitStack = INVENTORY_ACTION_SPLIT_STACK,
+    SplitStack = BASE_INVENTORY_ACTION + 4,
     /// The operation opcode/type when combining stacks of identical items.
-    CombineStack = INVENTORY_ACTION_COMBINE_STACK,
+    CombineStack = BASE_INVENTORY_ACTION + 6,
 }
 
 impl TryFrom<u8> for ItemOperationKind {

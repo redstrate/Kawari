@@ -91,25 +91,8 @@ pub const ITEM_CONDITION_MAX: u16 = 30000;
 /// The invalid/nothing/none actor ID.
 pub const INVALID_ACTOR_ID: u32 = 0xE000_0000;
 
-// These operation codes/types change regularly, so update them when needed!
-
-/// The operation opcode/type when updating the currency storage.
-pub const INVENTORY_ACTION_UPDATE_CURRENCY: u8 = 144;
-
-/// The operation opcode/type when discarding an item from the inventory.
-pub const INVENTORY_ACTION_DISCARD: u8 = 145;
-
-/// The operation opcode/type when moving an item to an emtpy slot in the inventory.
-pub const INVENTORY_ACTION_MOVE: u8 = 146;
-
-/// The operation opcode/type when moving an item to a slot occupied by another in the inventory.
-pub const INVENTORY_ACTION_EXCHANGE: u8 = 147;
-
-/// The operation opcode/type when splitting stacks of identical items.
-pub const INVENTORY_ACTION_SPLIT_STACK: u8 = 148;
-
-/// The operation opcode/type when combining stacks of identical items.
-pub const INVENTORY_ACTION_COMBINE_STACK: u8 = 150;
+// This operation code change regularly, so update it when needed!
+pub const BASE_INVENTORY_ACTION: u8 = 144;
 
 /// The server's acknowledgement of a shop item being purchased.
 pub const INVENTORY_ACTION_ACK_SHOP: u8 = 6;
