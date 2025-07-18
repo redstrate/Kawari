@@ -1072,6 +1072,16 @@ mod tests {
                 },
             ),
             (
+                ServerZoneIpcType::ItemObtainedLogMessage,
+                ServerZoneIpcData::ItemObtainedLogMessage {
+                    event_id: 0,
+                    message_type: 0,
+                    params_count: 0,
+                    item_id: 0,
+                    item_quantity: 0,
+                },
+            ),
+            (
                 ServerZoneIpcType::UpdateInventorySlot,
                 ServerZoneIpcData::UpdateInventorySlot {
                     sequence: 0,
