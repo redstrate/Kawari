@@ -87,10 +87,10 @@ impl ChatHandler {
                     if let Some(item_info) =
                         gamedata.get_item_info(ItemInfoQuery::ByName(name.to_string()))
                     {
-                        result = connection.player_data.inventory.add_in_next_free_slot(
-                            Item::new(1, item_info.id),
-                            item_info.stack_size,
-                        );
+                        result = connection
+                            .player_data
+                            .inventory
+                            .add_in_next_free_slot(Item::new(item_info, 1));
                     }
                 }
 

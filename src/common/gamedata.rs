@@ -37,7 +37,7 @@ impl Default for GameData {
 }
 
 /// Struct detailing various information about an item, pulled from the Items sheet.
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct ItemInfo {
     /// The item's textual name.
     pub name: String,
@@ -53,6 +53,8 @@ pub struct ItemInfo {
     pub primary_model_id: u64,
     /// The item's max stack size.
     pub stack_size: u32,
+    /// The item's item level.
+    pub item_level: u16,
 }
 
 #[derive(Debug)]
@@ -190,6 +192,10 @@ impl GameData {
                 panic!("Unexpected type!");
             };
 
+            let physis::exd::ColumnData::UInt16(item_level) = &matched_row.columns[11] else {
+                panic!("Unexpected type!");
+            };
+
             let physis::exd::ColumnData::UInt8(equip_category) = &matched_row.columns[17] else {
                 panic!("Unexpected type!");
             };
@@ -218,6 +224,7 @@ impl GameData {
                 equip_category: *equip_category,
                 primary_model_id: *primary_model_id,
                 stack_size: *stack_size,
+                item_level: *item_level,
             };
 
             return Some(item_info);

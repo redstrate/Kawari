@@ -166,7 +166,12 @@ async fn client_loop(
 
                                         // initialize player data if it doesn't exist'
                                         if connection.player_data.actor_id == 0 {
-                                            connection.player_data = database.find_player_data(actor_id);
+                                            let player_data;
+                                            {
+                                                let mut game_data = connection.gamedata.lock().unwrap();
+                                                player_data = database.find_player_data(actor_id, &mut game_data);
+                                            }
+                                            connection.player_data = player_data;
                                         }
 
                                         if connection_type == ConnectionType::Zone {
@@ -326,6 +331,12 @@ async fn client_loop(
                                                     })
                                                     .await;
                                                 }
+
+                                                connection.actor_control_self(ActorControlSelf {
+                                                    category: ActorControlCategory::SetItemLevel {
+                                                        level: connection.player_data.inventory.equipped.calculate_item_level() as u32,
+                                                    }
+                                                }).await;
 
                                                 connection.send_quest_information().await;
 
@@ -806,6 +817,11 @@ async fn client_loop(
                                                 // if updated equipped items, we have to process that
                                                 if action.src_storage_id == ContainerType::Equipped || action.dst_storage_id == ContainerType::Equipped {
                                                     connection.inform_equip().await;
+                                                    connection.actor_control_self(ActorControlSelf {
+                                                        category: ActorControlCategory::SetItemLevel {
+                                                            level: connection.player_data.inventory.equipped.calculate_item_level() as u32,
+                                                        }
+                                                    }).await;
                                                 }
 
                                                 if action.operation_type == ItemOperationKind::Discard {
@@ -859,7 +875,7 @@ async fn client_loop(
 
                                                     if let Some(item_info) = result {
                                                         if connection.player_data.inventory.currency.gil.quantity >= *item_quantity * item_info.price_mid {
-                                                            if let Some(add_result) = connection.player_data.inventory.add_in_next_free_slot(Item::new(*item_quantity, item_info.id), item_info.stack_size) {
+                                                            if let Some(add_result) = connection.player_data.inventory.add_in_next_free_slot(Item::new(item_info.clone(), *item_quantity)) {
                                                                 connection.player_data.inventory.currency.gil.quantity -= *item_quantity * item_info.price_mid;
                                                                 connection.send_gilshop_item_update(ContainerType::Currency as u16, 0, connection.player_data.inventory.currency.gil.quantity, CurrencyKind::Gil as u32).await;
 
@@ -901,6 +917,7 @@ async fn client_loop(
                                                             id: item_info.id,
                                                             quantity,
                                                             price_low: item_info.price_low,
+                                                            item_level: item_info.item_level,
                                                             stack_size: item_info.stack_size,
                                                         };
                                                         connection.player_data.buyback_list.push_item(*event_id, bb_item);

@@ -478,6 +478,13 @@ impl ZoneConnection {
             })
             .await;
         }
+
+        self.actor_control_self(ActorControlSelf {
+            category: ActorControlCategory::SetItemLevel {
+                level: self.player_data.inventory.equipped.calculate_item_level() as u32,
+            },
+        })
+        .await;
     }
 
     pub async fn warp(&mut self, warp_id: u32) {
@@ -929,10 +936,7 @@ impl ZoneConnection {
                         if self
                             .player_data
                             .inventory
-                            .add_in_next_free_slot(
-                                Item::new(*quantity, *id),
-                                item_info.unwrap().stack_size,
-                            )
+                            .add_in_next_free_slot(Item::new(item_info.unwrap(), *quantity))
                             .is_some()
                         {
                             if *send_client_update {

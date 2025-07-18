@@ -1,21 +1,32 @@
+use crate::common::ItemInfo;
+
 use crate::ITEM_CONDITION_MAX;
 use serde::{Deserialize, Serialize};
 
-/// Represents an item, or if the quanity is zero an empty slot.
+/// Represents an item, or if the quantity is zero, an empty slot.
 #[derive(Default, Copy, Clone, Serialize, Deserialize, Debug)]
 pub struct Item {
     pub quantity: u32,
     pub id: u32,
     pub condition: u16,
     pub glamour_catalog_id: u32,
+    #[serde(skip)]
+    pub item_level: u16,
+    #[serde(skip)]
+    pub stack_size: u32,
+    #[serde(skip)]
+    pub price_low: u32,
 }
 
 impl Item {
-    pub fn new(quantity: u32, id: u32) -> Self {
+    pub fn new(item_info: ItemInfo, quantity: u32) -> Self {
         Self {
             quantity,
-            id,
+            id: item_info.id,
             condition: ITEM_CONDITION_MAX,
+            item_level: item_info.item_level,
+            stack_size: item_info.stack_size,
+            price_low: item_info.price_low,
             ..Default::default()
         }
     }
@@ -26,5 +37,9 @@ impl Item {
             return self.glamour_catalog_id;
         }
         self.id
+    }
+
+    pub fn is_empty_slot(&self) -> bool {
+        self.quantity == 0
     }
 }

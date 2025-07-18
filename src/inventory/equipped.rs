@@ -20,6 +20,39 @@ pub struct EquippedStorage {
     pub soul_crystal: Item,
 }
 
+impl EquippedStorage {
+    /// Calculates the player's item level.
+    /// TODO: This is not accurate, for several reasons.
+    /// First, it does not take into account if the main hand is a one or two hander.
+    /// Second, it does not take into account if body armour occupies multiple slots or not (e.g. Herklaedi: cannot equip anything to hands, legs, or feet).
+    /// There is currently no known way of properly figuring those out. Presumably, the information is somewhere in the Items sheet.
+    pub fn calculate_item_level(&self) -> u16 {
+        const DIVISOR: u16 = 13;
+        const INDEX_BELT: u32 = 5;
+        const INDEX_SOUL_CRYSTAL: u32 = 13;
+
+        let mut level = self.main_hand.item_level;
+
+        if !self.off_hand.is_empty_slot() {
+            level += self.off_hand.item_level;
+        } else {
+            // Main hand counts twice if off hand is empty. See comments above why this isn't always correct.
+            level += self.main_hand.item_level;
+        }
+
+        for index in 2..self.max_slots() {
+            if index == INDEX_BELT || index == INDEX_SOUL_CRYSTAL {
+                continue;
+            }
+
+            let item = self.get_slot(index as u16);
+            level += item.item_level;
+        }
+
+        std::cmp::min(level / DIVISOR, 9999)
+    }
+}
+
 impl Storage for EquippedStorage {
     fn max_slots(&self) -> u32 {
         14
@@ -48,6 +81,7 @@ impl Storage for EquippedStorage {
             2 => &mut self.head,
             3 => &mut self.body,
             4 => &mut self.hands,
+            5 => &mut self.belt,
             6 => &mut self.legs,
             7 => &mut self.feet,
             8 => &mut self.ears,
