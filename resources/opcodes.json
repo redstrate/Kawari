@@ -296,7 +296,7 @@
             "size": 232
         },
         {
-            "name": "GilShopTransactionAck",
+            "name": "ShopLogMessage",
             "opcode": 974,
             "size": 32
         },
@@ -309,6 +309,11 @@
             "name": "EffectResult",
             "opcode": 431,
             "size": 96
+        },
+        {
+            "name": "ItemObtainedLogMessage",
+            "opcode": 456,
+            "size": 22
         }
     ],
     "ClientZoneIpcType": [

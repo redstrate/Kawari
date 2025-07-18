@@ -391,7 +391,7 @@ impl LuaPlayer {
         let new_gil = self.player_data.inventory.currency.gil.quantity - cost;
         self.remove_gil(cost, false);
 
-        let shop_packets_to_send = vec![
+        let shop_packets_to_send = [
             (
                 ServerZoneIpcType::UpdateInventorySlot,
                 ServerZoneIpcData::UpdateInventorySlot {
@@ -422,11 +422,11 @@ impl LuaPlayer {
                 },
             ),
             (
-                ServerZoneIpcType::GilShopTransactionAck,
-                ServerZoneIpcData::GilShopTransactionAck {
+                ServerZoneIpcType::ShopLogMessage,
+                ServerZoneIpcData::ShopLogMessage {
                     event_id: shop_id,
                     message_type: LogMessageType::ItemBoughtBack as u32,
-                    unk1: 3,
+                    params_count: 3,
                     item_id: bb_item.id,
                     item_quantity: item_dst_info.quantity,
                     total_sale_cost: item_dst_info.quantity * bb_item.price_low,
