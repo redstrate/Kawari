@@ -388,6 +388,7 @@ pub enum ServerZoneIpcData {
         #[brw(pad_after = 8)]
         unk3: u8,
     },
+    /// Sent by the server to acknowledge when the client is updating their inventory in some way (typically when interacting with shops).
     #[br(pre_assert(*magic == ServerZoneIpcType::InventoryActionAck))]
     InventoryActionAck {
         sequence: u32,
@@ -416,6 +417,7 @@ pub enum ServerZoneIpcData {
         #[brw(pad_after = 7)]
         unk1: u8,
     },
+    /// Send by the server to inform the client of when the inventory is being updated (typically when interacting with shops).
     #[br(pre_assert(*magic == ServerZoneIpcType::InventoryTransaction))]
     InventoryTransaction {
         /// This is later reused in InventoryTransactionFinish, so it might be some sort of sequence or context id, but it's not the one sent by the client
@@ -445,9 +447,10 @@ pub enum ServerZoneIpcData {
         /// Always set to zero.
         dst_catalog_id: u32,
     },
+    /// Sent by the server when a sequence of InventoryTransaction packets have concluded.
     #[br(pre_assert(*magic == ServerZoneIpcType::InventoryTransactionFinish))]
     InventoryTransactionFinish {
-        /// Same value as unk1 in InventoryTransaction.
+        /// Same sequence value as in InventoryTransaction.
         sequence: u32,
         /// Repeated unk1 value. No, it's not a copy-paste error.
         sequence_repeat: u32,
@@ -535,6 +538,7 @@ pub enum ServerZoneIpcData {
         /// Set to zero if only one item was obtained (stackable or not)
         item_quantity: u32,
     },
+    /// Sent by the server typically when a shop transaction takes place, usually to update currency.
     #[br(pre_assert(*magic == ServerZoneIpcType::UpdateInventorySlot))]
     UpdateInventorySlot {
         /// Starts from zero and increases by one for each of these packets during this gameplay session
