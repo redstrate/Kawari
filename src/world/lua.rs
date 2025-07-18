@@ -365,11 +365,11 @@ impl LuaPlayer {
 
         // This is a no-op since we can't edit PlayerData from the Lua side, but we can queue it up afterward.
         // We *need* this information, though.
-        let item_to_restore = Item::new(bb_item.quantity, bb_item.id);
+        let item_to_restore = Item::new(bb_item.as_item_info(), bb_item.quantity);
         let Some(item_dst_info) = self
             .player_data
             .inventory
-            .add_in_next_free_slot(item_to_restore, bb_item.stack_size)
+            .add_in_next_free_slot(item_to_restore)
         else {
             let error = "Your inventory is full. Unable to restore item.";
             self.send_message(error, 0);

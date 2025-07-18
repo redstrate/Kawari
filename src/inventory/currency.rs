@@ -1,3 +1,5 @@
+use crate::common::ItemInfo;
+
 use serde::{Deserialize, Serialize};
 
 use super::{Item, Storage};
@@ -39,6 +41,17 @@ pub enum CurrencyKind {
     TrophyCrystal = 36656,
 }
 
+// TODO: Should we just pull this from the Item sheet?
+// Otherwise, should we not use Default and instead use new with a GameData parameter?
+pub enum CurrencyStack {
+    _CompanySeal = 90000,
+    _ElementalCrystal = 9999,
+    Gil = 999_999_999,
+    _MGP = 9_999_999,
+    _Tomestone = 2000,
+    _Pvp = 20000,
+}
+
 #[derive(Clone, Copy, Deserialize, Serialize, Debug)]
 pub struct CurrencyStorage {
     pub gil: Item,
@@ -47,7 +60,14 @@ pub struct CurrencyStorage {
 impl Default for CurrencyStorage {
     fn default() -> Self {
         Self {
-            gil: Item::new(0, CurrencyKind::Gil as u32),
+            gil: Item::new(
+                ItemInfo {
+                    id: CurrencyKind::Gil as u32,
+                    stack_size: CurrencyStack::Gil as u32,
+                    ..Default::default()
+                },
+                0,
+            ),
         }
     }
 }

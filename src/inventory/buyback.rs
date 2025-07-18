@@ -3,6 +3,7 @@ use std::collections::{HashMap, VecDeque};
 const BUYBACK_LIST_SIZE: usize = 10;
 const BUYBACK_PARAM_COUNT: usize = 22;
 
+// TODO: Deprecate this type, Item can now be expanded to support everything we'll need
 #[derive(Clone, Debug, Default)]
 pub struct BuyBackItem {
     pub id: u32,
@@ -11,6 +12,7 @@ pub struct BuyBackItem {
     // TODO: there are 22 total things the server keeps track of and sends back to the client, we should implement these!
     // Not every value is not fully understood but they appeared to be related to item quality, materia melds, the crafter's name (if applicable), spiritbond/durability, and maybe more.
     /// Fields beyond this comment are not part of the 22 datapoints the server sends to the client, but we need them for later item restoration.
+    pub item_level: u16,
     pub stack_size: u32,
 }
 
@@ -74,5 +76,18 @@ impl BuyBackList {
         }
 
         params
+    }
+}
+
+// TODO: Once BBItem is deprecated, remove this. This is a transitional impl as we migrate to using Item.
+impl BuyBackItem {
+    pub fn as_item_info(&self) -> crate::common::ItemInfo {
+        crate::common::ItemInfo {
+            id: self.id,
+            item_level: self.item_level,
+            stack_size: self.stack_size,
+            price_low: self.price_low,
+            ..Default::default()
+        }
     }
 }

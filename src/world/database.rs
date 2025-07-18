@@ -7,7 +7,7 @@ use crate::{
     AETHERYTE_UNLOCK_BITMASK_SIZE, CLASSJOB_ARRAY_SIZE, COMPLETED_QUEST_BITMASK_SIZE,
     UNLOCK_BITMASK_SIZE,
     common::{
-        CustomizeData, GameData, Position,
+        CustomizeData, GameData, ItemInfoQuery, Position,
         workdefinitions::{CharaMake, ClientSelectData, RemakeMode},
     },
     inventory::{Inventory, Item, Storage},
@@ -182,7 +182,7 @@ impl WorldDatabase {
             game_data,
         );
 
-        let mut player_data = self.find_player_data(actor_id);
+        let mut player_data = self.find_player_data(actor_id, game_data);
 
         // import jobs
         for classjob in &character.classjob_levels {
@@ -208,6 +208,7 @@ impl WorldDatabase {
                         id: item.id,
                         condition: item.condition,
                         glamour_catalog_id: item.glamour_id,
+                        ..Default::default()
                     };
                 }
             };
@@ -278,7 +279,7 @@ impl WorldDatabase {
         tracing::info!("{} added to the world!", character.name);
     }
 
-    pub fn find_player_data(&self, actor_id: u32) -> PlayerData {
+    pub fn find_player_data(&self, actor_id: u32, game_data: &mut GameData) -> PlayerData {
         let connection = self.connection.lock().unwrap();
 
         let mut stmt = connection
@@ -291,7 +292,7 @@ impl WorldDatabase {
         stmt = connection
             .prepare("SELECT pos_x, pos_y, pos_z, rotation, zone_id, inventory, gm_rank, classjob_id, classjob_levels, classjob_exp, unlocks, aetherytes, completed_quests FROM character_data WHERE content_id = ?1")
             .unwrap();
-        let player_data: PlayerData = stmt
+        let mut player_data: PlayerData = stmt
             .query_row((content_id,), |row| {
                 Ok(PlayerData {
                     actor_id,
@@ -317,7 +318,48 @@ impl WorldDatabase {
             })
             .unwrap();
 
+        // Before we're finished, we need to populate the items in the inventory with additional static information that we don't bother caching in the db.
+        self.prepare_player_inventory(&mut player_data.inventory, game_data);
+
         player_data
+    }
+
+    // TODO: Should this and prepare_player_inventory be instead placed somewhere in the inventory modules?
+    fn prepare_items_in_container(&self, container: &mut impl Storage, data: &mut GameData) {
+        for index in 0..container.max_slots() {
+            let item = container.get_slot_mut(index as u16);
+
+            if item.is_empty_slot() {
+                continue;
+            }
+
+            if let Some(info) = data.get_item_info(ItemInfoQuery::ById(item.id)) {
+                item.item_level = info.item_level;
+                item.stack_size = info.stack_size;
+                item.price_low = info.price_low;
+                // TODO: There will be much more in the future.
+            }
+        }
+    }
+
+    fn prepare_player_inventory(&self, inventory: &mut Inventory, data: &mut GameData) {
+        // TODO: implement iter_mut for Inventory so all of this can be reduced down
+        for index in 0..inventory.pages.len() {
+            self.prepare_items_in_container(&mut inventory.pages[index], data);
+        }
+
+        self.prepare_items_in_container(&mut inventory.equipped, data);
+        self.prepare_items_in_container(&mut inventory.armoury_main_hand, data);
+        self.prepare_items_in_container(&mut inventory.armoury_body, data);
+        self.prepare_items_in_container(&mut inventory.armoury_hands, data);
+        self.prepare_items_in_container(&mut inventory.armoury_legs, data);
+        self.prepare_items_in_container(&mut inventory.armoury_feet, data);
+        self.prepare_items_in_container(&mut inventory.armoury_off_hand, data);
+        self.prepare_items_in_container(&mut inventory.armoury_earring, data);
+        self.prepare_items_in_container(&mut inventory.armoury_necklace, data);
+        self.prepare_items_in_container(&mut inventory.armoury_bracelet, data);
+        self.prepare_items_in_container(&mut inventory.armoury_rings, data);
+        // Skip soul crystals
     }
 
     /// Commit the dynamic player data back to the database

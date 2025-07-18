@@ -1,4 +1,4 @@
-use crate::common::GameData;
+use crate::common::{GameData, ItemInfoQuery};
 use binrw::binrw;
 use icarus::{ClassJob::ClassJobSheet, Race::RaceSheet};
 use physis::common::Language;
@@ -171,7 +171,9 @@ pub fn get_container_type(container_index: u32) -> Option<ContainerType> {
 
         // currency
         17 => Some(ContainerType::Currency),
-        _ => panic!("Inventory iterator invalid or the client sent a very weird packet!"),
+        _ => panic!(
+            "Inventory iterator invalid or the client sent a very weird packet! {container_index}"
+        ),
     }
 }
 
@@ -201,15 +203,45 @@ impl Inventory {
         let sheet = ClassJobSheet::read_from(&mut game_data.resource, Language::English).unwrap();
         let row = sheet.get_row(classjob_id as u32).unwrap();
 
-        self.equipped.main_hand =
-            Item::new(1, *row.ItemStartingWeapon().into_i32().unwrap() as u32);
+        let main_hand_id = *row.ItemStartingWeapon().into_i32().unwrap() as u32;
+        self.equipped.main_hand = Item::new(
+            game_data
+                .get_item_info(ItemInfoQuery::ById(main_hand_id))
+                .unwrap(),
+            1,
+        );
 
         // TODO: don't hardcode
-        self.equipped.ears = Item::new(1, 0x00003b1b);
-        self.equipped.neck = Item::new(1, 0x00003b1a);
-        self.equipped.wrists = Item::new(1, 0x00003b1c);
-        self.equipped.right_ring = Item::new(1, 0x0000114a);
-        self.equipped.left_ring = Item::new(1, 0x00003b1d);
+        self.equipped.ears = Item::new(
+            game_data
+                .get_item_info(ItemInfoQuery::ById(0x3b1b))
+                .unwrap(),
+            1,
+        );
+        self.equipped.neck = Item::new(
+            game_data
+                .get_item_info(ItemInfoQuery::ById(0x3b1a))
+                .unwrap(),
+            1,
+        );
+        self.equipped.wrists = Item::new(
+            game_data
+                .get_item_info(ItemInfoQuery::ById(0x3b1c))
+                .unwrap(),
+            1,
+        );
+        self.equipped.right_ring = Item::new(
+            game_data
+                .get_item_info(ItemInfoQuery::ById(0x114a))
+                .unwrap(),
+            1,
+        );
+        self.equipped.left_ring = Item::new(
+            game_data
+                .get_item_info(ItemInfoQuery::ById(0x3b1d))
+                .unwrap(),
+            1,
+        );
     }
 
     /// Equip the starting items for a given race
@@ -217,17 +249,46 @@ impl Inventory {
         let sheet = RaceSheet::read_from(&mut game_data.resource, Language::English).unwrap();
         let row = sheet.get_row(race_id as u32).unwrap();
 
-        if gender == 0 {
-            self.equipped.body = Item::new(1, *row.RSEMBody().into_i32().unwrap() as u32);
-            self.equipped.hands = Item::new(1, *row.RSEMHands().into_i32().unwrap() as u32);
-            self.equipped.legs = Item::new(1, *row.RSEMLegs().into_i32().unwrap() as u32);
-            self.equipped.feet = Item::new(1, *row.RSEMFeet().into_i32().unwrap() as u32);
+        let ids: Vec<u32> = if gender == 0 {
+            vec![
+                *row.RSEMBody().into_i32().unwrap() as u32,
+                *row.RSEMHands().into_i32().unwrap() as u32,
+                *row.RSEMLegs().into_i32().unwrap() as u32,
+                *row.RSEMFeet().into_i32().unwrap() as u32,
+            ]
         } else {
-            self.equipped.body = Item::new(1, *row.RSEFBody().into_i32().unwrap() as u32);
-            self.equipped.hands = Item::new(1, *row.RSEFHands().into_i32().unwrap() as u32);
-            self.equipped.legs = Item::new(1, *row.RSEFLegs().into_i32().unwrap() as u32);
-            self.equipped.feet = Item::new(1, *row.RSEFFeet().into_i32().unwrap() as u32);
-        }
+            vec![
+                *row.RSEFBody().into_i32().unwrap() as u32,
+                *row.RSEFHands().into_i32().unwrap() as u32,
+                *row.RSEFLegs().into_i32().unwrap() as u32,
+                *row.RSEFFeet().into_i32().unwrap() as u32,
+            ]
+        };
+
+        self.equipped.body = Item::new(
+            game_data
+                .get_item_info(ItemInfoQuery::ById(ids[0]))
+                .unwrap(),
+            1,
+        );
+        self.equipped.hands = Item::new(
+            game_data
+                .get_item_info(ItemInfoQuery::ById(ids[1]))
+                .unwrap(),
+            1,
+        );
+        self.equipped.legs = Item::new(
+            game_data
+                .get_item_info(ItemInfoQuery::ById(ids[2]))
+                .unwrap(),
+            1,
+        );
+        self.equipped.feet = Item::new(
+            game_data
+                .get_item_info(ItemInfoQuery::ById(ids[3]))
+                .unwrap(),
+            1,
+        );
     }
 
     /// Helper functions to reduce boilerplate
@@ -313,15 +374,11 @@ impl Inventory {
         None
     }
 
-    pub fn add_in_next_free_slot(
-        &mut self,
-        item: Item,
-        stack_size: u32,
-    ) -> Option<ItemDestinationInfo> {
-        if stack_size > 1 {
+    pub fn add_in_next_free_slot(&mut self, item: Item) -> Option<ItemDestinationInfo> {
+        if item.stack_size > 1 {
             for page in &mut self.pages {
                 for (slot_index, slot) in page.slots.iter_mut().enumerate() {
-                    if slot.id == item.id && slot.quantity + item.quantity <= stack_size {
+                    if slot.id == item.id && slot.quantity + item.quantity <= item.stack_size {
                         slot.quantity += item.quantity;
                         return Some(ItemDestinationInfo {
                             container: page.kind,
