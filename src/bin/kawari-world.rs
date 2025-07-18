@@ -3,7 +3,7 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use kawari::common::Position;
-use kawari::common::{GameData, ItemInfoQuery, timestamp_secs};
+use kawari::common::{GameData, INVALID_OBJECT_ID, ItemInfoQuery, timestamp_secs};
 use kawari::config::get_config;
 use kawari::inventory::{
     BuyBackItem, ContainerType, CurrencyKind, Item, ItemOperationKind, get_container_type,
@@ -42,7 +42,7 @@ use tokio::sync::mpsc::{Receiver, UnboundedReceiver, UnboundedSender, channel, u
 use tokio::sync::oneshot;
 use tokio::task::JoinHandle;
 
-use kawari::{INVALID_ACTOR_ID, INVENTORY_ACTION_ACK_GENERAL, INVENTORY_ACTION_ACK_SHOP};
+use kawari::{INVENTORY_ACTION_ACK_GENERAL, INVENTORY_ACTION_ACK_SHOP};
 
 fn spawn_main_loop() -> (ServerHandle, JoinHandle<()>) {
     let (send, recv) = channel(64);
@@ -838,7 +838,7 @@ async fn client_loop(
                                                             src_container_index: action.src_container_index,
                                                             src_stack: action.src_stack,
                                                             src_catalog_id: action.src_catalog_id,
-                                                            dst_actor_id: INVALID_ACTOR_ID,
+                                                            dst_actor_id: INVALID_OBJECT_ID.0,
                                                             dummy_container: ContainerType::DiscardingItemSentinel,
                                                             dst_storage_id: ContainerType::DiscardingItemSentinel,
                                                             dst_container_index: u16::MAX,
@@ -938,7 +938,7 @@ async fn client_loop(
                                                                 src_container_index: 0,
                                                                 src_stack: connection.player_data.inventory.currency.gil.quantity,
                                                                 src_catalog_id: CurrencyKind::Gil as u32,
-                                                                dst_actor_id: INVALID_ACTOR_ID,
+                                                                dst_actor_id: INVALID_OBJECT_ID.0,
                                                                 dummy_container: ContainerType::DiscardingItemSentinel,
                                                                 dst_storage_id: ContainerType::DiscardingItemSentinel,
                                                                 dst_container_index: u16::MAX,
@@ -977,7 +977,7 @@ async fn client_loop(
                                                                 src_container_index: index as u16,
                                                                 src_stack: quantity,
                                                                 src_catalog_id: item_info.id,
-                                                                dst_actor_id: INVALID_ACTOR_ID,
+                                                                dst_actor_id: INVALID_OBJECT_ID.0,
                                                                 dummy_container: ContainerType::DiscardingItemSentinel,
                                                                 dst_storage_id: ContainerType::DiscardingItemSentinel,
                                                                 dst_container_index: u16::MAX,
