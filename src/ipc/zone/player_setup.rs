@@ -156,16 +156,46 @@ pub struct PlayerStatus {
     #[br(count = 141)]
     #[bw(pad_size_to = 141)]
     pub unknown948: Vec<u8>,
-    pub unlocked_raids: [u8; RAID_ARRAY_SIZE],
-    pub unlocked_dungeons: [u8; DUNGEON_ARRAY_SIZE],
-    pub unlocked_guildhests: [u8; GUILDHEST_ARRAY_SIZE],
-    pub unlocked_trials: [u8; TRIAL_ARRAY_SIZE],
-    pub unlocked_pvp: [u8; PVP_ARRAY_SIZE],
-    pub cleared_raids: [u8; RAID_ARRAY_SIZE],
-    pub cleared_dungeons: [u8; DUNGEON_ARRAY_SIZE],
-    pub cleared_guildhests: [u8; GUILDHEST_ARRAY_SIZE],
-    pub cleared_trials: [u8; TRIAL_ARRAY_SIZE],
-    pub cleared_pvp: [u8; PVP_ARRAY_SIZE],
+
+    #[br(count = RAID_ARRAY_SIZE)]
+    #[bw(pad_size_to = RAID_ARRAY_SIZE)]
+    pub unlocked_raids: Vec<u8>,
+
+    #[br(count = DUNGEON_ARRAY_SIZE)]
+    #[bw(pad_size_to = DUNGEON_ARRAY_SIZE)]
+    pub unlocked_dungeons: Vec<u8>,
+
+    #[br(count = GUILDHEST_ARRAY_SIZE)]
+    #[bw(pad_size_to = GUILDHEST_ARRAY_SIZE)]
+    pub unlocked_guildhests: Vec<u8>,
+
+    #[br(count = TRIAL_ARRAY_SIZE)]
+    #[bw(pad_size_to = TRIAL_ARRAY_SIZE)]
+    pub unlocked_trials: Vec<u8>,
+
+    #[br(count = PVP_ARRAY_SIZE)]
+    #[bw(pad_size_to = PVP_ARRAY_SIZE)]
+    pub unlocked_pvp: Vec<u8>,
+
+    #[br(count = RAID_ARRAY_SIZE)]
+    #[bw(pad_size_to = RAID_ARRAY_SIZE)]
+    pub cleared_raids: Vec<u8>,
+
+    #[br(count = DUNGEON_ARRAY_SIZE)]
+    #[bw(pad_size_to = DUNGEON_ARRAY_SIZE)]
+    pub cleared_dungeons: Vec<u8>,
+
+    #[br(count = GUILDHEST_ARRAY_SIZE)]
+    #[bw(pad_size_to = GUILDHEST_ARRAY_SIZE)]
+    pub cleared_guildhests: Vec<u8>,
+
+    #[br(count = TRIAL_ARRAY_SIZE)]
+    #[bw(pad_size_to = TRIAL_ARRAY_SIZE)]
+    pub cleared_trials: Vec<u8>,
+
+    #[br(count = PVP_ARRAY_SIZE)]
+    #[bw(pad_size_to = PVP_ARRAY_SIZE)]
+    pub cleared_pvp: Vec<u8>,
 
     #[br(count = 16)]
     #[bw(pad_size_to = 16)]

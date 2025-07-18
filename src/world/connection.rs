@@ -6,11 +6,14 @@ use std::{
 };
 
 use mlua::Function;
+use serde::{Deserialize, Serialize};
 use tokio::net::TcpStream;
 
 use crate::{
-    CLASSJOB_ARRAY_SIZE, COMPLETED_LEVEQUEST_BITMASK_SIZE, COMPLETED_QUEST_BITMASK_SIZE,
-    ERR_INVENTORY_ADD_FAILED, LogMessageType,
+    AETHERYTE_UNLOCK_BITMASK_SIZE, CLASSJOB_ARRAY_SIZE, COMPLETED_LEVEQUEST_BITMASK_SIZE,
+    COMPLETED_QUEST_BITMASK_SIZE, DUNGEON_ARRAY_SIZE, ERR_INVENTORY_ADD_FAILED,
+    GUILDHEST_ARRAY_SIZE, LogMessageType, PVP_ARRAY_SIZE, RAID_ARRAY_SIZE, TRIAL_ARRAY_SIZE,
+    UNLOCK_BITMASK_SIZE,
     common::{
         GameData, INVALID_OBJECT_ID, ItemInfoQuery, ObjectId, ObjectTypeId, Position,
         timestamp_secs, value_to_flag_byte_index_value,
@@ -57,6 +60,43 @@ pub struct TeleportQuery {
     pub aetheryte_id: u16,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UnlockData {
+    pub unlocks: Vec<u8>,
+    pub aetherytes: Vec<u8>,
+    pub completed_quests: Vec<u8>,
+    pub unlocked_raids: Vec<u8>,
+    pub unlocked_dungeons: Vec<u8>,
+    pub unlocked_guildhests: Vec<u8>,
+    pub unlocked_trials: Vec<u8>,
+    pub unlocked_pvp: Vec<u8>,
+    pub cleared_raids: Vec<u8>,
+    pub cleared_dungeons: Vec<u8>,
+    pub cleared_guildhests: Vec<u8>,
+    pub cleared_trials: Vec<u8>,
+    pub cleared_pvp: Vec<u8>,
+}
+
+impl Default for UnlockData {
+    fn default() -> Self {
+        Self {
+            unlocks: vec![0x0; UNLOCK_BITMASK_SIZE],
+            aetherytes: vec![0x0; AETHERYTE_UNLOCK_BITMASK_SIZE],
+            completed_quests: vec![0x0; COMPLETED_QUEST_BITMASK_SIZE],
+            unlocked_raids: vec![0x0; RAID_ARRAY_SIZE],
+            unlocked_dungeons: vec![0x0; DUNGEON_ARRAY_SIZE],
+            unlocked_guildhests: vec![0x0; GUILDHEST_ARRAY_SIZE],
+            unlocked_trials: vec![0x0; TRIAL_ARRAY_SIZE],
+            unlocked_pvp: vec![0x0; PVP_ARRAY_SIZE],
+            cleared_raids: vec![0x0; RAID_ARRAY_SIZE],
+            cleared_dungeons: vec![0x0; DUNGEON_ARRAY_SIZE],
+            cleared_guildhests: vec![0x0; GUILDHEST_ARRAY_SIZE],
+            cleared_trials: vec![0x0; TRIAL_ARRAY_SIZE],
+            cleared_pvp: vec![0x0; PVP_ARRAY_SIZE],
+        }
+    }
+}
+
 #[derive(Debug, Default, Clone)]
 pub struct PlayerData {
     // Static data
@@ -83,15 +123,13 @@ pub struct PlayerData {
     pub gm_rank: GameMasterRank,
     pub gm_invisible: bool,
 
-    pub unlocks: Vec<u8>,
-    pub aetherytes: Vec<u8>,
-    pub completed_quests: Vec<u8>,
     pub item_sequence: u32,
     pub shop_sequence: u32,
     /// Store the target actor id for the purpose of chaining cutscenes.
     pub target_actorid: ObjectTypeId,
     /// The server-side copy of NPC shop buyback lists.
     pub buyback_list: BuyBackList,
+    pub unlocks: UnlockData,
 }
 
 /// Various obsfucation-related bits like the seeds and keys for this connection.
@@ -835,7 +873,7 @@ impl ZoneConnection {
                 }
                 Task::Unlock { id } => {
                     let (value, index) = value_to_flag_byte_index_value(*id);
-                    self.player_data.unlocks[index as usize] |= value;
+                    self.player_data.unlocks.unlocks[index as usize] |= value;
 
                     self.actor_control_self(ActorControlSelf {
                         category: ActorControlCategory::ToggleUnlock {
@@ -851,9 +889,9 @@ impl ZoneConnection {
                         for i in 1..239 {
                             let (value, index) = value_to_flag_byte_index_value(i);
                             if *on {
-                                self.player_data.aetherytes[index as usize] |= value;
+                                self.player_data.unlocks.aetherytes[index as usize] |= value;
                             } else {
-                                self.player_data.aetherytes[index as usize] ^= value;
+                                self.player_data.unlocks.aetherytes[index as usize] ^= value;
                             }
 
                             /* Unknown if this will make the server panic from a flood of packets.
@@ -869,9 +907,9 @@ impl ZoneConnection {
                     } else {
                         let (value, index) = value_to_flag_byte_index_value(*id);
                         if *on {
-                            self.player_data.aetherytes[index as usize] |= value;
+                            self.player_data.unlocks.aetherytes[index as usize] |= value;
                         } else {
-                            self.player_data.aetherytes[index as usize] ^= value;
+                            self.player_data.unlocks.aetherytes[index as usize] ^= value;
                         }
 
                         self.actor_control_self(ActorControlSelf {
@@ -955,7 +993,8 @@ impl ZoneConnection {
                     }
                 }
                 Task::CompleteAllQuests {} => {
-                    self.player_data.completed_quests = vec![0xFF; COMPLETED_QUEST_BITMASK_SIZE];
+                    self.player_data.unlocks.completed_quests =
+                        vec![0xFF; COMPLETED_QUEST_BITMASK_SIZE];
                     self.send_quest_information().await;
                 }
                 Task::UnlockContent { id } => {
@@ -1637,7 +1676,7 @@ impl ZoneConnection {
                 op_code: ServerZoneIpcType::QuestCompleteList,
                 timestamp: timestamp_secs(),
                 data: ServerZoneIpcData::QuestCompleteList {
-                    completed_quests: self.player_data.completed_quests.clone(),
+                    completed_quests: self.player_data.unlocks.completed_quests.clone(),
                     unk2: vec![0xFF; 69],
                 },
                 ..Default::default()
