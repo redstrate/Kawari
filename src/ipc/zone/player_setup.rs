@@ -1,7 +1,8 @@
 use binrw::binrw;
 
 use crate::{
-    AETHERYTE_UNLOCK_BITMASK_SIZE, CLASSJOB_ARRAY_SIZE, UNLOCK_BITMASK_SIZE,
+    AETHERYTE_UNLOCK_BITMASK_SIZE, CLASSJOB_ARRAY_SIZE, DUNGEON_ARRAY_SIZE, GUILDHEST_ARRAY_SIZE,
+    PVP_ARRAY_SIZE, RAID_ARRAY_SIZE, TRIAL_ARRAY_SIZE, UNLOCK_BITMASK_SIZE,
     common::{CHAR_NAME_MAX_LENGTH, read_string, write_string},
 };
 
@@ -151,21 +152,24 @@ pub struct PlayerStatus {
     #[br(count = 41)]
     #[bw(pad_size_to = 41)]
     pub unknown85e: Vec<u8>,
-    pub unlocked_raids: [u8; 28],
-    pub unlocked_dungeons: [u8; 18],
-    pub unlocked_guildhests: [u8; 10],
-    pub unlocked_trials: [u8; 12],
-    pub unlocked_pvp: [u8; 5],
-    pub cleared_raids: [u8; 28],
-    pub cleared_dungeons: [u8; 18],
-    pub cleared_guildhests: [u8; 10],
-    pub cleared_trials: [u8; 12],
-    pub cleared_pvp: [u8; 5],
-
     // meh, this is where i put all of the new data
-    #[br(count = 159)]
-    #[bw(pad_size_to = 159)]
+    #[br(count = 141)]
+    #[bw(pad_size_to = 141)]
     pub unknown948: Vec<u8>,
+    pub unlocked_raids: [u8; RAID_ARRAY_SIZE],
+    pub unlocked_dungeons: [u8; DUNGEON_ARRAY_SIZE],
+    pub unlocked_guildhests: [u8; GUILDHEST_ARRAY_SIZE],
+    pub unlocked_trials: [u8; TRIAL_ARRAY_SIZE],
+    pub unlocked_pvp: [u8; PVP_ARRAY_SIZE],
+    pub cleared_raids: [u8; RAID_ARRAY_SIZE],
+    pub cleared_dungeons: [u8; DUNGEON_ARRAY_SIZE],
+    pub cleared_guildhests: [u8; GUILDHEST_ARRAY_SIZE],
+    pub cleared_trials: [u8; TRIAL_ARRAY_SIZE],
+    pub cleared_pvp: [u8; PVP_ARRAY_SIZE],
+
+    #[br(count = 16)]
+    #[bw(pad_size_to = 16)]
+    pub unknown949: Vec<u8>,
 }
 
 #[cfg(test)]
