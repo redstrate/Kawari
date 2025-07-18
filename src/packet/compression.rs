@@ -18,6 +18,7 @@ use super::{
 #[derive(Debug, PartialEq)]
 pub enum CompressionType {
     Uncompressed = 0,
+    ZLib = 1,
     Oodle = 2,
 }
 
@@ -35,11 +36,12 @@ pub(crate) fn decompress<T: ReadWriteIpcSegment>(
     reader.read_exact(&mut data).unwrap();
 
     let data = match header.compression_type {
-        crate::packet::CompressionType::Uncompressed => data,
-        crate::packet::CompressionType::Oodle => oodle.decode(data, header.uncompressed_size),
+        CompressionType::Uncompressed => data,
+        CompressionType::ZLib => unimplemented!(),
+        CompressionType::Oodle => oodle.decode(data, header.uncompressed_size),
     };
 
-    if header.compression_type == crate::packet::CompressionType::Oodle {
+    if header.compression_type == CompressionType::Oodle {
         assert_eq!(
             data.len(),
             header.uncompressed_size as usize,
@@ -119,6 +121,7 @@ pub(crate) fn compress<T: ReadWriteIpcSegment>(
 
     match compression_type {
         CompressionType::Uncompressed => (segments_buffer, 0),
+        CompressionType::ZLib => unimplemented!(),
         CompressionType::Oodle => (
             state.clientbound_oodle.encode(segments_buffer),
             segments_buffer_len,
