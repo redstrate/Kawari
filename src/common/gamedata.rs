@@ -3,8 +3,10 @@ use std::path::PathBuf;
 use icarus::Action::ActionSheet;
 use icarus::Aetheryte::AetheryteSheet;
 use icarus::ClassJob::ClassJobSheet;
+use icarus::ContentFinderCondition::ContentFinderConditionSheet;
 use icarus::EquipSlotCategory::EquipSlotCategorySheet;
 use icarus::GilShopItem::GilShopItemSheet;
+use icarus::InstanceContent::InstanceContentSheet;
 use icarus::PlaceName::PlaceNameSheet;
 use icarus::TerritoryType::TerritoryTypeSheet;
 use icarus::WeatherRate::WeatherRateSheet;
@@ -436,6 +438,20 @@ impl GameData {
         let item_id = row.Item().into_i32()?;
 
         self.get_item_info(ItemInfoQuery::ById(*item_id as u32))
+    }
+
+    /// Gets the zone id for the given InstanceContent.
+    pub fn find_zone_for_content(&mut self, content_id: u16) -> Option<u16> {
+        let instance_content_sheet =
+            InstanceContentSheet::read_from(&mut self.resource, Language::None).unwrap();
+        let instance_content_row = instance_content_sheet.get_row(content_id as u32)?;
+
+        let content_finder_row_id = instance_content_row.ContentFinderCondition().into_u16()?;
+        let content_finder_sheet =
+            ContentFinderConditionSheet::read_from(&mut self.resource, Language::English).unwrap();
+        let content_finder_row = content_finder_sheet.get_row(*content_finder_row_id as u32)?;
+
+        content_finder_row.TerritoryType().into_u16().copied()
     }
 }
 

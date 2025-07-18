@@ -251,14 +251,14 @@
             "size": 16
         },
         {
-            "name": "ContentFinderFound",
+            "name": "ContentFinderUpdate",
             "opcode": 619,
             "size": 40
         },
         {
-            "name": "ContentFinderFound2",
-            "opcode": 619,
-            "size": 812
+            "name": "ContentFinderFound",
+            "opcode": 730,
+            "size": 40
         },
         {
             "name": "ObjectSpawn",
@@ -314,6 +314,11 @@
             "name": "ItemObtainedLogMessage",
             "opcode": 456,
             "size": 22
+        },
+        {
+            "name": "ContentFinderCommencing",
+            "opcode": 485,
+            "size": 24
         }
     ],
     "ClientZoneIpcType": [
@@ -471,6 +476,11 @@
             "name": "ContentFinderRegister",
             "opcode": 991,
             "size": 40
+        },
+        {
+            "name": "ContentFinderAction",
+            "opcode": 409,
+            "size": 8
         }
     ],
     "ServerLobbyIpcType": [

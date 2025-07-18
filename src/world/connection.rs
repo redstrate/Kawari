@@ -139,6 +139,9 @@ pub struct ZoneConnection {
     pub weather_id: u16,
 
     pub obsfucation_data: ObsfucationData,
+
+    // TODO: support more than one content in the queue
+    pub queued_content: Option<u16>,
 }
 
 impl ZoneConnection {

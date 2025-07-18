@@ -1147,64 +1147,197 @@ async fn client_loop(
                                             }
                                             ClientZoneIpcData::ContentFinderRegister { content_ids, .. } => {
                                                 tracing::info!("Searching for {content_ids:?}");
-                                                let ipc = ServerZoneIpcSegment {
-                                                    op_code: ServerZoneIpcType::ContentFinderFound,
-                                                    timestamp: timestamp_secs(),
-                                                    data: ServerZoneIpcData::ContentFinderFound {
-                                                        state1: 2,
-                                                        classjob_id: 1,
-                                                        unk1: [
-                                                            5,
-                                                            2,
-                                                            5,
-                                                            2,
-                                                            5,
-                                                            2,
-                                                            96,
-                                                            4,
-                                                            5,
-                                                            64,
-                                                            2,
-                                                            5,
-                                                            2,
-                                                            5,
-                                                            2,
-                                                            2,
-                                                            2,
-                                                            2,
-                                                            4,
-                                                            0,
-                                                            0,
-                                                            0,
-                                                            0,
-                                                            0,
-                                                            0,
-                                                            0,
-                                                            0,
-                                                            0,
-                                                            0,
-                                                            0,
-                                                            0,
-                                                            0,
-                                                            0,
-                                                            0,
-                                                            0,
-                                                            0,
-                                                            0,
-                                                            0,
-                                                        ]
-                                                    },
-                                                    ..Default::default()
-                                                };
 
-                                                connection
-                                                .send_segment(PacketSegment {
-                                                    source_actor: connection.player_data.actor_id,
-                                                    target_actor: connection.player_data.actor_id,
-                                                    segment_type: SegmentType::Ipc,
-                                                    data: SegmentData::Ipc { data: ipc },
-                                                })
-                                                .await;
+                                                connection.queued_content = Some(content_ids[0]);
+
+                                                // update
+                                                {
+                                                    let ipc = ServerZoneIpcSegment {
+                                                        op_code: ServerZoneIpcType::ContentFinderUpdate,
+                                                        timestamp: timestamp_secs(),
+                                                        data: ServerZoneIpcData::ContentFinderUpdate {
+                                                            state1: 1,
+                                                            classjob_id: connection.player_data.classjob_id, // TODO: store what they registered with, because it can change
+                                                            unk1: [
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                96,
+                                                                4,
+                                                                2,
+                                                                64,
+                                                                1,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                1,
+                                                                1,
+                                                            ],
+                                                            content_ids: [
+                                                                4,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                            ],
+                                                            unk2: [
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                            ],
+                                                        },
+                                                        ..Default::default()
+                                                    };
+
+                                                    connection
+                                                    .send_segment(PacketSegment {
+                                                        source_actor: connection.player_data.actor_id,
+                                                        target_actor: connection.player_data.actor_id,
+                                                        segment_type: SegmentType::Ipc,
+                                                        data: SegmentData::Ipc { data: ipc },
+                                                    })
+                                                    .await;
+                                                }
+
+                                                // found
+                                                {
+                                                    let ipc = ServerZoneIpcSegment {
+                                                        op_code: ServerZoneIpcType::ContentFinderFound,
+                                                        timestamp: timestamp_secs(),
+                                                        data: ServerZoneIpcData::ContentFinderFound {
+                                                            unk1: [
+                                                                3,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                96,
+                                                                4,
+                                                                2,
+                                                                64,
+                                                                1,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                1,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                4,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                1,
+                                                            ],
+                                                        },
+                                                        ..Default::default()
+                                                    };
+
+                                                    connection
+                                                    .send_segment(PacketSegment {
+                                                        source_actor: connection.player_data.actor_id,
+                                                        target_actor: connection.player_data.actor_id,
+                                                        segment_type: SegmentType::Ipc,
+                                                        data: SegmentData::Ipc { data: ipc },
+                                                    })
+                                                    .await;
+                                                }
+                                            }
+                                            ClientZoneIpcData::ContentFinderAction { unk1 } => {
+                                                dbg!(unk1);
+
+
+                                                // commencing
+                                                {
+                                                    let ipc = ServerZoneIpcSegment {
+                                                        op_code: ServerZoneIpcType::ContentFinderCommencing,
+                                                        timestamp: timestamp_secs(),
+                                                        data: ServerZoneIpcData::ContentFinderCommencing {
+                                                            unk1: [
+                                                                4,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                1,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                4,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                1,
+                                                                1,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                            ],
+                                                        },
+                                                        ..Default::default()
+                                                    };
+
+                                                    connection
+                                                    .send_segment(PacketSegment {
+                                                        source_actor: connection.player_data.actor_id,
+                                                        target_actor: connection.player_data.actor_id,
+                                                        segment_type: SegmentType::Ipc,
+                                                        data: SegmentData::Ipc { data: ipc },
+                                                    })
+                                                    .await;
+                                                }
+
+                                                // TODO: content finder should be moved to global state
+                                                // For now, just send them to do the zone if they do anything
+                                                let zone_id;
+                                                {
+                                                    let mut game_data = game_data.lock().unwrap();
+                                                    zone_id = game_data.find_zone_for_content(connection.queued_content.unwrap());
+                                                }
+
+                                                if let Some(zone_id) = zone_id {
+                                                    connection.change_zone(zone_id).await;
+                                                } else {
+                                                    tracing::warn!("Failed to find zone id for content?!");
+                                                }
+
+                                                connection.queued_content = None;
                                             }
                                             ClientZoneIpcData::Unknown { .. } => {
                                                 tracing::warn!("Unknown packet {:?} recieved, this should be handled!", data.op_code);
@@ -1376,6 +1509,7 @@ async fn main() {
                     gracefully_logged_out: false,
                     weather_id: 0,
                     obsfucation_data: ObsfucationData::default(),
+                    queued_content: None,
                 });
             }
             Some((mut socket, _)) = handle_rcon(&rcon_listener) => {

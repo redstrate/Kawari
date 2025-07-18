@@ -459,8 +459,8 @@ pub enum ServerZoneIpcData {
         /// Unknown, seems to always be 0x00000200.
         unk2: u32,
     },
-    #[br(pre_assert(*magic == ServerZoneIpcType::ContentFinderFound))]
-    ContentFinderFound {
+    #[br(pre_assert(*magic == ServerZoneIpcType::ContentFinderUpdate))]
+    ContentFinderUpdate {
         /// 0 = Nothing happens
         /// 1 = Reserving server
         /// 2 = again? ^
@@ -469,10 +469,12 @@ pub enum ServerZoneIpcData {
         /// nothing appears to happen above 5
         state1: u8,
         classjob_id: u8,
-        unk1: [u8; 38],
+        unk1: [u8; 18],
+        content_ids: [u16; 5],
+        unk2: [u8; 10],
     },
-    #[br(pre_assert(*magic == ServerZoneIpcType::ContentFinderFound2))]
-    ContentFinderFound2 { unk1: [u8; 8] },
+    #[br(pre_assert(*magic == ServerZoneIpcType::ContentFinderFound))]
+    ContentFinderFound { unk1: [u8; 40] },
     #[br(pre_assert(*magic == ServerZoneIpcType::ObjectSpawn))]
     ObjectSpawn(ObjectSpawn),
     #[br(pre_assert(*magic == ServerZoneIpcType::ActorGauge))]
@@ -554,6 +556,9 @@ pub enum ServerZoneIpcData {
     },
     #[br(pre_assert(*magic == ServerZoneIpcType::EffectResult))]
     EffectResult(EffectResult),
+    /// Sent to give you the green checkmark before entering a CF zone.
+    #[br(pre_assert(*magic == ServerZoneIpcType::ContentFinderCommencing))]
+    ContentFinderCommencing { unk1: [u8; 24] },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -750,6 +755,8 @@ pub enum ClientZoneIpcData {
         #[brw(pad_after = 4)] // seems to empty
         content_ids: [u16; 5],
     },
+    #[br(pre_assert(*magic == ClientZoneIpcType::ContentFinderAction))]
+    ContentFinderAction { unk1: [u8; 8] },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
