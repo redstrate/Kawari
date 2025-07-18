@@ -33,7 +33,7 @@
         {
             "name": "InitResponse",
             "opcode": 186,
-            "size": 16
+            "size": 14
         },
         {
             "name": "LogOutComplete",
