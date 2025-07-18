@@ -190,7 +190,7 @@ pub enum ServerZoneIpcData {
     InitResponse {
         unk1: u64,
         character_id: u32,
-        unk2: u16,
+        unk2: u32,
     },
     /// Sent by the server that tells the client which zone to load
     #[br(pre_assert(*magic == ServerZoneIpcType::InitZone))]
