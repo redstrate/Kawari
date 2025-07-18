@@ -20,7 +20,7 @@ pub mod oodle;
 #[cfg(not(target_family = "wasm"))]
 mod send_helpers;
 #[cfg(not(target_family = "wasm"))]
-pub use send_helpers::{send_keep_alive, send_packet};
+pub use send_helpers::{send_custom_world_packet, send_keep_alive, send_packet};
 
 mod scrambler;
 pub use scrambler::{

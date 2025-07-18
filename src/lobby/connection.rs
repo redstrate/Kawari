@@ -1,9 +1,8 @@
 use std::cmp::min;
 
-use tokio::{io::AsyncReadExt, net::TcpStream};
+use tokio::net::TcpStream;
 
 use crate::{
-    RECEIVE_BUFFER_SIZE,
     blowfish::Blowfish,
     common::timestamp_secs,
     config::get_config,
@@ -11,7 +10,7 @@ use crate::{
     opcodes::ServerLobbyIpcType,
     packet::{
         CompressionType, ConnectionType, PacketSegment, PacketState, SegmentData, SegmentType,
-        generate_encryption_key, oodle::OodleNetwork, parse_packet, send_packet,
+        generate_encryption_key, parse_packet, send_custom_world_packet, send_packet,
     },
 };
 
@@ -532,50 +531,4 @@ impl LobbyConnection {
             LobbyCharacterActionKind::Request => todo!(),
         }
     }
-}
-
-/// Sends a custom IPC packet to the world server, meant for private server-to-server communication.
-/// Returns the first custom IPC segment returned.
-pub async fn send_custom_world_packet(segment: CustomIpcSegment) -> Option<CustomIpcSegment> {
-    let config = get_config();
-
-    let addr = config.world.get_public_socketaddr();
-
-    let mut stream = TcpStream::connect(addr).await.unwrap();
-
-    let mut packet_state = PacketState {
-        client_key: None,
-        serverbound_oodle: OodleNetwork::new(),
-        clientbound_oodle: OodleNetwork::new(),
-    };
-
-    let segment: PacketSegment<CustomIpcSegment> = PacketSegment {
-        segment_type: SegmentType::KawariIpc,
-        data: SegmentData::KawariIpc { data: segment },
-        ..Default::default()
-    };
-
-    send_packet(
-        &mut stream,
-        &mut packet_state,
-        ConnectionType::None,
-        CompressionType::Uncompressed,
-        &[segment],
-        None,
-    )
-    .await;
-
-    // read response
-    let mut buf = vec![0; RECEIVE_BUFFER_SIZE];
-    let n = stream.read(&mut buf).await.expect("Failed to read data!");
-    if n != 0 {
-        let (segments, _) = parse_packet::<CustomIpcSegment>(&buf[..n], &mut packet_state);
-
-        return match &segments[0].data {
-            SegmentData::KawariIpc { data } => Some(data.clone()),
-            _ => None,
-        };
-    }
-
-    None
 }
