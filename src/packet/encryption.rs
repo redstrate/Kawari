@@ -4,7 +4,7 @@ use binrw::BinResult;
 
 use crate::{GAME_VERSION, blowfish::Blowfish};
 
-use super::ReadWriteIpcSegment;
+use super::{IPC_HEADER_SIZE, ReadWriteIpcSegment};
 
 pub fn generate_encryption_key(key: &[u8], phrase: &str) -> [u8; 16] {
     let mut base_key = vec![0x78, 0x56, 0x34, 0x12];
@@ -22,7 +22,7 @@ pub(crate) fn decrypt<T: ReadWriteIpcSegment>(
     encryption_key: Option<&[u8]>,
 ) -> BinResult<T> {
     if let Some(encryption_key) = encryption_key {
-        let size = size - (std::mem::size_of::<u32>() * 4) as u32; // 16 = header size
+        let size = size - IPC_HEADER_SIZE;
 
         let mut data = vec![0; size as usize];
         reader.read_exact(&mut data)?;
@@ -44,7 +44,7 @@ pub(crate) fn encrypt<T: ReadWriteIpcSegment>(
     encryption_key: Option<&[u8]>,
 ) -> BinResult<()> {
     if let Some(encryption_key) = encryption_key {
-        let size = size - (std::mem::size_of::<u32>() * 4) as u32; // 16 = header size
+        let size = size - IPC_HEADER_SIZE;
 
         let mut cursor = Cursor::new(Vec::new());
         value.write_options(&mut cursor, endian, ())?;
