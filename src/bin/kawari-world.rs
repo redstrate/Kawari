@@ -1178,13 +1178,7 @@ async fn client_loop(
                                                                 1,
                                                                 1,
                                                             ],
-                                                            content_ids: [
-                                                                4,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                            ],
+                                                            content_ids: *content_ids,
                                                             unk2: [
                                                                 0,
                                                                 0,
@@ -1246,8 +1240,9 @@ async fn client_loop(
                                                                 0,
                                                                 0,
                                                                 0,
-                                                                4,
-                                                                0,
+                                                            ],
+                                                            content_id: content_ids[0],
+                                                            unk2: [
                                                                 0,
                                                                 0,
                                                                 0,

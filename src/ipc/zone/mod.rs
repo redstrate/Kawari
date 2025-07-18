@@ -474,7 +474,11 @@ pub enum ServerZoneIpcData {
         unk2: [u8; 10],
     },
     #[br(pre_assert(*magic == ServerZoneIpcType::ContentFinderFound))]
-    ContentFinderFound { unk1: [u8; 40] },
+    ContentFinderFound {
+        unk1: [u8; 28],
+        content_id: u16,
+        unk2: [u8; 10],
+    },
     #[br(pre_assert(*magic == ServerZoneIpcType::ObjectSpawn))]
     ObjectSpawn(ObjectSpawn),
     #[br(pre_assert(*magic == ServerZoneIpcType::ActorGauge))]
