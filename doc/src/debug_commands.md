@@ -15,7 +15,7 @@ These special debug commands start with `!` and are custom to Kawari.
 * `!item <name>`: Gives you an item matching by name.
 * `!inspect`: Prints info about the player.
 * `!completeallquests`: Completes every quest in the game, useful for accessing stuff gated behind quest completion.
-* `!unlockcontent <id>`: Unlocks the specified instanced content.
+* `!unlockcontent <id>`: Unlocks the specified instanced content. The ID to use is from the InstanceContent Excel sheet.
 * `!replay <path>`: Replays packets, must be in the format generated from cfcap-capture.
 * `!condition <name>`: Forcefully sets a condition, see `condition.rs` for what is supported.
 * `!clearconditions`: Forcefully clears all conditions set on your character.

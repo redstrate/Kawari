@@ -30,6 +30,7 @@ impl TryFrom<i32> for RemakeMode {
         }
     }
 }
+
 #[cfg(not(target_family = "wasm"))]
 impl rusqlite::types::FromSql for RemakeMode {
     fn column_result(value: rusqlite::types::ValueRef<'_>) -> rusqlite::types::FromSqlResult<Self> {

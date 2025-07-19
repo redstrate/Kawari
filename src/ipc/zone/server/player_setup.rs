@@ -163,8 +163,8 @@ pub struct PlayerStatus {
     #[bw(pad_size_to = 41)]
     pub unknown85e: Vec<u8>,
     // meh, this is where i put all of the new data
-    #[br(count = 141)]
-    #[bw(pad_size_to = 141)]
+    #[br(count = 152)]
+    #[bw(pad_size_to = 152)]
     pub unknown948: Vec<u8>,
 
     // unlocked status
@@ -210,6 +210,10 @@ pub struct PlayerStatus {
     #[br(count = PVP_ARRAY_SIZE)]
     #[bw(pad_size_to = PVP_ARRAY_SIZE)]
     pub cleared_pvp: Vec<u8>, // TODO: i don't think this is actually a thing?
+
+    #[br(count = 11)]
+    #[bw(pad_size_to = 11)]
+    pub unknown949: Vec<u8>,
 }
 
 // TODO: update testdata for 7.3

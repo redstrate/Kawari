@@ -86,7 +86,7 @@ pub const COMPLETED_LEVEQUEST_BITMASK_SIZE: usize = 226;
 pub const CLASSJOB_ARRAY_SIZE: usize = 32;
 
 /// The size of various raid bitmasks.
-pub const RAID_ARRAY_SIZE: usize = 39;
+pub const RAID_ARRAY_SIZE: usize = 28;
 
 /// The size of various dungeon bitmasks.
 pub const DUNGEON_ARRAY_SIZE: usize = 18;

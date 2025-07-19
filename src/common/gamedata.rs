@@ -69,6 +69,62 @@ pub enum ItemInfoQuery {
     ByName(String),
 }
 
+// From FFXIVClientStructs
+// This is actually indexes of InstanceContentType, but we want nice names.
+#[derive(Debug)]
+pub enum InstanceContentType {
+    Raid = 1,
+    Dungeon = 2,
+    Guildhests = 3,
+    Trial = 4,
+    CrystallineConflict = 5,
+    Frontlines = 6,
+    QuestBattle = 7,
+    BeginnerTraining = 8,
+    DeepDungeon = 9,
+    TreasureHuntDungeon = 10,
+    SeasonalDungeon = 11,
+    RivalWing = 12,
+    MaskedCarnivale = 13,
+    Mahjong = 14,
+    GoldSaucer = 15,
+    OceanFishing = 16,
+    UnrealTrial = 17,
+    TripleTriad = 18,
+    VariantDungeon = 19,
+    CriterionDungeon = 20,
+}
+
+impl TryFrom<u8> for InstanceContentType {
+    type Error = ();
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        match value {
+            1 => Ok(Self::Raid),
+            2 => Ok(Self::Dungeon),
+            3 => Ok(Self::Guildhests),
+            4 => Ok(Self::Trial),
+            5 => Ok(Self::CrystallineConflict),
+            6 => Ok(Self::Frontlines),
+            7 => Ok(Self::QuestBattle),
+            8 => Ok(Self::BeginnerTraining),
+            9 => Ok(Self::DeepDungeon),
+            10 => Ok(Self::TreasureHuntDungeon),
+            11 => Ok(Self::SeasonalDungeon),
+            12 => Ok(Self::RivalWing),
+            13 => Ok(Self::MaskedCarnivale),
+            14 => Ok(Self::Mahjong),
+            15 => Ok(Self::GoldSaucer),
+            16 => Ok(Self::OceanFishing),
+            17 => Ok(Self::UnrealTrial),
+            18 => Ok(Self::TripleTriad),
+            19 => Ok(Self::VariantDungeon),
+            20 => Ok(Self::CriterionDungeon),
+            _ => Err(()),
+        }
+    }
+}
+
 impl GameData {
     pub fn new() -> Self {
         let config = get_config();
@@ -494,6 +550,20 @@ impl GameData {
         let model_row = model_sheet.get_row(*model_row_id as u32)?;
 
         model_row.Model().into_u16().copied()
+    }
+
+    /// Gets the content type for the given InstanceContent.
+    pub fn find_type_for_content(&mut self, content_id: u16) -> Option<InstanceContentType> {
+        let instance_content_sheet =
+            InstanceContentSheet::read_from(&mut self.resource, Language::None).unwrap();
+        let instance_content_row = instance_content_sheet.get_row(content_id as u32)?;
+
+        instance_content_row
+            .InstanceContentType()
+            .into_u8()
+            .copied()?
+            .try_into()
+            .ok()
     }
 }
 

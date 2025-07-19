@@ -14,8 +14,8 @@ use crate::{
     GUILDHEST_ARRAY_SIZE, LogMessageType, PVP_ARRAY_SIZE, RAID_ARRAY_SIZE, TRIAL_ARRAY_SIZE,
     UNLOCK_BITMASK_SIZE,
     common::{
-        EquipDisplayFlag, GameData, INVALID_OBJECT_ID, ItemInfoQuery, ObjectId, ObjectTypeId,
-        Position, timestamp_secs, value_to_flag_byte_index_value,
+        EquipDisplayFlag, GameData, INVALID_OBJECT_ID, InstanceContentType, ItemInfoQuery,
+        ObjectId, ObjectTypeId, Position, timestamp_secs, value_to_flag_byte_index_value,
     },
     config::{WorldConfig, get_config},
     inventory::{BuyBackList, ContainerType, Inventory, Item, Storage},
@@ -901,6 +901,46 @@ impl ZoneConnection {
                     self.send_quest_information().await;
                 }
                 Task::UnlockContent { id } => {
+                    {
+                        let mut game_data = self.gamedata.lock().unwrap();
+                        if let Some(instance_content_type) = game_data.find_type_for_content(*id) {
+                            // Each id has to be subtracted by it's offset in the InstanceContent Excel sheet. For example, all guildheists start at ID 10000.
+                            match instance_content_type {
+                                InstanceContentType::Dungeon => {
+                                    let (value, index) =
+                                        value_to_flag_byte_index_value(*id as u32 - 1);
+                                    self.player_data.unlocks.unlocked_dungeons[index as usize] |=
+                                        value;
+                                }
+                                InstanceContentType::Raid => {
+                                    let (value, index) =
+                                        value_to_flag_byte_index_value(*id as u32 - 30001);
+                                    self.player_data.unlocks.unlocked_raids[index as usize] |=
+                                        value;
+                                }
+                                InstanceContentType::Guildhests => {
+                                    let (value, index) =
+                                        value_to_flag_byte_index_value(*id as u32 - 10001);
+                                    self.player_data.unlocks.unlocked_guildhests[index as usize] |=
+                                        value;
+                                }
+                                InstanceContentType::Trial => {
+                                    let (value, index) =
+                                        value_to_flag_byte_index_value(*id as u32 - 20001);
+                                    self.player_data.unlocks.unlocked_trials[index as usize] |=
+                                        value;
+                                }
+                                _ => {
+                                    tracing::warn!(
+                                        "Not sure what to do about {instance_content_type:?} {id}!"
+                                    );
+                                }
+                            };
+                        } else {
+                            tracing::warn!("Unknown content {id}!");
+                        }
+                    }
+
                     self.actor_control_self(ActorControlSelf {
                         category: ActorControlCategory::UnlockInstanceContent {
                             id: *id as u32,
