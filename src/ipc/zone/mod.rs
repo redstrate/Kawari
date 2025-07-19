@@ -540,7 +540,7 @@ pub enum ServerZoneIpcData {
         /// Always 2
         params_count: u32,
         item_id: u32,
-        #[brw(pad_after = 2)]
+        #[brw(pad_after = 4)]
         /// Set to zero if only one item was obtained (stackable or not)
         item_quantity: u32,
     },
