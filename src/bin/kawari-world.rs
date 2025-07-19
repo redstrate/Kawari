@@ -727,7 +727,7 @@ async fn client_loop(
                                                         tracing::warn!("Lua error in {file_name}: {:?}", err);
                                                     }
                                                 } else {
-                                                    tracing::warn!("Received unknown GM {command} with args: arg0: {arg0} arg1: {arg1} arg2: {arg2} arg3: {arg3}!");
+                                                    tracing::warn!("Received unknown GM command {command} with args: arg0: {arg0} arg1: {arg1} arg2: {arg2} arg3: {arg3}!");
                                                 }
                                             }
                                             ClientZoneIpcData::ZoneJump {
