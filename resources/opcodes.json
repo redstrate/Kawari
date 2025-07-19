@@ -313,7 +313,7 @@
         {
             "name": "ItemObtainedLogMessage",
             "opcode": 456,
-            "size": 22
+            "size": 24
         },
         {
             "name": "ContentFinderCommencing",
