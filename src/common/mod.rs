@@ -13,7 +13,7 @@ pub use position::Position;
 
 mod gamedata;
 pub use gamedata::GameData;
-pub use gamedata::{ItemInfo, ItemInfoQuery, TerritoryNameKind};
+pub use gamedata::{InstanceContentType, ItemInfo, ItemInfoQuery, TerritoryNameKind};
 
 pub mod workdefinitions;
 
