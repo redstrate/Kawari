@@ -130,6 +130,7 @@ pub struct PlayerData {
     /// The server-side copy of NPC shop buyback lists.
     pub buyback_list: BuyBackList,
     pub unlocks: UnlockData,
+    pub saw_inn_wakeup: bool,
 }
 
 /// Various obsfucation-related bits like the seeds and keys for this connection.
@@ -1026,6 +1027,9 @@ impl ZoneConnection {
                 } => {
                     self.start_event(*actor_id, *event_id, *event_type, *event_arg)
                         .await;
+                }
+                Task::SetInnWakeup { watched } => {
+                    self.player_data.saw_inn_wakeup = *watched;
                 }
             }
         }
