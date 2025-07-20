@@ -759,6 +759,21 @@ pub enum ClientZoneIpcData {
         #[brw(pad_after = 4)] // seems to empty
         content_ids: [u16; 5],
     },
+    #[br(pre_assert(*magic == ClientZoneIpcType::EquipGearset))]
+    EquipGearset {
+        /// Sapphire calls this a context id but it was observed as an actual index into the list of gearsets that the client keeps on its side.
+        gearset_index: u32,
+        /// In order: weapon, off-hand, head, body, hands, invalid/waist, legs, feet, earrings, neck, wrist, left ring, right ring, soul crystal
+        /// When a container is irrelevant, it is marked as 9999/ContainerType::Invalid.
+        containers: [ContainerType; 14],
+        /// Indices into the containers.
+        indices: [u16; 14],
+        /// For the moment, it is completely unclear what unk1 and unk2 are used for or represent.
+        #[brw(pad_before = 6)]
+        unk1: u16,
+        #[brw(pad_after = 2)]
+        unk2: u16,
+    },
     #[br(pre_assert(*magic == ClientZoneIpcType::ContentFinderAction))]
     ContentFinderAction { unk1: [u8; 8] },
     Unknown {
