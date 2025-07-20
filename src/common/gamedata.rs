@@ -74,6 +74,14 @@ impl GameData {
             SqPackResource::from_existing(Platform::Win32, &config.filesystem.game_path),
             &config.filesystem.unpack_path,
         );
+
+        if sqpack_resource.sqpack_resource.repositories.is_empty() {
+            tracing::warn!(
+                "You have an empty game directory ({:?}). This may be a configuration issue, you may want to read the usage documentation.",
+                config.filesystem.game_path
+            );
+        }
+
         let mut resource_resolver = ResourceResolver::new();
         for path in config.filesystem.additional_search_paths {
             let unpacked_resource = UnpackedResource::from_existing(&path);
