@@ -894,8 +894,6 @@ impl ZoneConnection {
                                 self.player_data.unlocks.aetherytes[index as usize] ^= value;
                             }
 
-                            /* Unknown if this will make the server panic from a flood of packets.
-                             * Needs testing once toggling aetherytes actually works. */
                             self.actor_control_self(ActorControlSelf {
                                 category: ActorControlCategory::LearnTeleport {
                                     id: i,
