@@ -37,19 +37,21 @@ const MAX_LARGE_STORAGE: usize = 50;
 #[brw(repr = u8)]
 #[repr(u8)]
 pub enum ItemOperationKind {
-    /// The operation opcode/type when updating the currency storage.
-    UpdateCurrency = BASE_INVENTORY_ACTION,
-    /// The operation opcode/type when discarding an item from the inventory.
-    Discard = BASE_INVENTORY_ACTION + 1,
+    /// The operation opcode/type when an item is created in the inventory. Seen during currency shop transactions, and likely elsewhere.
+    Create = BASE_INVENTORY_ACTION,
+    /// The operation opcode/type when updating the inventory. Seen during all shop transactions when updating currency, and elsewhere.
+    Update = BASE_INVENTORY_ACTION + 1,
+    /// The operation opcode/type when discarding an item from the inventory. Seen when discarding an item from the inventory, and during gilshop sell transactions.
+    Discard = BASE_INVENTORY_ACTION + 2,
     #[default]
     /// The operation opcode/type when moving an item to an emtpy slot in the inventory.
-    Move = BASE_INVENTORY_ACTION + 2,
+    Move = BASE_INVENTORY_ACTION + 3,
     /// The operation opcode/type when moving an item to a slot occupied by another in the inventory.
-    Exchange = BASE_INVENTORY_ACTION + 3,
+    Exchange = BASE_INVENTORY_ACTION + 4,
     /// The operation opcode/type when splitting stacks of identical items.
-    SplitStack = BASE_INVENTORY_ACTION + 4,
+    SplitStack = BASE_INVENTORY_ACTION + 5,
     /// The operation opcode/type when combining stacks of identical items.
-    CombineStack = BASE_INVENTORY_ACTION + 6,
+    CombineStack = BASE_INVENTORY_ACTION + 7,
 }
 
 impl TryFrom<u8> for ItemOperationKind {
