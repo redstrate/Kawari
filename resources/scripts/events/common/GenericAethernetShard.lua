@@ -20,7 +20,7 @@ function onReturn(scene, results, player)
 
     if scene == SCENE_SHOW_MENU then
         if destination ~= AETHERNET_MENU_CANCEL then
-            player:finish_event(EVENT_ID) -- Need to finish the event here, because warping does not return to this callback (the game will crash or softlock otherwise)
+            player:finish_event(EVENT_ID, 0) -- Need to finish the event here, because warping does not return to this callback (the game will crash or softlock otherwise)
             player:warp_aetheryte(destination)
             return
         end
@@ -28,5 +28,5 @@ function onReturn(scene, results, player)
         -- TODO: attunement logic
     end
 
-    player:finish_event(EVENT_ID)
+    player:finish_event(EVENT_ID, 0)
 end

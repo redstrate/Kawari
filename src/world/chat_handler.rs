@@ -110,7 +110,7 @@ impl ChatHandler {
             }
             "!finishevent" => {
                 if let Some(event) = &connection.event {
-                    connection.event_finish(event.id).await;
+                    connection.event_finish(event.id, 0).await;
                     connection
                         .send_message("Current event forcefully finished.")
                         .await;

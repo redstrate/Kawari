@@ -7,10 +7,26 @@ dofile(BASE_DIR.."events/Events.lua")
 dofile(BASE_DIR.."items/Items.lua")
 dofile(BASE_DIR.."Global.lua")
 
+BED_EVENT_HANDLER = 720916
+BED_CUTSCENE_FLAGS = 4165480179 -- TODO: remove this hardcode
+BED_SCENE_WAKEUP_ANIM = 00100
+
 -- Lua error handlers, and other server events like player login
 function onBeginLogin(player)
     -- send a welcome message
     player:send_message(getLoginMessage())
+end
+
+function onFinishZoning(player)
+    local zone_id = player.zone.id;
+
+    -- play the wakeup animation
+    -- the roost
+    -- TODO: check for other inns
+    if zone_id == 179 then
+        player:start_event(player.id, BED_EVENT_HANDLER, 15, zone_id)
+        player:play_scene(player.id, BED_EVENT_HANDLER, BED_SCENE_WAKEUP_ANIM, BED_CUTSCENE_FLAGS, {})
+    end
 end
 
 function onCommandRequiredRankInsufficientError(player)

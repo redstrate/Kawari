@@ -31,7 +31,7 @@ function onReturn(scene, results, player)
 
     if scene == SCENE_SHOW_MENU then
         if decision == NOTHING or decision == CANCEL_SCENE then
-            player:finish_event(EVENT_ID)
+            player:finish_event(EVENT_ID, 0)
         else
             if decision == LOG_OUT or decision == EXIT_GAME then
                 player:begin_log_out()
@@ -47,7 +47,9 @@ function onReturn(scene, results, player)
         end
     elseif scene == SCENE_DREAMFITTING then
         player:play_scene(player.id, EVENT_ID, SCENE_AWAKEN_ANIM, CUTSCENE_FLAGS, {0})
+    elseif scene == SCENE_AWAKEN_ANIM then
+        player:finish_event(EVENT_ID, player.zone.id)
     else
-        player:finish_event(EVENT_ID)
+        player:finish_event(EVENT_ID, 0)
     end
 end

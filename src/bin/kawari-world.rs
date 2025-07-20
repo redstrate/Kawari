@@ -15,8 +15,8 @@ use kawari::ipc::zone::{
 };
 
 use kawari::ipc::zone::{
-    ClientTriggerCommand, ClientZoneIpcData, EventStart, GameMasterRank, OnlineStatus,
-    ServerZoneIpcData, ServerZoneIpcSegment, SocialListRequestType,
+    ClientTriggerCommand, ClientZoneIpcData, GameMasterRank, OnlineStatus, ServerZoneIpcData,
+    ServerZoneIpcSegment, SocialListRequestType,
 };
 use kawari::opcodes::{ServerChatIpcType, ServerZoneIpcType};
 use kawari::packet::oodle::OodleNetwork;
@@ -27,7 +27,7 @@ use kawari::world::{
     ChatHandler, ExtraLuaState, LuaZone, ObsfucationData, Zone, ZoneConnection, load_init_script,
 };
 use kawari::world::{
-    ClientHandle, Event, FromServer, LuaPlayer, PlayerData, ServerHandle, StatusEffects, ToServer,
+    ClientHandle, FromServer, LuaPlayer, PlayerData, ServerHandle, StatusEffects, ToServer,
     WorldDatabase, handle_custom_ipc, server_main_loop,
 };
 use kawari::{
@@ -443,6 +443,20 @@ async fn client_loop(
                                                         })
                                                         .await;
                                                     },
+                                                    ClientTriggerCommand::FinishZoning {} => {
+                                                        let lua = lua.lock().unwrap();
+                                                        lua.scope(|scope| {
+                                                            let connection_data =
+                                                            scope.create_userdata_ref_mut(&mut lua_player).unwrap();
+
+                                                            let func: Function = lua.globals().get("onFinishZoning").unwrap();
+
+                                                            func.call::<()>(connection_data).unwrap();
+
+                                                            Ok(())
+                                                        })
+                                                        .unwrap();
+                                                    }
                                                     _ => {
                                                         // inform the server of our trigger, it will handle sending it to other clients
                                                         connection.handle.send(ToServer::ClientTrigger(connection.id, connection.player_data.actor_id, trigger.clone())).await;
@@ -902,15 +916,15 @@ async fn client_loop(
                                                             } else {
                                                                 tracing::error!(ERR_INVENTORY_ADD_FAILED);
                                                                 connection.send_message(ERR_INVENTORY_ADD_FAILED).await;
-                                                                connection.event_finish(*event_id).await;
+                                                                connection.event_finish(*event_id, 0).await;
                                                             }
                                                         } else {
                                                             connection.send_message("Insufficient gil to buy item. Nice try bypassing the client-side check!").await;
-                                                            connection.event_finish(*event_id).await;
+                                                            connection.event_finish(*event_id, 0).await;
                                                         }
                                                     } else {
                                                         connection.send_message("Unable to find shop item, this is a bug in Kawari!").await;
-                                                        connection.event_finish(*event_id).await;
+                                                        connection.event_finish(*event_id, 0).await;
                                                     }
                                                 } else if *buy_sell_mode == SELL {
                                                     let storage = get_container_type(*item_index).unwrap();
@@ -1019,69 +1033,24 @@ async fn client_loop(
                                                         connection.event_scene(&target_id, *event_id, 10, 8193, params).await;
                                                     } else {
                                                         connection.send_message("Unable to find shop item, this is a bug in Kawari!").await;
-                                                        connection.event_finish(*event_id).await;
+                                                        connection.event_finish(*event_id, 0).await;
                                                     }
                                                 } else {
                                                     tracing::error!("Received unknown transaction mode {buy_sell_mode}!");
-                                                    connection.event_finish(*event_id).await;
+                                                    connection.event_finish(*event_id, 0).await;
                                                 }
                                             }
                                             ClientZoneIpcData::StartTalkEvent { actor_id, event_id } => {
-                                                connection.player_data.target_actorid = *actor_id;
-                                                // load event
-                                                {
-                                                    let ipc = ServerZoneIpcSegment {
-                                                        op_code: ServerZoneIpcType::EventStart,
-                                                        timestamp: timestamp_secs(),
-                                                        data: ServerZoneIpcData::EventStart(EventStart {
-                                                            target_id: *actor_id,
-                                                            event_id: *event_id,
-                                                            event_type: 1, // talk?
-                                                            ..Default::default()
-                                                        }),
-                                                        ..Default::default()
-                                                    };
-
-                                                    connection
-                                                    .send_segment(PacketSegment {
-                                                        source_actor: connection.player_data.actor_id,
-                                                        target_actor: connection.player_data.actor_id,
-                                                        segment_type: SegmentType::Ipc,
-                                                        data: SegmentData::Ipc { data: ipc },
-                                                    })
-                                                    .await;
-                                                }
+                                                connection.start_event(*actor_id, *event_id, 1, 0).await;
 
                                                 /* TODO: ServerZoneIpcType::Unk18 with data [64,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-                                                 * was observed to always be sent by the server upon interacting with shops. They open and function fine without
-                                                 * it, but should we send it anyway, for the sake of accuracy? It's also still unclear if this
-                                                 * happens for -every- NPC/actor. */
+                                                    * was observed to always be sent by the server upon interacting with shops. They open and function fine without
+                                                    * it, but should we send it anyway, for the sake of accuracy? It's also still unclear if this
+                                                    * happens for -every- NPC/actor. */
 
-                                                let mut should_cancel = false;
-                                                {
-                                                    let lua = lua.lock().unwrap();
-                                                    let state = lua.app_data_ref::<ExtraLuaState>().unwrap();
-
-                                                    if let Some(event_script) =
-                                                        state.event_scripts.get(event_id)
-                                                        {
-                                                            connection.event = Some(Event::new(*event_id, event_script));
-                                                            connection
-                                                            .event
-                                                            .as_mut()
-                                                            .unwrap()
-                                                            .talk(*actor_id, &mut lua_player);
-                                                        } else {
-                                                            tracing::warn!("Event {event_id} isn't scripted yet! Ignoring...");
-
-                                                            should_cancel = true;
-                                                        }
-                                                }
-
-                                                if should_cancel {
-                                                    // give control back to the player so they aren't stuck
-                                                    connection.event_finish(*event_id).await;
-                                                    connection.send_message(&format!("Event {event_id} tried to start, but it doesn't have a script associated with it!")).await;
+                                                // begin talk function if it exists
+                                                if let Some(event) = connection.event.as_mut() {
+                                                     event.talk(*actor_id, &mut lua_player);
                                                 }
                                             }
                                             ClientZoneIpcData::EventYieldHandler(handler) => {
@@ -1517,6 +1486,7 @@ async fn main() {
                     weather_id: 0,
                     obsfucation_data: ObsfucationData::default(),
                     queued_content: None,
+                    event_type: 0,
                 });
             }
             Some((mut socket, _)) = handle_rcon(&rcon_listener) => {

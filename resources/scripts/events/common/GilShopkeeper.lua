@@ -38,6 +38,6 @@ function onReturn(scene, results, player)
             player:play_scene(player.id, EVENT_ID, SCENE_SHOP_END, 1 | 0x2000, {})
         end
     else
-        player:finish_event(EVENT_ID)
+        player:finish_event(EVENT_ID, 0)
     end
 end

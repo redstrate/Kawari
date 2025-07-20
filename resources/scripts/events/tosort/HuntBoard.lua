@@ -9,5 +9,5 @@ function onTalk(target, player)
 end
 
 function onReturn(scene, results, player)
-    player:finish_event(EVENT_ID)
+    player:finish_event(EVENT_ID, 0)
 end

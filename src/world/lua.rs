@@ -22,6 +22,7 @@ use mlua::{FromLua, Lua, LuaSerdeExt, UserData, UserDataFields, UserDataMethods,
 
 use super::{PlayerData, StatusEffects, Zone, connection::TeleportQuery};
 
+#[derive(Clone)]
 pub enum Task {
     ChangeTerritory {
         zone_id: u16,
@@ -33,6 +34,7 @@ pub enum Task {
     BeginLogOut,
     FinishEvent {
         handler_id: u32,
+        arg: u32,
     },
     SetClassJob {
         classjob_id: u8,
@@ -82,6 +84,12 @@ pub enum Task {
     },
     AddExp {
         amount: u32,
+    },
+    StartEvent {
+        actor_id: ObjectTypeId,
+        event_id: u32,
+        event_type: u8,
+        event_arg: u32,
     },
 }
 
@@ -199,7 +207,7 @@ impl LuaPlayer {
             let error_message = "Unsupported amount of parameters in play_scene! This is likely a bug in your script! Cancelling event...".to_string();
             tracing::warn!(error_message);
             self.send_message(&error_message, 0);
-            self.finish_event(event_id);
+            self.finish_event(event_id, 0);
         }
     }
 
@@ -273,8 +281,9 @@ impl LuaPlayer {
         self.queued_tasks.push(Task::BeginLogOut);
     }
 
-    fn finish_event(&mut self, handler_id: u32) {
-        self.queued_tasks.push(Task::FinishEvent { handler_id });
+    fn finish_event(&mut self, handler_id: u32, arg: u32) {
+        self.queued_tasks
+            .push(Task::FinishEvent { handler_id, arg });
     }
 
     fn set_classjob(&mut self, classjob_id: u8) {
@@ -446,6 +455,21 @@ impl LuaPlayer {
     fn add_exp(&mut self, amount: u32) {
         self.queued_tasks.push(Task::AddExp { amount });
     }
+
+    fn start_event(
+        &mut self,
+        actor_id: ObjectTypeId,
+        event_id: u32,
+        event_type: u8,
+        event_arg: u32,
+    ) {
+        self.queued_tasks.push(Task::StartEvent {
+            actor_id,
+            event_id,
+            event_type,
+            event_arg,
+        });
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -533,8 +557,8 @@ impl UserData for LuaPlayer {
             this.begin_log_out();
             Ok(())
         });
-        methods.add_method_mut("finish_event", |_, this, handler_id: u32| {
-            this.finish_event(handler_id);
+        methods.add_method_mut("finish_event", |_, this, (handler_id, arg): (u32, u32)| {
+            this.finish_event(handler_id, arg);
             Ok(())
         });
         methods.add_method_mut("set_classjob", |_, this, classjob_id: u8| {
@@ -600,6 +624,13 @@ impl UserData for LuaPlayer {
             this.add_exp(amount);
             Ok(())
         });
+        methods.add_method_mut(
+            "start_event",
+            |_, this, (target, event_id, event_type, event_arg): (ObjectTypeId, u32, u8, u32)| {
+                this.start_event(target, event_id, event_type, event_arg);
+                Ok(())
+            },
+        );
     }
 
     fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {

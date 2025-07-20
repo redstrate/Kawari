@@ -26,7 +26,7 @@ use crate::{
             ActionEffect, ActionRequest, ActionResult, ActorControl, ActorControlCategory,
             ActorControlSelf, ActorControlTarget, ClientZoneIpcSegment, CommonSpawn, Config,
             ContainerInfo, CurrencyInfo, DisplayFlag, EffectEntry, EffectKind, EffectResult, Equip,
-            EventScene, GameMasterRank, InitZone, ItemInfo, Move, NpcSpawn, ObjectKind,
+            EventScene, EventStart, GameMasterRank, InitZone, ItemInfo, Move, NpcSpawn, ObjectKind,
             PlayerStats, PlayerSubKind, QuestActiveList, ServerZoneIpcData, ServerZoneIpcSegment,
             StatusEffect, StatusEffectList, UpdateClassInfo, Warp, WeatherChange,
         },
@@ -155,6 +155,7 @@ pub struct ZoneConnection {
     pub status_effects: StatusEffects,
 
     pub event: Option<Event>,
+    pub event_type: u8,
     pub actors: Vec<Actor>,
 
     pub ip: SocketAddr,
@@ -847,7 +848,8 @@ impl ZoneConnection {
         }
         player.queued_segments.clear();
 
-        for task in &player.queued_tasks {
+        let tasks = player.queued_tasks.clone();
+        for task in &tasks {
             match task {
                 Task::ChangeTerritory { zone_id } => self.change_zone(*zone_id).await,
                 Task::SetRemakeMode(remake_mode) => self
@@ -857,7 +859,7 @@ impl ZoneConnection {
                     self.warp(*warp_id).await;
                 }
                 Task::BeginLogOut => self.begin_log_out().await,
-                Task::FinishEvent { handler_id } => self.event_finish(*handler_id).await,
+                Task::FinishEvent { handler_id, arg } => self.event_finish(*handler_id, *arg).await,
                 Task::SetClassJob { classjob_id } => {
                     self.player_data.classjob_id = *classjob_id;
                     self.update_class_info().await;
@@ -1016,6 +1018,15 @@ impl ZoneConnection {
                     self.set_current_exp(current_exp + amount);
                     self.update_class_info().await;
                 }
+                Task::StartEvent {
+                    actor_id,
+                    event_id,
+                    event_type,
+                    event_arg,
+                } => {
+                    self.start_event(*actor_id, *event_id, *event_type, *event_arg)
+                        .await;
+                }
             }
         }
         player.queued_tasks.clear();
@@ -1066,11 +1077,11 @@ impl ZoneConnection {
                 "Unable to play event {event_id}, scene {:?}, scene_flags {scene_flags}!",
                 scene
             );
-            self.event_finish(event_id).await;
+            self.event_finish(event_id, 0).await;
         }
     }
 
-    pub async fn event_finish(&mut self, handler_id: u32) {
+    pub async fn event_finish(&mut self, handler_id: u32, arg: u32) {
         self.player_data.target_actorid = ObjectTypeId::default();
         // sent event finish
         {
@@ -1079,9 +1090,9 @@ impl ZoneConnection {
                 timestamp: timestamp_secs(),
                 data: ServerZoneIpcData::EventFinish {
                     handler_id,
-                    event: 1,
+                    event: self.event_type,
                     result: 1,
-                    arg: 0,
+                    arg,
                 },
                 ..Default::default()
             };
@@ -1776,5 +1787,63 @@ impl ZoneConnection {
             },
         })
         .await;
+    }
+
+    pub async fn start_event(
+        &mut self,
+        actor_id: ObjectTypeId,
+        event_id: u32,
+        event_type: u8,
+        event_arg: u32,
+    ) {
+        self.player_data.target_actorid = actor_id;
+        self.event_type = event_type;
+
+        // tell the client the event has started
+        {
+            let ipc = ServerZoneIpcSegment {
+                op_code: ServerZoneIpcType::EventStart,
+                timestamp: timestamp_secs(),
+                data: ServerZoneIpcData::EventStart(EventStart {
+                    target_id: actor_id,
+                    event_id,
+                    event_type,
+                    event_arg,
+                    ..Default::default()
+                }),
+                ..Default::default()
+            };
+
+            self.send_segment(PacketSegment {
+                source_actor: self.player_data.actor_id,
+                target_actor: self.player_data.actor_id,
+                segment_type: SegmentType::Ipc,
+                data: SegmentData::Ipc { data: ipc },
+            })
+            .await;
+        }
+
+        // load event script if needed
+        let mut should_cancel = false;
+        {
+            let lua = self.lua.lock().unwrap();
+            let state = lua.app_data_ref::<ExtraLuaState>().unwrap();
+            if let Some(event_script) = state.event_scripts.get(&event_id) {
+                self.event = Some(Event::new(event_id, event_script));
+            } else {
+                tracing::warn!("Event {event_id} isn't scripted yet! Ignoring...");
+
+                should_cancel = true;
+            }
+        }
+
+        if should_cancel {
+            // give control back to the player so they aren't stuck
+            self.event_finish(event_id, 0).await;
+            self.send_message(&format!(
+                "Event {event_id} tried to start, but it doesn't have a script associated with it!"
+            ))
+            .await;
+        }
     }
 }

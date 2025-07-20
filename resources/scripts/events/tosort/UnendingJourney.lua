@@ -21,6 +21,6 @@ function onReturn(scene, results, player)
     elseif scene == SCENE_PLAY_CUTSCENE then
         player:play_scene(player.id, EVENT_ID, SCENE_SHOW_MENU, 8192, {1})
     else
-        player:finish_event(EVENT_ID)
+        player:finish_event(EVENT_ID, 0)
     end
 end
