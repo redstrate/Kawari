@@ -34,7 +34,7 @@ Afterwards, create a `config.yaml` in the current directory. Currently the minim
 
 ```yaml
 filesystem:
-    game_path: "C:\Program Files (x86)\SquareEnix\FINAL FANTASY XIV - A Realm Reborn\game"
+    game_path: C:\Program Files (x86)\SquareEnix\FINAL FANTASY XIV - A Realm Reborn\game
 ```
 
 More configuration options can be found in `config.rs`, such as changing the ports services run on. If you plan on just running it locally for yourself, you don't need to set anything else.
