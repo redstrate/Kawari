@@ -37,21 +37,25 @@ const MAX_LARGE_STORAGE: usize = 50;
 #[brw(repr = u8)]
 #[repr(u8)]
 pub enum ItemOperationKind {
+    /// The operation opcode/type when the server wants the client to create a storage. Seen during login to create the HandIn storage.
+    CreateStorage = BASE_INVENTORY_ACTION,
     /// The operation opcode/type when an item is created in the inventory. Seen during currency shop transactions, and likely elsewhere.
-    Create = BASE_INVENTORY_ACTION,
+    Create = BASE_INVENTORY_ACTION + 4,
     /// The operation opcode/type when updating the inventory. Seen during all shop transactions when updating currency, and elsewhere.
-    Update = BASE_INVENTORY_ACTION + 1,
+    Update = BASE_INVENTORY_ACTION + 5,
     /// The operation opcode/type when discarding an item from the inventory. Seen when discarding an item from the inventory, and during gilshop sell transactions.
-    Discard = BASE_INVENTORY_ACTION + 2,
+    Discard = BASE_INVENTORY_ACTION + 6,
     #[default]
     /// The operation opcode/type when moving an item to an emtpy slot in the inventory.
-    Move = BASE_INVENTORY_ACTION + 3,
+    Move = BASE_INVENTORY_ACTION + 7,
     /// The operation opcode/type when moving an item to a slot occupied by another in the inventory.
-    Exchange = BASE_INVENTORY_ACTION + 4,
+    Exchange = BASE_INVENTORY_ACTION + 8,
     /// The operation opcode/type when splitting stacks of identical items.
-    SplitStack = BASE_INVENTORY_ACTION + 5,
+    SplitStack = BASE_INVENTORY_ACTION + 9,
     /// The operation opcode/type when combining stacks of identical items.
-    CombineStack = BASE_INVENTORY_ACTION + 7,
+    CombineStack = BASE_INVENTORY_ACTION + 11,
+    /// The operation opcode/type when the server wants the client to equip the mannequin (character sheet/try on preview model?). Seen during login and probably elsewhere.
+    EquipMannequin = BASE_INVENTORY_ACTION + 18,
 }
 
 impl TryFrom<u8> for ItemOperationKind {

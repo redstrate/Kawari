@@ -104,7 +104,7 @@ pub const PVP_ARRAY_SIZE: usize = 7;
 pub const ITEM_CONDITION_MAX: u16 = 30000;
 
 // This operation code changes regularly, so update it when needed!
-pub const BASE_INVENTORY_ACTION: u8 = 143;
+pub const BASE_INVENTORY_ACTION: u8 = 139;
 
 /// The server's acknowledgement of a shop item being purchased.
 pub const INVENTORY_ACTION_ACK_SHOP: u8 = 6;
