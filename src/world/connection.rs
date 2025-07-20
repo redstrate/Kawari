@@ -1007,6 +1007,15 @@ impl ZoneConnection {
                 Task::UpdateBuyBackList { list } => {
                     self.player_data.buyback_list = list.clone();
                 }
+                Task::AddExp { amount } => {
+                    let current_exp;
+                    {
+                        let mut game_data = self.gamedata.lock().unwrap();
+                        current_exp = self.current_exp(&mut game_data);
+                    }
+                    self.set_current_exp(current_exp + amount);
+                    self.update_class_info().await;
+                }
             }
         }
         player.queued_tasks.clear();

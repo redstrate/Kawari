@@ -80,6 +80,9 @@ pub enum Task {
     UpdateBuyBackList {
         list: BuyBackList,
     },
+    AddExp {
+        amount: u32,
+    },
 }
 
 #[derive(Default, Clone)]
@@ -439,6 +442,10 @@ impl LuaPlayer {
             self.create_segment_self(op_code, data);
         }
     }
+
+    fn add_exp(&mut self, amount: u32) {
+        self.queued_tasks.push(Task::AddExp { amount });
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -589,6 +596,10 @@ impl UserData for LuaPlayer {
                 Ok(())
             },
         );
+        methods.add_method_mut("add_exp", |_, this, amount: u32| {
+            this.add_exp(amount);
+            Ok(())
+        });
     }
 
     fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
