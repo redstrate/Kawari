@@ -91,6 +91,9 @@ pub enum Task {
         event_type: u8,
         event_arg: u32,
     },
+    SetInnWakeup {
+        watched: bool
+    },
 }
 
 #[derive(Default, Clone)]
@@ -470,6 +473,10 @@ impl LuaPlayer {
             event_arg,
         });
     }
+
+    fn set_inn_wakeup(&mut self, watched: bool) {
+        self.queued_tasks.push(Task::SetInnWakeup { watched });
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -631,6 +638,13 @@ impl UserData for LuaPlayer {
                 Ok(())
             },
         );
+         methods.add_method_mut(
+            "set_inn_wakeup",
+            |_, this, watched: bool| {
+                this.set_inn_wakeup(watched);
+                Ok(())
+            },
+        );
     }
 
     fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
@@ -653,6 +667,9 @@ impl UserData for LuaPlayer {
         // Helper method to reduce the amount of typing for gil
         fields.add_field_method_get("gil", |_, this| {
             Ok(this.player_data.inventory.currency.gil.quantity)
+        });
+        fields.add_field_method_get("saw_inn_wakeup", |_, this| {
+            Ok(this.player_data.saw_inn_wakeup)
         });
     }
 }
