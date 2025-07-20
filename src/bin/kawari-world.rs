@@ -958,7 +958,7 @@ async fn client_loop(
                                                             timestamp: timestamp_secs(),
                                                             data: ServerZoneIpcData::InventoryTransaction {
                                                                 sequence: connection.player_data.item_sequence,
-                                                                operation_type: ItemOperationKind::UpdateCurrency,
+                                                                operation_type: ItemOperationKind::Update,
                                                                 src_actor_id: connection.player_data.actor_id,
                                                                 src_storage_id: ContainerType::Currency,
                                                                 src_container_index: 0,
