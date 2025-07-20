@@ -1315,6 +1315,10 @@ async fn client_loop(
 
                                                 connection.queued_content = None;
                                             }
+                                            ClientZoneIpcData::EquipGearset { .. } => {
+                                                tracing::info!("Client tried to equip a gearset!");
+                                                connection.send_message("Gearsets are not yet implemented.").await;
+                                            }
                                             ClientZoneIpcData::Unknown { .. } => {
                                                 tracing::warn!("Unknown packet {:?} recieved, this should be handled!", data.op_code);
                                             }

@@ -481,6 +481,11 @@
             "name": "ContentFinderAction",
             "opcode": 409,
             "size": 8
+        },
+        {
+            "name": "EquipGearset",
+            "opcode": 101,
+            "size": 72
         }
     ],
     "ServerLobbyIpcType": [
