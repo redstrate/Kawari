@@ -334,6 +334,8 @@ generic_gil_shops = {
     262157, -- Tanie <Florist>, New Gridania
     262190, -- Blue Lily <Independent Apothecary>, Limsa Lominsa: The Lower Decks
     262197, -- Gerulf <Independent Culinarian>, Limsa Lominsa: The Lower Decks
+    262574, -- Minon Trader, Chocobo Square
+    262612, -- Tack & Feed Trader, Chocobo Square
     262735, -- Sorcha <Independent Jeweler> (Limsa Lominsa: The Lower Decks), Battlecraft Accessories
     262736, -- Sorcha <Independent Jeweler> (Limsa Lominsa: The Lower Decks), Fieldcraft/Tradecraft Accessories
     263220, -- Neon <Air-wheeler dealer>, Solution Nine
