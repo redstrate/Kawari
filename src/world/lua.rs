@@ -92,7 +92,7 @@ pub enum Task {
         event_arg: u32,
     },
     SetInnWakeup {
-        watched: bool
+        watched: bool,
     },
 }
 
@@ -638,13 +638,10 @@ impl UserData for LuaPlayer {
                 Ok(())
             },
         );
-         methods.add_method_mut(
-            "set_inn_wakeup",
-            |_, this, watched: bool| {
-                this.set_inn_wakeup(watched);
-                Ok(())
-            },
-        );
+        methods.add_method_mut("set_inn_wakeup", |_, this, watched: bool| {
+            this.set_inn_wakeup(watched);
+            Ok(())
+        });
     }
 
     fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {

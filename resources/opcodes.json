@@ -319,6 +319,11 @@
             "name": "ContentFinderCommencing",
             "opcode": 485,
             "size": 24
+        },
+        {
+            "name": "StatusEffectList3",
+            "opcode": 894,
+            "size": 360
         }
     ],
     "ClientZoneIpcType": [

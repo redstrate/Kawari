@@ -563,6 +563,8 @@ pub enum ServerZoneIpcData {
     /// Sent to give you the green checkmark before entering a CF zone.
     #[br(pre_assert(*magic == ServerZoneIpcType::ContentFinderCommencing))]
     ContentFinderCommencing { unk1: [u8; 24] },
+    #[br(pre_assert(*magic == ServerZoneIpcType::StatusEffectList3))]
+    StatusEffectList3 { status_effects: [StatusEffect; 30] },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -1125,6 +1127,12 @@ mod tests {
             (
                 ServerZoneIpcType::EffectResult,
                 ServerZoneIpcData::EffectResult(EffectResult::default()),
+            ),
+            (
+                ServerZoneIpcType::StatusEffectList3,
+                ServerZoneIpcData::StatusEffectList3 {
+                    status_effects: [StatusEffect::default(); 30],
+                },
             ),
         ];
 
