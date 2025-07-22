@@ -10,12 +10,12 @@ TELEPORTER_INFO = {
 }
 
 EVENT_ARG = {
-    [4194305] = 10611851, -- Teleporter from eastern Aetheryte Plaza to Recreation Zone
-    [4194306] = 10611861, -- Teleporter from Recreation Zone to eastern Aetheryte Plaza
-    [4194307] = 10611862, -- Teleporter from northern Aetheryte Plaza to Government Sector
-    [4194308] = 10611864, -- Teleporter from Government Sector to northern Aetheryte Plaza
-    [4194309] = 10611868, -- Teleporter from Nexus Arcade ground floor to upper balcony
-    [4194310] = 10611881, -- Teleporter from upper balcony to Nexus Arcade ground floor
+    [4194305] = 10611851,
+    [4194306] = 10611861,
+    [4194307] = 10611862,
+    [4194308] = 10611864,
+    [4194309] = 10611868,
+    [4194310] = 10611881,
 }
 
 function onEnterTrigger(player)

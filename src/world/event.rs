@@ -62,7 +62,6 @@ impl Event {
         let mut run_script = || {
             self.lua.scope(|scope| {
                 let player = scope.create_userdata_ref_mut(player)?;
-                //let zone = scope.create_userdata_ref(zone)?;
 
                 let func: Function = self.lua.globals().get("onEnterTrigger")?;
 
