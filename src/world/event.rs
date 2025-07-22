@@ -10,6 +10,12 @@ pub struct Event {
     pub id: u32,
 }
 
+#[derive(Copy, Clone)]
+pub enum EventFinishType {
+    Normal,
+    Jumping,
+}
+
 impl Event {
     pub fn new(id: u32, path: &str) -> Self {
         let lua = Lua::new();
@@ -47,6 +53,25 @@ impl Event {
                 Ok(())
             })
         };
+        if let Err(err) = run_script() {
+            tracing::warn!("Syntax error in {}: {:?}", self.file_name, err);
+        }
+    }
+
+    pub fn enter_trigger(&mut self, player: &mut LuaPlayer) {
+        let mut run_script = || {
+            self.lua.scope(|scope| {
+                let player = scope.create_userdata_ref_mut(player)?;
+                //let zone = scope.create_userdata_ref(zone)?;
+
+                let func: Function = self.lua.globals().get("onEnterTrigger")?;
+
+                func.call::<()>(player)?;
+
+                Ok(())
+            })
+        };
+
         if let Err(err) = run_script() {
             tracing::warn!("Syntax error in {}: {:?}", self.file_name, err);
         }

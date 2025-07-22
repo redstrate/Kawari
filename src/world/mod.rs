@@ -15,6 +15,7 @@ pub use lua::{EffectsBuilder, LuaPlayer, LuaZone, load_init_script};
 
 mod event;
 pub use event::Event;
+pub use event::EventFinishType;
 
 mod actor;
 pub use actor::Actor;

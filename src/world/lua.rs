@@ -16,7 +16,7 @@ use crate::{
     },
     opcodes::ServerZoneIpcType,
     packet::{PacketSegment, SegmentData, SegmentType},
-    world::ExtraLuaState,
+    world::{EventFinishType, ExtraLuaState},
 };
 use mlua::{FromLua, Lua, LuaSerdeExt, UserData, UserDataFields, UserDataMethods, Value};
 
@@ -35,6 +35,7 @@ pub enum Task {
     FinishEvent {
         handler_id: u32,
         arg: u32,
+        finish_type: EventFinishType,
     },
     SetClassJob {
         classjob_id: u8,
@@ -210,7 +211,7 @@ impl LuaPlayer {
             let error_message = "Unsupported amount of parameters in play_scene! This is likely a bug in your script! Cancelling event...".to_string();
             tracing::warn!(error_message);
             self.send_message(&error_message, 0);
-            self.finish_event(event_id, 0);
+            self.finish_event(event_id, 0, EventFinishType::Normal);
         }
     }
 
@@ -284,9 +285,12 @@ impl LuaPlayer {
         self.queued_tasks.push(Task::BeginLogOut);
     }
 
-    fn finish_event(&mut self, handler_id: u32, arg: u32) {
-        self.queued_tasks
-            .push(Task::FinishEvent { handler_id, arg });
+    fn finish_event(&mut self, handler_id: u32, arg: u32, finish_type: EventFinishType) {
+        self.queued_tasks.push(Task::FinishEvent {
+            handler_id,
+            arg,
+            finish_type,
+        });
     }
 
     fn set_classjob(&mut self, classjob_id: u8) {
@@ -455,6 +459,53 @@ impl LuaPlayer {
         }
     }
 
+    fn do_solnine_teleporter(
+        &mut self,
+        event_id: u32,
+        unk1: u32,
+        unk2: u16,
+        unk3: u32,
+        unk4: u32,
+        unk5: u32,
+    ) {
+        let packets_to_send = [
+            (
+                ServerZoneIpcType::ActorControlSelf,
+                ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
+                    category: ActorControlCategory::EventRelatedUnk3 { event_id },
+                }),
+            ),
+            (
+                ServerZoneIpcType::WalkInEvent,
+                ServerZoneIpcData::WalkInEvent {
+                    unk1,
+                    unk2,
+                    unk3,
+                    unk4,
+                    unk5,
+                },
+            ),
+            (
+                ServerZoneIpcType::ActorControlSelf,
+                ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
+                    category: ActorControlCategory::WalkInTriggerRelatedUnk3 {
+                        unk1: 1, // Sometimes the server sends 2 for this, but it's still completely unknown what it means.
+                    },
+                }),
+            ),
+            (
+                ServerZoneIpcType::ActorControlSelf,
+                ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
+                    category: ActorControlCategory::WalkInTriggerRelatedUnk1 { unk1: 1 },
+                }),
+            ),
+        ];
+
+        for (op_code, data) in packets_to_send {
+            self.create_segment_self(op_code, data);
+        }
+    }
+
     fn add_exp(&mut self, amount: u32) {
         self.queued_tasks.push(Task::AddExp { amount });
     }
@@ -564,10 +615,20 @@ impl UserData for LuaPlayer {
             this.begin_log_out();
             Ok(())
         });
-        methods.add_method_mut("finish_event", |_, this, (handler_id, arg): (u32, u32)| {
-            this.finish_event(handler_id, arg);
-            Ok(())
-        });
+        methods.add_method_mut(
+            "finish_event",
+            |lua, this, (handler_id, arg, finish_type): (u32, u32, Value)| {
+                // It's desirable for finish_type to be optional since we do normal finishes 99% of the time.
+                let finish_type: u32 = lua.from_value(finish_type).unwrap_or(0);
+                let finish_type = match finish_type {
+                    0 => EventFinishType::Normal,
+                    1 => EventFinishType::Jumping,
+                    _ => EventFinishType::Normal,
+                };
+                this.finish_event(handler_id, arg, finish_type);
+                Ok(())
+            },
+        );
         methods.add_method_mut("set_classjob", |_, this, classjob_id: u8| {
             this.set_classjob(classjob_id);
             Ok(())
@@ -642,6 +703,13 @@ impl UserData for LuaPlayer {
             this.set_inn_wakeup(watched);
             Ok(())
         });
+        methods.add_method_mut(
+            "do_solnine_teleporter",
+            |_, this, (event_id, unk1, unk2, unk3, unk4, unk5): (u32, u32, u16, u32, u32, u32)| {
+                this.do_solnine_teleporter(event_id, unk1, unk2, unk3, unk4, unk5);
+                Ok(())
+            },
+        );
     }
 
     fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {

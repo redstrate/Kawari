@@ -50,6 +50,11 @@ pub enum ClientTriggerCommand {
         aetheryte_id: u32,
         // TODO: fill out the rest
     },
+    #[brw(magic = 0x25eu16)]
+    WalkInTriggerFinished {
+        #[brw(pad_before = 2)]
+        unk1: u32,
+    },
     #[brw(magic = 0x033Eu16)]
     EventRelatedUnk {
         // seen in haircut event

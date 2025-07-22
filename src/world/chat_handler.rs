@@ -3,7 +3,7 @@ use crate::{
     common::ItemInfoQuery,
     inventory::{Item, Storage},
     ipc::zone::{ChatMessage, GameMasterRank},
-    world::ToServer,
+    world::{EventFinishType, ToServer},
 };
 
 use super::ZoneConnection;
@@ -110,7 +110,9 @@ impl ChatHandler {
             }
             "!finishevent" => {
                 if let Some(event) = &connection.event {
-                    connection.event_finish(event.id, 0).await;
+                    connection
+                        .event_finish(event.id, 0, EventFinishType::Normal)
+                        .await;
                     connection
                         .send_message("Current event forcefully finished.")
                         .await;

@@ -50,6 +50,7 @@ pub enum FromServer {
     ReplayPacket(PacketSegment<ServerZoneIpcSegment>),
     /// The player should lose this effect.
     LoseEffect(u16, u16, ObjectId),
+    Unk18([u8; 16]),
 }
 
 #[derive(Debug, Clone)]

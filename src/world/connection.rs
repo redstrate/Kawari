@@ -39,8 +39,8 @@ use crate::{
 };
 
 use super::{
-    Actor, CharacterData, EffectsBuilder, Event, LuaPlayer, StatusEffects, ToServer, WorldDatabase,
-    Zone,
+    Actor, CharacterData, EffectsBuilder, Event, EventFinishType, LuaPlayer, StatusEffects,
+    ToServer, WorldDatabase, Zone,
     common::{ClientId, ServerHandle},
     load_init_script,
     lua::Task,
@@ -860,7 +860,11 @@ impl ZoneConnection {
                     self.warp(*warp_id).await;
                 }
                 Task::BeginLogOut => self.begin_log_out().await,
-                Task::FinishEvent { handler_id, arg } => self.event_finish(*handler_id, *arg).await,
+                Task::FinishEvent {
+                    handler_id,
+                    arg,
+                    finish_type,
+                } => self.event_finish(*handler_id, *arg, *finish_type).await,
                 Task::SetClassJob { classjob_id } => {
                     self.player_data.classjob_id = *classjob_id;
                     self.update_class_info().await;
@@ -1081,11 +1085,12 @@ impl ZoneConnection {
                 "Unable to play event {event_id}, scene {:?}, scene_flags {scene_flags}!",
                 scene
             );
-            self.event_finish(event_id, 0).await;
+            self.event_finish(event_id, 0, EventFinishType::Normal)
+                .await;
         }
     }
 
-    pub async fn event_finish(&mut self, handler_id: u32, arg: u32) {
+    pub async fn event_finish(&mut self, handler_id: u32, arg: u32, finish_type: EventFinishType) {
         self.player_data.target_actorid = ObjectTypeId::default();
         // sent event finish
         {
@@ -1111,22 +1116,29 @@ impl ZoneConnection {
         }
 
         // give back control to the player
-        {
-            let ipc = ServerZoneIpcSegment {
-                op_code: ServerZoneIpcType::Unk18,
-                timestamp: timestamp_secs(),
-                data: ServerZoneIpcData::Unk18 { unk: [0; 16] },
-                ..Default::default()
-            };
+        let unk = match finish_type {
+            EventFinishType::Normal => [0; 16],
+            EventFinishType::Jumping => [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        };
 
-            self.send_segment(PacketSegment {
-                source_actor: self.player_data.actor_id,
-                target_actor: self.player_data.actor_id,
-                segment_type: SegmentType::Ipc,
-                data: SegmentData::Ipc { data: ipc },
-            })
-            .await;
-        }
+        self.send_unk18(unk).await;
+    }
+
+    pub async fn send_unk18(&mut self, unk: [u8; 16]) {
+        let ipc = ServerZoneIpcSegment {
+            op_code: ServerZoneIpcType::Unk18,
+            timestamp: timestamp_secs(),
+            data: ServerZoneIpcData::Unk18 { unk },
+            ..Default::default()
+        };
+
+        self.send_segment(PacketSegment {
+            source_actor: self.player_data.actor_id,
+            target_actor: self.player_data.actor_id,
+            segment_type: SegmentType::Ipc,
+            data: SegmentData::Ipc { data: ipc },
+        })
+        .await;
     }
 
     pub async fn send_inventory_ack(&mut self, sequence: u32, action_type: u16) {
@@ -1843,7 +1855,8 @@ impl ZoneConnection {
 
         if should_cancel {
             // give control back to the player so they aren't stuck
-            self.event_finish(event_id, 0).await;
+            self.event_finish(event_id, 0, EventFinishType::Normal)
+                .await;
             self.send_message(&format!(
                 "Event {event_id} tried to start, but it doesn't have a script associated with it!"
             ))
