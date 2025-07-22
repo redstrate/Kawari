@@ -565,6 +565,11 @@ pub enum ServerZoneIpcData {
     ContentFinderCommencing { unk1: [u8; 24] },
     #[br(pre_assert(*magic == ServerZoneIpcType::StatusEffectList3))]
     StatusEffectList3 { status_effects: [StatusEffect; 30] },
+    #[br(pre_assert(*magic == ServerZoneIpcType::CrossworldLinkshells))]
+    CrossworldLinkshells {
+        // TODO: fill this out, each entry is 57 bytes probably
+        unk1: [u8; 456],
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
