@@ -47,6 +47,10 @@ pub struct PlayerEntry {
     pub fc_tag: String,
 }
 
+impl PlayerEntry {
+    pub const SIZE: usize = 112;
+}
+
 #[binrw]
 #[derive(Debug, Clone, Default)]
 pub struct SocialList {
@@ -55,6 +59,6 @@ pub struct SocialList {
     pub sequence: u8,
     #[brw(pad_before = 2)] // empty
     #[br(count = 10)]
-    #[bw(pad_size_to = 112 * 10)]
+    #[bw(pad_size_to = 10 * PlayerEntry::SIZE)]
     pub entries: Vec<PlayerEntry>,
 }

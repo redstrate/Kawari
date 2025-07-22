@@ -93,11 +93,11 @@
         {
             "name": "Unk17",
             "opcode": 777,
-            "size": 104
+            "size": 968
         },
         {
             "name": "SocialList",
-            "opcode": 253,
+            "opcode": 152,
             "size": 1136
         },
         {
@@ -329,6 +329,11 @@
             "name": "CrossworldLinkshells",
             "opcode": 709,
             "size": 456
+        },
+        {
+            "name": "SetSearchComment",
+            "opcode": 512,
+            "size": 216
         }
     ],
     "ClientZoneIpcType": [
@@ -346,11 +351,6 @@
             "name": "ClientTrigger",
             "opcode": 531,
             "size": 32
-        },
-        {
-            "name": "Unk2",
-            "opcode": 968,
-            "size": 16
         },
         {
             "name": "Unk3",
@@ -374,7 +374,7 @@
         },
         {
             "name": "SocialListRequest",
-            "opcode": 604,
+            "opcode": 968,
             "size": 16
         },
         {

@@ -570,6 +570,22 @@ pub enum ServerZoneIpcData {
         // TODO: fill this out, each entry is 57 bytes probably
         unk1: [u8; 456],
     },
+    #[br(pre_assert(*magic == ServerZoneIpcType::SetSearchComment))]
+    SetSearchComment {
+        // TODO: fill this out
+        unk1: [u8; 18],
+        #[brw(pad_size_to = 32)]
+        #[br(count = 32)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        comment: String,
+        unk2: [u8; 166],
+    },
+    #[br(pre_assert(*magic == ServerZoneIpcType::Unk17))]
+    Unk17 {
+        // TODO: fill this out
+        unk1: [u8; 968],
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -603,12 +619,6 @@ pub enum ClientZoneIpcData {
     },
     #[br(pre_assert(*magic == ClientZoneIpcType::ClientTrigger))]
     ClientTrigger(ClientTrigger),
-    /// FIXME: 16 bytes of something from the client, not sure what yet
-    #[br(pre_assert(*magic == ClientZoneIpcType::Unk2))]
-    Unk2 {
-        // TODO: full of possibly interesting information
-        unk: [u8; 16],
-    },
     /// FIXME: 8 bytes of something from the client, not sure what yet
     #[br(pre_assert(*magic == ClientZoneIpcType::Unk3))]
     Unk3 {
@@ -1139,6 +1149,18 @@ mod tests {
                     status_effects: [StatusEffect::default(); 30],
                 },
             ),
+            (
+                ServerZoneIpcType::SetSearchComment,
+                ServerZoneIpcData::SetSearchComment {
+                    unk1: [0; 18],
+                    comment: String::default(),
+                    unk2: [0; 166],
+                },
+            ),
+            (
+                ServerZoneIpcType::Unk17,
+                ServerZoneIpcData::Unk17 { unk1: [0; 968] },
+            ),
         ];
 
         for (opcode, data) in &ipc_types {
@@ -1183,10 +1205,6 @@ mod tests {
             (
                 ClientZoneIpcType::ClientTrigger,
                 ClientZoneIpcData::ClientTrigger(ClientTrigger::default()),
-            ),
-            (
-                ClientZoneIpcType::Unk2,
-                ClientZoneIpcData::Unk2 { unk: [0; 16] },
             ),
             (
                 ClientZoneIpcType::Unk3,
