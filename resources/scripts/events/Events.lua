@@ -375,6 +375,15 @@ generic_currency_exchange = {
     -- 3539075, -- Dibourdier <Mahjong Vendor> doesn't respond when interacted with right now, probably needs special handling
 }
 
+solution_nine_teleporters = {
+    4194305, -- Teleporter from eastern Aetheryte Plaza to Recreation Zone
+    4194306, -- Teleporter from Recreation Zone to eastern Aetheryte Plaza
+    4194307, -- Teleporter from northern Aetheryte Plaza to Government Sector
+    4194308, -- Teleporter from Government Sector to northern Aetheryte Plaza
+    4194309, -- Teleporter from Nexus Arcade ground floor to upper balcony
+    4194310, -- Teleporter from upper balcony to Nexus Arcade ground floor
+}
+
 -- Not custom in the sense of non-SQEX content, just going based off the directory name
 custom0_events = {
     [720916] = "cmndefinnbed_00020.lua",
@@ -397,6 +406,7 @@ TOSORT_DIR = "events/tosort/"
 OPENING_DIR = "events/quest/opening/"
 CUSTOM0_DIR = "events/custom/000/"
 CUSTOM1_DIR = "events/custom/001/"
+TRIGGER_DIR = "events/walkin_trigger/"
 
 for _, event_id in pairs(generic_warps) do
     registerEvent(event_id, "events/common/GenericWarp.lua")
@@ -440,4 +450,8 @@ end
 
 for event_id, script_file in pairs(quests) do
     registerEvent(event_id, OPENING_DIR..script_file)
+end
+
+for _, event_id in pairs(solution_nine_teleporters) do
+    registerEvent(event_id, TRIGGER_DIR.."SolutionNineTeleporter.lua")
 end

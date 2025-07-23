@@ -586,6 +586,18 @@ pub enum ServerZoneIpcData {
         // TODO: fill this out
         unk1: [u8; 968],
     },
+    /// Sent by the server when walking over a trigger (e.g. the teleport pads in Solution Nine).
+    /// All of these fields are currently unknown in meaning.
+    #[br(pre_assert(*magic == ServerZoneIpcType::WalkInEvent))]
+    WalkInEvent {
+        unk1: u32,
+        unk2: u16,
+        #[brw(pad_before = 2)]
+        unk3: u32,
+        unk4: u32,
+        #[brw(pad_after = 4)]
+        unk5: u32,
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -790,6 +802,13 @@ pub enum ClientZoneIpcData {
         unk1: u16,
         #[brw(pad_after = 2)]
         unk2: u16,
+    },
+    #[br(pre_assert(*magic == ClientZoneIpcType::StartWalkInEvent))]
+    StartWalkInEvent {
+        event_arg: u32,
+        event_id: u32,
+        #[brw(pad_after = 4)]
+        pos: Position,
     },
     #[br(pre_assert(*magic == ClientZoneIpcType::ContentFinderAction))]
     ContentFinderAction { unk1: [u8; 8] },
@@ -1161,6 +1180,16 @@ mod tests {
                 ServerZoneIpcType::Unk17,
                 ServerZoneIpcData::Unk17 { unk1: [0; 968] },
             ),
+            (
+                ServerZoneIpcType::WalkInEvent,
+                ServerZoneIpcData::WalkInEvent {
+                    unk1: 0,
+                    unk2: 0,
+                    unk3: 0,
+                    unk4: 0,
+                    unk5: 0,
+                },
+            ),
         ];
 
         for (opcode, data) in &ipc_types {
@@ -1338,6 +1367,18 @@ mod tests {
             (
                 ClientZoneIpcType::UnkCall2,
                 ClientZoneIpcData::UnkCall2 { unk1: [0; 8] },
+            ),
+            (
+                ClientZoneIpcType::StartWalkInEvent,
+                ClientZoneIpcData::StartWalkInEvent {
+                    event_arg: 0,
+                    event_id: 0,
+                    pos: Position {
+                        x: 0.0,
+                        y: 0.0,
+                        z: 0.0,
+                    },
+                },
             ),
         ];
 

@@ -334,6 +334,11 @@
             "name": "SetSearchComment",
             "opcode": 512,
             "size": 216
+        },
+        {
+            "name": "WalkInEvent",
+            "opcode": 316,
+            "size": 24
         }
     ],
     "ClientZoneIpcType": [
@@ -496,6 +501,11 @@
             "name": "EquipGearset",
             "opcode": 101,
             "size": 72
+        },
+        {
+            "name": "StartWalkInEvent",
+            "opcode": 607,
+            "size": 24
         }
     ],
     "ServerLobbyIpcType": [

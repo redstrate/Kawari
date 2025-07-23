@@ -568,6 +568,51 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                                 to_remove.push(id);
                             }
                         }
+
+                        if let ClientTriggerCommand::WalkInTriggerFinished { .. } = &trigger.trigger
+                        {
+                            // This is where we finally release the client after the walk-in trigger.
+                            let msg = FromServer::Unk18([0; 16]);
+
+                            if handle.send(msg).is_err() {
+                                to_remove.push(id);
+                            }
+
+                            let msg = FromServer::ActorControlSelf(ActorControlSelf {
+                                category: ActorControlCategory::WalkInTriggerRelatedUnk1 {
+                                    unk1: 0,
+                                },
+                            });
+
+                            if handle.send(msg).is_err() {
+                                to_remove.push(id);
+                            }
+
+                            // Yes, this is actually sent every time the trigger event finishes...
+                            let msg = FromServer::ActorControlSelf(ActorControlSelf {
+                                category: ActorControlCategory::CompanionUnlock {
+                                    unk1: 0,
+                                    unk2: 1,
+                                },
+                            });
+
+                            if handle.send(msg).is_err() {
+                                to_remove.push(id);
+                            }
+
+                            let msg = FromServer::ActorControlSelf(ActorControlSelf {
+                                category: ActorControlCategory::WalkInTriggerRelatedUnk2 {
+                                    unk1: 0,
+                                    unk2: 0,
+                                    unk3: 0,
+                                    unk4: 7,
+                                },
+                            });
+
+                            if handle.send(msg).is_err() {
+                                to_remove.push(id);
+                            }
+                        }
                         continue;
                     }
 

@@ -3,15 +3,17 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use kawari::common::Position;
-use kawari::common::{GameData, INVALID_OBJECT_ID, ItemInfoQuery, timestamp_secs};
+use kawari::common::{
+    GameData, INVALID_OBJECT_ID, ItemInfoQuery, ObjectId, ObjectTypeId, timestamp_secs,
+};
 use kawari::config::get_config;
 use kawari::inventory::{
     BuyBackItem, ContainerType, CurrencyKind, Item, ItemOperationKind, get_container_type,
 };
 use kawari::ipc::chat::{ServerChatIpcData, ServerChatIpcSegment};
 use kawari::ipc::zone::{
-    ActorControlCategory, ActorControlSelf, ItemOperation, PlayerEntry, PlayerSpawn, PlayerStatus,
-    SocialList,
+    ActorControl, ActorControlCategory, ActorControlSelf, ItemOperation, PlayerEntry, PlayerSpawn,
+    PlayerStatus, SocialList,
 };
 
 use kawari::ipc::zone::{
@@ -27,8 +29,8 @@ use kawari::world::{
     ChatHandler, ExtraLuaState, LuaZone, ObsfucationData, Zone, ZoneConnection, load_init_script,
 };
 use kawari::world::{
-    ClientHandle, FromServer, LuaPlayer, PlayerData, ServerHandle, StatusEffects, ToServer,
-    WorldDatabase, handle_custom_ipc, server_main_loop,
+    ClientHandle, EventFinishType, FromServer, LuaPlayer, PlayerData, ServerHandle, StatusEffects,
+    ToServer, WorldDatabase, handle_custom_ipc, server_main_loop,
 };
 use kawari::{
     ERR_INVENTORY_ADD_FAILED, LogMessageType, RECEIVE_BUFFER_SIZE, TITLE_UNLOCK_BITMASK_SIZE,
@@ -462,9 +464,6 @@ async fn client_loop(
                                                         connection.handle.send(ToServer::ClientTrigger(connection.id, connection.player_data.actor_id, trigger.clone())).await;
                                                     }
                                                 }
-                                            }
-                                            ClientZoneIpcData::Unk2 { .. } => {
-                                                // no-op
                                             }
                                             ClientZoneIpcData::Unk3 { .. } => {
                                                 // no-op
@@ -916,15 +915,15 @@ async fn client_loop(
                                                             } else {
                                                                 tracing::error!(ERR_INVENTORY_ADD_FAILED);
                                                                 connection.send_message(ERR_INVENTORY_ADD_FAILED).await;
-                                                                connection.event_finish(*event_id, 0).await;
+                                                                connection.event_finish(*event_id, 0, EventFinishType::Normal).await;
                                                             }
                                                         } else {
                                                             connection.send_message("Insufficient gil to buy item. Nice try bypassing the client-side check!").await;
-                                                            connection.event_finish(*event_id, 0).await;
+                                                            connection.event_finish(*event_id, 0, EventFinishType::Normal).await;
                                                         }
                                                     } else {
                                                         connection.send_message("Unable to find shop item, this is a bug in Kawari!").await;
-                                                        connection.event_finish(*event_id, 0).await;
+                                                        connection.event_finish(*event_id, 0, EventFinishType::Normal).await;
                                                     }
                                                 } else if *buy_sell_mode == SELL {
                                                     let storage = get_container_type(*item_index).unwrap();
@@ -1033,11 +1032,11 @@ async fn client_loop(
                                                         connection.event_scene(&target_id, *event_id, 10, 8193, params).await;
                                                     } else {
                                                         connection.send_message("Unable to find shop item, this is a bug in Kawari!").await;
-                                                        connection.event_finish(*event_id, 0).await;
+                                                        connection.event_finish(*event_id, 0, EventFinishType::Normal).await;
                                                     }
                                                 } else {
                                                     tracing::error!("Received unknown transaction mode {buy_sell_mode}!");
-                                                    connection.event_finish(*event_id, 0).await;
+                                                    connection.event_finish(*event_id, 0, EventFinishType::Normal).await;
                                                 }
                                             }
                                             ClientZoneIpcData::StartTalkEvent { actor_id, event_id } => {
@@ -1319,6 +1318,22 @@ async fn client_loop(
                                                 tracing::info!("Client tried to equip a gearset!");
                                                 connection.send_message("Gearsets are not yet implemented.").await;
                                             }
+                                            ClientZoneIpcData::StartWalkInEvent { event_arg, event_id, .. } => {
+                                                // Yes, an ActorControl is sent here, not an ActorControlSelf!
+                                                connection.actor_control(connection.player_data.actor_id, ActorControl {
+                                                    category: ActorControlCategory::ToggleWeapon {
+                                                        shown: false,
+                                                    }
+                                                }).await;
+                                                connection.send_unk18([64, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]).await;
+                                                let actor_id = ObjectTypeId { object_id: ObjectId(connection.player_data.actor_id), object_type: 0 };
+                                                connection.start_event(actor_id, *event_id, 10, *event_arg).await;
+
+                                                // begin walk-in trigger function if it exists
+                                                if let Some(event) = connection.event.as_mut() {
+                                                     event.enter_trigger(&mut lua_player);
+                                                }
+                                            }
                                             ClientZoneIpcData::Unknown { .. } => {
                                                 tracing::warn!("Unknown packet {:?} recieved, this should be handled!", data.op_code);
                                             }
@@ -1391,6 +1406,7 @@ async fn client_loop(
                     FromServer::ActorEquip(actor_id, main_weapon_id, model_ids) => connection.update_equip(actor_id, main_weapon_id, model_ids).await,
                     FromServer::ReplayPacket(segment) => connection.send_segment(segment).await,
                     FromServer::LoseEffect(effect_id, effect_param, effect_source_actor_id) => connection.lose_effect(effect_id, effect_param, effect_source_actor_id, &mut lua_player).await,
+                    FromServer::Unk18(unk) => connection.send_unk18(unk).await,
                 },
                 None => break,
             }

@@ -72,6 +72,11 @@ pub enum ActorControlCategory {
         #[bw(map = write_bool_as::<u32>)]
         unlocked: bool,
     },
+    #[brw(magic = 0x8Au16)]
+    EventRelatedUnk3 {
+        #[brw(pad_before = 2)] //padding
+        event_id: u32,
+    },
     #[brw(magic = 0xCBu16)]
     TeleportStart {
         #[brw(pad_before = 2)] //padding
@@ -82,6 +87,11 @@ pub enum ActorControlCategory {
     Flee {
         #[brw(pad_before = 2)] // padding
         speed: u16,
+    },
+    #[brw(magic = 0xECu16)]
+    WalkInTriggerRelatedUnk3 {
+        #[brw(pad_before = 2)] // padding
+        unk1: u32,
     },
     #[brw(magic = 0x386u16)]
     SetFestival {
@@ -176,6 +186,20 @@ pub enum ActorControlCategory {
         unk1: u32,
         unk2: u32,
         unk3: u32,
+    },
+    #[brw(magic = 0x104u16)]
+    WalkInTriggerRelatedUnk2 {
+        #[brw(pad_before = 2)] // padding
+        unk1: u32,
+        unk2: u32,
+        unk3: u32,
+        /// Usually 7?
+        unk4: u32,
+    },
+    #[brw(magic = 0x107u16)]
+    WalkInTriggerRelatedUnk1 {
+        #[brw(pad_before = 2)] // padding
+        unk1: u32,
     },
     Unknown {
         category: u16,
