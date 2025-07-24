@@ -3,6 +3,7 @@ BASE_DIR = "resources/scripts/"
 dofile(BASE_DIR.."actions/Actions.lua")
 dofile(BASE_DIR.."commands/Commands.lua")
 dofile(BASE_DIR.."effects/Effects.lua")
+dofile(BASE_DIR.."eobjs/EObjects.lua")
 dofile(BASE_DIR.."events/Events.lua")
 dofile(BASE_DIR.."items/Items.lua")
 dofile(BASE_DIR.."Global.lua")

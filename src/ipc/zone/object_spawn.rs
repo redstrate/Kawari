@@ -1,11 +1,12 @@
 use binrw::binrw;
 
 use crate::common::{Position, read_quantized_rotation, write_quantized_rotation};
+use serde::Deserialize;
 
 // TODO: this is all kinds of wrong, take the fields with a grain of salt
 #[binrw]
 #[brw(little)]
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Copy, Clone, Default, Deserialize)]
 pub struct ObjectSpawn {
     pub index: u8,
     pub kind: u8,
