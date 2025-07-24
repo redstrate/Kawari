@@ -606,6 +606,8 @@ pub enum ServerZoneIpcData {
         #[brw(pad_after = 4)]
         immortal_flames_rank: u8,
     },
+    #[br(pre_assert(*magic == ServerZoneIpcType::CraftingLog))]
+    CraftingLog { unk1: [u8; 808] },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,

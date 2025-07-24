@@ -344,6 +344,11 @@
             "name": "GrandCompanyInfo",
             "opcode": 218,
             "size": 8
+        },
+        {
+            "name": "CraftingLog",
+            "opcode": 210,
+            "size": 808
         }
     ],
     "ClientZoneIpcType": [
