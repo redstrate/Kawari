@@ -53,6 +53,7 @@ pub struct ExtraLuaState {
     pub command_scripts: HashMap<String, String>,
     pub gm_command_scripts: HashMap<u32, String>,
     pub effect_scripts: HashMap<u32, String>,
+    pub zone_eobj_scripts: HashMap<u32, String>,
 }
 
 #[derive(Debug, Default, Clone)]
@@ -844,10 +845,19 @@ impl ZoneConnection {
     }
 
     pub async fn process_lua_player(&mut self, player: &mut LuaPlayer) {
+        // First, send player-related segments
         for segment in &player.queued_segments {
             self.send_segment(segment.clone()).await;
         }
         player.queued_segments.clear();
+
+        // Second, send zone-related segments
+        for segment in &player.zone_data.queued_segments {
+            let mut edited_segment = segment.clone();
+            edited_segment.target_actor = player.player_data.actor_id;
+            self.send_segment(edited_segment).await;
+        }
+        player.zone_data.queued_segments.clear();
 
         let tasks = player.queued_tasks.clone();
         for task in &tasks {
@@ -1803,6 +1813,37 @@ impl ZoneConnection {
             },
         })
         .await;
+    }
+
+    pub async fn spawn_eobjs(&mut self, lua_player: &mut LuaPlayer) {
+        let lua = self.lua.lock().unwrap();
+        let state = lua.app_data_ref::<ExtraLuaState>().unwrap();
+
+        let key = self.player_data.zone_id as u32;
+        if let Some(zone_eobj_script) = state.zone_eobj_scripts.get(&key) {
+            lua.scope(|scope| {
+                let connection_data = scope.create_userdata_ref_mut(&mut lua_player.zone_data).unwrap();
+
+                let config = get_config();
+
+                let file_name = format!("{}/{}", &config.world.scripts_location, zone_eobj_script);
+                lua.load(
+                    std::fs::read(&file_name).expect("Failed to locate scripts directory!"),
+                )
+                .set_name("@".to_string() + &file_name)
+                .exec()
+                .unwrap();
+
+                let func: Function = lua.globals().get("onRequestEObjSpawn").unwrap();
+
+                func.call::<()>(connection_data).unwrap();
+
+                Ok(())
+            })
+            .unwrap();
+        } else {
+            tracing::info!("Zone {} doesn't have an eobj script.", self.player_data.zone_id);
+        }
     }
 
     pub async fn start_event(

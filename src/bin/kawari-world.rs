@@ -413,6 +413,9 @@ async fn client_loop(
                                                     .await;
                                                 }
 
+                                                // If a zone has any eobjs that need spawning (e.g. Chocobo Square), do so
+                                                connection.spawn_eobjs(&mut lua_player).await;
+
                                                 // wipe any exit position so it isn't accidentally reused
                                                 connection.exit_position = None;
                                                 connection.exit_rotation = None;
@@ -1378,6 +1381,7 @@ async fn client_loop(
                                     region_name: zone.region_name.clone(),
                                     place_name: zone.place_name.clone(),
                                     intended_use: zone.intended_use,
+                                    queued_segments: Vec::<PacketSegment<ServerZoneIpcSegment>>::new()
                                 };
                             }
                         }

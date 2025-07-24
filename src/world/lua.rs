@@ -12,7 +12,7 @@ use crate::{
     },
     ipc::zone::{
         ActionEffect, ActorControlCategory, ActorControlSelf, DamageElement, DamageKind,
-        DamageType, EffectKind, EventScene, ServerZoneIpcData, ServerZoneIpcSegment, Warp,
+        DamageType, EffectKind, EventScene, ObjectSpawn, ServerZoneIpcData, ServerZoneIpcSegment, Warp,
     },
     opcodes::ServerZoneIpcType,
     packet::{PacketSegment, SegmentData, SegmentType},
@@ -105,6 +105,7 @@ pub struct LuaZone {
     pub region_name: String,
     pub place_name: String,
     pub intended_use: u8,
+    pub queued_segments: Vec<PacketSegment<ServerZoneIpcSegment>>,
 }
 
 impl UserData for LuaZone {
@@ -115,6 +116,53 @@ impl UserData for LuaZone {
         fields.add_field_method_get("region_name", |_, this| Ok(this.region_name.clone()));
         fields.add_field_method_get("place_name", |_, this| Ok(this.place_name.clone()));
         fields.add_field_method_get("intended_use", |_, this| Ok(this.intended_use));
+    }
+
+    fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
+        methods.add_method_mut(
+            "spawn_eobj",
+            |lua, this, eobj: Value| {
+                let eobj: ObjectSpawn = lua.from_value(eobj).unwrap();
+                this.spawn_eobj(eobj);
+                Ok(())
+            },
+        );
+    }
+}
+
+impl LuaZone {
+    // TODO: Can we deduplicate this segment stuff somehow?
+    fn queue_segment(&mut self, segment: PacketSegment<ServerZoneIpcSegment>) {
+        self.queued_segments.push(segment);
+    }
+
+    fn create_segment_target(
+        &mut self,
+        op_code: ServerZoneIpcType,
+        data: ServerZoneIpcData,
+        source_actor: u32,
+        target_actor: u32,
+    ) {
+        let ipc = ServerZoneIpcSegment {
+            op_code,
+            timestamp: timestamp_secs(),
+            data,
+            ..Default::default()
+        };
+
+        self.queue_segment(PacketSegment {
+            source_actor,
+            target_actor,
+            segment_type: SegmentType::Ipc,
+            data: SegmentData::Ipc { data: ipc },
+        });
+    }
+
+    fn spawn_eobj(&mut self, eobj: ObjectSpawn) {
+        let op_code = ServerZoneIpcType::ObjectSpawn;
+        let data = ServerZoneIpcData::ObjectSpawn(eobj);
+
+        self.create_segment_target(op_code, data, eobj.entity_id, 0); // Setting the target actor id to 0 for later post-processing.
     }
 }
 
@@ -908,6 +956,17 @@ impl FromLua for EffectsBuilder {
     }
 }
 
+impl UserData for ObjectSpawn {}
+
+impl FromLua for ObjectSpawn {
+    fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
+        match value {
+            Value::UserData(ud) => Ok(*ud.borrow::<Self>()?),
+            _ => unreachable!(),
+        }
+    }
+}
+
 /// Loads `Init.lua`
 pub fn load_init_script(lua: &mut Lua) -> mlua::Result<()> {
     let register_action_func =
@@ -947,6 +1006,13 @@ pub fn load_init_script(lua: &mut Lua) -> mlua::Result<()> {
             Ok(())
         })?;
 
+    let register_zone_eobjs_func =
+    lua.create_function(|lua, (zone_id, zone_eobj_script): (u32, String)| {
+        let mut state = lua.app_data_mut::<ExtraLuaState>().unwrap();
+        let _ = state.zone_eobj_scripts.insert(zone_id, zone_eobj_script);
+        Ok(())
+    })?;
+
     let get_login_message_func = lua.create_function(|_, _: ()| {
         let config = get_config();
         Ok(config.world.login_message)
@@ -960,6 +1026,7 @@ pub fn load_init_script(lua: &mut Lua) -> mlua::Result<()> {
     lua.globals()
         .set("registerGMCommand", register_gm_command_func)?;
     lua.globals().set("registerEffect", register_effects_func)?;
+    lua.globals().set("registerZoneEObjs", register_zone_eobjs_func)?;
     lua.globals()
         .set("getLoginMessage", get_login_message_func)?;
 
