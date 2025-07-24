@@ -332,7 +332,7 @@
         },
         {
             "name": "SetSearchComment",
-            "opcode": 512,
+            "opcode": 516,
             "size": 216
         },
         {
