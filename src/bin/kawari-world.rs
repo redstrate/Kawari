@@ -492,12 +492,9 @@ async fn client_loop(
                                                                     // TODO: fill with actual player data, it also shows up wrong in game
                                                                     content_id: connection.player_data.content_id,
                                                                     zone_id: connection.zone.as_ref().unwrap().id,
-                                                                                                zone_id1: 0x0100,
-                                                                                                class_job: 36,
-                                                                                                level: 100,
-                                                                                                one: 1,
-                                                                                                name: "INVALID".to_string(),
-                                                                                                ..Default::default()
+                                                                    zone_id1: 0x0100,
+                                                                    name: "INVALID".to_string(),
+                                                                    ..Default::default()
                                                                 }],
                                                             }),
                                                             ..Default::default()
