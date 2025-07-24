@@ -12,7 +12,8 @@ use crate::{
     },
     ipc::zone::{
         ActionEffect, ActorControlCategory, ActorControlSelf, DamageElement, DamageKind,
-        DamageType, EffectKind, EventScene, ObjectSpawn, ServerZoneIpcData, ServerZoneIpcSegment, Warp,
+        DamageType, EffectKind, EventScene, ObjectSpawn, ServerZoneIpcData, ServerZoneIpcSegment,
+        Warp,
     },
     opcodes::ServerZoneIpcType,
     packet::{PacketSegment, SegmentData, SegmentType},
@@ -119,14 +120,11 @@ impl UserData for LuaZone {
     }
 
     fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
-        methods.add_method_mut(
-            "spawn_eobj",
-            |lua, this, eobj: Value| {
-                let eobj: ObjectSpawn = lua.from_value(eobj).unwrap();
-                this.spawn_eobj(eobj);
-                Ok(())
-            },
-        );
+        methods.add_method_mut("spawn_eobj", |lua, this, eobj: Value| {
+            let eobj: ObjectSpawn = lua.from_value(eobj).unwrap();
+            this.spawn_eobj(eobj);
+            Ok(())
+        });
     }
 }
 
@@ -1007,11 +1005,11 @@ pub fn load_init_script(lua: &mut Lua) -> mlua::Result<()> {
         })?;
 
     let register_zone_eobjs_func =
-    lua.create_function(|lua, (zone_id, zone_eobj_script): (u32, String)| {
-        let mut state = lua.app_data_mut::<ExtraLuaState>().unwrap();
-        let _ = state.zone_eobj_scripts.insert(zone_id, zone_eobj_script);
-        Ok(())
-    })?;
+        lua.create_function(|lua, (zone_id, zone_eobj_script): (u32, String)| {
+            let mut state = lua.app_data_mut::<ExtraLuaState>().unwrap();
+            let _ = state.zone_eobj_scripts.insert(zone_id, zone_eobj_script);
+            Ok(())
+        })?;
 
     let get_login_message_func = lua.create_function(|_, _: ()| {
         let config = get_config();
@@ -1026,7 +1024,8 @@ pub fn load_init_script(lua: &mut Lua) -> mlua::Result<()> {
     lua.globals()
         .set("registerGMCommand", register_gm_command_func)?;
     lua.globals().set("registerEffect", register_effects_func)?;
-    lua.globals().set("registerZoneEObjs", register_zone_eobjs_func)?;
+    lua.globals()
+        .set("registerZoneEObjs", register_zone_eobjs_func)?;
     lua.globals()
         .set("getLoginMessage", get_login_message_func)?;
 
