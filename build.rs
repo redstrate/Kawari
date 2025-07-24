@@ -23,6 +23,7 @@ fn main() {
         for element in json.as_object().unwrap() {
             let key = element.0;
             let opcodes = element.1.as_array().unwrap();
+            let mut seen_opcodes = Vec::new();
 
             // beginning
             output_str.push_str("#[binrw]\n");
@@ -33,6 +34,15 @@ fn main() {
                 let opcode = opcode.as_object().unwrap();
                 let name = opcode.get("name").unwrap().as_str().unwrap();
                 let opcode = opcode.get("opcode").unwrap().as_number().unwrap();
+
+                if !seen_opcodes.contains(&opcode) {
+                    seen_opcodes.push(opcode);
+                } else {
+                    panic!(
+                        "{} has the same opcode as a previous one, this isn't correct!",
+                        name
+                    );
+                }
 
                 output_str.push_str(&format!("#[brw(magic = {opcode}u16)]\n"));
                 output_str.push_str(&format!("{name},\n"));
