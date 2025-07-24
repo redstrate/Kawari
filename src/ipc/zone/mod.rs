@@ -598,6 +598,14 @@ pub enum ServerZoneIpcData {
         #[brw(pad_after = 4)]
         unk5: u32,
     },
+    #[br(pre_assert(*magic == ServerZoneIpcType::GrandCompanyInfo))]
+    GrandCompanyInfo {
+        active_company_id: u8,
+        maelstrom_rank: u8,
+        twin_adder_rank: u8,
+        #[brw(pad_after = 4)]
+        immortal_flames_rank: u8,
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,

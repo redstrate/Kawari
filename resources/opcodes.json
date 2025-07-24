@@ -339,6 +339,11 @@
             "name": "WalkInEvent",
             "opcode": 316,
             "size": 24
+        },
+        {
+            "name": "GrandCompanyInfo",
+            "opcode": 218,
+            "size": 8
         }
     ],
     "ClientZoneIpcType": [
