@@ -24,22 +24,19 @@ pub struct SocialListRequest {
 #[derive(Debug, Clone, Default)]
 pub struct PlayerEntry {
     pub content_id: u64,
-    pub unk: [u8; 12],
+    pub unk: [u8; 16],
     pub zone_id: u16,
     pub zone_id1: u16,
     pub unk2: [u8; 8],
     pub online_status_mask: u64,
-    pub class_job: u8,
-    pub padding: u8,
-    pub level: u8,
-    pub padding1: u8,
-    pub padding2: u16,
-    pub one: u32,
+    pub unk3: [u8; 22],
+    pub world_id: u16,
     #[br(count = CHAR_NAME_MAX_LENGTH)]
     #[bw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
     #[br(map = read_string)]
     #[bw(map = write_string)]
     pub name: String,
+    #[brw(pad_after = 6)]
     #[br(count = 6)]
     #[bw(pad_size_to = 6)]
     #[br(map = read_string)]
