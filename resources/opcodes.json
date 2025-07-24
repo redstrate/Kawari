@@ -349,6 +349,11 @@
             "name": "CraftingLog",
             "opcode": 210,
             "size": 808
+        },
+        {
+            "name": "GatheringLog",
+            "opcode": 357,
+            "size": 104
         }
     ],
     "ClientZoneIpcType": [

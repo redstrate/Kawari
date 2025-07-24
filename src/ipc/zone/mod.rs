@@ -608,6 +608,8 @@ pub enum ServerZoneIpcData {
     },
     #[br(pre_assert(*magic == ServerZoneIpcType::CraftingLog))]
     CraftingLog { unk1: [u8; 808] },
+    #[br(pre_assert(*magic == ServerZoneIpcType::GatheringLog))]
+    GatheringLog { unk1: [u8; 104] },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
