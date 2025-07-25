@@ -38,9 +38,7 @@ fn main() {
                 if !seen_opcodes.contains(&opcode) {
                     seen_opcodes.push(opcode);
                 } else {
-                    panic!(
-                        "{name} has the same opcode as a previous one, this isn't correct!"
-                    );
+                    panic!("{name} has the same opcode as a previous one, this isn't correct!");
                 }
 
                 output_str.push_str(&format!("#[brw(magic = {opcode}u16)]\n"));

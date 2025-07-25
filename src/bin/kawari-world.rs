@@ -319,7 +319,7 @@ async fn client_loop(
                                                             levels: connection.player_data.classjob_levels.map(|x| x as u16),
                                                             unlocks: connection.player_data.unlocks.unlocks.clone(),
                                                             aetherytes: connection.player_data.unlocks.aetherytes.clone(),
-                                                            unlocked_raids: connection.player_data.unlocks.unlocked_raids.clone().into(),
+                                                            unlocked_raids: connection.player_data.unlocks.unlocked_raids.clone(),
                                                             unlocked_dungeons: connection.player_data.unlocks.unlocked_dungeons.clone(),
                                                             unlocked_guildhests: connection.player_data.unlocks.unlocked_guildhests.clone(),
                                                             unlocked_trials: connection.player_data.unlocks.unlocked_trials.clone(),
