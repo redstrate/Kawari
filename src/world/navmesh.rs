@@ -62,7 +62,7 @@ impl Navmesh {
     /// Reads an existing NVM file.
     pub fn from_existing(buffer: &[u8]) -> Option<Self> {
         let mut cursor = Cursor::new(buffer);
-        if let Some(mut navmesh) = Self::read(&mut cursor).ok() {
+        if let Ok(mut navmesh) = Self::read(&mut cursor) {
             navmesh.initialize();
             return Some(navmesh);
         }
