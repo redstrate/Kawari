@@ -39,8 +39,7 @@ fn main() {
                     seen_opcodes.push(opcode);
                 } else {
                     panic!(
-                        "{} has the same opcode as a previous one, this isn't correct!",
-                        name
+                        "{name} has the same opcode as a previous one, this isn't correct!"
                     );
                 }
 
