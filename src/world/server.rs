@@ -1033,8 +1033,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                             if let Ok(parsed) =
                                 ServerZoneIpcSegment::read_le_args(&mut cursor, (&ipc_len,))
                             {
-                                match parsed.data {
-                                    ServerZoneIpcData::InitZone(mut init_zone) => {
+                                if let ServerZoneIpcData::InitZone(mut init_zone) = parsed.data {
                                         tracing::info!("- Fixing up InitZone");
 
                                         // stop it from trying to initialize obsfucation
@@ -1046,8 +1045,6 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                                         let mut cursor = Cursor::new(Vec::new());
                                         init_zone.write_le(&mut cursor).unwrap();
                                         ipc_data = cursor.into_inner().to_vec();
-                                    }
-                                    _ => {}
                                 }
                             }
 
