@@ -1027,8 +1027,8 @@ impl ZoneConnection {
                 Task::AddExp { amount } => {
                     let current_exp;
                     {
-                        let mut game_data = self.gamedata.lock().unwrap();
-                        current_exp = self.current_exp(&mut game_data);
+                        let game_data = self.gamedata.lock().unwrap();
+                        current_exp = self.current_exp(&game_data);
                     }
                     self.set_current_exp(current_exp + amount);
                     self.update_class_info().await;
