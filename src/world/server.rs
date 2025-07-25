@@ -116,7 +116,7 @@ impl Instance {
             tracing::warn!("Navimesh path is not set! Monsters will not function correctly!");
         } else {
             let mut nvm_path = PathBuf::from(config.filesystem.navimesh_path);
-            nvm_path.push(&navimesh_path.unwrap());
+            nvm_path.push(navimesh_path.unwrap());
 
             if let Ok(nvm_bytes) = std::fs::read(&nvm_path) {
                 instance.navmesh = Navmesh::from_existing(&nvm_bytes).unwrap();
