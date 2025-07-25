@@ -221,7 +221,7 @@
             "size": 16
         },
         {
-            "name": "UnkCall",
+            "name": "PingSyncReply",
             "opcode": 715,
             "size": 32
         },
@@ -438,7 +438,7 @@
             "size": 8
         },
         {
-            "name": "Unk17",
+            "name": "PingSync",
             "opcode": 988,
             "size": 32
         },

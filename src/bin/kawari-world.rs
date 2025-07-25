@@ -792,14 +792,14 @@ async fn client_loop(
                                             ClientZoneIpcData::Unk16 { .. } => {
                                                 // no-op
                                             }
-                                            ClientZoneIpcData::Unk17 { unk1, .. } => {
+                                            ClientZoneIpcData::PingSync { timestamp, .. } => {
                                                 // this is *usually* sent in response, but not always
                                                 let ipc = ServerZoneIpcSegment {
-                                                    op_code: ServerZoneIpcType::UnkCall,
+                                                    op_code: ServerZoneIpcType::PingSyncReply,
                                                     timestamp: timestamp_secs(),
-                                                    data: ServerZoneIpcData::UnkCall {
-                                                        unk1: *unk1, // copied from here
-                                                        unk2: 333, // always this for some reason
+                                                    data: ServerZoneIpcData::PingSyncReply {
+                                                        timestamp: *timestamp, // copied from here
+                                                        transmission_interval: 333, // always this for some reason
                                                     },
                                                     ..Default::default()
                                                 };
