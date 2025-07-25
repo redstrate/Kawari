@@ -1034,17 +1034,17 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                                 ServerZoneIpcSegment::read_le_args(&mut cursor, (&ipc_len,))
                             {
                                 if let ServerZoneIpcData::InitZone(mut init_zone) = parsed.data {
-                                        tracing::info!("- Fixing up InitZone");
+                                    tracing::info!("- Fixing up InitZone");
 
-                                        // stop it from trying to initialize obsfucation
-                                        init_zone.obsfucation_mode = 0;
-                                        init_zone.seed1 = 0;
-                                        init_zone.seed2 = 0;
-                                        init_zone.seed3 = 0;
+                                    // stop it from trying to initialize obsfucation
+                                    init_zone.obsfucation_mode = 0;
+                                    init_zone.seed1 = 0;
+                                    init_zone.seed2 = 0;
+                                    init_zone.seed3 = 0;
 
-                                        let mut cursor = Cursor::new(Vec::new());
-                                        init_zone.write_le(&mut cursor).unwrap();
-                                        ipc_data = cursor.into_inner().to_vec();
+                                    let mut cursor = Cursor::new(Vec::new());
+                                    init_zone.write_le(&mut cursor).unwrap();
+                                    ipc_data = cursor.into_inner().to_vec();
                                 }
                             }
 
