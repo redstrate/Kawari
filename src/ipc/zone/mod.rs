@@ -395,18 +395,25 @@ pub enum ServerZoneIpcData {
         #[brw(pad_after = 10)]
         action_type: u16,
     },
-    #[br(pre_assert(*magic == ServerZoneIpcType::UnkCall))]
-    UnkCall {
-        unk1: u32,
-        #[brw(pad_after = 26)]
-        unk2: u16,
+    /// Sent by the server in response to PingReply. In prior expansions, it seems to have had the following additional fields:
+    /// origin_entity_id: u32,
+    /// <4 bytes of padding before position>
+    /// position: Position,
+    /// rotation: f32,
+    /// <4 bytes of padding after rotation>
+    /// but those fields are now seemingly deprecated and used as zero-padding.
+    #[br(pre_assert(*magic == ServerZoneIpcType::PingSyncReply))]
+    PingSyncReply {
+        timestamp: u32,
+        #[brw(pad_after = 24)]
+        transmission_interval: u32,
     },
     #[br(pre_assert(*magic == ServerZoneIpcType::QuestCompleteList))]
     QuestCompleteList {
         #[br(count = COMPLETED_QUEST_BITMASK_SIZE)]
         #[bw(pad_size_to = COMPLETED_QUEST_BITMASK_SIZE)]
         completed_quests: Vec<u8>,
-        // TODO: what is in ehre?
+        // TODO: what is in here?
         #[br(count = 69)]
         #[bw(pad_size_to = 69)]
         unk2: Vec<u8>,
@@ -417,7 +424,7 @@ pub enum ServerZoneIpcData {
         #[brw(pad_after = 7)]
         unk1: u8,
     },
-    /// Send by the server to inform the client of when the inventory is being updated (typically when interacting with shops).
+    /// Sent by the server to inform the client of when the inventory is being updated (typically when interacting with shops).
     #[br(pre_assert(*magic == ServerZoneIpcType::InventoryTransaction))]
     InventoryTransaction {
         /// This is later reused in InventoryTransactionFinish, so it might be some sort of sequence or context id, but it's not the one sent by the client
@@ -718,10 +725,16 @@ pub enum ClientZoneIpcData {
     Unk16 {
         unk: [u8; 8], // TODO: unknown
     },
-    #[br(pre_assert(*magic == ClientZoneIpcType::Unk17))]
-    Unk17 {
-        unk1: u32,
-        unk2: [u8; 28], // TODO: unknown
+    /// Occasionally sent by the client, purpose is unknown.
+    #[br(pre_assert(*magic == ClientZoneIpcType::PingSync))]
+    PingSync {
+        timestamp: u32,
+        /// Sapphire calls it this, but it never seems to have the player's actor id or any values resembling ids of any sort in it?
+        origin_entity_id: u32,
+        #[brw(pad_before = 4)]
+        position: Position,
+        #[brw(pad_after = 4)]
+        rotation: f32,
     },
     #[br(pre_assert(*magic == ClientZoneIpcType::Unk18))]
     Unk18 {
@@ -1055,8 +1068,11 @@ mod tests {
                 },
             ),
             (
-                ServerZoneIpcType::UnkCall,
-                ServerZoneIpcData::UnkCall { unk1: 0, unk2: 0 },
+                ServerZoneIpcType::PingSyncReply,
+                ServerZoneIpcData::PingSyncReply {
+                    timestamp: 0,
+                    transmission_interval: 0,
+                },
             ),
             (
                 ServerZoneIpcType::QuestCompleteList,
@@ -1314,10 +1330,12 @@ mod tests {
                 ClientZoneIpcData::Unk16 { unk: [0; 8] },
             ),
             (
-                ClientZoneIpcType::Unk17,
-                ClientZoneIpcData::Unk17 {
-                    unk1: 0,
-                    unk2: [0; 28],
+                ClientZoneIpcType::PingSync,
+                ClientZoneIpcData::PingSync {
+                    timestamp: 0,
+                    origin_entity_id: 0,
+                    position: Position::default(),
+                    rotation: 0.0,
                 },
             ),
             (
