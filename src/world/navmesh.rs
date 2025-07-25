@@ -188,7 +188,7 @@ impl Navmesh {
                 ) == DT_SUCCESS
             );
 
-            return (nearest_ref, nearest_pt);
+            (nearest_ref, nearest_pt)
         }
     }
 }
