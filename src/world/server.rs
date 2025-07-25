@@ -214,7 +214,7 @@ impl WorldServer {
 }
 
 fn server_logic_tick(data: &mut WorldServer) {
-    for (_, instance) in &mut data.instances {
+    for instance in data.instances.values_mut() {
         let mut actor_moves = Vec::new();
         let players = instance.find_all_players();
 
@@ -326,7 +326,7 @@ fn server_logic_tick(data: &mut WorldServer) {
 
         // inform clients of the NPCs new positions
         for msg in actor_moves {
-            for (_, (handle, _)) in &mut data.clients {
+            for (handle, _) in data.clients.values_mut() {
                 if handle.send(msg.clone()).is_err() {
                     //to_remove.push(id);
                 }
