@@ -366,11 +366,10 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 let mut data = data.lock().unwrap();
 
                 // create a new instance if necessary
-                if !data.instances.contains_key(&zone_id) {
+                data.instances.entry(zone_id).or_insert_with(|| {
                     let mut game_data = game_data.lock().unwrap();
-                    data.instances
-                        .insert(zone_id, Instance::new(zone_id, &mut game_data));
-                }
+                    Instance::new(zone_id, &mut game_data)
+                });
 
                 // Send existing player data, if any
                 if let Some(instance) = data.find_instance(zone_id).cloned() {
