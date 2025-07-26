@@ -15,8 +15,8 @@ use crate::{
     GUILDHEST_ARRAY_SIZE, LogMessageType, PVP_ARRAY_SIZE, RAID_ARRAY_SIZE, TRIAL_ARRAY_SIZE,
     UNLOCK_BITMASK_SIZE,
     common::{
-        GameData, INVALID_OBJECT_ID, ItemInfoQuery, ObjectId, ObjectTypeId, Position,
-        timestamp_secs, value_to_flag_byte_index_value,
+        GameData, INVALID_OBJECT_ID, InstanceContentType, ItemInfoQuery, ObjectId, ObjectTypeId,
+        Position, timestamp_secs, value_to_flag_byte_index_value,
     },
     config::{WorldConfig, get_config},
     inventory::{BuyBackList, ContainerType, Inventory, Item, Storage},
@@ -1013,6 +1013,29 @@ impl ZoneConnection {
                     self.send_quest_information().await;
                 }
                 Task::UnlockContent { id } => {
+                    {
+                        let mut game_data = self.gamedata.lock().unwrap();
+                        if let Some(instance_content_type) = game_data.find_type_for_content(*id) {
+                            match instance_content_type {
+                                InstanceContentType::Dungeon => {
+                                    let (value, index) = value_to_flag_byte_index_value(*id as u32);
+                                    self.player_data.unlocks.unlocked_dungeons[index as usize] |=
+                                        value;
+                                }
+                                InstanceContentType::Raid => {}
+                                InstanceContentType::Guildhests => {}
+                                InstanceContentType::Trial => {}
+                                _ => {
+                                    tracing::warn!(
+                                        "Not sure what to do about {instance_content_type:?} {id}!"
+                                    );
+                                }
+                            };
+                        } else {
+                            tracing::warn!("Unknown content {id}!");
+                        }
+                    }
+
                     self.actor_control_self(ActorControlSelf {
                         category: ActorControlCategory::UnlockInstanceContent {
                             id: *id as u32,
