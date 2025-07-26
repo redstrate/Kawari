@@ -398,7 +398,7 @@ async fn client_loop(
                                                             gm_rank: connection.player_data.gm_rank,
                                                             online_status,
                                                             common: common.clone(),
-                                                                                             ..Default::default()
+                                                            ..Default::default()
                                                         }),
                                                         ..Default::default()
                                                     };

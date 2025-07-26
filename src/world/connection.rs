@@ -1907,4 +1907,21 @@ impl ZoneConnection {
             .await;
         }
     }
+
+    pub async fn send_arbitrary_packet(&mut self, op_code: u16, data: Vec<u8>) {
+        let ipc = ServerZoneIpcSegment {
+            op_code: ServerZoneIpcType::Unknown(op_code),
+            timestamp: timestamp_secs(),
+            data: ServerZoneIpcData::Unknown { unk: data },
+            ..Default::default()
+        };
+
+        self.send_segment(PacketSegment {
+            source_actor: self.player_data.actor_id,
+            target_actor: self.player_data.actor_id,
+            segment_type: SegmentType::Ipc,
+            data: SegmentData::Ipc { data: ipc },
+        })
+        .await;
+    }
 }
