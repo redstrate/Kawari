@@ -78,6 +78,7 @@ jobs:
     - name: Build
       run: cargo build --release --verbose --features oodle
     - name: Run clippy
+      if: runner.os == 'Linux'
       run: cargo clippy --features oodle
     - name: Run tests
       run: cargo test --verbose
