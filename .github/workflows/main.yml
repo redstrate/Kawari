@@ -92,6 +92,7 @@ jobs:
       run: |
         mv target/release/* .
         mv scripts/run_artifacts_linux.sh run.sh
+        echo "${{ github.head_ref }}.${{ github.sha }}" >> version.txt
     - name: Archive artifacts
       uses: actions/upload-artifact@v4
       with:
@@ -118,6 +119,7 @@ jobs:
           run.bat
           !resources/*.bin
           !resources/main.png
+          version.txt
 
   deploy:
     name: "Deploy"
