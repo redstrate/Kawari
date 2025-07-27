@@ -25,7 +25,7 @@ pub(crate) fn decompress<T: ReadWriteIpcSegment>(
     header: &PacketHeader,
     encryption_key: Option<&[u8]>,
 ) -> BinResult<Vec<PacketSegment<T>>> {
-    let mut segments = Vec::new();
+    let mut segments = Vec::with_capacity(header.segment_count as usize);
 
     let size = header.size as usize - std::mem::size_of::<PacketHeader>();
 
