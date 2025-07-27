@@ -81,12 +81,12 @@ jobs:
       run: cargo clippy --features oodle
     - name: Run tests
       run: cargo test --verbose
-    - name: Prepare Artifacts
+    - name: Prepare artifacts
       if: runner.os == 'Windows'
       run: |
         mv target/release/* .
         mv scripts/run_artifacts_windows.bat run.bat
-    - name: Prepare Artifacts
+    - name: Prepare artifacts
       if: runner.os == 'Linux'
       run: |
         mv target/release/* .
@@ -117,3 +117,28 @@ jobs:
           run.bat
           !resources/*.bin
           !resources/main.png
+
+  deploy:
+    name: "Deploy"
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/master'
+
+    steps:
+    - name: Download artifact
+      uses: dawidd6/action-download-artifact@v11
+      with:
+        skip_unpack: true
+    - name: Set up SSH key
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.DEPLOY_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        printf "Host ryne.moe\nPort 38901\nStrictHostKeyChecking no" >> ~/.ssh/config
+        chmod 700 ~/.ssh
+        chmod 600 ~/.ssh/id_rsa
+        chmod 644 ~/.ssh/config
+    - name: Upload artifacts
+      run: |
+        rsync --recursive "Kawari-Linux.zip" deploy@ryne.moe:/srv/http/astra-distrib/kawari/
+        rsync --recursive "Kawari-Windows.zip" deploy@ryne.moe:/srv/http/astra-distrib/kawari/
+
