@@ -11,47 +11,45 @@ Kawari is designed to be easy to run, and should be accessible to anyone who wan
 ## Prerequisites
 
 * Windows or Linux
-* Copy of the game updated to the supported game version (see [README](README.md))
-* Oodle Network Compression (see below)
+* Legally obtained copy of a supported version of the game (see [README](README.md))
+* Oodle Network Compression library
+    * You can download the [latest release of Oodle from this repository](https://github.com/WorkingRobot/OodleUE/releases/latest). Download "gcc.zip" on Linux, and "msvc.zip" on Windows.
 
-### Getting Oodle
+## Downloading
 
-Get the [latest release from this repository](https://github.com/WorkingRobot/OodleUE/releases/latest). You want the "gcc.zip" for Linux, and "msvc.zip" for Windows.
+We have two ways to download pre-built versions of Kawari, either from xiv.zone or GitHub Actions. You have a choice, depending on your situation:
 
-## Download Artifact
+* xiv.zone only has the latest commit from master, and downloads are accessible to anyone from anywhere.
+* GitHub Actions allows you to download builds of specific commits, but this requires a GitHub account. (These builds also expire after 90 days.)
 
-Windows and Linux artifacts are built on every commit, under [Github Actions](https://github.com/redstrate/Kawari/actions). Place the `oodle-network-shared.dll` (Windows) or `oodle-network-shared.so` (Linux) in the same directory as the executables.
+Here is the [latest build for Windows from xiv.zone](https://xiv.zone/distrib/kawari/Kawari-Windows.zip) and the [latest build for Linux](https://xiv.zone/distrib/kawari/Kawari-Linux.zip). For [Github Actions](https://github.com/redstrate/Kawari/actions), look under the Summary tab to download a build.
 
 ## Building
 
-Build Kawari with `cargo build`.
+Building Kawari is simple, run `cargo build` in a terminal.
 
-For the World server to function, Kawari needs to be built with `--features oodle`. On Linux, place the `oodle-network-shared.so` in a folder created by you named `oodle` before building.
+For the World server to function, Kawari needs to be built with `--features oodle`. On Linux, place the `oodle-network-shared.so` in a folder created by you named `oodle` before building. On Windows, no extra step is necessary here.
 
 ## Setup
 
-Afterwards, create a `config.yaml` in the current directory. Currently the minimal config you need to run most services looks like this:
+Place the `oodle-network-shared.dll` (Windows) or `oodle-network-shared.so` (Linux) in the same directory as the executables. If you skip this step, the World server cannot function.
+
+Then create a `config.yaml` in the current directory. At a minimum, you have to specify the path to the game directory:
 
 ```yaml
 filesystem:
     game_path: C:\Program Files (x86)\SquareEnix\FINAL FANTASY XIV - A Realm Reborn\game
 ```
 
-More configuration options can be found in `config.rs`, such as changing the ports services run on. If you plan on just running it locally for yourself, you don't need to set anything else.
+More configuration options can be found in `config.rs`, such as changing the ports services run on. If you plan on just running it locally for yourself, you can begin running the servers.
 
-Kawari is made up of multiple executables, to simplify running we have a script to start all of them.
+## Running
 
-### Windows
+Since Kawari is made up of multiple executables, we have included a built-in script to start them all at once.
 
-Double-click `run.bat`.
-
-### Linux
-
-Run `run.sh` in a terminal.
-
-### Development
-
-Run `scripts/run.sh` in a terminal.
+* On Windows, double-click `run.bat`.
+* On Linux, run `run.sh` in a terminal.
+* For developers, run `scripts/run.sh` in a terminal.
 
 ## Reverse proxy setup
 
