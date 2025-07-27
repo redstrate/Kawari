@@ -69,6 +69,7 @@ impl ChatHandler {
                         let slot = connection.player_data.inventory.equipped.get_slot_mut(slot);
 
                         slot.id = item_info.id;
+                        slot.glamour_catalog_id = 0;
                         slot.quantity = 1;
                         slot.condition = ITEM_CONDITION_MAX;
                     }
