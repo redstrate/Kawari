@@ -115,3 +115,5 @@ jobs:
           !resources/opcodes.json
           run.sh
           run.bat
+          !resources/*.bin
+          !resources/main.png
