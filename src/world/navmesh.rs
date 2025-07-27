@@ -21,6 +21,18 @@ pub struct NavmeshParams {
     pub max_polys: i32,
 }
 
+/// Represents a navmesh tile for a zone.
+#[binrw]
+#[brw(little)]
+#[derive(Default, Debug, Clone)]
+pub struct NavmeshTile {
+    #[br(temp)]
+    #[bw(calc = data.len() as u32)]
+    data_size: u32,
+    #[br(count = data_size)]
+    pub data: Vec<u8>,
+}
+
 /// Represents a navmesh for a zone.
 /// NOTE: We reuse the .nvm file extension used by the retail server. These have no relations to ours.
 #[binrw]
@@ -29,10 +41,10 @@ pub struct NavmeshParams {
 pub struct Navmesh {
     nav_mesh_params: NavmeshParams,
     #[br(temp)]
-    #[bw(calc = data.len() as u32)]
-    data_size: u32,
-    #[br(count = data_size)]
-    data: Vec<u8>,
+    #[bw(calc = tiles.len() as u32)]
+    tile_count: u32,
+    #[br(count = tile_count)]
+    tiles: Vec<NavmeshTile>,
 
     #[bw(ignore)]
     #[br(default)]
@@ -48,10 +60,10 @@ unsafe impl Sync for Navmesh {}
 
 impl Navmesh {
     /// Creates a new Navmesh.
-    pub fn new(nav_mesh_params: NavmeshParams, data: Vec<u8>) -> Self {
+    pub fn new(nav_mesh_params: NavmeshParams, tiles: Vec<NavmeshTile>) -> Self {
         let mut navmesh = Navmesh {
             nav_mesh_params,
-            data,
+            tiles,
             navmesh: null_mut(),
             navmesh_query: null_mut(),
         };
@@ -96,18 +108,21 @@ impl Navmesh {
             self.navmesh = dtAllocNavMesh();
             assert!(dtNavMesh_init(self.navmesh, &navmesh_params) == DT_SUCCESS);
 
-            assert!(
-                dtNavMesh_addTile(
-                    self.navmesh,
-                    self.data.as_mut_ptr(),
-                    self.data.len() as i32,
-                    0,
-                    0,
-                    null_mut()
-                ) == DT_SUCCESS
-            );
+            for tile in &mut self.tiles {
+                assert!(
+                    dtNavMesh_addTile(
+                        self.navmesh,
+                        tile.data.as_mut_ptr(),
+                        tile.data.len() as i32,
+                        0,
+                        0,
+                        null_mut()
+                    ) == DT_SUCCESS
+                );
+            }
 
             self.navmesh_query = dtAllocNavMeshQuery();
+            assert!(self.navmesh_query != null_mut());
             assert!(dtNavMeshQuery_init(self.navmesh_query, self.navmesh, 2048) == DT_SUCCESS);
         }
     }

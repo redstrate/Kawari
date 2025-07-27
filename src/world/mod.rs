@@ -33,4 +33,4 @@ mod common;
 pub use common::{ClientHandle, ClientId, FromServer, ServerHandle, ToServer};
 
 mod navmesh;
-pub use navmesh::{Navmesh, NavmeshParams};
+pub use navmesh::{Navmesh, NavmeshParams, NavmeshTile};
