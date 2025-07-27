@@ -418,10 +418,6 @@ pub struct Config {
     #[serde(default)]
     pub save_data_bank: SaveDataBankConfig,
 
-    /// Enable various packet debug functions. This will clutter your working directory!
-    #[serde(default)]
-    pub packet_debugging: bool,
-
     /// Enable various validity checks for version and file hashes that emulate retail.
     #[serde(default = "Config::default_enforce_validity_checks")]
     pub enforce_validity_checks: bool,
@@ -441,7 +437,6 @@ impl Default for Config {
             world: WorldConfig::default(),
             launcher: LauncherConfig::default(),
             save_data_bank: SaveDataBankConfig::default(),
-            packet_debugging: false,
             enforce_validity_checks: Self::default_enforce_validity_checks(),
         }
     }

@@ -1,10 +1,9 @@
-use std::{fs::write, io::Cursor};
+use std::io::Cursor;
 
 use binrw::{BinRead, binrw};
 
 use crate::{
     common::{read_string, write_string},
-    config::get_config,
     ipc::kawari::CustomIpcSegment,
     packet::encryption::decrypt,
 };
@@ -178,11 +177,6 @@ struct Packet<T: ReadWriteIpcSegment> {
     segments: Vec<PacketSegment<T>>,
 }
 
-fn dump(msg: &str, data: &[u8]) {
-    write("packet.bin", data).unwrap();
-    tracing::warn!("{msg} Dumped to packet.bin.");
-}
-
 // temporary
 /// State needed for each connection between the client & server, containing various things like the compressor and encryption keys.
 pub struct PacketState {
@@ -207,11 +201,6 @@ pub fn parse_packet<T: ReadWriteIpcSegment>(
         Ok(packet) => (packet.segments, packet.header.connection_type),
         Err(err) => {
             tracing::error!("{err}");
-
-            let config = get_config();
-            if config.packet_debugging {
-                dump("Failed to parse packet!", data);
-            }
 
             (Vec::new(), ConnectionType::None)
         }

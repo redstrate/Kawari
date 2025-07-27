@@ -3,10 +3,7 @@ use std::io::Cursor;
 
 use binrw::{BinRead, BinResult};
 
-use crate::{
-    config::get_config,
-    packet::{PacketHeader, PacketSegment},
-};
+use crate::packet::{PacketHeader, PacketSegment};
 
 use super::{
     IPC_HEADER_SIZE, PacketState, ReadWriteIpcSegment, ScramblerKeys, SegmentData,
@@ -50,11 +47,6 @@ pub(crate) fn decompress<T: ReadWriteIpcSegment>(
     }
 
     let mut cursor = Cursor::new(&data);
-
-    let config = get_config();
-    if config.packet_debugging {
-        std::fs::write("decompressed.bin", &data).unwrap();
-    }
 
     for _ in 0..header.segment_count {
         let current_position = cursor.position();
