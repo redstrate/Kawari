@@ -84,7 +84,7 @@ async fn verify_session(
     }
 
     let config = get_config();
-    if !config.supports_platform(&platform) {
+    if !config.patch.supports_platform(&platform) {
         return StatusCode::INTERNAL_SERVER_ERROR.into_response();
     }
 
@@ -156,7 +156,7 @@ async fn verify_boot(
     }
 
     let config = get_config();
-    if !config.supports_platform(&platform) {
+    if !config.patch.supports_platform(&platform) {
         tracing::warn!("Invalid platform! {platform}");
         return StatusCode::INTERNAL_SERVER_ERROR.into_response();
     }
@@ -177,12 +177,6 @@ async fn verify_boot(
 
     if config.enforce_validity_checks {
         tracing::info!("Verifying boot components for {platform} {channel} {boot_version}...");
-
-        let config = get_config();
-        if !config.supports_platform(&platform) {
-            tracing::warn!("Invalid platform! {platform}");
-            return StatusCode::INTERNAL_SERVER_ERROR.into_response();
-        }
 
         let actual_boot_version = boot_version.split("?time").collect::<Vec<&str>>()[0];
         let boot_version = Version(actual_boot_version);

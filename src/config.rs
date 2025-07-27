@@ -134,6 +134,8 @@ pub struct PatchConfig {
     pub patches_location: String,
     pub game_server_name: String,
     pub boot_server_name: String,
+    #[serde(default = "PatchConfig::default_supported_platforms")]
+    pub supported_platforms: Vec<String>,
 }
 
 impl Default for PatchConfig {
@@ -145,6 +147,7 @@ impl Default for PatchConfig {
             patches_location: "patches".to_string(),
             boot_server_name: "patch-bootver.ffxiv.localhost".to_string(),
             game_server_name: "patch-gamever.ffxiv.localhost".to_string(),
+            supported_platforms: Self::default_supported_platforms(),
         }
     }
 }
@@ -156,6 +159,14 @@ impl PatchConfig {
             IpAddr::from_str(&self.listen_address).expect("Invalid IP address format in config!"),
             self.port,
         ))
+    }
+
+    fn default_supported_platforms() -> Vec<String> {
+        vec!["win32".to_string()]
+    }
+
+    pub fn supports_platform(&self, platform: &String) -> bool {
+        self.supported_platforms.contains(platform)
     }
 }
 
@@ -385,9 +396,6 @@ pub struct FilesystemConfig {
 /// Settings that affect all servers belong here.
 #[derive(Serialize, Deserialize)]
 pub struct Config {
-    #[serde(default = "default_supported_platforms")]
-    pub supported_platforms: Vec<String>,
-
     #[serde(default)]
     pub filesystem: FilesystemConfig,
 
@@ -426,7 +434,6 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Self {
         Self {
-            supported_platforms: default_supported_platforms(),
             filesystem: FilesystemConfig::default(),
             admin: AdminConfig::default(),
             frontier: FrontierConfig::default(),
@@ -443,17 +450,9 @@ impl Default for Config {
 }
 
 impl Config {
-    pub fn supports_platform(&self, platform: &String) -> bool {
-        self.supported_platforms.contains(platform)
-    }
-
     fn default_enforce_validity_checks() -> bool {
         true
     }
-}
-
-fn default_supported_platforms() -> Vec<String> {
-    vec!["win32".to_string()]
 }
 
 pub fn get_config() -> Config {
