@@ -8,15 +8,17 @@ use serde::{Deserialize, Serialize};
 /// Configuration for the admin server.
 #[derive(Serialize, Deserialize)]
 pub struct AdminConfig {
+    #[serde(default = "AdminConfig::default_port")]
     pub port: u16,
+    #[serde(default = "AdminConfig::default_listen_address")]
     pub listen_address: String,
 }
 
 impl Default for AdminConfig {
     fn default() -> Self {
         Self {
-            port: 5800,
-            listen_address: "0.0.0.0".to_string(),
+            port: Self::default_port(),
+            listen_address: Self::default_listen_address(),
         }
     }
 }
@@ -29,24 +31,36 @@ impl AdminConfig {
             self.port,
         ))
     }
+
+    fn default_port() -> u16 {
+        5800
+    }
+
+    fn default_listen_address() -> String {
+        "0.0.0.0".to_string()
+    }
 }
 
 /// Configuration for the frontier server.
 #[derive(Serialize, Deserialize)]
 pub struct FrontierConfig {
+    #[serde(default = "FrontierConfig::default_port")]
     pub port: u16,
+    #[serde(default = "FrontierConfig::default_listen_address")]
     pub listen_address: String,
+    #[serde(default = "FrontierConfig::default_worlds_open")]
     pub worlds_open: bool,
+    #[serde(default = "FrontierConfig::default_login_open")]
     pub login_open: bool,
 }
 
 impl Default for FrontierConfig {
     fn default() -> Self {
         Self {
-            port: 5857,
-            listen_address: "0.0.0.0".to_string(),
-            worlds_open: true,
-            login_open: true,
+            port: Self::default_port(),
+            listen_address: Self::default_listen_address(),
+            worlds_open: Self::default_worlds_open(),
+            login_open: Self::default_login_open(),
         }
     }
 }
@@ -59,20 +73,38 @@ impl FrontierConfig {
             self.port,
         ))
     }
+
+    fn default_port() -> u16 {
+        5857
+    }
+
+    fn default_listen_address() -> String {
+        "0.0.0.0".to_string()
+    }
+
+    fn default_worlds_open() -> bool {
+        true
+    }
+
+    fn default_login_open() -> bool {
+        true
+    }
 }
 
 /// Configuration for the lobby server.
 #[derive(Serialize, Deserialize)]
 pub struct LobbyConfig {
+    #[serde(default = "LobbyConfig::default_port")]
     pub port: u16,
+    #[serde(default = "LobbyConfig::default_listen_address")]
     pub listen_address: String,
 }
 
 impl Default for LobbyConfig {
     fn default() -> Self {
         Self {
-            port: 7000,
-            listen_address: "0.0.0.0".to_string(),
+            port: Self::default_port(),
+            listen_address: Self::default_listen_address(),
         }
     }
 }
@@ -85,23 +117,34 @@ impl LobbyConfig {
             self.port,
         ))
     }
+
+    fn default_port() -> u16 {
+        7000
+    }
+
+    fn default_listen_address() -> String {
+        "0.0.0.0".to_string()
+    }
 }
 
 /// Configuration for the login server.
 #[derive(Serialize, Deserialize)]
 pub struct LoginConfig {
+    #[serde(default = "LoginConfig::default_port")]
     pub port: u16,
+    #[serde(default = "LoginConfig::default_listen_address")]
     pub listen_address: String,
     /// Public-facing domain of the server.
+    #[serde(default = "LoginConfig::default_server_name")]
     pub server_name: String,
 }
 
 impl Default for LoginConfig {
     fn default() -> Self {
         Self {
-            port: 6700,
-            listen_address: "0.0.0.0".to_string(),
-            server_name: "ffxiv-login.square.localhost".to_string(),
+            port: Self::default_port(),
+            listen_address: Self::default_listen_address(),
+            server_name: Self::default_server_name(),
         }
     }
 }
@@ -114,15 +157,30 @@ impl LoginConfig {
             self.port,
         ))
     }
+
+    fn default_port() -> u16 {
+        6700
+    }
+
+    fn default_listen_address() -> String {
+        "0.0.0.0".to_string()
+    }
+
+    fn default_server_name() -> String {
+        "ffxiv-login.square.localhost".to_string()
+    }
 }
 
 /// Configuration for the patch server.
 #[derive(Serialize, Deserialize)]
 pub struct PatchConfig {
+    #[serde(default = "PatchConfig::default_port")]
     pub port: u16,
+    #[serde(default = "PatchConfig::default_listen_address")]
     pub listen_address: String,
     /// Publicly accessible URL to download patches from.
     /// For example, "patch-dl.ffxiv.localhost". Patch files must be served so they're accessible as: "http://patch-dl.ffxiv.localhost/game/ex4/somepatchfilename.patch"
+    #[serde(default = "PatchConfig::default_patch_dl_url")]
     pub patch_dl_url: String,
     /// Location of the patches directory on disk. Must be setup like so:
     /// ```ignore
@@ -131,8 +189,11 @@ pub struct PatchConfig {
     ///     ex1/
     /// ...
     /// ```
+    #[serde(default = "PatchConfig::default_patches_location")]
     pub patches_location: String,
+    #[serde(default = "PatchConfig::default_game_server_name")]
     pub game_server_name: String,
+    #[serde(default = "PatchConfig::default_boot_server_name")]
     pub boot_server_name: String,
     #[serde(default = "PatchConfig::default_supported_platforms")]
     pub supported_platforms: Vec<String>,
@@ -141,12 +202,12 @@ pub struct PatchConfig {
 impl Default for PatchConfig {
     fn default() -> Self {
         Self {
-            port: 6900,
-            listen_address: "0.0.0.0".to_string(),
-            patch_dl_url: "patch-dl.ffxiv.localhost".to_string(),
-            patches_location: "patches".to_string(),
-            boot_server_name: "patch-bootver.ffxiv.localhost".to_string(),
-            game_server_name: "patch-gamever.ffxiv.localhost".to_string(),
+            port: Self::default_port(),
+            listen_address: Self::default_listen_address(),
+            patch_dl_url: Self::default_patch_dl_url(),
+            patches_location: Self::default_patches_location(),
+            boot_server_name: Self::default_boot_server_name(),
+            game_server_name: Self::default_game_server_name(),
             supported_platforms: Self::default_supported_platforms(),
         }
     }
@@ -161,6 +222,30 @@ impl PatchConfig {
         ))
     }
 
+    fn default_port() -> u16 {
+        6900
+    }
+
+    fn default_listen_address() -> String {
+        "0.0.0.0".to_string()
+    }
+
+    fn default_patch_dl_url() -> String {
+        "patch-dl.ffxiv.localhost".to_string()
+    }
+
+    fn default_patches_location() -> String {
+        "patches".to_string()
+    }
+
+    fn default_boot_server_name() -> String {
+        "patch-bootver.ffxiv.localhost".to_string()
+    }
+
+    fn default_game_server_name() -> String {
+        "patch-gamever.ffxiv.localhost".to_string()
+    }
+
     fn default_supported_platforms() -> Vec<String> {
         vec!["win32".to_string()]
     }
@@ -173,18 +258,21 @@ impl PatchConfig {
 /// Configuration for the web server.
 #[derive(Serialize, Deserialize)]
 pub struct WebConfig {
+    #[serde(default = "WebConfig::default_port")]
     pub port: u16,
+    #[serde(default = "WebConfig::default_listen_address")]
     pub listen_address: String,
     /// Public-facing domain of the server.
+    #[serde(default = "WebConfig::default_server_name")]
     pub server_name: String,
 }
 
 impl Default for WebConfig {
     fn default() -> Self {
         Self {
-            port: 5801,
-            listen_address: "0.0.0.0".to_string(),
-            server_name: "ffxiv.localhost".to_string(),
+            port: Self::default_port(),
+            listen_address: Self::default_listen_address(),
+            server_name: Self::default_server_name(),
         }
     }
 }
@@ -196,6 +284,18 @@ impl WebConfig {
             IpAddr::from_str(&self.listen_address).expect("Invalid IP address format in config!"),
             self.port,
         ))
+    }
+
+    fn default_port() -> u16 {
+        5801
+    }
+
+    fn default_listen_address() -> String {
+        "0.0.0.0".to_string()
+    }
+
+    fn default_server_name() -> String {
+        "ffxiv.localhost".to_string()
     }
 }
 
@@ -319,17 +419,20 @@ impl WorldConfig {
 /// Configuration for the launcher server.
 #[derive(Serialize, Deserialize)]
 pub struct LauncherConfig {
+    #[serde(default = "LauncherConfig::default_port")]
     pub port: u16,
+    #[serde(default = "LauncherConfig::default_listen_address")]
     pub listen_address: String,
+    #[serde(default = "LauncherConfig::default_server_name")]
     pub server_name: String,
 }
 
 impl Default for LauncherConfig {
     fn default() -> Self {
         Self {
-            port: 5802,
-            listen_address: "0.0.0.0".to_string(),
-            server_name: "launcher.ffxiv.localhost".to_string(),
+            port: Self::default_port(),
+            listen_address: Self::default_listen_address(),
+            server_name: Self::default_server_name(),
         }
     }
 }
@@ -342,20 +445,34 @@ impl LauncherConfig {
             self.port,
         ))
     }
+
+    fn default_port() -> u16 {
+        5802
+    }
+
+    fn default_listen_address() -> String {
+        "0.0.0.0".to_string()
+    }
+
+    fn default_server_name() -> String {
+        "launcher.ffxiv.localhost".to_string()
+    }
 }
 
 /// Configuration for the save data bank server.
 #[derive(Serialize, Deserialize)]
 pub struct SaveDataBankConfig {
+    #[serde(default = "SaveDataBankConfig::default_port")]
     pub port: u16,
+    #[serde(default = "SaveDataBankConfig::default_listen_address")]
     pub listen_address: String,
 }
 
 impl Default for SaveDataBankConfig {
     fn default() -> Self {
         Self {
-            port: 5803,
-            listen_address: "0.0.0.0".to_string(),
+            port: Self::default_port(),
+            listen_address: Self::default_listen_address(),
         }
     }
 }
@@ -367,6 +484,14 @@ impl SaveDataBankConfig {
             IpAddr::from_str(&self.listen_address).expect("Invalid IP address format in config!"),
             self.port,
         ))
+    }
+
+    fn default_port() -> u16 {
+        5803
+    }
+
+    fn default_listen_address() -> String {
+        "0.0.0.0".to_string()
     }
 }
 
