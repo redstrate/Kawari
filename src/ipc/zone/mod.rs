@@ -127,23 +127,6 @@ impl ReadWriteIpcSegment for ClientZoneIpcSegment {
     }
 }
 
-// TODO: make generic
-impl Default for ClientZoneIpcSegment {
-    fn default() -> Self {
-        Self {
-            unk1: 0x14,
-            unk2: 0,
-            op_code: ClientZoneIpcType::InitRequest,
-            option: 0,
-            timestamp: 0,
-            data: ClientZoneIpcData::InitRequest {
-                unk1: String::default(),
-                unk2: String::default(),
-            },
-        }
-    }
-}
-
 pub type ServerZoneIpcSegment = IpcSegment<ServerZoneIpcType, ServerZoneIpcData>;
 
 impl ReadWriteIpcSegment for ServerZoneIpcSegment {
@@ -164,20 +147,6 @@ impl ReadWriteIpcSegment for ServerZoneIpcSegment {
 
     fn get_opcode(&self) -> u16 {
         self.op_code.get_opcode()
-    }
-}
-
-// TODO: make generic
-impl Default for ServerZoneIpcSegment {
-    fn default() -> Self {
-        Self {
-            unk1: 0x14,
-            unk2: 0,
-            op_code: ServerZoneIpcType::InitZone,
-            option: 0,
-            timestamp: 0,
-            data: ServerZoneIpcData::InitZone(InitZone::default()),
-        }
     }
 }
 
@@ -623,6 +592,14 @@ pub enum ServerZoneIpcData {
     },
 }
 
+impl Default for ServerZoneIpcData {
+    fn default() -> Self {
+        Self::Unknown {
+            unk: Vec::default(),
+        }
+    }
+}
+
 #[binrw]
 #[br(import(magic: &ClientZoneIpcType, size: &u32))]
 #[derive(Debug, Clone)]
@@ -841,6 +818,14 @@ pub enum ClientZoneIpcData {
         #[br(count = size - 32)]
         unk: Vec<u8>,
     },
+}
+
+impl Default for ClientZoneIpcData {
+    fn default() -> Self {
+        Self::Unknown {
+            unk: Vec::default(),
+        }
+    }
 }
 
 #[cfg(test)]
@@ -1224,12 +1209,9 @@ mod tests {
             let mut cursor = Cursor::new(Vec::new());
 
             let ipc_segment = ServerZoneIpcSegment {
-                unk1: 0,
-                unk2: 0,
                 op_code: opcode.clone(), // doesn't matter for this test
-                option: 0,
-                timestamp: 0,
                 data: data.clone(),
+                ..Default::default()
             };
             ipc_segment.write_le(&mut cursor).unwrap();
 
@@ -1416,12 +1398,9 @@ mod tests {
             let mut cursor = Cursor::new(Vec::new());
 
             let ipc_segment = ClientZoneIpcSegment {
-                unk1: 0,
-                unk2: 0,
                 op_code: opcode.clone(), // doesn't matter for this test
-                option: 0,
-                timestamp: 0,
                 data: data.clone(),
+                ..Default::default()
             };
             ipc_segment.write_le(&mut cursor).unwrap();
 

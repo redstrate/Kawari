@@ -327,14 +327,11 @@ async fn main() {
                                     // NOTE: This is NOT the ideal solution. I theorize the lobby server has it's own records with this information.
                                     {
                                         let ipc_segment = CustomIpcSegment {
-                                            unk1: 0,
-                                            unk2: 0,
                                             op_code: CustomIpcType::GetActorId,
-                                            option: 0,
-                                            timestamp: 0,
                                             data: CustomIpcData::GetActorId {
                                                 content_id: *content_id,
                                             },
+                                            ..Default::default()
                                         };
 
                                         let response_segment =

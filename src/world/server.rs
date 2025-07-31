@@ -11,7 +11,7 @@ use std::{
 use tokio::sync::mpsc::Receiver;
 
 use crate::{
-    common::{CustomizeData, GameData, ObjectId, ObjectTypeId, Position, timestamp_secs},
+    common::{CustomizeData, GameData, ObjectId, ObjectTypeId, Position},
     config::get_config,
     ipc::zone::{
         ActorControl, ActorControlCategory, ActorControlSelf, ActorControlTarget, BattleNpcSubKind,
@@ -1054,12 +1054,9 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                                 segment_type: SegmentType::Ipc,
                                 data: SegmentData::Ipc {
                                     data: ServerZoneIpcSegment {
-                                        unk1: 20,
-                                        unk2: 0,
                                         op_code: ServerZoneIpcType::Unknown(opcode),
-                                        option: 0,
-                                        timestamp: timestamp_secs(),
                                         data: ServerZoneIpcData::Unknown { unk: ipc_data },
+                                        ..Default::default()
                                     },
                                 },
                             });

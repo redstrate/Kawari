@@ -21,23 +21,6 @@ impl ReadWriteIpcSegment for ServerChatIpcSegment {
     }
 }
 
-// TODO: make generic
-impl Default for ServerChatIpcSegment {
-    fn default() -> Self {
-        Self {
-            unk1: 0x14,
-            unk2: 0,
-            op_code: ServerChatIpcType::LoginReply,
-            option: 0,
-            timestamp: 0,
-            data: ServerChatIpcData::LoginReply {
-                timestamp: 0,
-                sid: 0,
-            },
-        }
-    }
-}
-
 pub type ClientChatIpcSegment = IpcSegment<ClientChatIpcType, ClientChatIpcData>;
 
 impl ReadWriteIpcSegment for ClientChatIpcSegment {
@@ -54,20 +37,6 @@ impl ReadWriteIpcSegment for ClientChatIpcSegment {
     }
 }
 
-// TODO: make generic
-impl Default for ClientChatIpcSegment {
-    fn default() -> Self {
-        Self {
-            unk1: 0x14,
-            unk2: 0,
-            op_code: ClientChatIpcType::Unknown(0),
-            option: 0,
-            timestamp: 0,
-            data: ClientChatIpcData::Unknown { unk: Vec::new() },
-        }
-    }
-}
-
 #[binrw]
 #[br(import(magic: &ServerChatIpcType, size: &u32))]
 #[derive(Debug, Clone)]
@@ -81,6 +50,14 @@ pub enum ServerChatIpcData {
     },
 }
 
+impl Default for ServerChatIpcData {
+    fn default() -> Self {
+        Self::Unknown {
+            unk: Vec::default(),
+        }
+    }
+}
+
 #[binrw]
 #[br(import(_magic: &ClientChatIpcType, size: &u32))]
 #[derive(Debug, Clone)]
@@ -89,6 +66,14 @@ pub enum ClientChatIpcData {
         #[br(count = size - 32)]
         unk: Vec<u8>,
     },
+}
+
+impl Default for ClientChatIpcData {
+    fn default() -> Self {
+        Self::Unknown {
+            unk: Vec::default(),
+        }
+    }
 }
 
 #[cfg(test)]
@@ -114,12 +99,9 @@ mod tests {
             let mut cursor = Cursor::new(Vec::new());
 
             let ipc_segment = ServerChatIpcSegment {
-                unk1: 0,
-                unk2: 0,
                 op_code: opcode.clone(),
-                option: 0,
-                timestamp: 0,
                 data: ipc.clone(),
+                ..Default::default()
             };
             ipc_segment.write_le(&mut cursor).unwrap();
 

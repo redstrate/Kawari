@@ -265,7 +265,6 @@ impl ZoneConnection {
         {
             let ipc = ServerZoneIpcSegment {
                 op_code: ServerZoneIpcType::Warp,
-                timestamp: timestamp_secs(),
                 data: ServerZoneIpcData::Warp(Warp {
                     position,
                     ..Default::default()
@@ -286,7 +285,6 @@ impl ZoneConnection {
     pub async fn set_actor_position(&mut self, actor_id: u32, position: Position, rotation: f32) {
         let ipc = ServerZoneIpcSegment {
             op_code: ServerZoneIpcType::Move,
-            timestamp: timestamp_secs(),
             data: ServerZoneIpcData::Move(Move {
                 rotation,
                 flag1: 128,
@@ -318,7 +316,6 @@ impl ZoneConnection {
 
         let ipc = ServerZoneIpcSegment {
             op_code: ServerZoneIpcType::NpcSpawn,
-            timestamp: timestamp_secs(),
             data: ServerZoneIpcData::NpcSpawn(spawn),
             ..Default::default()
         };
@@ -340,7 +337,6 @@ impl ZoneConnection {
 
             let ipc = ServerZoneIpcSegment {
                 op_code: ServerZoneIpcType::Delete,
-                timestamp: timestamp_secs(),
                 data: ServerZoneIpcData::Delete {
                     spawn_index: actor.spawn_index as u8,
                     actor_id,
@@ -372,7 +368,6 @@ impl ZoneConnection {
 
             ipc = ServerZoneIpcSegment {
                 op_code: ServerZoneIpcType::UpdateClassInfo,
-                timestamp: timestamp_secs(),
                 data: ServerZoneIpcData::UpdateClassInfo(UpdateClassInfo {
                     class_id: self.player_data.classjob_id,
                     synced_level: self.current_level(&game_data) as u16,
@@ -419,7 +414,6 @@ impl ZoneConnection {
         {
             let ipc = ServerZoneIpcSegment {
                 op_code: ServerZoneIpcType::PrepareZoning,
-                timestamp: timestamp_secs(),
                 data: ServerZoneIpcData::PrepareZoning {
                     log_message: 0,
                     target_zone: self.player_data.zone_id,
@@ -497,7 +491,6 @@ impl ZoneConnection {
 
             let ipc = ServerZoneIpcSegment {
                 op_code: ServerZoneIpcType::InitZone,
-                timestamp: timestamp_secs(),
                 data: ServerZoneIpcData::InitZone(InitZone {
                     territory_type: self.zone.as_ref().unwrap().id,
                     weather_id: self.weather_id,
@@ -601,7 +594,6 @@ impl ZoneConnection {
 
         let ipc = ServerZoneIpcSegment {
             op_code: ServerZoneIpcType::WeatherId,
-            timestamp: timestamp_secs(),
             data: ServerZoneIpcData::WeatherId(WeatherChange {
                 weather_id: new_weather_id,
                 transistion_time: 1.0,
@@ -661,7 +653,6 @@ impl ZoneConnection {
 
                     let ipc = ServerZoneIpcSegment {
                         op_code: ServerZoneIpcType::CurrencyCrystalInfo,
-                        timestamp: timestamp_secs(),
                         data: ServerZoneIpcData::CurrencyCrystalInfo(CurrencyInfo {
                             sequence: sequence as u32,
                             container: container_type,
@@ -696,7 +687,6 @@ impl ZoneConnection {
 
                     let ipc = ServerZoneIpcSegment {
                         op_code: ServerZoneIpcType::UpdateItem,
-                        timestamp: timestamp_secs(),
                         data: ServerZoneIpcData::UpdateItem(ItemInfo {
                             sequence: sequence as u32,
                             container: container_type,
@@ -728,7 +718,6 @@ impl ZoneConnection {
             {
                 let ipc = ServerZoneIpcSegment {
                     op_code: ServerZoneIpcType::ContainerInfo,
-                    timestamp: timestamp_secs(),
                     data: ServerZoneIpcData::ContainerInfo(ContainerInfo {
                         container: container_type,
                         num_items: container.num_items(),
@@ -762,7 +751,6 @@ impl ZoneConnection {
         ] {
             let ipc = ServerZoneIpcSegment {
                 op_code: ServerZoneIpcType::ContainerInfo,
-                timestamp: timestamp_secs(),
                 data: ServerZoneIpcData::ContainerInfo(ContainerInfo {
                     container: container_type,
                     num_items: 0,
@@ -786,7 +774,6 @@ impl ZoneConnection {
     pub async fn update_equip(&mut self, actor_id: u32, main_weapon_id: u64, model_ids: [u32; 10]) {
         let ipc = ServerZoneIpcSegment {
             op_code: ServerZoneIpcType::Equip,
-            timestamp: timestamp_secs(),
             data: ServerZoneIpcData::Equip(Equip {
                 main_weapon_id,
                 model_ids,
@@ -807,7 +794,6 @@ impl ZoneConnection {
     pub async fn send_message(&mut self, message: &str) {
         let ipc = ServerZoneIpcSegment {
             op_code: ServerZoneIpcType::ServerChatMessage,
-            timestamp: timestamp_secs(),
             data: ServerZoneIpcData::ServerChatMessage {
                 message: message.to_string(),
                 param: 0,
@@ -828,7 +814,6 @@ impl ZoneConnection {
         self.player_data.gm_invisible = invisible;
         let ipc = ServerZoneIpcSegment {
             op_code: ServerZoneIpcType::ActorControlSelf,
-            timestamp: timestamp_secs(),
             data: ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
                 category: ActorControlCategory::ToggleInvisibility { invisible },
             }),
@@ -1078,7 +1063,6 @@ impl ZoneConnection {
         if let Some((op_code, data)) = scene.package_scene() {
             let ipc = ServerZoneIpcSegment {
                 op_code,
-                timestamp: timestamp_secs(),
                 data,
                 ..Default::default()
             };
@@ -1106,7 +1090,6 @@ impl ZoneConnection {
         {
             let ipc = ServerZoneIpcSegment {
                 op_code: ServerZoneIpcType::EventFinish,
-                timestamp: timestamp_secs(),
                 data: ServerZoneIpcData::EventFinish {
                     handler_id,
                     event: self.event_type,
@@ -1137,7 +1120,6 @@ impl ZoneConnection {
     pub async fn send_unk18(&mut self, unk: [u8; 16]) {
         let ipc = ServerZoneIpcSegment {
             op_code: ServerZoneIpcType::Unk18,
-            timestamp: timestamp_secs(),
             data: ServerZoneIpcData::Unk18 { unk },
             ..Default::default()
         };
@@ -1154,7 +1136,6 @@ impl ZoneConnection {
     pub async fn send_inventory_ack(&mut self, sequence: u32, action_type: u16) {
         let ipc = ServerZoneIpcSegment {
             op_code: ServerZoneIpcType::InventoryActionAck,
-            timestamp: timestamp_secs(),
             data: ServerZoneIpcData::InventoryActionAck {
                 sequence,
                 action_type,
@@ -1183,7 +1164,6 @@ impl ZoneConnection {
     ) {
         let ipc = ServerZoneIpcSegment {
             op_code: ServerZoneIpcType::ShopLogMessage,
-            timestamp: timestamp_secs(),
             data: ServerZoneIpcData::ShopLogMessage {
                 event_id,
                 message_type: message_type as u32,
@@ -1213,7 +1193,6 @@ impl ZoneConnection {
     ) {
         let ipc = ServerZoneIpcSegment {
             op_code: ServerZoneIpcType::UpdateInventorySlot,
-            timestamp: timestamp_secs(),
             data: ServerZoneIpcData::UpdateInventorySlot {
                 sequence: self.player_data.shop_sequence,
                 dst_storage_id,
@@ -1239,7 +1218,6 @@ impl ZoneConnection {
     pub async fn send_inventory_transaction_finish(&mut self, unk1: u32, unk2: u32) {
         let ipc = ServerZoneIpcSegment {
             op_code: ServerZoneIpcType::InventoryTransactionFinish,
-            timestamp: timestamp_secs(),
             data: ServerZoneIpcData::InventoryTransactionFinish {
                 sequence: self.player_data.item_sequence,
                 sequence_repeat: self.player_data.item_sequence,
@@ -1268,7 +1246,6 @@ impl ZoneConnection {
         {
             let ipc = ServerZoneIpcSegment {
                 op_code: ServerZoneIpcType::LogOutComplete,
-                timestamp: timestamp_secs(),
                 data: ServerZoneIpcData::LogOutComplete { unk: [0; 8] },
                 ..Default::default()
             };
@@ -1296,7 +1273,6 @@ impl ZoneConnection {
 
                 ipc = ServerZoneIpcSegment {
                     op_code: ServerZoneIpcType::StatusEffectList,
-                    timestamp: timestamp_secs(),
                     data: ServerZoneIpcData::StatusEffectList(StatusEffectList {
                         statues: list,
                         classjob_id: self.player_data.classjob_id,
@@ -1326,7 +1302,6 @@ impl ZoneConnection {
     pub async fn update_hp_mp(&mut self, actor_id: ObjectId, hp: u32, mp: u16) {
         let ipc = ServerZoneIpcSegment {
             op_code: ServerZoneIpcType::UpdateHpMpTp,
-            timestamp: timestamp_secs(),
             data: ServerZoneIpcData::UpdateHpMpTp { hp, mp, unk: 0 },
             ..Default::default()
         };
@@ -1351,7 +1326,6 @@ impl ZoneConnection {
     pub async fn actor_control_self(&mut self, actor_control: ActorControlSelf) {
         let ipc = ServerZoneIpcSegment {
             op_code: ServerZoneIpcType::ActorControlSelf,
-            timestamp: timestamp_secs(),
             data: ServerZoneIpcData::ActorControlSelf(actor_control),
             ..Default::default()
         };
@@ -1368,7 +1342,6 @@ impl ZoneConnection {
     pub async fn actor_control(&mut self, actor_id: u32, actor_control: ActorControl) {
         let ipc = ServerZoneIpcSegment {
             op_code: ServerZoneIpcType::ActorControl,
-            timestamp: timestamp_secs(),
             data: ServerZoneIpcData::ActorControl(actor_control),
             ..Default::default()
         };
@@ -1390,7 +1363,6 @@ impl ZoneConnection {
 
         let ipc = ServerZoneIpcSegment {
             op_code: ServerZoneIpcType::ActorControlTarget,
-            timestamp: timestamp_secs(),
             data: ServerZoneIpcData::ActorControlTarget(actor_control),
             ..Default::default()
         };
@@ -1407,7 +1379,6 @@ impl ZoneConnection {
     pub async fn update_config(&mut self, actor_id: u32, config: Config) {
         let ipc = ServerZoneIpcSegment {
             op_code: ServerZoneIpcType::Config,
-            timestamp: timestamp_secs(),
             data: ServerZoneIpcData::Config(config),
             ..Default::default()
         };
@@ -1464,7 +1435,6 @@ impl ZoneConnection {
 
         let ipc = ServerZoneIpcSegment {
             op_code: ServerZoneIpcType::PlayerStats,
-            timestamp: timestamp_secs(),
             data: ServerZoneIpcData::PlayerStats(PlayerStats {
                 strength: attributes.strength,
                 dexterity: attributes.dexterity,
@@ -1547,7 +1517,6 @@ impl ZoneConnection {
 
                 let ipc = ServerZoneIpcSegment {
                     op_code: ServerZoneIpcType::ActionResult,
-                    timestamp: timestamp_secs(),
                     data: ServerZoneIpcData::ActionResult(ActionResult {
                         main_target: request.target,
                         target_id_again: request.target,
@@ -1617,7 +1586,6 @@ impl ZoneConnection {
 
                 let ipc = ServerZoneIpcSegment {
                     op_code: ServerZoneIpcType::EffectResult,
-                    timestamp: timestamp_secs(),
                     data: ServerZoneIpcData::EffectResult(EffectResult {
                         unk1: 1,
                         unk2: 776386,
@@ -1700,7 +1668,6 @@ impl ZoneConnection {
         {
             let ipc = ServerZoneIpcSegment {
                 op_code: ServerZoneIpcType::QuestActiveList,
-                timestamp: timestamp_secs(),
                 data: ServerZoneIpcData::QuestActiveList(QuestActiveList::default()),
                 ..Default::default()
             };
@@ -1718,7 +1685,6 @@ impl ZoneConnection {
         {
             let ipc = ServerZoneIpcSegment {
                 op_code: ServerZoneIpcType::QuestCompleteList,
-                timestamp: timestamp_secs(),
                 data: ServerZoneIpcData::QuestCompleteList {
                     completed_quests: self.player_data.unlocks.completed_quests.clone(),
                     unk2: vec![0xFF; 69],
@@ -1740,7 +1706,6 @@ impl ZoneConnection {
         {
             let ipc = ServerZoneIpcSegment {
                 op_code: ServerZoneIpcType::LevequestCompleteList,
-                timestamp: timestamp_secs(),
                 data: ServerZoneIpcData::LevequestCompleteList {
                     completed_levequests: vec![0xFF; COMPLETED_LEVEQUEST_BITMASK_SIZE],
                     unk2: Vec::default(),
@@ -1863,7 +1828,6 @@ impl ZoneConnection {
         {
             let ipc = ServerZoneIpcSegment {
                 op_code: ServerZoneIpcType::EventStart,
-                timestamp: timestamp_secs(),
                 data: ServerZoneIpcData::EventStart(EventStart {
                     target_id: actor_id,
                     event_id,
@@ -1911,7 +1875,6 @@ impl ZoneConnection {
     pub async fn send_arbitrary_packet(&mut self, op_code: u16, data: Vec<u8>) {
         let ipc = ServerZoneIpcSegment {
             op_code: ServerZoneIpcType::Unknown(op_code),
-            timestamp: timestamp_secs(),
             data: ServerZoneIpcData::Unknown { unk: data },
             ..Default::default()
         };

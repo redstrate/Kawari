@@ -219,8 +219,9 @@ mod tests {
     fn test_packet_sizes() {
         #[binrw]
         #[brw(repr = u16)]
-        #[derive(Clone, PartialEq, Debug)]
+        #[derive(Clone, PartialEq, Debug, Default)]
         enum ClientLobbyIpcType {
+            #[default]
             Dummy = 0x1,
         }
 
@@ -229,6 +230,12 @@ mod tests {
         #[derive(Debug, Clone)]
         enum ClientLobbyIpcData {
             Dummy(),
+        }
+
+        impl Default for ClientLobbyIpcData {
+            fn default() -> Self {
+                Self::Dummy()
+            }
         }
 
         type ClientLobbyIpcSegment = IpcSegment<ClientLobbyIpcType, ClientLobbyIpcData>;

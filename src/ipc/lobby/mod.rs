@@ -40,27 +40,6 @@ impl ReadWriteIpcSegment for ClientLobbyIpcSegment {
     }
 }
 
-// TODO: make generic
-impl Default for ClientLobbyIpcSegment {
-    fn default() -> Self {
-        Self {
-            unk1: 0x14,
-            unk2: 0,
-            op_code: ClientLobbyIpcType::LoginEx,
-            option: 0,
-            timestamp: 0,
-            data: ClientLobbyIpcData::LoginEx {
-                sequence: 0,
-                session_id: String::new(),
-                version_info: String::new(),
-                unk1: 0,
-                timestamp: 0,
-                unk2: 0,
-            },
-        }
-    }
-}
-
 pub type ServerLobbyIpcSegment = IpcSegment<ServerLobbyIpcType, ServerLobbyIpcData>;
 
 impl ReadWriteIpcSegment for ServerLobbyIpcSegment {
@@ -74,20 +53,6 @@ impl ReadWriteIpcSegment for ServerLobbyIpcSegment {
 
     fn get_opcode(&self) -> u16 {
         self.op_code.get_opcode()
-    }
-}
-
-// TODO: make generic
-impl Default for ServerLobbyIpcSegment {
-    fn default() -> Self {
-        Self {
-            unk1: 0x14,
-            unk2: 0,
-            op_code: ServerLobbyIpcType::NackReply,
-            option: 0,
-            timestamp: 0,
-            data: ServerLobbyIpcData::NackReply(NackReply::default()),
-        }
     }
 }
 
@@ -154,6 +119,14 @@ pub enum ClientLobbyIpcData {
     },
 }
 
+impl Default for ClientLobbyIpcData {
+    fn default() -> Self {
+        Self::Unknown {
+            unk: Vec::default(),
+        }
+    }
+}
+
 #[binrw]
 #[br(import(magic: &ServerLobbyIpcType, size: &u32))]
 #[derive(Debug, Clone)]
@@ -215,6 +188,14 @@ pub enum ServerLobbyIpcData {
     },
 }
 
+impl Default for ServerLobbyIpcData {
+    fn default() -> Self {
+        Self::Unknown {
+            unk: Vec::default(),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::io::Cursor;
@@ -274,12 +255,9 @@ mod tests {
             let mut cursor = Cursor::new(Vec::new());
 
             let ipc_segment = ServerLobbyIpcSegment {
-                unk1: 0,
-                unk2: 0,
                 op_code: opcode.clone(),
-                option: 0,
-                timestamp: 0,
                 data: ipc.clone(),
+                ..Default::default()
             };
             ipc_segment.write_le(&mut cursor).unwrap();
 
@@ -348,12 +326,9 @@ mod tests {
             let mut cursor = Cursor::new(Vec::new());
 
             let ipc_segment = ClientLobbyIpcSegment {
-                unk1: 0,
-                unk2: 0,
                 op_code: opcode.clone(),
-                option: 0,
-                timestamp: 0,
                 data: ipc.clone(),
+                ..Default::default()
             };
             ipc_segment.write_le(&mut cursor).unwrap();
 

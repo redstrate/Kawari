@@ -263,15 +263,12 @@ async fn upload_character_backup(
 
             if name == "charbak" {
                 let ipc_segment = CustomIpcSegment {
-                    unk1: 0,
-                    unk2: 0,
                     op_code: CustomIpcType::ImportCharacter,
-                    option: 0,
-                    timestamp: 0,
                     data: CustomIpcData::ImportCharacter {
                         service_account_id,
                         path: "temp.zip".to_string(),
                     },
+                    ..Default::default()
                 };
 
                 send_custom_world_packet(ipc_segment).await.unwrap();

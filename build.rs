@@ -50,6 +50,12 @@ fn main() {
             // end
             output_str.push_str("}\n\n");
 
+            output_str.push_str(&format!("impl Default for {key} {{\n"));
+            output_str.push_str("fn default () -> Self {\n");
+            output_str.push_str("Self::Unknown(0)\n");
+            output_str.push_str("}\n");
+            output_str.push_str("}\n");
+
             output_str.push_str(&format!("impl {key} {{\n"));
 
             // sizes

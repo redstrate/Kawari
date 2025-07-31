@@ -4,7 +4,6 @@ use tokio::net::TcpStream;
 
 use crate::{
     blowfish::Blowfish,
-    common::timestamp_secs,
     config::get_config,
     ipc::lobby::{DistRetainerInfo, NackReply},
     opcodes::ServerLobbyIpcType,
@@ -89,7 +88,6 @@ impl LobbyConnection {
 
         let ipc = ServerLobbyIpcSegment {
             op_code: ServerLobbyIpcType::LoginReply,
-            timestamp: timestamp_secs(),
             data: service_account_list,
             ..Default::default()
         };
@@ -128,7 +126,6 @@ impl LobbyConnection {
 
             let ipc = ServerLobbyIpcSegment {
                 op_code: ServerLobbyIpcType::DistWorldInfo,
-                timestamp: timestamp_secs(),
                 data: lobby_server_list,
                 ..Default::default()
             };
@@ -148,7 +145,6 @@ impl LobbyConnection {
 
             let ipc = ServerLobbyIpcSegment {
                 op_code: ServerLobbyIpcType::DistRetainerInfo,
-                timestamp: timestamp_secs(),
                 data: lobby_retainer_list,
                 ..Default::default()
             };
@@ -227,7 +223,6 @@ impl LobbyConnection {
 
                 let ipc = ServerLobbyIpcSegment {
                     op_code: ServerLobbyIpcType::ServiceLoginReply,
-                    timestamp: timestamp_secs(),
                     data: ServerLobbyIpcData::ServiceLoginReply(lobby_character_list),
                     ..Default::default()
                 };
@@ -257,7 +252,6 @@ impl LobbyConnection {
 
         let ipc = ServerLobbyIpcSegment {
             op_code: ServerLobbyIpcType::GameLoginReply,
-            timestamp: timestamp_secs(),
             data: enter_world,
             ..Default::default()
         };
@@ -281,7 +275,6 @@ impl LobbyConnection {
 
         let ipc = ServerLobbyIpcSegment {
             op_code: ServerLobbyIpcType::NackReply,
-            timestamp: timestamp_secs(),
             data: lobby_error,
             ..Default::default()
         };

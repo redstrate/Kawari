@@ -220,7 +220,6 @@ async fn client_loop(
                                             {
                                                 let ipc = ServerChatIpcSegment {
                                                     op_code: ServerChatIpcType::LoginReply,
-                                                    timestamp: timestamp_secs(),
                                                     data: ServerChatIpcData::LoginReply {
                                                         timestamp: 0,
                                                         sid: 0,
@@ -249,7 +248,6 @@ async fn client_loop(
                                                 {
                                                     let ipc = ServerZoneIpcSegment {
                                                         op_code: ServerZoneIpcType::InitResponse,
-                                                        timestamp: timestamp_secs(),
                                                         data: ServerZoneIpcData::InitResponse {
                                                             unk1: 0,
                                                             character_id: connection.player_data.actor_id,
@@ -297,7 +295,6 @@ async fn client_loop(
                                                 {
                                                     let ipc = ServerZoneIpcSegment {
                                                         op_code: ServerZoneIpcType::PlayerStatus,
-                                                        timestamp: timestamp_secs(),
                                                         data: ServerZoneIpcData::PlayerStatus(PlayerStatus {
                                                             content_id: connection.player_data.content_id,
                                                             // Disabled for now until the client stops freaking out
@@ -389,7 +386,6 @@ async fn client_loop(
                                                 {
                                                     let ipc = ServerZoneIpcSegment {
                                                         op_code: ServerZoneIpcType::PlayerSpawn,
-                                                        timestamp: timestamp_secs(),
                                                         data: ServerZoneIpcData::PlayerSpawn(PlayerSpawn {
                                                             account_id: connection.player_data.account_id,
                                                             content_id: connection.player_data.content_id,
@@ -432,7 +428,6 @@ async fn client_loop(
 
                                                         let ipc = ServerZoneIpcSegment {
                                                             op_code: ServerZoneIpcType::TitleList,
-                                                            timestamp: timestamp_secs(),
                                                             data: ServerZoneIpcData::TitleList {
                                                                 unlock_bitmask: [0xFF; TITLE_UNLOCK_BITMASK_SIZE]
                                                             },
@@ -487,7 +482,6 @@ async fn client_loop(
                                                     SocialListRequestType::Party => {
                                                         let ipc = ServerZoneIpcSegment {
                                                             op_code: ServerZoneIpcType::SocialList,
-                                                            timestamp: timestamp_secs(),
                                                             data: ServerZoneIpcData::SocialList(SocialList {
                                                                 request_type: request.request_type,
                                                                 sequence: request.count,
@@ -515,7 +509,6 @@ async fn client_loop(
                                                     SocialListRequestType::Friends => {
                                                         let ipc = ServerZoneIpcSegment {
                                                             op_code: ServerZoneIpcType::SocialList,
-                                                            timestamp: timestamp_secs(),
                                                             data: ServerZoneIpcData::SocialList(SocialList {
                                                                 request_type: request.request_type,
                                                                 sequence: request.count,
@@ -796,7 +789,6 @@ async fn client_loop(
                                                 // this is *usually* sent in response, but not always
                                                 let ipc = ServerZoneIpcSegment {
                                                     op_code: ServerZoneIpcType::PingSyncReply,
-                                                    timestamp: timestamp_secs(),
                                                     data: ServerZoneIpcData::PingSyncReply {
                                                         timestamp: *timestamp, // copied from here
                                                         transmission_interval: 333, // always this for some reason
@@ -854,7 +846,6 @@ async fn client_loop(
 
                                                     let ipc = ServerZoneIpcSegment {
                                                         op_code: ServerZoneIpcType::InventoryTransaction,
-                                                        timestamp: timestamp_secs(),
                                                         data: ServerZoneIpcData::InventoryTransaction {
                                                             sequence: connection.player_data.item_sequence,
                                                             operation_type: action.operation_type,
@@ -954,7 +945,6 @@ async fn client_loop(
                                                         // TODO: Refactor InventoryTransactions into connection.rs
                                                         let ipc = ServerZoneIpcSegment {
                                                             op_code: ServerZoneIpcType::InventoryTransaction,
-                                                            timestamp: timestamp_secs(),
                                                             data: ServerZoneIpcData::InventoryTransaction {
                                                                 sequence: connection.player_data.item_sequence,
                                                                 operation_type: ItemOperationKind::Update,
@@ -993,7 +983,6 @@ async fn client_loop(
 
                                                         let ipc = ServerZoneIpcSegment {
                                                             op_code: ServerZoneIpcType::InventoryTransaction,
-                                                            timestamp: timestamp_secs(),
                                                             data: ServerZoneIpcData::InventoryTransaction {
                                                                 sequence: connection.player_data.item_sequence,
                                                                 operation_type: ItemOperationKind::Discard,
@@ -1087,7 +1076,6 @@ async fn client_loop(
                                             ClientZoneIpcData::EventUnkRequest { event_id, unk1, unk2, unk3 } => {
                                                  let ipc = ServerZoneIpcSegment {
                                                         op_code: ServerZoneIpcType::EventUnkReply,
-                                                        timestamp: timestamp_secs(),
                                                         data: ServerZoneIpcData::EventUnkReply {
                                                             event_id: *event_id,
                                                             unk1: *unk1,
@@ -1109,7 +1097,6 @@ async fn client_loop(
                                             ClientZoneIpcData::UnkCall2 { .. } => {
                                                 let ipc = ServerZoneIpcSegment {
                                                     op_code: ServerZoneIpcType::UnkResponse2,
-                                                    timestamp: timestamp_secs(),
                                                     data: ServerZoneIpcData::UnkResponse2 {
                                                         unk1: 1,
                                                     },
@@ -1134,7 +1121,6 @@ async fn client_loop(
                                                 {
                                                     let ipc = ServerZoneIpcSegment {
                                                         op_code: ServerZoneIpcType::ContentFinderUpdate,
-                                                        timestamp: timestamp_secs(),
                                                         data: ServerZoneIpcData::ContentFinderUpdate {
                                                             state1: 1,
                                                             classjob_id: connection.player_data.classjob_id, // TODO: store what they registered with, because it can change
@@ -1189,7 +1175,6 @@ async fn client_loop(
                                                 {
                                                     let ipc = ServerZoneIpcSegment {
                                                         op_code: ServerZoneIpcType::ContentFinderFound,
-                                                        timestamp: timestamp_secs(),
                                                         data: ServerZoneIpcData::ContentFinderFound {
                                                             unk1: [
                                                                 3,
@@ -1256,7 +1241,6 @@ async fn client_loop(
                                                 {
                                                     let ipc = ServerZoneIpcSegment {
                                                         op_code: ServerZoneIpcType::ContentFinderCommencing,
-                                                        timestamp: timestamp_secs(),
                                                         data: ServerZoneIpcData::ContentFinderCommencing {
                                                             unk1: [
                                                                 4,

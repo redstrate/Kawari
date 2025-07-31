@@ -2,8 +2,8 @@ use crate::INVENTORY_ACTION_ACK_SHOP;
 use crate::{
     LogMessageType,
     common::{
-        INVALID_OBJECT_ID, ObjectId, ObjectTypeId, Position, timestamp_secs,
-        workdefinitions::RemakeMode, write_quantized_rotation,
+        INVALID_OBJECT_ID, ObjectId, ObjectTypeId, Position, workdefinitions::RemakeMode,
+        write_quantized_rotation,
     },
     config::get_config,
     inventory::{
@@ -143,7 +143,6 @@ impl LuaZone {
     ) {
         let ipc = ServerZoneIpcSegment {
             op_code,
-            timestamp: timestamp_secs(),
             data,
             ..Default::default()
         };
@@ -187,7 +186,6 @@ impl LuaPlayer {
     ) {
         let ipc = ServerZoneIpcSegment {
             op_code,
-            timestamp: timestamp_secs(),
             data,
             ..Default::default()
         };
