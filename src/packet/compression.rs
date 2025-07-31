@@ -25,7 +25,7 @@ pub(crate) fn decompress<T: ReadWriteIpcSegment>(
     header: &PacketHeader,
     encryption_key: Option<&[u8]>,
 ) -> BinResult<Vec<PacketSegment<T>>> {
-    let mut segments = Vec::with_capacity(header.segment_count as usize);
+    let mut segments: Vec<PacketSegment<T>> = Vec::with_capacity(header.segment_count as usize);
 
     let size = header.size as usize - std::mem::size_of::<PacketHeader>();
 
@@ -50,21 +50,28 @@ pub(crate) fn decompress<T: ReadWriteIpcSegment>(
 
     for _ in 0..header.segment_count {
         let current_position = cursor.position();
-        segments.push(PacketSegment::read_options(
-            &mut cursor,
-            endian,
-            (encryption_key,),
-        )?);
-        let new_position = cursor.position();
-        let expected_size = segments.last().unwrap().calc_size() as u64;
-        let actual_size = new_position - current_position;
+        let segment: PacketSegment<T> =
+            PacketSegment::read_options(&mut cursor, endian, (encryption_key,))?;
 
-        if expected_size != actual_size {
-            tracing::warn!(
-                "The segment {:#?} does not match the size in calc_size()! (expected {expected_size} got {actual_size})",
-                segments.last()
-            );
+        let is_unknown = match &segment.data {
+            SegmentData::Ipc { data } => data.get_name() == "Unknown",
+            _ => false,
+        };
+
+        if !is_unknown {
+            let new_position = cursor.position();
+            let expected_size = segment.calc_size() as u64;
+            let actual_size = new_position - current_position;
+
+            if expected_size != actual_size {
+                tracing::warn!(
+                    "The segment {:#?} does not match the size in calc_size()! (expected {expected_size} got {actual_size})",
+                    segments.last()
+                );
+            }
         }
+
+        segments.push(segment);
     }
 
     Ok(segments)
