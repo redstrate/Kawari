@@ -1113,12 +1113,16 @@ impl ZoneConnection {
 
         // give back control to the player
         match finish_type {
-            EventFinishType::Normal => {}
+            EventFinishType::Normal => {
+                // TODO: clear the cutscene flag instead of going nuclear
+                self.conditions = Conditions::default();
+            }
             EventFinishType::Jumping => {
                 self.conditions.remove_condition(Condition::WalkInEvent);
-                self.send_conditions().await;
             }
         };
+
+        self.send_conditions().await;
     }
 
     pub async fn send_conditions(&mut self) {
