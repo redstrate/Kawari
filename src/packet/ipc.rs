@@ -79,10 +79,10 @@ where
 {
     fn default() -> Self {
         Self {
-            unk1: 0x14,
+            unk1: 20,
             unk2: 0,
             op_code: OpCode::default(),
-            option: 0,
+            option: 15,
             timestamp: timestamp_secs(),
             data: Data::default(),
         }
