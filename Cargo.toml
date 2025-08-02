@@ -100,6 +100,10 @@ bevy = { version = "0.16", features = ["std",
   "bevy_gizmos",
   "x11"], default-features = false, optional = true }
 
+# doing stuff with enums Rust doesn't allow for some reason
+strum = { version = "0.27", default-features = false }
+strum_macros = { version = "0.27", default-features = false }
+
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
 # Used for the web servers
 axum = { version = "0.8", features = ["json", "tokio", "http1", "form", "query", "multipart"], default-features = false }

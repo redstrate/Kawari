@@ -1,8 +1,10 @@
+use std::str::FromStr;
+
 use crate::{
     ERR_INVENTORY_ADD_FAILED, ITEM_CONDITION_MAX,
     common::ItemInfoQuery,
     inventory::{Item, Storage},
-    ipc::zone::{ChatMessage, GameMasterRank},
+    ipc::zone::{ChatMessage, Condition, Conditions, GameMasterRank},
     world::{EventFinishType, ToServer},
 };
 
@@ -123,6 +125,31 @@ impl ChatHandler {
             "!replay" => {
                 let (_, path) = chat_message.message.split_once(' ').unwrap();
                 connection.replay_packets(path).await;
+
+                true
+            }
+            "!condition" => {
+                let (_, condition_name) = chat_message.message.split_once(' ').unwrap();
+                if let Ok(condition) = Condition::from_str(condition_name) {
+                    connection.conditions.set_condition(condition);
+                    connection.send_conditions().await;
+                    connection
+                        .send_message(&*format!("Condition {condition:?} set!"))
+                        .await;
+                } else {
+                    connection
+                        .send_message(&*format!("Unknown condition {condition_name}"))
+                        .await;
+                }
+
+                true
+            }
+            "!clearconditions" => {
+                connection.conditions = Conditions::default();
+                connection.send_conditions().await;
+                connection
+                    .send_message(&*format!("Conditions cleared!"))
+                    .await;
 
                 true
             }

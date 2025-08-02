@@ -97,6 +97,9 @@ pub use quest_active_list::QuestActiveList;
 mod effect_result;
 pub use effect_result::{EffectEntry, EffectResult};
 
+mod condition;
+pub use condition::{Condition, Conditions};
+
 use crate::COMPLETED_LEVEQUEST_BITMASK_SIZE;
 use crate::COMPLETED_QUEST_BITMASK_SIZE;
 use crate::TITLE_UNLOCK_BITMASK_SIZE;
@@ -335,10 +338,8 @@ pub enum ServerZoneIpcData {
         arg: u32,
     },
     /// Sent after EventFinish? it un-occupies the character lol
-    #[br(pre_assert(*magic == ServerZoneIpcType::Unk18))]
-    Unk18 {
-        unk: [u8; 16], // all zero...
-    },
+    #[br(pre_assert(*magic == ServerZoneIpcType::Condition))]
+    Condition(Conditions),
     /// Used to control target information
     #[br(pre_assert(*magic == ServerZoneIpcType::ActorControlTarget))]
     ActorControlTarget(ActorControlTarget),
@@ -1025,8 +1026,8 @@ mod tests {
                 },
             ),
             (
-                ServerZoneIpcType::Unk18,
-                ServerZoneIpcData::Unk18 { unk: [0; 16] },
+                ServerZoneIpcType::Condition,
+                ServerZoneIpcData::Condition(Conditions::default()),
             ),
             (
                 ServerZoneIpcType::ActorControlTarget,

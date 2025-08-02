@@ -12,8 +12,8 @@ use kawari::inventory::{
 };
 use kawari::ipc::chat::{ServerChatIpcData, ServerChatIpcSegment};
 use kawari::ipc::zone::{
-    ActorControl, ActorControlCategory, ActorControlSelf, ItemOperation, PlayerEntry, PlayerSpawn,
-    PlayerStatus, SocialList,
+    ActorControl, ActorControlCategory, ActorControlSelf, Condition, Conditions, ItemOperation,
+    PlayerEntry, PlayerSpawn, PlayerStatus, SocialList,
 };
 
 use kawari::ipc::zone::{
@@ -1309,7 +1309,8 @@ async fn client_loop(
                                                         shown: false,
                                                     }
                                                 }).await;
-                                                connection.send_unk18([64, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]).await;
+                                                connection.conditions.set_condition(Condition::WalkInEvent);
+                                                connection.send_conditions().await;
                                                 let actor_id = ObjectTypeId { object_id: ObjectId(connection.player_data.actor_id), object_type: 0 };
                                                 connection.start_event(actor_id, *event_id, 10, *event_arg).await;
 
@@ -1391,7 +1392,10 @@ async fn client_loop(
                     FromServer::ActorEquip(actor_id, main_weapon_id, model_ids) => connection.update_equip(actor_id, main_weapon_id, model_ids).await,
                     FromServer::ReplayPacket(segment) => connection.send_segment(segment).await,
                     FromServer::LoseEffect(effect_id, effect_param, effect_source_actor_id) => connection.lose_effect(effect_id, effect_param, effect_source_actor_id, &mut lua_player).await,
-                    FromServer::Unk18(unk) => connection.send_unk18(unk).await,
+                    FromServer::Conditions(conditions) => {
+                        connection.conditions = conditions;
+                        connection.send_conditions().await;
+                    },
                 },
                 None => break,
             }
@@ -1492,6 +1496,7 @@ async fn main() {
                     obsfucation_data: ObsfucationData::default(),
                     queued_content: None,
                     event_type: 0,
+                    conditions: Conditions::default(),
                 });
             }
             Some((mut socket, _)) = handle_rcon(&rcon_listener) => {

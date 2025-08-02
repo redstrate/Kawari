@@ -24,11 +24,12 @@ use crate::{
         chat::ServerChatIpcSegment,
         zone::{
             ActionEffect, ActionRequest, ActionResult, ActorControl, ActorControlCategory,
-            ActorControlSelf, ActorControlTarget, ClientZoneIpcSegment, CommonSpawn, Config,
-            ContainerInfo, CurrencyInfo, DisplayFlag, EffectEntry, EffectKind, EffectResult, Equip,
-            EventScene, EventStart, GameMasterRank, InitZone, ItemInfo, Move, NpcSpawn, ObjectKind,
-            PlayerStats, PlayerSubKind, QuestActiveList, ServerZoneIpcData, ServerZoneIpcSegment,
-            StatusEffect, StatusEffectList, UpdateClassInfo, Warp, WeatherChange,
+            ActorControlSelf, ActorControlTarget, ClientZoneIpcSegment, CommonSpawn, Condition,
+            Conditions, Config, ContainerInfo, CurrencyInfo, DisplayFlag, EffectEntry, EffectKind,
+            EffectResult, Equip, EventScene, EventStart, GameMasterRank, InitZone, ItemInfo, Move,
+            NpcSpawn, ObjectKind, PlayerStats, PlayerSubKind, QuestActiveList, ServerZoneIpcData,
+            ServerZoneIpcSegment, StatusEffect, StatusEffectList, UpdateClassInfo, Warp,
+            WeatherChange,
         },
     },
     opcodes::ServerZoneIpcType,
@@ -183,6 +184,8 @@ pub struct ZoneConnection {
 
     // TODO: support more than one content in the queue
     pub queued_content: Option<u16>,
+
+    pub conditions: Conditions,
 }
 
 impl ZoneConnection {
@@ -1109,18 +1112,19 @@ impl ZoneConnection {
         }
 
         // give back control to the player
-        let unk = match finish_type {
-            EventFinishType::Normal => [0; 16],
-            EventFinishType::Jumping => [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        match finish_type {
+            EventFinishType::Normal => {}
+            EventFinishType::Jumping => {
+                self.conditions.remove_condition(Condition::WalkInEvent);
+                self.send_conditions().await;
+            }
         };
-
-        self.send_unk18(unk).await;
     }
 
-    pub async fn send_unk18(&mut self, unk: [u8; 16]) {
+    pub async fn send_conditions(&mut self) {
         let ipc = ServerZoneIpcSegment {
-            op_code: ServerZoneIpcType::Unk18,
-            data: ServerZoneIpcData::Unk18 { unk },
+            op_code: ServerZoneIpcType::Condition,
+            data: ServerZoneIpcData::Condition(self.conditions),
             ..Default::default()
         };
 

@@ -12,7 +12,7 @@ use crate::{
     common::{ObjectId, Position},
     ipc::zone::{
         ActionRequest, ActorControl, ActorControlSelf, ActorControlTarget, ClientTrigger,
-        CommonSpawn, Config, NpcSpawn, ServerZoneIpcSegment,
+        CommonSpawn, Conditions, Config, NpcSpawn, ServerZoneIpcSegment,
     },
     packet::PacketSegment,
 };
@@ -50,7 +50,8 @@ pub enum FromServer {
     ReplayPacket(PacketSegment<ServerZoneIpcSegment>),
     /// The player should lose this effect.
     LoseEffect(u16, u16, ObjectId),
-    Unk18([u8; 16]),
+    // TODO: temporary
+    Conditions(Conditions),
 }
 
 #[derive(Debug, Clone)]

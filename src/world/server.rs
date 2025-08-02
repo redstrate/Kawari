@@ -15,7 +15,7 @@ use crate::{
     config::get_config,
     ipc::zone::{
         ActorControl, ActorControlCategory, ActorControlSelf, ActorControlTarget, BattleNpcSubKind,
-        ClientTriggerCommand, CommonSpawn, NpcSpawn, ObjectKind, ServerZoneIpcData,
+        ClientTriggerCommand, CommonSpawn, Conditions, NpcSpawn, ObjectKind, ServerZoneIpcData,
         ServerZoneIpcSegment,
     },
     opcodes::ServerZoneIpcType,
@@ -571,7 +571,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         if let ClientTriggerCommand::WalkInTriggerFinished { .. } = &trigger.trigger
                         {
                             // This is where we finally release the client after the walk-in trigger.
-                            let msg = FromServer::Unk18([0; 16]);
+                            let msg = FromServer::Conditions(Conditions::default());
 
                             if handle.send(msg).is_err() {
                                 to_remove.push(id);
