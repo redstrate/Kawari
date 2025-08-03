@@ -110,7 +110,7 @@ axum = { version = "0.8", features = ["json", "tokio", "http1", "form", "query",
 axum-extra = { version = "0.10", features = ["cookie"], default-features = false }
 
 # Async runtime
-tokio = { version = "1.46", features = ["macros", "rt", "rt-multi-thread", "io-util"], default-features = false }
+tokio = { version = "1.47", features = ["macros", "rt", "rt-multi-thread", "io-util"], default-features = false }
 
 # Logging
 tracing-subscriber = { version = "0.3", features = ["fmt"], default-features = false }
@@ -125,7 +125,7 @@ minijinja = { version = "2.11", features = ["serde", "loader", "multi_template"]
 rusqlite = { version = "0.37", features = ["bundled"], default-features = false }
 
 # For server-side scripting
-mlua = { version = "0.10", features = ["lua54", "vendored", "send", "async", "serialize"], default-features = false }
+mlua = { version = "0.11", features = ["lua54", "vendored", "send", "async", "serialize"], default-features = false }
 
 # For character backup decompression
 zip = { version = "4.3", features = ["deflate", "lzma", "bzip2"], default-features = false }
