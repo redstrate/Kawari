@@ -119,9 +119,15 @@ impl Instance {
             nvm_path.push(navimesh_path.unwrap());
 
             if let Ok(nvm_bytes) = std::fs::read(&nvm_path) {
-                instance.navmesh = Navmesh::from_existing(&nvm_bytes).unwrap();
+                if let Some(navmesh) = Navmesh::from_existing(&nvm_bytes) {
+                    instance.navmesh = navmesh;
 
-                tracing::info!("Successfully loaded navimesh from {nvm_path:?}");
+                    tracing::info!("Successfully loaded navimesh from {nvm_path:?}");
+                } else {
+                    tracing::warn!(
+                        "Failed to read {nvm_path:?}, monsters will not function correctly!"
+                    );
+                }
             } else {
                 tracing::warn!(
                     "Failed to read {nvm_path:?}, monsters will not function correctly!"
