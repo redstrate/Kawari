@@ -648,8 +648,8 @@ mod tests {
                 ServerZoneIpcData::ActorControl(ActorControl::default()),
             ),
             (
-                ServerZoneIpcType::Move,
-                ServerZoneIpcData::Move(Move::default()),
+                ServerZoneIpcType::ActorMove,
+                ServerZoneIpcData::ActorMove(ActorMove::default()),
             ),
             (
                 ServerZoneIpcType::SocialList,

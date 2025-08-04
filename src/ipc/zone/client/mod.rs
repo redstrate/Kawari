@@ -276,8 +276,6 @@ mod tests {
 
     use binrw::BinWrite;
 
-    use crate::opcodes::ServerZoneIpcType;
-
     use super::*;
 
     /// Ensure that the IPC data size as reported matches up with what we write
