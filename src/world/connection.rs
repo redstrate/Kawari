@@ -1111,14 +1111,15 @@ impl ZoneConnection {
             .await;
         }
 
-        // give back control to the player
+        // give back control to the player, or mark them as busy for some events
         match finish_type {
             EventFinishType::Normal => {
                 // TODO: clear the cutscene flag instead of going nuclear
                 self.conditions = Conditions::default();
             }
             EventFinishType::Jumping => {
-                self.conditions.remove_condition(Condition::WalkInEvent);
+                // We want it set here, because when the client finishes the animation, they will send us a client trigger to tell us.
+                self.conditions.set_condition(Condition::WalkInEvent);
             }
         };
 
