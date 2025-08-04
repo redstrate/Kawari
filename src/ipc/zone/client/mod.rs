@@ -17,17 +17,14 @@ pub use crate::ipc::zone::client::item_operation::ItemOperation;
 
 pub use super::social_list::{PlayerEntry, SocialList, SocialListRequest, SocialListRequestType};
 
-use crate::opcodes::ClientZoneIpcType;
-use crate::common::{Position, read_string, write_string};
-use crate::packet::IPC_HEADER_SIZE;
 use super::config::Config;
+use crate::common::{Position, read_string, write_string};
+use crate::opcodes::ClientZoneIpcType;
+use crate::packet::IPC_HEADER_SIZE;
 
 use crate::common::ObjectTypeId;
 use crate::inventory::ContainerType;
 use crate::packet::{IpcSegment, ReadWriteIpcSegment};
-
-
-
 
 pub type ClientZoneIpcSegment = IpcSegment<ClientZoneIpcType, ClientZoneIpcData>;
 

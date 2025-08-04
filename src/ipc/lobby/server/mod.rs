@@ -6,7 +6,7 @@ pub mod nack_reply;
 pub mod server_list;
 pub mod service_login_reply;
 
-pub use crate::ipc::lobby::chara_make::{LobbyCharacterActionKind};
+pub use crate::ipc::lobby::chara_make::LobbyCharacterActionKind;
 
 pub use service_login_reply::{CharacterDetails, CharacterFlag, ServiceLoginReply};
 
@@ -20,10 +20,9 @@ pub use nack_reply::NackReply;
 
 use crate::{
     common::{read_string, write_string},
-    opcodes::{ServerLobbyIpcType},
+    opcodes::ServerLobbyIpcType,
     packet::{IPC_HEADER_SIZE, IpcSegment, ReadWriteIpcSegment},
 };
-
 
 pub type ServerLobbyIpcSegment = IpcSegment<ServerLobbyIpcType, ServerLobbyIpcData>;
 
