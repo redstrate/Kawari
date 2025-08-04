@@ -1,6 +1,6 @@
 use binrw::binrw;
 
-use super::Position;
+use crate::common::Position;
 
 #[binrw]
 #[derive(Debug, Clone, Default)]

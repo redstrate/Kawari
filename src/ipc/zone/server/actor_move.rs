@@ -7,7 +7,7 @@ use crate::common::{
 
 #[binrw]
 #[derive(Debug, Clone, Default)]
-pub struct Move {
+pub struct ActorMove {
     #[br(map = read_quantized_rotation)]
     #[bw(map = write_quantized_rotation)]
     pub rotation: f32,

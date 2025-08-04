@@ -86,7 +86,7 @@
             "size": 24
         },
         {
-            "name": "Move",
+            "name": "ActorMove",
             "opcode": 699,
             "size": 16
         },
