@@ -22,14 +22,14 @@ use crate::{
     inventory::{BuyBackList, ContainerType, Inventory, Item, Storage},
     ipc::{
         chat::ServerChatIpcSegment,
-        zone::{
-            ActionEffect, ActionRequest, ActionResult, ActorControl, ActorControlCategory,
-            ActorControlSelf, ActorControlTarget, ClientZoneIpcSegment, CommonSpawn, Condition,
-            Conditions, Config, ContainerInfo, CurrencyInfo, DisplayFlag, EffectEntry, EffectKind,
-            EffectResult, Equip, EventScene, EventStart, GameMasterRank, InitZone, ItemInfo, Move,
-            NpcSpawn, ObjectKind, PlayerStats, PlayerSubKind, QuestActiveList, ServerZoneIpcData,
-            ServerZoneIpcSegment, StatusEffect, StatusEffectList, UpdateClassInfo, Warp,
-            WeatherChange,
+        zone::client::{ActionRequest, ClientZoneIpcSegment},
+        zone::server::{
+            ActionEffect, ActionResult, ActorControl, ActorControlCategory, ActorControlSelf,
+            ActorControlTarget, ActorMove, CommonSpawn, Condition, Conditions, Config,
+            ContainerInfo, CurrencyInfo, DisplayFlag, EffectEntry, EffectKind, EffectResult, Equip,
+            EventScene, EventStart, GameMasterRank, InitZone, ItemInfo, NpcSpawn, ObjectKind,
+            PlayerStats, PlayerSubKind, QuestActiveList, ServerZoneIpcData, ServerZoneIpcSegment,
+            StatusEffect, StatusEffectList, UpdateClassInfo, Warp, WeatherChange,
         },
     },
     opcodes::ServerZoneIpcType,
@@ -287,8 +287,8 @@ impl ZoneConnection {
 
     pub async fn set_actor_position(&mut self, actor_id: u32, position: Position, rotation: f32) {
         let ipc = ServerZoneIpcSegment {
-            op_code: ServerZoneIpcType::Move,
-            data: ServerZoneIpcData::Move(Move {
+            op_code: ServerZoneIpcType::ActorMove,
+            data: ServerZoneIpcData::ActorMove(ActorMove {
                 rotation,
                 flag1: 128,
                 flag2: 60,

@@ -4,7 +4,8 @@ use crate::{
     ERR_INVENTORY_ADD_FAILED, ITEM_CONDITION_MAX,
     common::ItemInfoQuery,
     inventory::{Item, Storage},
-    ipc::zone::{ChatMessage, Condition, Conditions, GameMasterRank},
+    ipc::zone::client::ChatMessage,
+    ipc::zone::server::{Condition, Conditions, GameMasterRank},
     world::{EventFinishType, ToServer},
 };
 

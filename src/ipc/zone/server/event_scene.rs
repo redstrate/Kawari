@@ -1,7 +1,7 @@
 use binrw::binrw;
 
 use crate::common::ObjectTypeId;
-use crate::ipc::zone::{ServerZoneIpcData, ServerZoneIpcType};
+use crate::ipc::zone::server::{ServerZoneIpcData, ServerZoneIpcType};
 
 #[derive(Debug, Clone, Default)]
 #[binrw]
