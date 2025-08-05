@@ -36,7 +36,7 @@ Also please don't use Kawari to spoil new or unreleased content, thanks.
 
 ## Supported Game Version
 
-Kawari currently supports patch **7.25h3** (2025.06.28.0000.0000.) Previously supported patches are provided on as tags (e.g. `2025.02.27.0000.0000`.) These may or may not function or build correctly, the tag is moreso a historical marker.
+Kawari currently supports patch **7.25h3** (2025.06.28.0000.0000.) Previously supported patches are provided on as tags (e.g. `2025.07.30.0000.0000`.) These may or may not function or build correctly, the tag is moreso a historical marker.
 
 Only the Global region is supported. Only the Windows client is supported. Supporting other regions or clients are currently out of scope of this project, but might work anyway.
 
