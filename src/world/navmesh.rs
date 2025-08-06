@@ -122,7 +122,7 @@ impl Navmesh {
             }
 
             self.navmesh_query = dtAllocNavMeshQuery();
-            assert!(self.navmesh_query != null_mut());
+            assert!(!self.navmesh_query.is_null());
             assert!(dtNavMeshQuery_init(self.navmesh_query, self.navmesh, 2048) == DT_SUCCESS);
         }
     }
