@@ -135,11 +135,11 @@ impl ChatHandler {
                     connection.conditions.set_condition(condition);
                     connection.send_conditions().await;
                     connection
-                        .send_message(&*format!("Condition {condition:?} set!"))
+                        .send_message(&format!("Condition {condition:?} set!"))
                         .await;
                 } else {
                     connection
-                        .send_message(&*format!("Unknown condition {condition_name}"))
+                        .send_message(&format!("Unknown condition {condition_name}"))
                         .await;
                 }
 
@@ -149,7 +149,7 @@ impl ChatHandler {
                 connection.conditions = Conditions::default();
                 connection.send_conditions().await;
                 connection
-                    .send_message(&*format!("Conditions cleared!"))
+                    .send_message("Conditions cleared!")
                     .await;
 
                 true
