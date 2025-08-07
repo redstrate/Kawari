@@ -233,7 +233,7 @@
         {
             "name": "QuestCompleteList",
             "opcode": 947,
-            "size": 760
+            "size": 816
         },
         {
             "name": "UnkResponse2",
