@@ -18,7 +18,7 @@
         {
             "name": "PlayerStatus",
             "opcode": 893,
-            "size": 2808
+            "size": 2848
         },
         {
             "name": "UpdateClassInfo",
@@ -77,7 +77,7 @@
         },
         {
             "name": "Unk16",
-            "opcode": 751,
+            "opcode": 135,
             "size": 136
         },
         {
@@ -359,7 +359,7 @@
     "ClientZoneIpcType": [
         {
             "name": "InitRequest",
-            "opcode": 107,
+            "opcode": 182,
             "size": 120
         },
         {
@@ -404,7 +404,7 @@
         },
         {
             "name": "LogOut",
-            "opcode": 800,
+            "opcode": 378,
             "size": 8
         },
         {
