@@ -197,8 +197,8 @@ pub struct PlayerStatus {
     #[bw(pad_size_to = PVP_ARRAY_SIZE)]
     pub cleared_pvp: Vec<u8>,
 
-    #[br(count = 16)]
-    #[bw(pad_size_to = 16)]
+    #[br(count = 56)]
+    #[bw(pad_size_to = 56)]
     pub unknown949: Vec<u8>,
 }
 
