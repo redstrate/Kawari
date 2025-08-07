@@ -34,8 +34,8 @@ const MAX_LARGE_STORAGE: usize = 50;
 
 #[binrw]
 #[derive(Debug, Clone, Default, Copy, PartialEq)]
-#[brw(repr = u8)]
-#[repr(u8)]
+#[brw(repr = u32)]
+#[repr(u32)]
 pub enum ItemOperationKind {
     /// The operation opcode/type when the server wants the client to create a storage. Seen during login to create the HandIn storage.
     CreateStorage = BASE_INVENTORY_ACTION,

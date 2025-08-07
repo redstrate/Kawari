@@ -9,7 +9,6 @@ pub struct ItemOperation {
     pub context_id: u32,
     pub operation_type: ItemOperationKind,
 
-    #[brw(pad_before = 3)]
     pub src_actor_id: u32,
     #[brw(pad_size_to = 4)]
     pub src_storage_id: ContainerType,
