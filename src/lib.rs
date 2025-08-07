@@ -74,7 +74,7 @@ pub const UNLOCK_BITMASK_SIZE: usize = 92;
 pub const AETHERYTE_UNLOCK_BITMASK_SIZE: usize = 30;
 
 /// The size of the completed quest bitmask.
-pub const COMPLETED_QUEST_BITMASK_SIZE: usize = 691;
+pub const COMPLETED_QUEST_BITMASK_SIZE: usize = 747;
 
 /// The size of the unlocked title bitmask.
 pub const TITLE_UNLOCK_BITMASK_SIZE: usize = 112;
