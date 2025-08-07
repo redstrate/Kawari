@@ -363,7 +363,6 @@ pub enum ServerZoneIpcData {
         sequence: u32,
         /// Same as the one sent by the client, not the one that the server responds with in InventoryActionAck!
         operation_type: ItemOperationKind,
-        #[brw(pad_before = 3)]
         src_actor_id: u32,
         #[brw(pad_size_to = 4)]
         src_storage_id: ContainerType,

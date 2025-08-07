@@ -43,22 +43,22 @@ pub mod ipc;
 pub mod inventory;
 
 /// Used in the encryption key.
-const GAME_VERSION: u16 = 7000;
+const GAME_VERSION: u16 = 7201;
 
 pub const RECEIVE_BUFFER_SIZE: usize = 32000;
 
 /// Supported boot version.
-pub const SUPPORTED_BOOT_VERSION: Version = Version("2025.05.01.0000.0001");
+pub const SUPPORTED_BOOT_VERSION: Version = Version("2025.07.017.0000.0001");
 
 /// Supported game version.
-pub const SUPPORTED_GAME_VERSION: Version = Version("2025.06.28.0000.0000");
+pub const SUPPORTED_GAME_VERSION: Version = Version("2025.07.30.0000.0000");
 
 const SUPPORTED_EXPAC_VERSIONS: [(&str, Version); 5] = [
-    ("ex1", Version("2025.05.01.0000.0000")),
-    ("ex2", Version("2025.05.09.0000.0000")),
-    ("ex3", Version("2025.06.28.0000.0000")),
-    ("ex4", Version("2025.06.28.0000.0000")),
-    ("ex5", Version("2025.06.28.0000.0000")),
+    ("ex1", Version("2025.07.25.0000.0000")),
+    ("ex2", Version("2025.07.23.0000.0000")),
+    ("ex3", Version("2025.07.30.0000.0000")),
+    ("ex4", Version("2025.07.30.0000.0000")),
+    ("ex5", Version("2025.07.30.0000.0000")),
 ];
 
 /// Supported expansion versions.
@@ -74,7 +74,7 @@ pub const UNLOCK_BITMASK_SIZE: usize = 92;
 pub const AETHERYTE_UNLOCK_BITMASK_SIZE: usize = 30;
 
 /// The size of the completed quest bitmask.
-pub const COMPLETED_QUEST_BITMASK_SIZE: usize = 691;
+pub const COMPLETED_QUEST_BITMASK_SIZE: usize = 747;
 
 /// The size of the unlocked title bitmask.
 pub const TITLE_UNLOCK_BITMASK_SIZE: usize = 112;
@@ -104,7 +104,7 @@ pub const PVP_ARRAY_SIZE: usize = 7;
 pub const ITEM_CONDITION_MAX: u16 = 30000;
 
 // This operation code changes regularly, so update it when needed!
-pub const BASE_INVENTORY_ACTION: u8 = 139;
+pub const BASE_INVENTORY_ACTION: u32 = 958;
 
 /// The server's acknowledgement of a shop item being purchased.
 pub const INVENTORY_ACTION_ACK_SHOP: u8 = 6;
