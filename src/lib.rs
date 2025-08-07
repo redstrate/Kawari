@@ -54,8 +54,8 @@ pub const SUPPORTED_BOOT_VERSION: Version = Version("2025.07.017.0000.0001");
 pub const SUPPORTED_GAME_VERSION: Version = Version("2025.07.30.0000.0000");
 
 const SUPPORTED_EXPAC_VERSIONS: [(&str, Version); 5] = [
-    ("ex1", Version("2025.07.30.0000.0000")),
-    ("ex2", Version("2025.07.25.0000.0000")),
+    ("ex1", Version("2025.07.25.0000.0000")),
+    ("ex2", Version("2025.07.23.0000.0000")),
     ("ex3", Version("2025.07.30.0000.0000")),
     ("ex4", Version("2025.07.30.0000.0000")),
     ("ex5", Version("2025.07.30.0000.0000")),
