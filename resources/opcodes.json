@@ -369,7 +369,7 @@
         },
         {
             "name": "ClientTrigger",
-            "opcode": 392,
+            "opcode": 828,
             "size": 32
         },
         {
@@ -394,7 +394,7 @@
         },
         {
             "name": "SocialListRequest",
-            "opcode": 968,
+            "opcode": 615,
             "size": 16
         },
         {
@@ -409,7 +409,7 @@
         },
         {
             "name": "Disconnected",
-            "opcode": 305,
+            "opcode": 776,
             "size": 8
         },
         {
@@ -424,7 +424,7 @@
         },
         {
             "name": "ZoneJump",
-            "opcode": 828,
+            "opcode": 392,
             "size": 24
         },
         {
@@ -504,12 +504,12 @@
         },
         {
             "name": "ContentFinderRegister",
-            "opcode": 991,
+            "opcode": 750,
             "size": 40
         },
         {
             "name": "ContentFinderAction",
-            "opcode": 409,
+            "opcode": 381,
             "size": 8
         },
         {
