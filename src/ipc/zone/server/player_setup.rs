@@ -70,12 +70,21 @@ pub struct PlayerStatus {
     pub unknown_pvp124: u32,
     pub pvp_exp: u32,
     pub pvp_frontline_overall_ranks: [u32; 3],
-    pub unknown138: u32,
+    #[br(count = 16)]
+    #[bw(pad_size_to = 16)]
+    pub unknown138: Vec<u8>,
     pub levels: [u16; CLASSJOB_ARRAY_SIZE],
-    #[br(count = 218)]
-    #[bw(pad_size_to = 218)]
+    #[br(count = 8)]
+    #[bw(pad_size_to = 8)]
+    pub unknown186: Vec<u8>,
+    #[br(count = 268)]
+    #[bw(pad_size_to = 268)]
     pub unknown194: Vec<u8>,
-    pub companion_name: [u8; 21],
+    #[br(count = 21)]
+    #[bw(pad_size_to = 21)]
+    #[br(map = read_string)]
+    #[bw(map = write_string)]
+    pub companion_name: String,
     pub companion_def_rank: u8,
     pub companion_att_rank: u8,
     pub companion_heal_rank: u8,
@@ -83,15 +92,15 @@ pub struct PlayerStatus {
     #[bw(pad_size_to = 33)]
     pub mount_guide_mask: Vec<u8>,
     pub ornament_mask: [u8; 4],
-    #[br(count = 95)]
-    #[bw(pad_size_to = 95)]
+    #[br(count = 50)]
+    #[bw(pad_size_to = 50)]
     pub unknown281: Vec<u8>,
     #[br(count = CHAR_NAME_MAX_LENGTH)]
     #[bw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
     #[br(map = read_string)]
     #[bw(map = write_string)]
     pub name: String,
-    pub unknown293: [u8; 32],
+    #[brw(pad_before = 32)]
     #[br(count = UNLOCK_BITMASK_SIZE)]
     #[bw(pad_size_to = UNLOCK_BITMASK_SIZE)]
     pub unlocks: Vec<u8>,
@@ -99,6 +108,7 @@ pub struct PlayerStatus {
     #[bw(pad_size_to = AETHERYTE_UNLOCK_BITMASK_SIZE)]
     pub aetherytes: Vec<u8>,
     pub favorite_aetheryte_ids: [u16; 4],
+    //#[brw(pad_before = 4)] // TODO: This seems to have been removed in 7.3?
     pub free_aetheryte_id: u16,
     pub ps_plus_free_aetheryte_id: u16,
     #[br(count = 480)]
@@ -112,8 +122,8 @@ pub struct PlayerStatus {
     #[bw(pad_size_to = 60)]
     pub minions: Vec<u8>,
     pub chocobo_taxi_mask: [u8; 12],
-    #[br(count = 159)]
-    #[bw(pad_size_to = 159)]
+    #[br(count = 161)]
+    #[bw(pad_size_to = 161)]
     pub watched_cutscenes: Vec<u8>,
     pub companion_barding_mask: [u8; 12],
     pub companion_equipped_head: u8,
@@ -197,8 +207,9 @@ pub struct PlayerStatus {
     #[bw(pad_size_to = PVP_ARRAY_SIZE)]
     pub cleared_pvp: Vec<u8>,
 
-    #[br(count = 56)]
-    #[bw(pad_size_to = 56)]
+    /// TODO: This is probably wrong!
+    #[br(count = 28)]
+    #[bw(pad_size_to = 28)]
     pub unknown949: Vec<u8>,
 }
 
