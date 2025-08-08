@@ -59,13 +59,13 @@ where
     pub unk2: u8,
     /// The opcode for this segment.
     pub op_code: OpCode,
-    #[brw(pad_before = 2)] // empty
+    #[brw(pad_before = 4)] // empty
     /// Unknown purpose, but safe to keep 0.
     pub option: u16,
     /// The timestamp of this packet in seconds since UNIX epoch.
+    #[brw(pad_before = 2)]
     pub timestamp: u32,
     /// The data associated with the opcode.
-    #[brw(pad_before = 4)]
     #[br(args(&op_code, size))]
     pub data: Data,
 }
