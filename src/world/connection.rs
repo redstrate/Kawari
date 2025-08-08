@@ -1251,11 +1251,15 @@ impl ZoneConnection {
         // write the player back to the database
         self.database.commit_player_data(&self.player_data);
 
-        // tell the client we're ready to disconnect at any moment'
+        // set the client's conditions for logout preparation
+        self.conditions.set_condition(Condition::LoggingOut);
+        self.send_conditions().await;
+
+        // tell the client we're ready to disconnect at any moment
         {
             let ipc = ServerZoneIpcSegment {
                 op_code: ServerZoneIpcType::LogOutComplete,
-                data: ServerZoneIpcData::LogOutComplete { unk: [0; 8] },
+                data: ServerZoneIpcData::LogOutComplete { unk: [1, 0, 0, 0, 0, 0, 0, 0] },
                 ..Default::default()
             };
 
