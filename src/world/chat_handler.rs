@@ -148,9 +148,7 @@ impl ChatHandler {
             "!clearconditions" => {
                 connection.conditions = Conditions::default();
                 connection.send_conditions().await;
-                connection
-                    .send_message("Conditions cleared!")
-                    .await;
+                connection.send_message("Conditions cleared!").await;
 
                 true
             }
