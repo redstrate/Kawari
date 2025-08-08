@@ -48,7 +48,7 @@ const GAME_VERSION: u16 = 7201;
 pub const RECEIVE_BUFFER_SIZE: usize = 32000;
 
 /// Supported boot version.
-pub const SUPPORTED_BOOT_VERSION: Version = Version("2025.07.017.0000.0001");
+pub const SUPPORTED_BOOT_VERSION: Version = Version("2025.07.17.0000.0001");
 
 /// Supported game version.
 pub const SUPPORTED_GAME_VERSION: Version = Version("2025.07.30.0000.0000");
