@@ -364,7 +364,7 @@
         },
         {
             "name": "FinishLoading",
-            "opcode": 808,
+            "opcode": 965,
             "size": 72
         },
         {
