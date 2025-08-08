@@ -2,394 +2,394 @@
     "ServerZoneIpcType": [
         {
             "name": "InitZone",
-            "opcode": 364,
+            "opcode": 876,
             "size": 112
         },
         {
             "name": "ActorControlSelf",
-            "opcode": 630,
+            "opcode": 500,
             "size": 32
         },
         {
             "name": "PlayerStats",
-            "opcode": 124,
+            "opcode": 230,
             "size": 144
         },
         {
             "name": "PlayerStatus",
-            "opcode": 893,
+            "opcode": 857,
             "size": 2848
         },
         {
             "name": "UpdateClassInfo",
-            "opcode": 722,
+            "opcode": 557,
             "size": 16
         },
         {
             "name": "PlayerSpawn",
-            "opcode": 464,
+            "opcode": 890,
             "size": 664
         },
         {
             "name": "InitResponse",
-            "opcode": 844,
+            "opcode": 103,
             "size": 16
         },
         {
             "name": "LogOutComplete",
-            "opcode": 342,
+            "opcode": 370,
             "size": 8
         },
         {
             "name": "Warp",
-            "opcode": 504,
+            "opcode": 434,
             "size": 24
         },
         {
             "name": "ServerChatMessage",
-            "opcode": 532,
+            "opcode": 449,
             "size": 776
         },
         {
             "name": "Unk8",
-            "opcode": 803,
+            "opcode": 332,
             "size": 808
         },
         {
             "name": "LinkShellInformation",
-            "opcode": 233,
+            "opcode": 194,
             "size": 456
         },
         {
             "name": "Unk11",
-            "opcode": 168,
+            "opcode": 276,
             "size": 32
         },
         {
             "name": "PrepareZoning",
-            "opcode": 270,
+            "opcode": 653,
             "size": 16
         },
         {
             "name": "Unk15",
-            "opcode": 574,
+            "opcode": 489,
             "size": 16
         },
         {
             "name": "Unk16",
-            "opcode": 135,
+            "opcode": 733,
             "size": 136
         },
         {
             "name": "ActorControl",
-            "opcode": 228,
+            "opcode": 736,
             "size": 24
         },
         {
             "name": "ActorMove",
-            "opcode": 740,
+            "opcode": 150,
             "size": 16
         },
         {
             "name": "Unk17",
-            "opcode": 938,
+            "opcode": 759,
             "size": 968
         },
         {
             "name": "SocialList",
-            "opcode": 748,
+            "opcode": 580,
             "size": 1136
         },
         {
             "name": "NpcSpawn",
-            "opcode": 557,
+            "opcode": 196,
             "size": 656
         },
         {
             "name": "StatusEffectList",
-            "opcode": 919,
+            "opcode": 713,
             "size": 384
         },
         {
             "name": "WeatherId",
-            "opcode": 779,
+            "opcode": 848,
             "size": 8
         },
         {
             "name": "UpdateItem",
-            "opcode": 643,
+            "opcode": 676,
             "size": 64
         },
         {
             "name": "ContainerInfo",
-            "opcode": 260,
+            "opcode": 938,
             "size": 16
         },
         {
             "name": "EventScene",
-            "opcode": 401,
+            "opcode": 163,
             "size": 40
         },
         {
             "name": "EventScene4",
-            "opcode": 179,
+            "opcode": 116,
             "size": 48
         },
         {
             "name": "EventScene8",
-            "opcode": 505,
+            "opcode": 682,
             "size": 64
         },
         {
             "name": "EventScene16",
-            "opcode": 484,
+            "opcode": 904,
             "size": 96
         },
         {
             "name": "EventScene32",
-            "opcode": 888,
+            "opcode": 268,
             "size": 160
         },
         {
             "name": "EventScene64",
-            "opcode": 366,
+            "opcode": 941,
             "size": 288
         },
         {
             "name": "EventScene128",
-            "opcode": 419,
+            "opcode": 282,
             "size": 544
         },
         {
             "name": "EventScene255",
-            "opcode": 527,
+            "opcode": 117,
             "size": 1052
         },
         {
             "name": "EventStart",
-            "opcode": 149,
+            "opcode": 595,
             "size": 24
         },
         {
             "name": "UpdateHpMpTp",
-            "opcode": 235,
+            "opcode": 436,
             "size": 8
         },
         {
             "name": "ActionResult",
-            "opcode": 769,
+            "opcode": 583,
             "size": 124
         },
         {
             "name": "Equip",
-            "opcode": 684,
+            "opcode": 348,
             "size": 72
         },
         {
             "name": "Delete",
-            "opcode": 707,
+            "opcode": 412,
             "size": 8
         },
         {
             "name": "EventFinish",
-            "opcode": 257,
+            "opcode": 927,
             "size": 16
         },
         {
             "name": "Condition",
-            "opcode": 654,
+            "opcode": 701,
             "size": 16
         },
         {
             "name": "ActorControlTarget",
-            "opcode": 923,
+            "opcode": 391,
             "size": 28
         },
         {
             "name": "CurrencyCrystalInfo",
-            "opcode": 609,
+            "opcode": 929,
             "size": 24
         },
         {
             "name": "Config",
-            "opcode": 814,
+            "opcode": 924,
             "size": 8
         },
         {
             "name": "EventUnkReply",
-            "opcode": 845,
+            "opcode": 710,
             "size": 16
         },
         {
             "name": "PingSyncReply",
-            "opcode": 134,
+            "opcode": 101,
             "size": 32
         },
         {
             "name": "InventoryActionAck",
-            "opcode": 208,
+            "opcode": 362,
             "size": 16
         },
         {
             "name": "QuestCompleteList",
-            "opcode": 947,
+            "opcode": 430,
             "size": 816
         },
         {
             "name": "UnkResponse2",
-            "opcode": 183,
+            "opcode": 217,
             "size": 8
         },
         {
             "name": "InventoryTransaction",
-            "opcode": 546,
+            "opcode": 402,
             "size": 48
         },
         {
             "name": "InventoryTransactionFinish",
-            "opcode": 696,
+            "opcode": 948,
             "size": 16
         },
         {
             "name": "ContentFinderUpdate",
-            "opcode": 657,
+            "opcode": 659,
             "size": 40
         },
         {
             "name": "ContentFinderFound",
-            "opcode": 452,
+            "opcode": 415,
             "size": 40
         },
         {
             "name": "ObjectSpawn",
-            "opcode": 197,
+            "opcode": 154,
             "size": 64
         },
         {
             "name": "ActorGauge",
-            "opcode": 647,
+            "opcode": 335,
             "size": 16
         },
         {
             "name": "UpdateSearchInfo",
-            "opcode": 160,
+            "opcode": 159,
             "size": 216
         },
         {
             "name": "FreeCompanyInfo",
-            "opcode": 828,
+            "opcode": 340,
             "size": 80
         },
         {
             "name": "TitleList",
-            "opcode": 267,
+            "opcode": 198,
             "size": 112
         },
         {
             "name": "QuestActiveList",
-            "opcode": 594,
+            "opcode": 660,
             "size": 480
         },
         {
             "name": "LevequestCompleteList",
-            "opcode": 896,
+            "opcode": 312,
             "size": 232
         },
         {
             "name": "ShopLogMessage",
-            "opcode": 839,
+            "opcode": 994,
             "size": 32
         },
         {
             "name": "UpdateInventorySlot",
-            "opcode": 196,
+            "opcode": 574,
             "size": 64
         },
         {
             "name": "EffectResult",
-            "opcode": 754,
+            "opcode": 445,
             "size": 96
         },
         {
             "name": "ItemObtainedLogMessage",
-            "opcode": 890,
+            "opcode": 791,
             "size": 24
         },
         {
             "name": "ContentFinderCommencing",
-            "opcode": 520,
+            "opcode": 841,
             "size": 24
         },
         {
             "name": "StatusEffectList3",
-            "opcode": 658,
+            "opcode": 256,
             "size": 360
         },
         {
             "name": "CrossworldLinkshells",
-            "opcode": 400,
+            "opcode": 135,
             "size": 456
         },
         {
             "name": "SetSearchComment",
-            "opcode": 256,
+            "opcode": 889,
             "size": 216
         },
         {
             "name": "WalkInEvent",
-            "opcode": 604,
+            "opcode": 829,
             "size": 24
         },
         {
             "name": "GrandCompanyInfo",
-            "opcode": 727,
+            "opcode": 539,
             "size": 8
         },
         {
             "name": "CraftingLog",
-            "opcode": 375,
+            "opcode": 516,
             "size": 808
         },
         {
             "name": "GatheringLog",
-            "opcode": 812,
+            "opcode": 301,
             "size": 104
         }
     ],
     "ClientZoneIpcType": [
         {
             "name": "InitRequest",
-            "opcode": 182,
+            "opcode": 338,
             "size": 120
         },
         {
             "name": "FinishLoading",
-            "opcode": 965,
+            "opcode": 822,
             "size": 72
         },
         {
             "name": "ClientTrigger",
-            "opcode": 828,
+            "opcode": 340,
             "size": 32
         },
         {
             "name": "Unk3",
-            "opcode": 422,
+            "opcode": 410,
             "size": 8
         },
         {
             "name": "Unk4",
-            "opcode": 844,
+            "opcode": 103,
             "size": 8
         },
         {
             "name": "Unk18",
-            "opcode": 649,
+            "opcode": 269,
             "size": 8
         },
         {
             "name": "Unk5",
-            "opcode": 256,
+            "opcode": 889,
             "size": 8
         },
         {
@@ -399,127 +399,127 @@
         },
         {
             "name": "UpdatePositionHandler",
-            "opcode": 518,
+            "opcode": 373,
             "size": 24
         },
         {
             "name": "LogOut",
-            "opcode": 378,
+            "opcode": 735,
             "size": 8
         },
         {
             "name": "Disconnected",
-            "opcode": 776,
+            "opcode": 897,
             "size": 8
         },
         {
             "name": "ChatMessage",
-            "opcode": 163,
+            "opcode": 563,
             "size": 1056
         },
         {
             "name": "GMCommand",
-            "opcode": 641,
+            "opcode": 573,
             "size": 32
         },
         {
             "name": "ZoneJump",
-            "opcode": 453,
+            "opcode": 561,
             "size": 24
         },
         {
             "name": "ActionRequest",
-            "opcode": 275,
+            "opcode": 600,
             "size": 32
         },
         {
             "name": "Unk16",
-            "opcode": 161,
+            "opcode": 433,
             "size": 8
         },
         {
             "name": "PingSync",
-            "opcode": 967,
+            "opcode": 241,
             "size": 32
         },
         {
             "name": "SetSearchInfoHandler",
-            "opcode": 352,
+            "opcode": 589,
             "size": 8
         },
         {
             "name": "EventRelatedUnk",
-            "opcode": 155,
+            "opcode": 444,
             "size": 16
         },
         {
             "name": "Unk19",
-            "opcode": 335,
+            "opcode": 687,
             "size": 16
         },
         {
             "name": "ItemOperation",
-            "opcode": 957,
+            "opcode": 157,
             "size": 48
         },
         {
             "name": "StartTalkEvent",
-            "opcode": 787,
+            "opcode": 442,
             "size": 16
         },
         {
             "name": "EventYieldHandler",
-            "opcode": 159,
+            "opcode": 525,
             "size": 16
         },
         {
             "name": "EventYieldHandler8",
-            "opcode": 494,
+            "opcode": 308,
             "size": 40
         },
         {
             "name": "Config",
-            "opcode": 309,
+            "opcode": 483,
             "size": 8
         },
         {
             "name": "EventUnkRequest",
-            "opcode": 123,
+            "opcode": 601,
             "size": 16
         },
         {
             "name": "GilShopTransaction",
-            "opcode": 492,
+            "opcode": 553,
             "size": 24
         },
         {
             "name": "UnkCall2",
-            "opcode": 684,
+            "opcode": 348,
             "size": 8
         },
         {
             "name": "StandardControlsPivot",
-            "opcode": 556,
+            "opcode": 295,
             "size": 8
         },
         {
             "name": "ContentFinderRegister",
-            "opcode": 750,
+            "opcode": 235,
             "size": 40
         },
         {
             "name": "ContentFinderAction",
-            "opcode": 381,
+            "opcode": 978,
             "size": 8
         },
         {
             "name": "EquipGearset",
-            "opcode": 215,
+            "opcode": 683,
             "size": 72
         },
         {
             "name": "StartWalkInEvent",
-            "opcode": 477,
+            "opcode": 640,
             "size": 24
         }
     ],
