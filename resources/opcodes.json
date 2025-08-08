@@ -414,7 +414,7 @@
         },
         {
             "name": "ChatMessage",
-            "opcode": 412,
+            "opcode": 163,
             "size": 1056
         },
         {
@@ -494,7 +494,7 @@
         },
         {
             "name": "UnkCall2",
-            "opcode": 458,
+            "opcode": 684,
             "size": 8
         },
         {
