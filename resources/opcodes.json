@@ -429,7 +429,7 @@
         },
         {
             "name": "ActionRequest",
-            "opcode": 677,
+            "opcode": 275,
             "size": 32
         },
         {
