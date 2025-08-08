@@ -424,7 +424,7 @@
         },
         {
             "name": "ZoneJump",
-            "opcode": 392,
+            "opcode": 453,
             "size": 24
         },
         {
