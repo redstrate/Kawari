@@ -37,11 +37,14 @@ impl ChatHandler {
                 true
             }
             "!spawnmonster" => {
+                let (_, id) = chat_message.message.split_once(' ').unwrap();
+
                 connection
                     .handle
                     .send(ToServer::DebugNewEnemy(
                         connection.id,
                         connection.player_data.actor_id,
+                        id.parse().unwrap(),
                     ))
                     .await;
                 true

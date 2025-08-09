@@ -105,7 +105,7 @@ pub enum ToServer {
     /// Spawn a friendly debug NPC.
     DebugNewNpc(ClientId, u32),
     /// Spawn an enemy debug NPC.
-    DebugNewEnemy(ClientId, u32),
+    DebugNewEnemy(ClientId, u32, u32),
     /// Spawn a debug clone.
     DebugSpawnClone(ClientId, u32),
     /// Request to perform an action

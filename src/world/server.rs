@@ -769,7 +769,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     spawn,
                 );
             }
-            ToServer::DebugNewEnemy(_from_id, from_actor_id) => {
+            ToServer::DebugNewEnemy(_from_id, from_actor_id, id) => {
                 let mut data = data.lock().unwrap();
 
                 let actor_id = Instance::generate_actor_id();
@@ -787,6 +787,12 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         break;
                     };
 
+                    let model_chara;
+                    {
+                        let mut game_data = game_data.lock().unwrap();
+                        model_chara = game_data.find_bnpc(id).unwrap();
+                    }
+
                     spawn = NpcSpawn {
                         aggression_mode: 1,
                         common: CommonSpawn {
@@ -794,13 +800,13 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                             hp_max: 91,
                             mp_curr: 100,
                             mp_max: 100,
-                            spawn_index: 0,   // not needed at this level
-                            bnpc_base: 13498, // TODO: changing this prevents it from spawning...
+                            spawn_index: 0, // not needed at this level
+                            bnpc_base: id,
                             bnpc_name: 405,
                             object_kind: ObjectKind::BattleNpc(BattleNpcSubKind::Enemy),
                             level: 1,
                             battalion: 4,
-                            model_chara: 297,
+                            model_chara,
                             pos: player.common.pos,
                             ..Default::default()
                         },

@@ -1259,7 +1259,9 @@ impl ZoneConnection {
         {
             let ipc = ServerZoneIpcSegment {
                 op_code: ServerZoneIpcType::LogOutComplete,
-                data: ServerZoneIpcData::LogOutComplete { unk: [1, 0, 0, 0, 0, 0, 0, 0] },
+                data: ServerZoneIpcData::LogOutComplete {
+                    unk: [1, 0, 0, 0, 0, 0, 0, 0],
+                },
                 ..Default::default()
             };
 

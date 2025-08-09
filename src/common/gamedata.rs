@@ -2,11 +2,13 @@ use std::path::PathBuf;
 
 use icarus::Action::ActionSheet;
 use icarus::Aetheryte::AetheryteSheet;
+use icarus::BNpcBase::BNpcBaseSheet;
 use icarus::ClassJob::ClassJobSheet;
 use icarus::ContentFinderCondition::ContentFinderConditionSheet;
 use icarus::EquipSlotCategory::EquipSlotCategorySheet;
 use icarus::GilShopItem::GilShopItemSheet;
 use icarus::InstanceContent::InstanceContentSheet;
+use icarus::ModelChara::ModelCharaSheet;
 use icarus::PlaceName::PlaceNameSheet;
 use icarus::TerritoryType::TerritoryTypeSheet;
 use icarus::WeatherRate::WeatherRateSheet;
@@ -460,6 +462,18 @@ impl GameData {
         let content_finder_row = content_finder_sheet.get_row(*content_finder_row_id as u32)?;
 
         content_finder_row.TerritoryType().into_u16().copied()
+    }
+
+    /// Grabs needed BattleNPC information such as their name, model id and more.
+    pub fn find_bnpc(&mut self, id: u32) -> Option<u16> {
+        let bnpc_sheet = BNpcBaseSheet::read_from(&mut self.resource, Language::None).unwrap();
+        let bnpc_row = bnpc_sheet.get_row(id)?;
+
+        let model_row_id = bnpc_row.ModelChara().into_u16()?;
+        let model_sheet = ModelCharaSheet::read_from(&mut self.resource, Language::None).unwrap();
+        let model_row = model_sheet.get_row(*model_row_id as u32)?;
+
+        model_row.Model().into_u16().copied()
     }
 }
 
