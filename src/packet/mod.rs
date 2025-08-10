@@ -11,7 +11,7 @@ mod encryption;
 pub use encryption::generate_encryption_key;
 
 mod ipc;
-pub use ipc::{IPC_HEADER_SIZE, IpcSegment, ReadWriteIpcSegment};
+pub use ipc::{IPC_HEADER_SIZE, IpcSegment, ReadWriteIpcOpcode, ReadWriteIpcSegment};
 
 /// Bindings for Oodle network compression.
 pub mod oodle;

@@ -1,8 +1,9 @@
 use binrw::binrw;
+use paramacro::opcode_data;
 
 use crate::{
     opcodes::ClientChatIpcType,
-    packet::{IPC_HEADER_SIZE, IpcSegment, ReadWriteIpcSegment},
+    packet::{IPC_HEADER_SIZE, IpcSegment, ReadWriteIpcOpcode, ReadWriteIpcSegment},
 };
 
 pub type ClientChatIpcSegment = IpcSegment<ClientChatIpcType, ClientChatIpcData>;
@@ -21,6 +22,7 @@ impl ReadWriteIpcSegment for ClientChatIpcSegment {
     }
 }
 
+#[opcode_data(ClientChatIpcType)]
 #[binrw]
 #[br(import(_magic: &ClientChatIpcType, size: &u32))]
 #[derive(Debug, Clone)]

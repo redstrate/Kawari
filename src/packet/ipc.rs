@@ -2,6 +2,12 @@ use binrw::{BinRead, BinWrite, binrw};
 
 use crate::common::timestamp_secs;
 
+/// Required to implement specializations of `IpcSegment`.
+pub trait ReadWriteIpcOpcode<T> {
+    /// Returns the opcode that fits `data`.
+    fn from_data(data: &T) -> Self;
+}
+
 /// Required to implement for specializations of `IpcSegment`. These should be read/writeable, however for client packets you can leave calc_size() unimplemented.
 pub trait ReadWriteIpcSegment:
     for<'a> BinRead<Args<'a> = (&'a u32,)>
@@ -48,8 +54,10 @@ pub trait ReadWriteIpcSegment:
 #[br(import(size: &u32))]
 pub struct IpcSegment<OpCode, Data>
 where
-    for<'a> OpCode: BinRead<Args<'a> = ()> + 'a + std::fmt::Debug + Default,
-    for<'a> OpCode: BinWrite<Args<'a> = ()> + 'a + std::fmt::Debug + Default,
+    for<'a> OpCode:
+        BinRead<Args<'a> = ()> + 'a + std::fmt::Debug + Default + ReadWriteIpcOpcode<Data>,
+    for<'a> OpCode:
+        BinWrite<Args<'a> = ()> + 'a + std::fmt::Debug + Default + ReadWriteIpcOpcode<Data>,
     for<'a> Data: BinRead<Args<'a> = (&'a OpCode, &'a u32)> + 'a + std::fmt::Debug + Default,
     for<'a> Data: BinWrite<Args<'a> = ()> + 'a + std::fmt::Debug + Default,
 {
@@ -70,10 +78,31 @@ where
     pub data: Data,
 }
 
+impl<OpCode, Data> IpcSegment<OpCode, Data>
+where
+    for<'a> OpCode:
+        BinRead<Args<'a> = ()> + 'a + std::fmt::Debug + Default + ReadWriteIpcOpcode<Data>,
+    for<'a> OpCode:
+        BinWrite<Args<'a> = ()> + 'a + std::fmt::Debug + Default + ReadWriteIpcOpcode<Data>,
+    for<'a> Data: BinRead<Args<'a> = (&'a OpCode, &'a u32)> + 'a + std::fmt::Debug + Default,
+    for<'a> Data: BinWrite<Args<'a> = ()> + 'a + std::fmt::Debug + Default,
+{
+    /// Creates a new IPC segment with the specified `data`.
+    pub fn new(data: Data) -> Self {
+        Self {
+            op_code: OpCode::from_data(&data),
+            data,
+            ..Default::default()
+        }
+    }
+}
+
 impl<OpCode, Data> Default for IpcSegment<OpCode, Data>
 where
-    for<'a> OpCode: BinRead<Args<'a> = ()> + 'a + std::fmt::Debug + Default,
-    for<'a> OpCode: BinWrite<Args<'a> = ()> + 'a + std::fmt::Debug + Default,
+    for<'a> OpCode:
+        BinRead<Args<'a> = ()> + 'a + std::fmt::Debug + Default + ReadWriteIpcOpcode<Data>,
+    for<'a> OpCode:
+        BinWrite<Args<'a> = ()> + 'a + std::fmt::Debug + Default + ReadWriteIpcOpcode<Data>,
     for<'a> Data: BinRead<Args<'a> = (&'a OpCode, &'a u32)> + 'a + std::fmt::Debug + Default,
     for<'a> Data: BinWrite<Args<'a> = ()> + 'a + std::fmt::Debug + Default,
 {
