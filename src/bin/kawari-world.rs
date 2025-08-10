@@ -20,7 +20,6 @@ use kawari::ipc::zone::{
     ClientTriggerCommand, ClientZoneIpcData, GameMasterRank, OnlineStatus, ServerZoneIpcData,
     ServerZoneIpcSegment, SocialListRequestType,
 };
-use kawari::opcodes::{ServerChatIpcType, ServerZoneIpcType};
 use kawari::packet::oodle::OodleNetwork;
 use kawari::packet::{
     ConnectionType, PacketSegment, PacketState, SegmentData, SegmentType, send_keep_alive,
@@ -218,14 +217,10 @@ async fn client_loop(
 
                                             // send login reply
                                             {
-                                                let ipc = ServerChatIpcSegment {
-                                                    op_code: ServerChatIpcType::LoginReply,
-                                                    data: ServerChatIpcData::LoginReply {
-                                                        timestamp: 0,
-                                                        sid: 0,
-                                                    },
-                                                    ..Default::default()
-                                                };
+                                                let ipc = ServerChatIpcSegment::new(ServerChatIpcData::LoginReply {
+                                                    timestamp: 0,
+                                                    sid: 0,
+                                                });
 
                                                 connection.send_chat_segment(PacketSegment {
                                                     source_actor: connection.player_data.actor_id,
@@ -246,15 +241,11 @@ async fn client_loop(
 
                                                 // IPC Init(?)
                                                 {
-                                                    let ipc = ServerZoneIpcSegment {
-                                                        op_code: ServerZoneIpcType::InitResponse,
-                                                        data: ServerZoneIpcData::InitResponse {
-                                                            unk1: 0,
-                                                            character_id: connection.player_data.actor_id,
-                                                            unk2: 0,
-                                                        },
-                                                        ..Default::default()
-                                                    };
+                                                    let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InitResponse {
+                                                        unk1: 0,
+                                                        character_id: connection.player_data.actor_id,
+                                                        unk2: 0,
+                                                    });
 
                                                     connection
                                                     .send_segment(PacketSegment {
@@ -293,43 +284,39 @@ async fn client_loop(
 
                                                 // Player Setup
                                                 {
-                                                    let ipc = ServerZoneIpcSegment {
-                                                        op_code: ServerZoneIpcType::PlayerStatus,
-                                                        data: ServerZoneIpcData::PlayerStatus(PlayerStatus {
-                                                            content_id: connection.player_data.content_id,
-                                                            // Disabled for now until the client stops freaking out
-                                                            //exp: connection.player_data.classjob_exp,
-                                                            max_level: 100,
-                                                            expansion: 5,
-                                                            name: chara_details.name,
-                                                            char_id: connection.player_data.actor_id,
-                                                            race: chara_details.chara_make.customize.race,
-                                                            gender: chara_details.chara_make.customize.gender,
-                                                            tribe: chara_details.chara_make.customize.subrace,
-                                                            city_state: chara_details.city_state,
-                                                            nameday_month: chara_details.chara_make.birth_month
-                                                            as u8,
-                                                            nameday_day: chara_details.chara_make.birth_day as u8,
-                                                            deity: chara_details.chara_make.guardian as u8,
-                                                            current_class: current_class as u8,
-                                                            current_job: connection.player_data.classjob_id,
-                                                            levels: connection.player_data.classjob_levels.map(|x| x as u16),
-                                                            unlocks: connection.player_data.unlocks.unlocks.clone(),
-                                                            aetherytes: connection.player_data.unlocks.aetherytes.clone(),
-                                                            unlocked_raids: connection.player_data.unlocks.unlocked_raids.clone(),
-                                                            unlocked_dungeons: connection.player_data.unlocks.unlocked_dungeons.clone(),
-                                                            unlocked_guildhests: connection.player_data.unlocks.unlocked_guildhests.clone(),
-                                                            unlocked_trials: connection.player_data.unlocks.unlocked_trials.clone(),
-                                                            unlocked_pvp: connection.player_data.unlocks.unlocked_pvp.clone(),
-                                                            cleared_raids: connection.player_data.unlocks.cleared_raids.clone(),
-                                                            cleared_dungeons: connection.player_data.unlocks.cleared_dungeons.clone(),
-                                                            cleared_guildhests: connection.player_data.unlocks.cleared_guildhests.clone(),
-                                                            cleared_trials: connection.player_data.unlocks.cleared_trials.clone(),
-                                                            cleared_pvp: connection.player_data.unlocks.cleared_pvp.clone(),
-                                                            ..Default::default()
-                                                        }),
+                                                    let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PlayerStatus(PlayerStatus {
+                                                        content_id: connection.player_data.content_id,
+                                                        // Disabled for now until the client stops freaking out
+                                                        //exp: connection.player_data.classjob_exp,
+                                                        max_level: 100,
+                                                        expansion: 5,
+                                                        name: chara_details.name,
+                                                        char_id: connection.player_data.actor_id,
+                                                        race: chara_details.chara_make.customize.race,
+                                                        gender: chara_details.chara_make.customize.gender,
+                                                        tribe: chara_details.chara_make.customize.subrace,
+                                                        city_state: chara_details.city_state,
+                                                        nameday_month: chara_details.chara_make.birth_month
+                                                        as u8,
+                                                        nameday_day: chara_details.chara_make.birth_day as u8,
+                                                        deity: chara_details.chara_make.guardian as u8,
+                                                        current_class: current_class as u8,
+                                                        current_job: connection.player_data.classjob_id,
+                                                        levels: connection.player_data.classjob_levels.map(|x| x as u16),
+                                                        unlocks: connection.player_data.unlocks.unlocks.clone(),
+                                                        aetherytes: connection.player_data.unlocks.aetherytes.clone(),
+                                                        unlocked_raids: connection.player_data.unlocks.unlocked_raids.clone(),
+                                                        unlocked_dungeons: connection.player_data.unlocks.unlocked_dungeons.clone(),
+                                                        unlocked_guildhests: connection.player_data.unlocks.unlocked_guildhests.clone(),
+                                                        unlocked_trials: connection.player_data.unlocks.unlocked_trials.clone(),
+                                                        unlocked_pvp: connection.player_data.unlocks.unlocked_pvp.clone(),
+                                                        cleared_raids: connection.player_data.unlocks.cleared_raids.clone(),
+                                                        cleared_dungeons: connection.player_data.unlocks.cleared_dungeons.clone(),
+                                                        cleared_guildhests: connection.player_data.unlocks.cleared_guildhests.clone(),
+                                                        cleared_trials: connection.player_data.unlocks.cleared_trials.clone(),
+                                                        cleared_pvp: connection.player_data.unlocks.cleared_pvp.clone(),
                                                         ..Default::default()
-                                                    };
+                                                    }));
 
                                                     connection
                                                     .send_segment(PacketSegment {
@@ -384,20 +371,16 @@ async fn client_loop(
 
                                                 // send player spawn
                                                 {
-                                                    let ipc = ServerZoneIpcSegment {
-                                                        op_code: ServerZoneIpcType::PlayerSpawn,
-                                                        data: ServerZoneIpcData::PlayerSpawn(PlayerSpawn {
-                                                            account_id: connection.player_data.account_id,
-                                                            content_id: connection.player_data.content_id,
-                                                            current_world_id: config.world.world_id,
-                                                            home_world_id: config.world.world_id,
-                                                            gm_rank: connection.player_data.gm_rank,
-                                                            online_status,
-                                                            common: common.clone(),
-                                                            ..Default::default()
-                                                        }),
+                                                    let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PlayerSpawn(PlayerSpawn {
+                                                        account_id: connection.player_data.account_id,
+                                                        content_id: connection.player_data.content_id,
+                                                        current_world_id: config.world.world_id,
+                                                        home_world_id: config.world.world_id,
+                                                        gm_rank: connection.player_data.gm_rank,
+                                                        online_status,
+                                                        common: common.clone(),
                                                         ..Default::default()
-                                                    };
+                                                    }));
 
                                                     connection
                                                     .send_segment(PacketSegment {
@@ -426,13 +409,9 @@ async fn client_loop(
                                                     ClientTriggerCommand::RequestTitleList {} => {
                                                         // send full title list for now
 
-                                                        let ipc = ServerZoneIpcSegment {
-                                                            op_code: ServerZoneIpcType::TitleList,
-                                                            data: ServerZoneIpcData::TitleList {
-                                                                unlock_bitmask: [0xFF; TITLE_UNLOCK_BITMASK_SIZE]
-                                                            },
-                                                            ..Default::default()
-                                                        };
+                                                        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::TitleList {
+                                                            unlock_bitmask: [0xFF; TITLE_UNLOCK_BITMASK_SIZE]
+                                                        });
 
                                                         connection
                                                         .send_segment(PacketSegment {
@@ -480,22 +459,18 @@ async fn client_loop(
 
                                                 match &request.request_type {
                                                     SocialListRequestType::Party => {
-                                                        let ipc = ServerZoneIpcSegment {
-                                                            op_code: ServerZoneIpcType::SocialList,
-                                                            data: ServerZoneIpcData::SocialList(SocialList {
-                                                                request_type: request.request_type,
-                                                                sequence: request.count,
-                                                                entries: vec![PlayerEntry {
-                                                                    // TODO: fill with actual player data, it also shows up wrong in game
-                                                                    content_id: connection.player_data.content_id,
-                                                                    zone_id: connection.zone.as_ref().unwrap().id,
-                                                                    zone_id1: 0x0100,
-                                                                    name: "INVALID".to_string(),
-                                                                    ..Default::default()
-                                                                }],
-                                                            }),
-                                                            ..Default::default()
-                                                        };
+                                                        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::SocialList(SocialList {
+                                                            request_type: request.request_type,
+                                                            sequence: request.count,
+                                                            entries: vec![PlayerEntry {
+                                                                // TODO: fill with actual player data, it also shows up wrong in game
+                                                                content_id: connection.player_data.content_id,
+                                                                zone_id: connection.zone.as_ref().unwrap().id,
+                                                                zone_id1: 0x0100,
+                                                                name: "INVALID".to_string(),
+                                                                ..Default::default()
+                                                            }],
+                                                        }));
 
                                                         connection
                                                         .send_segment(PacketSegment {
@@ -507,15 +482,11 @@ async fn client_loop(
                                                         .await;
                                                     }
                                                     SocialListRequestType::Friends => {
-                                                        let ipc = ServerZoneIpcSegment {
-                                                            op_code: ServerZoneIpcType::SocialList,
-                                                            data: ServerZoneIpcData::SocialList(SocialList {
-                                                                request_type: request.request_type,
-                                                                sequence: request.count,
-                                                                entries: Default::default(),
-                                                            }),
-                                                            ..Default::default()
-                                                        };
+                                                        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::SocialList(SocialList {
+                                                            request_type: request.request_type,
+                                                            sequence: request.count,
+                                                            entries: Default::default(),
+                                                        }));
 
                                                         connection
                                                         .send_segment(PacketSegment {
@@ -787,14 +758,10 @@ async fn client_loop(
                                             }
                                             ClientZoneIpcData::PingSync { timestamp, .. } => {
                                                 // this is *usually* sent in response, but not always
-                                                let ipc = ServerZoneIpcSegment {
-                                                    op_code: ServerZoneIpcType::PingSyncReply,
-                                                    data: ServerZoneIpcData::PingSyncReply {
-                                                        timestamp: *timestamp, // copied from here
-                                                        transmission_interval: 333, // always this for some reason
-                                                    },
-                                                    ..Default::default()
-                                                };
+                                                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PingSyncReply {
+                                                    timestamp: *timestamp, // copied from here
+                                                    transmission_interval: 333, // always this for some reason
+                                                });
 
                                                 connection
                                                 .send_segment(PacketSegment {
@@ -844,25 +811,21 @@ async fn client_loop(
                                                 if action.operation_type == ItemOperationKind::Discard {
                                                     tracing::info!("Client is discarding from their inventory!");
 
-                                                    let ipc = ServerZoneIpcSegment {
-                                                        op_code: ServerZoneIpcType::InventoryTransaction,
-                                                        data: ServerZoneIpcData::InventoryTransaction {
-                                                            sequence: connection.player_data.item_sequence,
-                                                            operation_type: action.operation_type,
-                                                            src_actor_id: connection.player_data.actor_id,
-                                                            src_storage_id: action.src_storage_id,
-                                                            src_container_index: action.src_container_index,
-                                                            src_stack: action.src_stack,
-                                                            src_catalog_id: action.src_catalog_id,
-                                                            dst_actor_id: INVALID_OBJECT_ID.0,
-                                                            dummy_container: ContainerType::DiscardingItemSentinel,
-                                                            dst_storage_id: ContainerType::DiscardingItemSentinel,
-                                                            dst_container_index: u16::MAX,
-                                                            dst_stack: 0,
-                                                            dst_catalog_id: 0,
-                                                        },
-                                                        ..Default::default()
-                                                    };
+                                                    let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InventoryTransaction {
+                                                        sequence: connection.player_data.item_sequence,
+                                                        operation_type: action.operation_type,
+                                                        src_actor_id: connection.player_data.actor_id,
+                                                        src_storage_id: action.src_storage_id,
+                                                        src_container_index: action.src_container_index,
+                                                        src_stack: action.src_stack,
+                                                        src_catalog_id: action.src_catalog_id,
+                                                        dst_actor_id: INVALID_OBJECT_ID.0,
+                                                        dummy_container: ContainerType::DiscardingItemSentinel,
+                                                        dst_storage_id: ContainerType::DiscardingItemSentinel,
+                                                        dst_container_index: u16::MAX,
+                                                        dst_stack: 0,
+                                                        dst_catalog_id: 0,
+                                                    });
                                                     connection
                                                     .send_segment(PacketSegment {
                                                         source_actor: connection.player_data.actor_id,
@@ -943,25 +906,21 @@ async fn client_loop(
                                                         connection.send_gilshop_item_update(storage as u16, index as u16, 0, 0).await;
 
                                                         // TODO: Refactor InventoryTransactions into connection.rs
-                                                        let ipc = ServerZoneIpcSegment {
-                                                            op_code: ServerZoneIpcType::InventoryTransaction,
-                                                            data: ServerZoneIpcData::InventoryTransaction {
-                                                                sequence: connection.player_data.item_sequence,
-                                                                operation_type: ItemOperationKind::Update,
-                                                                src_actor_id: connection.player_data.actor_id,
-                                                                src_storage_id: ContainerType::Currency,
-                                                                src_container_index: 0,
-                                                                src_stack: connection.player_data.inventory.currency.gil.quantity,
-                                                                src_catalog_id: CurrencyKind::Gil as u32,
-                                                                dst_actor_id: INVALID_OBJECT_ID.0,
-                                                                dummy_container: ContainerType::DiscardingItemSentinel,
-                                                                dst_storage_id: ContainerType::DiscardingItemSentinel,
-                                                                dst_container_index: u16::MAX,
-                                                                dst_stack: 0,
-                                                                dst_catalog_id: 0,
-                                                            },
-                                                            ..Default::default()
-                                                        };
+                                                        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InventoryTransaction {
+                                                            sequence: connection.player_data.item_sequence,
+                                                            operation_type: ItemOperationKind::Update,
+                                                            src_actor_id: connection.player_data.actor_id,
+                                                            src_storage_id: ContainerType::Currency,
+                                                            src_container_index: 0,
+                                                            src_stack: connection.player_data.inventory.currency.gil.quantity,
+                                                            src_catalog_id: CurrencyKind::Gil as u32,
+                                                            dst_actor_id: INVALID_OBJECT_ID.0,
+                                                            dummy_container: ContainerType::DiscardingItemSentinel,
+                                                            dst_storage_id: ContainerType::DiscardingItemSentinel,
+                                                            dst_container_index: u16::MAX,
+                                                            dst_stack: 0,
+                                                            dst_catalog_id: 0,
+                                                        });
                                                         connection
                                                         .send_segment(PacketSegment {
                                                             source_actor: connection.player_data.actor_id,
@@ -981,25 +940,21 @@ async fn client_loop(
 
                                                         connection.player_data.inventory.process_action(&action);
 
-                                                        let ipc = ServerZoneIpcSegment {
-                                                            op_code: ServerZoneIpcType::InventoryTransaction,
-                                                            data: ServerZoneIpcData::InventoryTransaction {
-                                                                sequence: connection.player_data.item_sequence,
-                                                                operation_type: ItemOperationKind::Discard,
-                                                                src_actor_id: connection.player_data.actor_id,
-                                                                src_storage_id: storage,
-                                                                src_container_index: index as u16,
-                                                                src_stack: quantity,
-                                                                src_catalog_id: item_info.id,
-                                                                dst_actor_id: INVALID_OBJECT_ID.0,
-                                                                dummy_container: ContainerType::DiscardingItemSentinel,
-                                                                dst_storage_id: ContainerType::DiscardingItemSentinel,
-                                                                dst_container_index: u16::MAX,
-                                                                dst_stack: 0,
-                                                                dst_catalog_id: 0,
-                                                            },
-                                                            ..Default::default()
-                                                        };
+                                                        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InventoryTransaction {
+                                                            sequence: connection.player_data.item_sequence,
+                                                            operation_type: ItemOperationKind::Discard,
+                                                            src_actor_id: connection.player_data.actor_id,
+                                                            src_storage_id: storage,
+                                                            src_container_index: index as u16,
+                                                            src_stack: quantity,
+                                                            src_catalog_id: item_info.id,
+                                                            dst_actor_id: INVALID_OBJECT_ID.0,
+                                                            dummy_container: ContainerType::DiscardingItemSentinel,
+                                                            dst_storage_id: ContainerType::DiscardingItemSentinel,
+                                                            dst_container_index: u16::MAX,
+                                                            dst_stack: 0,
+                                                            dst_catalog_id: 0,
+                                                        });
                                                         connection
                                                         .send_segment(PacketSegment {
                                                             source_actor: connection.player_data.actor_id,
@@ -1074,16 +1029,12 @@ async fn client_loop(
                                                  * pivoting anyway. */
                                             }
                                             ClientZoneIpcData::EventUnkRequest { event_id, unk1, unk2, unk3 } => {
-                                                 let ipc = ServerZoneIpcSegment {
-                                                        op_code: ServerZoneIpcType::EventUnkReply,
-                                                        data: ServerZoneIpcData::EventUnkReply {
-                                                            event_id: *event_id,
-                                                            unk1: *unk1,
-                                                            unk2: *unk2,
-                                                            unk3: *unk3 + 1,
-                                                        },
-                                                        ..Default::default()
-                                                    };
+                                                 let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::EventUnkReply {
+                                                        event_id: *event_id,
+                                                        unk1: *unk1,
+                                                        unk2: *unk2,
+                                                        unk3: *unk3 + 1,
+                                                    });
 
                                                     connection
                                                     .send_segment(PacketSegment {
@@ -1095,13 +1046,9 @@ async fn client_loop(
                                                     .await;
                                             }
                                             ClientZoneIpcData::UnkCall2 { .. } => {
-                                                let ipc = ServerZoneIpcSegment {
-                                                    op_code: ServerZoneIpcType::UnkResponse2,
-                                                    data: ServerZoneIpcData::UnkResponse2 {
-                                                        unk1: 1,
-                                                    },
-                                                    ..Default::default()
-                                                };
+                                                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UnkResponse2 {
+                                                    unk1: 1,
+                                                });
 
                                                 connection
                                                 .send_segment(PacketSegment {
@@ -1119,47 +1066,43 @@ async fn client_loop(
 
                                                 // update
                                                 {
-                                                    let ipc = ServerZoneIpcSegment {
-                                                        op_code: ServerZoneIpcType::ContentFinderUpdate,
-                                                        data: ServerZoneIpcData::ContentFinderUpdate {
-                                                            state1: 1,
-                                                            classjob_id: connection.player_data.classjob_id, // TODO: store what they registered with, because it can change
-                                                            unk1: [
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                96,
-                                                                4,
-                                                                2,
-                                                                64,
-                                                                1,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                1,
-                                                                1,
-                                                            ],
-                                                            content_ids: *content_ids,
-                                                            unk2: [
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                            ],
-                                                        },
-                                                        ..Default::default()
-                                                    };
+                                                    let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ContentFinderUpdate {
+                                                        state1: 1,
+                                                        classjob_id: connection.player_data.classjob_id, // TODO: store what they registered with, because it can change
+                                                        unk1: [
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            96,
+                                                            4,
+                                                            2,
+                                                            64,
+                                                            1,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            1,
+                                                            1,
+                                                        ],
+                                                        content_ids: *content_ids,
+                                                        unk2: [
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                        ],
+                                                    });
 
                                                     connection
                                                     .send_segment(PacketSegment {
@@ -1173,55 +1116,51 @@ async fn client_loop(
 
                                                 // found
                                                 {
-                                                    let ipc = ServerZoneIpcSegment {
-                                                        op_code: ServerZoneIpcType::ContentFinderFound,
-                                                        data: ServerZoneIpcData::ContentFinderFound {
-                                                            unk1: [
-                                                                3,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                96,
-                                                                4,
-                                                                2,
-                                                                64,
-                                                                1,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                1,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                            ],
-                                                            content_id: content_ids[0],
-                                                            unk2: [
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                1,
-                                                            ],
-                                                        },
-                                                        ..Default::default()
-                                                    };
+                                                    let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ContentFinderFound {
+                                                        unk1: [
+                                                            3,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            96,
+                                                            4,
+                                                            2,
+                                                            64,
+                                                            1,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            1,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                        ],
+                                                        content_id: content_ids[0],
+                                                        unk2: [
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            1,
+                                                        ],
+                                                    });
 
                                                     connection
                                                     .send_segment(PacketSegment {
@@ -1239,38 +1178,34 @@ async fn client_loop(
 
                                                 // commencing
                                                 {
-                                                    let ipc = ServerZoneIpcSegment {
-                                                        op_code: ServerZoneIpcType::ContentFinderCommencing,
-                                                        data: ServerZoneIpcData::ContentFinderCommencing {
-                                                            unk1: [
-                                                                4,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                1,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                4,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                1,
-                                                                1,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                0,
-                                                            ],
-                                                        },
-                                                        ..Default::default()
-                                                    };
+                                                    let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ContentFinderCommencing {
+                                                        unk1: [
+                                                            4,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            1,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            4,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            1,
+                                                            1,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                        ],
+                                                    });
 
                                                     connection
                                                     .send_segment(PacketSegment {

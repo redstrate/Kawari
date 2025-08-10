@@ -1,4 +1,5 @@
 use binrw::binrw;
+use paramacro::opcode_data;
 
 pub mod dist_retainer_info;
 pub mod login_reply;
@@ -21,7 +22,7 @@ pub use nack_reply::NackReply;
 use crate::{
     common::{read_string, write_string},
     opcodes::ServerLobbyIpcType,
-    packet::{IPC_HEADER_SIZE, IpcSegment, ReadWriteIpcSegment},
+    packet::{IPC_HEADER_SIZE, IpcSegment, ReadWriteIpcOpcode, ReadWriteIpcSegment},
 };
 
 pub type ServerLobbyIpcSegment = IpcSegment<ServerLobbyIpcType, ServerLobbyIpcData>;
@@ -40,21 +41,14 @@ impl ReadWriteIpcSegment for ServerLobbyIpcSegment {
     }
 }
 
+#[opcode_data(ServerLobbyIpcType)]
 #[binrw]
 #[br(import(magic: &ServerLobbyIpcType, size: &u32))]
 #[derive(Debug, Clone)]
 pub enum ServerLobbyIpcData {
-    /// Sent by the server to indicate an lobby error occured.
-    #[br(pre_assert(*magic == ServerLobbyIpcType::NackReply))]
     NackReply(NackReply),
-    /// Sent by the server to inform the client of their service accounts.
-    #[br(pre_assert(*magic == ServerLobbyIpcType::LoginReply))]
     LoginReply(LoginReply),
-    /// Sent by the server to inform the client of their characters.
-    #[br(pre_assert(*magic == ServerLobbyIpcType::ServiceLoginReply))]
     ServiceLoginReply(ServiceLoginReply),
-    // Assumed what this is, but probably incorrect
-    #[br(pre_assert(*magic == ServerLobbyIpcType::CharaMakeReply))]
     CharaMakeReply {
         sequence: u64,
         unk1: u8,
@@ -65,8 +59,6 @@ pub enum ServerLobbyIpcData {
         #[brw(pad_after = 1336)] // empty and garbage
         details: CharacterDetails,
     },
-    /// Sent by the server to tell the client how to connect to the world server.
-    #[br(pre_assert(*magic == ServerLobbyIpcType::GameLoginReply))]
     GameLoginReply {
         sequence: u64,
         actor_id: u32,
@@ -86,15 +78,11 @@ pub enum ServerLobbyIpcData {
         #[bw(map = write_string)]
         host: String,
     },
-    /// Sent by the server to inform the client of their servers.
-    #[br(pre_assert(*magic == ServerLobbyIpcType::DistWorldInfo))]
     DistWorldInfo(DistWorldInfo),
-    /// Sent by the server to inform the client of their retainers.
-    #[br(pre_assert(*magic == ServerLobbyIpcType::DistRetainerInfo))]
     DistRetainerInfo(DistRetainerInfo),
-    /// Unknown purpose
-    #[br(pre_assert(*magic == ServerLobbyIpcType::XiCharacterInfo))]
-    XiCharacterInfo { unk: [u8; 496] },
+    XiCharacterInfo {
+        unk: [u8; 496],
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,

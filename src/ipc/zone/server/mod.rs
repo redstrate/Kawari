@@ -1,4 +1,5 @@
 use binrw::binrw;
+use paramacro::opcode_data;
 
 pub use super::social_list::{PlayerEntry, SocialList, SocialListRequest, SocialListRequestType};
 
@@ -87,7 +88,7 @@ use crate::inventory::{ContainerType, ItemOperationKind};
 use crate::opcodes::ServerZoneIpcType;
 use crate::packet::IPC_HEADER_SIZE;
 use crate::packet::IpcSegment;
-use crate::packet::ReadWriteIpcSegment;
+use crate::packet::{ReadWriteIpcOpcode, ReadWriteIpcSegment};
 
 mod actor_move;
 pub use crate::ipc::zone::server::actor_move::ActorMove;
@@ -115,46 +116,27 @@ impl ReadWriteIpcSegment for ServerZoneIpcSegment {
     }
 }
 
+#[opcode_data(ServerZoneIpcType)]
 #[binrw]
 #[br(import(magic: &ServerZoneIpcType, size: &u32))]
 #[derive(Debug, Clone)]
 pub enum ServerZoneIpcData {
-    /// Sent by the server as response to ZoneInitRequest.
-    #[br(pre_assert(*magic == ServerZoneIpcType::InitResponse))]
     InitResponse {
         unk1: u64,
         character_id: u32,
         unk2: u32,
     },
-    /// Sent by the server that tells the client which zone to load
-    #[br(pre_assert(*magic == ServerZoneIpcType::InitZone))]
     InitZone(InitZone),
-    /// Sent by the server for... something
-    #[br(pre_assert(*magic == ServerZoneIpcType::ActorControlSelf))]
     ActorControlSelf(ActorControlSelf),
-    /// Sent by the server containing character stats
-    #[br(pre_assert(*magic == ServerZoneIpcType::PlayerStats))]
     PlayerStats(PlayerStats),
-    /// Sent by the server to setup the player on the client
-    #[br(pre_assert(*magic == ServerZoneIpcType::PlayerStatus))]
     PlayerStatus(PlayerStatus),
-    /// Sent by the server to setup class info
-    #[br(pre_assert(*magic == ServerZoneIpcType::UpdateClassInfo))]
     UpdateClassInfo(UpdateClassInfo),
-    /// Sent by the server to spawn the player in
-    #[br(pre_assert(*magic == ServerZoneIpcType::PlayerSpawn))]
     PlayerSpawn(PlayerSpawn),
-    /// Sent by the server to indicate the log out is complete
-    #[br(pre_assert(*magic == ServerZoneIpcType::LogOutComplete))]
     LogOutComplete {
         // TODO: guessed
         unk: [u8; 8],
     },
-    /// Sent by the server to modify the client's position
-    #[br(pre_assert(*magic == ServerZoneIpcType::Warp))]
     Warp(Warp),
-    /// Sent by the server when they send a chat message
-    #[br(pre_assert(*magic == ServerZoneIpcType::ServerChatMessage))]
     ServerChatMessage {
         /*
          * bits (properties will apply when set, but a final base 10 value of zero defaults to chat log only):
@@ -176,11 +158,9 @@ pub enum ServerZoneIpcData {
         #[bw(map = write_string)]
         message: String,
     },
-    /// Unknown, but seems to contain information on cross-world linkshells
-    #[br(pre_assert(*magic == ServerZoneIpcType::LinkShellInformation))]
-    LinkShellInformation { unk: [u8; 456] },
-    /// Sent by the server when it wants the client to... prepare to zone?
-    #[br(pre_assert(*magic == ServerZoneIpcType::PrepareZoning))]
+    LinkShellInformation {
+        unk: [u8; 456],
+    },
     PrepareZoning {
         log_message: u32,
         target_zone: u16,
@@ -193,104 +173,59 @@ pub enum ServerZoneIpcData {
         unk1: u8,
         unk2: u16,
     },
-    /// Sent by the server
-    #[br(pre_assert(*magic == ServerZoneIpcType::ActorControl))]
     ActorControl(ActorControl),
-    /// Sent by the server when actors that aren't the player move.
-    #[br(pre_assert(*magic == ServerZoneIpcType::ActorMove))]
     ActorMove(ActorMove),
-    /// Sent by the server in response to SocialListRequest
-    #[br(pre_assert(*magic == ServerZoneIpcType::SocialList))]
     SocialList(SocialList),
-    /// Sent by the server to spawn an NPC
-    #[br(pre_assert(*magic == ServerZoneIpcType::NpcSpawn))]
     NpcSpawn(NpcSpawn),
-    /// Sent by the server to update an actor's status effect list
-    #[br(pre_assert(*magic == ServerZoneIpcType::StatusEffectList))]
     StatusEffectList(StatusEffectList),
-    /// Sent by the server when it's time to change the weather
-    #[br(pre_assert(*magic == ServerZoneIpcType::WeatherId))]
     WeatherId(WeatherChange),
-    /// Sent to inform the client of an inventory item
-    #[br(pre_assert(*magic == ServerZoneIpcType::UpdateItem))]
     UpdateItem(ItemInfo),
-    /// Sent to inform the client of container status
-    #[br(pre_assert(*magic == ServerZoneIpcType::ContainerInfo))]
     ContainerInfo(ContainerInfo),
-    /// Sent to tell the client to play a scene
-    #[br(pre_assert(*magic == ServerZoneIpcType::EventScene))]
-    #[brw(little)]
     EventScene {
         #[brw(args { max_params: 2 } )]
         data: EventScene,
     },
-    #[br(pre_assert(*magic == ServerZoneIpcType::EventScene4))]
-    #[brw(little)]
     EventScene4 {
         #[brw(args { max_params: 4 } )]
         data: EventScene,
     },
-    #[br(pre_assert(*magic == ServerZoneIpcType::EventScene8))]
-    #[brw(little)]
     EventScene8 {
         #[brw(args { max_params: 8 } )]
         data: EventScene,
     },
-    #[br(pre_assert(*magic == ServerZoneIpcType::EventScene16))]
-    #[brw(little)]
     EventScene16 {
         #[brw(args { max_params: 16 } )]
         data: EventScene,
     },
-    #[br(pre_assert(*magic == ServerZoneIpcType::EventScene32))]
-    #[brw(little)]
     EventScene32 {
         #[brw(args { max_params: 32 } )]
         data: EventScene,
     },
-    #[br(pre_assert(*magic == ServerZoneIpcType::EventScene64))]
-    #[brw(little)]
     EventScene64 {
         #[brw(args { max_params: 64 } )]
         data: EventScene,
     },
-    #[br(pre_assert(*magic == ServerZoneIpcType::EventScene128))]
-    #[brw(little)]
     EventScene128 {
         #[brw(args { max_params: 128 } )]
         data: EventScene,
     },
-    #[br(pre_assert(*magic == ServerZoneIpcType::EventScene255))]
-    #[brw(little)]
     EventScene255 {
         #[brw(args { max_params: 255 } )]
         data: EventScene,
     },
-    /// Sent to tell the client to load a scene, but not play it
-    #[br(pre_assert(*magic == ServerZoneIpcType::EventStart))]
     EventStart(EventStart),
-    /// Sent to update an actor's hp & mp values
-    #[br(pre_assert(*magic == ServerZoneIpcType::UpdateHpMpTp))]
     UpdateHpMpTp {
         hp: u32,
         mp: u16,
         unk: u16, // it's filled with... something
     },
-    /// Sent to inform the client the consequences of their actions
-    #[br(pre_assert(*magic == ServerZoneIpcType::ActionResult))]
     ActionResult(ActionResult),
-    /// Sent to to the client to update their appearance
-    #[br(pre_assert(*magic == ServerZoneIpcType::Equip))]
     Equip(Equip),
-    /// Sent to the client to free up a spawn index
-    #[br(pre_assert(*magic == ServerZoneIpcType::Delete))]
     Delete {
         spawn_index: u8,
         #[brw(pad_before = 3)] // padding
         actor_id: u32,
     },
-    /// Sent to the client to stop their currently playing event.
-    #[br(pre_assert(*magic == ServerZoneIpcType::EventFinish))]
     EventFinish {
         handler_id: u32,
         event: u8,
@@ -299,20 +234,10 @@ pub enum ServerZoneIpcData {
         #[brw(pad_after = 4)] // padding
         arg: u32,
     },
-    /// Sent after EventFinish? it un-occupies the character lol
-    #[br(pre_assert(*magic == ServerZoneIpcType::Condition))]
     Condition(Conditions),
-    /// Used to control target information
-    #[br(pre_assert(*magic == ServerZoneIpcType::ActorControlTarget))]
     ActorControlTarget(ActorControlTarget),
-    /// Used to update the player's currencies
-    #[br(pre_assert(*magic == ServerZoneIpcType::CurrencyCrystalInfo))]
     CurrencyCrystalInfo(CurrencyInfo),
-    /// Used to update an actor's equip display flags
-    #[br(pre_assert(*magic == ServerZoneIpcType::Config))]
     Config(Config),
-    /// Unknown, seen in haircut event
-    #[br(pre_assert(*magic == ServerZoneIpcType::EventUnkReply))]
     EventUnkReply {
         event_id: u32,
         unk1: u16,
@@ -320,27 +245,16 @@ pub enum ServerZoneIpcData {
         #[brw(pad_after = 8)]
         unk3: u8,
     },
-    /// Sent by the server to acknowledge when the client is updating their inventory in some way (typically when interacting with shops).
-    #[br(pre_assert(*magic == ServerZoneIpcType::InventoryActionAck))]
     InventoryActionAck {
         sequence: u32,
         #[brw(pad_after = 10)]
         action_type: u16,
     },
-    /// Sent by the server in response to PingReply. In prior expansions, it seems to have had the following additional fields:
-    /// origin_entity_id: u32,
-    /// <4 bytes of padding before position>
-    /// position: Position,
-    /// rotation: f32,
-    /// <4 bytes of padding after rotation>
-    /// but those fields are now seemingly deprecated and used as zero-padding.
-    #[br(pre_assert(*magic == ServerZoneIpcType::PingSyncReply))]
     PingSyncReply {
         timestamp: u32,
         #[brw(pad_after = 24)]
         transmission_interval: u32,
     },
-    #[br(pre_assert(*magic == ServerZoneIpcType::QuestCompleteList))]
     QuestCompleteList {
         #[br(count = COMPLETED_QUEST_BITMASK_SIZE)]
         #[bw(pad_size_to = COMPLETED_QUEST_BITMASK_SIZE)]
@@ -350,14 +264,10 @@ pub enum ServerZoneIpcData {
         #[bw(pad_size_to = 69)]
         unk2: Vec<u8>,
     },
-    /// Unsure the true purpose of this, but it's needed for the Unending Journey to function.
-    #[br(pre_assert(*magic == ServerZoneIpcType::UnkResponse2))]
     UnkResponse2 {
         #[brw(pad_after = 7)]
         unk1: u8,
     },
-    /// Sent by the server to inform the client of when the inventory is being updated (typically when interacting with shops).
-    #[br(pre_assert(*magic == ServerZoneIpcType::InventoryTransaction))]
     InventoryTransaction {
         /// This is later reused in InventoryTransactionFinish, so it might be some sort of sequence or context id, but it's not the one sent by the client
         sequence: u32,
@@ -385,8 +295,6 @@ pub enum ServerZoneIpcData {
         /// Always set to zero.
         dst_catalog_id: u32,
     },
-    /// Sent by the server when a sequence of InventoryTransaction packets have concluded.
-    #[br(pre_assert(*magic == ServerZoneIpcType::InventoryTransactionFinish))]
     InventoryTransactionFinish {
         /// Same sequence value as in InventoryTransaction.
         sequence: u32,
@@ -397,7 +305,6 @@ pub enum ServerZoneIpcData {
         /// Unknown, seems to always be 0x00000200.
         unk2: u32,
     },
-    #[br(pre_assert(*magic == ServerZoneIpcType::ContentFinderUpdate))]
     ContentFinderUpdate {
         /// 0 = Nothing happens
         /// 1 = Reserving server
@@ -411,17 +318,16 @@ pub enum ServerZoneIpcData {
         content_ids: [u16; 5],
         unk2: [u8; 10],
     },
-    #[br(pre_assert(*magic == ServerZoneIpcType::ContentFinderFound))]
     ContentFinderFound {
         unk1: [u8; 28],
         content_id: u16,
         unk2: [u8; 10],
     },
-    #[br(pre_assert(*magic == ServerZoneIpcType::ObjectSpawn))]
     ObjectSpawn(ObjectSpawn),
-    #[br(pre_assert(*magic == ServerZoneIpcType::ActorGauge))]
-    ActorGauge { classjob_id: u8, data: [u8; 15] },
-    #[br(pre_assert(*magic == ServerZoneIpcType::UpdateSearchInfo))]
+    ActorGauge {
+        classjob_id: u8,
+        data: [u8; 15],
+    },
     UpdateSearchInfo {
         online_status_flags: u64,
         unk1: u64,
@@ -435,15 +341,13 @@ pub enum ServerZoneIpcData {
         #[bw(map = write_string)]
         message: String,
     },
-    #[br(pre_assert(*magic == ServerZoneIpcType::FreeCompanyInfo))]
-    FreeCompanyInfo { unk: [u8; 80] },
-    #[br(pre_assert(*magic == ServerZoneIpcType::TitleList))]
+    FreeCompanyInfo {
+        unk: [u8; 80],
+    },
     TitleList {
         unlock_bitmask: [u8; TITLE_UNLOCK_BITMASK_SIZE],
     },
-    #[br(pre_assert(*magic == ServerZoneIpcType::QuestActiveList))]
     QuestActiveList(QuestActiveList),
-    #[br(pre_assert(*magic == ServerZoneIpcType::LevequestCompleteList))]
     LevequestCompleteList {
         #[br(count = COMPLETED_LEVEQUEST_BITMASK_SIZE)]
         #[bw(pad_size_to = COMPLETED_LEVEQUEST_BITMASK_SIZE)]
@@ -453,8 +357,6 @@ pub enum ServerZoneIpcData {
         #[bw(pad_size_to = 6)]
         unk2: Vec<u8>,
     },
-    /// Sent by the server when an item is obtained from shops that accept gil.
-    #[br(pre_assert(*magic == ServerZoneIpcType::ShopLogMessage))]
     ShopLogMessage {
         event_id: u32,
         /// When buying: 0x697
@@ -468,8 +370,6 @@ pub enum ServerZoneIpcData {
         #[brw(pad_after = 8)]
         total_sale_cost: u32,
     },
-    /// Sent by the server when an item is obtained in ways other than gil shops (e.g. Poetics shops).
-    #[br(pre_assert(*magic == ServerZoneIpcType::ItemObtainedLogMessage))]
     ItemObtainedLogMessage {
         event_id: u32,
         /// Non-stackable item or a single item: 750 / 0x2EE ("You obtained a .")
@@ -482,8 +382,6 @@ pub enum ServerZoneIpcData {
         /// Set to zero if only one item was obtained (stackable or not)
         item_quantity: u32,
     },
-    /// Sent by the server typically when a shop transaction takes place, usually to update currency.
-    #[br(pre_assert(*magic == ServerZoneIpcType::UpdateInventorySlot))]
     UpdateInventorySlot {
         /// Starts from zero and increases by one for each of these packets during this gameplay session
         sequence: u32,
@@ -496,19 +394,17 @@ pub enum ServerZoneIpcData {
         /// Always 0x7530_0000, this number appears elsewhere in buybacks so it's probably flags, but what they mean is completely unknown for now
         unk1: u32,
     },
-    #[br(pre_assert(*magic == ServerZoneIpcType::EffectResult))]
     EffectResult(EffectResult),
-    /// Sent to give you the green checkmark before entering a CF zone.
-    #[br(pre_assert(*magic == ServerZoneIpcType::ContentFinderCommencing))]
-    ContentFinderCommencing { unk1: [u8; 24] },
-    #[br(pre_assert(*magic == ServerZoneIpcType::StatusEffectList3))]
-    StatusEffectList3 { status_effects: [StatusEffect; 30] },
-    #[br(pre_assert(*magic == ServerZoneIpcType::CrossworldLinkshells))]
+    ContentFinderCommencing {
+        unk1: [u8; 24],
+    },
+    StatusEffectList3 {
+        status_effects: [StatusEffect; 30],
+    },
     CrossworldLinkshells {
         // TODO: fill this out, each entry is 57 bytes probably
         unk1: [u8; 456],
     },
-    #[br(pre_assert(*magic == ServerZoneIpcType::SetSearchComment))]
     SetSearchComment {
         // TODO: fill this out
         unk1: [u8; 18],
@@ -519,14 +415,10 @@ pub enum ServerZoneIpcData {
         comment: String,
         unk2: [u8; 166],
     },
-    #[br(pre_assert(*magic == ServerZoneIpcType::Unk17))]
     Unk17 {
         // TODO: fill this out
         unk1: [u8; 968],
     },
-    /// Sent by the server when walking over a trigger (e.g. the teleport pads in Solution Nine).
-    /// All of these fields are currently unknown in meaning.
-    #[br(pre_assert(*magic == ServerZoneIpcType::WalkInEvent))]
     WalkInEvent {
         unk1: u32,
         unk2: u16,
@@ -536,7 +428,6 @@ pub enum ServerZoneIpcData {
         #[brw(pad_after = 4)]
         unk5: u32,
     },
-    #[br(pre_assert(*magic == ServerZoneIpcType::GrandCompanyInfo))]
     GrandCompanyInfo {
         active_company_id: u8,
         maelstrom_rank: u8,
@@ -544,10 +435,12 @@ pub enum ServerZoneIpcData {
         #[brw(pad_after = 4)]
         immortal_flames_rank: u8,
     },
-    #[br(pre_assert(*magic == ServerZoneIpcType::CraftingLog))]
-    CraftingLog { unk1: [u8; 808] },
-    #[br(pre_assert(*magic == ServerZoneIpcType::GatheringLog))]
-    GatheringLog { unk1: [u8; 104] },
+    CraftingLog {
+        unk1: [u8; 808],
+    },
+    GatheringLog {
+        unk1: [u8; 104],
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,

@@ -1,8 +1,9 @@
 use binrw::binrw;
+use paramacro::opcode_data;
 
 use crate::{
     opcodes::ServerChatIpcType,
-    packet::{IPC_HEADER_SIZE, IpcSegment, ReadWriteIpcSegment},
+    packet::{IPC_HEADER_SIZE, IpcSegment, ReadWriteIpcOpcode, ReadWriteIpcSegment},
 };
 
 pub type ServerChatIpcSegment = IpcSegment<ServerChatIpcType, ServerChatIpcData>;
@@ -21,13 +22,15 @@ impl ReadWriteIpcSegment for ServerChatIpcSegment {
     }
 }
 
+#[opcode_data(ServerChatIpcType)]
 #[binrw]
 #[br(import(magic: &ServerChatIpcType, size: &u32))]
 #[derive(Debug, Clone)]
 pub enum ServerChatIpcData {
-    /// Sent by the server to Initialize something chat-related?
-    #[br(pre_assert(*magic == ServerChatIpcType::LoginReply))]
-    LoginReply { timestamp: u32, sid: u32 },
+    LoginReply {
+        timestamp: u32,
+        sid: u32,
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,

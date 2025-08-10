@@ -3,7 +3,7 @@ use binrw::binrw;
 use crate::{
     common::{CHAR_NAME_MAX_LENGTH, read_bool_from, read_string, write_bool_as, write_string},
     ipc::lobby::CharacterDetails,
-    packet::{IPC_HEADER_SIZE, IpcSegment, ReadWriteIpcSegment},
+    packet::{IPC_HEADER_SIZE, IpcSegment, ReadWriteIpcOpcode, ReadWriteIpcSegment},
 };
 
 pub type CustomIpcSegment = IpcSegment<CustomIpcType, CustomIpcData>;
@@ -68,6 +68,12 @@ pub enum CustomIpcType {
     RemakeCharacter = 0x12,
     // Character has been remade
     CharacterRemade = 0x13,
+}
+
+impl ReadWriteIpcOpcode<CustomIpcData> for CustomIpcType {
+    fn from_data(_: &CustomIpcData) -> Self {
+        todo!()
+    }
 }
 
 #[binrw]

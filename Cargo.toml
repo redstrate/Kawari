@@ -104,6 +104,9 @@ bevy = { version = "0.16", features = ["std",
 strum = { version = "0.27", default-features = false }
 strum_macros = { version = "0.27", default-features = false }
 
+# used for simplifying some of the heavy opcode things
+paramacro = { path = "paramacro" }
+
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
 # Used for the web servers
 axum = { version = "0.8", features = ["json", "tokio", "http1", "form", "query", "multipart"], default-features = false }

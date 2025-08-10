@@ -266,14 +266,10 @@ impl ZoneConnection {
     pub async fn set_player_position(&mut self, position: Position) {
         // set pos
         {
-            let ipc = ServerZoneIpcSegment {
-                op_code: ServerZoneIpcType::Warp,
-                data: ServerZoneIpcData::Warp(Warp {
-                    position,
-                    ..Default::default()
-                }),
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Warp(Warp {
+                position,
                 ..Default::default()
-            };
+            }));
 
             self.send_segment(PacketSegment {
                 source_actor: self.player_data.actor_id,
@@ -286,16 +282,12 @@ impl ZoneConnection {
     }
 
     pub async fn set_actor_position(&mut self, actor_id: u32, position: Position, rotation: f32) {
-        let ipc = ServerZoneIpcSegment {
-            op_code: ServerZoneIpcType::ActorMove,
-            data: ServerZoneIpcData::ActorMove(ActorMove {
-                rotation,
-                flag1: 128,
-                flag2: 60,
-                position,
-            }),
-            ..Default::default()
-        };
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActorMove(ActorMove {
+            rotation,
+            flag1: 128,
+            flag2: 60,
+            position,
+        }));
 
         self.send_segment(PacketSegment {
             source_actor: actor_id,
@@ -317,11 +309,7 @@ impl ZoneConnection {
             object_type: 0,
         };
 
-        let ipc = ServerZoneIpcSegment {
-            op_code: ServerZoneIpcType::NpcSpawn,
-            data: ServerZoneIpcData::NpcSpawn(spawn),
-            ..Default::default()
-        };
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::NpcSpawn(spawn));
 
         self.send_segment(PacketSegment {
             source_actor: actor.id.0,
@@ -338,14 +326,10 @@ impl ZoneConnection {
         if let Some(actor) = self.get_actor(ObjectId(actor_id)).cloned() {
             tracing::info!("Removing actor {actor_id} {}!", actor.spawn_index);
 
-            let ipc = ServerZoneIpcSegment {
-                op_code: ServerZoneIpcType::Delete,
-                data: ServerZoneIpcData::Delete {
-                    spawn_index: actor.spawn_index as u8,
-                    actor_id,
-                },
-                ..Default::default()
-            };
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Delete {
+                spawn_index: actor.spawn_index as u8,
+                actor_id,
+            });
 
             self.send_segment(PacketSegment {
                 source_actor: actor.id.0,
@@ -369,18 +353,14 @@ impl ZoneConnection {
         {
             let game_data = self.gamedata.lock().unwrap();
 
-            ipc = ServerZoneIpcSegment {
-                op_code: ServerZoneIpcType::UpdateClassInfo,
-                data: ServerZoneIpcData::UpdateClassInfo(UpdateClassInfo {
-                    class_id: self.player_data.classjob_id,
-                    synced_level: self.current_level(&game_data) as u16,
-                    class_level: self.current_level(&game_data) as u16,
-                    current_level: self.current_level(&game_data) as u16,
-                    current_exp: self.current_exp(&game_data),
-                    ..Default::default()
-                }),
+            ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateClassInfo(UpdateClassInfo {
+                class_id: self.player_data.classjob_id,
+                synced_level: self.current_level(&game_data) as u16,
+                class_level: self.current_level(&game_data) as u16,
+                current_level: self.current_level(&game_data) as u16,
+                current_exp: self.current_exp(&game_data),
                 ..Default::default()
-            };
+            }));
         }
 
         self.send_segment(PacketSegment {
@@ -415,22 +395,18 @@ impl ZoneConnection {
 
         // fade in?
         {
-            let ipc = ServerZoneIpcSegment {
-                op_code: ServerZoneIpcType::PrepareZoning,
-                data: ServerZoneIpcData::PrepareZoning {
-                    log_message: 0,
-                    target_zone: self.player_data.zone_id,
-                    animation: 0,
-                    param4: 0,
-                    hide_character: 0,
-                    fade_out: 1,
-                    param_7: 1,
-                    fade_out_time: 1,
-                    unk1: 8,
-                    unk2: 0,
-                },
-                ..Default::default()
-            };
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PrepareZoning {
+                log_message: 0,
+                target_zone: self.player_data.zone_id,
+                animation: 0,
+                param4: 0,
+                hide_character: 0,
+                fade_out: 1,
+                param_7: 1,
+                fade_out_time: 1,
+                unk1: 8,
+                unk2: 0,
+            });
 
             self.send_segment(PacketSegment {
                 source_actor: self.player_data.actor_id,
@@ -492,23 +468,19 @@ impl ZoneConnection {
                     .unwrap_or(1) as u16;
             }
 
-            let ipc = ServerZoneIpcSegment {
-                op_code: ServerZoneIpcType::InitZone,
-                data: ServerZoneIpcData::InitZone(InitZone {
-                    territory_type: self.zone.as_ref().unwrap().id,
-                    weather_id: self.weather_id,
-                    obsfucation_mode: if config.world.enable_packet_obsfucation {
-                        OBFUSCATION_ENABLED_MODE
-                    } else {
-                        0
-                    },
-                    seed1: !self.obsfucation_data.seed1,
-                    seed2: !self.obsfucation_data.seed2,
-                    seed3: !self.obsfucation_data.seed3,
-                    ..Default::default()
-                }),
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InitZone(InitZone {
+                territory_type: self.zone.as_ref().unwrap().id,
+                weather_id: self.weather_id,
+                obsfucation_mode: if config.world.enable_packet_obsfucation {
+                    OBFUSCATION_ENABLED_MODE
+                } else {
+                    0
+                },
+                seed1: !self.obsfucation_data.seed1,
+                seed2: !self.obsfucation_data.seed2,
+                seed3: !self.obsfucation_data.seed3,
                 ..Default::default()
-            };
+            }));
 
             self.send_segment(PacketSegment {
                 source_actor: self.player_data.actor_id,
@@ -595,14 +567,10 @@ impl ZoneConnection {
     pub async fn change_weather(&mut self, new_weather_id: u16) {
         self.weather_id = new_weather_id;
 
-        let ipc = ServerZoneIpcSegment {
-            op_code: ServerZoneIpcType::WeatherId,
-            data: ServerZoneIpcData::WeatherId(WeatherChange {
-                weather_id: new_weather_id,
-                transistion_time: 1.0,
-            }),
-            ..Default::default()
-        };
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::WeatherId(WeatherChange {
+            weather_id: new_weather_id,
+            transistion_time: 1.0,
+        }));
 
         self.send_segment(PacketSegment {
             source_actor: self.player_data.actor_id,
@@ -654,18 +622,16 @@ impl ZoneConnection {
                         return;
                     }
 
-                    let ipc = ServerZoneIpcSegment {
-                        op_code: ServerZoneIpcType::CurrencyCrystalInfo,
-                        data: ServerZoneIpcData::CurrencyCrystalInfo(CurrencyInfo {
+                    let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::CurrencyCrystalInfo(
+                        CurrencyInfo {
                             sequence: sequence as u32,
                             container: container_type,
                             quantity: item.quantity,
                             catalog_id: item.id,
                             unk1: 1,
                             ..Default::default()
-                        }),
-                        ..Default::default()
-                    };
+                        },
+                    ));
 
                     self.send_segment(PacketSegment {
                         source_actor: self.player_data.actor_id,
@@ -688,20 +654,16 @@ impl ZoneConnection {
                         return;
                     }
 
-                    let ipc = ServerZoneIpcSegment {
-                        op_code: ServerZoneIpcType::UpdateItem,
-                        data: ServerZoneIpcData::UpdateItem(ItemInfo {
-                            sequence: sequence as u32,
-                            container: container_type,
-                            slot: slot_index,
-                            quantity: item.quantity,
-                            catalog_id: item.id,
-                            condition: item.condition,
-                            glamour_catalog_id: item.glamour_catalog_id,
-                            ..Default::default()
-                        }),
+                    let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateItem(ItemInfo {
+                        sequence: sequence as u32,
+                        container: container_type,
+                        slot: slot_index,
+                        quantity: item.quantity,
+                        catalog_id: item.id,
+                        condition: item.condition,
+                        glamour_catalog_id: item.glamour_catalog_id,
                         ..Default::default()
-                    };
+                    }));
 
                     self.send_segment(PacketSegment {
                         source_actor: self.player_data.actor_id,
@@ -719,16 +681,13 @@ impl ZoneConnection {
 
             // inform the client of container state
             {
-                let ipc = ServerZoneIpcSegment {
-                    op_code: ServerZoneIpcType::ContainerInfo,
-                    data: ServerZoneIpcData::ContainerInfo(ContainerInfo {
+                let ipc =
+                    ServerZoneIpcSegment::new(ServerZoneIpcData::ContainerInfo(ContainerInfo {
                         container: container_type,
                         num_items: container.num_items(),
                         sequence: sequence as u32,
                         ..Default::default()
-                    }),
-                    ..Default::default()
-                };
+                    }));
 
                 self.send_segment(PacketSegment {
                     source_actor: self.player_data.actor_id,
@@ -752,16 +711,12 @@ impl ZoneConnection {
             ContainerType::Unk2,
             ContainerType::ArmoryWaist,
         ] {
-            let ipc = ServerZoneIpcSegment {
-                op_code: ServerZoneIpcType::ContainerInfo,
-                data: ServerZoneIpcData::ContainerInfo(ContainerInfo {
-                    container: container_type,
-                    num_items: 0,
-                    sequence: sequence as u32,
-                    ..Default::default()
-                }),
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ContainerInfo(ContainerInfo {
+                container: container_type,
+                num_items: 0,
+                sequence: sequence as u32,
                 ..Default::default()
-            };
+            }));
 
             self.send_segment(PacketSegment {
                 source_actor: self.player_data.actor_id,
@@ -775,15 +730,11 @@ impl ZoneConnection {
     }
 
     pub async fn update_equip(&mut self, actor_id: u32, main_weapon_id: u64, model_ids: [u32; 10]) {
-        let ipc = ServerZoneIpcSegment {
-            op_code: ServerZoneIpcType::Equip,
-            data: ServerZoneIpcData::Equip(Equip {
-                main_weapon_id,
-                model_ids,
-                ..Default::default()
-            }),
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Equip(Equip {
+            main_weapon_id,
+            model_ids,
             ..Default::default()
-        };
+        }));
 
         self.send_segment(PacketSegment {
             source_actor: actor_id,
@@ -795,14 +746,10 @@ impl ZoneConnection {
     }
 
     pub async fn send_message(&mut self, message: &str) {
-        let ipc = ServerZoneIpcSegment {
-            op_code: ServerZoneIpcType::ServerChatMessage,
-            data: ServerZoneIpcData::ServerChatMessage {
-                message: message.to_string(),
-                param: 0,
-            },
-            ..Default::default()
-        };
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ServerChatMessage {
+            message: message.to_string(),
+            param: 0,
+        });
 
         self.send_segment(PacketSegment {
             source_actor: self.player_data.actor_id,
@@ -815,13 +762,10 @@ impl ZoneConnection {
 
     pub async fn toggle_invisibility(&mut self, invisible: bool) {
         self.player_data.gm_invisible = invisible;
-        let ipc = ServerZoneIpcSegment {
-            op_code: ServerZoneIpcType::ActorControlSelf,
-            data: ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
+        let ipc =
+            ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
                 category: ActorControlCategory::ToggleInvisibility { invisible },
-            }),
-            ..Default::default()
-        };
+            }));
 
         self.send_segment(PacketSegment {
             source_actor: self.player_data.actor_id,
@@ -1091,16 +1035,12 @@ impl ZoneConnection {
         self.player_data.target_actorid = ObjectTypeId::default();
         // sent event finish
         {
-            let ipc = ServerZoneIpcSegment {
-                op_code: ServerZoneIpcType::EventFinish,
-                data: ServerZoneIpcData::EventFinish {
-                    handler_id,
-                    event: self.event_type,
-                    result: 1,
-                    arg,
-                },
-                ..Default::default()
-            };
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::EventFinish {
+                handler_id,
+                event: self.event_type,
+                result: 1,
+                arg,
+            });
 
             self.send_segment(PacketSegment {
                 source_actor: self.player_data.actor_id,
@@ -1127,11 +1067,7 @@ impl ZoneConnection {
     }
 
     pub async fn send_conditions(&mut self) {
-        let ipc = ServerZoneIpcSegment {
-            op_code: ServerZoneIpcType::Condition,
-            data: ServerZoneIpcData::Condition(self.conditions),
-            ..Default::default()
-        };
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Condition(self.conditions));
 
         self.send_segment(PacketSegment {
             source_actor: self.player_data.actor_id,
@@ -1143,14 +1079,10 @@ impl ZoneConnection {
     }
 
     pub async fn send_inventory_ack(&mut self, sequence: u32, action_type: u16) {
-        let ipc = ServerZoneIpcSegment {
-            op_code: ServerZoneIpcType::InventoryActionAck,
-            data: ServerZoneIpcData::InventoryActionAck {
-                sequence,
-                action_type,
-            },
-            ..Default::default()
-        };
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InventoryActionAck {
+            sequence,
+            action_type,
+        });
         self.send_segment(PacketSegment {
             source_actor: self.player_data.actor_id,
             target_actor: self.player_data.actor_id,
@@ -1171,18 +1103,14 @@ impl ZoneConnection {
         price_per_item: u32,
         message_type: LogMessageType,
     ) {
-        let ipc = ServerZoneIpcSegment {
-            op_code: ServerZoneIpcType::ShopLogMessage,
-            data: ServerZoneIpcData::ShopLogMessage {
-                event_id,
-                message_type: message_type as u32,
-                params_count: 3,
-                item_id,
-                item_quantity,
-                total_sale_cost: item_quantity * price_per_item,
-            },
-            ..Default::default()
-        };
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ShopLogMessage {
+            event_id,
+            message_type: message_type as u32,
+            params_count: 3,
+            item_id,
+            item_quantity,
+            total_sale_cost: item_quantity * price_per_item,
+        });
 
         self.send_segment(PacketSegment {
             source_actor: self.player_data.actor_id,
@@ -1200,18 +1128,14 @@ impl ZoneConnection {
         dst_stack: u32,
         dst_catalog_id: u32,
     ) {
-        let ipc = ServerZoneIpcSegment {
-            op_code: ServerZoneIpcType::UpdateInventorySlot,
-            data: ServerZoneIpcData::UpdateInventorySlot {
-                sequence: self.player_data.shop_sequence,
-                dst_storage_id,
-                dst_container_index,
-                dst_stack,
-                dst_catalog_id,
-                unk1: 0x7530_0000,
-            },
-            ..Default::default()
-        };
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateInventorySlot {
+            sequence: self.player_data.shop_sequence,
+            dst_storage_id,
+            dst_container_index,
+            dst_stack,
+            dst_catalog_id,
+            unk1: 0x7530_0000,
+        });
 
         self.send_segment(PacketSegment {
             source_actor: self.player_data.actor_id,
@@ -1225,16 +1149,12 @@ impl ZoneConnection {
     }
 
     pub async fn send_inventory_transaction_finish(&mut self, unk1: u32, unk2: u32) {
-        let ipc = ServerZoneIpcSegment {
-            op_code: ServerZoneIpcType::InventoryTransactionFinish,
-            data: ServerZoneIpcData::InventoryTransactionFinish {
-                sequence: self.player_data.item_sequence,
-                sequence_repeat: self.player_data.item_sequence,
-                unk1,
-                unk2,
-            },
-            ..Default::default()
-        };
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InventoryTransactionFinish {
+            sequence: self.player_data.item_sequence,
+            sequence_repeat: self.player_data.item_sequence,
+            unk1,
+            unk2,
+        });
 
         self.send_segment(PacketSegment {
             source_actor: self.player_data.actor_id,
@@ -1257,13 +1177,9 @@ impl ZoneConnection {
 
         // tell the client we're ready to disconnect at any moment
         {
-            let ipc = ServerZoneIpcSegment {
-                op_code: ServerZoneIpcType::LogOutComplete,
-                data: ServerZoneIpcData::LogOutComplete {
-                    unk: [1, 0, 0, 0, 0, 0, 0, 0],
-                },
-                ..Default::default()
-            };
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::LogOutComplete {
+                unk: [1, 0, 0, 0, 0, 0, 0, 0],
+            });
 
             self.send_segment(PacketSegment {
                 source_actor: self.player_data.actor_id,
@@ -1286,9 +1202,8 @@ impl ZoneConnection {
             {
                 let game_data = self.gamedata.lock().unwrap();
 
-                ipc = ServerZoneIpcSegment {
-                    op_code: ServerZoneIpcType::StatusEffectList,
-                    data: ServerZoneIpcData::StatusEffectList(StatusEffectList {
+                ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::StatusEffectList(
+                    StatusEffectList {
                         statues: list,
                         classjob_id: self.player_data.classjob_id,
                         level: self.current_level(&game_data) as u8,
@@ -1297,9 +1212,8 @@ impl ZoneConnection {
                         curr_mp: self.player_data.curr_mp,
                         max_mp: self.player_data.max_mp,
                         ..Default::default()
-                    }),
-                    ..Default::default()
-                };
+                    },
+                ));
             }
 
             self.send_segment(PacketSegment {
@@ -1315,11 +1229,7 @@ impl ZoneConnection {
     }
 
     pub async fn update_hp_mp(&mut self, actor_id: ObjectId, hp: u32, mp: u16) {
-        let ipc = ServerZoneIpcSegment {
-            op_code: ServerZoneIpcType::UpdateHpMpTp,
-            data: ServerZoneIpcData::UpdateHpMpTp { hp, mp, unk: 0 },
-            ..Default::default()
-        };
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateHpMpTp { hp, mp, unk: 0 });
 
         self.send_segment(PacketSegment {
             source_actor: actor_id.0,
@@ -1339,11 +1249,7 @@ impl ZoneConnection {
     }
 
     pub async fn actor_control_self(&mut self, actor_control: ActorControlSelf) {
-        let ipc = ServerZoneIpcSegment {
-            op_code: ServerZoneIpcType::ActorControlSelf,
-            data: ServerZoneIpcData::ActorControlSelf(actor_control),
-            ..Default::default()
-        };
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlSelf(actor_control));
 
         self.send_segment(PacketSegment {
             source_actor: self.player_data.actor_id,
@@ -1355,11 +1261,7 @@ impl ZoneConnection {
     }
 
     pub async fn actor_control(&mut self, actor_id: u32, actor_control: ActorControl) {
-        let ipc = ServerZoneIpcSegment {
-            op_code: ServerZoneIpcType::ActorControl,
-            data: ServerZoneIpcData::ActorControl(actor_control),
-            ..Default::default()
-        };
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControl(actor_control));
 
         self.send_segment(PacketSegment {
             source_actor: actor_id,
@@ -1376,11 +1278,7 @@ impl ZoneConnection {
             self.player_data.actor_id
         );
 
-        let ipc = ServerZoneIpcSegment {
-            op_code: ServerZoneIpcType::ActorControlTarget,
-            data: ServerZoneIpcData::ActorControlTarget(actor_control),
-            ..Default::default()
-        };
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlTarget(actor_control));
 
         self.send_segment(PacketSegment {
             source_actor: actor_id,
@@ -1392,11 +1290,7 @@ impl ZoneConnection {
     }
 
     pub async fn update_config(&mut self, actor_id: u32, config: Config) {
-        let ipc = ServerZoneIpcSegment {
-            op_code: ServerZoneIpcType::Config,
-            data: ServerZoneIpcData::Config(config),
-            ..Default::default()
-        };
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Config(config));
 
         self.send_segment(PacketSegment {
             source_actor: actor_id,
@@ -1448,20 +1342,16 @@ impl ZoneConnection {
                 .expect("Failed to read racial attributes");
         }
 
-        let ipc = ServerZoneIpcSegment {
-            op_code: ServerZoneIpcType::PlayerStats,
-            data: ServerZoneIpcData::PlayerStats(PlayerStats {
-                strength: attributes.strength,
-                dexterity: attributes.dexterity,
-                vitality: attributes.vitality,
-                intelligence: attributes.intelligence,
-                mind: attributes.mind,
-                hp: self.player_data.max_hp,
-                mp: self.player_data.max_mp as u32,
-                ..Default::default()
-            }),
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PlayerStats(PlayerStats {
+            strength: attributes.strength,
+            dexterity: attributes.dexterity,
+            vitality: attributes.vitality,
+            intelligence: attributes.intelligence,
+            mind: attributes.mind,
+            hp: self.player_data.max_hp,
+            mp: self.player_data.max_mp as u32,
             ..Default::default()
-        };
+        }));
 
         self.send_segment(PacketSegment {
             source_actor: self.player_data.actor_id,
@@ -1530,9 +1420,8 @@ impl ZoneConnection {
                 let mut effects = [ActionEffect::default(); 8];
                 effects[..effects_builder.effects.len()].copy_from_slice(&effects_builder.effects);
 
-                let ipc = ServerZoneIpcSegment {
-                    op_code: ServerZoneIpcType::ActionResult,
-                    data: ServerZoneIpcData::ActionResult(ActionResult {
+                let ipc =
+                    ServerZoneIpcSegment::new(ServerZoneIpcData::ActionResult(ActionResult {
                         main_target: request.target,
                         target_id_again: request.target,
                         action_id: request.action_key,
@@ -1546,9 +1435,7 @@ impl ZoneConnection {
                         unk2: 3758096384,
                         hidden_animation: 1,
                         ..Default::default()
-                    }),
-                    ..Default::default()
-                };
+                    }));
 
                 self.send_segment(PacketSegment {
                     source_actor: self.player_data.actor_id,
@@ -1599,9 +1486,8 @@ impl ZoneConnection {
                     }
                 }
 
-                let ipc = ServerZoneIpcSegment {
-                    op_code: ServerZoneIpcType::EffectResult,
-                    data: ServerZoneIpcData::EffectResult(EffectResult {
+                let ipc =
+                    ServerZoneIpcSegment::new(ServerZoneIpcData::EffectResult(EffectResult {
                         unk1: 1,
                         unk2: 776386,
                         target_id: request.target.object_id,
@@ -1614,9 +1500,7 @@ impl ZoneConnection {
                         entry_count: num_entries,
                         unk4: 0,
                         statuses: entries,
-                    }),
-                    ..Default::default()
-                };
+                    }));
 
                 self.send_segment(PacketSegment {
                     source_actor: self.player_data.actor_id,
@@ -1681,11 +1565,9 @@ impl ZoneConnection {
     pub async fn send_quest_information(&mut self) {
         // quest active list
         {
-            let ipc = ServerZoneIpcSegment {
-                op_code: ServerZoneIpcType::QuestActiveList,
-                data: ServerZoneIpcData::QuestActiveList(QuestActiveList::default()),
-                ..Default::default()
-            };
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::QuestActiveList(
+                QuestActiveList::default(),
+            ));
 
             self.send_segment(PacketSegment {
                 source_actor: self.player_data.actor_id,
@@ -1698,14 +1580,10 @@ impl ZoneConnection {
 
         // quest complete list
         {
-            let ipc = ServerZoneIpcSegment {
-                op_code: ServerZoneIpcType::QuestCompleteList,
-                data: ServerZoneIpcData::QuestCompleteList {
-                    completed_quests: self.player_data.unlocks.completed_quests.clone(),
-                    unk2: vec![0xFF; 69],
-                },
-                ..Default::default()
-            };
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::QuestCompleteList {
+                completed_quests: self.player_data.unlocks.completed_quests.clone(),
+                unk2: vec![0xFF; 69],
+            });
 
             self.send_segment(PacketSegment {
                 source_actor: self.player_data.actor_id,
@@ -1719,14 +1597,10 @@ impl ZoneConnection {
         // levequest complete list
         // NOTE: all levequests are unlocked by default
         {
-            let ipc = ServerZoneIpcSegment {
-                op_code: ServerZoneIpcType::LevequestCompleteList,
-                data: ServerZoneIpcData::LevequestCompleteList {
-                    completed_levequests: vec![0xFF; COMPLETED_LEVEQUEST_BITMASK_SIZE],
-                    unk2: Vec::default(),
-                },
-                ..Default::default()
-            };
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::LevequestCompleteList {
+                completed_levequests: vec![0xFF; COMPLETED_LEVEQUEST_BITMASK_SIZE],
+                unk2: Vec::default(),
+            });
 
             self.send_segment(PacketSegment {
                 source_actor: self.player_data.actor_id,
@@ -1841,17 +1715,13 @@ impl ZoneConnection {
 
         // tell the client the event has started
         {
-            let ipc = ServerZoneIpcSegment {
-                op_code: ServerZoneIpcType::EventStart,
-                data: ServerZoneIpcData::EventStart(EventStart {
-                    target_id: actor_id,
-                    event_id,
-                    event_type,
-                    event_arg,
-                    ..Default::default()
-                }),
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::EventStart(EventStart {
+                target_id: actor_id,
+                event_id,
+                event_type,
+                event_arg,
                 ..Default::default()
-            };
+            }));
 
             self.send_segment(PacketSegment {
                 source_actor: self.player_data.actor_id,

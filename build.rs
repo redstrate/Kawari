@@ -33,6 +33,10 @@ fn main() {
             for opcode in opcodes {
                 let opcode = opcode.as_object().unwrap();
                 let name = opcode.get("name").unwrap().as_str().unwrap();
+                if let Some(comment) = opcode.get("comment").unwrap_or_default().as_str() {
+                    output_str.push_str(&format!("/// {comment}\n"));
+                }
+
                 let opcode = opcode.get("opcode").unwrap().as_number().unwrap();
 
                 if !seen_opcodes.contains(&opcode) {

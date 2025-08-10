@@ -2573,6 +2573,7 @@ dependencies = [
  "md5",
  "minijinja",
  "mlua",
+ "paramacro",
  "physis",
  "recastnavigation-sys",
  "reqwest",
@@ -3348,6 +3349,14 @@ name = "overload"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b15813163c1d831bf4a13c3610c05c0d03b39feb07f7e09fa234dac9b15aaf39"
+
+[[package]]
+name = "paramacro"
+version = "0.0.0"
+dependencies = [
+ "quote",
+ "syn",
+]
 
 [[package]]
 name = "parking"

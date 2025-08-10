@@ -6,7 +6,6 @@ use crate::{
     blowfish::Blowfish,
     config::get_config,
     ipc::lobby::{DistRetainerInfo, NackReply},
-    opcodes::ServerLobbyIpcType,
     packet::{
         CompressionType, ConnectionType, PacketSegment, PacketState, SegmentData, SegmentType,
         generate_encryption_key, parse_packet, send_custom_world_packet, send_packet,
@@ -86,11 +85,7 @@ impl LobbyConnection {
             service_accounts: self.service_accounts.to_vec(),
         });
 
-        let ipc = ServerLobbyIpcSegment {
-            op_code: ServerLobbyIpcType::LoginReply,
-            data: service_account_list,
-            ..Default::default()
-        };
+        let ipc = ServerLobbyIpcSegment::new(service_account_list);
 
         self.send_segment(PacketSegment {
             segment_type: SegmentType::Ipc,
@@ -124,11 +119,7 @@ impl LobbyConnection {
                 ..Default::default()
             });
 
-            let ipc = ServerLobbyIpcSegment {
-                op_code: ServerLobbyIpcType::DistWorldInfo,
-                data: lobby_server_list,
-                ..Default::default()
-            };
+            let ipc = ServerLobbyIpcSegment::new(lobby_server_list);
 
             let response_packet = PacketSegment {
                 segment_type: SegmentType::Ipc,
@@ -143,11 +134,7 @@ impl LobbyConnection {
             let lobby_retainer_list =
                 ServerLobbyIpcData::DistRetainerInfo(DistRetainerInfo::default());
 
-            let ipc = ServerLobbyIpcSegment {
-                op_code: ServerLobbyIpcType::DistRetainerInfo,
-                data: lobby_retainer_list,
-                ..Default::default()
-            };
+            let ipc = ServerLobbyIpcSegment::new(lobby_retainer_list);
 
             let response_packet = PacketSegment {
                 segment_type: SegmentType::Ipc,
@@ -221,11 +208,9 @@ impl LobbyConnection {
                     }
                 };
 
-                let ipc = ServerLobbyIpcSegment {
-                    op_code: ServerLobbyIpcType::ServiceLoginReply,
-                    data: ServerLobbyIpcData::ServiceLoginReply(lobby_character_list),
-                    ..Default::default()
-                };
+                let ipc = ServerLobbyIpcSegment::new(ServerLobbyIpcData::ServiceLoginReply(
+                    lobby_character_list,
+                ));
 
                 self.send_segment(PacketSegment {
                     segment_type: SegmentType::Ipc,
@@ -250,11 +235,7 @@ impl LobbyConnection {
             host: config.world.server_name,
         };
 
-        let ipc = ServerLobbyIpcSegment {
-            op_code: ServerLobbyIpcType::GameLoginReply,
-            data: enter_world,
-            ..Default::default()
-        };
+        let ipc = ServerLobbyIpcSegment::new(enter_world);
 
         self.send_segment(PacketSegment {
             segment_type: SegmentType::Ipc,
@@ -273,11 +254,7 @@ impl LobbyConnection {
             ..Default::default()
         });
 
-        let ipc = ServerLobbyIpcSegment {
-            op_code: ServerLobbyIpcType::NackReply,
-            data: lobby_error,
-            ..Default::default()
-        };
+        let ipc = ServerLobbyIpcSegment::new(lobby_error);
 
         self.send_segment(PacketSegment {
             segment_type: SegmentType::Ipc,
@@ -316,22 +293,18 @@ impl LobbyConnection {
                 if *free {
                     self.stored_character_creation_name = character_action.name.clone();
 
-                    let ipc = ServerLobbyIpcSegment {
-                        op_code: ServerLobbyIpcType::CharaMakeReply,
-                        data: ServerLobbyIpcData::CharaMakeReply {
-                            sequence: character_action.sequence + 1,
-                            unk1: 0x1,
-                            unk2: 0x1,
-                            action: LobbyCharacterActionKind::ReserveName,
-                            details: CharacterDetails {
-                                character_name: character_action.name.clone(),
-                                origin_server_name: self.world_name.clone(),
-                                current_server_name: self.world_name.clone(),
-                                ..Default::default()
-                            },
+                    let ipc = ServerLobbyIpcSegment::new(ServerLobbyIpcData::CharaMakeReply {
+                        sequence: character_action.sequence + 1,
+                        unk1: 0x1,
+                        unk2: 0x1,
+                        action: LobbyCharacterActionKind::ReserveName,
+                        details: CharacterDetails {
+                            character_name: character_action.name.clone(),
+                            origin_server_name: self.world_name.clone(),
+                            current_server_name: self.world_name.clone(),
+                            ..Default::default()
                         },
-                        ..Default::default()
-                    };
+                    });
 
                     self.send_segment(PacketSegment {
                         segment_type: SegmentType::Ipc,
@@ -340,16 +313,13 @@ impl LobbyConnection {
                     })
                     .await;
                 } else {
-                    let ipc = ServerLobbyIpcSegment {
-                        op_code: ServerLobbyIpcType::NackReply,
-                        data: ServerLobbyIpcData::NackReply(NackReply {
+                    let ipc =
+                        ServerLobbyIpcSegment::new(ServerLobbyIpcData::NackReply(NackReply {
                             sequence: character_action.sequence,
                             error: 0x00000bdb,
                             exd_error_id: 0x32cc,
                             ..Default::default()
-                        }),
-                        ..Default::default()
-                    };
+                        }));
 
                     let response_packet = PacketSegment {
                         segment_type: SegmentType::Ipc,
@@ -396,24 +366,20 @@ impl LobbyConnection {
 
                 // a slightly different character created packet now
                 {
-                    let ipc = ServerLobbyIpcSegment {
-                        op_code: ServerLobbyIpcType::CharaMakeReply,
-                        data: ServerLobbyIpcData::CharaMakeReply {
-                            sequence: character_action.sequence + 1,
-                            unk1: 0x1,
-                            unk2: 0x1,
-                            action: LobbyCharacterActionKind::Create,
-                            details: CharacterDetails {
-                                player_id: our_actor_id as u64, // TODO: not correct
-                                content_id: our_content_id,
-                                character_name: character_action.name.clone(),
-                                origin_server_name: self.world_name.clone(),
-                                current_server_name: self.world_name.clone(),
-                                ..Default::default()
-                            },
+                    let ipc = ServerLobbyIpcSegment::new(ServerLobbyIpcData::CharaMakeReply {
+                        sequence: character_action.sequence + 1,
+                        unk1: 0x1,
+                        unk2: 0x1,
+                        action: LobbyCharacterActionKind::Create,
+                        details: CharacterDetails {
+                            player_id: our_actor_id as u64, // TODO: not correct
+                            content_id: our_content_id,
+                            character_name: character_action.name.clone(),
+                            origin_server_name: self.world_name.clone(),
+                            current_server_name: self.world_name.clone(),
+                            ..Default::default()
                         },
-                        ..Default::default()
-                    };
+                    });
 
                     self.send_segment(PacketSegment {
                         segment_type: SegmentType::Ipc,
@@ -442,24 +408,20 @@ impl LobbyConnection {
 
                 // send a confirmation that the deletion was successful
                 {
-                    let ipc = ServerLobbyIpcSegment {
-                        op_code: ServerLobbyIpcType::CharaMakeReply,
-                        data: ServerLobbyIpcData::CharaMakeReply {
-                            sequence: character_action.sequence + 1,
-                            unk1: 0x1,
-                            unk2: 0x1,
-                            action: LobbyCharacterActionKind::Delete,
-                            details: CharacterDetails {
-                                player_id: 0, // TODO: fill maybe?
-                                content_id: character_action.content_id,
-                                character_name: character_action.name.clone(),
-                                origin_server_name: self.world_name.clone(),
-                                current_server_name: self.world_name.clone(),
-                                ..Default::default()
-                            },
+                    let ipc = ServerLobbyIpcSegment::new(ServerLobbyIpcData::CharaMakeReply {
+                        sequence: character_action.sequence + 1,
+                        unk1: 0x1,
+                        unk2: 0x1,
+                        action: LobbyCharacterActionKind::Delete,
+                        details: CharacterDetails {
+                            player_id: 0, // TODO: fill maybe?
+                            content_id: character_action.content_id,
+                            character_name: character_action.name.clone(),
+                            origin_server_name: self.world_name.clone(),
+                            current_server_name: self.world_name.clone(),
+                            ..Default::default()
                         },
-                        ..Default::default()
-                    };
+                    });
 
                     self.send_segment(PacketSegment {
                         segment_type: SegmentType::Ipc,
@@ -490,24 +452,20 @@ impl LobbyConnection {
 
                 // send a confirmation that the remakewas successful
                 {
-                    let ipc = ServerLobbyIpcSegment {
-                        op_code: ServerLobbyIpcType::CharaMakeReply,
-                        data: ServerLobbyIpcData::CharaMakeReply {
-                            sequence: character_action.sequence + 1,
-                            unk1: 0x1,
-                            unk2: 0x1,
-                            action: LobbyCharacterActionKind::RemakeChara,
-                            details: CharacterDetails {
-                                player_id: 0, // TODO: fill maybe?
-                                content_id: character_action.content_id,
-                                character_name: character_action.name.clone(),
-                                origin_server_name: self.world_name.clone(),
-                                current_server_name: self.world_name.clone(),
-                                ..Default::default()
-                            },
+                    let ipc = ServerLobbyIpcSegment::new(ServerLobbyIpcData::CharaMakeReply {
+                        sequence: character_action.sequence + 1,
+                        unk1: 0x1,
+                        unk2: 0x1,
+                        action: LobbyCharacterActionKind::RemakeChara,
+                        details: CharacterDetails {
+                            player_id: 0, // TODO: fill maybe?
+                            content_id: character_action.content_id,
+                            character_name: character_action.name.clone(),
+                            origin_server_name: self.world_name.clone(),
+                            current_server_name: self.world_name.clone(),
+                            ..Default::default()
                         },
-                        ..Default::default()
-                    };
+                    });
 
                     self.send_segment(PacketSegment {
                         segment_type: SegmentType::Ipc,

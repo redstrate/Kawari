@@ -1,11 +1,12 @@
 use binrw::binrw;
+use paramacro::opcode_data;
 
 pub use super::chara_make::{CharaMake, LobbyCharacterActionKind};
 
 use crate::{
     common::{read_string, write_string},
     opcodes::ClientLobbyIpcType,
-    packet::{IPC_HEADER_SIZE, IpcSegment, ReadWriteIpcSegment},
+    packet::{IPC_HEADER_SIZE, IpcSegment, ReadWriteIpcOpcode, ReadWriteIpcSegment},
 };
 
 pub type ClientLobbyIpcSegment = IpcSegment<ClientLobbyIpcType, ClientLobbyIpcData>;
@@ -24,12 +25,11 @@ impl ReadWriteIpcSegment for ClientLobbyIpcSegment {
     }
 }
 
+#[opcode_data(ClientLobbyIpcType)]
 #[binrw]
 #[br(import(magic: &ClientLobbyIpcType, size: &u32))]
 #[derive(Debug, Clone)]
 pub enum ClientLobbyIpcData {
-    /// Sent by the client when it requests the character list in the lobby.
-    #[br(pre_assert(*magic == ClientLobbyIpcType::ServiceLogin))]
     ServiceLogin {
         sequence: u64,
         account_index: u8,
@@ -39,8 +39,6 @@ pub enum ClientLobbyIpcData {
         account_id: u32,
         unk4: u32,
     },
-    /// Sent by the client when it requests to enter a world.
-    #[br(pre_assert(*magic == ClientLobbyIpcType::GameLogin))]
     GameLogin {
         sequence: u64,
         content_id: u64,
@@ -50,8 +48,6 @@ pub enum ClientLobbyIpcData {
         unk3: u32,
         unk4: u32,
     },
-    /// Sent by the client after exchanging encryption information with the lobby server.
-    #[br(pre_assert(*magic == ClientLobbyIpcType::LoginEx))]
     LoginEx {
         sequence: u64,
         timestamp: u32,
@@ -72,14 +68,11 @@ pub enum ClientLobbyIpcData {
         #[brw(pad_before = 910)] // empty
         unk2: u64,
     },
-    #[br(pre_assert(*magic == ClientLobbyIpcType::ShandaLogin))]
     ShandaLogin {
         #[bw(pad_size_to = 1456)]
         #[br(count = 1456)]
         unk: Vec<u8>,
     },
-    /// Sent by the client when they request something about the character (e.g. deletion.)
-    #[br(pre_assert(*magic == ClientLobbyIpcType::CharaMake))]
     CharaMake(CharaMake),
     Unknown {
         #[br(count = size - 32)]
