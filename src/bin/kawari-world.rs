@@ -221,15 +221,13 @@ async fn client_loop(
                                                     timestamp: 0,
                                                     sid: 0,
                                                 });
-
                                                 connection.send_chat_segment(PacketSegment {
                                                     source_actor: connection.player_data.actor_id,
                                                     target_actor: connection.player_data.actor_id,
                                                     segment_type: SegmentType::Ipc,
                                                     data: SegmentData::Ipc { data: ipc },
-                                                })
-                                                .await;
-                                            }
+                                                }).await;
+                                        }
                                         }
                                     }
                                     SegmentData::Ipc { data } => {
@@ -246,15 +244,7 @@ async fn client_loop(
                                                         character_id: connection.player_data.actor_id,
                                                         unk2: 0,
                                                     });
-
-                                                    connection
-                                                    .send_segment(PacketSegment {
-                                                        source_actor: connection.player_data.actor_id,
-                                                        target_actor: connection.player_data.actor_id,
-                                                        segment_type: SegmentType::Ipc,
-                                                        data: SegmentData::Ipc { data: ipc },
-                                                    })
-                                                    .await;
+                                                    connection.send_ipc_self(ipc).await;
                                                 }
 
                                                 let chara_details =
@@ -317,15 +307,7 @@ async fn client_loop(
                                                         cleared_pvp: connection.player_data.unlocks.cleared_pvp.clone(),
                                                         ..Default::default()
                                                     }));
-
-                                                    connection
-                                                    .send_segment(PacketSegment {
-                                                        source_actor: connection.player_data.actor_id,
-                                                        target_actor: connection.player_data.actor_id,
-                                                        segment_type: SegmentType::Ipc,
-                                                        data: SegmentData::Ipc { data: ipc },
-                                                    })
-                                                    .await;
+                                                    connection.send_ipc_self(ipc).await;
                                                 }
 
                                                 connection.actor_control_self(ActorControlSelf {
@@ -381,15 +363,7 @@ async fn client_loop(
                                                         common: common.clone(),
                                                         ..Default::default()
                                                     }));
-
-                                                    connection
-                                                    .send_segment(PacketSegment {
-                                                        source_actor: connection.player_data.actor_id,
-                                                        target_actor: connection.player_data.actor_id,
-                                                        segment_type: SegmentType::Ipc,
-                                                        data: SegmentData::Ipc { data: ipc },
-                                                    })
-                                                    .await;
+                                                    connection.send_ipc_self(ipc).await;
                                                 }
 
                                                 // If a zone has any eobjs that need spawning (e.g. Chocobo Square), do so
@@ -412,15 +386,7 @@ async fn client_loop(
                                                         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::TitleList {
                                                             unlock_bitmask: [0xFF; TITLE_UNLOCK_BITMASK_SIZE]
                                                         });
-
-                                                        connection
-                                                        .send_segment(PacketSegment {
-                                                            source_actor: connection.player_data.actor_id,
-                                                            target_actor: connection.player_data.actor_id,
-                                                            segment_type: SegmentType::Ipc,
-                                                            data: SegmentData::Ipc { data: ipc },
-                                                        })
-                                                        .await;
+                                                        connection.send_ipc_self(ipc).await;
                                                     },
                                                     ClientTriggerCommand::FinishZoning {} => {
                                                         let lua = lua.lock().unwrap();
@@ -471,15 +437,7 @@ async fn client_loop(
                                                                 ..Default::default()
                                                             }],
                                                         }));
-
-                                                        connection
-                                                        .send_segment(PacketSegment {
-                                                            source_actor: connection.player_data.actor_id,
-                                                            target_actor: connection.player_data.actor_id,
-                                                            segment_type: SegmentType::Ipc,
-                                                            data: SegmentData::Ipc { data: ipc },
-                                                        })
-                                                        .await;
+                                                        connection.send_ipc_self(ipc).await;
                                                     }
                                                     SocialListRequestType::Friends => {
                                                         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::SocialList(SocialList {
@@ -487,15 +445,7 @@ async fn client_loop(
                                                             sequence: request.count,
                                                             entries: Default::default(),
                                                         }));
-
-                                                        connection
-                                                        .send_segment(PacketSegment {
-                                                            source_actor: connection.player_data.actor_id,
-                                                            target_actor: connection.player_data.actor_id,
-                                                            segment_type: SegmentType::Ipc,
-                                                            data: SegmentData::Ipc { data: ipc },
-                                                        })
-                                                        .await;
+                                                        connection.send_ipc_self(ipc).await;
                                                     }
                                                 }
                                             }
@@ -762,15 +712,7 @@ async fn client_loop(
                                                     timestamp: *timestamp, // copied from here
                                                     transmission_interval: 333, // always this for some reason
                                                 });
-
-                                                connection
-                                                .send_segment(PacketSegment {
-                                                    source_actor: connection.player_data.actor_id,
-                                                    target_actor: connection.player_data.actor_id,
-                                                    segment_type: SegmentType::Ipc,
-                                                    data: SegmentData::Ipc { data: ipc },
-                                                })
-                                                .await;
+                                                connection.send_ipc_self(ipc).await;
                                             }
                                             ClientZoneIpcData::Unk18 { .. } => {
                                                 // no-op
@@ -826,14 +768,7 @@ async fn client_loop(
                                                         dst_stack: 0,
                                                         dst_catalog_id: 0,
                                                     });
-                                                    connection
-                                                    .send_segment(PacketSegment {
-                                                        source_actor: connection.player_data.actor_id,
-                                                        target_actor: connection.player_data.actor_id,
-                                                        segment_type: SegmentType::Ipc,
-                                                        data: SegmentData::Ipc { data: ipc },
-                                                    })
-                                                    .await;
+                                                    connection.send_ipc_self(ipc).await;
                                                     connection.send_inventory_transaction_finish(0x90, 0x200).await;
                                                 }
 
@@ -921,14 +856,7 @@ async fn client_loop(
                                                             dst_stack: 0,
                                                             dst_catalog_id: 0,
                                                         });
-                                                        connection
-                                                        .send_segment(PacketSegment {
-                                                            source_actor: connection.player_data.actor_id,
-                                                            target_actor: connection.player_data.actor_id,
-                                                            segment_type: SegmentType::Ipc,
-                                                            data: SegmentData::Ipc { data: ipc },
-                                                        })
-                                                        .await;
+                                                        connection.send_ipc_self(ipc).await;
 
                                                         // Process the server's inventory first.
                                                         let action = ItemOperation {
@@ -955,14 +883,7 @@ async fn client_loop(
                                                             dst_stack: 0,
                                                             dst_catalog_id: 0,
                                                         });
-                                                        connection
-                                                        .send_segment(PacketSegment {
-                                                            source_actor: connection.player_data.actor_id,
-                                                            target_actor: connection.player_data.actor_id,
-                                                            segment_type: SegmentType::Ipc,
-                                                            data: SegmentData::Ipc { data: ipc },
-                                                        })
-                                                        .await;
+                                                        connection.send_ipc_self(ipc).await;
 
                                                         connection.send_inventory_transaction_finish(0x100, 0x300).await;
 
@@ -1030,34 +951,18 @@ async fn client_loop(
                                             }
                                             ClientZoneIpcData::EventUnkRequest { event_id, unk1, unk2, unk3 } => {
                                                  let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::EventUnkReply {
-                                                        event_id: *event_id,
-                                                        unk1: *unk1,
-                                                        unk2: *unk2,
-                                                        unk3: *unk3 + 1,
-                                                    });
-
-                                                    connection
-                                                    .send_segment(PacketSegment {
-                                                        source_actor: connection.player_data.actor_id,
-                                                        target_actor: connection.player_data.actor_id,
-                                                        segment_type: SegmentType::Ipc,
-                                                        data: SegmentData::Ipc { data: ipc },
-                                                    })
-                                                    .await;
+                                                     event_id: *event_id,
+                                                     unk1: *unk1,
+                                                     unk2: *unk2,
+                                                     unk3: *unk3 + 1,
+                                                 });
+                                                 connection.send_ipc_self(ipc).await;
                                             }
                                             ClientZoneIpcData::UnkCall2 { .. } => {
                                                 let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UnkResponse2 {
                                                     unk1: 1,
                                                 });
-
-                                                connection
-                                                .send_segment(PacketSegment {
-                                                    source_actor: connection.player_data.actor_id,
-                                                    target_actor: connection.player_data.actor_id,
-                                                    segment_type: SegmentType::Ipc,
-                                                    data: SegmentData::Ipc { data: ipc },
-                                                })
-                                                .await;
+                                                connection.send_ipc_self(ipc).await;
                                             }
                                             ClientZoneIpcData::ContentFinderRegister { content_ids, .. } => {
                                                 tracing::info!("Searching for {content_ids:?}");
@@ -1103,15 +1008,7 @@ async fn client_loop(
                                                             0,
                                                         ],
                                                     });
-
-                                                    connection
-                                                    .send_segment(PacketSegment {
-                                                        source_actor: connection.player_data.actor_id,
-                                                        target_actor: connection.player_data.actor_id,
-                                                        segment_type: SegmentType::Ipc,
-                                                        data: SegmentData::Ipc { data: ipc },
-                                                    })
-                                                    .await;
+                                                    connection.send_ipc_self(ipc).await;
                                                 }
 
                                                 // found
@@ -1161,15 +1058,7 @@ async fn client_loop(
                                                             1,
                                                         ],
                                                     });
-
-                                                    connection
-                                                    .send_segment(PacketSegment {
-                                                        source_actor: connection.player_data.actor_id,
-                                                        target_actor: connection.player_data.actor_id,
-                                                        segment_type: SegmentType::Ipc,
-                                                        data: SegmentData::Ipc { data: ipc },
-                                                    })
-                                                    .await;
+                                                    connection.send_ipc_self(ipc).await;
                                                 }
                                             }
                                             ClientZoneIpcData::ContentFinderAction { unk1 } => {
@@ -1206,15 +1095,7 @@ async fn client_loop(
                                                             0,
                                                         ],
                                                     });
-
-                                                    connection
-                                                    .send_segment(PacketSegment {
-                                                        source_actor: connection.player_data.actor_id,
-                                                        target_actor: connection.player_data.actor_id,
-                                                        segment_type: SegmentType::Ipc,
-                                                        data: SegmentData::Ipc { data: ipc },
-                                                    })
-                                                    .await;
+                                                    connection.send_ipc_self(ipc).await;
                                                 }
 
                                                 // TODO: content finder should be moved to global state
