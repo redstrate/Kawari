@@ -76,10 +76,10 @@ pub enum ClientTriggerCommand {
     },
     /// When the player begins swimming. Seems to have no parameters.
     #[brw(magic = 0x260u16)]
-    BeginSwimming { },
+    BeginSwimming {},
     /// When the player stops swimming (by going back on land, mounting, etc.). Seems to have no parameters.
     #[brw(magic = 0x261u16)]
-    EndSwimming { },
+    EndSwimming {},
     Unknown {
         category: u16,
         // seen in haircut event

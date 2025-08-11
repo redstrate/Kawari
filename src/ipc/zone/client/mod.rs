@@ -19,7 +19,7 @@ pub use crate::ipc::zone::client::item_operation::ItemOperation;
 pub use super::social_list::{PlayerEntry, SocialList, SocialListRequest, SocialListRequestType};
 
 use super::config::Config;
-use crate::common::{Position, read_string, write_string};
+use crate::common::{CHAR_NAME_MAX_LENGTH, Position, read_string, write_string};
 use crate::opcodes::ClientZoneIpcType;
 use crate::packet::IPC_HEADER_SIZE;
 
@@ -216,6 +216,18 @@ pub enum ClientZoneIpcData {
     NewDiscovery {
         layout_id: u32,
         pos: Position,
+    },
+    GMCommandName {
+        command: u32,
+        arg0: u32,
+        arg1: u32,
+        arg2: u32,
+        arg3: u32,
+        #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+        #[br(count = CHAR_NAME_MAX_LENGTH)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        unk1: String,
     },
     Unknown {
         #[br(count = size - 32)]

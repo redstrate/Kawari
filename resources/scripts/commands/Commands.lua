@@ -3,6 +3,7 @@ GM_DIR = "commands/gm/"
 
 -- GM commands
 
+GM_SET_POS = 0
 GM_SET_LEVEL = 1
 GM_CHANGE_WEATHER = 6
 GM_SPEED = 9
@@ -18,6 +19,7 @@ GM_WIREFRAME = 550
 GM_TERRITORY = 600
 GM_TERRITORY_INFO = 605
 
+registerGMCommand(GM_SET_POS,           GM_DIR.."SetPos.lua")
 registerGMCommand(GM_SET_LEVEL,         GM_DIR.."SetLevel.lua")
 registerGMCommand(GM_CHANGE_WEATHER,    GM_DIR.."ChangeWeather.lua")
 registerGMCommand(GM_SPEED,             GM_DIR.."SetSpeed.lua")
@@ -43,7 +45,6 @@ registerCommand("inspect",           GM_DIR.."InspectPlayer.lua") -- TODO: remov
 registerCommand("nudge",             DBG_DIR.."Nudge.lua")
 registerCommand("ost",               DBG_DIR.."OnScreenTest.lua")
 registerCommand("permtest",          DBG_DIR.."PermissionTest.lua")
-registerCommand("setpos",            DBG_DIR.."SetPos.lua")
 registerCommand("unlock",            DBG_DIR.."Unlock.lua")
 registerCommand("unlockcontent",     DBG_DIR.."UnlockContent.lua")
 registerCommand("completeallquests", DBG_DIR.."CompleteAllQuests.lua")

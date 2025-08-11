@@ -580,6 +580,12 @@
             "comment": "Sent by the client when they discover a new location on the map.",
             "opcode": 914,
             "size": 16
+        },
+        {
+            "name": "GMCommandName",
+            "comment": "Sent by the client when they send a GM command. This can only be sent by the client if they are sent a GM rank.",
+            "opcode": 535,
+            "size": 52
         }
     ],
     "ServerLobbyIpcType": [

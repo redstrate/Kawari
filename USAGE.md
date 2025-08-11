@@ -102,7 +102,6 @@ This feature is still a work-in-progress, and not all data is imported yet.
 
 These special debug commands start with `!` and are custom to Kawari.
 
-* `!setpos <x> <y> <z>`: Teleport to the specified location
 * `!spawnnpc`: Spawn a NPC for debugging
 * `!spawnmonster`: Spawn a monster for debugging
 * `!spawnclone`: Spawn a clone of yourself
@@ -125,6 +124,7 @@ These special debug commands start with `!` and are custom to Kawari.
 
 These GM commands are implemented in the FFXIV protocol, but only some of them are implemented.
 
+* `//gm pos <x> <y> <z>`: Teleport to the specified location
 * `//gm teri <id>`: Changes to the specified territory
 * `//gm weather <id>`: Changes the weather
 * `//gm wireframe`: Toggle wireframe rendering for the environment
