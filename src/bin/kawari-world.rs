@@ -1135,6 +1135,10 @@ async fn client_loop(
                                                      event.enter_trigger(&mut lua_player);
                                                 }
                                             }
+                                            ClientZoneIpcData::NewDiscovery { layout_id, pos } => {
+                                                // TODO: Remove this soon, it's pretty spammy, happening every 10 seconds when no reply is sent. For now it's here for testing
+                                                tracing::info!("Client discovered a new location on {:?} at {:?}!", layout_id, pos);
+                                            }
                                             ClientZoneIpcData::Unknown { .. } => {
                                                 tracing::warn!("Unknown packet {:?} recieved, this should be handled!", data.op_code);
                                             }
