@@ -2,7 +2,7 @@
 
 Server emulator for a certain MMO. Updates on the project can be found [on my blog](https://redstrate.com/blog/series/kawari-progress-report/).
 
-![](resources/main.png)
+![](.github/main.png)
 
 ## Features
 
