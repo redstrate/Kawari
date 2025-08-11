@@ -42,12 +42,14 @@ mod tests {
 
     use binrw::BinRead;
 
+    use crate::server_zone_tests_dir;
+
     use super::*;
 
     #[test]
     fn read_init_zone() {
         let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        d.push("resources/tests/init_zone.bin");
+        d.push(server_zone_tests_dir!("init_zone.bin"));
 
         let buffer = read(d).unwrap();
         let mut buffer = Cursor::new(&buffer);

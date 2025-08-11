@@ -32,12 +32,14 @@ mod tests {
 
     use binrw::BinRead;
 
+    use crate::client_zone_tests_dir;
+
     use super::*;
 
     #[test]
     fn read_inventory_modify() {
         let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        d.push("resources/tests/inventory_modify.bin");
+        d.push(client_zone_tests_dir!("inventory_modify.bin"));
 
         let buffer = read(d).unwrap();
         let mut buffer = Cursor::new(&buffer);

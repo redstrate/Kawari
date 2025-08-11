@@ -103,7 +103,6 @@ jobs:
           LICENSE
           USAGE.md
           README.md
-          Caddyfile
           kawari-admin*
           kawari-frontier*
           kawari-lobby*
@@ -115,12 +114,10 @@ jobs:
           kawari-savedatabank*
           !*.d
           resources/
-          !resources/tests
-          !resources/opcodes.json
+          !resources/data/tests
+          !resources/data/opcodes.json
           run.sh
           run.bat
-          !resources/*.bin
-          !resources/main.png
           version.txt
 
   deploy:

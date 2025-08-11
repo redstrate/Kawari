@@ -4,6 +4,13 @@
 /// Constant to enable packet obfuscation. Changes every patch.
 pub const OBFUSCATION_ENABLED_MODE: u8 = 118;
 
+// Helper macro so we don't repeat ourselves a bunch of times
+macro_rules! scrambler_dir {
+    ($rel_path:literal) => {
+        concat!("../../resources/data/scrambler/", $rel_path)
+    }
+}
+
 /// Generates the necessary keys from three seeds.
 pub struct ScramblerKeyGenerator {
     table0: &'static [i32],
@@ -27,16 +34,16 @@ impl ScramblerKeyGenerator {
         unsafe {
             Self {
                 table0: std::mem::transmute::<&[u8], &[i32]>(include_bytes!(
-                    "../../resources/table0.bin"
+                    scrambler_dir!("table0.bin")
                 )),
                 table1: std::mem::transmute::<&[u8], &[i32]>(include_bytes!(
-                    "../../resources/table1.bin"
+                    scrambler_dir!("table1.bin")
                 )),
                 table2: std::mem::transmute::<&[u8], &[i32]>(include_bytes!(
-                    "../../resources/table2.bin"
+                    scrambler_dir!("table2.bin")
                 )),
-                mid_table: include_bytes!("../../resources/midtable.bin"),
-                day_table: include_bytes!("../../resources/daytable.bin"),
+                mid_table: include_bytes!(scrambler_dir!("midtable.bin")),
+                day_table: include_bytes!(scrambler_dir!("daytable.bin")),
 
                 // TODO: is it possible to calculate these automatically?
                 table_radixes: &[93, 94, 113],

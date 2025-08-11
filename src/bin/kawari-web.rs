@@ -6,47 +6,49 @@ use minijinja::Environment;
 use minijinja::context;
 use serde::{Deserialize, Serialize};
 use tower_http::services::ServeDir;
+use kawari::{web_static_dir, web_templates_dir};
+
 
 fn setup_default_environment() -> Environment<'static> {
     let mut env = Environment::new();
     env.add_template_owned(
         "layout.html",
-        std::fs::read_to_string("resources/templates/layout.html")
+        std::fs::read_to_string(web_templates_dir!("layout.html"))
             .expect("Failed to find template!"),
     )
     .unwrap();
     env.add_template_owned(
         "web_base.html",
-        std::fs::read_to_string("resources/templates/web_base.html")
+        std::fs::read_to_string(web_templates_dir!("web_base.html"))
             .expect("Failed to find template!"),
     )
     .unwrap();
     env.add_template_owned(
         "web.html",
-        std::fs::read_to_string("resources/templates/web.html").expect("Failed to find template!"),
+        std::fs::read_to_string(web_templates_dir!("web.html")).expect("Failed to find template!"),
     )
     .unwrap();
     env.add_template_owned(
         "worldstatus.html",
-        std::fs::read_to_string("resources/templates/worldstatus.html")
+        std::fs::read_to_string(web_templates_dir!("worldstatus.html"))
             .expect("Failed to find template!"),
     )
     .unwrap();
     env.add_template_owned(
         "account.html",
-        std::fs::read_to_string("resources/templates/account.html")
+        std::fs::read_to_string(web_templates_dir!("account.html"))
             .expect("Failed to find template!"),
     )
     .unwrap();
     env.add_template_owned(
         "setup.html",
-        std::fs::read_to_string("resources/templates/setup.html")
+        std::fs::read_to_string(web_templates_dir!("setup.html"))
             .expect("Failed to find template!"),
     )
     .unwrap();
     env.add_template_owned(
         "launchertweaks.toml",
-        std::fs::read_to_string("resources/templates/launchertweaks.toml")
+        std::fs::read_to_string(web_templates_dir!("launchertweaks.toml"))
             .expect("Failed to find template!"),
     )
     .unwrap();
@@ -120,7 +122,7 @@ async fn main() {
         .route("/worldstatus", get(world_status))
         .route("/setup", get(setup))
         .route("/launcherconfig", get(launcher_config))
-        .nest_service("/static", ServeDir::new("resources/static"));
+        .nest_service("/static", ServeDir::new(web_static_dir!("")));
 
     let config = get_config();
 

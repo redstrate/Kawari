@@ -19,12 +19,14 @@ mod tests {
 
     use binrw::BinRead;
 
+    use crate::server_zone_tests_dir;
+
     use super::*;
 
     #[test]
     fn read_containerinfo() {
         let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        d.push("resources/tests/container_info.bin");
+        d.push(server_zone_tests_dir!("container_info.bin"));
 
         let buffer = read(d).unwrap();
         let mut buffer = Cursor::new(&buffer);
