@@ -10,11 +10,11 @@ use kawari::config::get_config;
 use kawari::ipc::kawari::{CustomIpcData, CustomIpcSegment, CustomIpcType};
 use kawari::login::{LoginDatabase, LoginError};
 use kawari::packet::send_custom_world_packet;
+use kawari::{web_static_dir, web_templates_dir};
 use minijinja::{Environment, context};
 use serde::Deserialize;
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::services::ServeDir;
-use kawari::{web_static_dir, web_templates_dir};
 
 fn setup_default_environment() -> Environment<'static> {
     let mut env = Environment::new();

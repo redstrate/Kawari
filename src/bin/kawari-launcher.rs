@@ -2,11 +2,11 @@ use axum::extract::Query;
 use axum::response::Html;
 use axum::{Router, routing::get};
 use kawari::config::get_config;
+use kawari::{web_static_dir, web_templates_dir};
 use minijinja::Environment;
 use minijinja::context;
 use serde::Deserialize;
 use tower_http::services::ServeDir;
-use kawari::{web_static_dir, web_templates_dir};
 
 fn setup_default_environment() -> Environment<'static> {
     let mut env = Environment::new();

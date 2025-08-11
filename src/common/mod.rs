@@ -160,16 +160,18 @@ pub struct Attributes {
     pub mind: u32,
 }
 
-#[macro_export] macro_rules! web_templates_dir {
+#[macro_export]
+macro_rules! web_templates_dir {
     ($rel_path:literal) => {
         concat!("resources/web/templates/", $rel_path)
-    }
+    };
 }
 
-#[macro_export] macro_rules! web_static_dir {
+#[macro_export]
+macro_rules! web_static_dir {
     ($rel_path:literal) => {
         concat!("resources/web/static/", $rel_path)
-    }
+    };
 }
 
 #[cfg(test)]
@@ -227,40 +229,46 @@ mod tests {
     }
 
     // Helper macros so we don't repeat ourselves in tests a bunch of times
-    #[macro_export] macro_rules! client_zone_tests_dir {
+    #[macro_export]
+    macro_rules! client_zone_tests_dir {
         ($rel_path:literal) => {
             concat!("resources/data/tests/zone/client/", $rel_path)
-        }
+        };
     }
 
-    #[macro_export] macro_rules! server_zone_tests_dir {
+    #[macro_export]
+    macro_rules! server_zone_tests_dir {
         ($rel_path:literal) => {
             concat!("resources/data/tests/zone/server/", $rel_path)
-        }
+        };
     }
 
-    #[macro_export] macro_rules! client_chat_tests_dir {
+    #[macro_export]
+    macro_rules! client_chat_tests_dir {
         ($rel_path:literal) => {
             concat!("resources/data/tests/chat/client/", $rel_path)
-        }
+        };
     }
 
-    #[macro_export] macro_rules! server_chat_tests_dir {
+    #[macro_export]
+    macro_rules! server_chat_tests_dir {
         ($rel_path:literal) => {
             concat!("resources/data/tests/chat/server/", $rel_path)
-        }
+        };
     }
 
     // Helper macros so we don't repeat ourselves a bunch of times
-    #[macro_export] macro_rules! client_lobby_tests_dir {
+    #[macro_export]
+    macro_rules! client_lobby_tests_dir {
         ($rel_path:literal) => {
             concat!("resources/data/tests/lobby/client/", $rel_path)
-        }
+        };
     }
 
-    #[macro_export] macro_rules! server_lobby_tests_dir {
+    #[macro_export]
+    macro_rules! server_lobby_tests_dir {
         ($rel_path:literal) => {
             concat!("resources/data/tests/lobby/server/", $rel_path)
-        }
+        };
     }
 }

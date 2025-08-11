@@ -8,7 +8,7 @@ pub const OBFUSCATION_ENABLED_MODE: u8 = 118;
 macro_rules! scrambler_dir {
     ($rel_path:literal) => {
         concat!("../../resources/data/scrambler/", $rel_path)
-    }
+    };
 }
 
 /// Generates the necessary keys from three seeds.
@@ -33,15 +33,15 @@ impl ScramblerKeyGenerator {
         // Technically unsafe, but Unscrambler's tables should be correct anyway
         unsafe {
             Self {
-                table0: std::mem::transmute::<&[u8], &[i32]>(include_bytes!(
-                    scrambler_dir!("table0.bin")
-                )),
-                table1: std::mem::transmute::<&[u8], &[i32]>(include_bytes!(
-                    scrambler_dir!("table1.bin")
-                )),
-                table2: std::mem::transmute::<&[u8], &[i32]>(include_bytes!(
-                    scrambler_dir!("table2.bin")
-                )),
+                table0: std::mem::transmute::<&[u8], &[i32]>(include_bytes!(scrambler_dir!(
+                    "table0.bin"
+                ))),
+                table1: std::mem::transmute::<&[u8], &[i32]>(include_bytes!(scrambler_dir!(
+                    "table1.bin"
+                ))),
+                table2: std::mem::transmute::<&[u8], &[i32]>(include_bytes!(scrambler_dir!(
+                    "table2.bin"
+                ))),
                 mid_table: include_bytes!(scrambler_dir!("midtable.bin")),
                 day_table: include_bytes!(scrambler_dir!("daytable.bin")),
 

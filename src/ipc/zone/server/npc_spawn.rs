@@ -30,9 +30,9 @@ mod tests {
     use binrw::BinRead;
 
     use crate::{
-        server_zone_tests_dir,
         common::INVALID_OBJECT_ID,
         ipc::zone::{BattleNpcSubKind, CharacterMode, DisplayFlag, ObjectKind, OnlineStatus},
+        server_zone_tests_dir,
     };
 
     use super::*;
