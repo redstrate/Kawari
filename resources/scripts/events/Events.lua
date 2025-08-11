@@ -69,6 +69,7 @@ generic_warps = {
     131519,  -- Faire Adventurer from Eastern La Noscea: bottom of the Moonfire Festival (2023 tower to the first tier of the tower
     131545,  -- Port Official from Tuliyollal to Old Sharlayan
     131578,  -- Exit The For'ard Cabins to Tuliyollal
+    131609,  -- Exit from The Ageless Necropolis to Living Memory: The Meso Terminal
 }
 
 generic_inns = {

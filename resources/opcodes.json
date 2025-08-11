@@ -574,6 +574,12 @@
             "name": "StartWalkInEvent",
             "opcode": 640,
             "size": 24
+        },
+        {
+            "name": "NewDiscovery",
+            "comment": "Sent by the client when they discover a new location on the map.",
+            "opcode": 914,
+            "size": 16
         }
     ],
     "ServerLobbyIpcType": [

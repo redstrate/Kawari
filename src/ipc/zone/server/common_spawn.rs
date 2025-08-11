@@ -82,18 +82,59 @@ pub enum CharacterMode {
 }
 
 // See https://github.com/aers/FFXIVClientStructs/blob/28d9f0f77fdf388f596ba65768c7d6441e962d06/FFXIVClientStructs/FFXIV/Client/UI/Info/InfoProxyCommonList.cs#L86
+// TODO: This entire enum seems to be used as both literal values (e.g. in PlayerSpawn, where a single byte indicates status) and shift values (e.g. other packets, probably social list related, as a u64).
 #[binrw]
 #[brw(little)]
 #[brw(repr = u8)]
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub enum OnlineStatus {
-    Offline = 0x0,
+    Offline = 0,
     GameQA = 1,
     GameMaster = 2,
     GameMasterBlue = 3,
     EventParticipant = 4,
-    NewAdventurer = 32, // TODO: This is actually a flag!
+    Disconnected = 5,
+    WaitingForFriendListApproval = 6,
+    WaitingForLinkshellApproval = 7,
+    WaitingForFreeCompanyApproval = 8,
+    NotFound = 9,
+    OfflineExd = 10,
+    BattleMentor = 11,
+    Busy = 12,
+    PvP = 13,
+    PlayingTripleTriad = 14,
     ViewingCutscene = 15,
+    UsingAChocoboPorter = 16,
+    AwayFromKeyboard = 17,
+    CameraMode = 18,
+    LookingForRepairs = 19,
+    LookingToRepair = 20,
+    LookingToMeldMateria = 21,
+    RolePlaying = 22,
+    LookingForParty = 23,
+    SwordForHire = 24,
+    WaitingForDutyFinder = 25,
+    RecruitingPartyMembers = 26,
+    Mentor = 27,
+    PvEMentor = 28,
+    TradeMentor = 29,
+    PvPMentor = 30,
+    Returner = 31,
+    NewAdventurer = 32,
+    AllianceLeader = 33,
+    AlliancePartyLeader = 34,
+    AlliancePartyMember = 35,
+    PartyLeader = 36,
+    PartyMember = 37,
+    PartyLeaderCrossWorld = 38,
+    PartyMemberCrossWorld = 39,
+    AnotherWorld = 40,
+    SharingDuty = 41,
+    SimilarDuty = 42,
+    InDuty = 43,
+    TrialAdventurer = 44,
+    FreeCompany = 45,
+    GrandCompany = 46,
     #[default]
     Online = 47,
 }

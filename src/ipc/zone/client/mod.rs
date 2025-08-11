@@ -213,6 +213,10 @@ pub enum ClientZoneIpcData {
     ContentFinderAction {
         unk1: [u8; 8],
     },
+    NewDiscovery {
+        layout_id: u32,
+        pos: Position,
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -394,6 +398,17 @@ mod tests {
                 ClientZoneIpcData::StartWalkInEvent {
                     event_arg: 0,
                     event_id: 0,
+                    pos: Position {
+                        x: 0.0,
+                        y: 0.0,
+                        z: 0.0,
+                    },
+                },
+            ),
+            (
+                ClientZoneIpcType::NewDiscovery,
+                ClientZoneIpcData::NewDiscovery {
+                    layout_id: 0,
                     pos: Position {
                         x: 0.0,
                         y: 0.0,
