@@ -12,7 +12,7 @@ fn main() {
     // Generate IPC opcodes
     {
         let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        d.push("resources/opcodes.json");
+        d.push("resources/data/opcodes.json");
 
         println!("cargo::rerun-if-changed={}", d.to_str().unwrap());
 

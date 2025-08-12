@@ -23,12 +23,14 @@ mod tests {
 
     use crate::common::ObjectId;
 
+    use crate::server_zone_tests_dir;
+
     use super::*;
 
     #[test]
     fn read_intro_event_start() {
         let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        d.push("resources/tests/event_start.bin");
+        d.push(server_zone_tests_dir!("event_start.bin"));
 
         let buffer = read(d).unwrap();
         let mut buffer = Cursor::new(&buffer);

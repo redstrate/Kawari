@@ -40,12 +40,14 @@ mod tests {
 
     use binrw::BinRead;
 
+    use crate::server_zone_tests_dir;
+
     use super::*;
 
     #[test]
     fn read_effectresult() {
         let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        d.push("resources/tests/effect_result.bin");
+        d.push(server_zone_tests_dir!("effect_result.bin"));
 
         let buffer = read(d).unwrap();
         let mut buffer = Cursor::new(&buffer);

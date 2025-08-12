@@ -2,6 +2,7 @@ use axum::extract::Query;
 use axum::response::Html;
 use axum::{Router, routing::get};
 use kawari::config::get_config;
+use kawari::{web_static_dir, web_templates_dir};
 use minijinja::Environment;
 use minijinja::context;
 use serde::Deserialize;
@@ -11,13 +12,13 @@ fn setup_default_environment() -> Environment<'static> {
     let mut env = Environment::new();
     env.add_template_owned(
         "layout.html",
-        std::fs::read_to_string("resources/templates/layout.html")
+        std::fs::read_to_string(web_templates_dir!("layout.html"))
             .expect("Failed to find template!"),
     )
     .unwrap();
     env.add_template_owned(
         "launcher.html",
-        std::fs::read_to_string("resources/templates/launcher.html")
+        std::fs::read_to_string(web_templates_dir!("launcher.html"))
             .expect("Failed to find template!"),
     )
     .unwrap();
@@ -50,7 +51,7 @@ async fn main() {
 
     let app = Router::new()
         .route("/v700/index.html", get(root))
-        .nest_service("/static", ServeDir::new("resources/static"));
+        .nest_service("/static", ServeDir::new(web_static_dir!("")));
 
     let config = get_config();
 

@@ -38,12 +38,14 @@ mod tests {
 
     use crate::common::ObjectId;
 
+    use crate::client_zone_tests_dir;
+
     use super::*;
 
     #[test]
     fn read_actionrequest() {
         let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        d.push("resources/tests/action_request.bin");
+        d.push(client_zone_tests_dir!("action_request.bin"));
 
         let buffer = read(d).unwrap();
         let mut buffer = Cursor::new(&buffer);

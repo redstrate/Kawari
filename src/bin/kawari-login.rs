@@ -10,6 +10,7 @@ use kawari::config::get_config;
 use kawari::ipc::kawari::{CustomIpcData, CustomIpcSegment, CustomIpcType};
 use kawari::login::{LoginDatabase, LoginError};
 use kawari::packet::send_custom_world_packet;
+use kawari::{web_static_dir, web_templates_dir};
 use minijinja::{Environment, context};
 use serde::Deserialize;
 use tower_http::cors::{Any, CorsLayer};
@@ -19,49 +20,49 @@ fn setup_default_environment() -> Environment<'static> {
     let mut env = Environment::new();
     env.add_template_owned(
         "layout.html",
-        std::fs::read_to_string("resources/templates/layout.html")
+        std::fs::read_to_string(web_templates_dir!("layout.html"))
             .expect("Failed to find template!"),
     )
     .unwrap();
     env.add_template_owned(
         "account_base.html",
-        std::fs::read_to_string("resources/templates/account_base.html")
+        std::fs::read_to_string(web_templates_dir!("account_base.html"))
             .expect("Failed to find template!"),
     )
     .unwrap();
     env.add_template_owned(
         "login_base.html",
-        std::fs::read_to_string("resources/templates/login_base.html")
+        std::fs::read_to_string(web_templates_dir!("login_base.html"))
             .expect("Failed to find template!"),
     )
     .unwrap();
     env.add_template_owned(
         "login.html",
-        std::fs::read_to_string("resources/templates/login.html")
+        std::fs::read_to_string(web_templates_dir!("login.html"))
             .expect("Failed to find template!"),
     )
     .unwrap();
     env.add_template_owned(
         "register.html",
-        std::fs::read_to_string("resources/templates/register.html")
+        std::fs::read_to_string(web_templates_dir!("register.html"))
             .expect("Failed to find template!"),
     )
     .unwrap();
     env.add_template_owned(
         "account.html",
-        std::fs::read_to_string("resources/templates/account.html")
+        std::fs::read_to_string(web_templates_dir!("account.html"))
             .expect("Failed to find template!"),
     )
     .unwrap();
     env.add_template_owned(
         "changepassword.html",
-        std::fs::read_to_string("resources/templates/changepassword.html")
+        std::fs::read_to_string(web_templates_dir!("changepassword.html"))
             .expect("Failed to find template!"),
     )
     .unwrap();
     env.add_template_owned(
         "restore.html",
-        std::fs::read_to_string("resources/templates/restore.html")
+        std::fs::read_to_string(web_templates_dir!("restore.html"))
             .expect("Failed to find template!"),
     )
     .unwrap();
@@ -335,7 +336,7 @@ async fn main() {
         .route("/account/app/svc/restore", get(restore_backup))
         .route("/account/app/svc/restore", post(upload_character_backup))
         .with_state(state)
-        .nest_service("/static", ServeDir::new("resources/static"))
+        .nest_service("/static", ServeDir::new(web_static_dir!("")))
         .layer(cors);
 
     let config = get_config();

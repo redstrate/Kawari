@@ -32,6 +32,7 @@ mod tests {
     use crate::{
         common::INVALID_OBJECT_ID,
         ipc::zone::{BattleNpcSubKind, CharacterMode, DisplayFlag, ObjectKind, OnlineStatus},
+        server_zone_tests_dir,
     };
 
     use super::*;
@@ -39,7 +40,7 @@ mod tests {
     #[test]
     fn read_carbuncle() {
         let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        d.push("resources/tests/npc_spawn.bin");
+        d.push(server_zone_tests_dir!("npc_spawn.bin"));
 
         let buffer = read(d).unwrap();
         let mut buffer = Cursor::new(&buffer);
@@ -71,7 +72,7 @@ mod tests {
     #[test]
     fn read_tiny_mandragora() {
         let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        d.push("resources/tests/tiny_mandragora.bin");
+        d.push(server_zone_tests_dir!("tiny_mandragora.bin"));
 
         let buffer = read(d).unwrap();
         let mut buffer = Cursor::new(&buffer);

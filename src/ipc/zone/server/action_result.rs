@@ -158,12 +158,14 @@ mod tests {
 
     use crate::common::{INVALID_OBJECT_ID, ObjectId};
 
+    use crate::server_zone_tests_dir;
+
     use super::*;
 
     #[test]
     fn read_actionresult() {
         let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        d.push("resources/tests/action_result.bin");
+        d.push(server_zone_tests_dir!("action_result.bin"));
 
         let buffer = read(d).unwrap();
         let mut buffer = Cursor::new(&buffer);
@@ -210,7 +212,7 @@ mod tests {
     #[test]
     fn read_actionresult_sprint() {
         let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        d.push("resources/tests/action_result_sprint.bin");
+        d.push(server_zone_tests_dir!("action_result_sprint.bin"));
 
         let buffer = read(d).unwrap();
         let mut buffer = Cursor::new(&buffer);
