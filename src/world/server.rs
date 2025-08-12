@@ -1173,8 +1173,9 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
 
                 if let Some(actor_id) = actor_id {
                     // remove them from the instance
-                    let current_instance = data.find_actor_instance_mut(actor_id).unwrap();
-                    current_instance.actors.remove(&ObjectId(actor_id));
+                    if let Some(current_instance) = data.find_actor_instance_mut(actor_id) {
+                        current_instance.actors.remove(&ObjectId(actor_id));
+                    }
                 }
 
                 data.clients.remove(&remove_id);
