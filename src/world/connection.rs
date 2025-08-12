@@ -1064,24 +1064,26 @@ impl ZoneConnection {
     pub async fn begin_log_out(&mut self) {
         self.gracefully_logged_out = true;
 
-        // write the player back to the database
+        // Write the player back to the database
         self.database.commit_player_data(&self.player_data);
 
-        // set the client's conditions for logout preparation
+        // Set the client's conditions for logout preparation
         self.conditions.set_condition(Condition::LoggingOut);
         self.send_conditions().await;
 
-        // tell the client we're ready to disconnect at any moment
+        // Tell the client we're ready to disconnect at any moment
         {
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::LogOutComplete {
                 unk: [1, 0, 0, 0, 0, 0, 0, 0],
             });
             self.send_ipc_self(ipc).await;
         }
+
+        self.handle.send(ToServer::LeftZone(self.id, self.player_data.actor_id, self.player_data.zone_id)).await;
     }
 
     pub async fn process_effects_list(&mut self) {
-        // Only update the client if absolutely nessecary (e.g. an effect is added, removed or changed duration)
+        // Only update the client if absolutely necessary (e.g. an effect is added, removed or changed duration)
         if self.status_effects.dirty {
             let mut list = [StatusEffect::default(); 30];
             list[..self.status_effects.status_effects.len()]
