@@ -56,7 +56,7 @@ Since Kawari is made up of multiple executables, we have included a built-in scr
 Kawari isn't very useful unless it's addressable to a launcher, so we have to setup a "reverse proxy". We suggest using [Caddy](https://caddyserver.com/download) and we also have a configuration that works on most local setups. Run this in your operating system's terminal. If you're on Windows, point it to the Caddy `.exe`.
 
 ```shell
-caddy run --config resources/Caddyfile
+caddy run --config resources/data/Caddyfile
 ```
 
 This Caddyfile hosts several domains required for normal operation, for example `ffxiv.localhost` on port 80. If you get a "permission denied" error starting Caddy, you must either start Caddy with elevated privileges (`sudo`) or set the `CAP_NET_BIND_SERVICE` capability. See [here](https://caddyserver.com/docs/quick-starts/caddyfile) for more information on how to do this.
