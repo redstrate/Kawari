@@ -160,6 +160,15 @@ pub struct Attributes {
     pub mind: u32,
 }
 
+#[binrw]
+#[brw(repr(u32))]
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub enum DistanceRange {
+    Normal = 0x0,
+    Extended = 0x1,
+    Maximum = 0x2,
+}
+
 #[macro_export]
 macro_rules! web_templates_dir {
     ($rel_path:literal) => {

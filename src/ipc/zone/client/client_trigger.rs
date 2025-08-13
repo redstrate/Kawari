@@ -1,6 +1,6 @@
 use binrw::binrw;
 
-use crate::common::{ObjectId, read_bool_from, write_bool_as};
+use crate::common::{DistanceRange, ObjectId, read_bool_from, write_bool_as};
 
 #[binrw]
 #[derive(Debug, Eq, PartialEq, Clone)]
@@ -80,6 +80,12 @@ pub enum ClientTriggerCommand {
     /// When the player stops swimming (by going back on land, mounting, etc.). Seems to have no parameters.
     #[brw(magic = 0x261u16)]
     EndSwimming {},
+    /// The client telling us how far in the distance we should see actors.
+    #[brw(magic = 0x232Du16)]
+    SetDistanceRange {
+        #[brw(pad_before = 2)]
+        range: DistanceRange
+    },
     Unknown {
         category: u16,
         // seen in haircut event
