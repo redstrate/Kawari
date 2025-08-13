@@ -220,6 +220,7 @@ impl ZoneConnection {
         .await;
     }
 
+    // TODO: Get rid of this? Lua.rs doesn't really need it but we'll continue using it for now.
     pub async fn send_segment(&mut self, segment: PacketSegment<ServerZoneIpcSegment>) {
         send_packet(
             &mut self.socket,
@@ -953,12 +954,7 @@ impl ZoneConnection {
             params,
             ..Default::default()
         };
-        if let Some((op_code, data)) = scene.package_scene() {
-            let ipc = ServerZoneIpcSegment {
-                op_code,
-                data,
-                ..Default::default()
-            };
+        if let Some(ipc) = scene.package_scene() {
             self.send_ipc_self(ipc).await;
         } else {
             tracing::error!(
