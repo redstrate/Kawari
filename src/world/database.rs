@@ -192,7 +192,7 @@ impl WorldDatabase {
             .map_err(|_| ImportError::ReadError)?;
         let mut charsave_bytes = Vec::<u8>::new();
         let mut bufrdr = BufReader::new(charsave_file);
-        if let Err(_) = bufrdr.read_to_end(&mut charsave_bytes) {
+        if bufrdr.read_to_end(&mut charsave_bytes).is_err() {
             return Err(ImportError::ReadError);
         };
 
