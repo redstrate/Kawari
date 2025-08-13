@@ -283,9 +283,9 @@ async fn upload_character_backup(
         }
     }
 
-    return restore_backup_with_message("Unknown Error".to_string())
+    restore_backup_with_message("Unknown Error".to_string())
         .await
-        .into_response();
+        .into_response()
 }
 
 async fn logout(jar: CookieJar) -> (CookieJar, Redirect) {
