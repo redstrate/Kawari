@@ -66,7 +66,7 @@ pub(crate) fn decompress<T: ReadWriteIpcSegment>(
             if expected_size != actual_size {
                 tracing::warn!(
                     "The segment {:#?} does not match the size in calc_size()! (expected {expected_size} got {actual_size})",
-                    segments.last()
+                    segment
                 );
             }
         }
