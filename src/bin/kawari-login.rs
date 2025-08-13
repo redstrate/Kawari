@@ -1,7 +1,9 @@
 use std::sync::Arc;
 
+use axum::body::Body;
 use axum::extract::{Multipart, Query, State};
-use axum::response::{Html, Redirect};
+use axum::http::Response;
+use axum::response::{Html, IntoResponse, Redirect};
 use axum::routing::post;
 use axum::{Form, Router, routing::get};
 use axum_extra::extract::CookieJar;
@@ -251,7 +253,7 @@ async fn upload_character_backup(
     State(state): State<LoginServerState>,
     jar: CookieJar,
     mut multipart: Multipart,
-) -> Redirect {
+) -> Response<Body> {
     if let Some(session_id) = jar.get("cis_sessid") {
         let user_id = state.database.get_user_id(session_id.value());
         let service_account_id = state.database.get_service_account(user_id);
@@ -272,12 +274,21 @@ async fn upload_character_backup(
                     ..Default::default()
                 };
 
-                send_custom_world_packet(ipc_segment).await.unwrap();
+                if let Some(response) = send_custom_world_packet(ipc_segment).await {
+                    match response.data {
+                        CustomIpcData::CharacterImported { message } => {
+                            return restore_backup_with_message(message).await.into_response();
+                        }
+                        _ => {}
+                    }
+                }
             }
         }
     }
 
-    Redirect::to("/account/app/svc/manage")
+    return restore_backup_with_message("Unknown Error".to_string())
+        .await
+        .into_response();
 }
 
 async fn logout(jar: CookieJar) -> (CookieJar, Redirect) {
@@ -305,6 +316,16 @@ async fn restore_backup() -> Html<String> {
     let environment = setup_default_environment();
     let template = environment.get_template("restore.html").unwrap();
     Html(template.render(context! {}).unwrap())
+}
+
+async fn restore_backup_with_message(status_message: String) -> Html<String> {
+    let environment = setup_default_environment();
+    let template = environment.get_template("restore.html").unwrap();
+    Html(
+        template
+            .render(context! { status_message => status_message })
+            .unwrap(),
+    )
 }
 
 #[tokio::main]

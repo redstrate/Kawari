@@ -198,11 +198,44 @@ pub async fn handle_custom_ipc(connection: &mut ZoneConnection, data: &CustomIpc
             service_account_id,
             path,
         } => {
-            let mut game_data = connection.gamedata.lock().unwrap();
+            let message;
 
-            connection
-                .database
-                .import_character(&mut game_data, *service_account_id, path);
+            if let Ok(mut game_data) = connection.gamedata.lock() {
+                if let Err(err) =
+                    connection
+                        .database
+                        .import_character(&mut game_data, *service_account_id, path)
+                {
+                    message = err.to_string();
+                } else {
+                    message = "Successfully imported!".to_string();
+                }
+            } else {
+                message = "Failed to read game data".to_string();
+            }
+
+            // send response
+            {
+                send_packet::<CustomIpcSegment>(
+                    &mut connection.socket,
+                    &mut connection.state,
+                    ConnectionType::None,
+                    CompressionType::Uncompressed,
+                    &[PacketSegment {
+                        segment_type: SegmentType::KawariIpc,
+                        data: SegmentData::KawariIpc {
+                            data: CustomIpcSegment {
+                                op_code: CustomIpcType::CharacterImported,
+                                data: CustomIpcData::CharacterImported { message },
+                                ..Default::default()
+                            },
+                        },
+                        ..Default::default()
+                    }],
+                    None,
+                )
+                .await;
+            }
         }
         CustomIpcData::RemakeCharacter {
             content_id,

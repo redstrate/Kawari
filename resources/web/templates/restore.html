@@ -5,6 +5,11 @@
 
 {% block accountbody %}
 <h2>Upload Character Backup</h2>
+{% if status_message is defined %}
+<div class="alert alert-primary" role="alert" id="alert">
+    <p id="statusMessage">{{ status_message }}</p>
+</div>
+{% endif %}
 <form method='post' enctype="multipart/form-data">
     <div class="mb-3">
         <label for="charbak" class="form-label">Backup file</label>

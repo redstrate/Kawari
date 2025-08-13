@@ -37,6 +37,24 @@ fn json_unpack<T: for<'a> Deserialize<'a>>(json_str: String) -> T {
     serde_json::from_str(&json_str).unwrap()
 }
 
+pub enum ImportError {
+    CharacterExists,
+    ReadError,
+    ParseError,
+}
+
+impl std::fmt::Display for ImportError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let message = match self {
+            ImportError::CharacterExists => "Character already exists",
+            ImportError::ReadError => "Error while reading files",
+            ImportError::ParseError => "Error while parsing files",
+        };
+
+        write!(f, "{}", message)
+    }
+}
+
 impl WorldDatabase {
     pub fn new() -> Self {
         let connection = Connection::open("world.db").expect("Failed to open database!");
@@ -74,7 +92,12 @@ impl WorldDatabase {
         }
     }
 
-    pub fn import_character(&self, game_data: &mut GameData, service_account_id: u32, path: &str) {
+    pub fn import_character(
+        &self,
+        game_data: &mut GameData,
+        service_account_id: u32,
+        path: &str,
+    ) -> Result<(), ImportError> {
         tracing::info!("Importing character backup from {path}...");
 
         let file = std::fs::File::open(path).unwrap();
@@ -148,32 +171,33 @@ impl WorldDatabase {
 
         let character: CharacterJson;
         {
-            let mut character_file = archive.by_name("character.json").unwrap();
+            let mut character_file = archive
+                .by_name("character.json")
+                .map_err(|_| ImportError::ReadError)?;
 
             let mut json_string = String::new();
-            character_file.read_to_string(&mut json_string).unwrap();
+            character_file
+                .read_to_string(&mut json_string)
+                .map_err(|_| ImportError::ReadError)?;
 
-            character = serde_json::from_str(&json_string).unwrap();
+            character = serde_json::from_str(&json_string).map_err(|_| ImportError::ReadError)?;
         }
 
         if !self.check_is_name_free(&character.name) {
-            let name = character.name;
-            tracing::warn!("* Skipping since {name} already exists.");
-            return;
+            return Err(ImportError::CharacterExists);
         }
 
-        let charsave_file = archive.by_name("FFXIV_CHARA_01.dat").unwrap();
+        let charsave_file = archive
+            .by_name("FFXIV_CHARA_01.dat")
+            .map_err(|_| ImportError::ReadError)?;
         let mut charsave_bytes = Vec::<u8>::new();
         let mut bufrdr = BufReader::new(charsave_file);
-        if let Err(err) = bufrdr.read_to_end(&mut charsave_bytes) {
-            tracing::error!(
-                "Unable to read FFXIV_CHARA_01.dat from archive! Additional information: {err}"
-            );
-            return;
+        if let Err(_) = bufrdr.read_to_end(&mut charsave_bytes) {
+            return Err(ImportError::ReadError);
         };
 
-        let charsave =
-            physis::savedata::chardat::CharacterData::from_existing(&charsave_bytes).unwrap();
+        let charsave = physis::savedata::chardat::CharacterData::from_existing(&charsave_bytes)
+            .ok_or(ImportError::ParseError)?;
 
         let customize = CustomizeData::from(charsave.customize);
 
@@ -204,7 +228,7 @@ impl WorldDatabase {
             // find the array index of the job
             let index = game_data
                 .get_exp_array_index(classjob.value as u16)
-                .unwrap();
+                .ok_or(ImportError::ParseError)?;
 
             player_data.classjob_levels[index as usize] = classjob.level;
             if let Some(exp) = classjob.exp {
@@ -291,7 +315,7 @@ impl WorldDatabase {
 
         self.commit_player_data(&player_data);
 
-        tracing::info!("{} added to the world!", character.name);
+        Ok(())
     }
 
     pub fn find_player_data(&self, actor_id: u32, game_data: &mut GameData) -> PlayerData {
