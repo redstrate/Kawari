@@ -51,7 +51,7 @@ impl std::fmt::Display for ImportError {
             ImportError::ParseError => "Error while parsing files",
         };
 
-        write!(f, "{}", message)
+        write!(f, "{message}")
     }
 }
 
