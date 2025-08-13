@@ -84,7 +84,7 @@ pub enum ClientTriggerCommand {
     #[brw(magic = 0x232Du16)]
     SetDistanceRange {
         #[brw(pad_before = 2)]
-        range: DistanceRange
+        range: DistanceRange,
     },
     Unknown {
         category: u16,

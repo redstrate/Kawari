@@ -586,6 +586,36 @@
             "comment": "Sent by the client when they send a GM command. This can only be sent by the client if they are sent a GM rank.",
             "opcode": 535,
             "size": 52
+        },
+        {
+            "name": "RequestBlacklist",
+            "comment": "Seems to happen when opening the Blacklist window.",
+            "opcode": 894,
+            "size": 8
+        },
+        {
+            "name": "RequestFellowships",
+            "comment": "Seems to happen when opening the Fellowships window.",
+            "opcode": 852,
+            "size": 8
+        },
+        {
+            "name": "RequestCrossworldLinkshells",
+            "comment": "Seems to happen when opening the Cross-world Linkshells window. Weird that it can do this, considering it's sent on login?",
+            "opcode": 345,
+            "size": 8
+        },
+        {
+            "name": "SearchFellowships",
+            "comment": "Seems to happen when opening the Fellowship Finder.",
+            "opcode": 138,
+            "size": 112
+        },
+        {
+            "name": "StartCountdown",
+            "comment": "Happens when starting a countdown through the Countdown window.",
+            "opcode": 811,
+            "size": 40
         }
     ],
     "ServerLobbyIpcType": [

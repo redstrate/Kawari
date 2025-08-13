@@ -229,6 +229,25 @@ pub enum ClientZoneIpcData {
         #[bw(map = write_string)]
         unk1: String,
     },
+    RequestBlacklist {
+        unk: [u8; 8],
+    },
+    RequestFellowships {
+        unk: [u8; 8],
+    },
+    RequestCrossworldLinkshells {
+        unk: [u8; 8],
+    },
+    SearchFellowships {
+        #[br(count = 112)]
+        #[bw(pad_size_to = 112)]
+        unk: Vec<u8>,
+    },
+    StartCountdown {
+        #[br(count = 40)]
+        #[bw(pad_size_to = 40)]
+        unk: Vec<u8>,
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,

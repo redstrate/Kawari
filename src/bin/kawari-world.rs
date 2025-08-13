@@ -1077,8 +1077,23 @@ async fn client_loop(
                                                 // TODO: Remove this soon, it's pretty spammy, happening every 10 seconds when no reply is sent. For now it's here for testing
                                                 tracing::info!("Client discovered a new location on {:?} at {:?}!", layout_id, pos);
                                             }
-                                            ClientZoneIpcData::Unknown { .. } => {
-                                                tracing::warn!("Unknown packet {:?} recieved, this should be handled!", data.op_code);
+                                            ClientZoneIpcData::RequestBlacklist { .. } => {
+                                                tracing::info!("Blacklist is unimplemented");
+                                            }
+                                            ClientZoneIpcData::RequestFellowships { .. } => {
+                                                tracing::info!("Fellowships is unimplemented");
+                                            }
+                                            ClientZoneIpcData::RequestCrossworldLinkshells { .. } => {
+                                                tracing::info!("Linkshells is unimplemented");
+                                            }
+                                            ClientZoneIpcData::SearchFellowships { .. } => {
+                                                tracing::info!("Fellowships is unimplemented");
+                                            }
+                                            ClientZoneIpcData::StartCountdown { .. } => {
+                                                tracing::info!("Countdowns is unimplemented");
+                                            }
+                                            ClientZoneIpcData::Unknown { unk } => {
+                                                tracing::warn!("Unknown packet {:?} recieved ({} bytes), this should be handled!", data.op_code, unk.len());
                                             }
                                         }
                                     }
