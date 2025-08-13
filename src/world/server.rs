@@ -458,20 +458,21 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
             ToServer::LeftZone(from_id, actor_id, zone_id) => {
                 let mut data = data.lock().unwrap();
 
-                // when the actor leaves the zone, remove them from the instance
-                let current_instance = data.find_actor_instance_mut(actor_id).unwrap();
-                current_instance.actors.remove(&ObjectId(actor_id));
+                // When the actor leaves the zone, remove them from the instance
+                if let Some(current_instance) = data.find_actor_instance_mut(actor_id) {
+                    current_instance.actors.remove(&ObjectId(actor_id));
+                }
 
                 // Then tell any clients in the zone that we left
                 for (id, (handle, state)) in &mut data.clients {
                     let id = *id;
 
-                    // don't bother telling the client who told us
+                    // Don't bother telling the client who told us
                     if id == from_id {
                         continue;
                     }
 
-                    // skip any clients not in our zone
+                    // Skip any clients not in our zone
                     if state.zone_id != zone_id {
                         continue;
                     }
