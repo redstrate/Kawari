@@ -15,7 +15,6 @@ use crate::{
         DamageType, EffectKind, EventScene, ObjectSpawn, ServerZoneIpcData, ServerZoneIpcSegment,
         Warp,
     },
-    opcodes::ServerZoneIpcType,
     packet::{PacketSegment, SegmentData, SegmentType},
     world::{EventFinishType, ExtraLuaState},
 };
@@ -109,6 +108,34 @@ pub struct LuaZone {
     pub queued_segments: Vec<PacketSegment<ServerZoneIpcSegment>>,
 }
 
+trait QueueSegments {
+    fn queue_segment(&mut self, ipc: PacketSegment<ServerZoneIpcSegment>);
+}
+
+fn create_ipc_self<T: QueueSegments>(
+    user_data: &mut T,
+    ipc: ServerZoneIpcSegment,
+    source_actor: u32,
+) {
+    create_ipc_target(user_data, ipc, source_actor, source_actor);
+}
+
+fn create_ipc_target<T: QueueSegments>(
+    user_data: &mut T,
+    ipc: ServerZoneIpcSegment,
+    source_actor: u32,
+    target_actor: u32,
+) {
+    let segment = PacketSegment {
+        source_actor,
+        target_actor,
+        segment_type: SegmentType::Ipc,
+        data: SegmentData::Ipc { data: ipc },
+    };
+
+    user_data.queue_segment(segment);
+}
+
 impl UserData for LuaZone {
     fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
         fields.add_field_method_get("id", |_, this| Ok(this.zone_id));
@@ -128,38 +155,17 @@ impl UserData for LuaZone {
     }
 }
 
-impl LuaZone {
-    // TODO: Can we deduplicate this segment stuff somehow?
+impl QueueSegments for LuaZone {
     fn queue_segment(&mut self, segment: PacketSegment<ServerZoneIpcSegment>) {
         self.queued_segments.push(segment);
     }
+}
 
-    fn create_segment_target(
-        &mut self,
-        op_code: ServerZoneIpcType,
-        data: ServerZoneIpcData,
-        source_actor: u32,
-        target_actor: u32,
-    ) {
-        let ipc = ServerZoneIpcSegment {
-            op_code,
-            data,
-            ..Default::default()
-        };
-
-        self.queue_segment(PacketSegment {
-            source_actor,
-            target_actor,
-            segment_type: SegmentType::Ipc,
-            data: SegmentData::Ipc { data: ipc },
-        });
-    }
-
+impl LuaZone {
     fn spawn_eobj(&mut self, eobj: ObjectSpawn) {
-        let op_code = ServerZoneIpcType::ObjectSpawn;
-        let data = ServerZoneIpcData::ObjectSpawn(eobj);
+        let data = ServerZoneIpcSegment::new(ServerZoneIpcData::ObjectSpawn(eobj));
 
-        self.create_segment_target(op_code, data, eobj.entity_id, 0); // Setting the target actor id to 0 for later post-processing.
+        create_ipc_target(self, data, eobj.entity_id, 0); // Setting the target actor id to 0 for later post-processing.
     }
 }
 
@@ -172,61 +178,32 @@ pub struct LuaPlayer {
     pub zone_data: LuaZone,
 }
 
-impl LuaPlayer {
+impl QueueSegments for LuaPlayer {
     fn queue_segment(&mut self, segment: PacketSegment<ServerZoneIpcSegment>) {
         self.queued_segments.push(segment);
     }
+}
 
-    fn create_segment_target(
-        &mut self,
-        op_code: ServerZoneIpcType,
-        data: ServerZoneIpcData,
-        source_actor: u32,
-        target_actor: u32,
-    ) {
-        let ipc = ServerZoneIpcSegment {
-            op_code,
-            data,
-            ..Default::default()
-        };
-
-        self.queue_segment(PacketSegment {
-            source_actor,
-            target_actor,
-            segment_type: SegmentType::Ipc,
-            data: SegmentData::Ipc { data: ipc },
-        });
-    }
-
-    fn create_segment_self(&mut self, op_code: ServerZoneIpcType, data: ServerZoneIpcData) {
-        self.create_segment_target(
-            op_code,
-            data,
-            self.player_data.actor_id,
-            self.player_data.actor_id,
-        );
-    }
-
+impl LuaPlayer {
     fn send_message(&mut self, message: &str, param: u8) {
-        let op_code = ServerZoneIpcType::ServerChatMessage;
-        let data = ServerZoneIpcData::ServerChatMessage {
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ServerChatMessage {
             message: message.to_string(),
             param,
-        };
+        });
 
-        self.create_segment_self(op_code, data);
+        create_ipc_self(self, ipc, self.player_data.actor_id);
     }
 
     fn give_status_effect(&mut self, effect_id: u16, effect_param: u16, duration: f32) {
-        let op_code = ServerZoneIpcType::ActorControlSelf;
-        let data = ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
-            category: ActorControlCategory::GainEffect {
-                effect_id: effect_id as u32,
-                param: effect_param as u32,
-                source_actor_id: INVALID_OBJECT_ID, // TODO: fill
-            },
-        });
-        self.create_segment_self(op_code, data);
+        let ipc =
+            ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
+                category: ActorControlCategory::GainEffect {
+                    effect_id: effect_id as u32,
+                    param: effect_param as u32,
+                    source_actor_id: INVALID_OBJECT_ID, // TODO: fill
+                },
+            }));
+        create_ipc_self(self, ipc, self.player_data.actor_id);
 
         self.status_effects.add(effect_id, duration);
     }
@@ -249,8 +226,8 @@ impl LuaPlayer {
             ..Default::default()
         };
 
-        if let Some((op_code, data)) = scene.package_scene() {
-            self.create_segment_self(op_code, data);
+        if let Some(ipc) = scene.package_scene() {
+            create_ipc_self(self, ipc, self.player_data.actor_id);
         } else {
             let error_message = "Unsupported amount of parameters in play_scene! This is likely a bug in your script! Cancelling event...".to_string();
             tracing::warn!(error_message);
@@ -260,28 +237,27 @@ impl LuaPlayer {
     }
 
     fn set_position(&mut self, position: Position, rotation: f32) {
-        let op_code = ServerZoneIpcType::Warp;
-        let data = ServerZoneIpcData::Warp(Warp {
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Warp(Warp {
             dir: write_quantized_rotation(&rotation),
             position,
             ..Default::default()
-        });
+        }));
 
-        self.create_segment_self(op_code, data);
+        create_ipc_self(self, ipc, self.player_data.actor_id);
     }
 
     fn set_festival(&mut self, festival1: u32, festival2: u32, festival3: u32, festival4: u32) {
-        let op_code = ServerZoneIpcType::ActorControlSelf;
-        let data = ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
-            category: ActorControlCategory::SetFestival {
-                festival1,
-                festival2,
-                festival3,
-                festival4,
-            },
-        });
+        let ipc =
+            ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
+                category: ActorControlCategory::SetFestival {
+                    festival1,
+                    festival2,
+                    festival3,
+                    festival4,
+                },
+            }));
 
-        self.create_segment_self(op_code, data);
+        create_ipc_self(self, ipc, self.player_data.actor_id);
     }
 
     fn unlock(&mut self, id: u32) {
@@ -289,21 +265,21 @@ impl LuaPlayer {
     }
 
     fn set_speed(&mut self, speed: u16) {
-        let op_code = ServerZoneIpcType::ActorControlSelf;
-        let data = ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
-            category: ActorControlCategory::Flee { speed },
-        });
+        let ipc =
+            ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
+                category: ActorControlCategory::Flee { speed },
+            }));
 
-        self.create_segment_self(op_code, data);
+        create_ipc_self(self, ipc, self.player_data.actor_id);
     }
 
     fn toggle_wireframe(&mut self) {
-        let op_code = ServerZoneIpcType::ActorControlSelf;
-        let data = ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
-            category: ActorControlCategory::ToggleWireframeRendering(),
-        });
+        let ipc =
+            ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
+                category: ActorControlCategory::ToggleWireframeRendering(),
+            }));
 
-        self.create_segment_self(op_code, data);
+        create_ipc_self(self, ipc, self.player_data.actor_id);
     }
 
     fn unlock_aetheryte(&mut self, unlocked: u32, id: u32) {
@@ -455,51 +431,39 @@ impl LuaPlayer {
         self.remove_gil(cost, false);
 
         let shop_packets_to_send = [
-            (
-                ServerZoneIpcType::UpdateInventorySlot,
-                ServerZoneIpcData::UpdateInventorySlot {
-                    sequence: self.player_data.shop_sequence,
-                    dst_storage_id: ContainerType::Currency as u16,
-                    dst_container_index: 0,
-                    dst_stack: new_gil,
-                    dst_catalog_id: CurrencyKind::Gil as u32,
-                    unk1: 0x7530_0000,
-                },
-            ),
-            (
-                ServerZoneIpcType::InventoryActionAck,
-                ServerZoneIpcData::InventoryActionAck {
-                    sequence: u32::MAX,
-                    action_type: INVENTORY_ACTION_ACK_SHOP as u16,
-                },
-            ),
-            (
-                ServerZoneIpcType::UpdateInventorySlot,
-                ServerZoneIpcData::UpdateInventorySlot {
-                    sequence: self.player_data.shop_sequence,
-                    dst_storage_id: item_dst_info.container as u16,
-                    dst_container_index: item_dst_info.index,
-                    dst_stack: item_dst_info.quantity,
-                    dst_catalog_id: bb_item.id,
-                    unk1: 0x7530_0000,
-                },
-            ),
-            (
-                ServerZoneIpcType::ShopLogMessage,
-                ServerZoneIpcData::ShopLogMessage {
-                    event_id: shop_id,
-                    message_type: LogMessageType::ItemBoughtBack as u32,
-                    params_count: 3,
-                    item_id: bb_item.id,
-                    item_quantity: item_dst_info.quantity,
-                    total_sale_cost: item_dst_info.quantity * bb_item.price_low,
-                },
-            ),
+            ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateInventorySlot {
+                sequence: self.player_data.shop_sequence,
+                dst_storage_id: ContainerType::Currency as u16,
+                dst_container_index: 0,
+                dst_stack: new_gil,
+                dst_catalog_id: CurrencyKind::Gil as u32,
+                unk1: 0x7530_0000,
+            }),
+            ServerZoneIpcSegment::new(ServerZoneIpcData::InventoryActionAck {
+                sequence: u32::MAX,
+                action_type: INVENTORY_ACTION_ACK_SHOP as u16,
+            }),
+            ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateInventorySlot {
+                sequence: self.player_data.shop_sequence,
+                dst_storage_id: item_dst_info.container as u16,
+                dst_container_index: item_dst_info.index,
+                dst_stack: item_dst_info.quantity,
+                dst_catalog_id: bb_item.id,
+                unk1: 0x7530_0000,
+            }),
+            ServerZoneIpcSegment::new(ServerZoneIpcData::ShopLogMessage {
+                event_id: shop_id,
+                message_type: LogMessageType::ItemBoughtBack as u32,
+                params_count: 3,
+                item_id: bb_item.id,
+                item_quantity: item_dst_info.quantity,
+                total_sale_cost: item_dst_info.quantity * bb_item.price_low,
+            }),
         ];
 
         // Finally, queue up the packets required to make the magic happen.
-        for (op_code, data) in shop_packets_to_send {
-            self.create_segment_self(op_code, data);
+        for ipc in shop_packets_to_send {
+            create_ipc_self(self, ipc, self.player_data.actor_id);
         }
     }
 
@@ -513,40 +477,28 @@ impl LuaPlayer {
         unk5: u32,
     ) {
         let packets_to_send = [
-            (
-                ServerZoneIpcType::ActorControlSelf,
-                ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
-                    category: ActorControlCategory::EventRelatedUnk3 { event_id },
-                }),
-            ),
-            (
-                ServerZoneIpcType::WalkInEvent,
-                ServerZoneIpcData::WalkInEvent {
-                    unk1,
-                    unk2,
-                    unk3,
-                    unk4,
-                    unk5,
+            ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
+                category: ActorControlCategory::EventRelatedUnk3 { event_id },
+            })),
+            ServerZoneIpcSegment::new(ServerZoneIpcData::WalkInEvent {
+                unk1,
+                unk2,
+                unk3,
+                unk4,
+                unk5,
+            }),
+            ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
+                category: ActorControlCategory::WalkInTriggerRelatedUnk3 {
+                    unk1: 1, // Sometimes the server sends 2 for this, but it's still completely unknown what it means.
                 },
-            ),
-            (
-                ServerZoneIpcType::ActorControlSelf,
-                ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
-                    category: ActorControlCategory::WalkInTriggerRelatedUnk3 {
-                        unk1: 1, // Sometimes the server sends 2 for this, but it's still completely unknown what it means.
-                    },
-                }),
-            ),
-            (
-                ServerZoneIpcType::ActorControlSelf,
-                ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
-                    category: ActorControlCategory::WalkInTriggerRelatedUnk1 { unk1: 1 },
-                }),
-            ),
+            })),
+            ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
+                category: ActorControlCategory::WalkInTriggerRelatedUnk1 { unk1: 1 },
+            })),
         ];
 
-        for (op_code, data) in packets_to_send {
-            self.create_segment_self(op_code, data);
+        for ipc in packets_to_send {
+            create_ipc_self(self, ipc, self.player_data.actor_id);
         }
     }
 

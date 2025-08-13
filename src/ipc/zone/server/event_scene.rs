@@ -1,7 +1,7 @@
 use binrw::binrw;
 
 use crate::common::ObjectTypeId;
-use crate::ipc::zone::server::{ServerZoneIpcData, ServerZoneIpcType};
+use crate::ipc::zone::server::{ServerZoneIpcData, ServerZoneIpcSegment};
 
 #[derive(Debug, Clone, Default)]
 #[binrw]
@@ -24,49 +24,35 @@ pub struct EventScene {
 }
 
 impl EventScene {
-    pub fn package_scene(&self) -> Option<(ServerZoneIpcType, ServerZoneIpcData)> {
-        let op_code;
-        let data;
+    pub fn package_scene(&self) -> Option<ServerZoneIpcSegment> {
         match self.params.len() {
             // TODO: it would be nice to avoid cloning if possible
-            0..=2 => {
-                op_code = ServerZoneIpcType::EventScene;
-                data = ServerZoneIpcData::EventScene { data: self.clone() };
-            }
-            3..=4 => {
-                op_code = ServerZoneIpcType::EventScene4;
-                data = ServerZoneIpcData::EventScene4 { data: self.clone() };
-            }
-            5..=8 => {
-                op_code = ServerZoneIpcType::EventScene8;
-                data = ServerZoneIpcData::EventScene8 { data: self.clone() };
-            }
-            9..=16 => {
-                op_code = ServerZoneIpcType::EventScene16;
-                data = ServerZoneIpcData::EventScene16 { data: self.clone() };
-            }
-            17..=32 => {
-                op_code = ServerZoneIpcType::EventScene32;
-                data = ServerZoneIpcData::EventScene32 { data: self.clone() };
-            }
-            33..=64 => {
-                op_code = ServerZoneIpcType::EventScene64;
-                data = ServerZoneIpcData::EventScene64 { data: self.clone() };
-            }
-            65..=128 => {
-                op_code = ServerZoneIpcType::EventScene128;
-                data = ServerZoneIpcData::EventScene128 { data: self.clone() };
-            }
-            129..255 => {
-                op_code = ServerZoneIpcType::EventScene255;
-                data = ServerZoneIpcData::EventScene255 { data: self.clone() };
-            }
-            _ => {
-                return None;
-            }
+            0..=2 => Some(ServerZoneIpcSegment::new(ServerZoneIpcData::EventScene {
+                data: self.clone(),
+            })),
+            3..=4 => Some(ServerZoneIpcSegment::new(ServerZoneIpcData::EventScene4 {
+                data: self.clone(),
+            })),
+            5..=8 => Some(ServerZoneIpcSegment::new(ServerZoneIpcData::EventScene8 {
+                data: self.clone(),
+            })),
+            9..=16 => Some(ServerZoneIpcSegment::new(ServerZoneIpcData::EventScene16 {
+                data: self.clone(),
+            })),
+            17..=32 => Some(ServerZoneIpcSegment::new(ServerZoneIpcData::EventScene32 {
+                data: self.clone(),
+            })),
+            33..=64 => Some(ServerZoneIpcSegment::new(ServerZoneIpcData::EventScene64 {
+                data: self.clone(),
+            })),
+            65..=128 => Some(ServerZoneIpcSegment::new(
+                ServerZoneIpcData::EventScene128 { data: self.clone() },
+            )),
+            129..=255 => Some(ServerZoneIpcSegment::new(
+                ServerZoneIpcData::EventScene255 { data: self.clone() },
+            )),
+            _ => None,
         }
-
-        Some((op_code, data))
     }
 }
 
