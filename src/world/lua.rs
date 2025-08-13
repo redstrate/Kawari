@@ -226,7 +226,6 @@ impl LuaPlayer {
             ..Default::default()
         };
 
-        // TODO: Refactor package_scene so it doesn't return the ocode anymore
         if let Some(ipc) = scene.package_scene() {
             create_ipc_self(self, ipc, self.player_data.actor_id);
         } else {
