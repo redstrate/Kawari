@@ -275,11 +275,8 @@ async fn upload_character_backup(
                 };
 
                 if let Some(response) = send_custom_world_packet(ipc_segment).await {
-                    match response.data {
-                        CustomIpcData::CharacterImported { message } => {
-                            return restore_backup_with_message(message).await.into_response();
-                        }
-                        _ => {}
+                    if let CustomIpcData::CharacterImported { message } = response.data {
+                        return restore_backup_with_message(message).await.into_response();
                     }
                 }
             }
