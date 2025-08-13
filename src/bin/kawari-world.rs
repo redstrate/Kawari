@@ -458,6 +458,7 @@ async fn client_loop(
                                             ClientZoneIpcData::LogOut { .. } => {
                                                 tracing::info!("Recieved log out from client!");
 
+                                                connection.gracefully_logged_out = true;
                                                 connection.begin_log_out().await;
                                             }
                                             ClientZoneIpcData::Disconnected { .. } => {
@@ -1160,15 +1161,22 @@ async fn client_loop(
     }
 
     // forcefully log out the player if they weren't logging out but force D/C'd
-    if connection.player_data.actor_id != 0
-        && !connection.gracefully_logged_out
-        && is_zone_connection
-    {
-        tracing::info!(
-            "Forcefully logging out connection {:#?}...",
-            client_handle.id
-        );
-        connection.begin_log_out().await;
+    if connection.player_data.actor_id != 0 && is_zone_connection {
+        connection
+            .handle
+            .send(ToServer::LeftZone(
+                connection.id,
+                connection.player_data.actor_id,
+                connection.player_data.zone_id,
+            ))
+            .await;
+        if !connection.gracefully_logged_out {
+            tracing::info!(
+                "Forcefully logging out connection {:#?}...",
+                client_handle.id
+            );
+            connection.begin_log_out().await;
+        }
         connection
             .handle
             .send(ToServer::Disconnected(connection.id))
