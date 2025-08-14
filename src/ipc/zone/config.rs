@@ -6,6 +6,6 @@ use super::DisplayFlag;
 #[brw(little)]
 #[derive(Debug, Clone, Default)]
 pub struct Config {
-    #[brw(pad_after = 4)]
+    #[brw(pad_after = 6)]
     pub display_flag: DisplayFlag,
 }

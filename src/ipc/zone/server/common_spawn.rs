@@ -181,19 +181,23 @@ impl TryFrom<u8> for GameMasterRank {
 }
 
 #[binrw]
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct DisplayFlag(u32);
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub struct DisplayFlag(pub u16);
+
+impl std::fmt::Debug for DisplayFlag {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        bitflags::parser::to_writer(self, f)
+    }
+}
 
 bitflags! {
-    impl DisplayFlag : u32 {
-        const NONE = 0x0;
-        // Can be made visible with ActorControl I think
-        const INVISIBLE = 0x20;
-        const HIDE_HEAD = 0x40;
-        const HIDE_WEAPON = 0x80;
-        const FADED = 0x100;
-        const VISOR = 0x800;
-        const UNK = 0x40000; // FIXME: what is this?
+    impl DisplayFlag : u16 {
+        const NONE = 0x00;
+        const HIDE_LEGACY_MARK = 0x04;
+        const HIDE_HEAD = 0x01;
+        const HIDE_WEAPON = 0x02;
+        const CLOSE_VISOR = 0x40;
+        const HIDE_EARS = 0x80;
     }
 }
 
@@ -226,6 +230,7 @@ pub struct CommonSpawn {
     pub parent_actor_id: ObjectId,
     pub hp_max: u32,
     pub hp_curr: u32,
+    #[brw(pad_after = 2)] // what's after this?
     pub display_flags: DisplayFlag,
     pub fate_id: u16, // assumed
     pub mp_curr: u16,

@@ -10,7 +10,10 @@ use crate::{
         workdefinitions::{CharaMake, ClientSelectData, RemakeMode},
     },
     inventory::{Inventory, Item, Storage},
-    ipc::lobby::{CharacterDetails, CharacterFlag},
+    ipc::{
+        lobby::{CharacterDetails, CharacterFlag},
+        zone::DisplayFlag,
+    },
 };
 
 use super::{PlayerData, connection::UnlockData};
@@ -542,7 +545,7 @@ impl WorldDatabase {
                     remake_mode: query.remake_mode,
                     remake_minutes_remaining: 0,
                     voice_id: query.chara_make.voice_id,
-                    unk20: 0,
+                    display_flags: DisplayFlag::NONE,
                     unk21: 0,
                     world_name: String::new(),
                     unk22: 0,

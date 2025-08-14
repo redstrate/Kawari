@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-use crate::{CLASSJOB_ARRAY_SIZE, common::CustomizeData};
+use crate::{CLASSJOB_ARRAY_SIZE, common::CustomizeData, ipc::zone::DisplayFlag};
 
 // TODO: this isn't really an enum in the game, nor is it a flag either. it's weird!
 #[derive(Debug, Clone, Copy, Deserialize, Serialize)]
@@ -61,8 +61,8 @@ pub struct ClientSelectData {
     pub remake_mode: RemakeMode, // TODO: upstream a comment about this to FFXIVClientStructs
     /// If above 0, then a message warns the user that they have X minutes left to remake their character.
     pub remake_minutes_remaining: i32,
+    pub display_flags: DisplayFlag,
     pub voice_id: i32, // presumably
-    pub unk20: i32,
     pub unk21: i32,
     pub world_name: String,
     pub unk22: i32,
@@ -93,8 +93,8 @@ impl ClientSelectData {
             self.glasses.map(|x| x.to_string()),
             (self.remake_mode as i32).to_string(),
             self.remake_minutes_remaining.to_string(),
+            (self.display_flags.0).to_string(),
             self.voice_id.to_string(),
-            self.unk20.to_string(),
             self.unk21.to_string(),
             self.world_name,
             self.unk22.to_string(),
