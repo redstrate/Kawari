@@ -182,7 +182,7 @@ impl TryFrom<u8> for GameMasterRank {
 
 #[binrw]
 #[derive(Clone, Copy, PartialEq, Eq)]
-pub struct DisplayFlag(pub u16);
+pub struct DisplayFlag(pub u32);
 
 impl std::fmt::Debug for DisplayFlag {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -202,13 +202,16 @@ impl From<EquipDisplayFlag> for DisplayFlag {
         if value.intersects(EquipDisplayFlag::CLOSE_VISOR) {
             new_flag.insert(DisplayFlag::CLOSE_VISOR);
         }
+        if value.intersects(EquipDisplayFlag::HIDE_EARS) {
+            new_flag.insert(DisplayFlag::HIDE_EARS);
+        }
 
         new_flag
     }
 }
 
 bitflags! {
-    impl DisplayFlag : u16 {
+    impl DisplayFlag : u32 {
         const NONE = 0x000;
         const ACTIVE_STANCE = 0x001;
         const INVISIBLE = 0x020;
@@ -216,6 +219,8 @@ bitflags! {
         const HIDE_WEAPON = 0x80;
         const FADED = 0x100;
         const CLOSE_VISOR = 0x800;
+        const UNK1 = 0x40000;
+        const HIDE_EARS = 0x100000;
     }
 }
 
@@ -248,7 +253,6 @@ pub struct CommonSpawn {
     pub parent_actor_id: ObjectId,
     pub hp_max: u32,
     pub hp_curr: u32,
-    #[brw(pad_size_to = 4)] // TODO: or maybe this is actually a u32?
     pub display_flags: DisplayFlag,
     pub fate_id: u16, // assumed
     pub mp_curr: u16,

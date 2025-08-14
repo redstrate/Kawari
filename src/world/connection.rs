@@ -1199,7 +1199,6 @@ impl ZoneConnection {
             object_kind: ObjectKind::Player(PlayerSubKind::Player),
             look: chara_details.chara_make.customize,
             display_flags: self.player_data.display_flags.into(),
-            //scale: self.player_data.display_flags,
             main_weapon_model: inventory.get_main_weapon_id(&mut game_data),
             models: inventory.get_model_ids(&mut game_data),
             pos: exit_position.unwrap_or_default(),

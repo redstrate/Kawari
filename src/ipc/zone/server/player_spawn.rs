@@ -78,7 +78,7 @@ mod tests {
             player_spawn.common.object_kind,
             ObjectKind::Player(PlayerSubKind::Player)
         );
-        assert_eq!(player_spawn.common.display_flags, DisplayFlag::NONE);
+        assert_eq!(player_spawn.common.display_flags, DisplayFlag::UNK1);
         assert_eq!(player_spawn.online_status, OnlineStatus::Offline);
     }
 }
