@@ -441,6 +441,9 @@ pub enum ServerZoneIpcData {
     GatheringLog {
         unk1: [u8; 104],
     },
+    Fellowships {
+        unk1: [u8; 808],
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,

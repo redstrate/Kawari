@@ -395,6 +395,12 @@
             "name": "GatheringLog",
             "opcode": 301,
             "size": 104
+        },
+        {
+            "name": "Fellowships",
+            "comment": "The fellowships you have joined.",
+            "opcode": 840,
+            "size": 808
         }
     ],
     "ClientZoneIpcType": [
