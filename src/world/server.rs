@@ -539,7 +539,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 for (id, (handle, _)) in &mut data.clients {
                     let id = *id;
 
-                    tracing::info!("{:#?}", trigger);
+                    tracing::info!("{:#X?}", trigger);
 
                     // handle player-to-server actions
                     if id == from_id {
