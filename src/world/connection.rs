@@ -15,21 +15,24 @@ use crate::{
     GUILDHEST_ARRAY_SIZE, LogMessageType, PVP_ARRAY_SIZE, RAID_ARRAY_SIZE, TRIAL_ARRAY_SIZE,
     UNLOCK_BITMASK_SIZE,
     common::{
-        GameData, INVALID_OBJECT_ID, ItemInfoQuery, ObjectId, ObjectTypeId, Position,
-        timestamp_secs, value_to_flag_byte_index_value,
+        EquipDisplayFlag, GameData, INVALID_OBJECT_ID, ItemInfoQuery, ObjectId, ObjectTypeId,
+        Position, timestamp_secs, value_to_flag_byte_index_value,
     },
     config::{WorldConfig, get_config},
     inventory::{BuyBackList, ContainerType, Inventory, Item, Storage},
     ipc::{
         chat::ServerChatIpcSegment,
-        zone::client::{ActionRequest, ClientZoneIpcSegment},
-        zone::server::{
-            ActionEffect, ActionResult, ActorControl, ActorControlCategory, ActorControlSelf,
-            ActorControlTarget, ActorMove, CommonSpawn, Condition, Conditions, Config,
-            ContainerInfo, CurrencyInfo, DisplayFlag, EffectEntry, EffectKind, EffectResult, Equip,
-            EventScene, EventStart, GameMasterRank, InitZone, ItemInfo, NpcSpawn, ObjectKind,
-            PlayerStats, PlayerSubKind, QuestActiveList, ServerZoneIpcData, ServerZoneIpcSegment,
-            StatusEffect, StatusEffectList, UpdateClassInfo, Warp, WeatherChange,
+        zone::{
+            client::{ActionRequest, ClientZoneIpcSegment},
+            server::{
+                ActionEffect, ActionResult, ActorControl, ActorControlCategory, ActorControlSelf,
+                ActorControlTarget, ActorMove, CommonSpawn, Condition, Conditions, Config,
+                ContainerInfo, CurrencyInfo, EffectEntry, EffectKind, EffectResult, Equip,
+                EventScene, EventStart, GameMasterRank, InitZone, ItemInfo, NpcSpawn, ObjectKind,
+                PlayerStats, PlayerSubKind, QuestActiveList, ServerZoneIpcData,
+                ServerZoneIpcSegment, StatusEffect, StatusEffectList, UpdateClassInfo, Warp,
+                WeatherChange,
+            },
         },
     },
     opcodes::ServerZoneIpcType,
@@ -133,6 +136,7 @@ pub struct PlayerData {
     pub buyback_list: BuyBackList,
     pub unlocks: UnlockData,
     pub saw_inn_wakeup: bool,
+    pub display_flags: EquipDisplayFlag,
 }
 
 /// Various obsfucation-related bits like the seeds and keys for this connection.
@@ -1194,7 +1198,8 @@ impl ZoneConnection {
             level: self.current_level(&game_data) as u8,
             object_kind: ObjectKind::Player(PlayerSubKind::Player),
             look: chara_details.chara_make.customize,
-            display_flags: DisplayFlag::NONE,
+            display_flags: self.player_data.display_flags.into(),
+            //scale: self.player_data.display_flags,
             main_weapon_model: inventory.get_main_weapon_id(&mut game_data),
             models: inventory.get_model_ids(&mut game_data),
             pos: exit_position.unwrap_or_default(),

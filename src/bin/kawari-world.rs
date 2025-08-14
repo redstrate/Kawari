@@ -253,12 +253,11 @@ async fn client_loop(
                                                 // Send inventory
                                                 connection.send_inventory(true).await;
 
-                                                // set chara gear param
+                                                // set equip display flags
                                                 connection
                                                 .actor_control_self(ActorControlSelf {
-                                                    category: ActorControlCategory::SetCharaGearParamUI {
-                                                        unk1: 1,
-                                                        unk2: 1,
+                                                    category: ActorControlCategory::SetEquipDisplayFlags {
+                                                        display_flag: connection.player_data.display_flags
                                                     },
                                                 })
                                                 .await;
@@ -874,6 +873,8 @@ async fn client_loop(
                                                     .finish(handler.scene, &handler.params[..handler.num_results as usize], &mut lua_player);
                                             }
                                             ClientZoneIpcData::Config(config) => {
+                                                // Update our own state so it's committed on log out
+                                                connection.player_data.display_flags = config.display_flag;
                                                 connection
                                                     .handle
                                                     .send(ToServer::Config(

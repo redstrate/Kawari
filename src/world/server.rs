@@ -923,7 +923,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         break;
                     };
 
-                    player.common.display_flags = config.display_flag;
+                    player.common.display_flags = config.display_flag.into();
                 }
 
                 let mut data = data.lock().unwrap();

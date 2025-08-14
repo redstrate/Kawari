@@ -1,6 +1,6 @@
 use binrw::binrw;
 
-use crate::common::{ObjectId, read_bool_from, write_bool_as};
+use crate::common::{EquipDisplayFlag, ObjectId, read_bool_from, write_bool_as};
 
 use super::OnlineStatus;
 
@@ -31,10 +31,9 @@ pub enum ActorControlCategory {
         raise_anim: u32,
     },
     #[brw(magic = 0x260u16)]
-    SetCharaGearParamUI {
+    SetEquipDisplayFlags {
         #[brw(pad_before = 2)]
-        unk1: u32,
-        unk2: u32,
+        display_flag: EquipDisplayFlag,
     },
     #[brw(magic = 0x01F8u16)]
     SetStatusIcon {

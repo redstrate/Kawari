@@ -1,3 +1,4 @@
+use bitflags::bitflags;
 use std::{
     ffi::CString,
     time::{SystemTime, UNIX_EPOCH},
@@ -167,6 +168,37 @@ pub enum DistanceRange {
     Normal = 0x0,
     Extended = 0x1,
     Maximum = 0x2,
+}
+
+#[binrw]
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub struct EquipDisplayFlag(pub u16);
+
+impl std::fmt::Debug for EquipDisplayFlag {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        bitflags::parser::to_writer(self, f)
+    }
+}
+
+bitflags! {
+    impl EquipDisplayFlag : u16 {
+        const NONE = 0x00;
+        const HIDE_LEGACY_MARK = 0x04;
+        const HIDE_HEAD = 0x01;
+        const HIDE_WEAPON = 0x02;
+        const UNK1 = 0x04;
+        const UNK2 = 0x08;
+        const UNK3 = 0x10;
+        const UNK4 = 0x20;
+        const CLOSE_VISOR = 0x40;
+        const HIDE_EARS = 0x80;
+    }
+}
+
+impl Default for EquipDisplayFlag {
+    fn default() -> Self {
+        Self::NONE
+    }
 }
 
 #[macro_export]

@@ -6,14 +6,11 @@ use serde::Deserialize;
 use crate::{
     CLASSJOB_ARRAY_SIZE,
     common::{
-        CustomizeData, GameData, ItemInfoQuery, Position,
+        CustomizeData, EquipDisplayFlag, GameData, ItemInfoQuery, Position,
         workdefinitions::{CharaMake, ClientSelectData, RemakeMode},
     },
     inventory::{Inventory, Item, Storage},
-    ipc::{
-        lobby::{CharacterDetails, CharacterFlag},
-        zone::DisplayFlag,
-    },
+    ipc::lobby::{CharacterDetails, CharacterFlag},
 };
 
 use super::{PlayerData, connection::UnlockData};
@@ -86,7 +83,8 @@ impl WorldDatabase {
                 classjob_id INTEGER,
                 classjob_levels STRING,
                 classjob_exp STRING,
-                unlocks STRING);";
+                unlocks STRING,
+                display_flags INTEGER);";
             connection.execute(query, ()).unwrap();
         }
 
@@ -343,7 +341,8 @@ impl WorldDatabase {
                      classjob_id,
                      classjob_levels,
                      classjob_exp,
-                     unlocks
+                     unlocks,
+                     display_flags
                      FROM character_data WHERE content_id = ?1",
             )
             .unwrap();
@@ -366,6 +365,7 @@ impl WorldDatabase {
                     classjob_levels: json_unpack::<[i32; CLASSJOB_ARRAY_SIZE]>(row.get(8)?),
                     classjob_exp: json_unpack::<[u32; CLASSJOB_ARRAY_SIZE]>(row.get(9)?),
                     unlocks: json_unpack(row.get(10)?),
+                    display_flags: EquipDisplayFlag::from_bits(row.get(11)?).unwrap_or_default(),
                     ..Default::default()
                 })
             })
@@ -431,8 +431,9 @@ impl WorldDatabase {
                         classjob_id=?7,
                         classjob_levels=?8,
                         classjob_exp=?9,
-                        unlocks=?10
-                        WHERE content_id = ?11",
+                        unlocks=?10,
+                        display_flags=?11
+                        WHERE content_id = ?12",
             )
             .unwrap();
         stmt.execute(rusqlite::params![
@@ -446,6 +447,7 @@ impl WorldDatabase {
             serde_json::to_string(&data.classjob_levels).unwrap(),
             serde_json::to_string(&data.classjob_exp).unwrap(),
             serde_json::to_string(&data.unlocks).unwrap(),
+            data.display_flags.0,
             data.content_id,
         ])
         .unwrap();
@@ -494,7 +496,7 @@ impl WorldDatabase {
         for (index, (content_id, actor_id)) in content_actor_ids.iter().enumerate() {
             let mut stmt = connection
                 .prepare(
-                    "SELECT name, chara_make, zone_id, inventory, remake_mode, classjob_id, classjob_levels FROM character_data WHERE content_id = ?1",
+                    "SELECT name, chara_make, zone_id, inventory, remake_mode, classjob_id, classjob_levels, display_flags FROM character_data WHERE content_id = ?1",
                 )
                 .unwrap();
 
@@ -506,6 +508,7 @@ impl WorldDatabase {
                 remake_mode: RemakeMode,
                 classjob_id: i32,
                 classjob_levels: [i32; CLASSJOB_ARRAY_SIZE],
+                display_flags: u16,
             }
 
             let result: Result<CharaListQuery, rusqlite::Error> =
@@ -518,6 +521,7 @@ impl WorldDatabase {
                         remake_mode: row.get(4)?,
                         classjob_id: row.get(5)?,
                         classjob_levels: json_unpack::<[i32; CLASSJOB_ARRAY_SIZE]>(row.get(6)?),
+                        display_flags: row.get(7)?,
                     })
                 });
 
@@ -545,7 +549,8 @@ impl WorldDatabase {
                     remake_mode: query.remake_mode,
                     remake_minutes_remaining: 0,
                     voice_id: query.chara_make.voice_id,
-                    display_flags: DisplayFlag::NONE,
+                    display_flags: EquipDisplayFlag::from_bits(query.display_flags)
+                        .unwrap_or_default(),
                     unk21: 0,
                     world_name: String::new(),
                     unk22: 0,
@@ -622,7 +627,7 @@ impl WorldDatabase {
         // insert char data
         connection
             .execute(
-                "INSERT INTO character_data VALUES (?1, ?2, ?3, ?4, ?5, 0.0, 0.0, 0.0, 0.0, ?6, 0, 90, ?7, ?8, ?9, ?10);",
+                "INSERT INTO character_data VALUES (?1, ?2, ?3, ?4, ?5, 0.0, 0.0, 0.0, 0.0, ?6, 0, 90, ?7, ?8, ?9, ?10, 0);",
                 (
                     content_id,
                     name,

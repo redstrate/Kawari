@@ -1,8 +1,8 @@
 use binrw::binrw;
 
 use crate::common::{
-    CHAR_NAME_MAX_LENGTH, CustomizeData, ObjectId, ObjectTypeId, Position, read_quantized_rotation,
-    read_string, write_quantized_rotation, write_string,
+    CHAR_NAME_MAX_LENGTH, CustomizeData, EquipDisplayFlag, ObjectId, ObjectTypeId, Position,
+    read_quantized_rotation, read_string, write_quantized_rotation, write_string,
 };
 use bitflags::bitflags;
 
@@ -190,14 +190,32 @@ impl std::fmt::Debug for DisplayFlag {
     }
 }
 
+impl From<EquipDisplayFlag> for DisplayFlag {
+    fn from(value: EquipDisplayFlag) -> Self {
+        let mut new_flag = Self::NONE;
+        if value.intersects(EquipDisplayFlag::HIDE_HEAD) {
+            new_flag.insert(DisplayFlag::HIDE_HEAD);
+        }
+        if value.intersects(EquipDisplayFlag::HIDE_WEAPON) {
+            new_flag.insert(DisplayFlag::HIDE_WEAPON);
+        }
+        if value.intersects(EquipDisplayFlag::CLOSE_VISOR) {
+            new_flag.insert(DisplayFlag::CLOSE_VISOR);
+        }
+
+        new_flag
+    }
+}
+
 bitflags! {
     impl DisplayFlag : u16 {
-        const NONE = 0x00;
-        const HIDE_LEGACY_MARK = 0x04;
-        const HIDE_HEAD = 0x01;
-        const HIDE_WEAPON = 0x02;
-        const CLOSE_VISOR = 0x40;
-        const HIDE_EARS = 0x80;
+        const NONE = 0x000;
+        const ACTIVE_STANCE = 0x001;
+        const INVISIBLE = 0x020;
+        const HIDE_HEAD = 0x040;
+        const HIDE_WEAPON = 0x80;
+        const FADED = 0x100;
+        const CLOSE_VISOR = 0x800;
     }
 }
 
@@ -230,7 +248,7 @@ pub struct CommonSpawn {
     pub parent_actor_id: ObjectId,
     pub hp_max: u32,
     pub hp_curr: u32,
-    #[brw(pad_after = 2)] // what's after this?
+    #[brw(pad_size_to = 4)] // TODO: or maybe this is actually a u32?
     pub display_flags: DisplayFlag,
     pub fate_id: u16, // assumed
     pub mp_curr: u16,
