@@ -1,9 +1,10 @@
 use binrw::binrw;
+use strum_macros::IntoStaticStr;
 
 use crate::common::{DistanceRange, ObjectId, read_bool_from, write_bool_as};
 
 #[binrw]
-#[derive(Debug, Eq, PartialEq, Clone)]
+#[derive(Debug, Eq, PartialEq, Clone, IntoStaticStr)]
 pub enum ClientTriggerCommand {
     /// The player sheathes/unsheathes their weapon.
     #[brw(magic = 0x1u16)]
