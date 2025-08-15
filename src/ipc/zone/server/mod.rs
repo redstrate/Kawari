@@ -114,6 +114,10 @@ impl ReadWriteIpcSegment for ServerZoneIpcSegment {
     fn get_opcode(&self) -> u16 {
         self.op_code.get_opcode()
     }
+
+    fn get_comment(&self) -> Option<&'static str> {
+        self.op_code.get_comment()
+    }
 }
 
 #[opcode_data(ServerZoneIpcType)]

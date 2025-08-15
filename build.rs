@@ -115,6 +115,25 @@ fn main() {
             output_str.push_str("}\n\n");
             output_str.push_str("}\n\n");
 
+            // comments
+            output_str.push_str("/// Returns the comment for this opcode.\n");
+            output_str.push_str("pub fn get_comment(&self) -> Option<&'static str> {\n");
+            output_str.push_str("match self {\n");
+
+            for opcode in opcodes {
+                let opcode = opcode.as_object().unwrap();
+                let name = opcode.get("name").unwrap().as_str().unwrap();
+
+                if let Some(comment) = opcode.get("comment").unwrap_or_default().as_str() {
+                    output_str.push_str(&format!("{key}::{name} => Some(\"{comment}\"),\n"));
+                }
+            }
+
+            output_str.push_str(&format!("_ => None,\n"));
+
+            output_str.push_str("}\n\n");
+            output_str.push_str("}\n\n");
+
             // end impl
             output_str.push_str("}\n\n");
         }

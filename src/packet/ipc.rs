@@ -25,6 +25,9 @@ pub trait ReadWriteIpcSegment:
 
     /// Returns the integer opcode.
     fn get_opcode(&self) -> u16;
+
+    /// Returns the comment for this opcode.
+    fn get_comment(&self) -> Option<&'static str>;
 }
 
 /// An IPC packet segment.

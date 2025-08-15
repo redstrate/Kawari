@@ -34,7 +34,11 @@ impl ReadWriteIpcSegment for CustomIpcSegment {
     }
 
     fn get_opcode(&self) -> u16 {
-        todo!()
+        0
+    }
+
+    fn get_comment(&self) -> Option<&'static str> {
+        None
     }
 }
 
