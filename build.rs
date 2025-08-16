@@ -129,7 +129,7 @@ fn main() {
                 }
             }
 
-            output_str.push_str(&format!("_ => None,\n"));
+            output_str.push_str("_ => None,\n");
 
             output_str.push_str("}\n\n");
             output_str.push_str("}\n\n");

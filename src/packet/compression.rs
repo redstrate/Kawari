@@ -102,18 +102,20 @@ pub(crate) fn compress<T: ReadWriteIpcSegment>(
         }
 
         // obsfucate if needed
-        if let ConnectionState::Zone { scrambler_keys, .. } = state {
-            if let Some(keys) = scrambler_keys {
-                if let SegmentData::Ipc(data) = &segment.data {
-                    let opcode = data.get_opcode();
-                    let base_key = keys.get_base_key(opcode);
+        if let ConnectionState::Zone {
+            scrambler_keys: Some(keys),
+            ..
+        } = state
+        {
+            if let SegmentData::Ipc(data) = &segment.data {
+                let opcode = data.get_opcode();
+                let base_key = keys.get_base_key(opcode);
 
-                    scramble_packet(
-                        data.get_name(),
-                        base_key,
-                        &mut buffer[IPC_HEADER_SIZE as usize..],
-                    );
-                }
+                scramble_packet(
+                    data.get_name(),
+                    base_key,
+                    &mut buffer[IPC_HEADER_SIZE as usize..],
+                );
             }
         }
 
