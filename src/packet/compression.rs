@@ -54,7 +54,7 @@ pub(crate) fn decompress<T: ReadWriteIpcSegment>(
             PacketSegment::read_options(&mut cursor, endian, (encryption_key,))?;
 
         let is_unknown = match &segment.data {
-            SegmentData::Ipc { data } => data.get_name() == "Unknown",
+            SegmentData::Ipc(data) => data.get_name() == "Unknown",
             _ => false,
         };
 
@@ -101,7 +101,7 @@ pub(crate) fn compress<T: ReadWriteIpcSegment>(
 
         // obsfucate if needed
         if let Some(keys) = keys {
-            if let SegmentData::Ipc { data } = &segment.data {
+            if let SegmentData::Ipc(data) = &segment.data {
                 let opcode = data.get_opcode();
                 let base_key = keys.get_base_key(opcode);
 

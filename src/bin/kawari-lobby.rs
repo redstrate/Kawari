@@ -269,7 +269,7 @@ async fn main() {
                             SegmentData::SecuritySetup { phrase, key } => {
                                 connection.initialize_encryption(phrase, key).await
                             }
-                            SegmentData::Ipc { data } => match &data.data {
+                            SegmentData::Ipc(data) => match &data.data {
                                 ClientLobbyIpcData::LoginEx {
                                     sequence,
                                     session_id,

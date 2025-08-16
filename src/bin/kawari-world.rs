@@ -225,12 +225,12 @@ async fn client_loop(
                                                     source_actor: connection.player_data.actor_id,
                                                     target_actor: connection.player_data.actor_id,
                                                     segment_type: SegmentType::Ipc,
-                                                    data: SegmentData::Ipc { data: ipc },
+                                                    data: SegmentData::Ipc(ipc),
                                                 }).await;
                                         }
                                         }
                                     }
-                                    SegmentData::Ipc { data } => {
+                                    SegmentData::Ipc(data) => {
                                         match &data.data {
                                             ClientZoneIpcData::InitRequest { .. } => {
                                                 tracing::info!(
@@ -1111,7 +1111,7 @@ async fn client_loop(
                                     SegmentData::KeepAliveResponse { .. } => {
                                         tracing::info!("Got keep alive response from client... cool...");
                                     }
-                                    SegmentData::KawariIpc { data } => handle_custom_ipc(&mut connection, data).await,
+                                    SegmentData::KawariIpc(data) => handle_custom_ipc(&mut connection, data).await,
                                     _ => {
                                         panic!("The server is recieving a response or unknown packet: {segment:#?}")
                                     }

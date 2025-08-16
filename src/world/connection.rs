@@ -206,7 +206,7 @@ impl ZoneConnection {
             source_actor: self.player_data.actor_id,
             target_actor: self.player_data.actor_id,
             segment_type: SegmentType::Ipc,
-            data: SegmentData::Ipc { data: ipc },
+            data: SegmentData::Ipc(ipc),
         };
 
         send_packet(
@@ -315,7 +315,7 @@ impl ZoneConnection {
             source_actor: actor_id,
             target_actor: actor_id,
             segment_type: SegmentType::Ipc,
-            data: SegmentData::Ipc { data: ipc },
+            data: SegmentData::Ipc(ipc),
         })
         .await;
     }
@@ -337,7 +337,7 @@ impl ZoneConnection {
             source_actor: actor.id.0,
             target_actor: self.player_data.actor_id,
             segment_type: SegmentType::Ipc,
-            data: SegmentData::Ipc { data: ipc },
+            data: SegmentData::Ipc(ipc),
         })
         .await;
 
@@ -357,7 +357,7 @@ impl ZoneConnection {
                 source_actor: actor.id.0,
                 target_actor: self.player_data.actor_id,
                 segment_type: SegmentType::Ipc,
-                data: SegmentData::Ipc { data: ipc },
+                data: SegmentData::Ipc(ipc),
             })
             .await;
 
@@ -719,7 +719,7 @@ impl ZoneConnection {
             source_actor: actor_id,
             target_actor: self.player_data.actor_id,
             segment_type: SegmentType::Ipc,
-            data: SegmentData::Ipc { data: ipc },
+            data: SegmentData::Ipc(ipc),
         })
         .await;
     }
@@ -1131,7 +1131,7 @@ impl ZoneConnection {
             source_actor: actor_id.0,
             target_actor: self.player_data.actor_id,
             segment_type: SegmentType::Ipc,
-            data: SegmentData::Ipc { data: ipc },
+            data: SegmentData::Ipc(ipc),
         })
         .await;
     }
@@ -1156,7 +1156,7 @@ impl ZoneConnection {
             source_actor: actor_id,
             target_actor: self.player_data.actor_id,
             segment_type: SegmentType::Ipc,
-            data: SegmentData::Ipc { data: ipc },
+            data: SegmentData::Ipc(ipc),
         })
         .await;
     }
@@ -1173,7 +1173,7 @@ impl ZoneConnection {
             source_actor: actor_id,
             target_actor: self.player_data.actor_id,
             segment_type: SegmentType::Ipc,
-            data: SegmentData::Ipc { data: ipc },
+            data: SegmentData::Ipc(ipc),
         })
         .await;
     }
@@ -1185,7 +1185,7 @@ impl ZoneConnection {
             source_actor: actor_id,
             target_actor: self.player_data.actor_id,
             segment_type: SegmentType::Ipc,
-            data: SegmentData::Ipc { data: ipc },
+            data: SegmentData::Ipc(ipc),
         })
         .await;
     }
@@ -1574,7 +1574,7 @@ impl ZoneConnection {
                 source_actor: self.player_data.actor_id,
                 target_actor: self.player_data.actor_id,
                 segment_type: SegmentType::Ipc,
-                data: SegmentData::Ipc { data: ipc },
+                data: SegmentData::Ipc(ipc),
             })
             .await;
         }

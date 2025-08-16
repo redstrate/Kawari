@@ -90,7 +90,7 @@ pub async fn send_custom_world_packet(segment: CustomIpcSegment) -> Option<Custo
 
     let segment: PacketSegment<CustomIpcSegment> = PacketSegment {
         segment_type: SegmentType::KawariIpc,
-        data: SegmentData::KawariIpc { data: segment },
+        data: SegmentData::KawariIpc(segment),
         ..Default::default()
     };
 
@@ -111,7 +111,7 @@ pub async fn send_custom_world_packet(segment: CustomIpcSegment) -> Option<Custo
         let (segments, _) = parse_packet::<CustomIpcSegment>(&buf[..n], &mut packet_state);
 
         return match &segments[0].data {
-            SegmentData::KawariIpc { data } => Some(data.clone()),
+            SegmentData::KawariIpc(data) => Some(data.clone()),
             _ => None,
         };
     }

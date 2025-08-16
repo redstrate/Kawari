@@ -1065,13 +1065,11 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                                 source_actor,
                                 target_actor,
                                 segment_type: SegmentType::Ipc,
-                                data: SegmentData::Ipc {
-                                    data: ServerZoneIpcSegment {
-                                        op_code: ServerZoneIpcType::Unknown(opcode),
-                                        data: ServerZoneIpcData::Unknown { unk: ipc_data },
-                                        ..Default::default()
-                                    },
-                                },
+                                data: SegmentData::Ipc(ServerZoneIpcSegment {
+                                    op_code: ServerZoneIpcType::Unknown(opcode),
+                                    data: ServerZoneIpcData::Unknown { unk: ipc_data },
+                                    ..Default::default()
+                                }),
                             });
 
                             if handle.send(msg).is_err() {

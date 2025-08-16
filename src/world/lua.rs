@@ -130,7 +130,7 @@ fn create_ipc_target<T: QueueSegments>(
         source_actor,
         target_actor,
         segment_type: SegmentType::Ipc,
-        data: SegmentData::Ipc { data: ipc },
+        data: SegmentData::Ipc(ipc),
     };
 
     user_data.queue_segment(segment);

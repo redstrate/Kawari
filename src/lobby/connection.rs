@@ -89,7 +89,7 @@ impl LobbyConnection {
 
         self.send_segment(PacketSegment {
             segment_type: SegmentType::Ipc,
-            data: SegmentData::Ipc { data: ipc },
+            data: SegmentData::Ipc(ipc),
             ..Default::default()
         })
         .await;
@@ -123,7 +123,7 @@ impl LobbyConnection {
 
             let response_packet = PacketSegment {
                 segment_type: SegmentType::Ipc,
-                data: SegmentData::Ipc { data: ipc },
+                data: SegmentData::Ipc(ipc),
                 ..Default::default()
             };
             packets.push(response_packet);
@@ -138,7 +138,7 @@ impl LobbyConnection {
 
             let response_packet = PacketSegment {
                 segment_type: SegmentType::Ipc,
-                data: SegmentData::Ipc { data: ipc },
+                data: SegmentData::Ipc(ipc),
                 ..Default::default()
             };
             packets.push(response_packet);
@@ -214,7 +214,7 @@ impl LobbyConnection {
 
                 self.send_segment(PacketSegment {
                     segment_type: SegmentType::Ipc,
-                    data: SegmentData::Ipc { data: ipc },
+                    data: SegmentData::Ipc(ipc),
                     ..Default::default()
                 })
                 .await;
@@ -239,7 +239,7 @@ impl LobbyConnection {
 
         self.send_segment(PacketSegment {
             segment_type: SegmentType::Ipc,
-            data: SegmentData::Ipc { data: ipc },
+            data: SegmentData::Ipc(ipc),
             ..Default::default()
         })
         .await;
@@ -258,7 +258,7 @@ impl LobbyConnection {
 
         self.send_segment(PacketSegment {
             segment_type: SegmentType::Ipc,
-            data: SegmentData::Ipc { data: ipc },
+            data: SegmentData::Ipc(ipc),
             ..Default::default()
         })
         .await;
@@ -308,7 +308,7 @@ impl LobbyConnection {
 
                     self.send_segment(PacketSegment {
                         segment_type: SegmentType::Ipc,
-                        data: SegmentData::Ipc { data: ipc },
+                        data: SegmentData::Ipc(ipc),
                         ..Default::default()
                     })
                     .await;
@@ -323,7 +323,7 @@ impl LobbyConnection {
 
                     let response_packet = PacketSegment {
                         segment_type: SegmentType::Ipc,
-                        data: SegmentData::Ipc { data: ipc },
+                        data: SegmentData::Ipc(ipc),
                         ..Default::default()
                     };
                     self.send_segment(response_packet).await;
@@ -383,7 +383,7 @@ impl LobbyConnection {
 
                     self.send_segment(PacketSegment {
                         segment_type: SegmentType::Ipc,
-                        data: SegmentData::Ipc { data: ipc },
+                        data: SegmentData::Ipc(ipc),
                         ..Default::default()
                     })
                     .await;
@@ -425,7 +425,7 @@ impl LobbyConnection {
 
                     self.send_segment(PacketSegment {
                         segment_type: SegmentType::Ipc,
-                        data: SegmentData::Ipc { data: ipc },
+                        data: SegmentData::Ipc(ipc),
                         ..Default::default()
                     })
                     .await;
@@ -469,7 +469,7 @@ impl LobbyConnection {
 
                     self.send_segment(PacketSegment {
                         segment_type: SegmentType::Ipc,
-                        data: SegmentData::Ipc { data: ipc },
+                        data: SegmentData::Ipc(ipc),
                         ..Default::default()
                     })
                     .await;

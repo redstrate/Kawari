@@ -78,11 +78,11 @@ pub enum SegmentData<T: ReadWriteIpcSegment> {
         key: [u8; 4],
     },
     #[br(pre_assert(kind == SegmentType::Ipc))]
-    Ipc {
+    Ipc(
         #[br(parse_with = decrypt, args(size, encryption_key))]
         #[bw(write_with = encrypt, args(size, encryption_key))]
-        data: T,
-    },
+        T,
+    ),
     #[br(pre_assert(kind == SegmentType::KeepAliveRequest))]
     KeepAliveRequest { id: u32, timestamp: u32 },
     #[br(pre_assert(kind == SegmentType::SecurityInitialize))]
@@ -95,10 +95,10 @@ pub enum SegmentData<T: ReadWriteIpcSegment> {
     KeepAliveResponse { id: u32, timestamp: u32 },
 
     #[br(pre_assert(kind == SegmentType::KawariIpc))]
-    KawariIpc {
+    KawariIpc(
         #[br(args(&0))] // this being zero is okay, custom ipc segments don't use the size arg
-        data: CustomIpcSegment,
-    },
+        CustomIpcSegment,
+    ),
 }
 
 impl<T: ReadWriteIpcSegment> Default for SegmentData<T> {
@@ -157,12 +157,12 @@ impl<T: ReadWriteIpcSegment> PacketSegment<T> {
                 SegmentData::None() => 0,
                 SegmentData::SecuritySetup { .. } => 616,
                 SegmentData::SecurityInitialize { .. } => 640,
-                SegmentData::Ipc { data } => data.calc_size(),
+                SegmentData::Ipc(data) => data.calc_size(),
                 SegmentData::KeepAliveRequest { .. } => 0x8,
                 SegmentData::KeepAliveResponse { .. } => 0x8,
                 SegmentData::Initialize { .. } => 40,
                 SegmentData::Setup { .. } => 40,
-                SegmentData::KawariIpc { data } => data.calc_size(),
+                SegmentData::KawariIpc(data) => data.calc_size(),
             }
     }
 }
