@@ -455,7 +455,7 @@ pub enum ServerZoneIpcData {
         unk1: [u8; 8],
     },
     Linkshells {
-        // TODO: fill this out
+        // TODO: fill this out, each entry appears to be 56 bytes long.
         unk: [u8; 448]
     },
     Unknown {
