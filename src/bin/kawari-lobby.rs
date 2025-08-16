@@ -418,7 +418,7 @@ async fn main() {
 
 #[cfg(test)]
 mod tests {
-    use super::{validate_client_version_string};
+    use super::validate_client_version_string;
 
     #[test]
     fn test_validate_client_version_string() {

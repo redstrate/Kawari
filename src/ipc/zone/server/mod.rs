@@ -448,6 +448,12 @@ pub enum ServerZoneIpcData {
     Fellowships {
         unk1: [u8; 808],
     },
+    UnkZoneLoad1 {
+        unk1: [u8; 56],
+    },
+    UnkZoneLoad2 {
+        unk1: [u8; 8],
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,

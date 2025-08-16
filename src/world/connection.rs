@@ -498,6 +498,19 @@ impl ZoneConnection {
             },
         })
         .await;
+
+        // send some weird thing to make the zone load correctly
+        {
+            self.send_ipc_self(ServerZoneIpcSegment::new(ServerZoneIpcData::UnkZoneLoad1 {
+                unk1: [0; 56],
+            }))
+            .await;
+
+            self.send_ipc_self(ServerZoneIpcSegment::new(ServerZoneIpcData::UnkZoneLoad2 {
+                unk1: [0; 8],
+            }))
+            .await;
+        }
     }
 
     pub async fn warp(&mut self, warp_id: u32) {

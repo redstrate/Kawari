@@ -76,7 +76,7 @@ pub enum ClientTriggerCommand {
     #[brw(magic = 0x0264u16)]
     EnterMountingProhibitedArea {
         #[brw(pad_before = 2)]
-        enabled: u32
+        enabled: u32,
     },
     /// Unknown purpose, but is seen during the crystal bell/aesthetician cutscenes.
     #[brw(magic = 0x033Eu16)]

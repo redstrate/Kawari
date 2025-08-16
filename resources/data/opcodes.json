@@ -401,6 +401,18 @@
             "comment": "The fellowships you have joined.",
             "opcode": 840,
             "size": 808
+        },
+        {
+            "name": "UnkZoneLoad1",
+            "comment": "Sent shortly after the server sends InitZone, this with UnkZoneLoad2 it makes everything load faster.",
+            "opcode": 244,
+            "size": 56
+        },
+        {
+            "name": "UnkZoneLoad2",
+            "comment": "Sent shortly after the server sends InitZone, this with UnkZoneLoad1 it makes everything load faster.",
+            "opcode": 879,
+            "size": 8
         }
     ],
     "ClientZoneIpcType": [
