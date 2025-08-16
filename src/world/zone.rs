@@ -42,24 +42,25 @@ impl Zone {
 
         let path = format!("bg/{}.lvb", &bg_path);
         tracing::info!("Loading {}", path);
-        let lgb_file = game_data.resource.read(&path).unwrap();
-        let lgb = Lvb::from_existing(&lgb_file).unwrap();
+        if let Some(lgb_file) = game_data.resource.read(&path) {
+            let lgb = Lvb::from_existing(&lgb_file).unwrap();
 
-        let mut load_lgb = |path: &str| -> Option<LayerGroup> {
-            let lgb_file = game_data.resource.read(path)?;
-            tracing::info!("Loading {path}");
-            let lgb = LayerGroup::from_existing(&lgb_file);
-            if lgb.is_none() {
-                tracing::warn!(
-                    "Failed to parse {path}, this is most likely a bug in Physis and should be reported somewhere!"
-                )
-            }
-            lgb
-        };
+            let mut load_lgb = |path: &str| -> Option<LayerGroup> {
+                let lgb_file = game_data.resource.read(path)?;
+                tracing::info!("Loading {path}");
+                let lgb = LayerGroup::from_existing(&lgb_file);
+                if lgb.is_none() {
+                    tracing::warn!(
+                        "Failed to parse {path}, this is most likely a bug in Physis and should be reported somewhere!"
+                    )
+                }
+                lgb
+            };
 
-        for path in &lgb.scns[0].header.path_layer_group_resources {
-            if let Some(lgb) = load_lgb(path) {
-                zone.layer_groups.push(lgb);
+            for path in &lgb.scns[0].header.path_layer_group_resources {
+                if let Some(lgb) = load_lgb(path) {
+                    zone.layer_groups.push(lgb);
+                }
             }
         }
 

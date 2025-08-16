@@ -95,15 +95,17 @@ impl Instance {
         // e.g. ffxiv/fst_f1/fld/f1f3/level/f1f3
         let bg_path = row.Bg().into_string().unwrap();
 
+        let mut navimesh_path = None;
+
         let path = format!("bg/{}.lvb", &bg_path);
         tracing::info!("Loading {}", path);
-        let lgb_file = game_data.resource.read(&path).unwrap();
-        let lgb = Lvb::from_existing(&lgb_file).unwrap();
+        if let Some(lgb_file) = game_data.resource.read(&path) {
+            let lgb = Lvb::from_existing(&lgb_file).unwrap();
 
-        let mut navimesh_path = None;
-        for layer_set in &lgb.scns[0].unk3.unk2 {
-            // FIXME: this is wrong. I think there might be multiple, separate navimeshes in really big zones but I'm not sure yet.
-            navimesh_path = Some(layer_set.path_nvm.replace("/server/data/", "").to_string());
+            for layer_set in &lgb.scns[0].unk3.unk2 {
+                // FIXME: this is wrong. I think there might be multiple, separate navimeshes in really big zones but I'm not sure yet.
+                navimesh_path = Some(layer_set.path_nvm.replace("/server/data/", "").to_string());
+            }
         }
 
         if navimesh_path.is_none() {
