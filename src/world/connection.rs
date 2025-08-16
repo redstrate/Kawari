@@ -45,7 +45,7 @@ use crate::{
 
 use super::{
     Actor, CharacterData, EffectsBuilder, Event, EventFinishType, LuaPlayer, StatusEffects,
-    ToServer, WorldDatabase, Zone,
+    ToServer, WorldDatabase,
     common::{ClientId, ServerHandle},
     load_init_script,
     lua::Task,
@@ -156,7 +156,6 @@ pub struct ZoneConnection {
     pub state: ConnectionState,
     pub player_data: PlayerData,
 
-    pub zone: Option<Zone>,
     pub spawn_index: u8,
 
     pub status_effects: StatusEffects,
@@ -395,26 +394,28 @@ impl ZoneConnection {
         self.send_ipc_self(ipc).await;
     }
 
+    /// Request the global server state to change our zone.
     pub async fn change_zone(&mut self, new_zone_id: u16) {
-        // tell everyone we're gone
-        // the connection already checks to see if the actor already exists, so it's seems harmless if we do
-        if let Some(zone) = &self.zone {
-            self.handle
-                .send(ToServer::LeftZone(
-                    self.id,
-                    self.player_data.actor_id,
-                    zone.id,
-                ))
-                .await;
-        }
+        self.handle
+            .send(ToServer::ChangeZone(
+                self.id,
+                self.player_data.actor_id,
+                new_zone_id,
+            ))
+            .await;
+    }
 
-        // load the new zone now
-        {
-            let mut game_data = self.gamedata.lock().unwrap();
-            self.zone = Some(Zone::load(&mut game_data, new_zone_id));
-        }
-
+    /// Handle the zone change information from the server state.
+    pub async fn handle_zone_change(
+        &mut self,
+        new_zone_id: u16,
+        weather_id: u16,
+        exit_position: Position,
+        exit_rotation: f32,
+    ) {
         self.player_data.zone_id = new_zone_id;
+        self.exit_position = Some(exit_position);
+        self.exit_rotation = Some(exit_rotation);
 
         // fade in?
         {
@@ -481,16 +482,9 @@ impl ZoneConnection {
         {
             let config = get_config();
 
-            {
-                let mut game_data = self.gamedata.lock().unwrap();
-                self.weather_id = game_data
-                    .get_weather(self.zone.as_ref().unwrap().id.into())
-                    .unwrap_or(1) as u16;
-            }
-
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InitZone(InitZone {
-                territory_type: self.zone.as_ref().unwrap().id,
-                weather_id: self.weather_id,
+                territory_type: new_zone_id,
+                weather_id,
                 obsfucation_mode: if config.world.enable_packet_obsfucation {
                     OBFUSCATION_ENABLED_MODE
                 } else {
@@ -526,68 +520,19 @@ impl ZoneConnection {
     }
 
     pub async fn warp(&mut self, warp_id: u32) {
-        let territory_type;
-        // find the pop range on the other side
-        {
-            let mut game_data = self.gamedata.lock().unwrap();
-            let (pop_range_id, zone_id) = game_data
-                .get_warp(warp_id)
-                .expect("Failed to find the warp!");
-
-            let new_zone = Zone::load(&mut game_data, zone_id);
-
-            // find it on the other side
-            if let Some((object, _)) = new_zone.find_pop_range(pop_range_id) {
-                self.exit_position = Some(Position {
-                    x: object.transform.translation[0],
-                    y: object.transform.translation[1],
-                    z: object.transform.translation[2],
-                });
-            } else {
-                tracing::warn!(
-                    "Failed to find pop range in {}. Falling back to 0,0,0!",
-                    new_zone.id
-                );
-            }
-
-            territory_type = zone_id;
-        }
-
-        self.change_zone(territory_type).await;
+        self.handle
+            .send(ToServer::Warp(self.id, self.player_data.actor_id, warp_id))
+            .await;
     }
 
     pub async fn warp_aetheryte(&mut self, aetheryte_id: u32) {
-        tracing::info!("Warping to aetheryte {}", aetheryte_id);
-
-        let territory_type;
-        // find the pop range on the other side
-        {
-            let mut game_data = self.gamedata.lock().unwrap();
-            let (pop_range_id, zone_id) = game_data
-                .get_aetheryte(aetheryte_id)
-                .expect("Failed to find the aetheryte!");
-
-            let new_zone = Zone::load(&mut game_data, zone_id);
-
-            // find it on the other side
-            if let Some((object, _)) = new_zone.find_pop_range(pop_range_id) {
-                // set the exit position
-                self.exit_position = Some(Position {
-                    x: object.transform.translation[0],
-                    y: object.transform.translation[1],
-                    z: object.transform.translation[2],
-                });
-            } else {
-                tracing::warn!(
-                    "Failed to find pop range in {}. Falling back to 0,0,0!",
-                    new_zone.id
-                );
-            }
-
-            territory_type = zone_id;
-        }
-
-        self.change_zone(territory_type).await;
+        self.handle
+            .send(ToServer::WarpAetheryte(
+                self.id,
+                self.player_data.actor_id,
+                aetheryte_id,
+            ))
+            .await;
     }
 
     pub async fn change_weather(&mut self, new_weather_id: u16) {

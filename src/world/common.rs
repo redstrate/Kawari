@@ -52,6 +52,8 @@ pub enum FromServer {
     LoseEffect(u16, u16, ObjectId),
     // TODO: temporary
     Conditions(Conditions),
+    /// To inform the connection of the zone they're loading into.
+    ChangeZone(u16, u16, Position, f32),
 }
 
 #[derive(Debug, Clone)]
@@ -96,8 +98,11 @@ pub enum ToServer {
     /// The connection loaded into a zone.
     // TODO: the connection should not be in charge and telling the global server what zone they just loaded in! but this will work for now
     ZoneLoaded(ClientId, u16, CommonSpawn),
-    /// The connection left a zone.
-    LeftZone(ClientId, u32, u16),
+    /// The connection wants to enter a new zone.
+    // TODO: temporary as this is only used for commands and those aren't run on global server state yet
+    ChangeZone(ClientId, u32, u16),
+    /// The player walks through a zone change line.
+    EnterZoneJump(ClientId, u32, u32),
     /// The connection disconnected.
     Disconnected(ClientId),
     /// A fatal error occured.
@@ -118,6 +123,12 @@ pub enum ToServer {
     BeginReplay(ClientId, String),
     /// The player gains an effect.
     GainEffect(ClientId, u32, u16, f32, u16, ObjectId),
+    /// Warp with the specified id.
+    Warp(ClientId, u32, u32),
+    /// Warp with the specified aetheryte id.
+    WarpAetheryte(ClientId, u32, u32),
+    /// Ready to spawn the player (this happens during initrequest)
+    ReadySpawnPlayer(ClientId, u16, Position, f32),
 }
 
 #[derive(Clone, Debug)]

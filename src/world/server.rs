@@ -1,6 +1,4 @@
 use binrw::{BinRead, BinWrite};
-use icarus::TerritoryType::TerritoryTypeSheet;
-use physis::{common::Language, lvb::Lvb, resource::Resource};
 use std::{
     collections::{HashMap, VecDeque},
     io::Cursor,
@@ -22,7 +20,7 @@ use crate::{
     packet::{PacketSegment, SegmentData, SegmentType},
 };
 
-use super::{Actor, ClientHandle, ClientId, FromServer, Navmesh, ToServer};
+use super::{Actor, ClientHandle, ClientId, FromServer, Navmesh, ToServer, Zone};
 
 /// Used for the debug NPC.
 pub const CUSTOMIZE_DATA: CustomizeData = CustomizeData {
@@ -75,50 +73,29 @@ impl NetworkedActor {
     }
 }
 
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug)]
 struct Instance {
     // structure temporary, of course
     actors: HashMap<ObjectId, NetworkedActor>,
     navmesh: Navmesh,
+    zone: Zone,
+    weather_id: u16,
 }
 
 impl Instance {
     pub fn new(id: u16, game_data: &mut GameData) -> Self {
-        let mut instance = Self::default();
-
-        let sheet = TerritoryTypeSheet::read_from(&mut game_data.resource, Language::None).unwrap();
-        let Some(row) = sheet.get_row(id as u32) else {
-            tracing::warn!("Invalid zone id {id}, allowing anyway...");
-            return instance;
+        let mut instance = Instance {
+            zone: Zone::load(game_data, id),
+            weather_id: game_data.get_weather(id as u32).unwrap_or_default() as u16,
+            ..Default::default()
         };
-
-        // e.g. ffxiv/fst_f1/fld/f1f3/level/f1f3
-        let bg_path = row.Bg().into_string().unwrap();
-
-        let mut navimesh_path = None;
-
-        let path = format!("bg/{}.lvb", &bg_path);
-        tracing::info!("Loading {}", path);
-        if let Some(lgb_file) = game_data.resource.read(&path) {
-            let lgb = Lvb::from_existing(&lgb_file).unwrap();
-
-            for layer_set in &lgb.scns[0].unk3.unk2 {
-                // FIXME: this is wrong. I think there might be multiple, separate navimeshes in really big zones but I'm not sure yet.
-                navimesh_path = Some(layer_set.path_nvm.replace("/server/data/", "").to_string());
-            }
-        }
-
-        if navimesh_path.is_none() {
-            tracing::info!("No navimesh path found, monsters will not function correctly!");
-            return instance;
-        }
 
         let config = get_config();
         if config.filesystem.navimesh_path.is_empty() {
             tracing::warn!("Navimesh path is not set! Monsters will not function correctly!");
         } else {
             let mut nvm_path = PathBuf::from(config.filesystem.navimesh_path);
-            nvm_path.push(navimesh_path.unwrap());
+            nvm_path.push(instance.zone.navimesh_path.clone());
 
             if let Ok(nvm_bytes) = std::fs::read(&nvm_path) {
                 if let Some(navmesh) = Navmesh::from_existing(&nvm_bytes) {
@@ -176,19 +153,23 @@ impl Instance {
 }
 
 #[derive(Default, Debug, Clone)]
-struct ClientState {
-    zone_id: u16,
-}
+struct ClientState {}
 
 #[derive(Default, Debug)]
 struct WorldServer {
-    to_remove: Vec<ClientId>,
-    clients: HashMap<ClientId, (ClientHandle, ClientState)>,
     /// Indexed by zone id
     instances: HashMap<u16, Instance>,
 }
 
 impl WorldServer {
+    /// Ensures an instance exists, and creates one if not found.
+    fn ensure_exists(&mut self, zone_id: u16, game_data: &mut GameData) {
+        // create a new instance if necessary
+        self.instances
+            .entry(zone_id)
+            .or_insert_with(|| Instance::new(zone_id, game_data));
+    }
+
     /// Finds the instance associated with a zone, or None if it doesn't exist yet.
     fn find_instance(&self, zone_id: u16) -> Option<&Instance> {
         self.instances.get(&zone_id)
@@ -200,12 +181,27 @@ impl WorldServer {
     }
 
     /// Finds the instance associated with an actor, or returns None if they are not found.
+    fn find_actor_instance(&self, actor_id: u32) -> Option<&Instance> {
+        self.instances
+            .values()
+            .find(|instance| instance.actors.contains_key(&ObjectId(actor_id)))
+    }
+
+    /// Finds the instance associated with an actor, or returns None if they are not found.
     fn find_actor_instance_mut(&mut self, actor_id: u32) -> Option<&mut Instance> {
         self.instances
             .values_mut()
             .find(|instance| instance.actors.contains_key(&ObjectId(actor_id)))
     }
+}
 
+#[derive(Default, Debug)]
+struct NetworkState {
+    to_remove: Vec<ClientId>,
+    clients: HashMap<ClientId, (ClientHandle, ClientState)>,
+}
+
+impl NetworkState {
     /// Tell all the clients that a new NPC spawned.
     fn send_npc(&mut self, actor: Actor, spawn: NpcSpawn) {
         // TODO: only send in the relevant instance
@@ -219,15 +215,52 @@ impl WorldServer {
             }
         }
     }
+
+    /// Inform all clients in an instance that the actor has left.
+    fn inform_remove_actor(&mut self, instance: &Instance, from_id: ClientId, actor_id: u32) {
+        for (id, (handle, _)) in &mut self.clients {
+            let id = *id;
+
+            // Don't bother telling the client who told us
+            if id == from_id {
+                continue;
+            }
+
+            // Skip any clients not in this instance
+            if !instance.actors.contains_key(&ObjectId(handle.actor_id)) {
+                continue;
+            }
+
+            let msg = FromServer::ActorDespawn(actor_id);
+
+            if handle.send(msg).is_err() {
+                self.to_remove.push(id);
+            }
+        }
+    }
+
+    fn send_to(&mut self, client_id: ClientId, message: FromServer) {
+        for (id, (handle, _)) in &mut self.clients {
+            let id = *id;
+
+            if id == client_id {
+                if handle.send(message).is_err() {
+                    self.to_remove.push(id);
+                }
+                break;
+            }
+        }
+    }
 }
 
-fn server_logic_tick(data: &mut WorldServer) {
+fn server_logic_tick(data: &mut WorldServer, network: &mut NetworkState) {
     for instance in data.instances.values_mut() {
         let mut actor_moves = Vec::new();
         let players = instance.find_all_players();
 
+        let mut target_actor_pos = HashMap::new();
+
         // const pass
-        let instance_copy = instance.clone(); // TODO: refactor out please
         for (id, actor) in &instance.actors {
             if let NetworkedActor::Npc {
                 current_path,
@@ -258,6 +291,15 @@ fn server_logic_tick(data: &mut WorldServer) {
                             rotation,
                         ));
                     }
+
+                    target_actor_pos.insert(
+                        current_target.unwrap(),
+                        instance
+                            .find_actor(current_target.unwrap())
+                            .unwrap()
+                            .get_common_spawn()
+                            .pos,
+                    );
                 }
             }
         }
@@ -303,14 +345,11 @@ fn server_logic_tick(data: &mut WorldServer) {
                     *current_path_lerp += (10.0 / distance).clamp(0.0, 1.0);
                 }
 
-                let target_actor = instance_copy.find_actor(current_target.unwrap());
-                let target_pos = target_actor.unwrap().get_common_spawn().pos;
+                let target_pos = target_actor_pos[&current_target.unwrap()];
                 let distance = Position::distance(spawn.common.pos, target_pos);
                 let needs_repath = current_path.is_empty() && distance > 5.0; // TODO: confirm distance this in retail
                 if needs_repath && current_target.is_some() {
                     let current_pos = spawn.common.pos;
-                    let target_actor = instance_copy.find_actor(current_target.unwrap());
-                    let target_pos = target_actor.unwrap().get_common_spawn().pos;
                     *current_path = instance
                         .navmesh
                         .calculate_path(
@@ -334,7 +373,7 @@ fn server_logic_tick(data: &mut WorldServer) {
 
         // inform clients of the NPCs new positions
         for msg in actor_moves {
-            for (handle, _) in data.clients.values_mut() {
+            for (handle, _) in network.clients.values_mut() {
                 if handle.send(msg.clone()).is_err() {
                     //to_remove.push(id);
                 }
@@ -345,17 +384,20 @@ fn server_logic_tick(data: &mut WorldServer) {
 
 pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::io::Error> {
     let data = Arc::new(Mutex::new(WorldServer::default()));
+    let network = Arc::new(Mutex::new(NetworkState::default()));
     let game_data = Arc::new(Mutex::new(GameData::new()));
 
     {
         let data = data.clone();
+        let network = network.clone();
         tokio::task::spawn(async move {
             let mut interval = tokio::time::interval(Duration::from_millis(500));
             interval.tick().await;
             loop {
                 interval.tick().await;
                 let mut data = data.lock().unwrap();
-                server_logic_tick(&mut data);
+                let mut network = network.lock().unwrap();
+                server_logic_tick(&mut data, &mut network);
             }
         });
     }
@@ -365,54 +407,98 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
 
         match msg {
             ToServer::NewClient(handle) => {
-                let mut data = data.lock().unwrap();
+                tracing::info!(
+                    "New client {:?} is connecting with actor id {}",
+                    handle.id,
+                    handle.actor_id
+                );
 
-                data.clients
+                let mut network = network.lock().unwrap();
+
+                network
+                    .clients
                     .insert(handle.id, (handle, ClientState::default()));
             }
-            ToServer::ZoneLoaded(from_id, zone_id, common_spawn) => {
+            ToServer::ReadySpawnPlayer(from_id, zone_id, position, rotation) => {
+                let mut network = network.lock().unwrap();
                 let mut data = data.lock().unwrap();
 
                 // create a new instance if necessary
-                data.instances.entry(zone_id).or_insert_with(|| {
-                    let mut game_data = game_data.lock().unwrap();
-                    Instance::new(zone_id, &mut game_data)
-                });
+                let mut game_data = game_data.lock().unwrap();
+                data.ensure_exists(zone_id, &mut game_data);
+                let target_instance = data.find_instance_mut(zone_id);
 
-                // Send existing player data, if any
-                if let Some(instance) = data.find_instance(zone_id).cloned() {
-                    for (id, (handle, state)) in &mut data.clients {
-                        let id = *id;
+                // tell the client to load into the zone
+                let msg =
+                    FromServer::ChangeZone(zone_id, target_instance.weather_id, position, rotation);
 
-                        if id == from_id {
-                            state.zone_id = zone_id;
+                network.send_to(from_id, msg);
+            }
+            ToServer::ZoneLoaded(from_id, zone_id, common_spawn) => {
+                tracing::info!(
+                    "Client {from_id:?} has now loaded, sending them existing player data."
+                );
 
-                            // send existing player data
-                            for (id, spawn) in &instance.actors {
-                                let npc_spawn = match spawn {
-                                    NetworkedActor::Player(spawn) => spawn,
-                                    NetworkedActor::Npc { spawn, .. } => spawn,
-                                };
+                let mut data = data.lock().unwrap();
+                let mut network = network.lock().unwrap();
 
-                                // Note that we currently only support spawning via the NPC packet, hence why we don't need to differentiate here
-                                let msg = FromServer::ActorSpawn(
-                                    Actor {
-                                        id: *id,
-                                        hp: 100,
-                                        spawn_index: 0,
-                                    },
-                                    npc_spawn.clone(),
-                                );
+                // Send existing player data to the connection, if any
+                if let Some(instance) = data.find_instance(zone_id) {
+                    // send existing player data
+                    for (id, spawn) in &instance.actors {
+                        let npc_spawn = match spawn {
+                            NetworkedActor::Player(spawn) => spawn,
+                            NetworkedActor::Npc { spawn, .. } => spawn,
+                        };
 
-                                handle.send(msg).unwrap();
-                            }
+                        // Note that we currently only support spawning via the NPC packet, hence why we don't need to differentiate here
+                        let msg = FromServer::ActorSpawn(
+                            Actor {
+                                id: *id,
+                                hp: 100,
+                                spawn_index: 0,
+                            },
+                            npc_spawn.clone(),
+                        );
 
-                            break;
-                        }
+                        network.send_to(from_id, msg);
                     }
                 }
 
-                let (client, _) = data.clients.get(&from_id).unwrap().clone();
+                let (client, _) = network.clients.get(&from_id).unwrap().clone();
+
+                if let Some(instance) = data.find_instance(zone_id) {
+                    // Then tell any clients in the zone that we spawned
+                    for (id, (handle, _)) in &mut network.clients {
+                        let id = *id;
+
+                        // don't bother telling the client who told us
+                        if id == from_id {
+                            continue;
+                        }
+
+                        // skip any clients not in our zone
+                        if !instance.actors.contains_key(&ObjectId(handle.actor_id)) {
+                            continue;
+                        }
+
+                        let msg = FromServer::ActorSpawn(
+                            Actor {
+                                id: ObjectId(client.actor_id),
+                                hp: 0,
+                                spawn_index: 0,
+                            },
+                            NpcSpawn {
+                                common: common_spawn.clone(),
+                                ..Default::default()
+                            },
+                        );
+
+                        if handle.send(msg).is_err() {
+                            to_remove.push(id);
+                        }
+                    }
+                }
 
                 // add the connection's actor to the table
                 {
@@ -425,71 +511,180 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         }),
                     );
                 }
-
-                // Then tell any clients in the zone that we spawned
-                for (id, (handle, state)) in &mut data.clients {
-                    let id = *id;
-
-                    // don't bother telling the client who told us
-                    if id == from_id {
-                        continue;
-                    }
-
-                    // skip any clients not in our zone
-                    if state.zone_id != zone_id {
-                        continue;
-                    }
-
-                    let msg = FromServer::ActorSpawn(
-                        Actor {
-                            id: ObjectId(client.actor_id),
-                            hp: 0,
-                            spawn_index: 0,
-                        },
-                        NpcSpawn {
-                            common: common_spawn.clone(),
-                            ..Default::default()
-                        },
-                    );
-
-                    if handle.send(msg).is_err() {
-                        to_remove.push(id);
-                    }
-                }
             }
-            ToServer::LeftZone(from_id, actor_id, zone_id) => {
-                let mut data = data.lock().unwrap();
+            ToServer::ChangeZone(from_id, actor_id, zone_id) => {
+                tracing::info!("Client {from_id:?} is requesting to go to {zone_id}!");
 
-                // When the actor leaves the zone, remove them from the instance
+                let mut data = data.lock().unwrap();
+                let mut network = network.lock().unwrap();
+
+                // create a new instance if necessary
+                let mut game_data = game_data.lock().unwrap();
+                data.ensure_exists(zone_id, &mut game_data);
+
+                // inform the players in this zone that this actor left
                 if let Some(current_instance) = data.find_actor_instance_mut(actor_id) {
                     current_instance.actors.remove(&ObjectId(actor_id));
+                    network.inform_remove_actor(current_instance, from_id, actor_id);
                 }
 
-                // Then tell any clients in the zone that we left
-                for (id, (handle, state)) in &mut data.clients {
-                    let id = *id;
+                // then find or create a new instance with the zone id
+                data.ensure_exists(zone_id, &mut game_data);
+                let target_instance = data.find_instance_mut(zone_id);
 
-                    // Don't bother telling the client who told us
-                    if id == from_id {
-                        continue;
-                    }
+                // tell the client to load into the zone
+                let msg = FromServer::ChangeZone(
+                    zone_id,
+                    target_instance.weather_id,
+                    Position::default(),
+                    0.0,
+                );
+                network.send_to(from_id, msg);
+            }
+            ToServer::EnterZoneJump(from_id, actor_id, exitbox_id) => {
+                let mut data = data.lock().unwrap();
+                let mut network = network.lock().unwrap();
 
-                    // Skip any clients not in our zone
-                    if state.zone_id != zone_id {
-                        continue;
-                    }
-
-                    let msg = FromServer::ActorDespawn(actor_id);
-
-                    if handle.send(msg).is_err() {
-                        to_remove.push(id);
-                    }
+                // first, find the zone jump in the current zone
+                let destination_zone_id;
+                let destination_instance_id;
+                if let Some(current_instance) = data.find_actor_instance(actor_id) {
+                    let Some((_, new_exit_box)) = current_instance.zone.find_exit_box(exitbox_id)
+                    else {
+                        tracing::warn!("Couldn't find exit box {exitbox_id}?!");
+                        break;
+                    };
+                    destination_zone_id = new_exit_box.territory_type;
+                    destination_instance_id = new_exit_box.destination_instance_id;
+                } else {
+                    tracing::warn!(
+                        "Actor isn't in the instance it was expected in. This is a bug!"
+                    );
+                    break;
                 }
+
+                // inform the players in this zone that this actor left
+                if let Some(current_instance) = data.find_actor_instance_mut(actor_id) {
+                    current_instance.actors.remove(&ObjectId(actor_id));
+                    network.inform_remove_actor(current_instance, from_id, actor_id);
+                }
+
+                // then find or create a new instance with the zone id
+                let mut game_data = game_data.lock().unwrap();
+                data.ensure_exists(destination_zone_id, &mut game_data);
+                let target_instance = data.find_instance_mut(destination_zone_id);
+
+                // TODO: this same code is 99% the same for zone jumps, aetherytes and warps. it should be consolidated!
+                let exit_position;
+                if let Some((destination_object, _)) =
+                    target_instance.zone.find_pop_range(destination_instance_id)
+                {
+                    exit_position = Position {
+                        x: destination_object.transform.translation[0],
+                        y: destination_object.transform.translation[1],
+                        z: destination_object.transform.translation[2],
+                    };
+                } else {
+                    exit_position = Position::default();
+                }
+
+                // now that we have all of the data needed, inform the connection of where they need to be
+                let msg = FromServer::ChangeZone(
+                    destination_zone_id,
+                    target_instance.weather_id,
+                    exit_position,
+                    0.0, // TODO: exit rotation
+                );
+                network.send_to(from_id, msg);
+            }
+            ToServer::Warp(from_id, actor_id, warp_id) => {
+                let mut data = data.lock().unwrap();
+                let mut network = network.lock().unwrap();
+                let mut game_data = game_data.lock().unwrap();
+
+                // first, find the warp and it's destination
+                let (destination_instance_id, destination_zone_id) = game_data
+                    .get_warp(warp_id)
+                    .expect("Failed to find the warp!");
+
+                // inform the players in this zone that this actor left
+                if let Some(current_instance) = data.find_actor_instance_mut(actor_id) {
+                    current_instance.actors.remove(&ObjectId(actor_id));
+                    network.inform_remove_actor(current_instance, from_id, actor_id);
+                }
+
+                // then find or create a new instance with the zone id
+                data.ensure_exists(destination_zone_id, &mut game_data);
+                let target_instance = data.find_instance_mut(destination_zone_id);
+
+                let exit_position;
+                if let Some((destination_object, _)) =
+                    target_instance.zone.find_pop_range(destination_instance_id)
+                {
+                    exit_position = Position {
+                        x: destination_object.transform.translation[0],
+                        y: destination_object.transform.translation[1],
+                        z: destination_object.transform.translation[2],
+                    };
+                } else {
+                    exit_position = Position::default();
+                }
+
+                // now that we have all of the data needed, inform the connection of where they need to be
+                let msg = FromServer::ChangeZone(
+                    destination_zone_id,
+                    target_instance.weather_id,
+                    exit_position,
+                    0.0, // TODO: exit rotation
+                );
+                network.send_to(from_id, msg);
+            }
+            ToServer::WarpAetheryte(from_id, actor_id, aetheryte_id) => {
+                let mut data = data.lock().unwrap();
+                let mut network = network.lock().unwrap();
+                let mut game_data = game_data.lock().unwrap();
+
+                // first, find the warp and it's destination
+                let (destination_instance_id, destination_zone_id) = game_data
+                    .get_aetheryte(aetheryte_id)
+                    .expect("Failed to find the aetheryte!");
+
+                // inform the players in this zone that this actor left
+                if let Some(current_instance) = data.find_actor_instance_mut(actor_id) {
+                    current_instance.actors.remove(&ObjectId(actor_id));
+                    network.inform_remove_actor(current_instance, from_id, actor_id);
+                }
+
+                // then find or create a new instance with the zone id
+                data.ensure_exists(destination_zone_id, &mut game_data);
+                let target_instance = data.find_instance_mut(destination_zone_id);
+
+                let exit_position;
+                if let Some((destination_object, _)) =
+                    target_instance.zone.find_pop_range(destination_instance_id)
+                {
+                    exit_position = Position {
+                        x: destination_object.transform.translation[0],
+                        y: destination_object.transform.translation[1],
+                        z: destination_object.transform.translation[2],
+                    };
+                } else {
+                    exit_position = Position::default();
+                }
+
+                // now that we have all of the data needed, inform the connection of where they need to be
+                let msg = FromServer::ChangeZone(
+                    destination_zone_id,
+                    target_instance.weather_id,
+                    exit_position,
+                    0.0, // TODO: exit rotation
+                );
+                network.send_to(from_id, msg);
             }
             ToServer::Message(from_id, msg) => {
-                let mut data = data.lock().unwrap();
+                let mut network = network.lock().unwrap();
 
-                for (id, (handle, _)) in &mut data.clients {
+                for (id, (handle, _)) in &mut network.clients {
                     let id = *id;
 
                     if id == from_id {
@@ -505,6 +700,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
             }
             ToServer::ActorMoved(from_id, actor_id, position, rotation) => {
                 let mut data = data.lock().unwrap();
+                let mut network = network.lock().unwrap();
 
                 if let Some(instance) = data.find_actor_instance_mut(actor_id) {
                     if let Some((_, spawn)) = instance
@@ -520,7 +716,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         common.rotation = rotation;
                     }
 
-                    for (id, (handle, _)) in &mut data.clients {
+                    for (id, (handle, _)) in &mut network.clients {
                         let id = *id;
 
                         if id == from_id {
@@ -536,9 +732,9 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 }
             }
             ToServer::ClientTrigger(from_id, from_actor_id, trigger) => {
-                let mut data = data.lock().unwrap();
+                let mut network = network.lock().unwrap();
 
-                for (id, (handle, _)) in &mut data.clients {
+                for (id, (handle, _)) in &mut network.clients {
                     let id = *id;
 
                     tracing::info!("{:#X?}", trigger);
@@ -711,6 +907,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
             }
             ToServer::DebugNewNpc(_from_id, from_actor_id) => {
                 let mut data = data.lock().unwrap();
+                let mut network = network.lock().unwrap();
 
                 let actor_id = Instance::generate_actor_id();
                 let spawn;
@@ -764,7 +961,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     instance.insert_npc(ObjectId(actor_id), spawn.clone());
                 }
 
-                data.send_npc(
+                network.send_npc(
                     Actor {
                         id: ObjectId(actor_id),
                         ..Default::default()
@@ -774,6 +971,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
             }
             ToServer::DebugNewEnemy(_from_id, from_actor_id, id) => {
                 let mut data = data.lock().unwrap();
+                let mut network = network.lock().unwrap();
 
                 let actor_id = Instance::generate_actor_id();
                 let spawn;
@@ -819,7 +1017,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     instance.insert_npc(ObjectId(actor_id), spawn.clone());
                 }
 
-                data.send_npc(
+                network.send_npc(
                     Actor {
                         id: ObjectId(actor_id),
                         ..Default::default()
@@ -829,6 +1027,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
             }
             ToServer::DebugSpawnClone(_from_id, from_actor_id) => {
                 let mut data = data.lock().unwrap();
+                let mut network = network.lock().unwrap();
 
                 let actor_id = Instance::generate_actor_id();
                 let spawn;
@@ -854,7 +1053,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     instance.insert_npc(ObjectId(actor_id), spawn.clone());
                 }
 
-                data.send_npc(
+                network.send_npc(
                     Actor {
                         id: ObjectId(actor_id),
                         ..Default::default()
@@ -866,28 +1065,18 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 let mut game_data = game_data.lock().unwrap();
                 let cast_time = game_data.get_casttime(request.action_key).unwrap();
 
-                let send_execution = |from_id: ClientId, data: Arc<Mutex<WorldServer>>| {
-                    let mut data = data.lock().unwrap();
+                let send_execution = |from_id: ClientId, network: Arc<Mutex<NetworkState>>| {
+                    let mut network = network.lock().unwrap();
 
                     tracing::info!("Now finishing delayed cast!");
 
-                    for (id, (handle, _)) in &mut data.clients {
-                        let id = *id;
-
-                        if id == from_id {
-                            let msg = FromServer::ActionComplete(request);
-
-                            if handle.send(msg).is_err() {
-                                data.to_remove.push(id);
-                            }
-                            break;
-                        }
-                    }
+                    let msg = FromServer::ActionComplete(request);
+                    network.send_to(from_id, msg);
                 };
 
                 if cast_time == 0 {
                     // If instantaneous, send right back
-                    send_execution(from_id, data.clone());
+                    send_execution(from_id, network.clone());
                 } else {
                     // Otherwise, delay
                     // NOTE: I know this won't scale, but it's a fine hack for now
@@ -898,13 +1087,13 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     );
 
                     // we have to shadow these variables to tell rust not to move them into the async closure
-                    let data = data.clone();
+                    let network = network.clone();
                     tokio::task::spawn(async move {
                         let mut interval =
                             tokio::time::interval(Duration::from_millis(cast_time as u64 * 100));
                         interval.tick().await;
                         interval.tick().await;
-                        send_execution(from_id, data);
+                        send_execution(from_id, network);
                     });
                 }
             }
@@ -928,8 +1117,8 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     player.common.display_flags = config.display_flag.into();
                 }
 
-                let mut data = data.lock().unwrap();
-                for (id, (handle, _)) in &mut data.clients {
+                let mut network = network.lock().unwrap();
+                for (id, (handle, _)) in &mut network.clients {
                     let id = *id;
 
                     let msg = FromServer::UpdateConfig(from_actor_id, config.clone());
@@ -961,8 +1150,8 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 }
 
                 // Inform all clients about their new equipped model ids
-                let mut data = data.lock().unwrap();
-                for (id, (handle, _)) in &mut data.clients {
+                let mut network = network.lock().unwrap();
+                for (id, (handle, _)) in &mut network.clients {
                     let id = *id;
 
                     let msg = FromServer::ActorEquip(from_actor_id, main_weapon_id, model_ids);
@@ -1005,90 +1194,77 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 });
 
                 let send_execution = |from_id: ClientId,
-                                      data: Arc<Mutex<WorldServer>>,
+                                      network: Arc<Mutex<NetworkState>>,
                                       entry: &PathBuf| {
-                    let mut data = data.lock().unwrap();
+                    let mut network = network.lock().unwrap();
 
-                    for (id, (handle, _)) in &mut data.clients {
-                        let id = *id;
+                    // only care about Ipc packets
+                    let filename = entry.file_name().unwrap().to_str().unwrap();
+                    if !filename.contains("Ipc") {
+                        return;
+                    }
 
-                        if id == from_id {
-                            // only care about Ipc packets
-                            let filename = entry.file_name().unwrap().to_str().unwrap();
-                            if !filename.contains("Ipc") {
-                                continue;
-                            }
+                    // only care about packets from the server
+                    if !filename.contains("(to client)") {
+                        return;
+                    }
 
-                            // only care about packets from the server
-                            if !filename.contains("(to client)") {
-                                continue;
-                            }
+                    let path = entry.to_str().unwrap();
 
-                            let path = entry.to_str().unwrap();
+                    tracing::info!("- Replaying {path}");
 
-                            tracing::info!("- Replaying {path}");
+                    let source_actor_bytes =
+                        std::fs::read(format!("{path}/source_actor.bin")).unwrap();
+                    let target_actor_bytes =
+                        std::fs::read(format!("{path}/target_actor.bin")).unwrap();
+                    let source_actor =
+                        u32::from_le_bytes(source_actor_bytes[0..4].try_into().unwrap());
+                    let target_actor =
+                        u32::from_le_bytes(target_actor_bytes[0..4].try_into().unwrap());
 
-                            let source_actor_bytes =
-                                std::fs::read(format!("{path}/source_actor.bin")).unwrap();
-                            let target_actor_bytes =
-                                std::fs::read(format!("{path}/target_actor.bin")).unwrap();
-                            let source_actor =
-                                u32::from_le_bytes(source_actor_bytes[0..4].try_into().unwrap());
-                            let target_actor =
-                                u32::from_le_bytes(target_actor_bytes[0..4].try_into().unwrap());
+                    let ipc_header_bytes = std::fs::read(format!("{path}/ipc_header.bin")).unwrap();
+                    let opcode = u16::from_le_bytes(ipc_header_bytes[2..4].try_into().unwrap());
 
-                            let ipc_header_bytes =
-                                std::fs::read(format!("{path}/ipc_header.bin")).unwrap();
-                            let opcode =
-                                u16::from_le_bytes(ipc_header_bytes[2..4].try_into().unwrap());
+                    let mut ipc_data = std::fs::read(format!("{path}/data.bin")).unwrap();
+                    let ipc_len = ipc_data.len() as u32 + 32;
+                    let mut cursor = Cursor::new(&mut ipc_data);
+                    if let Ok(parsed) = ServerZoneIpcSegment::read_le_args(&mut cursor, (&ipc_len,))
+                    {
+                        if let ServerZoneIpcData::InitZone(mut init_zone) = parsed.data {
+                            tracing::info!("- Fixing up InitZone");
 
-                            let mut ipc_data = std::fs::read(format!("{path}/data.bin")).unwrap();
-                            let ipc_len = ipc_data.len() as u32 + 32;
-                            let mut cursor = Cursor::new(&mut ipc_data);
-                            if let Ok(parsed) =
-                                ServerZoneIpcSegment::read_le_args(&mut cursor, (&ipc_len,))
-                            {
-                                if let ServerZoneIpcData::InitZone(mut init_zone) = parsed.data {
-                                    tracing::info!("- Fixing up InitZone");
+                            // stop it from trying to initialize obsfucation
+                            init_zone.obsfucation_mode = 0;
+                            init_zone.seed1 = 0;
+                            init_zone.seed2 = 0;
+                            init_zone.seed3 = 0;
 
-                                    // stop it from trying to initialize obsfucation
-                                    init_zone.obsfucation_mode = 0;
-                                    init_zone.seed1 = 0;
-                                    init_zone.seed2 = 0;
-                                    init_zone.seed3 = 0;
-
-                                    let mut cursor = Cursor::new(Vec::new());
-                                    init_zone.write_le(&mut cursor).unwrap();
-                                    ipc_data = cursor.into_inner().to_vec();
-                                }
-                            }
-
-                            let msg = FromServer::ReplayPacket(PacketSegment {
-                                source_actor,
-                                target_actor,
-                                segment_type: SegmentType::Ipc,
-                                data: SegmentData::Ipc(ServerZoneIpcSegment {
-                                    op_code: ServerZoneIpcType::Unknown(opcode),
-                                    data: ServerZoneIpcData::Unknown { unk: ipc_data },
-                                    ..Default::default()
-                                }),
-                            });
-
-                            if handle.send(msg).is_err() {
-                                data.to_remove.push(id);
-                            }
-                            break;
+                            let mut cursor = Cursor::new(Vec::new());
+                            init_zone.write_le(&mut cursor).unwrap();
+                            ipc_data = cursor.into_inner().to_vec();
                         }
                     }
+
+                    let msg = FromServer::ReplayPacket(PacketSegment {
+                        source_actor,
+                        target_actor,
+                        segment_type: SegmentType::Ipc,
+                        data: SegmentData::Ipc(ServerZoneIpcSegment {
+                            op_code: ServerZoneIpcType::Unknown(opcode),
+                            data: ServerZoneIpcData::Unknown { unk: ipc_data },
+                            ..Default::default()
+                        }),
+                    });
+                    network.send_to(from_id, msg);
                 };
 
-                let data = data.clone();
+                let network = network.clone();
                 tokio::task::spawn(async move {
                     for entry in &entries {
                         let mut interval = tokio::time::interval(Duration::from_millis(100));
                         interval.tick().await;
                         interval.tick().await;
-                        send_execution(from_id, data.clone(), entry);
+                        send_execution(from_id, network.clone(), entry);
                     }
                 });
             }
@@ -1102,30 +1278,17 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
             ) => {
                 let send_lost_effect =
                     |from_id: ClientId,
-                     data: Arc<Mutex<WorldServer>>,
+                     network: Arc<Mutex<NetworkState>>,
                      effect_id: u16,
                      effect_param: u16,
                      effect_source_actor_id: ObjectId| {
-                        let mut data = data.lock().unwrap();
+                        let mut network = network.lock().unwrap();
 
                         tracing::info!("Now losing effect {}!", effect_id);
 
-                        for (id, (handle, _)) in &mut data.clients {
-                            let id = *id;
-
-                            if id == from_id {
-                                let msg = FromServer::LoseEffect(
-                                    effect_id,
-                                    effect_param,
-                                    effect_source_actor_id,
-                                );
-
-                                if handle.send(msg).is_err() {
-                                    data.to_remove.push(id);
-                                }
-                                break;
-                            }
-                        }
+                        let msg =
+                            FromServer::LoseEffect(effect_id, effect_param, effect_source_actor_id);
+                        network.send_to(from_id, msg);
                     };
 
                 // Eventually tell the player they lost this effect
@@ -1134,7 +1297,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 tracing::info!("Effect {effect_id} lasts for {effect_duration} seconds");
 
                 // we have to shadow these variables to tell rust not to move them into the async closure
-                let data = data.clone();
+                let network = network.clone();
                 tokio::task::spawn(async move {
                     let mut interval = tokio::time::interval(Duration::from_millis(
                         (effect_duration * 1000.0) as u64,
@@ -1143,7 +1306,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     interval.tick().await;
                     send_lost_effect(
                         from_id,
-                        data,
+                        network,
                         effect_id,
                         effect_param,
                         effect_source_actor_id,
@@ -1151,22 +1314,24 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 });
             }
             ToServer::Disconnected(from_id) => {
-                let mut data = data.lock().unwrap();
+                let mut network = network.lock().unwrap();
 
-                data.to_remove.push(from_id);
+                network.to_remove.push(from_id);
             }
             ToServer::FatalError(err) => return Err(err),
         }
 
         // Remove any clients that errored out
         {
+            let mut network = network.lock().unwrap();
             let mut data = data.lock().unwrap();
-            data.to_remove.append(&mut to_remove);
 
-            for remove_id in data.to_remove.clone() {
+            network.to_remove.append(&mut to_remove);
+
+            for remove_id in network.to_remove.clone() {
                 // remove any actors they had
                 let mut actor_id = None;
-                for (id, (handle, _)) in &mut data.clients {
+                for (id, (handle, _)) in &mut network.clients {
                     if *id == remove_id {
                         actor_id = Some(handle.actor_id);
                     }
@@ -1176,10 +1341,11 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     // remove them from the instance
                     if let Some(current_instance) = data.find_actor_instance_mut(actor_id) {
                         current_instance.actors.remove(&ObjectId(actor_id));
+                        network.inform_remove_actor(current_instance, remove_id, actor_id);
                     }
                 }
 
-                data.clients.remove(&remove_id);
+                network.clients.remove(&remove_id);
             }
         }
     }

@@ -2,7 +2,6 @@ use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-use kawari::common::Position;
 use kawari::common::{
     GameData, INVALID_OBJECT_ID, ItemInfoQuery, ObjectId, ObjectTypeId, timestamp_secs,
 };
@@ -25,7 +24,7 @@ use kawari::packet::{
     ConnectionState, ConnectionType, PacketSegment, SegmentData, SegmentType, send_keep_alive,
 };
 use kawari::world::{
-    ChatHandler, ExtraLuaState, LuaZone, ObsfucationData, Zone, ZoneConnection, load_init_script,
+    ChatHandler, ExtraLuaState, ObsfucationData, ZoneConnection, load_init_script,
 };
 use kawari::world::{
     ClientHandle, EventFinishType, FromServer, LuaPlayer, PlayerData, ServerHandle, StatusEffects,
@@ -181,9 +180,6 @@ async fn client_loop(
                                             // collect actor data
                                             connection.initialize(actor_id).await;
 
-                                            connection.exit_position = Some(connection.player_data.position);
-                                            connection.exit_rotation = Some(connection.player_data.rotation);
-
                                             let mut client_handle = client_handle.clone();
                                             client_handle.actor_id = actor_id;
 
@@ -317,8 +313,7 @@ async fn client_loop(
 
                                                 connection.send_quest_information().await;
 
-                                                let zone_id = connection.player_data.zone_id;
-                                                connection.change_zone(zone_id).await;
+                                                connection.handle.send(ToServer::ReadySpawnPlayer(connection.id, connection.player_data.zone_id, connection.player_data.position, connection.player_data.rotation)).await;
 
                                                 let lua = lua.lock().unwrap();
                                                 lua.scope(|scope| {
@@ -337,7 +332,7 @@ async fn client_loop(
                                                 let common = connection.get_player_common_spawn(connection.exit_position, connection.exit_rotation);
 
                                                 // tell the server we loaded into the zone, so it can start sending us actors
-                                                connection.handle.send(ToServer::ZoneLoaded(connection.id, connection.zone.as_ref().unwrap().id, common.clone())).await;
+                                                connection.handle.send(ToServer::ZoneLoaded(connection.id, connection.player_data.zone_id, common.clone())).await;
 
                                                 let chara_details = database.find_chara_make(connection.player_data.content_id);
 
@@ -430,7 +425,7 @@ async fn client_loop(
                                                             entries: vec![PlayerEntry {
                                                                 // TODO: fill with actual player data, it also shows up wrong in game
                                                                 content_id: connection.player_data.content_id,
-                                                                zone_id: connection.zone.as_ref().unwrap().id,
+                                                                zone_id: 0,
                                                                 zone_id1: 0x0100,
                                                                 name: "INVALID".to_string(),
                                                                 ..Default::default()
@@ -603,32 +598,7 @@ async fn client_loop(
                                                     "Character entered {exit_box} with a position of {position:#?}!"
                                                 );
 
-                                                // find the exit box id
-                                                let new_territory;
-                                                {
-                                                    let (_, exit_box) = connection
-                                                    .zone
-                                                    .as_ref()
-                                                    .unwrap()
-                                                    .find_exit_box(*exit_box)
-                                                    .unwrap();
-
-                                                    // find the pop range on the other side
-                                                    let mut game_data = game_data.lock().unwrap();
-                                                    let new_zone = Zone::load(&mut game_data, exit_box.territory_type);
-                                                    if let Some((destination_object, _)) = new_zone
-                                                        .find_pop_range(exit_box.destination_instance_id) {
-                                                        // set the exit position
-                                                        connection.exit_position = Some(Position {
-                                                            x: destination_object.transform.translation[0],
-                                                            y: destination_object.transform.translation[1],
-                                                            z: destination_object.transform.translation[2],
-                                                        });
-                                                    }
-                                                    new_territory = exit_box.territory_type;
-                                                }
-
-                                                connection.change_zone(new_territory).await;
+                                                connection.handle.send(ToServer::EnterZoneJump(connection.id, connection.player_data.actor_id, *exit_box)).await;
                                             }
                                             ClientZoneIpcData::ActionRequest(request) => {
                                                 connection
@@ -1130,18 +1100,6 @@ async fn client_loop(
                             // update lua player
                             lua_player.player_data = connection.player_data.clone();
                             lua_player.status_effects = connection.status_effects.clone();
-
-                            if let Some(zone) = &connection.zone {
-                                lua_player.zone_data = LuaZone {
-                                    zone_id: zone.id,
-                                    weather_id: connection.weather_id,
-                                    internal_name: zone.internal_name.clone(),
-                                    region_name: zone.region_name.clone(),
-                                    place_name: zone.place_name.clone(),
-                                    intended_use: zone.intended_use,
-                                    queued_segments: Vec::<PacketSegment<ServerZoneIpcSegment>>::new()
-                                };
-                            }
                         }
                     },
                     Err(_) => {
@@ -1169,6 +1127,7 @@ async fn client_loop(
                         connection.conditions = conditions;
                         connection.send_conditions().await;
                     },
+                    FromServer::ChangeZone(zone_id, weather_id, position, rotation) => connection.handle_zone_change(zone_id, weather_id, position, rotation).await,
                 },
                 None => break,
             }
@@ -1177,14 +1136,6 @@ async fn client_loop(
 
     // forcefully log out the player if they weren't logging out but force D/C'd
     if connection.player_data.actor_id != 0 && is_zone_connection {
-        connection
-            .handle
-            .send(ToServer::LeftZone(
-                connection.id,
-                connection.player_data.actor_id,
-                connection.player_data.zone_id,
-            ))
-            .await;
         if !connection.gracefully_logged_out {
             tracing::info!(
                 "Forcefully logging out connection {:#?}...",
@@ -1258,7 +1209,6 @@ async fn main() {
                     state,
                     player_data: PlayerData::default(),
                     spawn_index: 0,
-                    zone: None,
                     status_effects: StatusEffects::default(),
                     event: None,
                     actors: Vec::new(),

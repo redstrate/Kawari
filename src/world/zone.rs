@@ -62,6 +62,11 @@ impl Zone {
                     zone.layer_groups.push(lgb);
                 }
             }
+
+            for layer_set in &lgb.scns[0].unk3.unk2 {
+                // FIXME: this is wrong. I think there might be multiple, separate navimeshes in really big zones but I'm not sure yet.
+                zone.navimesh_path = layer_set.path_nvm.replace("/server/data/", "").to_string();
+            }
         }
 
         // load names
