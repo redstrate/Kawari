@@ -43,7 +43,7 @@ pub mod ipc;
 pub mod inventory;
 
 /// Used in the encryption key.
-const GAME_VERSION: u16 = 7201;
+const GAME_VERSION: u32 = 7201;
 
 pub const RECEIVE_BUFFER_SIZE: usize = 32000;
 
