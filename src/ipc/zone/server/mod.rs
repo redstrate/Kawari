@@ -456,7 +456,7 @@ pub enum ServerZoneIpcData {
     },
     Linkshells {
         // TODO: fill this out, each entry appears to be 56 bytes long.
-        unk: [u8; 448]
+        unk: [u8; 448],
     },
     Unknown {
         #[br(count = size - 32)]
@@ -849,10 +849,8 @@ mod tests {
             ),
             (
                 ServerZoneIpcType::Linkshells,
-                ServerZoneIpcData::Linkshells {
-                    unk: [0; 448]
-                }
-            )
+                ServerZoneIpcData::Linkshells { unk: [0; 448] },
+            ),
         ];
 
         for (opcode, data) in &ipc_types {
