@@ -454,6 +454,10 @@ pub enum ServerZoneIpcData {
     UnkZoneLoad2 {
         unk1: [u8; 8],
     },
+    Linkshells {
+        // TODO: fill this out
+        unk: [u8; 448]
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -843,6 +847,12 @@ mod tests {
                     unk5: 0,
                 },
             ),
+            (
+                ServerZoneIpcType::Linkshells,
+                ServerZoneIpcData::Linkshells {
+                    unk: [0; 448]
+                }
+            )
         ];
 
         for (opcode, data) in &ipc_types {
