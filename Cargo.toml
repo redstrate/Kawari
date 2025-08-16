@@ -37,6 +37,9 @@ name = "kawari-launcher"
 name = "kawari-navimesh"
 required-features = ["visualizer"]
 
+[[bin]]
+name = "kawari-datacentertravel"
+
 [profile.release]
 lto = true
 strip = true

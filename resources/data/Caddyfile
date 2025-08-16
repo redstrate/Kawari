@@ -72,3 +72,7 @@ patch-dl.ffxiv.localhost:80 {
     root * ./patches
     file_server
 }
+
+dctravel.ffxiv.localhost:80 {
+    reverse_proxy :5860
+}

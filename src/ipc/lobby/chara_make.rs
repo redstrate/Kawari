@@ -24,12 +24,17 @@ pub enum LobbyCharacterActionKind {
     SettingsUploadBegin,
     #[brw(magic = 0xCu8)]
     SettingsUpload,
+    /// Used when asking to visit another world.
     #[brw(magic = 0xEu8)]
     WorldVisit,
+    /// Used when opening the data center window, and it requests the world list.
     #[brw(magic = 0xFu8)]
     DataCenterToken,
     #[brw(magic = 0x15u8)]
     Request,
+    /// When the client uploads data using the config backup system.
+    #[brw(magic = 0xAu8)]
+    UploadData,
 }
 
 #[binrw]

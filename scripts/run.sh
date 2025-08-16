@@ -12,4 +12,5 @@ cargo run -q --package kawari --features oodle --bin kawari-lobby &
 cargo run -q --package kawari --features oodle --bin kawari-world &
 cargo run -q --package kawari --features oodle --bin kawari-launcher &
 cargo run -q --package kawari --features oodle --bin kawari-savedatabank &
+cargo run -q --package kawari --features oodle --bin kawari-datacentertravel &
 wait

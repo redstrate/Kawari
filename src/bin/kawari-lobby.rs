@@ -383,7 +383,13 @@ async fn main() {
                                         .send_enter_world(*sequence, *content_id, our_actor_id)
                                         .await;
                                 }
-                                _ => {}
+                                ClientLobbyIpcData::Unknown { unk } => {
+                                    tracing::warn!(
+                                        "Unknown packet {:?} recieved ({} bytes), this should be handled!",
+                                        data.op_code,
+                                        unk.len()
+                                    );
+                                }
                             },
                             SegmentData::KeepAliveRequest { id, timestamp } => {
                                 send_keep_alive::<ServerLobbyIpcSegment>(

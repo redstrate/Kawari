@@ -73,6 +73,7 @@ You'll notice that your browser can connect to the `.localhost` sites without an
 127.0.0.1 patch-gamever.ffxiv.localhost
 127.0.0.1 ffxiv-login.square.localhost
 127.0.0.1 patch-dl.ffxiv.localhost
+127.0.0.1 dctravel.ffxiv.localhost
 ```
 
 On Windows this file is located under `C:\Windows\System32\Drivers\etc\hosts` and on Linux it's located under `/etc/hosts`. **If you plan on using Astra to connect to Kawari, this is not needed.**

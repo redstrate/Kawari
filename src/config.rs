@@ -463,6 +463,38 @@ impl SaveDataBankConfig {
     }
 }
 
+/// Configuration for the data center travel server.
+#[derive(Serialize, Deserialize)]
+pub struct DataCenterTravelConfig {
+    #[serde(default = "DataCenterTravelConfig::default_port")]
+    pub port: u16,
+    #[serde(default = "default_listen_address")]
+    pub listen_address: String,
+}
+
+impl Default for DataCenterTravelConfig {
+    fn default() -> Self {
+        Self {
+            port: Self::default_port(),
+            listen_address: default_listen_address(),
+        }
+    }
+}
+
+impl DataCenterTravelConfig {
+    /// Returns the configured IP address & port as a `SocketAddr`.
+    pub fn get_socketaddr(&self) -> SocketAddr {
+        SocketAddr::from((
+            IpAddr::from_str(&self.listen_address).expect("Invalid IP address format in config!"),
+            self.port,
+        ))
+    }
+
+    fn default_port() -> u16 {
+        5860
+    }
+}
+
 /// Configuration for the game filesystem.
 #[derive(Serialize, Deserialize, Default)]
 pub struct FilesystemConfig {
@@ -519,6 +551,9 @@ pub struct Config {
     #[serde(default)]
     pub save_data_bank: SaveDataBankConfig,
 
+    #[serde(default)]
+    pub datacenter_travel: DataCenterTravelConfig,
+
     /// Enable various validity checks for version and file hashes that emulate retail.
     #[serde(default = "Config::default_enforce_validity_checks")]
     pub enforce_validity_checks: bool,
@@ -537,6 +572,7 @@ impl Default for Config {
             world: WorldConfig::default(),
             launcher: LauncherConfig::default(),
             save_data_bank: SaveDataBankConfig::default(),
+            datacenter_travel: DataCenterTravelConfig::default(),
             enforce_validity_checks: Self::default_enforce_validity_checks(),
         }
     }

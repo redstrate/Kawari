@@ -188,11 +188,12 @@ impl LobbyConnection {
                         sequence,
                         counter: (i * 4) + 1, // TODO: why the + 1 here?
                         num_in_packet: characters_in_packet.len() as u8,
-                        unk4: 128,
+                        unk3: 192,
+                        unk6: 192,
                         days_subscribed: 30,
                         remaining_days: 30,
                         days_to_next_rank: 0,
-                        unk8: 8,
+                        unk8: 520,
                         max_characters_on_world: 8,
                         entitled_expansion: 5,
                         characters: characters_in_packet,
@@ -480,6 +481,7 @@ impl LobbyConnection {
             LobbyCharacterActionKind::WorldVisit => todo!(),
             LobbyCharacterActionKind::DataCenterToken => todo!(),
             LobbyCharacterActionKind::Request => todo!(),
+            LobbyCharacterActionKind::UploadData => todo!(),
         }
     }
 }
