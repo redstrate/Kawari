@@ -383,19 +383,28 @@ impl GameData {
         let sheet = WeatherRateSheet::read_from(&mut self.resource, Language::None)?;
         let row = sheet.get_row(weather_rate_id)?;
 
+        // sum up the rates
+        let mut rates = row.Rate().map(|x| x.into_u8().unwrap().clone());
+        let mut sum = 0;
+        for rate in &mut rates {
+            sum += *rate;
+            *rate = sum;
+        }
+
         let target = Self::calculate_target();
         let weather_and_rates: Vec<(i32, i32)> = row
             .Weather()
             .iter()
             .cloned()
-            .zip(row.Rate())
-            .map(|(x, y)| (*x.into_i32().unwrap(), *y.into_u8().unwrap() as i32))
+            .zip(rates)
+            .map(|(x, y)| (*x.into_i32().unwrap(), y as i32))
+            .filter(|x| x.0 > 0) // don't take into account invalid weather ids
             .collect();
 
         Some(
             weather_and_rates
                 .iter()
-                .filter(|(_, rate)| target < *rate)
+                .filter(|(_, rate)| target <= *rate)
                 .take(1)
                 .collect::<Vec<&(i32, i32)>>()
                 .first()?
@@ -405,25 +414,18 @@ impl GameData {
 
     /// Calculate target window for weather calculations
     fn calculate_target() -> i32 {
-        // Based off of https://github.com/Rogueadyn/SaintCoinach/blob/master/SaintCoinach/Xiv/WeatherRate.cs
-        // TODO: this isn't correct still and doesn't seem to match up with the retail server
+        let unix_seconds = timestamp_secs();
+        let eorzean_hours = f32::floor(unix_seconds as f32 / 175.0) as u32;
+        let eorzean_days = f32::floor(eorzean_hours as f32 / 24.0) as u32;
 
-        let real_to_eorzean_factor = (60.0 * 24.0) / 70.0;
-        let unix = (timestamp_secs() as f32 / real_to_eorzean_factor) as u64;
-        // Get Eorzea hour for weather start
-        let bell = unix / 175;
-        // Do the magic 'cause for calculations 16:00 is 0, 00:00 is 8 and 08:00 is 16
-        let increment = ((bell + 8 - (bell % 8)) as u32) % 24;
-
-        // Take Eorzea days since unix epoch
-        let total_days = (unix / 4200) as u32;
-
-        let calc_base = (total_days * 0x64) + increment;
+        let time_chunk = (eorzean_hours % 24) - (eorzean_hours % 8);
+        let time_chunk = (time_chunk + 8) % 24;
+        let calc_base = (eorzean_days * 100) + time_chunk;
 
         let step1 = (calc_base << 0xB) ^ calc_base;
         let step2 = (step1 >> 8) ^ step1;
 
-        (step2 % 0x64) as i32
+        (step2 % 100) as i32
     }
 
     /// Gets the current weather for the given zone id
@@ -432,7 +434,6 @@ impl GameData {
         let row = sheet.get_row(zone_id)?;
 
         let weather_rate_id = row.WeatherRate().into_u8()?;
-
         self.get_weather_rate(*weather_rate_id as u32)
     }
 
