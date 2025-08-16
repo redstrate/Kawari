@@ -11,20 +11,18 @@ use crate::{
 };
 
 use super::{
-    CompressionType, ConnectionType, PacketHeader, PacketSegment, PacketState, ReadWriteIpcSegment,
-    ScramblerKeys, SegmentData, SegmentType, compression::compress, oodle::OodleNetwork,
-    parse_packet,
+    CompressionType, ConnectionState, ConnectionType, PacketHeader, PacketSegment,
+    ReadWriteIpcSegment, SegmentData, SegmentType, compression::compress, parse_packet,
 };
 
 pub async fn send_packet<T: ReadWriteIpcSegment>(
     socket: &mut TcpStream,
-    state: &mut PacketState,
+    state: &mut ConnectionState,
     connection_type: ConnectionType,
     compression_type: CompressionType,
     segments: &[PacketSegment<T>],
-    keys: Option<&ScramblerKeys>,
 ) {
-    let (data, uncompressed_size) = compress(state, &compression_type, segments, keys);
+    let (data, uncompressed_size) = compress(state, &compression_type, segments);
     let size = std::mem::size_of::<PacketHeader>() + data.len();
 
     let header = PacketHeader {
@@ -52,7 +50,7 @@ pub async fn send_packet<T: ReadWriteIpcSegment>(
 
 pub async fn send_keep_alive<T: ReadWriteIpcSegment>(
     socket: &mut TcpStream,
-    state: &mut PacketState,
+    state: &mut ConnectionState,
     connection_type: ConnectionType,
     id: u32,
     timestamp: u32,
@@ -68,7 +66,6 @@ pub async fn send_keep_alive<T: ReadWriteIpcSegment>(
         connection_type,
         CompressionType::Uncompressed,
         &[response_packet],
-        None,
     )
     .await;
 }
@@ -82,11 +79,7 @@ pub async fn send_custom_world_packet(segment: CustomIpcSegment) -> Option<Custo
 
     let mut stream = TcpStream::connect(addr).await.unwrap();
 
-    let mut packet_state = PacketState {
-        client_key: None,
-        serverbound_oodle: OodleNetwork::new(),
-        clientbound_oodle: OodleNetwork::new(),
-    };
+    let mut packet_state = ConnectionState::None;
 
     let segment: PacketSegment<CustomIpcSegment> = PacketSegment {
         segment_type: SegmentType::KawariIpc,
@@ -100,7 +93,6 @@ pub async fn send_custom_world_packet(segment: CustomIpcSegment) -> Option<Custo
         ConnectionType::None,
         CompressionType::Uncompressed,
         &[segment],
-        None,
     )
     .await;
 

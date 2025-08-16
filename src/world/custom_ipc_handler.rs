@@ -6,9 +6,7 @@ use crate::{
     config::get_config,
     inventory::Inventory,
     ipc::kawari::{CustomIpcData, CustomIpcSegment, CustomIpcType},
-    packet::{
-        CompressionType, ConnectionType, PacketSegment, SegmentData, SegmentType, send_packet,
-    },
+    packet::{PacketSegment, SegmentData, SegmentType},
 };
 
 use super::ZoneConnection;
@@ -63,7 +61,7 @@ pub async fn handle_custom_ipc(connection: &mut ZoneConnection, data: &CustomIpc
             // send them the new actor and content id
             {
                 connection
-                    .send_segment(PacketSegment {
+                    .send_custom_response(PacketSegment {
                         segment_type: SegmentType::KawariIpc,
                         data: SegmentData::KawariIpc(CustomIpcSegment {
                             op_code: CustomIpcType::CharacterCreated,
@@ -86,7 +84,7 @@ pub async fn handle_custom_ipc(connection: &mut ZoneConnection, data: &CustomIpc
             // send them the actor id
             {
                 connection
-                    .send_segment(PacketSegment {
+                    .send_custom_response(PacketSegment {
                         segment_type: SegmentType::KawariIpc,
                         data: SegmentData::KawariIpc(CustomIpcSegment {
                             op_code: CustomIpcType::ActorIdFound,
@@ -104,7 +102,7 @@ pub async fn handle_custom_ipc(connection: &mut ZoneConnection, data: &CustomIpc
             // send response
             {
                 connection
-                    .send_segment(PacketSegment {
+                    .send_custom_response(PacketSegment {
                         segment_type: SegmentType::KawariIpc,
                         data: SegmentData::KawariIpc(CustomIpcSegment {
                             op_code: CustomIpcType::NameIsAvailableResponse,
@@ -141,12 +139,8 @@ pub async fn handle_custom_ipc(connection: &mut ZoneConnection, data: &CustomIpc
 
             // send response
             {
-                send_packet::<CustomIpcSegment>(
-                    &mut connection.socket,
-                    &mut connection.state,
-                    ConnectionType::None,
-                    CompressionType::Uncompressed,
-                    &[PacketSegment {
+                connection
+                    .send_custom_response(PacketSegment {
                         segment_type: SegmentType::KawariIpc,
                         data: SegmentData::KawariIpc(CustomIpcSegment {
                             op_code: CustomIpcType::RequestCharacterListRepsonse,
@@ -154,10 +148,8 @@ pub async fn handle_custom_ipc(connection: &mut ZoneConnection, data: &CustomIpc
                             ..Default::default()
                         }),
                         ..Default::default()
-                    }],
-                    None,
-                )
-                .await;
+                    })
+                    .await;
             }
         }
         CustomIpcData::DeleteCharacter { content_id } => {
@@ -165,12 +157,8 @@ pub async fn handle_custom_ipc(connection: &mut ZoneConnection, data: &CustomIpc
 
             // send response
             {
-                send_packet::<CustomIpcSegment>(
-                    &mut connection.socket,
-                    &mut connection.state,
-                    ConnectionType::None,
-                    CompressionType::Uncompressed,
-                    &[PacketSegment {
+                connection
+                    .send_custom_response(PacketSegment {
                         segment_type: SegmentType::KawariIpc,
                         data: SegmentData::KawariIpc(CustomIpcSegment {
                             op_code: CustomIpcType::CharacterDeleted,
@@ -178,10 +166,8 @@ pub async fn handle_custom_ipc(connection: &mut ZoneConnection, data: &CustomIpc
                             ..Default::default()
                         }),
                         ..Default::default()
-                    }],
-                    None,
-                )
-                .await;
+                    })
+                    .await;
             }
         }
         CustomIpcData::ImportCharacter {
@@ -206,12 +192,8 @@ pub async fn handle_custom_ipc(connection: &mut ZoneConnection, data: &CustomIpc
 
             // send response
             {
-                send_packet::<CustomIpcSegment>(
-                    &mut connection.socket,
-                    &mut connection.state,
-                    ConnectionType::None,
-                    CompressionType::Uncompressed,
-                    &[PacketSegment {
+                connection
+                    .send_custom_response(PacketSegment {
                         segment_type: SegmentType::KawariIpc,
                         data: SegmentData::KawariIpc(CustomIpcSegment {
                             op_code: CustomIpcType::CharacterImported,
@@ -219,10 +201,8 @@ pub async fn handle_custom_ipc(connection: &mut ZoneConnection, data: &CustomIpc
                             ..Default::default()
                         }),
                         ..Default::default()
-                    }],
-                    None,
-                )
-                .await;
+                    })
+                    .await;
             }
         }
         CustomIpcData::RemakeCharacter {
@@ -241,12 +221,8 @@ pub async fn handle_custom_ipc(connection: &mut ZoneConnection, data: &CustomIpc
 
             // send response
             {
-                send_packet::<CustomIpcSegment>(
-                    &mut connection.socket,
-                    &mut connection.state,
-                    ConnectionType::None,
-                    CompressionType::Uncompressed,
-                    &[PacketSegment {
+                connection
+                    .send_custom_response(PacketSegment {
                         segment_type: SegmentType::KawariIpc,
                         data: SegmentData::KawariIpc(CustomIpcSegment {
                             op_code: CustomIpcType::CharacterRemade,
@@ -256,10 +232,8 @@ pub async fn handle_custom_ipc(connection: &mut ZoneConnection, data: &CustomIpc
                             ..Default::default()
                         }),
                         ..Default::default()
-                    }],
-                    None,
-                )
-                .await;
+                    })
+                    .await;
             }
         }
         _ => {

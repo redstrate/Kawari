@@ -22,7 +22,7 @@ use kawari::ipc::zone::{
 };
 use kawari::packet::oodle::OodleNetwork;
 use kawari::packet::{
-    ConnectionType, PacketSegment, PacketState, SegmentData, SegmentType, send_keep_alive,
+    ConnectionState, ConnectionType, PacketSegment, SegmentData, SegmentType, send_keep_alive,
 };
 use kawari::world::{
     ChatHandler, ExtraLuaState, LuaZone, ObsfucationData, Zone, ZoneConnection, load_init_script,
@@ -1003,7 +1003,6 @@ async fn client_loop(
                                             ClientZoneIpcData::ContentFinderAction { unk1 } => {
                                                 dbg!(unk1);
 
-
                                                 // commencing
                                                 {
                                                     let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ContentFinderCommencing {
@@ -1247,10 +1246,10 @@ async fn main() {
             Ok((socket, ip)) = listener.accept() => {
                 let id = handle.next_id();
 
-                let state = PacketState {
-                    client_key: None,
+                let state = ConnectionState::Zone {
                     clientbound_oodle: OodleNetwork::new(),
                     serverbound_oodle: OodleNetwork::new(),
+                    scrambler_keys: None
                 };
 
                 spawn_client(ZoneConnection {

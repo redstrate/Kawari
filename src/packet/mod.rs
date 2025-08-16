@@ -1,6 +1,6 @@
 mod parsing;
 pub use parsing::{
-    ConnectionType, PacketHeader, PacketSegment, PacketState, SegmentData, SegmentType,
+    ConnectionState, ConnectionType, PacketHeader, PacketSegment, SegmentData, SegmentType,
     parse_packet,
 };
 

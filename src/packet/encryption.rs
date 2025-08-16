@@ -4,7 +4,7 @@ use binrw::BinResult;
 
 use crate::{GAME_VERSION, blowfish::Blowfish};
 
-use super::{IPC_HEADER_SIZE, ReadWriteIpcSegment};
+use super::{IPC_HEADER_SIZE, ReadWriteIpcSegment, parsing::ConnectionState};
 
 pub fn generate_encryption_key(key: &[u8], phrase: &str) -> [u8; 16] {
     let mut base_key = vec![0x78, 0x56, 0x34, 0x12];
@@ -17,17 +17,14 @@ pub fn generate_encryption_key(key: &[u8], phrase: &str) -> [u8; 16] {
 }
 
 #[binrw::parser(reader, endian)]
-pub(crate) fn decrypt<T: ReadWriteIpcSegment>(
-    size: u32,
-    encryption_key: Option<&[u8]>,
-) -> BinResult<T> {
-    if let Some(encryption_key) = encryption_key {
+pub(crate) fn decrypt<T: ReadWriteIpcSegment>(size: u32, state: &ConnectionState) -> BinResult<T> {
+    if let ConnectionState::Lobby { client_key } = state {
         let size = size - IPC_HEADER_SIZE;
 
         let mut data = vec![0; size as usize];
         reader.read_exact(&mut data)?;
 
-        let blowfish = Blowfish::new(encryption_key);
+        let blowfish = Blowfish::new(client_key);
         blowfish.decrypt(&mut data);
 
         let mut cursor = Cursor::new(&data);
@@ -41,9 +38,9 @@ pub(crate) fn decrypt<T: ReadWriteIpcSegment>(
 pub(crate) fn encrypt<T: ReadWriteIpcSegment>(
     value: &T,
     size: u32,
-    encryption_key: Option<&[u8]>,
+    state: &ConnectionState,
 ) -> BinResult<()> {
-    if let Some(encryption_key) = encryption_key {
+    if let ConnectionState::Lobby { client_key } = state {
         let size = size - IPC_HEADER_SIZE;
 
         let mut cursor = Cursor::new(Vec::new());
@@ -52,7 +49,7 @@ pub(crate) fn encrypt<T: ReadWriteIpcSegment>(
         let mut buffer = cursor.into_inner();
         buffer.resize(size as usize, 0);
 
-        let blowfish = Blowfish::new(encryption_key);
+        let blowfish = Blowfish::new(client_key);
         blowfish.encrypt(&mut buffer);
 
         writer.write_all(&buffer)?;

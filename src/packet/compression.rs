@@ -6,8 +6,7 @@ use binrw::{BinRead, BinResult};
 use crate::packet::{PacketHeader, PacketSegment};
 
 use super::{
-    IPC_HEADER_SIZE, PacketState, ReadWriteIpcSegment, ScramblerKeys, SegmentData,
-    oodle::OodleNetwork, scramble_packet,
+    IPC_HEADER_SIZE, ReadWriteIpcSegment, SegmentData, parsing::ConnectionState, scramble_packet,
 };
 
 #[binrw]
@@ -21,9 +20,8 @@ pub enum CompressionType {
 
 #[binrw::parser(reader, endian)]
 pub(crate) fn decompress<T: ReadWriteIpcSegment>(
-    oodle: &mut OodleNetwork,
     header: &PacketHeader,
-    encryption_key: Option<&[u8]>,
+    state: &mut ConnectionState,
 ) -> BinResult<Vec<PacketSegment<T>>> {
     let mut segments: Vec<PacketSegment<T>> = Vec::with_capacity(header.segment_count as usize);
 
@@ -35,7 +33,18 @@ pub(crate) fn decompress<T: ReadWriteIpcSegment>(
     let data = match header.compression_type {
         CompressionType::Uncompressed => data,
         CompressionType::ZLib => unimplemented!(),
-        CompressionType::Oodle => oodle.decode(data, header.uncompressed_size),
+        CompressionType::Oodle => {
+            let ConnectionState::Zone {
+                serverbound_oodle, ..
+            } = state
+            else {
+                panic!(
+                    "Unexpected connection type! It needs to be Zone when using Oodle compression."
+                );
+            };
+
+            serverbound_oodle.decode(data, header.uncompressed_size)
+        }
     };
 
     if header.compression_type == CompressionType::Oodle {
@@ -50,8 +59,7 @@ pub(crate) fn decompress<T: ReadWriteIpcSegment>(
 
     for _ in 0..header.segment_count {
         let current_position = cursor.position();
-        let segment: PacketSegment<T> =
-            PacketSegment::read_options(&mut cursor, endian, (encryption_key,))?;
+        let segment: PacketSegment<T> = PacketSegment::read_options(&mut cursor, endian, (state,))?;
 
         let is_unknown = match &segment.data {
             SegmentData::Ipc(data) => data.get_name() == "Unknown",
@@ -78,10 +86,9 @@ pub(crate) fn decompress<T: ReadWriteIpcSegment>(
 }
 
 pub(crate) fn compress<T: ReadWriteIpcSegment>(
-    state: &mut PacketState,
+    state: &mut ConnectionState,
     compression_type: &CompressionType,
     segments: &[PacketSegment<T>],
-    keys: Option<&ScramblerKeys>,
 ) -> (Vec<u8>, usize) {
     let mut segments_buffer = Vec::new();
     for segment in segments {
@@ -91,25 +98,22 @@ pub(crate) fn compress<T: ReadWriteIpcSegment>(
         {
             let mut cursor = Cursor::new(&mut buffer);
 
-            segment
-                .write_le_args(
-                    &mut cursor,
-                    (state.client_key.as_ref().map(|s: &[u8; 16]| s.as_slice()),),
-                )
-                .unwrap();
+            segment.write_le_args(&mut cursor, (state,)).unwrap();
         }
 
         // obsfucate if needed
-        if let Some(keys) = keys {
-            if let SegmentData::Ipc(data) = &segment.data {
-                let opcode = data.get_opcode();
-                let base_key = keys.get_base_key(opcode);
+        if let ConnectionState::Zone { scrambler_keys, .. } = state {
+            if let Some(keys) = scrambler_keys {
+                if let SegmentData::Ipc(data) = &segment.data {
+                    let opcode = data.get_opcode();
+                    let base_key = keys.get_base_key(opcode);
 
-                scramble_packet(
-                    data.get_name(),
-                    base_key,
-                    &mut buffer[IPC_HEADER_SIZE as usize..],
-                );
+                    scramble_packet(
+                        data.get_name(),
+                        base_key,
+                        &mut buffer[IPC_HEADER_SIZE as usize..],
+                    );
+                }
             }
         }
 
@@ -121,9 +125,20 @@ pub(crate) fn compress<T: ReadWriteIpcSegment>(
     match compression_type {
         CompressionType::Uncompressed => (segments_buffer, 0),
         CompressionType::ZLib => unimplemented!(),
-        CompressionType::Oodle => (
-            state.clientbound_oodle.encode(segments_buffer),
-            segments_buffer_len,
-        ),
+        CompressionType::Oodle => {
+            let ConnectionState::Zone {
+                clientbound_oodle, ..
+            } = state
+            else {
+                panic!(
+                    "Unexpected connection state, it needs to be Zone when using Oodle compression!"
+                );
+            };
+
+            (
+                clientbound_oodle.encode(segments_buffer),
+                segments_buffer_len,
+            )
+        }
     }
 }

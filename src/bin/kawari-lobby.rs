@@ -12,9 +12,8 @@ use kawari::lobby::LobbyConnection;
 use kawari::packet::ConnectionType;
 use kawari::packet::PacketSegment;
 use kawari::packet::SegmentType;
-use kawari::packet::oodle::OodleNetwork;
 use kawari::packet::send_custom_world_packet;
-use kawari::packet::{PacketState, SegmentData, send_keep_alive};
+use kawari::packet::{ConnectionState, SegmentData, send_keep_alive};
 use std::fs;
 use std::path::MAIN_SEPARATOR_STR;
 use tokio::io::AsyncReadExt;
@@ -223,15 +222,9 @@ async fn main() {
     loop {
         let (socket, _) = listener.accept().await.unwrap();
 
-        let state = PacketState {
-            client_key: None,
-            clientbound_oodle: OodleNetwork::new(),
-            serverbound_oodle: OodleNetwork::new(),
-        };
-
         let mut connection = LobbyConnection {
             socket,
-            state,
+            state: ConnectionState::None,
             session_id: None,
             stored_character_creation_name: String::new(),
             world_name: world_name.clone(),

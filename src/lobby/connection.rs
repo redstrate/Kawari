@@ -7,7 +7,7 @@ use crate::{
     config::get_config,
     ipc::lobby::{DistRetainerInfo, NackReply},
     packet::{
-        CompressionType, ConnectionType, PacketSegment, PacketState, SegmentData, SegmentType,
+        CompressionType, ConnectionState, ConnectionType, PacketSegment, SegmentData, SegmentType,
         generate_encryption_key, parse_packet, send_custom_world_packet, send_packet,
     },
 };
@@ -25,7 +25,7 @@ pub struct LobbyConnection {
 
     pub session_id: Option<String>,
 
-    pub state: PacketState,
+    pub state: ConnectionState,
 
     pub stored_character_creation_name: String,
 
@@ -51,7 +51,6 @@ impl LobbyConnection {
             ConnectionType::Lobby,
             CompressionType::Uncompressed,
             &[segment],
-            None,
         )
         .await;
     }
@@ -59,13 +58,15 @@ impl LobbyConnection {
     /// Send an acknowledgement to the client that we generated a valid encryption key.
     pub async fn initialize_encryption(&mut self, phrase: &str, key: &[u8; 4]) {
         // Generate an encryption key for this client
-        self.state.client_key = Some(generate_encryption_key(key, phrase));
+        let client_key = generate_encryption_key(key, phrase);
 
         let mut data = 0xE0003C2Au32.to_le_bytes().to_vec();
         data.resize(0x280, 0);
 
-        let blowfish = Blowfish::new(&self.state.client_key.unwrap());
+        let blowfish = Blowfish::new(&client_key);
         blowfish.encrypt(&mut data);
+
+        self.state = ConnectionState::Lobby { client_key };
 
         self.send_segment(PacketSegment {
             segment_type: SegmentType::SecurityInitialize,
@@ -150,7 +151,6 @@ impl LobbyConnection {
             ConnectionType::Lobby,
             CompressionType::Uncompressed,
             &packets,
-            None,
         )
         .await;
 

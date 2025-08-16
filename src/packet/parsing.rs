@@ -9,8 +9,8 @@ use crate::{
 };
 
 use super::{
-    CompressionType, compression::decompress, encryption::encrypt, ipc::ReadWriteIpcSegment,
-    oodle::OodleNetwork,
+    CompressionType, ScramblerKeys, compression::decompress, encryption::encrypt,
+    ipc::ReadWriteIpcSegment, oodle::OodleNetwork,
 };
 
 #[binrw]
@@ -53,7 +53,7 @@ pub enum SegmentType {
 }
 
 #[binrw]
-#[brw(import(kind: SegmentType, size: u32, encryption_key: Option<&[u8]>))]
+#[brw(import(kind: SegmentType, size: u32, state: &ConnectionState))]
 #[derive(Debug, Clone)]
 pub enum SegmentData<T: ReadWriteIpcSegment> {
     #[br(pre_assert(kind == SegmentType::None))]
@@ -88,8 +88,8 @@ pub enum SegmentData<T: ReadWriteIpcSegment> {
     },
     #[br(pre_assert(kind == SegmentType::Ipc))]
     Ipc(
-        #[br(parse_with = decrypt, args(size, encryption_key))]
-        #[bw(write_with = encrypt, args(size, encryption_key))]
+        #[br(parse_with = decrypt, args(size, state))]
+        #[bw(write_with = encrypt, args(size, state))]
         T,
     ),
     #[br(pre_assert(kind == SegmentType::KeepAliveRequest))]
@@ -132,7 +132,7 @@ pub struct PacketHeader {
 }
 
 #[binrw]
-#[brw(import(encryption_key: Option<&[u8]>))]
+#[brw(import(state: &ConnectionState))]
 #[derive(Debug, Clone)]
 pub struct PacketSegment<T: ReadWriteIpcSegment> {
     #[bw(calc = self.calc_size())]
@@ -141,8 +141,8 @@ pub struct PacketSegment<T: ReadWriteIpcSegment> {
     pub target_actor: u32,
     #[brw(pad_after = 2)] // padding
     pub segment_type: SegmentType,
-    #[bw(args(*segment_type, size, encryption_key))]
-    #[br(args(segment_type, size, encryption_key))]
+    #[bw(args(*segment_type, size, state))]
+    #[br(args(segment_type, size, state))]
     #[br(err_context("segment size = {}", size))]
     pub data: SegmentData<T>,
 }
@@ -177,36 +177,36 @@ impl<T: ReadWriteIpcSegment> PacketSegment<T> {
 }
 
 #[binrw]
-#[brw(import(oodle: &mut OodleNetwork, encryption_key: Option<&[u8]>))]
+#[brw(import(state: &mut ConnectionState))]
 #[derive(Debug)]
 struct Packet<T: ReadWriteIpcSegment> {
     header: PacketHeader,
-    #[bw(args(encryption_key))]
-    #[br(parse_with = decompress, args(oodle, &header, encryption_key,))]
+    #[bw(args(state))]
+    #[br(parse_with = decompress, args(&header, state,))]
     segments: Vec<PacketSegment<T>>,
 }
 
-// temporary
-/// State needed for each connection between the client & server, containing various things like the compressor and encryption keys.
-pub struct PacketState {
-    pub client_key: Option<[u8; 16]>,
-    pub serverbound_oodle: OodleNetwork,
-    pub clientbound_oodle: OodleNetwork,
+/// State needed for each connection between the client & server, containing various things like the compressor or encryption keys.
+pub enum ConnectionState {
+    /// Used for stateless connections.
+    None,
+    /// Used for the Lobby connection.
+    Lobby { client_key: [u8; 16] },
+    /// Used for the Zone connection.
+    Zone {
+        serverbound_oodle: OodleNetwork,
+        clientbound_oodle: OodleNetwork,
+        scrambler_keys: Option<ScramblerKeys>,
+    },
 }
 
 pub fn parse_packet<T: ReadWriteIpcSegment>(
     data: &[u8],
-    state: &mut PacketState,
+    state: &mut ConnectionState,
 ) -> (Vec<PacketSegment<T>>, ConnectionType) {
     let mut cursor = Cursor::new(data);
 
-    match Packet::read_le_args(
-        &mut cursor,
-        (
-            &mut state.serverbound_oodle,
-            state.client_key.as_ref().map(|s: &[u8; 16]| s.as_slice()),
-        ),
-    ) {
+    match Packet::read_le_args(&mut cursor, (state,)) {
         Ok(packet) => (packet.segments, packet.header.connection_type),
         Err(err) => {
             tracing::error!("{err}");

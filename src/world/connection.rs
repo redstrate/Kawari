@@ -22,6 +22,7 @@ use crate::{
     inventory::{BuyBackList, ContainerType, Inventory, Item, Storage},
     ipc::{
         chat::ServerChatIpcSegment,
+        kawari::CustomIpcSegment,
         zone::{
             client::{ActionRequest, ClientZoneIpcSegment},
             server::{
@@ -37,8 +38,8 @@ use crate::{
     },
     opcodes::ServerZoneIpcType,
     packet::{
-        CompressionType, ConnectionType, OBFUSCATION_ENABLED_MODE, PacketSegment, PacketState,
-        ScramblerKeyGenerator, ScramblerKeys, SegmentData, SegmentType, parse_packet, send_packet,
+        CompressionType, ConnectionState, ConnectionType, OBFUSCATION_ENABLED_MODE, PacketSegment,
+        ScramblerKeyGenerator, SegmentData, SegmentType, parse_packet, send_packet,
     },
 };
 
@@ -142,7 +143,6 @@ pub struct PlayerData {
 /// Various obsfucation-related bits like the seeds and keys for this connection.
 #[derive(Debug, Default, Clone)]
 pub struct ObsfucationData {
-    pub keys: Option<ScramblerKeys>,
     pub seed1: u8,
     pub seed2: u8,
     pub seed3: u32,
@@ -153,7 +153,7 @@ pub struct ZoneConnection {
     pub config: WorldConfig,
     pub socket: TcpStream,
 
-    pub state: PacketState,
+    pub state: ConnectionState,
     pub player_data: PlayerData,
 
     pub zone: Option<Zone>,
@@ -219,7 +219,6 @@ impl ZoneConnection {
                 CompressionType::Uncompressed
             },
             &[segment],
-            self.obsfucation_data.keys.as_ref(),
         )
         .await;
     }
@@ -236,7 +235,17 @@ impl ZoneConnection {
                 CompressionType::Uncompressed
             },
             &[segment],
-            self.obsfucation_data.keys.as_ref(),
+        )
+        .await;
+    }
+
+    pub async fn send_custom_response(&mut self, segment: PacketSegment<CustomIpcSegment>) {
+        send_packet(
+            &mut self.socket,
+            &mut self.state,
+            ConnectionType::None,
+            CompressionType::Uncompressed,
+            &[segment],
         )
         .await;
     }
@@ -252,7 +261,6 @@ impl ZoneConnection {
                 CompressionType::Uncompressed
             },
             &[segment],
-            self.obsfucation_data.keys.as_ref(),
         )
         .await;
     }
@@ -437,11 +445,15 @@ impl ZoneConnection {
             let generator = ScramblerKeyGenerator::new();
 
             self.obsfucation_data = ObsfucationData {
-                keys: Some(generator.generate(seed1, seed2, seed3)),
                 seed1,
                 seed2,
                 seed3,
             };
+
+            let ConnectionState::Zone { scrambler_keys, .. } = &mut self.state else {
+                panic!("Unexpected connection type!");
+            };
+            *scrambler_keys = Some(generator.generate(seed1, seed2, seed3));
 
             tracing::info!(
                 "You enabled packet obsfucation in your World config, things will break! {:?}",
