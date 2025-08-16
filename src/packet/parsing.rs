@@ -17,9 +17,13 @@ use super::{
 #[brw(repr = u16)]
 #[derive(Debug, PartialEq)]
 pub enum ConnectionType {
+    /// An invalid connection.
     None = 0x0,
+    /// The zone connection.
     Zone = 0x1,
+    /// The chat connection.
     Chat = 0x2,
+    /// The lobby connection.
     Lobby = 0x3,
 }
 
@@ -27,19 +31,24 @@ pub enum ConnectionType {
 #[brw(repr = u16)]
 #[derive(Debug, PartialEq, Copy, Clone, Default)]
 pub enum SegmentType {
+    /// An invalid segment.
     #[default]
     None = 0x0,
+    /// Used to tell the server to setup a connection.
     Setup = 0x1,
+    /// Used to tell the client that the server has setup their connection and it's ready to use.
     Initialize = 0x2,
-    // Also known as "UPLAYER"
+    /// Used for everything interesting, e.g. game actions. Has it's own completely separate opcodes and structure.
     Ipc = 0x3,
+    /// Sent to begin keep alives and needs a KeepAliveResponse.
     KeepAliveRequest = 0x7,
+    /// Sent to respond to KeepAliveRequest.
     KeepAliveResponse = 0x8,
-    // Also known as "SECSETUP"
+    /// Sent to the server which gives it the required phrase and key to communicate with the client.
     SecuritySetup = 0x9,
-    // Also known as "SECINIT"
+    /// Sent to the client to initialize and confirm the encryption key.
     SecurityInitialize = 0xA,
-    // This isn't in retail!
+    /// Segment used internally in Kawari for IPC.
     KawariIpc = 0xAAAA,
 }
 
