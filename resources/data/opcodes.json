@@ -413,6 +413,12 @@
             "comment": "Sent shortly after the server sends InitZone, this with UnkZoneLoad1 it makes everything load faster.",
             "opcode": 879,
             "size": 8
+        },
+        {
+            "name": "Linkshells",
+            "comment": "Sent to inform the client about server-local Linkshells, not to be confused with cross-world ones.",
+            "opcode": 811,
+            "size": 448
         }
     ],
     "ClientZoneIpcType": [
