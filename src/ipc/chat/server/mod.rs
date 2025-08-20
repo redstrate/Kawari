@@ -78,32 +78,11 @@ mod tests {
             ),
             (
                 ServerChatIpcType::TellMessage,
-                ServerChatIpcData::TellMessage(TellMessage {
-                    sender_account_id: 0,
-                    unk2: 0,
-                    unk3: 0,
-                    unk4: 0,
-                    sender_world_id: 0,
-                    flags: 0,
-                    sender_name: "".to_string(),
-                    message: "".to_string(),
-                }),
+                ServerChatIpcData::TellMessage(TellMessage::default()),
             ),
             (
                 ServerChatIpcType::PartyMessage,
-                ServerChatIpcData::PartyMessage(PartyMessage {
-                    party_id: 0,
-                    sender_account_id: 0,
-                    unk1: 0,
-                    unk2: 0,
-                    unk3: 0,
-                    unk4: 0,
-
-                    sender_actor_id: 0,
-                    sender_world_id: 0,
-                    sender_name: "".to_string(),
-                    message: "".to_string(),
-                }),
+                ServerChatIpcData::PartyMessage(PartyMessage::default()),
             ),
         ];
 

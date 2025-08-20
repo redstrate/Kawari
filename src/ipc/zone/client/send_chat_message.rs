@@ -3,7 +3,7 @@ use binrw::binrw;
 use crate::common::{ChatChannel, Position, read_string, write_string};
 
 #[binrw]
-#[derive(Debug, Clone, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct SendChatMessage {
     #[brw(pad_before = 4)] // empty
     pub actor_id: u32,

@@ -3,7 +3,7 @@ use binrw::binrw;
 use crate::common::{ChatChannel, read_string, write_string};
 
 #[binrw]
-#[derive(Debug, Clone, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct ChatMessage {
     pub sender_account_id: u32,
     pub unk2: u32,

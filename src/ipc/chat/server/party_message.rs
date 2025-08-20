@@ -3,7 +3,7 @@ use binrw::binrw;
 use crate::common::{read_string, write_string};
 
 #[binrw]
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug, Default)]
 pub struct PartyMessage {
     pub party_id: u64,
     pub sender_account_id: u32,
