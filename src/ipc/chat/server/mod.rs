@@ -6,6 +6,12 @@ use crate::{
     packet::{IPC_HEADER_SIZE, IpcSegment, ReadWriteIpcOpcode, ReadWriteIpcSegment},
 };
 
+mod tell_message;
+pub use tell_message::TellMessage;
+
+mod party_message;
+pub use party_message::PartyMessage;
+
 pub type ServerChatIpcSegment = IpcSegment<ServerChatIpcType, ServerChatIpcData>;
 
 impl ReadWriteIpcSegment for ServerChatIpcSegment {
@@ -35,6 +41,8 @@ pub enum ServerChatIpcData {
         timestamp: u32,
         sid: u32,
     },
+    TellMessage(TellMessage),
+    PartyMessage(PartyMessage),
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -66,7 +74,37 @@ mod tests {
                 timestamp: 0,
                 sid: 0,
             },
-        )];
+        ),
+        (
+            ServerChatIpcType::TellMessage,
+            ServerChatIpcData::TellMessage(TellMessage {
+                sender_account_id: 0,
+                unk2: 0,
+                unk3: 0,
+                unk4: 0,
+                sender_world_id: 0,
+                flags: 0,
+                sender_name: "".to_string(),
+                message: "".to_string(),
+            }),
+        ),
+        (
+            ServerChatIpcType::PartyMessage,
+            ServerChatIpcData::PartyMessage(PartyMessage {
+                party_id: 0,
+                sender_account_id: 0,
+                unk1: 0,
+                unk2: 0,
+                unk3: 0,
+                unk4: 0,
+
+                sender_actor_id: 0,
+                sender_world_id: 0,
+                sender_name: "".to_string(),
+                message: "".to_string(),
+            }),
+        ),
+    ];
 
         for (opcode, ipc) in &ipc_types {
             let mut cursor = Cursor::new(Vec::new());

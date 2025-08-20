@@ -56,7 +56,7 @@
         },
         {
             "name": "ServerChatMessage",
-            "comment": "Sent by the server when they send a chat message.",
+            "comment": "Sent by the server when they send a chat message. Usually used for login messages and imminent maintenance notices.",
             "opcode": 449,
             "size": 776
         },
@@ -231,7 +231,7 @@
             "name": "ActorControlTarget",
             "comment": "Used to control target information.",
             "opcode": 391,
-            "size": 28
+            "size": 32
         },
         {
             "name": "CurrencyCrystalInfo",
@@ -419,6 +419,12 @@
             "comment": "Sent to inform the client about server-local Linkshells, not to be confused with cross-world ones.",
             "opcode": 811,
             "size": 448
+        },
+        {
+            "name": "ChatMessage",
+            "comment": "Sent to nearby clients when a client sends a chat message in the say, yell, or shout channels.",
+            "opcode": 298,
+            "size": 1080
         }
     ],
     "ClientZoneIpcType": [
@@ -478,13 +484,13 @@
         },
         {
             "name": "Disconnected",
-            "comment": "Sent by the client when it's actually disconnecting",
+            "comment": "Sent by the client when it's actually disconnecting.",
             "opcode": 897,
             "size": 8
         },
         {
-            "name": "ChatMessage",
-            "comment": "Sent by the client when they send a chat message",
+            "name": "SendChatMessage",
+            "comment": "Sent by the client when they send a chat message.",
             "opcode": 563,
             "size": 1056
         },
@@ -729,7 +735,32 @@
             "comment": "Sent by the server to Initialize something chat-related?",
             "opcode": 2,
             "size": 8
+        },
+        {
+            "name": "TellMessage",
+            "comment": "Sent by the server in response to a client sending a private message to another client.",
+            "opcode": 100,
+            "size": 1080
+        },
+        {
+            "name": "PartyMessage",
+            "comment": "Sent by the server in response to a client sending a private message to another client.",
+            "opcode": 101,
+            "size": 1088
         }
     ],
-    "ClientChatIpcType": []
+    "ClientChatIpcType": [
+        {
+            "name": "SendTellMessage",
+            "comment": "Sent by the client when sending a private message to another client.",
+            "opcode": 100,
+            "size": 1080
+        },
+        {
+            "name": "SendPartyMessage",
+            "comment": "Sent by the client when sending a message to party chat.",
+            "opcode": 101,
+            "size": 1032
+        }
+    ]
 }

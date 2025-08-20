@@ -212,7 +212,7 @@ impl Default for ActorControlSelf {
 #[binrw]
 #[derive(Debug, Clone)]
 pub struct ActorControlTarget {
-    #[brw(pad_size_to = 28)] // take into account categories without params
+    #[brw(pad_size_to = 32)] // take into account categories without params
     pub category: ActorControlCategory,
 }
 
