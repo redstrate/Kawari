@@ -1,5 +1,3 @@
-// TODO: use tiles
-
 use std::{io::Cursor, ptr::null_mut};
 
 use binrw::{BinRead, BinWrite, binrw};
