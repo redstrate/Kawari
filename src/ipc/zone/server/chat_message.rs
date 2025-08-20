@@ -1,6 +1,6 @@
 use binrw::binrw;
 
-use crate::common::{ChatChannel, /*Position,*/ read_string, write_string};
+use crate::common::{ChatChannel, read_string, write_string};
 
 #[binrw]
 #[derive(Debug, Clone, Default)]

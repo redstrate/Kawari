@@ -10,12 +10,15 @@ pub struct TellMessage {
     pub unk3: u32,
     pub unk4: u32,
     pub sender_world_id: u16,
-    pub flags: u8, // If it's a GM tell or not
+    /// Indicates if it's a GM tell or not.
+    pub flags: u8,
+
     #[br(count = 32)]
     #[bw(pad_size_to = 32)]
     #[br(map = read_string)]
     #[bw(map = write_string)]
     pub sender_name: String,
+
     #[br(count = 1024)]
     #[bw(pad_size_to = 1024)]
     #[br(map = read_string)]

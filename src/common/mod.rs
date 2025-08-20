@@ -198,7 +198,8 @@ pub enum DistanceRange {
 #[brw(repr(u16))]
 #[derive(Debug, Clone, Eq, PartialEq, Default)]
 pub enum ChatChannel {
-    #[default] Say = 10,
+    #[default]
+    Say = 10,
     Shout = 11,
     Yell = 30,
 }

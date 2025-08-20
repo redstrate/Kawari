@@ -68,43 +68,44 @@ mod tests {
     /// Ensure that the IPC data size as reported matches up with what we write
     #[test]
     fn server_chat_ipc_sizes() {
-        let ipc_types = [(
-            ServerChatIpcType::LoginReply,
-            ServerChatIpcData::LoginReply {
-                timestamp: 0,
-                sid: 0,
-            },
-        ),
-        (
-            ServerChatIpcType::TellMessage,
-            ServerChatIpcData::TellMessage(TellMessage {
-                sender_account_id: 0,
-                unk2: 0,
-                unk3: 0,
-                unk4: 0,
-                sender_world_id: 0,
-                flags: 0,
-                sender_name: "".to_string(),
-                message: "".to_string(),
-            }),
-        ),
-        (
-            ServerChatIpcType::PartyMessage,
-            ServerChatIpcData::PartyMessage(PartyMessage {
-                party_id: 0,
-                sender_account_id: 0,
-                unk1: 0,
-                unk2: 0,
-                unk3: 0,
-                unk4: 0,
+        let ipc_types = [
+            (
+                ServerChatIpcType::LoginReply,
+                ServerChatIpcData::LoginReply {
+                    timestamp: 0,
+                    sid: 0,
+                },
+            ),
+            (
+                ServerChatIpcType::TellMessage,
+                ServerChatIpcData::TellMessage(TellMessage {
+                    sender_account_id: 0,
+                    unk2: 0,
+                    unk3: 0,
+                    unk4: 0,
+                    sender_world_id: 0,
+                    flags: 0,
+                    sender_name: "".to_string(),
+                    message: "".to_string(),
+                }),
+            ),
+            (
+                ServerChatIpcType::PartyMessage,
+                ServerChatIpcData::PartyMessage(PartyMessage {
+                    party_id: 0,
+                    sender_account_id: 0,
+                    unk1: 0,
+                    unk2: 0,
+                    unk3: 0,
+                    unk4: 0,
 
-                sender_actor_id: 0,
-                sender_world_id: 0,
-                sender_name: "".to_string(),
-                message: "".to_string(),
-            }),
-        ),
-    ];
+                    sender_actor_id: 0,
+                    sender_world_id: 0,
+                    sender_name: "".to_string(),
+                    message: "".to_string(),
+                }),
+            ),
+        ];
 
         for (opcode, ipc) in &ipc_types {
             let mut cursor = Cursor::new(Vec::new());

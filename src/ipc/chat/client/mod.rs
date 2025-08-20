@@ -64,17 +64,15 @@ mod tests {
     /// Ensure that the IPC data size as reported matches up with what we write
     #[test]
     fn client_chat_ipc_sizes() {
-        let ipc_types = [
-            (
-                ClientChatIpcType::SendTellMessage,
-                ClientChatIpcData::SendTellMessage(SendTellMessage {
-                    origin_world_id: 0,
-                    recipient_world_id: 0,
-                    recipient_name: "".to_string(),
-                    message: "".to_string(),
-                }),
-            ),
-        ];
+        let ipc_types = [(
+            ClientChatIpcType::SendTellMessage,
+            ClientChatIpcData::SendTellMessage(SendTellMessage {
+                origin_world_id: 0,
+                recipient_world_id: 0,
+                recipient_name: "".to_string(),
+                message: "".to_string(),
+            }),
+        )];
 
         for (opcode, ipc) in &ipc_types {
             let mut cursor = Cursor::new(Vec::new());
