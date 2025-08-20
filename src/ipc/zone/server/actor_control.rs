@@ -17,34 +17,40 @@ pub enum ActorControlCategory {
         #[bw(map = write_bool_as::<u32>)]
         shown: bool,
     },
+
+    #[brw(magic = 15u32)]
+    CancelCast {},
+
+    #[brw(magic = 17u32)]
+    Cooldown { unk1: u32, unk2: u32, unk3: u32 },
+
+    #[brw(magic = 20u32)]
+    GainEffect {
+        effect_id: u32,
+        param: u32,
+        source_actor_id: ObjectId,
+    },
+
+    #[brw(magic = 21u32)]
+    LoseEffect {
+        effect_id: u32,
+        unk2: u32,
+        source_actor_id: ObjectId,
+    },
+
+    #[brw(magic = 24u32)]
+    UpdateRestedExp { exp: u32 },
+
+    #[brw(magic = 27u32)]
+    Flee { speed: u16 },
+
     #[brw(magic = 38u32)]
     ToggleInvisibility {
         #[br(map = read_bool_from::<u32>)]
         #[bw(map = write_bool_as::<u32>)]
         invisible: bool,
     },
-    #[brw(magic = 200u32)]
-    ZoneIn {
-        warp_finish_anim: u32,
-        raise_anim: u32,
-    },
-    #[brw(magic = 608u32)]
-    SetEquipDisplayFlags { display_flag: EquipDisplayFlag },
-    #[brw(magic = 504u32)]
-    SetStatusIcon { icon: OnlineStatus },
-    #[brw(magic = 609u32)]
-    ToggleWireframeRendering(),
-    #[brw(magic = 50u32)]
-    SetTarget { actor_id: ObjectId },
-    #[brw(magic = 295u32)]
-    Pose { unk1: u32, pose: u32 },
-    #[brw(magic = 509u32)]
-    LearnTeleport {
-        id: u32,
-        #[br(map = read_bool_from::<u32>)]
-        #[bw(map = write_bool_as::<u32>)]
-        unlocked: bool,
-    },
+
     #[brw(magic = 41u32)]
     ToggleUnlock {
         /// Corresponds to an UnlockLink. Could be a spell, action, emote, etc.
@@ -54,17 +60,93 @@ pub enum ActorControlCategory {
         #[bw(map = write_bool_as::<u32>)]
         unlocked: bool,
     },
+
+    #[brw(magic = 50u32)]
+    SetTarget { actor_id: ObjectId },
+
+    #[brw(magic = 131u32)]
+    UnlockInstanceContent {
+        /// Index into InstanceContent Excel sheet
+        id: u32,
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        unlocked: bool,
+    },
+
     #[brw(magic = 138u32)]
     EventRelatedUnk3 { event_id: u32 },
+
+    #[brw(magic = 200u32)]
+    ZoneIn {
+        warp_finish_anim: u32,
+        raise_anim: u32,
+    },
+
     #[brw(magic = 203u32)]
     TeleportStart {
         insufficient_gil: u32,
         aetheryte_id: u32,
     },
-    #[brw(magic = 27u32)]
-    Flee { speed: u16 },
+
     #[brw(magic = 236u32)]
     WalkInTriggerRelatedUnk3 { unk1: u32 },
+
+    #[brw(magic = 253u32)]
+    CompanionUnlock {
+        unk1: u32,
+        unk2: u32, // unlocked?
+    },
+
+    #[brw(magic = 260u32)]
+    WalkInTriggerRelatedUnk2 {
+        unk1: u32,
+        unk2: u32,
+        unk3: u32,
+        /// Usually 7?
+        unk4: u32,
+    },
+
+    #[brw(magic = 274u32)]
+    UpdateHater { unk1: u32 },
+
+    #[brw(magic = 295u32)]
+    Pose { unk1: u32, pose: u32 },
+
+    #[brw(magic = 263u32)]
+    WalkInTriggerRelatedUnk1 { unk1: u32 },
+
+    #[brw(magic = 290u32)]
+    Emote { emote: u32 },
+
+    #[brw(magic = 378u32)]
+    PlayerCurrency { unk1: u32, unk2: u32, unk3: u32 },
+
+    #[brw(magic = 504u32)]
+    SetStatusIcon { icon: OnlineStatus },
+
+    #[brw(magic = 509u32)]
+    LearnTeleport {
+        id: u32,
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        unlocked: bool,
+    },
+
+    #[brw(magic = 511u32)]
+    EventRelatedUnk1 { unk1: u32 },
+
+    #[brw(magic = 512u32)]
+    EventRelatedUnk2 { unk1: u32 },
+
+    #[brw(magic = 521u32)]
+    SetItemLevel { level: u32 },
+
+    #[brw(magic = 608u32)]
+    SetEquipDisplayFlags { display_flag: EquipDisplayFlag },
+
+    #[brw(magic = 609u32)]
+    ToggleWireframeRendering(),
+
     #[brw(magic = 902u32)]
     SetFestival {
         festival1: u32, // Multiple festivals can be set at the same time.
@@ -72,8 +154,7 @@ pub enum ActorControlCategory {
         festival3: u32,
         festival4: u32,
     },
-    #[brw(magic = 15u32)]
-    CancelCast {},
+
     #[brw(magic = 918u32)]
     ToggleOrchestrionUnlock {
         song_id: u16,
@@ -84,57 +165,7 @@ pub enum ActorControlCategory {
         #[bw(map = write_bool_as::<u32>)]
         unlocked: bool,
     },
-    #[brw(magic = 290u32)]
-    Emote { emote: u32 },
-    #[brw(magic = 511u32)]
-    EventRelatedUnk1 { unk1: u32 },
-    #[brw(magic = 512u32)]
-    EventRelatedUnk2 { unk1: u32 },
-    #[brw(magic = 131u32)]
-    UnlockInstanceContent {
-        /// Index into InstanceContent Excel sheet
-        id: u32,
-        #[br(map = read_bool_from::<u32>)]
-        #[bw(map = write_bool_as::<u32>)]
-        unlocked: bool,
-    },
-    #[brw(magic = 378u32)]
-    PlayerCurrency { unk1: u32, unk2: u32, unk3: u32 },
-    #[brw(magic = 521u32)]
-    SetItemLevel { level: u32 },
-    #[brw(magic = 274u32)]
-    UpdateHater { unk1: u32 },
-    #[brw(magic = 253u32)]
-    CompanionUnlock {
-        unk1: u32,
-        unk2: u32, // unlocked?
-    },
-    #[brw(magic = 24u32)]
-    UpdateRestedExp { exp: u32 },
-    #[brw(magic = 21u32)]
-    LoseEffect {
-        effect_id: u32,
-        unk2: u32,
-        source_actor_id: ObjectId,
-    },
-    #[brw(magic = 20u32)]
-    GainEffect {
-        effect_id: u32,
-        param: u32,
-        source_actor_id: ObjectId,
-    },
-    #[brw(magic = 17u32)]
-    Cooldown { unk1: u32, unk2: u32, unk3: u32 },
-    #[brw(magic = 260u32)]
-    WalkInTriggerRelatedUnk2 {
-        unk1: u32,
-        unk2: u32,
-        unk3: u32,
-        /// Usually 7?
-        unk4: u32,
-    },
-    #[brw(magic = 263u32)]
-    WalkInTriggerRelatedUnk1 { unk1: u32 },
+
     Unknown {
         category: u32,
         param1: u32,
