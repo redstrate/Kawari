@@ -11,101 +11,71 @@ use super::OnlineStatus;
 #[binrw]
 #[derive(Debug, Eq, PartialEq, Clone, IntoStaticStr)]
 pub enum ActorControlCategory {
-    #[brw(magic = 0x0u16)]
+    #[brw(magic = 0u32)]
     ToggleWeapon {
-        #[brw(pad_before = 2)]
         #[br(map = read_bool_from::<u32>)]
         #[bw(map = write_bool_as::<u32>)]
         shown: bool,
     },
-    #[brw(magic = 0x26u16)]
+    #[brw(magic = 38u32)]
     ToggleInvisibility {
-        #[brw(pad_before = 2)]
         #[br(map = read_bool_from::<u32>)]
         #[bw(map = write_bool_as::<u32>)]
         invisible: bool,
     },
-    #[brw(magic = 0xC8u16)]
+    #[brw(magic = 200u32)]
     ZoneIn {
-        #[brw(pad_before = 2)]
         warp_finish_anim: u32,
         raise_anim: u32,
     },
-    #[brw(magic = 0x260u16)]
-    SetEquipDisplayFlags {
-        #[brw(pad_before = 2)]
-        display_flag: EquipDisplayFlag,
-    },
-    #[brw(magic = 0x01F8u16)]
-    SetStatusIcon {
-        #[brw(pad_before = 2)]
-        icon: OnlineStatus,
-    },
-    #[brw(magic = 0x261u16)]
+    #[brw(magic = 608u32)]
+    SetEquipDisplayFlags { display_flag: EquipDisplayFlag },
+    #[brw(magic = 504u32)]
+    SetStatusIcon { icon: OnlineStatus },
+    #[brw(magic = 609u32)]
     ToggleWireframeRendering(),
-    #[brw(magic = 0x32u16)]
-    SetTarget {
-        #[brw(pad_before = 22)] // actually full of info, and 2 bytes of padding at the beginning
-        actor_id: ObjectId,
-    },
-    #[brw(magic = 0x127u16)]
-    Pose {
-        #[brw(pad_before = 2)] //padding
-        unk1: u32,
-        pose: u32,
-    },
-    #[brw(magic = 0x1FDu16)]
+    #[brw(magic = 50u32)]
+    SetTarget { actor_id: ObjectId },
+    #[brw(magic = 295u32)]
+    Pose { unk1: u32, pose: u32 },
+    #[brw(magic = 509u32)]
     LearnTeleport {
-        #[brw(pad_before = 2)] //padding
         id: u32,
         #[br(map = read_bool_from::<u32>)]
         #[bw(map = write_bool_as::<u32>)]
         unlocked: bool,
     },
-    #[brw(magic = 0x29u16)]
+    #[brw(magic = 41u32)]
     ToggleUnlock {
         /// Corresponds to an UnlockLink. Could be a spell, action, emote, etc.
         // See https://github.com/Haselnussbomber/HaselDebug/blob/main/HaselDebug/Tabs/UnlocksTabs/UnlockLinks/UnlockLinksTable.cs
-        #[brw(pad_before = 2)] //padding
         id: u32,
         #[br(map = read_bool_from::<u32>)]
         #[bw(map = write_bool_as::<u32>)]
         unlocked: bool,
     },
-    #[brw(magic = 0x8Au16)]
-    EventRelatedUnk3 {
-        #[brw(pad_before = 2)] //padding
-        event_id: u32,
-    },
-    #[brw(magic = 0xCBu16)]
+    #[brw(magic = 138u32)]
+    EventRelatedUnk3 { event_id: u32 },
+    #[brw(magic = 203u32)]
     TeleportStart {
-        #[brw(pad_before = 2)] //padding
         insufficient_gil: u32,
         aetheryte_id: u32,
     },
-    #[brw(magic = 0x1Bu16)]
-    Flee {
-        #[brw(pad_before = 2)] // padding
-        speed: u16,
-    },
-    #[brw(magic = 0xECu16)]
-    WalkInTriggerRelatedUnk3 {
-        #[brw(pad_before = 2)] // padding
-        unk1: u32,
-    },
-    #[brw(magic = 0x386u16)]
+    #[brw(magic = 27u32)]
+    Flee { speed: u16 },
+    #[brw(magic = 236u32)]
+    WalkInTriggerRelatedUnk3 { unk1: u32 },
+    #[brw(magic = 902u32)]
     SetFestival {
-        #[brw(pad_before = 2)] // padding
         festival1: u32, // Multiple festivals can be set at the same time.
         festival2: u32,
         festival3: u32,
         festival4: u32,
     },
-    #[brw(magic = 0xFu16)]
+    #[brw(magic = 15u32)]
     CancelCast {},
-    #[brw(magic = 0x396u16)]
+    #[brw(magic = 918u32)]
     ToggleOrchestrionUnlock {
-        #[brw(pad_before = 2)] // padding
         song_id: u16,
         /* TODO: guessed, Sapphire suggests it's an u32 item id,
         * but it behaves as an unlock boolean like aetherytes, so
@@ -114,96 +84,59 @@ pub enum ActorControlCategory {
         #[bw(map = write_bool_as::<u32>)]
         unlocked: bool,
     },
-    #[brw(magic = 0x122u16)]
-    Emote {
-        #[brw(pad_before = 2)] // padding
-        emote: u32,
-    },
-    #[brw(magic = 0x1ffu16)]
-    EventRelatedUnk1 {
-        #[brw(pad_before = 2)] // padding
-        unk1: u32,
-    },
-    #[brw(magic = 0x200u16)]
-    EventRelatedUnk2 {
-        #[brw(pad_before = 2)] // padding
-        unk1: u32,
-    },
-    #[brw(magic = 0x83u16)]
+    #[brw(magic = 290u32)]
+    Emote { emote: u32 },
+    #[brw(magic = 511u32)]
+    EventRelatedUnk1 { unk1: u32 },
+    #[brw(magic = 512u32)]
+    EventRelatedUnk2 { unk1: u32 },
+    #[brw(magic = 131u32)]
     UnlockInstanceContent {
-        #[brw(pad_before = 2)] // padding
         /// Index into InstanceContent Excel sheet
         id: u32,
         #[br(map = read_bool_from::<u32>)]
         #[bw(map = write_bool_as::<u32>)]
         unlocked: bool,
     },
-    #[brw(magic = 0x17Au16)]
-    PlayerCurrency {
-        #[brw(pad_before = 2)] // padding
-        unk1: u32,
-        unk2: u32,
-        unk3: u32,
-    },
-    #[brw(magic = 0x209u16)]
-    SetItemLevel {
-        #[brw(pad_before = 2)] // padding
-        level: u32,
-    },
-    #[brw(magic = 0x112u16)]
-    UpdateHater {
-        #[brw(pad_before = 2)] // padding
-        unk1: u32,
-    },
-    #[brw(magic = 0xFDu16)]
+    #[brw(magic = 378u32)]
+    PlayerCurrency { unk1: u32, unk2: u32, unk3: u32 },
+    #[brw(magic = 521u32)]
+    SetItemLevel { level: u32 },
+    #[brw(magic = 274u32)]
+    UpdateHater { unk1: u32 },
+    #[brw(magic = 253u32)]
     CompanionUnlock {
-        #[brw(pad_before = 2)] // padding
         unk1: u32,
         unk2: u32, // unlocked?
     },
-    #[brw(magic = 0x18u16)]
-    UpdateRestedExp {
-        #[brw(pad_before = 2)] // padding
-        exp: u32,
-    },
-    #[brw(magic = 0x15u16)]
+    #[brw(magic = 24u32)]
+    UpdateRestedExp { exp: u32 },
+    #[brw(magic = 21u32)]
     LoseEffect {
-        #[brw(pad_before = 2)] // padding
         effect_id: u32,
         unk2: u32,
         source_actor_id: ObjectId,
     },
-    #[brw(magic = 0x14u16)]
+    #[brw(magic = 20u32)]
     GainEffect {
-        #[brw(pad_before = 2)] // padding
         effect_id: u32,
         param: u32,
         source_actor_id: ObjectId,
     },
-    #[brw(magic = 0x11u16)]
-    Cooldown {
-        #[brw(pad_before = 2)] // padding
-        unk1: u32,
-        unk2: u32,
-        unk3: u32,
-    },
-    #[brw(magic = 0x104u16)]
+    #[brw(magic = 17u32)]
+    Cooldown { unk1: u32, unk2: u32, unk3: u32 },
+    #[brw(magic = 260u32)]
     WalkInTriggerRelatedUnk2 {
-        #[brw(pad_before = 2)] // padding
         unk1: u32,
         unk2: u32,
         unk3: u32,
         /// Usually 7?
         unk4: u32,
     },
-    #[brw(magic = 0x107u16)]
-    WalkInTriggerRelatedUnk1 {
-        #[brw(pad_before = 2)] // padding
-        unk1: u32,
-    },
+    #[brw(magic = 263u32)]
+    WalkInTriggerRelatedUnk1 { unk1: u32 },
     Unknown {
-        category: u16,
-        #[brw(pad_before = 2)] // padding
+        category: u32,
         param1: u32,
         param2: u32,
         param3: u32,
