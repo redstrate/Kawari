@@ -46,7 +46,7 @@ pub enum ActorControlCategory {
     #[brw(magic = 0x32u16)]
     SetTarget {
         #[brw(pad_before = 22)] // actually full of info, and 2 bytes of padding at the beginning
-        actor_id: u32,
+        actor_id: ObjectId,
     },
     #[brw(magic = 0x127u16)]
     Pose {

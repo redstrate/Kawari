@@ -18,7 +18,7 @@ pub enum ClientTriggerCommand {
     #[brw(magic = 0x0003u16)]
     SetTarget {
         #[brw(pad_before = 2)]
-        actor_id: u32,
+        actor_id: ObjectId,
     },
     /// When the player right-clicks their status effect to remove it.
     #[brw(magic = 0x0068u16)]
@@ -117,7 +117,9 @@ pub struct ClientTrigger {
 impl Default for ClientTrigger {
     fn default() -> Self {
         Self {
-            trigger: ClientTriggerCommand::SetTarget { actor_id: 0 },
+            trigger: ClientTriggerCommand::SetTarget {
+                actor_id: ObjectId::default(),
+            },
         }
     }
 }

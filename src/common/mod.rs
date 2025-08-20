@@ -19,12 +19,35 @@ pub mod workdefinitions;
 
 #[binrw]
 #[brw(little)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ObjectId(pub u32);
+
+impl ObjectId {
+    /// Returns true if it points to a *valid-looking* object id.
+    fn is_valid(&self) -> bool {
+        *self != INVALID_OBJECT_ID
+    }
+}
 
 impl Default for ObjectId {
     fn default() -> Self {
         INVALID_OBJECT_ID
+    }
+}
+
+impl std::fmt::Display for ObjectId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.is_valid() {
+            write!(f, "{}", self.0)
+        } else {
+            write!(f, "INVALID_ACTOR")
+        }
+    }
+}
+
+impl std::fmt::Debug for ObjectId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "ObjectId ({})", self)
     }
 }
 
