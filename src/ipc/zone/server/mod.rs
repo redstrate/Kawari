@@ -79,6 +79,9 @@ pub use effect_result::{EffectEntry, EffectResult};
 mod condition;
 pub use condition::{Condition, Conditions};
 
+mod chat_message;
+pub use chat_message::ChatMessage;
+
 use crate::COMPLETED_LEVEQUEST_BITMASK_SIZE;
 use crate::COMPLETED_QUEST_BITMASK_SIZE;
 use crate::TITLE_UNLOCK_BITMASK_SIZE;
@@ -458,6 +461,7 @@ pub enum ServerZoneIpcData {
         // TODO: fill this out, each entry appears to be 56 bytes long.
         unk: [u8; 448],
     },
+    ChatMessage(ChatMessage),
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,

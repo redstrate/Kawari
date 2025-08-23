@@ -6,6 +6,12 @@ use crate::{
     packet::{IPC_HEADER_SIZE, IpcSegment, ReadWriteIpcOpcode, ReadWriteIpcSegment},
 };
 
+mod tell_message;
+pub use tell_message::TellMessage;
+
+mod party_message;
+pub use party_message::PartyMessage;
+
 pub type ServerChatIpcSegment = IpcSegment<ServerChatIpcType, ServerChatIpcData>;
 
 impl ReadWriteIpcSegment for ServerChatIpcSegment {
@@ -35,6 +41,8 @@ pub enum ServerChatIpcData {
         timestamp: u32,
         sid: u32,
     },
+    TellMessage(TellMessage),
+    PartyMessage(PartyMessage),
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -60,13 +68,23 @@ mod tests {
     /// Ensure that the IPC data size as reported matches up with what we write
     #[test]
     fn server_chat_ipc_sizes() {
-        let ipc_types = [(
-            ServerChatIpcType::LoginReply,
-            ServerChatIpcData::LoginReply {
-                timestamp: 0,
-                sid: 0,
-            },
-        )];
+        let ipc_types = [
+            (
+                ServerChatIpcType::LoginReply,
+                ServerChatIpcData::LoginReply {
+                    timestamp: 0,
+                    sid: 0,
+                },
+            ),
+            (
+                ServerChatIpcType::TellMessage,
+                ServerChatIpcData::TellMessage(TellMessage::default()),
+            ),
+            (
+                ServerChatIpcType::PartyMessage,
+                ServerChatIpcData::PartyMessage(PartyMessage::default()),
+            ),
+        ];
 
         for (opcode, ipc) in &ipc_types {
             let mut cursor = Cursor::new(Vec::new());

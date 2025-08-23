@@ -4,7 +4,7 @@ use crate::{
     ERR_INVENTORY_ADD_FAILED, ITEM_CONDITION_MAX,
     common::ItemInfoQuery,
     inventory::{Item, Storage},
-    ipc::zone::client::ChatMessage,
+    ipc::zone::client::SendChatMessage,
     ipc::zone::server::{Condition, Conditions, GameMasterRank},
     world::{EventFinishType, ToServer},
 };
@@ -17,7 +17,7 @@ impl ChatHandler {
     /// Returns true if the command is handled, otherwise false.
     pub async fn handle_chat_message(
         connection: &mut ZoneConnection,
-        chat_message: &ChatMessage,
+        chat_message: &SendChatMessage,
     ) -> bool {
         if connection.player_data.gm_rank == GameMasterRank::NormalUser {
             tracing::info!("Rejecting debug command because the user is not GM!");

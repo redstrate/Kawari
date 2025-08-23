@@ -462,7 +462,7 @@ async fn client_loop(
 
                                                 break;
                                             }
-                                            ClientZoneIpcData::ChatMessage(chat_message) => {
+                                            ClientZoneIpcData::SendChatMessage(chat_message) => {
                                                 connection.handle.send(ToServer::Message(connection.id, chat_message.message.clone())).await;
 
                                                 let mut handled = false;

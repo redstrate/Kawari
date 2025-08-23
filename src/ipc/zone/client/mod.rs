@@ -4,8 +4,8 @@ use paramacro::opcode_data;
 mod action_request;
 pub use crate::ipc::zone::client::action_request::ActionRequest;
 
-mod chat_message;
-pub use chat_message::ChatMessage;
+mod send_chat_message;
+pub use send_chat_message::SendChatMessage;
 
 mod client_trigger;
 pub use crate::ipc::zone::client::client_trigger::{ClientTrigger, ClientTriggerCommand};
@@ -102,7 +102,7 @@ pub enum ClientZoneIpcData {
         // TODO: full of possibly interesting information
         unk: [u8; 8],
     },
-    ChatMessage(ChatMessage),
+    SendChatMessage(SendChatMessage),
     GMCommand {
         command: u32,
         arg0: u32,
@@ -329,8 +329,8 @@ mod tests {
                 ClientZoneIpcData::Disconnected { unk: [0; 8] },
             ),
             (
-                ClientZoneIpcType::ChatMessage,
-                ClientZoneIpcData::ChatMessage(ChatMessage::default()),
+                ClientZoneIpcType::SendChatMessage,
+                ClientZoneIpcData::SendChatMessage(SendChatMessage::default()),
             ),
             (
                 ClientZoneIpcType::GMCommand,
