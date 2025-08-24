@@ -1315,6 +1315,43 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     );
                 });
             }
+            ToServer::ZoneIn(from_id, from_actor_id, is_teleport) => {
+                // Inform all clients to play the zone in animation
+                let mut network = network.lock().unwrap();
+                for (id, (handle, _)) in &mut network.clients {
+                    let id = *id;
+
+                    if id == from_id {
+                        let msg = FromServer::ActorControlSelf(ActorControlSelf {
+                            category: ActorControlCategory::ZoneIn {
+                                warp_finish_anim: 1,
+                                raise_anim: 0,
+                                unk1: if is_teleport { 110 } else { 0 },
+                            },
+                        });
+
+                        if handle.send(msg).is_err() {
+                            to_remove.push(id);
+                        }
+                    } else {
+                        // FIXME: do you see teleport animations from other players?
+                        let msg = FromServer::ActorControl(
+                            from_actor_id,
+                            ActorControl {
+                                category: ActorControlCategory::ZoneIn {
+                                    warp_finish_anim: 1,
+                                    raise_anim: 0,
+                                    unk1: 0,
+                                },
+                            },
+                        );
+
+                        if handle.send(msg).is_err() {
+                            to_remove.push(id);
+                        }
+                    }
+                }
+            }
             ToServer::Disconnected(from_id) => {
                 let mut network = network.lock().unwrap();
 

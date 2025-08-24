@@ -78,8 +78,13 @@ pub enum ActorControlCategory {
 
     #[brw(magic = 200u32)]
     ZoneIn {
+        /// When set to 1, it slowly fades the character in.
         warp_finish_anim: u32,
+        /// When set to 1, it plays the effects *and* animation for raising.
         raise_anim: u32,
+        /// If set to 110, then it plays the "we teleported here" animation.
+        #[brw(pad_before = 4)] // empty
+        unk1: u32,
     },
 
     #[brw(magic = 203u32)]

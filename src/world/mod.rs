@@ -5,7 +5,7 @@ mod chat_handler;
 pub use chat_handler::ChatHandler;
 
 mod connection;
-pub use connection::{ExtraLuaState, ObsfucationData, PlayerData, ZoneConnection};
+pub use connection::{ExtraLuaState, ObsfucationData, PlayerData, TeleportReason, ZoneConnection};
 
 mod database;
 pub use database::{CharacterData, WorldDatabase};

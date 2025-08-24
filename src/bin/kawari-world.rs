@@ -24,7 +24,7 @@ use kawari::packet::{
     ConnectionState, ConnectionType, PacketSegment, SegmentData, SegmentType, send_keep_alive,
 };
 use kawari::world::{
-    ChatHandler, ExtraLuaState, ObsfucationData, ZoneConnection, load_init_script,
+    ChatHandler, ExtraLuaState, ObsfucationData, TeleportReason, ZoneConnection, load_init_script,
 };
 use kawari::world::{
     ClientHandle, EventFinishType, FromServer, LuaPlayer, PlayerData, ServerHandle, StatusEffects,
@@ -383,18 +383,22 @@ async fn client_loop(
                                                         connection.send_ipc_self(ipc).await;
                                                     },
                                                     ClientTriggerCommand::FinishZoning {} => {
-                                                        let lua = lua.lock().unwrap();
-                                                        lua.scope(|scope| {
-                                                            let connection_data =
-                                                            scope.create_userdata_ref_mut(&mut lua_player).unwrap();
+                                                        {
+                                                            let lua = lua.lock().unwrap();
+                                                            lua.scope(|scope| {
+                                                                let connection_data =
+                                                                scope.create_userdata_ref_mut(&mut lua_player).unwrap();
 
-                                                            let func: Function = lua.globals().get("onFinishZoning").unwrap();
+                                                                let func: Function = lua.globals().get("onFinishZoning").unwrap();
 
-                                                            func.call::<()>(connection_data).unwrap();
+                                                                func.call::<()>(connection_data).unwrap();
 
-                                                            Ok(())
-                                                        })
-                                                        .unwrap();
+                                                                Ok(())
+                                                            })
+                                                            .unwrap();
+                                                        }
+
+                                                        connection.handle.send(ToServer::ZoneIn(connection.id, connection.player_data.actor_id, connection.player_data.teleport_reason == TeleportReason::Aetheryte)).await;
                                                     }
                                                     _ => {
                                                         // inform the server of our trigger, it will handle sending it to other clients

@@ -24,6 +24,7 @@ use crate::{
         chat::ServerChatIpcSegment,
         kawari::CustomIpcSegment,
         zone::{
+            DisplayFlag,
             client::{ActionRequest, ClientZoneIpcSegment},
             server::{
                 ActionEffect, ActionResult, ActorControl, ActorControlCategory, ActorControlSelf,
@@ -103,6 +104,14 @@ impl Default for UnlockData {
     }
 }
 
+#[derive(Debug, Default, Clone, PartialEq)]
+pub enum TeleportReason {
+    #[default]
+    NotSpecified,
+    /// Teleporting/Returning to an Aetheryte or shared
+    Aetheryte,
+}
+
 #[derive(Debug, Default, Clone)]
 pub struct PlayerData {
     // Static data
@@ -138,6 +147,7 @@ pub struct PlayerData {
     pub unlocks: UnlockData,
     pub saw_inn_wakeup: bool,
     pub display_flags: EquipDisplayFlag,
+    pub teleport_reason: TeleportReason,
 }
 
 /// Various obsfucation-related bits like the seeds and keys for this connection.
@@ -396,6 +406,7 @@ impl ZoneConnection {
 
     /// Request the global server state to change our zone.
     pub async fn change_zone(&mut self, new_zone_id: u16) {
+        self.player_data.teleport_reason = TeleportReason::NotSpecified;
         self.handle
             .send(ToServer::ChangeZone(
                 self.id,
@@ -519,12 +530,14 @@ impl ZoneConnection {
     }
 
     pub async fn warp(&mut self, warp_id: u32) {
+        self.player_data.teleport_reason = TeleportReason::NotSpecified;
         self.handle
             .send(ToServer::Warp(self.id, self.player_data.actor_id, warp_id))
             .await;
     }
 
     pub async fn warp_aetheryte(&mut self, aetheryte_id: u32) {
+        self.player_data.teleport_reason = TeleportReason::Aetheryte;
         self.handle
             .send(ToServer::WarpAetheryte(
                 self.id,
@@ -1167,7 +1180,7 @@ impl ZoneConnection {
             level: self.current_level(&game_data) as u8,
             object_kind: ObjectKind::Player(PlayerSubKind::Player),
             look: chara_details.chara_make.customize,
-            display_flags: self.player_data.display_flags.into(),
+            display_flags: DisplayFlag::INVISIBLE, //, self.player_data.display_flags.into(),
             main_weapon_model: inventory.get_main_weapon_id(&mut game_data),
             models: inventory.get_model_ids(&mut game_data),
             pos: exit_position.unwrap_or_default(),
