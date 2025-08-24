@@ -346,4 +346,11 @@ mod tests {
             concat!("resources/data/tests/lobby/server/", $rel_path)
         };
     }
+
+    #[macro_export]
+    macro_rules! patch_tests_dir {
+        ($rel_path:literal) => {
+            concat!("resources/data/tests/patch/", $rel_path)
+        };
+    }
 }

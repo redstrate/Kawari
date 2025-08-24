@@ -212,7 +212,8 @@ impl Default for ActorControlSelf {
 #[binrw]
 #[derive(Debug, Clone)]
 pub struct ActorControlTarget {
-    #[brw(pad_size_to = 32)] // take into account categories without params, TODO: investigate if the last 4 bytes are padding or a possible 7th param
+    #[brw(pad_size_to = 32)]
+    // take into account categories without params, TODO: investigate if the last 4 bytes are padding or a possible 7th param
     pub category: ActorControlCategory,
 }
 

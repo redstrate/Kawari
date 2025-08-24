@@ -1,5 +1,4 @@
 use std::cmp::Ordering;
-use std::fs::read_dir;
 
 use axum::extract::Path;
 use axum::http::{HeaderMap, StatusCode, Uri};
@@ -7,62 +6,10 @@ use axum::response::IntoResponse;
 use axum::routing::post;
 use axum::{Router, routing::get};
 use kawari::config::get_config;
-use kawari::patch::Version;
+use kawari::patch::{Version, list_patch_files};
 use kawari::{SUPPORTED_BOOT_VERSION, SUPPORTED_GAME_VERSION, get_supported_expac_versions};
 use physis::patchlist::{PatchEntry, PatchList, PatchListType};
 use reqwest::header::USER_AGENT;
-
-fn list_patch_files(dir_path: &str) -> Vec<String> {
-    // If the dir doesn't exist, pretend there is no patch files
-    let Ok(dir) = read_dir(dir_path) else {
-        return Vec::new();
-    };
-    let mut entries: Vec<_> = dir.flatten().collect();
-    entries.sort_by_key(|dir| dir.path());
-    let mut game_patches: Vec<_> = entries
-        .into_iter()
-        .flat_map(|entry| {
-            let Ok(meta) = entry.metadata() else {
-                return vec![];
-            };
-            if meta.is_dir() {
-                return vec![];
-            }
-            if meta.is_file() && entry.file_name().to_str().unwrap().contains(".patch") {
-                return vec![entry.path()];
-            }
-            vec![]
-        })
-        .collect();
-    game_patches.sort_by(|a, b| {
-        // Ignore H/D in front of filenames
-        let a_path = a
-            .as_path()
-            .file_name()
-            .unwrap()
-            .to_str()
-            .unwrap()
-            .to_string();
-        if a_path.starts_with("H") {
-            return Ordering::Less;
-        }
-        let b_path = b
-            .as_path()
-            .file_name()
-            .unwrap()
-            .to_str()
-            .unwrap()
-            .to_string();
-        /*if b_path.starts_with("H") {
-            return Ordering::Greater;
-        }*/
-        a_path.partial_cmp(&b_path).unwrap()
-    }); // ensure we're actually installing them in the correct order
-    game_patches
-        .iter()
-        .map(|x| x.file_stem().unwrap().to_str().unwrap().to_string())
-        .collect()
-}
 
 /// Check if it's a valid patch client connecting
 fn check_valid_patch_client(headers: &HeaderMap) -> bool {
