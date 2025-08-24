@@ -1,6 +1,10 @@
 //! Obfuscation-related structures and procedures. This is based on the ever fantastic work of Perchbird and his Unscrambler: https://github.com/perchbirdd/Unscrambler
 //! This is simply a Rust-reimplementation of Unscrambler.
 
+use std::num::Wrapping;
+
+use crate::common::CHAR_NAME_MAX_LENGTH;
+
 /// Constant to enable packet obfuscation. Changes every patch.
 pub const OBFUSCATION_ENABLED_MODE: u8 = 21;
 
@@ -122,85 +126,86 @@ impl ScramblerKeys {
     }
 }
 
+pub unsafe fn unscramble_add<T: Copy + Sized>(data: &mut [u8], offset: usize, key: T)
+where
+    Wrapping<T>: std::ops::Add<Wrapping<T>, Output = Wrapping<T>>,
+{
+    unsafe {
+        let ptr = data.as_mut_ptr().add(offset);
+
+        let ptr_casted = ptr as *mut T;
+        let wrapped_key = Wrapping(key);
+        let wrapped_value = Wrapping(*ptr_casted);
+
+        *ptr_casted = (wrapped_value + wrapped_key).0;
+    }
+}
+
+pub unsafe fn unscramble_xor<T: Copy + Sized>(data: &mut [u8], offset: usize, key: T)
+where
+    Wrapping<T>: std::ops::BitXor<Wrapping<T>, Output = Wrapping<T>>,
+{
+    unsafe {
+        let ptr = data.as_mut_ptr().add(offset);
+
+        let ptr_casted = ptr as *mut T;
+        let wrapped_key = Wrapping(key);
+        let wrapped_value = Wrapping(*ptr_casted);
+
+        *ptr_casted = (wrapped_key ^ wrapped_value).0;
+    }
+}
+
 /// Scrambles the packet in just the right ways.
 /// Not the greatest thing I ever implemented, it just copies what Unscrambler does. There might be a better way of doing this.
 pub fn scramble_packet(opcode_name: &str, base_key: u8, opcode_based_key: i32, data: &mut [u8]) {
-    // NOTE: All offsets begin after the IPC segment header
-
     unsafe {
         match opcode_name {
             "PlayerSpawn" => {
                 // content id
-                *std::mem::transmute::<&mut [u8; 8], &mut u64>(
-                    &mut data[24..32].try_into().unwrap(),
-                ) += base_key as u64;
+                unscramble_add::<u64>(data, 24, base_key as u64);
                 // home world
-                *std::mem::transmute::<&mut [u8; 2], &mut u16>(
-                    &mut data[36..38].try_into().unwrap(),
-                ) += base_key as u16;
+                unscramble_add::<u16>(data, 36, base_key as u16);
                 // current world
-                *std::mem::transmute::<&mut [u8; 2], &mut u16>(
-                    &mut data[38..40].try_into().unwrap(),
-                ) += base_key as u16;
+                unscramble_add::<u16>(data, 38, base_key as u16);
 
                 // name
                 let name_offset = 610;
-                for i in 0..32 {
-                    data[(name_offset + i) as usize] =
-                        data[(name_offset + i) as usize].wrapping_add(base_key);
+                for i in 0..CHAR_NAME_MAX_LENGTH {
+                    unscramble_add::<u8>(data, name_offset + i, base_key);
                 }
 
                 // equipment
                 let equip_offset = 556;
-                let int_key_to_use = base_key as u32 + opcode_based_key as u32;
+                let int_key_to_use = base_key as i32 + opcode_based_key;
                 for i in 0..10 {
-                    let offset = equip_offset + i * 4;
-                    *std::mem::transmute::<&mut [u8; 4], &mut u32>(
-                        &mut data[offset as usize..offset as usize + 4]
-                            .try_into()
-                            .unwrap(),
-                    ) ^= int_key_to_use;
+                    let offset = equip_offset + i * std::mem::size_of::<i32>();
+                    unscramble_xor::<i32>(data, offset, int_key_to_use);
                 }
             }
             "NpcSpawn" => {
-                // TODO: note what these fields are
-                *std::mem::transmute::<&mut [u8; 4], &mut u32>(
-                    &mut data[80..84].try_into().unwrap(),
-                ) += base_key as u32;
-                *std::mem::transmute::<&mut [u8; 4], &mut u32>(
-                    &mut data[84..88].try_into().unwrap(),
-                ) += base_key as u32;
-                *std::mem::transmute::<&mut [u8; 4], &mut u32>(
-                    &mut data[88..92].try_into().unwrap(),
-                ) += base_key as u32;
-                *std::mem::transmute::<&mut [u8; 4], &mut u32>(
-                    &mut data[96..100].try_into().unwrap(),
-                ) += base_key as u32;
-                *std::mem::transmute::<&mut [u8; 4], &mut u32>(
-                    &mut data[100..104].try_into().unwrap(),
-                ) += base_key as u32;
-                let weird_const = 0xF1E2D9C8;
-                *std::mem::transmute::<&mut [u8; 4], &mut u32>(
-                    &mut data[108..112].try_into().unwrap(),
-                ) ^= weird_const;
+                // TODO: note what these fields are and upstream said comments
+                unscramble_add::<u32>(data, 80, base_key as u32);
+                unscramble_add::<u32>(data, 84, base_key as u32);
+                unscramble_add::<u32>(data, 88, base_key as u32);
+                unscramble_add::<u32>(data, 96, base_key as u32);
+                unscramble_add::<u32>(data, 100, base_key as u32);
+
+                unscramble_xor::<u32>(data, 108, opcode_based_key as u32);
 
                 // ops?
-                /*let op_offset = 168;
+                let op_offset = 168;
                 for i in 0..30 {
                     let offset = op_offset + i * 22;
-                    *std::mem::transmute::<&mut [u8; 2], &mut u16>(&mut data[offset as usize..offset as usize + 2].try_into().unwrap()) += base_key as u16;
-                }*/
+                    unscramble_add::<u16>(data, offset, base_key as u16);
+                }
             }
             "Equip" => {
                 let op_offset = 36;
                 let int_key_to_use = base_key as i32 + opcode_based_key;
                 for i in 0..10 {
-                    let offset = op_offset + i * 4;
-                    *std::mem::transmute::<&mut [u8; 4], &mut i32>(
-                        &mut data[offset as usize..offset as usize + 4]
-                            .try_into()
-                            .unwrap(),
-                    ) ^= int_key_to_use;
+                    let offset = op_offset + i * std::mem::size_of::<i32>();
+                    unscramble_xor::<i32>(data, offset, int_key_to_use);
                 }
             }
             _ => {}
