@@ -55,6 +55,8 @@ pub struct ItemInfo {
     pub equip_category: u8,
     /// The item's primary model id.
     pub primary_model_id: u64,
+    /// The item's sub model id.
+    pub sub_model_id: u64,
     /// The item's max stack size.
     pub stack_size: u32,
     /// The item's item level.
@@ -228,6 +230,10 @@ impl GameData {
                 panic!("Unexpected type!");
             };
 
+            let physis::exd::ColumnData::UInt64(sub_model_id) = &matched_row.columns[48] else {
+                panic!("Unexpected type!");
+            };
+
             let item_info = ItemInfo {
                 id: *item_id,
                 name: name.to_string(),
@@ -235,6 +241,7 @@ impl GameData {
                 price_low: *price_low,
                 equip_category: *equip_category,
                 primary_model_id: *primary_model_id,
+                sub_model_id: *sub_model_id,
                 stack_size: *stack_size,
                 item_level: *item_level,
             };
@@ -245,10 +252,19 @@ impl GameData {
         None
     }
 
-    /// Gets the primary model ID for a given item ID
+    /// Gets the primary model ID for a given item ID.
     pub fn get_primary_model_id(&mut self, item_id: u32) -> Option<u64> {
         if let Some(item_info) = self.get_item_info(ItemInfoQuery::ById(item_id)) {
             return Some(item_info.primary_model_id);
+        }
+
+        None
+    }
+
+    /// Gets the sub model ID for a given item ID.
+    pub fn get_sub_model_id(&mut self, item_id: u32) -> Option<u64> {
+        if let Some(item_info) = self.get_item_info(ItemInfoQuery::ById(item_id)) {
+            return Some(item_info.sub_model_id);
         }
 
         None

@@ -402,6 +402,17 @@ impl Inventory {
             .unwrap_or(0)
     }
 
+    pub fn get_sub_weapon_id(&self, game_data: &mut GameData) -> u64 {
+        // Use sub model from main hand (if available), e.g. quivers for bows. Otherwise fall back to off-hand, e.g. shields.
+        if let Some(model) = game_data.get_sub_model_id(self.equipped.main_hand.apparent_id()) {
+            model
+        } else {
+            game_data
+                .get_sub_model_id(self.equipped.off_hand.apparent_id())
+                .unwrap_or(0)
+        }
+    }
+
     pub fn get_model_ids(&self, game_data: &mut GameData) -> [u32; 10] {
         [
             game_data

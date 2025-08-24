@@ -542,7 +542,7 @@ impl WorldDatabase {
                     content_finder_condition: 0,
                     customize: query.chara_make.customize,
                     model_main_weapon: query.inventory.get_main_weapon_id(game_data),
-                    model_sub_weapon: 0,
+                    model_sub_weapon: query.inventory.get_sub_weapon_id(game_data) as i32,
                     model_ids: query.inventory.get_model_ids(game_data),
                     equip_stain: [0; 10],
                     glasses: [0; 2],

@@ -1182,6 +1182,7 @@ impl ZoneConnection {
             look: chara_details.chara_make.customize,
             display_flags: DisplayFlag::INVISIBLE, //, self.player_data.display_flags.into(),
             main_weapon_model: inventory.get_main_weapon_id(&mut game_data),
+            sec_weapon_model: inventory.get_sub_weapon_id(&mut game_data),
             models: inventory.get_model_ids(&mut game_data),
             pos: exit_position.unwrap_or_default(),
             rotation: exit_rotation.unwrap_or(0.0),
