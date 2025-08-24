@@ -158,19 +158,6 @@ pub fn timestamp_msecs() -> u64 {
         .unwrap()
 }
 
-/// Gets the initial zone for a given city-state id
-pub fn determine_initial_starting_zone(citystate_id: u8) -> u16 {
-    match citystate_id {
-        // Limsa
-        1 => 128,
-        // Gridania
-        2 => 132,
-        // Ul'dah
-        3 => 130,
-        _ => panic!("This is not a valid city-state id!"),
-    }
-}
-
 pub fn value_to_flag_byte_index_value(in_value: u32) -> (u8, u16) {
     let bit_index = in_value % 8;
     (1 << bit_index, (in_value / 8) as u16)
