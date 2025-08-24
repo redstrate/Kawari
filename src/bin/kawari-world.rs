@@ -313,8 +313,6 @@ async fn client_loop(
 
                                                 connection.send_quest_information().await;
 
-                                                connection.handle.send(ToServer::ReadySpawnPlayer(connection.id, connection.player_data.zone_id, connection.player_data.position, connection.player_data.rotation)).await;
-
                                                 let lua = lua.lock().unwrap();
                                                 lua.scope(|scope| {
                                                     let connection_data =
@@ -322,7 +320,7 @@ async fn client_loop(
 
                                                     let func: Function = lua.globals().get("onBeginLogin").unwrap();
 
-                                                    func.call::<()>(connection_data).unwrap();
+                                                    func.call::<()>((connection_data, connection.player_data.zone_id)).unwrap();
 
                                                     Ok(())
                                                 })
@@ -330,6 +328,21 @@ async fn client_loop(
                                             }
                                             ClientZoneIpcData::FinishLoading { .. } => {
                                                 let common = connection.get_player_common_spawn(connection.exit_position, connection.exit_rotation);
+
+                                                {
+                                                    let lua = lua.lock().unwrap();
+                                                    lua.scope(|scope| {
+                                                        let connection_data =
+                                                        scope.create_userdata_ref_mut(&mut lua_player).unwrap();
+
+                                                        let func: Function = lua.globals().get("onFinishZoning").unwrap();
+
+                                                        func.call::<()>(connection_data).unwrap();
+
+                                                        Ok(())
+                                                    })
+                                                    .unwrap();
+                                                }
 
                                                 // tell the server we loaded into the zone, so it can start sending us actors
                                                 connection.handle.send(ToServer::ZoneLoaded(connection.id, connection.player_data.zone_id, common.clone())).await;

@@ -50,4 +50,4 @@ GM_RANK_MAX = 255 -- Doesn't exist, used for purposes of testing permissions in 
 BED_EVENT_HANDLER = 720916
 BED_CUTSCENE_FLAGS = 4165480179 -- TODO: remove this hardcode
 BED_SCENE_WAKEUP_ANIM = 00100
-ZONE_INTENDED_USE_INN = 2
+ZONE_INTENDED_USE_OPENING_AREA = 6
