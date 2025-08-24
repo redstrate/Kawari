@@ -345,18 +345,20 @@ fn server_logic_tick(data: &mut WorldServer, network: &mut NetworkState) {
                     *current_path_lerp += (10.0 / distance).clamp(0.0, 1.0);
                 }
 
-                let target_pos = target_actor_pos[&current_target.unwrap()];
-                let distance = Position::distance(spawn.common.pos, target_pos);
-                let needs_repath = current_path.is_empty() && distance > 5.0; // TODO: confirm distance this in retail
-                if needs_repath && current_target.is_some() {
-                    let current_pos = spawn.common.pos;
-                    *current_path = instance
-                        .navmesh
-                        .calculate_path(
-                            [current_pos.x, current_pos.y, current_pos.z],
-                            [target_pos.x, target_pos.y, target_pos.z],
-                        )
-                        .into();
+                if target_actor_pos.contains_key(&current_target.unwrap()) {
+                    let target_pos = target_actor_pos[&current_target.unwrap()];
+                    let distance = Position::distance(spawn.common.pos, target_pos);
+                    let needs_repath = current_path.is_empty() && distance > 5.0; // TODO: confirm distance this in retail
+                    if needs_repath && current_target.is_some() {
+                        let current_pos = spawn.common.pos;
+                        *current_path = instance
+                            .navmesh
+                            .calculate_path(
+                                [current_pos.x, current_pos.y, current_pos.z],
+                                [target_pos.x, target_pos.y, target_pos.z],
+                            )
+                            .into();
+                    }
                 }
 
                 // update common spawn
