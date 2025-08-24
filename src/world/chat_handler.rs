@@ -4,8 +4,11 @@ use crate::{
     ERR_INVENTORY_ADD_FAILED, ITEM_CONDITION_MAX,
     common::ItemInfoQuery,
     inventory::{Item, Storage},
-    ipc::zone::client::SendChatMessage,
-    ipc::zone::server::{Condition, Conditions, GameMasterRank},
+    ipc::zone::{
+        ActorControlCategory, ActorControlSelf,
+        client::SendChatMessage,
+        server::{Condition, Conditions, GameMasterRank},
+    },
     world::{EventFinishType, ToServer},
 };
 
@@ -152,6 +155,43 @@ impl ChatHandler {
                 connection.conditions = Conditions::default();
                 connection.send_conditions().await;
                 connection.send_message("Conditions cleared!").await;
+
+                true
+            }
+            "!acs" => {
+                let parts: Vec<&str> = chat_message.message.split(' ').collect();
+
+                connection
+                    .actor_control_self(ActorControlSelf {
+                        category: ActorControlCategory::Unknown {
+                            category: parts.get(1).cloned().unwrap().parse().unwrap(),
+                            param1: parts
+                                .get(2)
+                                .cloned()
+                                .unwrap_or_default()
+                                .parse()
+                                .unwrap_or_default(),
+                            param2: parts
+                                .get(3)
+                                .cloned()
+                                .unwrap_or_default()
+                                .parse()
+                                .unwrap_or_default(),
+                            param3: parts
+                                .get(4)
+                                .cloned()
+                                .unwrap_or_default()
+                                .parse()
+                                .unwrap_or_default(),
+                            param4: parts
+                                .get(5)
+                                .cloned()
+                                .unwrap_or_default()
+                                .parse()
+                                .unwrap_or_default(),
+                        },
+                    })
+                    .await;
 
                 true
             }
