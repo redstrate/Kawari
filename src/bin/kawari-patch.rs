@@ -85,19 +85,60 @@ async fn verify_session(
             return StatusCode::INTERNAL_SERVER_ERROR.into_response();
         }
 
-        if game_version < SUPPORTED_GAME_VERSION {
-            tracing::warn!(
-                "{game_version} is below supported game version {SUPPORTED_GAME_VERSION}!"
-            );
-            return StatusCode::INTERNAL_SERVER_ERROR.into_response();
-        }
-
         // If we are up to date, yay!
         if game_version == SUPPORTED_GAME_VERSION {
             let mut headers = HeaderMap::new();
             headers.insert("X-Patch-Unique-Id", sid.parse().unwrap());
 
             return (headers).into_response();
+        }
+
+        // Their game version is too old, serve them patch files
+        let mut send_patches = Vec::new();
+        let patches = list_patch_files(&format!("{}/game", &config.patch.patches_location));
+        let mut patch_length = 0;
+        for patch in patches {
+            let patch_str: &str = &patch;
+            if game_version.0.partial_cmp(patch_str).unwrap() == Ordering::Less {
+                let file = std::fs::File::open(&*format!(
+                    "{}/game/{}.patch",
+                    &config.patch.patches_location, patch_str
+                ))
+                .unwrap();
+                let metadata = file.metadata().unwrap();
+
+                send_patches.push(PatchEntry {
+                    url: format!("http://{}/game/{}.patch", config.patch.patch_dl_url, patch)
+                        .to_string(),
+                    version: patch_str.to_string(),
+                    hash_block_size: 0,
+                    length: metadata.len() as i64,
+                    size_on_disk: metadata.len() as i64, // NOTE: wrong but it should be fine to lie
+                    hashes: vec![],
+                    unknown_a: 19,
+                    unknown_b: 18,
+                });
+                patch_length += metadata.len();
+            }
+        }
+
+        if !send_patches.is_empty() {
+            headers.insert(
+                "Content-Type",
+                "multipart/mixed; boundary=477D80B1_38BC_41d4_8B48_5273ADB89CAC"
+                    .parse()
+                    .unwrap(),
+            );
+
+            let patch_list = PatchList {
+                id: "477D80B1_38BC_41d4_8B48_5273ADB89CAC".to_string(),
+                requested_version: game_version.to_string().clone(),
+                content_location: format!("ffxivpatch/4e9232b/metainfo/{}.http", game_version.0), // FIXME: i think this is actually supposed to be the target version
+                patch_length,
+                patches: send_patches,
+            };
+            let patch_list_str = patch_list.to_string(PatchListType::Game);
+            return (headers, patch_list_str).into_response();
         }
     }
 
@@ -200,7 +241,6 @@ async fn verify_boot(
                 patches: send_patches,
             };
             let patch_list_str = patch_list.to_string(PatchListType::Boot);
-            dbg!(&patch_list_str);
             return (headers, patch_list_str).into_response();
         }
     }
