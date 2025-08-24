@@ -18,6 +18,7 @@ pub struct ScramblerKeyGenerator {
     table2: &'static [i32],
     mid_table: &'static [u8],
     day_table: &'static [u8],
+    opcode_key_table: &'static [i32],
     table_radixes: &'static [i32],
     table_max: &'static [i32],
 }
@@ -44,6 +45,9 @@ impl ScramblerKeyGenerator {
                 ))),
                 mid_table: include_bytes!(scrambler_dir!("midtable.bin")),
                 day_table: include_bytes!(scrambler_dir!("daytable.bin")),
+                opcode_key_table: std::mem::transmute::<&[u8], &[i32]>(include_bytes!(
+                    scrambler_dir!("opcodekeytable.bin")
+                )),
 
                 // TODO: is it possible to calculate these automatically?
                 table_radixes: &[120, 93, 112],
@@ -91,6 +95,7 @@ impl ScramblerKeyGenerator {
                 self.derive(1, neg_seed_1, neg_seed_2, neg_seed_3),
                 self.derive(2, neg_seed_1, neg_seed_2, neg_seed_3),
             ],
+            opcode_key_table: self.opcode_key_table,
         }
     }
 }
@@ -99,6 +104,8 @@ impl ScramblerKeyGenerator {
 #[derive(Debug, Clone)]
 pub struct ScramblerKeys {
     keys: [u8; 3],
+    // TODO: maybe move somewhere else?
+    opcode_key_table: &'static [i32],
 }
 
 impl ScramblerKeys {
@@ -106,11 +113,18 @@ impl ScramblerKeys {
     pub fn get_base_key(&self, opcode: u16) -> u8 {
         self.keys[(opcode % 3) as usize]
     }
+
+    /// Fetches the opcode-based key from the table. This changes every patch.
+    pub fn get_opcode_based_key(&self, opcode: u16) -> i32 {
+        let base_key = self.get_base_key(opcode);
+        let index = (opcode as usize + base_key as usize) % self.opcode_key_table.len();
+        return self.opcode_key_table[index];
+    }
 }
 
 /// Scrambles the packet in just the right ways.
 /// Not the greatest thing I ever implemented, it just copies what Unscrambler does. There might be a better way of doing this.
-pub fn scramble_packet(opcode_name: &str, base_key: u8, data: &mut [u8]) {
+pub fn scramble_packet(opcode_name: &str, base_key: u8, opcode_based_key: i32, data: &mut [u8]) {
     // NOTE: All offsets begin after the IPC segment header
 
     unsafe {
@@ -138,7 +152,7 @@ pub fn scramble_packet(opcode_name: &str, base_key: u8, data: &mut [u8]) {
 
                 // equipment
                 let equip_offset = 556;
-                let int_key_to_use = base_key as u32 + 118426275;
+                let int_key_to_use = base_key as u32 + opcode_based_key as u32;
                 for i in 0..10 {
                     let offset = equip_offset + i * 4;
                     *std::mem::transmute::<&mut [u8; 4], &mut u32>(
@@ -179,7 +193,7 @@ pub fn scramble_packet(opcode_name: &str, base_key: u8, data: &mut [u8]) {
             }
             "Equip" => {
                 let op_offset = 36;
-                let int_key_to_use = base_key as i32 - 863169860;
+                let int_key_to_use = base_key as i32 + opcode_based_key;
                 for i in 0..10 {
                     let offset = op_offset + i * 4;
                     *std::mem::transmute::<&mut [u8; 4], &mut i32>(

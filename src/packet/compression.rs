@@ -110,10 +110,12 @@ pub(crate) fn compress<T: ReadWriteIpcSegment>(
             if let SegmentData::Ipc(data) = &segment.data {
                 let opcode = data.get_opcode();
                 let base_key = keys.get_base_key(opcode);
+                let opcode_based_key = keys.get_opcode_based_key(opcode);
 
                 scramble_packet(
                     data.get_name(),
                     base_key,
+                    opcode_based_key,
                     &mut buffer[IPC_HEADER_SIZE as usize..],
                 );
             }
