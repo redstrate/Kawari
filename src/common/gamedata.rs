@@ -664,7 +664,7 @@ impl GameData {
 
     /// Returns the internal script name for this Opening event.
     pub fn get_opening_name(&mut self, opening_id: u32) -> String {
-        let sheet = OpeningSheet::read_from(&mut self.resource, Language::English).unwrap();
+        let sheet = OpeningSheet::read_from(&mut self.resource, Language::None).unwrap();
         let row = sheet.get_row(opening_id).unwrap();
 
         row.Name().into_string().cloned().unwrap_or_default()

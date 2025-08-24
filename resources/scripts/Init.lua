@@ -16,16 +16,32 @@ end
 
 function onFinishZoning(player)
     local in_inn <const> = player.zone.intended_use == ZONE_INTENDED_USE_INN
+    local in_opening <const> = player.zone.intended_use == ZONE_INTENDED_USE_OPENING_AREA
 
-    -- Need this first so if a player logs in from a non-inn zone, they won't get the bed scene when they enter. It should only play on login.
-    if not in_inn then
-        player:set_inn_wakeup(true)
+    if in_opening then
+        local starting_town <const> = player.city_state
+
+        if starting_town == 1 then
+            -- limsa
+            player:start_event(player.id, 1245185, 15, 0)
+            player:play_scene(player.id, 1245185, 0, 8193, {})
+        elseif starting_town == 2 then
+            -- gridania
+            player:start_event(player.id, 1245186, 15, 0)
+            player:play_scene(player.id, 1245186, 0, 8193, {0})
+        elseif starting_town == 3 then
+            -- ul'dah
+            player:start_event(player.id, 1245187, 15, 0)
+            player:play_scene(player.id, 1245187, 0, 8193, {})
+        end
     elseif in_inn and not player.saw_inn_wakeup then
-        player:set_inn_wakeup(true)
         -- play the wakeup animation
         player:start_event(player.id, BED_EVENT_HANDLER, 15, player.zone.id)
         player:play_scene(player.id, BED_EVENT_HANDLER, BED_SCENE_WAKEUP_ANIM, BED_CUTSCENE_FLAGS, {})
     end
+
+    -- Need this first so if a player logs in from a non-inn zone, they won't get the bed scene when they enter. It should only play on login.
+    player:set_inn_wakeup(true)
 end
 
 function onCommandRequiredRankInsufficientError(player)

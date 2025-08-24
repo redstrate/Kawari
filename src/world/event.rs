@@ -2,7 +2,7 @@ use mlua::{Function, Lua};
 
 use crate::{common::ObjectTypeId, config::get_config};
 
-use super::lua::{LuaPlayer, LuaZone, initial_setup};
+use super::lua::{LuaPlayer, initial_setup};
 
 #[derive(Clone)]
 pub struct Event {
@@ -42,15 +42,15 @@ impl Event {
         Some(Self { file_name, lua, id })
     }
 
-    pub fn enter_territory(&mut self, player: &mut LuaPlayer, zone: &LuaZone) {
+    // TODO: this is a terrible hold-over name. what it actually is an onStart function that's really only useful for cutscenes.
+    pub fn enter_territory(&mut self, player: &mut LuaPlayer) {
         let mut run_script = || {
             self.lua.scope(|scope| {
-                let player = scope.create_userdata_ref_mut(player)?;
-                let zone = scope.create_userdata_ref(zone)?;
+                let player_data = scope.create_userdata_ref_mut(player)?;
 
                 let func: Function = self.lua.globals().get("onEnterTerritory")?;
 
-                func.call::<()>((player, zone))?;
+                func.call::<()>(player_data)?;
 
                 Ok(())
             })
