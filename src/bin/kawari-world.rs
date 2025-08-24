@@ -630,8 +630,6 @@ async fn client_loop(
 
                                                 connection.send_quest_information().await;
 
-                                                connection.handle.send(ToServer::ReadySpawnPlayer(connection.id, connection.player_data.zone_id, connection.player_data.position, connection.player_data.rotation)).await;
-
                                                 let lua = lua.lock().unwrap();
                                                 lua.scope(|scope| {
                                                     let connection_data =
@@ -639,7 +637,7 @@ async fn client_loop(
 
                                                     let func: Function = lua.globals().get("onBeginLogin").unwrap();
 
-                                                    func.call::<()>(connection_data).unwrap();
+                                                    func.call::<()>((connection_data, connection.player_data.zone_id)).unwrap();
 
                                                     Ok(())
                                                 })
@@ -647,6 +645,21 @@ async fn client_loop(
                                             }
                                             ClientZoneIpcData::FinishLoading { .. } => {
                                                 let common = connection.get_player_common_spawn(connection.exit_position, connection.exit_rotation);
+
+                                                {
+                                                    let lua = lua.lock().unwrap();
+                                                    lua.scope(|scope| {
+                                                        let connection_data =
+                                                        scope.create_userdata_ref_mut(&mut lua_player).unwrap();
+
+                                                        let func: Function = lua.globals().get("onFinishZoning").unwrap();
+
+                                                        func.call::<()>(connection_data).unwrap();
+
+                                                        Ok(())
+                                                    })
+                                                    .unwrap();
+                                                }
 
                                                 let online_status = if connection.player_data.gm_rank == GameMasterRank::NormalUser {
                                                     OnlineStatus::Online
@@ -702,21 +715,6 @@ async fn client_loop(
                                                         connection.send_ipc_self(ipc).await;
                                                     },
                                                     ClientTriggerCommand::FinishZoning {} => {
-                                                        {
-                                                            let lua = lua.lock().unwrap();
-                                                            lua.scope(|scope| {
-                                                                let connection_data =
-                                                                scope.create_userdata_ref_mut(&mut lua_player).unwrap();
-
-                                                                let func: Function = lua.globals().get("onFinishZoning").unwrap();
-
-                                                                func.call::<()>(connection_data).unwrap();
-
-                                                                Ok(())
-                                                            })
-                                                            .unwrap();
-                                                        }
-
                                                         connection.handle.send(ToServer::ZoneIn(connection.id, connection.player_data.actor_id, connection.player_data.teleport_reason == TeleportReason::Aetheryte)).await;
                                                     },
                                                     ClientTriggerCommand::BeginContentsReplay {} => {

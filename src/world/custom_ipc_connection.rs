@@ -1,6 +1,6 @@
 use crate::{
     common::{
-        GameData, determine_initial_starting_zone,
+        GameData,
         workdefinitions::{CharaMake, RemakeMode},
     },
     config::get_config,
@@ -84,7 +84,7 @@ impl CustomIpcConnection {
                         name,
                         chara_make_json,
                         city_state,
-                        determine_initial_starting_zone(city_state),
+                        0,
                         inventory,
                         &mut game_data,
                     );

@@ -836,6 +836,8 @@ impl ZoneConnection {
         }
         player.zone_data.queued_segments.clear();
 
+        let mut run_enter_territory = false;
+
         let tasks = player.queued_tasks.clone();
         for task in &tasks {
             match task {
@@ -1058,6 +1060,7 @@ impl ZoneConnection {
                 } => {
                     self.start_event(*actor_id, *event_id, *event_type, *event_arg)
                         .await;
+                    run_enter_territory = true;
                 }
                 Task::SetInnWakeup { watched } => {
                     self.player_data.saw_inn_wakeup = *watched;
@@ -1090,6 +1093,14 @@ impl ZoneConnection {
             }
         }
         player.queued_tasks.clear();
+
+        // We have to do this because the onEnterTerritory may add new tasks
+        if run_enter_territory {
+            // Let the script now that it just loaded
+            if let Some(event) = &mut self.event {
+                event.enter_territory(player);
+            }
+        }
     }
 
     /// Reloads Global.lua

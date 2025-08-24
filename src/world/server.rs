@@ -544,27 +544,6 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     .clients
                     .insert(handle.id, (handle, ClientState::default()));
             }
-            ToServer::ReadySpawnPlayer(from_id, zone_id, position, rotation) => {
-                let mut network = network.lock().unwrap();
-                let mut data = data.lock().unwrap();
-
-                // create a new instance if necessary
-                let mut game_data = game_data.lock().unwrap();
-                data.ensure_exists(zone_id, &mut game_data);
-                let target_instance = data.find_instance_mut(zone_id);
-
-                // tell the client to load into the zone
-                let msg = FromServer::ChangeZone(
-                    zone_id,
-                    target_instance.weather_id,
-                    position,
-                    rotation,
-                    LuaZone::from_zone(&target_instance.zone, target_instance.weather_id),
-                    true, // since this is initial login
-                );
-
-                network.send_to(from_id, msg);
-            }
             ToServer::ZoneLoaded(from_id, zone_id, player_spawn) => {
                 tracing::info!(
                     "Client {from_id:?} has now loaded, sending them existing player data."
