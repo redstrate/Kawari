@@ -11,6 +11,10 @@ use kawari::{SUPPORTED_BOOT_VERSION, SUPPORTED_GAME_VERSION, get_supported_expac
 use physis::patchlist::{PatchEntry, PatchList, PatchListType};
 use reqwest::header::USER_AGENT;
 
+const BOUNDARY_ID: &'static str = "477D80B1_38BC_41d4_8B48_5273ADB89CAC";
+const BOOT_ID: &'static str = "2b5cbc63";
+const GAME_ID: &'static str = "4e9232b";
+
 /// Check if it's a valid patch client connecting
 fn check_valid_patch_client(headers: &HeaderMap) -> bool {
     let Some(user_agent) = headers.get(USER_AGENT) else {
@@ -39,7 +43,9 @@ async fn verify_session(
     let mut headers = HeaderMap::new();
     headers.insert(
         "Content-Location",
-        "ffxivpatch/4e9232b/vercheck.dat".parse().unwrap(),
+        format!("ffxivpatch/{GAME_ID}/vercheck.dat")
+            .parse()
+            .unwrap(),
     );
     headers.insert(
         "X-Repository",
@@ -125,15 +131,15 @@ async fn verify_session(
         if !send_patches.is_empty() {
             headers.insert(
                 "Content-Type",
-                "multipart/mixed; boundary=477D80B1_38BC_41d4_8B48_5273ADB89CAC"
+                format!("multipart/mixed; boundary={BOUNDARY_ID}")
                     .parse()
                     .unwrap(),
             );
 
             let patch_list = PatchList {
-                id: "477D80B1_38BC_41d4_8B48_5273ADB89CAC".to_string(),
+                id: BOUNDARY_ID.to_string(),
                 requested_version: game_version.to_string().clone(),
-                content_location: format!("ffxivpatch/4e9232b/metainfo/{}.http", game_version.0), // FIXME: i think this is actually supposed to be the target version
+                content_location: format!("ffxivpatch/{GAME_ID}/metainfo/{}.http", game_version.0), // FIXME: i think this is actually supposed to be the target version
                 patch_length,
                 patches: send_patches,
             };
@@ -167,7 +173,9 @@ async fn verify_boot(
     let mut headers = HeaderMap::new();
     headers.insert(
         "Content-Location",
-        "ffxivpatch/2b5cbc63/vercheck.dat".parse().unwrap(),
+        format!("ffxivpatch/{BOOT_ID}/vercheck.dat")
+            .parse()
+            .unwrap(),
     );
     headers.insert(
         "X-Repository",
@@ -228,15 +236,15 @@ async fn verify_boot(
         if !send_patches.is_empty() {
             headers.insert(
                 "Content-Type",
-                "multipart/mixed; boundary=477D80B1_38BC_41d4_8B48_5273ADB89CAC"
+                format!("multipart/mixed; boundary={BOUNDARY_ID}")
                     .parse()
                     .unwrap(),
             );
 
             let patch_list = PatchList {
-                id: "477D80B1_38BC_41d4_8B48_5273ADB89CAC".to_string(),
+                id: BOUNDARY_ID.to_string(),
                 requested_version: boot_version.to_string().clone(),
-                content_location: format!("ffxivpatch/2b5cbc63/metainfo/{}.http", boot_version.0), // FIXME: i think this is actually supposed to be the target version
+                content_location: format!("ffxivpatch/{BOOT_ID}/metainfo/{}.http", boot_version.0), // FIXME: i think this is actually supposed to be the target version
                 patch_length,
                 patches: send_patches,
             };
