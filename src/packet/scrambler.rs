@@ -210,6 +210,20 @@ pub fn scramble_packet(opcode_name: &str, base_key: u8, opcode_based_key: i32, d
                     unscramble_xor::<u32>(data, offset, int_key_to_use);
                 }
             }
+            "StatusEffectList" => {
+                let op_offset = 36;
+                for i in 0..30 {
+                    let offset = op_offset + i * 12;
+                    unscramble_add::<u16>(data, offset, base_key as u16);
+                }
+            }
+            "StatusEffectList3" => {
+                let op_offset = 16;
+                for i in 0..30 {
+                    let offset = op_offset + i * 12;
+                    unscramble_add::<u16>(data, offset, base_key as u16);
+                }
+            }
             _ => {}
         }
     }
