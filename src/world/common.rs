@@ -17,7 +17,7 @@ use crate::{
     packet::PacketSegment,
 };
 
-use super::Actor;
+use super::{Actor, LuaZone};
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub struct ClientId(usize);
@@ -53,7 +53,7 @@ pub enum FromServer {
     // TODO: temporary
     Conditions(Conditions),
     /// To inform the connection of the zone they're loading into.
-    ChangeZone(u16, u16, Position, f32),
+    ChangeZone(u16, u16, Position, f32, LuaZone),
 }
 
 #[derive(Debug, Clone)]

@@ -162,6 +162,18 @@ impl QueueSegments for LuaZone {
 }
 
 impl LuaZone {
+    pub fn from_zone(zone: &Zone, weather_id: u16) -> Self {
+        Self {
+            zone_id: zone.id,
+            weather_id,
+            internal_name: zone.internal_name.clone(),
+            region_name: zone.region_name.clone(),
+            place_name: zone.place_name.clone(),
+            intended_use: zone.intended_use,
+            ..Default::default()
+        }
+    }
+
     fn spawn_eobj(&mut self, eobj: ObjectSpawn) {
         let data = ServerZoneIpcSegment::new(ServerZoneIpcData::ObjectSpawn(eobj));
 

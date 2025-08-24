@@ -20,7 +20,7 @@ use crate::{
     packet::{PacketSegment, SegmentData, SegmentType},
 };
 
-use super::{Actor, ClientHandle, ClientId, FromServer, Navmesh, ToServer, Zone};
+use super::{Actor, ClientHandle, ClientId, FromServer, LuaZone, Navmesh, ToServer, Zone};
 
 /// Used for the debug NPC.
 pub const CUSTOMIZE_DATA: CustomizeData = CustomizeData {
@@ -431,8 +431,13 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 let target_instance = data.find_instance_mut(zone_id);
 
                 // tell the client to load into the zone
-                let msg =
-                    FromServer::ChangeZone(zone_id, target_instance.weather_id, position, rotation);
+                let msg = FromServer::ChangeZone(
+                    zone_id,
+                    target_instance.weather_id,
+                    position,
+                    rotation,
+                    LuaZone::from_zone(&target_instance.zone, target_instance.weather_id),
+                );
 
                 network.send_to(from_id, msg);
             }
@@ -540,6 +545,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     target_instance.weather_id,
                     Position::default(),
                     0.0,
+                    LuaZone::from_zone(&target_instance.zone, target_instance.weather_id),
                 );
                 network.send_to(from_id, msg);
             }
@@ -596,6 +602,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     target_instance.weather_id,
                     exit_position,
                     0.0, // TODO: exit rotation
+                    LuaZone::from_zone(&target_instance.zone, target_instance.weather_id),
                 );
                 network.send_to(from_id, msg);
             }
@@ -638,6 +645,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     target_instance.weather_id,
                     exit_position,
                     0.0, // TODO: exit rotation
+                    LuaZone::from_zone(&target_instance.zone, target_instance.weather_id),
                 );
                 network.send_to(from_id, msg);
             }
@@ -680,6 +688,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     target_instance.weather_id,
                     exit_position,
                     0.0, // TODO: exit rotation
+                    LuaZone::from_zone(&target_instance.zone, target_instance.weather_id),
                 );
                 network.send_to(from_id, msg);
             }
