@@ -128,6 +128,45 @@ async fn verify_session(
             }
         }
 
+        // check expac versions
+        for expansion_version in expansion_versions {
+            let expac_version_parts: Vec<&str> = expansion_version.split('\t').collect();
+            let expansion_name = expac_version_parts[0]; // e.g. ex1
+            let expansion_version = expac_version_parts[1];
+
+            let patches = list_patch_files(&format!(
+                "{}/{expansion_name}",
+                &config.patch.patches_location
+            ));
+            for patch in patches {
+                let patch_str: &str = &patch;
+                if expansion_version.partial_cmp(patch_str).unwrap() == Ordering::Less {
+                    let file = std::fs::File::open(&*format!(
+                        "{}/{expansion_name}/{}.patch",
+                        &config.patch.patches_location, patch_str
+                    ))
+                    .unwrap();
+                    let metadata = file.metadata().unwrap();
+
+                    send_patches.push(PatchEntry {
+                        url: format!(
+                            "http://{}/{expansion_name}/{}.patch",
+                            config.patch.patch_dl_url, patch
+                        )
+                        .to_string(),
+                        version: patch_str.to_string(),
+                        hash_block_size: 0,
+                        length: metadata.len() as i64,
+                        size_on_disk: metadata.len() as i64, // NOTE: wrong but it should be fine to lie
+                        hashes: vec![],
+                        unknown_a: 19,
+                        unknown_b: 18,
+                    });
+                    patch_length += metadata.len();
+                }
+            }
+        }
+
         if !send_patches.is_empty() {
             headers.insert(
                 "Content-Type",
