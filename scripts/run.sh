@@ -1,7 +1,7 @@
 #!/bin/sh
 
 trap 'kill $(jobs -p)' EXIT
-RUST_BACKTRACE=1
+export RUST_BACKTRACE=1
 
 cargo run -q --package kawari --features oodle --bin kawari-admin &
 cargo run -q --package kawari --features oodle --bin kawari-frontier &
