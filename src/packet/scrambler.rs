@@ -2,7 +2,7 @@
 //! This is simply a Rust-reimplementation of Unscrambler.
 
 /// Constant to enable packet obfuscation. Changes every patch.
-pub const OBFUSCATION_ENABLED_MODE: u8 = 118;
+pub const OBFUSCATION_ENABLED_MODE: u8 = 21;
 
 // Helper macro so we don't repeat ourselves a bunch of times
 macro_rules! scrambler_dir {
@@ -46,8 +46,8 @@ impl ScramblerKeyGenerator {
                 day_table: include_bytes!(scrambler_dir!("daytable.bin")),
 
                 // TODO: is it possible to calculate these automatically?
-                table_radixes: &[93, 94, 113],
-                table_max: &[219, 187, 113],
+                table_radixes: &[120, 93, 112],
+                table_max: &[73, 95, 193],
             }
         }
     }
