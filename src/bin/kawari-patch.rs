@@ -35,6 +35,20 @@ async fn verify_session(
         return StatusCode::INTERNAL_SERVER_ERROR.into_response();
     }
 
+    // TODO: these are all very useful and should be documented somewhere
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "Content-Location",
+        "ffxivpatch/4e9232b/vercheck.dat".parse().unwrap(),
+    );
+    headers.insert(
+        "X-Repository",
+        "ffxivneo/win32/release/game".parse().unwrap(),
+    );
+    headers.insert("X-Patch-Module", "ZiPatch".parse().unwrap());
+    headers.insert("X-Protocol", "http".parse().unwrap());
+    headers.insert("X-Latest-Version", game_version.parse().unwrap());
+
     if config.enforce_validity_checks {
         tracing::info!(
             "Verifying game components for {platform} {channel} {game_version} {body}..."
