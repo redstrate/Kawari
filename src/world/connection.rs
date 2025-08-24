@@ -457,8 +457,7 @@ impl ZoneConnection {
             *scrambler_keys = Some(generator.generate(seed1, seed2, seed3));
 
             tracing::info!(
-                "You enabled packet obsfucation in your World config, things will break! {:?}",
-                self.obsfucation_data
+                "You enabled packet obsfucation in your World config, if things break please report it!",
             );
         }
 

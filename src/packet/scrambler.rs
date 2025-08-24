@@ -17,12 +17,12 @@ macro_rules! scrambler_dir {
 
 /// Generates the necessary keys from three seeds.
 pub struct ScramblerKeyGenerator {
-    table0: &'static [i32],
-    table1: &'static [i32],
-    table2: &'static [i32],
+    table0: Vec<i32>,
+    table1: Vec<i32>,
+    table2: Vec<i32>,
     mid_table: &'static [u8],
     day_table: &'static [u8],
-    opcode_key_table: &'static [i32],
+    opcode_key_table: Vec<i32>,
     table_radixes: &'static [i32],
     table_max: &'static [i32],
 }
@@ -35,28 +35,29 @@ impl Default for ScramblerKeyGenerator {
 
 impl ScramblerKeyGenerator {
     pub fn new() -> Self {
-        // Technically unsafe, but Unscrambler's tables should be correct anyway
-        unsafe {
-            Self {
-                table0: std::mem::transmute::<&[u8], &[i32]>(include_bytes!(scrambler_dir!(
-                    "table0.bin"
-                ))),
-                table1: std::mem::transmute::<&[u8], &[i32]>(include_bytes!(scrambler_dir!(
-                    "table1.bin"
-                ))),
-                table2: std::mem::transmute::<&[u8], &[i32]>(include_bytes!(scrambler_dir!(
-                    "table2.bin"
-                ))),
-                mid_table: include_bytes!(scrambler_dir!("midtable.bin")),
-                day_table: include_bytes!(scrambler_dir!("daytable.bin")),
-                opcode_key_table: std::mem::transmute::<&[u8], &[i32]>(include_bytes!(
-                    scrambler_dir!("opcodekeytable.bin")
-                )),
+        Self {
+            table0: include_bytes!(scrambler_dir!("table0.bin"))
+                .chunks(4)
+                .map(|x| i32::from_le_bytes(x.try_into().unwrap()))
+                .collect(),
+            table1: include_bytes!(scrambler_dir!("table1.bin"))
+                .chunks(4)
+                .map(|x| i32::from_le_bytes(x.try_into().unwrap()))
+                .collect(),
+            table2: include_bytes!(scrambler_dir!("table2.bin"))
+                .chunks(4)
+                .map(|x| i32::from_le_bytes(x.try_into().unwrap()))
+                .collect(),
+            mid_table: include_bytes!(scrambler_dir!("midtable.bin")),
+            day_table: include_bytes!(scrambler_dir!("daytable.bin")),
+            opcode_key_table: include_bytes!(scrambler_dir!("opcodekeytable.bin"))
+                .chunks(4)
+                .map(|x| i32::from_le_bytes(x.try_into().unwrap()))
+                .collect(),
 
-                // TODO: is it possible to calculate these automatically?
-                table_radixes: &[120, 93, 112],
-                table_max: &[73, 95, 193],
-            }
+            // TODO: is it possible to calculate these automatically?
+            table_radixes: &[120, 93, 112],
+            table_max: &[73, 95, 193],
         }
     }
 
@@ -99,7 +100,7 @@ impl ScramblerKeyGenerator {
                 self.derive(1, neg_seed_1, neg_seed_2, neg_seed_3),
                 self.derive(2, neg_seed_1, neg_seed_2, neg_seed_3),
             ],
-            opcode_key_table: self.opcode_key_table,
+            opcode_key_table: self.opcode_key_table.clone(),
         }
     }
 }
@@ -109,7 +110,7 @@ impl ScramblerKeyGenerator {
 pub struct ScramblerKeys {
     keys: [u8; 3],
     // TODO: maybe move somewhere else?
-    opcode_key_table: &'static [i32],
+    opcode_key_table: Vec<i32>,
 }
 
 impl ScramblerKeys {
@@ -120,6 +121,7 @@ impl ScramblerKeys {
 
     /// Fetches the opcode-based key from the table. This changes every patch.
     pub fn get_opcode_based_key(&self, opcode: u16) -> i32 {
+        assert_eq!(self.opcode_key_table.len(), 51);
         let base_key = self.get_base_key(opcode);
         let index = (opcode as usize + base_key as usize) % self.opcode_key_table.len();
         return self.opcode_key_table[index];
@@ -152,7 +154,7 @@ where
         let wrapped_key = Wrapping(key);
         let wrapped_value = Wrapping(*ptr_casted);
 
-        *ptr_casted = (wrapped_key ^ wrapped_value).0;
+        *ptr_casted = (wrapped_value ^ wrapped_key).0;
     }
 }
 
@@ -177,10 +179,10 @@ pub fn scramble_packet(opcode_name: &str, base_key: u8, opcode_based_key: i32, d
 
                 // equipment
                 let equip_offset = 556;
-                let int_key_to_use = base_key as i32 + opcode_based_key;
+                let int_key_to_use = base_key as u32 + opcode_based_key as u32;
                 for i in 0..10 {
-                    let offset = equip_offset + i * std::mem::size_of::<i32>();
-                    unscramble_xor::<i32>(data, offset, int_key_to_use);
+                    let offset = equip_offset + i * std::mem::size_of::<u32>();
+                    unscramble_xor::<u32>(data, offset, int_key_to_use);
                 }
             }
             "NpcSpawn" => {
@@ -202,10 +204,10 @@ pub fn scramble_packet(opcode_name: &str, base_key: u8, opcode_based_key: i32, d
             }
             "Equip" => {
                 let op_offset = 36;
-                let int_key_to_use = base_key as i32 + opcode_based_key;
+                let int_key_to_use = base_key as u32 + opcode_based_key as u32;
                 for i in 0..10 {
-                    let offset = op_offset + i * std::mem::size_of::<i32>();
-                    unscramble_xor::<i32>(data, offset, int_key_to_use);
+                    let offset = op_offset + i * std::mem::size_of::<u32>();
+                    unscramble_xor::<u32>(data, offset, int_key_to_use);
                 }
             }
             _ => {}
