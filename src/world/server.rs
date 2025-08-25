@@ -20,7 +20,7 @@ use crate::{
     packet::{PacketSegment, SegmentData, SegmentType},
 };
 
-use super::{Actor, ClientHandle, ClientId, FromServer, LuaZone, Navmesh, ToServer, Zone};
+use super::{Actor, ClientHandle, ClientId, FromServer, Navmesh, ToServer, Zone, lua::LuaZone};
 
 /// Used for the debug NPC.
 pub const CUSTOMIZE_DATA: CustomizeData = CustomizeData {

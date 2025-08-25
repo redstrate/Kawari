@@ -5,13 +5,12 @@ mod chat_handler;
 pub use chat_handler::ChatHandler;
 
 mod connection;
-pub use connection::{ExtraLuaState, ObsfucationData, PlayerData, TeleportReason, ZoneConnection};
+pub use connection::{ObsfucationData, PlayerData, TeleportReason, ZoneConnection};
 
 mod database;
 pub use database::{CharacterData, WorldDatabase};
 
-mod lua;
-pub use lua::{EffectsBuilder, LuaPlayer, LuaZone, load_init_script};
+pub mod lua;
 
 mod event;
 pub use event::Event;

@@ -17,7 +17,7 @@ use crate::{
     packet::PacketSegment,
 };
 
-use super::{Actor, LuaZone};
+use super::{Actor, lua::LuaZone};
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub struct ClientId(usize);

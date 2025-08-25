@@ -1,5 +1,4 @@
 use std::{
-    collections::HashMap,
     net::SocketAddr,
     sync::{Arc, Mutex},
     time::Instant,
@@ -45,22 +44,10 @@ use crate::{
 };
 
 use super::{
-    Actor, CharacterData, EffectsBuilder, Event, EventFinishType, LuaPlayer, StatusEffects,
-    ToServer, WorldDatabase,
+    Actor, CharacterData, Event, EventFinishType, StatusEffects, ToServer, WorldDatabase,
     common::{ClientId, ServerHandle},
-    load_init_script,
-    lua::Task,
+    lua::{EffectsBuilder, ExtraLuaState, LuaPlayer, Task, load_init_script},
 };
-
-#[derive(Default)]
-pub struct ExtraLuaState {
-    pub action_scripts: HashMap<u32, String>,
-    pub event_scripts: HashMap<u32, String>,
-    pub command_scripts: HashMap<String, String>,
-    pub gm_command_scripts: HashMap<u32, String>,
-    pub effect_scripts: HashMap<u32, String>,
-    pub zone_eobj_scripts: HashMap<u32, String>,
-}
 
 #[derive(Debug, Default, Clone)]
 pub struct TeleportQuery {

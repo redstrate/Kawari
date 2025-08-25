@@ -2,7 +2,7 @@ use mlua::{Function, Lua};
 
 use crate::{common::ObjectTypeId, config::get_config};
 
-use super::{LuaPlayer, Zone};
+use super::{Zone, lua::LuaPlayer};
 
 pub struct Event {
     pub file_name: String,
