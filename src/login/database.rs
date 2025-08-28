@@ -264,4 +264,18 @@ impl LoginDatabase {
         stmt.query_row((service, sid), |row| row.get::<usize, u32>(0))
             .is_ok()
     }
+
+    /// Revokes a given `service` from the active session list for the `user_id`.
+    pub fn revoke_session(&self, user_id: u32, service: &str) {
+        let connection = self.connection.lock().unwrap();
+
+        connection
+            .execute(
+                "DELETE FROM sessions WHERE user_id = ?1 AND service = ?2",
+                (user_id, service),
+            )
+            .unwrap();
+
+        tracing::info!("Revoked {service} for {user_id}!");
+    }
 }
