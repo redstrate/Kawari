@@ -32,13 +32,13 @@ Kawari is primarily a research project, but also a way to preserve the modern cl
 * **NOT** a way to play the game without a valid subscription. The server can't, nor ever will be a suitable replacement for the real game.
 * **NOT** for creating bots, packet modifications or doing anything on the retail servers.
 
-Also please don't use Kawari to spoil new or unreleased content, thanks.
+Also please don't use Kawari to spoil new and unreleased content, thanks.
 
 ## Supported Game Version
 
 Kawari currently supports patch **7.3h1** (2025.08.07.0000.0000.) Previously supported patches are provided on as tags (e.g. `2025.02.27.0000.0000`.) These may or may not function or build correctly, the tag is moreso a historical marker.
 
-Only the Global region is supported. Only the Windows client is supported. Supporting other regions or clients are currently out of scope of this project, but might work anyway.
+Only the Global region is supported. Only the Windows client is supported. Supporting other regions or clients are out of scope of this project.
 
 ## Running
 
