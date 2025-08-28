@@ -253,4 +253,15 @@ impl LoginDatabase {
             return Vec::default();
         }
     }
+
+    /// Simply checks if this is a valid session or not.
+    pub fn is_session_valid(&self, service: &str, sid: &str) -> bool {
+        let connection = self.connection.lock().unwrap();
+
+        let mut stmt = connection
+            .prepare("SELECT user_id FROM sessions WHERE service = ?1 AND sid = ?2")
+            .unwrap();
+        stmt.query_row((service, sid), |row| row.get::<usize, u32>(0))
+            .is_ok()
+    }
 }
