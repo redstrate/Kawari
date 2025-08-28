@@ -2,7 +2,7 @@ use axum::extract::Query;
 use axum::response::Html;
 use axum::{Router, routing::get};
 use kawari::config::get_config;
-use kawari::{web_static_dir, web_templates_dir};
+use kawari::{SUPPORTED_GAME_VERSION, web_static_dir, web_templates_dir};
 use minijinja::Environment;
 use minijinja::context;
 use serde::{Deserialize, Serialize};
@@ -91,7 +91,7 @@ async fn setup() -> Html<String> {
     let template = environment.get_template("setup.html").unwrap();
     Html(
         template
-            .render(context! { login_server => config.login.server_name })
+            .render(context! { login_server => config.login.server_name, lobby_port => config.lobby.port, lobby_host => config.lobby.listen_address, game_version => SUPPORTED_GAME_VERSION.0 })
             .unwrap(),
     )
 }

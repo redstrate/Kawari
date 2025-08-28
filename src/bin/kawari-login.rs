@@ -350,7 +350,7 @@ async fn login_history(State(state): State<LoginServerState>, jar: CookieJar) ->
 
         Html(
             template
-                .render(context! { past_logins => past_logins })
+                .render(context! { past_logins => past_logins, game_service_name => GAME_SERVICE })
                 .unwrap(),
         )
     } else {
@@ -373,7 +373,7 @@ async fn login_history_with_sid(
 
         Html(
             template
-                .render(context! { past_logins => past_logins, generated_sid => generated_sid })
+                .render(context! { past_logins => past_logins, generated_sid => generated_sid, game_service_name => GAME_SERVICE })
                 .unwrap(),
         )
     } else {

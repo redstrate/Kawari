@@ -34,6 +34,9 @@
 </table>
 <h3>Generate SID</h3>
 <p>You can manually generate an SID here. Useful for logging into the game manually, for example.</p>
+<div class="alert alert-secondary" role="alert" id="alert">
+    <p id="statusMessage">If you want to login to the game, you must use the service name '{{ game_service_name }}'!</p>
+</div>
 <form method='post' action='login_generate'>
     <label for="service" class="form-label">Service</label><br>
     <input type='text' id='service' name='service' class="form-control" placeholder="Unique name for this SID (e.g. 'Login Test')"/><br>
