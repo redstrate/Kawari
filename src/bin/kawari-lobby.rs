@@ -1,3 +1,4 @@
+use kawari::GAME_SERVICE;
 use kawari::RECEIVE_BUFFER_SIZE;
 use kawari::common::GameData;
 use kawari::common::timestamp_secs;
@@ -285,8 +286,8 @@ async fn main() {
                                     }
 
                                     let Ok(login_reply) = reqwest::get(format!(
-                                        "http://{}/_private/service_accounts?sid={}",
-                                        config.login.server_name, session_id
+                                        "http://{}/_private/service_accounts?sid={}&service={}",
+                                        config.login.server_name, session_id, GAME_SERVICE
                                     ))
                                     .await
                                     else {

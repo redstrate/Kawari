@@ -1,0 +1,23 @@
+{% extends "account_base.html" %}
+
+{% block title %}Login History{% endblock %}
+{% set current_page = "login_history" %}
+
+{% block accountbody %}
+<h2>Login History</h2>
+<p>This is a list of previous sessions from this account.</p>
+<table>
+    <tr>
+        <th>Login Time</th>
+        <th>Client</th>
+        <th>Service</th>
+    </tr>
+    {% for session in past_logins %}
+        <tr>
+        <td>{{ session.time }}</td>
+        <td>Computer</td>
+        <td>{{ session.service }}</td>
+        </tr>
+    {% endfor %}
+</table>
+{% endblock %}

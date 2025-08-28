@@ -1,6 +1,7 @@
 use std::sync::Mutex;
 
 use rusqlite::Connection;
+use serde::Serialize;
 
 use crate::ipc::lobby::ServiceAccount;
 
@@ -21,6 +22,12 @@ impl Default for LoginDatabase {
     }
 }
 
+#[derive(Serialize)]
+pub struct SessionInformation {
+    pub time: String,
+    pub service: String,
+}
+
 impl LoginDatabase {
     pub fn new() -> Self {
         let connection = Connection::open("login.db").expect("Failed to open database!");
@@ -33,8 +40,7 @@ impl LoginDatabase {
 
         // Create active sessions table
         {
-            let query =
-                "CREATE TABLE IF NOT EXISTS sessions (user_id INTEGER PRIMARY KEY, sid TEXT);";
+            let query = "CREATE TABLE IF NOT EXISTS sessions (user_id INTEGER, time TEXT, service TEXT, sid TEXT, PRIMARY KEY(user_id, service));";
             connection.execute(query, ()).unwrap();
         }
 
@@ -86,7 +92,12 @@ impl LoginDatabase {
     }
 
     /// Login as user, returns a session id.
-    pub fn login_user(&self, username: &str, password: &str) -> Result<String, LoginError> {
+    pub fn login_user(
+        &self,
+        service: &str,
+        username: &str,
+        password: &str,
+    ) -> Result<String, LoginError> {
         let selected_row: Result<(u32, String), rusqlite::Error>;
 
         tracing::info!("Finding user with username {username}");
@@ -100,9 +111,11 @@ impl LoginDatabase {
             selected_row = stmt.query_row((username,), |row| Ok((row.get(0)?, row.get(1)?)));
         }
 
-        if let Ok((_id, their_password)) = selected_row {
+        if let Ok((id, their_password)) = selected_row {
             if their_password == password {
-                return self.create_session(_id).ok_or(LoginError::InternalError);
+                return self
+                    .create_session(service, id)
+                    .ok_or(LoginError::InternalError);
             } else {
                 return Err(LoginError::WrongPassword);
             }
@@ -118,16 +131,16 @@ impl LoginDatabase {
         random_id.to_lowercase()
     }
 
-    /// Create a new session for user, which replaces the last one (if any)
-    pub fn create_session(&self, user_id: u32) -> Option<String> {
+    /// Create a new session for user, which replaces the last one (if any) of a given `service`
+    pub fn create_session(&self, service: &str, user_id: u32) -> Option<String> {
         let connection = self.connection.lock().unwrap();
 
         let sid = Self::generate_sid();
 
         connection
             .execute(
-                "INSERT OR REPLACE INTO sessions VALUES (?1, ?2);",
-                (user_id, &sid),
+                "INSERT OR REPLACE INTO sessions VALUES (?1, datetime('now'), ?2, ?3);",
+                (user_id, service, &sid),
             )
             .ok()?;
 
@@ -137,17 +150,16 @@ impl LoginDatabase {
     }
 
     /// Gets the service account list
-    pub fn check_session(&self, sid: &str) -> Vec<ServiceAccount> {
+    pub fn check_session(&self, service: &str, sid: &str) -> Vec<ServiceAccount> {
         let connection = self.connection.lock().unwrap();
 
         // get user id
         let user_id: u32;
         {
             let mut stmt = connection
-                .prepare("SELECT user_id FROM sessions WHERE sid = ?1")
-                .ok()
+                .prepare("SELECT user_id FROM sessions WHERE service = ?1 AND sid = ?2")
                 .unwrap();
-            if let Ok(found_user_id) = stmt.query_row((sid,), |row| row.get(0)) {
+            if let Ok(found_user_id) = stmt.query_row((service, sid), |row| row.get(0)) {
                 user_id = found_user_id;
             } else {
                 return Vec::default();
@@ -218,5 +230,27 @@ impl LoginDatabase {
             .ok()
             .unwrap();
         stmt.query_row((user_id,), |row| row.get(0)).unwrap()
+    }
+
+    /// Gets the current session list, at some point it will return past sessions too.
+    pub fn get_sessions(&self, user_id: u32) -> Vec<SessionInformation> {
+        let connection = self.connection.lock().unwrap();
+
+        let mut stmt = connection
+            .prepare("SELECT time, service FROM sessions WHERE user_id = ?1 ORDER BY time DESC;")
+            .ok()
+            .unwrap();
+        if let Ok(mut rows) = stmt.query((user_id,)) {
+            let mut info = Vec::new();
+            while let Some(row) = rows.next().unwrap() {
+                info.push(SessionInformation {
+                    time: row.get(0).unwrap(),
+                    service: row.get(1).unwrap(),
+                });
+            }
+            return info;
+        } else {
+            return Vec::default();
+        }
     }
 }
