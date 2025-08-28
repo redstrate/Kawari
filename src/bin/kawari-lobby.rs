@@ -17,6 +17,8 @@ use kawari::packet::send_custom_world_packet;
 use kawari::packet::{ConnectionState, SegmentData, send_keep_alive};
 use std::fs;
 use std::path::MAIN_SEPARATOR_STR;
+use std::time::Duration;
+use std::time::Instant;
 use tokio::io::AsyncReadExt;
 use tokio::net::TcpListener;
 
@@ -231,6 +233,7 @@ async fn main() {
             world_name: world_name.clone(),
             service_accounts: Vec::new(),
             selected_service_account: None,
+            last_keep_alive: Instant::now(),
         };
 
         // as seen in retail, the server sends a KeepAliveRequest before doing *anything*
@@ -250,165 +253,194 @@ async fn main() {
         tokio::spawn(async move {
             let mut buf = vec![0; RECEIVE_BUFFER_SIZE];
             loop {
-                let n = connection
-                    .socket
-                    .read(&mut buf)
-                    .await
-                    .expect("Failed to read data!");
-
-                if n != 0 {
-                    let (segments, _) = connection.parse_packet(&buf[..n]);
-                    for segment in &segments {
-                        match &segment.data {
-                            SegmentData::SecuritySetup { phrase, key } => {
-                                connection.initialize_encryption(phrase, key).await
+                match connection.socket.read(&mut buf).await {
+                    Ok(n) => {
+                        // if the last response was over >5 seconds, the client is probably gone
+                        if n == 0 {
+                            let now = Instant::now();
+                            if now.duration_since(connection.last_keep_alive)
+                                > Duration::from_secs(5)
+                            {
+                                tracing::info!("Connection was killed because of timeout");
+                                break;
                             }
-                            SegmentData::Ipc(data) => match &data.data {
-                                ClientLobbyIpcData::LoginEx {
-                                    sequence,
-                                    session_id,
-                                    version_info,
-                                    ..
-                                } => {
-                                    tracing::info!(
-                                        "Client {session_id} ({version_info}) logging in!"
-                                    );
+                        } else {
+                            connection.last_keep_alive = Instant::now();
 
-                                    let config = get_config();
-
-                                    // The lobby server does its own version check as well, but it can be turned off if desired.
-                                    if config.enforce_validity_checks
-                                        && !do_game_version_check(version_info)
-                                    {
-                                        // "A version update is required."
-                                        connection.send_error(*sequence, 1012, 13101).await;
-                                        break;
+                            let (segments, _) = connection.parse_packet(&buf[..n]);
+                            for segment in &segments {
+                                match &segment.data {
+                                    SegmentData::SecuritySetup { phrase, key } => {
+                                        connection.initialize_encryption(phrase, key).await
                                     }
-
-                                    let Ok(login_reply) = reqwest::get(format!(
-                                        "http://{}/_private/service_accounts?sid={}&service={}",
-                                        config.login.server_name, session_id, GAME_SERVICE
-                                    ))
-                                    .await
-                                    else {
-                                        tracing::warn!(
-                                            "Failed to contact login server, is it running?"
-                                        );
-                                        // "The lobby server connection has encountered an error."
-                                        connection.send_error(*sequence, 2002, 13001).await;
-                                        break;
-                                    };
-
-                                    let Ok(body) = login_reply.text().await else {
-                                        tracing::warn!(
-                                            "Failed to contact login server, is it running?"
-                                        );
-                                        // "The lobby server connection has encountered an error."
-                                        connection.send_error(*sequence, 2002, 13001).await;
-                                        break;
-                                    };
-
-                                    let service_accounts: Option<Vec<ServiceAccount>> =
-                                        serde_json::from_str(&body).ok();
-                                    if let Some(service_accounts) = service_accounts {
-                                        if service_accounts.is_empty() {
-                                            tracing::warn!(
-                                                "This account has no service accounts attached, how did this happen?"
+                                    SegmentData::Ipc(data) => match &data.data {
+                                        ClientLobbyIpcData::LoginEx {
+                                            sequence,
+                                            session_id,
+                                            version_info,
+                                            ..
+                                        } => {
+                                            tracing::info!(
+                                                "Client {session_id} ({version_info}) logging in!"
                                             );
 
-                                            /* "<the game> has not yet been registered on this platform or your service account's subscription has expired. Please close the application and complete the registration process. If you would like to add a platform to your service account or renew your subscription, please visit the <website>). To register another platform, you must purchase a license for the applicable platform or complete the registration process using the registration code included with your purchase." */
-                                            connection.send_error(*sequence, 2002, 13209).await;
-                                        } else {
-                                            connection.service_accounts = service_accounts;
-                                            connection.session_id = Some(session_id.clone());
-                                            connection.send_account_list().await;
-                                        }
-                                    } else {
-                                        tracing::warn!(
-                                            "Failed to parse service accounts from the login server!"
-                                        );
+                                            let config = get_config();
 
-                                        // "The lobby server has encountered a problem."
-                                        connection.send_error(*sequence, 2002, 13006).await;
-                                    }
-                                }
-                                ClientLobbyIpcData::ServiceLogin {
-                                    sequence,
-                                    account_index,
-                                    ..
-                                } => {
-                                    connection.selected_service_account = Some(
-                                        connection.service_accounts[*account_index as usize].id
-                                            as u32,
-                                    );
-                                    connection.send_lobby_info(*sequence).await
-                                }
-                                ClientLobbyIpcData::CharaMake(character_action) => {
-                                    connection.handle_character_action(character_action).await
-                                }
-                                ClientLobbyIpcData::ShandaLogin { .. } => {
-                                    connection.send_account_list().await;
-                                }
-                                ClientLobbyIpcData::GameLogin {
-                                    sequence,
-                                    content_id,
-                                    ..
-                                } => {
-                                    tracing::info!("Client is joining the world with {content_id}");
+                                            // The lobby server does its own version check as well, but it can be turned off if desired.
+                                            if config.enforce_validity_checks
+                                                && !do_game_version_check(version_info)
+                                            {
+                                                // "A version update is required."
+                                                connection.send_error(*sequence, 1012, 13101).await;
+                                                break;
+                                            }
 
-                                    let our_actor_id;
-
-                                    // find the actor id for this content id
-                                    // NOTE: This is NOT the ideal solution. I theorize the lobby server has it's own records with this information.
-                                    {
-                                        let ipc_segment = CustomIpcSegment {
-                                            op_code: CustomIpcType::GetActorId,
-                                            data: CustomIpcData::GetActorId {
-                                                content_id: *content_id,
-                                            },
-                                            ..Default::default()
+                                            let Ok(login_reply) = reqwest::get(format!(
+                                            "http://{}/_private/service_accounts?sid={}&service={}",
+                                            config.login.server_name, session_id, GAME_SERVICE
+                                        ))
+                                        .await
+                                        else {
+                                            tracing::warn!(
+                                                "Failed to contact login server, is it running?"
+                                            );
+                                            // "The lobby server connection has encountered an error."
+                                            connection.send_error(*sequence, 2002, 13001).await;
+                                            break;
                                         };
 
-                                        let response_segment =
-                                            send_custom_world_packet(ipc_segment).await.unwrap();
+                                            let Ok(body) = login_reply.text().await else {
+                                                tracing::warn!(
+                                                    "Failed to contact login server, is it running?"
+                                                );
+                                                // "The lobby server connection has encountered an error."
+                                                connection.send_error(*sequence, 2002, 13001).await;
+                                                break;
+                                            };
 
-                                        match &response_segment.data {
-                                            CustomIpcData::ActorIdFound { actor_id } => {
-                                                our_actor_id = *actor_id;
+                                            let service_accounts: Option<Vec<ServiceAccount>> =
+                                                serde_json::from_str(&body).ok();
+                                            if let Some(service_accounts) = service_accounts {
+                                                if service_accounts.is_empty() {
+                                                    tracing::warn!(
+                                                        "This account has no service accounts attached, how did this happen?"
+                                                    );
+
+                                                    /* "<the game> has not yet been registered on this platform or your service account's subscription has expired. Please close the application and complete the registration process. If you would like to add a platform to your service account or renew your subscription, please visit the <website>). To register another platform, you must purchase a license for the applicable platform or complete the registration process using the registration code included with your purchase." */
+                                                    connection
+                                                        .send_error(*sequence, 2002, 13209)
+                                                        .await;
+                                                } else {
+                                                    connection.service_accounts = service_accounts;
+                                                    connection.session_id =
+                                                        Some(session_id.clone());
+                                                    connection.send_account_list().await;
+                                                }
+                                            } else {
+                                                tracing::warn!(
+                                                    "Failed to parse service accounts from the login server!"
+                                                );
+
+                                                // "The lobby server has encountered a problem."
+                                                connection.send_error(*sequence, 2002, 13006).await;
                                             }
-                                            _ => panic!("Unexpected custom IPC packet type here!"),
                                         }
-                                    }
+                                        ClientLobbyIpcData::ServiceLogin {
+                                            sequence,
+                                            account_index,
+                                            ..
+                                        } => {
+                                            connection.selected_service_account = Some(
+                                                connection.service_accounts[*account_index as usize]
+                                                    .id
+                                                    as u32,
+                                            );
+                                            connection.send_lobby_info(*sequence).await
+                                        }
+                                        ClientLobbyIpcData::CharaMake(character_action) => {
+                                            connection
+                                                .handle_character_action(character_action)
+                                                .await
+                                        }
+                                        ClientLobbyIpcData::ShandaLogin { .. } => {
+                                            connection.send_account_list().await;
+                                        }
+                                        ClientLobbyIpcData::GameLogin {
+                                            sequence,
+                                            content_id,
+                                            ..
+                                        } => {
+                                            tracing::info!(
+                                                "Client is joining the world with {content_id}"
+                                            );
 
-                                    connection
-                                        .send_enter_world(*sequence, *content_id, our_actor_id)
-                                        .await;
+                                            let our_actor_id;
+
+                                            // find the actor id for this content id
+                                            // NOTE: This is NOT the ideal solution. I theorize the lobby server has it's own records with this information.
+                                            {
+                                                let ipc_segment = CustomIpcSegment {
+                                                    op_code: CustomIpcType::GetActorId,
+                                                    data: CustomIpcData::GetActorId {
+                                                        content_id: *content_id,
+                                                    },
+                                                    ..Default::default()
+                                                };
+
+                                                let response_segment =
+                                                    send_custom_world_packet(ipc_segment)
+                                                        .await
+                                                        .unwrap();
+
+                                                match &response_segment.data {
+                                                    CustomIpcData::ActorIdFound { actor_id } => {
+                                                        our_actor_id = *actor_id;
+                                                    }
+                                                    _ => panic!(
+                                                        "Unexpected custom IPC packet type here!"
+                                                    ),
+                                                }
+                                            }
+
+                                            connection
+                                                .send_enter_world(
+                                                    *sequence,
+                                                    *content_id,
+                                                    our_actor_id,
+                                                )
+                                                .await;
+                                        }
+                                        ClientLobbyIpcData::Unknown { unk } => {
+                                            tracing::warn!(
+                                                "Unknown packet {:?} recieved ({} bytes), this should be handled!",
+                                                data.op_code,
+                                                unk.len()
+                                            );
+                                        }
+                                    },
+                                    SegmentData::KeepAliveRequest { id, timestamp } => {
+                                        send_keep_alive::<ServerLobbyIpcSegment>(
+                                            &mut connection.socket,
+                                            &mut connection.state,
+                                            ConnectionType::Lobby,
+                                            *id,
+                                            *timestamp,
+                                        )
+                                        .await
+                                    }
+                                    SegmentData::KeepAliveResponse { .. } => {
+                                        // we can throw this away
+                                    }
+                                    _ => {
+                                        panic!("The server is recieving a response packet!")
+                                    }
                                 }
-                                ClientLobbyIpcData::Unknown { unk } => {
-                                    tracing::warn!(
-                                        "Unknown packet {:?} recieved ({} bytes), this should be handled!",
-                                        data.op_code,
-                                        unk.len()
-                                    );
-                                }
-                            },
-                            SegmentData::KeepAliveRequest { id, timestamp } => {
-                                send_keep_alive::<ServerLobbyIpcSegment>(
-                                    &mut connection.socket,
-                                    &mut connection.state,
-                                    ConnectionType::Lobby,
-                                    *id,
-                                    *timestamp,
-                                )
-                                .await
-                            }
-                            SegmentData::KeepAliveResponse { .. } => {
-                                // we can throw this away
-                            }
-                            _ => {
-                                panic!("The server is recieving a response packet!")
                             }
                         }
+                    }
+                    Err(_) => {
+                        tracing::info!("A connection was disconnected!");
+                        break;
                     }
                 }
             }

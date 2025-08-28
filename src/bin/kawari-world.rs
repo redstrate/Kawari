@@ -151,9 +151,7 @@ async fn client_loop(
                                 tracing::info!("Connection {:#?} was killed because of timeout", client_handle.id);
                                 break;
                             }
-                        }
-
-                        if n > 0 {
+                        } else {
                             connection.last_keep_alive = Instant::now();
 
                             let (segments, connection_type) = connection.parse_packet(&buf[..n]);

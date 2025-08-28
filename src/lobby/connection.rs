@@ -1,4 +1,4 @@
-use std::cmp::min;
+use std::{cmp::min, time::Instant};
 
 use tokio::net::TcpStream;
 
@@ -34,6 +34,8 @@ pub struct LobbyConnection {
     pub service_accounts: Vec<ServiceAccount>,
 
     pub selected_service_account: Option<u32>,
+
+    pub last_keep_alive: Instant,
 }
 
 impl LobbyConnection {
