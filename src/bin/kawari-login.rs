@@ -416,6 +416,34 @@ async fn manual_generate_sid(
     login_history(State(state), jar).await.into_response()
 }
 
+#[derive(Deserialize, Debug)]
+#[allow(dead_code)]
+struct RevokeInput {
+    service: Option<String>,
+}
+
+async fn revoke_sid(
+    State(state): State<LoginServerState>,
+    jar: CookieJar,
+    Form(input): Form<RevokeInput>,
+) -> Response<Body> {
+    let Some(service) = input.service else {
+        panic!("Expected service!");
+    };
+
+    if let Some(session_id) = jar.get("cis_sessid") {
+        if state
+            .database
+            .is_session_valid(ACCOUNT_MANAGEMENT_SERVICE, session_id.value())
+        {
+            let user_id = state.database.get_user_id(session_id.value());
+            state.database.revoke_session(user_id, &service);
+        }
+    }
+
+    login_history(State(state), jar).await.into_response()
+}
+
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
@@ -445,7 +473,8 @@ async fn main() {
         .route("/account/app/svc/restore", get(restore_backup))
         .route("/account/app/svc/restore", post(upload_character_backup))
         .route("/account/app/svc/loginhistory", get(login_history))
-        .route("/account/app/svc/loginhistory", post(manual_generate_sid))
+        .route("/account/app/svc/login_generate", post(manual_generate_sid))
+        .route("/account/app/svc/login_revoke", post(revoke_sid))
         .with_state(state)
         .nest_service("/static", ServeDir::new(web_static_dir!("")))
         .layer(cors);

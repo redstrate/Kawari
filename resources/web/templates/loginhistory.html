@@ -16,20 +16,27 @@
         <th>Login Time</th>
         <th>Client</th>
         <th>Service</th>
+        <th>Actions</td>
     </tr>
     {% for session in past_logins %}
         <tr>
-        <td>{{ session.time }}</td>
-        <td>Computer</td>
-        <td>{{ session.service }}</td>
+            <td>{{ session.time }}</td>
+            <td>Computer</td>
+            <td>{{ session.service }}</td>
+            <td>
+            <form method='post' action='login_revoke'>
+                <input type="hidden" id="service" name="service" value="{{ session.service }}">
+                <button type='submit'  class="btn btn-secondary">Revoke</button>
+            </form>
+            </td>
         </tr>
     {% endfor %}
 </table>
 <h3>Generate SID</h3>
 <p>You can manually generate an SID here. Useful for logging into the game manually, for example.</p>
-<form method='post'>
-<label for="service" class="form-label">Service</label><br>
-<input type='text' id='service' name='service' class="form-control" placeholder="Unique name for this SID (e.g. 'Login Test')"/><br>
-<button type='submit'  class="btn btn-primary">Generate</button>
+<form method='post' action='login_generate'>
+    <label for="service" class="form-label">Service</label><br>
+    <input type='text' id='service' name='service' class="form-control" placeholder="Unique name for this SID (e.g. 'Login Test')"/><br>
+    <button type='submit'  class="btn btn-primary">Generate</button>
 </form>
 {% endblock %}
