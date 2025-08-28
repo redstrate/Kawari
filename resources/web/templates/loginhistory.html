@@ -4,6 +4,11 @@
 {% set current_page = "login_history" %}
 
 {% block accountbody %}
+{% if generated_sid is defined %}
+<div class="alert alert-primary" role="alert" id="alert">
+    <p id="statusMessage">SID successfully generated: <code>{{ generated_sid }}</code>. It won't be shown again, so be sure to save it!</p>
+</div>
+{% endif %}
 <h2>Login History</h2>
 <p>This is a list of previous sessions from this account.</p>
 <table>
@@ -20,4 +25,11 @@
         </tr>
     {% endfor %}
 </table>
+<h3>Generate SID</h3>
+<p>You can manually generate an SID here. Useful for logging into the game manually, for example.</p>
+<form method='post'>
+<label for="service" class="form-label">Service</label><br>
+<input type='text' id='service' name='service' class="form-control" placeholder="Unique name for this SID (e.g. 'Login Test')"/><br>
+<button type='submit'  class="btn btn-primary">Generate</button>
+</form>
 {% endblock %}

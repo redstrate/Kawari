@@ -358,6 +358,64 @@ async fn login_history(State(state): State<LoginServerState>, jar: CookieJar) ->
     }
 }
 
+async fn login_history_with_sid(
+    State(state): State<LoginServerState>,
+    jar: CookieJar,
+    generated_sid: &str,
+) -> Html<String> {
+    // TODO: de-duplicate with above function pls
+    if let Some(session_id) = jar.get("cis_sessid") {
+        let user_id = state.database.get_user_id(session_id.value());
+
+        let environment = setup_default_environment();
+        let template = environment.get_template("loginhistory.html").unwrap();
+        let past_logins = state.database.get_sessions(user_id);
+
+        Html(
+            template
+                .render(context! { past_logins => past_logins, generated_sid => generated_sid })
+                .unwrap(),
+        )
+    } else {
+        Html("You need to be logged in!".to_string())
+    }
+}
+
+#[derive(Deserialize, Debug)]
+#[allow(dead_code)]
+struct SIDInput {
+    service: Option<String>,
+}
+
+async fn manual_generate_sid(
+    State(state): State<LoginServerState>,
+    jar: CookieJar,
+    Form(input): Form<SIDInput>,
+) -> Response<Body> {
+    let Some(service) = input.service else {
+        panic!("Expected service!");
+    };
+
+    if let Some(session_id) = jar.get("cis_sessid") {
+        if state
+            .database
+            .is_session_valid(ACCOUNT_MANAGEMENT_SERVICE, session_id.value())
+        {
+            let user_id = state.database.get_user_id(session_id.value());
+            let new_sid = state
+                .database
+                .create_session(&service, user_id)
+                .expect("Failed to create new SID?!");
+
+            return login_history_with_sid(State(state), jar, &new_sid)
+                .await
+                .into_response();
+        }
+    }
+
+    login_history(State(state), jar).await.into_response()
+}
+
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
@@ -387,6 +445,7 @@ async fn main() {
         .route("/account/app/svc/restore", get(restore_backup))
         .route("/account/app/svc/restore", post(upload_character_backup))
         .route("/account/app/svc/loginhistory", get(login_history))
+        .route("/account/app/svc/loginhistory", post(manual_generate_sid))
         .with_state(state)
         .nest_service("/static", ServeDir::new(web_static_dir!("")))
         .layer(cors);
