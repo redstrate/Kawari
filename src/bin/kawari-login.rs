@@ -303,9 +303,14 @@ async fn upload_character_backup(
         .into_response()
 }
 
-async fn logout(jar: CookieJar) -> (CookieJar, Redirect) {
+async fn logout(State(state): State<LoginServerState>, jar: CookieJar) -> (CookieJar, Redirect) {
     let config = get_config();
-    // TODO: remove session from database
+    if let Some(session_id) = jar.get("cis_sessid") {
+        let user_id = state.database.get_user_id(session_id.value());
+        state
+            .database
+            .revoke_session(user_id, ACCOUNT_MANAGEMENT_SERVICE);
+    }
     (
         jar.remove("cis_sessid"),
         Redirect::to(&format!("http://{}/", config.web.server_name)),
