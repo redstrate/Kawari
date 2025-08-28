@@ -12,7 +12,7 @@ use kawari::config::get_config;
 use kawari::ipc::kawari::{CustomIpcData, CustomIpcSegment, CustomIpcType};
 use kawari::login::{LoginDatabase, LoginError};
 use kawari::packet::send_custom_world_packet;
-use kawari::{web_static_dir, web_templates_dir};
+use kawari::{ACCOUNT_MANAGEMENT_SERVICE, GAME_SERVICE, web_static_dir, web_templates_dir};
 use minijinja::{Environment, context};
 use serde::Deserialize;
 use tower_http::cors::{Any, CorsLayer};
@@ -68,6 +68,12 @@ fn setup_default_environment() -> Environment<'static> {
             .expect("Failed to find template!"),
     )
     .unwrap();
+    env.add_template_owned(
+        "loginhistory.html",
+        std::fs::read_to_string(web_templates_dir!("loginhistory.html"))
+            .expect("Failed to find template!"),
+    )
+    .unwrap();
 
     env
 }
@@ -107,7 +113,9 @@ async fn login_send(
     State(state): State<LoginServerState>,
     Form(input): Form<Input>,
 ) -> Html<String> {
-    let user = state.database.login_user(&input.sqexid, &input.password);
+    let user = state
+        .database
+        .login_user(GAME_SERVICE, &input.sqexid, &input.password);
     match user {
         Ok(session_id) => Html(format!(
             "window.external.user(\"login=auth,ok,sid,{session_id},terms,1,region,2,etmadd,0,playable,1,ps3pkg,0,maxex,5,product,1\");"
@@ -158,7 +166,10 @@ async fn do_register(
     state.database.add_user(&username, &password);
 
     // redirect to account management page
-    let sid = state.database.login_user(&username, &password).unwrap();
+    let sid = state
+        .database
+        .login_user(ACCOUNT_MANAGEMENT_SERVICE, &username, &password)
+        .unwrap();
 
     let cookie = Cookie::build(("cis_sessid", sid))
         .path("/")
@@ -172,13 +183,14 @@ async fn do_register(
 #[allow(dead_code)]
 struct CheckSessionParams {
     sid: String,
+    service: String,
 }
 
 async fn check_session(
     State(state): State<LoginServerState>,
     Query(params): Query<CheckSessionParams>,
 ) -> String {
-    let accounts = state.database.check_session(&params.sid);
+    let accounts = state.database.check_session(&params.service, &params.sid);
     serde_json::to_string(&accounts).unwrap_or(String::new())
 }
 
@@ -225,7 +237,10 @@ async fn do_login(
         panic!("Expected password!");
     };
 
-    let sid = state.database.login_user(&username, &password).unwrap();
+    let sid = state
+        .database
+        .login_user(ACCOUNT_MANAGEMENT_SERVICE, &username, &password)
+        .unwrap();
 
     let cookie = Cookie::build(("cis_sessid", sid))
         .path("/")
@@ -325,6 +340,24 @@ async fn restore_backup_with_message(status_message: String) -> Html<String> {
     )
 }
 
+async fn login_history(State(state): State<LoginServerState>, jar: CookieJar) -> Html<String> {
+    if let Some(session_id) = jar.get("cis_sessid") {
+        let user_id = state.database.get_user_id(session_id.value());
+
+        let environment = setup_default_environment();
+        let template = environment.get_template("loginhistory.html").unwrap();
+        let past_logins = state.database.get_sessions(user_id);
+
+        Html(
+            template
+                .render(context! { past_logins => past_logins })
+                .unwrap(),
+        )
+    } else {
+        Html("You need to be logged in!".to_string())
+    }
+}
+
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
@@ -353,6 +386,7 @@ async fn main() {
         .route("/account/app/svc/mbrCancel", get(cancel_account))
         .route("/account/app/svc/restore", get(restore_backup))
         .route("/account/app/svc/restore", post(upload_character_backup))
+        .route("/account/app/svc/loginhistory", get(login_history))
         .with_state(state)
         .nest_service("/static", ServeDir::new(web_static_dir!("")))
         .layer(cors);

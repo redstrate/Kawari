@@ -125,3 +125,9 @@ pub enum LogMessageType {
 /// Error messages: TODO: this should probably be moved into its own universal mod/crate?
 pub const ERR_INVENTORY_ADD_FAILED: &str =
     "Unable to add item to inventory! Your inventory is full, or this is a bug in Kawari!";
+
+/// Service name for the account management pages. This is used to uniquely identify sessions.
+pub const ACCOUNT_MANAGEMENT_SERVICE: &'static str = "Kawari: Account Management";
+
+/// Service name for game logins. This is used to uniquely identify sessions.
+pub const GAME_SERVICE: &'static str = "Kawari: Game Client";
