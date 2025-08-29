@@ -44,6 +44,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    - run: |
+        cargo install --git https://github.com/rust-lang/mdBook.git mdbook
     - uses: actions/cache@v4
       id: cache-deps
       with:
@@ -83,6 +85,11 @@ jobs:
       run: cargo clippy --features oodle
     - name: Run tests
       run: cargo test --verbose
+    - name: Build documentation
+      run: |
+        mdbook build --dest-dir=doc-build ./doc
+        mv doc doc-1
+        mv doc-build doc
     - name: Prepare artifacts
       if: runner.os == 'Windows'
       run: |
@@ -119,6 +126,9 @@ jobs:
           run.sh
           run.bat
           version.txt
+          doc/
+          !doc/src/
+          !doc/book.toml
 
   deploy:
     name: "Deploy"
