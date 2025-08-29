@@ -9,3 +9,4 @@ src/opcodes.rs
 backups/
 temp.zip
 patches/
+doc/book
