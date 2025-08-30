@@ -1,8 +1,5 @@
 use crate::{
-    common::{
-        determine_initial_starting_zone,
-        workdefinitions::{CharaMake, RemakeMode},
-    },
+    common::workdefinitions::{CharaMake, RemakeMode},
     config::get_config,
     inventory::Inventory,
     ipc::kawari::{CustomIpcData, CustomIpcSegment, CustomIpcType},
@@ -50,7 +47,7 @@ pub async fn handle_custom_ipc(connection: &mut ZoneConnection, data: &CustomIpc
                     name,
                     chara_make_json,
                     city_state,
-                    determine_initial_starting_zone(city_state),
+                    0,
                     inventory,
                     &mut game_data,
                 );
