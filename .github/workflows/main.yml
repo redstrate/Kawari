@@ -153,4 +153,6 @@ jobs:
       run: |
         rsync --recursive "Kawari-Linux.zip" deploy@ryne.moe:/srv/http/astra-distrib/kawari/
         rsync --recursive "Kawari-Windows.zip" deploy@ryne.moe:/srv/http/astra-distrib/kawari/
+        unzip "Kawari-Linux.zip"
+        rsync --recursive doc/ deploy@ryne.moe:/srv/http/kawari-docs
 
