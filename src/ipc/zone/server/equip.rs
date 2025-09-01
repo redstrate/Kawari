@@ -9,8 +9,13 @@ pub struct Equip {
     pub crest_enable: u8,
     #[brw(pad_before = 1)]
     pub pattern_invalid: u16,
-    #[brw(pad_after = 12)]
     pub model_ids: [u32; 10],
+    /// These appear to be some sort of display flags? They're continually included as long as the gear in question remains equipped.
+    /// Associated with headgear: set to 0x41 for some headgear when equipped, 0 when unequipped, observed when equipping Songbird Hat; 0x41 doesn't seem to be related to visor toggling or hiding earrings.
+    pub headgear_unk: u8,
+    #[brw(pad_after = 10)]
+    /// Associated with chest gear: set to 0x01 when equipped, 0 when unequipped. Observed when equipping Martial Artist's Sleeveless Vest, a piece which hides necklaces.
+    pub chestgear_unk: u8,
 }
 
 #[cfg(test)]
