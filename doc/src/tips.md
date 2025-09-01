@@ -21,3 +21,12 @@ The game lacks a noclip or flying mode, so getting around zones can appear a bit
 It's possible to import existing characters from the retail server using [Auracite](https://auracite.xiv.zone). You can upload the backup ZIP on the account management page.
 
 This feature is still a work-in-progress, and not all data is imported yet.
+
+## Legacy Mark/Tattoo
+
+This is currently only possible by manually editing the database.
+
+1. Open the database and find the row in the `character_data` table you want to edit.
+2. Look at the `chara_make` column, this is where you'll find JSON. You can copy this to a text editor so it's easier to work with.
+3. Go to the thirteenth value of the first array, that is the character's facial features. (If you have no facial features selected, this value would be zero.)
+4. We need to set the left-most bit. For example: if you don't care about any other facial feature, set this value to 128.
