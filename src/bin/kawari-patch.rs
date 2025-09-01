@@ -11,9 +11,9 @@ use kawari::{SUPPORTED_BOOT_VERSION, SUPPORTED_GAME_VERSION, get_supported_expac
 use physis::patchlist::{PatchEntry, PatchList, PatchListType};
 use reqwest::header::USER_AGENT;
 
-const BOUNDARY_ID: & str = "477D80B1_38BC_41d4_8B48_5273ADB89CAC";
-const BOOT_ID: & str = "2b5cbc63";
-const GAME_ID: & str = "4e9232b";
+const BOUNDARY_ID: &str = "477D80B1_38BC_41d4_8B48_5273ADB89CAC";
+const BOOT_ID: &str = "2b5cbc63";
+const GAME_ID: &str = "4e9232b";
 
 /// Check if it's a valid patch client connecting
 fn check_valid_patch_client(headers: &HeaderMap) -> bool {
