@@ -47,7 +47,7 @@ impl std::fmt::Display for ObjectId {
 
 impl std::fmt::Debug for ObjectId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "ObjectId ({})", self)
+        write!(f, "ObjectId ({self})")
     }
 }
 
