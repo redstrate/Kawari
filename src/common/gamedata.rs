@@ -400,7 +400,7 @@ impl GameData {
         let row = sheet.get_row(weather_rate_id)?;
 
         // sum up the rates
-        let mut rates = row.Rate().map(|x| x.into_u8().unwrap().clone());
+        let mut rates = row.Rate().map(|x| *x.into_u8().unwrap());
         let mut sum = 0;
         for rate in &mut rates {
             sum += *rate;
