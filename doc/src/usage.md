@@ -91,8 +91,6 @@ world:
 
 This has no actual effect in-game, apart from the World name shown inside the client. All data centers will show the configured world.
 
-## Importing characters from retail
+## What's next?
 
-It's possible to import existing characters from the retail server using [Auracite](https://auracite.xiv.zone). Upload the backup ZIP on the account management page on the login server.
-
-This feature is still a work-in-progress, and not all data is imported yet.
+I highly recommend reading through the [Tips](tips.md) page for how to use Kawari effectively.
