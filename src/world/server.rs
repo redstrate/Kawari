@@ -1139,7 +1139,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     }
                 }
             }
-            ToServer::Equip(_from_id, from_actor_id, main_weapon_id, model_ids) => {
+            ToServer::Equip(_from_id, from_actor_id, main_weapon_id, sub_weapon_id, model_ids) => {
                 // update their stored state so it's correctly sent on new spawns
                 {
                     let mut data = data.lock().unwrap();
@@ -1157,6 +1157,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     };
 
                     player.common.main_weapon_model = main_weapon_id;
+                    player.common.sec_weapon_model = sub_weapon_id;
                     player.common.models = model_ids;
                 }
 
@@ -1165,7 +1166,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 for (id, (handle, _)) in &mut network.clients {
                     let id = *id;
 
-                    let msg = FromServer::ActorEquip(from_actor_id, main_weapon_id, model_ids);
+                    let msg = FromServer::ActorEquip(from_actor_id, main_weapon_id, sub_weapon_id, model_ids);
 
                     if handle.send(msg).is_err() {
                         to_remove.push(id);

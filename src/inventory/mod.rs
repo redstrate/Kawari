@@ -408,7 +408,7 @@ impl Inventory {
             model
         } else {
             game_data
-                .get_sub_model_id(self.equipped.off_hand.apparent_id())
+                .get_primary_model_id(self.equipped.off_hand.apparent_id()).
                 .unwrap_or(0)
         }
     }

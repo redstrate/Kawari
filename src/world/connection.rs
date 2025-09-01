@@ -565,12 +565,14 @@ impl ZoneConnection {
     /// Inform other clients (including yourself) that you changed your equipped model ids.
     pub async fn inform_equip(&mut self) {
         let main_weapon_id;
+        let sub_weapon_id;
         let model_ids;
         {
             let mut game_data = self.gamedata.lock().unwrap();
             let inventory = &self.player_data.inventory;
 
             main_weapon_id = inventory.get_main_weapon_id(&mut game_data);
+            sub_weapon_id = inventory.get_sub_weapon_id(&mut game_data);
             model_ids = inventory.get_model_ids(&mut game_data);
         }
 
@@ -579,6 +581,7 @@ impl ZoneConnection {
                 self.id,
                 self.player_data.actor_id,
                 main_weapon_id,
+                sub_weapon_id,
                 model_ids,
             ))
             .await;
@@ -677,9 +680,12 @@ impl ZoneConnection {
         }
     }
 
-    pub async fn update_equip(&mut self, actor_id: u32, main_weapon_id: u64, model_ids: [u32; 10]) {
+    pub async fn update_equip(&mut self, actor_id: u32, main_weapon_id: u64, sub_weapon_id: u64, model_ids: [u32; 10]) {
+        let chara_details = self.database.find_chara_make(self.player_data.content_id);
+        self.send_stats(&chara_details).await;
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Equip(Equip {
             main_weapon_id,
+            sub_weapon_id,
             model_ids,
             ..Default::default()
         }));
@@ -691,6 +697,28 @@ impl ZoneConnection {
             data: SegmentData::Ipc(ipc),
         })
         .await;
+
+        // TODO: get a capture of another player equipping stuff to see if we get this as well, but it seems unlikely.
+        if self.player_data.actor_id == actor_id {
+            self.actor_control_self(ActorControlSelf {
+                category: ActorControlCategory::SetItemLevel {
+                    level: self.player_data.inventory.equipped.calculate_item_level() as u32,
+                }
+            }).await;
+            // Uknown what this is, it's seen when (un)equipping stuff.
+            self.actor_control_self(ActorControlSelf {
+                category: ActorControlCategory::Unknown {
+                    category: 57,
+                    param1: 0,
+                    param2: 0,
+                    param3: 0,
+                    param4: 0,
+                }
+            }).await;
+        }
+        
+        self.process_effects_list().await;
+        self.update_class_info().await;
     }
 
     pub async fn send_message(&mut self, message: &str) {
