@@ -248,9 +248,9 @@ impl LoginDatabase {
                     service: row.get(1).unwrap(),
                 });
             }
-            return info;
+            info
         } else {
-            return Vec::default();
+            Vec::default()
         }
     }
 

@@ -124,7 +124,7 @@ impl ScramblerKeys {
         assert_eq!(self.opcode_key_table.len(), 51);
         let base_key = self.get_base_key(opcode);
         let index = (opcode as usize + base_key as usize) % self.opcode_key_table.len();
-        return self.opcode_key_table[index];
+        self.opcode_key_table[index]
     }
 }
 
