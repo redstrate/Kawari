@@ -15,11 +15,19 @@
 
     <h2>Astra</h2>
 
-    <p>Instructions coming soon!</p>
+    <p>Connecting to this server with <a href="https://xiv.zone/software/astra">Astra</a> is very easy, as the functionality is built-in. You currently need a pre-release version of Astra (>=0.7)</p>
+
+    <ol>
+        <li>Open Astra, tap the "Settings" button in the top-right.</li>
+        <li>Under the General page, check the "Show Developer Settings" checkbox.</li>
+        <li>Select or create the account you want to log in to Kawari with. You should see a new "Developer" tab to the far-right.</li>
+    </ol>
+
+    <p>Then paste the Server URL (<code>{{ server_url }}</code>) and Astra will automatically configure the correct server configuration. That's it!</p>
 
     <h2>Manually Running</h2>
 
-    <p>It's possible to manually run the game if you can't or want to use a launcher. Here are the following arguments you should pass to the game:</p>
+    <p>It's possible to manually run the game if you can't or don't want to use a launcher. Here are the following arguments you should pass to the game:</p>
 
     <pre>DEV.TestSID=replace_this_with_your_sid DEV.UseSqPack=1 DEV.DataPathType=1 SYS.region=3 language=1 version={{ game_version }} DEV.MaxEntitledExpansionID=5 DEV.LobbyHost01={{ lobby_host }} DEV.LobbyPort01={{ lobby_port }} DEV.LobbyHost02={{ lobby_host }} DEV.LobbyPort02={{ lobby_port }} DEV.LobbyHost03={{ lobby_host }} DEV.LobbyPort03={{ lobby_port }} DEV.LobbyHost04={{ lobby_host }} DEV.LobbyPort04={{ lobby_port }} DEV.LobbyHost05={{ lobby_host }} DEV.LobbyPort05={{ lobby_port }} DEV.LobbyHost06={{ lobby_host }} DEV.LobbyPort06={{ lobby_port }} DEV.LobbyHost07={{ lobby_host }} DEV.LobbyPort07={{ lobby_port }} DEV.LobbyHost08={{ lobby_host }} DEV.LobbyPort08={{ lobby_port }} DEV.LobbyHost09={{ lobby_host }} DEV.LobbyPort09={{ lobby_port }} DEV.LobbyHost10={{ lobby_host }} DEV.LobbyPort10={{ lobby_port }} DEV.LobbyHost11={{ lobby_host }} DEV.LobbyPort11={{ lobby_port }} DEV.LobbyHost12={{ lobby_host }} DEV.LobbyPort12={{ lobby_port }}</pre>
 

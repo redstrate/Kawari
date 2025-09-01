@@ -1,0 +1,12 @@
+{
+    "game_patch_server": "{{ game_patch_server }}",
+    "boot_patch_server": "{{ boot_patch_server }}",
+    "login_server": "{{ login_server }}",
+    "lobby_server": "{{ lobby_server }}",
+    "lobby_port": {{ lobby_port }},
+    "lodestone_server": "",
+    "frontier_server": "{{ frontier_server }}",
+    "savedata_bank_server": "",
+    "savedata_bank_port": "",
+    "datacenter_travel_server": "{{ datacenter_travel_server }}"
+}

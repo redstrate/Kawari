@@ -1,4 +1,4 @@
-launcher_url = "http://{{ launcher_url }}/v700/"
+launcher_url = "{{ launcher_url }}/v700/"
 disable_webview2_install = {{ enable_webview2 }}
 disable_boot_version_check = true
 force_http = true

@@ -51,6 +51,12 @@ fn setup_default_environment() -> Environment<'static> {
             .expect("Failed to find template!"),
     )
     .unwrap();
+    env.add_template_owned(
+        "autoconfig.json",
+        std::fs::read_to_string(web_templates_dir!("autoconfig.json"))
+            .expect("Failed to find template!"),
+    )
+    .unwrap();
 
     env
 }
@@ -91,7 +97,7 @@ async fn setup() -> Html<String> {
     let template = environment.get_template("setup.html").unwrap();
     Html(
         template
-            .render(context! { login_server => config.login.server_name, lobby_port => config.lobby.port, lobby_host => config.lobby.listen_address, game_version => SUPPORTED_GAME_VERSION.0 })
+            .render(context! { login_server => config.login.server_name, lobby_port => config.lobby.port, lobby_host => config.lobby.server_name, game_version => SUPPORTED_GAME_VERSION.0, frontier_host => config.frontier.server_name, login_host => config.login.server_name })
             .unwrap(),
     )
 }
@@ -108,8 +114,26 @@ async fn launcher_config(Query(params): Query<Params>) -> String {
     let environment = setup_default_environment();
     let template = environment.get_template("launchertweaks.toml").unwrap();
     template
-            .render(context! { launcher_url => config.launcher.server_name, enable_webview2 => params.r#type != "webview2", game_patch_server => config.patch.game_server_name, boot_patch_server => config.patch.boot_server_name, lobby_port => config.lobby.port, lobby_host => config.lobby.listen_address })
+            .render(context! { launcher_url => config.launcher.server_name, enable_webview2 => params.r#type != "webview2", game_patch_server => config.patch.game_server_name, boot_patch_server => config.patch.boot_server_name, lobby_port => config.lobby.port, lobby_host => config.lobby.server_name })
             .unwrap()
+}
+
+async fn auto_config() -> String {
+    let config = get_config();
+
+    let environment = setup_default_environment();
+    let template = environment.get_template("autoconfig.json").unwrap();
+    template
+        .render(context! {
+            game_patch_server => config.patch.game_server_name,
+            boot_patch_server => config.patch.boot_server_name,
+            login_server => config.login.server_name,
+            lobby_server => config.lobby.server_name,
+            lobby_port => config.lobby.port,
+            frontier_server => config.frontier.server_name,
+            datacenter_travel_server => config.datacenter_travel.server_name,
+        })
+        .unwrap()
 }
 
 #[tokio::main]
@@ -121,6 +145,7 @@ async fn main() {
         .route("/worldstatus", get(world_status))
         .route("/setup", get(setup))
         .route("/launcherconfig", get(launcher_config))
+        .route("/.well-known/xiv", get(auto_config))
         .nest_service("/static", ServeDir::new(web_static_dir!("")));
 
     let config = get_config();

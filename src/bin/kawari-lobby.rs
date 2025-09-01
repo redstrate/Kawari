@@ -296,18 +296,18 @@ async fn main() {
                                             }
 
                                             let Ok(login_reply) = reqwest::get(format!(
-                                            "http://{}/_private/service_accounts?sid={}&service={}",
-                                            config.login.server_name, session_id, GAME_SERVICE
-                                        ))
-                                        .await
-                                        else {
-                                            tracing::warn!(
-                                                "Failed to contact login server, is it running?"
-                                            );
-                                            // "The lobby server connection has encountered an error."
-                                            connection.send_error(*sequence, 2002, 13001).await;
-                                            break;
-                                        };
+                                                "{}/_private/service_accounts?sid={}&service={}",
+                                                config.login.server_name, session_id, GAME_SERVICE
+                                            ))
+                                            .await
+                                            else {
+                                                tracing::warn!(
+                                                    "Failed to contact login server, is it running?"
+                                                );
+                                                // "The lobby server connection has encountered an error."
+                                                connection.send_error(*sequence, 2002, 13001).await;
+                                                break;
+                                            };
 
                                             let Ok(body) = login_reply.text().await else {
                                                 tracing::warn!(

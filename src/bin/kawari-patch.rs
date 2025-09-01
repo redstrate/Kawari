@@ -114,8 +114,7 @@ async fn verify_session(
                 let metadata = file.metadata().unwrap();
 
                 send_patches.push(PatchEntry {
-                    url: format!("http://{}/game/{}.patch", config.patch.patch_dl_url, patch)
-                        .to_string(),
+                    url: format!("{}/game/{}.patch", config.patch.patch_dl_url, patch).to_string(),
                     version: patch_str.to_string(),
                     hash_block_size: 0,
                     length: metadata.len() as i64,
@@ -150,7 +149,7 @@ async fn verify_session(
 
                     send_patches.push(PatchEntry {
                         url: format!(
-                            "http://{}/{expansion_name}/{}.patch",
+                            "{}/{expansion_name}/{}.patch",
                             config.patch.patch_dl_url, patch
                         )
                         .to_string(),
@@ -258,8 +257,7 @@ async fn verify_boot(
                 let metadata = file.metadata().unwrap();
 
                 send_patches.push(PatchEntry {
-                    url: format!("http://{}/boot/{}.patch", config.patch.patch_dl_url, patch)
-                        .to_string(),
+                    url: format!("{}/boot/{}.patch", config.patch.patch_dl_url, patch).to_string(),
                     version: patch_str.to_string(),
                     hash_block_size: 0,
                     length: metadata.len() as i64,

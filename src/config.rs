@@ -48,6 +48,8 @@ pub struct FrontierConfig {
     pub port: u16,
     #[serde(default = "default_listen_address")]
     pub listen_address: String,
+    #[serde(default = "FrontierConfig::default_server_name")]
+    pub server_name: String,
     #[serde(default = "FrontierConfig::default_worlds_open")]
     pub worlds_open: bool,
     #[serde(default = "FrontierConfig::default_login_open")]
@@ -59,6 +61,7 @@ impl Default for FrontierConfig {
         Self {
             port: Self::default_port(),
             listen_address: default_listen_address(),
+            server_name: Self::default_server_name(),
             worlds_open: Self::default_worlds_open(),
             login_open: Self::default_login_open(),
         }
@@ -85,6 +88,10 @@ impl FrontierConfig {
     fn default_login_open() -> bool {
         true
     }
+
+    fn default_server_name() -> String {
+        "http://frontier.ffxiv.localhost".to_string()
+    }
 }
 
 /// Configuration for the lobby server.
@@ -94,6 +101,8 @@ pub struct LobbyConfig {
     pub port: u16,
     #[serde(default = "default_listen_address")]
     pub listen_address: String,
+    #[serde(default = "LobbyConfig::default_server_name")]
+    pub server_name: String,
 }
 
 impl Default for LobbyConfig {
@@ -101,6 +110,7 @@ impl Default for LobbyConfig {
         Self {
             port: Self::default_port(),
             listen_address: default_listen_address(),
+            server_name: Self::default_server_name(),
         }
     }
 }
@@ -116,6 +126,10 @@ impl LobbyConfig {
 
     fn default_port() -> u16 {
         7000
+    }
+
+    fn default_server_name() -> String {
+        "127.0.0.1".to_string()
     }
 }
 
@@ -155,7 +169,7 @@ impl LoginConfig {
     }
 
     fn default_server_name() -> String {
-        "ffxiv-login.square.localhost".to_string()
+        "http://ffxiv-login.square.localhost".to_string()
     }
 }
 
@@ -215,7 +229,7 @@ impl PatchConfig {
     }
 
     fn default_patch_dl_url() -> String {
-        "patch-dl.ffxiv.localhost".to_string()
+        "http://patch-dl.ffxiv.localhost".to_string()
     }
 
     fn default_patches_location() -> String {
@@ -223,11 +237,11 @@ impl PatchConfig {
     }
 
     fn default_boot_server_name() -> String {
-        "patch-bootver.ffxiv.localhost".to_string()
+        "http://patch-bootver.ffxiv.localhost".to_string()
     }
 
     fn default_game_server_name() -> String {
-        "patch-gamever.ffxiv.localhost".to_string()
+        "http://patch-gamever.ffxiv.localhost".to_string()
     }
 
     fn default_supported_platforms() -> Vec<String> {
@@ -275,7 +289,7 @@ impl WebConfig {
     }
 
     fn default_server_name() -> String {
-        "ffxiv.localhost".to_string()
+        "http://ffxiv.localhost".to_string()
     }
 }
 
@@ -427,7 +441,7 @@ impl LauncherConfig {
     }
 
     fn default_server_name() -> String {
-        "launcher.ffxiv.localhost".to_string()
+        "http://launcher.ffxiv.localhost".to_string()
     }
 }
 
@@ -470,6 +484,8 @@ pub struct DataCenterTravelConfig {
     pub port: u16,
     #[serde(default = "default_listen_address")]
     pub listen_address: String,
+    #[serde(default = "DataCenterTravelConfig::default_server_name")]
+    pub server_name: String,
 }
 
 impl Default for DataCenterTravelConfig {
@@ -477,6 +493,7 @@ impl Default for DataCenterTravelConfig {
         Self {
             port: Self::default_port(),
             listen_address: default_listen_address(),
+            server_name: Self::default_server_name(),
         }
     }
 }
@@ -492,6 +509,10 @@ impl DataCenterTravelConfig {
 
     fn default_port() -> u16 {
         5860
+    }
+
+    fn default_server_name() -> String {
+        "http://dctravel.ffxiv.localhost".to_string()
     }
 }
 

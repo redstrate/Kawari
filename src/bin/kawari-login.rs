@@ -313,7 +313,7 @@ async fn logout(State(state): State<LoginServerState>, jar: CookieJar) -> (Cooki
     }
     (
         jar.remove("cis_sessid"),
-        Redirect::to(&format!("http://{}/", config.web.server_name)),
+        Redirect::to(&format!("{}/", config.web.server_name)),
     )
 }
 
