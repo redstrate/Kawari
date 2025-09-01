@@ -264,7 +264,10 @@ impl GameData {
     /// Gets the sub model ID for a given item ID.
     pub fn get_sub_model_id(&mut self, item_id: u32) -> Option<u64> {
         if let Some(item_info) = self.get_item_info(ItemInfoQuery::ById(item_id)) {
-            return Some(item_info.sub_model_id);
+            // Only return an id if the item actually has a sub model.
+            if item_info.sub_model_id != 0 {
+                return Some(item_info.sub_model_id);
+            }
         }
 
         None

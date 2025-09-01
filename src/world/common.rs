@@ -45,7 +45,7 @@ pub enum FromServer {
     /// Update an actor's equip display flags.
     UpdateConfig(u32, Config),
     /// Update an actor's model IDs.
-    ActorEquip(u32, u64, [u32; 10]),
+    ActorEquip(u32, u64, u64, [u32; 10]),
     /// Informs the connection to replay packet data to the client.
     ReplayPacket(PacketSegment<ServerZoneIpcSegment>),
     /// The player should lose this effect.
@@ -118,7 +118,7 @@ pub enum ToServer {
     /// We want to update our own equip display flags.
     Config(ClientId, u32, Config),
     /// Tell the server what models IDs we have equipped.
-    Equip(ClientId, u32, u64, [u32; 10]),
+    Equip(ClientId, u32, u64, u64, [u32; 10]),
     /// Begins a packet replay.
     BeginReplay(ClientId, String),
     /// The player gains an effect.
