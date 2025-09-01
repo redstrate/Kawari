@@ -127,8 +127,6 @@ pub enum ToServer {
     Warp(ClientId, u32, u32),
     /// Warp with the specified aetheryte id.
     WarpAetheryte(ClientId, u32, u32),
-    /// Ready to spawn the player (this happens during initrequest)
-    ReadySpawnPlayer(ClientId, u16, Position, f32),
     /// Ready to send the ZoneIn ACS
     ZoneIn(ClientId, u32, bool),
 }

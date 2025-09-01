@@ -17,7 +17,7 @@ function onEnterTerritory(player, zone)
     Scene00000(player);
 end
 
-function onSceneFinished(player, scene)
+function onReturn(scene, results, player)
     if scene == 0 then
         Scene00001(player)
     end
