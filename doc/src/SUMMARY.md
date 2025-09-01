@@ -2,6 +2,7 @@
 
 - [Usage](usage.md)
 - [Contributing](contributing.md)
+- [Sapphire Proxy](sapphire.md)
 
 # Commands
 - [GM Commands](gm_commands.md)
