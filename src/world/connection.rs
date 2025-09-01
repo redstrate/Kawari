@@ -1193,6 +1193,17 @@ impl ZoneConnection {
 
         let inventory = &self.player_data.inventory;
 
+        let mut look = chara_details.chara_make.customize;
+
+        // There seems to be no display flag for this, so clear the bit out
+        if self
+            .player_data
+            .display_flags
+            .intersects(EquipDisplayFlag::HIDE_LEGACY_MARK)
+        {
+            look.facial_features &= !(1 << 7);
+        }
+
         CommonSpawn {
             class_job: self.player_data.classjob_id,
             name: chara_details.name,
@@ -1202,8 +1213,8 @@ impl ZoneConnection {
             mp_max: self.player_data.max_mp,
             level: self.current_level(&game_data) as u8,
             object_kind: ObjectKind::Player(PlayerSubKind::Player),
-            look: chara_details.chara_make.customize,
-            display_flags: DisplayFlag::INVISIBLE, //, self.player_data.display_flags.into(),
+            look,
+            display_flags: DisplayFlag::INVISIBLE | self.player_data.display_flags.into(),
             main_weapon_model: inventory.get_main_weapon_id(&mut game_data),
             sec_weapon_model: inventory.get_sub_weapon_id(&mut game_data),
             models: inventory.get_model_ids(&mut game_data),
