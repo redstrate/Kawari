@@ -1166,7 +1166,12 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 for (id, (handle, _)) in &mut network.clients {
                     let id = *id;
 
-                    let msg = FromServer::ActorEquip(from_actor_id, main_weapon_id, sub_weapon_id, model_ids);
+                    let msg = FromServer::ActorEquip(
+                        from_actor_id,
+                        main_weapon_id,
+                        sub_weapon_id,
+                        model_ids,
+                    );
 
                     if handle.send(msg).is_err() {
                         to_remove.push(id);

@@ -680,7 +680,13 @@ impl ZoneConnection {
         }
     }
 
-    pub async fn update_equip(&mut self, actor_id: u32, main_weapon_id: u64, sub_weapon_id: u64, model_ids: [u32; 10]) {
+    pub async fn update_equip(
+        &mut self,
+        actor_id: u32,
+        main_weapon_id: u64,
+        sub_weapon_id: u64,
+        model_ids: [u32; 10],
+    ) {
         let chara_details = self.database.find_chara_make(self.player_data.content_id);
         self.send_stats(&chara_details).await;
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Equip(Equip {
@@ -703,8 +709,9 @@ impl ZoneConnection {
             self.actor_control_self(ActorControlSelf {
                 category: ActorControlCategory::SetItemLevel {
                     level: self.player_data.inventory.equipped.calculate_item_level() as u32,
-                }
-            }).await;
+                },
+            })
+            .await;
             // Uknown what this is, it's seen when (un)equipping stuff.
             self.actor_control_self(ActorControlSelf {
                 category: ActorControlCategory::Unknown {
@@ -713,10 +720,11 @@ impl ZoneConnection {
                     param2: 0,
                     param3: 0,
                     param4: 0,
-                }
-            }).await;
+                },
+            })
+            .await;
         }
-        
+
         self.process_effects_list().await;
         self.update_class_info().await;
     }
