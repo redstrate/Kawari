@@ -121,7 +121,6 @@ impl ScramblerKeys {
 
     /// Fetches the opcode-based key from the table. This changes every patch.
     pub fn get_opcode_based_key(&self, opcode: u16) -> i32 {
-        assert_eq!(self.opcode_key_table.len(), 51);
         let base_key = self.get_base_key(opcode);
         let index = (opcode as usize + base_key as usize) % self.opcode_key_table.len();
         self.opcode_key_table[index]
