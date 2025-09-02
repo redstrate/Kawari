@@ -425,6 +425,12 @@
             "comment": "Sent to nearby clients when a client sends a chat message in the say, yell, or shout channels.",
             "opcode": 298,
             "size": 1080
+        },
+        {
+            "name": "LocationDiscovered",
+            "comment": "Sent by the server in response to NewDiscovery.",
+            "opcode": 977,
+            "size": 8
         }
     ],
     "ClientZoneIpcType": [

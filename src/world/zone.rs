@@ -20,6 +20,7 @@ pub struct Zone {
     pub intended_use: u8,
     pub layer_groups: Vec<LayerGroup>,
     pub navimesh_path: String,
+    pub map_id: u16,
 }
 
 impl Zone {
@@ -36,6 +37,7 @@ impl Zone {
         };
 
         zone.intended_use = *row.TerritoryIntendedUse().into_u8().unwrap();
+        zone.map_id = *row.Map().into_u16().unwrap();
 
         // e.g. ffxiv/fst_f1/fld/f1f3/level/f1f3
         let bg_path = row.Bg().into_string().unwrap();

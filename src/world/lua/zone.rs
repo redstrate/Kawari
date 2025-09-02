@@ -17,6 +17,7 @@ pub struct LuaZone {
     pub region_name: String,
     pub place_name: String,
     pub intended_use: u8,
+    pub map_id: u16,
     pub queued_segments: Vec<PacketSegment<ServerZoneIpcSegment>>,
 }
 
@@ -54,6 +55,7 @@ impl LuaZone {
             region_name: zone.region_name.clone(),
             place_name: zone.place_name.clone(),
             intended_use: zone.intended_use,
+            map_id: zone.map_id,
             ..Default::default()
         }
     }

@@ -462,6 +462,10 @@ pub enum ServerZoneIpcData {
         unk: [u8; 448],
     },
     ChatMessage(ChatMessage),
+    LocationDiscovered {
+        map_part_id: u32,
+        map_id: u32,
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
