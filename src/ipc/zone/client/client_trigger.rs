@@ -37,6 +37,10 @@ pub enum ClientTriggerCommand {
         // TODO: fill out the rest
     },
 
+    /// The client toggles a sign for their current target.
+    #[brw(magic = 0x012Du32)]
+    ToggleSign { id: u32 },
+
     /// The client sets a specific title.
     #[brw(magic = 0x012Eu32)]
     SetTitle { title_id: u32 },
