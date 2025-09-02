@@ -112,6 +112,12 @@ pub enum ClientTriggerCommand {
     #[brw(magic = 0x232Du32)]
     SetDistanceRange { range: DistanceRange },
 
+    // Sent whenever the client tries to begin a Hall of the Novice exercise.
+    #[brw(magic = 0x0802u32)]
+    BeginNoviceExercise {
+        id: u32, // not specific to a class/job
+    },
+
     // Sent whenever the Glamour Plates window is opened or closed.
     #[brw(magic = 0x934u32)]
     ToggleGlamourPlatesWindow {
