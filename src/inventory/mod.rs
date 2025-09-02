@@ -58,15 +58,15 @@ pub enum ItemOperationKind {
     EquipMannequin = BASE_INVENTORY_ACTION + 18,
 }
 
-impl TryFrom<u8> for ItemOperationKind {
+impl TryFrom<u32> for ItemOperationKind {
     type Error = ();
-    fn try_from(value: u8) -> Result<Self, Self::Error> {
+    fn try_from(value: u32) -> Result<Self, Self::Error> {
         match value {
-            x if x == ItemOperationKind::Discard as u8 => Ok(ItemOperationKind::Discard),
-            x if x == ItemOperationKind::Move as u8 => Ok(ItemOperationKind::Move),
-            x if x == ItemOperationKind::Exchange as u8 => Ok(ItemOperationKind::Exchange),
-            x if x == ItemOperationKind::SplitStack as u8 => Ok(ItemOperationKind::SplitStack),
-            x if x == ItemOperationKind::CombineStack as u8 => Ok(ItemOperationKind::CombineStack),
+            x if x == ItemOperationKind::Discard as u32 => Ok(ItemOperationKind::Discard),
+            x if x == ItemOperationKind::Move as u32 => Ok(ItemOperationKind::Move),
+            x if x == ItemOperationKind::Exchange as u32 => Ok(ItemOperationKind::Exchange),
+            x if x == ItemOperationKind::SplitStack as u32 => Ok(ItemOperationKind::SplitStack),
+            x if x == ItemOperationKind::CombineStack as u32 => Ok(ItemOperationKind::CombineStack),
             _ => Err(()),
         }
     }
