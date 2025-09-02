@@ -1063,6 +1063,9 @@ async fn client_loop(
                                             ClientZoneIpcData::StartCountdown { .. } => {
                                                 tracing::info!("Countdowns is unimplemented");
                                             }
+                                            ClientZoneIpcData::RequestPlaytime { .. } => {
+                                                tracing::info!("Playtime is unimplemented");
+                                            }
                                             ClientZoneIpcData::Unknown { unk } => {
                                                 tracing::warn!("Unknown packet {:?} recieved ({} bytes), this should be handled!", data.op_code, unk.len());
                                             }

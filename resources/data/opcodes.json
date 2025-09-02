@@ -703,6 +703,12 @@
             "comment": "Happens when starting a countdown through the Countdown window.",
             "opcode": 146,
             "size": 40
+        },
+        {
+            "name": "RequestPlaytime",
+            "comment": "Happens when the client requests the playtime using the /playtime command.",
+            "opcode": 175,
+            "size": 8
         }
     ],
     "ServerLobbyIpcType": [

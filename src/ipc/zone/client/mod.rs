@@ -252,6 +252,9 @@ pub enum ClientZoneIpcData {
         #[bw(pad_size_to = 40)]
         unk: Vec<u8>,
     },
+    RequestPlaytime {
+        unk: [u8; 8],
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
