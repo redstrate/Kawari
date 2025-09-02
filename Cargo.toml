@@ -116,7 +116,7 @@ axum = { version = "0.8", features = ["json", "tokio", "http1", "form", "query",
 axum-extra = { version = "0.10", features = ["cookie"], default-features = false }
 
 # Async runtime
-tokio = { version = "1.47", features = ["macros", "rt", "rt-multi-thread", "io-util"], default-features = false }
+tokio = { version = "1.47", features = ["macros", "rt", "rt-multi-thread", "io-util", "process"], default-features = false }
 
 # Logging
 tracing-subscriber = { version = "0.3", features = ["fmt"], default-features = false }
@@ -150,3 +150,6 @@ sha1_smol = { version = "1.0" }
 
 # for navimesh generation
 recastnavigation-sys = { git = "https://github.com/redstrate/recastnavigation-rs-sys", features = ["recast", "detour"] }
+
+# For orchestrator
+ctrlc = { version =  "3.4" }
