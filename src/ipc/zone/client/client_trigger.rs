@@ -4,7 +4,7 @@ use strum_macros::IntoStaticStr;
 use crate::common::{DistanceRange, ObjectId, read_bool_from, write_bool_as};
 
 #[binrw]
-#[derive(Debug, Eq, PartialEq, Clone, IntoStaticStr)]
+#[derive(Debug, PartialEq, Clone, IntoStaticStr)]
 pub enum ClientTriggerCommand {
     /// The player sheathes/unsheathes their weapon.
     #[brw(magic = 0x0001u32)]
@@ -44,6 +44,25 @@ pub enum ClientTriggerCommand {
     /// The client requests the player's unlocked titles.
     #[brw(magic = 0x012Fu32)]
     RequestTitleList {},
+
+    /// The client clears all waymarks.
+    #[brw(magic = 0x0139u32)]
+    ClearAllWaymarks {},
+
+    /// The client places a waymark.
+    #[brw(magic = 0x013Du32)]
+    PlaceWaymark {
+        id: u32,
+
+        // probably coordinates?
+        unk1: u32,
+        unk2: u32,
+        unk3: u32,
+    },
+
+    /// The client clears a waymark.
+    #[brw(magic = 0x013Eu32)]
+    ClearWaymark { id: u32 },
 
     /// The player begins an emote.
     #[brw(magic = 0x01F4u32)]
