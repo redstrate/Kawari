@@ -1079,7 +1079,7 @@ async fn client_loop(
                                         .await
                                     }
                                     SegmentData::KeepAliveResponse { .. } => {
-                                        tracing::info!("Got keep alive response from client... cool...");
+                                        // these should be safe to ignore
                                     }
                                     SegmentData::KawariIpc(data) => handle_custom_ipc(&mut connection, data).await,
                                     _ => {
