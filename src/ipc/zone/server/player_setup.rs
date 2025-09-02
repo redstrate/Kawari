@@ -100,7 +100,7 @@ pub struct PlayerStatus {
     #[br(map = read_string)]
     #[bw(map = write_string)]
     pub name: String,
-    #[brw(pad_before = 32)]
+    #[brw(pad_before = 31)]
     #[br(count = UNLOCK_BITMASK_SIZE)]
     #[bw(pad_size_to = UNLOCK_BITMASK_SIZE)]
     pub unlocks: Vec<u8>,
@@ -163,8 +163,8 @@ pub struct PlayerStatus {
     #[bw(pad_size_to = 41)]
     pub unknown85e: Vec<u8>,
     // meh, this is where i put all of the new data
-    #[br(count = 152)]
-    #[bw(pad_size_to = 152)]
+    #[br(count = 153)]
+    #[bw(pad_size_to = 153)]
     pub unknown948: Vec<u8>,
 
     // unlocked status
