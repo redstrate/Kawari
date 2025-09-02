@@ -14,12 +14,14 @@ pub enum ClientTriggerCommand {
         #[bw(map = write_bool_as::<u32>)]
         shown: bool,
     },
+
     /// The player looks or stops looking at an actor.
     #[brw(magic = 0x0003u16)]
     SetTarget {
         #[brw(pad_before = 2)]
         actor_id: ObjectId,
     },
+
     /// When the player right-clicks their status effect to remove it.
     #[brw(magic = 0x0068u16)]
     ManuallyRemoveEffect {
@@ -28,9 +30,11 @@ pub enum ClientTriggerCommand {
         unk1: u32,
         source_actor_id: ObjectId,
     },
+
     /// The client is finished zoning.
     #[brw(magic = 0x00C9u16)]
     FinishZoning {},
+
     /// The player selects a teleport destination.
     #[brw(magic = 0x00CAu16)]
     TeleportQuery {
@@ -38,18 +42,22 @@ pub enum ClientTriggerCommand {
         aetheryte_id: u32,
         // TODO: fill out the rest
     },
+
     /// The client sets a specific title.
     #[brw(magic = 0x012Eu16)]
     SetTitle { title_id: u32 },
+
     /// The client requests the player's unlocked titles.
     #[brw(magic = 0x012Fu16)]
     RequestTitleList {},
+
     /// The player begins an emote.
     #[brw(magic = 0x01F4u16)]
     Emote {
         #[brw(pad_before = 2)] // padding
         emote: u32,
     },
+
     /// The player explicitly changed their pose.
     #[brw(magic = 0x01F9u16)]
     ChangePose {
@@ -57,6 +65,7 @@ pub enum ClientTriggerCommand {
         unk1: u32,
         pose: u32,
     },
+
     /// The client is "reapplying" the existing pose, like after idling.
     #[brw(magic = 0x01FAu16)]
     ReapplyPose {
@@ -64,23 +73,28 @@ pub enum ClientTriggerCommand {
         unk1: u32,
         pose: u32,
     },
+
     #[brw(magic = 0x025Eu16)]
     WalkInTriggerFinished {
         #[brw(pad_before = 2)]
         unk1: u32,
     },
+
     /// When the player begins swimming. Seems to have no parameters.
     #[brw(magic = 0x0260u16)]
     BeginSwimming {},
+
     /// When the player stops swimming (by going back on land, mounting, etc.). Seems to have no parameters.
     #[brw(magic = 0x0261u16)]
     EndSwimming {},
+
     /// When the player enters an area where mounting is prohibited in a zone that otherwise permits zoning. Commonly seen during Moonfire Faire festivals, and does not seem to have an exit counterpart.
     #[brw(magic = 0x0264u16)]
     EnterMountingProhibitedArea {
         #[brw(pad_before = 2)]
         enabled: u32,
     },
+
     /// Unknown purpose, but is seen during the crystal bell/aesthetician cutscenes.
     #[brw(magic = 0x033Eu16)]
     EventRelatedUnk {
@@ -90,15 +104,18 @@ pub enum ClientTriggerCommand {
         unk3: u32,
         unk4: u32,
     },
+
     /// The client is ready to begin loading a zone.
     #[brw(magic = 0x0C81u16)]
     BeginLoading {},
+
     /// The client tells us how far in the distance we should see actors.
     #[brw(magic = 0x232Du16)]
     SetDistanceRange {
         #[brw(pad_before = 2)]
         range: DistanceRange,
     },
+
     Unknown {
         category: u16,
         // seen in haircut event
