@@ -116,6 +116,15 @@ pub enum ClientTriggerCommand {
         range: DistanceRange,
     },
 
+    // Sent whenever the Glamour Plates window is opened or closed.
+    #[brw(magic = 0x934u16)]
+    ToggleGlamourPlatesWindow {
+        #[brw(pad_before = 2)]
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        open: bool,
+    },
+
     Unknown {
         category: u16,
         // seen in haircut event
