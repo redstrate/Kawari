@@ -125,7 +125,7 @@ tracing-subscriber = { version = "0.3", features = ["fmt"], default-features = f
 fastrand = { version = "2.3", features = ["std"], default-features = false }
 
 # HTML templates used in the web servers
-minijinja = { version = "2.11", features = ["serde", "loader", "multi_template"], default-features = false }
+minijinja = { version = "2.12", features = ["serde", "loader", "multi_template"], default-features = false }
 
 # Used for data persistence
 rusqlite = { version = "0.37", features = ["bundled"], default-features = false }
@@ -134,7 +134,7 @@ rusqlite = { version = "0.37", features = ["bundled"], default-features = false 
 mlua = { version = "0.11", features = ["lua54", "vendored", "send", "async", "serialize"], default-features = false }
 
 # For character backup decompression
-zip = { version = "4.3", features = ["deflate", "lzma", "bzip2"], default-features = false }
+zip = { version = "4.6", features = ["deflate", "lzma", "bzip2"], default-features = false }
 
 # For some login<->lobby server communication
 reqwest = { version = "0.12", default-features = false }
