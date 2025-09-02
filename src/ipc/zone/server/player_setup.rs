@@ -167,10 +167,12 @@ pub struct PlayerStatus {
     #[bw(pad_size_to = 141)]
     pub unknown948: Vec<u8>,
 
+    // unlocked status
     #[br(count = RAID_ARRAY_SIZE)]
     #[bw(pad_size_to = RAID_ARRAY_SIZE)]
     pub unlocked_raids: Vec<u8>,
 
+    // FIXME: some pvp/gold saucer duties are located inside of the raids array?!?! I feel like we are understanding this part wrong...
     #[br(count = DUNGEON_ARRAY_SIZE)]
     #[bw(pad_size_to = DUNGEON_ARRAY_SIZE)]
     pub unlocked_dungeons: Vec<u8>,
@@ -187,14 +189,8 @@ pub struct PlayerStatus {
     #[bw(pad_size_to = PVP_ARRAY_SIZE)]
     pub unlocked_pvp: Vec<u8>,
 
-    #[br(count = RAID_ARRAY_SIZE)]
-    #[bw(pad_size_to = RAID_ARRAY_SIZE)]
-    pub cleared_raids: Vec<u8>,
-
-    #[br(count = DUNGEON_ARRAY_SIZE)]
-    #[bw(pad_size_to = DUNGEON_ARRAY_SIZE)]
-    pub cleared_dungeons: Vec<u8>,
-
+    // cleared status
+    // NOTE: all of the following fields are wrong in some way!
     #[br(count = GUILDHEST_ARRAY_SIZE)]
     #[bw(pad_size_to = GUILDHEST_ARRAY_SIZE)]
     pub cleared_guildhests: Vec<u8>,
@@ -203,14 +199,17 @@ pub struct PlayerStatus {
     #[bw(pad_size_to = TRIAL_ARRAY_SIZE)]
     pub cleared_trials: Vec<u8>,
 
+    #[br(count = DUNGEON_ARRAY_SIZE)]
+    #[bw(pad_size_to = DUNGEON_ARRAY_SIZE)]
+    pub cleared_dungeons: Vec<u8>,
+
+    #[br(count = RAID_ARRAY_SIZE)]
+    #[bw(pad_size_to = RAID_ARRAY_SIZE)]
+    pub cleared_raids: Vec<u8>,
+
     #[br(count = PVP_ARRAY_SIZE)]
     #[bw(pad_size_to = PVP_ARRAY_SIZE)]
-    pub cleared_pvp: Vec<u8>,
-
-    /// TODO: This is probably wrong!
-    #[br(count = 28)]
-    #[bw(pad_size_to = 28)]
-    pub unknown949: Vec<u8>,
+    pub cleared_pvp: Vec<u8>, // TODO: i don't think this is actually a thing?
 }
 
 // TODO: update testdata for 7.3

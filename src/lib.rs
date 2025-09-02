@@ -86,16 +86,16 @@ pub const COMPLETED_LEVEQUEST_BITMASK_SIZE: usize = 226;
 pub const CLASSJOB_ARRAY_SIZE: usize = 32;
 
 /// The size of various raid bitmasks.
-pub const RAID_ARRAY_SIZE: usize = 24;
+pub const RAID_ARRAY_SIZE: usize = 39;
 
 /// The size of various dungeon bitmasks.
-pub const DUNGEON_ARRAY_SIZE: usize = 15;
+pub const DUNGEON_ARRAY_SIZE: usize = 18;
 
 /// The size of various guildhest bitmasks.
 pub const GUILDHEST_ARRAY_SIZE: usize = 10;
 
 /// The size of various trial bitmasks.
-pub const TRIAL_ARRAY_SIZE: usize = 18;
+pub const TRIAL_ARRAY_SIZE: usize = 14;
 
 /// The size of various PvP bitmasks.
 pub const PVP_ARRAY_SIZE: usize = 7;
