@@ -38,6 +38,9 @@ pub enum ClientTriggerCommand {
         aetheryte_id: u32,
         // TODO: fill out the rest
     },
+    /// The client sets a specific title.
+    #[brw(magic = 0x012Eu16)]
+    SetTitle { title_id: u32 },
     /// The client requests the player's unlocked titles.
     #[brw(magic = 0x012Fu16)]
     RequestTitleList {},
