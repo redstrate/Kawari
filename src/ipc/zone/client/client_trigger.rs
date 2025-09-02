@@ -7,98 +7,74 @@ use crate::common::{DistanceRange, ObjectId, read_bool_from, write_bool_as};
 #[derive(Debug, Eq, PartialEq, Clone, IntoStaticStr)]
 pub enum ClientTriggerCommand {
     /// The player sheathes/unsheathes their weapon.
-    #[brw(magic = 0x0001u16)]
+    #[brw(magic = 0x0001u32)]
     ToggleWeapon {
-        #[brw(pad_before = 2)]
         #[br(map = read_bool_from::<u32>)]
         #[bw(map = write_bool_as::<u32>)]
         shown: bool,
     },
 
     /// The player looks or stops looking at an actor.
-    #[brw(magic = 0x0003u16)]
-    SetTarget {
-        #[brw(pad_before = 2)]
-        actor_id: ObjectId,
-    },
+    #[brw(magic = 0x0003u32)]
+    SetTarget { actor_id: ObjectId },
 
     /// When the player right-clicks their status effect to remove it.
-    #[brw(magic = 0x0068u16)]
+    #[brw(magic = 0x0068u32)]
     ManuallyRemoveEffect {
-        #[brw(pad_before = 2)] // padding
         effect_id: u32,
         unk1: u32,
         source_actor_id: ObjectId,
     },
 
     /// The client is finished zoning.
-    #[brw(magic = 0x00C9u16)]
+    #[brw(magic = 0x00C9u32)]
     FinishZoning {},
 
     /// The player selects a teleport destination.
-    #[brw(magic = 0x00CAu16)]
+    #[brw(magic = 0x00CAu32)]
     TeleportQuery {
-        #[brw(pad_before = 2)]
         aetheryte_id: u32,
         // TODO: fill out the rest
     },
 
     /// The client sets a specific title.
-    #[brw(magic = 0x012Eu16)]
+    #[brw(magic = 0x012Eu32)]
     SetTitle { title_id: u32 },
 
     /// The client requests the player's unlocked titles.
-    #[brw(magic = 0x012Fu16)]
+    #[brw(magic = 0x012Fu32)]
     RequestTitleList {},
 
     /// The player begins an emote.
-    #[brw(magic = 0x01F4u16)]
-    Emote {
-        #[brw(pad_before = 2)] // padding
-        emote: u32,
-    },
+    #[brw(magic = 0x01F4u32)]
+    Emote { emote: u32 },
 
     /// The player explicitly changed their pose.
-    #[brw(magic = 0x01F9u16)]
-    ChangePose {
-        #[brw(pad_before = 2)] // padding
-        unk1: u32,
-        pose: u32,
-    },
+    #[brw(magic = 0x01F9u32)]
+    ChangePose { unk1: u32, pose: u32 },
 
     /// The client is "reapplying" the existing pose, like after idling.
-    #[brw(magic = 0x01FAu16)]
-    ReapplyPose {
-        #[brw(pad_before = 2)] // padding
-        unk1: u32,
-        pose: u32,
-    },
+    #[brw(magic = 0x01FAu32)]
+    ReapplyPose { unk1: u32, pose: u32 },
 
-    #[brw(magic = 0x025Eu16)]
-    WalkInTriggerFinished {
-        #[brw(pad_before = 2)]
-        unk1: u32,
-    },
+    #[brw(magic = 0x025Eu32)]
+    WalkInTriggerFinished { unk1: u32 },
 
     /// When the player begins swimming. Seems to have no parameters.
-    #[brw(magic = 0x0260u16)]
+    #[brw(magic = 0x0260u32)]
     BeginSwimming {},
 
     /// When the player stops swimming (by going back on land, mounting, etc.). Seems to have no parameters.
-    #[brw(magic = 0x0261u16)]
+    #[brw(magic = 0x0261u32)]
     EndSwimming {},
 
     /// When the player enters an area where mounting is prohibited in a zone that otherwise permits zoning. Commonly seen during Moonfire Faire festivals, and does not seem to have an exit counterpart.
-    #[brw(magic = 0x0264u16)]
-    EnterMountingProhibitedArea {
-        #[brw(pad_before = 2)]
-        enabled: u32,
-    },
+    #[brw(magic = 0x0264u32)]
+    EnterMountingProhibitedArea { enabled: u32 },
 
     /// Unknown purpose, but is seen during the crystal bell/aesthetician cutscenes.
-    #[brw(magic = 0x033Eu16)]
+    #[brw(magic = 0x033Eu32)]
     EventRelatedUnk {
-        #[brw(pad_before = 2)] // padding
         unk1: u32,
         unk2: u32,
         unk3: u32,
@@ -106,29 +82,24 @@ pub enum ClientTriggerCommand {
     },
 
     /// The client is ready to begin loading a zone.
-    #[brw(magic = 0x0C81u16)]
+    #[brw(magic = 0x0C81u32)]
     BeginLoading {},
 
     /// The client tells us how far in the distance we should see actors.
-    #[brw(magic = 0x232Du16)]
-    SetDistanceRange {
-        #[brw(pad_before = 2)]
-        range: DistanceRange,
-    },
+    #[brw(magic = 0x232Du32)]
+    SetDistanceRange { range: DistanceRange },
 
     // Sent whenever the Glamour Plates window is opened or closed.
-    #[brw(magic = 0x934u16)]
+    #[brw(magic = 0x934u32)]
     ToggleGlamourPlatesWindow {
-        #[brw(pad_before = 2)]
         #[br(map = read_bool_from::<u32>)]
         #[bw(map = write_bool_as::<u32>)]
         open: bool,
     },
 
     Unknown {
-        category: u16,
+        category: u32,
         // seen in haircut event
-        #[brw(pad_before = 2)] // padding
         unk1: u32,
         unk2: u32,
         unk3: u32,
