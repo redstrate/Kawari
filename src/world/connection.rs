@@ -346,6 +346,18 @@ impl ZoneConnection {
         .await;
 
         self.actors.push(actor);
+
+        self.actor_control(
+            actor.id.0,
+            ActorControl {
+                category: ActorControlCategory::ZoneIn {
+                    warp_finish_anim: 1,
+                    raise_anim: 0,
+                    unk1: 0,
+                },
+            },
+        )
+        .await;
     }
 
     pub async fn remove_actor(&mut self, actor_id: u32) {
