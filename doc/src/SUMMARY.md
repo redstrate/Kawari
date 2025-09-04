@@ -3,6 +3,9 @@
 - [Usage](usage.md)
 - [Contributing](contributing.md)
 - [Sapphire Proxy](sapphire.md)
+- [Scripting](scripting/intro.md)
+  - [Commands](scripting/commands.md)
+  - [Generic Events](scripting/generic_events.md)
 
 # Commands
 - [GM Commands](gm_commands.md)
