@@ -80,16 +80,7 @@ On Windows this file is located under `C:\Windows\System32\Drivers\etc\hosts` an
 
 ## Logging in
 
-Navigate to [http://ffxiv.localhost](http://ffxiv.localhost), and register for an account. In order to actually log in, navigate to the Setup page and follow the instructions there. If you get an error in your web browser, ensure you're connecting via **http://** and not **https://**.
-
-By default, the World server advertises itself as Gilgamesh but this can be changed in `config.yaml`:
-
-```yaml
-world:
-    world_id: 63
-```
-
-This has no actual effect in-game, apart from the World name shown inside the client. All data centers will show the configured world.
+Now that you completed the initial setup process, you're ready to connect to Kawari! Information on setting up your client to connect is hosted locally at [http://ffxiv.localhost](http://ffxiv.localhost), and it also has the link to register your first account. If you get an error in your web browser, ensure you're connecting via **http://** and not **https://**.
 
 ## What's next?
 
