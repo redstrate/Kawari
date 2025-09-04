@@ -9,12 +9,6 @@ Here are some Dalamud plugins that will make your life easier:
 * [AllowLoginFail](https://codeberg.org/redstrate/AllowLoginFail) to stop the game from rage quitting after hitting lobby errors.
 * [Scripter](https://codeberg.org/redstrate/Scripter) for inspecting the client's Lua state.
 
-## Packet capture
-
-The well-tested packet capturing solutions are [TemporalStasis](https://github.com/WorkingRobot/TemporalStasis/) and [Project Chronofoil](https://github.com/ProjectChronofoil). You should use Project Chronofoil under most circumstances, but it requires Dalamud. TemporalStasis works like a standalone proxy server, and can work with a vanilla game.
-
-To extract `.cfcap` captures from Project Chronofoil, use `cfcap-expand` from [XIVPacketTools](https://codeberg.org/redstrate/XIVPacketTools).
-
 ## Updating to new patches
 
 Here are the various things that should be checked when updating Kawari to a newer patch:
