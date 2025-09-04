@@ -25,7 +25,7 @@ impl ReadWriteIpcSegment for CustomIpcSegment {
                 CustomIpcType::ImportCharacter => 132,
                 CustomIpcType::RemakeCharacter => 1024 + 8,
                 CustomIpcType::CharacterRemade => 8,
-                CustomIpcType::CharacterImported => 64,
+                CustomIpcType::CharacterImported => 128,
             }
     }
 
@@ -157,8 +157,8 @@ pub enum CustomIpcData {
     CharacterRemade { content_id: u64 },
     #[br(pre_assert(*magic == CustomIpcType::CharacterImported))]
     CharacterImported {
-        #[bw(pad_size_to = 64)]
-        #[br(count = 64)]
+        #[bw(pad_size_to = 128)]
+        #[br(count = 128)]
         #[br(map = read_string)]
         #[bw(map = write_string)]
         message: String,

@@ -41,6 +41,7 @@ pub enum ImportError {
     CharacterExists,
     ReadError,
     ParseError,
+    MissingData,
 }
 
 impl std::fmt::Display for ImportError {
@@ -49,6 +50,9 @@ impl std::fmt::Display for ImportError {
             ImportError::CharacterExists => "Character already exists",
             ImportError::ReadError => "Error while reading files",
             ImportError::ParseError => "Error while parsing files",
+            ImportError::MissingData => {
+                "Not all required data can be found. You need to use the Dalamud integration in Auracite!"
+            }
         };
 
         write!(f, "{message}")
@@ -181,7 +185,7 @@ impl WorldDatabase {
                 .read_to_string(&mut json_string)
                 .map_err(|_| ImportError::ReadError)?;
 
-            character = serde_json::from_str(&json_string).map_err(|_| ImportError::ReadError)?;
+            character = serde_json::from_str(&json_string).map_err(|_| ImportError::MissingData)?;
         }
 
         if !self.check_is_name_free(&character.name) {
@@ -190,7 +194,7 @@ impl WorldDatabase {
 
         let charsave_file = archive
             .by_name("FFXIV_CHARA_01.dat")
-            .map_err(|_| ImportError::ReadError)?;
+            .map_err(|_| ImportError::MissingData)?;
         let mut charsave_bytes = Vec::<u8>::new();
         let mut bufrdr = BufReader::new(charsave_file);
         if bufrdr.read_to_end(&mut charsave_bytes).is_err() {
