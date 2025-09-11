@@ -111,6 +111,12 @@ pub enum ActorControlCategory {
         unk4: u32,
     },
 
+    #[brw(magic = 270u32)]
+    MinionSpawnControl {
+        /// When set to 0, the player's minion is despawned.
+        minion_id: u32,
+    },
+
     #[brw(magic = 274u32)]
     UpdateHater { unk1: u32 },
 

@@ -46,6 +46,10 @@ pub enum FromServer {
     UpdateConfig(u32, Config),
     /// Update an actor's model IDs.
     ActorEquip(u32, u64, u64, [u32; 10]),
+    /// We need to summon a player's minion, and tell other clients
+    ActorSummonsMinion(u32),
+    /// We need to despawn a player's minion, and tell other clients
+    ActorDespawnsMinion(),
     /// Informs the connection to replay packet data to the client.
     ReplayPacket(PacketSegment<ServerZoneIpcSegment>),
     /// The player should lose this effect.
@@ -131,6 +135,10 @@ pub enum ToServer {
     ReadySpawnPlayer(ClientId, u16, Position, f32),
     /// Ready to send the ZoneIn ACS
     ZoneIn(ClientId, u32, bool),
+    /// We need to summon a player's minion, and tell other clients
+    ActorSummonsMinion(ClientId, u32, u32),
+    /// We need to despawn a player's minion, and tell other clients
+    ActorDespawnsMinion(ClientId, u32),
 }
 
 #[derive(Clone, Debug)]

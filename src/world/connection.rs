@@ -135,6 +135,7 @@ pub struct PlayerData {
     pub saw_inn_wakeup: bool,
     pub display_flags: EquipDisplayFlag,
     pub teleport_reason: TeleportReason,
+    pub active_minion: u32,
 }
 
 /// Various obsfucation-related bits like the seeds and keys for this connection.
@@ -1273,6 +1274,7 @@ impl ZoneConnection {
             pos: exit_position.unwrap_or_default(),
             rotation: exit_rotation.unwrap_or(0.0),
             voice: chara_details.chara_make.voice_id as u8,
+            active_minion: self.player_data.active_minion as u16,
             ..Default::default()
         }
     }

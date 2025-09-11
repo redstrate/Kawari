@@ -253,6 +253,60 @@ impl NetworkState {
     }
 }
 
+fn set_player_minion(
+    data: &mut WorldServer,
+    network: &mut NetworkState,
+    to_remove: &mut Vec<ClientId>,
+    minion_id: u32,
+    from_id: ClientId,
+    from_actor_id: u32,
+) {
+    for (id, (handle, _)) in &mut network.clients {
+        let id = *id;
+
+        // Update our common spawn to reflect the new minion
+        if id == from_id {
+            let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
+                break;
+            };
+
+            let Some(actor) = instance.find_actor_mut(ObjectId(from_actor_id)) else {
+                break;
+            };
+
+            let NetworkedActor::Player(player) = actor else {
+                break;
+            };
+
+            player.common.active_minion = minion_id as u16;
+
+            let msg = FromServer::ActorControlSelf(
+                ActorControlSelf {
+                    category: ActorControlCategory::MinionSpawnControl { minion_id },
+                },
+            );
+
+            if handle.send(msg).is_err() {
+                to_remove.push(id);
+            }
+
+            // Skip sending the regular ActorControl to ourselves
+            continue;
+        }
+
+        let msg = FromServer::ActorControl(
+            from_actor_id,
+            ActorControl {
+                category: ActorControlCategory::MinionSpawnControl { minion_id },
+            },
+        );
+
+        if handle.send(msg).is_err() {
+            to_remove.push(id);
+        }
+    }
+}
+
 fn server_logic_tick(data: &mut WorldServer, network: &mut NetworkState) {
     for instance in data.instances.values_mut() {
         let mut actor_moves = Vec::new();
@@ -828,6 +882,22 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                                 to_remove.push(id);
                             }
                         }
+
+                        if let ClientTriggerCommand::SummonMinion { minion_id } = &trigger.trigger {
+                            let msg = FromServer::ActorSummonsMinion(*minion_id);
+
+                            if handle.send(msg).is_err() {
+                                to_remove.push(id);
+                            }
+                        }
+
+                        if let ClientTriggerCommand::DespawnMinion { .. } = &trigger.trigger {
+                            let msg = FromServer::ActorDespawnsMinion();
+
+                            if handle.send(msg).is_err() {
+                                to_remove.push(id);
+                            }
+                        }
                         continue;
                     }
 
@@ -1371,6 +1441,32 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 let mut network = network.lock().unwrap();
 
                 network.to_remove.push(from_id);
+            }
+            ToServer::ActorSummonsMinion(from_id, from_actor_id, minion_id) => {
+                let mut network = network.lock().unwrap();
+                let mut data = data.lock().unwrap();
+
+                set_player_minion(
+                    &mut data,
+                    &mut network,
+                    &mut to_remove,
+                    minion_id,
+                    from_id,
+                    from_actor_id,
+                );
+            }
+            ToServer::ActorDespawnsMinion(from_id, from_actor_id) => {
+                let mut network = network.lock().unwrap();
+                let mut data = data.lock().unwrap();
+
+                set_player_minion(
+                    &mut data,
+                    &mut network,
+                    &mut to_remove,
+                    0,
+                    from_id,
+                    from_actor_id,
+                );
             }
             ToServer::FatalError(err) => return Err(err),
         }

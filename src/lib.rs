@@ -100,6 +100,10 @@ pub const TRIAL_ARRAY_SIZE: usize = 14;
 /// The size of various PvP bitmasks.
 pub const PVP_ARRAY_SIZE: usize = 7;
 
+/// The size of the minion bitmask.
+// TODO & FIXME: This is wrong as of 7.31h1, a large number of minions are missing.
+pub const MINION_BITMASK_SIZE: usize = 60;
+
 /// The maximum durability of an item.
 pub const ITEM_CONDITION_MAX: u16 = 30000;
 
