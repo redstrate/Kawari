@@ -18,6 +18,14 @@ pub enum ClientTriggerCommand {
     #[brw(magic = 0x0003u32)]
     SetTarget { actor_id: ObjectId },
 
+    /// The client requests a minion to be summoned.
+    #[brw(magic = 0x0066u32)]
+    SummonMinion { minion_id: u32 },
+
+    /// The client requests a minion to be despawned.
+    #[brw(magic = 0x0067u32)]
+    DespawnMinion {},
+
     /// When the player right-clicks their status effect to remove it.
     #[brw(magic = 0x0068u32)]
     ManuallyRemoveEffect {

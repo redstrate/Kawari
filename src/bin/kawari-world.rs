@@ -30,7 +30,7 @@ use kawari::world::{
     WorldDatabase, handle_custom_ipc, server_main_loop,
 };
 use kawari::{
-    ERR_INVENTORY_ADD_FAILED, LogMessageType, RECEIVE_BUFFER_SIZE, TITLE_UNLOCK_BITMASK_SIZE,
+    ERR_INVENTORY_ADD_FAILED, LogMessageType, MINION_BITMASK_SIZE, RECEIVE_BUFFER_SIZE, TITLE_UNLOCK_BITMASK_SIZE,
 };
 
 use mlua::{Function, Lua};
@@ -297,6 +297,7 @@ async fn client_loop(
                                                         cleared_guildhests: connection.player_data.unlocks.cleared_guildhests.clone(),
                                                         cleared_trials: connection.player_data.unlocks.cleared_trials.clone(),
                                                         cleared_pvp: connection.player_data.unlocks.cleared_pvp.clone(),
+                                                        minions: vec![0xFFu8; MINION_BITMASK_SIZE], // TODO: make this persistent?
                                                         ..Default::default()
                                                     }));
                                                     connection.send_ipc_self(ipc).await;
@@ -1121,6 +1122,14 @@ async fn client_loop(
                     FromServer::ActorControl(actor_id, actor_control) => connection.actor_control(actor_id, actor_control).await,
                     FromServer::ActorControlTarget(actor_id, actor_control) => connection.actor_control_target(actor_id, actor_control).await,
                     FromServer::ActorControlSelf(actor_control) => connection.actor_control_self(actor_control).await,
+                    FromServer::ActorSummonsMinion(minion_id) => {
+                        connection.handle.send(ToServer::ActorSummonsMinion(connection.id, connection.player_data.actor_id, minion_id)).await;
+                        connection.player_data.active_minion = minion_id;
+                    }
+                    FromServer::ActorDespawnsMinion() => {
+                        connection.handle.send(ToServer::ActorDespawnsMinion(connection.id, connection.player_data.actor_id)).await;
+                        connection.player_data.active_minion = 0;
+                    }
                     FromServer::ActionComplete(request) => connection.execute_action(request, &mut lua_player).await,
                     FromServer::ActionCancelled() => connection.cancel_action().await,
                     FromServer::UpdateConfig(actor_id, config) => connection.update_config(actor_id, config).await,
