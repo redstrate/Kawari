@@ -6,6 +6,7 @@
 - [Scripting](scripting/intro.md)
   - [Commands](scripting/commands.md)
   - [Generic Events](scripting/generic_events.md)
+  - [Using Scripter](scripting/scripter.md)
 
 # Commands
 - [GM Commands](gm_commands.md)

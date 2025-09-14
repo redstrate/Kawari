@@ -9,3 +9,5 @@ There are currently guides for scripting:
 * [Generic Events](generic_events.md) (Warps, Inns, Aetherytes, and other generic NPCs.)
 
 If you don't see an item here that's listed, it may be because it's unimplemented or the API is still too unstable.
+
+When you need to start delving into reverse engineering more of the game's Lua, there's [a guide on how to use Scripter to help you](scripter.md)!
