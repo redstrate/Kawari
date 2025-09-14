@@ -509,7 +509,7 @@
         {
             "name": "SocialListRequest",
             "comment": "Sent by the client when it requests the friends list and other related info.",
-            "opcode": 834,
+            "opcode": 384,
             "size": 16
         },
         {
