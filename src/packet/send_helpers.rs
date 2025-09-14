@@ -77,7 +77,7 @@ pub async fn send_custom_world_packet(segment: CustomIpcSegment) -> Option<Custo
 
     let addr = config.world.get_public_socketaddr();
 
-    let mut stream = TcpStream::connect(addr).await.unwrap();
+    let mut stream = TcpStream::connect(addr).await.ok()?;
 
     let mut packet_state = ConnectionState::None;
 

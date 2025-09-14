@@ -280,11 +280,9 @@ fn set_player_minion(
 
             player.common.active_minion = minion_id as u16;
 
-            let msg = FromServer::ActorControlSelf(
-                ActorControlSelf {
-                    category: ActorControlCategory::MinionSpawnControl { minion_id },
-                },
-            );
+            let msg = FromServer::ActorControlSelf(ActorControlSelf {
+                category: ActorControlCategory::MinionSpawnControl { minion_id },
+            });
 
             if handle.send(msg).is_err() {
                 to_remove.push(id);

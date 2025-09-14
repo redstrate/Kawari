@@ -284,16 +284,19 @@ impl LobbyConnection {
                     ..Default::default()
                 };
 
-                let name_response = send_custom_world_packet(name_request)
-                    .await
-                    .expect("Failed to get name request packet!");
-                let CustomIpcData::NameIsAvailableResponse { free } = &name_response.data else {
-                    panic!("Unexpedted custom IPC type!")
-                };
+                let is_free;
+                if let Some(name_response) = send_custom_world_packet(name_request).await {
+                    let CustomIpcData::NameIsAvailableResponse { free } = &name_response.data
+                    else {
+                        panic!("Unexpedted custom IPC type!")
+                    };
+                    is_free = *free;
+                } else {
+                    tracing::warn!("Failed to contact World server, assuming name isn't free.");
+                    is_free = false;
+                }
 
-                tracing::info!("Is name free? {free}");
-
-                if *free {
+                if is_free {
                     self.stored_character_creation_name = character_action.name.clone();
 
                     let ipc = ServerLobbyIpcSegment::new(ServerLobbyIpcData::CharaMakeReply {
@@ -350,16 +353,22 @@ impl LobbyConnection {
                         ..Default::default()
                     };
 
-                    let response_segment = send_custom_world_packet(ipc_segment).await.unwrap();
-                    match &response_segment.data {
-                        CustomIpcData::CharacterCreated {
-                            actor_id,
-                            content_id,
-                        } => {
-                            our_actor_id = *actor_id;
-                            our_content_id = *content_id;
+                    if let Some(response_segment) = send_custom_world_packet(ipc_segment).await {
+                        match &response_segment.data {
+                            CustomIpcData::CharacterCreated {
+                                actor_id,
+                                content_id,
+                            } => {
+                                our_actor_id = *actor_id;
+                                our_content_id = *content_id;
+                            }
+                            _ => panic!("Unexpected custom IPC packet type here!"),
                         }
-                        _ => panic!("Unexpected custom IPC packet type here!"),
+                    } else {
+                        // "The lobby server has encountered a problem."
+                        self.send_error(character_action.sequence, 2002, 13006)
+                            .await;
+                        return;
                     }
                 }
 
@@ -404,7 +413,7 @@ impl LobbyConnection {
                         ..Default::default()
                     };
 
-                    let _ = send_custom_world_packet(ipc_segment).await.unwrap();
+                    let _ = send_custom_world_packet(ipc_segment).await;
 
                     // we intentionally don't care about the response right now, it's not expected to fail
                 }
@@ -448,7 +457,7 @@ impl LobbyConnection {
                         ..Default::default()
                     };
 
-                    let _ = send_custom_world_packet(ipc_segment).await.unwrap();
+                    let _ = send_custom_world_packet(ipc_segment).await;
 
                     // we intentionally don't care about the response right now, it's not expected to fail
                 }

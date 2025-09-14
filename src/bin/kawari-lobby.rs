@@ -387,28 +387,34 @@ async fn main() {
                                                     ..Default::default()
                                                 };
 
-                                                let response_segment =
-                                                    send_custom_world_packet(ipc_segment)
-                                                        .await
-                                                        .unwrap();
-
-                                                match &response_segment.data {
-                                                    CustomIpcData::ActorIdFound { actor_id } => {
-                                                        our_actor_id = *actor_id;
+                                                if let Some(response_segment) =
+                                                    send_custom_world_packet(ipc_segment).await
+                                                {
+                                                    match &response_segment.data {
+                                                        CustomIpcData::ActorIdFound {
+                                                            actor_id,
+                                                        } => {
+                                                            our_actor_id = *actor_id;
+                                                        }
+                                                        _ => panic!(
+                                                            "Unexpected custom IPC packet type here!"
+                                                        ),
                                                     }
-                                                    _ => panic!(
-                                                        "Unexpected custom IPC packet type here!"
-                                                    ),
+
+                                                    connection
+                                                        .send_enter_world(
+                                                            *sequence,
+                                                            *content_id,
+                                                            our_actor_id,
+                                                        )
+                                                        .await;
+                                                } else {
+                                                    // "The lobby server has encountered a problem."
+                                                    connection
+                                                        .send_error(*sequence, 2002, 13006)
+                                                        .await;
                                                 }
                                             }
-
-                                            connection
-                                                .send_enter_world(
-                                                    *sequence,
-                                                    *content_id,
-                                                    our_actor_id,
-                                                )
-                                                .await;
                                         }
                                         ClientLobbyIpcData::Unknown { unk } => {
                                             tracing::warn!(

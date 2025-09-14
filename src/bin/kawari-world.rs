@@ -30,7 +30,8 @@ use kawari::world::{
     WorldDatabase, handle_custom_ipc, server_main_loop,
 };
 use kawari::{
-    ERR_INVENTORY_ADD_FAILED, LogMessageType, MINION_BITMASK_SIZE, RECEIVE_BUFFER_SIZE, TITLE_UNLOCK_BITMASK_SIZE,
+    ERR_INVENTORY_ADD_FAILED, LogMessageType, MINION_BITMASK_SIZE, RECEIVE_BUFFER_SIZE,
+    TITLE_UNLOCK_BITMASK_SIZE,
 };
 
 use mlua::{Function, Lua};
