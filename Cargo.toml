@@ -139,9 +139,6 @@ zip = { version = "4.6", features = ["deflate", "lzma", "bzip2"], default-featur
 # For some login<->lobby server communication
 reqwest = { version = "0.12", default-features = false }
 
-# For RCON
-rkon = { version = "0.1" }
-
 # For serving static files on the website
 tower-http = { version = "0.6", features = ["fs", "cors"] }
 

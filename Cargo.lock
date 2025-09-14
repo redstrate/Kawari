@@ -2592,7 +2592,6 @@ dependencies = [
  "physis",
  "recastnavigation-sys",
  "reqwest",
- "rkon",
  "rusqlite",
  "serde",
  "serde-xml-rs",
@@ -3762,12 +3761,6 @@ dependencies = [
  "wasm-bindgen-futures",
  "web-sys",
 ]
-
-[[package]]
-name = "rkon"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cfc4a2303eff8c4ba350c0c1151f4f71437f9cf57ccd95a08f15b2c90e13f7ce"
 
 [[package]]
 name = "ron"

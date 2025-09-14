@@ -309,12 +309,6 @@ pub struct WorldConfig {
     /// Defaults to a sensible value if the project is self-built.
     #[serde(default = "WorldConfig::default_scripts_location")]
     pub scripts_location: String,
-    /// Port of the RCON server.
-    #[serde(default = "WorldConfig::default_rcon_port")]
-    pub rcon_port: u16,
-    /// Password of the RCON server, if left blank (the default) RCON is disabled.
-    #[serde(default = "WorldConfig::default_rcon_password")]
-    pub rcon_password: String,
     /// Enable packet obsfucation. There's literally no reason to do this!
     #[serde(default = "WorldConfig::default_packet_obsfucation")]
     pub enable_packet_obsfucation: bool,
@@ -334,8 +328,6 @@ impl Default for WorldConfig {
             server_name: Self::default_server_name(),
             world_id: Self::default_world_id(),
             scripts_location: Self::default_scripts_location(),
-            rcon_port: Self::default_rcon_port(),
-            rcon_password: Self::default_rcon_password(),
             enable_packet_obsfucation: Self::default_packet_obsfucation(),
             enable_packet_compression: Self::default_packet_compression(),
             login_message: Self::default_login_message(),
@@ -358,14 +350,6 @@ impl WorldConfig {
 
     fn default_scripts_location() -> String {
         "resources/scripts".to_string()
-    }
-
-    fn default_rcon_port() -> u16 {
-        25575
-    }
-
-    fn default_rcon_password() -> String {
-        String::default()
     }
 
     fn default_packet_obsfucation() -> bool {
@@ -394,14 +378,6 @@ impl WorldConfig {
         SocketAddr::from((
             IpAddr::from_str(&self.server_name).expect("Invalid IP address format in config!"),
             self.port,
-        ))
-    }
-
-    /// Returns the configured IP address & port as a `SocketAddr` for RCON.
-    pub fn get_rcon_socketaddr(&self) -> SocketAddr {
-        SocketAddr::from((
-            IpAddr::from_str(&self.listen_address).expect("Invalid IP address format in config!"),
-            self.rcon_port,
         ))
     }
 }
