@@ -46,7 +46,7 @@ pub struct Navmesh {
 
     #[bw(ignore)]
     #[br(default)]
-    navmesh: *mut dtNavMesh,
+    pub navmesh: *mut dtNavMesh,
     #[bw(ignore)]
     #[br(default)]
     navmesh_query: *mut dtNavMeshQuery,
