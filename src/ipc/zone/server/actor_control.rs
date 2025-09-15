@@ -2,6 +2,7 @@ use binrw::binrw;
 use strum_macros::IntoStaticStr;
 
 use crate::common::{EquipDisplayFlag, ObjectId, read_bool_from, write_bool_as};
+use crate::ipc::zone::common_emote::CommonEmoteInfo;
 
 use super::OnlineStatus;
 
@@ -127,7 +128,7 @@ pub enum ActorControlCategory {
     WalkInTriggerRelatedUnk1 { unk1: u32 },
 
     #[brw(magic = 290u32)]
-    Emote { emote: u32 },
+    Emote(CommonEmoteInfo),
 
     #[brw(magic = 378u32)]
     PlayerCurrency { unk1: u32, unk2: u32, unk3: u32 },

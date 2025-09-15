@@ -2,6 +2,7 @@ use binrw::binrw;
 use strum_macros::IntoStaticStr;
 
 use crate::common::{DistanceRange, ObjectId, read_bool_from, write_bool_as};
+use crate::ipc::zone::common_emote::CommonEmoteInfo;
 
 #[binrw]
 #[derive(Debug, PartialEq, Clone, IntoStaticStr)]
@@ -78,7 +79,7 @@ pub enum ClientTriggerCommand {
 
     /// The player begins an emote.
     #[brw(magic = 0x01F4u32)]
-    Emote { emote: u32 },
+    Emote(CommonEmoteInfo),
 
     /// The player explicitly changed their pose.
     #[brw(magic = 0x01F9u32)]
