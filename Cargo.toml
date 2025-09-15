@@ -28,6 +28,7 @@ name = "kawari-lobby"
 
 [[bin]]
 name = "kawari-world"
+required-features = ["oodle"]
 
 [[bin]]
 name = "kawari-launcher"
@@ -49,6 +50,9 @@ panic = "abort"
 [features]
 # Default featureset
 default = []
+
+# Oodle compression
+oodle = []
 
 # Navmesh visualizer
 visualizer = ["dep:bevy"]
