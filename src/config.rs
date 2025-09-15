@@ -318,6 +318,9 @@ pub struct WorldConfig {
     /// Default message received when logging into the world.
     #[serde(default = "WorldConfig::default_login_message")]
     pub login_message: String,
+    /// Whether we generate new navmeshes on-demand. This consumes a lot of resources when entering a new zone!
+    #[serde(default = "WorldConfig::default_generate_navmesh")]
+    pub generate_navmesh: bool,
 }
 
 impl Default for WorldConfig {
@@ -331,6 +334,7 @@ impl Default for WorldConfig {
             enable_packet_obsfucation: Self::default_packet_obsfucation(),
             enable_packet_compression: Self::default_packet_compression(),
             login_message: Self::default_login_message(),
+            generate_navmesh: Self::default_generate_navmesh(),
         }
     }
 }
@@ -362,6 +366,10 @@ impl WorldConfig {
 
     fn default_login_message() -> String {
         "Welcome to Kawari!".to_string()
+    }
+
+    fn default_generate_navmesh() -> bool {
+        true
     }
 }
 

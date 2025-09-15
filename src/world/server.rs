@@ -1,8 +1,10 @@
 use binrw::{BinRead, BinWrite};
 use std::{
     collections::{HashMap, VecDeque},
+    env::consts::EXE_SUFFIX,
     io::Cursor,
     path::PathBuf,
+    process::Command,
     sync::{Arc, Mutex},
     time::Duration,
 };
@@ -74,12 +76,25 @@ impl NetworkedActor {
 }
 
 #[derive(Default, Debug)]
+enum NavmeshGenerationStep {
+    /// No generation is currently happening.
+    #[default]
+    None,
+    /// We need to generate a navmesh at this path.
+    Needed(String),
+    /// The process to write the navmesh has started, and we need to wait until the file exists.
+    Started(String),
+}
+
+#[derive(Default, Debug)]
 struct Instance {
     // structure temporary, of course
     actors: HashMap<ObjectId, NetworkedActor>,
     navmesh: Navmesh,
     zone: Zone,
     weather_id: u16,
+    // If Some, then this is the path of the navmesh we need to generate.
+    generate_navmesh: NavmeshGenerationStep,
 }
 
 impl Instance {
@@ -108,9 +123,14 @@ impl Instance {
                     );
                 }
             } else {
-                tracing::warn!(
-                    "Failed to read {nvm_path:?}, monsters will not function correctly!"
-                );
+                if config.world.generate_navmesh {
+                    instance.generate_navmesh =
+                        NavmeshGenerationStep::Needed(nvm_path.to_str().unwrap().to_string());
+                } else {
+                    tracing::warn!(
+                        "Failed to read {nvm_path:?}, monsters will not function correctly!"
+                    );
+                }
             }
         }
 
@@ -430,6 +450,43 @@ fn server_logic_tick(data: &mut WorldServer, network: &mut NetworkState) {
             for (handle, _) in network.clients.values_mut() {
                 if handle.send(msg.clone()).is_err() {
                     //to_remove.push(id);
+                }
+            }
+        }
+
+        // generate navmesh if necessary
+        match &instance.generate_navmesh {
+            NavmeshGenerationStep::None => {}
+            NavmeshGenerationStep::Needed(nvm_path) => {
+                tracing::info!(
+                    "Missing navmesh {nvm_path:?}, we are going to generate it in the background now..."
+                );
+
+                let mut dir = std::env::current_exe().unwrap();
+                dir.pop();
+                dir.push(format!("kawari-navimesh{}", EXE_SUFFIX));
+
+                // start navimesh generator
+                Command::new(dir)
+                    .arg(&instance.zone.id.to_string())
+                    .arg(nvm_path)
+                    .spawn()
+                    .unwrap();
+
+                instance.generate_navmesh = NavmeshGenerationStep::Started(nvm_path.clone());
+            }
+            NavmeshGenerationStep::Started(nvm_path) => {
+                if let Ok(nvm_bytes) = std::fs::read(&nvm_path) {
+                    if let Some(navmesh) = Navmesh::from_existing(&nvm_bytes) {
+                        instance.navmesh = navmesh;
+
+                        tracing::info!("Successfully loaded navimesh from {nvm_path:?}");
+                    } else {
+                        tracing::warn!(
+                            "Failed to read {nvm_path:?}, monsters will not function correctly!"
+                        );
+                    }
+                    instance.generate_navmesh = NavmeshGenerationStep::None;
                 }
             }
         }

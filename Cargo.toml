@@ -42,7 +42,7 @@ required-features = ["server"]
 
 [[bin]]
 name = "kawari-navimesh"
-required-features = ["visualizer"]
+required-features = ["server"]
 
 [[bin]]
 name = "kawari-datacentertravel"
@@ -66,9 +66,6 @@ default = ["server"]
 # Oodle compression, not needed unless you are connecting to the retail client.
 # This is especially useful for downstream projects, so they don't have to install Oodle but still want to reuse our packet parsing
 oodle = []
-
-# Navmesh visualizer
-visualizer = ["dep:bevy"]
 
 # Server-related functionality. Projects that only need our packet parsing can safely disable this.
 server = ["dep:axum", "dep:axum-extra", "dep:tokio", "dep:tracing-subscriber", "dep:fastrand", "dep:minijinja", "dep:rusqlite", "dep:mlua", "dep:zip", "dep:reqwest", "dep:tower-http", "dep:sha1_smol", "dep:recastnavigation-sys"]
@@ -147,19 +144,3 @@ sha1_smol = { version = "1.0", optional = true }
 
 # for navimesh generation
 recastnavigation-sys = { git = "https://github.com/redstrate/recastnavigation-rs-sys", features = ["recast", "detour"], optional = true }
-
-# navimesh visualization
-bevy = { version = "0.16", features = ["std",
-  "bevy_asset",
-  "bevy_color",
-  "bevy_pbr",
-  "bevy_render",
-  "bevy_scene",
-  "bevy_state",
-  "bevy_window",
-  "bevy_winit",
-  "tonemapping_luts",
-  "bevy_picking",
-  "bevy_mesh_picking_backend",
-  "bevy_gizmos",
-  "x11"], default-features = false, optional = true }

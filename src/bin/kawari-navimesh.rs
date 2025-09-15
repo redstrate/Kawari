@@ -1,20 +1,8 @@
-use std::ptr::{null, null_mut};
-
-use bevy::{
-    asset::RenderAssetUsages,
-    color::palettes::{
-        css::WHITE,
-        tailwind::{BLUE_100, GREEN_100, PINK_100, RED_500},
-    },
-    pbr::wireframe::{Wireframe, WireframeConfig, WireframePlugin},
-    picking::pointer::PointerInteraction,
-    prelude::*,
-    render::{
-        RenderPlugin,
-        mesh::{Indices, PrimitiveTopology},
-        settings::{RenderCreation, WgpuFeatures, WgpuSettings},
-    },
+use std::{
+    path::PathBuf,
+    ptr::{null, null_mut},
 };
+
 use icarus::TerritoryType::TerritoryTypeSheet;
 use kawari::{
     config::get_config,
@@ -30,350 +18,24 @@ use physis::{
     tera::{PlateModel, Terrain},
 };
 use recastnavigation_sys::{
-    CreateContext, RC_MESH_NULL_IDX, dtCreateNavMeshData, dtNavMeshCreateParams,
-    rcAllocCompactHeightfield, rcAllocContourSet, rcAllocHeightfield, rcAllocPolyMesh,
-    rcAllocPolyMeshDetail, rcBuildCompactHeightfield, rcBuildContours,
-    rcBuildContoursFlags_RC_CONTOUR_TESS_WALL_EDGES, rcBuildDistanceField, rcBuildPolyMesh,
-    rcBuildPolyMeshDetail, rcBuildRegions, rcCalcGridSize, rcContext, rcCreateHeightfield,
-    rcErodeWalkableArea, rcHeightfield, rcMarkWalkableTriangles, rcRasterizeTriangles,
+    CreateContext, dtCreateNavMeshData, dtNavMeshCreateParams, rcAllocCompactHeightfield,
+    rcAllocContourSet, rcAllocHeightfield, rcAllocPolyMesh, rcAllocPolyMeshDetail,
+    rcBuildCompactHeightfield, rcBuildContours, rcBuildContoursFlags_RC_CONTOUR_TESS_WALL_EDGES,
+    rcBuildDistanceField, rcBuildPolyMesh, rcBuildPolyMeshDetail, rcBuildRegions, rcCalcGridSize,
+    rcContext, rcCreateHeightfield, rcErodeWalkableArea, rcHeightfield, rcMarkWalkableTriangles,
+    rcRasterizeTriangles,
 };
-
-#[derive(Resource)]
-struct ZoneToLoad(u16);
-
-#[derive(Resource, Default)]
-struct NavigationState {
-    navmesh: Navmesh,
-    path: Vec<Vec3>,
-    from_position: Vec3,
-    to_position: Vec3,
-}
-
-impl NavigationState {
-    pub fn calculate_path(&mut self) {
-        let start_pos = [
-            self.from_position.x,
-            self.from_position.y,
-            self.from_position.z,
-        ];
-        let end_pos = [self.to_position.x, self.to_position.y, self.to_position.z];
-
-        self.path = self
-            .navmesh
-            .calculate_path(start_pos, end_pos)
-            .iter()
-            .map(|x| Vec3::from_slice(x))
-            .collect();
-    }
-}
-
-unsafe impl Send for NavigationState {}
-unsafe impl Sync for NavigationState {}
 
 fn main() {
     tracing_subscriber::fmt::init();
 
     let args: Vec<String> = std::env::args().collect();
     let zone_id: u16 = args[1].parse().unwrap();
+    let destination_path: String = args[2].parse().unwrap();
 
-    App::new()
-        .add_event::<Navigate>()
-        .add_event::<SetOrigin>()
-        .add_event::<SetTarget>()
-        .add_plugins((
-            DefaultPlugins.set(RenderPlugin {
-                render_creation: RenderCreation::Automatic(WgpuSettings {
-                    features: WgpuFeatures::POLYGON_MODE_LINE,
-                    ..default()
-                }),
-                ..default()
-            }),
-            MeshPickingPlugin,
-            WireframePlugin::default(),
-        ))
-        .add_systems(Startup, setup)
-        .add_systems(Update, draw_mesh_intersections)
-        .insert_resource(WireframeConfig {
-            global: false,
-            default_color: WHITE.into(),
-        })
-        .insert_resource(ZoneToLoad(zone_id))
-        .insert_resource(NavigationState::default())
-        .run();
-}
-
-#[derive(Event, Reflect, Clone, Debug)]
-struct Navigate();
-
-#[derive(Event, Reflect, Clone, Debug)]
-struct SetOrigin(Vec3);
-
-#[derive(Event, Reflect, Clone, Debug)]
-struct SetTarget(Vec3);
-
-/// Represents the heightfield of a tile.
-#[derive(Debug)]
-struct Tile {
-    min_bounds: [f32; 3],
-    max_bounds: [f32; 3],
-    height_field: *mut rcHeightfield,
-}
-
-/// Walk each node, add it's collision model to the scene.
-fn walk_node(
-    node: &ResourceNode,
-    commands: &mut Commands,
-    meshes: &mut ResMut<Assets<Mesh>>,
-    materials: &mut ResMut<Assets<StandardMaterial>>,
-    transform: &Transformation,
-    context: *mut rcContext,
-    tiles: &[Tile],
-) {
-    if !node.vertices.is_empty() {
-        let mut mesh = Mesh::new(PrimitiveTopology::TriangleList, RenderAssetUsages::all());
-
-        let mut positions = Vec::new();
-        for vec in &node.vertices {
-            positions.push(Vec3::from_slice(vec));
-        }
-
-        mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions.clone());
-
-        let mut indices = Vec::new();
-        for polygon in &node.polygons {
-            let mut vec: Vec<u32> = Vec::from(&polygon.vertex_indices)
-                .iter()
-                .map(|x| *x as u32)
-                .collect();
-            assert!(vec.len() == 3);
-            indices.append(&mut vec);
-        }
-
-        mesh.insert_indices(Indices::U32(indices.clone()));
-
-        mesh.compute_normals();
-
-        let transform = Transform {
-            translation: Vec3::from_array(transform.translation),
-            rotation: Quat::from_euler(
-                EulerRot::XYZ,
-                transform.rotation[0],
-                transform.rotation[1],
-                transform.rotation[2],
-            ),
-            scale: Vec3::from_array(transform.scale),
-        };
-
-        // insert into 3d scene
-        commands
-            .spawn((
-                Mesh3d(meshes.add(mesh)),
-                MeshMaterial3d(materials.add(Color::srgb(
-                    fastrand::f32(),
-                    fastrand::f32(),
-                    fastrand::f32(),
-                ))),
-                transform,
-            ))
-            .observe(
-                |mut trigger: Trigger<Pointer<Click>>,
-                 mut navigate_events: EventWriter<Navigate>,
-                 mut target_events: EventWriter<SetTarget>,
-                 mut origin_events: EventWriter<SetOrigin>| {
-                    let click_event: &Pointer<Click> = trigger.event();
-                    match click_event.button {
-                        PointerButton::Primary => {
-                            target_events.write(SetTarget(click_event.hit.position.unwrap()));
-                        }
-                        PointerButton::Secondary => {
-                            origin_events.write(SetOrigin(click_event.hit.position.unwrap()));
-                        }
-                        PointerButton::Middle => {
-                            navigate_events.write(Navigate());
-                        }
-                    }
-                    trigger.propagate(false);
-                },
-            );
-
-        // Step 2: insert geoemtry into heightfield
-        let tile_indices: Vec<i32> = indices.iter().map(|x| *x as i32).collect();
-        let mut tri_area_ids: Vec<u8> = vec![0; tile_indices.len() / 3];
-
-        // transform the vertices on the CPU
-        let mut tile_vertices: Vec<[f32; 3]> = Vec::new();
-        let transform_matrix = transform.compute_matrix();
-        for vertex in &positions {
-            let transformed_vertex = transform_matrix.transform_point3(*vertex);
-            tile_vertices.push([
-                transformed_vertex.x,
-                transformed_vertex.y,
-                transformed_vertex.z,
-            ]);
-        }
-
-        for tile in tiles {
-            unsafe {
-                let ntris = tile_indices.len() as i32 / 3;
-
-                // mark areas as walkable
-                rcMarkWalkableTriangles(
-                    context,
-                    45.0,
-                    std::mem::transmute::<*const [f32; 3], *const f32>(tile_vertices.as_ptr()),
-                    positions.len() as i32,
-                    tile_indices.as_ptr(),
-                    ntris,
-                    tri_area_ids.as_mut_ptr(),
-                );
-
-                assert!(rcRasterizeTriangles(
-                    context,
-                    std::mem::transmute::<*const [f32; 3], *const f32>(tile_vertices.as_ptr()),
-                    positions.len() as i32,
-                    tile_indices.as_ptr(),
-                    tri_area_ids.as_ptr(),
-                    ntris,
-                    tile.height_field,
-                    2
-                ));
-            }
-        }
-    }
-
-    for child in &node.children {
-        walk_node(
-            &child, commands, meshes, materials, transform, context, tiles,
-        );
-    }
-}
-
-fn add_plate(
-    plate: &PlateModel,
-    tera_path: &str,
-    sqpack_resource: &mut SqPackResource,
-    commands: &mut Commands,
-    meshes: &mut ResMut<Assets<Mesh>>,
-    materials: &mut ResMut<Assets<StandardMaterial>>,
-    context: *mut rcContext,
-    tiles: &[Tile],
-) {
-    let mdl_path = format!("{}/bgplate/{}", tera_path, plate.filename);
-    let mdl_bytes = sqpack_resource.read(&mdl_path).unwrap();
-    let mdl = MDL::from_existing(&mdl_bytes).unwrap();
-
-    let lod = &mdl.lods[0];
-    for part in &lod.parts {
-        let mut mesh = Mesh::new(PrimitiveTopology::TriangleList, RenderAssetUsages::all());
-
-        let mut positions = Vec::new();
-        let mut normals = Vec::new();
-        for vec in &part.vertices {
-            positions.push(Vec3::from_slice(&vec.position));
-            normals.push(Vec3::from_slice(&vec.normal));
-        }
-        mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions.clone());
-        mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals.clone());
-
-        mesh.insert_indices(Indices::U16(part.indices.clone()));
-
-        let transform = Transform::from_xyz(plate.position.0, 0.0, plate.position.1);
-
-        // insert into 3d scene
-        commands
-            .spawn((
-                Mesh3d(meshes.add(mesh)),
-                MeshMaterial3d(materials.add(Color::srgb(
-                    fastrand::f32(),
-                    fastrand::f32(),
-                    fastrand::f32(),
-                ))),
-                transform,
-            ))
-            .observe(
-                |mut trigger: Trigger<Pointer<Click>>,
-                 mut navigate_events: EventWriter<Navigate>,
-                 mut target_events: EventWriter<SetTarget>,
-                 mut origin_events: EventWriter<SetOrigin>| {
-                    let click_event: &Pointer<Click> = trigger.event();
-                    match click_event.button {
-                        PointerButton::Primary => {
-                            target_events.write(SetTarget(click_event.hit.position.unwrap()));
-                        }
-                        PointerButton::Secondary => {
-                            origin_events.write(SetOrigin(click_event.hit.position.unwrap()));
-                        }
-                        PointerButton::Middle => {
-                            navigate_events.write(Navigate());
-                        }
-                    }
-                    trigger.propagate(false);
-                },
-            );
-
-        // Step 2: insert geoemtry into heightfield
-        let tile_indices: Vec<i32> = part.indices.iter().map(|x| *x as i32).collect();
-        let mut tri_area_ids: Vec<u8> = vec![0; tile_indices.len() / 3];
-
-        let mut min_bounds_x: f32 = 0.0;
-        let mut min_bounds_z: f32 = 0.0;
-        let mut max_bounds_x: f32 = 0.0;
-        let mut max_bounds_z: f32 = 0.0;
-
-        // transform the vertices on the CPU
-        let mut tile_vertices: Vec<[f32; 3]> = Vec::new();
-        let transform_matrix = transform.compute_matrix();
-        for vertex in &positions {
-            let transformed_vertex = transform_matrix.transform_point3(*vertex);
-            tile_vertices.push([
-                transformed_vertex.x,
-                transformed_vertex.y,
-                transformed_vertex.z,
-            ]);
-        }
-
-        for tile in tiles {
-            unsafe {
-                let ntris = tile_indices.len() as i32 / 3;
-
-                // mark areas as walkable
-                rcMarkWalkableTriangles(
-                    context,
-                    45.0,
-                    std::mem::transmute::<*const [f32; 3], *const f32>(tile_vertices.as_ptr()),
-                    positions.len() as i32,
-                    tile_indices.as_ptr(),
-                    ntris,
-                    tri_area_ids.as_mut_ptr(),
-                );
-
-                assert!(rcRasterizeTriangles(
-                    context,
-                    std::mem::transmute::<*const [f32; 3], *const f32>(tile_vertices.as_ptr()),
-                    positions.len() as i32,
-                    tile_indices.as_ptr(),
-                    tri_area_ids.as_ptr(),
-                    ntris,
-                    tile.height_field,
-                    2
-                ));
-            }
-        }
-    }
-}
-
-/// Setup 3D scene.
-fn setup(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    zone_id: Res<ZoneToLoad>,
-    mut navigation_state: ResMut<NavigationState>,
-) {
-    let zone_id = zone_id.0;
     let config = get_config();
 
-    tracing::info!("Generating navmesh for zone {zone_id}!");
+    tracing::info!("Generating navmesh for zone {zone_id}, writing to {destination_path}!");
 
     let mut sqpack_resource =
         SqPackResource::from_existing(Platform::Win32, &config.filesystem.game_path);
@@ -445,7 +107,6 @@ fn setup(
 
                 tiles.push(Tile {
                     min_bounds,
-                    max_bounds,
                     height_field,
                 });
             }
@@ -469,9 +130,6 @@ fn setup(
             &plate,
             &scene.general.path_terrain,
             &mut sqpack_resource,
-            &mut commands,
-            &mut meshes,
-            &mut materials,
             context,
             &tiles,
         );
@@ -507,15 +165,7 @@ fn setup(
                                     .unwrap();
                                 let pcb = Pcb::from_existing(&pcb_file).unwrap();
 
-                                walk_node(
-                                    &pcb.root_node,
-                                    &mut commands,
-                                    &mut meshes,
-                                    &mut materials,
-                                    &object.transform,
-                                    context,
-                                    &tiles,
-                                );
+                                walk_node(&pcb.root_node, &object.transform, context, &tiles);
                             }
                         }
                     }
@@ -586,54 +236,6 @@ fn setup(
             assert!(rcBuildPolyMesh(context, contour_set, nvp, poly_mesh));
             assert!((*poly_mesh).verts != null_mut());
             assert!((*poly_mesh).nverts > 0);
-
-            let nvp = (*poly_mesh).nvp;
-            let cs = (*poly_mesh).cs;
-            let ch = (*poly_mesh).ch;
-            let orig = (*poly_mesh).bmin;
-
-            // add polymesh to visualization
-            {
-                let mut mesh = Mesh::new(PrimitiveTopology::TriangleList, RenderAssetUsages::all());
-
-                let mut positions = Vec::new();
-                for i in 0..(*poly_mesh).nverts as usize {
-                    let v = (*poly_mesh).verts.wrapping_add(i * 3);
-                    let x = orig[0] + *v as f32 * cs as f32;
-                    let y = orig[1] + (*v.wrapping_add(1) + 1) as f32 * ch as f32 + 0.1;
-                    let z = orig[2] + (*v.wrapping_add(2)) as f32 * cs as f32;
-
-                    positions.push(Vec3::new(x, y, z));
-                }
-
-                mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions.clone());
-
-                let mut indices = Vec::new();
-                for i in 0..(*poly_mesh).npolys as usize {
-                    let p = (*poly_mesh).polys.wrapping_add(i * nvp as usize * 2);
-                    for j in 2..nvp as usize {
-                        if *(p.wrapping_add(j)) == RC_MESH_NULL_IDX {
-                            break;
-                        }
-
-                        indices.push(*p);
-                        indices.push(*p.wrapping_add(j - 1));
-                        indices.push(*p.wrapping_add(j));
-                    }
-                }
-
-                mesh.insert_indices(Indices::U16(indices.clone()));
-
-                //mesh.compute_normals();
-
-                // insert into 3d scene
-                commands.spawn((
-                    Mesh3d(meshes.add(mesh)),
-                    MeshMaterial3d(materials.add(Color::srgba(0.0, 0.0, 1.0, 0.5))),
-                    Pickable::IGNORE,
-                    Wireframe,
-                ));
-            }
 
             let flags =
                 std::slice::from_raw_parts_mut((*poly_mesh).flags, (*poly_mesh).npolys as usize);
@@ -714,7 +316,7 @@ fn setup(
         }
     }
 
-    navigation_state.navmesh = Navmesh::new(
+    let navmesh = Navmesh::new(
         NavmeshParams {
             orig: [tile_origin_x, 0.0, tile_origin_y],
             tile_width,
@@ -725,50 +327,139 @@ fn setup(
         navmesh_tiles,
     );
 
-    // TODO: output in the correct directory
-    let serialized_navmesh = navigation_state.navmesh.write_to_buffer().unwrap();
-    std::fs::write("test.nvm", &serialized_navmesh).unwrap();
-
-    // camera
-    commands.spawn((
-        Camera3d::default(),
-        Transform::from_xyz(0.0, 1500.0, 0.0).looking_at(Vec3::ZERO, Vec3::Y),
-    ));
+    let serialized_navmesh = navmesh.write_to_buffer().unwrap();
+    let path = PathBuf::from(&destination_path);
+    std::fs::create_dir_all(path.parent().unwrap()).unwrap(); // create directory structure
+    std::fs::write(destination_path, &serialized_navmesh).unwrap();
 }
 
-fn draw_mesh_intersections(
-    pointers: Query<&PointerInteraction>,
-    mut gizmos: Gizmos,
-    mut navigate_events: EventReader<Navigate>,
-    mut origin_events: EventReader<SetOrigin>,
-    mut target_events: EventReader<SetTarget>,
-    mut navigation_state: ResMut<NavigationState>,
+/// Represents the heightfield of a tile.
+#[derive(Debug)]
+struct Tile {
+    min_bounds: [f32; 3],
+    height_field: *mut rcHeightfield,
+}
+
+/// Walk each node, add it's collision model to the scene.
+fn walk_node(
+    node: &ResourceNode,
+    transform: &Transformation,
+    context: *mut rcContext,
+    tiles: &[Tile],
 ) {
-    gizmos.sphere(navigation_state.from_position, 0.05, GREEN_100);
-    gizmos.sphere(navigation_state.to_position, 0.05, BLUE_100);
+    if !node.vertices.is_empty() {
+        let mut indices = Vec::new();
+        for polygon in &node.polygons {
+            let mut vec: Vec<u32> = Vec::from(&polygon.vertex_indices)
+                .iter()
+                .map(|x| *x as u32)
+                .collect();
+            assert!(vec.len() == 3);
+            indices.append(&mut vec);
+        }
 
-    for pos in &navigation_state.path {
-        gizmos.sphere(*pos, 0.05, RED_500);
+        // Step 2: insert geoemtry into heightfield
+        let tile_indices: Vec<i32> = indices.iter().map(|x| *x as i32).collect();
+        let mut tri_area_ids: Vec<u8> = vec![0; tile_indices.len() / 3];
+
+        // transform the vertices on the CPU
+        // TODO: compute an actual transformation matrix, we need rotation/scale since porting from Bevy
+        let mut tile_vertices: Vec<[f32; 3]> = Vec::new();
+        for vertex in &node.vertices {
+            tile_vertices.push([
+                vertex[0] + transform.translation[0],
+                vertex[1] + transform.translation[1],
+                vertex[2] + transform.translation[2],
+            ]);
+        }
+
+        for tile in tiles {
+            unsafe {
+                let ntris = tile_indices.len() as i32 / 3;
+
+                // mark areas as walkable
+                rcMarkWalkableTriangles(
+                    context,
+                    45.0,
+                    std::mem::transmute::<*const [f32; 3], *const f32>(tile_vertices.as_ptr()),
+                    tile_vertices.len() as i32,
+                    tile_indices.as_ptr(),
+                    ntris,
+                    tri_area_ids.as_mut_ptr(),
+                );
+
+                assert!(rcRasterizeTriangles(
+                    context,
+                    std::mem::transmute::<*const [f32; 3], *const f32>(tile_vertices.as_ptr()),
+                    tile_vertices.len() as i32,
+                    tile_indices.as_ptr(),
+                    tri_area_ids.as_ptr(),
+                    ntris,
+                    tile.height_field,
+                    2
+                ));
+            }
+        }
     }
 
-    for (point, normal) in pointers
-        .iter()
-        .filter_map(|interaction| interaction.get_nearest_hit())
-        .filter_map(|(_entity, hit)| hit.position.zip(hit.normal))
-    {
-        gizmos.sphere(point, 0.05, RED_500);
-        gizmos.arrow(point, point + normal.normalize() * 0.5, PINK_100);
+    for child in &node.children {
+        walk_node(&child, transform, context, tiles);
     }
+}
 
-    for event in origin_events.read() {
-        navigation_state.from_position = event.0;
-    }
+fn add_plate(
+    plate: &PlateModel,
+    tera_path: &str,
+    sqpack_resource: &mut SqPackResource,
+    context: *mut rcContext,
+    tiles: &[Tile],
+) {
+    let mdl_path = format!("{}/bgplate/{}", tera_path, plate.filename);
+    let mdl_bytes = sqpack_resource.read(&mdl_path).unwrap();
+    let mdl = MDL::from_existing(&mdl_bytes).unwrap();
 
-    for event in target_events.read() {
-        navigation_state.to_position = event.0;
-    }
+    let lod = &mdl.lods[0];
+    for part in &lod.parts {
+        // Step 2: insert geoemtry into heightfield
+        let tile_indices: Vec<i32> = part.indices.iter().map(|x| *x as i32).collect();
+        let mut tri_area_ids: Vec<u8> = vec![0; tile_indices.len() / 3];
 
-    for _ in navigate_events.read() {
-        navigation_state.calculate_path();
+        // transform the vertices on the CPU
+        let mut tile_vertices: Vec<[f32; 3]> = Vec::new();
+        for vertex in &part.vertices {
+            tile_vertices.push([
+                vertex.position[0] + plate.position.0,
+                vertex.position[1],
+                vertex.position[2] + plate.position.1,
+            ]);
+        }
+
+        for tile in tiles {
+            unsafe {
+                let ntris = tile_indices.len() as i32 / 3;
+
+                // mark areas as walkable
+                rcMarkWalkableTriangles(
+                    context,
+                    45.0,
+                    std::mem::transmute::<*const [f32; 3], *const f32>(tile_vertices.as_ptr()),
+                    tile_vertices.len() as i32,
+                    tile_indices.as_ptr(),
+                    ntris,
+                    tri_area_ids.as_mut_ptr(),
+                );
+
+                assert!(rcRasterizeTriangles(
+                    context,
+                    std::mem::transmute::<*const [f32; 3], *const f32>(tile_vertices.as_ptr()),
+                    tile_vertices.len() as i32,
+                    tile_indices.as_ptr(),
+                    tri_area_ids.as_ptr(),
+                    ntris,
+                    tile.height_field,
+                    2
+                ));
+            }
+        }
     }
 }
