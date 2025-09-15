@@ -944,21 +944,11 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                                 to_remove.push(id);
                             }
                         }
-                        ClientTriggerCommand::Emote {
-                            emote,
-                            hide_text,
-                            target,
-                            target_type,
-                        } => {
+                        ClientTriggerCommand::Emote(emote_info) => {
                             let msg = FromServer::ActorControlTarget(
                                 from_actor_id,
                                 ActorControlTarget {
-                                    category: ActorControlCategory::Emote {
-                                        emote: *emote,
-                                        hide_text: *hide_text,
-                                        target: *target,
-                                        target_type: *target_type,
-                                    },
+                                    category: ActorControlCategory::Emote(*emote_info),
                                 },
                             );
 

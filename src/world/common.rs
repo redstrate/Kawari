@@ -19,8 +19,6 @@ use crate::{
 
 use super::{Actor, lua::LuaZone};
 
-use binrw::binrw;
-
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub struct ClientId(usize);
 
@@ -159,14 +157,4 @@ impl ServerHandle {
         let id = self.next_id.fetch_add(1, Ordering::Relaxed);
         ClientId(id)
     }
-}
-
-/// Information passed along to clients to let them know what kind of actor the emote is targeting.
-#[binrw]
-#[brw(repr = u32)]
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum EmoteTargetType {
-    PlayerOrNone = 0,
-    EObjOrNpc = 1,
-    Minion = 4,
 }
