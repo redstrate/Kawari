@@ -518,8 +518,14 @@ pub struct FilesystemConfig {
     pub unpack_path: String,
 
     /// Navimesh file directory.
-    #[serde(default)]
+    #[serde(default = "FilesystemConfig::default_navimesh_path")]
     pub navimesh_path: String,
+}
+
+impl FilesystemConfig {
+    fn default_navimesh_path() -> String {
+        "navimesh".to_string()
+    }
 }
 
 /// Global and all-encompassing config.
