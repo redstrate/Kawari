@@ -51,7 +51,8 @@ panic = "abort"
 # Default featureset
 default = []
 
-# Oodle compression
+# Oodle compression, not needed unless you are connecting to the retail client.
+# This is especially useful for downstream projects, so they don't have to install Oodle but still want to reuse our packet parsing
 oodle = []
 
 # Navmesh visualizer
