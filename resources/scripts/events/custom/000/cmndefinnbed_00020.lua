@@ -15,6 +15,9 @@ SCENE_LOG_OUT      = 00002
 SCENE_DREAMFITTING = 00003
 SCENE_AWAKEN_ANIM  = 00100
 
+-- if true, we are in the dreamfitting sequence
+local is_dreamfitting = false
+
 function onTalk(target, player)
     player:play_scene(target, EVENT_ID, SCENE_SHOW_MENU, HIDE_HOTBAR, {0})
 end
@@ -46,9 +49,15 @@ function onReturn(scene, results, player)
             player:play_scene(player.id, EVENT_ID, SCENE_LOG_OUT, CUTSCENE_FLAGS, {decision})
         end
     elseif scene == SCENE_DREAMFITTING then
+        is_dreamfitting = true
         player:play_scene(player.id, EVENT_ID, SCENE_AWAKEN_ANIM, CUTSCENE_FLAGS, {0})
     elseif scene == SCENE_AWAKEN_ANIM then
-        player:finish_event(EVENT_ID, player.zone.id)
+        -- Dreamfitting doesn't finish with the zone id, if it does the client crashes!
+        if is_dreamfitting then
+            player:finish_event(EVENT_ID, 0)
+        else
+            player:finish_event(EVENT_ID, player.zone.id)
+        end
     else
         player:finish_event(EVENT_ID, 0)
     end

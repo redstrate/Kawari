@@ -4,7 +4,7 @@ use crate::{
     world::EventFinishType,
 };
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Task {
     ChangeTerritory {
         zone_id: u16,

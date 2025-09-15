@@ -10,7 +10,7 @@ pub struct Event {
     pub id: u32,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum EventFinishType {
     Normal,
     Jumping,
