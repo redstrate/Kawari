@@ -156,7 +156,7 @@ pub enum GameMasterRank {
     Debug = 90,
 }
 
-#[cfg(not(target_family = "wasm"))]
+#[cfg(all(not(target_family = "wasm"), feature = "server"))]
 impl rusqlite::types::FromSql for GameMasterRank {
     fn column_result(value: rusqlite::types::ValueRef<'_>) -> rusqlite::types::FromSqlResult<Self> {
         Ok(Self::try_from(u8::column_result(value)?).unwrap())

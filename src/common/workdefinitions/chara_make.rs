@@ -13,7 +13,7 @@ pub struct CharaMake {
     pub unk2: i32,
 }
 
-#[cfg(not(target_family = "wasm"))]
+#[cfg(all(not(target_family = "wasm"), feature = "server"))]
 impl rusqlite::types::FromSql for CharaMake {
     fn column_result(value: rusqlite::types::ValueRef<'_>) -> rusqlite::types::FromSqlResult<Self> {
         Ok(Self::from_json(&String::column_result(value)?))

@@ -17,9 +17,9 @@ pub use ipc::{IPC_HEADER_SIZE, IpcSegment, ReadWriteIpcOpcode, ReadWriteIpcSegme
 pub mod oodle;
 
 /// Send packet helpers.
-#[cfg(not(target_family = "wasm"))]
+#[cfg(all(not(target_family = "wasm"), feature = "server"))]
 mod send_helpers;
-#[cfg(not(target_family = "wasm"))]
+#[cfg(all(not(target_family = "wasm"), feature = "server"))]
 pub use send_helpers::{send_custom_world_packet, send_keep_alive, send_packet};
 
 mod scrambler;

@@ -16,18 +16,18 @@ pub mod common;
 pub mod config;
 
 /// Lobby server-specific code.
-#[cfg(not(target_family = "wasm"))]
+#[cfg(all(not(target_family = "wasm"), feature = "server"))]
 pub mod lobby;
 
 /// World server-specific code.
-#[cfg(not(target_family = "wasm"))]
+#[cfg(all(not(target_family = "wasm"), feature = "server"))]
 pub mod world;
 
 /// Everything packet parsing related.
 pub mod packet;
 
 /// Logic server-specific code.
-#[cfg(not(target_family = "wasm"))]
+#[cfg(all(not(target_family = "wasm"), feature = "server"))]
 pub mod login;
 
 /// Patch server-specific code.

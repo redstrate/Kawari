@@ -138,7 +138,7 @@ impl Default for Inventory {
     }
 }
 
-#[cfg(not(target_family = "wasm"))]
+#[cfg(all(not(target_family = "wasm"), feature = "server"))]
 impl rusqlite::types::FromSql for Inventory {
     fn column_result(value: rusqlite::types::ValueRef<'_>) -> rusqlite::types::FromSqlResult<Self> {
         Ok(serde_json::from_str(&String::column_result(value)?).unwrap())
