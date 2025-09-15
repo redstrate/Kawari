@@ -33,3 +33,35 @@ Something we have needed from time to time is a way to truly understand some obs
 **NOTE:** This process could potentially be interpreted as cheating, messing with retail network operation is inherently risky. Do not try this on an account you care about!
 
 You can use the [Firewall plugin](https://codeberg.org/redstrate/Firewall) for this task. Due to the dangerous nature of the plugin, you will have to figure out how to build it yourself.
+
+## Finding the opcode switch in Ghidra/IDA
+
+The way the game handles parsing opcodes is simple, it boils down to a few big `switch` statements. Naturally, we can't point you to the specific function offset as that changes each patch. Also this function isn't named in FFXIVClientStructs, so to find it you must:
+
+* Setup FFXIVClientStructs and import at least function names ([Instructions for Ghidra](https://github.com/aers/FFXIVClientStructs/blob/main/Ghidra/Getting%20Started.md), [instructions for IDA](https://github.com/aers/FFXIVClientStructs/tree/main/ida#ffxiv_idarenamepy))
+* Find an existing process function, e.g. `ProcessPacketSpawnPlayer`
+* Go up to it's (usually) only usage, you'll know it when you find it:
+
+```c
+...
+        case 0x370:
+          ProcessPacketUpdateAllianceSmallPositions(*(undefined4 *)(param_2 + 4),param_3,1);
+          return 1;
+        case 0x372:
+          ProcessPacketActionEffect8(*(undefined4 *)(param_2 + 4),param_3);
+          return 1;
+        case 0x37a:
+          ProcessPacketSpawnPlayer(*(undefined4 *)(param_2 + 4),param_3);
+          return 1;
+        case 900:
+          FUN_140a756b0(*(undefined4 *)(param_2 + 4),param_3,1);
+          return 1;
+        case 0x38b:
+          FUN_140a8c230(param_3);
+          return 1;
+        }
+      }
+...
+```
+
+And from here, you can explore the other various packet handling functions in the client.
