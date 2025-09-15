@@ -2,6 +2,7 @@ use binrw::binrw;
 use strum_macros::IntoStaticStr;
 
 use crate::common::{DistanceRange, ObjectId, read_bool_from, write_bool_as};
+use crate::world::EmoteTargetType;
 
 #[binrw]
 #[derive(Debug, PartialEq, Clone, IntoStaticStr)]
@@ -78,7 +79,20 @@ pub enum ClientTriggerCommand {
 
     /// The player begins an emote.
     #[brw(magic = 0x01F4u32)]
-    Emote { emote: u32 },
+    Emote {
+        /// The id of the emote.
+        emote: u32,
+        /// 0/false = text shown, 1/true = text hidden
+        #[brw(pad_before = 4)]
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        hide_text: bool,
+        /// The actor id of the target.
+        #[brw(pad_before = 8)]
+        target: u32,
+        /// See the EmoteTargetType enum for more info.
+        target_type: EmoteTargetType,
+    },
 
     /// The player explicitly changed their pose.
     #[brw(magic = 0x01F9u32)]

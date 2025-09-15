@@ -2,6 +2,7 @@ use binrw::binrw;
 use strum_macros::IntoStaticStr;
 
 use crate::common::{EquipDisplayFlag, ObjectId, read_bool_from, write_bool_as};
+use crate::world::EmoteTargetType;
 
 use super::OnlineStatus;
 
@@ -127,7 +128,20 @@ pub enum ActorControlCategory {
     WalkInTriggerRelatedUnk1 { unk1: u32 },
 
     #[brw(magic = 290u32)]
-    Emote { emote: u32 },
+    Emote {
+        /// The id of the emote.
+        emote: u32,
+        /// 0/false = text shown, 1/true = text hidden
+        #[brw(pad_before = 4)]
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        hide_text: bool,
+        /// The actor id of the target.
+        #[brw(pad_before = 8)]
+        target: u32,
+        /// See the EmoteTargetType enum for more info.
+        target_type: EmoteTargetType,
+    },
 
     #[brw(magic = 378u32)]
     PlayerCurrency { unk1: u32, unk2: u32, unk3: u32 },
