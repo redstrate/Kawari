@@ -37,6 +37,8 @@ pub struct NavmeshTile {
 #[brw(little)]
 #[derive(Default, Debug, Clone)]
 pub struct Navmesh {
+    /// The zone ID that the navmesh was generated with. Not guaranteed to be valid, it's only here for informative purposes in tools.
+    pub zone_id: u16,
     nav_mesh_params: NavmeshParams,
     #[br(temp)]
     #[bw(calc = tiles.len() as u32)]
@@ -58,8 +60,9 @@ unsafe impl Sync for Navmesh {}
 
 impl Navmesh {
     /// Creates a new Navmesh.
-    pub fn new(nav_mesh_params: NavmeshParams, tiles: Vec<NavmeshTile>) -> Self {
+    pub fn new(zone_id: u16, nav_mesh_params: NavmeshParams, tiles: Vec<NavmeshTile>) -> Self {
         let mut navmesh = Navmesh {
+            zone_id,
             nav_mesh_params,
             tiles,
             navmesh: null_mut(),

@@ -317,6 +317,7 @@ fn main() {
     }
 
     let navmesh = Navmesh::new(
+        zone_id,
         NavmeshParams {
             orig: [tile_origin_x, 0.0, tile_origin_y],
             tile_width,
