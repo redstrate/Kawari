@@ -17,6 +17,8 @@ pub enum ActorControlCategory {
         #[br(map = read_bool_from::<u32>)]
         #[bw(map = write_bool_as::<u32>)]
         shown: bool,
+        /// This seems to always be set to 1. If set to another value, the animation glitches for other clients.
+        unk_flag: u32,
     },
 
     #[brw(magic = 15u32)]

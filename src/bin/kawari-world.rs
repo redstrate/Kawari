@@ -1028,6 +1028,7 @@ async fn client_loop(
                                                 connection.actor_control(connection.player_data.actor_id, ActorControl {
                                                     category: ActorControlCategory::ToggleWeapon {
                                                         shown: false,
+                                                        unk_flag: 1,
                                                     }
                                                 }).await;
                                                 connection.conditions.set_condition(Condition::WalkInEvent);

@@ -1013,11 +1013,11 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                                 to_remove.push(id);
                             }
                         }
-                        ClientTriggerCommand::ToggleWeapon { shown } => {
+                        ClientTriggerCommand::ToggleWeapon { shown, unk_flag } => {
                             let msg = FromServer::ActorControl(
                                 from_actor_id,
                                 ActorControl {
-                                    category: ActorControlCategory::ToggleWeapon { shown: *shown },
+                                    category: ActorControlCategory::ToggleWeapon { shown: *shown, unk_flag: *unk_flag },
                                 },
                             );
 
