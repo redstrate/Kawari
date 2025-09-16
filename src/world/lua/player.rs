@@ -3,8 +3,8 @@ use mlua::{LuaSerdeExt, UserData, UserDataFields, UserDataMethods, Value};
 use crate::{
     INVENTORY_ACTION_ACK_SHOP, LogMessageType,
     common::{
-        INVALID_OBJECT_ID, ObjectId, ObjectTypeId, Position, workdefinitions::RemakeMode,
-        write_quantized_rotation,
+        INVALID_OBJECT_ID, ObjectId, ObjectTypeId, ObjectTypeKind, Position,
+        workdefinitions::RemakeMode, write_quantized_rotation,
     },
     inventory::{ContainerType, CurrencyKind, Item},
     ipc::zone::{
@@ -560,7 +560,7 @@ impl UserData for LuaPlayer {
         fields.add_field_method_get("id", |_, this| {
             Ok(ObjectTypeId {
                 object_id: ObjectId(this.player_data.actor_id),
-                object_type: 0,
+                object_type: ObjectTypeKind::None,
             })
         });
 

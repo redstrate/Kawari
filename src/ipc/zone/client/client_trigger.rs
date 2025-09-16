@@ -18,7 +18,12 @@ pub enum ClientTriggerCommand {
 
     /// The player looks or stops looking at an actor.
     #[brw(magic = 0x0003u32)]
-    SetTarget { actor_id: ObjectId },
+    SetTarget {
+        actor_id: ObjectId,
+        /// The client sends value(s) that differ from ObjectTypeKind, so we cannot use it here.
+        /// It differs for minions, which the client sends as 2, while 4 is used elsewhere (see ObjectTypeKind).
+        actor_type: u32,
+    },
 
     /// The client requests a minion to be summoned.
     #[brw(magic = 0x0066u32)]
@@ -158,6 +163,7 @@ impl Default for ClientTrigger {
         Self {
             trigger: ClientTriggerCommand::SetTarget {
                 actor_id: ObjectId::default(),
+                actor_type: 0,
             },
         }
     }

@@ -11,7 +11,7 @@ use std::{
 use tokio::sync::mpsc::Receiver;
 
 use crate::{
-    common::{CustomizeData, GameData, ObjectId, ObjectTypeId, Position},
+    common::{CustomizeData, GameData, ObjectId, ObjectTypeId, ObjectTypeKind, Position},
     config::get_config,
     ipc::zone::{
         ActorControl, ActorControlCategory, ActorControlSelf, ActorControlTarget, BattleNpcSubKind,
@@ -957,12 +957,33 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     }
 
                     match &trigger.trigger {
-                        ClientTriggerCommand::SetTarget { actor_id } => {
+                        ClientTriggerCommand::SetTarget {
+                            actor_id,
+                            actor_type,
+                        } => {
+                            // For whatever reason these don't match what the server has to send back, so they cannot be directly reused.
+                            let actor_type = match *actor_type {
+                                0 => ObjectTypeKind::None,
+                                1 => ObjectTypeKind::EObjOrNpc,
+                                2 => ObjectTypeKind::Minion,
+                                _ => {
+                                    // TODO: Are there other types?
+                                    tracing::warn!(
+                                        "SetTarget: Unknown actor target type {}! Defaulting to None!",
+                                        *actor_type
+                                    );
+                                    ObjectTypeKind::None
+                                }
+                            };
+
                             let msg = FromServer::ActorControlTarget(
                                 from_actor_id,
                                 ActorControlTarget {
                                     category: ActorControlCategory::SetTarget {
-                                        actor_id: *actor_id,
+                                        target: ObjectTypeId {
+                                            object_id: *actor_id,
+                                            object_type: actor_type,
+                                        },
                                     },
                                 },
                             );
@@ -1076,7 +1097,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                             object_kind: ObjectKind::BattleNpc(BattleNpcSubKind::Enemy),
                             target_id: ObjectTypeId {
                                 object_id: ObjectId(from_actor_id),
-                                object_type: 0,
+                                object_type: ObjectTypeKind::None,
                             }, // target the player
                             level: 1,
                             models: [

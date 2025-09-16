@@ -15,7 +15,8 @@ use crate::{
     UNLOCK_BITMASK_SIZE,
     common::{
         EquipDisplayFlag, GameData, INVALID_OBJECT_ID, InstanceContentType, ItemInfoQuery,
-        ObjectId, ObjectTypeId, Position, timestamp_secs, value_to_flag_byte_index_value,
+        ObjectId, ObjectTypeId, ObjectTypeKind, Position, timestamp_secs,
+        value_to_flag_byte_index_value,
     },
     config::{WorldConfig, get_config},
     inventory::{BuyBackList, ContainerType, Inventory, Item, Storage},
@@ -333,7 +334,7 @@ impl ZoneConnection {
         spawn.common.spawn_index = actor.spawn_index as u8;
         spawn.common.target_id = ObjectTypeId {
             object_id: actor.id,
-            object_type: 0,
+            object_type: ObjectTypeKind::None,
         };
 
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::NpcSpawn(spawn));
