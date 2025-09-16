@@ -13,6 +13,7 @@ pub enum ClientTriggerCommand {
         #[br(map = read_bool_from::<u32>)]
         #[bw(map = write_bool_as::<u32>)]
         shown: bool,
+        unk_flag: u32,
     },
 
     /// The player looks or stops looking at an actor.
