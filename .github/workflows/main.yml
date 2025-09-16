@@ -119,6 +119,7 @@ jobs:
           kawari-world*
           kawari-launcher*
           kawari-savedatabank*
+          kawari-navimesh*
           !*.d
           resources/
           !resources/data/tests
