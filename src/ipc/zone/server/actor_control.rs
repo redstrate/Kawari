@@ -1,7 +1,7 @@
 use binrw::binrw;
 use strum_macros::IntoStaticStr;
 
-use crate::common::{EquipDisplayFlag, ObjectId, read_bool_from, write_bool_as};
+use crate::common::{EquipDisplayFlag, ObjectId, ObjectTypeId, read_bool_from, write_bool_as};
 use crate::ipc::zone::common_emote::CommonEmoteInfo;
 
 use super::OnlineStatus;
@@ -65,7 +65,10 @@ pub enum ActorControlCategory {
     },
 
     #[brw(magic = 50u32)]
-    SetTarget { actor_id: ObjectId },
+    SetTarget {
+        #[brw(pad_before = 20)] // Blank since there are no params in the ACT
+        target: ObjectTypeId,
+    },
 
     #[brw(magic = 131u32)]
     UnlockInstanceContent {

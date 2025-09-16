@@ -51,21 +51,38 @@ impl std::fmt::Debug for ObjectId {
     }
 }
 
-// See https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Client/Game/Object/GameObject.cs#L158
+// This is unrelated to the ObjectKind struct as named by ClientStructs; it's used for ACT::SetTarget, ACT::Emote, and probably more.
+// Instead it correlates to the Type field in the GameObjectId client struct.
+// See https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Client/Game/Object/GameObject.cs#L230
+#[binrw]
+#[brw(repr = u32)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum ObjectTypeKind {
+    /// Everything that has a proper entity/actor ID.
+    #[default]
+    None = 0,
+    /// Orchestrions, static NPCs in towns, etc., and possibly more.
+    EObjOrNpc = 1,
+    /// Unclear when this is used, more research is needed.
+    /// ClientStructs describes it as "if (BaseId == 0 || (ObjectIndex >= 200 && ObjectIndex < 244)) ObjectId = ObjectIndex, Type = 2"
+    Unknown = 2,
+    /// Player-summoned minions (not to be confused with chocobos or other bnpc pets), and possibly more.
+    Minion = 4,
+}
+// See https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Client/Game/Object/GameObject.cs#L238
 #[binrw]
 #[brw(little)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ObjectTypeId {
     pub object_id: ObjectId,
-    #[brw(pad_after = 3)]
-    pub object_type: u8,
+    pub object_type: ObjectTypeKind,
 }
 
 impl Default for ObjectTypeId {
     fn default() -> Self {
         Self {
             object_id: INVALID_OBJECT_ID,
-            object_type: 0, // TODO: not sure if correct?
+            object_type: ObjectTypeKind::None,
         }
     }
 }

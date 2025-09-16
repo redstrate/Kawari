@@ -2,7 +2,8 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use kawari::common::{
-    GameData, INVALID_OBJECT_ID, ItemInfoQuery, ObjectId, ObjectTypeId, timestamp_secs,
+    GameData, INVALID_OBJECT_ID, ItemInfoQuery, ObjectId, ObjectTypeId, ObjectTypeKind,
+    timestamp_secs,
 };
 use kawari::config::get_config;
 use kawari::inventory::{
@@ -1033,7 +1034,7 @@ async fn client_loop(
                                                 }).await;
                                                 connection.conditions.set_condition(Condition::WalkInEvent);
                                                 connection.send_conditions().await;
-                                                let actor_id = ObjectTypeId { object_id: ObjectId(connection.player_data.actor_id), object_type: 0 };
+                                                let actor_id = ObjectTypeId { object_id: ObjectId(connection.player_data.actor_id), object_type: ObjectTypeKind::None };
                                                 connection.start_event(actor_id, *event_id, 10, *event_arg).await;
 
                                                 // begin walk-in trigger function if it exists

@@ -1,4 +1,4 @@
-use crate::common::{ObjectId, read_bool_from, write_bool_as};
+use crate::common::{ObjectTypeId, read_bool_from, write_bool_as};
 use binrw::binrw;
 
 /// The common structure used by both ActorControlTarget and ClientTrigger.
@@ -15,21 +15,5 @@ pub struct CommonEmoteInfo {
     hide_text: bool,
     /// The actor id of the target.
     #[brw(pad_before = 8)] // blank
-    target: ObjectId,
-    /// See the EmoteTargetType enum for more info.
-    target_type: EmoteTargetType,
-}
-
-/// Information passed along to clients to let them know what kind of actor the emote is targeting.
-#[binrw]
-#[brw(repr = u32)]
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
-pub enum EmoteTargetType {
-    /// None means there is no target, or it's a player or bnpc (monster, chocobo, carbuncle, scholar fairy).
-    #[default]
-    None = 0,
-    /// Orchestrions, static NPCs in towns, etc.
-    EObjOrNpc = 1,
-    /// Player-summoned minions (not to be confused with chocobos or other bnpc pets).
-    Minion = 4,
+    target: ObjectTypeId,
 }

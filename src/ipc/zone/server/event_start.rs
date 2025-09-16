@@ -21,7 +21,7 @@ mod tests {
 
     use binrw::BinRead;
 
-    use crate::common::ObjectId;
+    use crate::common::{ObjectId, ObjectTypeKind};
 
     use crate::server_zone_tests_dir;
 
@@ -40,7 +40,7 @@ mod tests {
             event_start.target_id,
             ObjectTypeId {
                 object_id: ObjectId(277124129),
-                object_type: 0
+                object_type: ObjectTypeKind::None,
             }
         );
         assert_eq!(event_start.event_id, 0x130003); // aether intro
