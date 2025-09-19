@@ -320,7 +320,6 @@ impl ZoneConnection {
     ) {
         let mut anim_type = anim_type;
         let mut anim_speed = MoveAnimationSpeed::Running; // TODO: sprint is 78, jog is 72, but falling and normal running are always 60
-        //let mut falling = false;
 
         // We're purely walking or strafing while walking. No jumping or falling.
         if anim_type & MoveAnimationType::WALKING_OR_LANDING
