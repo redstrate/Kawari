@@ -252,6 +252,84 @@ impl Default for EquipDisplayFlag {
     }
 }
 
+/// The client sends this to inform the server (and other clients) about the animation its player is performing while moving.
+/// Multiple can be set at once, e.g. Strafing and walking at the same time.
+// TODO: Why does RUNNING display as a comma in PacketAnalyzer?
+#[binrw]
+#[derive(Clone, Copy, Eq, PartialEq)]
+pub struct MoveAnimationType(u8);
+
+bitflags! {
+    impl MoveAnimationType : u8 {
+        /// The player is running.
+        const RUNNING = 0x00;
+        /// Unknown: seems to be the start of the regular run animation and loops the first few frames endlessly.
+        const UNKNOWN = 0x01;
+        /// The player is walking or landing from a jump/fall (MoveAnimationState::ENTER_COLLISION is set).
+        const WALKING_OR_LANDING = 0x02;
+        /// The player is strafing.
+        const STRAFING = 0x04;
+        /// The player is being knocked back by an attack or some other force.
+        const KNOCKBACK = 0x08;
+        /// The player is jumping.
+        const JUMPING = 0x10;
+        /// The player has begun falling after jumping.
+        const FALLING = 0x20;
+    }
+}
+
+impl Default for MoveAnimationType {
+    fn default() -> Self {
+        Self::RUNNING
+    }
+}
+
+impl std::fmt::Debug for MoveAnimationType {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        bitflags::parser::to_writer(self, f)
+    }
+}
+
+/// The client sends this to inform the server about its player's current state when moving around.
+#[binrw]
+#[brw(repr = u8)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum MoveAnimationState {
+    #[default]
+    /// No special state is in play.
+    None = 0,
+    /// The player fell off something, or they began jumping.
+    LeavingCollision = 1,
+    /// The player landed back on the ground.
+    EnteringCollision = 2,
+    /// The player reached the apex of their jump, and began to fall.
+    StartFalling = 4,
+}
+
+/// The client sends this to inform the server about its player's current state when jumping.
+#[binrw]
+#[brw(repr = u8)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum JumpState {
+    /// The player is descending back to the ground, or isn't jumping at all.
+    #[default]
+    NoneOrFalling = 0,
+    /// The player is ascending to the apex of the jump.
+    Ascending = 16,
+}
+
+/// The server responds with these values to set the correct speed when informing other clients about how quickly to animate the movements.
+#[binrw]
+#[brw(repr = u8)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum MoveAnimationSpeed {
+    Walking = 20,
+    #[default]
+    Running = 60,
+    Jogging = 72,
+    Sprinting = 78,
+}
+
 #[macro_export]
 macro_rules! web_templates_dir {
     ($rel_path:literal) => {

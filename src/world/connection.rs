@@ -15,8 +15,8 @@ use crate::{
     UNLOCK_BITMASK_SIZE,
     common::{
         EquipDisplayFlag, GameData, INVALID_OBJECT_ID, InstanceContentType, ItemInfoQuery,
-        ObjectId, ObjectTypeId, ObjectTypeKind, Position, timestamp_secs,
-        value_to_flag_byte_index_value,
+        JumpState, MoveAnimationSpeed, MoveAnimationState, MoveAnimationType, ObjectId,
+        ObjectTypeId, ObjectTypeKind, Position, timestamp_secs, value_to_flag_byte_index_value,
     },
     config::{WorldConfig, get_config},
     inventory::{BuyBackList, ContainerType, Inventory, Item, Storage},
@@ -309,17 +309,56 @@ impl ZoneConnection {
         }
     }
 
-    pub async fn set_actor_position(&mut self, actor_id: u32, position: Position, rotation: f32) {
+    pub async fn set_actor_position(
+        &mut self,
+        actor_id: u32,
+        position: Position,
+        rotation: f32,
+        anim_type: MoveAnimationType,
+        anim_state: MoveAnimationState,
+        jump_state: JumpState,
+    ) {
+        let mut anim_type = anim_type;
+        let mut anim_speed = MoveAnimationSpeed::Running; // TODO: sprint is 78, jog is 72, but falling and normal running are always 60
+
+        // We're purely walking or strafing while walking. No jumping or falling.
+        if anim_type & MoveAnimationType::WALKING_OR_LANDING
+            == MoveAnimationType::WALKING_OR_LANDING
+            && anim_state == MoveAnimationState::None
+            && jump_state == JumpState::NoneOrFalling
+        {
+            anim_speed = MoveAnimationSpeed::Walking;
+        }
+
+        if anim_state == MoveAnimationState::LeavingCollision {
+            anim_type |= MoveAnimationType::FALLING;
+        }
+
+        if jump_state == JumpState::Ascending {
+            anim_type |= MoveAnimationType::FALLING;
+            if anim_state == MoveAnimationState::LeavingCollision
+                || anim_state == MoveAnimationState::StartFalling
+            {
+                anim_type |= MoveAnimationType::JUMPING;
+            }
+        }
+
+        if anim_state == MoveAnimationState::EnteringCollision {
+            anim_type = MoveAnimationType::WALKING_OR_LANDING;
+        }
+
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActorMove(ActorMove {
             rotation,
-            flag1: 128,
-            flag2: 60,
+
+            anim_type,
+            anim_state,
+            anim_speed,
             position,
         }));
 
         self.send_segment(PacketSegment {
             source_actor: actor_id,
-            target_actor: actor_id,
+            target_actor: self.player_data.actor_id,
             segment_type: SegmentType::Ipc,
             data: SegmentData::Ipc(ipc),
         })

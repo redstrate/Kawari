@@ -9,7 +9,7 @@ use std::{
 use tokio::sync::mpsc::Sender;
 
 use crate::{
-    common::{ObjectId, Position},
+    common::{JumpState, MoveAnimationState, MoveAnimationType, ObjectId, Position},
     ipc::zone::{
         ActionRequest, ActorControl, ActorControlSelf, ActorControlTarget, ClientTrigger,
         CommonSpawn, Conditions, Config, NpcSpawn, ServerZoneIpcSegment,
@@ -29,7 +29,14 @@ pub enum FromServer {
     /// An actor has been spawned.
     ActorSpawn(Actor, NpcSpawn),
     /// An actor moved to a new position.
-    ActorMove(u32, Position, f32),
+    ActorMove(
+        u32,
+        Position,
+        f32,
+        MoveAnimationType,
+        MoveAnimationState,
+        JumpState,
+    ),
     // An actor has despawned.
     ActorDespawn(u32),
     /// We need to update an actor
@@ -96,7 +103,15 @@ pub enum ToServer {
     /// The connection sent a message.
     Message(ClientId, String),
     /// The connection's player moved.
-    ActorMoved(ClientId, u32, Position, f32),
+    ActorMoved(
+        ClientId,
+        u32,
+        Position,
+        f32,
+        MoveAnimationType,
+        MoveAnimationState,
+        JumpState,
+    ),
     /// The connection has recieved a client trigger.
     ClientTrigger(ClientId, u32, ClientTrigger),
     /// The connection loaded into a zone.
