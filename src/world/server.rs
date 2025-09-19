@@ -837,9 +837,9 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 actor_id,
                 position,
                 rotation,
-                flag1,
-                flag2,
-                flag_unshared,
+                anim_type,
+                anim_state,
+                jump_state,
             ) => {
                 let mut data = data.lock().unwrap();
                 let mut network = network.lock().unwrap();
@@ -869,9 +869,9 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                             actor_id,
                             position,
                             rotation,
-                            flag1,
-                            flag2,
-                            flag_unshared,
+                            anim_type,
+                            anim_state,
+                            jump_state,
                         );
 
                         if handle.send(msg).is_err() {
