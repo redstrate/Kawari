@@ -11,7 +11,10 @@ use std::{
 use tokio::sync::mpsc::Receiver;
 
 use crate::{
-    common::{CustomizeData, GameData, ObjectId, ObjectTypeId, ObjectTypeKind, Position},
+    common::{
+        CustomizeData, GameData, JumpState, MoveAnimationState, MoveAnimationType, ObjectId,
+        ObjectTypeId, ObjectTypeKind, Position,
+    },
     config::get_config,
     ipc::zone::{
         ActorControl, ActorControlCategory, ActorControlSelf, ActorControlTarget, BattleNpcSubKind,
@@ -361,6 +364,9 @@ fn server_logic_tick(data: &mut WorldServer, network: &mut NetworkState) {
                             id.0,
                             Position::lerp(current_position, next_position, *current_path_lerp),
                             rotation,
+                            MoveAnimationType::RUNNING,
+                            MoveAnimationState::None,
+                            JumpState::NoneOrFalling,
                         ));
                     }
 
@@ -435,7 +441,15 @@ fn server_logic_tick(data: &mut WorldServer, network: &mut NetworkState) {
 
                 // update common spawn
                 for msg in &actor_moves {
-                    if let FromServer::ActorMove(msg_id, pos, rotation) = msg {
+                    if let FromServer::ActorMove(
+                        msg_id,
+                        pos,
+                        rotation,
+                        MoveAnimationType::RUNNING,
+                        MoveAnimationState::None,
+                        JumpState::NoneOrFalling,
+                    ) = msg
+                    {
                         if id.0 == *msg_id {
                             spawn.common.pos = *pos;
                             spawn.common.rotation = *rotation;
@@ -818,7 +832,15 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     }
                 }
             }
-            ToServer::ActorMoved(from_id, actor_id, position, rotation) => {
+            ToServer::ActorMoved(
+                from_id,
+                actor_id,
+                position,
+                rotation,
+                flag1,
+                flag2,
+                flag_unshared,
+            ) => {
                 let mut data = data.lock().unwrap();
                 let mut network = network.lock().unwrap();
 
@@ -843,7 +865,14 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                             continue;
                         }
 
-                        let msg = FromServer::ActorMove(actor_id, position, rotation);
+                        let msg = FromServer::ActorMove(
+                            actor_id,
+                            position,
+                            rotation,
+                            flag1,
+                            flag2,
+                            flag_unshared,
+                        );
 
                         if handle.send(msg).is_err() {
                             to_remove.push(id);

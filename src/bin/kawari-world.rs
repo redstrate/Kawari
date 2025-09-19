@@ -446,11 +446,8 @@ async fn client_loop(
                                                     }
                                                 }
                                             }
-                                            ClientZoneIpcData::UpdatePositionHandler { position, rotation } => {
-                                                connection.player_data.rotation = *rotation;
-                                                connection.player_data.position = *position;
-
-                                                connection.handle.send(ToServer::ActorMoved(connection.id, connection.player_data.actor_id, *position, *rotation)).await;
+                                            ClientZoneIpcData::UpdatePositionHandler { position, rotation, anim_type, anim_state, jump_state, } => {
+                                                connection.handle.send(ToServer::ActorMoved(connection.id, connection.player_data.actor_id, *position, *rotation, *anim_type, *anim_state, *jump_state)).await;
                                             }
                                             ClientZoneIpcData::LogOut { .. } => {
                                                 tracing::info!("Recieved log out from client!");
@@ -1119,7 +1116,7 @@ async fn client_loop(
                 Some(msg) => match msg {
                     FromServer::Message(msg) => connection.send_message(&msg).await,
                     FromServer::ActorSpawn(actor, spawn) => connection.spawn_actor(actor, spawn).await,
-                    FromServer::ActorMove(actor_id, position, rotation) => connection.set_actor_position(actor_id, position, rotation).await,
+                    FromServer::ActorMove(actor_id, position, rotation, anim_type, anim_state, jump_state) => connection.set_actor_position(actor_id, position, rotation, anim_type, anim_state, jump_state).await,
                     FromServer::ActorDespawn(actor_id) => connection.remove_actor(actor_id).await,
                     FromServer::ActorControl(actor_id, actor_control) => connection.actor_control(actor_id, actor_control).await,
                     FromServer::ActorControlTarget(actor_id, actor_control) => connection.actor_control_target(actor_id, actor_control).await,

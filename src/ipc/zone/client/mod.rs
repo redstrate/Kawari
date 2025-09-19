@@ -19,7 +19,10 @@ pub use crate::ipc::zone::client::item_operation::ItemOperation;
 pub use super::social_list::{PlayerEntry, SocialList, SocialListRequest, SocialListRequestType};
 
 use super::config::Config;
-use crate::common::{CHAR_NAME_MAX_LENGTH, Position, read_string, write_string};
+use crate::common::{
+    CHAR_NAME_MAX_LENGTH, JumpState, MoveAnimationState, MoveAnimationType, Position, read_string,
+    write_string,
+};
 use crate::opcodes::ClientZoneIpcType;
 use crate::packet::IPC_HEADER_SIZE;
 
@@ -89,8 +92,11 @@ pub enum ClientZoneIpcData {
     SocialListRequest(SocialListRequest),
     UpdatePositionHandler {
         /// In radians.
-        #[brw(pad_after = 4)] // empty
         rotation: f32,
+        anim_type: MoveAnimationType,
+        anim_state: MoveAnimationState,
+        #[brw(pad_after = 1)] // empty
+        jump_state: JumpState,
         #[brw(pad_after = 4)] // empty
         position: Position,
     },
@@ -321,6 +327,9 @@ mod tests {
                 ClientZoneIpcData::UpdatePositionHandler {
                     rotation: 0.0,
                     position: Position::default(),
+                    anim_type: MoveAnimationType::default(),
+                    anim_state: MoveAnimationState::default(),
+                    jump_state: JumpState::default(),
                 },
             ),
             (
