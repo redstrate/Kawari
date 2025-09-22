@@ -132,11 +132,11 @@ jobs:
     if: github.ref == 'refs/heads/master'
 
     steps:
-    - name: Download artifact
-      uses: dawidd6/action-download-artifact@v11
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
       with:
-        skip_unpack: true
-        ref: ${{ github.sha }}
+        run-id: ${{ github.event.workflow_run.id }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
     - name: Set up SSH key
       run: |
         mkdir -p ~/.ssh
