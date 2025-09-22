@@ -136,6 +136,7 @@ jobs:
       uses: dawidd6/action-download-artifact@v11
       with:
         skip_unpack: true
+        ref: ${{ github.sha }}
     - name: Set up SSH key
       run: |
         mkdir -p ~/.ssh
