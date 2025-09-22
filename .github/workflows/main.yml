@@ -146,6 +146,14 @@ jobs:
         chmod 644 ~/.ssh/config
     - name: Upload artifacts
       run: |
+        pushd Kawari-Linux
+        zip -r ../Kawari-Linux.zip *
+        popd
+
+        pushd Kawari-Windows
+        zip -r ../Kawari-Windows.zip *
+        popd
+
         rsync --recursive "Kawari-Linux.zip" deploy@ryne.moe:/srv/http/astra-distrib/kawari/
         rsync --recursive "Kawari-Windows.zip" deploy@ryne.moe:/srv/http/astra-distrib/kawari/
         unzip "Kawari-Linux.zip"
