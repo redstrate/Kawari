@@ -57,7 +57,7 @@
         req = new XMLHttpRequest();
         req.addEventListener("readystatechange", readystatechange);
         req.addEventListener("error", error);
-        req.open("POST", "http://{{ login_server }}/oauth/ffxivarr/login/login.send");
+        req.open("POST", "{{ login_server }}/oauth/ffxivarr/login/login.send");
         req.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
         req.send("sqexid=" + sqexid + "&password=" + password + "&otppw=" + otppw + "&_STORED_=" + stored);
     }
