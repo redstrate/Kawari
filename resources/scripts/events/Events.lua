@@ -85,14 +85,14 @@ generic_inns = {
 
 generic_aetherytes = {
     -- A Realm Reborn Aetherytes
-    327682, -- New Gridania Aetheryte, currently not working due to the aetheryte actor not spawning
+    327682, -- New Gridania Aetheryte
     327683,  -- Bentbranch Meadows Aetheryte
     327684,  -- The Hawthorne Hut Aetheryte
     327685,  -- Quarrymill Aetheryte
     327686,  -- Camp Tranquil Aetheryte
     327687,  -- Fallgourd Float Aetheryte
-    327688,  -- Limsa Lominsa: The Lower Decks Aetheryte, currently not working due to the aetheryte actor not spawning
-    327689,  -- Ul'dah: Steps of Nald Aetheryte, currently not working due to the aetheryte actor not spawning
+    327688,  -- Limsa Lominsa: The Lower Decks Aetheryte
+    327689,  -- Ul'dah: Steps of Nald Aetheryte
     327690,  -- Moraby Drydocks Aetheryte
     327691,  -- Costa del Sol Aetheryte
     327692,  -- Wineport Aetheryte
@@ -144,7 +144,7 @@ generic_aetherytes = {
 
     -- Shadowbringers Aetherytes
     327812,  -- Fort Jobb Aetheryte
-    327813,  -- The Crystarium Aetheryte,currently not working due to the aetheryte actor not spawning
+    327813,  -- The Crystarium Aetheryte
     327814,  -- Eulmore Aetheryte
     327816,  -- The Ostal Imperative Aetheryte
     327817,  -- Stilltide Aetheryte
