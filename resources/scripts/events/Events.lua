@@ -79,8 +79,8 @@ generic_inns = {
     131204, -- Exit Ishgard: Foundation to Cloud Nine Inn room
     131245, -- Exit Kugane to Bokairo Inn room
     131316, -- Exit from The Crystarium to The Pendants Personal Suite
-    131401, -- Exit from Old Sharlayan to The Andron, this does not work currently because the actor doesn't spawn
-    131576, -- Exit from Tuliyollal to The For'ard Cabins, this does not work currently because the actor doesn't spawn
+    131401, -- Exit from Old Sharlayan to The Andron
+    131576, -- Exit from Tuliyollal to The For'ard Cabins
 }
 
 generic_aetherytes = {
