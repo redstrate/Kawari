@@ -447,6 +447,9 @@ async fn client_loop(
                                                 }
                                             }
                                             ClientZoneIpcData::UpdatePositionHandler { position, rotation, anim_type, anim_state, jump_state, } => {
+                                                connection.player_data.rotation = *rotation;
+                                                connection.player_data.position = *position;
+                                                
                                                 connection.handle.send(ToServer::ActorMoved(connection.id, connection.player_data.actor_id, *position, *rotation, *anim_type, *anim_state, *jump_state)).await;
                                             }
                                             ClientZoneIpcData::LogOut { .. } => {
