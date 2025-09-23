@@ -476,7 +476,7 @@ fn server_logic_tick(data: &mut WorldServer, network: &mut NetworkState) {
 
                 let mut dir = std::env::current_exe().unwrap();
                 dir.pop();
-                dir.push(format!("kawari-navimesh{}", EXE_SUFFIX));
+                dir.push(format!("kawari-navimesh{EXE_SUFFIX}"));
 
                 // start navimesh generator
                 Command::new(dir)
