@@ -119,7 +119,7 @@ fn main() {
     let scene = &lvb.scns[0];
 
     let tera_bytes = sqpack_resource
-        .read(&*format!(
+        .read(&format!(
             "{}/bgplate/terrain.tera",
             scene.general.path_terrain
         ))
