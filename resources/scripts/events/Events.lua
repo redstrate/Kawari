@@ -78,20 +78,21 @@ generic_inns = {
     131081, -- Exit Ul'dah: Steps of Nald to The Hourglass Inn room
     131204, -- Exit Ishgard: Foundation to Cloud Nine Inn room
     131245, -- Exit Kugane to Bokairo Inn room
-    131401, -- Exit from Old Sharlayan to The Andron, this does not work currently because the actor doesn't spawn
-    131576, -- Exit from Tuliyollal to The For'ard Cabins, this does not work currently because the actor doesn't spawn
+    131316, -- Exit from The Crystarium to The Pendants Personal Suite
+    131401, -- Exit from Old Sharlayan to The Andron
+    131576, -- Exit from Tuliyollal to The For'ard Cabins
 }
 
 generic_aetherytes = {
     -- A Realm Reborn Aetherytes
-    327682, -- New Gridania Aetheryte, currently not working due to the aetheryte actor not spawning
+    327682, -- New Gridania Aetheryte
     327683,  -- Bentbranch Meadows Aetheryte
     327684,  -- The Hawthorne Hut Aetheryte
     327685,  -- Quarrymill Aetheryte
     327686,  -- Camp Tranquil Aetheryte
     327687,  -- Fallgourd Float Aetheryte
-    327688,  -- Limsa Lominsa: The Lower Decks Aetheryte, currently not working due to the aetheryte actor not spawning
-    327689,  -- Ul'dah: Steps of Nald Aetheryte, currently not working due to the aetheryte actor not spawning
+    327688,  -- Limsa Lominsa: The Lower Decks Aetheryte
+    327689,  -- Ul'dah: Steps of Nald Aetheryte
     327690,  -- Moraby Drydocks Aetheryte
     327691,  -- Costa del Sol Aetheryte
     327692,  -- Wineport Aetheryte
@@ -143,7 +144,7 @@ generic_aetherytes = {
 
     -- Shadowbringers Aetherytes
     327812,  -- Fort Jobb Aetheryte
-    327813,  -- The Crystarium Aetheryte,currently not working due to the aetheryte actor not spawning
+    327813,  -- The Crystarium Aetheryte
     327814,  -- Eulmore Aetheryte
     327816,  -- The Ostal Imperative Aetheryte
     327817,  -- Stilltide Aetheryte
