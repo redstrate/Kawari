@@ -125,15 +125,13 @@ impl Instance {
                         "Failed to read {nvm_path:?}, monsters will not function correctly!"
                     );
                 }
+            } else if config.world.generate_navmesh {
+                instance.generate_navmesh =
+                    NavmeshGenerationStep::Needed(nvm_path.to_str().unwrap().to_string());
             } else {
-                if config.world.generate_navmesh {
-                    instance.generate_navmesh =
-                        NavmeshGenerationStep::Needed(nvm_path.to_str().unwrap().to_string());
-                } else {
-                    tracing::warn!(
-                        "Failed to read {nvm_path:?}, monsters will not function correctly!"
-                    );
-                }
+                tracing::warn!(
+                    "Failed to read {nvm_path:?}, monsters will not function correctly!"
+                );
             }
         }
 
@@ -866,12 +864,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         }
 
                         let msg = FromServer::ActorMove(
-                            actor_id,
-                            position,
-                            rotation,
-                            anim_type,
-                            anim_state,
-                            jump_state,
+                            actor_id, position, rotation, anim_type, anim_state, jump_state,
                         );
 
                         if handle.send(msg).is_err() {
