@@ -480,7 +480,7 @@ fn server_logic_tick(data: &mut WorldServer, network: &mut NetworkState) {
 
                 // start navimesh generator
                 Command::new(dir)
-                    .arg(&instance.zone.id.to_string())
+                    .arg(instance.zone.id.to_string())
                     .arg(nvm_path)
                     .spawn()
                     .unwrap();
@@ -488,7 +488,7 @@ fn server_logic_tick(data: &mut WorldServer, network: &mut NetworkState) {
                 instance.generate_navmesh = NavmeshGenerationStep::Started(nvm_path.clone());
             }
             NavmeshGenerationStep::Started(nvm_path) => {
-                if let Ok(nvm_bytes) = std::fs::read(&nvm_path) {
+                if let Ok(nvm_bytes) = std::fs::read(nvm_path) {
                     if let Some(navmesh) = Navmesh::from_existing(&nvm_bytes) {
                         instance.navmesh = navmesh;
 
