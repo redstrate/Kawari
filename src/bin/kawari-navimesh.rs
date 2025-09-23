@@ -404,7 +404,7 @@ fn walk_node(
     }
 
     for child in &node.children {
-        walk_node(&child, transform, context, tiles);
+        walk_node(child, transform, context, tiles);
     }
 }
 
