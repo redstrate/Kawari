@@ -234,7 +234,7 @@ fn main() {
             let poly_mesh = rcAllocPolyMesh();
             let nvp = 6;
             assert!(rcBuildPolyMesh(context, contour_set, nvp, poly_mesh));
-            assert!((*poly_mesh).verts != null_mut());
+            assert!(!(*poly_mesh).verts.is_null());
             assert!((*poly_mesh).nverts > 0);
 
             let flags =
@@ -306,7 +306,7 @@ fn main() {
                 &mut out_data,
                 &mut out_data_size
             ));
-            assert!(out_data != null_mut());
+            assert!(!out_data.is_null());
             assert!(out_data_size > 0);
 
             navmesh_tiles.push(NavmeshTile {
