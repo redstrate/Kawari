@@ -163,8 +163,8 @@ pub struct PlayerStatus {
     #[bw(pad_size_to = 41)]
     pub unknown85e: Vec<u8>,
     // meh, this is where i put all of the new data
-    #[br(count = 153)]
-    #[bw(pad_size_to = 153)]
+    #[br(count = 116)]
+    #[bw(pad_size_to = 116)]
     pub unknown948: Vec<u8>,
 
     // unlocked status
