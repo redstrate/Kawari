@@ -109,8 +109,8 @@
             "size": 16
         },
         {
-            "name": "Unk17",
-            "comment": "Unknown purpose.",
+            "name": "Blacklist",
+            "comment": "Sent by the server in response to RequestBlacklist.",
             "opcode": 809,
             "size": 968
         },

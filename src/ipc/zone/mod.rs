@@ -1,8 +1,9 @@
 pub mod client;
 pub use client::*;
 
-pub mod common_emote;
+mod common_emote;
 
+mod black_list;
 mod config;
 mod social_list;
 

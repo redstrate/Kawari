@@ -96,6 +96,8 @@ use crate::packet::{ReadWriteIpcOpcode, ReadWriteIpcSegment};
 mod actor_move;
 pub use crate::ipc::zone::server::actor_move::ActorMove;
 
+pub use crate::ipc::zone::black_list::{Blacklist, BlacklistedCharacter};
+
 pub type ServerZoneIpcSegment = IpcSegment<ServerZoneIpcType, ServerZoneIpcData>;
 
 impl ReadWriteIpcSegment for ServerZoneIpcSegment {
@@ -422,10 +424,7 @@ pub enum ServerZoneIpcData {
         comment: String,
         unk2: [u8; 166],
     },
-    Unk17 {
-        // TODO: fill this out
-        unk1: [u8; 968],
-    },
+    Blacklist(Blacklist),
     WalkInEvent {
         unk1: u32,
         unk2: u16,
@@ -842,8 +841,11 @@ mod tests {
                 },
             ),
             (
-                ServerZoneIpcType::Unk17,
-                ServerZoneIpcData::Unk17 { unk1: [0; 968] },
+                ServerZoneIpcType::Blacklist,
+                ServerZoneIpcData::Blacklist(Blacklist {
+                    data: vec![BlacklistedCharacter::default(); Blacklist::NUM_ENTRIES],
+                    sequence: 0,
+                }),
             ),
             (
                 ServerZoneIpcType::WalkInEvent,
