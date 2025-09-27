@@ -16,6 +16,8 @@ pub use crate::ipc::zone::client::event_yield_handler::EventYieldHandler;
 mod item_operation;
 pub use crate::ipc::zone::client::item_operation::ItemOperation;
 
+use crate::ipc::zone::black_list::RequestBlacklist;
+
 pub use super::social_list::{PlayerEntry, SocialList, SocialListRequest, SocialListRequestType};
 
 use super::config::Config;
@@ -239,9 +241,7 @@ pub enum ClientZoneIpcData {
         #[bw(map = write_string)]
         unk1: String,
     },
-    RequestBlacklist {
-        unk: [u8; 8],
-    },
+    RequestBlacklist(RequestBlacklist),
     RequestFellowships {
         unk: [u8; 8],
     },
@@ -462,6 +462,10 @@ mod tests {
                         z: 0.0,
                     },
                 },
+            ),
+            (
+                ClientZoneIpcType::RequestBlacklist,
+                ClientZoneIpcData::RequestBlacklist(RequestBlacklist::default()),
             ),
         ];
 

@@ -16,9 +16,11 @@ use kawari::ipc::zone::{
 };
 
 use kawari::ipc::zone::{
-    ClientTriggerCommand, ClientZoneIpcData, GameMasterRank, OnlineStatus, ServerZoneIpcData,
-    ServerZoneIpcSegment, SocialListRequestType,
+    Blacklist, BlacklistedCharacter, ClientTriggerCommand, ClientZoneIpcData, GameMasterRank,
+    OnlineStatus, ServerZoneIpcData, ServerZoneIpcSegment, SocialListRequestType,
 };
+
+//use kawari::ipc::zone::black_list::Blacklist;
 use kawari::packet::oodle::OodleNetwork;
 use kawari::packet::{
     ConnectionState, ConnectionType, PacketSegment, SegmentData, SegmentType, send_keep_alive,
@@ -449,7 +451,7 @@ async fn client_loop(
                                             ClientZoneIpcData::UpdatePositionHandler { position, rotation, anim_type, anim_state, jump_state, } => {
                                                 connection.player_data.rotation = *rotation;
                                                 connection.player_data.position = *position;
-                                                
+
                                                 connection.handle.send(ToServer::ActorMoved(connection.id, connection.player_data.actor_id, *position, *rotation, *anim_type, *anim_state, *jump_state)).await;
                                             }
                                             ClientZoneIpcData::LogOut { .. } => {
@@ -1051,8 +1053,14 @@ async fn client_loop(
                                                 });
                                                 connection.send_ipc_self(ipc).await;
                                             }
-                                            ClientZoneIpcData::RequestBlacklist { .. } => {
-                                                tracing::info!("Blacklist is unimplemented");
+                                            ClientZoneIpcData::RequestBlacklist(request) => {
+                                                // TODO: Actually implement this beyond simply sending a blank list
+                                                // NOTE: Failing to respond to this request means PlayerSpawn will not work and other players will be invisible, have their chat ignored and possibly other issues by the client! Beware!
+                                                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Blacklist(Blacklist {
+                                                    data: vec![BlacklistedCharacter::default(); Blacklist::NUM_ENTRIES],
+                                                    sequence: request.sequence,
+                                                }));
+                                                connection.send_ipc_self(ipc).await;
                                             }
                                             ClientZoneIpcData::RequestFellowships { .. } => {
                                                 tracing::info!("Fellowships is unimplemented");
