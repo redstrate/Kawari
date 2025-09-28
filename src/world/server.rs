@@ -18,14 +18,16 @@ use crate::{
     config::get_config,
     ipc::zone::{
         ActorControl, ActorControlCategory, ActorControlSelf, ActorControlTarget, BattleNpcSubKind,
-        ClientTriggerCommand, CommonSpawn, Conditions, NpcSpawn, ObjectKind, ServerZoneIpcData,
-        ServerZoneIpcSegment,
+        ClientTriggerCommand, CommonSpawn, Conditions, NpcSpawn, ObjectKind, PlayerSpawn,
+        ServerZoneIpcData, ServerZoneIpcSegment,
     },
     opcodes::ServerZoneIpcType,
     packet::{PacketSegment, SegmentData, SegmentType},
 };
 
 use super::{Actor, ClientHandle, ClientId, FromServer, Navmesh, ToServer, Zone, lua::LuaZone};
+
+use crate::world::common::SpawnKind;
 
 /// Used for the debug NPC.
 pub const CUSTOMIZE_DATA: CustomizeData = CustomizeData {
@@ -59,7 +61,7 @@ pub const CUSTOMIZE_DATA: CustomizeData = CustomizeData {
 
 #[derive(Debug, Clone)]
 enum NetworkedActor {
-    Player(NpcSpawn),
+    Player(PlayerSpawn),
     Npc {
         current_path: VecDeque<[f32; 3]>,
         current_path_lerp: f32,
@@ -72,7 +74,7 @@ enum NetworkedActor {
 impl NetworkedActor {
     pub fn get_common_spawn(&self) -> &CommonSpawn {
         match &self {
-            NetworkedActor::Player(npc_spawn) => &npc_spawn.common,
+            NetworkedActor::Player(player_spawn) => &player_spawn.common,
             NetworkedActor::Npc { spawn, .. } => &spawn.common,
         }
     }
@@ -223,8 +225,8 @@ struct NetworkState {
 }
 
 impl NetworkState {
-    /// Tell all the clients that a new NPC spawned.
-    fn send_npc(&mut self, actor: Actor, spawn: NpcSpawn) {
+    /// Tell all the clients that a new actor spawned.
+    fn send_actor(&mut self, actor: Actor, spawn: SpawnKind) {
         // TODO: only send in the relevant instance
         for (id, (handle, _)) in &mut self.clients {
             let id = *id;
@@ -562,7 +564,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
 
                 network.send_to(from_id, msg);
             }
-            ToServer::ZoneLoaded(from_id, zone_id, common_spawn) => {
+            ToServer::ZoneLoaded(from_id, zone_id, player_spawn) => {
                 tracing::info!(
                     "Client {from_id:?} has now loaded, sending them existing player data."
                 );
@@ -574,19 +576,21 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 if let Some(instance) = data.find_instance(zone_id) {
                     // send existing player data
                     for (id, spawn) in &instance.actors {
-                        let npc_spawn = match spawn {
-                            NetworkedActor::Player(spawn) => spawn,
-                            NetworkedActor::Npc { spawn, .. } => spawn,
+                        let kind = match spawn {
+                            NetworkedActor::Player(spawn) => SpawnKind::Player(spawn.clone()),
+                            NetworkedActor::Npc { spawn, .. } => {
+                                // TODO: Do we actually care about NPCs here if we're only sending *player* data?
+                                SpawnKind::Npc(spawn.clone())
+                            }
                         };
 
-                        // Note that we currently only support spawning via the NPC packet, hence why we don't need to differentiate here
                         let msg = FromServer::ActorSpawn(
                             Actor {
                                 id: *id,
                                 hp: 100,
                                 spawn_index: 0,
                             },
-                            npc_spawn.clone(),
+                            kind,
                         );
 
                         network.send_to(from_id, msg);
@@ -616,10 +620,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                                 hp: 0,
                                 spawn_index: 0,
                             },
-                            NpcSpawn {
-                                common: common_spawn.clone(),
-                                ..Default::default()
-                            },
+                            SpawnKind::Player(player_spawn.clone()),
                         );
 
                         if handle.send(msg).is_err() {
@@ -633,10 +634,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     let instance = data.find_instance_mut(zone_id);
                     instance.actors.insert(
                         ObjectId(client.actor_id),
-                        NetworkedActor::Player(NpcSpawn {
-                            common: common_spawn.clone(),
-                            ..Default::default()
-                        }),
+                        NetworkedActor::Player(player_spawn),
                     );
                 }
             }
@@ -1143,12 +1141,12 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     instance.insert_npc(ObjectId(actor_id), spawn.clone());
                 }
 
-                network.send_npc(
+                network.send_actor(
                     Actor {
                         id: ObjectId(actor_id),
                         ..Default::default()
                     },
-                    spawn,
+                    SpawnKind::Npc(spawn),
                 );
             }
             ToServer::DebugNewEnemy(_from_id, from_actor_id, id) => {
@@ -1199,12 +1197,12 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     instance.insert_npc(ObjectId(actor_id), spawn.clone());
                 }
 
-                network.send_npc(
+                network.send_actor(
                     Actor {
                         id: ObjectId(actor_id),
                         ..Default::default()
                     },
-                    spawn,
+                    SpawnKind::Npc(spawn),
                 );
             }
             ToServer::DebugSpawnClone(_from_id, from_actor_id) => {
@@ -1235,12 +1233,12 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     instance.insert_npc(ObjectId(actor_id), spawn.clone());
                 }
 
-                network.send_npc(
+                network.send_actor(
                     Actor {
                         id: ObjectId(actor_id),
                         ..Default::default()
                     },
-                    spawn,
+                    SpawnKind::Npc(spawn),
                 );
             }
             ToServer::ActionRequest(from_id, _from_actor_id, request) => {

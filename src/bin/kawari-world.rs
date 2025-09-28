@@ -332,32 +332,34 @@ async fn client_loop(
                                             ClientZoneIpcData::FinishLoading { .. } => {
                                                 let common = connection.get_player_common_spawn(connection.exit_position, connection.exit_rotation);
 
-                                                // tell the server we loaded into the zone, so it can start sending us actors
-                                                connection.handle.send(ToServer::ZoneLoaded(connection.id, connection.player_data.zone_id, common.clone())).await;
-
-                                                let chara_details = database.find_chara_make(connection.player_data.content_id);
-
-                                                connection.send_inventory(false).await;
-                                                connection.send_stats(&chara_details).await;
-
                                                 let online_status = if connection.player_data.gm_rank == GameMasterRank::NormalUser {
                                                     OnlineStatus::Online
                                                 } else {
                                                     OnlineStatus::GameMasterBlue
                                                 };
 
+                                                let spawn = PlayerSpawn {
+                                                    account_id: connection.player_data.account_id,
+                                                    content_id: connection.player_data.content_id,
+                                                    current_world_id: config.world.world_id,
+                                                    home_world_id: config.world.world_id,
+                                                    gm_rank: connection.player_data.gm_rank,
+                                                    online_status,
+                                                    common: common.clone(),
+                                                    ..Default::default()
+                                                };
+
+                                                // tell the server we loaded into the zone, so it can start sending us actors
+                                                connection.handle.send(ToServer::ZoneLoaded(connection.id, connection.player_data.zone_id, spawn.clone())).await;
+
+                                                let chara_details = database.find_chara_make(connection.player_data.content_id);
+
+                                                connection.send_inventory(false).await;
+                                                connection.send_stats(&chara_details).await;
+
                                                 // send player spawn
                                                 {
-                                                    let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PlayerSpawn(PlayerSpawn {
-                                                        account_id: connection.player_data.account_id,
-                                                        content_id: connection.player_data.content_id,
-                                                        current_world_id: config.world.world_id,
-                                                        home_world_id: config.world.world_id,
-                                                        gm_rank: connection.player_data.gm_rank,
-                                                        online_status,
-                                                        common: common.clone(),
-                                                        ..Default::default()
-                                                    }));
+                                                    let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PlayerSpawn(spawn));
                                                     connection.send_ipc_self(ipc).await;
                                                 }
 
