@@ -12,7 +12,7 @@ use crate::{
     common::{JumpState, MoveAnimationState, MoveAnimationType, ObjectId, Position},
     ipc::zone::{
         ActionRequest, ActorControl, ActorControlSelf, ActorControlTarget, ClientTrigger,
-        CommonSpawn, Conditions, Config, NpcSpawn, ServerZoneIpcSegment,
+        Conditions, Config, NpcSpawn, PlayerSpawn, ServerZoneIpcSegment,
     },
     packet::PacketSegment,
 };
@@ -22,12 +22,22 @@ use super::{Actor, lua::LuaZone};
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub struct ClientId(usize);
 
+/// A type encapsulating the different spawn types.
+/// Note that event object (eobj) spawning is handled elsewhere in connection.rs.
+#[derive(Clone, Debug)]
+pub enum SpawnKind {
+    /// A player's spawn data is contained within.
+    Player(PlayerSpawn),
+    /// An NPC's spawn data is contained within.
+    Npc(NpcSpawn),
+}
+
 #[derive(Clone)]
 pub enum FromServer {
     /// A chat message.
     Message(String),
     /// An actor has been spawned.
-    ActorSpawn(Actor, NpcSpawn),
+    ActorSpawn(Actor, SpawnKind),
     /// An actor moved to a new position.
     ActorMove(
         u32,
@@ -116,7 +126,7 @@ pub enum ToServer {
     ClientTrigger(ClientId, u32, ClientTrigger),
     /// The connection loaded into a zone.
     // TODO: the connection should not be in charge and telling the global server what zone they just loaded in! but this will work for now
-    ZoneLoaded(ClientId, u16, CommonSpawn),
+    ZoneLoaded(ClientId, u16, PlayerSpawn),
     /// The connection wants to enter a new zone.
     // TODO: temporary as this is only used for commands and those aren't run on global server state yet
     ChangeZone(ClientId, u32, u16),

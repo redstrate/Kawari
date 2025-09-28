@@ -30,7 +30,7 @@ use crate::{
                 ActionEffect, ActionResult, ActorControl, ActorControlCategory, ActorControlSelf,
                 ActorControlTarget, ActorMove, CommonSpawn, Condition, Conditions, Config,
                 ContainerInfo, CurrencyInfo, EffectEntry, EffectKind, EffectResult, Equip,
-                EventScene, EventStart, GameMasterRank, InitZone, ItemInfo, NpcSpawn, ObjectKind,
+                EventScene, EventStart, GameMasterRank, InitZone, ItemInfo, ObjectKind,
                 PlayerStats, PlayerSubKind, QuestActiveList, ServerZoneIpcData,
                 ServerZoneIpcSegment, StatusEffect, StatusEffectList, UpdateClassInfo, Warp,
                 WeatherChange,
@@ -46,7 +46,7 @@ use crate::{
 
 use super::{
     Actor, CharacterData, Event, EventFinishType, StatusEffects, ToServer, WorldDatabase,
-    common::{ClientId, ServerHandle},
+    common::{ClientId, ServerHandle, SpawnKind},
     lua::{EffectsBuilder, ExtraLuaState, LuaPlayer, Task, load_init_script},
 };
 
@@ -365,18 +365,32 @@ impl ZoneConnection {
         .await;
     }
 
-    pub async fn spawn_actor(&mut self, mut actor: Actor, mut spawn: NpcSpawn) {
-        // There is no reason for us to spawn our own player again. It's probably a bug!'
+    pub async fn spawn_actor(&mut self, mut actor: Actor, spawn: SpawnKind) {
+        // There is no reason for us to spawn our own player again. It's probably a bug!
         assert!(actor.id.0 != self.player_data.actor_id);
 
+        let ipc;
         actor.spawn_index = self.get_free_spawn_index() as u32;
-        spawn.common.spawn_index = actor.spawn_index as u8;
-        spawn.common.target_id = ObjectTypeId {
-            object_id: actor.id,
-            object_type: ObjectTypeKind::None,
-        };
 
-        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::NpcSpawn(spawn));
+        // TODO: Can this be deduplicated somehow?
+        match spawn {
+            SpawnKind::Player(mut spawn) => {
+                spawn.common.spawn_index = actor.spawn_index as u8;
+                spawn.common.target_id = ObjectTypeId {
+                    object_id: actor.id,
+                    object_type: ObjectTypeKind::None,
+                };
+                ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PlayerSpawn(spawn));
+            }
+            SpawnKind::Npc(mut spawn) => {
+                spawn.common.spawn_index = actor.spawn_index as u8;
+                spawn.common.target_id = ObjectTypeId {
+                    object_id: actor.id,
+                    object_type: ObjectTypeKind::None,
+                };
+                ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::NpcSpawn(spawn));
+            }
+        }
 
         self.send_segment(PacketSegment {
             source_actor: actor.id.0,
@@ -774,6 +788,7 @@ impl ZoneConnection {
             message: message.to_string(),
             param: 0,
         });
+
         self.send_ipc_self(ipc).await;
     }
 
