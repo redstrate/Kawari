@@ -108,6 +108,11 @@ pub enum ActorControlCategory {
         unk2: u32, // unlocked?
     },
 
+    #[brw(magic = 254u32)]
+    BardingUnlock {
+        id: u32, // unsure what this actually corresponds to
+    },
+
     #[brw(magic = 260u32)]
     WalkInTriggerRelatedUnk2 {
         unk1: u32,
