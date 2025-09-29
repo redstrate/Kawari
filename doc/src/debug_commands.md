@@ -20,3 +20,4 @@ These special debug commands start with `!` and are custom to Kawari.
 * `!condition <name>`: Forcefully sets a condition, see `condition.rs` for what is supported.
 * `!clearconditions`: Forcefully clears all conditions set on your character.
 * `!acs <category> <param1 (optional)> <param2 (optional)> <param3 (optional)> <param1 (optional)>`: Send an ActorControlSelf to the player.
+* `!unlockmount <id>`: Unlocks the specified mount by its ID.

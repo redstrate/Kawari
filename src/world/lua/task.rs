@@ -77,4 +77,7 @@ pub enum Task {
     SetInnWakeup {
         watched: bool,
     },
+    UnlockMount {
+        id: u16,
+    },
 }

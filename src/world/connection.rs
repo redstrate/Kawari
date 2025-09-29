@@ -1054,6 +1054,22 @@ impl ZoneConnection {
                 Task::SetInnWakeup { watched } => {
                     self.player_data.saw_inn_wakeup = *watched;
                 }
+                Task::UnlockMount { id } => {
+                    let order;
+                    {
+                        let mut game_data = self.gamedata.lock().unwrap();
+                        order = game_data.find_mount_order(*id as u16).unwrap_or(0);
+                    }
+
+                    self.actor_control_self(ActorControlSelf {
+                        category: ActorControlCategory::MountUnlock {
+                            order: order as u32,
+                            id: *id as u32,
+                            unlocked: true,
+                        },
+                    })
+                    .await;
+                }
             }
         }
         player.queued_tasks.clear();

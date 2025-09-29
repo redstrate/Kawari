@@ -372,6 +372,10 @@ impl LuaPlayer {
     fn set_inn_wakeup(&mut self, watched: bool) {
         self.queued_tasks.push(Task::SetInnWakeup { watched });
     }
+
+    fn unlock_mount(&mut self, id: u16) {
+        self.queued_tasks.push(Task::UnlockMount { id });
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -554,6 +558,10 @@ impl UserData for LuaPlayer {
                 Ok(())
             },
         );
+        methods.add_method_mut("unlock_mount", |_, this, id: u16| {
+            this.unlock_mount(id);
+            Ok(())
+        });
     }
 
     fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
