@@ -177,6 +177,17 @@ pub enum ActorControlCategory {
         festival4: u32,
     },
 
+    #[brw(magic = 903u32)]
+    MountUnlock {
+        /// From the Order column from the Excel row.
+        order: u32,
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        unlocked: bool,
+        /// Row ID of the Mount Excel sheet.
+        id: u32,
+    },
+
     #[brw(magic = 918u32)]
     ToggleOrchestrionUnlock {
         song_id: u16,
