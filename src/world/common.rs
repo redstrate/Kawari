@@ -9,7 +9,7 @@ use std::{
 use tokio::sync::mpsc::Sender;
 
 use crate::{
-    common::{JumpState, MoveAnimationState, MoveAnimationType, ObjectId, Position},
+    common::{ChatChannel, JumpState, MoveAnimationState, MoveAnimationType, ObjectId, Position},
     ipc::zone::{
         ActionRequest, ActorControl, ActorControlSelf, ActorControlTarget, ClientTrigger,
         Conditions, Config, NpcSpawn, PlayerSpawn, ServerZoneIpcSegment,
@@ -32,10 +32,29 @@ pub enum SpawnKind {
     Npc(NpcSpawn),
 }
 
+/// A type encapsulating various information about a zone chat mesage to be sent.
+#[derive(Clone, Debug, Default)]
+pub struct MessageInfo {
+    /// The sender's actor id.
+    pub sender_actor_id: u32,
+    /// The sender's account id. Likely used by the client to know to ignore the message if this player is blocked.
+    pub sender_account_id: u32,
+    /// The sender's home world id. Used for purposes of displaying their home world in the chat window.
+    pub sender_world_id: u16,
+    /// The sender's name.
+    pub sender_name: String,
+    /// The sender's position in the zone, used for creating a radius around which the message is heard (not yet implemented on Kawari).
+    pub sender_position: Position,
+    /// The channel the message is intended for (say, shout, yell, custom emote (/em)).
+    pub channel: ChatChannel,
+    /// The chat message itself.
+    pub message: String,
+}
+
 #[derive(Clone)]
 pub enum FromServer {
     /// A chat message.
-    Message(String),
+    Message(MessageInfo),
     /// An actor has been spawned.
     ActorSpawn(Actor, SpawnKind),
     /// An actor moved to a new position.
@@ -111,7 +130,7 @@ pub enum ToServer {
     /// A new connection has started.
     NewClient(ClientHandle),
     /// The connection sent a message.
-    Message(ClientId, String),
+    Message(ClientId, MessageInfo),
     /// The connection's player moved.
     ActorMoved(
         ClientId,

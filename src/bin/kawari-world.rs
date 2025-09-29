@@ -20,7 +20,6 @@ use kawari::ipc::zone::{
     OnlineStatus, ServerZoneIpcData, ServerZoneIpcSegment, SocialListRequestType,
 };
 
-//use kawari::ipc::zone::black_list::Blacklist;
 use kawari::packet::oodle::OodleNetwork;
 use kawari::packet::{
     ConnectionState, ConnectionType, PacketSegment, SegmentData, SegmentType, send_keep_alive,
@@ -28,8 +27,8 @@ use kawari::packet::{
 use kawari::world::lua::{ExtraLuaState, LuaPlayer, load_init_script};
 use kawari::world::{ChatHandler, ObsfucationData, TeleportReason, ZoneConnection};
 use kawari::world::{
-    ClientHandle, EventFinishType, FromServer, PlayerData, ServerHandle, StatusEffects, ToServer,
-    WorldDatabase, handle_custom_ipc, server_main_loop,
+    ClientHandle, EventFinishType, FromServer, MessageInfo, PlayerData, ServerHandle,
+    StatusEffects, ToServer, WorldDatabase, handle_custom_ipc, server_main_loop,
 };
 use kawari::{
     ERR_INVENTORY_ADD_FAILED, LogMessageType, MINION_BITMASK_SIZE, RECEIVE_BUFFER_SIZE,
@@ -470,7 +469,18 @@ async fn client_loop(
                                                 break;
                                             }
                                             ClientZoneIpcData::SendChatMessage(chat_message) => {
-                                                connection.handle.send(ToServer::Message(connection.id, chat_message.message.clone())).await;
+                                                let chara_details = database.find_chara_make(connection.player_data.content_id);
+                                                let info = MessageInfo {
+                                                    sender_actor_id: connection.player_data.actor_id,
+                                                    sender_account_id: connection.player_data.account_id,
+                                                    sender_world_id: config.world.world_id,
+                                                    sender_position: connection.player_data.position,
+                                                    sender_name: chara_details.name,
+                                                    channel: chat_message.channel,
+                                                    message: chat_message.message.clone(),
+                                                };
+
+                                                connection.handle.send(ToServer::Message(connection.id, info)).await;
 
                                                 let mut handled = false;
                                                 let command_trigger: char = '!';
@@ -712,15 +722,15 @@ async fn client_loop(
                                                                 connection.event_scene(&target_id, *event_id, 10, 8193, vec![1, 100]).await;
                                                             } else {
                                                                 tracing::error!(ERR_INVENTORY_ADD_FAILED);
-                                                                connection.send_message(ERR_INVENTORY_ADD_FAILED).await;
+                                                                connection.send_notice(ERR_INVENTORY_ADD_FAILED).await;
                                                                 connection.event_finish(*event_id, 0, EventFinishType::Normal).await;
                                                             }
                                                         } else {
-                                                            connection.send_message("Insufficient gil to buy item. Nice try bypassing the client-side check!").await;
+                                                            connection.send_notice("Insufficient gil to buy item. Nice try bypassing the client-side check!").await;
                                                             connection.event_finish(*event_id, 0, EventFinishType::Normal).await;
                                                         }
                                                     } else {
-                                                        connection.send_message("Unable to find shop item, this is a bug in Kawari!").await;
+                                                        connection.send_notice("Unable to find shop item, this is a bug in Kawari!").await;
                                                         connection.event_finish(*event_id, 0, EventFinishType::Normal).await;
                                                     }
                                                 } else if *buy_sell_mode == SELL {
@@ -805,7 +815,7 @@ async fn client_loop(
                                                         params[1] = 0; // The "terminator" is 0 for sell mode.
                                                         connection.event_scene(&target_id, *event_id, 10, 8193, params).await;
                                                     } else {
-                                                        connection.send_message("Unable to find shop item, this is a bug in Kawari!").await;
+                                                        connection.send_notice("Unable to find shop item, this is a bug in Kawari!").await;
                                                         connection.event_finish(*event_id, 0, EventFinishType::Normal).await;
                                                     }
                                                 } else {
@@ -1026,7 +1036,7 @@ async fn client_loop(
                                             }
                                             ClientZoneIpcData::EquipGearset { .. } => {
                                                 tracing::info!("Client tried to equip a gearset!");
-                                                connection.send_message("Gearsets are not yet implemented.").await;
+                                                connection.send_notice("Gearsets are not yet implemented.").await;
                                             }
                                             ClientZoneIpcData::StartWalkInEvent { event_arg, event_id, .. } => {
                                                 // Yes, an ActorControl is sent here, not an ActorControlSelf!
@@ -1127,7 +1137,7 @@ async fn client_loop(
             }
             msg = internal_recv.recv() => match msg {
                 Some(msg) => match msg {
-                    FromServer::Message(msg) => connection.send_message(&msg).await,
+                    FromServer::Message(msg) => connection.send_message(msg).await,
                     FromServer::ActorSpawn(actor, spawn) => connection.spawn_actor(actor, spawn).await,
                     FromServer::ActorMove(actor_id, position, rotation, anim_type, anim_state, jump_state) => connection.set_actor_position(actor_id, position, rotation, anim_type, anim_state, jump_state).await,
                     FromServer::ActorDespawn(actor_id) => connection.remove_actor(actor_id).await,
