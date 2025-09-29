@@ -1417,7 +1417,7 @@ impl ZoneConnection {
                 })
                 .unwrap();
             } else {
-                tracing::warn!("Action {key} isn't scripted yet! Ignoring...");
+                tracing::warn!("Action {key} isn't scripted yet! Ignoring {:#?}", request);
             }
         }
 

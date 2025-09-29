@@ -10,6 +10,7 @@ pub enum ActionKind {
     Nothing = 0x0,
     Normal = 0x1,
     Item = 0x2,
+    Mount = 0xD,
 }
 
 #[binrw]
