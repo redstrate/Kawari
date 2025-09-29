@@ -108,14 +108,14 @@ impl ChatHandler {
                     connection.send_inventory(false).await;
                 } else {
                     tracing::error!(ERR_INVENTORY_ADD_FAILED);
-                    connection.send_message(ERR_INVENTORY_ADD_FAILED).await;
+                    connection.send_notice(ERR_INVENTORY_ADD_FAILED).await;
                 }
 
                 true
             }
             "!reload" => {
                 connection.reload_scripts();
-                connection.send_message("Scripts reloaded!").await;
+                connection.send_notice("Scripts reloaded!").await;
                 true
             }
             "!finishevent" => {
@@ -124,7 +124,7 @@ impl ChatHandler {
                         .event_finish(event.id, 0, EventFinishType::Normal)
                         .await;
                     connection
-                        .send_message("Current event forcefully finished.")
+                        .send_notice("Current event forcefully finished.")
                         .await;
                 }
                 true
@@ -141,11 +141,11 @@ impl ChatHandler {
                     connection.conditions.set_condition(condition);
                     connection.send_conditions().await;
                     connection
-                        .send_message(&format!("Condition {condition:?} set!"))
+                        .send_notice(&format!("Condition {condition:?} set!"))
                         .await;
                 } else {
                     connection
-                        .send_message(&format!("Unknown condition {condition_name}"))
+                        .send_notice(&format!("Unknown condition {condition_name}"))
                         .await;
                 }
 
@@ -154,7 +154,7 @@ impl ChatHandler {
             "!clearconditions" => {
                 connection.conditions = Conditions::default();
                 connection.send_conditions().await;
-                connection.send_message("Conditions cleared!").await;
+                connection.send_notice("Conditions cleared!").await;
 
                 true
             }

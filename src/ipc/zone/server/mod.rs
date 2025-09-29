@@ -146,7 +146,7 @@ pub enum ServerZoneIpcData {
         unk: [u8; 8],
     },
     Warp(Warp),
-    ServerChatMessage {
+    ServerNoticeMessage {
         /*
          * bits (properties will apply when set, but a final base 10 value of zero defaults to chat log only):
          * 76543210
@@ -534,8 +534,8 @@ mod tests {
                 ServerZoneIpcData::Warp(Warp::default()),
             ),
             (
-                ServerZoneIpcType::ServerChatMessage,
-                ServerZoneIpcData::ServerChatMessage {
+                ServerZoneIpcType::ServerNoticeMessage,
+                ServerZoneIpcData::ServerNoticeMessage {
                     param: 0,
                     message: String::new(),
                 },

@@ -34,7 +34,7 @@ impl QueueSegments for LuaPlayer {
 
 impl LuaPlayer {
     fn send_message(&mut self, message: &str, param: u8) {
-        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ServerChatMessage {
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ServerNoticeMessage {
             message: message.to_string(),
             param,
         });

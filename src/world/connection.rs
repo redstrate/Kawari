@@ -24,7 +24,7 @@ use crate::{
         chat::ServerChatIpcSegment,
         kawari::CustomIpcSegment,
         zone::{
-            DisplayFlag,
+            ChatMessage, DisplayFlag,
             client::{ActionRequest, ClientZoneIpcSegment},
             server::{
                 ActionEffect, ActionResult, ActorControl, ActorControlCategory, ActorControlSelf,
@@ -46,7 +46,7 @@ use crate::{
 
 use super::{
     Actor, CharacterData, Event, EventFinishType, StatusEffects, ToServer, WorldDatabase,
-    common::{ClientId, ServerHandle, SpawnKind},
+    common::{ClientId, MessageInfo, ServerHandle, SpawnKind},
     lua::{EffectsBuilder, ExtraLuaState, LuaPlayer, Task, load_init_script},
 };
 
@@ -783,8 +783,21 @@ impl ZoneConnection {
         self.update_class_info().await;
     }
 
-    pub async fn send_message(&mut self, message: &str) {
-        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ServerChatMessage {
+    pub async fn send_message(&mut self, message: MessageInfo) {
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ChatMessage(ChatMessage {
+            sender_account_id: message.sender_account_id,
+            sender_actor_id: message.sender_actor_id,
+            sender_world_id: message.sender_world_id,
+            sender_name: message.sender_name,
+            channel: message.channel,
+            message: message.message,
+            ..Default::default()
+        }));
+        self.send_ipc_self(ipc).await;
+    }
+
+    pub async fn send_notice(&mut self, message: &str) {
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ServerNoticeMessage {
             message: message.to_string(),
             param: 0,
         });
@@ -920,7 +933,7 @@ impl ZoneConnection {
                          * for some unknown reason. */
                         /*for i in 1..793 {
                             let idd = i as u16;
-                            connection.send_message("test!").await;
+                            connection.send_notice("test!").await;
                             connection.actor_control_self(ActorControlSelf {
                                 category: ActorControlCategory::ToggleOrchestrionUnlock { song_id: id, unlocked: on } }).await;
                         }*/
@@ -956,11 +969,11 @@ impl ZoneConnection {
                             }
                         } else {
                             tracing::error!(ERR_INVENTORY_ADD_FAILED);
-                            self.send_message(ERR_INVENTORY_ADD_FAILED).await;
+                            self.send_notice(ERR_INVENTORY_ADD_FAILED).await;
                         }
                     } else {
                         tracing::error!(ERR_INVENTORY_ADD_FAILED);
-                        self.send_message(ERR_INVENTORY_ADD_FAILED).await;
+                        self.send_notice(ERR_INVENTORY_ADD_FAILED).await;
                     }
                 }
                 Task::CompleteAllQuests {} => {
@@ -1710,7 +1723,7 @@ impl ZoneConnection {
             // give control back to the player so they aren't stuck
             self.event_finish(event_id, 0, EventFinishType::Normal)
                 .await;
-            self.send_message(&format!(
+            self.send_notice(&format!(
                 "Event {event_id} tried to start, but it doesn't have a script associated with it!"
             ))
             .await;

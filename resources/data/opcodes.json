@@ -55,8 +55,8 @@
             "size": 24
         },
         {
-            "name": "ServerChatMessage",
-            "comment": "Displays the purple, server message in the chat window. Usually used for login messages and imminent maintenance notices.",
+            "name": "ServerNoticeMessage",
+            "comment": "Displays a purple server notice message in the chat window, or in some cases, on-screen. Usually used for login messages and imminent maintenance notices.",
             "opcode": 397,
             "size": 776
         },
