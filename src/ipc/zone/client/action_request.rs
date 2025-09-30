@@ -52,8 +52,24 @@ mod tests {
         let mut buffer = Cursor::new(&buffer);
 
         let action_request = ActionRequest::read_le(&mut buffer).unwrap();
+        assert_eq!(action_request.action_kind, ActionKind::Normal);
         assert_eq!(action_request.target.object_id, ObjectId(0x400097d0));
         assert_eq!(action_request.request_id, 0x2);
         assert_eq!(action_request.rotation, 1.9694216);
+    }
+
+    #[test]
+    fn read_actionrequest_mount() {
+        let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        d.push(client_zone_tests_dir!("action_request_mount.bin"));
+
+        let buffer = read(d).unwrap();
+        let mut buffer = Cursor::new(&buffer);
+
+        let action_request = ActionRequest::read_le(&mut buffer).unwrap();
+        assert_eq!(action_request.action_kind, ActionKind::Mount);
+        assert_eq!(action_request.target.object_id, ObjectId(277114100));
+        assert_eq!(action_request.request_id, 4);
+        assert_eq!(action_request.rotation, -0.8154669);
     }
 }

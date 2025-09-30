@@ -39,7 +39,7 @@ pub enum EffectKind {
     },
     #[brw(magic = 27u8)]
     BeginCombo,
-    /// seen during sprint
+    /// Seen during sprint.
     #[brw(magic = 14u8)]
     Unk1 {
         unk1: u8,
@@ -54,6 +54,14 @@ pub enum EffectKind {
         param: u16,
         #[brw(ignore)]
         source_actor_id: ObjectId,
+    },
+    /// Seen during mounting.
+    #[brw(magic = 39u8)]
+    Unk2 {
+        unk1: u8,
+        unk2: u32,
+        id: u16,
+        unk3: u8,
     },
 }
 
@@ -247,5 +255,43 @@ mod tests {
         );
 
         assert_eq!(action_result.target_id_again.object_id, ObjectId(277554542));
+    }
+
+    #[test]
+    fn read_actionresult_mount() {
+        let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        d.push(server_zone_tests_dir!("action_result_mount.bin"));
+
+        let buffer = read(d).unwrap();
+        let mut buffer = Cursor::new(&buffer);
+
+        let action_result = ActionResult::read_le(&mut buffer).unwrap();
+        assert_eq!(action_result.main_target.object_id, ObjectId(277114100));
+        assert_eq!(action_result.action_id, 55);
+        assert_eq!(action_result.unk1, 4232092); // TODO: probably means this field is wrong
+        assert_eq!(action_result.animation_lock_time, 0.1);
+        assert_eq!(action_result.unk2, 3758096384); // TODO: ditto
+        assert_eq!(action_result.hidden_animation, 4);
+        assert_eq!(action_result.rotation, -0.8154669);
+        assert_eq!(action_result.action_animation_id, 4);
+        assert_eq!(action_result.variation, 0);
+        assert_eq!(action_result.flag, 13);
+        assert_eq!(action_result.unk3, 0);
+        assert_eq!(action_result.effect_count, 1);
+        assert_eq!(action_result.unk4, 0);
+        assert_eq!(action_result.unk5, [0; 6]);
+
+        // effect 0: unk2
+        assert_eq!(
+            action_result.effects[0].kind,
+            EffectKind::Unk2 {
+                unk1: 1,
+                unk2: 0,
+                id: 55,
+                unk3: 27,
+            }
+        );
+
+        assert_eq!(action_result.target_id_again.object_id, ObjectId(1082476));
     }
 }

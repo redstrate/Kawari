@@ -2,7 +2,7 @@ use binrw::binrw;
 use paramacro::opcode_data;
 
 mod action_request;
-pub use crate::ipc::zone::client::action_request::ActionRequest;
+pub use crate::ipc::zone::client::action_request::{ActionKind, ActionRequest};
 
 mod send_chat_message;
 pub use send_chat_message::SendChatMessage;
