@@ -465,6 +465,10 @@ pub enum ServerZoneIpcData {
         map_part_id: u32,
         map_id: u32,
     },
+    Mount {
+        id: u16,
+        unk1: [u8; 14],
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,

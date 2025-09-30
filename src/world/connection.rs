@@ -9,24 +9,13 @@ use serde::{Deserialize, Serialize};
 use tokio::net::TcpStream;
 
 use crate::{
-    AETHERYTE_UNLOCK_BITMASK_SIZE, CLASSJOB_ARRAY_SIZE, COMPLETED_LEVEQUEST_BITMASK_SIZE,
-    COMPLETED_QUEST_BITMASK_SIZE, DUNGEON_ARRAY_SIZE, ERR_INVENTORY_ADD_FAILED,
-    GUILDHEST_ARRAY_SIZE, LogMessageType, PVP_ARRAY_SIZE, RAID_ARRAY_SIZE, TRIAL_ARRAY_SIZE,
-    UNLOCK_BITMASK_SIZE,
     common::{
-        EquipDisplayFlag, GameData, INVALID_OBJECT_ID, InstanceContentType, ItemInfoQuery,
-        JumpState, MoveAnimationSpeed, MoveAnimationState, MoveAnimationType, ObjectId,
-        ObjectTypeId, ObjectTypeKind, Position, timestamp_secs, value_to_flag_byte_index_value,
-    },
-    config::{WorldConfig, get_config},
-    inventory::{BuyBackList, ContainerType, Inventory, Item, Storage},
-    ipc::{
+        timestamp_secs, value_to_flag_byte_index_value, EquipDisplayFlag, GameData, InstanceContentType, ItemInfoQuery, JumpState, MoveAnimationSpeed, MoveAnimationState, MoveAnimationType, ObjectId, ObjectTypeId, ObjectTypeKind, Position, INVALID_OBJECT_ID
+    }, config::{get_config, WorldConfig}, inventory::{BuyBackList, ContainerType, Inventory, Item, Storage}, ipc::{
         chat::ServerChatIpcSegment,
         kawari::CustomIpcSegment,
         zone::{
-            ChatMessage, DisplayFlag,
-            client::{ActionRequest, ClientZoneIpcSegment},
-            server::{
+            client::{ActionRequest, ClientZoneIpcSegment}, server::{
                 ActionEffect, ActionResult, ActorControl, ActorControlCategory, ActorControlSelf,
                 ActorControlTarget, ActorMove, CommonSpawn, Condition, Conditions, Config,
                 ContainerInfo, CurrencyInfo, EffectEntry, EffectKind, EffectResult, Equip,
@@ -34,14 +23,11 @@ use crate::{
                 PlayerStats, PlayerSubKind, QuestActiveList, ServerZoneIpcData,
                 ServerZoneIpcSegment, StatusEffect, StatusEffectList, UpdateClassInfo, Warp,
                 WeatherChange,
-            },
+            }, ActionKind, ChatMessage, DisplayFlag
         },
-    },
-    opcodes::ServerZoneIpcType,
-    packet::{
-        CompressionType, ConnectionState, ConnectionType, OBFUSCATION_ENABLED_MODE, PacketSegment,
-        ScramblerKeyGenerator, SegmentData, SegmentType, parse_packet, send_packet,
-    },
+    }, opcodes::ServerZoneIpcType, packet::{
+        parse_packet, send_packet, CompressionType, ConnectionState, ConnectionType, PacketSegment, ScramblerKeyGenerator, SegmentData, SegmentType, OBFUSCATION_ENABLED_MODE
+    }, LogMessageType, AETHERYTE_UNLOCK_BITMASK_SIZE, CLASSJOB_ARRAY_SIZE, COMPLETED_LEVEQUEST_BITMASK_SIZE, COMPLETED_QUEST_BITMASK_SIZE, DUNGEON_ARRAY_SIZE, ERR_INVENTORY_ADD_FAILED, GUILDHEST_ARRAY_SIZE, PVP_ARRAY_SIZE, RAID_ARRAY_SIZE, TRIAL_ARRAY_SIZE, UNLOCK_BITMASK_SIZE
 };
 
 use super::{
@@ -1387,6 +1373,52 @@ impl ZoneConnection {
     }
 
     pub async fn execute_action(&mut self, request: ActionRequest, lua_player: &mut LuaPlayer) {
+        if request.action_kind == ActionKind::Mount {
+            let mut effects = [ActionEffect::default(); 8];
+            effects[0] = ActionEffect {
+                kind: EffectKind::Unk2 { unk1: 1, unk2: 0, id: request.action_key as u16, unk3: 27 },
+            };
+
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActionResult(ActionResult {
+                main_target: request.target,
+                target_id_again: request.target,
+                action_id: request.action_key,
+                animation_lock_time: 0.1,
+                rotation: self.player_data.rotation,
+                action_animation_id: 4,
+                flag: 13,
+                effect_count: 1,
+                effects,
+                unk1: 4232092,
+                unk2: 3758096384,
+                hidden_animation: 4,
+                ..Default::default()
+            }));
+            self.send_ipc_self(ipc).await;
+
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Mount {
+                id: request.action_key as u16,
+                unk1: [
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                ]
+            });
+            self.send_ipc_self(ipc).await;
+            return;
+        }
+
         let mut effects_builder = None;
 
         // run action script

@@ -68,6 +68,7 @@ mod tests {
 
         let action_request = ActionRequest::read_le(&mut buffer).unwrap();
         assert_eq!(action_request.action_kind, ActionKind::Mount);
+        assert_eq!(action_request.action_key, 55);
         assert_eq!(action_request.target.object_id, ObjectId(277114100));
         assert_eq!(action_request.request_id, 4);
         assert_eq!(action_request.rotation, -0.8154669);

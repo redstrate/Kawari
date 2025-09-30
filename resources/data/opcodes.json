@@ -461,6 +461,12 @@
             "comment": "Sent by the server in response to NewDiscovery.",
             "opcode": 672,
             "size": 8
+        },
+        {
+            "name": "Mount",
+            "comment": "Sent by the server to mount the player.",
+            "opcode": 230,
+            "size": 16
         }
     ],
     "ClientZoneIpcType": [
