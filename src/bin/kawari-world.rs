@@ -31,8 +31,8 @@ use kawari::world::{
     StatusEffects, ToServer, WorldDatabase, handle_custom_ipc, server_main_loop,
 };
 use kawari::{
-    ERR_INVENTORY_ADD_FAILED, LogMessageType, MINION_BITMASK_SIZE, RECEIVE_BUFFER_SIZE,
-    TITLE_UNLOCK_BITMASK_SIZE,
+    ERR_INVENTORY_ADD_FAILED, LogMessageType, MINION_BITMASK_SIZE, MOUNT_BITMASK_SIZE,
+    RECEIVE_BUFFER_SIZE, TITLE_UNLOCK_BITMASK_SIZE,
 };
 
 use mlua::{Function, Lua};
@@ -300,6 +300,7 @@ async fn client_loop(
                                                         cleared_trials: connection.player_data.unlocks.cleared_trials.clone(),
                                                         cleared_pvp: connection.player_data.unlocks.cleared_pvp.clone(),
                                                         minions: vec![0xFFu8; MINION_BITMASK_SIZE], // TODO: make this persistent?
+                                                        mount_guide_mask: vec![0xFFu8; MOUNT_BITMASK_SIZE], // TODO: make this persistent too?
                                                         ..Default::default()
                                                     }));
                                                     connection.send_ipc_self(ipc).await;

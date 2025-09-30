@@ -2,7 +2,8 @@ use binrw::binrw;
 
 use crate::{
     AETHERYTE_UNLOCK_BITMASK_SIZE, CLASSJOB_ARRAY_SIZE, DUNGEON_ARRAY_SIZE, GUILDHEST_ARRAY_SIZE,
-    MINION_BITMASK_SIZE, PVP_ARRAY_SIZE, RAID_ARRAY_SIZE, TRIAL_ARRAY_SIZE, UNLOCK_BITMASK_SIZE,
+    MINION_BITMASK_SIZE, MOUNT_BITMASK_SIZE, PVP_ARRAY_SIZE, RAID_ARRAY_SIZE, TRIAL_ARRAY_SIZE,
+    UNLOCK_BITMASK_SIZE,
     common::{CHAR_NAME_MAX_LENGTH, read_string, write_string},
 };
 
@@ -88,12 +89,12 @@ pub struct PlayerStatus {
     pub companion_def_rank: u8,
     pub companion_att_rank: u8,
     pub companion_heal_rank: u8,
-    #[br(count = 33)]
-    #[bw(pad_size_to = 33)]
+    #[br(count = MOUNT_BITMASK_SIZE)]
+    #[bw(pad_size_to = MOUNT_BITMASK_SIZE)]
     pub mount_guide_mask: Vec<u8>,
     pub ornament_mask: [u8; 4],
-    #[br(count = 50)]
-    #[bw(pad_size_to = 50)]
+    #[br(count = 42)]
+    #[bw(pad_size_to = 42)]
     pub unknown281: Vec<u8>,
     #[br(count = CHAR_NAME_MAX_LENGTH)]
     #[bw(pad_size_to = CHAR_NAME_MAX_LENGTH)]

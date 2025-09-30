@@ -103,6 +103,9 @@ pub const PVP_ARRAY_SIZE: usize = 7;
 /// The size of the minion bitmask.
 pub const MINION_BITMASK_SIZE: usize = 97;
 
+/// The size of the mount bitmask.
+pub const MOUNT_BITMASK_SIZE: usize = 41;
+
 /// The maximum durability of an item.
 pub const ITEM_CONDITION_MAX: u16 = 30000;
 

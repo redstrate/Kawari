@@ -9,13 +9,24 @@ use serde::{Deserialize, Serialize};
 use tokio::net::TcpStream;
 
 use crate::{
+    AETHERYTE_UNLOCK_BITMASK_SIZE, CLASSJOB_ARRAY_SIZE, COMPLETED_LEVEQUEST_BITMASK_SIZE,
+    COMPLETED_QUEST_BITMASK_SIZE, DUNGEON_ARRAY_SIZE, ERR_INVENTORY_ADD_FAILED,
+    GUILDHEST_ARRAY_SIZE, LogMessageType, PVP_ARRAY_SIZE, RAID_ARRAY_SIZE, TRIAL_ARRAY_SIZE,
+    UNLOCK_BITMASK_SIZE,
     common::{
-        timestamp_secs, value_to_flag_byte_index_value, EquipDisplayFlag, GameData, InstanceContentType, ItemInfoQuery, JumpState, MoveAnimationSpeed, MoveAnimationState, MoveAnimationType, ObjectId, ObjectTypeId, ObjectTypeKind, Position, INVALID_OBJECT_ID
-    }, config::{get_config, WorldConfig}, inventory::{BuyBackList, ContainerType, Inventory, Item, Storage}, ipc::{
+        EquipDisplayFlag, GameData, INVALID_OBJECT_ID, InstanceContentType, ItemInfoQuery,
+        JumpState, MoveAnimationSpeed, MoveAnimationState, MoveAnimationType, ObjectId,
+        ObjectTypeId, ObjectTypeKind, Position, timestamp_secs, value_to_flag_byte_index_value,
+    },
+    config::{WorldConfig, get_config},
+    inventory::{BuyBackList, ContainerType, Inventory, Item, Storage},
+    ipc::{
         chat::ServerChatIpcSegment,
         kawari::CustomIpcSegment,
         zone::{
-            client::{ActionRequest, ClientZoneIpcSegment}, server::{
+            ActionKind, ChatMessage, DisplayFlag,
+            client::{ActionRequest, ClientZoneIpcSegment},
+            server::{
                 ActionEffect, ActionResult, ActorControl, ActorControlCategory, ActorControlSelf,
                 ActorControlTarget, ActorMove, CommonSpawn, Condition, Conditions, Config,
                 ContainerInfo, CurrencyInfo, EffectEntry, EffectKind, EffectResult, Equip,
@@ -23,11 +34,14 @@ use crate::{
                 PlayerStats, PlayerSubKind, QuestActiveList, ServerZoneIpcData,
                 ServerZoneIpcSegment, StatusEffect, StatusEffectList, UpdateClassInfo, Warp,
                 WeatherChange,
-            }, ActionKind, ChatMessage, DisplayFlag
+            },
         },
-    }, opcodes::ServerZoneIpcType, packet::{
-        parse_packet, send_packet, CompressionType, ConnectionState, ConnectionType, PacketSegment, ScramblerKeyGenerator, SegmentData, SegmentType, OBFUSCATION_ENABLED_MODE
-    }, LogMessageType, AETHERYTE_UNLOCK_BITMASK_SIZE, CLASSJOB_ARRAY_SIZE, COMPLETED_LEVEQUEST_BITMASK_SIZE, COMPLETED_QUEST_BITMASK_SIZE, DUNGEON_ARRAY_SIZE, ERR_INVENTORY_ADD_FAILED, GUILDHEST_ARRAY_SIZE, PVP_ARRAY_SIZE, RAID_ARRAY_SIZE, TRIAL_ARRAY_SIZE, UNLOCK_BITMASK_SIZE
+    },
+    opcodes::ServerZoneIpcType,
+    packet::{
+        CompressionType, ConnectionState, ConnectionType, OBFUSCATION_ENABLED_MODE, PacketSegment,
+        ScramblerKeyGenerator, SegmentData, SegmentType, parse_packet, send_packet,
+    },
 };
 
 use super::{
@@ -1376,7 +1390,12 @@ impl ZoneConnection {
         if request.action_kind == ActionKind::Mount {
             let mut effects = [ActionEffect::default(); 8];
             effects[0] = ActionEffect {
-                kind: EffectKind::Unk2 { unk1: 1, unk2: 0, id: request.action_key as u16, unk3: 27 },
+                kind: EffectKind::Unk2 {
+                    unk1: 1,
+                    unk2: 0,
+                    id: request.action_key as u16,
+                    unk3: 27,
+                },
             };
 
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActionResult(ActionResult {
@@ -1398,22 +1417,7 @@ impl ZoneConnection {
 
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Mount {
                 id: request.action_key as u16,
-                unk1: [
-                    1,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                ]
+                unk1: [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             });
             self.send_ipc_self(ipc).await;
             return;
