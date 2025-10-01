@@ -10,6 +10,8 @@ pub enum Condition {
     None = 0,
     /// Seen when beginning a walk-in event.
     WalkInEvent = 6,
+    /// When the client starts watching a Duty Recorder replay.
+    ContentsReplay = 17,
     /// When the client is logging out.
     LoggingOut = 25,
 }
