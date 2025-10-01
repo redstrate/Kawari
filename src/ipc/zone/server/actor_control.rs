@@ -188,6 +188,10 @@ pub enum ActorControlCategory {
         id: u32,
     },
 
+    /// Forces the player off their current mount.
+    #[brw(magic = 915u32)]
+    Dismount { sequence: u32 },
+
     #[brw(magic = 918u32)]
     ToggleOrchestrionUnlock {
         song_id: u16,
@@ -198,6 +202,10 @@ pub enum ActorControlCategory {
         #[bw(map = write_bool_as::<u32>)]
         unlocked: bool,
     },
+
+    /// Unknown purpose, seen during dismounting.
+    #[brw(magic = 930u32)]
+    UnkDismountRelated { unk1: u32, unk2: u32, unk3: u32 },
 
     #[brw(magic = 931u32)]
     BeginContentsReplay {

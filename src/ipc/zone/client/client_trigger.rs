@@ -25,6 +25,10 @@ pub enum ClientTriggerCommand {
         actor_type: u32,
     },
 
+    /// The client is trying to dismount their current mount.
+    #[brw(magic = 0x0065u32)]
+    Dismount { sequence: u32 },
+
     /// The client requests a minion to be summoned.
     #[brw(magic = 0x0066u32)]
     SummonMinion { minion_id: u32 },

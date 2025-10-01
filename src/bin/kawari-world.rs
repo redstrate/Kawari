@@ -449,7 +449,40 @@ async fn client_loop(
                                                         // TODO: clear the ContentsReplay flag instead of going nuclear (see also: event_finish)
                                                         connection.conditions = Conditions::default();
                                                         connection.send_conditions().await;
-                                                    }
+                                                    },
+                                                    ClientTriggerCommand::Dismount { sequence } => {
+                                                        connection.conditions = Conditions::default();
+                                                        connection.send_conditions().await;
+
+                                                        // TODO: not sure if it's important, retail sends an AC 2 with a param of 1
+
+                                                        // Retail indeed does send an AC, not an ACS for this.
+                                                        connection.actor_control(connection.player_data.actor_id, ActorControl {
+                                                            category: ActorControlCategory::UnkDismountRelated { unk1: 47494, unk2: 32711, unk3: 1510381914 }
+                                                        }).await;
+
+                                                        connection.actor_control_self(ActorControlSelf {
+                                                            category: ActorControlCategory::Dismount { sequence }
+                                                        }).await;
+
+                                                        // Then these are also sent!
+                                                        connection.actor_control_self(ActorControlSelf {
+                                                            category: ActorControlCategory::WalkInTriggerRelatedUnk1 { unk1: 0 }
+                                                        }).await;
+
+                                                        connection.actor_control_self(ActorControlSelf {
+                                                            category: ActorControlCategory::CompanionUnlock { unk1: 0, unk2: 0 }
+                                                        }).await;
+
+                                                        connection.actor_control_self(ActorControlSelf {
+                                                            category: ActorControlCategory::WalkInTriggerRelatedUnk2 {
+                                                                unk1: 0,
+                                                                unk2: 0,
+                                                                unk3: 0,
+                                                                unk4: 7,
+                                                            }
+                                                        }).await;
+                                                    },
                                                     _ => {
                                                         // inform the server of our trigger, it will handle sending it to other clients
                                                         connection.handle.send(ToServer::ClientTrigger(connection.id, connection.player_data.actor_id, trigger.clone())).await;
