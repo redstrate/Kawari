@@ -199,6 +199,16 @@ pub enum ActorControlCategory {
         unlocked: bool,
     },
 
+    #[brw(magic = 931u32)]
+    BeginContentsReplay {
+        unk1: u32, // Always 1
+    },
+
+    #[brw(magic = 932u32)]
+    EndContentsReplay {
+        unk1: u32, // Always 1
+    },
+
     Unknown {
         category: u32,
         param1: u32,

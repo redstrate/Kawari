@@ -127,6 +127,12 @@ pub enum ClientTriggerCommand {
     #[brw(magic = 0x232Du32)]
     SetDistanceRange { range: DistanceRange },
 
+    #[brw(magic = 0x07BCu32)]
+    BeginContentsReplay {},
+
+    #[brw(magic = 0x07BDu32)]
+    EndContentsReplay {},
+
     // Sent whenever the client tries to begin a Hall of the Novice exercise.
     #[brw(magic = 0x0802u32)]
     BeginNoviceExercise {
