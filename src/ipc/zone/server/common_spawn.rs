@@ -7,6 +7,7 @@ use crate::common::{
 use bitflags::bitflags;
 
 use super::StatusEffect;
+use strum_macros::EnumIter;
 
 #[binrw]
 #[brw(repr = u8)]
@@ -82,11 +83,11 @@ pub enum CharacterMode {
 }
 
 // See https://github.com/aers/FFXIVClientStructs/blob/28d9f0f77fdf388f596ba65768c7d6441e962d06/FFXIVClientStructs/FFXIV/Client/UI/Info/InfoProxyCommonList.cs#L86
-// TODO: This entire enum seems to be used as both literal values (e.g. in PlayerSpawn, where a single byte indicates status) and shift values (e.g. other packets, probably social list related, as a u64).
+// TODO: This entire enum seems to be used as both literal values (e.g. in PlayerSpawn, where a single byte indicates status) and shift values as a u64 for the SocialList (possibly other places too).
 #[binrw]
 #[brw(little)]
 #[brw(repr = u8)]
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Clone, Debug, Default, EnumIter, Eq, PartialEq)]
 pub enum OnlineStatus {
     Offline = 0,
     GameQA = 1,
