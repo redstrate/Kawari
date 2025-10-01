@@ -12,12 +12,14 @@ use kawari::inventory::{
 use kawari::ipc::chat::{ServerChatIpcData, ServerChatIpcSegment};
 use kawari::ipc::zone::{
     ActorControl, ActorControlCategory, ActorControlSelf, Condition, Conditions, ItemOperation,
-    PlayerEntry, PlayerSpawn, PlayerStatus, SocialList,
+    Language, LanguageUnderline, OnlineStatusMask, PlayerEntry, PlayerSpawn, PlayerStatus,
+    SocialList,
 };
 
 use kawari::ipc::zone::{
     Blacklist, BlacklistedCharacter, ClientTriggerCommand, ClientZoneIpcData, GameMasterRank,
     OnlineStatus, ServerZoneIpcData, ServerZoneIpcSegment, SocialListRequestType,
+    SocialListUIFlags,
 };
 
 use kawari::packet::oodle::OodleNetwork;
@@ -503,20 +505,31 @@ async fn client_loop(
                                             }
                                             ClientZoneIpcData::SocialListRequest(request) => {
                                                 tracing::info!("Recieved social list request!");
+                                                // TODO: store this in player_data, and also update it when in parties, duties, etc.
+                                                let mut online_status_mask = OnlineStatusMask::default();
+                                                online_status_mask.set_status(OnlineStatus::Online);
 
                                                 match &request.request_type {
+                                                    // TODO: Fill in with other party members once support for parties is implemented.
                                                     SocialListRequestType::Party => {
+                                                        let chara_details = database.find_chara_make(connection.player_data.content_id);
                                                         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::SocialList(SocialList {
                                                             request_type: request.request_type,
                                                             sequence: request.count,
                                                             entries: vec![PlayerEntry {
-                                                                // TODO: fill with actual player data, it also shows up wrong in game
+                                                                current_world_id: config.world.world_id,
+                                                                ui_flags: SocialListUIFlags::ENABLE_CONTEXT_MENU,
                                                                 content_id: connection.player_data.content_id,
-                                                                zone_id: 0,
-                                                                zone_id1: 0x0100,
-                                                                name: "INVALID".to_string(),
+                                                                zone_id: connection.player_data.zone_id,
+                                                                language: Language::ENGLISH, // TODO: Where does the client inform us about this and the underline?
+                                                                language_underline: LanguageUnderline::English,
+                                                                online_status_mask,
+                                                                home_world_id: config.world.world_id,
+                                                                name: chara_details.name.to_string(),
+                                                                classjob_id: connection.player_data.classjob_id,
+                                                                classjob_level: connection.player_data.classjob_levels[connection.player_data.classjob_id as usize] as u8,
                                                                 ..Default::default()
-                                                            }],
+                                                            },],
                                                         }));
                                                         connection.send_ipc_self(ipc).await;
                                                     }
