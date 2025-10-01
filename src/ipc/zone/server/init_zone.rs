@@ -12,7 +12,7 @@ pub struct InitZone {
     pub layer_set_id: u32,
     pub layout_id: u32,
     pub weather_id: u16, // index into Weather sheet probably?
-    pub unk_really: u16,
+    pub unk_really: u16, // If not 1, then the Duty Recorder window doesn't initialize in the client.
     pub unk_bitmask1: u8,
     /// Zero means "no obsfucation" (not really, but functionally yes.)
     /// To enable obsfucation, you need to set this to a constant that changes every patch. See lib.rs for the constant.
