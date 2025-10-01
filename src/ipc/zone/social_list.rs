@@ -67,7 +67,7 @@ impl std::fmt::Debug for OnlineStatusMask {
 
 /// Which languages the client's player wishes to be grouped and/or interacted with.
 #[binrw]
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Language(u8);
 
 bitflags! {
@@ -76,6 +76,12 @@ bitflags! {
         const ENGLISH = 2;
         const GERMAN = 4;
         const FRENCH = 8;
+    }
+}
+
+impl Default for Language {
+    fn default() -> Self {
+        Language::JAPANESE
     }
 }
 
