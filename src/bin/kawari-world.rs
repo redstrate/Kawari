@@ -402,6 +402,53 @@ async fn client_loop(
                                                         }
 
                                                         connection.handle.send(ToServer::ZoneIn(connection.id, connection.player_data.actor_id, connection.player_data.teleport_reason == TeleportReason::Aetheryte)).await;
+                                                    },
+                                                    ClientTriggerCommand::BeginContentsReplay {} => {
+                                                        connection.conditions.set_condition(Condition::ContentsReplay);
+                                                        connection.send_conditions().await;
+
+                                                        connection.actor_control_self(ActorControlSelf {
+                                                            category: ActorControlCategory::BeginContentsReplay {
+                                                                unk1: 1
+                                                            }
+                                                        }).await;
+                                                    },
+                                                    ClientTriggerCommand::EndContentsReplay {} => {
+                                                        connection.actor_control_self(ActorControlSelf {
+                                                            category: ActorControlCategory::EndContentsReplay {
+                                                                unk1: 1
+                                                            }
+                                                        }).await;
+
+                                                        // TODO: de-duplicate from ClientZoneIpcData::FinishLoading
+                                                        let common = connection.get_player_common_spawn(connection.exit_position, connection.exit_rotation);
+
+                                                        let online_status = if connection.player_data.gm_rank == GameMasterRank::NormalUser {
+                                                            OnlineStatus::Online
+                                                        } else {
+                                                            OnlineStatus::GameMasterBlue
+                                                        };
+
+                                                        let spawn = PlayerSpawn {
+                                                            account_id: connection.player_data.account_id,
+                                                            content_id: connection.player_data.content_id,
+                                                            current_world_id: config.world.world_id,
+                                                            home_world_id: config.world.world_id,
+                                                            gm_rank: connection.player_data.gm_rank,
+                                                            online_status,
+                                                            common: common.clone(),
+                                                            ..Default::default()
+                                                        };
+
+                                                        // send player spawn
+                                                        {
+                                                            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PlayerSpawn(spawn));
+                                                            connection.send_ipc_self(ipc).await;
+                                                        }
+
+                                                        // TODO: clear the ContentsReplay flag instead of going nuclear (see also: event_finish)
+                                                        connection.conditions = Conditions::default();
+                                                        connection.send_conditions().await;
                                                     }
                                                     _ => {
                                                         // inform the server of our trigger, it will handle sending it to other clients
