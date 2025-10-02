@@ -11,9 +11,9 @@ use kawari::inventory::{
 };
 use kawari::ipc::chat::{ServerChatIpcData, ServerChatIpcSegment};
 use kawari::ipc::zone::{
-    ActorControl, ActorControlCategory, ActorControlSelf, Condition, Conditions, ItemOperation,
-    Language, LanguageUnderline, OnlineStatusMask, PlayerEntry, PlayerSpawn, PlayerStatus,
-    SocialList,
+    ActorControl, ActorControlCategory, ActorControlSelf, ClientLanguage, Condition, Conditions,
+    ItemOperation, OnlineStatusMask, PlayerEntry, PlayerSpawn, PlayerStatus, SocialList,
+    SocialListUILanguages,
 };
 
 use kawari::ipc::zone::{
@@ -521,8 +521,8 @@ async fn client_loop(
                                                                 ui_flags: SocialListUIFlags::ENABLE_CONTEXT_MENU,
                                                                 content_id: connection.player_data.content_id,
                                                                 zone_id: connection.player_data.zone_id,
-                                                                language: Language::ENGLISH, // TODO: Where does the client inform us about this and the underline?
-                                                                language_underline: LanguageUnderline::English,
+                                                                social_ui_languages: SocialListUILanguages::ENGLISH, // TODO: These languages and the primary client language seem to be set in the search info, but that is not yet implemented.
+                                                                client_language: ClientLanguage::English,
                                                                 online_status_mask,
                                                                 home_world_id: config.world.world_id,
                                                                 name: chara_details.name.to_string(),

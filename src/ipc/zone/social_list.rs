@@ -66,12 +66,14 @@ impl std::fmt::Debug for OnlineStatusMask {
 }
 
 /// Which languages the client's player wishes to be grouped and/or interacted with.
+/// These are set by the client in the Edit Search Info menu (the Content Finder's seem to be used exclusively for grouping preferences?), but by default the primary language will be enabled.
+/// Not to be confused with physis::common::Language.
 #[binrw]
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct Language(u8);
+pub struct SocialListUILanguages(u8);
 
 bitflags! {
-    impl Language: u8 {
+    impl SocialListUILanguages: u8 {
         const JAPANESE = 1;
         const ENGLISH = 2;
         const GERMAN = 4;
@@ -79,17 +81,18 @@ bitflags! {
     }
 }
 
-impl Default for Language {
+impl Default for SocialListUILanguages {
     fn default() -> Self {
-        Language::JAPANESE
+        SocialListUILanguages::JAPANESE
     }
 }
 
 /// Which language the client indicates as its primary language.
+/// Not to be confused with physis::common::Language.
 #[binrw]
 #[brw(repr = u8)]
 #[derive(Clone, Copy, Debug, Default)]
-pub enum LanguageUnderline {
+pub enum ClientLanguage {
     #[default]
     Japanese = 0,
     English = 1,
@@ -135,8 +138,8 @@ pub struct PlayerEntry {
     #[brw(pad_after = 2)]
     pub zone_id: u16,
     pub grand_company: GrandCompany,
-    pub language_underline: LanguageUnderline,
-    pub language: Language,
+    pub client_language: ClientLanguage,
+    pub social_ui_languages: SocialListUILanguages,
     #[br(map = read_bool_from::<u8>)]
     #[bw(map = write_bool_as::<u8>)]
     pub has_search_comment: bool,

@@ -2,8 +2,8 @@ use binrw::binrw;
 use paramacro::opcode_data;
 
 pub use super::social_list::{
-    Language, LanguageUnderline, OnlineStatusMask, PlayerEntry, SocialList, SocialListRequest,
-    SocialListRequestType, SocialListUIFlags,
+    ClientLanguage, OnlineStatusMask, PlayerEntry, SocialList, SocialListRequest,
+    SocialListRequestType, SocialListUIFlags, SocialListUILanguages,
 };
 
 mod player_spawn;
