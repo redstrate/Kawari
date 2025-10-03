@@ -22,6 +22,7 @@ pub struct PlayerStatus {
     pub unknown28: u32,
     pub unknown_pvp2c: u16,
     pub unknown2e: u16,
+    /// How many Frontline campaigns you participated in.
     pub pvp_frontline_overall_campaigns: u32,
     pub unknown_timestamp34: u32,
     pub unknown_timestamp38: u32,
@@ -33,6 +34,7 @@ pub struct PlayerStatus {
     pub unknown50: u16,
     pub unknown_pvp52: [u16; 4],
     pub pvp_series_exp: u16,
+    /// How many player commendations you received.
     pub player_commendations: u16,
     pub unknown64: [u16; 8],
     pub pvp_rival_wings_total_matches: u16,
