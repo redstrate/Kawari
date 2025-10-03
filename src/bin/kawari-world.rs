@@ -272,8 +272,7 @@ async fn client_loop(
                                                 {
                                                     let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PlayerStatus(PlayerStatus {
                                                         content_id: connection.player_data.content_id,
-                                                        // Disabled for now until the client stops freaking out
-                                                        //exp: connection.player_data.classjob_exp,
+                                                        exp: connection.player_data.classjob_exp,
                                                         max_level: 100,
                                                         expansion: 5,
                                                         name: chara_details.name,
@@ -304,6 +303,8 @@ async fn client_loop(
                                                         minions: vec![0xFFu8; MINION_BITMASK_SIZE], // TODO: make this persistent?
                                                         mount_guide_mask: vec![0xFFu8; MOUNT_BITMASK_SIZE], // TODO: make this persistent too?
                                                         homepoint: 8, // hardcoded to limsa for now
+                                                        fav_aetheryte_count: 1,
+                                                        favorite_aetheryte_ids: [8, 0, 0, 0],
                                                         ..Default::default()
                                                     }));
                                                     connection.send_ipc_self(ipc).await;
