@@ -154,9 +154,6 @@ fn main() {
                     for object in &layer.objects {
                         if let LayerEntryData::BG(bg) = &object.data {
                             if !bg.collision_asset_path.value.is_empty() {
-                                tracing::info!("Considering {} for navimesh", object.instance_id);
-                                tracing::info!("- Loading {}", bg.collision_asset_path.value);
-
                                 // NOTE: assert is here to find out the unknown
                                 assert!(bg.collision_type == ModelCollisionType::Replace);
 
