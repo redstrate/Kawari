@@ -2,4 +2,5 @@
 
 registerAction(3, "actions/Sprint.lua")
 registerAction(5, "actions/Teleport.lua")
+registerAction(6, "actions/Return.lua")
 registerAction(9, "actions/FastBlade.lua")
