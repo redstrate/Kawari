@@ -43,7 +43,9 @@ pub struct PlayerStatus {
     pub pvp_rival_wings_total_victories: u16,
     pub pvp_rival_wings_weekly_matches: u16,
     pub pvp_rival_wings_weekly_victories: u16,
+    /// The maximum attainable level on the account. Unsure of it's in-game effect.
     pub max_level: u8,
+    /// Which expansion you have acquired. Unsure of it's in-game effect.
     pub expansion: u8,
     pub unknown76: u8,
     pub unknown77: u8,
