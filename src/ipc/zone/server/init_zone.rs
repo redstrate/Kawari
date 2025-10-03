@@ -38,13 +38,14 @@ impl Default for InitZoneFlags {
 #[derive(Debug, Clone, Default)]
 pub struct InitZone {
     pub zone_id: u16,
+    /// Index into the TerritoryType Excel sheet.
     pub territory_type: u16,
     /// The id of the instanced area, has no effect if non-zero and flags doesn't contain `INSTANCED_AREA`.
     pub instance_id: u16,
     pub content_finder_condition_id: u16,
     pub layer_set_id: u32,
     pub layout_id: u32,
-    /// Index into the weather sheet.
+    /// Index into the Weather Excel sheet.
     pub weather_id: u16,
     pub flags: InitZoneFlags,
     pub unk_bitmask1: u8,
