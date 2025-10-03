@@ -121,7 +121,6 @@ pub struct PlayerStatus {
     #[bw(pad_size_to = AETHERYTE_UNLOCK_BITMASK_SIZE)]
     pub aetherytes: Vec<u8>,
     pub favorite_aetheryte_ids: [u16; 4],
-    //#[brw(pad_before = 4)] // TODO: This seems to have been removed in 7.3?
     pub free_aetheryte_id: u16,
     pub ps_plus_free_aetheryte_id: u16,
     #[br(count = 480)]
