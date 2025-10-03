@@ -93,7 +93,7 @@ pub enum FromServer {
     // TODO: temporary
     Conditions(Conditions),
     /// To inform the connection of the zone they're loading into.
-    ChangeZone(u16, u16, Position, f32, LuaZone),
+    ChangeZone(u16, u16, Position, f32, LuaZone, bool),
 }
 
 #[derive(Debug, Clone)]

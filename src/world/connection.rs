@@ -24,7 +24,7 @@ use crate::{
         chat::ServerChatIpcSegment,
         kawari::CustomIpcSegment,
         zone::{
-            ActionKind, ChatMessage, DisplayFlag,
+            ActionKind, ChatMessage, DisplayFlag, InitZoneFlags,
             client::{ActionRequest, ClientZoneIpcSegment},
             server::{
                 ActionEffect, ActionResult, ActorControl, ActorControlCategory, ActorControlSelf,
@@ -477,6 +477,7 @@ impl ZoneConnection {
         weather_id: u16,
         exit_position: Position,
         exit_rotation: f32,
+        initial_login: bool,
     ) {
         self.player_data.zone_id = new_zone_id;
         self.exit_position = Some(exit_position);
@@ -546,10 +547,16 @@ impl ZoneConnection {
         {
             let config = get_config();
 
+            let extra_flags = if initial_login {
+                InitZoneFlags::INITIAL_LOGIN
+            } else {
+                InitZoneFlags::default()
+            };
+
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InitZone(InitZone {
                 territory_type: new_zone_id,
                 weather_id,
-                unk_really: 1,
+                flags: InitZoneFlags::ENABLE_FLYING | extra_flags,
                 obsfucation_mode: if config.world.enable_packet_obsfucation {
                     OBFUSCATION_ENABLED_MODE
                 } else {

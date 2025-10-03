@@ -1,6 +1,34 @@
 use binrw::binrw;
+use bitflags::bitflags;
 
 use crate::common::Position;
+
+// NOTE: Not 100% sure this is actually u16, it could be u8.
+#[binrw]
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub struct InitZoneFlags(pub u16);
+
+impl std::fmt::Debug for InitZoneFlags {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        bitflags::parser::to_writer(self, f)
+    }
+}
+
+bitflags! {
+    impl InitZoneFlags : u16 {
+        const NONE = 0x000;
+        /// Enables the Playguide window, and also the Duty Recorder. Only sent for the first zone logged into.
+        const INITIAL_LOGIN = 0x001;
+        /// Allows flying on your mount. This only works if you completed A Realm Reborn.
+        const ENABLE_FLYING = 0x010;
+    }
+}
+
+impl Default for InitZoneFlags {
+    fn default() -> Self {
+        Self::NONE
+    }
+}
 
 #[binrw]
 #[derive(Debug, Clone, Default)]
@@ -11,8 +39,9 @@ pub struct InitZone {
     pub content_finder_condition_id: u16,
     pub layer_set_id: u32,
     pub layout_id: u32,
-    pub weather_id: u16, // index into Weather sheet probably?
-    pub unk_really: u16, // If not 1, then the Duty Recorder window doesn't initialize in the client.
+    /// Index into the weather sheet.
+    pub weather_id: u16,
+    pub flags: InitZoneFlags,
     pub unk_bitmask1: u8,
     /// Zero means "no obsfucation" (not really, but functionally yes.)
     /// To enable obsfucation, you need to set this to a constant that changes every patch. See lib.rs for the constant.

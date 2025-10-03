@@ -25,7 +25,7 @@ mod actor_control;
 pub use actor_control::{ActorControl, ActorControlCategory, ActorControlSelf, ActorControlTarget};
 
 mod init_zone;
-pub use init_zone::InitZone;
+pub use init_zone::{InitZone, InitZoneFlags};
 
 mod npc_spawn;
 pub use npc_spawn::NpcSpawn;

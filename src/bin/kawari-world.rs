@@ -1256,9 +1256,9 @@ async fn client_loop(
                         connection.conditions = conditions;
                         connection.send_conditions().await;
                     },
-                    FromServer::ChangeZone(zone_id, weather_id, position, rotation, lua_zone) => {
+                    FromServer::ChangeZone(zone_id, weather_id, position, rotation, lua_zone, initial_login) => {
                         lua_player.zone_data = lua_zone;
-                        connection.handle_zone_change(zone_id, weather_id, position, rotation).await;
+                        connection.handle_zone_change(zone_id, weather_id, position, rotation, initial_login).await;
                     },
                 },
                 None => break,

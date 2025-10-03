@@ -560,6 +560,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     position,
                     rotation,
                     LuaZone::from_zone(&target_instance.zone, target_instance.weather_id),
+                    true, // since this is initial login
                 );
 
                 network.send_to(from_id, msg);
@@ -665,6 +666,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     Position::default(),
                     0.0,
                     LuaZone::from_zone(&target_instance.zone, target_instance.weather_id),
+                    false,
                 );
                 network.send_to(from_id, msg);
             }
@@ -722,6 +724,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     exit_position,
                     0.0, // TODO: exit rotation
                     LuaZone::from_zone(&target_instance.zone, target_instance.weather_id),
+                    false,
                 );
                 network.send_to(from_id, msg);
             }
@@ -765,6 +768,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     exit_position,
                     0.0, // TODO: exit rotation
                     LuaZone::from_zone(&target_instance.zone, target_instance.weather_id),
+                    false,
                 );
                 network.send_to(from_id, msg);
             }
@@ -808,6 +812,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     exit_position,
                     0.0, // TODO: exit rotation
                     LuaZone::from_zone(&target_instance.zone, target_instance.weather_id),
+                    false,
                 );
                 network.send_to(from_id, msg);
             }
