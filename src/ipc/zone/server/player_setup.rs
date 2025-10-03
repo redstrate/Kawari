@@ -73,6 +73,7 @@ pub struct PlayerStatus {
     pub sightseeing21_to_80_unlock: u8,
     pub sightseeing_heavensward_unlock: u8,
     pub unknown9e: [u8; 30],
+    /// Current EXP for all classjobs. This doesn't control the class' "unlocked state" in the Character UI.
     pub exp: [u32; CLASSJOB_ARRAY_SIZE],
     pub unknown_pvp124: u32,
     pub pvp_exp: u32,
@@ -80,6 +81,7 @@ pub struct PlayerStatus {
     #[br(count = 16)]
     #[bw(pad_size_to = 16)]
     pub unknown138: Vec<u8>,
+    /// Current levels for all classjobs. If non-zero, the class is visibly "unlocked" in the Character UI.
     pub levels: [u16; CLASSJOB_ARRAY_SIZE],
     #[br(count = 8)]
     #[bw(pad_size_to = 8)]
