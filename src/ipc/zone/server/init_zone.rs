@@ -37,7 +37,7 @@ impl Default for InitZoneFlags {
 #[binrw]
 #[derive(Debug, Clone, Default)]
 pub struct InitZone {
-    /// This is most likely meaningless, the number doesn't seem to correspond to anything.
+    /// This is the internal server ID. (*Not* the World ID.) This seems to be just for informational purposes, and doesn't affect anything functionally. Always the same as the `server_id` in `IpcSegment`.
     pub server_id: u16,
     /// Index into the TerritoryType Excel sheet.
     pub territory_type: u16,

@@ -71,10 +71,10 @@ where
     /// The opcode for this segment.
     pub op_code: OpCode,
     #[brw(pad_before = 4)] // empty
-    /// Unknown purpose, but safe to keep 0.
-    pub option: u16,
+    /// This is the internal server ID. (*Not* the World ID.) This seems to be just for informational purposes, and doesn't affect anything functionally.
+    pub server_id: u16,
     /// The timestamp of this packet in seconds since UNIX epoch.
-    #[brw(pad_before = 2)]
+    #[brw(pad_before = 2)] // not empty
     pub timestamp: u32,
     /// The data associated with the opcode.
     #[br(args(&op_code, size))]
@@ -114,7 +114,7 @@ where
             unk1: 20,
             unk2: 0,
             op_code: OpCode::default(),
-            option: 15,
+            server_id: 15,
             timestamp: timestamp_secs(),
             data: Data::default(),
         }
