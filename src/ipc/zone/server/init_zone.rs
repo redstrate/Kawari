@@ -23,6 +23,8 @@ bitflags! {
         const HIDE_SERVER = 0x008;
         /// Allows flying on your mount. This only works if you completed A Realm Reborn.
         const ENABLE_FLYING = 0x010;
+        /// Informs the client that this is an instanced area. Also needs instance_id to be a non-zero value.
+        const INSTANCED_AREA = 0x080;
     }
 }
 
@@ -37,7 +39,8 @@ impl Default for InitZoneFlags {
 pub struct InitZone {
     pub zone_id: u16,
     pub territory_type: u16,
-    pub territory_index: u16,
+    /// The id of the instanced area, has no effect if non-zero and flags doesn't contain `INSTANCED_AREA`.
+    pub instance_id: u16,
     pub content_finder_condition_id: u16,
     pub layer_set_id: u32,
     pub layout_id: u32,
