@@ -19,6 +19,8 @@ bitflags! {
         const NONE = 0x000;
         /// Enables the Playguide window, and also the Duty Recorder. Only sent for the first zone logged into.
         const INITIAL_LOGIN = 0x001;
+        /// Hides the server information in the status bar.
+        const HIDE_SERVER = 0x008;
         /// Allows flying on your mount. This only works if you completed A Realm Reborn.
         const ENABLE_FLYING = 0x010;
     }
