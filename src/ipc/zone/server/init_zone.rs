@@ -37,7 +37,8 @@ impl Default for InitZoneFlags {
 #[binrw]
 #[derive(Debug, Clone, Default)]
 pub struct InitZone {
-    pub zone_id: u16,
+    /// This is most likely meaningless, the number doesn't seem to correspond to anything.
+    pub server_id: u16,
     /// Index into the TerritoryType Excel sheet.
     pub territory_type: u16,
     /// The id of the instanced area, has no effect if non-zero and flags doesn't contain `INSTANCED_AREA`.
@@ -90,9 +91,9 @@ mod tests {
         let mut buffer = Cursor::new(&buffer);
 
         let init_zone = InitZone::read_le(&mut buffer).unwrap();
-        assert_eq!(init_zone.zone_id, 1);
+        assert_eq!(init_zone.server_id, 1);
         assert_eq!(init_zone.territory_type, 182);
-        assert_eq!(init_zone.territory_index, 0);
+        assert_eq!(init_zone.instance_id, 0);
         assert_eq!(init_zone.weather_id, 2);
         assert_eq!(init_zone.position.x, 40.519722);
         assert_eq!(init_zone.position.y, 4.0);
