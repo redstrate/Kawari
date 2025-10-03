@@ -10,10 +10,12 @@ use crate::{
 #[binrw]
 #[derive(Debug, Clone, Default)]
 pub struct PlayerStatus {
+    /// The content ID of the player.
     pub content_id: u64,
     pub crest: u64,
     pub unknown10: u64,
-    pub char_id: u32,
+    /// The actor ID of the player.
+    pub actor_id: u32,
     pub rested_exp: u32,
     pub companion_current_exp: u32,
     pub unknown1c: u32,

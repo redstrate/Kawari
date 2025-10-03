@@ -276,7 +276,7 @@ async fn client_loop(
                                                         max_level: 100,
                                                         expansion: 5,
                                                         name: chara_details.name,
-                                                        char_id: connection.player_data.actor_id,
+                                                        actor_id: connection.player_data.actor_id,
                                                         race: chara_details.chara_make.customize.race,
                                                         gender: chara_details.chara_make.customize.gender,
                                                         tribe: chara_details.chara_make.customize.subrace,
