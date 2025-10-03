@@ -49,10 +49,13 @@ pub struct PlayerStatus {
     pub gender: u8,
     pub current_job: u8,
     pub current_class: u8,
+    /// The character's chosen deity. Indexed into the GuardianDeity Excel sheet.
     pub deity: u8,
     pub nameday_month: u8,
     pub nameday_day: u8,
+    /// The character's initial city-state.
     pub city_state: u8,
+    /// The Aetheryte used for the Return action. Indexed into the Aetheryte Excel sheet.
     pub homepoint: u8,
     pub unknown8d: [u8; 3],
     pub companion_rank: u8,

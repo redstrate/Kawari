@@ -303,6 +303,7 @@ async fn client_loop(
                                                         cleared_pvp: connection.player_data.unlocks.cleared_pvp.clone(),
                                                         minions: vec![0xFFu8; MINION_BITMASK_SIZE], // TODO: make this persistent?
                                                         mount_guide_mask: vec![0xFFu8; MOUNT_BITMASK_SIZE], // TODO: make this persistent too?
+                                                        homepoint: 8, // hardcoded to limsa for now
                                                         ..Default::default()
                                                     }));
                                                     connection.send_ipc_self(ipc).await;
