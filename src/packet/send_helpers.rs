@@ -90,7 +90,7 @@ pub async fn send_custom_world_packet(segment: CustomIpcSegment) -> Option<Custo
     send_packet(
         &mut stream,
         &mut packet_state,
-        ConnectionType::None,
+        ConnectionType::KawariIpc,
         CompressionType::Uncompressed,
         &[segment],
     )

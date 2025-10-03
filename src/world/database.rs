@@ -13,7 +13,7 @@ use crate::{
     ipc::lobby::{CharacterDetails, CharacterFlag},
 };
 
-use super::{PlayerData, connection::UnlockData};
+use super::{PlayerData, zone_connection::UnlockData};
 
 pub struct WorldDatabase {
     connection: Mutex<Connection>,

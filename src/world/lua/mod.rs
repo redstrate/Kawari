@@ -22,7 +22,7 @@ use crate::{
     packet::{PacketSegment, SegmentData, SegmentType},
 };
 
-use super::connection::TeleportQuery;
+use super::zone_connection::TeleportQuery;
 
 trait QueueSegments {
     fn queue_segment(&mut self, ipc: PacketSegment<ServerZoneIpcSegment>);

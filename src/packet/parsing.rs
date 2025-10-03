@@ -25,6 +25,8 @@ pub enum ConnectionType {
     Chat = 0x2,
     /// The lobby connection.
     Lobby = 0x3,
+    /// A custom internal connection for use between Kawari servers.
+    KawariIpc = 0xAAAA,
 }
 
 #[binrw]
@@ -198,6 +200,29 @@ pub enum ConnectionState {
         clientbound_oodle: OodleNetwork,
         scrambler_keys: Option<ScramblerKeys>,
     },
+}
+
+pub fn parse_packet_header(data: &[u8]) -> PacketHeader {
+    let mut cursor = Cursor::new(data);
+
+    match PacketHeader::read_le_args(&mut cursor, ()) {
+        Ok(header) => header,
+        Err(err) => {
+            tracing::error!("{err}");
+
+            PacketHeader {
+                prefix: [0u8; 16],
+                timestamp: 0,
+                size: 0,
+                connection_type: ConnectionType::None,
+                segment_count: 0,
+                version: 0,
+                compression_type: CompressionType::Uncompressed,
+                unk4: 0,
+                uncompressed_size: 0,
+            }
+        }
+    }
 }
 
 pub fn parse_packet<T: ReadWriteIpcSegment>(
