@@ -54,6 +54,7 @@ impl ChatConnection {
 
     pub async fn initialize(&mut self) {
         {
+             // We have to send the client a keep alive!
             let response = PacketSegment::<ServerChatIpcSegment> {
                 segment_type: SegmentType::KeepAliveRequest,
                 data: SegmentData::KeepAliveRequest {
@@ -73,6 +74,7 @@ impl ChatConnection {
         }
 
         {
+            // initialize connection
             let response = PacketSegment::<ServerChatIpcSegment> {
                 segment_type: SegmentType::Initialize,
                 data: SegmentData::Initialize {
@@ -91,6 +93,7 @@ impl ChatConnection {
             .await;
         }
 
+        // send login reply
         {
             let ipc = ServerChatIpcSegment::new(ServerChatIpcData::LoginReply {
                 timestamp: 0,

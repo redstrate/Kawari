@@ -319,7 +319,7 @@ fn spawn_chat_connection(connection: ChatConnection) {
     let _ = my_send.send(handle);
 }
 
-/// THe task that kickstarts the client chat connection loop.
+/// The task that kickstarts the client chat connection loop.
 async fn start_chat_connection(my_handle: oneshot::Receiver<ClientHandle>, data: ClientChatData) {
     // Recieve client information from global
     let my_handle = match my_handle.await {
