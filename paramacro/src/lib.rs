@@ -50,7 +50,7 @@ pub fn opcode_data(_metadata: TokenStream, input: TokenStream)
         }
 
         output = quote! {
-            impl ReadWriteIpcOpcode<#data_ident> for #opcode_ident {
+            impl crate::packet::ReadWriteIpcOpcode<#data_ident> for #opcode_ident {
                 /// Returns the opcode that's associated with the #data_ident.
                 fn from_data(data: &#data_ident) -> Self {
                     match data {

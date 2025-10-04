@@ -3,10 +3,7 @@ use paramacro::opcode_data;
 
 use crate::{
     opcodes::ServerChatIpcType,
-    packet::{
-        IPC_HEADER_SIZE, IpcSegment, ReadWriteIpcOpcode, ReadWriteIpcSegment,
-        ServerIpcSegmentHeader,
-    },
+    packet::{IpcSegment, ServerIpcSegmentHeader},
 };
 
 mod tell_message;
@@ -17,24 +14,6 @@ pub use party_message::PartyMessage;
 
 pub type ServerChatIpcSegment =
     IpcSegment<ServerIpcSegmentHeader<ServerChatIpcType>, ServerChatIpcType, ServerChatIpcData>;
-
-impl ReadWriteIpcSegment for ServerChatIpcSegment {
-    fn calc_size(&self) -> u32 {
-        IPC_HEADER_SIZE + self.header.op_code.calc_size()
-    }
-
-    fn get_name(&self) -> &'static str {
-        self.header.op_code.get_name()
-    }
-
-    fn get_opcode(&self) -> u16 {
-        self.header.op_code.get_opcode()
-    }
-
-    fn get_comment(&self) -> Option<&'static str> {
-        self.header.op_code.get_comment()
-    }
-}
 
 #[opcode_data(ServerChatIpcType)]
 #[binrw]
@@ -67,7 +46,7 @@ mod tests {
 
     use binrw::BinWrite;
 
-    use crate::packet::IpcSegmentHeader;
+    use crate::{packet::IpcSegmentHeader, packet::ReadWriteIpcSegment};
 
     use super::*;
 

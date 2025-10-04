@@ -26,32 +26,14 @@ use crate::common::{
     write_string,
 };
 use crate::opcodes::ClientZoneIpcType;
-use crate::packet::{IPC_HEADER_SIZE, ServerIpcSegmentHeader};
+use crate::packet::ServerIpcSegmentHeader;
 
 use crate::common::ObjectTypeId;
 use crate::inventory::ContainerType;
-use crate::packet::{IpcSegment, ReadWriteIpcOpcode, ReadWriteIpcSegment};
+use crate::packet::IpcSegment;
 
 pub type ClientZoneIpcSegment =
     IpcSegment<ServerIpcSegmentHeader<ClientZoneIpcType>, ClientZoneIpcType, ClientZoneIpcData>;
-
-impl ReadWriteIpcSegment for ClientZoneIpcSegment {
-    fn calc_size(&self) -> u32 {
-        IPC_HEADER_SIZE + self.header.op_code.calc_size()
-    }
-
-    fn get_name(&self) -> &'static str {
-        self.header.op_code.get_name()
-    }
-
-    fn get_opcode(&self) -> u16 {
-        self.header.op_code.get_opcode()
-    }
-
-    fn get_comment(&self) -> Option<&'static str> {
-        self.header.op_code.get_comment()
-    }
-}
 
 #[opcode_data(ClientZoneIpcType)]
 #[binrw]
@@ -282,7 +264,7 @@ mod tests {
 
     use binrw::BinWrite;
 
-    use crate::packet::IpcSegmentHeader;
+    use crate::{packet::IpcSegmentHeader, packet::ReadWriteIpcSegment};
 
     use super::*;
 

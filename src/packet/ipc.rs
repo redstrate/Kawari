@@ -2,6 +2,21 @@ use binrw::{BinRead, BinWrite, binrw};
 
 use crate::common::timestamp_secs;
 
+/// Implemented for all predefined opcodes.
+pub trait PredefinedOpcode {
+    /// Returns the expected size of the data segment of this IPC opcode, _without_ any headers.
+    fn calc_size(&self) -> u32;
+
+    /// Returns a human-readable name of the opcode.
+    fn get_name(&self) -> &'static str;
+
+    /// Returns the integer opcode.
+    fn get_opcode(&self) -> u16;
+
+    /// Returns the comment for this opcode.
+    fn get_comment(&self) -> Option<&'static str>;
+}
+
 /// Required to implement specializations of `IpcSegment`.
 pub trait ReadWriteIpcOpcode<T> {
     /// Returns the opcode that fits `data`.
@@ -189,6 +204,44 @@ where
             header: Header::default(),
             data: Data::default(),
         }
+    }
+}
+
+impl<Header, OpCode, Data> ReadWriteIpcSegment for IpcSegment<Header, OpCode, Data>
+where
+    for<'a> Header:
+        BinRead<Args<'a> = ()> + 'a + std::fmt::Debug + Default + IpcSegmentHeader<OpCode>,
+    for<'a> Header:
+        BinWrite<Args<'a> = ()> + 'a + std::fmt::Debug + Default + IpcSegmentHeader<OpCode>,
+    for<'a> OpCode: BinRead<Args<'a> = ()>
+        + 'a
+        + std::fmt::Debug
+        + Default
+        + ReadWriteIpcOpcode<Data>
+        + PredefinedOpcode,
+    for<'a> OpCode: BinWrite<Args<'a> = ()>
+        + 'a
+        + std::fmt::Debug
+        + Default
+        + ReadWriteIpcOpcode<Data>
+        + PredefinedOpcode,
+    for<'a> Data: BinRead<Args<'a> = (&'a OpCode, &'a u32)> + 'a + std::fmt::Debug + Default,
+    for<'a> Data: BinWrite<Args<'a> = ()> + 'a + std::fmt::Debug + Default,
+{
+    fn calc_size(&self) -> u32 {
+        IPC_HEADER_SIZE + self.header.opcode().calc_size()
+    }
+
+    fn get_name(&self) -> &'static str {
+        self.header.opcode().get_name()
+    }
+
+    fn get_opcode(&self) -> u16 {
+        self.header.opcode().get_opcode()
+    }
+
+    fn get_comment(&self) -> Option<&'static str> {
+        self.header.opcode().get_comment()
     }
 }
 

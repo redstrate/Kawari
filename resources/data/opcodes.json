@@ -832,5 +832,91 @@
             "opcode": 101,
             "size": 1032
         }
+    ],
+    "CustomIpcType": [
+        {
+            "name": "RequestCreateCharacter",
+            "comment": "Request the world server to create a character",
+            "opcode": 1,
+            "size": 1056
+        },
+        {
+            "name": "CharacterCreated",
+            "comment": "Response from the world server when the character is created",
+            "opcode": 2,
+            "size": 12
+        },
+        {
+            "name": "GetActorId",
+            "comment": "Request the actor id from the content id of a character",
+            "opcode": 3,
+            "size": 8
+        },
+        {
+            "name": "ActorIdFound",
+            "comment": "Response from the world server when the actor id is found",
+            "opcode": 4,
+            "size": 4
+        },
+        {
+            "name": "CheckNameIsAvailable",
+            "comment": "Check if a name is available on the world server",
+            "opcode": 5,
+            "size": 32
+        },
+        {
+            "name": "NameIsAvailableResponse",
+            "comment": "Response to CheckNameIsAvailable",
+            "opcode": 6,
+            "size": 1
+        },
+        {
+            "name": "RequestCharacterList",
+            "comment": "Request the character list from the world server",
+            "opcode": 7,
+            "size": 4
+        },
+        {
+            "name": "RequestCharacterListRepsonse",
+            "comment": "Response to RequestCharacterList",
+            "opcode": 8,
+            "size": 9473
+        },
+        {
+            "name": "DeleteCharacter",
+            "comment": "Request that a character be deleted from the world server",
+            "opcode": 9,
+            "size": 8
+        },
+        {
+            "name": "CharacterDeleted",
+            "comment": "Response to DeleteCharacter",
+            "opcode": 10,
+            "size": 1
+        },
+        {
+            "name": "ImportCharacter",
+            "comment": "Request to import a character backup",
+            "opcode": 11,
+            "size": 132
+        },
+        {
+            "name": "RemakeCharacter",
+            "comment": "Remake a character",
+            "opcode": 12,
+            "size": 1032
+        },
+        {
+            "name": "CharacterRemade",
+            "comment": "Character has been remade",
+            "opcode": 13,
+            "size": 8
+        },
+        {
+            "name": "CharacterImported",
+            "comment": "Response to importing a character.",
+            "opcode": 14,
+            "size": 128
+        }
     ]
 }

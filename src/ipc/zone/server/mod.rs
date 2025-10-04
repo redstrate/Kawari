@@ -92,10 +92,8 @@ use crate::common::read_string;
 use crate::common::write_string;
 use crate::inventory::{ContainerType, ItemOperationKind};
 use crate::opcodes::ServerZoneIpcType;
-use crate::packet::IPC_HEADER_SIZE;
 use crate::packet::IpcSegment;
 use crate::packet::ServerIpcSegmentHeader;
-use crate::packet::{ReadWriteIpcOpcode, ReadWriteIpcSegment};
 
 mod actor_move;
 pub use crate::ipc::zone::server::actor_move::ActorMove;
@@ -104,31 +102,6 @@ pub use crate::ipc::zone::black_list::{Blacklist, BlacklistedCharacter};
 
 pub type ServerZoneIpcSegment =
     IpcSegment<ServerIpcSegmentHeader<ServerZoneIpcType>, ServerZoneIpcType, ServerZoneIpcData>;
-
-impl ReadWriteIpcSegment for ServerZoneIpcSegment {
-    fn calc_size(&self) -> u32 {
-        IPC_HEADER_SIZE
-            + match &self.header.op_code {
-                ServerZoneIpcType::Unknown(..) => match &self.data {
-                    ServerZoneIpcData::Unknown { unk } => unk.len() as u32,
-                    _ => panic!("Unknown packet type doesn't have unknown data?"),
-                },
-                _ => self.header.op_code.calc_size(),
-            }
-    }
-
-    fn get_name(&self) -> &'static str {
-        self.header.op_code.get_name()
-    }
-
-    fn get_opcode(&self) -> u16 {
-        self.header.op_code.get_opcode()
-    }
-
-    fn get_comment(&self) -> Option<&'static str> {
-        self.header.op_code.get_comment()
-    }
-}
 
 #[opcode_data(ServerZoneIpcType)]
 #[binrw]
@@ -494,7 +467,9 @@ mod tests {
 
     use binrw::BinWrite;
 
-    use crate::{opcodes::ServerZoneIpcType, packet::IpcSegmentHeader};
+    use crate::{
+        opcodes::ServerZoneIpcType, packet::IpcSegmentHeader, packet::ReadWriteIpcSegment,
+    };
 
     use super::*;
 

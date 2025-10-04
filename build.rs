@@ -16,7 +16,8 @@ fn main() {
 
         println!("cargo::rerun-if-changed={}", d.to_str().unwrap());
 
-        let mut output_str = "use binrw::binrw;\n".to_string();
+        let mut output_str =
+            "use binrw::binrw;\nuse crate::packet::PredefinedOpcode;\n".to_string();
 
         let opcodes_buffer = std::fs::read_to_string(d).unwrap();
         let json: Value = serde_json::from_str(&opcodes_buffer).unwrap();
@@ -60,11 +61,10 @@ fn main() {
             output_str.push_str("}\n");
             output_str.push_str("}\n");
 
-            output_str.push_str(&format!("impl {key} {{\n"));
+            output_str.push_str(&format!("impl PredefinedOpcode for {key} {{\n"));
 
             // sizes
-            output_str.push_str("/// Returns the expected size of the data segment of this IPC opcode, _without_ any headers.\n");
-            output_str.push_str("pub fn calc_size(&self) -> u32 {\n");
+            output_str.push_str("fn calc_size(&self) -> u32 {\n");
             output_str.push_str("match self {\n");
 
             for opcode in opcodes {
@@ -81,8 +81,7 @@ fn main() {
             output_str.push_str("}\n\n");
 
             // names
-            output_str.push_str("/// Returns a human-readable name of the opcode.\n");
-            output_str.push_str("pub fn get_name(&self) -> &'static str {\n");
+            output_str.push_str("fn get_name(&self) -> &'static str {\n");
             output_str.push_str("match self {\n");
 
             for opcode in opcodes {
@@ -99,7 +98,7 @@ fn main() {
 
             // opcodes
             output_str.push_str("/// Returns the integer opcode.\n");
-            output_str.push_str("pub fn get_opcode(&self) -> u16 {\n");
+            output_str.push_str("fn get_opcode(&self) -> u16 {\n");
             output_str.push_str("match self {\n");
 
             for opcode in opcodes {
@@ -116,8 +115,7 @@ fn main() {
             output_str.push_str("}\n\n");
 
             // comments
-            output_str.push_str("/// Returns the comment for this opcode.\n");
-            output_str.push_str("pub fn get_comment(&self) -> Option<&'static str> {\n");
+            output_str.push_str("fn get_comment(&self) -> Option<&'static str> {\n");
             output_str.push_str("match self {\n");
 
             for opcode in opcodes {
