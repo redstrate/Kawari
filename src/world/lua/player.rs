@@ -376,6 +376,10 @@ impl LuaPlayer {
     fn unlock_mount(&mut self, id: u16) {
         self.queued_tasks.push(Task::UnlockMount { id });
     }
+
+    fn move_to_pop_range(&mut self, id: u32) {
+        self.queued_tasks.push(Task::MoveToPopRange { id });
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -560,6 +564,10 @@ impl UserData for LuaPlayer {
         );
         methods.add_method_mut("unlock_mount", |_, this, id: u16| {
             this.unlock_mount(id);
+            Ok(())
+        });
+        methods.add_method_mut("move_to_pop_range", |_, this, id: u32| {
+            this.move_to_pop_range(id);
             Ok(())
         });
     }

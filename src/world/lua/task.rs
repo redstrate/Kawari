@@ -80,4 +80,7 @@ pub enum Task {
     UnlockMount {
         id: u16,
     },
+    MoveToPopRange {
+        id: u32,
+    },
 }

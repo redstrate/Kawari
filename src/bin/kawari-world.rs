@@ -1575,6 +1575,7 @@ async fn client_loop(
                         lua_player.zone_data = lua_zone;
                         connection.handle_zone_change(zone_id, weather_id, position, rotation, initial_login).await;
                     },
+                    FromServer::NewPosition(position) => connection.set_player_position(position).await,
                 },
                 None => break,
             }

@@ -1564,6 +1564,38 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     from_actor_id,
                 );
             }
+            ToServer::MoveToPopRange(from_id, from_actor_id, id) => {
+                let mut data = data.lock().unwrap();
+                let mut network = network.lock().unwrap();
+
+                tracing::info!("finding {id}");
+
+                if let Some(instance) = data.find_actor_instance_mut(from_actor_id) {
+                    if let Some(pop_range) = instance.zone.find_pop_range(id) {
+                        let trans = pop_range.0.transform.translation;
+
+                        // send new position to the client
+                        for (id, (handle, _)) in &mut network.clients {
+                            let id = *id;
+
+                            if id == from_id {
+                                let msg = FromServer::NewPosition(Position {
+                                    x: trans[0],
+                                    y: trans[1],
+                                    z: trans[2],
+                                });
+
+                                if handle.send(msg).is_err() {
+                                    to_remove.push(id);
+                                }
+                                break;
+                            }
+                        }
+                    } else {
+                        tracing::warn!("Failed to find pop range for {id}!");
+                    }
+                }
+            }
             ToServer::FatalError(err) => return Err(err),
         }
 

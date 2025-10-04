@@ -94,6 +94,8 @@ pub enum FromServer {
     Conditions(Conditions),
     /// To inform the connection of the zone they're loading into.
     ChangeZone(u16, u16, Position, f32, LuaZone, bool),
+    /// The returned position from ToServer::MoveToPopRange.
+    NewPosition(Position),
 }
 
 #[derive(Debug, Clone)]
@@ -183,6 +185,8 @@ pub enum ToServer {
     ActorSummonsMinion(ClientId, u32, u32),
     /// We need to despawn a player's minion, and tell other clients
     ActorDespawnsMinion(ClientId, u32),
+    /// Move the player's actor to the specified pop range.
+    MoveToPopRange(ClientId, u32, u32),
 }
 
 #[derive(Clone, Debug)]

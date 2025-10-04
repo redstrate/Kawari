@@ -1077,6 +1077,15 @@ impl ZoneConnection {
                     })
                     .await;
                 }
+                Task::MoveToPopRange { id } => {
+                    self.handle
+                        .send(ToServer::MoveToPopRange(
+                            self.id,
+                            self.player_data.actor_id,
+                            *id,
+                        ))
+                        .await;
+                }
             }
         }
         player.queued_tasks.clear();
