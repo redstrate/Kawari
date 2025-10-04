@@ -76,8 +76,8 @@ pub struct PlayerStatus {
     pub companion_fav_feed: u8,
     pub fav_aetheryte_count: u8,
     pub unknown97: [u8; 5],
-    pub sightseeing21_to_80_unlock: u8, // TODO: adventure_mask seems to be the real deal, what is this then?
-    pub sightseeing_heavensward_unlock: u8, // TODO: adventure_mask seems to be the real deal, what is this then?
+    pub sightseeing21_to_80_unlock: u8, // TODO: might be SightseeingLogUnlockState in ClientStructs?
+    pub sightseeing_heavensward_unlock: u8, // TODO: might be SightseeingLogUnlockStateEx in ClientStructs?
     pub unknown9e: [u8; 30],
     /// Current EXP for all classjobs. This doesn't control the class' "unlocked state" in the Character UI.
     pub exp: [u32; CLASSJOB_ARRAY_SIZE],
