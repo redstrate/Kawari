@@ -30,92 +30,163 @@ pub trait ReadWriteIpcSegment:
     fn get_comment(&self) -> Option<&'static str>;
 }
 
-/// An IPC packet segment.
-/// When implementing a new connection type, `OpCode` and `Data` can be used to specialize this type:
-/// ```
-/// # use binrw::binrw;
-/// # use kawari::packet::IpcSegment;
-/// #
-/// # #[binrw]
-/// # #[brw(repr = u16)]
-/// # #[derive(Clone, PartialEq, Debug)]
-/// # pub enum ClientLobbyIpcType {
-/// #     Dummy = 0x1,
-/// # }
-/// #
-/// # #[binrw]
-/// # #[br(import(magic: &ClientLobbyIpcType))]
-/// # #[derive(Debug, Clone)]
-/// # pub enum ClientLobbyIpcData {
-/// #     Dummy()
-/// # }
-/// #
-/// pub type ClientLobbyIpcSegment = IpcSegment<ClientLobbyIpcType, ClientLobbyIpcData>;
-/// ```
+pub trait IpcSegmentHeader<T> {
+    /// Returns the header with `opcode`.
+    fn from_opcode(opcode: T) -> Self;
+
+    /// Returns the opcode.
+    fn opcode(&self) -> &T;
+}
+
+/// Seen in Zone connections. Has an extra field containing server information.
 #[binrw]
 #[derive(Debug, Clone)]
-#[br(import(size: &u32))]
-pub struct IpcSegment<OpCode, Data>
+#[brw(magic = 0x14u16)]
+pub struct ServerIpcSegmentHeader<OpCode>
 where
-    for<'a> OpCode:
-        BinRead<Args<'a> = ()> + 'a + std::fmt::Debug + Default + ReadWriteIpcOpcode<Data>,
-    for<'a> OpCode:
-        BinWrite<Args<'a> = ()> + 'a + std::fmt::Debug + Default + ReadWriteIpcOpcode<Data>,
-    for<'a> Data: BinRead<Args<'a> = (&'a OpCode, &'a u32)> + 'a + std::fmt::Debug + Default,
-    for<'a> Data: BinWrite<Args<'a> = ()> + 'a + std::fmt::Debug + Default,
+    for<'a> OpCode: BinRead<Args<'a> = ()> + 'a + std::fmt::Debug + Default,
+    for<'a> OpCode: BinWrite<Args<'a> = ()> + 'a + std::fmt::Debug + Default,
 {
-    /// Unknown purpose, but usually 20.
-    pub unk1: u8,
-    /// Unknown purpose, but usually 0.
-    pub unk2: u8,
     /// The opcode for this segment.
     pub op_code: OpCode,
     #[brw(pad_before = 4)] // empty
     /// This is the internal server ID. (*Not* the World ID.) This seems to be just for informational purposes, and doesn't affect anything functionally.
     pub server_id: u16,
     /// The timestamp of this packet in seconds since UNIX epoch.
-    #[brw(pad_before = 2)] // not empty
+    #[brw(pad_before = 2)] // not sure if always empty
     pub timestamp: u32,
+}
+
+impl<OpCode> Default for ServerIpcSegmentHeader<OpCode>
+where
+    for<'a> OpCode: BinRead<Args<'a> = ()> + 'a + std::fmt::Debug + Default,
+    for<'a> OpCode: BinWrite<Args<'a> = ()> + 'a + std::fmt::Debug + Default,
+{
+    fn default() -> Self {
+        Self {
+            op_code: OpCode::default(),
+            server_id: 0,
+            timestamp: timestamp_secs(),
+        }
+    }
+}
+
+impl<OpCode> IpcSegmentHeader<OpCode> for ServerIpcSegmentHeader<OpCode>
+where
+    for<'a> OpCode: BinRead<Args<'a> = ()> + 'a + std::fmt::Debug + Default,
+    for<'a> OpCode: BinWrite<Args<'a> = ()> + 'a + std::fmt::Debug + Default,
+{
+    fn from_opcode(opcode: OpCode) -> Self {
+        Self {
+            op_code: opcode,
+            ..Default::default()
+        }
+    }
+
+    fn opcode(&self) -> &OpCode {
+        return &self.op_code;
+    }
+}
+
+/// Seen in Lobby connections. Only has the timestamp and opcode.
+#[binrw]
+#[derive(Debug, Clone)]
+#[brw(magic = 0x14u16)]
+pub struct ServerlessIpcSegmentHeader<OpCode>
+where
+    for<'a> OpCode: BinRead<Args<'a> = ()> + 'a + std::fmt::Debug + Default,
+    for<'a> OpCode: BinWrite<Args<'a> = ()> + 'a + std::fmt::Debug + Default,
+{
+    /// The opcode for this segment.
+    pub op_code: OpCode,
+    /// The timestamp of this packet in seconds since UNIX epoch.
+    #[brw(pad_before = 4)] // empty
+    #[brw(pad_after = 4)] // empty
+    pub timestamp: u32,
+}
+
+impl<OpCode> Default for ServerlessIpcSegmentHeader<OpCode>
+where
+    for<'a> OpCode: BinRead<Args<'a> = ()> + 'a + std::fmt::Debug + Default,
+    for<'a> OpCode: BinWrite<Args<'a> = ()> + 'a + std::fmt::Debug + Default,
+{
+    fn default() -> Self {
+        Self {
+            op_code: OpCode::default(),
+            timestamp: timestamp_secs(),
+        }
+    }
+}
+
+impl<OpCode> IpcSegmentHeader<OpCode> for ServerlessIpcSegmentHeader<OpCode>
+where
+    for<'a> OpCode: BinRead<Args<'a> = ()> + 'a + std::fmt::Debug + Default,
+    for<'a> OpCode: BinWrite<Args<'a> = ()> + 'a + std::fmt::Debug + Default,
+{
+    fn from_opcode(opcode: OpCode) -> Self {
+        Self {
+            op_code: opcode,
+            ..Default::default()
+        }
+    }
+
+    fn opcode(&self) -> &OpCode {
+        return &self.op_code;
+    }
+}
+
+/// An IPC packet segment.
+/// When implementing a new connection type, `OpCode` and `Data` can be used to specialize this type.
+#[binrw]
+#[derive(Debug, Clone)]
+#[br(import(size: &u32))]
+pub struct IpcSegment<Header, OpCode, Data>
+where
+    for<'a> Header:
+        BinRead<Args<'a> = ()> + 'a + std::fmt::Debug + Default + IpcSegmentHeader<OpCode>,
+    for<'a> Header:
+        BinWrite<Args<'a> = ()> + 'a + std::fmt::Debug + Default + IpcSegmentHeader<OpCode>,
+    for<'a> Data: BinRead<Args<'a> = (&'a OpCode, &'a u32)> + 'a + std::fmt::Debug + Default,
+    for<'a> Data: BinWrite<Args<'a> = ()> + 'a + std::fmt::Debug + Default,
+{
+    pub header: Header,
     /// The data associated with the opcode.
-    #[br(args(&op_code, size))]
+    #[br(args(&header.opcode(), size))]
     pub data: Data,
 }
 
-impl<OpCode, Data> IpcSegment<OpCode, Data>
+impl<Header, OpCode, Data> IpcSegment<Header, OpCode, Data>
 where
-    for<'a> OpCode:
-        BinRead<Args<'a> = ()> + 'a + std::fmt::Debug + Default + ReadWriteIpcOpcode<Data>,
-    for<'a> OpCode:
-        BinWrite<Args<'a> = ()> + 'a + std::fmt::Debug + Default + ReadWriteIpcOpcode<Data>,
+    for<'a> OpCode: ReadWriteIpcOpcode<Data>,
+    for<'a> Header:
+        BinRead<Args<'a> = ()> + 'a + std::fmt::Debug + Default + IpcSegmentHeader<OpCode>,
+    for<'a> Header:
+        BinWrite<Args<'a> = ()> + 'a + std::fmt::Debug + Default + IpcSegmentHeader<OpCode>,
     for<'a> Data: BinRead<Args<'a> = (&'a OpCode, &'a u32)> + 'a + std::fmt::Debug + Default,
     for<'a> Data: BinWrite<Args<'a> = ()> + 'a + std::fmt::Debug + Default,
 {
     /// Creates a new IPC segment with the specified `data`.
     pub fn new(data: Data) -> Self {
         Self {
-            op_code: OpCode::from_data(&data),
+            header: Header::from_opcode(OpCode::from_data(&data)),
             data,
             ..Default::default()
         }
     }
 }
 
-impl<OpCode, Data> Default for IpcSegment<OpCode, Data>
+impl<Header, OpCode, Data> Default for IpcSegment<Header, OpCode, Data>
 where
-    for<'a> OpCode:
-        BinRead<Args<'a> = ()> + 'a + std::fmt::Debug + Default + ReadWriteIpcOpcode<Data>,
-    for<'a> OpCode:
-        BinWrite<Args<'a> = ()> + 'a + std::fmt::Debug + Default + ReadWriteIpcOpcode<Data>,
+    for<'a> Header:
+        BinRead<Args<'a> = ()> + 'a + std::fmt::Debug + Default + IpcSegmentHeader<OpCode>,
+    for<'a> Header:
+        BinWrite<Args<'a> = ()> + 'a + std::fmt::Debug + Default + IpcSegmentHeader<OpCode>,
     for<'a> Data: BinRead<Args<'a> = (&'a OpCode, &'a u32)> + 'a + std::fmt::Debug + Default,
     for<'a> Data: BinWrite<Args<'a> = ()> + 'a + std::fmt::Debug + Default,
 {
     fn default() -> Self {
         Self {
-            unk1: 20,
-            unk2: 0,
-            op_code: OpCode::default(),
-            server_id: 0,
-            timestamp: timestamp_secs(),
+            header: Header::default(),
             data: Data::default(),
         }
     }

@@ -9,7 +9,7 @@ use axum::{Form, Router, routing::get};
 use axum_extra::extract::CookieJar;
 use axum_extra::extract::cookie::{Cookie, Expiration};
 use kawari::config::get_config;
-use kawari::ipc::kawari::{CustomIpcData, CustomIpcSegment, CustomIpcType};
+use kawari::ipc::kawari::{CustomIpcData, CustomIpcSegment};
 use kawari::login::{LoginDatabase, LoginError};
 use kawari::packet::send_custom_world_packet;
 use kawari::{ACCOUNT_MANAGEMENT_SERVICE, GAME_SERVICE, web_static_dir, web_templates_dir};
@@ -367,14 +367,10 @@ async fn upload_character_backup(
             std::fs::write("temp.zip", data).unwrap();
 
             if name == "charbak" {
-                let ipc_segment = CustomIpcSegment {
-                    op_code: CustomIpcType::ImportCharacter,
-                    data: CustomIpcData::ImportCharacter {
-                        service_account_id,
-                        path: "temp.zip".to_string(),
-                    },
-                    ..Default::default()
-                };
+                let ipc_segment = CustomIpcSegment::new(CustomIpcData::ImportCharacter {
+                    service_account_id,
+                    path: "temp.zip".to_string(),
+                });
 
                 if let Some(response) = send_custom_world_packet(ipc_segment).await {
                     if let CustomIpcData::CharacterImported { message } = response.data {

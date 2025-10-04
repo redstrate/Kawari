@@ -5,7 +5,7 @@ use crate::{
     },
     config::get_config,
     inventory::Inventory,
-    ipc::kawari::{CustomIpcData, CustomIpcSegment, CustomIpcType},
+    ipc::kawari::{CustomIpcData, CustomIpcSegment},
     packet::{PacketSegment, SegmentData, SegmentType},
 };
 
@@ -63,14 +63,12 @@ pub async fn handle_custom_ipc(connection: &mut ZoneConnection, data: &CustomIpc
                 connection
                     .send_custom_response(PacketSegment {
                         segment_type: SegmentType::KawariIpc,
-                        data: SegmentData::KawariIpc(CustomIpcSegment {
-                            op_code: CustomIpcType::CharacterCreated,
-                            data: CustomIpcData::CharacterCreated {
+                        data: SegmentData::KawariIpc(CustomIpcSegment::new(
+                            CustomIpcData::CharacterCreated {
                                 actor_id,
                                 content_id,
                             },
-                            ..Default::default()
-                        }),
+                        )),
                         ..Default::default()
                     })
                     .await;
@@ -86,11 +84,9 @@ pub async fn handle_custom_ipc(connection: &mut ZoneConnection, data: &CustomIpc
                 connection
                     .send_custom_response(PacketSegment {
                         segment_type: SegmentType::KawariIpc,
-                        data: SegmentData::KawariIpc(CustomIpcSegment {
-                            op_code: CustomIpcType::ActorIdFound,
-                            data: CustomIpcData::ActorIdFound { actor_id },
-                            ..Default::default()
-                        }),
+                        data: SegmentData::KawariIpc(CustomIpcSegment::new(
+                            CustomIpcData::ActorIdFound { actor_id },
+                        )),
                         ..Default::default()
                     })
                     .await;
@@ -104,11 +100,9 @@ pub async fn handle_custom_ipc(connection: &mut ZoneConnection, data: &CustomIpc
                 connection
                     .send_custom_response(PacketSegment {
                         segment_type: SegmentType::KawariIpc,
-                        data: SegmentData::KawariIpc(CustomIpcSegment {
-                            op_code: CustomIpcType::NameIsAvailableResponse,
-                            data: CustomIpcData::NameIsAvailableResponse { free: is_name_free },
-                            ..Default::default()
-                        }),
+                        data: SegmentData::KawariIpc(CustomIpcSegment::new(
+                            CustomIpcData::NameIsAvailableResponse { free: is_name_free },
+                        )),
                         ..Default::default()
                     })
                     .await;
@@ -142,11 +136,9 @@ pub async fn handle_custom_ipc(connection: &mut ZoneConnection, data: &CustomIpc
                 connection
                     .send_custom_response(PacketSegment {
                         segment_type: SegmentType::KawariIpc,
-                        data: SegmentData::KawariIpc(CustomIpcSegment {
-                            op_code: CustomIpcType::RequestCharacterListRepsonse,
-                            data: CustomIpcData::RequestCharacterListRepsonse { characters },
-                            ..Default::default()
-                        }),
+                        data: SegmentData::KawariIpc(CustomIpcSegment::new(
+                            CustomIpcData::RequestCharacterListRepsonse { characters },
+                        )),
                         ..Default::default()
                     })
                     .await;
@@ -160,11 +152,9 @@ pub async fn handle_custom_ipc(connection: &mut ZoneConnection, data: &CustomIpc
                 connection
                     .send_custom_response(PacketSegment {
                         segment_type: SegmentType::KawariIpc,
-                        data: SegmentData::KawariIpc(CustomIpcSegment {
-                            op_code: CustomIpcType::CharacterDeleted,
-                            data: CustomIpcData::CharacterDeleted { deleted: 1 },
-                            ..Default::default()
-                        }),
+                        data: SegmentData::KawariIpc(CustomIpcSegment::new(
+                            CustomIpcData::CharacterDeleted { deleted: 1 },
+                        )),
                         ..Default::default()
                     })
                     .await;
@@ -195,11 +185,9 @@ pub async fn handle_custom_ipc(connection: &mut ZoneConnection, data: &CustomIpc
                 connection
                     .send_custom_response(PacketSegment {
                         segment_type: SegmentType::KawariIpc,
-                        data: SegmentData::KawariIpc(CustomIpcSegment {
-                            op_code: CustomIpcType::CharacterImported,
-                            data: CustomIpcData::CharacterImported { message },
-                            ..Default::default()
-                        }),
+                        data: SegmentData::KawariIpc(CustomIpcSegment::new(
+                            CustomIpcData::CharacterImported { message },
+                        )),
                         ..Default::default()
                     })
                     .await;
@@ -224,13 +212,11 @@ pub async fn handle_custom_ipc(connection: &mut ZoneConnection, data: &CustomIpc
                 connection
                     .send_custom_response(PacketSegment {
                         segment_type: SegmentType::KawariIpc,
-                        data: SegmentData::KawariIpc(CustomIpcSegment {
-                            op_code: CustomIpcType::CharacterRemade,
-                            data: CustomIpcData::CharacterRemade {
+                        data: SegmentData::KawariIpc(CustomIpcSegment::new(
+                            CustomIpcData::CharacterRemade {
                                 content_id: *content_id,
                             },
-                            ..Default::default()
-                        }),
+                        )),
                         ..Default::default()
                     })
                     .await;

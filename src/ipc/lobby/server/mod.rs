@@ -22,26 +22,33 @@ pub use nack_reply::NackReply;
 use crate::{
     common::{read_string, write_string},
     opcodes::ServerLobbyIpcType,
-    packet::{IPC_HEADER_SIZE, IpcSegment, ReadWriteIpcOpcode, ReadWriteIpcSegment},
+    packet::{
+        IPC_HEADER_SIZE, IpcSegment, ReadWriteIpcOpcode, ReadWriteIpcSegment,
+        ServerlessIpcSegmentHeader,
+    },
 };
 
-pub type ServerLobbyIpcSegment = IpcSegment<ServerLobbyIpcType, ServerLobbyIpcData>;
+pub type ServerLobbyIpcSegment = IpcSegment<
+    ServerlessIpcSegmentHeader<ServerLobbyIpcType>,
+    ServerLobbyIpcType,
+    ServerLobbyIpcData,
+>;
 
 impl ReadWriteIpcSegment for ServerLobbyIpcSegment {
     fn calc_size(&self) -> u32 {
-        IPC_HEADER_SIZE + self.op_code.calc_size()
+        IPC_HEADER_SIZE + self.header.op_code.calc_size()
     }
 
     fn get_name(&self) -> &'static str {
-        self.op_code.get_name()
+        self.header.op_code.get_name()
     }
 
     fn get_opcode(&self) -> u16 {
-        self.op_code.get_opcode()
+        self.header.op_code.get_opcode()
     }
 
     fn get_comment(&self) -> Option<&'static str> {
-        self.op_code.get_comment()
+        self.header.op_code.get_comment()
     }
 }
 
@@ -107,6 +114,8 @@ mod tests {
 
     use binrw::BinWrite;
 
+    use crate::packet::IpcSegmentHeader;
+
     use super::*;
 
     /// Ensure that the IPC data size as reported matches up with what we write
@@ -160,7 +169,7 @@ mod tests {
             let mut cursor = Cursor::new(Vec::new());
 
             let ipc_segment = ServerLobbyIpcSegment {
-                op_code: opcode.clone(),
+                header: IpcSegmentHeader::from_opcode(opcode.clone()),
                 data: ipc.clone(),
                 ..Default::default()
             };

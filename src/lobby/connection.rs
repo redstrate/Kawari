@@ -12,7 +12,7 @@ use crate::{
     },
 };
 
-use crate::ipc::kawari::{CustomIpcData, CustomIpcSegment, CustomIpcType};
+use crate::ipc::kawari::{CustomIpcData, CustomIpcSegment};
 use crate::ipc::lobby::{
     CharaMake, CharacterDetails, ClientLobbyIpcSegment, DistWorldInfo, LobbyCharacterActionKind,
     LoginReply, Server, ServerLobbyIpcData, ServerLobbyIpcSegment, ServiceAccount,
@@ -158,13 +158,9 @@ impl LobbyConnection {
 
         // now send them the character list
         {
-            let charlist_request = CustomIpcSegment {
-                op_code: CustomIpcType::RequestCharacterList,
-                data: CustomIpcData::RequestCharacterList {
-                    service_account_id: self.selected_service_account.unwrap(),
-                },
-                ..Default::default()
-            };
+            let charlist_request = CustomIpcSegment::new(CustomIpcData::RequestCharacterList {
+                service_account_id: self.selected_service_account.unwrap(),
+            });
 
             let name_response = send_custom_world_packet(charlist_request)
                 .await
@@ -276,13 +272,9 @@ impl LobbyConnection {
                 );
 
                 // check with the world server if the name is available
-                let name_request = CustomIpcSegment {
-                    op_code: CustomIpcType::CheckNameIsAvailable,
-                    data: CustomIpcData::CheckNameIsAvailable {
-                        name: character_action.name.clone(),
-                    },
-                    ..Default::default()
-                };
+                let name_request = CustomIpcSegment::new(CustomIpcData::CheckNameIsAvailable {
+                    name: character_action.name.clone(),
+                });
 
                 let is_free;
                 if let Some(name_response) = send_custom_world_packet(name_request).await {
@@ -343,15 +335,12 @@ impl LobbyConnection {
 
                 // tell the world server to create this character
                 {
-                    let ipc_segment = CustomIpcSegment {
-                        op_code: CustomIpcType::RequestCreateCharacter,
-                        data: CustomIpcData::RequestCreateCharacter {
+                    let ipc_segment =
+                        CustomIpcSegment::new(CustomIpcData::RequestCreateCharacter {
                             service_account_id: self.selected_service_account.unwrap(),
                             name: self.stored_character_creation_name.clone(), // TODO: worth double-checking, but AFAIK we have to store it this way?
                             chara_make_json: character_action.json.clone(),
-                        },
-                        ..Default::default()
-                    };
+                        });
 
                     if let Some(response_segment) = send_custom_world_packet(ipc_segment).await {
                         match &response_segment.data {
@@ -405,13 +394,9 @@ impl LobbyConnection {
             LobbyCharacterActionKind::Delete => {
                 // tell the world server to yeet this guy
                 {
-                    let ipc_segment = CustomIpcSegment {
-                        op_code: CustomIpcType::DeleteCharacter,
-                        data: CustomIpcData::DeleteCharacter {
-                            content_id: character_action.content_id,
-                        },
-                        ..Default::default()
-                    };
+                    let ipc_segment = CustomIpcSegment::new(CustomIpcData::DeleteCharacter {
+                        content_id: character_action.content_id,
+                    });
 
                     let _ = send_custom_world_packet(ipc_segment).await;
 
@@ -448,14 +433,10 @@ impl LobbyConnection {
             LobbyCharacterActionKind::RemakeChara => {
                 // tell the world server to turn this guy into a catgirl
                 {
-                    let ipc_segment = CustomIpcSegment {
-                        op_code: CustomIpcType::RemakeCharacter,
-                        data: CustomIpcData::RemakeCharacter {
-                            content_id: character_action.content_id,
-                            chara_make_json: character_action.json.clone(),
-                        },
-                        ..Default::default()
-                    };
+                    let ipc_segment = CustomIpcSegment::new(CustomIpcData::RemakeCharacter {
+                        content_id: character_action.content_id,
+                        chara_make_json: character_action.json.clone(),
+                    });
 
                     let _ = send_custom_world_packet(ipc_segment).await;
 

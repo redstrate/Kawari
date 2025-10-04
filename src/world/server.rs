@@ -22,7 +22,7 @@ use crate::{
         ServerZoneIpcData, ServerZoneIpcSegment,
     },
     opcodes::ServerZoneIpcType,
-    packet::{PacketSegment, SegmentData, SegmentType},
+    packet::{IpcSegmentHeader, PacketSegment, SegmentData, SegmentType, ServerIpcSegmentHeader},
 };
 
 use super::{Actor, ClientHandle, ClientId, FromServer, Navmesh, ToServer, Zone, lua::LuaZone};
@@ -1441,7 +1441,9 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         target_actor,
                         segment_type: SegmentType::Ipc,
                         data: SegmentData::Ipc(ServerZoneIpcSegment {
-                            op_code: ServerZoneIpcType::Unknown(opcode),
+                            header: ServerIpcSegmentHeader::from_opcode(
+                                ServerZoneIpcType::Unknown(opcode),
+                            ),
                             data: ServerZoneIpcData::Unknown { unk: ipc_data },
                             ..Default::default()
                         }),

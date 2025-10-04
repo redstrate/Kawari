@@ -6,7 +6,6 @@ use kawari::config::get_config;
 use kawari::get_supported_expac_versions;
 use kawari::ipc::kawari::CustomIpcData;
 use kawari::ipc::kawari::CustomIpcSegment;
-use kawari::ipc::kawari::CustomIpcType;
 use kawari::ipc::lobby::ServiceAccount;
 use kawari::ipc::lobby::{ClientLobbyIpcData, ServerLobbyIpcSegment};
 use kawari::lobby::LobbyConnection;
@@ -379,13 +378,11 @@ async fn main() {
                                             // find the actor id for this content id
                                             // NOTE: This is NOT the ideal solution. I theorize the lobby server has it's own records with this information.
                                             {
-                                                let ipc_segment = CustomIpcSegment {
-                                                    op_code: CustomIpcType::GetActorId,
-                                                    data: CustomIpcData::GetActorId {
+                                                let ipc_segment = CustomIpcSegment::new(
+                                                    CustomIpcData::GetActorId {
                                                         content_id: *content_id,
                                                     },
-                                                    ..Default::default()
-                                                };
+                                                );
 
                                                 if let Some(response_segment) =
                                                     send_custom_world_packet(ipc_segment).await
@@ -419,7 +416,7 @@ async fn main() {
                                         ClientLobbyIpcData::Unknown { unk } => {
                                             tracing::warn!(
                                                 "Unknown packet {:?} recieved ({} bytes), this should be handled!",
-                                                data.op_code,
+                                                data.header.op_code,
                                                 unk.len()
                                             );
                                         }

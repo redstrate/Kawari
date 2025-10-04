@@ -39,8 +39,9 @@ use crate::{
     },
     opcodes::ServerZoneIpcType,
     packet::{
-        CompressionType, ConnectionState, ConnectionType, OBFUSCATION_ENABLED_MODE, PacketSegment,
-        ScramblerKeyGenerator, SegmentData, SegmentType, parse_packet, send_packet,
+        CompressionType, ConnectionState, ConnectionType, IpcSegmentHeader,
+        OBFUSCATION_ENABLED_MODE, PacketSegment, ScramblerKeyGenerator, SegmentData, SegmentType,
+        ServerIpcSegmentHeader, parse_packet, send_packet,
     },
 };
 
@@ -1792,7 +1793,7 @@ impl ZoneConnection {
 
     pub async fn send_arbitrary_packet(&mut self, op_code: u16, data: Vec<u8>) {
         let ipc = ServerZoneIpcSegment {
-            op_code: ServerZoneIpcType::Unknown(op_code),
+            header: ServerIpcSegmentHeader::from_opcode(ServerZoneIpcType::Unknown(op_code)),
             data: ServerZoneIpcData::Unknown { unk: data },
             ..Default::default()
         };

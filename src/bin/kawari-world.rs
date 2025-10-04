@@ -1186,7 +1186,7 @@ async fn client_loop(
                                                 tracing::info!("Playtime is unimplemented");
                                             }
                                             ClientZoneIpcData::Unknown { unk } => {
-                                                tracing::warn!("Unknown packet {:?} recieved ({} bytes), this should be handled!", data.op_code, unk.len());
+                                                tracing::warn!("Unknown packet {:?} recieved ({} bytes), this should be handled!", data.header.op_code, unk.len());
                                             }
                                         }
                                     }

@@ -1,17 +1,22 @@
 use binrw::binrw;
+use paramacro::opcode_data;
 
 use crate::{
     common::{CHAR_NAME_MAX_LENGTH, read_bool_from, read_string, write_bool_as, write_string},
     ipc::lobby::CharacterDetails,
-    packet::{IPC_HEADER_SIZE, IpcSegment, ReadWriteIpcOpcode, ReadWriteIpcSegment},
+    packet::{
+        IPC_HEADER_SIZE, IpcSegment, ReadWriteIpcOpcode, ReadWriteIpcSegment,
+        ServerlessIpcSegmentHeader,
+    },
 };
 
-pub type CustomIpcSegment = IpcSegment<CustomIpcType, CustomIpcData>;
+pub type CustomIpcSegment =
+    IpcSegment<ServerlessIpcSegmentHeader<CustomIpcType>, CustomIpcType, CustomIpcData>;
 
 impl ReadWriteIpcSegment for CustomIpcSegment {
     fn calc_size(&self) -> u32 {
         IPC_HEADER_SIZE
-            + match self.op_code {
+            + match self.header.op_code {
                 CustomIpcType::RequestCreateCharacter => 1024 + CHAR_NAME_MAX_LENGTH as u32,
                 CustomIpcType::CharacterCreated => 12,
                 CustomIpcType::GetActorId => 8,
@@ -77,17 +82,11 @@ pub enum CustomIpcType {
     CharacterImported = 0x14,
 }
 
-impl ReadWriteIpcOpcode<CustomIpcData> for CustomIpcType {
-    fn from_data(_: &CustomIpcData) -> Self {
-        todo!()
-    }
-}
-
+#[opcode_data(CustomIpcType)]
 #[binrw]
 #[br(import(magic: &CustomIpcType, _size: &u32))]
 #[derive(Debug, Clone)]
 pub enum CustomIpcData {
-    #[br(pre_assert(*magic == CustomIpcType::RequestCreateCharacter))]
     RequestCreateCharacter {
         service_account_id: u32,
         #[bw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
@@ -101,13 +100,16 @@ pub enum CustomIpcData {
         #[bw(map = write_string)]
         chara_make_json: String,
     },
-    #[br(pre_assert(*magic == CustomIpcType::CharacterCreated))]
-    CharacterCreated { actor_id: u32, content_id: u64 },
-    #[br(pre_assert(*magic == CustomIpcType::GetActorId))]
-    GetActorId { content_id: u64 },
-    #[br(pre_assert(*magic == CustomIpcType::ActorIdFound))]
-    ActorIdFound { actor_id: u32 },
-    #[br(pre_assert(*magic == CustomIpcType::CheckNameIsAvailable))]
+    CharacterCreated {
+        actor_id: u32,
+        content_id: u64,
+    },
+    GetActorId {
+        content_id: u64,
+    },
+    ActorIdFound {
+        actor_id: u32,
+    },
     CheckNameIsAvailable {
         #[bw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
         #[br(count = CHAR_NAME_MAX_LENGTH)]
@@ -115,15 +117,14 @@ pub enum CustomIpcData {
         #[bw(map = write_string)]
         name: String,
     },
-    #[br(pre_assert(*magic == CustomIpcType::NameIsAvailableResponse))]
     NameIsAvailableResponse {
         #[br(map = read_bool_from::<u8>)]
         #[bw(map = write_bool_as::<u8>)]
         free: bool,
     },
-    #[br(pre_assert(*magic == CustomIpcType::RequestCharacterList))]
-    RequestCharacterList { service_account_id: u32 },
-    #[br(pre_assert(*magic == CustomIpcType::RequestCharacterListRepsonse))]
+    RequestCharacterList {
+        service_account_id: u32,
+    },
     RequestCharacterListRepsonse {
         #[bw(calc = characters.len() as u8)]
         num_characters: u8,
@@ -131,11 +132,12 @@ pub enum CustomIpcData {
         #[brw(pad_size_to = 1184 * 8)]
         characters: Vec<CharacterDetails>, // TODO: maybe chunk this into 4 parts ala the lobby server?
     },
-    #[br(pre_assert(*magic == CustomIpcType::DeleteCharacter))]
-    DeleteCharacter { content_id: u64 },
-    #[br(pre_assert(*magic == CustomIpcType::CharacterDeleted))]
-    CharacterDeleted { deleted: u8 },
-    #[br(pre_assert(*magic == CustomIpcType::ImportCharacter))]
+    DeleteCharacter {
+        content_id: u64,
+    },
+    CharacterDeleted {
+        deleted: u8,
+    },
     ImportCharacter {
         service_account_id: u32,
         #[bw(pad_size_to = 128)]
@@ -144,7 +146,6 @@ pub enum CustomIpcData {
         #[bw(map = write_string)]
         path: String,
     },
-    #[br(pre_assert(*magic == CustomIpcType::RemakeCharacter))]
     RemakeCharacter {
         content_id: u64,
         #[bw(pad_size_to = 1024)]
@@ -153,9 +154,9 @@ pub enum CustomIpcData {
         #[bw(map = write_string)]
         chara_make_json: String,
     },
-    #[br(pre_assert(*magic == CustomIpcType::CharacterRemade))]
-    CharacterRemade { content_id: u64 },
-    #[br(pre_assert(*magic == CustomIpcType::CharacterImported))]
+    CharacterRemade {
+        content_id: u64,
+    },
     CharacterImported {
         #[bw(pad_size_to = 128)]
         #[br(count = 128)]
@@ -163,6 +164,7 @@ pub enum CustomIpcData {
         #[bw(map = write_string)]
         message: String,
     },
+    Unknown,
 }
 
 impl Default for CustomIpcData {

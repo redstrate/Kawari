@@ -26,29 +26,30 @@ use crate::common::{
     write_string,
 };
 use crate::opcodes::ClientZoneIpcType;
-use crate::packet::IPC_HEADER_SIZE;
+use crate::packet::{IPC_HEADER_SIZE, ServerIpcSegmentHeader};
 
 use crate::common::ObjectTypeId;
 use crate::inventory::ContainerType;
 use crate::packet::{IpcSegment, ReadWriteIpcOpcode, ReadWriteIpcSegment};
 
-pub type ClientZoneIpcSegment = IpcSegment<ClientZoneIpcType, ClientZoneIpcData>;
+pub type ClientZoneIpcSegment =
+    IpcSegment<ServerIpcSegmentHeader<ClientZoneIpcType>, ClientZoneIpcType, ClientZoneIpcData>;
 
 impl ReadWriteIpcSegment for ClientZoneIpcSegment {
     fn calc_size(&self) -> u32 {
-        IPC_HEADER_SIZE + self.op_code.calc_size()
+        IPC_HEADER_SIZE + self.header.op_code.calc_size()
     }
 
     fn get_name(&self) -> &'static str {
-        self.op_code.get_name()
+        self.header.op_code.get_name()
     }
 
     fn get_opcode(&self) -> u16 {
-        self.op_code.get_opcode()
+        self.header.op_code.get_opcode()
     }
 
     fn get_comment(&self) -> Option<&'static str> {
-        self.op_code.get_comment()
+        self.header.op_code.get_comment()
     }
 }
 
@@ -281,6 +282,8 @@ mod tests {
 
     use binrw::BinWrite;
 
+    use crate::packet::IpcSegmentHeader;
+
     use super::*;
 
     /// Ensure that the IPC data size as reported matches up with what we write
@@ -473,7 +476,7 @@ mod tests {
             let mut cursor = Cursor::new(Vec::new());
 
             let ipc_segment = ClientZoneIpcSegment {
-                op_code: opcode.clone(), // doesn't matter for this test
+                header: IpcSegmentHeader::from_opcode(opcode.clone()),
                 data: data.clone(),
                 ..Default::default()
             };
