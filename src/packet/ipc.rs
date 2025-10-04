@@ -99,7 +99,7 @@ where
     }
 
     fn opcode(&self) -> &OpCode {
-        return &self.op_code;
+        &self.op_code
     }
 }
 
@@ -146,7 +146,7 @@ where
     }
 
     fn opcode(&self) -> &OpCode {
-        return &self.op_code;
+        &self.op_code
     }
 }
 
