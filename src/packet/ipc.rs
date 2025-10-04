@@ -114,7 +114,7 @@ where
             unk1: 20,
             unk2: 0,
             op_code: OpCode::default(),
-            server_id: 15,
+            server_id: 0,
             timestamp: timestamp_secs(),
             data: Data::default(),
         }
