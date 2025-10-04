@@ -114,7 +114,7 @@ pub const ACTIVE_HELP_BITMASK_SIZE: usize = 37;
 pub const AETHER_CURRENT_BITMASK_SIZE: usize = 56;
 
 /// The size of the Orchestrion bitmask.
-pub const ORCHESTRION_BITMASK_SIZE: usize = 99;
+pub const ORCHESTRION_ROLL_BITMASK_SIZE: usize = 99;
 
 /// The size of the BuddyEquip (Companion Barding) bitmask.
 pub const BUDDY_EQUIP_BITMASK_SIZE: usize = 14;

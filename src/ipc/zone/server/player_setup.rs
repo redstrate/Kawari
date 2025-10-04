@@ -4,7 +4,7 @@ use crate::{
     ACTIVE_HELP_BITMASK_SIZE, AETHERYTE_UNLOCK_BITMASK_SIZE, CLASSJOB_ARRAY_SIZE,
     DUNGEON_ARRAY_SIZE, GUILDHEST_ARRAY_SIZE, MINION_BITMASK_SIZE, MOUNT_BITMASK_SIZE,
     PVP_ARRAY_SIZE, RAID_ARRAY_SIZE, TRIAL_ARRAY_SIZE, UNLOCK_BITMASK_SIZE,
-    AETHER_CURRENT_BITMASK_SIZE, ORCHESTRION_BITMASK_SIZE, BUDDY_EQUIP_BITMASK_SIZE,
+    AETHER_CURRENT_BITMASK_SIZE, ORCHESTRION_ROLL_BITMASK_SIZE, BUDDY_EQUIP_BITMASK_SIZE,
     CUTSCENE_SEEN_BITMASK_SIZE, ORNAMENT_BITMASK_SIZE, CAUGHT_FISH_BITMASK_SIZE,
     CAUGHT_SPEARFISH_BITMASK_SIZE, ADVENTURE_BITMASK_SIZE, TRIPLE_TRIAD_CARDS_BITMASK_SIZE,
     GLASSES_STYLES_BITMASK_SIZE, CHOCOBO_TAXI_STANDS_BITMASK_SIZE,
@@ -203,11 +203,11 @@ pub struct PlayerStatus {
     pub unknown95a: Vec<u8>,
     #[br(count = AETHER_CURRENT_BITMASK_SIZE)]
     #[bw(pad_size_to = AETHER_CURRENT_BITMASK_SIZE)]
-    pub aether_current_mask: Vec<u8>,
+    pub aether_currents_mask: Vec<u8>,
     pub unknown9d7: [u8; 6], // Maybe reserved for Aether Current?
-    #[br(count = ORCHESTRION_BITMASK_SIZE)]
-    #[bw(pad_size_to = ORCHESTRION_BITMASK_SIZE)]
-    pub orchestrion_mask: Vec<u8>,
+    #[br(count = ORCHESTRION_ROLL_BITMASK_SIZE)]
+    #[bw(pad_size_to = ORCHESTRION_ROLL_BITMASK_SIZE)]
+    pub orchestrion_roll_mask: Vec<u8>,
     pub hall_of_novice_completion: [u8; 3],
     pub anima_completion: [u8; 11],
     // meh, this is where i put all of the new data
