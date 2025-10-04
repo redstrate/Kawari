@@ -113,32 +113,32 @@ pub const ACTIVE_HELP_BITMASK_SIZE: usize = 37;
 /// The size of the AetherCurrent bitmask.
 pub const AETHER_CURRENT_BITMASK_SIZE: usize = 56;
 
-/// The size of the Orchestrion (Roll) bitmask.
+/// The size of the Orchestrion bitmask.
 pub const ORCHESTRION_BITMASK_SIZE: usize = 99;
 
-/// The size of the Companion Bardings (BuddyEquip sheet) bitmask.
-pub const COMPANION_BARDING_BITMASK_SIZE: usize = 14;
+/// The size of the BuddyEquip (Companion Barding) bitmask.
+pub const BUDDY_EQUIP_BITMASK_SIZE: usize = 14;
 
-/// The size of the watched Cutscenes bitmask.
-pub const WATCHED_CUTSCENES_BITMASK_SIZE: usize = 173;
+/// The size of the Cutscenes (that has been seen) bitmask.
+pub const CUTSCENE_SEEN_BITMASK_SIZE: usize = 173;
 
 /// The size of the Ornament (Accessories) bitmask.
 pub const ORNAMENT_BITMASK_SIZE: usize = 7;
 
 /// The size of the Fish caught bitmask.
-pub const FISH_CAUGHT_BITMASK_SIZE: usize = 182;
+pub const CAUGHT_FISH_BITMASK_SIZE: usize = 182;
 
 /// The size of the Fish caught with Spearfishing bitmask.
-pub const SPEARFISH_CAUGHT_BITMASK_SIZE: usize = 38;
+pub const CAUGHT_SPEARFISH_BITMASK_SIZE: usize = 38;
 
-/// The size of the Sightseeing (Adventure sheet) bitmask.
-pub const SIGHTSEEING_BITMASK_SIZE: usize = 43;
+/// The size of the Adventure (Sightseeing) bitmask.
+pub const ADVENTURE_BITMASK_SIZE: usize = 43;
 
-/// The size of the Triple Triad cards unlock bitmask.
+/// The size of the Triple Triad cards bitmask.
 pub const TRIPLE_TRIAD_CARDS_BITMASK_SIZE: usize = 57;
 
-/// The size of the Glasses unlock bitmask.
-pub const GLASSES_BITMASK_SIZE: usize = 5;
+/// The size of the GlassesStyle bitmask.
+pub const GLASSES_STYLES_BITMASK_SIZE: usize = 5;
 
 /// The maximum durability of an item.
 pub const ITEM_CONDITION_MAX: u16 = 30000;

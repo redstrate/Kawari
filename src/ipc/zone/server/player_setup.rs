@@ -4,10 +4,10 @@ use crate::{
     ACTIVE_HELP_BITMASK_SIZE, AETHERYTE_UNLOCK_BITMASK_SIZE, CLASSJOB_ARRAY_SIZE,
     DUNGEON_ARRAY_SIZE, GUILDHEST_ARRAY_SIZE, MINION_BITMASK_SIZE, MOUNT_BITMASK_SIZE,
     PVP_ARRAY_SIZE, RAID_ARRAY_SIZE, TRIAL_ARRAY_SIZE, UNLOCK_BITMASK_SIZE,
-    AETHER_CURRENT_BITMASK_SIZE, ORCHESTRION_BITMASK_SIZE, COMPANION_BARDING_BITMASK_SIZE,
-    WATCHED_CUTSCENES_BITMASK_SIZE, ORNAMENT_BITMASK_SIZE, FISH_CAUGHT_BITMASK_SIZE,
-    SPEARFISH_CAUGHT_BITMASK_SIZE, SIGHTSEEING_BITMASK_SIZE, TRIPLE_TRIAD_CARDS_BITMASK_SIZE,
-    GLASSES_BITMASK_SIZE,
+    AETHER_CURRENT_BITMASK_SIZE, ORCHESTRION_BITMASK_SIZE, BUDDY_EQUIP_BITMASK_SIZE,
+    CUTSCENE_SEEN_BITMASK_SIZE, ORNAMENT_BITMASK_SIZE, CAUGHT_FISH_BITMASK_SIZE,
+    CAUGHT_SPEARFISH_BITMASK_SIZE, ADVENTURE_BITMASK_SIZE, TRIPLE_TRIAD_CARDS_BITMASK_SIZE,
+    GLASSES_STYLES_BITMASK_SIZE,
     common::{CHAR_NAME_MAX_LENGTH, read_string, write_string},
 };
 
@@ -76,8 +76,8 @@ pub struct PlayerStatus {
     pub companion_fav_feed: u8,
     pub fav_aetheryte_count: u8,
     pub unknown97: [u8; 5],
-    pub sightseeing21_to_80_unlock: u8, // TODO: sightseeing_mask seems to be the real deal, what is this then?
-    pub sightseeing_heavensward_unlock: u8, // TODO: sightseeing_mask seems to be the real deal, what is this then?
+    pub sightseeing21_to_80_unlock: u8, // TODO: adventure_mask seems to be the real deal, what is this then?
+    pub sightseeing_heavensward_unlock: u8, // TODO: adventure_mask seems to be the real deal, what is this then?
     pub unknown9e: [u8; 30],
     /// Current EXP for all classjobs. This doesn't control the class' "unlocked state" in the Character UI.
     pub exp: [u32; CLASSJOB_ARRAY_SIZE],
@@ -110,9 +110,9 @@ pub struct PlayerStatus {
     #[bw(pad_size_to = ORNAMENT_BITMASK_SIZE)]
     pub ornament_mask: Vec<u8>,
     pub unknown281: u8,
-    #[br(count = GLASSES_BITMASK_SIZE)]
-    #[bw(pad_size_to = GLASSES_BITMASK_SIZE)]
-    pub glasses_mask: Vec<u8>,
+    #[br(count = GLASSES_STYLES_BITMASK_SIZE)]
+    #[bw(pad_size_to = GLASSES_STYLES_BITMASK_SIZE)]
+    pub glasses_styles_mask: Vec<u8>,
     #[br(count = 33)]
     #[bw(pad_size_to = 33)]
     pub unknown302: Vec<u8>,
@@ -147,28 +147,28 @@ pub struct PlayerStatus {
     #[bw(pad_size_to = MINION_BITMASK_SIZE)]
     pub minions: Vec<u8>,
     pub chocobo_taxi_mask: [u8; 12],
-    #[br(count = WATCHED_CUTSCENES_BITMASK_SIZE)]
-    #[bw(pad_size_to = WATCHED_CUTSCENES_BITMASK_SIZE)]
-    pub watched_cutscenes: Vec<u8>,
+    #[br(count = CUTSCENE_SEEN_BITMASK_SIZE)]
+    #[bw(pad_size_to = CUTSCENE_SEEN_BITMASK_SIZE)]
+    pub cutscene_seen_mask: Vec<u8>,
     pub unknown6ff: u8,
-    #[br(count = COMPANION_BARDING_BITMASK_SIZE)]
-    #[bw(pad_size_to = COMPANION_BARDING_BITMASK_SIZE)]
-    pub companion_barding_mask: Vec<u8>,
+    #[br(count = BUDDY_EQUIP_BITMASK_SIZE)]
+    #[bw(pad_size_to = BUDDY_EQUIP_BITMASK_SIZE)]
+    pub buddy_equip_mask: Vec<u8>,
     pub companion_equipped_head: u8,
     pub companion_equipped_body: u8,
     pub companion_equipped_legs: u8,
     #[br(count = 15)]
     #[bw(pad_size_to = 15)]
     pub unknown_mask: Vec<u8>,
-    #[br(count = FISH_CAUGHT_BITMASK_SIZE)]
-    #[bw(pad_size_to = FISH_CAUGHT_BITMASK_SIZE)]
-    pub fish_caught_mask: Vec<u8>,
+    #[br(count = CAUGHT_FISH_BITMASK_SIZE)]
+    #[bw(pad_size_to = CAUGHT_FISH_BITMASK_SIZE)]
+    pub caught_fish_mask: Vec<u8>,
     #[br(count = 42)]
     #[bw(pad_size_to = 42)]
     pub unknown7e2: Vec<u8>,
-    #[br(count = SPEARFISH_CAUGHT_BITMASK_SIZE)]
-    #[bw(pad_size_to = SPEARFISH_CAUGHT_BITMASK_SIZE)]
-    pub spearfish_caught_mask: Vec<u8>,
+    #[br(count = CAUGHT_SPEARFISH_BITMASK_SIZE)]
+    #[bw(pad_size_to = CAUGHT_SPEARFISH_BITMASK_SIZE)]
+    pub caught_spearfish_mask: Vec<u8>,
     pub pose: [u8; 2], // TODO: when spearfish_caught_mask was added, size went from 7 to 2, so this is wrong either in size or position (or both)
     pub unknown6df: [u8; 3],
     pub challenge_log_complete: [u8; 13],
@@ -178,12 +178,12 @@ pub struct PlayerStatus {
     #[br(count = 50)]
     #[bw(pad_size_to = 50)]
     pub unknown879: Vec<u8>,
-    #[br(count = SIGHTSEEING_BITMASK_SIZE)]
-    #[bw(pad_size_to = SIGHTSEEING_BITMASK_SIZE)]
-    pub sightseeing_mask: Vec<u8>,
+    #[br(count = ADVENTURE_BITMASK_SIZE)]
+    #[bw(pad_size_to = ADVENTURE_BITMASK_SIZE)]
+    pub adventure_mask: Vec<u8>,
     #[br(count = 46)]
     #[bw(pad_size_to = 46)]
-    pub hunting_mark_mask: Vec<u8>, // TODO: when sightseeing_mask was fixed, size went from 102 to 46, so this is wrong either in size or position (or both)
+    pub hunting_mark_mask: Vec<u8>, // TODO: when adventure_mask (sightseeing_mask) was fixed, size went from 102 to 46, so this is wrong either in size or position (or both)
     #[br(count = 45)]
     #[bw(pad_size_to = 45)]
     pub unknown895: Vec<u8>,
