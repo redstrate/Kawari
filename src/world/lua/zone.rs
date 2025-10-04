@@ -1,7 +1,6 @@
-use mlua::{Lua, LuaSerdeExt, UserData, UserDataFields, UserDataMethods, Value};
+use mlua::{LuaSerdeExt, UserData, UserDataFields, UserDataMethods, Value};
 
 use crate::{
-    common::Position,
     ipc::zone::{ObjectSpawn, ServerZoneIpcData, ServerZoneIpcSegment},
     packet::PacketSegment,
     world::Zone,
@@ -64,26 +63,5 @@ impl LuaZone {
         let data = ServerZoneIpcSegment::new(ServerZoneIpcData::ObjectSpawn(eobj));
 
         create_ipc_target(self, data, eobj.entity_id, 0); // Setting the target actor id to 0 for later post-processing.
-    }
-}
-
-impl UserData for Zone {
-    fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
-        methods.add_method(
-            "get_pop_range",
-            |lua: &Lua, this, id: u32| -> mlua::Result<mlua::Value> {
-                if let Some(pop_range) = this.find_pop_range(id) {
-                    let trans = pop_range.0.transform.translation;
-                    return lua.pack(Position {
-                        x: trans[0],
-                        y: trans[1],
-                        z: trans[2],
-                    });
-                } else {
-                    tracing::warn!("Failed to find pop range for {id}!");
-                }
-                Ok(mlua::Nil)
-            },
-        );
     }
 }
