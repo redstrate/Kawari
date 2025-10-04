@@ -1445,7 +1445,6 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                                 ServerZoneIpcType::Unknown(opcode),
                             ),
                             data: ServerZoneIpcData::Unknown { unk: ipc_data },
-                            ..Default::default()
                         }),
                     });
                     network.send_to(from_id, msg);
