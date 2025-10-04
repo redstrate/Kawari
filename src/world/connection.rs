@@ -1069,7 +1069,7 @@ impl ZoneConnection {
                     let order;
                     {
                         let mut game_data = self.gamedata.lock().unwrap();
-                        order = game_data.find_mount_order(*id as u16).unwrap_or(0);
+                        order = game_data.find_mount_order(*id).unwrap_or(0);
                     }
 
                     self.actor_control_self(ActorControlSelf {
