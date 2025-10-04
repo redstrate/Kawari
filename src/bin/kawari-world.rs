@@ -495,6 +495,9 @@ async fn client_loop(
     let mut client_handle = client_handle.clone();
     client_handle.actor_id = connection.player_data.actor_id;
 
+    // Do an initial update otherwise it may be uninitialized for the first packet that needs Lua
+    lua_player.player_data = connection.player_data.clone();
+
     // tell the server we exist, now that we confirmed we are a legitimate connection
     connection
         .handle
