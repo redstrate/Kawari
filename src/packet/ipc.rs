@@ -166,7 +166,7 @@ where
 {
     pub header: Header,
     /// The data associated with the opcode.
-    #[br(args(&header.opcode(), size))]
+    #[br(args(header.opcode(), size))]
     pub data: Data,
 }
 
