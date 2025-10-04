@@ -39,8 +39,8 @@ use kawari::world::{
     StatusEffects, ToServer, WorldDatabase, server_main_loop,
 };
 use kawari::{
-    ERR_INVENTORY_ADD_FAILED, LogMessageType,
-    NETWORK_TIMEOUT, RECEIVE_BUFFER_SIZE, TITLE_UNLOCK_BITMASK_SIZE,
+    ERR_INVENTORY_ADD_FAILED, LogMessageType, NETWORK_TIMEOUT, RECEIVE_BUFFER_SIZE,
+    TITLE_UNLOCK_BITMASK_SIZE,
 };
 
 use mlua::{Function, Lua};
