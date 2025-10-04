@@ -189,10 +189,7 @@ pub struct ZoneConnection {
 }
 
 impl ZoneConnection {
-    pub fn parse_packet(
-        &mut self,
-        data: &[u8],
-    ) -> (Vec<PacketSegment<ClientZoneIpcSegment>>, ConnectionType) {
+    pub fn parse_packet(&mut self, data: &[u8]) -> Vec<PacketSegment<ClientZoneIpcSegment>> {
         parse_packet(data, &mut self.state)
     }
 

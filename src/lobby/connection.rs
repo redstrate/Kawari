@@ -39,10 +39,7 @@ pub struct LobbyConnection {
 }
 
 impl LobbyConnection {
-    pub fn parse_packet(
-        &mut self,
-        data: &[u8],
-    ) -> (Vec<PacketSegment<ClientLobbyIpcSegment>>, ConnectionType) {
+    pub fn parse_packet(&mut self, data: &[u8]) -> Vec<PacketSegment<ClientLobbyIpcSegment>> {
         parse_packet(data, &mut self.state)
     }
 

@@ -128,7 +128,7 @@ async fn initial_setup(
                                     gamedata: game_data.clone(),
                                 };
                                 // Handle the first batch of segments before handing off control to the loop proper.
-                                let (segments, _) = connection.parse_packet(&buf[..n]);
+                                let segments = connection.parse_packet(&buf[..n]);
                                 for segment in segments {
                                     match &segment.data {
                                         SegmentData::KawariIpc(data) => connection.handle_custom_ipc(data).await,
@@ -171,7 +171,7 @@ async fn initial_setup(
                                 };
 
                                 // Handle setup before passing off control to the zone connection.
-                                let (segments, _) = connection.parse_packet(&buf[..n]);
+                                let segments = connection.parse_packet(&buf[..n]);
                                 for segment in segments {
                                     match &segment.data {
                                         SegmentData::Setup { actor_id } => {
@@ -215,7 +215,7 @@ async fn initial_setup(
                                 };
 
                                 // Handle setup before passing off control to the chat connection.
-                                let (segments, _) = connection.parse_packet(&buf[..n]);
+                                let segments = connection.parse_packet(&buf[..n]);
                                 for segment in segments {
                                     match &segment.data {
                                         SegmentData::Setup { actor_id } => {
@@ -276,7 +276,7 @@ async fn customipc_loop(mut connection: CustomIpcConnection) {
                             }
                         } else {
                             connection.last_keep_alive = Instant::now();
-                            let (segments, _) = connection.parse_packet(&buf);
+                            let segments = connection.parse_packet(&buf);
                             for segment in segments {
                                 match &segment.data {
                                         SegmentData::KawariIpc(data) => connection.handle_custom_ipc(data).await,
@@ -363,7 +363,7 @@ async fn client_chat_loop(
                             }
                         } else {
                             connection.last_keep_alive = Instant::now();
-                            let (segments, _) = connection.parse_packet(&buf);
+                            let segments = connection.parse_packet(&buf);
                             for segment in segments {
                                 match &segment.data {
                                     SegmentData::None() => {}
@@ -517,7 +517,7 @@ async fn client_loop(
                         } else {
                             connection.last_keep_alive = Instant::now();
 
-                            let (segments, _) = connection.parse_packet(&buf[..n]);
+                            let segments = connection.parse_packet(&buf[..n]);
                             for segment in &segments {
                                 match &segment.data {
                                     SegmentData::None() => {}

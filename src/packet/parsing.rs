@@ -228,15 +228,15 @@ pub fn parse_packet_header(data: &[u8]) -> PacketHeader {
 pub fn parse_packet<T: ReadWriteIpcSegment>(
     data: &[u8],
     state: &mut ConnectionState,
-) -> (Vec<PacketSegment<T>>, ConnectionType) {
+) -> Vec<PacketSegment<T>> {
     let mut cursor = Cursor::new(data);
 
     match Packet::read_le_args(&mut cursor, (state,)) {
-        Ok(packet) => (packet.segments, packet.header.connection_type),
+        Ok(packet) => packet.segments,
         Err(err) => {
             tracing::error!("{err}");
 
-            (Vec::new(), ConnectionType::None)
+            Vec::new()
         }
     }
 }

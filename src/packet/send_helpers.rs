@@ -100,7 +100,7 @@ pub async fn send_custom_world_packet(segment: CustomIpcSegment) -> Option<Custo
     let mut buf = vec![0; RECEIVE_BUFFER_SIZE];
     let n = stream.read(&mut buf).await.expect("Failed to read data!");
     if n != 0 {
-        let (segments, _) = parse_packet::<CustomIpcSegment>(&buf[..n], &mut packet_state);
+        let segments = parse_packet::<CustomIpcSegment>(&buf[..n], &mut packet_state);
 
         return match &segments[0].data {
             SegmentData::KawariIpc(data) => Some(data.clone()),

@@ -266,7 +266,7 @@ async fn main() {
                         } else {
                             connection.last_keep_alive = Instant::now();
 
-                            let (segments, _) = connection.parse_packet(&buf[..n]);
+                            let segments = connection.parse_packet(&buf[..n]);
                             for segment in &segments {
                                 match &segment.data {
                                     SegmentData::SecuritySetup { phrase, key } => {

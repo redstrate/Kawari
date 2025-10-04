@@ -22,10 +22,7 @@ pub struct ChatConnection {
 }
 
 impl ChatConnection {
-    pub fn parse_packet(
-        &mut self,
-        data: &[u8],
-    ) -> (Vec<PacketSegment<ClientChatIpcSegment>>, ConnectionType) {
+    pub fn parse_packet(&mut self, data: &[u8]) -> Vec<PacketSegment<ClientChatIpcSegment>> {
         parse_packet(data, &mut self.state)
     }
 

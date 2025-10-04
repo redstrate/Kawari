@@ -30,10 +30,7 @@ pub struct CustomIpcConnection {
 }
 
 impl CustomIpcConnection {
-    pub fn parse_packet(
-        &mut self,
-        data: &[u8],
-    ) -> (Vec<PacketSegment<CustomIpcSegment>>, ConnectionType) {
+    pub fn parse_packet(&mut self, data: &[u8]) -> Vec<PacketSegment<CustomIpcSegment>> {
         parse_packet(data, &mut self.state)
     }
 
