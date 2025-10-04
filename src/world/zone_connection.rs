@@ -84,7 +84,7 @@ pub struct UnlockData {
     pub adventures: Vec<u8>,
     pub triple_triad_cards: Vec<u8>,
     pub glasses_styles: Vec<u8>,
-    pub chocobo_taxi_stands_mask: Vec<u8>,
+    pub chocobo_taxi_stands: Vec<u8>,
 }
 
 impl Default for UnlockData {
@@ -116,7 +116,7 @@ impl Default for UnlockData {
             adventures: vec![0x0; ADVENTURE_BITMASK_SIZE],
             triple_triad_cards: vec![0x0; TRIPLE_TRIAD_CARDS_BITMASK_SIZE],
             glasses_styles: vec![0x0; GLASSES_STYLES_BITMASK_SIZE],
-            chocobo_taxi_stands_mask: vec![0x0; CHOCOBO_TAXI_STANDS_BITMASK_SIZE],
+            chocobo_taxi_stands: vec![0x0; CHOCOBO_TAXI_STANDS_BITMASK_SIZE],
         }
     }
 }
