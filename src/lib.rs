@@ -45,7 +45,8 @@ pub mod inventory;
 /// Used in the encryption key.
 const GAME_VERSION: u32 = 7201;
 
-pub const RECEIVE_BUFFER_SIZE: usize = 32000;
+/// The maximum size of our packet buffers, anything bigger than this from the client is truncated.
+pub const RECEIVE_BUFFER_SIZE: usize = 0xFFFF;
 
 /// Supported boot version.
 pub const SUPPORTED_BOOT_VERSION: Version = Version("2025.07.17.0000.0001");
