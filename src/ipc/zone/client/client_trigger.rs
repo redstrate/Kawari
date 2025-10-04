@@ -68,6 +68,10 @@ pub enum ClientTriggerCommand {
     #[brw(magic = 0x012Fu32)]
     RequestTitleList {},
 
+    /// The client shows an Active Help pop-up. This is triggered *when* it's shown, not when closed.
+    #[brw(magic = 0x0132u32)]
+    ShownActiveHelp { id: u32 },
+
     /// The client clears all waymarks.
     #[brw(magic = 0x0139u32)]
     ClearAllWaymarks {},

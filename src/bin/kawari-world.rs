@@ -3,7 +3,7 @@ use std::time::{Duration, Instant};
 
 use kawari::common::{
     GameData, INVALID_OBJECT_ID, ItemInfoQuery, ObjectId, ObjectTypeId, ObjectTypeKind,
-    timestamp_secs,
+    timestamp_secs, value_to_flag_byte_index_value,
 };
 use kawari::config::get_config;
 use kawari::inventory::{
@@ -305,6 +305,7 @@ async fn client_loop(
                                                         homepoint: 8, // hardcoded to limsa for now
                                                         fav_aetheryte_count: 1,
                                                         favorite_aetheryte_ids: [8, 0, 0, 0],
+                                                        seen_active_help: connection.player_data.unlocks.seen_active_help.clone(),
                                                         ..Default::default()
                                                     }));
                                                     connection.send_ipc_self(ipc).await;
@@ -487,6 +488,11 @@ async fn client_loop(
                                                             }
                                                         }).await;
                                                     },
+                                                    ClientTriggerCommand::ShownActiveHelp { id } => {
+                                                        // Save this so it isn't shown again on next login
+                                                        let (value, index) = value_to_flag_byte_index_value(id);
+                                                        connection.player_data.unlocks.seen_active_help[index as usize] |= value;
+                                                    }
                                                     _ => {
                                                         // inform the server of our trigger, it will handle sending it to other clients
                                                         connection.handle.send(ToServer::ClientTrigger(connection.id, connection.player_data.actor_id, trigger.clone())).await;

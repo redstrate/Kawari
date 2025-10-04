@@ -9,10 +9,10 @@ use serde::{Deserialize, Serialize};
 use tokio::net::TcpStream;
 
 use crate::{
-    AETHERYTE_UNLOCK_BITMASK_SIZE, CLASSJOB_ARRAY_SIZE, COMPLETED_LEVEQUEST_BITMASK_SIZE,
-    COMPLETED_QUEST_BITMASK_SIZE, DUNGEON_ARRAY_SIZE, ERR_INVENTORY_ADD_FAILED,
-    GUILDHEST_ARRAY_SIZE, LogMessageType, PVP_ARRAY_SIZE, RAID_ARRAY_SIZE, TRIAL_ARRAY_SIZE,
-    UNLOCK_BITMASK_SIZE,
+    ACTIVE_HELP_BITMASK_SIZE, AETHERYTE_UNLOCK_BITMASK_SIZE, CLASSJOB_ARRAY_SIZE,
+    COMPLETED_LEVEQUEST_BITMASK_SIZE, COMPLETED_QUEST_BITMASK_SIZE, DUNGEON_ARRAY_SIZE,
+    ERR_INVENTORY_ADD_FAILED, GUILDHEST_ARRAY_SIZE, LogMessageType, PVP_ARRAY_SIZE,
+    RAID_ARRAY_SIZE, TRIAL_ARRAY_SIZE, UNLOCK_BITMASK_SIZE,
     common::{
         EquipDisplayFlag, GameData, INVALID_OBJECT_ID, InstanceContentType, ItemInfoQuery,
         JumpState, MoveAnimationSpeed, MoveAnimationState, MoveAnimationType, ObjectId,
@@ -71,6 +71,7 @@ pub struct UnlockData {
     pub cleared_guildhests: Vec<u8>,
     pub cleared_trials: Vec<u8>,
     pub cleared_pvp: Vec<u8>,
+    pub seen_active_help: Vec<u8>,
 }
 
 impl Default for UnlockData {
@@ -89,6 +90,7 @@ impl Default for UnlockData {
             cleared_guildhests: vec![0x0; GUILDHEST_ARRAY_SIZE],
             cleared_trials: vec![0x0; TRIAL_ARRAY_SIZE],
             cleared_pvp: vec![0x0; PVP_ARRAY_SIZE],
+            seen_active_help: vec![0x0; ACTIVE_HELP_BITMASK_SIZE],
         }
     }
 }

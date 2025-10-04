@@ -1,9 +1,9 @@
 use binrw::binrw;
 
 use crate::{
-    AETHERYTE_UNLOCK_BITMASK_SIZE, CLASSJOB_ARRAY_SIZE, DUNGEON_ARRAY_SIZE, GUILDHEST_ARRAY_SIZE,
-    MINION_BITMASK_SIZE, MOUNT_BITMASK_SIZE, PVP_ARRAY_SIZE, RAID_ARRAY_SIZE, TRIAL_ARRAY_SIZE,
-    UNLOCK_BITMASK_SIZE,
+    ACTIVE_HELP_BITMASK_SIZE, AETHERYTE_UNLOCK_BITMASK_SIZE, CLASSJOB_ARRAY_SIZE,
+    DUNGEON_ARRAY_SIZE, GUILDHEST_ARRAY_SIZE, MINION_BITMASK_SIZE, MOUNT_BITMASK_SIZE,
+    PVP_ARRAY_SIZE, RAID_ARRAY_SIZE, TRIAL_ARRAY_SIZE, UNLOCK_BITMASK_SIZE,
     common::{CHAR_NAME_MAX_LENGTH, read_string, write_string},
 };
 
@@ -123,13 +123,14 @@ pub struct PlayerStatus {
     pub favorite_aetheryte_ids: [u16; 4],
     pub free_aetheryte_id: u16,
     pub ps_plus_free_aetheryte_id: u16,
-    #[br(count = 480)]
-    #[bw(pad_size_to = 480)]
+    #[br(count = 482)]
+    #[bw(pad_size_to = 482)]
     pub discovery: Vec<u8>,
-    #[br(count = 36)]
-    #[bw(pad_size_to = 36)]
-    pub howto: Vec<u8>,
-    pub unknown554: [u8; 4],
+    pub unknown554: [u8; 27],
+    /// Which Active Help guides the player has seen.
+    #[br(count = ACTIVE_HELP_BITMASK_SIZE)]
+    #[bw(pad_size_to = ACTIVE_HELP_BITMASK_SIZE)]
+    pub seen_active_help: Vec<u8>,
     /// Unlock bitmask for minions.
     #[br(count = MINION_BITMASK_SIZE)]
     #[bw(pad_size_to = MINION_BITMASK_SIZE)]
