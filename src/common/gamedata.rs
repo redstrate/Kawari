@@ -573,7 +573,7 @@ impl GameData {
             MountSheet::read_from(&mut self.resource, Language::English).unwrap();
         let mount_row = instance_content_sheet.get_row(mount_id as u32)?;
 
-        mount_row.Order().into_i16().copied()?.try_into().ok()
+        mount_row.Order().into_i16().copied()
     }
 }
 
