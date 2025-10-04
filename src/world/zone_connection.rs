@@ -20,21 +20,16 @@ use crate::{
     },
     config::{WorldConfig, get_config},
     inventory::{BuyBackList, ContainerType, Inventory, Item, Storage},
-    ipc::{
-        chat::ServerChatIpcSegment,
-        kawari::CustomIpcSegment,
-        zone::{
-            ActionKind, ChatMessage, DisplayFlag, InitZoneFlags,
-            client::{ActionRequest, ClientZoneIpcSegment},
-            server::{
-                ActionEffect, ActionResult, ActorControl, ActorControlCategory, ActorControlSelf,
-                ActorControlTarget, ActorMove, CommonSpawn, Condition, Conditions, Config,
-                ContainerInfo, CurrencyInfo, EffectEntry, EffectKind, EffectResult, Equip,
-                EventScene, EventStart, GameMasterRank, InitZone, ItemInfo, ObjectKind,
-                PlayerStats, PlayerSubKind, QuestActiveList, ServerZoneIpcData,
-                ServerZoneIpcSegment, StatusEffect, StatusEffectList, UpdateClassInfo, Warp,
-                WeatherChange,
-            },
+    ipc::zone::{
+        ActionKind, ChatMessage, DisplayFlag, InitZoneFlags,
+        client::{ActionRequest, ClientZoneIpcSegment},
+        server::{
+            ActionEffect, ActionResult, ActorControl, ActorControlCategory, ActorControlSelf,
+            ActorControlTarget, ActorMove, CommonSpawn, Condition, Conditions, Config,
+            ContainerInfo, CurrencyInfo, EffectEntry, EffectKind, EffectResult, Equip, EventScene,
+            EventStart, GameMasterRank, InitZone, ItemInfo, ObjectKind, PlayerStats, PlayerSubKind,
+            QuestActiveList, ServerZoneIpcData, ServerZoneIpcSegment, StatusEffect,
+            StatusEffectList, UpdateClassInfo, Warp, WeatherChange,
         },
     },
     opcodes::ServerZoneIpcType,
@@ -150,7 +145,7 @@ pub struct ObsfucationData {
     pub seed3: u32,
 }
 
-/// Represents a single connection between an instance of the client and the world server.
+/// Represents a single connection between an instance of the client and the zone portion of the world server.
 pub struct ZoneConnection {
     pub config: WorldConfig,
     pub socket: TcpStream,
@@ -230,32 +225,6 @@ impl ZoneConnection {
             &mut self.socket,
             &mut self.state,
             ConnectionType::Zone,
-            if self.config.enable_packet_compression {
-                CompressionType::Oodle
-            } else {
-                CompressionType::Uncompressed
-            },
-            &[segment],
-        )
-        .await;
-    }
-
-    pub async fn send_custom_response(&mut self, segment: PacketSegment<CustomIpcSegment>) {
-        send_packet(
-            &mut self.socket,
-            &mut self.state,
-            ConnectionType::None,
-            CompressionType::Uncompressed,
-            &[segment],
-        )
-        .await;
-    }
-
-    pub async fn send_chat_segment(&mut self, segment: PacketSegment<ServerChatIpcSegment>) {
-        send_packet(
-            &mut self.socket,
-            &mut self.state,
-            ConnectionType::Chat,
             if self.config.enable_packet_compression {
                 CompressionType::Oodle
             } else {
