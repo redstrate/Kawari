@@ -1797,7 +1797,6 @@ impl ZoneConnection {
         let ipc = ServerZoneIpcSegment {
             header: ServerIpcSegmentHeader::from_opcode(ServerZoneIpcType::Unknown(op_code)),
             data: ServerZoneIpcData::Unknown { unk: data },
-            ..Default::default()
         };
         self.send_ipc_self(ipc).await;
     }

@@ -185,7 +185,6 @@ where
         Self {
             header: Header::from_opcode(OpCode::from_data(&data)),
             data,
-            ..Default::default()
         }
     }
 }
