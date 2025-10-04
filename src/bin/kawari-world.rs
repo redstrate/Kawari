@@ -39,7 +39,7 @@ use kawari::world::{
     StatusEffects, ToServer, WorldDatabase, server_main_loop,
 };
 use kawari::{
-    ERR_INVENTORY_ADD_FAILED, LogMessageType, MINION_BITMASK_SIZE, MOUNT_BITMASK_SIZE,
+    ERR_INVENTORY_ADD_FAILED, LogMessageType,
     NETWORK_TIMEOUT, RECEIVE_BUFFER_SIZE, TITLE_UNLOCK_BITMASK_SIZE,
 };
 
@@ -597,12 +597,23 @@ async fn client_loop(
                                                         cleared_guildhests: connection.player_data.unlocks.cleared_guildhests.clone(),
                                                         cleared_trials: connection.player_data.unlocks.cleared_trials.clone(),
                                                         cleared_pvp: connection.player_data.unlocks.cleared_pvp.clone(),
-                                                        minions: vec![0xFFu8; MINION_BITMASK_SIZE], // TODO: make this persistent?
-                                                        mount_guide_mask: vec![0xFFu8; MOUNT_BITMASK_SIZE], // TODO: make this persistent too?
+                                                        minions: connection.player_data.unlocks.minions.clone(),
+                                                        mount_guide_mask: connection.player_data.unlocks.mounts.clone(),
                                                         homepoint: 8, // hardcoded to limsa for now
                                                         fav_aetheryte_count: 1,
                                                         favorite_aetheryte_ids: [8, 0, 0, 0],
                                                         seen_active_help: connection.player_data.unlocks.seen_active_help.clone(),
+                                                        aether_currents_mask: connection.player_data.unlocks.aether_currents.clone(),
+                                                        orchestrion_roll_mask: connection.player_data.unlocks.orchestrion_rolls.clone(),
+                                                        buddy_equip_mask: connection.player_data.unlocks.buddy_equip.clone(),
+                                                        cutscene_seen_mask: connection.player_data.unlocks.cutscene_seen.clone(),
+                                                        ornament_mask: connection.player_data.unlocks.ornaments.clone(),
+                                                        caught_fish_mask: connection.player_data.unlocks.caught_fish.clone(),
+                                                        caught_spearfish_mask: connection.player_data.unlocks.caught_spearfish.clone(),
+                                                        adventure_mask: connection.player_data.unlocks.adventures.clone(),
+                                                        triple_triad_cards: connection.player_data.unlocks.triple_triad_cards.clone(),
+                                                        glasses_styles_mask: connection.player_data.unlocks.glasses_styles.clone(),
+                                                        chocobo_taxi_stands_mask: connection.player_data.unlocks.chocobo_taxi_stands.clone(),
                                                         ..Default::default()
                                                     }));
                                                     connection.send_ipc_self(ipc).await;

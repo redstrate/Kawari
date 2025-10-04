@@ -4,6 +4,10 @@ use crate::{
     ACTIVE_HELP_BITMASK_SIZE, AETHERYTE_UNLOCK_BITMASK_SIZE, CLASSJOB_ARRAY_SIZE,
     DUNGEON_ARRAY_SIZE, GUILDHEST_ARRAY_SIZE, MINION_BITMASK_SIZE, MOUNT_BITMASK_SIZE,
     PVP_ARRAY_SIZE, RAID_ARRAY_SIZE, TRIAL_ARRAY_SIZE, UNLOCK_BITMASK_SIZE,
+    AETHER_CURRENT_BITMASK_SIZE, ORCHESTRION_ROLL_BITMASK_SIZE, BUDDY_EQUIP_BITMASK_SIZE,
+    CUTSCENE_SEEN_BITMASK_SIZE, ORNAMENT_BITMASK_SIZE, CAUGHT_FISH_BITMASK_SIZE,
+    CAUGHT_SPEARFISH_BITMASK_SIZE, ADVENTURE_BITMASK_SIZE, TRIPLE_TRIAD_CARDS_BITMASK_SIZE,
+    GLASSES_STYLES_BITMASK_SIZE, CHOCOBO_TAXI_STANDS_BITMASK_SIZE,
     common::{CHAR_NAME_MAX_LENGTH, read_string, write_string},
 };
 
@@ -72,8 +76,8 @@ pub struct PlayerStatus {
     pub companion_fav_feed: u8,
     pub fav_aetheryte_count: u8,
     pub unknown97: [u8; 5],
-    pub sightseeing21_to_80_unlock: u8,
-    pub sightseeing_heavensward_unlock: u8,
+    pub sightseeing21_to_80_unlock: u8, // TODO: might be SightseeingLogUnlockState in ClientStructs?
+    pub sightseeing_heavensward_unlock: u8, // TODO: might be SightseeingLogUnlockStateEx in ClientStructs?
     pub unknown9e: [u8; 30],
     /// Current EXP for all classjobs. This doesn't control the class' "unlocked state" in the Character UI.
     pub exp: [u32; CLASSJOB_ARRAY_SIZE],
@@ -102,17 +106,23 @@ pub struct PlayerStatus {
     #[br(count = MOUNT_BITMASK_SIZE)]
     #[bw(pad_size_to = MOUNT_BITMASK_SIZE)]
     pub mount_guide_mask: Vec<u8>,
-    pub ornament_mask: [u8; 4],
-    #[br(count = 42)]
-    #[bw(pad_size_to = 42)]
-    pub unknown281: Vec<u8>,
+    #[br(count = ORNAMENT_BITMASK_SIZE)]
+    #[bw(pad_size_to = ORNAMENT_BITMASK_SIZE)]
+    pub ornament_mask: Vec<u8>,
+    pub unknown281: u8,
+    #[br(count = GLASSES_STYLES_BITMASK_SIZE)]
+    #[bw(pad_size_to = GLASSES_STYLES_BITMASK_SIZE)]
+    pub glasses_styles_mask: Vec<u8>,
+    #[br(count = 33)]
+    #[bw(pad_size_to = 33)]
+    pub unknown302: Vec<u8>,
     #[br(count = CHAR_NAME_MAX_LENGTH)]
     #[bw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
     #[br(map = read_string)]
     #[bw(map = write_string)]
     pub name: String,
     /// Unlock bitmask for everything else, mostly for game features.
-    #[brw(pad_before = 31)]
+    #[brw(pad_before = 32)]
     #[br(count = UNLOCK_BITMASK_SIZE)]
     #[bw(pad_size_to = UNLOCK_BITMASK_SIZE)]
     pub unlocks: Vec<u8>,
@@ -135,50 +145,73 @@ pub struct PlayerStatus {
     #[br(count = MINION_BITMASK_SIZE)]
     #[bw(pad_size_to = MINION_BITMASK_SIZE)]
     pub minions: Vec<u8>,
-    pub chocobo_taxi_mask: [u8; 12],
-    #[br(count = 161)]
-    #[bw(pad_size_to = 161)]
-    pub watched_cutscenes: Vec<u8>,
-    pub companion_barding_mask: [u8; 12],
+    #[br(count = CHOCOBO_TAXI_STANDS_BITMASK_SIZE)]
+    #[bw(pad_size_to = CHOCOBO_TAXI_STANDS_BITMASK_SIZE)]
+    pub chocobo_taxi_stands_mask: Vec<u8>,
+    #[br(count = CUTSCENE_SEEN_BITMASK_SIZE)]
+    #[bw(pad_size_to = CUTSCENE_SEEN_BITMASK_SIZE)]
+    pub cutscene_seen_mask: Vec<u8>,
+    pub unknown6ff: u8,
+    #[br(count = BUDDY_EQUIP_BITMASK_SIZE)]
+    #[bw(pad_size_to = BUDDY_EQUIP_BITMASK_SIZE)]
+    pub buddy_equip_mask: Vec<u8>,
     pub companion_equipped_head: u8,
     pub companion_equipped_body: u8,
     pub companion_equipped_legs: u8,
-    #[br(count = 287)]
-    #[bw(pad_size_to = 287)]
+    #[br(count = 15)]
+    #[bw(pad_size_to = 15)]
     pub unknown_mask: Vec<u8>,
-    pub pose: [u8; 7],
+    #[br(count = CAUGHT_FISH_BITMASK_SIZE)]
+    #[bw(pad_size_to = CAUGHT_FISH_BITMASK_SIZE)]
+    pub caught_fish_mask: Vec<u8>,
+    #[br(count = 42)]
+    #[bw(pad_size_to = 42)]
+    pub unknown7e2: Vec<u8>,
+    #[br(count = CAUGHT_SPEARFISH_BITMASK_SIZE)]
+    #[bw(pad_size_to = CAUGHT_SPEARFISH_BITMASK_SIZE)]
+    pub caught_spearfish_mask: Vec<u8>,
+    pub pose: [u8; 2], // TODO: when spearfish_caught_mask was added, size went from 7 to 2, so this is wrong either in size or position (or both)
     pub unknown6df: [u8; 3],
     pub challenge_log_complete: [u8; 13],
     pub secret_recipe_book_mask: [u8; 12],
     pub unknown_mask6f7: [u8; 29],
     pub relic_completion: [u8; 12],
-    #[br(count = 37)]
-    #[bw(pad_size_to = 37)]
-    pub sightseeing_mask: Vec<u8>,
-    #[br(count = 102)]
-    #[bw(pad_size_to = 102)]
-    pub hunting_mark_mask: Vec<u8>,
+    #[br(count = 50)]
+    #[bw(pad_size_to = 50)]
+    pub unknown879: Vec<u8>,
+    #[br(count = ADVENTURE_BITMASK_SIZE)]
+    #[bw(pad_size_to = ADVENTURE_BITMASK_SIZE)]
+    pub adventure_mask: Vec<u8>,
+    #[br(count = 46)]
+    #[bw(pad_size_to = 46)]
+    pub hunting_mark_mask: Vec<u8>, // TODO: when adventure_mask (sightseeing_mask) was fixed, size went from 102 to 46, so this is wrong either in size or position (or both)
     #[br(count = 45)]
     #[bw(pad_size_to = 45)]
-    pub triple_triad_cards: Vec<u8>,
-    pub unknown895: u8,
+    pub unknown895: Vec<u8>,
     pub unknown7d7: [u8; 15],
     pub unknown7d8: u8,
-    #[br(count = 49)]
-    #[bw(pad_size_to = 49)]
+    #[br(count = 17)]
+    #[bw(pad_size_to = 17)]
     pub unknown7e6: Vec<u8>,
+    #[br(count = TRIPLE_TRIAD_CARDS_BITMASK_SIZE)]
+    #[bw(pad_size_to = TRIPLE_TRIAD_CARDS_BITMASK_SIZE)]
+    pub triple_triad_cards: Vec<u8>,
     pub regional_folklore_mask: [u8; 6],
-    #[br(count = 87)]
-    #[bw(pad_size_to = 87)]
-    pub orchestrion_mask: Vec<u8>,
+    #[br(count = 14)]
+    #[bw(pad_size_to = 14)]
+    pub unknown95a: Vec<u8>,
+    #[br(count = AETHER_CURRENT_BITMASK_SIZE)]
+    #[bw(pad_size_to = AETHER_CURRENT_BITMASK_SIZE)]
+    pub aether_currents_mask: Vec<u8>,
+    pub unknown9d7: [u8; 6], // Maybe reserved for Aether Current?
+    #[br(count = ORCHESTRION_ROLL_BITMASK_SIZE)]
+    #[bw(pad_size_to = ORCHESTRION_ROLL_BITMASK_SIZE)]
+    pub orchestrion_roll_mask: Vec<u8>,
     pub hall_of_novice_completion: [u8; 3],
     pub anima_completion: [u8; 11],
-    #[br(count = 41)]
-    #[bw(pad_size_to = 41)]
-    pub unknown85e: Vec<u8>,
     // meh, this is where i put all of the new data
-    #[br(count = 116)]
-    #[bw(pad_size_to = 116)]
+    #[br(count = 45)]
+    #[bw(pad_size_to = 45)]
     pub unknown948: Vec<u8>,
 
     // unlocked status

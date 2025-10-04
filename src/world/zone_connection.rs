@@ -13,6 +13,11 @@ use crate::{
     COMPLETED_LEVEQUEST_BITMASK_SIZE, COMPLETED_QUEST_BITMASK_SIZE, DUNGEON_ARRAY_SIZE,
     ERR_INVENTORY_ADD_FAILED, GUILDHEST_ARRAY_SIZE, LogMessageType, PVP_ARRAY_SIZE,
     RAID_ARRAY_SIZE, TRIAL_ARRAY_SIZE, UNLOCK_BITMASK_SIZE,
+    MINION_BITMASK_SIZE, MOUNT_BITMASK_SIZE,
+    AETHER_CURRENT_BITMASK_SIZE, ORCHESTRION_ROLL_BITMASK_SIZE, BUDDY_EQUIP_BITMASK_SIZE,
+    CUTSCENE_SEEN_BITMASK_SIZE, ORNAMENT_BITMASK_SIZE, CAUGHT_FISH_BITMASK_SIZE,
+    CAUGHT_SPEARFISH_BITMASK_SIZE, ADVENTURE_BITMASK_SIZE, TRIPLE_TRIAD_CARDS_BITMASK_SIZE,
+    GLASSES_STYLES_BITMASK_SIZE, CHOCOBO_TAXI_STANDS_BITMASK_SIZE,
     common::{
         EquipDisplayFlag, GameData, INVALID_OBJECT_ID, InstanceContentType, ItemInfoQuery,
         JumpState, MoveAnimationSpeed, MoveAnimationState, MoveAnimationType, ObjectId,
@@ -67,6 +72,19 @@ pub struct UnlockData {
     pub cleared_trials: Vec<u8>,
     pub cleared_pvp: Vec<u8>,
     pub seen_active_help: Vec<u8>,
+    pub minions: Vec<u8>,
+    pub mounts: Vec<u8>,
+    pub aether_currents: Vec<u8>,
+    pub orchestrion_rolls: Vec<u8>,
+    pub buddy_equip: Vec<u8>,
+    pub cutscene_seen: Vec<u8>,
+    pub ornaments: Vec<u8>,
+    pub caught_fish: Vec<u8>,
+    pub caught_spearfish: Vec<u8>,
+    pub adventures: Vec<u8>,
+    pub triple_triad_cards: Vec<u8>,
+    pub glasses_styles: Vec<u8>,
+    pub chocobo_taxi_stands: Vec<u8>,
 }
 
 impl Default for UnlockData {
@@ -86,6 +104,19 @@ impl Default for UnlockData {
             cleared_trials: vec![0x0; TRIAL_ARRAY_SIZE],
             cleared_pvp: vec![0x0; PVP_ARRAY_SIZE],
             seen_active_help: vec![0x0; ACTIVE_HELP_BITMASK_SIZE],
+            minions: vec![0x0; MINION_BITMASK_SIZE],
+            mounts: vec![0x0; MOUNT_BITMASK_SIZE],
+            aether_currents: vec![0x0; AETHER_CURRENT_BITMASK_SIZE],
+            orchestrion_rolls: vec![0x0; ORCHESTRION_ROLL_BITMASK_SIZE],
+            buddy_equip: vec![0x0; BUDDY_EQUIP_BITMASK_SIZE],
+            cutscene_seen: vec![0x0; CUTSCENE_SEEN_BITMASK_SIZE],
+            ornaments: vec![0x0; ORNAMENT_BITMASK_SIZE],
+            caught_fish: vec![0x0; CAUGHT_FISH_BITMASK_SIZE],
+            caught_spearfish: vec![0x0; CAUGHT_SPEARFISH_BITMASK_SIZE],
+            adventures: vec![0x0; ADVENTURE_BITMASK_SIZE],
+            triple_triad_cards: vec![0x0; TRIPLE_TRIAD_CARDS_BITMASK_SIZE],
+            glasses_styles: vec![0x0; GLASSES_STYLES_BITMASK_SIZE],
+            chocobo_taxi_stands: vec![0x0; CHOCOBO_TAXI_STANDS_BITMASK_SIZE],
         }
     }
 }
