@@ -210,8 +210,8 @@ pub struct PlayerStatus {
     pub hall_of_novice_completion: [u8; 3],
     pub anima_completion: [u8; 11],
     // meh, this is where i put all of the new data
-    #[br(count = 14)]
-    #[bw(pad_size_to = 14)]
+    #[br(count = 45)]
+    #[bw(pad_size_to = 45)]
     pub unknown948: Vec<u8>,
 
     // unlocked status
@@ -258,7 +258,7 @@ pub struct PlayerStatus {
     #[bw(pad_size_to = PVP_ARRAY_SIZE)]
     pub cleared_pvp: Vec<u8>, // TODO: i don't think this is actually a thing?
 
-    #[br(count = 42)]
-    #[bw(pad_size_to = 42)]
+    #[br(count = 11)]
+    #[bw(pad_size_to = 11)]
     pub unknown949: Vec<u8>,
 }
