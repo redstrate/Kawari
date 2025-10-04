@@ -230,7 +230,7 @@ async fn initial_setup(
                                 spawn_chat_connection(connection);
                                 break;
                             } else {
-                                panic!("Connection type is None! How did this happen?");
+                                tracing::warn!("Connection type is None! How did this happen?");
                             }
                         }
                     }
@@ -367,7 +367,7 @@ async fn client_chat_loop(
                             for segment in segments {
                                 match &segment.data {
                                     SegmentData::None() => {}
-                                    SegmentData::Setup {.. } => {
+                                    SegmentData::Setup { .. } => {
                                         // Handled before our connection was spawned!
                                     }
                                     SegmentData::Ipc(data) => {
