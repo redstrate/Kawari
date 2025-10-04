@@ -84,7 +84,7 @@ mod tests {
 
     use binrw::BinWrite;
 
-    use crate::{packet::IpcSegmentHeader, packet::ReadWriteIpcSegment};
+    use crate::packet::{IpcSegmentHeader, ReadWriteIpcOpcode, ReadWriteIpcSegment};
 
     use super::*;
 
@@ -92,58 +92,44 @@ mod tests {
     #[test]
     fn client_lobby_ipc_sizes() {
         let ipc_types = [
-            (
-                ClientLobbyIpcType::ServiceLogin,
-                ClientLobbyIpcData::ServiceLogin {
-                    sequence: 0,
-                    account_index: 0,
-                    unk1: 0,
-                    unk2: 0,
-                    account_id: 0,
-                    unk3: 0,
-                    unk4: 0,
-                },
-            ),
-            (
-                ClientLobbyIpcType::GameLogin,
-                ClientLobbyIpcData::GameLogin {
-                    sequence: 0,
-                    content_id: 0,
-                    unk1: 0,
-                    unk2: 0,
-                    unk3: 0,
-                    unk4: 0,
-                },
-            ),
-            (
-                ClientLobbyIpcType::LoginEx,
-                ClientLobbyIpcData::LoginEx {
-                    sequence: 0,
-                    session_id: String::default(),
-                    version_info: String::default(),
-                    unk1: 0,
-                    timestamp: 0,
-                    unk2: 0,
-                },
-            ),
-            (
-                ClientLobbyIpcType::ShandaLogin,
-                ClientLobbyIpcData::ShandaLogin {
-                    unk: Vec::default(),
-                },
-            ),
-            (
-                ClientLobbyIpcType::CharaMake,
-                ClientLobbyIpcData::CharaMake(CharaMake::default()),
-            ),
+            ClientLobbyIpcData::ServiceLogin {
+                sequence: 0,
+                account_index: 0,
+                unk1: 0,
+                unk2: 0,
+                account_id: 0,
+                unk3: 0,
+                unk4: 0,
+            },
+            ClientLobbyIpcData::GameLogin {
+                sequence: 0,
+                content_id: 0,
+                unk1: 0,
+                unk2: 0,
+                unk3: 0,
+                unk4: 0,
+            },
+            ClientLobbyIpcData::LoginEx {
+                sequence: 0,
+                session_id: String::default(),
+                version_info: String::default(),
+                unk1: 0,
+                timestamp: 0,
+                unk2: 0,
+            },
+            ClientLobbyIpcData::ShandaLogin {
+                unk: Vec::default(),
+            },
+            ClientLobbyIpcData::CharaMake(CharaMake::default()),
         ];
 
-        for (opcode, ipc) in &ipc_types {
+        for data in &ipc_types {
             let mut cursor = Cursor::new(Vec::new());
 
+            let opcode: ClientLobbyIpcType = ReadWriteIpcOpcode::from_data(data);
             let ipc_segment = ClientLobbyIpcSegment {
                 header: IpcSegmentHeader::from_opcode(opcode.clone()),
-                data: ipc.clone(),
+                data: data.clone(),
                 ..Default::default()
             };
             ipc_segment.write_le(&mut cursor).unwrap();

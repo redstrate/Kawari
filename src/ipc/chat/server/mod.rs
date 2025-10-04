@@ -46,7 +46,7 @@ mod tests {
 
     use binrw::BinWrite;
 
-    use crate::{packet::IpcSegmentHeader, packet::ReadWriteIpcSegment};
+    use crate::packet::{IpcSegmentHeader, ReadWriteIpcOpcode, ReadWriteIpcSegment};
 
     use super::*;
 
@@ -54,29 +54,21 @@ mod tests {
     #[test]
     fn server_chat_ipc_sizes() {
         let ipc_types = [
-            (
-                ServerChatIpcType::LoginReply,
-                ServerChatIpcData::LoginReply {
-                    timestamp: 0,
-                    sid: 0,
-                },
-            ),
-            (
-                ServerChatIpcType::TellMessage,
-                ServerChatIpcData::TellMessage(TellMessage::default()),
-            ),
-            (
-                ServerChatIpcType::PartyMessage,
-                ServerChatIpcData::PartyMessage(PartyMessage::default()),
-            ),
+            ServerChatIpcData::LoginReply {
+                timestamp: 0,
+                sid: 0,
+            },
+            ServerChatIpcData::TellMessage(TellMessage::default()),
+            ServerChatIpcData::PartyMessage(PartyMessage::default()),
         ];
 
-        for (opcode, ipc) in &ipc_types {
+        for data in &ipc_types {
             let mut cursor = Cursor::new(Vec::new());
 
+            let opcode: ServerChatIpcType = ReadWriteIpcOpcode::from_data(data);
             let ipc_segment = ServerChatIpcSegment {
                 header: IpcSegmentHeader::from_opcode(opcode.clone()),
-                data: ipc.clone(),
+                data: data.clone(),
                 ..Default::default()
             };
             ipc_segment.write_le(&mut cursor).unwrap();

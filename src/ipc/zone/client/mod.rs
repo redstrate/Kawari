@@ -264,7 +264,7 @@ mod tests {
 
     use binrw::BinWrite;
 
-    use crate::{packet::IpcSegmentHeader, packet::ReadWriteIpcSegment};
+    use crate::packet::{IpcSegmentHeader, ReadWriteIpcOpcode, ReadWriteIpcSegment};
 
     use super::*;
 
@@ -272,191 +272,139 @@ mod tests {
     #[test]
     fn client_zone_ipc_sizes() {
         let ipc_types = [
-            (
-                ClientZoneIpcType::InitRequest,
-                ClientZoneIpcData::InitRequest {
-                    unk1: String::default(),
-                    unk2: String::default(),
+            ClientZoneIpcData::InitRequest {
+                unk1: String::default(),
+                unk2: String::default(),
+            },
+            ClientZoneIpcData::FinishLoading { unk: [0; 72] },
+            ClientZoneIpcData::ClientTrigger(ClientTrigger::default()),
+            ClientZoneIpcData::Unk3 { unk: [0; 8] },
+            ClientZoneIpcData::Unk4 { unk: [0; 8] },
+            ClientZoneIpcData::SetSearchInfoHandler { unk: [0; 8] },
+            ClientZoneIpcData::Unk5 { unk: [0; 8] },
+            ClientZoneIpcData::SocialListRequest(SocialListRequest::default()),
+            ClientZoneIpcData::UpdatePositionHandler {
+                rotation: 0.0,
+                position: Position::default(),
+                anim_type: MoveAnimationType::default(),
+                anim_state: MoveAnimationState::default(),
+                jump_state: JumpState::default(),
+            },
+            ClientZoneIpcData::LogOut { unk: [0; 8] },
+            ClientZoneIpcData::Disconnected { unk: [0; 8] },
+            ClientZoneIpcData::SendChatMessage(SendChatMessage::default()),
+            ClientZoneIpcData::GMCommand {
+                command: 0,
+                arg0: 0,
+                arg1: 0,
+                arg2: 0,
+                arg3: 0,
+                target: 0,
+            },
+            ClientZoneIpcData::ZoneJump {
+                exit_box: 0,
+                position: Position::default(),
+                landset_index: 0,
+            },
+            ClientZoneIpcData::ActionRequest(ActionRequest::default()),
+            ClientZoneIpcData::Unk16 { unk: [0; 8] },
+            ClientZoneIpcData::PingSync {
+                timestamp: 0,
+                origin_entity_id: 0,
+                position: Position::default(),
+                rotation: 0.0,
+            },
+            ClientZoneIpcData::Unk18 { unk: [0; 8] },
+            ClientZoneIpcData::EventRelatedUnk {
+                unk1: 0,
+                unk2: 0,
+                unk3: 0,
+                unk4: 0,
+            },
+            ClientZoneIpcData::Unk19 { unk: [0; 16] },
+            ClientZoneIpcData::ItemOperation(ItemOperation::default()),
+            ClientZoneIpcData::StartTalkEvent {
+                actor_id: ObjectTypeId::default(),
+                event_id: 0,
+            },
+            ClientZoneIpcData::GilShopTransaction {
+                event_id: 0,
+                unk1: 0,
+                buy_sell_mode: 0,
+                item_index: 0,
+                item_quantity: 0,
+                unk2: 0,
+            },
+            ClientZoneIpcData::StandardControlsPivot { is_pivoting: 0 },
+            ClientZoneIpcData::EventYieldHandler(EventYieldHandler::<2>::default()),
+            ClientZoneIpcData::EventYieldHandler8(EventYieldHandler::<8>::default()),
+            ClientZoneIpcData::Config(Config::default()),
+            ClientZoneIpcData::EventUnkRequest {
+                event_id: 0,
+                unk1: 0,
+                unk2: 0,
+                unk3: 0,
+            },
+            ClientZoneIpcData::UnkCall2 { unk1: [0; 8] },
+            ClientZoneIpcData::ContentFinderRegister {
+                unk1: [0; 8],
+                flags: 0,
+                unk2: [0; 4],
+                language_flags: 0,
+                unk3: 0,
+                classjob_id: 0,
+                unk4: [0; 7],
+                content_ids: [0; 5],
+            },
+            ClientZoneIpcData::EquipGearset {
+                gearset_index: 0,
+                containers: [ContainerType::Inventory0; 14],
+                indices: [0; 14],
+                unk1: 0,
+                unk2: 0,
+            },
+            ClientZoneIpcData::StartWalkInEvent {
+                event_arg: 0,
+                event_id: 0,
+                pos: Position {
+                    x: 0.0,
+                    y: 0.0,
+                    z: 0.0,
                 },
-            ),
-            (
-                ClientZoneIpcType::FinishLoading,
-                ClientZoneIpcData::FinishLoading { unk: [0; 72] },
-            ),
-            (
-                ClientZoneIpcType::ClientTrigger,
-                ClientZoneIpcData::ClientTrigger(ClientTrigger::default()),
-            ),
-            (
-                ClientZoneIpcType::Unk3,
-                ClientZoneIpcData::Unk3 { unk: [0; 8] },
-            ),
-            (
-                ClientZoneIpcType::Unk4,
-                ClientZoneIpcData::Unk4 { unk: [0; 8] },
-            ),
-            (
-                ClientZoneIpcType::SetSearchInfoHandler,
-                ClientZoneIpcData::SetSearchInfoHandler { unk: [0; 8] },
-            ),
-            (
-                ClientZoneIpcType::Unk5,
-                ClientZoneIpcData::Unk5 { unk: [0; 8] },
-            ),
-            (
-                ClientZoneIpcType::SocialListRequest,
-                ClientZoneIpcData::SocialListRequest(SocialListRequest::default()),
-            ),
-            (
-                ClientZoneIpcType::UpdatePositionHandler,
-                ClientZoneIpcData::UpdatePositionHandler {
-                    rotation: 0.0,
-                    position: Position::default(),
-                    anim_type: MoveAnimationType::default(),
-                    anim_state: MoveAnimationState::default(),
-                    jump_state: JumpState::default(),
+            },
+            ClientZoneIpcData::ContentFinderAction { unk1: [0; 8] },
+            ClientZoneIpcData::NewDiscovery {
+                layout_id: 0,
+                pos: Position {
+                    x: 0.0,
+                    y: 0.0,
+                    z: 0.0,
                 },
-            ),
-            (
-                ClientZoneIpcType::LogOut,
-                ClientZoneIpcData::LogOut { unk: [0; 8] },
-            ),
-            (
-                ClientZoneIpcType::Disconnected,
-                ClientZoneIpcData::Disconnected { unk: [0; 8] },
-            ),
-            (
-                ClientZoneIpcType::SendChatMessage,
-                ClientZoneIpcData::SendChatMessage(SendChatMessage::default()),
-            ),
-            (
-                ClientZoneIpcType::GMCommand,
-                ClientZoneIpcData::GMCommand {
-                    command: 0,
-                    arg0: 0,
-                    arg1: 0,
-                    arg2: 0,
-                    arg3: 0,
-                    target: 0,
-                },
-            ),
-            (
-                ClientZoneIpcType::ZoneJump,
-                ClientZoneIpcData::ZoneJump {
-                    exit_box: 0,
-                    position: Position::default(),
-                    landset_index: 0,
-                },
-            ),
-            (
-                ClientZoneIpcType::ActionRequest,
-                ClientZoneIpcData::ActionRequest(ActionRequest::default()),
-            ),
-            (
-                ClientZoneIpcType::Unk16,
-                ClientZoneIpcData::Unk16 { unk: [0; 8] },
-            ),
-            (
-                ClientZoneIpcType::PingSync,
-                ClientZoneIpcData::PingSync {
-                    timestamp: 0,
-                    origin_entity_id: 0,
-                    position: Position::default(),
-                    rotation: 0.0,
-                },
-            ),
-            (
-                ClientZoneIpcType::Unk18,
-                ClientZoneIpcData::Unk18 { unk: [0; 8] },
-            ),
-            (
-                ClientZoneIpcType::EventRelatedUnk,
-                ClientZoneIpcData::EventRelatedUnk {
-                    unk1: 0,
-                    unk2: 0,
-                    unk3: 0,
-                    unk4: 0,
-                },
-            ),
-            (
-                ClientZoneIpcType::Unk19,
-                ClientZoneIpcData::Unk19 { unk: [0; 16] },
-            ),
-            (
-                ClientZoneIpcType::ItemOperation,
-                ClientZoneIpcData::ItemOperation(ItemOperation::default()),
-            ),
-            (
-                ClientZoneIpcType::StartTalkEvent,
-                ClientZoneIpcData::StartTalkEvent {
-                    actor_id: ObjectTypeId::default(),
-                    event_id: 0,
-                },
-            ),
-            (
-                ClientZoneIpcType::GilShopTransaction,
-                ClientZoneIpcData::GilShopTransaction {
-                    event_id: 0,
-                    unk1: 0,
-                    buy_sell_mode: 0,
-                    item_index: 0,
-                    item_quantity: 0,
-                    unk2: 0,
-                },
-            ),
-            (
-                ClientZoneIpcType::EventYieldHandler,
-                ClientZoneIpcData::EventYieldHandler(EventYieldHandler::<2>::default()),
-            ),
-            (
-                ClientZoneIpcType::EventYieldHandler8,
-                ClientZoneIpcData::EventYieldHandler8(EventYieldHandler::<8>::default()),
-            ),
-            (
-                ClientZoneIpcType::EventUnkRequest,
-                ClientZoneIpcData::EventUnkRequest {
-                    event_id: 0,
-                    unk1: 0,
-                    unk2: 0,
-                    unk3: 0,
-                },
-            ),
-            (
-                ClientZoneIpcType::UnkCall2,
-                ClientZoneIpcData::UnkCall2 { unk1: [0; 8] },
-            ),
-            (
-                ClientZoneIpcType::StartWalkInEvent,
-                ClientZoneIpcData::StartWalkInEvent {
-                    event_arg: 0,
-                    event_id: 0,
-                    pos: Position {
-                        x: 0.0,
-                        y: 0.0,
-                        z: 0.0,
-                    },
-                },
-            ),
-            (
-                ClientZoneIpcType::NewDiscovery,
-                ClientZoneIpcData::NewDiscovery {
-                    layout_id: 0,
-                    pos: Position {
-                        x: 0.0,
-                        y: 0.0,
-                        z: 0.0,
-                    },
-                },
-            ),
-            (
-                ClientZoneIpcType::RequestBlacklist,
-                ClientZoneIpcData::RequestBlacklist(RequestBlacklist::default()),
-            ),
+            },
+            ClientZoneIpcData::GMCommandName {
+                command: 0,
+                arg0: 0,
+                arg1: 0,
+                arg2: 0,
+                arg3: 0,
+                unk1: String::default(),
+            },
+            ClientZoneIpcData::RequestBlacklist(RequestBlacklist::default()),
+            ClientZoneIpcData::RequestFellowships { unk: [0; 8] },
+            ClientZoneIpcData::RequestCrossworldLinkshells { unk: [0; 8] },
+            ClientZoneIpcData::SearchFellowships {
+                unk: Vec::default(),
+            },
+            ClientZoneIpcData::StartCountdown {
+                unk: Vec::default(),
+            },
+            ClientZoneIpcData::RequestPlaytime { unk: [0; 8] },
         ];
 
-        for (opcode, data) in &ipc_types {
+        for data in &ipc_types {
             let mut cursor = Cursor::new(Vec::new());
 
+            let opcode: ClientZoneIpcType = ReadWriteIpcOpcode::from_data(data);
             let ipc_segment = ClientZoneIpcSegment {
                 header: IpcSegmentHeader::from_opcode(opcode.clone()),
                 data: data.clone(),

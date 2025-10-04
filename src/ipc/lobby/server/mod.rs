@@ -93,7 +93,7 @@ mod tests {
 
     use binrw::BinWrite;
 
-    use crate::{packet::IpcSegmentHeader, packet::ReadWriteIpcSegment};
+    use crate::packet::{IpcSegmentHeader, ReadWriteIpcOpcode, ReadWriteIpcSegment};
 
     use super::*;
 
@@ -101,55 +101,36 @@ mod tests {
     #[test]
     fn server_lobby_ipc_sizes() {
         let ipc_types = [
-            (
-                ServerLobbyIpcType::NackReply,
-                ServerLobbyIpcData::NackReply(NackReply::default()),
-            ),
-            (
-                ServerLobbyIpcType::LoginReply,
-                ServerLobbyIpcData::LoginReply(LoginReply::default()),
-            ),
-            (
-                ServerLobbyIpcType::ServiceLoginReply,
-                ServerLobbyIpcData::ServiceLoginReply(ServiceLoginReply::default()),
-            ),
-            (
-                ServerLobbyIpcType::CharaMakeReply,
-                ServerLobbyIpcData::CharaMakeReply {
-                    sequence: 0,
-                    unk1: 0,
-                    unk2: 0,
-                    action: LobbyCharacterActionKind::ReserveName,
-                    details: CharacterDetails::default(),
-                },
-            ),
-            (
-                ServerLobbyIpcType::GameLoginReply,
-                ServerLobbyIpcData::GameLoginReply {
-                    sequence: 0,
-                    actor_id: 0,
-                    content_id: 0,
-                    token: String::new(),
-                    port: 0,
-                    host: String::new(),
-                },
-            ),
-            (
-                ServerLobbyIpcType::DistWorldInfo,
-                ServerLobbyIpcData::DistWorldInfo(DistWorldInfo::default()),
-            ),
-            (
-                ServerLobbyIpcType::DistRetainerInfo,
-                ServerLobbyIpcData::DistRetainerInfo(DistRetainerInfo::default()),
-            ),
+            ServerLobbyIpcData::NackReply(NackReply::default()),
+            ServerLobbyIpcData::LoginReply(LoginReply::default()),
+            ServerLobbyIpcData::ServiceLoginReply(ServiceLoginReply::default()),
+            ServerLobbyIpcData::CharaMakeReply {
+                sequence: 0,
+                unk1: 0,
+                unk2: 0,
+                action: LobbyCharacterActionKind::ReserveName,
+                details: CharacterDetails::default(),
+            },
+            ServerLobbyIpcData::GameLoginReply {
+                sequence: 0,
+                actor_id: 0,
+                content_id: 0,
+                token: String::new(),
+                port: 0,
+                host: String::new(),
+            },
+            ServerLobbyIpcData::DistWorldInfo(DistWorldInfo::default()),
+            ServerLobbyIpcData::DistRetainerInfo(DistRetainerInfo::default()),
+            ServerLobbyIpcData::XiCharacterInfo { unk: [0; 496] },
         ];
 
-        for (opcode, ipc) in &ipc_types {
+        for data in &ipc_types {
             let mut cursor = Cursor::new(Vec::new());
 
+            let opcode: ServerLobbyIpcType = ReadWriteIpcOpcode::from_data(data);
             let ipc_segment = ServerLobbyIpcSegment {
                 header: IpcSegmentHeader::from_opcode(opcode.clone()),
-                data: ipc.clone(),
+                data: data.clone(),
                 ..Default::default()
             };
             ipc_segment.write_le(&mut cursor).unwrap();

@@ -468,7 +468,8 @@ mod tests {
     use binrw::BinWrite;
 
     use crate::{
-        opcodes::ServerZoneIpcType, packet::IpcSegmentHeader, packet::ReadWriteIpcSegment,
+        opcodes::ServerZoneIpcType,
+        packet::{IpcSegmentHeader, ReadWriteIpcOpcode, ReadWriteIpcSegment},
     };
 
     use super::*;
@@ -477,379 +478,239 @@ mod tests {
     #[test]
     fn server_zone_ipc_sizes() {
         let ipc_types = [
-            (
-                ServerZoneIpcType::InitResponse,
-                ServerZoneIpcData::InitResponse {
-                    unk1: 0,
-                    character_id: 0,
-                    unk2: 0,
-                },
-            ),
-            (
-                ServerZoneIpcType::InitZone,
-                ServerZoneIpcData::InitZone(InitZone::default()),
-            ),
-            (
-                ServerZoneIpcType::ActorControlSelf,
-                ServerZoneIpcData::ActorControlSelf(ActorControlSelf::default()),
-            ),
-            (
-                ServerZoneIpcType::PlayerStats,
-                ServerZoneIpcData::PlayerStats(PlayerStats::default()),
-            ),
-            (
-                ServerZoneIpcType::PlayerStatus,
-                ServerZoneIpcData::PlayerStatus(PlayerStatus::default()),
-            ),
-            (
-                ServerZoneIpcType::UpdateClassInfo,
-                ServerZoneIpcData::UpdateClassInfo(UpdateClassInfo::default()),
-            ),
-            (
-                ServerZoneIpcType::PlayerSpawn,
-                ServerZoneIpcData::PlayerSpawn(PlayerSpawn::default()),
-            ),
-            (
-                ServerZoneIpcType::LogOutComplete,
-                ServerZoneIpcData::LogOutComplete { unk: [0; 8] },
-            ),
-            (
-                ServerZoneIpcType::Warp,
-                ServerZoneIpcData::Warp(Warp::default()),
-            ),
-            (
-                ServerZoneIpcType::ServerNoticeMessage,
-                ServerZoneIpcData::ServerNoticeMessage {
-                    param: 0,
-                    message: String::new(),
-                },
-            ),
-            (
-                ServerZoneIpcType::LinkShellInformation,
-                ServerZoneIpcData::LinkShellInformation { unk: [0; 456] },
-            ),
-            (
-                ServerZoneIpcType::PrepareZoning,
-                ServerZoneIpcData::PrepareZoning {
-                    log_message: 0,
-                    target_zone: 0,
-                    animation: 0,
-                    param4: 0,
-                    hide_character: 0,
-                    fade_out: 0,
-                    param_7: 0,
-                    fade_out_time: 0,
-                    unk1: 0,
-                    unk2: 0,
-                },
-            ),
-            (
-                ServerZoneIpcType::ActorControl,
-                ServerZoneIpcData::ActorControl(ActorControl::default()),
-            ),
-            (
-                ServerZoneIpcType::ActorMove,
-                ServerZoneIpcData::ActorMove(ActorMove::default()),
-            ),
-            (
-                ServerZoneIpcType::SocialList,
-                ServerZoneIpcData::SocialList(SocialList::default()),
-            ),
-            (
-                ServerZoneIpcType::NpcSpawn,
-                ServerZoneIpcData::NpcSpawn(NpcSpawn::default()),
-            ),
-            (
-                ServerZoneIpcType::StatusEffectList,
-                ServerZoneIpcData::StatusEffectList(StatusEffectList::default()),
-            ),
-            (
-                ServerZoneIpcType::WeatherId,
-                ServerZoneIpcData::WeatherId(WeatherChange::default()),
-            ),
-            (
-                ServerZoneIpcType::UpdateItem,
-                ServerZoneIpcData::UpdateItem(ItemInfo::default()),
-            ),
-            (
-                ServerZoneIpcType::ContainerInfo,
-                ServerZoneIpcData::ContainerInfo(ContainerInfo::default()),
-            ),
-            (
-                ServerZoneIpcType::EventScene,
-                ServerZoneIpcData::EventScene {
-                    data: EventScene::default(),
-                },
-            ),
-            (
-                ServerZoneIpcType::EventScene4,
-                ServerZoneIpcData::EventScene4 {
-                    data: EventScene::default(),
-                },
-            ),
-            (
-                ServerZoneIpcType::EventScene8,
-                ServerZoneIpcData::EventScene8 {
-                    data: EventScene::default(),
-                },
-            ),
-            (
-                ServerZoneIpcType::EventScene16,
-                ServerZoneIpcData::EventScene16 {
-                    data: EventScene::default(),
-                },
-            ),
-            (
-                ServerZoneIpcType::EventScene32,
-                ServerZoneIpcData::EventScene32 {
-                    data: EventScene::default(),
-                },
-            ),
-            (
-                ServerZoneIpcType::EventScene64,
-                ServerZoneIpcData::EventScene64 {
-                    data: EventScene::default(),
-                },
-            ),
-            (
-                ServerZoneIpcType::EventScene128,
-                ServerZoneIpcData::EventScene128 {
-                    data: EventScene::default(),
-                },
-            ),
-            (
-                ServerZoneIpcType::EventScene255,
-                ServerZoneIpcData::EventScene255 {
-                    data: EventScene::default(),
-                },
-            ),
-            (
-                ServerZoneIpcType::EventStart,
-                ServerZoneIpcData::EventStart(EventStart::default()),
-            ),
-            (
-                ServerZoneIpcType::UpdateHpMpTp,
-                ServerZoneIpcData::UpdateHpMpTp {
-                    hp: 0,
-                    mp: 0,
-                    unk: 0,
-                },
-            ),
-            (
-                ServerZoneIpcType::Equip,
-                ServerZoneIpcData::Equip(Equip::default()),
-            ),
-            (
-                ServerZoneIpcType::ActionResult,
-                ServerZoneIpcData::ActionResult(ActionResult::default()),
-            ),
-            (
-                ServerZoneIpcType::Delete,
-                ServerZoneIpcData::Delete {
-                    spawn_index: 0,
-                    actor_id: 0,
-                },
-            ),
-            (
-                ServerZoneIpcType::EventFinish,
-                ServerZoneIpcData::EventFinish {
-                    handler_id: 0,
-                    event: 0,
-                    result: 0,
-                    arg: 0,
-                },
-            ),
-            (
-                ServerZoneIpcType::Condition,
-                ServerZoneIpcData::Condition(Conditions::default()),
-            ),
-            (
-                ServerZoneIpcType::ActorControlTarget,
-                ServerZoneIpcData::ActorControlTarget(ActorControlTarget::default()),
-            ),
-            (
-                ServerZoneIpcType::CurrencyCrystalInfo,
-                ServerZoneIpcData::CurrencyCrystalInfo(CurrencyInfo::default()),
-            ),
-            (
-                ServerZoneIpcType::EventUnkReply,
-                ServerZoneIpcData::EventUnkReply {
-                    event_id: 0,
-                    unk1: 0,
-                    unk2: 0,
-                    unk3: 0,
-                },
-            ),
-            (
-                ServerZoneIpcType::InventoryActionAck,
-                ServerZoneIpcData::InventoryActionAck {
-                    sequence: 0,
-                    action_type: 0,
-                },
-            ),
-            (
-                ServerZoneIpcType::PingSyncReply,
-                ServerZoneIpcData::PingSyncReply {
-                    timestamp: 0,
-                    transmission_interval: 0,
-                },
-            ),
-            (
-                ServerZoneIpcType::QuestCompleteList,
-                ServerZoneIpcData::QuestCompleteList {
-                    completed_quests: Vec::default(),
-                    unk2: Vec::default(),
-                },
-            ),
-            (
-                ServerZoneIpcType::UnkResponse2,
-                ServerZoneIpcData::UnkResponse2 { unk1: 0 },
-            ),
-            (
-                ServerZoneIpcType::InventoryTransaction,
-                ServerZoneIpcData::InventoryTransaction {
-                    sequence: 0,
-                    operation_type: ItemOperationKind::Move,
-                    src_actor_id: 0,
-                    src_storage_id: ContainerType::Inventory0,
-                    src_container_index: 0,
-                    src_stack: 0,
-                    src_catalog_id: 0,
-                    dst_actor_id: 0,
-                    dummy_container: ContainerType::Inventory0,
-                    dst_storage_id: ContainerType::Inventory0,
-                    dst_container_index: 0,
-                    dst_stack: 0,
-                    dst_catalog_id: 0,
-                },
-            ),
-            (
-                ServerZoneIpcType::InventoryTransactionFinish,
-                ServerZoneIpcData::InventoryTransactionFinish {
-                    sequence: 0,
-                    sequence_repeat: 0,
-                    unk1: 0,
-                    unk2: 0,
-                },
-            ),
-            (
-                ServerZoneIpcType::ObjectSpawn,
-                ServerZoneIpcData::ObjectSpawn(ObjectSpawn::default()),
-            ),
-            (
-                ServerZoneIpcType::ActorGauge,
-                ServerZoneIpcData::ActorGauge {
-                    classjob_id: 0,
-                    data: [0; 15],
-                },
-            ),
-            (
-                ServerZoneIpcType::UpdateSearchInfo,
-                ServerZoneIpcData::UpdateSearchInfo {
-                    online_status_flags: 0,
-                    unk1: 0,
-                    unk2: 0,
-                    region: 0,
-                    message: String::default(),
-                },
-            ),
-            (
-                ServerZoneIpcType::TitleList,
-                ServerZoneIpcData::TitleList {
-                    unlock_bitmask: [0; TITLE_UNLOCK_BITMASK_SIZE],
-                },
-            ),
-            (
-                ServerZoneIpcType::FreeCompanyInfo,
-                ServerZoneIpcData::FreeCompanyInfo { unk: [0; 80] },
-            ),
-            (
-                ServerZoneIpcType::QuestActiveList,
-                ServerZoneIpcData::QuestActiveList(QuestActiveList::default()),
-            ),
-            (
-                ServerZoneIpcType::LevequestCompleteList,
-                ServerZoneIpcData::LevequestCompleteList {
-                    completed_levequests: Vec::default(),
-                    unk2: Vec::default(),
-                },
-            ),
-            (
-                ServerZoneIpcType::ShopLogMessage,
-                ServerZoneIpcData::ShopLogMessage {
-                    event_id: 0,
-                    message_type: 0,
-                    params_count: 0,
-                    item_id: 0,
-                    item_quantity: 0,
-                    total_sale_cost: 0,
-                },
-            ),
-            (
-                ServerZoneIpcType::ItemObtainedLogMessage,
-                ServerZoneIpcData::ItemObtainedLogMessage {
-                    event_id: 0,
-                    message_type: 0,
-                    params_count: 0,
-                    item_id: 0,
-                    item_quantity: 0,
-                },
-            ),
-            (
-                ServerZoneIpcType::UpdateInventorySlot,
-                ServerZoneIpcData::UpdateInventorySlot {
-                    sequence: 0,
-                    dst_storage_id: 0,
-                    dst_container_index: 0,
-                    dst_stack: 0,
-                    dst_catalog_id: 0,
-                    unk1: 0,
-                },
-            ),
-            (
-                ServerZoneIpcType::EffectResult,
-                ServerZoneIpcData::EffectResult(EffectResult::default()),
-            ),
-            (
-                ServerZoneIpcType::StatusEffectList3,
-                ServerZoneIpcData::StatusEffectList3 {
-                    status_effects: [StatusEffect::default(); 30],
-                },
-            ),
-            (
-                ServerZoneIpcType::SetSearchComment,
-                ServerZoneIpcData::SetSearchComment {
-                    unk1: [0; 18],
-                    comment: String::default(),
-                    unk2: [0; 166],
-                },
-            ),
-            (
-                ServerZoneIpcType::Blacklist,
-                ServerZoneIpcData::Blacklist(Blacklist {
-                    data: vec![BlacklistedCharacter::default(); Blacklist::NUM_ENTRIES],
-                    sequence: 0,
-                }),
-            ),
-            (
-                ServerZoneIpcType::WalkInEvent,
-                ServerZoneIpcData::WalkInEvent {
-                    unk1: 0,
-                    unk2: 0,
-                    unk3: 0,
-                    unk4: 0,
-                    unk5: 0,
-                },
-            ),
-            (
-                ServerZoneIpcType::Linkshells,
-                ServerZoneIpcData::Linkshells { unk: [0; 448] },
-            ),
+            ServerZoneIpcData::InitResponse {
+                unk1: 0,
+                character_id: 0,
+                unk2: 0,
+            },
+            ServerZoneIpcData::InitZone(InitZone::default()),
+            ServerZoneIpcData::ActorControlSelf(ActorControlSelf::default()),
+            ServerZoneIpcData::PlayerStats(PlayerStats::default()),
+            ServerZoneIpcData::PlayerStatus(PlayerStatus::default()),
+            ServerZoneIpcData::UpdateClassInfo(UpdateClassInfo::default()),
+            ServerZoneIpcData::PlayerSpawn(PlayerSpawn::default()),
+            ServerZoneIpcData::LogOutComplete { unk: [0; 8] },
+            ServerZoneIpcData::Warp(Warp::default()),
+            ServerZoneIpcData::ServerNoticeMessage {
+                param: 0,
+                message: String::new(),
+            },
+            ServerZoneIpcData::LinkShellInformation { unk: [0; 456] },
+            ServerZoneIpcData::PrepareZoning {
+                log_message: 0,
+                target_zone: 0,
+                animation: 0,
+                param4: 0,
+                hide_character: 0,
+                fade_out: 0,
+                param_7: 0,
+                fade_out_time: 0,
+                unk1: 0,
+                unk2: 0,
+            },
+            ServerZoneIpcData::ActorControl(ActorControl::default()),
+            ServerZoneIpcData::ActorMove(ActorMove::default()),
+            ServerZoneIpcData::SocialList(SocialList::default()),
+            ServerZoneIpcData::NpcSpawn(NpcSpawn::default()),
+            ServerZoneIpcData::StatusEffectList(StatusEffectList::default()),
+            ServerZoneIpcData::WeatherId(WeatherChange::default()),
+            ServerZoneIpcData::UpdateItem(ItemInfo::default()),
+            ServerZoneIpcData::ContainerInfo(ContainerInfo::default()),
+            ServerZoneIpcData::EventScene {
+                data: EventScene::default(),
+            },
+            ServerZoneIpcData::EventScene4 {
+                data: EventScene::default(),
+            },
+            ServerZoneIpcData::EventScene8 {
+                data: EventScene::default(),
+            },
+            ServerZoneIpcData::EventScene16 {
+                data: EventScene::default(),
+            },
+            ServerZoneIpcData::EventScene32 {
+                data: EventScene::default(),
+            },
+            ServerZoneIpcData::EventScene64 {
+                data: EventScene::default(),
+            },
+            ServerZoneIpcData::EventScene128 {
+                data: EventScene::default(),
+            },
+            ServerZoneIpcData::EventScene255 {
+                data: EventScene::default(),
+            },
+            ServerZoneIpcData::EventStart(EventStart::default()),
+            ServerZoneIpcData::UpdateHpMpTp {
+                hp: 0,
+                mp: 0,
+                unk: 0,
+            },
+            ServerZoneIpcData::ActionResult(ActionResult::default()),
+            ServerZoneIpcData::Equip(Equip::default()),
+            ServerZoneIpcData::ActionResult(ActionResult::default()),
+            ServerZoneIpcData::Delete {
+                spawn_index: 0,
+                actor_id: 0,
+            },
+            ServerZoneIpcData::EventFinish {
+                handler_id: 0,
+                event: 0,
+                result: 0,
+                arg: 0,
+            },
+            ServerZoneIpcData::Condition(Conditions::default()),
+            ServerZoneIpcData::ActorControlTarget(ActorControlTarget::default()),
+            ServerZoneIpcData::CurrencyCrystalInfo(CurrencyInfo::default()),
+            ServerZoneIpcData::EventUnkReply {
+                event_id: 0,
+                unk1: 0,
+                unk2: 0,
+                unk3: 0,
+            },
+            ServerZoneIpcData::InventoryActionAck {
+                sequence: 0,
+                action_type: 0,
+            },
+            ServerZoneIpcData::PingSyncReply {
+                timestamp: 0,
+                transmission_interval: 0,
+            },
+            ServerZoneIpcData::QuestCompleteList {
+                completed_quests: Vec::default(),
+                unk2: Vec::default(),
+            },
+            ServerZoneIpcData::UnkResponse2 { unk1: 0 },
+            ServerZoneIpcData::InventoryTransaction {
+                sequence: 0,
+                operation_type: ItemOperationKind::Move,
+                src_actor_id: 0,
+                src_storage_id: ContainerType::Inventory0,
+                src_container_index: 0,
+                src_stack: 0,
+                src_catalog_id: 0,
+                dst_actor_id: 0,
+                dummy_container: ContainerType::Inventory0,
+                dst_storage_id: ContainerType::Inventory0,
+                dst_container_index: 0,
+                dst_stack: 0,
+                dst_catalog_id: 0,
+            },
+            ServerZoneIpcData::InventoryTransactionFinish {
+                sequence: 0,
+                sequence_repeat: 0,
+                unk1: 0,
+                unk2: 0,
+            },
+            ServerZoneIpcData::ContentFinderUpdate {
+                state1: 0,
+                classjob_id: 0,
+                unk1: [0; 18],
+                content_ids: [0; 5],
+                unk2: [0; 10],
+            },
+            ServerZoneIpcData::ContentFinderFound {
+                unk1: [0; 28],
+                content_id: 0,
+                unk2: [0; 10],
+            },
+            ServerZoneIpcData::ObjectSpawn(ObjectSpawn::default()),
+            ServerZoneIpcData::ActorGauge {
+                classjob_id: 0,
+                data: [0; 15],
+            },
+            ServerZoneIpcData::UpdateSearchInfo {
+                online_status_flags: 0,
+                unk1: 0,
+                unk2: 0,
+                region: 0,
+                message: String::default(),
+            },
+            ServerZoneIpcData::TitleList {
+                unlock_bitmask: [0; TITLE_UNLOCK_BITMASK_SIZE],
+            },
+            ServerZoneIpcData::FreeCompanyInfo { unk: [0; 80] },
+            ServerZoneIpcData::TitleList {
+                unlock_bitmask: [0; TITLE_UNLOCK_BITMASK_SIZE],
+            },
+            ServerZoneIpcData::QuestActiveList(QuestActiveList::default()),
+            ServerZoneIpcData::LevequestCompleteList {
+                completed_levequests: Vec::default(),
+                unk2: Vec::default(),
+            },
+            ServerZoneIpcData::ShopLogMessage {
+                event_id: 0,
+                message_type: 0,
+                params_count: 0,
+                item_id: 0,
+                item_quantity: 0,
+                total_sale_cost: 0,
+            },
+            ServerZoneIpcData::ItemObtainedLogMessage {
+                event_id: 0,
+                message_type: 0,
+                params_count: 0,
+                item_id: 0,
+                item_quantity: 0,
+            },
+            ServerZoneIpcData::UpdateInventorySlot {
+                sequence: 0,
+                dst_storage_id: 0,
+                dst_container_index: 0,
+                dst_stack: 0,
+                dst_catalog_id: 0,
+                unk1: 0,
+            },
+            ServerZoneIpcData::EffectResult(EffectResult::default()),
+            ServerZoneIpcData::ContentFinderCommencing { unk1: [0; 24] },
+            ServerZoneIpcData::StatusEffectList3 {
+                status_effects: [StatusEffect::default(); 30],
+            },
+            ServerZoneIpcData::CrossworldLinkshells { unk1: [0; 456] },
+            ServerZoneIpcData::SetSearchComment {
+                unk1: [0; 18],
+                comment: String::default(),
+                unk2: [0; 166],
+            },
+            ServerZoneIpcData::Blacklist(Blacklist {
+                data: vec![BlacklistedCharacter::default(); Blacklist::NUM_ENTRIES],
+                sequence: 0,
+            }),
+            ServerZoneIpcData::WalkInEvent {
+                unk1: 0,
+                unk2: 0,
+                unk3: 0,
+                unk4: 0,
+                unk5: 0,
+            },
+            ServerZoneIpcData::GrandCompanyInfo {
+                active_company_id: 0,
+                maelstrom_rank: 0,
+                twin_adder_rank: 0,
+                immortal_flames_rank: 0,
+            },
+            ServerZoneIpcData::CraftingLog { unk1: [0; 808] },
+            ServerZoneIpcData::GatheringLog { unk1: [0; 104] },
+            ServerZoneIpcData::Fellowships { unk1: [0; 808] },
+            ServerZoneIpcData::UnkZoneLoad1 { unk1: [0; 56] },
+            ServerZoneIpcData::UnkZoneLoad2 { unk1: [0; 8] },
+            ServerZoneIpcData::Linkshells { unk: [0; 448] },
+            ServerZoneIpcData::ChatMessage(ChatMessage::default()),
+            ServerZoneIpcData::LocationDiscovered {
+                map_part_id: 0,
+                map_id: 0,
+            },
+            ServerZoneIpcData::Mount {
+                id: 0,
+                unk1: [0; 14],
+            },
+            ServerZoneIpcData::Linkshells { unk: [0; 448] },
         ];
 
-        for (opcode, data) in &ipc_types {
+        for data in &ipc_types {
             let mut cursor = Cursor::new(Vec::new());
 
+            let opcode: ServerZoneIpcType = ReadWriteIpcOpcode::from_data(data);
             let ipc_segment = ServerZoneIpcSegment {
                 header: IpcSegmentHeader::from_opcode(opcode.clone()),
                 data: data.clone(),
