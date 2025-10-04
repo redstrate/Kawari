@@ -149,6 +149,7 @@ pub struct PlayerData {
     pub rotation: f32,
     pub zone_id: u16,
     pub inventory: Inventory,
+    pub city_state: u8,
 
     pub teleport_query: TeleportQuery,
     pub gm_rank: GameMasterRank,

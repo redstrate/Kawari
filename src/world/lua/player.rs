@@ -596,5 +596,6 @@ impl UserData for LuaPlayer {
         fields.add_field_method_get("saw_inn_wakeup", |_, this| {
             Ok(this.player_data.saw_inn_wakeup)
         });
+        fields.add_field_method_get("city_state", |_, this| Ok(this.player_data.city_state));
     }
 }
