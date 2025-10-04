@@ -1,6 +1,6 @@
 use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 use kawari::common::{
     GameData, INVALID_OBJECT_ID, ItemInfoQuery, ObjectId, ObjectTypeId, ObjectTypeKind,
@@ -40,7 +40,7 @@ use kawari::world::{
 };
 use kawari::{
     ERR_INVENTORY_ADD_FAILED, LogMessageType, MINION_BITMASK_SIZE, MOUNT_BITMASK_SIZE,
-    RECEIVE_BUFFER_SIZE, TITLE_UNLOCK_BITMASK_SIZE,
+    NETWORK_TIMEOUT, RECEIVE_BUFFER_SIZE, TITLE_UNLOCK_BITMASK_SIZE,
 };
 
 use mlua::{Function, Lua};
@@ -112,7 +112,7 @@ async fn initial_setup(
                         // if the last response was over >5 seconds, the client is probably gone
                         if n == 0 {
                             let now = Instant::now();
-                            if now.duration_since(last_keep_alive) > Duration::from_secs(5) {
+                            if now.duration_since(last_keep_alive) > NETWORK_TIMEOUT {
                                 tracing::info!("initial_setup: Connection was killed because of timeout or they are now handled by the proper connection type");
                                 break;
                             }
@@ -270,7 +270,7 @@ async fn customipc_loop(mut connection: CustomIpcConnection) {
                         // if the last response was over >5 seconds, the client is probably gone; we also don't care about id numbers on this connection
                         if n == 0 {
                             let now = Instant::now();
-                            if now.duration_since(connection.last_keep_alive) > Duration::from_secs(5) {
+                            if now.duration_since(connection.last_keep_alive) > NETWORK_TIMEOUT {
                                 tracing::info!("CustomIpcConnection: Connection was killed because of timeout");
                                 break;
                             }
@@ -357,7 +357,7 @@ async fn client_chat_loop(
                         // if the last response was over >5 seconds, the client is probably gone
                         if n == 0 {
                             let now = Instant::now();
-                            if now.duration_since(connection.last_keep_alive) > Duration::from_secs(5) {
+                            if now.duration_since(connection.last_keep_alive) > NETWORK_TIMEOUT {
                                 tracing::info!("Connection {:#?} was killed because of timeout", client_handle.id);
                                 break;
                             }
@@ -510,7 +510,7 @@ async fn client_loop(
                         // if the last response was over >5 seconds, the client is probably gone
                         if n == 0 {
                             let now = Instant::now();
-                            if now.duration_since(connection.last_keep_alive) > Duration::from_secs(5) {
+                            if now.duration_since(connection.last_keep_alive) > NETWORK_TIMEOUT {
                                 tracing::info!("Connection {:#?} was killed because of timeout", client_handle.id);
                                 break;
                             }

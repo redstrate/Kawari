@@ -2,7 +2,7 @@
 
 #![allow(clippy::large_enum_variant)]
 
-use std::collections::HashMap;
+use std::{collections::HashMap, time::Duration};
 
 use patch::Version;
 
@@ -140,3 +140,6 @@ pub const ACCOUNT_MANAGEMENT_SERVICE: &str = "Kawari: Account Management";
 
 /// Service name for game logins. This is used to uniquely identify sessions.
 pub const GAME_SERVICE: &str = "Kawari: Game Client";
+
+/// Timeout in seconds before clients are disconnected because of idle network activity.
+pub const NETWORK_TIMEOUT: Duration = Duration::from_secs(5);
