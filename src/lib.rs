@@ -68,7 +68,7 @@ pub fn get_supported_expac_versions() -> HashMap<&'static str, Version<'static>>
 }
 
 /// The size of the unlock bitmask.
-pub const UNLOCK_BITMASK_SIZE: usize = 93;
+pub const UNLOCK_BITMASK_SIZE: usize = 92;
 
 /// The size of the aetheryte unlock bitmask.
 // TODO: this can be automatically derived from game data
@@ -109,6 +109,36 @@ pub const MOUNT_BITMASK_SIZE: usize = 41;
 
 /// The size of the active help bitmask.
 pub const ACTIVE_HELP_BITMASK_SIZE: usize = 37;
+
+/// The size of the AetherCurrent bitmask.
+pub const AETHER_CURRENT_BITMASK_SIZE: usize = 56;
+
+/// The size of the Orchestrion (Roll) bitmask.
+pub const ORCHESTRION_BITMASK_SIZE: usize = 99;
+
+/// The size of the Companion Bardings (BuddyEquip sheet) bitmask.
+pub const COMPANION_BARDING_BITMASK_SIZE: usize = 14;
+
+/// The size of the watched Cutscenes bitmask.
+pub const WATCHED_CUTSCENES_BITMASK_SIZE: usize = 173;
+
+/// The size of the Ornament (Accessories) bitmask.
+pub const ORNAMENT_BITMASK_SIZE: usize = 7;
+
+/// The size of the Fish caught bitmask.
+pub const FISH_CAUGHT_BITMASK_SIZE: usize = 182;
+
+/// The size of the Fish caught with Spearfishing bitmask.
+pub const SPEARFISH_CAUGHT_BITMASK_SIZE: usize = 38;
+
+/// The size of the Sightseeing (Adventure sheet) bitmask.
+pub const SIGHTSEEING_BITMASK_SIZE: usize = 43;
+
+/// The size of the Triple Triad cards unlock bitmask.
+pub const TRIPLE_TRIAD_CARDS_BITMASK_SIZE: usize = 57;
+
+/// The size of the Glasses unlock bitmask.
+pub const GLASSES_BITMASK_SIZE: usize = 5;
 
 /// The maximum durability of an item.
 pub const ITEM_CONDITION_MAX: u16 = 30000;
