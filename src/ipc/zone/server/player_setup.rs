@@ -7,7 +7,7 @@ use crate::{
     AETHER_CURRENT_BITMASK_SIZE, ORCHESTRION_BITMASK_SIZE, BUDDY_EQUIP_BITMASK_SIZE,
     CUTSCENE_SEEN_BITMASK_SIZE, ORNAMENT_BITMASK_SIZE, CAUGHT_FISH_BITMASK_SIZE,
     CAUGHT_SPEARFISH_BITMASK_SIZE, ADVENTURE_BITMASK_SIZE, TRIPLE_TRIAD_CARDS_BITMASK_SIZE,
-    GLASSES_STYLES_BITMASK_SIZE,
+    GLASSES_STYLES_BITMASK_SIZE, CHOCOBO_TAXI_STANDS_BITMASK_SIZE,
     common::{CHAR_NAME_MAX_LENGTH, read_string, write_string},
 };
 
@@ -146,7 +146,9 @@ pub struct PlayerStatus {
     #[br(count = MINION_BITMASK_SIZE)]
     #[bw(pad_size_to = MINION_BITMASK_SIZE)]
     pub minions: Vec<u8>,
-    pub chocobo_taxi_mask: [u8; 12],
+    #[br(count = CHOCOBO_TAXI_STANDS_BITMASK_SIZE)]
+    #[bw(pad_size_to = CHOCOBO_TAXI_STANDS_BITMASK_SIZE)]
+    pub chocobo_taxi_stands_mask: Vec<u8>,
     #[br(count = CUTSCENE_SEEN_BITMASK_SIZE)]
     #[bw(pad_size_to = CUTSCENE_SEEN_BITMASK_SIZE)]
     pub cutscene_seen_mask: Vec<u8>,

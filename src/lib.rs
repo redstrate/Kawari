@@ -140,6 +140,9 @@ pub const TRIPLE_TRIAD_CARDS_BITMASK_SIZE: usize = 57;
 /// The size of the GlassesStyle bitmask.
 pub const GLASSES_STYLES_BITMASK_SIZE: usize = 5;
 
+/// The size of the Chocobo Taxi Stands bitmask.
+pub const CHOCOBO_TAXI_STANDS_BITMASK_SIZE: usize = 12;
+
 /// The maximum durability of an item.
 pub const ITEM_CONDITION_MAX: u16 = 30000;
 
