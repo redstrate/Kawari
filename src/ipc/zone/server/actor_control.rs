@@ -220,9 +220,9 @@ pub enum ActorControlCategory {
     #[brw(magic = 512u32)]
     EventRelatedUnk2 { unk1: u32 },
 
-    #[brw(magic = 324u32)]
+    #[brw(magic = 516u32)]
     ToggleCutsceneSeen{
-        id: u32, // Index to FishParameter
+        id: u32, // Index to Cutscene sheet
         #[br(map = read_bool_from::<u32>)]
         #[bw(map = write_bool_as::<u32>)]
         unlocked: bool,
