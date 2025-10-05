@@ -20,8 +20,14 @@ use crate::{
 
 use super::{Actor, lua::LuaZone};
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
+#[derive(Copy, Clone, Eq, PartialEq, Hash)]
 pub struct ClientId(usize);
+
+impl std::fmt::Debug for ClientId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "ClientId ({})", self.0)
+    }
+}
 
 /// A type encapsulating the different spawn types.
 /// Note that event object (eobj) spawning is handled elsewhere in connection.rs.
