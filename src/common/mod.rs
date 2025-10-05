@@ -399,6 +399,13 @@ mod tests {
         assert_eq!(write_packed_float(&5.0), 32931);
     }
 
+    #[test]
+    fn value_flag() {
+        assert_eq!(value_to_flag_byte_index_value(0), (1, 0));
+        assert_eq!(value_to_flag_byte_index_value(32), (1, 4));
+        assert_eq!(value_to_flag_byte_index_value(64), (1, 8));
+    }
+
     // Helper macros so we don't repeat ourselves in tests a bunch of times
     #[macro_export]
     macro_rules! client_zone_tests_dir {
