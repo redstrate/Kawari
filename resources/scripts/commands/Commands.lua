@@ -8,12 +8,12 @@ GM_SET_LEVEL = 1
 GM_CHANGE_WEATHER = 6
 GM_SPEED = 9
 GM_INVISIBILITY = 13
-GM_AETHERYTE = 350
 GM_EXP = 104
 GM_ORCHESTRION = 116
 GM_GIVE_ITEM = 200
 GM_GIL = 201
 GM_COLLECT = 202
+GM_AETHERYTE = 350
 GM_INSPECT = 422
 GM_WIREFRAME = 550
 GM_TERRITORY = 600
@@ -26,12 +26,12 @@ registerGMCommand(GM_SPEED,             GM_DIR.."SetSpeed.lua")
 registerGMCommand(GM_INVISIBILITY,      GM_DIR.."ToggleInvisibility.lua")
 -- TODO: Implement the GMInspect IPC opcode, it's completely different than the normal GMCommand opcode
 --registerGMCommand(GM_INSPECT,           GM_DIR.."InspectPlayer.lua")
-registerGMCommand(GM_AETHERYTE,         GM_DIR.."UnlockAetheryte.lua")
 registerGMCommand(GM_EXP,               GM_DIR.."Exp.lua")
 registerGMCommand(GM_ORCHESTRION,       GM_DIR.."Orchestrion.lua")
 registerGMCommand(GM_GIVE_ITEM,         GM_DIR.."GiveItem.lua")
 registerGMCommand(GM_GIL,               GM_DIR.."Gil.lua")
 registerGMCommand(GM_COLLECT,           GM_DIR.."Collect.lua")
+registerGMCommand(GM_AETHERYTE,         GM_DIR.."UnlockAetheryte.lua")
 registerGMCommand(GM_WIREFRAME,         GM_DIR.."ToggleWireframe.lua")
 registerGMCommand(GM_TERRITORY,         GM_DIR.."ChangeTerritory.lua")
 registerGMCommand(GM_TERRITORY_INFO,    GM_DIR.."TerritoryInfo.lua")
