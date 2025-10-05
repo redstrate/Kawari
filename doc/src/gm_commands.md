@@ -2,6 +2,8 @@
 
 These GM commands are implemented in the FFXIV protocol, but only some of them are implemented.
 
+**Note:** We obviously lack the original documentation for these commands, so the names and functionality are left up to our interpretation.
+
 * `//gm pos <x> <y> <z>`: Teleport to the specified location
 * `//gm teri <id>`: Changes to the specified territory
 * `//gm weather <id>`: Changes the weather
