@@ -1116,6 +1116,16 @@ impl ZoneConnection {
                         self.unlock_buddy_equip(i).await;
                     }
                 }
+                Task::ToggleChocoboTaxiStand { id } => {
+                    self.toggle_chocobo_taxi_stand(*id).await;
+                }
+                Task::ToggleChocoboTaxiStandAll {} => {
+                    let max_chocobo_taxi_stand_id = CHOCOBO_TAXI_STANDS_BITMASK_SIZE as u32 * 8;
+
+                    for i in 0..max_chocobo_taxi_stand_id {
+                        self.toggle_chocobo_taxi_stand(i).await;
+                    }
+                }
             }
         }
         player.queued_tasks.clear();
@@ -1896,6 +1906,26 @@ impl ZoneConnection {
         self.actor_control_self(ActorControlSelf {
             category: ActorControlCategory::BuddyEquipUnlock {
                 id: buddy_equip_id
+            },
+        })
+        .await;
+    }
+
+    pub async fn toggle_chocobo_taxi_stand(&mut self, chocobo_taxi_stand_id: u32) {
+        let (value, index) = value_to_flag_byte_index_value(chocobo_taxi_stand_id);
+
+        let unlock = (self.player_data.unlocks.chocobo_taxi_stands[index as usize] & value) == 0;
+
+        if unlock {
+            self.player_data.unlocks.chocobo_taxi_stands[index as usize] |= value;
+        } else {
+            self.player_data.unlocks.chocobo_taxi_stands[index as usize] ^= value;
+        }
+        
+        self.actor_control_self(ActorControlSelf {
+            category: ActorControlCategory::ToggleChocoboTaxiStandUnlock {
+                id: chocobo_taxi_stand_id,
+                unlocked: unlock,
             },
         })
         .await;

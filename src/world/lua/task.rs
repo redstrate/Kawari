@@ -91,4 +91,8 @@ pub enum Task {
         id: u32,
     },
     UnlockBuddyEquipAll {},
+    ToggleChocoboTaxiStand {
+        id: u32,
+    },
+    ToggleChocoboTaxiStandAll {},
 }

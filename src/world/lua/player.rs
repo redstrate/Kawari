@@ -399,6 +399,14 @@ impl LuaPlayer {
     fn unlock_buddy_equip_all(&mut self) {
         self.queued_tasks.push(Task::UnlockBuddyEquipAll {});
     }
+
+    fn toggle_chocobo_taxi_stand(&mut self, id: u32) {
+        self.queued_tasks.push(Task::ToggleChocoboTaxiStand { id });
+    }
+
+    fn toggle_chocobo_taxi_stand_all(&mut self) {
+        self.queued_tasks.push(Task::ToggleChocoboTaxiStandAll {});
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -607,6 +615,14 @@ impl UserData for LuaPlayer {
         });
         methods.add_method_mut("unlock_buddy_equip_all", |_, this, _: ()| {
             this.unlock_buddy_equip_all();
+            Ok(())
+        });
+        methods.add_method_mut("toggle_chocobo_taxi_stand", |_, this, id: u32| {
+            this.toggle_chocobo_taxi_stand(id);
+            Ok(())
+        });
+        methods.add_method_mut("toggle_chocobo_taxi_stand_all", |_, this, _: ()| {
+            this.toggle_chocobo_taxi_stand_all();
             Ok(())
         });
     }
