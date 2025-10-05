@@ -1,6 +1,8 @@
 use binrw::binrw;
 
-use super::{CommonSpawn, GameMasterRank, OnlineStatus};
+use crate::ipc::zone::online_status::OnlineStatus;
+
+use super::{CommonSpawn, GameMasterRank};
 
 #[binrw]
 #[brw(little)]
@@ -38,7 +40,7 @@ mod tests {
 
     use binrw::BinRead;
 
-    use crate::ipc::zone::{CharacterMode, DisplayFlag, ObjectKind, OnlineStatus, PlayerSubKind};
+    use crate::ipc::zone::{CharacterMode, DisplayFlag, ObjectKind, PlayerSubKind};
 
     use crate::server_zone_tests_dir;
 

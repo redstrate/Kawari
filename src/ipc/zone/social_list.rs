@@ -1,12 +1,11 @@
 use binrw::binrw;
 
 use crate::common::{
-    CHAR_NAME_MAX_LENGTH, read_bool_from, read_string, value_to_flag_byte_index_value,
-    write_bool_as, write_string,
+    CHAR_NAME_MAX_LENGTH, read_bool_from, read_string, write_bool_as, write_string,
 };
-use crate::ipc::zone::OnlineStatus;
 use bitflags::bitflags;
-use strum::IntoEnumIterator;
+
+use super::online_status::OnlineStatusMask;
 
 #[binrw]
 #[brw(repr = u8)]
@@ -24,45 +23,6 @@ pub struct SocialListRequest {
     pub request_type: SocialListRequestType,
     #[brw(pad_after = 4)] // empty
     pub count: u8,
-}
-
-// TODO: Move OnlineStatusMask elsewhere if it ends up being used in multiple places
-/// Represents a 64-bit online status. For possible values, see common_spawn.rs's OnlineStatus enum.
-#[binrw]
-#[brw(little)]
-#[derive(Clone, Copy, Default)]
-pub struct OnlineStatusMask {
-    flags: [u8; 8],
-}
-
-impl OnlineStatusMask {
-    pub fn mask(&self) -> Vec<OnlineStatus> {
-        let mut statuses = Vec::new();
-
-        for status in OnlineStatus::iter() {
-            let (value, index) = value_to_flag_byte_index_value(status.clone() as u32);
-            if self.flags[index as usize] & value == value {
-                statuses.push(status);
-            }
-        }
-        statuses
-    }
-
-    pub fn set_status(&mut self, status: OnlineStatus) {
-        let (value, index) = value_to_flag_byte_index_value(status as u32);
-        self.flags[index as usize] |= value;
-    }
-
-    pub fn remove_status(&mut self, status: OnlineStatus) {
-        let (value, index) = value_to_flag_byte_index_value(status as u32);
-        self.flags[index as usize] ^= value;
-    }
-}
-
-impl std::fmt::Debug for OnlineStatusMask {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "OnlineStatusMask {:#?} ({:#?})", self.flags, self.mask())
-    }
 }
 
 /// Which languages the client's player wishes to be grouped and/or interacted with.

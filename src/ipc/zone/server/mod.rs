@@ -2,8 +2,8 @@ use binrw::binrw;
 use paramacro::opcode_data;
 
 pub use super::social_list::{
-    ClientLanguage, OnlineStatusMask, PlayerEntry, SocialList, SocialListRequest,
-    SocialListRequestType, SocialListUIFlags, SocialListUILanguages,
+    ClientLanguage, PlayerEntry, SocialList, SocialListRequest, SocialListRequestType,
+    SocialListUIFlags, SocialListUILanguages,
 };
 
 mod player_spawn;
@@ -33,7 +33,7 @@ pub use npc_spawn::NpcSpawn;
 mod common_spawn;
 pub use common_spawn::{
     BattleNpcSubKind, CharacterMode, CommonSpawn, DisplayFlag, GameMasterRank, ObjectKind,
-    OnlineStatus, PlayerSubKind,
+    PlayerSubKind,
 };
 
 mod status_effect_list;

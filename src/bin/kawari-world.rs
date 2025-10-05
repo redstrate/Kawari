@@ -15,14 +15,13 @@ use kawari::ipc::chat::ClientChatIpcData;
 
 use kawari::ipc::zone::{
     ActorControl, ActorControlCategory, ActorControlSelf, ClientLanguage, Condition, Conditions,
-    ItemOperation, OnlineStatusMask, PlayerEntry, PlayerSpawn, PlayerStatus, SocialList,
-    SocialListUILanguages,
+    ItemOperation, OnlineStatus, OnlineStatusMask, PlayerEntry, PlayerSpawn, PlayerStatus,
+    SocialList, SocialListUILanguages,
 };
 
 use kawari::ipc::zone::{
     Blacklist, BlacklistedCharacter, ClientTriggerCommand, ClientZoneIpcData, GameMasterRank,
-    OnlineStatus, ServerZoneIpcData, ServerZoneIpcSegment, SocialListRequestType,
-    SocialListUIFlags,
+    ServerZoneIpcData, ServerZoneIpcSegment, SocialListRequestType, SocialListUIFlags,
 };
 
 use kawari::packet::oodle::OodleNetwork;

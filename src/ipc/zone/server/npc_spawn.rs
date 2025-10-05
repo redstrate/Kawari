@@ -1,6 +1,8 @@
 use binrw::binrw;
 
-use super::{CommonSpawn, GameMasterRank, OnlineStatus};
+use crate::ipc::zone::online_status::OnlineStatus;
+
+use super::{CommonSpawn, GameMasterRank};
 
 #[binrw]
 #[brw(little)]
@@ -31,7 +33,7 @@ mod tests {
 
     use crate::{
         common::INVALID_OBJECT_ID,
-        ipc::zone::{BattleNpcSubKind, CharacterMode, DisplayFlag, ObjectKind, OnlineStatus},
+        ipc::zone::{BattleNpcSubKind, CharacterMode, DisplayFlag, ObjectKind},
         server_zone_tests_dir,
     };
 
