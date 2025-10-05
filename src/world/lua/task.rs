@@ -83,4 +83,10 @@ pub enum Task {
     MoveToPopRange {
         id: u32,
     },
+    SetHP {
+        hp: u32,
+    },
+    SetMP {
+        mp: u16,
+    },
 }

@@ -1087,6 +1087,24 @@ impl ZoneConnection {
                         ))
                         .await;
                 }
+                Task::SetHP { hp } => {
+                    self.player_data.curr_hp = *hp;
+                    self.update_hp_mp(
+                        ObjectId(self.player_data.actor_id),
+                        self.player_data.curr_hp,
+                        self.player_data.curr_mp,
+                    )
+                    .await;
+                }
+                Task::SetMP { mp } => {
+                    self.player_data.curr_mp = *mp;
+                    self.update_hp_mp(
+                        ObjectId(self.player_data.actor_id),
+                        self.player_data.curr_hp,
+                        self.player_data.curr_mp,
+                    )
+                    .await;
+                }
             }
         }
         player.queued_tasks.clear();

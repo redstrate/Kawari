@@ -380,6 +380,14 @@ impl LuaPlayer {
     fn move_to_pop_range(&mut self, id: u32) {
         self.queued_tasks.push(Task::MoveToPopRange { id });
     }
+
+    fn set_hp(&mut self, hp: u32) {
+        self.queued_tasks.push(Task::SetHP { hp });
+    }
+
+    fn set_mp(&mut self, mp: u16) {
+        self.queued_tasks.push(Task::SetMP { mp });
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -568,6 +576,14 @@ impl UserData for LuaPlayer {
         });
         methods.add_method_mut("move_to_pop_range", |_, this, id: u32| {
             this.move_to_pop_range(id);
+            Ok(())
+        });
+        methods.add_method_mut("set_hp", |_, this, hp: u32| {
+            this.set_hp(hp);
+            Ok(())
+        });
+        methods.add_method_mut("set_mp", |_, this, mp: u16| {
+            this.set_mp(mp);
             Ok(())
         });
     }

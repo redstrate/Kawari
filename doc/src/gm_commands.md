@@ -15,3 +15,5 @@ These GM commands are implemented in the FFXIV protocol, but only some of them a
 * `//gm teri_info`: Displays information about the current zone. Currently displays zone id, weather, internal zone name, parent region name, and place/display name.
 * `//gm gil <amount>`: Adds the specified amount of gil to the player
 * `//gm collect <amount>`: Subtracts `amount` gil from the targeted player (yourself only for now).
+* `//gm hp <amount>`: Sets your current HP to the amount specified.
+* `//gm mp <amount>`: Sets your current MP to the amount specified.
