@@ -391,6 +391,14 @@ impl LuaPlayer {
     fn toggle_ornament_all(&mut self) {
         self.queued_tasks.push(Task::ToggleOrnamentAll {});
     }
+
+    fn unlock_buddy_equip(&mut self, id: u32) {
+        self.queued_tasks.push(Task::UnlockBuddyEquip { id });
+    }
+
+    fn unlock_buddy_equip_all(&mut self) {
+        self.queued_tasks.push(Task::UnlockBuddyEquipAll {});
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -591,6 +599,14 @@ impl UserData for LuaPlayer {
         });
         methods.add_method_mut("toggle_ornament_all", |_, this, _: ()| {
             this.toggle_ornament_all();
+            Ok(())
+        });
+        methods.add_method_mut("unlock_buddy_equip", |_, this, id: u32| {
+            this.unlock_buddy_equip(id);
+            Ok(())
+        });
+        methods.add_method_mut("unlock_buddy_equip_all", |_, this, _: ()| {
+            this.unlock_buddy_equip_all();
             Ok(())
         });
     }

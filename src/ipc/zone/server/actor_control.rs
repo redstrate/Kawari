@@ -141,7 +141,7 @@ pub enum ActorControlCategory {
     },
 
     #[brw(magic = 254u32)]
-    BardingUnlock {
+    BuddyEquipUnlock {
         id: u32, // Index to BuddyEquip sheet
     },
 

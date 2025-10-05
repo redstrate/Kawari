@@ -50,6 +50,7 @@ registerCommand("togglemount",          DBG_DIR.."ToggleMount.lua")
 registerCommand("toggleorchestrion",    DBG_DIR.."ToggleOrchestrion.lua")
 registerCommand("toggleornament",       DBG_DIR.."ToggleOrnament.lua")
 registerCommand("unlock",               DBG_DIR.."Unlock.lua")
+registerCommand("unlockbuddyequip",     DBG_DIR.."UnlockBuddyEquip.lua")
 registerCommand("unlockcontent",        DBG_DIR.."UnlockContent.lua")
 registerCommand("completeallquests",    DBG_DIR.."CompleteAllQuests.lua")
 

@@ -1106,6 +1106,16 @@ impl ZoneConnection {
                         self.toggle_ornament(i).await;
                     }
                 }
+                Task::UnlockBuddyEquip { id } => {
+                    self.unlock_buddy_equip(*id).await;
+                }
+                Task::UnlockBuddyEquipAll {} => {
+                    let max_buddy_equip_id = BUDDY_EQUIP_BITMASK_SIZE as u32 * 8;
+
+                    for i in 0..max_buddy_equip_id {
+                        self.unlock_buddy_equip(i).await;
+                    }
+                }
             }
         }
         player.queued_tasks.clear();
@@ -1874,6 +1884,18 @@ impl ZoneConnection {
             category: ActorControlCategory::ToggleOrnamentUnlock {
                 id: ornament_id,
                 unlocked: unlock,
+            },
+        })
+        .await;
+    }
+
+    pub async fn unlock_buddy_equip(&mut self, buddy_equip_id: u32) {
+        let (value, index) = value_to_flag_byte_index_value(buddy_equip_id);
+        self.player_data.unlocks.buddy_equip[index as usize] |= value;
+        
+        self.actor_control_self(ActorControlSelf {
+            category: ActorControlCategory::BuddyEquipUnlock {
+                id: buddy_equip_id
             },
         })
         .await;

@@ -87,4 +87,8 @@ pub enum Task {
         id: u32,
     },
     ToggleOrnamentAll {},
+    UnlockBuddyEquip {
+        id: u32,
+    },
+    UnlockBuddyEquipAll {},
 }
