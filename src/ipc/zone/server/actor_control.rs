@@ -181,15 +181,11 @@ pub enum ActorControlCategory {
     Emote(CommonEmoteInfo),
 
     #[brw(magic = 324u32)]
-    ToggleCaughtFish{
-        id: u32, // Index to FishParameter
-        #[br(map = read_bool_from::<u32>)]
-        #[bw(map = write_bool_as::<u32>)]
-        unlocked: bool,
+    SetCaughtFishBitmask{
+        index: u32,
+        value: u32,
     },
 
-    // If byte is 0, and mask is 255, then the 0-8 will be set as caught.
-    // Or, if byte is 1, and mask is 15, then the 9-12 range will be set as caught.
     #[brw(magic = 343u32)]
     SetCaughtSpearfishBitmask {
         index: u32,
