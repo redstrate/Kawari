@@ -1190,6 +1190,17 @@ impl ZoneConnection {
                         self.toggle_minion(i).await;
                     }
                 }
+                Task::ToggleAetherCurrent { id } => {
+                    self.toggle_aether_current(*id).await;
+                }
+                Task::ToggleAetherCurrentAll {} => {
+                    // TODO: seems like server has issues after executing it, but when you login back after being disconnected, seems to be alright?
+                    let max_aether_current_id = AETHER_CURRENT_BITMASK_SIZE as u32 * 8;
+
+                    for i in 2818048..(2818048 + max_aether_current_id) {
+                        self.toggle_aether_current(i).await;
+                    }
+                }
             }
         }
         player.queued_tasks.clear();
@@ -2115,6 +2126,71 @@ impl ZoneConnection {
             },
         })
         .await;
+    }
+
+    pub async fn toggle_aether_current(&mut self, aether_current_id: u32) {
+        let aether_current_set;
+        {
+            let mut game_data = self.gamedata.lock().unwrap();
+            aether_current_set = game_data.find_aether_current_set(aether_current_id as i32);
+        }
+
+        if let Some(aether_current_set_id) = aether_current_set {
+            let (value, index) = value_to_flag_byte_index_value(aether_current_id - 2818048);
+            let unlock = (self.player_data.unlocks.aether_currents[index as usize] & value) == 0;
+
+            if unlock {
+                self.player_data.unlocks.aether_currents[index as usize] |= value;
+
+                let currents_needed_for_zone;
+                {
+                    let mut game_data = self.gamedata.lock().unwrap();
+                    currents_needed_for_zone = game_data.get_aether_currents_from_zone(aether_current_set_id).unwrap();
+                }
+
+                let mut zone_complete = true;
+
+                for current_needed in currents_needed_for_zone {
+                    let (current_needed_value, current_needed_index) = value_to_flag_byte_index_value((current_needed - 2818048) as u32);
+                    let current_unlocked = (self.player_data.unlocks.aether_currents[current_needed_index as usize] & current_needed_value) != 0;
+
+                    if !current_unlocked {
+                        zone_complete = false;
+                        break;
+                    }
+                }
+
+                self.actor_control_self(ActorControlSelf {
+                    category: ActorControlCategory::ToggleAetherCurrentUnlock {
+                        id: aether_current_id,
+                        attunement_complete: zone_complete,
+                        padding: 0,
+                        screen_image_id: 0, // TODO: find out all valid values for this, for now we just 0 it.
+                        zone_id: aether_current_set_id as u8,
+                        unk1: zone_complete,
+                        show_flying_mounts_help: false,
+                        remove_aether_current: false,
+                    },
+                })
+                .await;
+            } else {
+                self.player_data.unlocks.aether_currents[index as usize] ^= value;
+
+                self.actor_control_self(ActorControlSelf {
+                    category: ActorControlCategory::ToggleAetherCurrentUnlock {
+                        id: aether_current_id,
+                        attunement_complete: false,
+                        padding: 0,
+                        screen_image_id: 0,
+                        zone_id: aether_current_set_id as u8,
+                        unk1: false,
+                        show_flying_mounts_help: false,
+                        remove_aether_current: true,
+                    },
+                })
+                .await;
+            }
+        }
     }
 
     pub async fn send_arbitrary_packet(&mut self, op_code: u16, data: Vec<u8>) {

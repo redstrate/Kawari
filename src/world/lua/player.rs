@@ -455,6 +455,14 @@ impl LuaPlayer {
     fn toggle_minion_all(&mut self) {
         self.queued_tasks.push(Task::ToggleMinionAll {});
     }
+
+    fn toggle_aether_current(&mut self, id: u32) {
+        self.queued_tasks.push(Task::ToggleAetherCurrent { id });
+    }
+
+    fn toggle_aether_current_all(&mut self) {
+        self.queued_tasks.push(Task::ToggleAetherCurrentAll {});
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -719,6 +727,14 @@ impl UserData for LuaPlayer {
         });
         methods.add_method_mut("toggle_minion_all", |_, this, _: ()| {
             this.toggle_minion_all();
+            Ok(())
+        });
+        methods.add_method_mut("toggle_aether_current", |_, this, id: u32| {
+            this.toggle_aether_current(id);
+            Ok(())
+        });
+        methods.add_method_mut("toggle_aether_current_all", |_, this, _: ()| {
+            this.toggle_aether_current_all();
             Ok(())
         });
     }

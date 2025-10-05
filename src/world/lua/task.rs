@@ -119,4 +119,8 @@ pub enum Task {
         id: u32,
     },
     ToggleMinionAll {},
+    ToggleAetherCurrent {
+        id: u32,
+    },
+    ToggleAetherCurrentAll {},
 }
