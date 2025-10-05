@@ -1228,6 +1228,7 @@ impl ZoneConnection {
                     for i in 2818048..(2818048 + max_aether_current_id) {
                         self.toggle_aether_current(i).await;
                     }
+                }
             }
         }
         player.queued_tasks.clear();
