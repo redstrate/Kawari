@@ -47,6 +47,6 @@ registerCommand("ost",               DBG_DIR.."OnScreenTest.lua")
 registerCommand("permtest",          DBG_DIR.."PermissionTest.lua")
 registerCommand("unlock",            DBG_DIR.."Unlock.lua")
 registerCommand("unlockcontent",     DBG_DIR.."UnlockContent.lua")
-registerCommand("unlockmount",       DBG_DIR.."UnlockMount.lua")
+registerCommand("togglemount",       DBG_DIR.."ToggleMount.lua")
 registerCommand("completeallquests", DBG_DIR.."CompleteAllQuests.lua")
 

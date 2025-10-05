@@ -49,9 +49,8 @@ pub enum Task {
         amount: u32,
         send_client_update: bool,
     },
-    UnlockOrchestrion {
-        id: u16,
-        on: bool,
+    ToggleOrchestrion {
+        id: u32,
     },
     AddItem {
         id: u32,
@@ -77,7 +76,7 @@ pub enum Task {
     SetInnWakeup {
         watched: bool,
     },
-    UnlockMount {
-        id: u16,
+    ToggleMount {
+        id: u32,
     },
 }

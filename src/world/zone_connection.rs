@@ -932,7 +932,7 @@ impl ZoneConnection {
                         self.send_inventory(false).await;
                     }
                 }
-                Task::UnlockOrchestrion { id, on } => {
+                Task::ToggleOrchestrion { id } => {
                     // id == 0 means "all"
                     if *id == 0 {
                         /* Currently 792 songs ingame.
@@ -945,13 +945,13 @@ impl ZoneConnection {
                                 category: ActorControlCategory::ToggleOrchestrionUnlock { song_id: id, unlocked: on } }).await;
                         }*/
                     } else {
-                        self.actor_control_self(ActorControlSelf {
+                        /*self.actor_control_self(ActorControlSelf {
                             category: ActorControlCategory::ToggleOrchestrionUnlock {
                                 song_id: *id,
                                 unlocked: *on,
                             },
                         })
-                        .await;
+                        .await;*/
                     }
                 }
                 Task::AddItem {
@@ -1061,21 +1061,21 @@ impl ZoneConnection {
                 Task::SetInnWakeup { watched } => {
                     self.player_data.saw_inn_wakeup = *watched;
                 }
-                Task::UnlockMount { id } => {
-                    let order;
+                Task::ToggleMount { id } => {
+                    /*let order;
                     {
                         let mut game_data = self.gamedata.lock().unwrap();
                         order = game_data.find_mount_order(*id).unwrap_or(0);
                     }
 
                     self.actor_control_self(ActorControlSelf {
-                        category: ActorControlCategory::MountUnlock {
+                        category: ActorControlCategory::ToggleMountUnlock {
                             order: order as u32,
                             id: *id as u32,
                             unlocked: true,
                         },
                     })
-                    .await;
+                    .await;*/
                 }
             }
         }

@@ -198,10 +198,9 @@ impl LuaPlayer {
         });
     }
 
-    fn unlock_orchestrion(&mut self, unlocked: u32, id: u16) {
-        self.queued_tasks.push(Task::UnlockOrchestrion {
+    fn toggle_orchestrion(&mut self, id: u32) {
+        self.queued_tasks.push(Task::ToggleOrchestrion {
             id,
-            on: unlocked == 1,
         });
     }
 
@@ -373,8 +372,8 @@ impl LuaPlayer {
         self.queued_tasks.push(Task::SetInnWakeup { watched });
     }
 
-    fn unlock_mount(&mut self, id: u16) {
-        self.queued_tasks.push(Task::UnlockMount { id });
+    fn toggle_mount(&mut self, id: u32) {
+        self.queued_tasks.push(Task::ToggleMount { id });
     }
 }
 
@@ -506,8 +505,8 @@ impl UserData for LuaPlayer {
             this.remove_gil(amount, true);
             Ok(())
         });
-        methods.add_method_mut("unlock_orchestrion", |_, this, (unlock, id): (u32, u16)| {
-            this.unlock_orchestrion(unlock, id);
+        methods.add_method_mut("toggle_orchestrion", |_, this, id: u32| {
+            this.toggle_orchestrion(id);
             Ok(())
         });
         methods.add_method_mut("add_item", |_, this, (id, quantity): (u32, u32)| {
@@ -558,8 +557,8 @@ impl UserData for LuaPlayer {
                 Ok(())
             },
         );
-        methods.add_method_mut("unlock_mount", |_, this, id: u16| {
-            this.unlock_mount(id);
+        methods.add_method_mut("toggle_mount", |_, this, id: u32| {
+            this.toggle_mount(id);
             Ok(())
         });
     }
