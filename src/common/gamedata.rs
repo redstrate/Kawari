@@ -575,6 +575,43 @@ impl GameData {
 
         mount_row.Order().into_i16().copied()
     }
+
+    /// Gets the Item ID of the Orchestrion Roll.
+    pub fn find_orchestrion_item_id(&mut self, orchestrion_id: u32) -> Option<u32> {
+        let mut result = None;
+        'outer: for page in &self.item_pages {
+            for row in &page.rows {
+                let ExcelRowKind::SingleRow(single_row) = &row.kind else {
+                    panic!("Expected a single row!");
+                };
+
+                let physis::exd::ColumnData::UInt8(filter_group) = &single_row.columns[13] else {
+                    panic!("Unexpected type!");
+                };
+
+                if *filter_group != 32 {
+                    continue;
+                }
+
+                let physis::exd::ColumnData::UInt32(additional_data) = &single_row.columns[14] else {
+                    panic!("Unexpected type!");
+                };
+
+                if *additional_data != orchestrion_id {
+                    continue;
+                }
+
+                result = Some(&row.row_id);
+                break 'outer;
+            }
+        }
+
+        if let Some(item_id) = result {
+            return Some(*item_id);
+        }
+
+        None
+    }
 }
 
 // Simple enum for GameData::get_territory_name

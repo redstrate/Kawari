@@ -39,14 +39,15 @@ registerGMCommand(GM_TERRITORY_INFO,    GM_DIR.."TerritoryInfo.lua")
 -- Debug commands
 -- Please keep these in alphabetical order!
 
-registerCommand("classjob",          DBG_DIR.."ClassJob.lua")
-registerCommand("festival",          DBG_DIR.."Festival.lua")
-registerCommand("inspect",           GM_DIR.."InspectPlayer.lua") -- TODO: remove this once we figure out the GMInspect IPC opcode
-registerCommand("nudge",             DBG_DIR.."Nudge.lua")
-registerCommand("ost",               DBG_DIR.."OnScreenTest.lua")
-registerCommand("permtest",          DBG_DIR.."PermissionTest.lua")
-registerCommand("unlock",            DBG_DIR.."Unlock.lua")
-registerCommand("unlockcontent",     DBG_DIR.."UnlockContent.lua")
-registerCommand("togglemount",       DBG_DIR.."ToggleMount.lua")
-registerCommand("completeallquests", DBG_DIR.."CompleteAllQuests.lua")
+registerCommand("classjob",             DBG_DIR.."ClassJob.lua")
+registerCommand("festival",             DBG_DIR.."Festival.lua")
+registerCommand("inspect",              GM_DIR.."InspectPlayer.lua") -- TODO: remove this once we figure out the GMInspect IPC opcode
+registerCommand("nudge",                DBG_DIR.."Nudge.lua")
+registerCommand("ost",                  DBG_DIR.."OnScreenTest.lua")
+registerCommand("permtest",             DBG_DIR.."PermissionTest.lua")
+registerCommand("togglemount",          DBG_DIR.."ToggleMount.lua")
+registerCommand("toggleorchestrion",    DBG_DIR.."ToggleOrchestrion.lua")
+registerCommand("unlock",               DBG_DIR.."Unlock.lua")
+registerCommand("unlockcontent",        DBG_DIR.."UnlockContent.lua")
+registerCommand("completeallquests",    DBG_DIR.."CompleteAllQuests.lua")
 

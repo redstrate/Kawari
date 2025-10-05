@@ -935,23 +935,22 @@ impl ZoneConnection {
                 Task::ToggleOrchestrion { id } => {
                     // id == 0 means "all"
                     if *id == 0 {
-                        /* Currently 792 songs ingame.
-                         * Commented out because this learns literally zero songs
-                         * for some unknown reason. */
-                        /*for i in 1..793 {
-                            let idd = i as u16;
-                            connection.send_notice("test!").await;
-                            connection.actor_control_self(ActorControlSelf {
-                                category: ActorControlCategory::ToggleOrchestrionUnlock { song_id: id, unlocked: on } }).await;
-                        }*/
+                        let max_orchestrion_id = ORCHESTRION_ROLL_BITMASK_SIZE as u32 * 8;
+
+                        for i in 0..max_orchestrion_id {
+                            // Prevent going through invalid entries
+                            let item_id;
+                            {
+                                let mut game_data = self.gamedata.lock().unwrap();
+                                item_id = game_data.find_orchestrion_item_id(i);
+                            }
+
+                            if let Some(_) = item_id {
+                                self.toggle_orchestrion(i).await;
+                            }
+                        }
                     } else {
-                        /*self.actor_control_self(ActorControlSelf {
-                            category: ActorControlCategory::ToggleOrchestrionUnlock {
-                                song_id: *id,
-                                unlocked: *on,
-                            },
-                        })
-                        .await;*/
+                        self.toggle_orchestrion(*id).await;
                     }
                 }
                 Task::AddItem {
@@ -1790,6 +1789,34 @@ impl ZoneConnection {
             ))
             .await;
         }
+    }
+
+    pub async fn toggle_orchestrion(&mut self, orchestrion_id: u32) {
+        let (value, index) = value_to_flag_byte_index_value(orchestrion_id);
+
+        let unlock = (self.player_data.unlocks.orchestrion_rolls[index as usize] & value) == 0;
+        let mut item_id = 0;
+
+        if unlock {
+            self.player_data.unlocks.orchestrion_rolls[index as usize] |= value;
+
+            {
+                let mut game_data = self.gamedata.lock().unwrap();
+                item_id = game_data.find_orchestrion_item_id(orchestrion_id).unwrap_or(0);
+            }
+
+        } else {
+            self.player_data.unlocks.orchestrion_rolls[index as usize] ^= value;
+        }
+
+        self.actor_control_self(ActorControlSelf {
+            category: ActorControlCategory::ToggleOrchestrionUnlock {
+                song_id: orchestrion_id,
+                unlocked: unlock,
+                item_id,
+            },
+        })
+        .await;
     }
 
     pub async fn send_arbitrary_packet(&mut self, op_code: u16, data: Vec<u8>) {
