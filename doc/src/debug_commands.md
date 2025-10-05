@@ -19,7 +19,7 @@ These special debug commands start with `!` and are custom to Kawari.
 * `!replay <path>`: Replays packets, must be in the format generated from cfcap-capture.
 * `!condition <name>`: Forcefully sets a condition, see `condition.rs` for what is supported.
 * `!clearconditions`: Forcefully clears all conditions set on your character.
-* `!acs <category> <param1 (optional)> <param2 (optional)> <param3 (optional)> <param1 (optional)>`: Send an ActorControlSelf to the player.
+* `!acs <category> <param1 (optional)> <param2 (optional)> <param3 (optional)> <param4 (optional)>`: Send an ActorControlSelf to the player.
 * `!unlockbuddyequip <id>`: Unlocks the specified BuddyEquip (Companion Barding) ID.
 * `!togglemount <id>`: Toggles the unlock status of the specified mount ID.
 * `!toggleorchestrion <id>`: Toggles the unlock status of the specified orchestrion ID.
