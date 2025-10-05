@@ -45,6 +45,7 @@ registerCommand("inspect",              GM_DIR.."InspectPlayer.lua") -- TODO: re
 registerCommand("nudge",                DBG_DIR.."Nudge.lua")
 registerCommand("ost",                  DBG_DIR.."OnScreenTest.lua")
 registerCommand("permtest",             DBG_DIR.."PermissionTest.lua")
+registerCommand("toggleglassesstyle",   DBG_DIR.."ToggleGlassesStyle.lua")
 registerCommand("togglemount",          DBG_DIR.."ToggleMount.lua")
 registerCommand("toggleorchestrion",    DBG_DIR.."ToggleOrchestrion.lua")
 registerCommand("unlock",               DBG_DIR.."Unlock.lua")

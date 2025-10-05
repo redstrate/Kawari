@@ -1086,6 +1086,16 @@ impl ZoneConnection {
                     })
                     .await;
                 }
+                Task::ToggleGlassesStyle { id } => {
+                    self.toggle_glasses_style(*id).await;
+                }
+                Task::ToggleGlassesStyleAll {} => {
+                    let max_glasses_style_id = GLASSES_STYLES_BITMASK_SIZE as u32 * 8;
+
+                    for i in 0..max_glasses_style_id {
+                        self.toggle_glasses_style(i).await;
+                    }
+                }
             }
         }
         player.queued_tasks.clear();
@@ -1814,6 +1824,26 @@ impl ZoneConnection {
                 song_id: orchestrion_id,
                 unlocked: unlock,
                 item_id,
+            },
+        })
+        .await;
+    }
+
+    pub async fn toggle_glasses_style(&mut self, glasses_style_id: u32) {
+        let (value, index) = value_to_flag_byte_index_value(glasses_style_id);
+
+        let unlock = (self.player_data.unlocks.glasses_styles[index as usize] & value) == 0;
+
+        if unlock {
+            self.player_data.unlocks.glasses_styles[index as usize] |= value;
+        } else {
+            self.player_data.unlocks.glasses_styles[index as usize] ^= value;
+        }
+        
+        self.actor_control_self(ActorControlSelf {
+            category: ActorControlCategory::ToggleGlassesStyleUnlock {
+                id: glasses_style_id,
+                unlocked: unlock,
             },
         })
         .await;

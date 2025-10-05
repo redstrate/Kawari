@@ -375,6 +375,14 @@ impl LuaPlayer {
     fn toggle_mount(&mut self, id: u32) {
         self.queued_tasks.push(Task::ToggleMount { id });
     }
+
+    fn toggle_glasses_style(&mut self, id: u32) {
+        self.queued_tasks.push(Task::ToggleGlassesStyle { id });
+    }
+
+    fn toggle_glasses_style_all(&mut self) {
+        self.queued_tasks.push(Task::ToggleGlassesStyleAll {});
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -559,6 +567,14 @@ impl UserData for LuaPlayer {
         );
         methods.add_method_mut("toggle_mount", |_, this, id: u32| {
             this.toggle_mount(id);
+            Ok(())
+        });
+        methods.add_method_mut("toggle_glasses_style", |_, this, id: u32| {
+            this.toggle_glasses_style(id);
+            Ok(())
+        });
+        methods.add_method_mut("toggle_glasses_style_all", |_, this, _: ()| {
+            this.toggle_glasses_style_all();
             Ok(())
         });
     }

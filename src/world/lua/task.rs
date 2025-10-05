@@ -79,4 +79,8 @@ pub enum Task {
     ToggleMount {
         id: u32,
     },
+    ToggleGlassesStyle {
+        id: u32,
+    },
+    ToggleGlassesStyleAll {},
 }
