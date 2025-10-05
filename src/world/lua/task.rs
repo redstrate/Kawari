@@ -95,4 +95,8 @@ pub enum Task {
         id: u32,
     },
     ToggleChocoboTaxiStandAll {},
+    ToggleCaughtFish {
+        id: u32,
+    },
+    ToggleCaughtFishAll {},
 }

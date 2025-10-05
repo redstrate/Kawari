@@ -1126,6 +1126,16 @@ impl ZoneConnection {
                         self.toggle_chocobo_taxi_stand(i).await;
                     }
                 }
+                Task::ToggleCaughtFish { id } => {
+                    self.toggle_caught_fish(*id).await;
+                }
+                Task::ToggleCaughtFishAll {} => {
+                    let max_caught_fish_id = CAUGHT_FISH_BITMASK_SIZE as u32 * 8;
+
+                    for i in 0..max_caught_fish_id {
+                        self.toggle_caught_fish(i).await;
+                    }
+                }
             }
         }
         player.queued_tasks.clear();
@@ -1926,6 +1936,26 @@ impl ZoneConnection {
             category: ActorControlCategory::ToggleChocoboTaxiStandUnlock {
                 id: chocobo_taxi_stand_id,
                 unlocked: unlock,
+            },
+        })
+        .await;
+    }
+
+    pub async fn toggle_caught_fish(&mut self, caught_fish_id: u32) {
+        let (value, index) = value_to_flag_byte_index_value(caught_fish_id);
+
+        let unlock = (self.player_data.unlocks.caught_fish[index as usize] & value) == 0;
+
+        if unlock {
+            self.player_data.unlocks.caught_fish[index as usize] |= value;
+        } else {
+            self.player_data.unlocks.caught_fish[index as usize] ^= value;
+        }
+        
+        self.actor_control_self(ActorControlSelf {
+            category: ActorControlCategory::SetCaughtFishBitmask {
+                index: index as u32,
+                value: self.player_data.unlocks.caught_fish[index as usize] as u32,
             },
         })
         .await;

@@ -407,6 +407,14 @@ impl LuaPlayer {
     fn toggle_chocobo_taxi_stand_all(&mut self) {
         self.queued_tasks.push(Task::ToggleChocoboTaxiStandAll {});
     }
+
+    fn toggle_caught_fish(&mut self, id: u32) {
+        self.queued_tasks.push(Task::ToggleCaughtFish { id });
+    }
+
+    fn toggle_caught_fish_all(&mut self) {
+        self.queued_tasks.push(Task::ToggleCaughtFishAll {});
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -623,6 +631,14 @@ impl UserData for LuaPlayer {
         });
         methods.add_method_mut("toggle_chocobo_taxi_stand_all", |_, this, _: ()| {
             this.toggle_chocobo_taxi_stand_all();
+            Ok(())
+        });
+        methods.add_method_mut("toggle_caught_fish", |_, this, id: u32| {
+            this.toggle_caught_fish(id);
+            Ok(())
+        });
+        methods.add_method_mut("toggle_caught_fish_all", |_, this, _: ()| {
+            this.toggle_caught_fish_all();
             Ok(())
         });
     }
