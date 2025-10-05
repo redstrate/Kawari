@@ -1170,6 +1170,16 @@ impl ZoneConnection {
                         }
                     }
                 }
+                Task::ToggleCutsceneSeen { id } => {
+                    self.toggle_cutscene_seen(*id).await;
+                }
+                Task::ToggleCutsceneSeenAll {} => {
+                    let max_cutscene_seen_id = CUTSCENE_SEEN_BITMASK_SIZE as u32 * 8;
+
+                    for i in 0..max_cutscene_seen_id {
+                        self.toggle_cutscene_seen(i).await;
+                    }
+                }
             }
         }
         player.queued_tasks.clear();
@@ -2051,6 +2061,26 @@ impl ZoneConnection {
             category: ActorControlCategory::ToggleAdventureUnlock {
                 id: adventure_id + 2162688,
                 all_vistas_recorded: all_vistas_recorded,
+                unlocked: unlock,
+            },
+        })
+        .await;
+    }
+
+    pub async fn toggle_cutscene_seen(&mut self, cutscene_id: u32) {
+        let (value, index) = value_to_flag_byte_index_value(cutscene_id);
+
+        let unlock = (self.player_data.unlocks.cutscene_seen[index as usize] & value) == 0;
+
+        if unlock {
+            self.player_data.unlocks.cutscene_seen[index as usize] |= value;
+        } else {
+            self.player_data.unlocks.cutscene_seen[index as usize] ^= value;
+        }
+        
+        self.actor_control_self(ActorControlSelf {
+            category: ActorControlCategory::ToggleCutsceneSeen {
+                id: cutscene_id,
                 unlocked: unlock,
             },
         })

@@ -439,6 +439,14 @@ impl LuaPlayer {
     fn toggle_adventure_all(&mut self) {
         self.queued_tasks.push(Task::ToggleAdventureAll {});
     }
+
+    fn toggle_cutscene_seen(&mut self, id: u32) {
+        self.queued_tasks.push(Task::ToggleCutsceneSeen { id });
+    }
+
+    fn toggle_cutscene_seen_all(&mut self) {
+        self.queued_tasks.push(Task::ToggleCutsceneSeenAll {});
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -687,6 +695,14 @@ impl UserData for LuaPlayer {
         });
         methods.add_method_mut("toggle_adventure_all", |_, this, _: ()| {
             this.toggle_adventure_all();
+            Ok(())
+        });
+        methods.add_method_mut("toggle_cutscene_seen", |_, this, id: u32| {
+            this.toggle_cutscene_seen(id);
+            Ok(())
+        });
+        methods.add_method_mut("toggle_cutscene_seen_all", |_, this, _: ()| {
+            this.toggle_cutscene_seen_all();
             Ok(())
         });
     }

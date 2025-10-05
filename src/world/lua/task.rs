@@ -111,4 +111,8 @@ pub enum Task {
         id: u32,
     },
     ToggleAdventureAll {},
+    ToggleCutsceneSeen {
+        id: u32,
+    },
+    ToggleCutsceneSeenAll {},
 }
