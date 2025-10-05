@@ -17,3 +17,4 @@ These GM commands are implemented in the FFXIV protocol, but only some of them a
 * `//gm collect <amount>`: Subtracts `amount` gil from the targeted player (yourself only for now).
 * `//gm hp <amount>`: Sets your current HP to the amount specified.
 * `//gm mp <amount>`: Sets your current MP to the amount specified.
+* `//gm getpos`: Returns your current position.
