@@ -20,4 +20,16 @@ These special debug commands start with `!` and are custom to Kawari.
 * `!condition <name>`: Forcefully sets a condition, see `condition.rs` for what is supported.
 * `!clearconditions`: Forcefully clears all conditions set on your character.
 * `!acs <category> <param1 (optional)> <param2 (optional)> <param3 (optional)> <param1 (optional)>`: Send an ActorControlSelf to the player.
+* `!unlockbuddyequip <id>`: Unlocks the specified BuddyEquip (Companion Barding) ID.
 * `!togglemount <id>`: Toggles the unlock status of the specified mount ID.
+* `!toggleorchestrion <id>`: Toggles the unlock status of the specified orchestrion ID.
+* `!toggleglassesstyle <id>`: Toggles the unlock status of the specified GlassesStyle ID.
+* `!toggleornament <id>`: Toggles the unlock status of the specified ornament ID.
+* `!togglechocobotaxistand <id>`: Toggles the unlock status of the specified ChocoboTaxiStand ID.
+* `!togglecaughtfish <id>`: Toggles the caught status of the specified fish ID.
+* `!togglecaughtspearfish <id>`: Toggles the caught status of the specified fish ID (for Spearfishing).
+* `!toggletripletriadcard <id>`: Toggles the unlock status of the specified Triple Triad Card ID.
+* `!toggleadventure <id>`: Toggles the unlock status of the specified Adventure (Sightseeing) ID.
+* `!toggleminion <id>`: Toggles the unlock status of the specified minion ID.
+* `!toggleaethercurrent <id>`: Toggles the unlock status of the specified Aether Current ID.
+* `!togglecutsceneseen <id>`: Toggles the seen status of the specified Cutscene ID.
