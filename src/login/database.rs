@@ -221,7 +221,7 @@ impl LoginDatabase {
         stmt.query_row((user_id,), |row| row.get(0)).unwrap()
     }
 
-    /// TODO: only works for one
+    // TODO: only returns one account right now
     pub fn get_service_account(&self, user_id: u32) -> u32 {
         let connection = self.connection.lock().unwrap();
 

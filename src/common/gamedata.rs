@@ -352,7 +352,7 @@ impl GameData {
         Some((*pop_range_id, *zone_id))
     }
 
-    // Retrieves a zone's internal name, place name or parent region name.
+    /// Retrieves a zone's internal name, place name or parent region name.
     pub fn get_territory_name(&mut self, zone_id: u32, which: TerritoryNameKind) -> Option<String> {
         let sheet = TerritoryTypeSheet::read_from(&mut self.resource, Language::None)?;
         let row = sheet.get_row(zone_id)?;
@@ -577,7 +577,7 @@ impl GameData {
     }
 }
 
-// Simple enum for GameData::get_territory_name
+/// Simple enum for GameData::get_territory_name
 pub enum TerritoryNameKind {
     Internal,
     Region,

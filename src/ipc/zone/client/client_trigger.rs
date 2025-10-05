@@ -141,13 +141,13 @@ pub enum ClientTriggerCommand {
     #[brw(magic = 0x07BDu32)]
     EndContentsReplay {},
 
-    // Sent whenever the client tries to begin a Hall of the Novice exercise.
+    /// Sent whenever the client tries to begin a Hall of the Novice exercise.
     #[brw(magic = 0x0802u32)]
     BeginNoviceExercise {
         id: u32, // not specific to a class/job
     },
 
-    // Sent whenever the Glamour Plates window is opened or closed.
+    /// Sent whenever the Glamour Plates window is opened or closed.
     #[brw(magic = 0x934u32)]
     ToggleGlamourPlatesWindow {
         #[br(map = read_bool_from::<u32>)]

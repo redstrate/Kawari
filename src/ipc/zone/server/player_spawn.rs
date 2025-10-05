@@ -6,13 +6,12 @@ use super::{CommonSpawn, GameMasterRank, OnlineStatus};
 #[brw(little)]
 #[derive(Debug, Clone, Default)]
 pub struct PlayerSpawn {
-    // yes, really.
     pub account_id: u32,
 
     #[brw(pad_before = 4)] // always empty?
     pub content_id: u64,
 
-    /// See Title Excel sheet
+    /// Index into the Title Excel sheet.
     pub title_id: u16,
     pub u1b: u16,
     pub current_world_id: u16,

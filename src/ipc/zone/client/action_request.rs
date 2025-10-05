@@ -19,7 +19,8 @@ pub struct ActionRequest {
     pub exec_proc: u8, // what?
     pub action_kind: ActionKind,
     #[brw(pad_before = 2)] // padding, i think it's filled with GARBAGE
-    pub action_key: u32, // See Action Excel sheet
+    /// Index into the Action Excel sheet.
+    pub action_key: u32,
     pub request_id: u16,
     #[br(map = read_quantized_rotation)]
     #[bw(map = write_quantized_rotation)]

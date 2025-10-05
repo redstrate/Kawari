@@ -6,8 +6,6 @@ use crate::ipc::zone::common_emote::CommonEmoteInfo;
 
 use super::OnlineStatus;
 
-// TODO: these are all somewhat related, but maybe should be separated?
-
 // See https://github.com/awgil/ffxiv_reverse/blob/f35b6226c1478234ca2b7149f82d251cffca2f56/vnetlog/vnetlog/ServerIPC.cs#L266 for a REALLY useful list of known values
 #[binrw]
 #[derive(Debug, Eq, PartialEq, Clone, IntoStaticStr)]
@@ -169,9 +167,10 @@ pub enum ActorControlCategory {
     #[brw(magic = 609u32)]
     ToggleWireframeRendering(),
 
+    /// Multiple festivals can be set at the same time.
     #[brw(magic = 902u32)]
     SetFestival {
-        festival1: u32, // Multiple festivals can be set at the same time.
+        festival1: u32,
         festival2: u32,
         festival3: u32,
         festival4: u32,
