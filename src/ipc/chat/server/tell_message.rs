@@ -13,8 +13,8 @@ pub struct TellMessage {
     /// Indicates if it's a GM tell or not.
     pub flags: u8,
 
-    #[br(count = 32)]
-    #[bw(pad_size_to = 32)]
+    #[br(count = CHAR_NAME_MAX_LENGTH)]
+    #[bw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
     #[br(map = read_string)]
     #[bw(map = write_string)]
     pub sender_name: String,
