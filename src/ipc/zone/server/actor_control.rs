@@ -82,6 +82,17 @@ pub enum ActorControlCategory {
     #[brw(magic = 138u32)]
     EventRelatedUnk3 { event_id: u32 },
 
+    #[brw(magic = 156u32)]
+    ToggleAdventureUnlock{
+        id: u32, // Index to Adventure sheet
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        all_vistas_recorded: bool,
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        unlocked: bool,
+    },
+
     #[brw(magic = 164u32)]
     ToggleAetherCurrentUnlock{
         id: u32, // Index to AetherCurrent sheet
@@ -101,17 +112,6 @@ pub enum ActorControlCategory {
         #[br(map = read_bool_from::<u32>)]
         #[bw(map = write_bool_as::<u32>)]
         remove_aether_current: bool, // If true, attunement_complete, screen_image_id and show_flying_mounts_help will be ignored.
-    },
-
-    #[brw(magic = 271u32)]
-    ToggleAdventureUnlock{
-        id: u32, // Index to Adventure sheet
-        #[br(map = read_bool_from::<u32>)]
-        #[bw(map = write_bool_as::<u32>)]
-        all_vistas_recorded: bool,
-        #[br(map = read_bool_from::<u32>)]
-        #[bw(map = write_bool_as::<u32>)]
-        unlocked: bool,
     },
 
     #[brw(magic = 200u32)]
