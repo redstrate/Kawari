@@ -377,10 +377,12 @@ generic_currency_exchange = {
 }
 
 generic_levemete_npcs = {
-    393217, -- Tierney in !Central Shroud
+    393217, -- Tierney in Central Shroud
     393220, -- Gontrant in Carline Canopy, New Gridania
     393221, -- T'mokkri in The Drowning Wench, Limsa
-    393227, -- ???
+    393227, -- Muriaule in Central Shroud
+    393223, -- Totonowa in Western Thanalan
+    393237, -- Ourawann in Lower La Noscea
     393250, -- Eirikur in Crystarium
 }
 
