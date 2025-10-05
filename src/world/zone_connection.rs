@@ -40,7 +40,7 @@ use crate::{
     packet::{
         CompressionType, ConnectionState, ConnectionType, IpcSegmentHeader,
         OBFUSCATION_ENABLED_MODE, PacketSegment, ScramblerKeyGenerator, SegmentData, SegmentType,
-        ServerIpcSegmentHeader, parse_packet, send_packet,
+        ServerIpcSegmentHeader, parse_packet, send_keep_alive, send_packet,
     },
 };
 
@@ -149,6 +149,7 @@ pub struct PlayerData {
     pub rotation: f32,
     pub zone_id: u16,
     pub inventory: Inventory,
+    pub city_state: u8,
 
     pub teleport_query: TeleportQuery,
     pub gm_rank: GameMasterRank,
@@ -1086,6 +1087,33 @@ impl ZoneConnection {
                     })
                     .await;
                 }
+                Task::MoveToPopRange { id } => {
+                    self.handle
+                        .send(ToServer::MoveToPopRange(
+                            self.id,
+                            self.player_data.actor_id,
+                            *id,
+                        ))
+                        .await;
+                }
+                Task::SetHP { hp } => {
+                    self.player_data.curr_hp = *hp;
+                    self.update_hp_mp(
+                        ObjectId(self.player_data.actor_id),
+                        self.player_data.curr_hp,
+                        self.player_data.curr_mp,
+                    )
+                    .await;
+                }
+                Task::SetMP { mp } => {
+                    self.player_data.curr_mp = *mp;
+                    self.update_hp_mp(
+                        ObjectId(self.player_data.actor_id),
+                        self.player_data.curr_hp,
+                        self.player_data.curr_mp,
+                    )
+                    .await;
+                }
                 Task::ToggleGlassesStyle { id } => {
                     self.toggle_glasses_style(*id).await;
                 }
@@ -1200,7 +1228,6 @@ impl ZoneConnection {
                     for i in 2818048..(2818048 + max_aether_current_id) {
                         self.toggle_aether_current(i).await;
                     }
-                }
             }
         }
         player.queued_tasks.clear();
@@ -2275,5 +2302,16 @@ impl ZoneConnection {
                 "Received unknown GM command {command} with args: arg0: {arg0} arg1: {arg1} arg2: {arg2} arg3: {arg3}!"
             );
         }
+    }
+
+    pub async fn send_keep_alive(&mut self, id: u32, timestamp: u32) {
+        send_keep_alive::<ServerZoneIpcSegment>(
+            &mut self.socket,
+            &mut self.state,
+            ConnectionType::Zone,
+            id,
+            timestamp,
+        )
+        .await;
     }
 }

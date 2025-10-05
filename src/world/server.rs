@@ -12,10 +12,11 @@ use tokio::sync::mpsc::Receiver;
 
 use crate::{
     common::{
-        CustomizeData, GameData, JumpState, MoveAnimationState, MoveAnimationType, ObjectId,
-        ObjectTypeId, ObjectTypeKind, Position,
+        CustomizeData, GameData, INVALID_OBJECT_ID, JumpState, MoveAnimationState,
+        MoveAnimationType, ObjectId, ObjectTypeId, ObjectTypeKind, Position,
     },
     config::get_config,
+    ipc::chat::TellNotFoundError,
     ipc::zone::{
         ActorControl, ActorControlCategory, ActorControlSelf, ActorControlTarget, BattleNpcSubKind,
         ClientTriggerCommand, CommonSpawn, Conditions, NpcSpawn, ObjectKind, PlayerSpawn,
@@ -23,6 +24,7 @@ use crate::{
     },
     opcodes::ServerZoneIpcType,
     packet::{IpcSegmentHeader, PacketSegment, SegmentData, SegmentType, ServerIpcSegmentHeader},
+    world::MessageInfo,
 };
 
 use super::{Actor, ClientHandle, ClientId, FromServer, Navmesh, ToServer, Zone, lua::LuaZone};
@@ -76,6 +78,13 @@ impl NetworkedActor {
         match &self {
             NetworkedActor::Player(player_spawn) => &player_spawn.common,
             NetworkedActor::Npc { spawn, .. } => &spawn.common,
+        }
+    }
+
+    pub fn get_player_spawn(&self) -> Option<&PlayerSpawn> {
+        match &self {
+            NetworkedActor::Player(player_spawn) => Some(player_spawn),
+            NetworkedActor::Npc { .. } => None,
         }
     }
 }
@@ -222,6 +231,7 @@ impl WorldServer {
 struct NetworkState {
     to_remove: Vec<ClientId>,
     clients: HashMap<ClientId, (ClientHandle, ClientState)>,
+    chat_clients: HashMap<ClientId, (ClientHandle, ClientState)>,
 }
 
 impl NetworkState {
@@ -533,7 +543,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
         match msg {
             ToServer::NewClient(handle) => {
                 tracing::info!(
-                    "New client {:?} is connecting with actor id {}",
+                    "New zone client {:?} is connecting with actor id {}",
                     handle.id,
                     handle.actor_id
                 );
@@ -542,6 +552,19 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
 
                 network
                     .clients
+                    .insert(handle.id, (handle, ClientState::default()));
+            }
+            ToServer::NewChatClient(handle) => {
+                tracing::info!(
+                    "New chat client {:?} is connecting with actor id {}",
+                    handle.id,
+                    handle.actor_id
+                );
+
+                let mut network = network.lock().unwrap();
+
+                network
+                    .chat_clients
                     .insert(handle.id, (handle, ClientState::default()));
             }
             ToServer::ReadySpawnPlayer(from_id, zone_id, position, rotation) => {
@@ -1563,6 +1586,121 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     from_id,
                     from_actor_id,
                 );
+            }
+            ToServer::MoveToPopRange(from_id, from_actor_id, id) => {
+                let mut data = data.lock().unwrap();
+                let mut network = network.lock().unwrap();
+
+                tracing::info!("finding {id}");
+
+                if let Some(instance) = data.find_actor_instance_mut(from_actor_id) {
+                    if let Some(pop_range) = instance.zone.find_pop_range(id) {
+                        let trans = pop_range.0.transform.translation;
+
+                        // send new position to the client
+                        for (id, (handle, _)) in &mut network.clients {
+                            let id = *id;
+
+                            if id == from_id {
+                                let msg = FromServer::NewPosition(Position {
+                                    x: trans[0],
+                                    y: trans[1],
+                                    z: trans[2],
+                                });
+
+                                if handle.send(msg).is_err() {
+                                    to_remove.push(id);
+                                }
+                                break;
+                            }
+                        }
+                    } else {
+                        tracing::warn!("Failed to find pop range for {id}!");
+                    }
+                }
+            }
+            ToServer::TellMessageSent(from_id, from_actor_id, message_info) => {
+                // TODO: Maybe this can be simplified with fewer loops?
+
+                let mut network = network.lock().unwrap();
+                let data = data.lock().unwrap();
+
+                // First pull up some info about the sender, as tell packets require it
+                let Some(sender_instance) = data.find_actor_instance(from_actor_id) else {
+                    panic!("ToServer::TellMessageSent: Unable to find the sender! What happened?");
+                };
+
+                let mut sender_name = "".to_string();
+                let mut sender_world_id = 0;
+                let mut sender_account_id = 0;
+
+                for (id, actor) in &sender_instance.actors {
+                    if id.0 == from_actor_id {
+                        let Some(spawn) = actor.get_player_spawn() else {
+                            panic!("Why are we trying to get the PlayerSpawn of an NPC?");
+                        };
+
+                        sender_name = spawn.common.name.clone();
+                        sender_world_id = spawn.home_world_id;
+                        sender_account_id = spawn.account_id;
+                        break;
+                    }
+                }
+
+                // If the sender wasn't found in the instance we already found them to be in, reality has apparently broken
+                assert!(sender_world_id != 0);
+
+                let mut recipient_actor_id = INVALID_OBJECT_ID;
+
+                // Second, look up the recipient by name, since that and their world id are all we're given by the sending client.
+                // Since we don't implement multiple worlds, the world id isn't useful for anything here.
+                'outer: for instance in data.instances.values() {
+                    for (id, actor) in &instance.actors {
+                        if actor.get_common_spawn().name == message_info.recipient_name {
+                            recipient_actor_id = *id;
+                            break 'outer;
+                        }
+                    }
+                }
+
+                // Next, if the recipient is online, fetch their handle from the network and send them the message!
+                if recipient_actor_id != INVALID_OBJECT_ID {
+                    for (id, (handle, _)) in &mut network.chat_clients {
+                        if handle.actor_id == recipient_actor_id.0 {
+                            let message_info = MessageInfo {
+                                sender_actor_id: from_actor_id,
+                                sender_account_id,
+                                sender_name: sender_name.clone(),
+                                sender_world_id,
+                                message: message_info.message.clone(),
+                                ..Default::default()
+                            };
+                            let msg = FromServer::TellMessageSent(message_info);
+                            if handle.send(msg.clone()).is_err() {
+                                to_remove.push(*id);
+                            }
+                            break;
+                        }
+                    }
+                } else {
+                    // Else, if the recipient is offline, inform the sender.
+                    let response = TellNotFoundError {
+                        sender_account_id,
+                        recipient_world_id: sender_world_id, // It doesn't matter if it's the sender's, since we don't implement multiple worlds.
+                        recipient_name: message_info.recipient_name.clone(),
+                        ..Default::default()
+                    };
+
+                    for (id, (handle, _)) in &mut network.chat_clients {
+                        if *id == from_id {
+                            let msg = FromServer::TellRecipientNotFound(response);
+                            if handle.send(msg.clone()).is_err() {
+                                to_remove.push(*id);
+                            }
+                            break;
+                        }
+                    }
+                }
             }
             ToServer::FatalError(err) => return Err(err),
         }

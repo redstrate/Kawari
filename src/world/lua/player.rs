@@ -463,6 +463,18 @@ impl LuaPlayer {
     fn toggle_aether_current_all(&mut self) {
         self.queued_tasks.push(Task::ToggleAetherCurrentAll {});
     }
+
+    fn move_to_pop_range(&mut self, id: u32) {
+        self.queued_tasks.push(Task::MoveToPopRange { id });
+    }
+
+    fn set_hp(&mut self, hp: u32) {
+        self.queued_tasks.push(Task::SetHP { hp });
+    }
+
+    fn set_mp(&mut self, mp: u16) {
+        self.queued_tasks.push(Task::SetMP { mp });
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -737,6 +749,18 @@ impl UserData for LuaPlayer {
             this.toggle_aether_current_all();
             Ok(())
         });
+        methods.add_method_mut("move_to_pop_range", |_, this, id: u32| {
+            this.move_to_pop_range(id);
+            Ok(())
+        });
+        methods.add_method_mut("set_hp", |_, this, hp: u32| {
+            this.set_hp(hp);
+            Ok(())
+        });
+        methods.add_method_mut("set_mp", |_, this, mp: u16| {
+            this.set_mp(mp);
+            Ok(())
+        });
     }
 
     fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
@@ -763,5 +787,6 @@ impl UserData for LuaPlayer {
         fields.add_field_method_get("saw_inn_wakeup", |_, this| {
             Ok(this.player_data.saw_inn_wakeup)
         });
+        fields.add_field_method_get("city_state", |_, this| Ok(this.player_data.city_state));
     }
 }

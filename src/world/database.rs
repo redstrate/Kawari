@@ -346,7 +346,8 @@ impl WorldDatabase {
                      classjob_levels,
                      classjob_exp,
                      unlocks,
-                     display_flags
+                     display_flags,
+                     city_state
                      FROM character_data WHERE content_id = ?1",
             )
             .unwrap();
@@ -370,6 +371,7 @@ impl WorldDatabase {
                     classjob_exp: json_unpack::<[u32; CLASSJOB_ARRAY_SIZE]>(row.get(9)?),
                     unlocks: json_unpack(row.get(10)?),
                     display_flags: EquipDisplayFlag::from_bits(row.get(11)?).unwrap_or_default(),
+                    city_state: row.get(12)?,
                     ..Default::default()
                 })
             })

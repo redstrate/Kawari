@@ -323,7 +323,6 @@ to_sort = {
 
 -- Events in /common that aren't already covered by other tables
 common_events = {
-    [393227] = "GenericLevemete.lua",
     [720915] = "GenericMender.lua",
     [721480] = "GenericGemstoneTrader.lua", -- Generic Shadowbringers in-city gemstone traders
     [721479] = "GenericGemstoneTrader.lua", -- Generic Shadowbringers per-zone gemstone traders
@@ -377,6 +376,16 @@ generic_currency_exchange = {
     -- 3539075, -- Dibourdier <Mahjong Vendor> doesn't respond when interacted with right now, probably needs special handling
 }
 
+generic_levemete_npcs = {
+    393217, -- Tierney in Central Shroud
+    393220, -- Gontrant in Carline Canopy, New Gridania
+    393221, -- T'mokkri in The Drowning Wench, Limsa
+    393227, -- Muriaule in Central Shroud
+    393223, -- Totonowa in Western Thanalan
+    393237, -- Ourawann in Lower La Noscea
+    393250, -- Eirikur in Crystarium
+}
+
 solution_nine_teleporters = {
     4194305, -- Teleporter from eastern Aetheryte Plaza to Recreation Zone
     4194306, -- Teleporter from Recreation Zone to eastern Aetheryte Plaza
@@ -388,11 +397,13 @@ solution_nine_teleporters = {
 
 -- Not custom in the sense of non-SQEX content, just going based off the directory name
 custom0_events = {
+    [720901] = "RegFstAdvGuild_00005.lua",
     [720916] = "cmndefinnbed_00020.lua",
 }
 
 custom1_events = {
     [721044] = "cmndefbeautysalon_00148.lua",
+    [721052] = "RegFstCarlineCanopy_00156.lua",
 }
 
 -- Events in quests/*
@@ -432,6 +443,10 @@ end
 
 for _, event_id in pairs(generic_currency_exchange) do
     registerEvent(event_id, "events/common/GenericHuntCurrencyExchange.lua") --TODO: Should probably rename this since it now covers other generic currency vendors like Gold Saucer ones
+end
+
+for _, event_id in pairs(generic_levemete_npcs) do
+    registerEvent(event_id, "events/common/GenericLevemete.lua")
 end
 
 for event_id, script_file in pairs(to_sort) do

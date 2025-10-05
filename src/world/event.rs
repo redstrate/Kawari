@@ -2,7 +2,7 @@ use mlua::{Function, Lua};
 
 use crate::{common::ObjectTypeId, config::get_config};
 
-use super::{Zone, lua::LuaPlayer};
+use super::lua::{LuaPlayer, LuaZone};
 
 pub struct Event {
     pub file_name: String,
@@ -40,7 +40,7 @@ impl Event {
         Self { file_name, lua, id }
     }
 
-    pub fn enter_territory(&mut self, player: &mut LuaPlayer, zone: &Zone) {
+    pub fn enter_territory(&mut self, player: &mut LuaPlayer, zone: &LuaZone) {
         let mut run_script = || {
             self.lua.scope(|scope| {
                 let player = scope.create_userdata_ref_mut(player)?;

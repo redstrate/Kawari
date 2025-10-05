@@ -10,6 +10,7 @@ use tokio::sync::mpsc::Sender;
 
 use crate::{
     common::{ChatChannel, JumpState, MoveAnimationState, MoveAnimationType, ObjectId, Position},
+    ipc::chat::{SendTellMessage, TellNotFoundError},
     ipc::zone::{
         ActionRequest, ActorControl, ActorControlSelf, ActorControlTarget, ClientTrigger,
         Conditions, Config, NpcSpawn, PlayerSpawn, ServerZoneIpcSegment,
@@ -19,8 +20,14 @@ use crate::{
 
 use super::{Actor, lua::LuaZone};
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
+#[derive(Copy, Clone, Eq, PartialEq, Hash)]
 pub struct ClientId(usize);
+
+impl std::fmt::Debug for ClientId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "ClientId ({})", self.0)
+    }
+}
 
 /// A type encapsulating the different spawn types.
 /// Note that event object (eobj) spawning is handled elsewhere in connection.rs.
@@ -51,7 +58,7 @@ pub struct MessageInfo {
     pub message: String,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum FromServer {
     /// A chat message.
     Message(MessageInfo),
@@ -94,6 +101,12 @@ pub enum FromServer {
     Conditions(Conditions),
     /// To inform the connection of the zone they're loading into.
     ChangeZone(u16, u16, Position, f32, LuaZone, bool),
+    /// The returned position from ToServer::MoveToPopRange.
+    NewPosition(Position),
+    /// We need to inform the recipent about the direct message they're receiving.
+    TellMessageSent(MessageInfo),
+    /// We need to inform the sender that the recipient was not found or is offline.
+    TellRecipientNotFound(TellNotFoundError),
 }
 
 #[derive(Debug, Clone)]
@@ -126,9 +139,12 @@ impl ClientHandle {
     }
 }
 
+#[derive(Debug)]
 pub enum ToServer {
-    /// A new connection has started.
+    /// A new zone connection has started.
     NewClient(ClientHandle),
+    /// A new chat connection has started.
+    NewChatClient(ClientHandle),
     /// The connection sent a message.
     Message(ClientId, MessageInfo),
     /// The connection's player moved.
@@ -183,6 +199,10 @@ pub enum ToServer {
     ActorSummonsMinion(ClientId, u32, u32),
     /// We need to despawn a player's minion, and tell other clients
     ActorDespawnsMinion(ClientId, u32),
+    /// Move the player's actor to the specified pop range.
+    MoveToPopRange(ClientId, u32, u32),
+    /// The connection sent a direct message to another client.
+    TellMessageSent(ClientId, u32, SendTellMessage),
 }
 
 #[derive(Clone, Debug)]

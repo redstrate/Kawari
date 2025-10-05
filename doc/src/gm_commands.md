@@ -2,6 +2,8 @@
 
 These GM commands are implemented in the FFXIV protocol, but only some of them are implemented.
 
+**Note:** We obviously lack the original documentation for these commands, so the names and functionality are left up to our interpretation.
+
 * `//gm pos <x> <y> <z>`: Teleport to the specified location
 * `//gm teri <id>`: Changes to the specified territory
 * `//gm weather <id>`: Changes the weather
@@ -15,3 +17,9 @@ These GM commands are implemented in the FFXIV protocol, but only some of them a
 * `//gm teri_info`: Displays information about the current zone. Currently displays zone id, weather, internal zone name, parent region name, and place/display name.
 * `//gm gil <amount>`: Adds the specified amount of gil to the player
 * `//gm collect <amount>`: Subtracts `amount` gil from the targeted player (yourself only for now).
+* `//gm hp <amount>`: Sets your current HP to the amount specified.
+* `//gm mp <amount>`: Sets your current MP to the amount specified.
+* `//gm getpos`: Returns your current position.
+* `//gm dc_region`: Useless, but returns the DC for the World you set in the config.
+* `//gm chr_info <pc/bnpc/enpc/enpc_lively>`: Returns the internal entity IDs for your player character.
+* `//gm blacklist status`: Unknown purpose, looks like it just prints out your blacklist.

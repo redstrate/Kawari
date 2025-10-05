@@ -1,11 +1,16 @@
 use super::common::ClientId;
 use crate::common::timestamp_secs;
 use crate::config::WorldConfig;
-use crate::ipc::chat::{ClientChatIpcSegment, ServerChatIpcData, ServerChatIpcSegment};
+use crate::ipc::chat::{
+    ClientChatIpcSegment, ServerChatIpcData, ServerChatIpcSegment, TellMessage, TellNotFoundError,
+};
+use crate::opcodes::ServerChatIpcType;
+use crate::packet::IpcSegmentHeader;
 use crate::packet::{
     CompressionType, ConnectionState, ConnectionType, PacketSegment, SegmentData, SegmentType,
-    parse_packet, send_packet,
+    ServerIpcSegmentHeader, parse_packet, send_keep_alive, send_packet,
 };
+use crate::world::{MessageInfo, ServerHandle};
 use std::net::SocketAddr;
 use std::time::Instant;
 use tokio::net::TcpStream;
@@ -19,6 +24,7 @@ pub struct ChatConnection {
     pub actor_id: u32,
     pub config: WorldConfig,
     pub last_keep_alive: Instant,
+    pub handle: ServerHandle,
 }
 
 impl ChatConnection {
@@ -30,6 +36,28 @@ impl ChatConnection {
     pub async fn send_ipc_self(&mut self, ipc: ServerChatIpcSegment) {
         let segment = PacketSegment {
             source_actor: self.actor_id,
+            target_actor: self.actor_id,
+            segment_type: SegmentType::Ipc,
+            data: SegmentData::Ipc(ipc),
+        };
+
+        send_packet(
+            &mut self.socket,
+            &mut self.state,
+            ConnectionType::Chat,
+            if self.config.enable_packet_compression {
+                CompressionType::Oodle
+            } else {
+                CompressionType::Uncompressed
+            },
+            &[segment],
+        )
+        .await;
+    }
+
+    pub async fn send_ipc(&mut self, ipc: ServerChatIpcSegment, from_actor_id: u32) {
+        let segment = PacketSegment {
+            source_actor: from_actor_id,
             target_actor: self.actor_id,
             segment_type: SegmentType::Ipc,
             data: SegmentData::Ipc(ipc),
@@ -111,5 +139,42 @@ impl ChatConnection {
             )
             .await;
         }
+    }
+
+    pub async fn tell_message_received(&mut self, message_info: MessageInfo) {
+        let ipc = ServerChatIpcSegment::new(ServerChatIpcData::TellMessage(TellMessage {
+            sender_account_id: message_info.sender_account_id,
+            sender_world_id: message_info.sender_world_id,
+            sender_name: message_info.sender_name,
+            message: message_info.message,
+            ..Default::default()
+        }));
+
+        self.send_ipc(ipc, message_info.sender_actor_id).await;
+    }
+
+    pub async fn tell_recipient_not_found(&mut self, error_info: TellNotFoundError) {
+        let ipc = ServerChatIpcSegment::new(ServerChatIpcData::TellNotFoundError(error_info));
+
+        self.send_ipc_self(ipc).await;
+    }
+
+    pub async fn send_keep_alive(&mut self, id: u32, timestamp: u32) {
+        send_keep_alive::<ServerChatIpcSegment>(
+            &mut self.socket,
+            &mut self.state,
+            ConnectionType::Chat,
+            id,
+            timestamp,
+        )
+        .await;
+    }
+
+    pub async fn send_arbitrary_packet(&mut self, op_code: u16, data: Vec<u8>) {
+        let ipc = ServerChatIpcSegment {
+            header: ServerIpcSegmentHeader::from_opcode(ServerChatIpcType::Unknown(op_code)),
+            data: ServerChatIpcData::Unknown { unk: data },
+        };
+        self.send_ipc_self(ipc).await;
     }
 }

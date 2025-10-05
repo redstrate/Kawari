@@ -79,6 +79,15 @@ pub enum Task {
     ToggleMount {
         id: u32,
     },
+    MoveToPopRange {
+        id: u32,
+    },
+    SetHP {
+        hp: u32,
+    },
+    SetMP {
+        mp: u16,
+    },
     ToggleGlassesStyle {
         id: u32,
     },
