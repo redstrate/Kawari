@@ -1096,6 +1096,16 @@ impl ZoneConnection {
                         self.toggle_glasses_style(i).await;
                     }
                 }
+                Task::ToggleOrnament { id } => {
+                    self.toggle_ornament(*id).await;
+                }
+                Task::ToggleOrnamentAll {} => {
+                    let max_ornament_id = ORNAMENT_BITMASK_SIZE as u32 * 8;
+
+                    for i in 0..max_ornament_id {
+                        self.toggle_ornament(i).await;
+                    }
+                }
             }
         }
         player.queued_tasks.clear();
@@ -1843,6 +1853,26 @@ impl ZoneConnection {
         self.actor_control_self(ActorControlSelf {
             category: ActorControlCategory::ToggleGlassesStyleUnlock {
                 id: glasses_style_id,
+                unlocked: unlock,
+            },
+        })
+        .await;
+    }
+
+    pub async fn toggle_ornament(&mut self, ornament_id: u32) {
+        let (value, index) = value_to_flag_byte_index_value(ornament_id);
+
+        let unlock = (self.player_data.unlocks.ornaments[index as usize] & value) == 0;
+
+        if unlock {
+            self.player_data.unlocks.ornaments[index as usize] |= value;
+        } else {
+            self.player_data.unlocks.ornaments[index as usize] ^= value;
+        }
+        
+        self.actor_control_self(ActorControlSelf {
+            category: ActorControlCategory::ToggleOrnamentUnlock {
+                id: ornament_id,
                 unlocked: unlock,
             },
         })

@@ -83,4 +83,8 @@ pub enum Task {
         id: u32,
     },
     ToggleGlassesStyleAll {},
+    ToggleOrnament {
+        id: u32,
+    },
+    ToggleOrnamentAll {},
 }
