@@ -208,7 +208,7 @@ pub enum ActorControlCategory {
 
     #[brw(magic = 510u32)]
     ToggleChocoboTaxiStandUnlock{
-        id: u32, // id + 1179648 = Index to ChocoboTaxiStand
+        id: u32, // id + 1179648 = Index to ChocoboTaxiStand sheet
         #[br(map = read_bool_from::<u32>)]
         #[bw(map = write_bool_as::<u32>)]
         unlocked: bool,
