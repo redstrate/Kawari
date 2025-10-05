@@ -26,9 +26,7 @@ use kawari::ipc::zone::{
 };
 
 use kawari::packet::oodle::OodleNetwork;
-use kawari::packet::{
-    ConnectionState, ConnectionType, SegmentData, parse_packet_header,
-};
+use kawari::packet::{ConnectionState, ConnectionType, SegmentData, parse_packet_header};
 use kawari::world::lua::{ExtraLuaState, LuaPlayer, load_init_script};
 use kawari::world::{
     ChatConnection, ChatHandler, CustomIpcConnection, ObsfucationData, TeleportReason,
@@ -381,7 +379,7 @@ async fn client_chat_loop(
                                     SegmentData::Ipc(data) => {
                                         match &data.data {
                                             ClientChatIpcData::SendTellMessage(data) => {
-                                                connection.handle.send(ToServer::TellMessageSent(connection.actor_id, data.clone())).await;
+                                                connection.handle.send(ToServer::TellMessageSent(connection.id, connection.actor_id, data.clone())).await;
                                             }
                                             ClientChatIpcData::SendPartyMessage(data) => {
                                                  tracing::info!("SendPartyMessage: {:#?} from {}", data, connection.actor_id);
@@ -410,6 +408,7 @@ async fn client_chat_loop(
             msg = internal_recv.recv() => match msg {
                 Some(msg) => match msg {
                     FromServer::TellMessageSent(message_info) => connection.tell_message_received(message_info).await,
+                    FromServer::TellRecipientNotFound(error_info) => connection.tell_recipient_not_found(error_info).await,
                     _ => tracing::error!("Chat connection {:#?} received a FromServer message we don't care about: {:#?}, ensure you're using the right client network or that you've implemented a handler for it if we actually care about it!", client_handle.id, msg),
                 },
                 None => break,

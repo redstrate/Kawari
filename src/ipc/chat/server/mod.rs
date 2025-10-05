@@ -7,7 +7,7 @@ use crate::{
 };
 
 mod tell_message;
-pub use tell_message::TellMessage;
+pub use tell_message::{TellMessage, TellNotFoundError};
 
 mod party_message;
 pub use party_message::PartyMessage;
@@ -26,6 +26,7 @@ pub enum ServerChatIpcData {
     },
     TellMessage(TellMessage),
     PartyMessage(PartyMessage),
+    TellNotFoundError(TellNotFoundError),
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -60,6 +61,7 @@ mod tests {
             },
             ServerChatIpcData::TellMessage(TellMessage::default()),
             ServerChatIpcData::PartyMessage(PartyMessage::default()),
+            ServerChatIpcData::TellNotFoundError(TellNotFoundError::default()),
         ];
 
         for data in &ipc_types {

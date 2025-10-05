@@ -10,7 +10,7 @@ use tokio::sync::mpsc::Sender;
 
 use crate::{
     common::{ChatChannel, JumpState, MoveAnimationState, MoveAnimationType, ObjectId, Position},
-    ipc::chat::SendTellMessage,
+    ipc::chat::{SendTellMessage, TellNotFoundError},
     ipc::zone::{
         ActionRequest, ActorControl, ActorControlSelf, ActorControlTarget, ClientTrigger,
         Conditions, Config, NpcSpawn, PlayerSpawn, ServerZoneIpcSegment,
@@ -99,6 +99,8 @@ pub enum FromServer {
     NewPosition(Position),
     /// We need to inform the recipent about the direct message they're receiving.
     TellMessageSent(MessageInfo),
+    /// We need to inform the sender that the recipient was not found or is offline.
+    TellRecipientNotFound(TellNotFoundError),
 }
 
 #[derive(Debug, Clone)]
@@ -194,7 +196,7 @@ pub enum ToServer {
     /// Move the player's actor to the specified pop range.
     MoveToPopRange(ClientId, u32, u32),
     /// The connection sent a direct message to another client.
-    TellMessageSent(u32, SendTellMessage),
+    TellMessageSent(ClientId, u32, SendTellMessage),
 }
 
 #[derive(Clone, Debug)]

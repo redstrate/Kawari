@@ -16,6 +16,7 @@ use crate::{
         MoveAnimationType, ObjectId, ObjectTypeId, ObjectTypeKind, Position,
     },
     config::get_config,
+    ipc::chat::TellNotFoundError,
     ipc::zone::{
         ActorControl, ActorControlCategory, ActorControlSelf, ActorControlTarget, BattleNpcSubKind,
         ClientTriggerCommand, CommonSpawn, Conditions, NpcSpawn, ObjectKind, PlayerSpawn,
@@ -1618,7 +1619,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     }
                 }
             }
-            ToServer::TellMessageSent(from_actor_id, message_info) => {
+            ToServer::TellMessageSent(from_id, from_actor_id, message_info) => {
                 // TODO: Handle the case where the recipient is offline or otherwise unavailable, this needs a capture
                 // TODO: Maybe this can be simplified with fewer loops?
 
@@ -1683,10 +1684,23 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         }
                     }
                 } else {
-                    tracing::info!(
-                        "Tell recipient {} is offline! Sending error messages back to the sender is not yet implemented.",
-                        message_info.recipient_name
-                    );
+                    // Else, if the recipient is offline, inform the sender.
+                    let response = TellNotFoundError {
+                        sender_account_id,
+                        recipient_world_id: sender_world_id, // It doesn't matter if it's the sender's, since we don't implement multiple worlds.
+                        recipient_name: message_info.recipient_name.clone(),
+                        ..Default::default()
+                    };
+
+                    for (id, (handle, _)) in &mut network.chat_clients {
+                        if *id == from_id {
+                            let msg = FromServer::TellRecipientNotFound(response);
+                            if handle.send(msg.clone()).is_err() {
+                                to_remove.push(*id);
+                            }
+                            break;
+                        }
+                    }
                 }
             }
             ToServer::FatalError(err) => return Err(err),

@@ -808,15 +808,21 @@
         },
         {
             "name": "TellMessage",
-            "comment": "Sent by the server in response to a client sending a private message to another client.",
+            "comment": "Sent by the server in response to a client sending a private message to another client that is online.",
             "opcode": 100,
             "size": 1080
         },
         {
             "name": "PartyMessage",
-            "comment": "Sent by the server in response to a client sending a private message to another client.",
+            "comment": "Sent by the server in response to a client sending a private message to their party.",
             "opcode": 101,
             "size": 1088
+        },
+        {
+            "name": "TellNotFoundError",
+            "comment": "Sent by the server in response to a client sending a private message to another client that is offline.",
+            "opcode": 112,
+            "size": 56
         }
     ],
     "ClientChatIpcType": [

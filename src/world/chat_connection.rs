@@ -2,7 +2,7 @@ use super::common::ClientId;
 use crate::common::timestamp_secs;
 use crate::config::WorldConfig;
 use crate::ipc::chat::{
-    ClientChatIpcSegment, ServerChatIpcData, ServerChatIpcSegment, TellMessage,
+    ClientChatIpcSegment, ServerChatIpcData, ServerChatIpcSegment, TellMessage, TellNotFoundError,
 };
 use crate::packet::{
     CompressionType, ConnectionState, ConnectionType, PacketSegment, SegmentData, SegmentType,
@@ -149,6 +149,12 @@ impl ChatConnection {
         }));
 
         self.send_ipc(ipc, message_info.sender_actor_id).await;
+    }
+
+    pub async fn tell_recipient_not_found(&mut self, error_info: TellNotFoundError) {
+        let ipc = ServerChatIpcSegment::new(ServerChatIpcData::TellNotFoundError(error_info));
+
+        self.send_ipc_self(ipc).await;
     }
 
     pub async fn send_keep_alive(&mut self, id: u32, timestamp: u32) {
