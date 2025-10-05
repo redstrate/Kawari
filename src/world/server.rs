@@ -1620,7 +1620,6 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 }
             }
             ToServer::TellMessageSent(from_id, from_actor_id, message_info) => {
-                // TODO: Handle the case where the recipient is offline or otherwise unavailable, this needs a capture
                 // TODO: Maybe this can be simplified with fewer loops?
 
                 let mut network = network.lock().unwrap();
