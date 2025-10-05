@@ -1136,6 +1136,16 @@ impl ZoneConnection {
                         self.toggle_caught_fish(i).await;
                     }
                 }
+                Task::ToggleCaughtSpearfish { id } => {
+                    self.toggle_caught_spearfish(*id).await;
+                }
+                Task::ToggleCaughtSpearfishAll {} => {
+                    let max_caught_spearfish_id = CAUGHT_SPEARFISH_BITMASK_SIZE as u32 * 8;
+
+                    for i in 0..max_caught_spearfish_id {
+                        self.toggle_caught_spearfish(i).await;
+                    }
+                }
             }
         }
         player.queued_tasks.clear();
@@ -1956,6 +1966,26 @@ impl ZoneConnection {
             category: ActorControlCategory::SetCaughtFishBitmask {
                 index: index as u32,
                 value: self.player_data.unlocks.caught_fish[index as usize] as u32,
+            },
+        })
+        .await;
+    }
+
+    pub async fn toggle_caught_spearfish(&mut self, caught_spearfish_id: u32) {
+        let (value, index) = value_to_flag_byte_index_value(caught_spearfish_id);
+
+        let unlock = (self.player_data.unlocks.caught_spearfish[index as usize] & value) == 0;
+
+        if unlock {
+            self.player_data.unlocks.caught_spearfish[index as usize] |= value;
+        } else {
+            self.player_data.unlocks.caught_spearfish[index as usize] ^= value;
+        }
+        
+        self.actor_control_self(ActorControlSelf {
+            category: ActorControlCategory::SetCaughtSpearfishBitmask {
+                index: index as u32,
+                value: self.player_data.unlocks.caught_spearfish[index as usize] as u32,
             },
         })
         .await;

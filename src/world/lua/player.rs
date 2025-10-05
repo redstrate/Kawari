@@ -415,6 +415,14 @@ impl LuaPlayer {
     fn toggle_caught_fish_all(&mut self) {
         self.queued_tasks.push(Task::ToggleCaughtFishAll {});
     }
+
+    fn toggle_caught_spearfish(&mut self, id: u32) {
+        self.queued_tasks.push(Task::ToggleCaughtSpearfish { id });
+    }
+
+    fn toggle_caught_spearfish_all(&mut self) {
+        self.queued_tasks.push(Task::ToggleCaughtSpearfishAll {});
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -639,6 +647,14 @@ impl UserData for LuaPlayer {
         });
         methods.add_method_mut("toggle_caught_fish_all", |_, this, _: ()| {
             this.toggle_caught_fish_all();
+            Ok(())
+        });
+        methods.add_method_mut("toggle_caught_spearfish", |_, this, id: u32| {
+            this.toggle_caught_spearfish(id);
+            Ok(())
+        });
+        methods.add_method_mut("toggle_caught_spearfish_all", |_, this, _: ()| {
+            this.toggle_caught_spearfish_all();
             Ok(())
         });
     }
