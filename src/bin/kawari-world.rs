@@ -11,7 +11,7 @@ use kawari::inventory::{
     BuyBackItem, ContainerType, CurrencyKind, Item, ItemOperationKind, get_container_type,
 };
 
-use kawari::ipc::chat::{ClientChatIpcData, ServerChatIpcSegment};
+use kawari::ipc::chat::ClientChatIpcData;
 
 use kawari::ipc::zone::{
     ActorControl, ActorControlCategory, ActorControlSelf, ClientLanguage, Condition, Conditions,
@@ -27,7 +27,7 @@ use kawari::ipc::zone::{
 
 use kawari::packet::oodle::OodleNetwork;
 use kawari::packet::{
-    ConnectionState, ConnectionType, SegmentData, parse_packet_header, send_keep_alive,
+    ConnectionState, ConnectionType, SegmentData, parse_packet_header,
 };
 use kawari::world::lua::{ExtraLuaState, LuaPlayer, load_init_script};
 use kawari::world::{
@@ -212,6 +212,7 @@ async fn initial_setup(
                                     state,
                                     last_keep_alive: Instant::now(),
                                     socket,
+                                    handle,
                                 };
 
                                 // Handle setup before passing off control to the chat connection.
@@ -302,6 +303,7 @@ fn spawn_chat_connection(connection: ChatConnection) {
 
     let id = &connection.id.clone();
     let ip = &connection.ip.clone();
+    let actor_id = &connection.actor_id.clone();
 
     let data = ClientChatData { recv, connection };
 
@@ -314,7 +316,7 @@ fn spawn_chat_connection(connection: ChatConnection) {
         id: *id,
         ip: *ip,
         channel: send,
-        actor_id: 0,
+        actor_id: *actor_id, // We have the actor id by this point, since Setup is done earlier
     };
     let _ = my_send.send(handle);
 }
@@ -346,6 +348,12 @@ async fn client_chat_loop(
     mut internal_recv: UnboundedReceiver<FromServer>,
     client_handle: ClientHandle,
 ) {
+    // tell the server we exist, now that we confirmed we are a legitimate connection
+    connection
+        .handle
+        .send(ToServer::NewChatClient(client_handle.clone()))
+        .await;
+
     let mut buf = vec![0; RECEIVE_BUFFER_SIZE];
     loop {
         tokio::select! {
@@ -372,10 +380,8 @@ async fn client_chat_loop(
                                     }
                                     SegmentData::Ipc(data) => {
                                         match &data.data {
-                                            // TODO: Add support for tells, party messages, and so on!
-                                            // These are added as a skeleton for now, to bring us up to feature parity with upstream.
                                             ClientChatIpcData::SendTellMessage(data) => {
-                                                tracing::info!("SendTellMessage: {:#?} from {}", data, connection.actor_id);
+                                                connection.handle.send(ToServer::TellMessageSent(connection.actor_id, data.clone())).await;
                                             }
                                             ClientChatIpcData::SendPartyMessage(data) => {
                                                  tracing::info!("SendPartyMessage: {:#?} from {}", data, connection.actor_id);
@@ -385,16 +391,7 @@ async fn client_chat_loop(
                                             }
                                         }
                                     }
-                                    SegmentData::KeepAliveRequest { id, timestamp } => {
-                                        send_keep_alive::<ServerChatIpcSegment> (
-                                            &mut connection.socket,
-                                            &mut connection.state,
-                                            ConnectionType::Chat,
-                                            *id,
-                                            *timestamp,
-                                        )
-                                        .await
-                                    }
+                                    SegmentData::KeepAliveRequest { id, timestamp } => connection.send_keep_alive(*id, *timestamp).await,
                                     SegmentData::KeepAliveResponse { .. } => {
                                         // these should be safe to ignore
                                     }
@@ -409,13 +406,12 @@ async fn client_chat_loop(
                     },
                 }
             }
-            // TODO: We don't yet have any chat-specific messages!
+
             msg = internal_recv.recv() => match msg {
-                Some(_msg) => todo!(), // This is only here to suppress clippy warning: "this match could be replaced by its body itself"
-                // TODO: uncomment this and fill it in once we have chat-specific messages!
-                /*Some(msg) => match msg {
-                    _ => todo!()
-                },*/
+                Some(msg) => match msg {
+                    FromServer::TellMessageSent(message_info) => connection.tell_message_received(message_info).await,
+                    _ => tracing::error!("Chat connection {:#?} received a FromServer message we don't care about: {:#?}, ensure you're using the right client network or that you've implemented a handler for it if we actually care about it!", client_handle.id, msg),
+                },
                 None => break,
             }
         }
@@ -434,6 +430,7 @@ fn spawn_client(connection: ZoneConnection) {
 
     let id = &connection.id.clone();
     let ip = &connection.ip.clone();
+    let actor_id = &connection.player_data.actor_id.clone();
 
     let data = ClientZoneData { recv, connection };
 
@@ -446,7 +443,7 @@ fn spawn_client(connection: ZoneConnection) {
         id: *id,
         ip: *ip,
         channel: send,
-        actor_id: 0,
+        actor_id: *actor_id, // We have the actor id by this point, since Setup is done earlier
     };
     let _ = my_send.send(handle);
 }
@@ -1507,16 +1504,7 @@ async fn client_loop(
                                             }
                                         }
                                     }
-                                    SegmentData::KeepAliveRequest { id, timestamp } => {
-                                        send_keep_alive::<ServerZoneIpcSegment>(
-                                            &mut connection.socket,
-                                            &mut connection.state,
-                                            ConnectionType::Zone,
-                                            *id,
-                                            *timestamp,
-                                        )
-                                        .await
-                                    }
+                                    SegmentData::KeepAliveRequest { id, timestamp } => connection.send_keep_alive(*id, *timestamp).await,
                                     SegmentData::KeepAliveResponse { .. } => {
                                         // these should be safe to ignore
                                     }
@@ -1579,6 +1567,8 @@ async fn client_loop(
                         connection.handle_zone_change(zone_id, weather_id, position, rotation, initial_login).await;
                     },
                     FromServer::NewPosition(position) => connection.set_player_position(position).await,
+
+                    _ => { tracing::error!("Zone connection {:#?} received a FromServer message we don't care about: {:#?}, ensure you're using the right client network or that you've implemented a handler for it if we actually care about it!", client_handle.id, msg); }
                 },
                 None => break,
             }

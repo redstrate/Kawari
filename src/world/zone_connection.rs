@@ -40,7 +40,7 @@ use crate::{
     packet::{
         CompressionType, ConnectionState, ConnectionType, IpcSegmentHeader,
         OBFUSCATION_ENABLED_MODE, PacketSegment, ScramblerKeyGenerator, SegmentData, SegmentType,
-        ServerIpcSegmentHeader, parse_packet, send_packet,
+        ServerIpcSegmentHeader, parse_packet, send_keep_alive, send_packet,
     },
 };
 
@@ -1874,5 +1874,16 @@ impl ZoneConnection {
                 "Received unknown GM command {command} with args: arg0: {arg0} arg1: {arg1} arg2: {arg2} arg3: {arg3}!"
             );
         }
+    }
+
+    pub async fn send_keep_alive(&mut self, id: u32, timestamp: u32) {
+        send_keep_alive::<ServerZoneIpcSegment>(
+            &mut self.socket,
+            &mut self.state,
+            ConnectionType::Zone,
+            id,
+            timestamp,
+        )
+        .await;
     }
 }
