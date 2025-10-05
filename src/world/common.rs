@@ -10,6 +10,7 @@ use tokio::sync::mpsc::Sender;
 
 use crate::{
     common::{ChatChannel, JumpState, MoveAnimationState, MoveAnimationType, ObjectId, Position},
+    ipc::chat::{SendTellMessage, TellNotFoundError},
     ipc::zone::{
         ActionRequest, ActorControl, ActorControlSelf, ActorControlTarget, ClientTrigger,
         Conditions, Config, NpcSpawn, PlayerSpawn, ServerZoneIpcSegment,
@@ -51,7 +52,7 @@ pub struct MessageInfo {
     pub message: String,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum FromServer {
     /// A chat message.
     Message(MessageInfo),
@@ -96,6 +97,10 @@ pub enum FromServer {
     ChangeZone(u16, u16, Position, f32, LuaZone, bool),
     /// The returned position from ToServer::MoveToPopRange.
     NewPosition(Position),
+    /// We need to inform the recipent about the direct message they're receiving.
+    TellMessageSent(MessageInfo),
+    /// We need to inform the sender that the recipient was not found or is offline.
+    TellRecipientNotFound(TellNotFoundError),
 }
 
 #[derive(Debug, Clone)]
@@ -128,9 +133,12 @@ impl ClientHandle {
     }
 }
 
+#[derive(Debug)]
 pub enum ToServer {
-    /// A new connection has started.
+    /// A new zone connection has started.
     NewClient(ClientHandle),
+    /// A new chat connection has started.
+    NewChatClient(ClientHandle),
     /// The connection sent a message.
     Message(ClientId, MessageInfo),
     /// The connection's player moved.
@@ -187,6 +195,8 @@ pub enum ToServer {
     ActorDespawnsMinion(ClientId, u32),
     /// Move the player's actor to the specified pop range.
     MoveToPopRange(ClientId, u32, u32),
+    /// The connection sent a direct message to another client.
+    TellMessageSent(ClientId, u32, SendTellMessage),
 }
 
 #[derive(Clone, Debug)]

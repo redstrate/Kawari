@@ -8,7 +8,7 @@ use crate::{
 
 use super::{QueueSegments, create_ipc_target};
 
-#[derive(Default, Clone)]
+#[derive(Default, Debug, Clone)]
 pub struct LuaZone {
     pub zone_id: u16,
     pub weather_id: u16,
