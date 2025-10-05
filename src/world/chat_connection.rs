@@ -4,9 +4,11 @@ use crate::config::WorldConfig;
 use crate::ipc::chat::{
     ClientChatIpcSegment, ServerChatIpcData, ServerChatIpcSegment, TellMessage, TellNotFoundError,
 };
+use crate::opcodes::ServerChatIpcType;
+use crate::packet::IpcSegmentHeader;
 use crate::packet::{
     CompressionType, ConnectionState, ConnectionType, PacketSegment, SegmentData, SegmentType,
-    parse_packet, send_keep_alive, send_packet,
+    ServerIpcSegmentHeader, parse_packet, send_keep_alive, send_packet,
 };
 use crate::world::{MessageInfo, ServerHandle};
 use std::net::SocketAddr;
@@ -166,5 +168,13 @@ impl ChatConnection {
             timestamp,
         )
         .await;
+    }
+
+    pub async fn send_arbitrary_packet(&mut self, op_code: u16, data: Vec<u8>) {
+        let ipc = ServerChatIpcSegment {
+            header: ServerIpcSegmentHeader::from_opcode(ServerChatIpcType::Unknown(op_code)),
+            data: ServerChatIpcData::Unknown { unk: data },
+        };
+        self.send_ipc_self(ipc).await;
     }
 }
