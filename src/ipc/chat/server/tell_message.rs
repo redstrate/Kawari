@@ -1,6 +1,6 @@
 use binrw::binrw;
 
-use crate::common::{read_string, write_string};
+use crate::common::{CHAR_NAME_MAX_LENGTH, read_string, write_string};
 
 #[binrw]
 #[derive(Clone, Debug, Default)]
