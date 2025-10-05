@@ -1062,20 +1062,30 @@ impl ZoneConnection {
                     self.player_data.saw_inn_wakeup = *watched;
                 }
                 Task::ToggleMount { id } => {
-                    /*let order;
+                    let order;
                     {
                         let mut game_data = self.gamedata.lock().unwrap();
                         order = game_data.find_mount_order(*id).unwrap_or(0);
                     }
 
+                    let (value, index) = value_to_flag_byte_index_value(*id);
+
+                    let unlock = (self.player_data.unlocks.mounts[index as usize] & value) == 0;
+
+                    if unlock {
+                        self.player_data.unlocks.mounts[index as usize] |= value;
+                    } else {
+                        self.player_data.unlocks.mounts[index as usize] ^= value;
+                    }
+                    
                     self.actor_control_self(ActorControlSelf {
                         category: ActorControlCategory::ToggleMountUnlock {
                             order: order as u32,
                             id: *id as u32,
-                            unlocked: true,
+                            unlocked: unlock,
                         },
                     })
-                    .await;*/
+                    .await;
                 }
             }
         }

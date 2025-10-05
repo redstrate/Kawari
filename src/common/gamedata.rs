@@ -568,10 +568,10 @@ impl GameData {
     }
 
     /// Gets the order of the mount.
-    pub fn find_mount_order(&mut self, mount_id: u16) -> Option<i16> {
+    pub fn find_mount_order(&mut self, mount_id: u32) -> Option<i16> {
         let instance_content_sheet =
             MountSheet::read_from(&mut self.resource, Language::English).unwrap();
-        let mount_row = instance_content_sheet.get_row(mount_id as u32)?;
+        let mount_row = instance_content_sheet.get_row(mount_id)?;
 
         mount_row.Order().into_i16().copied()
     }
