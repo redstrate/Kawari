@@ -45,6 +45,7 @@ registerCommand("inspect",                GM_DIR.."InspectPlayer.lua") -- TODO: 
 registerCommand("nudge",                  DBG_DIR.."Nudge.lua")
 registerCommand("ost",                    DBG_DIR.."OnScreenTest.lua")
 registerCommand("permtest",               DBG_DIR.."PermissionTest.lua")
+registerCommand("toggleadventure",        DBG_DIR.."ToggleAdventure.lua")
 registerCommand("togglecaughtfish",       DBG_DIR.."ToggleCaughtFish.lua")
 registerCommand("togglecaughtspearfish",  DBG_DIR.."ToggleCaughtSpearfish.lua")
 registerCommand("togglechocobotaxistand", DBG_DIR.."ToggleChocoboTaxiStand.lua")

@@ -1156,6 +1156,20 @@ impl ZoneConnection {
                         self.toggle_triple_triad_card(i).await;
                     }
                 }
+                Task::ToggleAdventure { id } => {
+                    self.toggle_adventure(*id, false).await;
+                }
+                Task::ToggleAdventureAll {} => {
+                    let max_adventure_id = ADVENTURE_BITMASK_SIZE as u32 * 8;
+
+                    for i in 0..max_adventure_id {
+                        if i == 0 {
+                            self.toggle_adventure(i, true).await;
+                        } else {
+                            self.toggle_adventure(i, false).await;
+                        }
+                    }
+                }
             }
         }
         player.queued_tasks.clear();
@@ -2015,6 +2029,28 @@ impl ZoneConnection {
         self.actor_control_self(ActorControlSelf {
             category: ActorControlCategory::ToggleTripleTriadCardUnlock {
                 id: triple_triad_card_id,
+                unlocked: unlock,
+            },
+        })
+        .await;
+    }
+
+    // TODO: make logic that determines if all_vistas_recorded should be true or false automatically
+    pub async fn toggle_adventure(&mut self, adventure_id: u32, all_vistas_recorded: bool) {
+        let (value, index) = value_to_flag_byte_index_value(adventure_id);
+
+        let unlock = (self.player_data.unlocks.adventures[index as usize] & value) == 0;
+
+        if unlock {
+            self.player_data.unlocks.adventures[index as usize] |= value;
+        } else {
+            self.player_data.unlocks.adventures[index as usize] ^= value;
+        }
+        
+        self.actor_control_self(ActorControlSelf {
+            category: ActorControlCategory::ToggleAdventureUnlock {
+                id: adventure_id + 2162688,
+                all_vistas_recorded: all_vistas_recorded,
                 unlocked: unlock,
             },
         })
