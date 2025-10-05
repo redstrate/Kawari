@@ -423,6 +423,14 @@ impl LuaPlayer {
     fn toggle_caught_spearfish_all(&mut self) {
         self.queued_tasks.push(Task::ToggleCaughtSpearfishAll {});
     }
+
+    fn toggle_triple_triad_card(&mut self, id: u32) {
+        self.queued_tasks.push(Task::ToggleTripleTriadCard { id });
+    }
+
+    fn toggle_triple_triad_card_all(&mut self) {
+        self.queued_tasks.push(Task::ToggleTripleTriadCardAll {});
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -655,6 +663,14 @@ impl UserData for LuaPlayer {
         });
         methods.add_method_mut("toggle_caught_spearfish_all", |_, this, _: ()| {
             this.toggle_caught_spearfish_all();
+            Ok(())
+        });
+        methods.add_method_mut("toggle_triple_triad_card", |_, this, id: u32| {
+            this.toggle_triple_triad_card(id);
+            Ok(())
+        });
+        methods.add_method_mut("toggle_triple_triad_card_all", |_, this, _: ()| {
+            this.toggle_triple_triad_card_all();
             Ok(())
         });
     }

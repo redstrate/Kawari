@@ -103,4 +103,8 @@ pub enum Task {
         id: u32,
     },
     ToggleCaughtSpearfishAll {},
+    ToggleTripleTriadCard {
+        id: u32,
+    },
+    ToggleTripleTriadCardAll {},
 }

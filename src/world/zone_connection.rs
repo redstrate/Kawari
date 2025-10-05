@@ -1146,6 +1146,16 @@ impl ZoneConnection {
                         self.toggle_caught_spearfish(i).await;
                     }
                 }
+                Task::ToggleTripleTriadCard { id } => {
+                    self.toggle_triple_triad_card(*id).await;
+                }
+                Task::ToggleTripleTriadCardAll {} => {
+                    let max_triple_triad_card_id = TRIPLE_TRIAD_CARDS_BITMASK_SIZE as u32 * 8;
+
+                    for i in 0..max_triple_triad_card_id {
+                        self.toggle_triple_triad_card(i).await;
+                    }
+                }
             }
         }
         player.queued_tasks.clear();
@@ -1986,6 +1996,26 @@ impl ZoneConnection {
             category: ActorControlCategory::SetCaughtSpearfishBitmask {
                 index: index as u32,
                 value: self.player_data.unlocks.caught_spearfish[index as usize] as u32,
+            },
+        })
+        .await;
+    }
+
+    pub async fn toggle_triple_triad_card(&mut self, triple_triad_card_id: u32) {
+        let (value, index) = value_to_flag_byte_index_value(triple_triad_card_id);
+
+        let unlock = (self.player_data.unlocks.triple_triad_cards[index as usize] & value) == 0;
+
+        if unlock {
+            self.player_data.unlocks.triple_triad_cards[index as usize] |= value;
+        } else {
+            self.player_data.unlocks.triple_triad_cards[index as usize] ^= value;
+        }
+        
+        self.actor_control_self(ActorControlSelf {
+            category: ActorControlCategory::ToggleTripleTriadCardUnlock {
+                id: triple_triad_card_id,
+                unlocked: unlock,
             },
         })
         .await;
