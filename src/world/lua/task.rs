@@ -115,4 +115,8 @@ pub enum Task {
         id: u32,
     },
     ToggleCutsceneSeenAll {},
+    ToggleMinion {
+        id: u32,
+    },
+    ToggleMinionAll {},
 }

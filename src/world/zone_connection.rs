@@ -1180,6 +1180,16 @@ impl ZoneConnection {
                         self.toggle_cutscene_seen(i).await;
                     }
                 }
+                Task::ToggleMinion { id } => {
+                    self.toggle_minion(*id).await;
+                }
+                Task::ToggleMinionAll {} => {
+                    let max_minion_id = MINION_BITMASK_SIZE as u32 * 8;
+
+                    for i in 0..max_minion_id {
+                        self.toggle_minion(i).await;
+                    }
+                }
             }
         }
         player.queued_tasks.clear();
@@ -2081,6 +2091,26 @@ impl ZoneConnection {
         self.actor_control_self(ActorControlSelf {
             category: ActorControlCategory::ToggleCutsceneSeen {
                 id: cutscene_id,
+                unlocked: unlock,
+            },
+        })
+        .await;
+    }
+
+    pub async fn toggle_minion(&mut self, minion_id: u32) {
+        let (value, index) = value_to_flag_byte_index_value(minion_id);
+
+        let unlock = (self.player_data.unlocks.minions[index as usize] & value) == 0;
+
+        if unlock {
+            self.player_data.unlocks.minions[index as usize] |= value;
+        } else {
+            self.player_data.unlocks.minions[index as usize] ^= value;
+        }
+        
+        self.actor_control_self(ActorControlSelf {
+            category: ActorControlCategory::ToggleMinionUnlock {
+                minion_id,
                 unlocked: unlock,
             },
         })

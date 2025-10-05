@@ -447,6 +447,14 @@ impl LuaPlayer {
     fn toggle_cutscene_seen_all(&mut self) {
         self.queued_tasks.push(Task::ToggleCutsceneSeenAll {});
     }
+
+    fn toggle_minion(&mut self, id: u32) {
+        self.queued_tasks.push(Task::ToggleMinion { id });
+    }
+
+    fn toggle_minion_all(&mut self) {
+        self.queued_tasks.push(Task::ToggleMinionAll {});
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -703,6 +711,14 @@ impl UserData for LuaPlayer {
         });
         methods.add_method_mut("toggle_cutscene_seen_all", |_, this, _: ()| {
             this.toggle_cutscene_seen_all();
+            Ok(())
+        });
+        methods.add_method_mut("toggle_minion", |_, this, id: u32| {
+            this.toggle_minion(id);
+            Ok(())
+        });
+        methods.add_method_mut("toggle_minion_all", |_, this, _: ()| {
+            this.toggle_minion_all();
             Ok(())
         });
     }
