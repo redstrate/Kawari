@@ -82,6 +82,38 @@ pub enum ActorControlCategory {
     #[brw(magic = 138u32)]
     EventRelatedUnk3 { event_id: u32 },
 
+    #[brw(magic = 164u32)]
+    ToggleAetherCurrentUnlock{
+        id: u32, // Index to AetherCurrent sheet
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        attunement_complete: bool, // If true, then "Attunement Complete" will show in the Aether Currents menu, and screen_image_id will show on screen
+        // padding, screen_image_id and zone_id are technically a single u32 in the client, but this is more readable
+        padding: u8,
+        screen_image_id: u16, // Index to ScreenImage sheet. Will only show if attunement_complete is true.
+        zone_id: u8, // Index to AetherCurrentCompFlgSet sheet.
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        unk1: bool, // Same value as attunement_complete
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        show_flying_mounts_help: bool, // Will only be used if attunement_complete is true.
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        remove_aether_current: bool, // If true, attunement_complete, screen_image_id and show_flying_mounts_help will be ignored.
+    },
+
+    #[brw(magic = 271u32)]
+    ToggleAdventureUnlock{
+        id: u32, // Index to Adventure sheet
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        all_vistas_recorded: bool,
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        unlocked: bool,
+    },
+
     #[brw(magic = 200u32)]
     ZoneIn {
         /// When set to 1, it slowly fades the character in.
@@ -110,7 +142,7 @@ pub enum ActorControlCategory {
 
     #[brw(magic = 254u32)]
     BardingUnlock {
-        id: u32, // unsure what this actually corresponds to
+        id: u32, // Index to BuddyEquip sheet
     },
 
     #[brw(magic = 260u32)]
@@ -128,6 +160,14 @@ pub enum ActorControlCategory {
         minion_id: u32,
     },
 
+    #[brw(magic = 271u32)]
+    ToggleMinionUnlock{
+        minion_id: u32,
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        unlocked: bool,
+    },
+
     #[brw(magic = 274u32)]
     UpdateHater { unk1: u32 },
 
@@ -139,6 +179,22 @@ pub enum ActorControlCategory {
 
     #[brw(magic = 290u32)]
     Emote(CommonEmoteInfo),
+
+    #[brw(magic = 324u32)]
+    ToggleCaughtFish{
+        id: u32, // Index to FishParameter
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        unlocked: bool,
+    },
+
+    // If byte is 0, and mask is 255, then the 0-8 will be set as caught.
+    // Or, if byte is 1, and mask is 15, then the 9-12 range will be set as caught.
+    #[brw(magic = 343u32)]
+    SetCaughtSpearfishBitmask {
+        index: u32,
+        value: u32,
+    },
 
     #[brw(magic = 378u32)]
     PlayerCurrency { unk1: u32, unk2: u32, unk3: u32 },
@@ -154,11 +210,33 @@ pub enum ActorControlCategory {
         unlocked: bool,
     },
 
+    #[brw(magic = 510u32)]
+    ToggleChocoboTaxiStandUnlock{
+        id: u32, // id + 1179648 = Index to ChocoboTaxiStand
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        unlocked: bool,
+    },
+
     #[brw(magic = 511u32)]
     EventRelatedUnk1 { unk1: u32 },
 
     #[brw(magic = 512u32)]
     EventRelatedUnk2 { unk1: u32 },
+
+    #[brw(magic = 324u32)]
+    ToggleCutsceneSeen{
+        id: u32, // Index to FishParameter
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        unlocked: bool,
+    },
+
+    #[brw(magic = 517u32)]
+    LogMessage {
+        log_message: u32, // Index to LogMessage sheet
+        id: u32, // Index to variable sheet, depending on LogMessage
+    },
 
     #[brw(magic = 521u32)]
     SetItemLevel { level: u32 },
@@ -178,7 +256,7 @@ pub enum ActorControlCategory {
     },
 
     #[brw(magic = 903u32)]
-    MountUnlock {
+    ToggleMountUnlock {
         /// From the Order column from the Excel row.
         order: u32,
         #[br(map = read_bool_from::<u32>)]
@@ -192,15 +270,13 @@ pub enum ActorControlCategory {
     #[brw(magic = 915u32)]
     Dismount { sequence: u32 },
 
-    #[brw(magic = 918u32)]
+    #[brw(magic = 919u32)]
     ToggleOrchestrionUnlock {
-        song_id: u16,
-        /* TODO: guessed, Sapphire suggests it's an u32 item id,
-        * but it behaves as an unlock boolean like aetherytes, so
-        perhaps it's been repurposed since Shadowbringers. */
+        song_id: u32, // Index to Orchestrion sheet
         #[br(map = read_bool_from::<u32>)]
         #[bw(map = write_bool_as::<u32>)]
         unlocked: bool,
+        item_id: u32, // Index to Item sheet
     },
 
     /// Unknown purpose, seen during dismounting.
@@ -215,6 +291,30 @@ pub enum ActorControlCategory {
     #[brw(magic = 932u32)]
     EndContentsReplay {
         unk1: u32, // Always 1
+    },
+
+    #[brw(magic = 938u32)]
+    ToggleOrnamentUnlock {
+        id: u32, // Index to Ornament sheet
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        unlocked: bool,
+    },
+
+    #[brw(magic = 945u32)]
+    ToggleGlassesStyleUnlock {
+        id: u32, // Index to GlassesStyle sheet
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        unlocked: bool,
+    },
+
+    #[brw(magic = 1204u32)]
+    ToggleTripleTriadCardUnlock {
+        id: u32, // Index to TripleTriadCard sheet
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        unlocked: bool,
     },
 
     Unknown {
