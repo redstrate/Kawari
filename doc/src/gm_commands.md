@@ -19,3 +19,4 @@ These GM commands are implemented in the FFXIV protocol, but only some of them a
 * `//gm mp <amount>`: Sets your current MP to the amount specified.
 * `//gm getpos`: Returns your current position.
 * `//gm dc_region`: Useless, but returns the DC for the World you set in the config.
+* `//gm chr_info <pc/bnpc/enpc/enpc_lively>`: Returns the internal entity IDs for your player character.
