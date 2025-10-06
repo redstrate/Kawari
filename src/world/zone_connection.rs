@@ -933,26 +933,8 @@ impl ZoneConnection {
                         self.send_inventory(false).await;
                     }
                 }
-                Task::ToggleOrchestrion { id } => {
-                    // id == 0 means "all"
-                    if *id == 0 {
-                        let max_orchestrion_id = ORCHESTRION_ROLL_BITMASK_SIZE as u32 * 8;
-
-                        for i in 0..max_orchestrion_id {
-                            // Prevent going through invalid entries
-                            let item_id;
-                            {
-                                let mut game_data = self.gamedata.lock().unwrap();
-                                item_id = game_data.find_orchestrion_item_id(i);
-                            }
-
-                            if let Some(_) = item_id {
-                                self.toggle_orchestrion(i).await;
-                            }
-                        }
-                    } else {
-                        self.toggle_orchestrion(*id).await;
-                    }
+                Task::GmSetOrchestrion { value, id } => {
+                    self.gm_set_orchestrion(*value, *id);
                 }
                 Task::AddItem {
                     id,
@@ -1762,6 +1744,18 @@ impl ZoneConnection {
         self.player_data.classjob_exp[index as usize] = exp;
     }
 
+    // Difference between this an toggle_orchestrion, is that this one doesn't send an ActorControlSelf
+    // The GM command itself manages the unlock for the client, so it isn't needed here
+    pub fn gm_set_orchestrion(&mut self, value: bool, orchestrion_id: u32) {
+        let (mask_value, mask_index) = value_to_flag_byte_index_value(orchestrion_id);
+
+        if value {
+            self.player_data.unlocks.orchestrion_rolls[mask_index as usize] |= mask_value;
+        } else {
+            self.player_data.unlocks.orchestrion_rolls[mask_index as usize] &= !mask_value;
+        }
+    }
+
     pub async fn send_quest_information(&mut self) {
         // quest active list
         {
@@ -2110,7 +2104,7 @@ impl ZoneConnection {
 
         if let Some(aether_current_set_id) = aether_current_set {
             let (value, index) = value_to_flag_byte_index_value(aether_current_id - 2818048);
-            
+
             let should_unlock = (self.player_data.unlocks.aether_currents[index as usize] & value) == 0;
             self.player_data.unlocks.aether_currents[index as usize] ^= value;
 

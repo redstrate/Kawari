@@ -49,7 +49,8 @@ pub enum Task {
         amount: u32,
         send_client_update: bool,
     },
-    ToggleOrchestrion {
+    GmSetOrchestrion {
+        value: bool,
         id: u32,
     },
     AddItem {

@@ -22,7 +22,6 @@ These special debug commands start with `!` and are custom to Kawari.
 * `!acs <category> <param1 (optional)> <param2 (optional)> <param3 (optional)> <param4 (optional)>`: Send an ActorControlSelf to the player.
 * `!unlockbuddyequip <id>`: Unlocks the specified BuddyEquip (Companion Barding) ID.
 * `!togglemount <id>`: Toggles the unlock status of the specified mount ID.
-* `!toggleorchestrion <id>`: Toggles the unlock status of the specified orchestrion ID.
 * `!toggleglassesstyle <id>`: Toggles the unlock status of the specified GlassesStyle ID.
 * `!toggleornament <id>`: Toggles the unlock status of the specified ornament ID.
 * `!togglechocobotaxistand <id>`: Toggles the unlock status of the specified ChocoboTaxiStand ID.
