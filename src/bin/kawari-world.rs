@@ -16,7 +16,7 @@ use kawari::ipc::chat::ClientChatIpcData;
 use kawari::ipc::zone::{
     ActorControl, ActorControlCategory, ActorControlSelf, ClientLanguage, Condition, Conditions,
     ItemOperation, OnlineStatus, OnlineStatusMask, PlayerEntry, PlayerSpawn, PlayerStatus,
-    SocialList, SocialListUILanguages,
+    SceneFlags, SocialList, SocialListUILanguages,
 };
 
 use kawari::ipc::zone::{
@@ -1127,7 +1127,7 @@ async fn client_loop(
 
                                                                 let target_id = connection.player_data.target_actorid;
                                                                 // See GenericShopkeeper.lua for information about this scene, the flags, and the params.
-                                                                connection.event_scene(&target_id, *event_id, 10, 8193, vec![1, 100]).await;
+                                                                connection.event_scene(&target_id, *event_id, 10, SceneFlags::from_bits(8193).unwrap(), vec![1, 100]).await;
                                                             } else {
                                                                 tracing::error!(ERR_INVENTORY_ADD_FAILED);
                                                                 connection.send_notice(ERR_INVENTORY_ADD_FAILED).await;
@@ -1221,7 +1221,7 @@ async fn client_loop(
                                                         let mut params = connection.player_data.buyback_list.as_scene_params(*event_id, false);
                                                         params[0] = SELL;
                                                         params[1] = 0; // The "terminator" is 0 for sell mode.
-                                                        connection.event_scene(&target_id, *event_id, 10, 8193, params).await;
+                                                        connection.event_scene(&target_id, *event_id, 10, SceneFlags::from_bits(8193).unwrap(), params).await;
                                                     } else {
                                                         connection.send_notice("Unable to find shop item, this is a bug in Kawari!").await;
                                                         connection.event_finish(*event_id, 0, EventFinishType::Normal).await;

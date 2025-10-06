@@ -6,7 +6,7 @@ use strum::IntoEnumIterator;
 
 use crate::{
     config::get_config,
-    ipc::zone::{GameMasterRank, ServerNoticeFlags},
+    ipc::zone::{GameMasterRank, SceneFlags, ServerNoticeFlags},
 };
 
 use super::EffectsBuilder;
@@ -26,6 +26,7 @@ pub fn load_init_script(lua: &mut Lua) -> mlua::Result<()> {
     // TODO: we should use a global static here so we can define this at the enum level
     register_flags::<ServerNoticeFlags>(lua, "SERVER_NOTICE");
     register_enum::<GameMasterRank>(lua, "GM_RANK");
+    register_flags::<SceneFlags>(lua, ""); // TODO: might want to prefix these at some point
 
     let register_action_func =
         lua.create_function(|lua, (action_id, action_script): (u32, String)| {

@@ -8,8 +8,8 @@ use crate::{
     },
     inventory::{ContainerType, CurrencyKind, Item},
     ipc::zone::{
-        ActorControlCategory, ActorControlSelf, EventScene, ServerNoticeFlags, ServerNoticeMessage,
-        ServerZoneIpcData, ServerZoneIpcSegment, Warp,
+        ActorControlCategory, ActorControlSelf, EventScene, SceneFlags, ServerNoticeFlags,
+        ServerNoticeMessage, ServerZoneIpcData, ServerZoneIpcSegment, Warp,
     },
     packet::PacketSegment,
     world::{EventFinishType, PlayerData, StatusEffects},
@@ -63,7 +63,7 @@ impl LuaPlayer {
         target: ObjectTypeId,
         event_id: u32,
         scene: u16,
-        scene_flags: u32,
+        scene_flags: SceneFlags,
         params: Vec<u32>,
     ) {
         let scene = EventScene {
@@ -420,7 +420,13 @@ impl UserData for LuaPlayer {
                 u32,
                 Vec<u32>,
             )| {
-                this.play_scene(target, event_id, scene, scene_flags, params);
+                this.play_scene(
+                    target,
+                    event_id,
+                    scene,
+                    SceneFlags::from_bits(scene_flags).unwrap_or_default(),
+                    params,
+                );
                 Ok(())
             },
         );

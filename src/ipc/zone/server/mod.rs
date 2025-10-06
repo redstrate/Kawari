@@ -49,7 +49,7 @@ mod item_info;
 pub use item_info::ItemInfo;
 
 mod event_scene;
-pub use event_scene::EventScene;
+pub use event_scene::{EventScene, SceneFlags};
 
 mod event_start;
 pub use event_start::EventStart;

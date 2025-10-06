@@ -25,7 +25,7 @@ use crate::{
     config::{WorldConfig, get_config},
     inventory::{BuyBackList, ContainerType, Inventory, Item, Storage},
     ipc::zone::{
-        ActionKind, ChatMessage, DisplayFlag, InitZoneFlags, ServerNoticeFlags,
+        ActionKind, ChatMessage, DisplayFlag, InitZoneFlags, SceneFlags, ServerNoticeFlags,
         ServerNoticeMessage,
         client::{ActionRequest, ClientZoneIpcSegment},
         server::{
@@ -1126,7 +1126,7 @@ impl ZoneConnection {
         target: &ObjectTypeId,
         event_id: u32,
         scene: u16,
-        scene_flags: u32,
+        scene_flags: SceneFlags,
         params: Vec<u32>,
     ) {
         let scene = EventScene {
