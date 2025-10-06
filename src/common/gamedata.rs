@@ -586,17 +586,13 @@ impl GameData {
                     panic!("Expected a single row!");
                 };
 
-                let physis::exd::ColumnData::UInt8(filter_group) = &single_row.columns[13] else {
-                    panic!("Unexpected type!");
-                };
+                let filter_group = single_row.columns[13].into_u8()?;
 
                 if *filter_group != 32 {
                     continue;
                 }
 
-                let physis::exd::ColumnData::UInt32(additional_data) = &single_row.columns[14] else {
-                    panic!("Unexpected type!");
-                };
+                let additional_data = single_row.columns[14].into_u32()?;
 
                 if *additional_data != orchestrion_id {
                     continue;
@@ -641,65 +637,21 @@ impl GameData {
                     panic!("Expected a single row!");
                 };
 
-                let physis::exd::ColumnData::Int32(aether_current_0) = &single_row.columns[1] else {
-                    panic!("Unexpected type!");
-                };
-
-                let physis::exd::ColumnData::Int32(aether_current_1) = &single_row.columns[2] else {
-                    panic!("Unexpected type!");
-                };
-
-                let physis::exd::ColumnData::Int32(aether_current_2) = &single_row.columns[3] else {
-                    panic!("Unexpected type!");
-                };
-
-                let physis::exd::ColumnData::Int32(aether_current_3) = &single_row.columns[4] else {
-                    panic!("Unexpected type!");
-                };
-
-                let physis::exd::ColumnData::Int32(aether_current_4) = &single_row.columns[5] else {
-                    panic!("Unexpected type!");
-                };
-
-                let physis::exd::ColumnData::Int32(aether_current_5) = &single_row.columns[6] else {
-                    panic!("Unexpected type!");
-                };
-
-                let physis::exd::ColumnData::Int32(aether_current_6) = &single_row.columns[7] else {
-                    panic!("Unexpected type!");
-                };
-
-                let physis::exd::ColumnData::Int32(aether_current_7) = &single_row.columns[8] else {
-                    panic!("Unexpected type!");
-                };
-
-                let physis::exd::ColumnData::Int32(aether_current_8) = &single_row.columns[9] else {
-                    panic!("Unexpected type!");
-                };
-
-                let physis::exd::ColumnData::Int32(aether_current_9) = &single_row.columns[10] else {
-                    panic!("Unexpected type!");
-                };
-
-                let physis::exd::ColumnData::Int32(aether_current_10) = &single_row.columns[11] else {
-                    panic!("Unexpected type!");
-                };
-
-                let physis::exd::ColumnData::Int32(aether_current_11) = &single_row.columns[12] else {
-                    panic!("Unexpected type!");
-                };
-
-                let physis::exd::ColumnData::Int32(aether_current_12) = &single_row.columns[13] else {
-                    panic!("Unexpected type!");
-                };
-
-                let physis::exd::ColumnData::Int32(aether_current_13) = &single_row.columns[14] else {
-                    panic!("Unexpected type!");
-                };
-
-                let physis::exd::ColumnData::Int32(aether_current_14) = &single_row.columns[15] else {
-                    panic!("Unexpected type!");
-                };
+                let aether_current_0 = single_row.columns[1].into_i32()?;
+                let aether_current_1 = single_row.columns[2].into_i32()?;
+                let aether_current_2 = single_row.columns[3].into_i32()?;
+                let aether_current_3 = single_row.columns[4].into_i32()?;
+                let aether_current_4 = single_row.columns[5].into_i32()?;
+                let aether_current_5 = single_row.columns[6].into_i32()?;
+                let aether_current_6 = single_row.columns[7].into_i32()?;
+                let aether_current_7 = single_row.columns[8].into_i32()?;
+                let aether_current_8 = single_row.columns[9].into_i32()?;
+                let aether_current_9 = single_row.columns[10].into_i32()?;
+                let aether_current_10 = single_row.columns[11].into_i32()?;
+                let aether_current_11 = single_row.columns[12].into_i32()?;
+                let aether_current_12 = single_row.columns[13].into_i32()?;
+                let aether_current_13 = single_row.columns[14].into_i32()?;
+                let aether_current_14 = single_row.columns[15].into_i32()?;
 
                 if *aether_current_0 == aether_current_id ||
                 *aether_current_1 == aether_current_id ||
