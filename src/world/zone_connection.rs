@@ -1052,9 +1052,10 @@ impl ZoneConnection {
 
                     let (value, index) = value_to_flag_byte_index_value(*id);
 
-                    let should_unlock = (self.player_data.unlocks.mounts[index as usize] & value) == 0;
+                    let should_unlock =
+                        (self.player_data.unlocks.mounts[index as usize] & value) == 0;
                     self.player_data.unlocks.mounts[index as usize] ^= value;
-                    
+
                     self.actor_control_self(ActorControlSelf {
                         category: ActorControlCategory::ToggleMountUnlock {
                             order: order as u32,
@@ -1926,18 +1927,21 @@ impl ZoneConnection {
     pub async fn toggle_orchestrion(&mut self, orchestrion_id: u32) {
         let (value, index) = value_to_flag_byte_index_value(orchestrion_id);
 
-        let should_unlock = (self.player_data.unlocks.orchestrion_rolls[index as usize] & value) == 0;
+        let should_unlock =
+            (self.player_data.unlocks.orchestrion_rolls[index as usize] & value) == 0;
         self.player_data.unlocks.orchestrion_rolls[index as usize] ^= value;
 
         let mut item_id = 0;
 
-        if should_unlock{
+        if should_unlock {
             {
                 let mut game_data = self.gamedata.lock().unwrap();
-                item_id = game_data.find_orchestrion_item_id(orchestrion_id).unwrap_or(0);
+                item_id = game_data
+                    .find_orchestrion_item_id(orchestrion_id)
+                    .unwrap_or(0);
             }
         }
-        
+
         self.actor_control_self(ActorControlSelf {
             category: ActorControlCategory::ToggleOrchestrionUnlock {
                 song_id: orchestrion_id,
@@ -1953,7 +1957,7 @@ impl ZoneConnection {
 
         let should_unlock = (self.player_data.unlocks.glasses_styles[index as usize] & value) == 0;
         self.player_data.unlocks.glasses_styles[index as usize] ^= value;
-        
+
         self.actor_control_self(ActorControlSelf {
             category: ActorControlCategory::ToggleGlassesStyleUnlock {
                 id: glasses_style_id,
@@ -1968,7 +1972,7 @@ impl ZoneConnection {
 
         let should_unlock = (self.player_data.unlocks.ornaments[index as usize] & value) == 0;
         self.player_data.unlocks.ornaments[index as usize] ^= value;
-        
+
         self.actor_control_self(ActorControlSelf {
             category: ActorControlCategory::ToggleOrnamentUnlock {
                 id: ornament_id,
@@ -1981,11 +1985,9 @@ impl ZoneConnection {
     pub async fn unlock_buddy_equip(&mut self, buddy_equip_id: u32) {
         let (value, index) = value_to_flag_byte_index_value(buddy_equip_id);
         self.player_data.unlocks.buddy_equip[index as usize] |= value;
-        
+
         self.actor_control_self(ActorControlSelf {
-            category: ActorControlCategory::BuddyEquipUnlock {
-                id: buddy_equip_id
-            },
+            category: ActorControlCategory::BuddyEquipUnlock { id: buddy_equip_id },
         })
         .await;
     }
@@ -1993,9 +1995,10 @@ impl ZoneConnection {
     pub async fn toggle_chocobo_taxi_stand(&mut self, chocobo_taxi_stand_id: u32) {
         let (value, index) = value_to_flag_byte_index_value(chocobo_taxi_stand_id);
 
-        let should_unlock = (self.player_data.unlocks.chocobo_taxi_stands[index as usize] & value) == 0;
+        let should_unlock =
+            (self.player_data.unlocks.chocobo_taxi_stands[index as usize] & value) == 0;
         self.player_data.unlocks.chocobo_taxi_stands[index as usize] ^= value;
-        
+
         self.actor_control_self(ActorControlSelf {
             category: ActorControlCategory::ToggleChocoboTaxiStandUnlock {
                 id: chocobo_taxi_stand_id,
@@ -2009,7 +2012,7 @@ impl ZoneConnection {
         let (value, index) = value_to_flag_byte_index_value(caught_fish_id);
 
         self.player_data.unlocks.caught_fish[index as usize] ^= value;
-        
+
         self.actor_control_self(ActorControlSelf {
             category: ActorControlCategory::SetCaughtFishBitmask {
                 index: index as u32,
@@ -2023,7 +2026,7 @@ impl ZoneConnection {
         let (value, index) = value_to_flag_byte_index_value(caught_spearfish_id);
 
         self.player_data.unlocks.caught_spearfish[index as usize] ^= value;
-        
+
         self.actor_control_self(ActorControlSelf {
             category: ActorControlCategory::SetCaughtSpearfishBitmask {
                 index: index as u32,
@@ -2036,9 +2039,10 @@ impl ZoneConnection {
     pub async fn toggle_triple_triad_card(&mut self, triple_triad_card_id: u32) {
         let (value, index) = value_to_flag_byte_index_value(triple_triad_card_id);
 
-        let should_unlock = (self.player_data.unlocks.triple_triad_cards[index as usize] & value) == 0;
+        let should_unlock =
+            (self.player_data.unlocks.triple_triad_cards[index as usize] & value) == 0;
         self.player_data.unlocks.triple_triad_cards[index as usize] ^= value;
-        
+
         self.actor_control_self(ActorControlSelf {
             category: ActorControlCategory::ToggleTripleTriadCardUnlock {
                 id: triple_triad_card_id,
@@ -2070,7 +2074,7 @@ impl ZoneConnection {
 
         let should_unlock = (self.player_data.unlocks.cutscene_seen[index as usize] & value) == 0;
         self.player_data.unlocks.cutscene_seen[index as usize] ^= value;
-        
+
         self.actor_control_self(ActorControlSelf {
             category: ActorControlCategory::ToggleCutsceneSeen {
                 id: cutscene_id,
@@ -2085,7 +2089,7 @@ impl ZoneConnection {
 
         let should_unlock = (self.player_data.unlocks.minions[index as usize] & value) == 0;
         self.player_data.unlocks.minions[index as usize] ^= value;
-        
+
         self.actor_control_self(ActorControlSelf {
             category: ActorControlCategory::ToggleMinionUnlock {
                 minion_id,
@@ -2105,21 +2109,28 @@ impl ZoneConnection {
         if let Some(aether_current_set_id) = aether_current_set {
             let (value, index) = value_to_flag_byte_index_value(aether_current_id - 2818048);
 
-            let should_unlock = (self.player_data.unlocks.aether_currents[index as usize] & value) == 0;
+            let should_unlock =
+                (self.player_data.unlocks.aether_currents[index as usize] & value) == 0;
             self.player_data.unlocks.aether_currents[index as usize] ^= value;
 
             if should_unlock {
                 let currents_needed_for_zone;
                 {
                     let mut game_data = self.gamedata.lock().unwrap();
-                    currents_needed_for_zone = game_data.get_aether_currents_from_zone(aether_current_set_id).unwrap();
+                    currents_needed_for_zone = game_data
+                        .get_aether_currents_from_zone(aether_current_set_id)
+                        .unwrap();
                 }
 
                 let mut zone_complete = true;
 
                 for current_needed in currents_needed_for_zone {
-                    let (current_needed_value, current_needed_index) = value_to_flag_byte_index_value((current_needed - 2818048) as u32);
-                    let current_unlocked = (self.player_data.unlocks.aether_currents[current_needed_index as usize] & current_needed_value) != 0;
+                    let (current_needed_value, current_needed_index) =
+                        value_to_flag_byte_index_value((current_needed - 2818048) as u32);
+                    let current_unlocked = (self.player_data.unlocks.aether_currents
+                        [current_needed_index as usize]
+                        & current_needed_value)
+                        != 0;
 
                     if !current_unlocked {
                         zone_complete = false;

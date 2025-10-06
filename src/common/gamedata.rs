@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use icarus::Action::ActionSheet;
+use icarus::AetherCurrentCompFlgSet::AetherCurrentCompFlgSetSheet;
 use icarus::Aetheryte::AetheryteSheet;
 use icarus::BNpcBase::BNpcBaseSheet;
 use icarus::ClassJob::ClassJobSheet;
@@ -15,7 +16,6 @@ use icarus::TerritoryType::TerritoryTypeSheet;
 use icarus::WeatherRate::WeatherRateSheet;
 use icarus::World::WorldSheet;
 use icarus::{Tribe::TribeSheet, Warp::WarpSheet};
-use icarus::AetherCurrentCompFlgSet::AetherCurrentCompFlgSetSheet;
 use physis::common::{Language, Platform};
 use physis::exd::{EXD, ExcelRowKind};
 use physis::exh::EXH;
@@ -616,8 +616,9 @@ impl GameData {
     pub fn find_aether_current_set(&mut self, aether_current_id: i32) -> Option<u32> {
         // Get AetherCurrentCompFlgSet sheet
         let mut aether_current_comp_flg_set_pages = Vec::new();
-        let aether_current_comp_flg_set_exh = read_excel_sheet_header(&mut self.resource, "AetherCurrentCompFlgSet")
-            .expect("Failed to read AetherCurrentCompFlgSet EXH, does the file exist?");
+        let aether_current_comp_flg_set_exh =
+            read_excel_sheet_header(&mut self.resource, "AetherCurrentCompFlgSet")
+                .expect("Failed to read AetherCurrentCompFlgSet EXH, does the file exist?");
         for (i, _) in aether_current_comp_flg_set_exh.pages.iter().enumerate() {
             aether_current_comp_flg_set_pages.push(
                 read_excel_sheet(
@@ -655,21 +656,22 @@ impl GameData {
                 let aether_current_13 = single_row.columns[14].into_i32()?;
                 let aether_current_14 = single_row.columns[15].into_i32()?;
 
-                if *aether_current_0 == aether_current_id ||
-                *aether_current_1 == aether_current_id ||
-                *aether_current_2 == aether_current_id ||
-                *aether_current_3 == aether_current_id ||
-                *aether_current_4 == aether_current_id ||
-                *aether_current_5 == aether_current_id ||
-                *aether_current_6 == aether_current_id ||
-                *aether_current_7 == aether_current_id ||
-                *aether_current_8 == aether_current_id ||
-                *aether_current_9 == aether_current_id ||
-                *aether_current_10 == aether_current_id ||
-                *aether_current_11 == aether_current_id ||
-                *aether_current_12 == aether_current_id ||
-                *aether_current_13 == aether_current_id ||
-                *aether_current_14 == aether_current_id {
+                if *aether_current_0 == aether_current_id
+                    || *aether_current_1 == aether_current_id
+                    || *aether_current_2 == aether_current_id
+                    || *aether_current_3 == aether_current_id
+                    || *aether_current_4 == aether_current_id
+                    || *aether_current_5 == aether_current_id
+                    || *aether_current_6 == aether_current_id
+                    || *aether_current_7 == aether_current_id
+                    || *aether_current_8 == aether_current_id
+                    || *aether_current_9 == aether_current_id
+                    || *aether_current_10 == aether_current_id
+                    || *aether_current_11 == aether_current_id
+                    || *aether_current_12 == aether_current_id
+                    || *aether_current_13 == aether_current_id
+                    || *aether_current_14 == aether_current_id
+                {
                     result = Some(&row.row_id);
                     break 'outer;
                 }
@@ -684,8 +686,11 @@ impl GameData {
     }
 
     /// Gets the Aether Currents needed for a zone.
-    pub fn get_aether_currents_from_zone(&mut self, aether_current_comp_flg_set_id: u32) -> Option<Vec<i32>> {
-        let aether_current_comp_flg_set_sheet = 
+    pub fn get_aether_currents_from_zone(
+        &mut self,
+        aether_current_comp_flg_set_id: u32,
+    ) -> Option<Vec<i32>> {
+        let aether_current_comp_flg_set_sheet =
             AetherCurrentCompFlgSetSheet::read_from(&mut self.resource, Language::None).unwrap();
 
         let row = aether_current_comp_flg_set_sheet.get_row(aether_current_comp_flg_set_id)?;

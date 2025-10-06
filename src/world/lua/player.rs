@@ -199,10 +199,7 @@ impl LuaPlayer {
     }
 
     fn gm_set_orchestrion(&mut self, value: bool, id: u32) {
-        self.queued_tasks.push(Task::GmSetOrchestrion {
-            value,
-            id,
-        });
+        self.queued_tasks.push(Task::GmSetOrchestrion { value, id });
     }
 
     fn add_item(&mut self, id: u32, quantity: u32, send_client_update: bool) {

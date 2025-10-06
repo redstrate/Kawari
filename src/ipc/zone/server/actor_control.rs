@@ -83,7 +83,7 @@ pub enum ActorControlCategory {
     EventRelatedUnk3 { event_id: u32 },
 
     #[brw(magic = 156u32)]
-    ToggleAdventureUnlock{
+    ToggleAdventureUnlock {
         id: u32, // Index to Adventure sheet
         #[br(map = read_bool_from::<u32>)]
         #[bw(map = write_bool_as::<u32>)]
@@ -94,7 +94,7 @@ pub enum ActorControlCategory {
     },
 
     #[brw(magic = 164u32)]
-    ToggleAetherCurrentUnlock{
+    ToggleAetherCurrentUnlock {
         id: u32, // Index to AetherCurrent sheet
         #[br(map = read_bool_from::<u32>)]
         #[bw(map = write_bool_as::<u32>)]
@@ -102,7 +102,7 @@ pub enum ActorControlCategory {
         // padding, screen_image_id and zone_id are technically a single u32 in the client, but this is more readable
         padding: u8,
         screen_image_id: u16, // Index to ScreenImage sheet. Will only show if attunement_complete is true.
-        zone_id: u8, // Index to AetherCurrentCompFlgSet sheet.
+        zone_id: u8,          // Index to AetherCurrentCompFlgSet sheet.
         #[br(map = read_bool_from::<u32>)]
         #[bw(map = write_bool_as::<u32>)]
         unk1: bool, // Same value as attunement_complete
@@ -161,7 +161,7 @@ pub enum ActorControlCategory {
     },
 
     #[brw(magic = 271u32)]
-    ToggleMinionUnlock{
+    ToggleMinionUnlock {
         minion_id: u32,
         #[br(map = read_bool_from::<u32>)]
         #[bw(map = write_bool_as::<u32>)]
@@ -181,16 +181,10 @@ pub enum ActorControlCategory {
     Emote(CommonEmoteInfo),
 
     #[brw(magic = 324u32)]
-    SetCaughtFishBitmask{
-        index: u32,
-        value: u32,
-    },
+    SetCaughtFishBitmask { index: u32, value: u32 },
 
     #[brw(magic = 343u32)]
-    SetCaughtSpearfishBitmask {
-        index: u32,
-        value: u32,
-    },
+    SetCaughtSpearfishBitmask { index: u32, value: u32 },
 
     #[brw(magic = 378u32)]
     PlayerCurrency { unk1: u32, unk2: u32, unk3: u32 },
@@ -207,7 +201,7 @@ pub enum ActorControlCategory {
     },
 
     #[brw(magic = 510u32)]
-    ToggleChocoboTaxiStandUnlock{
+    ToggleChocoboTaxiStandUnlock {
         id: u32, // id + 1179648 = Index to ChocoboTaxiStand sheet
         #[br(map = read_bool_from::<u32>)]
         #[bw(map = write_bool_as::<u32>)]
@@ -221,7 +215,7 @@ pub enum ActorControlCategory {
     EventRelatedUnk2 { unk1: u32 },
 
     #[brw(magic = 516u32)]
-    ToggleCutsceneSeen{
+    ToggleCutsceneSeen {
         id: u32, // Index to Cutscene sheet
         #[br(map = read_bool_from::<u32>)]
         #[bw(map = write_bool_as::<u32>)]
@@ -231,7 +225,7 @@ pub enum ActorControlCategory {
     #[brw(magic = 517u32)]
     LogMessage {
         log_message: u32, // Index to LogMessage sheet
-        id: u32, // Index to variable sheet, depending on LogMessage
+        id: u32,          // Index to variable sheet, depending on LogMessage
     },
 
     #[brw(magic = 521u32)]
