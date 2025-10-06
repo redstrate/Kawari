@@ -685,21 +685,19 @@ impl GameData {
 
     /// Gets the Aether Currents needed for a zone.
     pub fn get_aether_currents_from_zone(&mut self, aether_current_comp_flg_set_id: u32) -> Option<Vec<i32>> {
-        let mut aether_currents = Vec::new();
-
         let aether_current_comp_flg_set_sheet = 
             AetherCurrentCompFlgSetSheet::read_from(&mut self.resource, Language::None).unwrap();
 
         let row = aether_current_comp_flg_set_sheet.get_row(aether_current_comp_flg_set_id)?;
-        let aether_currents_from_zone = row.AetherCurrents().map(|x| *x.into_i32().unwrap());
 
-        for aether_current_from_zone in aether_currents_from_zone {
-            if aether_current_from_zone != 0 {
-                aether_currents.push(aether_current_from_zone)
-            }
-        }
+        let aether_currents_from_zone = row
+            .AetherCurrents()
+            .iter()
+            .map(|x| *x.into_i32().unwrap())
+            .filter(|x| *x != 0)
+            .collect();
 
-        return Some(aether_currents);
+        return Some(aether_currents_from_zone);
     }
 }
 
