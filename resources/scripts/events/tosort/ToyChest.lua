@@ -4,7 +4,7 @@
 
 function onTalk(target, player)
     -- You have not yet unlocked any mini-games.
-    player:play_scene(target, EVENT_ID, 00000, 8192, {0})
+    player:play_scene(target, EVENT_ID, 00000, HIDE_HOTBAR, {0})
 end
 
 function onReturn(scene, results, player)
