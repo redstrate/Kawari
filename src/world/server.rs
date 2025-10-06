@@ -100,14 +100,14 @@ enum NavmeshGenerationStep {
     Started(String),
 }
 
+// TODO: structure is temporary, of course
 #[derive(Default, Debug)]
 struct Instance {
-    // structure temporary, of course
     actors: HashMap<ObjectId, NetworkedActor>,
     navmesh: Navmesh,
     zone: Zone,
     weather_id: u16,
-    // If Some, then this is the path of the navmesh we need to generate.
+    /// If Some, then this is the path of the navmesh we need to generate.
     generate_navmesh: NavmeshGenerationStep,
 }
 

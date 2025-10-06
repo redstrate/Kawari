@@ -1,6 +1,8 @@
 use binrw::binrw;
 
-use super::{CommonSpawn, GameMasterRank, OnlineStatus};
+use crate::ipc::zone::online_status::OnlineStatus;
+
+use super::{CommonSpawn, GameMasterRank};
 
 #[binrw]
 #[brw(little)]
@@ -9,7 +11,7 @@ pub struct NpcSpawn {
     pub gimmick_id: u32,
     pub u1b: u8,
     pub u2b: u8,
-    pub gm_rank: GameMasterRank, // lol really? what does an NPC need GM rank privileges for?
+    pub gm_rank: GameMasterRank, // FIXME: lol really? what does an NPC need GM rank privileges for?
     pub u3b: u8,
 
     pub aggression_mode: u8,
@@ -31,7 +33,7 @@ mod tests {
 
     use crate::{
         common::INVALID_OBJECT_ID,
-        ipc::zone::{BattleNpcSubKind, CharacterMode, DisplayFlag, ObjectKind, OnlineStatus},
+        ipc::zone::{BattleNpcSubKind, CharacterMode, DisplayFlag, ObjectKind},
         server_zone_tests_dir,
     };
 

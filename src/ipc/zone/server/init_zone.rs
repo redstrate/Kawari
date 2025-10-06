@@ -16,6 +16,7 @@ impl std::fmt::Debug for InitZoneFlags {
 
 bitflags! {
     impl InitZoneFlags : u16 {
+        /// No flags.
         const NONE = 0x000;
         /// Enables the Playguide window, and also the Duty Recorder. Only sent for the first zone logged into.
         const INITIAL_LOGIN = 0x001;

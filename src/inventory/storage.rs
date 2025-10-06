@@ -2,7 +2,7 @@ use binrw::binrw;
 
 use super::Item;
 
-/// When adding a new container type, make sure to add it to InventoryIterator
+// When adding a new container type, make sure to add it to InventoryIterator
 #[binrw]
 #[brw(little)]
 #[brw(repr = u16)]

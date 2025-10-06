@@ -22,19 +22,12 @@ use crate::ipc::lobby::{
 /// Represents a single connection between an instance of the client and the lobby server.
 pub struct LobbyConnection {
     pub socket: TcpStream,
-
     pub session_id: Option<String>,
-
     pub state: ConnectionState,
-
     pub stored_character_creation_name: String,
-
     pub world_name: String,
-
     pub service_accounts: Vec<ServiceAccount>,
-
     pub selected_service_account: Option<u32>,
-
     pub last_keep_alive: Instant,
 }
 

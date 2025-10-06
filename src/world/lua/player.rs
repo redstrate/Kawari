@@ -8,8 +8,8 @@ use crate::{
     },
     inventory::{ContainerType, CurrencyKind, Item},
     ipc::zone::{
-        ActorControlCategory, ActorControlSelf, EventScene, ServerZoneIpcData,
-        ServerZoneIpcSegment, Warp,
+        ActorControlCategory, ActorControlSelf, EventScene, SceneFlags, ServerNoticeFlags,
+        ServerNoticeMessage, ServerZoneIpcData, ServerZoneIpcSegment, Warp,
     },
     packet::PacketSegment,
     world::{EventFinishType, PlayerData, StatusEffects},
@@ -34,10 +34,12 @@ impl QueueSegments for LuaPlayer {
 
 impl LuaPlayer {
     fn send_message(&mut self, message: &str, param: u8) {
-        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ServerNoticeMessage {
-            message: message.to_string(),
-            param,
-        });
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ServerNoticeMessage(
+            ServerNoticeMessage {
+                message: message.to_string(),
+                flags: ServerNoticeFlags::from_bits(param).unwrap_or_default(),
+            },
+        ));
 
         create_ipc_self(self, ipc, self.player_data.actor_id);
     }
@@ -61,7 +63,7 @@ impl LuaPlayer {
         target: ObjectTypeId,
         event_id: u32,
         scene: u16,
-        scene_flags: u32,
+        scene_flags: SceneFlags,
         params: Vec<u32>,
     ) {
         let scene = EventScene {
@@ -503,7 +505,13 @@ impl UserData for LuaPlayer {
                 u32,
                 Vec<u32>,
             )| {
-                this.play_scene(target, event_id, scene, scene_flags, params);
+                this.play_scene(
+                    target,
+                    event_id,
+                    scene,
+                    SceneFlags::from_bits(scene_flags).unwrap_or_default(),
+                    params,
+                );
                 Ok(())
             },
         );

@@ -25,7 +25,8 @@ use crate::{
     config::{WorldConfig, get_config},
     inventory::{BuyBackList, ContainerType, Inventory, Item, Storage},
     ipc::zone::{
-        ActionKind, ChatMessage, DisplayFlag, InitZoneFlags,
+        ActionKind, ChatMessage, DisplayFlag, InitZoneFlags, SceneFlags, ServerNoticeFlags,
+        ServerNoticeMessage,
         client::{ActionRequest, ClientZoneIpcSegment},
         server::{
             ActionEffect, ActionResult, ActorControl, ActorControlCategory, ActorControlSelf,
@@ -805,10 +806,12 @@ impl ZoneConnection {
     }
 
     pub async fn send_notice(&mut self, message: &str) {
-        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ServerNoticeMessage {
-            message: message.to_string(),
-            param: 0,
-        });
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ServerNoticeMessage(
+            ServerNoticeMessage {
+                flags: ServerNoticeFlags::CHAT_LOG,
+                message: message.to_string(),
+            },
+        ));
 
         self.send_ipc_self(ipc).await;
     }
@@ -1225,7 +1228,7 @@ impl ZoneConnection {
         target: &ObjectTypeId,
         event_id: u32,
         scene: u16,
-        scene_flags: u32,
+        scene_flags: SceneFlags,
         params: Vec<u32>,
     ) {
         let scene = EventScene {

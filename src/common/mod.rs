@@ -69,6 +69,7 @@ pub enum ObjectTypeKind {
     /// Player-summoned minions (not to be confused with chocobos or other bnpc pets), and possibly more.
     Minion = 4,
 }
+
 // See https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Client/Game/Object/GameObject.cs#L238
 #[binrw]
 #[brw(little)]

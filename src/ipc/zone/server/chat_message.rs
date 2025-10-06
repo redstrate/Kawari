@@ -21,8 +21,6 @@ pub struct ChatMessage {
     #[bw(map = write_string)]
     pub sender_name: String,
 
-    // FIXME: I disabled this because the size didn't agree, need to follow-up later
-    //#[brw(pad_after = 6)] // seems to be junk?
     #[br(count = 1024)]
     #[bw(pad_size_to = 1024)]
     #[br(map = read_string)]

@@ -2,7 +2,7 @@ use mlua::{Function, Lua};
 
 use crate::{common::ObjectTypeId, config::get_config};
 
-use super::lua::{LuaPlayer, LuaZone};
+use super::lua::{LuaPlayer, LuaZone, initial_setup};
 
 pub struct Event {
     pub file_name: String,
@@ -18,7 +18,8 @@ pub enum EventFinishType {
 
 impl Event {
     pub fn new(id: u32, path: &str) -> Self {
-        let lua = Lua::new();
+        let mut lua = Lua::new();
+        initial_setup(&mut lua);
 
         let config = get_config();
         let file_name = format!("{}/{}", &config.world.scripts_location, path);

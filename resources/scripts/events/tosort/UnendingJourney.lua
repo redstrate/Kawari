@@ -8,7 +8,7 @@ SCENE_SHOW_MENU       = 00000
 SCENE_PLAY_CUTSCENE   = 00001
 
 function onTalk(target, player)
-    player:play_scene(target, EVENT_ID, SCENE_SHOW_MENU, 8192, {0})
+    player:play_scene(target, EVENT_ID, SCENE_SHOW_MENU, HIDE_HOTBAR, {0})
 end
 
 function onReturn(scene, results, player)
@@ -19,7 +19,7 @@ function onReturn(scene, results, player)
         -- TODO: we need to switch the player into viewingcutscene online status (on the Rust side?)
         player:play_scene(player.id, EVENT_ID, SCENE_PLAY_CUTSCENE, UEJ_REPLAY_FLAGS, results)
     elseif scene == SCENE_PLAY_CUTSCENE then
-        player:play_scene(player.id, EVENT_ID, SCENE_SHOW_MENU, 8192, {1})
+        player:play_scene(player.id, EVENT_ID, SCENE_SHOW_MENU, HIDE_HOTBAR, {1})
     else
         player:finish_event(EVENT_ID, 0)
     end

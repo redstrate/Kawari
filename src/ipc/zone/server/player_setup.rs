@@ -236,7 +236,6 @@ pub struct PlayerStatus {
     #[bw(pad_size_to = PVP_ARRAY_SIZE)]
     pub unlocked_pvp: Vec<u8>,
 
-    // cleared status
     // NOTE: all of the following fields are wrong in some way!
     #[br(count = GUILDHEST_ARRAY_SIZE)]
     #[bw(pad_size_to = GUILDHEST_ARRAY_SIZE)]
