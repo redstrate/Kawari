@@ -85,6 +85,12 @@ pub use condition::{Condition, Conditions};
 mod chat_message;
 pub use chat_message::ChatMessage;
 
+mod actor_move;
+pub use crate::ipc::zone::server::actor_move::ActorMove;
+
+mod server_notice;
+pub use server_notice::{ServerNoticeFlags, ServerNoticeMessage};
+
 use crate::COMPLETED_LEVEQUEST_BITMASK_SIZE;
 use crate::COMPLETED_QUEST_BITMASK_SIZE;
 use crate::TITLE_UNLOCK_BITMASK_SIZE;
@@ -94,9 +100,6 @@ use crate::inventory::{ContainerType, ItemOperationKind};
 use crate::opcodes::ServerZoneIpcType;
 use crate::packet::IpcSegment;
 use crate::packet::ServerIpcSegmentHeader;
-
-mod actor_move;
-pub use crate::ipc::zone::server::actor_move::ActorMove;
 
 pub use crate::ipc::zone::black_list::{Blacklist, BlacklistedCharacter};
 
@@ -124,27 +127,7 @@ pub enum ServerZoneIpcData {
         unk: [u8; 8],
     },
     Warp(Warp),
-    ServerNoticeMessage {
-        /*
-         * bits (properties will apply when set, but a final base 10 value of zero defaults to chat log only):
-         * 76543210
-         * xxxxxSxC
-         * x = don't care/unused
-         * S = on-screen
-         * C = chat log
-         * all other bits are unused, therefore some possible examples are (base 10 values follow):
-         * 1 = chat log only
-         * 4 = on-screen only
-         * 5 = both
-         * ref: https://github.com/SapphireServer/Sapphire/blob/bf3368224a00c180cbb7ba413b52395eba58ec0b/src/common/Network/PacketDef/Zone/ServerZoneDef.h#L250
-         */
-        param: u8,
-        #[brw(pad_size_to = 775)]
-        #[br(count = 775)]
-        #[br(map = read_string)]
-        #[bw(map = write_string)]
-        message: String,
-    },
+    ServerNoticeMessage(ServerNoticeMessage),
     LinkShellInformation {
         unk: [u8; 456],
     },
@@ -491,10 +474,7 @@ mod tests {
             ServerZoneIpcData::PlayerSpawn(PlayerSpawn::default()),
             ServerZoneIpcData::LogOutComplete { unk: [0; 8] },
             ServerZoneIpcData::Warp(Warp::default()),
-            ServerZoneIpcData::ServerNoticeMessage {
-                param: 0,
-                message: String::new(),
-            },
+            ServerZoneIpcData::ServerNoticeMessage(ServerNoticeMessage::default()),
             ServerZoneIpcData::LinkShellInformation { unk: [0; 456] },
             ServerZoneIpcData::PrepareZoning {
                 log_message: 0,

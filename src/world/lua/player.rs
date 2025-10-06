@@ -8,8 +8,8 @@ use crate::{
     },
     inventory::{ContainerType, CurrencyKind, Item},
     ipc::zone::{
-        ActorControlCategory, ActorControlSelf, EventScene, ServerZoneIpcData,
-        ServerZoneIpcSegment, Warp,
+        ActorControlCategory, ActorControlSelf, EventScene, ServerNoticeFlags, ServerNoticeMessage,
+        ServerZoneIpcData, ServerZoneIpcSegment, Warp,
     },
     packet::PacketSegment,
     world::{EventFinishType, PlayerData, StatusEffects},
@@ -34,10 +34,12 @@ impl QueueSegments for LuaPlayer {
 
 impl LuaPlayer {
     fn send_message(&mut self, message: &str, param: u8) {
-        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ServerNoticeMessage {
-            message: message.to_string(),
-            param,
-        });
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ServerNoticeMessage(
+            ServerNoticeMessage {
+                message: message.to_string(),
+                flags: ServerNoticeFlags::from_bits(param).unwrap_or_default(),
+            },
+        ));
 
         create_ipc_self(self, ipc, self.player_data.actor_id);
     }
