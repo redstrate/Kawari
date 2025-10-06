@@ -1,8 +1,9 @@
 use std::collections::HashMap;
 
-use mlua::Lua;
+use bitflags::Flags;
+use mlua::{IntoLua, Lua};
 
-use crate::config::get_config;
+use crate::{config::get_config, ipc::zone::ServerNoticeFlags};
 
 use super::EffectsBuilder;
 
@@ -18,6 +19,9 @@ pub struct ExtraLuaState {
 
 /// Loads `Init.lua`
 pub fn load_init_script(lua: &mut Lua) -> mlua::Result<()> {
+    // TODO: we should use a global static here so we can define this at the enum level
+    register_flags::<ServerNoticeFlags>(lua, "SERVER_NOTICE");
+
     let register_action_func =
         lua.create_function(|lua, (action_id, action_script): (u32, String)| {
             let mut state = lua.app_data_mut::<ExtraLuaState>().unwrap();
@@ -91,4 +95,52 @@ pub fn load_init_script(lua: &mut Lua) -> mlua::Result<()> {
         .exec()?;
 
     Ok(())
+}
+
+/// Registers bitflags into the Lua state. All values are prefixed with `prefix`.
+pub fn register_flags<T: Flags<Bits: IntoLua>>(lua: &mut Lua, prefix: &str) {
+    for variant in T::FLAGS {
+        let new_name = format!("{prefix}_{}", variant.name());
+        lua.globals().set(new_name, variant.value().bits()).unwrap();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use bitflags::bitflags;
+
+    bitflags! {
+        struct DisplayFlag : u32 {
+            const NONE = 0x000;
+            const ACTIVE_STANCE = 0x001;
+            const OTHER_STANCE = 0x002;
+        }
+    }
+
+    #[test]
+    fn test_register_flags() {
+        let mut lua = Lua::new();
+        register_flags::<DisplayFlag>(&mut lua, "DISPLAY_FLAG");
+
+        assert_eq!(
+            lua.load("return DISPLAY_FLAG_NONE")
+                .call::<u32>(())
+                .unwrap(),
+            0
+        );
+        assert_eq!(
+            lua.load("return DISPLAY_FLAG_ACTIVE_STANCE")
+                .call::<u32>(())
+                .unwrap(),
+            1
+        );
+        assert_eq!(
+            lua.load("return DISPLAY_FLAG_ACTIVE_STANCE + DISPLAY_FLAG_OTHER_STANCE")
+                .call::<u32>(())
+                .unwrap(),
+            3
+        );
+    }
 }
