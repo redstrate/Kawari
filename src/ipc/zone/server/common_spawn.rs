@@ -1,4 +1,5 @@
 use binrw::binrw;
+use strum_macros::{Display, EnumIter};
 
 use crate::common::{
     CHAR_NAME_MAX_LENGTH, CustomizeData, EquipDisplayFlag, ObjectId, ObjectTypeId, Position,
@@ -82,11 +83,12 @@ pub enum CharacterMode {
 }
 
 // From https://github.com/SapphireServer/Sapphire/blob/bf3368224a00c180cbb7ba413b52395eba58ec0b/src/common/Common.h#L212
-// Where did they get this list from??
+// TODO: Where did they get this list from??
 #[binrw]
 #[brw(little)]
 #[brw(repr = u8)]
-#[derive(Debug, Clone, Copy, Default, PartialEq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Display, EnumIter)]
+#[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 pub enum GameMasterRank {
     #[default]
     NormalUser,
@@ -102,6 +104,13 @@ pub enum GameMasterRank {
 impl rusqlite::types::FromSql for GameMasterRank {
     fn column_result(value: rusqlite::types::ValueRef<'_>) -> rusqlite::types::FromSqlResult<Self> {
         Ok(Self::try_from(u8::column_result(value)?).unwrap())
+    }
+}
+
+#[cfg(all(not(target_family = "wasm"), feature = "server"))]
+impl mlua::IntoLua for GameMasterRank {
+    fn into_lua(self, _: &mlua::Lua) -> mlua::Result<mlua::Value> {
+        Ok(mlua::Value::Integer(self as i64))
     }
 }
 
