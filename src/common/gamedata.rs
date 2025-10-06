@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use icarus::Action::ActionSheet;
+use icarus::AetherCurrentCompFlgSet::AetherCurrentCompFlgSetSheet;
 use icarus::Aetheryte::AetheryteSheet;
 use icarus::BNpcBase::BNpcBaseSheet;
 use icarus::ClassJob::ClassJobSheet;
@@ -568,12 +569,140 @@ impl GameData {
     }
 
     /// Gets the order of the mount.
-    pub fn find_mount_order(&mut self, mount_id: u16) -> Option<i16> {
+    pub fn find_mount_order(&mut self, mount_id: u32) -> Option<i16> {
         let instance_content_sheet =
             MountSheet::read_from(&mut self.resource, Language::English).unwrap();
-        let mount_row = instance_content_sheet.get_row(mount_id as u32)?;
+        let mount_row = instance_content_sheet.get_row(mount_id)?;
 
         mount_row.Order().into_i16().copied()
+    }
+
+    /// Gets the Item ID of the Orchestrion Roll.
+    pub fn find_orchestrion_item_id(&mut self, orchestrion_id: u32) -> Option<u32> {
+        let mut result = None;
+        'outer: for page in &self.item_pages {
+            for row in &page.rows {
+                let ExcelRowKind::SingleRow(single_row) = &row.kind else {
+                    panic!("Expected a single row!");
+                };
+
+                let filter_group = single_row.columns[13].into_u8()?;
+
+                // If filter_group is 32, then this item is an Orchestrion Roll...
+                if *filter_group != 32 {
+                    continue;
+                }
+
+                // ...and additional_data will be the Orchestrion ID
+                let additional_data = single_row.columns[14].into_u32()?;
+
+                if *additional_data != orchestrion_id {
+                    continue;
+                }
+
+                result = Some(&row.row_id);
+                break 'outer;
+            }
+        }
+
+        if let Some(item_id) = result {
+            return Some(*item_id);
+        }
+
+        None
+    }
+
+    /// Gets the Set/Zone of the Aether Current
+    pub fn find_aether_current_set(&mut self, aether_current_id: i32) -> Option<u32> {
+        // Get AetherCurrentCompFlgSet sheet
+        let mut aether_current_comp_flg_set_pages = Vec::new();
+        let aether_current_comp_flg_set_exh =
+            read_excel_sheet_header(&mut self.resource, "AetherCurrentCompFlgSet")
+                .expect("Failed to read AetherCurrentCompFlgSet EXH, does the file exist?");
+        for (i, _) in aether_current_comp_flg_set_exh.pages.iter().enumerate() {
+            aether_current_comp_flg_set_pages.push(
+                read_excel_sheet(
+                    &mut self.resource,
+                    "AetherCurrentCompFlgSet",
+                    &aether_current_comp_flg_set_exh,
+                    Language::None,
+                    i,
+                )
+                .expect("Failed to read AetherCurrentCompFlgSet EXD, does the file exist?"),
+            );
+        }
+
+        // Start searching for Zone ID
+        let mut result = None;
+        'outer: for page in &aether_current_comp_flg_set_pages {
+            for row in &page.rows {
+                let ExcelRowKind::SingleRow(single_row) = &row.kind else {
+                    panic!("Expected a single row!");
+                };
+
+                let aether_current_0 = single_row.columns[1].into_i32()?;
+                let aether_current_1 = single_row.columns[2].into_i32()?;
+                let aether_current_2 = single_row.columns[3].into_i32()?;
+                let aether_current_3 = single_row.columns[4].into_i32()?;
+                let aether_current_4 = single_row.columns[5].into_i32()?;
+                let aether_current_5 = single_row.columns[6].into_i32()?;
+                let aether_current_6 = single_row.columns[7].into_i32()?;
+                let aether_current_7 = single_row.columns[8].into_i32()?;
+                let aether_current_8 = single_row.columns[9].into_i32()?;
+                let aether_current_9 = single_row.columns[10].into_i32()?;
+                let aether_current_10 = single_row.columns[11].into_i32()?;
+                let aether_current_11 = single_row.columns[12].into_i32()?;
+                let aether_current_12 = single_row.columns[13].into_i32()?;
+                let aether_current_13 = single_row.columns[14].into_i32()?;
+                let aether_current_14 = single_row.columns[15].into_i32()?;
+
+                if *aether_current_0 == aether_current_id
+                    || *aether_current_1 == aether_current_id
+                    || *aether_current_2 == aether_current_id
+                    || *aether_current_3 == aether_current_id
+                    || *aether_current_4 == aether_current_id
+                    || *aether_current_5 == aether_current_id
+                    || *aether_current_6 == aether_current_id
+                    || *aether_current_7 == aether_current_id
+                    || *aether_current_8 == aether_current_id
+                    || *aether_current_9 == aether_current_id
+                    || *aether_current_10 == aether_current_id
+                    || *aether_current_11 == aether_current_id
+                    || *aether_current_12 == aether_current_id
+                    || *aether_current_13 == aether_current_id
+                    || *aether_current_14 == aether_current_id
+                {
+                    result = Some(&row.row_id);
+                    break 'outer;
+                }
+            }
+        }
+
+        if let Some(item_id) = result {
+            return Some(*item_id);
+        }
+
+        None
+    }
+
+    /// Gets the Aether Currents needed for a zone.
+    pub fn get_aether_currents_from_zone(
+        &mut self,
+        aether_current_comp_flg_set_id: u32,
+    ) -> Option<Vec<i32>> {
+        let aether_current_comp_flg_set_sheet =
+            AetherCurrentCompFlgSetSheet::read_from(&mut self.resource, Language::None).unwrap();
+
+        let row = aether_current_comp_flg_set_sheet.get_row(aether_current_comp_flg_set_id)?;
+
+        let aether_currents_from_zone = row
+            .AetherCurrents()
+            .iter()
+            .map(|x| *x.into_i32().unwrap())
+            .filter(|x| *x != 0)
+            .collect();
+
+        return Some(aether_currents_from_zone);
     }
 }
 

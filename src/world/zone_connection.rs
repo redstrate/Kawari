@@ -936,27 +936,8 @@ impl ZoneConnection {
                         self.send_inventory(false).await;
                     }
                 }
-                Task::UnlockOrchestrion { id, on } => {
-                    // id == 0 means "all"
-                    if *id == 0 {
-                        /* Currently 792 songs ingame.
-                         * Commented out because this learns literally zero songs
-                         * for some unknown reason. */
-                        /*for i in 1..793 {
-                            let idd = i as u16;
-                            connection.send_notice("test!").await;
-                            connection.actor_control_self(ActorControlSelf {
-                                category: ActorControlCategory::ToggleOrchestrionUnlock { song_id: id, unlocked: on } }).await;
-                        }*/
-                    } else {
-                        self.actor_control_self(ActorControlSelf {
-                            category: ActorControlCategory::ToggleOrchestrionUnlock {
-                                song_id: *id,
-                                unlocked: *on,
-                            },
-                        })
-                        .await;
-                    }
+                Task::GmSetOrchestrion { value, id } => {
+                    self.gm_set_orchestrion(*value, *id);
                 }
                 Task::AddItem {
                     id,
@@ -1065,18 +1046,24 @@ impl ZoneConnection {
                 Task::SetInnWakeup { watched } => {
                     self.player_data.saw_inn_wakeup = *watched;
                 }
-                Task::UnlockMount { id } => {
+                Task::ToggleMount { id } => {
                     let order;
                     {
                         let mut game_data = self.gamedata.lock().unwrap();
                         order = game_data.find_mount_order(*id).unwrap_or(0);
                     }
 
+                    let (value, index) = value_to_flag_byte_index_value(*id);
+
+                    let should_unlock =
+                        (self.player_data.unlocks.mounts[index as usize] & value) == 0;
+                    self.player_data.unlocks.mounts[index as usize] ^= value;
+
                     self.actor_control_self(ActorControlSelf {
-                        category: ActorControlCategory::MountUnlock {
+                        category: ActorControlCategory::ToggleMountUnlock {
                             order: order as u32,
                             id: *id as u32,
-                            unlocked: true,
+                            unlocked: should_unlock,
                         },
                     })
                     .await;
@@ -1107,6 +1094,121 @@ impl ZoneConnection {
                         self.player_data.curr_mp,
                     )
                     .await;
+                }
+                Task::ToggleGlassesStyle { id } => {
+                    self.toggle_glasses_style(*id).await;
+                }
+                Task::ToggleGlassesStyleAll {} => {
+                    let max_glasses_style_id = GLASSES_STYLES_BITMASK_SIZE as u32 * 8;
+
+                    for i in 0..max_glasses_style_id {
+                        self.toggle_glasses_style(i).await;
+                    }
+                }
+                Task::ToggleOrnament { id } => {
+                    self.toggle_ornament(*id).await;
+                }
+                Task::ToggleOrnamentAll {} => {
+                    let max_ornament_id = ORNAMENT_BITMASK_SIZE as u32 * 8;
+
+                    for i in 0..max_ornament_id {
+                        self.toggle_ornament(i).await;
+                    }
+                }
+                Task::UnlockBuddyEquip { id } => {
+                    self.unlock_buddy_equip(*id).await;
+                }
+                Task::UnlockBuddyEquipAll {} => {
+                    let max_buddy_equip_id = BUDDY_EQUIP_BITMASK_SIZE as u32 * 8;
+
+                    for i in 0..max_buddy_equip_id {
+                        self.unlock_buddy_equip(i).await;
+                    }
+                }
+                Task::ToggleChocoboTaxiStand { id } => {
+                    self.toggle_chocobo_taxi_stand(*id).await;
+                }
+                Task::ToggleChocoboTaxiStandAll {} => {
+                    let max_chocobo_taxi_stand_id = CHOCOBO_TAXI_STANDS_BITMASK_SIZE as u32 * 8;
+
+                    for i in 0..max_chocobo_taxi_stand_id {
+                        self.toggle_chocobo_taxi_stand(i).await;
+                    }
+                }
+                Task::ToggleCaughtFish { id } => {
+                    self.toggle_caught_fish(*id).await;
+                }
+                Task::ToggleCaughtFishAll {} => {
+                    let max_caught_fish_id = CAUGHT_FISH_BITMASK_SIZE as u32 * 8;
+
+                    for i in 0..max_caught_fish_id {
+                        self.toggle_caught_fish(i).await;
+                    }
+                }
+                Task::ToggleCaughtSpearfish { id } => {
+                    self.toggle_caught_spearfish(*id).await;
+                }
+                Task::ToggleCaughtSpearfishAll {} => {
+                    let max_caught_spearfish_id = CAUGHT_SPEARFISH_BITMASK_SIZE as u32 * 8;
+
+                    for i in 0..max_caught_spearfish_id {
+                        self.toggle_caught_spearfish(i).await;
+                    }
+                }
+                Task::ToggleTripleTriadCard { id } => {
+                    self.toggle_triple_triad_card(*id).await;
+                }
+                Task::ToggleTripleTriadCardAll {} => {
+                    let max_triple_triad_card_id = TRIPLE_TRIAD_CARDS_BITMASK_SIZE as u32 * 8;
+
+                    for i in 0..max_triple_triad_card_id {
+                        self.toggle_triple_triad_card(i).await;
+                    }
+                }
+                Task::ToggleAdventure { id } => {
+                    self.toggle_adventure(*id, false).await;
+                }
+                Task::ToggleAdventureAll {} => {
+                    let max_adventure_id = ADVENTURE_BITMASK_SIZE as u32 * 8;
+
+                    for i in 0..max_adventure_id {
+                        if i == 0 {
+                            self.toggle_adventure(i, true).await;
+                        } else {
+                            self.toggle_adventure(i, false).await;
+                        }
+                    }
+                }
+                Task::ToggleCutsceneSeen { id } => {
+                    self.toggle_cutscene_seen(*id).await;
+                }
+                Task::ToggleCutsceneSeenAll {} => {
+                    let max_cutscene_seen_id = CUTSCENE_SEEN_BITMASK_SIZE as u32 * 8;
+
+                    for i in 0..max_cutscene_seen_id {
+                        self.toggle_cutscene_seen(i).await;
+                    }
+                }
+                Task::ToggleMinion { id } => {
+                    self.toggle_minion(*id).await;
+                }
+                Task::ToggleMinionAll {} => {
+                    let max_minion_id = MINION_BITMASK_SIZE as u32 * 8;
+
+                    for i in 0..max_minion_id {
+                        self.toggle_minion(i).await;
+                    }
+                }
+                Task::ToggleAetherCurrent { id } => {
+                    self.toggle_aether_current(*id).await;
+                }
+                Task::ToggleAetherCurrentAll {} => {
+                    // TODO: seems like server has issues after executing it, but when you login back after being disconnected, seems to be alright?
+                    let max_aether_current_id = AETHER_CURRENT_BITMASK_SIZE as u32 * 8;
+
+                    for i in 2818048..(2818048 + max_aether_current_id) {
+                        self.toggle_aether_current(i).await;
+                    }
                 }
             }
         }
@@ -1646,6 +1748,18 @@ impl ZoneConnection {
         self.player_data.classjob_exp[index as usize] = exp;
     }
 
+    // Difference between this an toggle_orchestrion, is that this one doesn't send an ActorControlSelf
+    // The GM command itself manages the unlock for the client, so it isn't needed here
+    pub fn gm_set_orchestrion(&mut self, value: bool, orchestrion_id: u32) {
+        let (mask_value, mask_index) = value_to_flag_byte_index_value(orchestrion_id);
+
+        if value {
+            self.player_data.unlocks.orchestrion_rolls[mask_index as usize] |= mask_value;
+        } else {
+            self.player_data.unlocks.orchestrion_rolls[mask_index as usize] &= !mask_value;
+        }
+    }
+
     pub async fn send_quest_information(&mut self) {
         // quest active list
         {
@@ -1810,6 +1924,251 @@ impl ZoneConnection {
                 "Event {event_id} tried to start, but it doesn't have a script associated with it!"
             ))
             .await;
+        }
+    }
+
+    pub async fn toggle_orchestrion(&mut self, orchestrion_id: u32) {
+        let (value, index) = value_to_flag_byte_index_value(orchestrion_id);
+
+        let should_unlock =
+            (self.player_data.unlocks.orchestrion_rolls[index as usize] & value) == 0;
+        self.player_data.unlocks.orchestrion_rolls[index as usize] ^= value;
+
+        let mut item_id = 0;
+
+        if should_unlock {
+            {
+                let mut game_data = self.gamedata.lock().unwrap();
+                item_id = game_data
+                    .find_orchestrion_item_id(orchestrion_id)
+                    .unwrap_or(0);
+            }
+        }
+
+        self.actor_control_self(ActorControlSelf {
+            category: ActorControlCategory::ToggleOrchestrionUnlock {
+                song_id: orchestrion_id,
+                unlocked: should_unlock,
+                item_id,
+            },
+        })
+        .await;
+    }
+
+    pub async fn toggle_glasses_style(&mut self, glasses_style_id: u32) {
+        let (value, index) = value_to_flag_byte_index_value(glasses_style_id);
+
+        let should_unlock = (self.player_data.unlocks.glasses_styles[index as usize] & value) == 0;
+        self.player_data.unlocks.glasses_styles[index as usize] ^= value;
+
+        self.actor_control_self(ActorControlSelf {
+            category: ActorControlCategory::ToggleGlassesStyleUnlock {
+                id: glasses_style_id,
+                unlocked: should_unlock,
+            },
+        })
+        .await;
+    }
+
+    pub async fn toggle_ornament(&mut self, ornament_id: u32) {
+        let (value, index) = value_to_flag_byte_index_value(ornament_id);
+
+        let should_unlock = (self.player_data.unlocks.ornaments[index as usize] & value) == 0;
+        self.player_data.unlocks.ornaments[index as usize] ^= value;
+
+        self.actor_control_self(ActorControlSelf {
+            category: ActorControlCategory::ToggleOrnamentUnlock {
+                id: ornament_id,
+                unlocked: should_unlock,
+            },
+        })
+        .await;
+    }
+
+    pub async fn unlock_buddy_equip(&mut self, buddy_equip_id: u32) {
+        let (value, index) = value_to_flag_byte_index_value(buddy_equip_id);
+        self.player_data.unlocks.buddy_equip[index as usize] |= value;
+
+        self.actor_control_self(ActorControlSelf {
+            category: ActorControlCategory::BuddyEquipUnlock { id: buddy_equip_id },
+        })
+        .await;
+    }
+
+    pub async fn toggle_chocobo_taxi_stand(&mut self, chocobo_taxi_stand_id: u32) {
+        let (value, index) = value_to_flag_byte_index_value(chocobo_taxi_stand_id);
+
+        let should_unlock =
+            (self.player_data.unlocks.chocobo_taxi_stands[index as usize] & value) == 0;
+        self.player_data.unlocks.chocobo_taxi_stands[index as usize] ^= value;
+
+        self.actor_control_self(ActorControlSelf {
+            category: ActorControlCategory::ToggleChocoboTaxiStandUnlock {
+                id: chocobo_taxi_stand_id,
+                unlocked: should_unlock,
+            },
+        })
+        .await;
+    }
+
+    pub async fn toggle_caught_fish(&mut self, caught_fish_id: u32) {
+        let (value, index) = value_to_flag_byte_index_value(caught_fish_id);
+
+        self.player_data.unlocks.caught_fish[index as usize] ^= value;
+
+        self.actor_control_self(ActorControlSelf {
+            category: ActorControlCategory::SetCaughtFishBitmask {
+                index: index as u32,
+                value: self.player_data.unlocks.caught_fish[index as usize] as u32,
+            },
+        })
+        .await;
+    }
+
+    pub async fn toggle_caught_spearfish(&mut self, caught_spearfish_id: u32) {
+        let (value, index) = value_to_flag_byte_index_value(caught_spearfish_id);
+
+        self.player_data.unlocks.caught_spearfish[index as usize] ^= value;
+
+        self.actor_control_self(ActorControlSelf {
+            category: ActorControlCategory::SetCaughtSpearfishBitmask {
+                index: index as u32,
+                value: self.player_data.unlocks.caught_spearfish[index as usize] as u32,
+            },
+        })
+        .await;
+    }
+
+    pub async fn toggle_triple_triad_card(&mut self, triple_triad_card_id: u32) {
+        let (value, index) = value_to_flag_byte_index_value(triple_triad_card_id);
+
+        let should_unlock =
+            (self.player_data.unlocks.triple_triad_cards[index as usize] & value) == 0;
+        self.player_data.unlocks.triple_triad_cards[index as usize] ^= value;
+
+        self.actor_control_self(ActorControlSelf {
+            category: ActorControlCategory::ToggleTripleTriadCardUnlock {
+                id: triple_triad_card_id,
+                unlocked: should_unlock,
+            },
+        })
+        .await;
+    }
+
+    // TODO: make logic that determines if all_vistas_recorded should be true or false automatically
+    pub async fn toggle_adventure(&mut self, adventure_id: u32, all_vistas_recorded: bool) {
+        let (value, index) = value_to_flag_byte_index_value(adventure_id);
+
+        let should_unlock = (self.player_data.unlocks.adventures[index as usize] & value) == 0;
+        self.player_data.unlocks.adventures[index as usize] ^= value;
+
+        self.actor_control_self(ActorControlSelf {
+            category: ActorControlCategory::ToggleAdventureUnlock {
+                id: adventure_id + 2162688,
+                all_vistas_recorded: all_vistas_recorded,
+                unlocked: should_unlock,
+            },
+        })
+        .await;
+    }
+
+    pub async fn toggle_cutscene_seen(&mut self, cutscene_id: u32) {
+        let (value, index) = value_to_flag_byte_index_value(cutscene_id);
+
+        let should_unlock = (self.player_data.unlocks.cutscene_seen[index as usize] & value) == 0;
+        self.player_data.unlocks.cutscene_seen[index as usize] ^= value;
+
+        self.actor_control_self(ActorControlSelf {
+            category: ActorControlCategory::ToggleCutsceneSeen {
+                id: cutscene_id,
+                unlocked: should_unlock,
+            },
+        })
+        .await;
+    }
+
+    pub async fn toggle_minion(&mut self, minion_id: u32) {
+        let (value, index) = value_to_flag_byte_index_value(minion_id);
+
+        let should_unlock = (self.player_data.unlocks.minions[index as usize] & value) == 0;
+        self.player_data.unlocks.minions[index as usize] ^= value;
+
+        self.actor_control_self(ActorControlSelf {
+            category: ActorControlCategory::ToggleMinionUnlock {
+                minion_id,
+                unlocked: should_unlock,
+            },
+        })
+        .await;
+    }
+
+    pub async fn toggle_aether_current(&mut self, aether_current_id: u32) {
+        let aether_current_set;
+        {
+            let mut game_data = self.gamedata.lock().unwrap();
+            aether_current_set = game_data.find_aether_current_set(aether_current_id as i32);
+        }
+
+        if let Some(aether_current_set_id) = aether_current_set {
+            let (value, index) = value_to_flag_byte_index_value(aether_current_id - 2818048);
+
+            let should_unlock =
+                (self.player_data.unlocks.aether_currents[index as usize] & value) == 0;
+            self.player_data.unlocks.aether_currents[index as usize] ^= value;
+
+            if should_unlock {
+                let currents_needed_for_zone;
+                {
+                    let mut game_data = self.gamedata.lock().unwrap();
+                    currents_needed_for_zone = game_data
+                        .get_aether_currents_from_zone(aether_current_set_id)
+                        .unwrap();
+                }
+
+                let mut zone_complete = true;
+
+                for current_needed in currents_needed_for_zone {
+                    let (current_needed_value, current_needed_index) =
+                        value_to_flag_byte_index_value((current_needed - 2818048) as u32);
+                    let current_unlocked = (self.player_data.unlocks.aether_currents
+                        [current_needed_index as usize]
+                        & current_needed_value)
+                        != 0;
+
+                    if !current_unlocked {
+                        zone_complete = false;
+                        break;
+                    }
+                }
+
+                self.actor_control_self(ActorControlSelf {
+                    category: ActorControlCategory::ToggleAetherCurrentUnlock {
+                        id: aether_current_id,
+                        attunement_complete: zone_complete,
+                        padding: 0,
+                        screen_image_id: 0, // TODO: find out all valid values for this, for now we just 0 it.
+                        zone_id: aether_current_set_id as u8,
+                        unk1: zone_complete,
+                        show_flying_mounts_help: false,
+                        remove_aether_current: false,
+                    },
+                })
+                .await;
+            } else {
+                self.actor_control_self(ActorControlSelf {
+                    category: ActorControlCategory::ToggleAetherCurrentUnlock {
+                        id: aether_current_id,
+                        attunement_complete: false,
+                        padding: 0,
+                        screen_image_id: 0,
+                        zone_id: aether_current_set_id as u8,
+                        unk1: false,
+                        show_flying_mounts_help: false,
+                        remove_aether_current: true,
+                    },
+                })
+                .await;
+            }
         }
     }
 

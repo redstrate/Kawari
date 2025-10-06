@@ -200,11 +200,8 @@ impl LuaPlayer {
         });
     }
 
-    fn unlock_orchestrion(&mut self, unlocked: u32, id: u16) {
-        self.queued_tasks.push(Task::UnlockOrchestrion {
-            id,
-            on: unlocked == 1,
-        });
+    fn gm_set_orchestrion(&mut self, value: bool, id: u32) {
+        self.queued_tasks.push(Task::GmSetOrchestrion { value, id });
     }
 
     fn add_item(&mut self, id: u32, quantity: u32, send_client_update: bool) {
@@ -375,8 +372,96 @@ impl LuaPlayer {
         self.queued_tasks.push(Task::SetInnWakeup { watched });
     }
 
-    fn unlock_mount(&mut self, id: u16) {
-        self.queued_tasks.push(Task::UnlockMount { id });
+    fn toggle_mount(&mut self, id: u32) {
+        self.queued_tasks.push(Task::ToggleMount { id });
+    }
+
+    fn toggle_glasses_style(&mut self, id: u32) {
+        self.queued_tasks.push(Task::ToggleGlassesStyle { id });
+    }
+
+    fn toggle_glasses_style_all(&mut self) {
+        self.queued_tasks.push(Task::ToggleGlassesStyleAll {});
+    }
+
+    fn toggle_ornament(&mut self, id: u32) {
+        self.queued_tasks.push(Task::ToggleOrnament { id });
+    }
+
+    fn toggle_ornament_all(&mut self) {
+        self.queued_tasks.push(Task::ToggleOrnamentAll {});
+    }
+
+    fn unlock_buddy_equip(&mut self, id: u32) {
+        self.queued_tasks.push(Task::UnlockBuddyEquip { id });
+    }
+
+    fn unlock_buddy_equip_all(&mut self) {
+        self.queued_tasks.push(Task::UnlockBuddyEquipAll {});
+    }
+
+    fn toggle_chocobo_taxi_stand(&mut self, id: u32) {
+        self.queued_tasks.push(Task::ToggleChocoboTaxiStand { id });
+    }
+
+    fn toggle_chocobo_taxi_stand_all(&mut self) {
+        self.queued_tasks.push(Task::ToggleChocoboTaxiStandAll {});
+    }
+
+    fn toggle_caught_fish(&mut self, id: u32) {
+        self.queued_tasks.push(Task::ToggleCaughtFish { id });
+    }
+
+    fn toggle_caught_fish_all(&mut self) {
+        self.queued_tasks.push(Task::ToggleCaughtFishAll {});
+    }
+
+    fn toggle_caught_spearfish(&mut self, id: u32) {
+        self.queued_tasks.push(Task::ToggleCaughtSpearfish { id });
+    }
+
+    fn toggle_caught_spearfish_all(&mut self) {
+        self.queued_tasks.push(Task::ToggleCaughtSpearfishAll {});
+    }
+
+    fn toggle_triple_triad_card(&mut self, id: u32) {
+        self.queued_tasks.push(Task::ToggleTripleTriadCard { id });
+    }
+
+    fn toggle_triple_triad_card_all(&mut self) {
+        self.queued_tasks.push(Task::ToggleTripleTriadCardAll {});
+    }
+
+    fn toggle_adventure(&mut self, id: u32) {
+        self.queued_tasks.push(Task::ToggleAdventure { id });
+    }
+
+    fn toggle_adventure_all(&mut self) {
+        self.queued_tasks.push(Task::ToggleAdventureAll {});
+    }
+
+    fn toggle_cutscene_seen(&mut self, id: u32) {
+        self.queued_tasks.push(Task::ToggleCutsceneSeen { id });
+    }
+
+    fn toggle_cutscene_seen_all(&mut self) {
+        self.queued_tasks.push(Task::ToggleCutsceneSeenAll {});
+    }
+
+    fn toggle_minion(&mut self, id: u32) {
+        self.queued_tasks.push(Task::ToggleMinion { id });
+    }
+
+    fn toggle_minion_all(&mut self) {
+        self.queued_tasks.push(Task::ToggleMinionAll {});
+    }
+
+    fn toggle_aether_current(&mut self, id: u32) {
+        self.queued_tasks.push(Task::ToggleAetherCurrent { id });
+    }
+
+    fn toggle_aether_current_all(&mut self) {
+        self.queued_tasks.push(Task::ToggleAetherCurrentAll {});
     }
 
     fn move_to_pop_range(&mut self, id: u32) {
@@ -526,8 +611,8 @@ impl UserData for LuaPlayer {
             this.remove_gil(amount, true);
             Ok(())
         });
-        methods.add_method_mut("unlock_orchestrion", |_, this, (unlock, id): (u32, u16)| {
-            this.unlock_orchestrion(unlock, id);
+        methods.add_method_mut("gm_set_orchestrion", |_, this, (value, id): (bool, u32)| {
+            this.gm_set_orchestrion(value, id);
             Ok(())
         });
         methods.add_method_mut("add_item", |_, this, (id, quantity): (u32, u32)| {
@@ -578,8 +663,96 @@ impl UserData for LuaPlayer {
                 Ok(())
             },
         );
-        methods.add_method_mut("unlock_mount", |_, this, id: u16| {
-            this.unlock_mount(id);
+        methods.add_method_mut("toggle_mount", |_, this, id: u32| {
+            this.toggle_mount(id);
+            Ok(())
+        });
+        methods.add_method_mut("toggle_glasses_style", |_, this, id: u32| {
+            this.toggle_glasses_style(id);
+            Ok(())
+        });
+        methods.add_method_mut("toggle_glasses_style_all", |_, this, _: ()| {
+            this.toggle_glasses_style_all();
+            Ok(())
+        });
+        methods.add_method_mut("toggle_ornament", |_, this, id: u32| {
+            this.toggle_ornament(id);
+            Ok(())
+        });
+        methods.add_method_mut("toggle_ornament_all", |_, this, _: ()| {
+            this.toggle_ornament_all();
+            Ok(())
+        });
+        methods.add_method_mut("unlock_buddy_equip", |_, this, id: u32| {
+            this.unlock_buddy_equip(id);
+            Ok(())
+        });
+        methods.add_method_mut("unlock_buddy_equip_all", |_, this, _: ()| {
+            this.unlock_buddy_equip_all();
+            Ok(())
+        });
+        methods.add_method_mut("toggle_chocobo_taxi_stand", |_, this, id: u32| {
+            this.toggle_chocobo_taxi_stand(id);
+            Ok(())
+        });
+        methods.add_method_mut("toggle_chocobo_taxi_stand_all", |_, this, _: ()| {
+            this.toggle_chocobo_taxi_stand_all();
+            Ok(())
+        });
+        methods.add_method_mut("toggle_caught_fish", |_, this, id: u32| {
+            this.toggle_caught_fish(id);
+            Ok(())
+        });
+        methods.add_method_mut("toggle_caught_fish_all", |_, this, _: ()| {
+            this.toggle_caught_fish_all();
+            Ok(())
+        });
+        methods.add_method_mut("toggle_caught_spearfish", |_, this, id: u32| {
+            this.toggle_caught_spearfish(id);
+            Ok(())
+        });
+        methods.add_method_mut("toggle_caught_spearfish_all", |_, this, _: ()| {
+            this.toggle_caught_spearfish_all();
+            Ok(())
+        });
+        methods.add_method_mut("toggle_triple_triad_card", |_, this, id: u32| {
+            this.toggle_triple_triad_card(id);
+            Ok(())
+        });
+        methods.add_method_mut("toggle_triple_triad_card_all", |_, this, _: ()| {
+            this.toggle_triple_triad_card_all();
+            Ok(())
+        });
+        methods.add_method_mut("toggle_adventure", |_, this, id: u32| {
+            this.toggle_adventure(id);
+            Ok(())
+        });
+        methods.add_method_mut("toggle_adventure_all", |_, this, _: ()| {
+            this.toggle_adventure_all();
+            Ok(())
+        });
+        methods.add_method_mut("toggle_cutscene_seen", |_, this, id: u32| {
+            this.toggle_cutscene_seen(id);
+            Ok(())
+        });
+        methods.add_method_mut("toggle_cutscene_seen_all", |_, this, _: ()| {
+            this.toggle_cutscene_seen_all();
+            Ok(())
+        });
+        methods.add_method_mut("toggle_minion", |_, this, id: u32| {
+            this.toggle_minion(id);
+            Ok(())
+        });
+        methods.add_method_mut("toggle_minion_all", |_, this, _: ()| {
+            this.toggle_minion_all();
+            Ok(())
+        });
+        methods.add_method_mut("toggle_aether_current", |_, this, id: u32| {
+            this.toggle_aether_current(id);
+            Ok(())
+        });
+        methods.add_method_mut("toggle_aether_current_all", |_, this, _: ()| {
+            this.toggle_aether_current_all();
             Ok(())
         });
         methods.add_method_mut("move_to_pop_range", |_, this, id: u32| {

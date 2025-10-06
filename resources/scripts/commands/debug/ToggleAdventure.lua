@@ -1,0 +1,12 @@
+required_rank = GM_RANK_DEBUG
+command_sender = "[toggleadventure] "
+
+function onCommand(args, player)
+    local id = args[1]
+
+    if id == "all" then
+        player:toggle_adventure_all()
+    else
+        player:toggle_adventure(tonumber(id))
+    end
+end

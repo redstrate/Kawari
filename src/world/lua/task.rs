@@ -49,9 +49,9 @@ pub enum Task {
         amount: u32,
         send_client_update: bool,
     },
-    UnlockOrchestrion {
-        id: u16,
-        on: bool,
+    GmSetOrchestrion {
+        value: bool,
+        id: u32,
     },
     AddItem {
         id: u32,
@@ -77,8 +77,8 @@ pub enum Task {
     SetInnWakeup {
         watched: bool,
     },
-    UnlockMount {
-        id: u16,
+    ToggleMount {
+        id: u32,
     },
     MoveToPopRange {
         id: u32,
@@ -89,4 +89,48 @@ pub enum Task {
     SetMP {
         mp: u16,
     },
+    ToggleGlassesStyle {
+        id: u32,
+    },
+    ToggleGlassesStyleAll {},
+    ToggleOrnament {
+        id: u32,
+    },
+    ToggleOrnamentAll {},
+    UnlockBuddyEquip {
+        id: u32,
+    },
+    UnlockBuddyEquipAll {},
+    ToggleChocoboTaxiStand {
+        id: u32,
+    },
+    ToggleChocoboTaxiStandAll {},
+    ToggleCaughtFish {
+        id: u32,
+    },
+    ToggleCaughtFishAll {},
+    ToggleCaughtSpearfish {
+        id: u32,
+    },
+    ToggleCaughtSpearfishAll {},
+    ToggleTripleTriadCard {
+        id: u32,
+    },
+    ToggleTripleTriadCardAll {},
+    ToggleAdventure {
+        id: u32,
+    },
+    ToggleAdventureAll {},
+    ToggleCutsceneSeen {
+        id: u32,
+    },
+    ToggleCutsceneSeenAll {},
+    ToggleMinion {
+        id: u32,
+    },
+    ToggleMinionAll {},
+    ToggleAetherCurrent {
+        id: u32,
+    },
+    ToggleAetherCurrentAll {},
 }
