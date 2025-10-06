@@ -588,10 +588,12 @@ impl GameData {
 
                 let filter_group = single_row.columns[13].into_u8()?;
 
+                // If filter_group is 32, then this item is an Orchestrion Roll...
                 if *filter_group != 32 {
                     continue;
                 }
 
+                // ...and additional_data will be the Orchestrion ID
                 let additional_data = single_row.columns[14].into_u32()?;
 
                 if *additional_data != orchestrion_id {
