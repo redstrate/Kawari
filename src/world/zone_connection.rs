@@ -2132,11 +2132,16 @@ impl ZoneConnection {
 
             if should_unlock {
                 let currents_needed_for_zone;
+                let screen_image_id;
+
                 {
                     let mut game_data = self.gamedata.lock().unwrap();
+
                     currents_needed_for_zone = game_data
                         .get_aether_currents_from_zone(aether_current_set_id)
                         .unwrap();
+
+                    screen_image_id = game_data.get_screenimage_from_aether_current_comp_flg_set(aether_current_set_id).unwrap();
                 }
 
                 let mut zone_complete = true;
@@ -2160,7 +2165,7 @@ impl ZoneConnection {
                         id: aether_current_id,
                         attunement_complete: zone_complete,
                         padding: 0,
-                        screen_image_id: 0, // TODO: find out all valid values for this, for now we just 0 it.
+                        screen_image_id: screen_image_id as u16,
                         zone_id: aether_current_set_id as u8,
                         unk1: zone_complete,
                         show_flying_mounts_help: false,
@@ -2193,12 +2198,18 @@ impl ZoneConnection {
         let should_unlock = (self.player_data.unlocks.aether_current_comp_flg_set[index as usize] & value) == 0;
         self.player_data.unlocks.aether_current_comp_flg_set[index as usize] ^= value;
 
+        let screen_image_id ;
+        {
+            let mut game_data = self.gamedata.lock().unwrap();
+            screen_image_id = game_data.get_screenimage_from_aether_current_comp_flg_set(aether_current_comp_flg_set_id).unwrap();
+        }
+
         self.actor_control_self(ActorControlSelf {
             category: ActorControlCategory::ToggleAetherCurrentUnlock {
                 id: 0xFFFFFFFF, // The client does a check, if (as of 7.31h) id is greater than 56, then no individual Aether Current logic is done. This, hopefully, lasts for long.
                 attunement_complete: should_unlock,
                 padding: 0,
-                screen_image_id: 0,
+                screen_image_id: screen_image_id as u16,
                 zone_id: aether_current_comp_flg_set_id as u8,
                 unk1: should_unlock,
                 show_flying_mounts_help: false,
