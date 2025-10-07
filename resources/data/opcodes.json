@@ -3,469 +3,469 @@
         {
             "name": "InitZone",
             "comment": "Informing the client which zone to load, along with some other miscellaneous information.",
-            "opcode": 777,
+            "opcode": 371,
             "size": 112
         },
         {
             "name": "ActorControlSelf",
             "comment": "Controls the player actor state, from playing emotes to making them invisible.",
-            "opcode": 288,
+            "opcode": 241,
             "size": 32
         },
         {
             "name": "PlayerStats",
             "comment": "Contains various character statistics like STR and HP.",
-            "opcode": 116,
+            "opcode": 972,
             "size": 144
         },
         {
             "name": "PlayerStatus",
             "comment": "A large packet containing lots of useful and persistent information like which dungeons are unlocked.",
-            "opcode": 321,
+            "opcode": 750,
             "size": 2848
         },
         {
             "name": "UpdateClassInfo",
             "comment": "Updates class-specific information, like your currently synced level.",
-            "opcode": 185,
+            "opcode": 631,
             "size": 16
         },
         {
             "name": "PlayerSpawn",
             "comment": "Used to spawn players in.",
-            "opcode": 542,
+            "opcode": 250,
             "size": 664
         },
         {
             "name": "InitResponse",
             "comment": "Sent by the server as response to ZoneInitRequest.",
-            "opcode": 328,
+            "opcode": 361,
             "size": 16
         },
         {
             "name": "LogOutComplete",
             "comment": "Informs the client that the server-side log out preparations are complete, and it's safe to disconnect.",
-            "opcode": 419,
+            "opcode": 986,
             "size": 8
         },
         {
             "name": "Warp",
             "comment": "Teleport to another position inside the current zone.",
-            "opcode": 955,
+            "opcode": 541,
             "size": 24
         },
         {
             "name": "ServerNoticeMessage",
             "comment": "Displays a purple server notice message in the chat window, or in some cases, on-screen. Usually used for login messages and imminent maintenance notices.",
-            "opcode": 397,
+            "opcode": 810,
             "size": 776
         },
         {
             "name": "Unk8",
             "comment": "Unknown purpose.",
-            "opcode": 957,
+            "opcode": 417,
             "size": 808
         },
         {
             "name": "LinkShellInformation",
             "comment": "Unknown, but seems to contain information on cross-world linkshells",
-            "opcode": 762,
+            "opcode": 733,
             "size": 456
         },
         {
             "name": "Unk11",
             "comment": "Unknown purpose.",
-            "opcode": 945,
+            "opcode": 325,
             "size": 32
         },
         {
             "name": "PrepareZoning",
             "comment": "Tells the client how to display next loading screen, e.g. how long it should fade.",
-            "opcode": 450,
+            "opcode": 471,
             "size": 16
         },
         {
             "name": "Unk15",
             "comment": "Unknown purpose.",
-            "opcode": 479,
+            "opcode": 866,
             "size": 16
         },
         {
             "name": "Unk16",
             "comment": "Unknown purpose.",
-            "opcode": 767,
+            "opcode": 320,
             "size": 136
         },
         {
             "name": "ActorControl",
             "comment": "Unknown purpose.",
-            "opcode": 977,
+            "opcode": 795,
             "size": 24
         },
         {
             "name": "ActorMove",
             "comment": "Used to move actors other than the current player. The client animates and interpolates the actor to this new position.",
-            "opcode": 755,
+            "opcode": 351,
             "size": 16
         },
         {
             "name": "Blacklist",
             "comment": "Sent by the server in response to RequestBlacklist.",
-            "opcode": 809,
+            "opcode": 434,
             "size": 968
         },
         {
             "name": "SocialList",
             "comment": "Sent by the server in response to SocialListRequest.",
-            "opcode": 102,
+            "opcode": 625,
             "size": 1136
         },
         {
             "name": "NpcSpawn",
             "comment": "Used to spawn friendly and battle NPCs.",
-            "opcode": 224,
+            "opcode": 575,
             "size": 656
         },
         {
             "name": "StatusEffectList",
             "comment": "This is used to update an actor's status effect list.",
-            "opcode": 300,
+            "opcode": 104,
             "size": 384
         },
         {
             "name": "WeatherId",
             "comment": "Used to change the weather in the current zone.",
-            "opcode": 538,
+            "opcode": 154,
             "size": 8
         },
         {
             "name": "UpdateItem",
             "comment": "Updates a specific inventory slot.",
-            "opcode": 495,
+            "opcode": 935,
             "size": 64
         },
         {
             "name": "ContainerInfo",
             "comment": "Informs the status of the entire container, for example the amount of items contained within.",
-            "opcode": 145,
+            "opcode": 880,
             "size": 16
         },
         {
             "name": "EventScene",
             "comment": "Used to begin a scene in the current event.",
-            "opcode": 493,
+            "opcode": 215,
             "size": 40
         },
         {
             "name": "EventScene4",
             "comment": "Used to begin a scene in the current event.",
-            "opcode": 144,
+            "opcode": 202,
             "size": 48
         },
         {
             "name": "EventScene8",
             "comment": "Used to begin a scene in the current event.",
-            "opcode": 174,
+            "opcode": 943,
             "size": 64
         },
         {
             "name": "EventScene16",
             "comment": "Used to begin a scene in the current event.",
-            "opcode": 136,
+            "opcode": 342,
             "size": 96
         },
         {
             "name": "EventScene32",
             "comment": "Used to begin a scene in the current event.",
-            "opcode": 582,
+            "opcode": 149,
             "size": 160
         },
         {
             "name": "EventScene64",
             "comment": "Used to begin a scene in the current event.",
-            "opcode": 232,
+            "opcode": 643,
             "size": 288
         },
         {
             "name": "EventScene128",
             "comment": "Used to begin a scene in the current event.",
-            "opcode": 584,
+            "opcode": 321,
             "size": 544
         },
         {
             "name": "EventScene255",
             "comment": "Used to begin a scene in the current event.",
-            "opcode": 250,
+            "opcode": 616,
             "size": 1052
         },
         {
             "name": "EventStart",
             "comment": "Sent to tell the client to load a scene, but not play it.",
-            "opcode": 251,
+            "opcode": 484,
             "size": 24
         },
         {
             "name": "UpdateHpMpTp",
             "comment": "Sent to update an actor's hp & mp values.",
-            "opcode": 750,
+            "opcode": 439,
             "size": 8
         },
         {
             "name": "ActionResult",
             "comment": "Sent to inform the client the consequences of their actions.",
-            "opcode": 824,
+            "opcode": 474,
             "size": 124
         },
         {
             "name": "Equip",
             "comment": "Sent to to the client to update their appearance.",
-            "opcode": 627,
+            "opcode": 911,
             "size": 72
         },
         {
             "name": "Delete",
             "comment": "Sent to the client to free up a spawn index.",
-            "opcode": 714,
+            "opcode": 910,
             "size": 8
         },
         {
             "name": "EventFinish",
             "comment": "Sent to the client to stop their currently playing event.",
-            "opcode": 138,
+            "opcode": 854,
             "size": 16
         },
         {
             "name": "Condition",
             "comment": "Sent after EventFinish? it un-occupies the character.",
-            "opcode": 329,
+            "opcode": 946,
             "size": 16
         },
         {
             "name": "ActorControlTarget",
             "comment": "Used to control target information.",
-            "opcode": 307,
+            "opcode": 709,
             "size": 32
         },
         {
             "name": "CurrencyCrystalInfo",
             "comment": "Used to update the player's currencies.",
-            "opcode": 696,
+            "opcode": 687,
             "size": 24
         },
         {
             "name": "Config",
             "comment": "Used to update an actor's equip display flags.",
-            "opcode": 701,
+            "opcode": 980,
             "size": 8
         },
         {
             "name": "EventUnkReply",
             "comment": "Unknown, seen in haircut event.",
-            "opcode": 513,
+            "opcode": 523,
             "size": 16
         },
         {
             "name": "PingSyncReply",
             "comment": "Sent by the server in response to PingReply. In prior expansions, it seems to have had the following additional fields that are now deprecated and used as padding.",
-            "opcode": 898,
+            "opcode": 790,
             "size": 32
         },
         {
             "name": "InventoryActionAck",
             "comment": "Sent by the server to acknowledge when the client is updating their inventory in some way (typically when interacting with shops.)",
-            "opcode": 682,
+            "opcode": 147,
             "size": 16
         },
         {
             "name": "QuestCompleteList",
             "comment": "Contains the list of completed quests.",
-            "opcode": 259,
+            "opcode": 516,
             "size": 816
         },
         {
             "name": "UnkResponse2",
             "comment": "Unsure the true purpose of this, but it's needed for the Unending Journey to function.",
-            "opcode": 241,
+            "opcode": 804,
             "size": 8
         },
         {
             "name": "InventoryTransaction",
             "comment": "Informs the client of when the inventory is being updated (typically when interacting with shops.)",
-            "opcode": 342,
+            "opcode": 137,
             "size": 48
         },
         {
             "name": "InventoryTransactionFinish",
             "comment": "Sent by the server when a sequence of InventoryTransaction packets have concluded.",
-            "opcode": 423,
+            "opcode": 411,
             "size": 16
         },
         {
             "name": "ContentFinderUpdate",
             "comment": "Sent to update the duty finder state.",
-            "opcode": 226,
+            "opcode": 719,
             "size": 40
         },
         {
             "name": "ContentFinderFound",
             "comment": "Sent when the duty finder content is found.",
-            "opcode": 194,
+            "opcode": 728,
             "size": 40
         },
         {
             "name": "ObjectSpawn",
             "comment": "Used to spawn objects in.",
-            "opcode": 799,
+            "opcode": 271,
             "size": 64
         },
         {
             "name": "ActorGauge",
             "comment": "Contains classjob-specific gauge information.",
-            "opcode": 579,
+            "opcode": 378,
             "size": 16
         },
         {
             "name": "UpdateSearchInfo",
             "comment": "Unknown purpose.",
-            "opcode": 309,
+            "opcode": 882,
             "size": 216
         },
         {
             "name": "FreeCompanyInfo",
             "comment": "Presumably contains information about the current free company.",
-            "opcode": 396,
+            "opcode": 747,
             "size": 80
         },
         {
             "name": "TitleList",
             "comment": "Contains the acquired title list.",
-            "opcode": 311,
+            "opcode": 828,
             "size": 112
         },
         {
             "name": "QuestActiveList",
             "comment": "Contains the list of active (or in-progress quests.",
-            "opcode": 727,
+            "opcode": 685,
             "size": 480
         },
         {
             "name": "LevequestCompleteList",
             "comment": "Contains the list of completed levequests.",
-            "opcode": 113,
+            "opcode": 257,
             "size": 232
         },
         {
             "name": "ShopLogMessage",
             "comment": "Sent by the server when an item is obtained from shops that accept gil.",
-            "opcode": 433,
+            "opcode": 376,
             "size": 32
         },
         {
             "name": "UpdateInventorySlot",
             "comment": "Sent by the server typically when a shop transaction takes place, usually to update currency.",
-            "opcode": 997,
+            "opcode": 530,
             "size": 64
         },
         {
             "name": "EffectResult",
             "comment": "Unknown purpose.",
-            "opcode": 401,
+            "opcode": 203,
             "size": 96
         },
         {
             "name": "ItemObtainedLogMessage",
             "comment": "Sent by the server when an item is obtained in ways other than gil shops (e.g. Poetics shops.)",
-            "opcode": 854,
+            "opcode": 636,
             "size": 24
         },
         {
             "name": "ContentFinderCommencing",
             "comment": "Sent to give you the green checkmark before entering a CF zone.",
-            "opcode": 904,
+            "opcode": 485,
             "size": 24
         },
         {
             "name": "StatusEffectList3",
             "comment": "Unknown purpose.",
-            "opcode": 775,
+            "opcode": 760,
             "size": 360
         },
         {
             "name": "CrossworldLinkshells",
             "comment": "Unknown purpose.",
-            "opcode": 966,
+            "opcode": 626,
             "size": 456
         },
         {
             "name": "SetSearchComment",
             "comment": "Unknown purpose.",
-            "opcode": 692,
+            "opcode": 331,
             "size": 216
         },
         {
             "name": "WalkInEvent",
             "comment": "Sent by the server when walking over a trigger (e.g. the teleport pads in Solution Nine.)",
-            "opcode": 213,
+            "opcode": 802,
             "size": 24
         },
         {
             "name": "GrandCompanyInfo",
             "comment": "Unknown purpose.",
-            "opcode": 724,
+            "opcode": 623,
             "size": 8
         },
         {
             "name": "CraftingLog",
             "comment": "Unknown purpose.",
-            "opcode": 247,
+            "opcode": 161,
             "size": 808
         },
         {
             "name": "GatheringLog",
             "comment": "Unknown purpose.",
-            "opcode": 719,
+            "opcode": 381,
             "size": 104
         },
         {
             "name": "Fellowships",
             "comment": "The fellowships you have joined.",
-            "opcode": 441,
+            "opcode": 708,
             "size": 808
         },
         {
             "name": "UnkZoneLoad1",
             "comment": "Sent shortly after the server sends InitZone, this with UnkZoneLoad2 it makes everything load faster.",
-            "opcode": 454,
+            "opcode": 229,
             "size": 56
         },
         {
             "name": "UnkZoneLoad2",
             "comment": "Sent shortly after the server sends InitZone, this with UnkZoneLoad1 it makes everything load faster.",
-            "opcode": 228,
+            "opcode": 724,
             "size": 8
         },
         {
             "name": "Linkshells",
             "comment": "Sent to inform the client about server-local Linkshells, not to be confused with cross-world ones.",
-            "opcode": 964,
+            "opcode": 560,
             "size": 448
         },
         {
             "name": "ChatMessage",
             "comment": "Sent to nearby clients when a client sends a chat message in the say, yell, or shout channels.",
-            "opcode": 490,
+            "opcode": 744,
             "size": 1080
         },
         {
             "name": "LocationDiscovered",
             "comment": "Sent by the server in response to NewDiscovery.",
-            "opcode": 672,
+            "opcode": 508,
             "size": 8
         },
         {
             "name": "Mount",
             "comment": "Sent by the server to mount the player.",
-            "opcode": 230,
+            "opcode": 506,
             "size": 16
         }
     ],
@@ -473,247 +473,247 @@
         {
             "name": "InitRequest",
             "comment": "Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)",
-            "opcode": 457,
+            "opcode": 415,
             "size": 120
         },
         {
             "name": "FinishLoading",
             "comment": "Sent by the client when they're done loading and they need to be spawned in.",
-            "opcode": 931,
+            "opcode": 585,
             "size": 72
         },
         {
             "name": "ClientTrigger",
             "comment": "Sent for a variety of actions from the client, e.g. sheathing a weapon.",
-            "opcode": 396,
+            "opcode": 747,
             "size": 32
         },
         {
             "name": "Unk3",
             "comment": "Unknown purpose.",
-            "opcode": 177,
+            "opcode": 994,
             "size": 8
         },
         {
             "name": "Unk4",
             "comment": "Unknown purpose.",
-            "opcode": 328,
+            "opcode": 361,
             "size": 8
         },
         {
             "name": "Unk18",
             "comment": "Unknown purpose.",
-            "opcode": 937,
+            "opcode": 492,
             "size": 8
         },
         {
             "name": "Unk5",
             "comment": "Unknown purpose.",
-            "opcode": 692,
+            "opcode": 331,
             "size": 8
         },
         {
             "name": "SocialListRequest",
             "comment": "Sent by the client when it requests the friends list and other related info.",
-            "opcode": 384,
+            "opcode": 562,
             "size": 16
         },
         {
             "name": "UpdatePositionHandler",
             "comment": "Contains the client's new position after the player moves their character.",
-            "opcode": 922,
+            "opcode": 392,
             "size": 24
         },
         {
             "name": "LogOut",
             "comment": "Sent by the client when the user requests to log out.",
-            "opcode": 848,
+            "opcode": 200,
             "size": 8
         },
         {
             "name": "Disconnected",
             "comment": "Sent by the client when it's actually disconnecting.",
-            "opcode": 797,
+            "opcode": 195,
             "size": 8
         },
         {
             "name": "SendChatMessage",
             "comment": "Sent by the client when they send a chat message.",
-            "opcode": 838,
+            "opcode": 765,
             "size": 1056
         },
         {
             "name": "GMCommand",
             "comment": "Sent by the client when they send a GM command. This can only be sent by the client if they are sent a GM rank.",
-            "opcode": 684,
+            "opcode": 453,
             "size": 32
         },
         {
             "name": "ZoneJump",
             "comment": "Sent by the client when the character walks into a zone transistion.",
-            "opcode": 547,
+            "opcode": 514,
             "size": 24
         },
         {
             "name": "ActionRequest",
             "comment": "Sent by the client when a character performs an action.",
-            "opcode": 659,
+            "opcode": 498,
             "size": 32
         },
         {
             "name": "Unk16",
             "comment": "Unknown purpose.",
-            "opcode": 156,
+            "opcode": 959,
             "size": 8
         },
         {
             "name": "PingSync",
             "comment": "Occasionally sent by the client, purpose is unknown.",
-            "opcode": 987,
+            "opcode": 833,
             "size": 32
         },
         {
             "name": "SetSearchInfoHandler",
             "comment": "Unknown purpose.",
-            "opcode": 470,
+            "opcode": 525,
             "size": 8
         },
         {
             "name": "EventRelatedUnk",
             "comment": "Unknown purpose.",
-            "opcode": 732,
+            "opcode": 133,
             "size": 16
         },
         {
             "name": "Unk19",
             "comment": "Unknown purpose.",
-            "opcode": 504,
+            "opcode": 904,
             "size": 16
         },
         {
             "name": "ItemOperation",
             "comment": "Unknown purpose.",
-            "opcode": 651,
+            "opcode": 584,
             "size": 48
         },
         {
             "name": "StartTalkEvent",
             "comment": "Unknown purpose.",
-            "opcode": 739,
+            "opcode": 237,
             "size": 16
         },
         {
             "name": "EventYieldHandler",
             "comment": "Unknown purpose.",
-            "opcode": 170,
+            "opcode": 564,
             "size": 16
         },
         {
             "name": "EventYieldHandler8",
             "comment": "Unknown purpose.",
-            "opcode": 676,
+            "opcode": 515,
             "size": 40
         },
         {
             "name": "Config",
             "comment": "Unknown purpose.",
-            "opcode": 911,
+            "opcode": 148,
             "size": 8
         },
         {
             "name": "EventUnkRequest",
             "comment": "Unknown purpose.",
-            "opcode": 483,
+            "opcode": 682,
             "size": 16
         },
         {
             "name": "GilShopTransaction",
             "comment": "Unknown purpose.",
-            "opcode": 231,
+            "opcode": 249,
             "size": 24
         },
         {
             "name": "UnkCall2",
             "comment": "Unsure the true purpose of this, but it's needed for the Unending Journey to function.",
-            "opcode": 627,
+            "opcode": 911,
             "size": 8
         },
         {
             "name": "StandardControlsPivot",
             "comment": "This packet is sent by the client when they pivot left or right on standard controls. It is sent once when beginning to pivot, and once when pivoting ends.",
-            "opcode": 468,
+            "opcode": 248,
             "size": 8
         },
         {
             "name": "ContentFinderRegister",
             "comment": "Unknown purpose.",
-            "opcode": 192,
+            "opcode": 472,
             "size": 40
         },
         {
             "name": "ContentFinderAction",
             "comment": "Unknown purpose.",
-            "opcode": 320,
+            "opcode": 563,
             "size": 8
         },
         {
             "name": "EquipGearset",
             "comment": "Unknown purpose.",
-            "opcode": 341,
+            "opcode": 952,
             "size": 72
         },
         {
             "name": "StartWalkInEvent",
             "comment": "Unknown purpose.",
-            "opcode": 137,
+            "opcode": 716,
             "size": 24
         },
         {
             "name": "NewDiscovery",
             "comment": "Sent by the client when they discover a new location on the map.",
-            "opcode": 486,
+            "opcode": 892,
             "size": 16
         },
         {
             "name": "GMCommandName",
             "comment": "Sent by the client when they send a GM command. This can only be sent by the client if they are sent a GM rank.",
-            "opcode": 262,
+            "opcode": 159,
             "size": 52
         },
         {
             "name": "RequestBlacklist",
             "comment": "Seems to happen when opening the Blacklist window.",
-            "opcode": 511,
+            "opcode": 522,
             "size": 8
         },
         {
             "name": "RequestFellowships",
             "comment": "Seems to happen when opening the Fellowships window.",
-            "opcode": 324,
+            "opcode": 870,
             "size": 8
         },
         {
             "name": "RequestCrossworldLinkshells",
             "comment": "Seems to happen when opening the Cross-world Linkshells window. Weird that it can do this, considering it's sent on login?",
-            "opcode": 976,
+            "opcode": 731,
             "size": 8
         },
         {
             "name": "SearchFellowships",
             "comment": "Seems to happen when opening the Fellowship Finder.",
-            "opcode": 550,
+            "opcode": 601,
             "size": 112
         },
         {
             "name": "StartCountdown",
             "comment": "Happens when starting a countdown through the Countdown window.",
-            "opcode": 964,
+            "opcode": 560,
             "size": 40
         },
         {
             "name": "RequestPlaytime",
             "comment": "Happens when the client requests the playtime using the /playtime command.",
-            "opcode": 175,
+            "opcode": 431,
             "size": 8
         }
     ],
