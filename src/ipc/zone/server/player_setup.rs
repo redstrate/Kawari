@@ -1,7 +1,8 @@
 use binrw::binrw;
 
 use crate::{
-    ACTIVE_HELP_BITMASK_SIZE, ADVENTURE_BITMASK_SIZE, AETHER_CURRENT_BITMASK_SIZE,
+    ACTIVE_HELP_BITMASK_SIZE, ADVENTURE_BITMASK_SIZE,
+    AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE, AETHER_CURRENT_BITMASK_SIZE,
     AETHERYTE_UNLOCK_BITMASK_SIZE, BUDDY_EQUIP_BITMASK_SIZE, CAUGHT_FISH_BITMASK_SIZE,
     CAUGHT_SPEARFISH_BITMASK_SIZE, CHOCOBO_TAXI_STANDS_BITMASK_SIZE, CLASSJOB_ARRAY_SIZE,
     CUTSCENE_SEEN_BITMASK_SIZE, DUNGEON_ARRAY_SIZE, GLASSES_STYLES_BITMASK_SIZE,
@@ -78,7 +79,9 @@ pub struct PlayerStatus {
     pub unknown97: [u8; 5],
     pub sightseeing21_to_80_unlock: u8, // TODO: might be SightseeingLogUnlockState in ClientStructs?
     pub sightseeing_heavensward_unlock: u8, // TODO: might be SightseeingLogUnlockStateEx in ClientStructs?
-    pub unknown9e: [u8; 30],
+    pub unknown9e: u32,
+    pub aether_current_comp_flg_set_bitmask1: u8,
+    pub unknowna3: [u8; 25],
     /// Current EXP for all classjobs. This doesn't control the class' "unlocked state" in the Character UI.
     pub exp: [u32; CLASSJOB_ARRAY_SIZE],
     pub unknown_pvp124: u32,
@@ -197,9 +200,13 @@ pub struct PlayerStatus {
     #[bw(pad_size_to = TRIPLE_TRIAD_CARDS_BITMASK_SIZE)]
     pub triple_triad_cards: Vec<u8>,
     pub regional_folklore_mask: [u8; 6],
-    #[br(count = 14)]
-    #[bw(pad_size_to = 14)]
+    #[br(count = 11)]
+    #[bw(pad_size_to = 11)]
     pub unknown95a: Vec<u8>,
+    // We do -1 because of aether_current_comp_flg_set_bitmask1 being present way earlier.
+    #[br(count = AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE - 1)]
+    #[bw(pad_size_to = AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE - 1)]
+    pub aether_current_comp_flg_set_bitmask2: Vec<u8>,
     #[br(count = AETHER_CURRENT_BITMASK_SIZE)]
     #[bw(pad_size_to = AETHER_CURRENT_BITMASK_SIZE)]
     pub aether_currents_mask: Vec<u8>,

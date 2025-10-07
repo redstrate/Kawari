@@ -110,6 +110,9 @@ pub const MOUNT_BITMASK_SIZE: usize = 41;
 /// The size of the active help bitmask.
 pub const ACTIVE_HELP_BITMASK_SIZE: usize = 37;
 
+/// The size of the AetherCurrentCompFlgSet bitmask.
+pub const AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE: usize = 4;
+
 /// The size of the AetherCurrent bitmask.
 pub const AETHER_CURRENT_BITMASK_SIZE: usize = 56;
 
