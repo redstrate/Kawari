@@ -68,7 +68,7 @@ const AETHER_CURRENT_COMP_FLG_SET_TO_SCREENIMAGE: [(u32, u32); 31] = [
     (31, 1274), // Living Memory
 ];
 
-pub fn get_aether_current_comp_flg_set_to_screenimage() -> HashMap<u32, u32> {
+fn get_aether_current_comp_flg_set_to_screenimage() -> HashMap<u32, u32> {
     HashMap::from(AETHER_CURRENT_COMP_FLG_SET_TO_SCREENIMAGE)
 }
 
