@@ -5,7 +5,7 @@ use crate::{
     common::ItemInfoQuery,
     inventory::{Item, Storage},
     ipc::zone::{
-        ActorControlCategory, ActorControlSelf,
+        ActorControlCategory, ActorControlSelf, ServerZoneIpcData, ServerZoneIpcSegment,
         client::SendChatMessage,
         server::{Condition, Conditions, GameMasterRank},
     },
@@ -192,6 +192,17 @@ impl ChatHandler {
                         },
                     })
                     .await;
+
+                true
+            }
+            "!mount" => {
+                let (_, mount) = chat_message.message.split_once(' ').unwrap();
+                let mount_id = mount.parse::<u16>().unwrap();
+                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Mount {
+                    id: mount_id,
+                    unk1: [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                });
+                connection.send_ipc_self(ipc).await;
 
                 true
             }
