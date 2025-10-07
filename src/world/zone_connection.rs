@@ -9,15 +9,15 @@ use serde::{Deserialize, Serialize};
 use tokio::net::TcpStream;
 
 use crate::{
-    ACTIVE_HELP_BITMASK_SIZE, ADVENTURE_BITMASK_SIZE,
-    AETHER_CURRENT_BITMASK_SIZE, AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE,
-    AETHERYTE_UNLOCK_BITMASK_SIZE, BUDDY_EQUIP_BITMASK_SIZE, CAUGHT_FISH_BITMASK_SIZE,
-    CAUGHT_SPEARFISH_BITMASK_SIZE, CHOCOBO_TAXI_STANDS_BITMASK_SIZE, CLASSJOB_ARRAY_SIZE,
-    COMPLETED_LEVEQUEST_BITMASK_SIZE, COMPLETED_QUEST_BITMASK_SIZE, CUTSCENE_SEEN_BITMASK_SIZE,
-    DUNGEON_ARRAY_SIZE, ERR_INVENTORY_ADD_FAILED, GLASSES_STYLES_BITMASK_SIZE,
-    GUILDHEST_ARRAY_SIZE, LogMessageType, MINION_BITMASK_SIZE, MOUNT_BITMASK_SIZE,
-    ORCHESTRION_ROLL_BITMASK_SIZE, ORNAMENT_BITMASK_SIZE, PVP_ARRAY_SIZE, RAID_ARRAY_SIZE,
-    TRIAL_ARRAY_SIZE, TRIPLE_TRIAD_CARDS_BITMASK_SIZE, UNLOCK_BITMASK_SIZE,
+    ACTIVE_HELP_BITMASK_SIZE, ADVENTURE_BITMASK_SIZE, AETHER_CURRENT_BITMASK_SIZE,
+    AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE, AETHERYTE_UNLOCK_BITMASK_SIZE,
+    BUDDY_EQUIP_BITMASK_SIZE, CAUGHT_FISH_BITMASK_SIZE, CAUGHT_SPEARFISH_BITMASK_SIZE,
+    CHOCOBO_TAXI_STANDS_BITMASK_SIZE, CLASSJOB_ARRAY_SIZE, COMPLETED_LEVEQUEST_BITMASK_SIZE,
+    COMPLETED_QUEST_BITMASK_SIZE, CUTSCENE_SEEN_BITMASK_SIZE, DUNGEON_ARRAY_SIZE,
+    ERR_INVENTORY_ADD_FAILED, GLASSES_STYLES_BITMASK_SIZE, GUILDHEST_ARRAY_SIZE, LogMessageType,
+    MINION_BITMASK_SIZE, MOUNT_BITMASK_SIZE, ORCHESTRION_ROLL_BITMASK_SIZE, ORNAMENT_BITMASK_SIZE,
+    PVP_ARRAY_SIZE, RAID_ARRAY_SIZE, TRIAL_ARRAY_SIZE, TRIPLE_TRIAD_CARDS_BITMASK_SIZE,
+    UNLOCK_BITMASK_SIZE,
     common::{
         EquipDisplayFlag, GameData, INVALID_OBJECT_ID, InstanceContentType, ItemInfoQuery,
         JumpState, MoveAnimationSpeed, MoveAnimationState, MoveAnimationType, ObjectId,
@@ -1217,7 +1217,8 @@ impl ZoneConnection {
                     self.toggle_aether_current_comp_flg_set(*id).await;
                 }
                 Task::ToggleAetherCurrentCompFlgSetAll {} => {
-                    let max_aether_current_comp_flg_set_id = AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE as u32 * 8;
+                    let max_aether_current_comp_flg_set_id =
+                        AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE as u32 * 8;
 
                     // AetherCurrentCompFlgSet starts at Index 1
                     for i in 1..max_aether_current_comp_flg_set_id {
@@ -2141,7 +2142,9 @@ impl ZoneConnection {
                         .get_aether_currents_from_zone(aether_current_set_id)
                         .unwrap();
 
-                    screen_image_id = game_data.get_screenimage_from_aether_current_comp_flg_set(aether_current_set_id).unwrap();
+                    screen_image_id = game_data
+                        .get_screenimage_from_aether_current_comp_flg_set(aether_current_set_id)
+                        .unwrap();
                 }
 
                 let mut zone_complete = true;
@@ -2191,17 +2194,23 @@ impl ZoneConnection {
         }
     }
 
-    pub async fn toggle_aether_current_comp_flg_set(&mut self, aether_current_comp_flg_set_id: u32) {
+    pub async fn toggle_aether_current_comp_flg_set(
+        &mut self,
+        aether_current_comp_flg_set_id: u32,
+    ) {
         // Because AetherCurrentCompFlgSet starts at Index 1, we need to adjust the mask so this gives the proper values
         let (value, index) = value_to_flag_byte_index_value(aether_current_comp_flg_set_id - 1);
 
-        let should_unlock = (self.player_data.unlocks.aether_current_comp_flg_set[index as usize] & value) == 0;
+        let should_unlock =
+            (self.player_data.unlocks.aether_current_comp_flg_set[index as usize] & value) == 0;
         self.player_data.unlocks.aether_current_comp_flg_set[index as usize] ^= value;
 
-        let screen_image_id ;
+        let screen_image_id;
         {
             let mut game_data = self.gamedata.lock().unwrap();
-            screen_image_id = game_data.get_screenimage_from_aether_current_comp_flg_set(aether_current_comp_flg_set_id).unwrap();
+            screen_image_id = game_data
+                .get_screenimage_from_aether_current_comp_flg_set(aether_current_comp_flg_set_id)
+                .unwrap();
         }
 
         self.actor_control_self(ActorControlSelf {
@@ -2218,7 +2227,6 @@ impl ZoneConnection {
         })
         .await;
     }
-
 
     pub async fn send_arbitrary_packet(&mut self, op_code: u16, data: Vec<u8>) {
         let ipc = ServerZoneIpcSegment {

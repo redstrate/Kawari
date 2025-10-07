@@ -1,4 +1,4 @@
-use std::{path::PathBuf, collections::HashMap};
+use std::{collections::HashMap, path::PathBuf};
 
 use icarus::Action::ActionSheet;
 use icarus::AetherCurrentCompFlgSet::AetherCurrentCompFlgSetSheet;
@@ -36,15 +36,13 @@ const AETHER_CURRENT_COMP_FLG_SET_TO_SCREENIMAGE: [(u32, u32); 31] = [
     (4, 331), // The Churning Mists
     (5, 332), // The Sea of Clouds
     (6, 333), // Azys Lla
-
     // StB
-    (7, 511), // The Fringes
-    (8, 514), // The Ruby Sea
-    (9, 512), // The Peaks
+    (7, 511),  // The Fringes
+    (8, 514),  // The Ruby Sea
+    (9, 512),  // The Peaks
     (10, 515), // Yanxia
     (11, 513), // The Lochs
     (12, 516), // The Azim Steppe
-
     // ShB
     (13, 762), // Lakeland
     (14, 763), // Amh Araeng
@@ -52,10 +50,8 @@ const AETHER_CURRENT_COMP_FLG_SET_TO_SCREENIMAGE: [(u32, u32); 31] = [
     (16, 765), // Kholusia
     (17, 766), // The Rak'tika Greatwood
     (18, 767), // The Tempest
-
     // TODO: maybe Mor Dhona's ScreenImage is the "Flying Unlocked" seen at the end of "The Ultimate Weapon" (end of ARR MSQ)? Need a confirmation.
     (19, 0), // Mor Dhona
-
     // EW
     (20, 1016), // Labyrinthos
     (21, 1017), // Thavnair
@@ -63,7 +59,6 @@ const AETHER_CURRENT_COMP_FLG_SET_TO_SCREENIMAGE: [(u32, u32); 31] = [
     (23, 1019), // Mare Lamentorum
     (24, 1021), // Elpis
     (25, 1020), // Ultima Thule
-
     // DT
     (26, 1269), // Urqopacha
     (27, 1270), // Kozama'uka
@@ -754,9 +749,13 @@ impl GameData {
         return Some(aether_currents_from_zone);
     }
 
-    pub fn get_screenimage_from_aether_current_comp_flg_set(&mut self, aether_current_comp_flg_set_id: u32) -> Option<u32> {
-        let aether_current_comp_flg_set_to_screenimage = get_aether_current_comp_flg_set_to_screenimage();
-        return Some(aether_current_comp_flg_set_to_screenimage[&aether_current_comp_flg_set_id])
+    pub fn get_screenimage_from_aether_current_comp_flg_set(
+        &mut self,
+        aether_current_comp_flg_set_id: u32,
+    ) -> Option<u32> {
+        let aether_current_comp_flg_set_to_screenimage =
+            get_aether_current_comp_flg_set_to_screenimage();
+        return Some(aether_current_comp_flg_set_to_screenimage[&aether_current_comp_flg_set_id]);
     }
 }
 
