@@ -79,7 +79,7 @@ pub struct PlayerStatus {
     pub sightseeing21_to_80_unlock: u8, // TODO: might be SightseeingLogUnlockState in ClientStructs?
     pub sightseeing_heavensward_unlock: u8, // TODO: might be SightseeingLogUnlockStateEx in ClientStructs?
     pub unknown9e: u32,
-    pub aether_current_comp_flg_set_bitmask1: u8,
+    pub aether_current_comp_flg_set_bitmask1: u8, // This is the first byte of the full bitmask. It contains the HW zones, The Fringes and The Ruby Sea. Why this one is here and the rest far down, no idea.
     pub unknowna3: [u8; 25],
     /// Current EXP for all classjobs. This doesn't control the class' "unlocked state" in the Character UI.
     pub exp: [u32; CLASSJOB_ARRAY_SIZE],
@@ -205,7 +205,7 @@ pub struct PlayerStatus {
     // We do -1 because of aether_current_comp_flg_set_bitmask1 being present way earlier.
     #[br(count = AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE - 1)]
     #[bw(pad_size_to = AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE - 1)]
-    pub aether_current_comp_flg_set_bitmask2: Vec<u8>,
+    pub aether_current_comp_flg_set_bitmask2: Vec<u8>, // This is the rest of the full bitmask. The rest of the zones are in here.
     #[br(count = AETHER_CURRENT_BITMASK_SIZE)]
     #[bw(pad_size_to = AETHER_CURRENT_BITMASK_SIZE)]
     pub aether_currents_mask: Vec<u8>,
