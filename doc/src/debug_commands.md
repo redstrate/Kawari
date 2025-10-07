@@ -31,5 +31,6 @@ These special debug commands start with `!` and are custom to Kawari.
 * `!toggleadventure <id>`: Toggles the unlock status of the specified Adventure (Sightseeing) ID.
 * `!toggleminion <id>`: Toggles the unlock status of the specified minion ID.
 * `!toggleaethercurrent <id>`: Toggles the unlock status of the specified Aether Current ID.
+* `!toggleaethercurrentcompflgset <id>`: Toggles the unlock status of the specified AetherCurrentCompFlgSet ID.
 * `!togglecutsceneseen <id>`: Toggles the seen status of the specified Cutscene ID.
 * `!mount <id>`: Allows you to mount in any zone, on the specified mount ID.

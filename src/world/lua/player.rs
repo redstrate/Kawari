@@ -464,6 +464,16 @@ impl LuaPlayer {
         self.queued_tasks.push(Task::ToggleAetherCurrentAll {});
     }
 
+    fn toggle_aether_current_comp_flg_set(&mut self, id: u32) {
+        self.queued_tasks
+            .push(Task::ToggleAetherCurrentCompFlgSet { id });
+    }
+
+    fn toggle_aether_current_comp_flg_set_all(&mut self) {
+        self.queued_tasks
+            .push(Task::ToggleAetherCurrentCompFlgSetAll {});
+    }
+
     fn move_to_pop_range(&mut self, id: u32) {
         self.queued_tasks.push(Task::MoveToPopRange { id });
     }
@@ -755,6 +765,17 @@ impl UserData for LuaPlayer {
             this.toggle_aether_current_all();
             Ok(())
         });
+        methods.add_method_mut("toggle_aether_current_comp_flg_set", |_, this, id: u32| {
+            this.toggle_aether_current_comp_flg_set(id);
+            Ok(())
+        });
+        methods.add_method_mut(
+            "toggle_aether_current_comp_flg_set_all",
+            |_, this, _: ()| {
+                this.toggle_aether_current_comp_flg_set_all();
+                Ok(())
+            },
+        );
         methods.add_method_mut("move_to_pop_range", |_, this, id: u32| {
             this.move_to_pop_range(id);
             Ok(())
