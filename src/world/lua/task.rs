@@ -133,4 +133,8 @@ pub enum Task {
         id: u32,
     },
     ToggleAetherCurrentAll {},
+    ToggleAetherCurrentCompFlgSet {
+        id: u32,
+    },
+    ToggleAetherCurrentCompFlgSetAll {},
 }

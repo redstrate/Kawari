@@ -1213,6 +1213,17 @@ impl ZoneConnection {
                         self.toggle_aether_current(i).await;
                     }
                 }
+                Task::ToggleAetherCurrentCompFlgSet { id } => {
+                    self.toggle_aether_current_comp_flg_set(*id).await;
+                }
+                Task::ToggleAetherCurrentCompFlgSetAll {} => {
+                    let max_aether_current_comp_flg_set_id = AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE as u32 * 8;
+
+                    // AetherCurrentCompFlgSet starts at Index 1
+                    for i in 1..max_aether_current_comp_flg_set_id {
+                        self.toggle_aether_current_comp_flg_set(i).await;
+                    }
+                }
             }
         }
         player.queued_tasks.clear();
@@ -2174,6 +2185,29 @@ impl ZoneConnection {
             }
         }
     }
+
+    pub async fn toggle_aether_current_comp_flg_set(&mut self, aether_current_comp_flg_set_id: u32) {
+        // Because AetherCurrentCompFlgSet starts at Index 1, we need to adjust the mask so this gives the proper values
+        let (value, index) = value_to_flag_byte_index_value(aether_current_comp_flg_set_id - 1);
+
+        let should_unlock = (self.player_data.unlocks.aether_current_comp_flg_set[index as usize] & value) == 0;
+        self.player_data.unlocks.aether_current_comp_flg_set[index as usize] ^= value;
+
+        self.actor_control_self(ActorControlSelf {
+            category: ActorControlCategory::ToggleAetherCurrentUnlock {
+                id: 0xFFFFFFFF, // The client does a check, if (as of 7.31h) id is greater than 56, then no individual Aether Current logic is done. This, hopefully, lasts for long.
+                attunement_complete: should_unlock,
+                padding: 0,
+                screen_image_id: 0,
+                zone_id: aether_current_comp_flg_set_id as u8,
+                unk1: should_unlock,
+                show_flying_mounts_help: false,
+                remove_aether_current: !should_unlock,
+            },
+        })
+        .await;
+    }
+
 
     pub async fn send_arbitrary_packet(&mut self, op_code: u16, data: Vec<u8>) {
         let ipc = ServerZoneIpcSegment {
