@@ -15,6 +15,7 @@ The game lacks a noclip or flying mode, so getting around zones can appear a bit
 * Try changing your speed with the [`//gm speed <factor>` GM command](gm_commands.md).
 * You can use the [`!nudge` debug command](debug_commands.md) to quickly teleport.
 * If you know an exact spot or need to travel an extremely long distance, use the `//gm pos <x> <y> <z>` command to teleport there.
+* While the game client doesn't provide a noclip or flying mode, Kawari itself does with the [`!mount` debug command](debug_commands.md), allowing you to mount in any zone and fly around as much as you'd like. You can also pair it with the GM speed command mentioned above to move even faster.
 
 ## Importing characters from retail
 
