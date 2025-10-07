@@ -37,7 +37,7 @@ use kawari::world::{
 };
 use kawari::{
     ERR_INVENTORY_ADD_FAILED, LogMessageType, NETWORK_TIMEOUT, RECEIVE_BUFFER_SIZE,
-    TITLE_UNLOCK_BITMASK_SIZE,
+    TITLE_UNLOCK_BITMASK_SIZE, AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE,
 };
 
 use mlua::{Function, Lua};
@@ -612,6 +612,8 @@ async fn client_loop(
                                                         triple_triad_cards: connection.player_data.unlocks.triple_triad_cards.clone(),
                                                         glasses_styles_mask: connection.player_data.unlocks.glasses_styles.clone(),
                                                         chocobo_taxi_stands_mask: connection.player_data.unlocks.chocobo_taxi_stands.clone(),
+                                                        aether_current_comp_flg_set_bitmask1: connection.player_data.unlocks.aether_current_comp_flg_set[0],
+                                                        aether_current_comp_flg_set_bitmask2: connection.player_data.unlocks.aether_current_comp_flg_set[1..AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE].to_vec(),
                                                         ..Default::default()
                                                     }));
                                                     connection.send_ipc_self(ipc).await;

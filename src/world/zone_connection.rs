@@ -9,7 +9,8 @@ use serde::{Deserialize, Serialize};
 use tokio::net::TcpStream;
 
 use crate::{
-    ACTIVE_HELP_BITMASK_SIZE, ADVENTURE_BITMASK_SIZE, AETHER_CURRENT_BITMASK_SIZE,
+    ACTIVE_HELP_BITMASK_SIZE, ADVENTURE_BITMASK_SIZE,
+    AETHER_CURRENT_BITMASK_SIZE, AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE,
     AETHERYTE_UNLOCK_BITMASK_SIZE, BUDDY_EQUIP_BITMASK_SIZE, CAUGHT_FISH_BITMASK_SIZE,
     CAUGHT_SPEARFISH_BITMASK_SIZE, CHOCOBO_TAXI_STANDS_BITMASK_SIZE, CLASSJOB_ARRAY_SIZE,
     COMPLETED_LEVEQUEST_BITMASK_SIZE, COMPLETED_QUEST_BITMASK_SIZE, CUTSCENE_SEEN_BITMASK_SIZE,
@@ -74,6 +75,7 @@ pub struct UnlockData {
     pub seen_active_help: Vec<u8>,
     pub minions: Vec<u8>,
     pub mounts: Vec<u8>,
+    pub aether_current_comp_flg_set: Vec<u8>,
     pub aether_currents: Vec<u8>,
     pub orchestrion_rolls: Vec<u8>,
     pub buddy_equip: Vec<u8>,
@@ -106,6 +108,7 @@ impl Default for UnlockData {
             seen_active_help: vec![0x0; ACTIVE_HELP_BITMASK_SIZE],
             minions: vec![0x0; MINION_BITMASK_SIZE],
             mounts: vec![0x0; MOUNT_BITMASK_SIZE],
+            aether_current_comp_flg_set: vec![0x0; AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE],
             aether_currents: vec![0x0; AETHER_CURRENT_BITMASK_SIZE],
             orchestrion_rolls: vec![0x0; ORCHESTRION_ROLL_BITMASK_SIZE],
             buddy_equip: vec![0x0; BUDDY_EQUIP_BITMASK_SIZE],
