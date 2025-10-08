@@ -118,6 +118,10 @@ pub enum ClientTriggerCommand {
     #[brw(magic = 0x0264u32)]
     EnterMountingProhibitedArea { enabled: u32 },
 
+    /// When the player starts flying on their mount.
+    #[brw(magic = 0x0268u32)]
+    StartFlying {},
+
     /// Unknown purpose, but is seen during the crystal bell/aesthetician cutscenes.
     #[brw(magic = 0x033Eu32)]
     EventRelatedUnk {
