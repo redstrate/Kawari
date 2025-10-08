@@ -1,0 +1,9 @@
+{% extends "account_base.html" %}
+
+{% block title %}Kawari - Cancel Account{% endblock %}
+{% set current_page = "cancel" %}
+
+{% block accountbody %}
+<p>Are you sure you want to cancel all of your service accounts and delete all information?</p>
+<a href="/account/app/svc/mbrCancel/perform" class="btn btn-danger">Delete Account</a>
+{% endblock %}

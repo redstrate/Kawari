@@ -279,4 +279,29 @@ impl LoginDatabase {
 
         tracing::info!("Revoked {service} for {user_id}!");
     }
+
+    /// Deletes the given user and also scrubs their service accounts.
+    pub fn delete_user(&self, user_id: u32) {
+        let connection = self.connection.lock().unwrap();
+
+        // delete from users table
+        connection
+            .execute("DELETE FROM users WHERE id = ?1", (user_id,))
+            .unwrap();
+
+        // delete from service accounts table
+        connection
+            .execute(
+                "DELETE FROM service_accounts WHERE user_id = ?1",
+                (user_id,),
+            )
+            .unwrap();
+
+        // delete from sessions table
+        connection
+            .execute("DELETE FROM sessions WHERE user_id = ?1", (user_id,))
+            .unwrap();
+
+        tracing::info!("Deleted {user_id}!");
+    }
 }

@@ -74,6 +74,12 @@ fn setup_default_environment() -> Environment<'static> {
             .expect("Failed to find template!"),
     )
     .unwrap();
+    env.add_template_owned(
+        "cancel.html",
+        std::fs::read_to_string(web_templates_dir!("cancel.html"))
+            .expect("Failed to find template!"),
+    )
+    .unwrap();
 
     env
 }
@@ -411,8 +417,22 @@ async fn change_password() -> Html<String> {
     Html(template.render(context! {}).unwrap())
 }
 
-async fn cancel_account(jar: CookieJar) -> (CookieJar, Redirect) {
-    // TODO: actually delete account
+async fn cancel_account() -> Html<String> {
+    let environment = setup_default_environment();
+    let template = environment.get_template("cancel.html").unwrap();
+    Html(template.render(context! {}).unwrap())
+}
+
+async fn cancel_account_perform(
+    State(state): State<LoginServerState>,
+    jar: CookieJar,
+) -> (CookieJar, Redirect) {
+    if let Some(session_id) = jar.get("cis_sessid") {
+        if let Some(user_id) = state.database.get_user_id(session_id.value()) {
+            state.database.delete_user(user_id);
+        }
+    }
+
     (jar.remove("cis_sessid"), Redirect::to("/"))
 }
 
@@ -566,6 +586,10 @@ async fn main() {
         .route("/account/app/svc/logout", get(logout))
         .route("/account/app/svc/mbrPasswd", get(change_password))
         .route("/account/app/svc/mbrCancel", get(cancel_account))
+        .route(
+            "/account/app/svc/mbrCancel/perform",
+            get(cancel_account_perform),
+        )
         .route("/account/app/svc/restore", get(restore_backup))
         .route("/account/app/svc/restore", post(upload_character_backup))
         .route("/account/app/svc/loginhistory", get(login_history))
