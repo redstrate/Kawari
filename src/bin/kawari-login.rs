@@ -287,6 +287,11 @@ async fn check_session(
     serde_json::to_string(&accounts).unwrap_or(String::new())
 }
 
+async fn get_users(State(state): State<LoginServerState>) -> String {
+    let users = state.database.get_users();
+    serde_json::to_string(&users).unwrap_or(String::new())
+}
+
 async fn login() -> Html<String> {
     let config = get_config();
     let environment = setup_default_environment();
@@ -585,6 +590,7 @@ async fn main() {
         // private server<->server API
         // TODO: make these actually private
         .route("/_private/service_accounts", get(check_session))
+        .route("/_private/users", get(get_users))
         // public website
         .route("/oauth/oa/oauthlogin", get(login))
         .route("/oauth/oa/oauthlogin", post(do_login))

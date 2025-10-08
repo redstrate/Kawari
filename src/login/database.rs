@@ -1,7 +1,7 @@
 use std::sync::Mutex;
 
 use rusqlite::Connection;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::ipc::lobby::ServiceAccount;
 
@@ -26,6 +26,12 @@ impl Default for LoginDatabase {
 pub struct SessionInformation {
     pub time: String,
     pub service: String,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct User {
+    pub id: u32,
+    pub username: String,
 }
 
 impl LoginDatabase {
@@ -303,5 +309,24 @@ impl LoginDatabase {
             .unwrap();
 
         tracing::info!("Deleted {user_id}!");
+    }
+
+    /// Grabs basic information about every user in the database.
+    pub fn get_users(&self) -> Vec<User> {
+        let connection = self.connection.lock().unwrap();
+
+        let mut stmt = connection
+            .prepare("SELECT id, username FROM users")
+            .unwrap();
+
+        stmt.query_map((), |row| {
+            Ok(User {
+                id: row.get(0)?,
+                username: row.get(1)?,
+            })
+        })
+        .unwrap()
+        .map(|x| x.unwrap())
+        .collect()
     }
 }

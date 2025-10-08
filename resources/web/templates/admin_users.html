@@ -1,0 +1,23 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Kawari Admin Panel{% endblock %}
+{% set current_page = "users" %}
+
+{% block adminbody %}
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">ID</th>
+      <th scope="col">Username</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for user in users %}
+      <tr>
+        <td>{{ user.id }}</td>
+        <td>{{ user.username }}</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
