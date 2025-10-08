@@ -2,6 +2,7 @@ use axum::response::{Html, Redirect};
 use axum::routing::post;
 use axum::{Router, extract::Form, routing::get};
 use kawari::config::get_config;
+use kawari::web_static_dir;
 use minijinja::Environment;
 use minijinja::context;
 use serde::{Deserialize, Serialize};
@@ -16,8 +17,14 @@ fn setup_default_environment() -> Environment<'static> {
     )
     .unwrap();
     env.add_template_owned(
-        "admin.html",
-        std::fs::read_to_string("resources/web/templates/admin.html")
+        "admin_general.html",
+        std::fs::read_to_string("resources/web/templates/admin_general.html")
+            .expect("Failed to find template!"),
+    )
+    .unwrap();
+    env.add_template_owned(
+        "admin_base.html",
+        std::fs::read_to_string("resources/web/templates/admin_base.html")
             .expect("Failed to find template!"),
     )
     .unwrap();
@@ -36,7 +43,7 @@ async fn root() -> Html<String> {
     let config = get_config();
 
     let environment = setup_default_environment();
-    let template = environment.get_template("admin.html").unwrap();
+    let template = environment.get_template("admin_general.html").unwrap();
     Html(template.render(context! { worlds_open => config.frontier.worlds_open, login_open => config.frontier.login_open, boot_patch_location => config.patch.patches_location }).unwrap())
 }
 
@@ -82,7 +89,7 @@ async fn main() {
     let app = Router::new()
         .route("/", get(root))
         .route("/apply", post(apply))
-        .nest_service("/static", ServeDir::new("resources/static"));
+        .nest_service("/static", ServeDir::new(web_static_dir!("")));
 
     let config = get_config();
 

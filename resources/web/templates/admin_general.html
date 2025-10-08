@@ -1,8 +1,9 @@
-{% extends "layout.html" %}
+{% extends "admin_base.html" %}
 
 {% block title %}Kawari Admin Panel{% endblock %}
+{% set current_page = "general" %}
 
-{% block body %}
+{% block adminbody %}
 <p>Gate open:{{ worlds_open }}</p>
 <p>Gate open:{{ login_open }}</p>
 <p>Boot patch location:{{ boot_patch_location }}</p>

@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+
+{% block body %}
+<main class="d-flex" style="height: 100vh">
+    <div class="d-flex flex-column p-3 text-bg-dark bg-body-tertiary" style="width: 280px;">
+        <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+            <span class="fs-4">Admin Panel</span>
+        </a>
+        <hr>
+        <ul class="nav nav-pills flex-column mb-auto">
+            <li class="nav-item">
+                <a href="/" class="nav-link {% if current_page == 'general' %}active{% endif %}" >
+                    General
+                </a>
+            </li>
+        </ul>
+    </div>
+    <div class="d-flex flex-column flex-fill p-3">
+        {% block adminbody %}{% endblock %}
+    </div>
+</main>
+{% endblock %}
