@@ -4,22 +4,22 @@
 {% set current_page = "general" %}
 
 {% block adminbody %}
-<p>Gate open:{{ worlds_open }}</p>
-<p>Gate open:{{ login_open }}</p>
-<p>Boot patch location:{{ boot_patch_location }}</p>
 <form action='apply' method='post'>
-    <label>
-        Worlds Open:
-        <input type='checkbox' id='worlds_open' name='worlds_open' checked/>
-    </label>
-    <label>
-        Login Open:
-        <input type='checkbox' id='login_open' name='login_open' checked/>
-    </label>
-    <label>
-        Boot Patch Location:
-        <input type='text' id='boot_patch_location' name='boot_patch_location'/>
-    </label>
-    <button type='submit'>Apply</button>
+    <div class="mb-3">
+        <div class="form-check">
+            <label class="form-check-label" for="worlds_open">Worlds Open</label>
+            <input class="form-check-input" type='checkbox' id='worlds_open' name='worlds_open' {{ 'checked' if worlds_open }}/>
+        </div>
+
+        <div class="form-check">
+            <label class="form-check-label" for="login_open">Login Open</label>
+            <input class="form-check-input" type='checkbox' id='login_open' name='login_open' {{ 'checked' if login_open }}/>
+        </div>
+
+        <label class="form-label" for="boot_patch_location">Boot Patch Location</label>
+        <input class="form-control" type='text' id='boot_patch_location' name='boot_patch_location' value='{{ boot_patch_location }}'/>
+    </div>
+
+    <button type='submit' class="btn btn-primary">Apply</button>
 </form>
 {% endblock %}
