@@ -340,15 +340,16 @@ async fn do_login(
 
 async fn account(State(state): State<LoginServerState>, jar: CookieJar) -> Html<String> {
     if let Some(session_id) = jar.get("cis_sessid") {
-        let user_id = state.database.get_user_id(session_id.value());
-        let username = state.database.get_username(user_id);
+        if let Some(user_id) = state.database.get_user_id(session_id.value()) {
+            let username = state.database.get_username(user_id);
 
-        let environment = setup_default_environment();
-        let template = environment.get_template("account.html").unwrap();
-        Html(template.render(context! { username => username }).unwrap())
-    } else {
-        Html("You need to be logged in!".to_string())
+            let environment = setup_default_environment();
+            let template = environment.get_template("account.html").unwrap();
+            return Html(template.render(context! { username => username }).unwrap());
+        }
     }
+
+    Html("You need to be logged in!".to_string())
 }
 
 async fn upload_character_backup(
@@ -357,24 +358,25 @@ async fn upload_character_backup(
     mut multipart: Multipart,
 ) -> Response<Body> {
     if let Some(session_id) = jar.get("cis_sessid") {
-        let user_id = state.database.get_user_id(session_id.value());
-        let service_account_id = state.database.get_service_account(user_id);
+        if let Some(user_id) = state.database.get_user_id(session_id.value()) {
+            let service_account_id = state.database.get_service_account(user_id);
 
-        while let Some(field) = multipart.next_field().await.unwrap() {
-            let name = field.name().unwrap().to_string();
-            let data = field.bytes().await.unwrap();
+            while let Some(field) = multipart.next_field().await.unwrap() {
+                let name = field.name().unwrap().to_string();
+                let data = field.bytes().await.unwrap();
 
-            std::fs::write("temp.zip", data).unwrap();
+                std::fs::write("temp.zip", data).unwrap();
 
-            if name == "charbak" {
-                let ipc_segment = CustomIpcSegment::new(CustomIpcData::ImportCharacter {
-                    service_account_id,
-                    path: "temp.zip".to_string(),
-                });
+                if name == "charbak" {
+                    let ipc_segment = CustomIpcSegment::new(CustomIpcData::ImportCharacter {
+                        service_account_id,
+                        path: "temp.zip".to_string(),
+                    });
 
-                if let Some(response) = send_custom_world_packet(ipc_segment).await {
-                    if let CustomIpcData::CharacterImported { message } = response.data {
-                        return restore_backup_with_message(message).await.into_response();
+                    if let Some(response) = send_custom_world_packet(ipc_segment).await {
+                        if let CustomIpcData::CharacterImported { message } = response.data {
+                            return restore_backup_with_message(message).await.into_response();
+                        }
                     }
                 }
             }
@@ -389,11 +391,13 @@ async fn upload_character_backup(
 async fn logout(State(state): State<LoginServerState>, jar: CookieJar) -> (CookieJar, Redirect) {
     let config = get_config();
     if let Some(session_id) = jar.get("cis_sessid") {
-        let user_id = state.database.get_user_id(session_id.value());
-        state
-            .database
-            .revoke_session(user_id, ACCOUNT_MANAGEMENT_SERVICE);
+        if let Some(user_id) = state.database.get_user_id(session_id.value()) {
+            state
+                .database
+                .revoke_session(user_id, ACCOUNT_MANAGEMENT_SERVICE);
+        }
     }
+
     (
         jar.remove("cis_sessid"),
         Redirect::to(&format!("{}/", config.web.server_name)),
@@ -430,20 +434,22 @@ async fn restore_backup_with_message(status_message: String) -> Html<String> {
 
 async fn login_history(State(state): State<LoginServerState>, jar: CookieJar) -> Html<String> {
     if let Some(session_id) = jar.get("cis_sessid") {
-        let user_id = state.database.get_user_id(session_id.value());
+        if let Some(user_id) = state.database.get_user_id(session_id.value()) {
+            let environment = setup_default_environment();
+            let template = environment.get_template("loginhistory.html").unwrap();
+            let past_logins = state.database.get_sessions(user_id);
 
-        let environment = setup_default_environment();
-        let template = environment.get_template("loginhistory.html").unwrap();
-        let past_logins = state.database.get_sessions(user_id);
-
-        Html(
-            template
-                .render(context! { past_logins => past_logins, game_service_name => GAME_SERVICE })
-                .unwrap(),
-        )
-    } else {
-        Html("You need to be logged in!".to_string())
+            return Html(
+                template
+                    .render(
+                        context! { past_logins => past_logins, game_service_name => GAME_SERVICE },
+                    )
+                    .unwrap(),
+            );
+        }
     }
+
+    Html("You need to be logged in!".to_string())
 }
 
 async fn login_history_with_sid(
@@ -453,20 +459,20 @@ async fn login_history_with_sid(
 ) -> Html<String> {
     // TODO: de-duplicate with above function pls
     if let Some(session_id) = jar.get("cis_sessid") {
-        let user_id = state.database.get_user_id(session_id.value());
+        if let Some(user_id) = state.database.get_user_id(session_id.value()) {
+            let environment = setup_default_environment();
+            let template = environment.get_template("loginhistory.html").unwrap();
+            let past_logins = state.database.get_sessions(user_id);
 
-        let environment = setup_default_environment();
-        let template = environment.get_template("loginhistory.html").unwrap();
-        let past_logins = state.database.get_sessions(user_id);
-
-        Html(
-            template
-                .render(context! { past_logins => past_logins, generated_sid => generated_sid, game_service_name => GAME_SERVICE })
-                .unwrap(),
-        )
-    } else {
-        Html("You need to be logged in!".to_string())
+            return Html(
+                template
+                    .render(context! { past_logins => past_logins, generated_sid => generated_sid, game_service_name => GAME_SERVICE })
+                    .unwrap(),
+            );
+        }
     }
+
+    Html("You need to be logged in!".to_string())
 }
 
 #[derive(Deserialize, Debug)]
@@ -489,15 +495,16 @@ async fn manual_generate_sid(
             .database
             .is_session_valid(ACCOUNT_MANAGEMENT_SERVICE, session_id.value())
         {
-            let user_id = state.database.get_user_id(session_id.value());
-            let new_sid = state
-                .database
-                .create_session(&service, user_id)
-                .expect("Failed to create new SID?!");
+            if let Some(user_id) = state.database.get_user_id(session_id.value()) {
+                let new_sid = state
+                    .database
+                    .create_session(&service, user_id)
+                    .expect("Failed to create new SID?!");
 
-            return login_history_with_sid(State(state), jar, &new_sid)
-                .await
-                .into_response();
+                return login_history_with_sid(State(state), jar, &new_sid)
+                    .await
+                    .into_response();
+            }
         }
     }
 
@@ -524,8 +531,9 @@ async fn revoke_sid(
             .database
             .is_session_valid(ACCOUNT_MANAGEMENT_SERVICE, session_id.value())
         {
-            let user_id = state.database.get_user_id(session_id.value());
-            state.database.revoke_session(user_id, &service);
+            if let Some(user_id) = state.database.get_user_id(session_id.value()) {
+                state.database.revoke_session(user_id, &service);
+            }
         }
     }
 

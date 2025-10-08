@@ -201,14 +201,15 @@ impl LoginDatabase {
         selected_row.is_ok()
     }
 
-    pub fn get_user_id(&self, sid: &str) -> u32 {
+    /// Returns the user ID associated with `sid`, or None if it's invalid or not found.
+    pub fn get_user_id(&self, sid: &str) -> Option<u32> {
         let connection = self.connection.lock().unwrap();
 
         let mut stmt = connection
             .prepare("SELECT user_id FROM sessions WHERE sid = ?1")
             .ok()
             .unwrap();
-        stmt.query_row((sid,), |row| row.get(0)).unwrap()
+        stmt.query_row((sid,), |row| row.get(0)).ok()?
     }
 
     pub fn get_username(&self, user_id: u32) -> String {
