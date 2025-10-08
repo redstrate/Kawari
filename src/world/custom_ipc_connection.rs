@@ -244,6 +244,9 @@ impl CustomIpcConnection {
                     .await;
                 }
             }
+            CustomIpcData::DeleteServiceAccount { service_account_id } => {
+                self.database.delete_characters(*service_account_id);
+            }
             _ => {
                 panic!("The server is recieving a response or unknown custom IPC! {data:#?}")
             }

@@ -93,6 +93,9 @@ pub enum CustomIpcData {
         #[bw(map = write_string)]
         message: String,
     },
+    DeleteServiceAccount {
+        service_account_id: u32,
+    },
     Unknown,
 }
 

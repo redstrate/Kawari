@@ -429,7 +429,15 @@ async fn cancel_account_perform(
 ) -> (CookieJar, Redirect) {
     if let Some(session_id) = jar.get("cis_sessid") {
         if let Some(user_id) = state.database.get_user_id(session_id.value()) {
+            // TODO: only supports one service account
+            let service_account_id = state.database.get_service_account(user_id);
+
             state.database.delete_user(user_id);
+
+            let ipc_segment =
+                CustomIpcSegment::new(CustomIpcData::DeleteServiceAccount { service_account_id });
+
+            let _ = send_custom_world_packet(ipc_segment).await; // we don't care about the response, for now.
         }
     }
 

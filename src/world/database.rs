@@ -746,4 +746,44 @@ impl WorldDatabase {
             .unwrap();
         stmt.execute((chara_make_json, content_id)).unwrap();
     }
+
+    /// Deletes all character associated with the service account.
+    pub fn delete_characters(&self, service_account_id: u32) {
+        let connection = self.connection.lock().unwrap();
+
+        let content_actor_ids: Vec<(u32, u32)>;
+
+        // find the content ids associated with the service account
+        {
+            let mut stmt = connection
+                .prepare(
+                    "SELECT content_id, actor_id FROM characters WHERE service_account_id = ?1",
+                )
+                .unwrap();
+
+            content_actor_ids = stmt
+                .query_map((service_account_id,), |row| Ok((row.get(0)?, row.get(1)?)))
+                .unwrap()
+                .map(|x| x.unwrap())
+                .collect();
+        }
+
+        for (content_id, _actor_id) in content_actor_ids {
+            // delete from characters table
+            connection
+                .execute(
+                    "DELETE FROM characters WHERE content_id = ?1",
+                    (content_id,),
+                )
+                .unwrap();
+
+            // delete from character_data table
+            connection
+                .execute(
+                    "DELETE FROM character_data WHERE content_id = ?1",
+                    (content_id,),
+                )
+                .unwrap();
+        }
+    }
 }

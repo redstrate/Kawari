@@ -923,6 +923,12 @@
             "comment": "Response to importing a character.",
             "opcode": 14,
             "size": 128
+        },
+        {
+            "name": "DeleteServiceAccount",
+            "comment": "Removes the characters associated with a given service account.",
+            "opcode": 15,
+            "size": 4
         }
     ]
 }
