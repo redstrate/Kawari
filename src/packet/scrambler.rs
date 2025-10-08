@@ -56,8 +56,8 @@ impl ScramblerKeyGenerator {
                 .collect(),
 
             // TODO: is it possible to calculate these automatically?
-            table_radixes: &[112, 82, 112],
-            table_max: &[222, 62, 250],
+            table_radixes: &[89, 91, 100],
+            table_max: &[64, 203, 90],
         }
     }
 
