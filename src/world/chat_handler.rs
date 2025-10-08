@@ -40,16 +40,18 @@ impl ChatHandler {
                 true
             }
             "!spawnmonster" => {
-                let (_, id) = chat_message.message.split_once(' ').unwrap();
-
-                connection
-                    .handle
-                    .send(ToServer::DebugNewEnemy(
-                        connection.id,
-                        connection.player_data.actor_id,
-                        id.parse().unwrap(),
-                    ))
-                    .await;
+                if let Some((_, id)) = chat_message.message.split_once(' ') {
+                    if let Ok(id) = id.parse::<u32>() {
+                        connection
+                            .handle
+                            .send(ToServer::DebugNewEnemy(
+                                connection.id,
+                                connection.player_data.actor_id,
+                                id,
+                            ))
+                            .await;
+                    }
+                }
                 true
             }
             "!spawnclone" => {
@@ -63,52 +65,54 @@ impl ChatHandler {
                 true
             }
             "!equip" => {
-                let (_, name) = chat_message.message.split_once(' ').unwrap();
-
-                {
-                    let mut gamedata = connection.gamedata.lock().unwrap();
-
-                    if let Some(item_info) =
-                        gamedata.get_item_info(ItemInfoQuery::ByName(name.to_string()))
+                if let Some((_, name)) = chat_message.message.split_once(' ') {
                     {
-                        let slot = gamedata
-                            .get_equipslot_category(item_info.equip_category)
-                            .unwrap();
+                        let mut gamedata = connection.gamedata.lock().unwrap();
 
-                        let slot = connection.player_data.inventory.equipped.get_slot_mut(slot);
+                        if let Some(item_info) =
+                            gamedata.get_item_info(ItemInfoQuery::ByName(name.to_string()))
+                        {
+                            let slot = gamedata
+                                .get_equipslot_category(item_info.equip_category)
+                                .unwrap();
 
-                        slot.id = item_info.id;
-                        slot.glamour_catalog_id = 0;
-                        slot.quantity = 1;
-                        slot.condition = ITEM_CONDITION_MAX;
+                            let slot = connection.player_data.inventory.equipped.get_slot_mut(slot);
+
+                            slot.id = item_info.id;
+                            slot.glamour_catalog_id = 0;
+                            slot.quantity = 1;
+                            slot.condition = ITEM_CONDITION_MAX;
+                        }
                     }
+
+                    connection.send_inventory(false).await;
+                    connection.inform_equip().await;
                 }
 
-                connection.send_inventory(false).await;
-                connection.inform_equip().await;
                 true
             }
             "!item" => {
-                let (_, name) = chat_message.message.split_once(' ').unwrap();
-                let mut result = None;
-                {
-                    let mut gamedata = connection.gamedata.lock().unwrap();
-
-                    if let Some(item_info) =
-                        gamedata.get_item_info(ItemInfoQuery::ByName(name.to_string()))
+                if let Some((_, name)) = chat_message.message.split_once(' ') {
+                    let mut result = None;
                     {
-                        result = connection
-                            .player_data
-                            .inventory
-                            .add_in_next_free_slot(Item::new(item_info, 1));
-                    }
-                }
+                        let mut gamedata = connection.gamedata.lock().unwrap();
 
-                if result.is_some() {
-                    connection.send_inventory(false).await;
-                } else {
-                    tracing::error!(ERR_INVENTORY_ADD_FAILED);
-                    connection.send_notice(ERR_INVENTORY_ADD_FAILED).await;
+                        if let Some(item_info) =
+                            gamedata.get_item_info(ItemInfoQuery::ByName(name.to_string()))
+                        {
+                            result = connection
+                                .player_data
+                                .inventory
+                                .add_in_next_free_slot(Item::new(item_info, 1));
+                        }
+                    }
+
+                    if result.is_some() {
+                        connection.send_inventory(false).await;
+                    } else {
+                        tracing::error!(ERR_INVENTORY_ADD_FAILED);
+                        connection.send_notice(ERR_INVENTORY_ADD_FAILED).await;
+                    }
                 }
 
                 true
@@ -130,23 +134,25 @@ impl ChatHandler {
                 true
             }
             "!replay" => {
-                let (_, path) = chat_message.message.split_once(' ').unwrap();
-                connection.replay_packets(path).await;
+                if let Some((_, path)) = chat_message.message.split_once(' ') {
+                    connection.replay_packets(path).await;
+                }
 
                 true
             }
             "!condition" => {
-                let (_, condition_name) = chat_message.message.split_once(' ').unwrap();
-                if let Ok(condition) = Condition::from_str(condition_name) {
-                    connection.conditions.set_condition(condition);
-                    connection.send_conditions().await;
-                    connection
-                        .send_notice(&format!("Condition {condition:?} set!"))
-                        .await;
-                } else {
-                    connection
-                        .send_notice(&format!("Unknown condition {condition_name}"))
-                        .await;
+                if let Some((_, condition_name)) = chat_message.message.split_once(' ') {
+                    if let Ok(condition) = Condition::from_str(condition_name) {
+                        connection.conditions.set_condition(condition);
+                        connection.send_conditions().await;
+                        connection
+                            .send_notice(&format!("Condition {condition:?} set!"))
+                            .await;
+                    } else {
+                        connection
+                            .send_notice(&format!("Unknown condition {condition_name}"))
+                            .await;
+                    }
                 }
 
                 true
@@ -196,13 +202,14 @@ impl ChatHandler {
                 true
             }
             "!mount" => {
-                let (_, mount) = chat_message.message.split_once(' ').unwrap();
-                let mount_id = mount.parse::<u16>().unwrap();
-                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Mount {
-                    id: mount_id,
-                    unk1: [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                });
-                connection.send_ipc_self(ipc).await;
+                if let Some((_, mount)) = chat_message.message.split_once(' ') {
+                    let mount_id = mount.parse::<u16>().unwrap();
+                    let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Mount {
+                        id: mount_id,
+                        unk1: [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    });
+                    connection.send_ipc_self(ipc).await;
+                }
 
                 true
             }
