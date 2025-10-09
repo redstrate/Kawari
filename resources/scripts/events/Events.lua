@@ -169,18 +169,6 @@ common_events = {
     -- [721620] = "GenericGemstoneTrader.lua", -- Generic Endwalker & Dawntrail in-city gemstone traders, but they do nothing when interacted with right now
 }
 
--- NPC shops that accept gil for purchasing items
-generic_gil_shops = {
-    262157, -- Tanie <Florist>, New Gridania
-    262190, -- Blue Lily <Independent Apothecary>, Limsa Lominsa: The Lower Decks
-    262197, -- Gerulf <Independent Culinarian>, Limsa Lominsa: The Lower Decks
-    262574, -- Minon Trader, Chocobo Square
-    262612, -- Tack & Feed Trader, Chocobo Square
-    262735, -- Sorcha <Independent Jeweler> (Limsa Lominsa: The Lower Decks), Battlecraft Accessories
-    262736, -- Sorcha <Independent Jeweler> (Limsa Lominsa: The Lower Decks), Fieldcraft/Tradecraft Accessories
-    263220, -- Neon <Air-wheeler dealer>, Solution Nine
-}
-
 -- Not all Hunt NPCs are spawning right now, unfortunately.
 generic_currency_exchange = {
     1769533, -- Gold Saucer Attendant <Prize Claim> (behind counter) -> Prize Exchange (Gear)
@@ -264,6 +252,8 @@ function dispatchEvent(event_id, game_data)
         else
             return runEvent(event_id, "events/common/GenericAethernetShard.lua")
         end
+    elseif event_type == EVENT_TYPE_GIL_SHOP then
+        return runEvent(event_id, "events/common/GilShopkeeper.lua")
     elseif event_type == EVENT_TYPE_EVENT_GIMMICK_PATH_MOVE then
         return runEvent(event_id, "events/walkin_trigger/SolutionNineTeleporter.lua")
     end
@@ -278,10 +268,6 @@ end
 
 for _, event_id in pairs(generic_inns) do
     registerEvent(event_id, "events/warp/WarpInnGeneric.lua" )
-end
-
-for _, event_id in pairs(generic_gil_shops) do
-    registerEvent(event_id, "events/common/GilShopkeeper.lua")
 end
 
 for _, event_id in pairs(generic_currency_exchange) do
