@@ -48,7 +48,7 @@ EVENT_TYPE_GUILD_ORDER_GUIDE = 23
 EVENT_TYPE_GUILD_ORDER_OFFICER = 24
 EVENT_TYPE_CONTENT_NPC = 25
 EVENT_TYPE_STORY = 26
-EVENT_TYPE_SEPCIAL_SHOP = 27
+EVENT_TYPE_SPECIAL_SHOP = 27
 EVENT_TYPE_SWITCH_TALK = 31
 EVENT_TYPE_TRIPLE_TRIAD = 35
 EVENT_TYPE_FCC_SHOP = 42
@@ -169,40 +169,6 @@ common_events = {
     -- [721620] = "GenericGemstoneTrader.lua", -- Generic Endwalker & Dawntrail in-city gemstone traders, but they do nothing when interacted with right now
 }
 
--- Not all Hunt NPCs are spawning right now, unfortunately.
-generic_currency_exchange = {
-    1769533, -- Gold Saucer Attendant <Prize Claim> (behind counter) -> Prize Exchange (Gear)
-    1769544, -- Gold Saucer Attendant <Prize Claim> (behind counter) -> Prize Exchange (Weapons)
-    1769545, -- Triple Triad Trader (Gold Saucer, behind counter) -> Prize Exchange (Weapons)
-    1769546, -- Tack & Feed Trader (Gold Saucer, Chocobo Square) -> Race Items
-    1769547, -- Tack & Feed Trader (Gold Saucer, Chocobo Square) -> Chocobo Training Manuals I
-    1769548, -- Tack & Feed Trader (Gold Saucer, Chocobo Square) -> Chocobo Training Manuals II
-    1769626, -- Minion Trader (Gold Saucer, Minion Square) -> Purchase Minions (MGP)
-    1769637, -- Modern Aesthetics Saleswoman (Gold Saucer) -> Prize Exchange III
-    1769660, -- Ishgard: Yolaine -> Doman Gear Exchange (DoW, IL 180)
-    1769661, -- Ishgard: Yolaine -> Doman Gear Exchange (DoM, IL 180)
-    1769715, -- Ishgard: Yolaine -> Artifact Gear Exchange I (DoW, IL 210)
-    1769716, -- Ishgard: Yolaine -> Artifact Gear Exchange II (DoW, IL 210)
-    1769717, -- Ishgard: Yolaine -> Artifact Gear Exchange (DoM, IL 210)
-    1769751, -- Gold Saucer Attendant <Prize Claim> (by Modern Aestherics Saleswoman) -> Prize Exchange I
-    1769752, -- Gold Saucer Attendant <Prize Claim> (by Modern Aestherics Saleswoman) -> Prize Exchange III
-    1769783, -- Kugane: Satsuya -> Centurio Seal Exchange II
-    1769864, -- Kugane: Satsuya -> Ala Mhigan Gear Exchange (DoW, IL 310)
-    1769865, -- Kugane: Satsuya -> Ala Mhigan Gear Exchange (DoM, IL 310)
-    1769914, -- Kugane: Satsuya -> Lost Allagan Gear (DoW, IL 340)
-    1769915, -- Kugane: Satsuya -> Lost Allagan Gear (DoM, IL 340)
-    1770476, -- Radz-at-Han: Wilmetta -> Sacks of Nuts Exchange
-    1770538, -- Gold Saucer Attendant <Prize Claim> (by Modern Aestherics Saleswoman) -> Prize Exchange II
-    1770599, -- Gold Saucer Attendant <Prize Claim> (behind counter) -> Prize Exchange (Registrable Miscellany)
-    1770600, -- Gold Saucer Attendant <Prize Claim> (behind counter) -> Prize Exchange (Music/Furnishings)
-    1770619, -- Radz-at-Han: Wilmetta -> Moonward Gear Exchange (DoW, IL 570)
-    1770620, -- Radz-at-Han: Wilmetta -> Moonward Gear Exchange (DoW, IL 570)
-    1770704, -- Radz-at-Han: Wilmetta -> Radiant's Gear (DoW, IL 600)
-    1770705, -- Radz-at-Han: Wilmetta -> Radiant's Gear (DoM, IL 600)
-    1770761, -- Tuliyollal: Ryubool Ja -> Dawn Hunt Vendor
-    -- 3539075, -- Dibourdier <Mahjong Vendor> doesn't respond when interacted with right now, probably needs special handling
-}
-
 -- Not custom in the sense of non-SQEX content, just going based off the directory name
 custom0_events = {
     [720901] = "RegFstAdvGuild_00005.lua",
@@ -244,8 +210,10 @@ function dispatchEvent(event_id, game_data)
         end
     elseif event_type == EVENT_TYPE_GIL_SHOP then
         return runEvent(event_id, "events/common/GilShopkeeper.lua")
-    elseif event_Type == EVENT_TYPE_GUILD_LEVE_ASSIGNMENT then
+    elseif event_type == EVENT_TYPE_GUILD_LEVE_ASSIGNMENT then
         return runEvent(event_id, "events/common/GenericLevemete.lua")
+    elseif event_type == EVENT_TYPE_SPECIAL_SHOP then
+        return runEvent(event_id, "events/common/GenericHuntCurrencyExchange.lua") --TODO: Should probably rename this since it now covers other generic currency vendors like Gold Saucer ones
     elseif event_type == EVENT_TYPE_EVENT_GIMMICK_PATH_MOVE then
         return runEvent(event_id, "events/walkin_trigger/SolutionNineTeleporter.lua")
     end
@@ -260,10 +228,6 @@ end
 
 for _, event_id in pairs(generic_inns) do
     registerEvent(event_id, "events/warp/WarpInnGeneric.lua" )
-end
-
-for _, event_id in pairs(generic_currency_exchange) do
-    registerEvent(event_id, "events/common/GenericHuntCurrencyExchange.lua") --TODO: Should probably rename this since it now covers other generic currency vendors like Gold Saucer ones
 end
 
 for event_id, script_file in pairs(to_sort) do
