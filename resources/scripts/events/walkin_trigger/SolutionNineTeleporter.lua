@@ -9,6 +9,7 @@ TELEPORTER_INFO = {
     [4194310] = { 10114944, 1970, 11837439, 1670053889, 2009628707 }, -- Teleporter from upper balcony to Nexus Arcade ground floor
 }
 
+-- TODO: this can be extrapolated from EventGimmickPathMove
 EVENT_ARG = {
     [4194305] = 10611851,
     [4194306] = 10611861,

@@ -60,6 +60,7 @@ EVENT_TYPE_PRE_HANDLER = 54
 EVENT_TYPE_INCLUSION_SHOP = 58
 EVENT_TYPE_COLLECTABLES_SHOP = 59
 EVENT_TYPE_EVENT_PATH_MOVE = 61
+EVENT_TYPE_EVENT_GIMMICK_PATH_MOVE = 64 -- These are used for the Solution Nine teleporter pads, for example
 
 generic_warps = {
     131077,  -- Ferry Skipper from Old Gridania to East Shroud: Sweetbloom Pier
@@ -224,15 +225,6 @@ generic_levemete_npcs = {
     393250, -- Eirikur in Crystarium
 }
 
-solution_nine_teleporters = {
-    4194305, -- Teleporter from eastern Aetheryte Plaza to Recreation Zone
-    4194306, -- Teleporter from Recreation Zone to eastern Aetheryte Plaza
-    4194307, -- Teleporter from northern Aetheryte Plaza to Government Sector
-    4194308, -- Teleporter from Government Sector to northern Aetheryte Plaza
-    4194309, -- Teleporter from Nexus Arcade ground floor to upper balcony
-    4194310, -- Teleporter from upper balcony to Nexus Arcade ground floor
-}
-
 -- Not custom in the sense of non-SQEX content, just going based off the directory name
 custom0_events = {
     [720901] = "RegFstAdvGuild_00005.lua",
@@ -272,6 +264,8 @@ function dispatchEvent(event_id, game_data)
         else
             return runEvent(event_id, "events/common/GenericAethernetShard.lua")
         end
+    elseif event_type == EVENT_TYPE_EVENT_GIMMICK_PATH_MOVE then
+        return runEvent(event_id, "events/walkin_trigger/SolutionNineTeleporter.lua")
     end
 
     return runLegacyEvent(event_id)
@@ -316,8 +310,4 @@ end
 
 for event_id, script_file in pairs(quests) do
     registerEvent(event_id, OPENING_DIR..script_file)
-end
-
-for _, event_id in pairs(solution_nine_teleporters) do
-    registerEvent(event_id, TRIGGER_DIR.."SolutionNineTeleporter.lua")
 end
