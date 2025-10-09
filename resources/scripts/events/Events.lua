@@ -177,6 +177,7 @@ custom0_events = {
 }
 
 custom1_events = {
+    [721001] = "CmnGscWeeklyLotUnlockTalk_00105.lua",
     [721044] = "cmndefbeautysalon_00148.lua",
     [721052] = "RegFstCarlineCanopy_00156.lua",
 }
