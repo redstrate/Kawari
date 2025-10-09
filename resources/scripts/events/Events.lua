@@ -203,16 +203,6 @@ generic_currency_exchange = {
     -- 3539075, -- Dibourdier <Mahjong Vendor> doesn't respond when interacted with right now, probably needs special handling
 }
 
-generic_levemete_npcs = {
-    393217, -- Tierney in Central Shroud
-    393220, -- Gontrant in Carline Canopy, New Gridania
-    393221, -- T'mokkri in The Drowning Wench, Limsa
-    393227, -- Muriaule in Central Shroud
-    393223, -- Totonowa in Western Thanalan
-    393237, -- Ourawann in Lower La Noscea
-    393250, -- Eirikur in Crystarium
-}
-
 -- Not custom in the sense of non-SQEX content, just going based off the directory name
 custom0_events = {
     [720901] = "RegFstAdvGuild_00005.lua",
@@ -254,6 +244,8 @@ function dispatchEvent(event_id, game_data)
         end
     elseif event_type == EVENT_TYPE_GIL_SHOP then
         return runEvent(event_id, "events/common/GilShopkeeper.lua")
+    elseif event_Type == EVENT_TYPE_GUILD_LEVE_ASSIGNMENT then
+        return runEvent(event_id, "events/common/GenericLevemete.lua")
     elseif event_type == EVENT_TYPE_EVENT_GIMMICK_PATH_MOVE then
         return runEvent(event_id, "events/walkin_trigger/SolutionNineTeleporter.lua")
     end
@@ -272,10 +264,6 @@ end
 
 for _, event_id in pairs(generic_currency_exchange) do
     registerEvent(event_id, "events/common/GenericHuntCurrencyExchange.lua") --TODO: Should probably rename this since it now covers other generic currency vendors like Gold Saucer ones
-end
-
-for _, event_id in pairs(generic_levemete_npcs) do
-    registerEvent(event_id, "events/common/GenericLevemete.lua")
 end
 
 for event_id, script_file in pairs(to_sort) do
