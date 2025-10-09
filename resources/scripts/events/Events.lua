@@ -1,6 +1,63 @@
 -- Please keep these ids sorted in each table!
 
--- TODO: Generic warps might be decided through ArrayEventHandler?
+-- Basically, all Event NPCs reference a specific sheet. You can see this in ENpcData in the ENpcBase sheet.
+-- The full list of sheets they can reference are as follows, which correspond to what that Event NPC does:
+
+-- ChocoboTaxiStand
+-- CollectablesShop
+-- ContentNpc
+-- CraftLeve
+-- CustomTalk
+-- DefaultTalk
+-- DisposalShop
+-- DpsChallengeOfficer
+-- EventPathMove
+-- FccShop
+-- GCShop
+-- GilShop
+-- GuildOrderGuide
+-- GuildOrderOfficer
+-- GuildleveAssignment
+-- InclusionShop
+-- LotteryExchangeShop
+-- PreHandler
+-- Quest
+-- SpecialShop
+-- Story
+-- SwitchTalk
+-- TopicSelect
+-- TripleTriad
+-- Warp
+
+-- Each "section" of ids appear to be broken up into segments of 65536 (which is also the max of a unsigned 16-bit integer)
+-- This allows us (and probably the client as well) to determine which event belongs to each sheet, or type of NPC.
+-- Here they are, sorted:
+QUESTS_START = 65536 -- / 65536 = 1
+WARP_START = 131072 -- / 65536 = 2
+GIL_SHOP_START = 262144 -- / 65536 = 4
+GUILD_LEVE_ASSIGNMENT_START = 393216 -- / 65536 = 6
+DEFAULT_TALK_START = 589824 -- / 65536 = 9
+CUSTOM_TALK_START = 720896 -- / 65536 = 11
+CRAFT_LEVEL_START = 917504 -- / 65536 = 14
+CHOCOBO_TAXI_STAND_START = 1179648 -- / 65536 = 18
+GC_SHOP_START = 1441792 -- / 65536 = 22
+GUILD_ORDER_GUIDE_START = 1507328 -- / 65536 = 23
+GUILD_ORDER_OFFICER_START = 1572864 -- / 65536 = 24
+CONTENT_NPC_START = 1638400 -- / 65536 = 25
+STORY_START = 1703936 -- / 65536 = 26
+SEPCIAL_SHOP_START = 1769472 -- / 65536 = 27
+SWITCH_TALK_START = 2031616 -- / 65536 = 31
+TRIPLE_TRIAD_START = 2293760 -- / 65536 = 35
+FCC_SHOP_START = 2752512 -- / 65536 = 42
+DPS_CHALLENGE_OFFICER_START = 3080192 -- / 65536 = 47
+TOPIC_SELECT_START = 3276800 -- / 65536 = 50
+LOTTERY_EXCHANGE_SHOP_START = 3407872 -- / 65536 = 52
+DISPOSAL_SHOP_START = 3473408 -- / 65536 = 53
+PRE_HANDLER_START = 3538944 -- / 65536 = 54
+INCLUSION_SHOP_START = 3801088 -- / 65536 = 58
+COLLECTABLES_SHOP_START = 3866624 -- / 65536 = 59
+EVENT_PATH_MOVE_START = 3997696 -- / 65536 = 61
+
 generic_warps = {
     131077,  -- Ferry Skipper from Old Gridania to East Shroud: Sweetbloom Pier
     131078,  -- Ferry Skipper from East Shroud: Sweetbloom Pier to Old Gridania
