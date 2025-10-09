@@ -180,6 +180,10 @@ custom1_events = {
     [721052] = "RegFstCarlineCanopy_00156.lua",
 }
 
+custom2_events = {
+    [721138] = "CmnGscGATENotice_00242.lua",
+}
+
 -- Events in quests/*
 quests = {
     [1245185] = "OpeningLimsaLominsa.lua",
@@ -193,6 +197,7 @@ TOSORT_DIR = "events/tosort/"
 OPENING_DIR = "events/quest/opening/"
 CUSTOM0_DIR = "events/custom/000/"
 CUSTOM1_DIR = "events/custom/001/"
+CUSTOM2_DIR = "events/custom/002/"
 TRIGGER_DIR = "events/walkin_trigger/"
 
 -- This is called whenever the client requests to start an event
@@ -244,6 +249,10 @@ end
 
 for event_id, script_file in pairs(custom1_events) do
     registerEvent(event_id, CUSTOM1_DIR..script_file)
+end
+
+for event_id, script_file in pairs(custom2_events) do
+    registerEvent(event_id, CUSTOM2_DIR..script_file)
 end
 
 for event_id, script_file in pairs(quests) do
