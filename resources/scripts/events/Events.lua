@@ -183,6 +183,7 @@ custom1_events = {
 }
 
 custom2_events = {
+    [721122] = "CmnGscDailyLotDescription_00226.lua",
     [721138] = "CmnGscGATENotice_00242.lua",
 }
 
