@@ -68,7 +68,7 @@ default = ["server"]
 oodle = []
 
 # Server-related functionality. Projects that only need our packet parsing can safely disable this.
-server = ["dep:axum", "dep:axum-extra", "dep:tokio", "dep:tracing-subscriber", "dep:fastrand", "dep:minijinja", "dep:rusqlite", "dep:mlua", "dep:zip", "dep:reqwest", "dep:tower-http", "dep:sha1_smol", "dep:recastnavigation-sys"]
+server = ["dep:axum", "dep:axum-extra", "dep:tokio", "dep:tracing-subscriber", "dep:fastrand", "dep:minijinja", "dep:rusqlite", "dep:mlua", "dep:zip", "dep:reqwest", "dep:tower-http", "dep:sha1_smol", "dep:recastnavigation-sys", "dep:parking_lot"]
 
 [build-dependencies]
 # Serialization of IPC opcodes
@@ -128,7 +128,7 @@ minijinja = { version = "2.12", features = ["serde", "loader", "multi_template"]
 rusqlite = { version = "0.37", features = ["bundled"], default-features = false, optional = true }
 
 # For server-side scripting
-mlua = { version = "0.11", features = ["lua54", "vendored", "send", "async", "serialize"], default-features = false, optional = true }
+mlua = { version = "0.11", features = ["lua54", "vendored", "send", "async", "serialize", "userdata-wrappers"], default-features = false, optional = true }
 
 # For character backup decompression
 zip = { version = "5.1", features = ["deflate", "lzma", "bzip2"], default-features = false, optional = true }
@@ -144,3 +144,6 @@ sha1_smol = { version = "1.0", optional = true }
 
 # for navimesh generation
 recastnavigation-sys = { git = "https://github.com/redstrate/recastnavigation-rs-sys", features = ["recast", "detour"], optional = true }
+
+# Used for passing GameData to Lua
+parking_lot = { version = "0.12", optional = true }

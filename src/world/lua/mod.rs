@@ -4,7 +4,7 @@ pub use effects::EffectsBuilder;
 mod inventory;
 
 mod player;
-use mlua::{FromLua, Lua, UserData, UserDataFields, Value};
+use mlua::{FromLua, Lua, UserData, UserDataFields, UserDataMethods, Value};
 pub use player::LuaPlayer;
 
 mod state;
@@ -17,12 +17,12 @@ mod zone;
 pub use zone::LuaZone;
 
 use crate::{
-    common::{ObjectTypeId, Position},
+    common::{GameData, ObjectTypeId, Position},
     ipc::zone::{ObjectSpawn, ServerZoneIpcSegment},
     packet::{PacketSegment, SegmentData, SegmentType},
 };
 
-use super::zone_connection::TeleportQuery;
+use super::{Event, zone_connection::TeleportQuery};
 
 trait QueueSegments {
     fn queue_segment(&mut self, ipc: PacketSegment<ServerZoneIpcSegment>);
@@ -85,5 +85,24 @@ impl FromLua for ObjectSpawn {
             Value::UserData(ud) => Ok(*ud.borrow::<Self>()?),
             _ => unreachable!(),
         }
+    }
+}
+
+impl FromLua for Event {
+    fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
+        match value {
+            Value::UserData(ud) => Ok(ud.borrow::<Self>()?.to_owned()),
+            _ => unreachable!(),
+        }
+    }
+}
+
+impl UserData for Event {}
+
+impl UserData for GameData {
+    fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
+        methods.add_method_mut("is_aetheryte", |_, this, aetheryte_id: u32| {
+            Ok(this.is_aetheryte(aetheryte_id))
+        });
     }
 }

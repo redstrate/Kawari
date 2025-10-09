@@ -1,5 +1,5 @@
 use std::net::SocketAddr;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::time::Instant;
 
 use kawari::common::{
@@ -41,6 +41,7 @@ use kawari::{
 };
 
 use mlua::{Function, Lua};
+use parking_lot::Mutex;
 use tokio::io::AsyncReadExt;
 use tokio::join;
 use tokio::net::{TcpListener, TcpStream};
@@ -179,7 +180,7 @@ async fn initial_setup(
                                             if connection.player_data.actor_id == 0 {
                                                 let player_data;
                                                 {
-                                                    let mut game_data = connection.gamedata.lock().unwrap();
+                                                    let mut game_data = connection.gamedata.lock();
                                                     player_data = database.find_player_data(actor_id, &mut game_data);
                                                 }
                                                 connection.player_data = player_data;
@@ -559,7 +560,7 @@ async fn client_loop(
 
                                                 let current_class;
                                                 {
-                                                    let game_data = connection.gamedata.lock().unwrap();
+                                                    let game_data = connection.gamedata.lock();
                                                     current_class = game_data.get_exp_array_index(connection.player_data.classjob_id as u16).unwrap();
                                                 }
 
@@ -629,7 +630,7 @@ async fn client_loop(
 
                                                 connection.handle.send(ToServer::ReadySpawnPlayer(connection.id, connection.player_data.zone_id, connection.player_data.position, connection.player_data.rotation)).await;
 
-                                                let lua = lua.lock().unwrap();
+                                                let lua = lua.lock();
                                                 lua.scope(|scope| {
                                                     let connection_data =
                                                     scope.create_userdata_ref_mut(&mut lua_player).unwrap();
@@ -700,7 +701,7 @@ async fn client_loop(
                                                     },
                                                     ClientTriggerCommand::FinishZoning {} => {
                                                         {
-                                                            let lua = lua.lock().unwrap();
+                                                            let lua = lua.lock();
                                                             lua.scope(|scope| {
                                                                 let connection_data =
                                                                 scope.create_userdata_ref_mut(&mut lua_player).unwrap();
@@ -900,7 +901,7 @@ async fn client_loop(
                                                     let command_name = &parts[0][1..];
 
                                                     {
-                                                        let lua = lua.lock().unwrap();
+                                                        let lua = lua.lock();
                                                         let state = lua.app_data_ref::<ExtraLuaState>().unwrap();
 
                                                         // If a Lua command exists, try using that first
@@ -991,7 +992,7 @@ async fn client_loop(
                                                     if !handled {
                                                         tracing::info!("Unknown command {command_name}");
 
-                                                        let lua = lua.lock().unwrap();
+                                                        let lua = lua.lock();
 
                                                         let mut call_func = || {
                                                             lua.scope(|scope| {
@@ -1112,7 +1113,7 @@ async fn client_loop(
                                                 if *buy_sell_mode == BUY {
                                                     let result;
                                                     {
-                                                        let mut game_data = connection.gamedata.lock().unwrap();
+                                                        let mut game_data = connection.gamedata.lock();
                                                         result = game_data.get_gilshop_item(*event_id, *item_index as u16);
                                                     }
 
@@ -1150,7 +1151,7 @@ async fn client_loop(
                                                     let quantity;
                                                     {
                                                         let item = connection.player_data.inventory.get_item(storage, index as u16);
-                                                        let mut game_data = connection.gamedata.lock().unwrap();
+                                                        let mut game_data = connection.gamedata.lock();
                                                         result = game_data.get_item_info(ItemInfoQuery::ById(item.id));
                                                         quantity = item.quantity;
                                                     }
@@ -1432,7 +1433,7 @@ async fn client_loop(
                                                 // For now, just send them to do the zone if they do anything
                                                 let zone_id;
                                                 {
-                                                    let mut game_data = game_data.lock().unwrap();
+                                                    let mut game_data = game_data.lock();
                                                     zone_id = game_data.find_zone_for_content(connection.queued_content.unwrap());
                                                 }
 
@@ -1608,7 +1609,7 @@ async fn main() {
     let game_data = Arc::new(Mutex::new(GameData::new()));
 
     {
-        let mut lua = lua.lock().unwrap();
+        let mut lua = lua.lock();
         if let Err(err) = load_init_script(&mut lua) {
             tracing::warn!("Failed to load Init.lua: {:?}", err);
         }

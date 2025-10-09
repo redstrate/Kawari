@@ -67,7 +67,7 @@ impl ChatHandler {
             "!equip" => {
                 if let Some((_, name)) = chat_message.message.split_once(' ') {
                     {
-                        let mut gamedata = connection.gamedata.lock().unwrap();
+                        let mut gamedata = connection.gamedata.lock();
 
                         if let Some(item_info) =
                             gamedata.get_item_info(ItemInfoQuery::ByName(name.to_string()))
@@ -95,7 +95,7 @@ impl ChatHandler {
                 if let Some((_, name)) = chat_message.message.split_once(' ') {
                     let mut result = None;
                     {
-                        let mut gamedata = connection.gamedata.lock().unwrap();
+                        let mut gamedata = connection.gamedata.lock();
 
                         if let Some(item_info) =
                             gamedata.get_item_info(ItemInfoQuery::ByName(name.to_string()))

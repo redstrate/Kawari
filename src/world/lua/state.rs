@@ -7,6 +7,7 @@ use strum::IntoEnumIterator;
 use crate::{
     config::get_config,
     ipc::zone::{GameMasterRank, SceneFlags, ServerNoticeFlags},
+    world::Event,
 };
 
 use super::EffectsBuilder;
@@ -82,6 +83,18 @@ pub fn load_init_script(lua: &mut Lua) -> mlua::Result<()> {
         Ok(config.world.login_message)
     })?;
 
+    let run_legacy_event_func = lua.create_function(|lua, event_id: u32| {
+        let state = lua.app_data_mut::<ExtraLuaState>().unwrap();
+        if let Some(event_script) = state.event_scripts.get(&event_id) {
+            return Ok(Some(Event::new(event_id, event_script)));
+        }
+        Ok(None)
+    })?;
+
+    let run_event_func = lua.create_function(|_, (event_id, event_script): (u32, String)| {
+        return Ok(Some(Event::new(event_id, &event_script)));
+    })?;
+
     lua.set_app_data(ExtraLuaState::default());
     lua.globals().set("registerAction", register_action_func)?;
     lua.globals().set("registerEvent", register_event_func)?;
@@ -94,6 +107,8 @@ pub fn load_init_script(lua: &mut Lua) -> mlua::Result<()> {
         .set("registerZoneEObjs", register_zone_eobjs_func)?;
     lua.globals()
         .set("getLoginMessage", get_login_message_func)?;
+    lua.globals().set("runLegacyEvent", run_legacy_event_func)?;
+    lua.globals().set("runEvent", run_event_func)?;
 
     let effectsbuilder_constructor = lua.create_function(|_, ()| Ok(EffectsBuilder::default()))?;
     lua.globals()

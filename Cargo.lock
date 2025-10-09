@@ -883,6 +883,7 @@ dependencies = [
  "minijinja",
  "mlua",
  "paramacro",
+ "parking_lot",
  "physis",
  "recastnavigation-sys",
  "reqwest",

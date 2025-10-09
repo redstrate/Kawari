@@ -4,6 +4,7 @@ use crate::{common::ObjectTypeId, config::get_config};
 
 use super::lua::{LuaPlayer, LuaZone, initial_setup};
 
+#[derive(Clone)]
 pub struct Event {
     pub file_name: String,
     lua: Lua,

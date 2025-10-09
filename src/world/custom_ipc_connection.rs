@@ -13,8 +13,9 @@ use crate::{
     world::WorldDatabase,
 };
 
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
+use parking_lot::Mutex;
 use std::net::SocketAddr;
 use std::time::Instant;
 use tokio::net::TcpStream;
@@ -58,7 +59,7 @@ impl CustomIpcConnection {
 
                 let city_state;
                 {
-                    let mut game_data = self.gamedata.lock().unwrap();
+                    let mut game_data = self.gamedata.lock();
 
                     city_state = game_data
                         .get_citystate(chara_make.classjob_id as u16)
@@ -68,7 +69,7 @@ impl CustomIpcConnection {
                 let mut inventory = Inventory::default();
                 let (content_id, actor_id);
                 {
-                    let mut game_data = self.gamedata.lock().unwrap();
+                    let mut game_data = self.gamedata.lock();
 
                     inventory.equip_classjob_items(chara_make.classjob_id as u16, &mut game_data);
 
@@ -144,7 +145,7 @@ impl CustomIpcConnection {
 
                 let world_name;
                 {
-                    let mut game_data = self.gamedata.lock().unwrap();
+                    let mut game_data = self.gamedata.lock();
                     world_name = game_data
                         .get_world_name(config.world.world_id)
                         .expect("Couldn't read world name");
@@ -152,7 +153,7 @@ impl CustomIpcConnection {
 
                 let characters;
                 {
-                    let mut game_data = self.gamedata.lock().unwrap();
+                    let mut game_data = self.gamedata.lock();
 
                     characters = self.database.get_character_list(
                         *service_account_id,
@@ -194,8 +195,8 @@ impl CustomIpcConnection {
                 path,
             } => {
                 let message;
-
-                if let Ok(mut game_data) = self.gamedata.lock() {
+                {
+                    let mut game_data = self.gamedata.lock();
                     if let Err(err) =
                         self.database
                             .import_character(&mut game_data, *service_account_id, path)
@@ -204,8 +205,6 @@ impl CustomIpcConnection {
                     } else {
                         message = "Successfully imported!".to_string();
                     }
-                } else {
-                    message = "Failed to read game data".to_string();
                 }
 
                 // send response

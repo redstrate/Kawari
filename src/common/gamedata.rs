@@ -397,6 +397,14 @@ impl GameData {
         Some((*pop_range_id, *zone_id))
     }
 
+    /// Checks if it's a big Aetheryte (true) or just a shard (false.)
+    pub fn is_aetheryte(&mut self, aetheryte_id: u32) -> bool {
+        let sheet = AetheryteSheet::read_from(&mut self.resource, Language::English).unwrap();
+        let row = sheet.get_row(aetheryte_id).unwrap();
+
+        row.IsAetheryte().into_bool().cloned().unwrap_or_default()
+    }
+
     /// Retrieves a zone's internal name, place name or parent region name.
     pub fn get_territory_name(&mut self, zone_id: u32, which: TerritoryNameKind) -> Option<String> {
         let sheet = TerritoryTypeSheet::read_from(&mut self.resource, Language::None)?;

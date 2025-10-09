@@ -1,10 +1,7 @@
-use std::{
-    net::SocketAddr,
-    sync::{Arc, Mutex},
-    time::Instant,
-};
+use std::{net::SocketAddr, sync::Arc, time::Instant};
 
 use mlua::Function;
+use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpStream;
 
@@ -448,7 +445,7 @@ impl ZoneConnection {
     pub async fn update_class_info(&mut self) {
         let ipc;
         {
-            let game_data = self.gamedata.lock().unwrap();
+            let game_data = self.gamedata.lock();
 
             ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateClassInfo(UpdateClassInfo {
                 class_id: self.player_data.classjob_id,
@@ -634,7 +631,7 @@ impl ZoneConnection {
         let sub_weapon_id;
         let model_ids;
         {
-            let mut game_data = self.gamedata.lock().unwrap();
+            let mut game_data = self.gamedata.lock();
             let inventory = &self.player_data.inventory;
 
             main_weapon_id = inventory.get_main_weapon_id(&mut game_data);
@@ -949,7 +946,7 @@ impl ZoneConnection {
                 } => {
                     let item_info;
                     {
-                        let mut game_data = self.gamedata.lock().unwrap();
+                        let mut game_data = self.gamedata.lock();
                         item_info = game_data.get_item_info(ItemInfoQuery::ById(*id));
                     }
                     if item_info.is_some() {
@@ -978,7 +975,7 @@ impl ZoneConnection {
                 }
                 Task::UnlockContent { id } => {
                     {
-                        let mut game_data = self.gamedata.lock().unwrap();
+                        let mut game_data = self.gamedata.lock();
                         if let Some(instance_content_type) = game_data.find_type_for_content(*id) {
                             // Each id has to be subtracted by it's offset in the InstanceContent Excel sheet. For example, all guildheists start at ID 10000.
                             match instance_content_type {
@@ -1031,7 +1028,7 @@ impl ZoneConnection {
                 Task::AddExp { amount } => {
                     let current_exp;
                     {
-                        let game_data = self.gamedata.lock().unwrap();
+                        let game_data = self.gamedata.lock();
                         current_exp = self.current_exp(&game_data);
                     }
                     self.set_current_exp(current_exp + amount);
@@ -1052,7 +1049,7 @@ impl ZoneConnection {
                 Task::ToggleMount { id } => {
                     let order;
                     {
-                        let mut game_data = self.gamedata.lock().unwrap();
+                        let mut game_data = self.gamedata.lock();
                         order = game_data.find_mount_order(*id).unwrap_or(0);
                     }
 
@@ -1232,7 +1229,7 @@ impl ZoneConnection {
 
     /// Reloads Global.lua
     pub fn reload_scripts(&mut self) {
-        let mut lua = self.lua.lock().unwrap();
+        let mut lua = self.lua.lock();
         if let Err(err) = load_init_script(&mut lua) {
             tracing::warn!("Failed to load Init.lua: {:?}", err);
         }
@@ -1387,7 +1384,7 @@ impl ZoneConnection {
 
             let ipc;
             {
-                let game_data = self.gamedata.lock().unwrap();
+                let game_data = self.gamedata.lock();
 
                 ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::StatusEffectList(
                     StatusEffectList {
@@ -1479,7 +1476,7 @@ impl ZoneConnection {
         exit_position: Option<Position>,
         exit_rotation: Option<f32>,
     ) -> CommonSpawn {
-        let mut game_data = self.gamedata.lock().unwrap();
+        let mut game_data = self.gamedata.lock();
 
         let chara_details = self.database.find_chara_make(self.player_data.content_id);
 
@@ -1521,7 +1518,7 @@ impl ZoneConnection {
     pub async fn send_stats(&mut self, chara_details: &CharacterData) {
         let attributes;
         {
-            let mut game_data = self.gamedata.lock().unwrap();
+            let mut game_data = self.gamedata.lock();
 
             attributes = game_data
                 .get_racial_base_attributes(chara_details.chara_make.customize.subrace)
@@ -1582,7 +1579,7 @@ impl ZoneConnection {
 
         // run action script
         {
-            let lua = self.lua.lock().unwrap();
+            let lua = self.lua.lock();
             let state = lua.app_data_ref::<ExtraLuaState>().unwrap();
 
             let key = request.action_key;
@@ -1739,7 +1736,7 @@ impl ZoneConnection {
     }
 
     pub fn set_current_level(&mut self, level: i32) {
-        let game_data = self.gamedata.lock().unwrap();
+        let game_data = self.gamedata.lock();
 
         let index = game_data
             .get_exp_array_index(self.player_data.classjob_id as u16)
@@ -1755,7 +1752,7 @@ impl ZoneConnection {
     }
 
     pub fn set_current_exp(&mut self, exp: u32) {
-        let game_data = self.gamedata.lock().unwrap();
+        let game_data = self.gamedata.lock();
 
         let index = game_data
             .get_exp_array_index(self.player_data.classjob_id as u16)
@@ -1820,7 +1817,7 @@ impl ZoneConnection {
     ) {
         // first, inform the effect script
         {
-            let lua = self.lua.lock().unwrap();
+            let lua = self.lua.lock();
             let state = lua.app_data_ref::<ExtraLuaState>().unwrap();
 
             let key = effect_id as u32;
@@ -1862,7 +1859,7 @@ impl ZoneConnection {
     }
 
     pub async fn spawn_eobjs(&mut self, lua_player: &mut LuaPlayer) {
-        let lua = self.lua.lock().unwrap();
+        let lua = self.lua.lock();
         let state = lua.app_data_ref::<ExtraLuaState>().unwrap();
 
         let key = self.player_data.zone_id as u32;
@@ -1917,13 +1914,18 @@ impl ZoneConnection {
             self.send_ipc_self(ipc).await;
         }
 
-        // load event script if needed
+        // call into the event dispatcher, get the event
         let mut should_cancel = false;
         {
-            let lua = self.lua.lock().unwrap();
-            let state = lua.app_data_ref::<ExtraLuaState>().unwrap();
-            if let Some(event_script) = state.event_scripts.get(&event_id) {
-                self.event = Some(Event::new(event_id, event_script));
+            let lua = self.lua.lock();
+
+            let func: Function = lua.globals().get("dispatchEvent").unwrap();
+
+            if let Some(event) = func
+                .call::<Option<Event>>((event_id, self.gamedata.clone()))
+                .unwrap()
+            {
+                self.event = Some(event);
             } else {
                 tracing::warn!("Event {event_id} isn't scripted yet! Ignoring...");
 
@@ -1953,7 +1955,7 @@ impl ZoneConnection {
 
         if should_unlock {
             {
-                let mut game_data = self.gamedata.lock().unwrap();
+                let mut game_data = self.gamedata.lock();
                 item_id = game_data
                     .find_orchestrion_item_id(orchestrion_id)
                     .unwrap_or(0);
@@ -2120,7 +2122,7 @@ impl ZoneConnection {
     pub async fn toggle_aether_current(&mut self, aether_current_id: u32) {
         let aether_current_set;
         {
-            let mut game_data = self.gamedata.lock().unwrap();
+            let mut game_data = self.gamedata.lock();
             aether_current_set = game_data.find_aether_current_set(aether_current_id as i32);
         }
 
@@ -2136,7 +2138,7 @@ impl ZoneConnection {
                 let screen_image_id;
 
                 {
-                    let mut game_data = self.gamedata.lock().unwrap();
+                    let mut game_data = self.gamedata.lock();
 
                     currents_needed_for_zone = game_data
                         .get_aether_currents_from_zone(aether_current_set_id)
@@ -2207,7 +2209,7 @@ impl ZoneConnection {
 
         let screen_image_id;
         {
-            let mut game_data = self.gamedata.lock().unwrap();
+            let mut game_data = self.gamedata.lock();
             screen_image_id = game_data
                 .get_screenimage_from_aether_current_comp_flg_set(aether_current_comp_flg_set_id)
                 .unwrap();
@@ -2245,7 +2247,7 @@ impl ZoneConnection {
         arg3: u32,
         lua_player: &mut LuaPlayer,
     ) {
-        let lua = self.lua.lock().unwrap();
+        let lua = self.lua.lock();
         let state = lua.app_data_ref::<ExtraLuaState>().unwrap();
         let config = get_config();
 

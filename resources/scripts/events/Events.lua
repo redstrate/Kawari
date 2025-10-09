@@ -30,33 +30,36 @@
 -- Warp
 
 -- Each "section" of ids appear to be broken up into segments of 65536 (which is also the max of a unsigned 16-bit integer)
+SECTION_SIZE = 65536
+
 -- This allows us (and probably the client as well) to determine which event belongs to each sheet, or type of NPC.
 -- Here they are, sorted:
-QUESTS_START = 65536 -- / 65536 = 1
-WARP_START = 131072 -- / 65536 = 2
-GIL_SHOP_START = 262144 -- / 65536 = 4
-GUILD_LEVE_ASSIGNMENT_START = 393216 -- / 65536 = 6
-DEFAULT_TALK_START = 589824 -- / 65536 = 9
-CUSTOM_TALK_START = 720896 -- / 65536 = 11
-CRAFT_LEVEL_START = 917504 -- / 65536 = 14
-CHOCOBO_TAXI_STAND_START = 1179648 -- / 65536 = 18
-GC_SHOP_START = 1441792 -- / 65536 = 22
-GUILD_ORDER_GUIDE_START = 1507328 -- / 65536 = 23
-GUILD_ORDER_OFFICER_START = 1572864 -- / 65536 = 24
-CONTENT_NPC_START = 1638400 -- / 65536 = 25
-STORY_START = 1703936 -- / 65536 = 26
-SEPCIAL_SHOP_START = 1769472 -- / 65536 = 27
-SWITCH_TALK_START = 2031616 -- / 65536 = 31
-TRIPLE_TRIAD_START = 2293760 -- / 65536 = 35
-FCC_SHOP_START = 2752512 -- / 65536 = 42
-DPS_CHALLENGE_OFFICER_START = 3080192 -- / 65536 = 47
-TOPIC_SELECT_START = 3276800 -- / 65536 = 50
-LOTTERY_EXCHANGE_SHOP_START = 3407872 -- / 65536 = 52
-DISPOSAL_SHOP_START = 3473408 -- / 65536 = 53
-PRE_HANDLER_START = 3538944 -- / 65536 = 54
-INCLUSION_SHOP_START = 3801088 -- / 65536 = 58
-COLLECTABLES_SHOP_START = 3866624 -- / 65536 = 59
-EVENT_PATH_MOVE_START = 3997696 -- / 65536 = 61
+EVENT_TYPE_QUESTS = 1
+EVENT_TYPE_WARP = 2
+EVENT_TYPE_GIL_SHOP = 4
+EVENT_TYPE_AETHERYTE = 5
+EVENT_TYPE_GUILD_LEVE_ASSIGNMENT = 6
+EVENT_TYPE_DEFAULT_TALK = 9
+EVENT_TYPE_CUSTOM_TALK = 11
+EVENT_TYPE_CRAFT_LEVEL = 14
+EVENT_TYPE_CHOCOBO_TAXI_STAND = 18
+EVENT_TYPE_GC_SHOP = 22
+EVENT_TYPE_GUILD_ORDER_GUIDE = 23
+EVENT_TYPE_GUILD_ORDER_OFFICER = 24
+EVENT_TYPE_CONTENT_NPC = 25
+EVENT_TYPE_STORY = 26
+EVENT_TYPE_SEPCIAL_SHOP = 27
+EVENT_TYPE_SWITCH_TALK = 31
+EVENT_TYPE_TRIPLE_TRIAD = 35
+EVENT_TYPE_FCC_SHOP = 42
+EVENT_TYPE_DPS_CHALLENGE_OFFICER = 47
+EVENT_TYPE_TOPIC_SELECT = 50
+EVENT_TYPE_LOTTERY_EXCHANGE_SHOP = 52
+EVENT_TYPE_DISPOSAL_SHOP = 53
+EVENT_TYPE_PRE_HANDLER = 54
+EVENT_TYPE_INCLUSION_SHOP = 58
+EVENT_TYPE_COLLECTABLES_SHOP = 59
+EVENT_TYPE_EVENT_PATH_MOVE = 61
 
 generic_warps = {
     131077,  -- Ferry Skipper from Old Gridania to East Shroud: Sweetbloom Pier
@@ -140,228 +143,6 @@ generic_inns = {
     131576, -- Exit from Tuliyollal to The For'ard Cabins
 }
 
-generic_aetherytes = {
-    -- A Realm Reborn Aetherytes
-    327682, -- New Gridania Aetheryte
-    327683,  -- Bentbranch Meadows Aetheryte
-    327684,  -- The Hawthorne Hut Aetheryte
-    327685,  -- Quarrymill Aetheryte
-    327686,  -- Camp Tranquil Aetheryte
-    327687,  -- Fallgourd Float Aetheryte
-    327688,  -- Limsa Lominsa: The Lower Decks Aetheryte
-    327689,  -- Ul'dah: Steps of Nald Aetheryte
-    327690,  -- Moraby Drydocks Aetheryte
-    327691,  -- Costa del Sol Aetheryte
-    327692,  -- Wineport Aetheryte
-    327693,  -- Swiftperch Aetheryte
-    327694,  -- Aleport Aetheryte
-    327695,  -- Camp Bronze Lake Aetheryte
-    327696,  -- Camp Overlook Aetheryte
-    327697,  -- Horizon Aetheryte
-    327698,  -- Camp Drybone Aetheryte
-    327699,  -- Little Ala Mhigo Aetheryte
-    327700,  -- Forgotten Springs Aetheryte
-    327701,  -- Camp Bluefog Aetheryte
-    327702,  -- Ceruleum Processing Plant Aetheryte
-    327703,  -- Camp Dragonhead Aetheryte
-    327732,  -- Summerford Farms Aetheryte
-    327733,  -- Black Brush Station Aetheryte
-    327735,  -- Wolves' Den Pier Aetheryte
-    327742,  -- The Gold Saucer Aetheryte
-
-    -- Heavensward Aetherytes
-    327750,  -- Ishgard: Foundation Aetheryte
-    327751,  -- Falcon's Nest Aetheryte
-    327752,  -- Camp Cloudtop Aetheryte
-    327753,  -- Ok' Zundu Aetheryte
-    327754,  -- Helix Aetheryte
-    327755,  -- Idyllshire Aetheryte
-    327756,  -- Tailfeather Aetheryte
-    327757,  -- Anyx Trine Aetheryte
-    327758,  -- Moghome Aetheryte
-    327759,  -- Zenith Aetheryte
-
-    -- Stormblood Aetherytes
-    327778,  -- Castrum Oriens Aetheryte
-    327779,  -- The Peering Stones Aetheryte
-    327780,  -- Ala Gannha Aetheryte
-    327781,  -- Ala Ghiri Aetheryte
-    327782,  -- Porta Praetoria Aetheryte
-    327783,  -- The Ala Mhigan Quarter Aetheryte
-    327784,  -- Rhalgr's Reach Aetheryte
-    327785,  -- Tamamizu Aetheryte
-    327786,  -- Onokoro Aetheryte
-    327787,  -- Namai Aetheryte
-    327788,  -- The House of the Fierce Aetheryte
-    327789,  -- Reunion Aetheryte
-    327790,  -- The Dawn Throne Aetheryte
-    327791,  -- Kugane Aetheryte
-    327807,  -- The Doman Enclave Aetheryte
-    327808,  -- Dhoro Iloh Aetheryte
-
-    -- Shadowbringers Aetherytes
-    327812,  -- Fort Jobb Aetheryte
-    327813,  -- The Crystarium Aetheryte
-    327814,  -- Eulmore Aetheryte
-    327816,  -- The Ostal Imperative Aetheryte
-    327817,  -- Stilltide Aetheryte
-    327818,  -- Wright Aetheryte
-    327819,  -- Tomra Aetheryte
-    327820,  -- Mord Souq Aetheryte
-    327821,  -- Twine Aetheryte
-    327822,  -- Slitherbough Aetheryte
-    327823,  -- Fanow Aetheryte
-    327824,  -- Lydha Lran Aetheryte
-    327825,  -- Pla Enni Aetheryte
-    327826,  -- Wolekdorf Aetheryte
-    327827,  -- The Ondo Cups Aetheryte
-    327828,  -- The Macarenses Angle Aetheryte
-    327841,  -- The Inn at Journey's Head Aetheryte
-    327842,  -- The Doman Enclave: Ferry Docks Aethernet shard
-
-    -- Endwalker Aetherytes
-    327846,  -- The Archeion Aetheryte
-    327847,  -- Sharlayan Hamlet Aetheryte
-    327848,  -- Aporia Aetheryte
-    327849,  -- Yedlihmad Aetheryte
-    327850,  -- The Great Work Aetheryte
-    327851,  -- Palaka's Stand Aetheryte
-    327852,  -- Camp Broken Glass Aetheryte
-    327853,  -- Tertium Aetheryte
-    327854,  -- Sinus Lacrimarum Aetheryte
-    327855,  -- Bestways Burrow Aetheryte
-    327856,  -- Anagnorisis Aetheryte
-    327857,  -- The Twelve Wonders Aetheryte
-    327858,  -- Poieten Oikos Aetheryte
-    327859,  -- Reah Tahra Aetheryte
-    327860,  -- Abode of the Ea Aetheryte
-    327861,  -- Base Omicron Aetheryte
-    327862,  -- Old Sharlayan Aetheryte
-    327863,  -- Radz-at-Han Aetheryte
-
-    -- Dawntrail Aetherytes
-    327880,  -- Wachunpelo Aetheryte
-    327881,  -- Worlar's Echo Aetheryte
-    327882,  -- Ok'hanu Aetheryte
-    327883,  -- Many Fires Aetheryte
-    327884,  -- Earthenshire Aetheryte
-    327885,  -- Iq Br'aax Aetheryte
-    327886,  -- Mamook Aetheryte
-    327887,  -- Hhusatahwi Aetheryte
-    327888,  -- Sheshenewezi Springs Aetheryte
-    327889,  -- Mehwahhetsoan Aetheryte
-    327890,  -- Yyasulani Station Aetheryte
-    327891,  -- The Outskirts Aetheryte
-    327892,  -- Electrope Strike Aetheryte
-    327893,  -- Leynode Mnemo Aetheryte
-    327894,  -- Leynode Pyro Aetheryte
-    327895,  -- Leynode Aero Aetheryte
-    327896,  -- Tuliyollal Aetheryte
-    327897,  -- Solution Nine Aetheryte
-    327918,  -- Dock Poga Aetheryte    
-}
-
-generic_anetshards = {
-    -- A Realm Reborn Aetherytes
-    327705,  -- Gridania: Archers' Guild Aethernet shard
-    327706,  -- Gridania: Leatherworkers' Guild & Shaded Bower Aethernet shard
-    327707,  -- Gridania: Lancers' Guild Aethernet shard
-    327708,  -- Gridania: Conjurer' Guild Aethernet shard
-    327709,  -- Gridania: Botanists' Guild Aethernet shard
-    327710,  -- Gridania: Mih Khetto's Amphitheatre Aethernet shard
-    327713,  -- Ul'dah: Adventurers' Guild Aethernet shard
-    327714,  -- Ul'dah: Thaumaturges' Guild Aethernet shard
-    327715,  -- Ul'dah: Gladiators' Guild Aethernet shard
-    327716,  -- Ul'dah: Miners' Guild Aethernet shard
-    327717,  -- Ul'dah: Alchemists' Guild Aethernet shard
-    327721,  -- Limsa Lominsa: The Aftcastle Aethernet shard
-    327722,  -- Limsa Lominsa: Culinarians' Guild Aethernet shard
-    327723,  -- Limsa Lominsa: Arcanists' Guild Aethernet shard
-    327724,  -- Limsa Lominsa: Fishermen's Guild Aethernet shard
-    327727,  -- Ul'dah: Weaver's Guild Aethernet shard
-    327728,  -- Limsa Lominsa: Marauders' Guild Aethernet shard
-    327729,  -- Limsa Lominsa: Hawker's Alley Aethernet shard
-    327730,  -- Ul'dah: Goldsmith's Guild Aethernet shard
-    327731,  -- Ul'dah: The Chamber of Rule Aethernet shard
-    327743,  -- The Gold Saucer: Entrance & Card Squares Aethernet shard
-    327744,  -- The Gold Saucer: Wonder Square East Aethernet shard
-    327745,  -- The Gold Saucer: Wonder Square West Aethernet shard
-    327746,  -- The Gold Saucer: Event Square Aethernet shard
-    327747,  -- The Gold Saucer: Cactpot Board Aethernet shard
-    327748,  -- The Gold Saucer: Round Square Aethernet shard
-    327749,  -- The Gold Saucer: Chocobo Square Aethernet shard
-    -- Heavensward Aetherytes
-    327760,  -- Ishgard: The Forgotten Knight Aethernet shard
-    327761,  -- Ishgard: Skysteel Manufactory Aethernet shard
-    327762,  -- Ishgard: The Brume Aethernet shard
-    327763,  -- Ishgard: Anathaeum Astrologicum Aethernet shard
-    327764,  -- Ishgard: The Jewled Crozier Aethernet shard
-    327765,  -- Ishgard: Saint Reymanaud's Cathedral Aethernet shard
-    327766,  -- Ishgard: The Tribunal Aethernet shard
-    327767,  -- Ishgard: The Last Vigil Aethernet shard
-    327769,  -- The Gold Saucer: Minion Square Aethernet shard
-    327770,  -- Idyllshire: West Idyllshire Aethernet shard
-
-    -- Stormblood Aetherytes
-    327792,  -- Kugane: Shiokaze Hostelry Aethernet shard
-    327793,  -- Kugane: Pier #1 Aethernet shard
-    327794,  -- Kugane: Thavnairian Consulate Aethernet shard
-    327795,  -- Kugane: Kogane Dori Markets Aethernet shard
-    327796,  -- Kugane: Bokairo Inn Aethernet shard
-    327797,  -- Kugane: The Ruby Bazaar Aethernet shard
-    327798,  -- Kugane: Sekiseigumi Barracks Aethernet shard
-    327799,  -- Kugane: Rakuza District Aethernet shard
-    327801,  -- Rhalgr's Reach: Western Rhalgr's Reach Aethernet shard
-    327802,  -- Rhalgr's Reach: Northeastern Rhalgr's Reach Aethernet shard
-    327805,  -- Ul'dah: Sapphire Avenue Exchange Aethernet shard
-    327809,  -- The Doman Enclave: The Northern Enclave Aethernet shard
-    327810,  -- The Doman Enclave: The Southern Enclave Aethernet shard
-
-    -- Shadowbringers Aetherytes
-    327815,  -- Eulmore: Southeast Derelicts Aethernet shard
-    327829,  -- The Crystarium: Musica Universalis Markets Aethernet shard
-    327830,  -- The Crystarium: Temenos Rookery Aethernet shard
-    327831,  -- The Crystarium: The Dossal Gate Aethernet shard
-    327832,  -- The Crystarium: The Pendants Aethernet shard
-    327833,  -- The Crystarium: The Amaro Launch Aethernet shard
-    327834,  -- The Crystarium: The Crystalline Mean Aethernet shard
-    327835,  -- The Crystarium: The Cabinet of Curiosity Aethernet shard
-    327837,  -- Eulmore: The Mainstay Aethernet shard
-    327838,  -- Eulmore: Nightsoil Pots Aethernet shard
-    327839,  -- Eulmore: The Glory Gate Aethernet shard
-    327842,  -- The Doman Enclave: Ferry Docks Aethernet shard
-
-    -- Endwalker Aetherytes
-    327864,  -- Old Sharlayan: The Studium Aethernet shard
-    327865,  -- Old Sharlayan: The Baldesion Annex Aethernet shard
-    327866,  -- Old Sharlayan: The Rostrum Aethernet shard
-    327867,  -- Old Sharlayan: The Leveilleur Estate Aethernet shard
-    327868,  -- Old Sharlayan: Journey's End Aethernet shard
-    327869,  -- Old Sharlayan: Scholar's Harbor Aethernet shard
-    327871,  -- Radz-at-Han: Meghaduta Aethernet shard
-    327872,  -- Radz-at-Han: Ruveydah Fibers Aethernet shard
-    327873,  -- Radz-at-Han: Airship Landing Aethernet shard
-    327874,  -- Radz-at-Han: Alzadaal's Peace Aethernet shard
-    327875,  -- Radz-at-Han: The Hall of the Radiant Host Aethernet shard
-    327876,  -- Radz-at-Han: Mehryde's Meyhane Aethernet shard
-    327878,  -- Radz-at-Han: Kama Aethernet shard
-    327879,  -- Radz-at-Han: The High Crucible of Al-Kimiya Aethernet shard
-
-    -- Dawntrail Aetherytes
-    327898,  -- Tuliyollal: Dirgible Landing Aethernet shard
-    327899,  -- Tuliyollal: The Resplendent Quarter Aethernet shard
-    327900,  -- Tuliyollal: The For'ard Cabins Aethernet shard
-    327901,  -- Tuliyollal: Bayside Bevy Marketplace Aethernet shard
-    327902,  -- Tuliyollal: Vollok Shoonsa Aethernet shard
-    327904,  -- Tuliyollal: Brightploom Post Aethernet shard
-    327910,  -- Solution Nine: Information Center Aethernet shard
-    327911,  -- Solution Nine: True Vue Aethernet shard
-    327912,  -- Solution Nine: Neon Stein Aethernet shard
-    327913,  -- Solution Nine: The Arcadion Aethernet shard
-    327914,  -- Solution Nine: Resolution Aethernet shard
-    327915,  -- Solution Nine: Nexus Arcade Aethernet shard
-    327916,  -- Solution Nine: Residential District Aethernet shard
-}
 
 -- TODO: Should probably break misc. events and their tables off into separate NPCs and objects eventually, but this is fine for now.
 to_sort = {
@@ -478,20 +259,31 @@ CUSTOM0_DIR = "events/custom/000/"
 CUSTOM1_DIR = "events/custom/001/"
 TRIGGER_DIR = "events/walkin_trigger/"
 
+-- This is called whenever the client requests to start an event
+function dispatchEvent(event_id, game_data)
+    local event_type = event_id >> 16
+    if event_type == EVENT_TYPE_AETHERYTE then
+        --- The Aetheryte sheet actually begins at 0, not 327680
+        local aetheryte_id = event_id & 0xFFF
+
+        --- Aetherytes and Aethernet shards are handled by different event scripts
+        if game_data:is_aetheryte(aetheryte_id) then
+            return runEvent(event_id, "events/common/GenericAetheryte.lua")
+        else
+            return runEvent(event_id, "events/common/GenericAethernetShard.lua")
+        end
+    end
+
+    return runLegacyEvent(event_id)
+end
+
+-- everything else
 for _, event_id in pairs(generic_warps) do
     registerEvent(event_id, "events/common/GenericWarp.lua")
 end
 
 for _, event_id in pairs(generic_inns) do
     registerEvent(event_id, "events/warp/WarpInnGeneric.lua" )
-end
-
-for _, event_id in pairs(generic_aetherytes) do
-    registerEvent(event_id, "events/common/GenericAetheryte.lua")
-end
-
-for _, event_id in pairs(generic_anetshards) do
-    registerEvent(event_id, "events/common/GenericAethernetShard.lua")
 end
 
 for _, event_id in pairs(generic_gil_shops) do
