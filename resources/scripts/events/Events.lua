@@ -1,7 +1,7 @@
 -- Please keep these ids sorted in each table!
 
 -- Basically, all Event NPCs reference a specific sheet. You can see this in ENpcData in the ENpcBase sheet.
--- The full list of sheets they can reference are as follows, which correspond to what that Event NPC does:
+-- A non-exhaustive list of sheets referenced are as follows, which correspond to what that Event NPC does:
 
 -- ChocoboTaxiStand
 -- CollectablesShop
