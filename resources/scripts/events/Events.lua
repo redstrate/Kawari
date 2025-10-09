@@ -173,6 +173,7 @@ common_events = {
 -- Not custom in the sense of non-SQEX content, just going based off the directory name
 custom0_events = {
     [720901] = "RegFstAdvGuild_00005.lua",
+    [720905] = "CmnDefRetainerDesk_00009.lua",
     [720916] = "cmndefinnbed_00020.lua",
 }
 

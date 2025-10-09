@@ -1,5 +1,3 @@
-HIDE_HOTBAR        = 0x00002000
-
 function onTalk(target, player)
     player:play_scene(target, EVENT_ID, 00000, HIDE_HOTBAR, {0})
 end
