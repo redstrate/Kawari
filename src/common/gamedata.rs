@@ -9,6 +9,7 @@ use icarus::ContentFinderCondition::ContentFinderConditionSheet;
 use icarus::EquipSlotCategory::EquipSlotCategorySheet;
 use icarus::GilShopItem::GilShopItemSheet;
 use icarus::InstanceContent::InstanceContentSheet;
+use icarus::Item::ItemSheet;
 use icarus::ModelChara::ModelCharaSheet;
 use icarus::Mount::MountSheet;
 use icarus::PlaceName::PlaceNameSheet;
@@ -18,8 +19,7 @@ use icarus::WeatherRate::WeatherRateSheet;
 use icarus::World::WorldSheet;
 use icarus::{Tribe::TribeSheet, Warp::WarpSheet};
 use physis::common::{Language, Platform};
-use physis::exd::{EXD, ExcelRowKind};
-use physis::exh::EXH;
+use physis::exd::ExcelRowKind;
 use physis::resource::{
     Resource, ResourceResolver, SqPackResource, UnpackedResource, read_excel_sheet,
     read_excel_sheet_header,
@@ -76,8 +76,7 @@ fn get_aether_current_comp_flg_set_to_screenimage() -> HashMap<u32, u32> {
 /// Convenient methods built on top of Physis to access data relevant to the server
 pub struct GameData {
     pub resource: ResourceResolver,
-    pub item_exh: EXH,
-    pub item_pages: Vec<EXD>,
+    pub item_sheet: ItemSheet,
     pub classjob_exp_indexes: Vec<i8>,
 }
 
@@ -196,23 +195,6 @@ impl GameData {
         }
         resource_resolver.add_source(Box::new(sqpack_resource));
 
-        let mut item_pages = Vec::new();
-
-        let item_exh = read_excel_sheet_header(&mut resource_resolver, "Item")
-            .expect("Failed to read Item EXH, does the file exist?");
-        for (i, _) in item_exh.pages.iter().enumerate() {
-            item_pages.push(
-                read_excel_sheet(
-                    &mut resource_resolver,
-                    "Item",
-                    &item_exh,
-                    Language::English,
-                    i,
-                )
-                .expect("Failed to read Item EXD, does the file exist?"),
-            );
-        }
-
         let mut classjob_exp_indexes = Vec::new();
 
         let sheet = ClassJobSheet::read_from(&mut resource_resolver, Language::English)
@@ -224,10 +206,12 @@ impl GameData {
             classjob_exp_indexes.push(*row.ExpArrayIndex().into_i8().unwrap());
         }
 
+        let item_sheet = ItemSheet::read_from(&mut resource_resolver, Language::English)
+            .expect("Failed to read ItemSheet, does the Excel files exist?");
+
         Self {
             resource: resource_resolver,
-            item_exh,
-            item_pages,
+            item_sheet,
             classjob_exp_indexes,
         }
     }
@@ -267,86 +251,42 @@ impl GameData {
     /// Gets various information from the Item sheet.
     pub fn get_item_info(&mut self, query: ItemInfoQuery) -> Option<ItemInfo> {
         let mut result = None;
-        'outer: for page in &self.item_pages {
-            match query {
-                ItemInfoQuery::ById(ref query_item_id) => {
-                    if let Some(row) = page.get_row(*query_item_id) {
-                        let ExcelRowKind::SingleRow(item_row) = row else {
-                            panic!("Expected a single row!");
-                        };
-                        result = Some((item_row, query_item_id));
-                        break 'outer;
-                    }
+        match query {
+            ItemInfoQuery::ById(ref query_item_id) => {
+                if let Some(row) = self.item_sheet.get_row(*query_item_id) {
+                    result = Some((row, *query_item_id));
                 }
+            }
 
-                ItemInfoQuery::ByName(ref query_item_name) => {
-                    for row in &page.rows {
-                        let ExcelRowKind::SingleRow(single_row) = &row.kind else {
-                            panic!("Expected a single row!");
-                        };
-
-                        let physis::exd::ColumnData::String(item_name) = &single_row.columns[9]
-                        else {
-                            panic!("Unexpected type!");
-                        };
-
-                        if !item_name
-                            .to_lowercase()
-                            .contains(&query_item_name.to_lowercase())
-                        {
-                            continue;
+            ItemInfoQuery::ByName(ref query_item_name) => {
+                // FIXME: this seems... inefficent
+                for id in 0..self.item_sheet.row_count() {
+                    if let Some(row) = self.item_sheet.get_row(id) {
+                        if let Some(name) = row.Name().into_string() {
+                            if name
+                                .to_lowercase()
+                                .contains(&query_item_name.to_lowercase())
+                            {
+                                result = Some((row, id));
+                                break;
+                            }
                         }
-
-                        result = Some((single_row.clone(), &row.row_id));
-                        break 'outer;
                     }
                 }
             }
         }
 
         if let Some((matched_row, item_id)) = result {
-            let physis::exd::ColumnData::String(name) = &matched_row.columns[9] else {
-                panic!("Unexpected type!");
-            };
-
-            let physis::exd::ColumnData::UInt16(item_level) = &matched_row.columns[11] else {
-                panic!("Unexpected type!");
-            };
-
-            let physis::exd::ColumnData::UInt8(equip_category) = &matched_row.columns[17] else {
-                panic!("Unexpected type!");
-            };
-
-            let physis::exd::ColumnData::UInt32(stack_size) = &matched_row.columns[20] else {
-                panic!("Unexpected type!");
-            };
-
-            let physis::exd::ColumnData::UInt32(price_mid) = &matched_row.columns[25] else {
-                panic!("Unexpected type!");
-            };
-
-            let physis::exd::ColumnData::UInt32(price_low) = &matched_row.columns[26] else {
-                panic!("Unexpected type!");
-            };
-
-            let physis::exd::ColumnData::UInt64(primary_model_id) = &matched_row.columns[47] else {
-                panic!("Unexpected type!");
-            };
-
-            let physis::exd::ColumnData::UInt64(sub_model_id) = &matched_row.columns[48] else {
-                panic!("Unexpected type!");
-            };
-
             let item_info = ItemInfo {
-                id: *item_id,
-                name: name.to_string(),
-                price_mid: *price_mid,
-                price_low: *price_low,
-                equip_category: *equip_category,
-                primary_model_id: *primary_model_id,
-                sub_model_id: *sub_model_id,
-                stack_size: *stack_size,
-                item_level: *item_level,
+                id: item_id,
+                name: matched_row.Name().into_string().unwrap().clone(),
+                price_mid: *matched_row.PriceMid().into_u32().unwrap(),
+                price_low: *matched_row.PriceLow().into_u32().unwrap(),
+                equip_category: *matched_row.EquipSlotCategory().into_u8().unwrap(),
+                primary_model_id: *matched_row.ModelMain().into_u64().unwrap(),
+                sub_model_id: *matched_row.ModelSub().into_u64().unwrap(),
+                stack_size: *matched_row.StackSize().into_u32().unwrap(),
+                item_level: *matched_row.LevelItem().into_u16().unwrap(),
             };
 
             return Some(item_info);
@@ -650,34 +590,18 @@ impl GameData {
 
     /// Gets the Item ID of the Orchestrion Roll.
     pub fn find_orchestrion_item_id(&mut self, orchestrion_id: u32) -> Option<u32> {
-        let mut result = None;
-        'outer: for page in &self.item_pages {
-            for row in &page.rows {
-                let ExcelRowKind::SingleRow(single_row) = &row.kind else {
-                    panic!("Expected a single row!");
-                };
-
-                let filter_group = single_row.columns[13].into_u8()?;
-
+        // FIXME: this seems... inefficient
+        for id in 0..self.item_sheet.row_count() {
+            if let Some(row) = self.item_sheet.get_row(id) {
                 // If filter_group is 32, then this item is an Orchestrion Roll...
-                if *filter_group != 32 {
+                if *row.FilterGroup().into_u8()? != 32 {
                     continue;
                 }
 
-                // ...and additional_data will be the Orchestrion ID
-                let additional_data = single_row.columns[14].into_u32()?;
-
-                if *additional_data != orchestrion_id {
-                    continue;
+                if *row.AdditionalData().into_u32()? == orchestrion_id {
+                    return Some(id);
                 }
-
-                result = Some(&row.row_id);
-                break 'outer;
             }
-        }
-
-        if let Some(item_id) = result {
-            return Some(*item_id);
         }
 
         None
