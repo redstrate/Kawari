@@ -195,8 +195,7 @@ impl GameData {
 
         let sheet = ClassJobSheet::read_from(&mut resource_resolver, Language::English)
             .expect("Failed to read ClassJobSheet, does the Excel files exist?");
-        // TODO: ids are hardcoded until we have API in Icarus to do this
-        for i in 0..43 {
+        for i in 0..sheet.row_count() {
             let row = sheet.get_row(i).unwrap();
 
             classjob_exp_indexes.push(*row.ExpArrayIndex().into_i8().unwrap());
