@@ -1,9 +1,6 @@
 -- Basically, all Event NPCs reference a specific sheet. You can see this in ENpcData in the ENpcBase sheet.
 -- Events are then run through the dispatcher, which references either a generic script or a custom one.
 
--- Each "section" of ids appear to be broken up into segments of 65536 (which is also the max of a unsigned 16-bit integer)
-SECTION_SIZE = 65536
-
 -- This allows us (and probably the client as well) to determine which event belongs to each sheet, or type of NPC.
 -- Here they are, sorted:
 EVENT_TYPE_QUESTS = 1 -- See Quests Excel sheet
