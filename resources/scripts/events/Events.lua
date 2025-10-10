@@ -36,14 +36,6 @@ EVENT_TYPE_COLLECTABLES_SHOP = 59 -- See CollectablesShop Excel sheet
 EVENT_TYPE_EVENT_PATH_MOVE = 61 -- See EventPathMove Excel sheet
 EVENT_TYPE_EVENT_GIMMICK_PATH_MOVE = 64 -- These are used for the Solution Nine teleporter pads, for example. See EventGimmickPathMove Excel sheet
 
--- Please keep these ids sorted in each table!
--- TODO: Should probably break misc. events and their tables off into separate NPCs and objects eventually, but this is fine for now.
-to_sort = {
-    [720935] = "MarketBoard.lua",
-}
-
-TOSORT_DIR = "events/tosort/"
-
 -- Extracts the script id from a given CustomTalk name. For example, "CmnDefBeginnerGuide_00327" will return 327.
 function extractScriptId(name)
     return tonumber(name:sub(-5))
@@ -107,9 +99,4 @@ function dispatchEvent(player, event_id, game_data)
     end
 
     return runLegacyEvent(event_id)
-end
-
--- everything else
-for event_id, script_file in pairs(common_events) do
-    registerEvent(event_id, GENERIC_DIR..script_file)
 end
