@@ -13,6 +13,7 @@ use icarus::InstanceContent::InstanceContentSheet;
 use icarus::Item::ItemSheet;
 use icarus::ModelChara::ModelCharaSheet;
 use icarus::Mount::MountSheet;
+use icarus::Opening::OpeningSheet;
 use icarus::PlaceName::PlaceNameSheet;
 use icarus::TerritoryType::TerritoryTypeSheet;
 use icarus::WarpLogic::WarpLogicSheet;
@@ -659,6 +660,14 @@ impl GameData {
     pub fn get_custom_talk_name(&mut self, custom_talk_id: u32) -> String {
         let sheet = CustomTalkSheet::read_from(&mut self.resource, Language::English).unwrap();
         let row = sheet.get_row(custom_talk_id).unwrap();
+
+        row.Name().into_string().cloned().unwrap_or_default()
+    }
+
+    /// Returns the internal script name for this Opening event.
+    pub fn get_opening_name(&mut self, opening_id: u32) -> String {
+        let sheet = OpeningSheet::read_from(&mut self.resource, Language::English).unwrap();
+        let row = sheet.get_row(opening_id).unwrap();
 
         row.Name().into_string().cloned().unwrap_or_default()
     }

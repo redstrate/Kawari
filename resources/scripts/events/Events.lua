@@ -16,6 +16,7 @@ EVENT_TYPE_DEFAULT_TALK = 9 -- See DefaultTalk Excel sheet
 EVENT_TYPE_CUSTOM_TALK = 11 -- See CustomTalk Excel sheet
 EVENT_TYPE_CRAFT_LEVEL = 14 -- See CraftLeve Excel sheet
 EVENT_TYPE_CHOCOBO_TAXI_STAND = 18 -- See ChocoboTaxiStand Excel sheet
+EVENT_TYPE_OPENING = 19 -- See Opening Excel sheet
 EVENT_TYPE_GC_SHOP = 22 -- See GCShop Excel sheet
 EVENT_TYPE_GUILD_ORDER_GUIDE = 23 -- See GuildOrderGuide Excel sheet
 EVENT_TYPE_GUILD_ORDER_OFFICER = 24 -- See GuildOrderOfficer Excel sheet
@@ -50,16 +51,8 @@ common_events = {
     -- [721620] = "GenericGemstoneTrader.lua", -- Generic Endwalker & Dawntrail in-city gemstone traders, but they do nothing when interacted with right now
 }
 
--- Events in quests/*
-quests = {
-    [1245185] = "OpeningLimsaLominsa.lua",
-    [1245186] = "OpeningGridania.lua",
-    [1245187] = "OpeningUldah.lua", 
-}
-
 GENERIC_DIR = "events/generic/"
 TOSORT_DIR = "events/tosort/"
-OPENING_DIR = "events/quest/opening/"
 
 -- Extracts the script id from a given CustomTalk name. For example, "CmnDefBeginnerGuide_00327" will return 327.
 function extractScriptId(name)
@@ -109,6 +102,9 @@ function dispatchEvent(player, event_id, game_data)
         end
 
         return event
+    elseif event_type == EVENT_TYPE_OPENING then
+        local script_name = game_data:get_opening_name(event_id)
+        return runEvent(event_id, "events/quest/opening/"..script_name..".lua")
     elseif event_type == EVENT_TYPE_SPECIAL_SHOP then
         return runEvent(event_id, "events/generic/SpecialShop.lua")
     elseif event_type == EVENT_TYPE_TOPIC_SELECT then
@@ -127,8 +123,4 @@ end
 
 for event_id, script_file in pairs(common_events) do
     registerEvent(event_id, GENERIC_DIR..script_file)
-end
-
-for event_id, script_file in pairs(quests) do
-    registerEvent(event_id, OPENING_DIR..script_file)
 end

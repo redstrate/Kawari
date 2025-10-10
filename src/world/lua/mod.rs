@@ -110,5 +110,8 @@ impl UserData for GameData {
         methods.add_method_mut("get_custom_talk_name", |_, this, custom_talk_id: u32| {
             Ok(this.get_custom_talk_name(custom_talk_id))
         });
+        methods.add_method_mut("get_opening_name", |_, this, opening_id: u32| {
+            Ok(this.get_opening_name(opening_id))
+        });
     }
 }
