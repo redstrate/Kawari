@@ -644,7 +644,7 @@ async fn client_loop(
                                                 .unwrap();
                                             }
                                             ClientZoneIpcData::FinishLoading { .. } => {
-                                                let common = connection.get_player_common_spawn(connection.exit_position, connection.exit_rotation);
+                                                let common = connection.get_player_common_spawn(connection.exit_position, connection.exit_rotation, true);
 
                                                 let online_status = if connection.player_data.gm_rank == GameMasterRank::NormalUser {
                                                     OnlineStatus::Online
@@ -671,11 +671,7 @@ async fn client_loop(
                                                 connection.send_inventory(false).await;
                                                 connection.send_stats(&chara_details).await;
 
-                                                // send player spawn
-                                                {
-                                                    let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PlayerSpawn(spawn));
-                                                    connection.send_ipc_self(ipc).await;
-                                                }
+                                                connection.respawn_player(true).await;
 
                                                 // If a zone has any eobjs that need spawning (e.g. Chocobo Square), do so
                                                 connection.spawn_eobjs(&mut lua_player).await;
@@ -685,6 +681,8 @@ async fn client_loop(
                                                 connection.exit_rotation = None;
                                             }
                                             ClientZoneIpcData::ClientTrigger(trigger) => {
+                                                dbg!(trigger);
+
                                                 // store the query for scripts
                                                 if let ClientTriggerCommand::TeleportQuery { aetheryte_id } = trigger.trigger {
                                                     connection.player_data.teleport_query.aetheryte_id = aetheryte_id as u16;
@@ -734,31 +732,7 @@ async fn client_loop(
                                                             }
                                                         }).await;
 
-                                                        // TODO: de-duplicate from ClientZoneIpcData::FinishLoading
-                                                        let common = connection.get_player_common_spawn(connection.exit_position, connection.exit_rotation);
-
-                                                        let online_status = if connection.player_data.gm_rank == GameMasterRank::NormalUser {
-                                                            OnlineStatus::Online
-                                                        } else {
-                                                            OnlineStatus::GameMasterBlue
-                                                        };
-
-                                                        let spawn = PlayerSpawn {
-                                                            account_id: connection.player_data.account_id,
-                                                            content_id: connection.player_data.content_id,
-                                                            current_world_id: config.world.world_id,
-                                                            home_world_id: config.world.world_id,
-                                                            gm_rank: connection.player_data.gm_rank,
-                                                            online_status,
-                                                            common: common.clone(),
-                                                            ..Default::default()
-                                                        };
-
-                                                        // send player spawn
-                                                        {
-                                                            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PlayerSpawn(spawn));
-                                                            connection.send_ipc_self(ipc).await;
-                                                        }
+                                                        connection.respawn_player(false).await;
 
                                                         // TODO: clear the ContentsReplay flag instead of going nuclear (see also: event_finish)
                                                         connection.conditions = Conditions::default();

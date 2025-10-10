@@ -485,6 +485,18 @@ impl LuaPlayer {
     fn set_mp(&mut self, mp: u16) {
         self.queued_tasks.push(Task::SetMP { mp });
     }
+
+    fn set_race(&mut self, race: u8) {
+        self.queued_tasks.push(Task::SetRace { race });
+    }
+
+    fn set_tribe(&mut self, tribe: u8) {
+        self.queued_tasks.push(Task::SetTribe { tribe });
+    }
+
+    fn set_sex(&mut self, sex: u8) {
+        self.queued_tasks.push(Task::SetSex { sex });
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -786,6 +798,18 @@ impl UserData for LuaPlayer {
         });
         methods.add_method_mut("set_mp", |_, this, mp: u16| {
             this.set_mp(mp);
+            Ok(())
+        });
+        methods.add_method_mut("set_race", |_, this, race: u8| {
+            this.set_race(race);
+            Ok(())
+        });
+        methods.add_method_mut("set_tribe", |_, this, tribe: u8| {
+            this.set_tribe(tribe);
+            Ok(())
+        });
+        methods.add_method_mut("set_sex", |_, this, sex: u8| {
+            this.set_sex(sex);
             Ok(())
         });
     }

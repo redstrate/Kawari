@@ -23,3 +23,6 @@ These GM commands are implemented in the FFXIV protocol, but only some of them a
 * `//gm dc_region`: Useless, but returns the DC for the World you set in the config.
 * `//gm chr_info <pc/bnpc/enpc/enpc_lively>`: Returns the internal entity IDs for your player character.
 * `//gm blacklist status`: Unknown purpose, looks like it just prints out your blacklist.
+* `//gm race <id>`: Sets your player's race.
+* `//gm tribe <id>`: Sets your player's tribe.
+* `//gm sex <id>`: Sets your player's sex (0 is male, 1 is female.)

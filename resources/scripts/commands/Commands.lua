@@ -5,6 +5,9 @@ GM_DIR = "commands/gm/"
 
 GM_SET_POS = 0
 GM_SET_LEVEL = 1
+GM_SET_RACE = 2
+GM_SET_TRIBE = 3
+GM_SET_SEX = 4
 GM_CHANGE_WEATHER = 6
 GM_SPEED = 9
 GM_INVISIBILITY = 13
@@ -23,6 +26,9 @@ GM_TERRITORY_INFO = 605
 
 registerGMCommand(GM_SET_POS,           GM_DIR.."SetPos.lua")
 registerGMCommand(GM_SET_LEVEL,         GM_DIR.."SetLevel.lua")
+registerGMCommand(GM_SET_RACE,          GM_DIR.."SetRace.lua")
+registerGMCommand(GM_SET_TRIBE,         GM_DIR.."SetTribe.lua")
+registerGMCommand(GM_SET_SEX,           GM_DIR.."SetSex.lua")
 registerGMCommand(GM_CHANGE_WEATHER,    GM_DIR.."ChangeWeather.lua")
 registerGMCommand(GM_SPEED,             GM_DIR.."SetSpeed.lua")
 registerGMCommand(GM_INVISIBILITY,      GM_DIR.."ToggleInvisibility.lua")

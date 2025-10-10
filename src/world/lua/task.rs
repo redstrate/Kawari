@@ -137,4 +137,13 @@ pub enum Task {
         id: u32,
     },
     ToggleAetherCurrentCompFlgSetAll {},
+    SetRace {
+        race: u8,
+    },
+    SetTribe {
+        tribe: u8,
+    },
+    SetSex {
+        sex: u8,
+    },
 }

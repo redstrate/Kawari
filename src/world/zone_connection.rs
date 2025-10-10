@@ -23,8 +23,8 @@ use crate::{
     config::{WorldConfig, get_config},
     inventory::{BuyBackList, ContainerType, Inventory, Item, Storage},
     ipc::zone::{
-        ActionKind, ChatMessage, DisplayFlag, InitZoneFlags, SceneFlags, ServerNoticeFlags,
-        ServerNoticeMessage,
+        ActionKind, ChatMessage, DisplayFlag, InitZoneFlags, OnlineStatus, PlayerSpawn, SceneFlags,
+        ServerNoticeFlags, ServerNoticeMessage,
         client::{ActionRequest, ClientZoneIpcSegment},
         server::{
             ActionEffect, ActionResult, ActorControl, ActorControlCategory, ActorControlSelf,
@@ -1222,6 +1222,39 @@ impl ZoneConnection {
                         self.toggle_aether_current_comp_flg_set(i).await;
                     }
                 }
+                Task::SetRace { race } => {
+                    let mut chara_details =
+                        self.database.find_chara_make(self.player_data.content_id);
+                    chara_details.chara_make.customize.race = *race;
+
+                    self.database.set_chara_make(
+                        self.player_data.content_id,
+                        &chara_details.chara_make.to_json(),
+                    );
+                    self.respawn_player(false).await;
+                }
+                Task::SetTribe { tribe } => {
+                    let mut chara_details =
+                        self.database.find_chara_make(self.player_data.content_id);
+                    chara_details.chara_make.customize.subrace = *tribe;
+
+                    self.database.set_chara_make(
+                        self.player_data.content_id,
+                        &chara_details.chara_make.to_json(),
+                    );
+                    self.respawn_player(false).await;
+                }
+                Task::SetSex { sex } => {
+                    let mut chara_details =
+                        self.database.find_chara_make(self.player_data.content_id);
+                    chara_details.chara_make.customize.gender = *sex;
+
+                    self.database.set_chara_make(
+                        self.player_data.content_id,
+                        &chara_details.chara_make.to_json(),
+                    );
+                    self.respawn_player(false).await;
+                }
             }
         }
         player.queued_tasks.clear();
@@ -1475,6 +1508,7 @@ impl ZoneConnection {
         &self,
         exit_position: Option<Position>,
         exit_rotation: Option<f32>,
+        start_invisible: bool,
     ) -> CommonSpawn {
         let mut game_data = self.gamedata.lock();
 
@@ -1493,6 +1527,11 @@ impl ZoneConnection {
             look.facial_features &= !(1 << 7);
         }
 
+        let mut display_flags = self.player_data.display_flags.into();
+        if start_invisible {
+            display_flags |= DisplayFlag::INVISIBLE;
+        }
+
         CommonSpawn {
             class_job: self.player_data.classjob_id,
             name: chara_details.name,
@@ -1503,7 +1542,7 @@ impl ZoneConnection {
             level: self.current_level(&game_data) as u8,
             object_kind: ObjectKind::Player(PlayerSubKind::Player),
             look,
-            display_flags: DisplayFlag::INVISIBLE | self.player_data.display_flags.into(),
+            display_flags,
             main_weapon_model: inventory.get_main_weapon_id(&mut game_data),
             sec_weapon_model: inventory.get_sub_weapon_id(&mut game_data),
             models: inventory.get_model_ids(&mut game_data),
@@ -2325,5 +2364,35 @@ impl ZoneConnection {
             timestamp,
         )
         .await;
+    }
+
+    /// Spawn the player actor. The client will handle replacing the existing one, if it exists.
+    pub async fn respawn_player(&mut self, start_invisible: bool) {
+        let common =
+            self.get_player_common_spawn(self.exit_position, self.exit_rotation, start_invisible);
+        let config = get_config();
+
+        let online_status = if self.player_data.gm_rank == GameMasterRank::NormalUser {
+            OnlineStatus::Online
+        } else {
+            OnlineStatus::GameMasterBlue
+        };
+
+        let spawn = PlayerSpawn {
+            account_id: self.player_data.account_id,
+            content_id: self.player_data.content_id,
+            current_world_id: config.world.world_id,
+            home_world_id: config.world.world_id,
+            gm_rank: self.player_data.gm_rank,
+            online_status,
+            common: common.clone(),
+            ..Default::default()
+        };
+
+        // send player spawn
+        {
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PlayerSpawn(spawn));
+            self.send_ipc_self(ipc).await;
+        }
     }
 }
