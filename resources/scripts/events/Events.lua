@@ -1,67 +1,40 @@
 -- Please keep these ids sorted in each table!
 
 -- Basically, all Event NPCs reference a specific sheet. You can see this in ENpcData in the ENpcBase sheet.
--- A non-exhaustive list of sheets referenced are as follows, which correspond to what that Event NPC does:
-
--- ChocoboTaxiStand
--- CollectablesShop
--- ContentNpc
--- CraftLeve
--- CustomTalk
--- DefaultTalk
--- DisposalShop
--- DpsChallengeOfficer
--- EventPathMove
--- FccShop
--- GCShop
--- GilShop
--- GuildOrderGuide
--- GuildOrderOfficer
--- GuildleveAssignment
--- InclusionShop
--- LotteryExchangeShop
--- PreHandler
--- Quest
--- SpecialShop
--- Story
--- SwitchTalk
--- TopicSelect
--- TripleTriad
--- Warp
 
 -- Each "section" of ids appear to be broken up into segments of 65536 (which is also the max of a unsigned 16-bit integer)
 SECTION_SIZE = 65536
 
 -- This allows us (and probably the client as well) to determine which event belongs to each sheet, or type of NPC.
 -- Here they are, sorted:
-EVENT_TYPE_QUESTS = 1
-EVENT_TYPE_WARP = 2
-EVENT_TYPE_GIL_SHOP = 4
-EVENT_TYPE_AETHERYTE = 5
-EVENT_TYPE_GUILD_LEVE_ASSIGNMENT = 6
-EVENT_TYPE_DEFAULT_TALK = 9
-EVENT_TYPE_CUSTOM_TALK = 11
-EVENT_TYPE_CRAFT_LEVEL = 14
-EVENT_TYPE_CHOCOBO_TAXI_STAND = 18
-EVENT_TYPE_GC_SHOP = 22
-EVENT_TYPE_GUILD_ORDER_GUIDE = 23
-EVENT_TYPE_GUILD_ORDER_OFFICER = 24
-EVENT_TYPE_CONTENT_NPC = 25
-EVENT_TYPE_STORY = 26
-EVENT_TYPE_SPECIAL_SHOP = 27
-EVENT_TYPE_SWITCH_TALK = 31
-EVENT_TYPE_TRIPLE_TRIAD = 35
+EVENT_TYPE_QUESTS = 1 -- See Quests Excel sheet
+EVENT_TYPE_WARP = 2 -- See Warp Excel sheet
+EVENT_TYPE_GIL_SHOP = 4 -- See GilShop Excel sheet
+EVENT_TYPE_AETHERYTE = 5 -- See Aetheryte Excel sheet
+EVENT_TYPE_GUILD_LEVE_ASSIGNMENT = 6 -- See GuildleveAssignment Excel sheet
+EVENT_TYPE_DEFAULT_TALK = 9 -- See DefaultTalk Excel sheet
+EVENT_TYPE_CUSTOM_TALK = 11 -- See CustomTalk Excel sheet
+EVENT_TYPE_CRAFT_LEVEL = 14 -- See CraftLeve Excel sheet
+EVENT_TYPE_CHOCOBO_TAXI_STAND = 18 -- See ChocoboTaxiStand Excel sheet
+EVENT_TYPE_GC_SHOP = 22 -- See GCShop Excel sheet
+EVENT_TYPE_GUILD_ORDER_GUIDE = 23 -- See GuildOrderGuide Excel sheet
+EVENT_TYPE_GUILD_ORDER_OFFICER = 24 -- See GuildOrderOfficer Excel sheet
+EVENT_TYPE_CONTENT_NPC = 25 -- See ContentNpc Excel sheet
+EVENT_TYPE_STORY = 26 -- See Story Excel sheet
+EVENT_TYPE_SPECIAL_SHOP = 27 -- See SpecialShop Excel sheet
+EVENT_TYPE_SWITCH_TALK = 31 -- See SwitchTalk Excel sheet
+EVENT_TYPE_TRIPLE_TRIAD = 35 -- See TripleTriad Excel sheet
 EVENT_TYPE_GOLD_SAUCER_ARCADE_MACHINE = 36 -- See GoldSaucerArcadeMachine Excel sheet
-EVENT_TYPE_FCC_SHOP = 42
-EVENT_TYPE_DPS_CHALLENGE_OFFICER = 47
-EVENT_TYPE_TOPIC_SELECT = 50
-EVENT_TYPE_LOTTERY_EXCHANGE_SHOP = 52
-EVENT_TYPE_DISPOSAL_SHOP = 53
-EVENT_TYPE_PRE_HANDLER = 54
-EVENT_TYPE_INCLUSION_SHOP = 58
-EVENT_TYPE_COLLECTABLES_SHOP = 59
-EVENT_TYPE_EVENT_PATH_MOVE = 61
-EVENT_TYPE_EVENT_GIMMICK_PATH_MOVE = 64 -- These are used for the Solution Nine teleporter pads, for example
+EVENT_TYPE_FCC_SHOP = 42 -- See FccShop Excel sheet
+EVENT_TYPE_DPS_CHALLENGE_OFFICER = 47 -- See DpsChallengeOfficer Excel sheet
+EVENT_TYPE_TOPIC_SELECT = 50 -- See TopicSelect Excel sheet
+EVENT_TYPE_LOTTERY_EXCHANGE_SHOP = 52 -- See LotteryExchangeShop Excel sheet
+EVENT_TYPE_DISPOSAL_SHOP = 53 -- See DisposalShop Excel sheet
+EVENT_TYPE_PRE_HANDLER = 54 -- See PreHandler Excel sheet
+EVENT_TYPE_INCLUSION_SHOP = 58 -- See InclusionShop Excel sheet
+EVENT_TYPE_COLLECTABLES_SHOP = 59 -- See CollectablesShop Excel sheet
+EVENT_TYPE_EVENT_PATH_MOVE = 61 -- See EventPathMove Excel sheet
+EVENT_TYPE_EVENT_GIMMICK_PATH_MOVE = 64 -- These are used for the Solution Nine teleporter pads, for example. See EventGimmickPathMove Excel sheet
 
 -- TODO: Should probably break misc. events and their tables off into separate NPCs and objects eventually, but this is fine for now.
 to_sort = {
