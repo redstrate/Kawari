@@ -40,7 +40,6 @@ EVENT_TYPE_EVENT_GIMMICK_PATH_MOVE = 64 -- These are used for the Solution Nine 
 -- TODO: Should probably break misc. events and their tables off into separate NPCs and objects eventually, but this is fine for now.
 to_sort = {
     [720935] = "MarketBoard.lua",
-    [1179657] = "Chocobokeep.lua", -- Chocobokeep in Central Shroud
 }
 
 -- Events in /common that aren't already covered by other tables
@@ -67,6 +66,7 @@ end
 -- This is called whenever the client requests to start an event
 function dispatchEvent(player, event_id, game_data)
     local event_type = event_id >> 16
+
     if event_type == EVENT_TYPE_GIL_SHOP then
         return runEvent(event_id, "events/generic/GilShopkeeper.lua")
     elseif event_type == EVENT_TYPE_WARP then
@@ -102,6 +102,8 @@ function dispatchEvent(player, event_id, game_data)
         end
 
         return event
+    elseif event_type == EVENT_TYPE_CHOCOBO_TAXI_STAND then
+        return runEvent(event_id, "events/generic/Chocobokeep.lua")
     elseif event_type == EVENT_TYPE_OPENING then
         local script_name = game_data:get_opening_name(event_id)
         return runEvent(event_id, "events/quest/opening/"..script_name..".lua")
