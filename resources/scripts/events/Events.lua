@@ -95,7 +95,7 @@ function dispatchEvent(player, event_id, game_data)
     elseif event_type == EVENT_TYPE_TOPIC_SELECT then
         return runEvent(event_id, "events/generic/TopicSelect.lua")
     elseif event_type == EVENT_TYPE_EVENT_GIMMICK_PATH_MOVE then
-        return runEvent(event_id, "events/walkin_trigger/SolutionNineTeleporter.lua")
+        return runEvent(event_id, "events/generic/GimmickPathMove.lua")
     end
 
     return runLegacyEvent(event_id)
