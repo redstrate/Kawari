@@ -223,6 +223,8 @@ function dispatchEvent(event_id, game_data)
         return runEvent(event_id, "events/common/GenericLevemete.lua")
     elseif event_type == EVENT_TYPE_SPECIAL_SHOP then
         return runEvent(event_id, "events/common/GenericHuntCurrencyExchange.lua") --TODO: Should probably rename this since it now covers other generic currency vendors like Gold Saucer ones
+    elseif event_type == EVENT_TYPE_TOPIC_SELECT then
+        return runEvent(event_id, "events/common/GenericTopicSelect.lua")
     elseif event_type == EVENT_TYPE_EVENT_GIMMICK_PATH_MOVE then
         return runEvent(event_id, "events/walkin_trigger/SolutionNineTeleporter.lua")
     end
