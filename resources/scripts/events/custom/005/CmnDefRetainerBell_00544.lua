@@ -1,5 +1,3 @@
--- Internally called CmnDefRetainerBell:721440
-
 -- TODO: actually implement this menu
 
 -- Scene 00000 - Unknown, softlocks

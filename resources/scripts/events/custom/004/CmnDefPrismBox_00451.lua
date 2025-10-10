@@ -1,9 +1,8 @@
--- Internally called CmnDefMiniGame:721096
-
 -- TODO: actually implement this menu
+-- Cutscene 0, flags 247 ("HOW_TO_ID_2", according to Scripter) fades the screen to black for a while, then comes back after closing an invisible dialog box
 
 function onTalk(target, player)
-    -- You have not yet unlocked any mini-games.
+    -- You have not yet unlocked the glamour dresser.
     player:play_scene(target, EVENT_ID, 00000, HIDE_HOTBAR, {0})
 end
 

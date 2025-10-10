@@ -38,22 +38,12 @@ EVENT_TYPE_EVENT_GIMMICK_PATH_MOVE = 64 -- These are used for the Solution Nine 
 
 -- TODO: Should probably break misc. events and their tables off into separate NPCs and objects eventually, but this is fine for now.
 to_sort = {
-    [720898] = "DeliveryMoogle.lua",
-    [721096] = "ToyChest.lua",
-    [721028] = "UnendingJourney.lua",
-    [721044] = "CrystalBell.lua",
-    [721098] = "HuntBoard.lua",
-    [721226] = "Orchestrion.lua",
-    [721347] = "GlamourDresser.lua",
-    [721440] = "SummoningBell.lua",
     [720935] = "MarketBoard.lua",
-    [720978] = "Armoire.lua",
     [1179657] = "Chocobokeep.lua", -- Chocobokeep in Central Shroud
 }
 
 -- Events in /common that aren't already covered by other tables
 common_events = {
-    [720915] = "Mender.lua",
     [721480] = "GemstoneTrader.lua", -- Generic Shadowbringers in-city gemstone traders
     [721479] = "GemstoneTrader.lua", -- Generic Shadowbringers per-zone gemstone traders
     -- [721619] = "GenericGemstoneTrader.lua", -- Generic Endwalker & Dawntrail per-zone gemstone traders, but they do nothing when interacted with right now
@@ -62,20 +52,38 @@ common_events = {
 
 -- Not custom in the sense of non-SQEX content, just going based off the directory name
 custom0_events = {
+    [720898] = "CmnDefMogLetter_00002.lua",
     [720901] = "RegFstAdvGuild_00005.lua",
     [720905] = "CmnDefRetainerDesk_00009.lua",
-    [720916] = "cmndefinnbed_00020.lua",
+    [720915] = "CmnDefNpcRepair_00019.lua",
+    [720916] = "CmnDefInnBed_00020.lua",
+    [720978] = "CmnDefCabinet_00082.lua",
 }
 
 custom1_events = {
     [721001] = "CmnGscWeeklyLotUnlockTalk_00105.lua",
-    [721044] = "cmndefbeautysalon_00148.lua",
+    [721028] = "CmnDefCutSceneReplay_00132.lua",
+    [721044] = "CmnDefBeautySalon_00148.lua",
     [721052] = "RegFstCarlineCanopy_00156.lua",
 }
 
 custom2_events = {
+    [721096] = "CmnDefMiniGame_00200.lua",
+    [721098] = "ComDefMobHuntBoard_00202.lua",
     [721122] = "CmnGscDailyLotDescription_00226.lua",
     [721138] = "CmnGscGATENotice_00242.lua",
+}
+
+custom3_events = {
+    [721226] = "HouFurOrchestrion_00330.lua",
+}
+
+custom4_events = {
+    [721347] = "CmnDefPrismBox_00451.lua",
+}
+
+custom5_events = {
+    [721440] = "CmnDefRetainerBell_00544.lua",
 }
 
 -- Events in quests/*
@@ -91,6 +99,9 @@ OPENING_DIR = "events/quest/opening/"
 CUSTOM0_DIR = "events/custom/000/"
 CUSTOM1_DIR = "events/custom/001/"
 CUSTOM2_DIR = "events/custom/002/"
+CUSTOM3_DIR = "events/custom/003/"
+CUSTOM4_DIR = "events/custom/004/"
+CUSTOM5_DIR = "events/custom/005/"
 
 -- This is called whenever the client requests to start an event
 function dispatchEvent(event_id, game_data)
@@ -148,6 +159,18 @@ end
 
 for event_id, script_file in pairs(custom2_events) do
     registerEvent(event_id, CUSTOM2_DIR..script_file)
+end
+
+for event_id, script_file in pairs(custom3_events) do
+    registerEvent(event_id, CUSTOM3_DIR..script_file)
+end
+
+for event_id, script_file in pairs(custom4_events) do
+    registerEvent(event_id, CUSTOM4_DIR..script_file)
+end
+
+for event_id, script_file in pairs(custom5_events) do
+    registerEvent(event_id, CUSTOM5_DIR..script_file)
 end
 
 for event_id, script_file in pairs(quests) do

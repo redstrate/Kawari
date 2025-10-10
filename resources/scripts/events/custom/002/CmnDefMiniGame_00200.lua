@@ -1,8 +1,7 @@
--- Internally called CmnDefCabinet:720978
-
--- TODO: actually implement this menu, attempting to open the "Remove an item." softlocks for now
+-- TODO: actually implement this menu
 
 function onTalk(target, player)
+    -- You have not yet unlocked any mini-games.
     player:play_scene(target, EVENT_ID, 00000, HIDE_HOTBAR, {0})
 end
 
