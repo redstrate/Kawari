@@ -107,5 +107,8 @@ impl UserData for GameData {
         methods.add_method_mut("get_warp_logic_name", |_, this, warp_id: u32| {
             Ok(this.get_warp_logic_name(warp_id))
         });
+        methods.add_method_mut("get_custom_talk_name", |_, this, custom_talk_id: u32| {
+            Ok(this.get_custom_talk_name(custom_talk_id))
+        });
     }
 }

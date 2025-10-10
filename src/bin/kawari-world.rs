@@ -1235,7 +1235,7 @@ async fn client_loop(
                                                 }
                                             }
                                             ClientZoneIpcData::StartTalkEvent { actor_id, event_id } => {
-                                                connection.start_event(*actor_id, *event_id, 1, 0).await;
+                                                connection.start_event(*actor_id, *event_id, 1, 0, &mut lua_player).await;
 
                                                 /* TODO: ServerZoneIpcType::Unk18 with data [64,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
                                                     * was observed to always be sent by the server upon interacting with shops. They open and function fine without
@@ -1460,7 +1460,7 @@ async fn client_loop(
                                                 connection.conditions.set_condition(Condition::WalkInEvent);
                                                 connection.send_conditions().await;
                                                 let actor_id = ObjectTypeId { object_id: ObjectId(connection.player_data.actor_id), object_type: ObjectTypeKind::None };
-                                                connection.start_event(actor_id, *event_id, 10, *event_arg).await;
+                                                connection.start_event(actor_id, *event_id, 10, *event_arg, &mut lua_player).await;
 
                                                 // begin walk-in trigger function if it exists
                                                 if let Some(event) = connection.event.as_mut() {

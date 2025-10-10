@@ -1040,7 +1040,7 @@ impl ZoneConnection {
                     event_type,
                     event_arg,
                 } => {
-                    self.start_event(*actor_id, *event_id, *event_type, *event_arg)
+                    self.start_event(*actor_id, *event_id, *event_type, *event_arg, player)
                         .await;
                 }
                 Task::SetInnWakeup { watched } => {
@@ -1898,6 +1898,7 @@ impl ZoneConnection {
         event_id: u32,
         event_type: u8,
         event_arg: u32,
+        lua_player: &mut LuaPlayer,
     ) {
         self.player_data.target_actorid = actor_id;
         self.event_type = event_type;
@@ -1915,25 +1916,26 @@ impl ZoneConnection {
         }
 
         // call into the event dispatcher, get the event
-        let mut should_cancel = false;
+        let event;
         {
             let lua = self.lua.lock();
 
-            let func: Function = lua.globals().get("dispatchEvent").unwrap();
+            event = lua
+                .scope(|scope| {
+                    let connection_data = scope.create_userdata_ref_mut(lua_player)?;
 
-            if let Some(event) = func
-                .call::<Option<Event>>((event_id, self.gamedata.clone()))
-                .unwrap()
-            {
-                self.event = Some(event);
-            } else {
-                tracing::warn!("Event {event_id} isn't scripted yet! Ignoring...");
+                    let func: Function = lua.globals().get("dispatchEvent").unwrap();
 
-                should_cancel = true;
-            }
+                    func.call::<Option<Event>>((connection_data, event_id, self.gamedata.clone()))
+                })
+                .unwrap();
         }
 
-        if should_cancel {
+        if let Some(event) = event {
+            self.event = Some(event);
+        } else {
+            tracing::warn!("Event {event_id} isn't scripted yet! Ignoring...");
+
             // give control back to the player so they aren't stuck
             self.event_finish(event_id, 0, EventFinishType::Normal)
                 .await;

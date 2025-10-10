@@ -18,7 +18,7 @@ pub enum EventFinishType {
 }
 
 impl Event {
-    pub fn new(id: u32, path: &str) -> Self {
+    pub fn new(id: u32, path: &str) -> Option<Self> {
         let mut lua = Lua::new();
         initial_setup(&mut lua);
 
@@ -28,18 +28,18 @@ impl Event {
         let result = std::fs::read(&file_name);
         if let Err(err) = std::fs::read(&file_name) {
             tracing::warn!("Failed to load {}: {:?}", file_name, err);
-            return Self { file_name, lua, id };
+            return None;
         }
         let file = result.unwrap();
 
         if let Err(err) = lua.load(file).set_name("@".to_string() + &file_name).exec() {
             tracing::warn!("Syntax error in {}: {:?}", file_name, err);
-            return Self { file_name, lua, id };
+            return None;
         }
 
         lua.globals().set("EVENT_ID", id).unwrap();
 
-        Self { file_name, lua, id }
+        Some(Self { file_name, lua, id })
     }
 
     pub fn enter_territory(&mut self, player: &mut LuaPlayer, zone: &LuaZone) {

@@ -50,42 +50,6 @@ common_events = {
     -- [721620] = "GenericGemstoneTrader.lua", -- Generic Endwalker & Dawntrail in-city gemstone traders, but they do nothing when interacted with right now
 }
 
--- Not custom in the sense of non-SQEX content, just going based off the directory name
-custom0_events = {
-    [720898] = "CmnDefMogLetter_00002.lua",
-    [720901] = "RegFstAdvGuild_00005.lua",
-    [720905] = "CmnDefRetainerDesk_00009.lua",
-    [720915] = "CmnDefNpcRepair_00019.lua",
-    [720916] = "CmnDefInnBed_00020.lua",
-    [720978] = "CmnDefCabinet_00082.lua",
-}
-
-custom1_events = {
-    [721001] = "CmnGscWeeklyLotUnlockTalk_00105.lua",
-    [721028] = "CmnDefCutSceneReplay_00132.lua",
-    [721044] = "CmnDefBeautySalon_00148.lua",
-    [721052] = "RegFstCarlineCanopy_00156.lua",
-}
-
-custom2_events = {
-    [721096] = "CmnDefMiniGame_00200.lua",
-    [721098] = "ComDefMobHuntBoard_00202.lua",
-    [721122] = "CmnGscDailyLotDescription_00226.lua",
-    [721138] = "CmnGscGATENotice_00242.lua",
-}
-
-custom3_events = {
-    [721226] = "HouFurOrchestrion_00330.lua",
-}
-
-custom4_events = {
-    [721347] = "CmnDefPrismBox_00451.lua",
-}
-
-custom5_events = {
-    [721440] = "CmnDefRetainerBell_00544.lua",
-}
-
 -- Events in quests/*
 quests = {
     [1245185] = "OpeningLimsaLominsa.lua",
@@ -96,15 +60,19 @@ quests = {
 GENERIC_DIR = "events/generic/"
 TOSORT_DIR = "events/tosort/"
 OPENING_DIR = "events/quest/opening/"
-CUSTOM0_DIR = "events/custom/000/"
-CUSTOM1_DIR = "events/custom/001/"
-CUSTOM2_DIR = "events/custom/002/"
-CUSTOM3_DIR = "events/custom/003/"
-CUSTOM4_DIR = "events/custom/004/"
-CUSTOM5_DIR = "events/custom/005/"
+
+-- Extracts the script id from a given CustomTalk name. For example, "CmnDefBeginnerGuide_00327" will return 327.
+function extractScriptId(name)
+    return tonumber(name:sub(-5))
+end
+
+-- Creates the proper folder name from a given script id. For example, 327 will return 003.
+function folderFromScriptId(id)
+    return string.format("%03d", math.floor(id / 100))
+end
 
 -- This is called whenever the client requests to start an event
-function dispatchEvent(event_id, game_data)
+function dispatchEvent(player, event_id, game_data)
     local event_type = event_id >> 16
     if event_type == EVENT_TYPE_GIL_SHOP then
         return runEvent(event_id, "events/generic/GilShopkeeper.lua")
@@ -129,6 +97,18 @@ function dispatchEvent(event_id, game_data)
         end
     elseif event_type == EVENT_TYPE_GUILD_LEVE_ASSIGNMENT then
         return runEvent(event_id, "events/generic/Levemete.lua")
+    elseif event_type == EVENT_TYPE_CUSTOM_TALK then
+        local script_name = game_data:get_custom_talk_name(event_id)
+        local script_id = extractScriptId(script_name)
+        local script_folder = folderFromScriptId(script_id)
+        local script_path = "events/custom/"..script_folder.."/"..script_name..".lua"
+
+        local event = runEvent(event_id, script_path)
+        if event == nil then
+            player:send_message(script_path.." was not found!")
+        end
+
+        return event
     elseif event_type == EVENT_TYPE_SPECIAL_SHOP then
         return runEvent(event_id, "events/generic/SpecialShop.lua")
     elseif event_type == EVENT_TYPE_TOPIC_SELECT then
@@ -147,30 +127,6 @@ end
 
 for event_id, script_file in pairs(common_events) do
     registerEvent(event_id, GENERIC_DIR..script_file)
-end
-
-for event_id, script_file in pairs(custom0_events) do
-    registerEvent(event_id, CUSTOM0_DIR..script_file)
-end
-
-for event_id, script_file in pairs(custom1_events) do
-    registerEvent(event_id, CUSTOM1_DIR..script_file)
-end
-
-for event_id, script_file in pairs(custom2_events) do
-    registerEvent(event_id, CUSTOM2_DIR..script_file)
-end
-
-for event_id, script_file in pairs(custom3_events) do
-    registerEvent(event_id, CUSTOM3_DIR..script_file)
-end
-
-for event_id, script_file in pairs(custom4_events) do
-    registerEvent(event_id, CUSTOM4_DIR..script_file)
-end
-
-for event_id, script_file in pairs(custom5_events) do
-    registerEvent(event_id, CUSTOM5_DIR..script_file)
 end
 
 for event_id, script_file in pairs(quests) do

@@ -6,6 +6,7 @@ use icarus::Aetheryte::AetheryteSheet;
 use icarus::BNpcBase::BNpcBaseSheet;
 use icarus::ClassJob::ClassJobSheet;
 use icarus::ContentFinderCondition::ContentFinderConditionSheet;
+use icarus::CustomTalk::CustomTalkSheet;
 use icarus::EquipSlotCategory::EquipSlotCategorySheet;
 use icarus::GilShopItem::GilShopItemSheet;
 use icarus::InstanceContent::InstanceContentSheet;
@@ -652,6 +653,14 @@ impl GameData {
         let aether_current_comp_flg_set_to_screenimage =
             get_aether_current_comp_flg_set_to_screenimage();
         return Some(aether_current_comp_flg_set_to_screenimage[&aether_current_comp_flg_set_id]);
+    }
+
+    /// Returns the internal script name for this CustomTalk event.
+    pub fn get_custom_talk_name(&mut self, custom_talk_id: u32) -> String {
+        let sheet = CustomTalkSheet::read_from(&mut self.resource, Language::English).unwrap();
+        let row = sheet.get_row(custom_talk_id).unwrap();
+
+        row.Name().into_string().cloned().unwrap_or_default()
     }
 }
 
