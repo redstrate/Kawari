@@ -42,15 +42,6 @@ to_sort = {
     [720935] = "MarketBoard.lua",
 }
 
--- Events in /common that aren't already covered by other tables
-common_events = {
-    [721480] = "GemstoneTrader.lua", -- Generic Shadowbringers in-city gemstone traders
-    [721479] = "GemstoneTrader.lua", -- Generic Shadowbringers per-zone gemstone traders
-    -- [721619] = "GenericGemstoneTrader.lua", -- Generic Endwalker & Dawntrail per-zone gemstone traders, but they do nothing when interacted with right now
-    -- [721620] = "GenericGemstoneTrader.lua", -- Generic Endwalker & Dawntrail in-city gemstone traders, but they do nothing when interacted with right now
-}
-
-GENERIC_DIR = "events/generic/"
 TOSORT_DIR = "events/tosort/"
 
 -- Extracts the script id from a given CustomTalk name. For example, "CmnDefBeginnerGuide_00327" will return 327.
@@ -119,10 +110,6 @@ function dispatchEvent(player, event_id, game_data)
 end
 
 -- everything else
-for event_id, script_file in pairs(to_sort) do
-    registerEvent(event_id, TOSORT_DIR..script_file)
-end
-
 for event_id, script_file in pairs(common_events) do
     registerEvent(event_id, GENERIC_DIR..script_file)
 end

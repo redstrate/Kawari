@@ -1,4 +1,5 @@
 -- TODO: actually implement bicolor gemstones, and present a 'shop' menu (it seems to be different than hunt exchange NPCs)?
+-- TODO: maybe de-duplicate these files
 
 --Scene 00000 "Collect bicolor gemstones to trade for a variety of goods" / scene informing the player they can now access the shop
 --Scene 00001 softlocks or simply shows a dialog box (depends per vendor), presumably needs shop params sent to it
