@@ -51,12 +51,17 @@ function dispatchEvent(player, event_id, game_data)
         return runEvent(event_id, "events/generic/GilShopkeeper.lua")
     elseif event_type == EVENT_TYPE_WARP then
         local warp_name = game_data:get_warp_logic_name(event_id)
-        -- TODO: don't hardcode all named warps to inns, there's also rental chocobos and more
-        -- (see WarpLogic Excel sheet)
+
         if warp_name == '' then
             return runEvent(event_id, "events/generic/Warp.lua")
         else
-            return runEvent(event_id, "events/warp/WarpInnGeneric.lua")
+            local script_path = "events/warp/"..warp_name..".lua"
+            local event = runEvent(event_id, script_path)
+            if event == nil then
+                player:send_message(script_path.." was not found!")
+            end
+
+            return event
         end
     elseif event_type == EVENT_TYPE_AETHERYTE then
         --- The Aetheryte sheet actually begins at 0, not 327680
