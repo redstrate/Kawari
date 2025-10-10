@@ -6,7 +6,6 @@ If you already know how to program in Lua, we use Lua 5.4. We won't give a baby-
 
 There are currently guides for scripting:
 * [Commands](commands.md)
-* [Generic Events](generic_events.md) (Warps, Inns, Aetherytes, and other generic NPCs.)
 
 If you don't see an item here that's listed, it may be because it's unimplemented or the API is still too unstable.
 
