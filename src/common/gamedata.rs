@@ -13,6 +13,7 @@ use icarus::ModelChara::ModelCharaSheet;
 use icarus::Mount::MountSheet;
 use icarus::PlaceName::PlaceNameSheet;
 use icarus::TerritoryType::TerritoryTypeSheet;
+use icarus::WarpLogic::WarpLogicSheet;
 use icarus::WeatherRate::WeatherRateSheet;
 use icarus::World::WorldSheet;
 use icarus::{Tribe::TribeSheet, Warp::WarpSheet};
@@ -384,6 +385,24 @@ impl GameData {
         let zone_id = row.TerritoryType().into_u16()?;
 
         Some((*pop_range_id, *zone_id))
+    }
+
+    /// Returns the warp logic name (if any) for this Warp.
+    pub fn get_warp_logic_name(&mut self, warp_id: u32) -> String {
+        let sheet = WarpSheet::read_from(&mut self.resource, Language::English).unwrap();
+        let row = sheet.get_row(warp_id).unwrap();
+
+        let warp_logic_id = row.WarpLogic().into_u16().unwrap();
+
+        let warp_logic_sheet =
+            WarpLogicSheet::read_from(&mut self.resource, Language::English).unwrap();
+        let warp_logic_row = warp_logic_sheet.get_row(*warp_logic_id as u32).unwrap();
+
+        warp_logic_row
+            .WarpName()
+            .into_string()
+            .cloned()
+            .unwrap_or_default()
     }
 
     pub fn get_aetheryte(&mut self, aetheryte_id: u32) -> Option<(u32, u16)> {

@@ -63,89 +63,6 @@ EVENT_TYPE_COLLECTABLES_SHOP = 59
 EVENT_TYPE_EVENT_PATH_MOVE = 61
 EVENT_TYPE_EVENT_GIMMICK_PATH_MOVE = 64 -- These are used for the Solution Nine teleporter pads, for example
 
-generic_warps = {
-    131077,  -- Ferry Skipper from Old Gridania to East Shroud: Sweetbloom Pier
-    131078,  -- Ferry Skipper from East Shroud: Sweetbloom Pier to Old Gridania
-    131079,  -- Exit Limsa Upper Decks to Mizzenmast Inn room
-    131080,  -- Exit New Gridania to The Roost Inn room
-    131081,  -- Exit Ul'dah: Steps of Nald to The Hourglass Inn room
-    131082,  -- Exit Mizzenmast Inn to Limsa Upper Decks
-    131083,  -- Exit The Roost to New Gridania
-    131084,  -- Exit The Hourglass to Ul'dah: Steps of Nald
-    131086,  -- Ferry Skipper from Western Thanalan: The Silver Bazaar to Western Thanalan: Cescent Cove
-    131087,  -- Ferry Skipper from Western Thanalan: Crescent Cove to Western Thanalan: The Silver Bazaar
-    131088,  -- Exit from Western Thanalan: Vesper Bay to The Waking Sands
-    131089,  -- Exit from The Waking Sands to Western Thanalan: Vesper Bay
-    131090,  -- Exit from The Waking Sands to The Solar
-    131091,  -- Exit from The Solar to The Waking Sands
-    131092,  -- Exit from Limsa Bulwark Hall and/or Drowning Wench to Airship Landing
-    131093,  -- Exit from Limsa Bullwark Hall and/or Airship Landing to Drowning Wench
-    131094,  -- Exit from Limsa Airship Landing and/or Drowning Wench to Bulwark Hall
-    131095,  -- Exit from Ul'dah Hustings Strip and/or Ruby Road Exchange to Airship Landing, these three events get reused in several places to ensure they all connect
-    131096,  -- Exit from Ul'dah Airship Landing and/or Ruby Road Exchange to Hustings Strip
-    131097,  -- Exit from Ul'dah Airship Landing and/or Husting Strip to Ruby Road Exchange
-    131107,  -- Nunuri <Ferry Ticketer> from Western Thanalan: Vesper Bay to Limsa Lominsa: The Lower Decks
-    131108,  -- Rhetkympf <Ferry Ticketer> from Limsa Lominsa: The Lower Decks to Western Thanalan: Vesper Bay
-    131109,  -- Rerenasu <Ferry Skipper> from Limsa Lominsa: The Lower Decks to Western La Noscea: Aleport
-    131110,  -- Ferry Skipper from Western La Noscea: Aleport to Limsa Lominsa: The Lower Decks
-    131111,  -- Rerenasu <Ferry Skipper> from Limsa Lominsa: The Lower Decks to Eastern La Noscea: Costa Del Sol
-    131112,  -- Ferry Skipper from Eastern La Noscea: Costa Del Sol to Limsa Lominsa: The Lower Decks
-    131113,  -- Ferry Skipper from Upper La Noscea: Memeroon's Trading Post to Upper La Noscea: Jijiroon's Trading Post
-    131114,  -- Ferry Skipper from Upper La Noscea: Jijiroon's Trading Post to Upper La Noscea: Memeroon's Trading Post
-    131115,  -- O'nolosi <Ferry Skipper> from Lower La Noscea: Candlekeep Quay to Western La Noscea: Aleport
-    131116,  -- Ferry Skipper from Western La Noscea: Aleport to Lower La Noscea: Candlekeep Quay
-    131119,  -- Ferry Skipper from Eastern La Noscea: Hidden Falls Docks to Eastern La Noscea: Raincatcher Gully Docks
-    131120,  -- Ferry Skipper from Eastern La Noscea: Raincatcher Gully Docks to Eastern La Noscea: Hidden Falls Docks
-    131126,  -- Gatekeeper from Southern Thanalan: Nald's Reflection to Southern Thanalan: The Minotaur Malm
-    131131,  -- Ferry Skipper from Moraby Drydocks to Wolves' Den Pier
-    131132,  -- Ferry Skipper from Wolves' Den Pier to Moraby Drydocks
-    131133,  -- Ferry Skipper from Western La Noscea: The Isles of Umbra to Western La Noscea: Aleport
-    131134,  -- Ferry Skipper from Western La Noscea: Aleport to Western La Noscea: The Isles of Umbra
-    -- 131158, None -- Ferry Skipper from Old Gridania to The Lavender Beds, needs special handling for housing
-    -- 131160, None -- Rerenasu <Ferry Skipper> from Limsa Lominsa: The Lower Decks to Mist, needs special handling for housing
-    131169,  -- Ferry Skipper from Eastern La Noscea: Costa Del Sol to ELN: Rhotano Privateer
-    131177,  -- Exit from The Gold Saucer (Lift Operator) to The Gold Saucer: Chocobo Square
-    131178,  -- Exit from The Gold Saucer: Chocobo Square (Lift Operator) to The Gold Saucer
-    131192,  -- House Fortemps Guard <Gatekeep> From Ishgard: The Pillars to Fortemps Manor
-    131195,  -- Exit from Fortemps manor to Ishgard: The Pillars
-    131204,  -- Exit Ishgard: Foundation to Cloud Nine Inn room
-    131205,  -- Exit Cloud Nine to Ishgard: Foundation
-    131245,  -- Exit Kugane to Bokairo Inn room
-    131246,  -- Exit Bokairo Inn to Kugane
-    -- 131248,  -- Kimachi <Ferry Skipper> from Kugane to Shirogane, needs special handling for housing
-    131250,  -- Gatekeeper from The Fringes: Castrum Oriens to East Shroud: Amarissaaix's Spire
-    131251,  -- Gatekeeper from East Shroud: Amarissaaix's Spire to The Fringes: Castrum Oriens
-    131252,  -- Uguisu <Ferry Skipper> from Kugane to Limsa Lominsa: The Lower Decks
-    131253,  -- East Aldenard Trading Company Sailor from Limsa Lominsa: The Lower Decks to Kugane
-    131255,  -- Ala Mhigan Resistance Gate Guard from The Fringes: Virdjala to The Fringes: Pike Falls
-    131266,  -- Gatekeeper from The House of the Fierce to dead-end cave (unable to dive currently)
-    131268,  -- Enclave Skiff Captain from The Doman Enclave to Yanxia: The Glittering Basin
-    131299,  -- Ala Mhigan Resistance Gate Guard from The Fringes: Pike Falls to The Fringes: Virdjala
-    131312,  -- Exit The Pendants Personal Suite to Crystarium
-    131313,  -- Exit from The Crown Lift (Lift Operator) to Eulmore: The Canopy
-    131390,  -- Exit via Pawlin <Dreamer's Run Doorman> from Old Gridania: Dreamer's Run (old Hatchingtide event area which is now out of bounds) to Old Gridania: Botanists' Guild
-    131402,  -- Exit Andron to Old Sharlayan
-    131405,  -- Aergwynt <Ferry Ticketer> from Old Sharlayan to Limsa Lominsa: The Lower Decks
-    131406,  -- Sailor <Ferryman> from Limsa Lominsa: The Lower Decks to Old Sharlayan
-    131428,  -- Exit from The Mothercrystal to Labyrinthos: The Aitiascope (outside, on overworld): probably supposed to drop you into a cutscene zone instead.
-    131519,  -- Faire Adventurer from Eastern La Noscea: bottom of the Moonfire Festival (2023 tower to the first tier of the tower
-    131545,  -- Port Official from Tuliyollal to Old Sharlayan
-    131578,  -- Exit The For'ard Cabins to Tuliyollal
-    131609,  -- Exit from The Ageless Necropolis to Living Memory: The Meso Terminal
-}
-
-generic_inns = {
-    131079, -- Exit Limsa Upper Decks to Mizzenmast Inn room
-    131080, -- Exit New Gridania to The Roost Inn room
-    131081, -- Exit Ul'dah: Steps of Nald to The Hourglass Inn room
-    131204, -- Exit Ishgard: Foundation to Cloud Nine Inn room
-    131245, -- Exit Kugane to Bokairo Inn room
-    131316, -- Exit from The Crystarium to The Pendants Personal Suite
-    131401, -- Exit from Old Sharlayan to The Andron
-    131576, -- Exit from Tuliyollal to The For'ard Cabins
-}
-
-
 -- TODO: Should probably break misc. events and their tables off into separate NPCs and objects eventually, but this is fine for now.
 to_sort = {
     [720898] = "DeliveryMoogle.lua",
@@ -196,18 +113,27 @@ quests = {
 }
 
 COMMON_DIR = "events/common/"
-WARP_DIR = "events/warp/"
 TOSORT_DIR = "events/tosort/"
 OPENING_DIR = "events/quest/opening/"
 CUSTOM0_DIR = "events/custom/000/"
 CUSTOM1_DIR = "events/custom/001/"
 CUSTOM2_DIR = "events/custom/002/"
-TRIGGER_DIR = "events/walkin_trigger/"
 
 -- This is called whenever the client requests to start an event
 function dispatchEvent(event_id, game_data)
     local event_type = event_id >> 16
-    if event_type == EVENT_TYPE_AETHERYTE then
+    if event_type == EVENT_TYPE_GIL_SHOP then
+        return runEvent(event_id, "events/common/GilShopkeeper.lua")
+    elseif event_type == EVENT_TYPE_WARP then
+        local warp_name = game_data:get_warp_logic_name(event_id)
+        -- TODO: don't hardcode all named warps to inns, there's also rental chocobos and more
+        -- (see WarpLogic Excel sheet)
+        if warp_name == '' then
+            return runEvent(event_id, "events/common/GenericWarp.lua")
+        else
+            return runEvent(event_id, "events/warp/WarpInnGeneric.lua")
+        end
+    elseif event_type == EVENT_TYPE_AETHERYTE then
         --- The Aetheryte sheet actually begins at 0, not 327680
         local aetheryte_id = event_id & 0xFFF
 
@@ -217,8 +143,6 @@ function dispatchEvent(event_id, game_data)
         else
             return runEvent(event_id, "events/common/GenericAethernetShard.lua")
         end
-    elseif event_type == EVENT_TYPE_GIL_SHOP then
-        return runEvent(event_id, "events/common/GilShopkeeper.lua")
     elseif event_type == EVENT_TYPE_GUILD_LEVE_ASSIGNMENT then
         return runEvent(event_id, "events/common/GenericLevemete.lua")
     elseif event_type == EVENT_TYPE_SPECIAL_SHOP then
@@ -233,14 +157,6 @@ function dispatchEvent(event_id, game_data)
 end
 
 -- everything else
-for _, event_id in pairs(generic_warps) do
-    registerEvent(event_id, "events/common/GenericWarp.lua")
-end
-
-for _, event_id in pairs(generic_inns) do
-    registerEvent(event_id, "events/warp/WarpInnGeneric.lua" )
-end
-
 for event_id, script_file in pairs(to_sort) do
     registerEvent(event_id, TOSORT_DIR..script_file)
 end

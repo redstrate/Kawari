@@ -104,5 +104,8 @@ impl UserData for GameData {
         methods.add_method_mut("is_aetheryte", |_, this, aetheryte_id: u32| {
             Ok(this.is_aetheryte(aetheryte_id))
         });
+        methods.add_method_mut("get_warp_logic_name", |_, this, warp_id: u32| {
+            Ok(this.get_warp_logic_name(warp_id))
+        });
     }
 }
