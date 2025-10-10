@@ -53,9 +53,9 @@ to_sort = {
 
 -- Events in /common that aren't already covered by other tables
 common_events = {
-    [720915] = "GenericMender.lua",
-    [721480] = "GenericGemstoneTrader.lua", -- Generic Shadowbringers in-city gemstone traders
-    [721479] = "GenericGemstoneTrader.lua", -- Generic Shadowbringers per-zone gemstone traders
+    [720915] = "Mender.lua",
+    [721480] = "GemstoneTrader.lua", -- Generic Shadowbringers in-city gemstone traders
+    [721479] = "GemstoneTrader.lua", -- Generic Shadowbringers per-zone gemstone traders
     -- [721619] = "GenericGemstoneTrader.lua", -- Generic Endwalker & Dawntrail per-zone gemstone traders, but they do nothing when interacted with right now
     -- [721620] = "GenericGemstoneTrader.lua", -- Generic Endwalker & Dawntrail in-city gemstone traders, but they do nothing when interacted with right now
 }
@@ -85,7 +85,7 @@ quests = {
     [1245187] = "OpeningUldah.lua", 
 }
 
-COMMON_DIR = "events/common/"
+GENERIC_DIR = "events/generic/"
 TOSORT_DIR = "events/tosort/"
 OPENING_DIR = "events/quest/opening/"
 CUSTOM0_DIR = "events/custom/000/"
@@ -96,13 +96,13 @@ CUSTOM2_DIR = "events/custom/002/"
 function dispatchEvent(event_id, game_data)
     local event_type = event_id >> 16
     if event_type == EVENT_TYPE_GIL_SHOP then
-        return runEvent(event_id, "events/common/GilShopkeeper.lua")
+        return runEvent(event_id, "events/generic/GilShopkeeper.lua")
     elseif event_type == EVENT_TYPE_WARP then
         local warp_name = game_data:get_warp_logic_name(event_id)
         -- TODO: don't hardcode all named warps to inns, there's also rental chocobos and more
         -- (see WarpLogic Excel sheet)
         if warp_name == '' then
-            return runEvent(event_id, "events/common/GenericWarp.lua")
+            return runEvent(event_id, "events/generic/Warp.lua")
         else
             return runEvent(event_id, "events/warp/WarpInnGeneric.lua")
         end
@@ -112,16 +112,16 @@ function dispatchEvent(event_id, game_data)
 
         --- Aetherytes and Aethernet shards are handled by different event scripts
         if game_data:is_aetheryte(aetheryte_id) then
-            return runEvent(event_id, "events/common/GenericAetheryte.lua")
+            return runEvent(event_id, "events/generic/Aetheryte.lua")
         else
-            return runEvent(event_id, "events/common/GenericAethernetShard.lua")
+            return runEvent(event_id, "events/generic/AethernetShard.lua")
         end
     elseif event_type == EVENT_TYPE_GUILD_LEVE_ASSIGNMENT then
-        return runEvent(event_id, "events/common/GenericLevemete.lua")
+        return runEvent(event_id, "events/generic/Levemete.lua")
     elseif event_type == EVENT_TYPE_SPECIAL_SHOP then
-        return runEvent(event_id, "events/common/GenericHuntCurrencyExchange.lua") --TODO: Should probably rename this since it now covers other generic currency vendors like Gold Saucer ones
+        return runEvent(event_id, "events/generic/SpecialShop.lua")
     elseif event_type == EVENT_TYPE_TOPIC_SELECT then
-        return runEvent(event_id, "events/common/GenericTopicSelect.lua")
+        return runEvent(event_id, "events/generic/TopicSelect.lua")
     elseif event_type == EVENT_TYPE_EVENT_GIMMICK_PATH_MOVE then
         return runEvent(event_id, "events/walkin_trigger/SolutionNineTeleporter.lua")
     end
@@ -135,7 +135,7 @@ for event_id, script_file in pairs(to_sort) do
 end
 
 for event_id, script_file in pairs(common_events) do
-    registerEvent(event_id, COMMON_DIR..script_file)
+    registerEvent(event_id, GENERIC_DIR..script_file)
 end
 
 for event_id, script_file in pairs(custom0_events) do
