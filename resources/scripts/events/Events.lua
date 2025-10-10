@@ -1,6 +1,5 @@
--- Please keep these ids sorted in each table!
-
 -- Basically, all Event NPCs reference a specific sheet. You can see this in ENpcData in the ENpcBase sheet.
+-- Events are then run through the dispatcher, which references either a generic script or a custom one.
 
 -- Each "section" of ids appear to be broken up into segments of 65536 (which is also the max of a unsigned 16-bit integer)
 SECTION_SIZE = 65536
@@ -37,6 +36,7 @@ EVENT_TYPE_COLLECTABLES_SHOP = 59 -- See CollectablesShop Excel sheet
 EVENT_TYPE_EVENT_PATH_MOVE = 61 -- See EventPathMove Excel sheet
 EVENT_TYPE_EVENT_GIMMICK_PATH_MOVE = 64 -- These are used for the Solution Nine teleporter pads, for example. See EventGimmickPathMove Excel sheet
 
+-- Please keep these ids sorted in each table!
 -- TODO: Should probably break misc. events and their tables off into separate NPCs and objects eventually, but this is fine for now.
 to_sort = {
     [720935] = "MarketBoard.lua",
