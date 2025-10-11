@@ -178,6 +178,7 @@ impl Inventory {
                 .unwrap(),
             1,
         );
+        // FIXME: I think this is actually based on a choice in the opening, and also defined in OpeningSystemDefine Excel sheet:
         self.equipped.right_ring = Item::new(
             game_data
                 .get_item_info(ItemInfoQuery::ById(0x114a))
