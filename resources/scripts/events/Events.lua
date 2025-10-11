@@ -100,5 +100,5 @@ function dispatchEvent(player, event_id, game_data)
         return runEvent(event_id, "events/generic/GimmickPathMove.lua")
     end
 
-    return runLegacyEvent(event_id)
+    return nil
 end

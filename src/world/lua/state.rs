@@ -15,7 +15,6 @@ use super::EffectsBuilder;
 #[derive(Default)]
 pub struct ExtraLuaState {
     pub action_scripts: HashMap<u32, String>,
-    pub event_scripts: HashMap<u32, String>,
     pub command_scripts: HashMap<String, String>,
     pub gm_command_scripts: HashMap<u32, String>,
     pub effect_scripts: HashMap<u32, String>,
@@ -38,13 +37,6 @@ pub fn load_init_script(lua: &mut Lua) -> mlua::Result<()> {
         lua.create_function(|lua, (action_id, action_script): (u32, String)| {
             let mut state = lua.app_data_mut::<ExtraLuaState>().unwrap();
             let _ = state.action_scripts.insert(action_id, action_script);
-            Ok(())
-        })?;
-
-    let register_event_func =
-        lua.create_function(|lua, (event_id, event_script): (u32, String)| {
-            let mut state = lua.app_data_mut::<ExtraLuaState>().unwrap();
-            let _ = state.event_scripts.insert(event_id, event_script);
             Ok(())
         })?;
 
@@ -83,21 +75,12 @@ pub fn load_init_script(lua: &mut Lua) -> mlua::Result<()> {
         Ok(config.world.login_message)
     })?;
 
-    let run_legacy_event_func = lua.create_function(|lua, event_id: u32| {
-        let state = lua.app_data_mut::<ExtraLuaState>().unwrap();
-        if let Some(event_script) = state.event_scripts.get(&event_id) {
-            return Ok(Event::new(event_id, event_script));
-        }
-        Ok(None)
-    })?;
-
     let run_event_func = lua.create_function(|_, (event_id, event_script): (u32, String)| {
         return Ok(Event::new(event_id, &event_script));
     })?;
 
     lua.set_app_data(ExtraLuaState::default());
     lua.globals().set("registerAction", register_action_func)?;
-    lua.globals().set("registerEvent", register_event_func)?;
     lua.globals()
         .set("registerCommand", register_command_func)?;
     lua.globals()
@@ -107,7 +90,6 @@ pub fn load_init_script(lua: &mut Lua) -> mlua::Result<()> {
         .set("registerZoneEObjs", register_zone_eobjs_func)?;
     lua.globals()
         .set("getLoginMessage", get_login_message_func)?;
-    lua.globals().set("runLegacyEvent", run_legacy_event_func)?;
     lua.globals().set("runEvent", run_event_func)?;
 
     let effectsbuilder_constructor = lua.create_function(|_, ()| Ok(EffectsBuilder::default()))?;
