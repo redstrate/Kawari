@@ -24,6 +24,7 @@ pub struct ExtraLuaState {
 /// Perform initial setup of global constants.
 pub fn initial_setup(lua: &mut Lua) {
     // TODO: we should use a global static here so we can define this at the enum level
+    // Specifically something like the linkme crate
     register_flags::<ServerNoticeFlags>(lua, "SERVER_NOTICE");
     register_enum::<GameMasterRank>(lua, "GM_RANK");
     register_flags::<SceneFlags>(lua, ""); // TODO: might want to prefix these at some point
