@@ -703,8 +703,7 @@ mod tests {
             assert_eq!(
                 buffer.len(),
                 ipc_segment.calc_size() as usize,
-                "{:#?} did not match size!",
-                opcode
+                "{opcode:#?} did not match size!"
             );
         }
     }

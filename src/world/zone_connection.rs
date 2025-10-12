@@ -1062,7 +1062,7 @@ impl ZoneConnection {
                     self.actor_control_self(ActorControlSelf {
                         category: ActorControlCategory::ToggleMountUnlock {
                             order: order as u32,
-                            id: *id as u32,
+                            id: *id,
                             unlocked: should_unlock,
                         },
                     })
@@ -2123,7 +2123,7 @@ impl ZoneConnection {
         self.actor_control_self(ActorControlSelf {
             category: ActorControlCategory::ToggleAdventureUnlock {
                 id: adventure_id + 2162688,
-                all_vistas_recorded: all_vistas_recorded,
+                all_vistas_recorded,
                 unlocked: should_unlock,
             },
         })

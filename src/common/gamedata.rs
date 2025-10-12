@@ -615,8 +615,7 @@ impl GameData {
                 let aether_currents: Vec<i32> = row
                     .AetherCurrents()
                     .iter()
-                    .map(|x| x.into_i32().cloned())
-                    .flatten()
+                    .filter_map(|x| x.into_i32().cloned())
                     .collect();
                 if aether_currents.contains(&aether_current_id) {
                     return Some(id);
@@ -644,7 +643,7 @@ impl GameData {
             .filter(|x| *x != 0)
             .collect();
 
-        return Some(aether_currents_from_zone);
+        Some(aether_currents_from_zone)
     }
 
     pub fn get_screenimage_from_aether_current_comp_flg_set(
@@ -653,7 +652,7 @@ impl GameData {
     ) -> Option<u32> {
         let aether_current_comp_flg_set_to_screenimage =
             get_aether_current_comp_flg_set_to_screenimage();
-        return Some(aether_current_comp_flg_set_to_screenimage[&aether_current_comp_flg_set_id]);
+        Some(aether_current_comp_flg_set_to_screenimage[&aether_current_comp_flg_set_id])
     }
 
     /// Returns the internal script name for this CustomTalk event.

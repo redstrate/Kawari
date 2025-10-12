@@ -77,7 +77,7 @@ pub fn load_init_script(lua: &mut Lua) -> mlua::Result<()> {
     })?;
 
     let run_event_func = lua.create_function(|_, (event_id, event_script): (u32, String)| {
-        return Ok(Event::new(event_id, &event_script));
+        Ok(Event::new(event_id, &event_script))
     })?;
 
     lua.set_app_data(ExtraLuaState::default());
@@ -124,7 +124,7 @@ pub fn register_enum<T: IntoEnumIterator + IntoLua + Display>(lua: &mut Lua, pre
         let new_name = if prefix.is_empty() {
             variant.to_string()
         } else {
-            format!("{prefix}_{}", variant)
+            format!("{prefix}_{variant}")
         };
         lua.globals().set(new_name, variant).unwrap();
     }

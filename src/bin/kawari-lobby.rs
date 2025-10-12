@@ -470,34 +470,22 @@ mod tests {
         const INVALID_EXE_SIZE_STR: &str =
             "ffxiv_dx11.exe/INVALID_SIZE/INVALID_HASH+INVALID_EX1+INVALID_EX2";
 
-        let hw_str: &str = &format!("{}+{}", BASE_STR, EX1_STR);
-        let hw_stb_str: &str = &format!("{}+{}", hw_str, EX2_STR);
-        let hw_stb_shb_str: &str = &format!("{}+{}", hw_stb_str, REST_EX_STR);
-        let hw_stb_shb_ew_str: &str = &format!("{}+{}", hw_stb_shb_str, REST_EX_STR);
-        let full_dt_str: &str = &format!("{}+{}", hw_stb_shb_ew_str, REST_EX_STR);
+        let hw_str: &str = &format!("{BASE_STR}+{EX1_STR}");
+        let hw_stb_str: &str = &format!("{hw_str}+{EX2_STR}");
+        let hw_stb_shb_str: &str = &format!("{hw_stb_str}+{REST_EX_STR}");
+        let hw_stb_shb_ew_str: &str = &format!("{hw_stb_shb_str}+{REST_EX_STR}");
+        let full_dt_str: &str = &format!("{hw_stb_shb_ew_str}+{REST_EX_STR}");
 
         // Test valid cases first, starting with HW + StB only, and adding one expansion per test.
-        assert_eq!(validate_client_version_string(hw_stb_str).is_some(), true);
-        assert_eq!(
-            validate_client_version_string(hw_stb_shb_str).is_some(),
-            true
-        );
-        assert_eq!(
-            validate_client_version_string(hw_stb_shb_ew_str).is_some(),
-            true
-        );
-        assert_eq!(validate_client_version_string(full_dt_str).is_some(), true);
+        assert!(validate_client_version_string(hw_stb_str).is_some());
+        assert!(validate_client_version_string(hw_stb_shb_str).is_some());
+        assert!(validate_client_version_string(hw_stb_shb_ew_str).is_some());
+        assert!(validate_client_version_string(full_dt_str).is_some());
 
         // Next, ensure cases that don't provide enough expansions, no expansions at all, or are otherwise obviously malformed in some way, fail.
-        assert_eq!(validate_client_version_string(BASE_STR).is_none(), true);
-        assert_eq!(validate_client_version_string(hw_str).is_none(), true);
-        assert_eq!(
-            validate_client_version_string(INVALID_EXE_SIZE_STR).is_none(),
-            true
-        );
-        assert_eq!(
-            validate_client_version_string(INVALID_EXE_NAME_STR).is_none(),
-            true
-        );
+        assert!(validate_client_version_string(BASE_STR).is_none());
+        assert!(validate_client_version_string(hw_str).is_none());
+        assert!(validate_client_version_string(INVALID_EXE_SIZE_STR).is_none());
+        assert!(validate_client_version_string(INVALID_EXE_NAME_STR).is_none());
     }
 }
