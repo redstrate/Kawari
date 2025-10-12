@@ -949,11 +949,11 @@ impl ZoneConnection {
                         let mut game_data = self.gamedata.lock();
                         item_info = game_data.get_item_info(ItemInfoQuery::ById(*id));
                     }
-                    if item_info.is_some() {
+                    if let Some(item_info) = item_info {
                         if self
                             .player_data
                             .inventory
-                            .add_in_next_free_slot(Item::new(item_info.unwrap(), *quantity))
+                            .add_in_next_free_slot(Item::new(item_info, *quantity))
                             .is_some()
                         {
                             if *send_client_update {
