@@ -95,10 +95,10 @@ impl Zone {
         for layer_group in &self.layer_groups {
             for layer in &layer_group.chunks[0].layers {
                 for object in &layer.objects {
-                    if let LayerEntryData::ExitRange(exit_range) = &object.data {
-                        if object.instance_id == instance_id {
-                            return Some((object, exit_range));
-                        }
+                    if let LayerEntryData::ExitRange(exit_range) = &object.data
+                        && object.instance_id == instance_id
+                    {
+                        return Some((object, exit_range));
                     }
                 }
             }
@@ -115,10 +115,10 @@ impl Zone {
         for layer_group in &self.layer_groups {
             for layer in &layer_group.chunks[0].layers {
                 for object in &layer.objects {
-                    if let LayerEntryData::PopRange(pop_range) = &object.data {
-                        if object.instance_id == instance_id {
-                            return Some((object, pop_range));
-                        }
+                    if let LayerEntryData::PopRange(pop_range) = &object.data
+                        && object.instance_id == instance_id
+                    {
+                        return Some((object, pop_range));
                     }
                 }
             }

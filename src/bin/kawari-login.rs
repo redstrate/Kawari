@@ -350,14 +350,14 @@ async fn do_login(
 }
 
 async fn account(State(state): State<LoginServerState>, jar: CookieJar) -> Html<String> {
-    if let Some(session_id) = jar.get("cis_sessid") {
-        if let Some(user_id) = state.database.get_user_id(session_id.value()) {
-            let username = state.database.get_username(user_id);
+    if let Some(session_id) = jar.get("cis_sessid")
+        && let Some(user_id) = state.database.get_user_id(session_id.value())
+    {
+        let username = state.database.get_username(user_id);
 
-            let environment = setup_default_environment();
-            let template = environment.get_template("account.html").unwrap();
-            return Html(template.render(context! { username => username }).unwrap());
-        }
+        let environment = setup_default_environment();
+        let template = environment.get_template("account.html").unwrap();
+        return Html(template.render(context! { username => username }).unwrap());
     }
 
     Html("You need to be logged in!".to_string())
@@ -368,27 +368,27 @@ async fn upload_character_backup(
     jar: CookieJar,
     mut multipart: Multipart,
 ) -> Response<Body> {
-    if let Some(session_id) = jar.get("cis_sessid") {
-        if let Some(user_id) = state.database.get_user_id(session_id.value()) {
-            let service_account_id = state.database.get_service_account(user_id);
+    if let Some(session_id) = jar.get("cis_sessid")
+        && let Some(user_id) = state.database.get_user_id(session_id.value())
+    {
+        let service_account_id = state.database.get_service_account(user_id);
 
-            while let Some(field) = multipart.next_field().await.unwrap() {
-                let name = field.name().unwrap().to_string();
-                let data = field.bytes().await.unwrap();
+        while let Some(field) = multipart.next_field().await.unwrap() {
+            let name = field.name().unwrap().to_string();
+            let data = field.bytes().await.unwrap();
 
-                std::fs::write("temp.zip", data).unwrap();
+            std::fs::write("temp.zip", data).unwrap();
 
-                if name == "charbak" {
-                    let ipc_segment = CustomIpcSegment::new(CustomIpcData::ImportCharacter {
-                        service_account_id,
-                        path: "temp.zip".to_string(),
-                    });
+            if name == "charbak" {
+                let ipc_segment = CustomIpcSegment::new(CustomIpcData::ImportCharacter {
+                    service_account_id,
+                    path: "temp.zip".to_string(),
+                });
 
-                    if let Some(response) = send_custom_world_packet(ipc_segment).await {
-                        if let CustomIpcData::CharacterImported { message } = response.data {
-                            return restore_backup_with_message(message).await.into_response();
-                        }
-                    }
+                if let Some(response) = send_custom_world_packet(ipc_segment).await
+                    && let CustomIpcData::CharacterImported { message } = response.data
+                {
+                    return restore_backup_with_message(message).await.into_response();
                 }
             }
         }
@@ -401,12 +401,12 @@ async fn upload_character_backup(
 
 async fn logout(State(state): State<LoginServerState>, jar: CookieJar) -> (CookieJar, Redirect) {
     let config = get_config();
-    if let Some(session_id) = jar.get("cis_sessid") {
-        if let Some(user_id) = state.database.get_user_id(session_id.value()) {
-            state
-                .database
-                .revoke_session(user_id, ACCOUNT_MANAGEMENT_SERVICE);
-        }
+    if let Some(session_id) = jar.get("cis_sessid")
+        && let Some(user_id) = state.database.get_user_id(session_id.value())
+    {
+        state
+            .database
+            .revoke_session(user_id, ACCOUNT_MANAGEMENT_SERVICE);
     }
 
     (
@@ -432,18 +432,18 @@ async fn cancel_account_perform(
     State(state): State<LoginServerState>,
     jar: CookieJar,
 ) -> (CookieJar, Redirect) {
-    if let Some(session_id) = jar.get("cis_sessid") {
-        if let Some(user_id) = state.database.get_user_id(session_id.value()) {
-            // TODO: only supports one service account
-            let service_account_id = state.database.get_service_account(user_id);
+    if let Some(session_id) = jar.get("cis_sessid")
+        && let Some(user_id) = state.database.get_user_id(session_id.value())
+    {
+        // TODO: only supports one service account
+        let service_account_id = state.database.get_service_account(user_id);
 
-            state.database.delete_user(user_id);
+        state.database.delete_user(user_id);
 
-            let ipc_segment =
-                CustomIpcSegment::new(CustomIpcData::DeleteServiceAccount { service_account_id });
+        let ipc_segment =
+            CustomIpcSegment::new(CustomIpcData::DeleteServiceAccount { service_account_id });
 
-            let _ = send_custom_world_packet(ipc_segment).await; // we don't care about the response, for now.
-        }
+        let _ = send_custom_world_packet(ipc_segment).await; // we don't care about the response, for now.
     }
 
     (jar.remove("cis_sessid"), Redirect::to("/"))
@@ -466,20 +466,18 @@ async fn restore_backup_with_message(status_message: String) -> Html<String> {
 }
 
 async fn login_history(State(state): State<LoginServerState>, jar: CookieJar) -> Html<String> {
-    if let Some(session_id) = jar.get("cis_sessid") {
-        if let Some(user_id) = state.database.get_user_id(session_id.value()) {
-            let environment = setup_default_environment();
-            let template = environment.get_template("loginhistory.html").unwrap();
-            let past_logins = state.database.get_sessions(user_id);
+    if let Some(session_id) = jar.get("cis_sessid")
+        && let Some(user_id) = state.database.get_user_id(session_id.value())
+    {
+        let environment = setup_default_environment();
+        let template = environment.get_template("loginhistory.html").unwrap();
+        let past_logins = state.database.get_sessions(user_id);
 
-            return Html(
-                template
-                    .render(
-                        context! { past_logins => past_logins, game_service_name => GAME_SERVICE },
-                    )
-                    .unwrap(),
-            );
-        }
+        return Html(
+            template
+                .render(context! { past_logins => past_logins, game_service_name => GAME_SERVICE })
+                .unwrap(),
+        );
     }
 
     Html("You need to be logged in!".to_string())
@@ -491,18 +489,18 @@ async fn login_history_with_sid(
     generated_sid: &str,
 ) -> Html<String> {
     // TODO: de-duplicate with above function pls
-    if let Some(session_id) = jar.get("cis_sessid") {
-        if let Some(user_id) = state.database.get_user_id(session_id.value()) {
-            let environment = setup_default_environment();
-            let template = environment.get_template("loginhistory.html").unwrap();
-            let past_logins = state.database.get_sessions(user_id);
+    if let Some(session_id) = jar.get("cis_sessid")
+        && let Some(user_id) = state.database.get_user_id(session_id.value())
+    {
+        let environment = setup_default_environment();
+        let template = environment.get_template("loginhistory.html").unwrap();
+        let past_logins = state.database.get_sessions(user_id);
 
-            return Html(
+        return Html(
                 template
                     .render(context! { past_logins => past_logins, generated_sid => generated_sid, game_service_name => GAME_SERVICE })
                     .unwrap(),
             );
-        }
     }
 
     Html("You need to be logged in!".to_string())
@@ -523,22 +521,20 @@ async fn manual_generate_sid(
         panic!("Expected service!");
     };
 
-    if let Some(session_id) = jar.get("cis_sessid") {
-        if state
+    if let Some(session_id) = jar.get("cis_sessid")
+        && state
             .database
             .is_session_valid(ACCOUNT_MANAGEMENT_SERVICE, session_id.value())
-        {
-            if let Some(user_id) = state.database.get_user_id(session_id.value()) {
-                let new_sid = state
-                    .database
-                    .create_session(&service, user_id)
-                    .expect("Failed to create new SID?!");
+        && let Some(user_id) = state.database.get_user_id(session_id.value())
+    {
+        let new_sid = state
+            .database
+            .create_session(&service, user_id)
+            .expect("Failed to create new SID?!");
 
-                return login_history_with_sid(State(state), jar, &new_sid)
-                    .await
-                    .into_response();
-            }
-        }
+        return login_history_with_sid(State(state), jar, &new_sid)
+            .await
+            .into_response();
     }
 
     login_history(State(state), jar).await.into_response()
@@ -559,15 +555,13 @@ async fn revoke_sid(
         panic!("Expected service!");
     };
 
-    if let Some(session_id) = jar.get("cis_sessid") {
-        if state
+    if let Some(session_id) = jar.get("cis_sessid")
+        && state
             .database
             .is_session_valid(ACCOUNT_MANAGEMENT_SERVICE, session_id.value())
-        {
-            if let Some(user_id) = state.database.get_user_id(session_id.value()) {
-                state.database.revoke_session(user_id, &service);
-            }
-        }
+        && let Some(user_id) = state.database.get_user_id(session_id.value())
+    {
+        state.database.revoke_session(user_id, &service);
     }
 
     login_history(State(state), jar).await.into_response()

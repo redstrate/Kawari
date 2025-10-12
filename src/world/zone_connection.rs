@@ -1748,14 +1748,14 @@ impl ZoneConnection {
                 self.send_ipc_self(ipc).await;
             }
 
-            if let Some(actor) = self.get_actor(request.target.object_id) {
-                if actor.hp == 0 {
-                    tracing::info!("Despawning {} because they died!", actor.id.0);
-                    // if the actor died, despawn them
-                    /*connection.handle
-                     *                                       .send(ToServer::ActorDespawned(connection.id, actor.id.0))
-                     *                                       .await;*/
-                }
+            if let Some(actor) = self.get_actor(request.target.object_id)
+                && actor.hp == 0
+            {
+                tracing::info!("Despawning {} because they died!", actor.id.0);
+                // if the actor died, despawn them
+                /*connection.handle
+                 *                                       .send(ToServer::ActorDespawned(connection.id, actor.id.0))
+                 *                                       .await;*/
             }
         }
     }

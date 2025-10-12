@@ -40,17 +40,17 @@ impl ChatHandler {
                 true
             }
             "!spawnmonster" => {
-                if let Some((_, id)) = chat_message.message.split_once(' ') {
-                    if let Ok(id) = id.parse::<u32>() {
-                        connection
-                            .handle
-                            .send(ToServer::DebugNewEnemy(
-                                connection.id,
-                                connection.player_data.actor_id,
-                                id,
-                            ))
-                            .await;
-                    }
+                if let Some((_, id)) = chat_message.message.split_once(' ')
+                    && let Ok(id) = id.parse::<u32>()
+                {
+                    connection
+                        .handle
+                        .send(ToServer::DebugNewEnemy(
+                            connection.id,
+                            connection.player_data.actor_id,
+                            id,
+                        ))
+                        .await;
                 }
                 true
             }

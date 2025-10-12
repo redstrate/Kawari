@@ -258,16 +258,14 @@ impl GameData {
             ItemInfoQuery::ByName(ref query_item_name) => {
                 // FIXME: this seems... inefficent
                 for id in 0..self.item_sheet.row_count() {
-                    if let Some(row) = self.item_sheet.get_row(id) {
-                        if let Some(name) = row.Name().into_string() {
-                            if name
-                                .to_lowercase()
-                                .contains(&query_item_name.to_lowercase())
-                            {
-                                result = Some((row, id));
-                                break;
-                            }
-                        }
+                    if let Some(row) = self.item_sheet.get_row(id)
+                        && let Some(name) = row.Name().into_string()
+                        && name
+                            .to_lowercase()
+                            .contains(&query_item_name.to_lowercase())
+                    {
+                        result = Some((row, id));
+                        break;
                     }
                 }
             }

@@ -354,41 +354,40 @@ fn server_logic_tick(data: &mut WorldServer, network: &mut NetworkState) {
                 spawn,
                 last_position,
             } = actor
+                && current_target.is_some()
             {
-                if current_target.is_some() {
-                    let needs_repath = current_path.is_empty();
-                    if !needs_repath {
-                        // follow current path
-                        let next_position = Position {
-                            x: current_path[0][0],
-                            y: current_path[0][1],
-                            z: current_path[0][2],
-                        };
-                        let current_position = last_position.unwrap_or(spawn.common.pos);
+                let needs_repath = current_path.is_empty();
+                if !needs_repath {
+                    // follow current path
+                    let next_position = Position {
+                        x: current_path[0][0],
+                        y: current_path[0][1],
+                        z: current_path[0][2],
+                    };
+                    let current_position = last_position.unwrap_or(spawn.common.pos);
 
-                        let dir_x = current_position.x - next_position.x;
-                        let dir_z = current_position.z - next_position.z;
-                        let rotation = f32::atan2(-dir_z, dir_x).to_degrees();
+                    let dir_x = current_position.x - next_position.x;
+                    let dir_z = current_position.z - next_position.z;
+                    let rotation = f32::atan2(-dir_z, dir_x).to_degrees();
 
-                        actor_moves.push(FromServer::ActorMove(
-                            id.0,
-                            Position::lerp(current_position, next_position, *current_path_lerp),
-                            rotation,
-                            MoveAnimationType::RUNNING,
-                            MoveAnimationState::None,
-                            JumpState::NoneOrFalling,
-                        ));
-                    }
-
-                    target_actor_pos.insert(
-                        current_target.unwrap(),
-                        instance
-                            .find_actor(current_target.unwrap())
-                            .unwrap()
-                            .get_common_spawn()
-                            .pos,
-                    );
+                    actor_moves.push(FromServer::ActorMove(
+                        id.0,
+                        Position::lerp(current_position, next_position, *current_path_lerp),
+                        rotation,
+                        MoveAnimationType::RUNNING,
+                        MoveAnimationState::None,
+                        JumpState::NoneOrFalling,
+                    ));
                 }
+
+                target_actor_pos.insert(
+                    current_target.unwrap(),
+                    instance
+                        .find_actor(current_target.unwrap())
+                        .unwrap()
+                        .get_common_spawn()
+                        .pos,
+                );
             }
         }
 
@@ -459,11 +458,10 @@ fn server_logic_tick(data: &mut WorldServer, network: &mut NetworkState) {
                         MoveAnimationState::None,
                         JumpState::NoneOrFalling,
                     ) = msg
+                        && id.0 == *msg_id
                     {
-                        if id.0 == *msg_id {
-                            spawn.common.pos = *pos;
-                            spawn.common.rotation = *rotation;
-                        }
+                        spawn.common.pos = *pos;
+                        spawn.common.rotation = *rotation;
                     }
                 }
             }
@@ -1443,20 +1441,19 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     let ipc_len = ipc_data.len() as u32 + 32;
                     let mut cursor = Cursor::new(&mut ipc_data);
                     if let Ok(parsed) = ServerZoneIpcSegment::read_le_args(&mut cursor, (&ipc_len,))
+                        && let ServerZoneIpcData::InitZone(mut init_zone) = parsed.data
                     {
-                        if let ServerZoneIpcData::InitZone(mut init_zone) = parsed.data {
-                            tracing::info!("- Fixing up InitZone");
+                        tracing::info!("- Fixing up InitZone");
 
-                            // stop it from trying to initialize obsfucation
-                            init_zone.obsfucation_mode = 0;
-                            init_zone.seed1 = 0;
-                            init_zone.seed2 = 0;
-                            init_zone.seed3 = 0;
+                        // stop it from trying to initialize obsfucation
+                        init_zone.obsfucation_mode = 0;
+                        init_zone.seed1 = 0;
+                        init_zone.seed2 = 0;
+                        init_zone.seed3 = 0;
 
-                            let mut cursor = Cursor::new(Vec::new());
-                            init_zone.write_le(&mut cursor).unwrap();
-                            ipc_data = cursor.into_inner().to_vec();
-                        }
+                        let mut cursor = Cursor::new(Vec::new());
+                        init_zone.write_le(&mut cursor).unwrap();
+                        ipc_data = cursor.into_inner().to_vec();
                     }
 
                     let msg = FromServer::ReplayPacket(PacketSegment {

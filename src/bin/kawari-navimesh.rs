@@ -152,18 +152,18 @@ fn main() {
             for chunk in &lgb.chunks {
                 for layer in &chunk.layers {
                     for object in &layer.objects {
-                        if let LayerEntryData::BG(bg) = &object.data {
-                            if !bg.collision_asset_path.value.is_empty() {
-                                // NOTE: assert is here to find out the unknown
-                                assert!(bg.collision_type == ModelCollisionType::Replace);
+                        if let LayerEntryData::BG(bg) = &object.data
+                            && !bg.collision_asset_path.value.is_empty()
+                        {
+                            // NOTE: assert is here to find out the unknown
+                            assert!(bg.collision_type == ModelCollisionType::Replace);
 
-                                let pcb_file = sqpack_resource
-                                    .read(&bg.collision_asset_path.value)
-                                    .unwrap();
-                                let pcb = Pcb::from_existing(&pcb_file).unwrap();
+                            let pcb_file = sqpack_resource
+                                .read(&bg.collision_asset_path.value)
+                                .unwrap();
+                            let pcb = Pcb::from_existing(&pcb_file).unwrap();
 
-                                walk_node(&pcb.root_node, &object.transform, context, &tiles);
-                            }
+                            walk_node(&pcb.root_node, &object.transform, context, &tiles);
                         }
                     }
                 }
