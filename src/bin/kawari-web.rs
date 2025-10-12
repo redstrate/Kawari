@@ -5,7 +5,7 @@ use kawari::config::get_config;
 use kawari::{SUPPORTED_GAME_VERSION, web_static_dir, web_templates_dir};
 use minijinja::Environment;
 use minijinja::context;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use tower_http::services::ServeDir;
 
 fn setup_default_environment() -> Environment<'static> {
@@ -59,11 +59,6 @@ fn setup_default_environment() -> Environment<'static> {
     .unwrap();
 
     env
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct GateStatus {
-    status: i32,
 }
 
 async fn root() -> Html<String> {
