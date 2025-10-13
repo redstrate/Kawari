@@ -3,7 +3,6 @@ use bitflags::bitflags;
 
 use crate::common::Position;
 
-// NOTE: Not 100% sure this is actually u16, it could be u8.
 #[binrw]
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct InitZoneFlags(pub u16);
