@@ -6,7 +6,7 @@ use std::num::Wrapping;
 use crate::common::CHAR_NAME_MAX_LENGTH;
 
 /// Constant to enable packet obfuscation. Changes every patch.
-pub const OBFUSCATION_ENABLED_MODE: u8 = 46;
+pub const OBFUSCATION_ENABLED_MODE: u8 = 52;
 
 // Helper macro so we don't repeat ourselves a bunch of times
 macro_rules! scrambler_dir {
