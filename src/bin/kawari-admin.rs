@@ -83,6 +83,7 @@ struct Input {
     festival2: Option<u16>,
     festival3: Option<u16>,
     world: Option<u16>,
+    login_message: Option<String>,
 }
 
 async fn apply(Form(input): Form<Input>) -> Redirect {
@@ -111,6 +112,10 @@ async fn apply(Form(input): Form<Input>) -> Redirect {
 
     if let Some(world) = input.world {
         config.world.world_id = world;
+    }
+
+    if let Some(login_message) = input.login_message {
+        config.world.login_message = login_message;
     }
 
     serde_yaml_ng::to_writer(&std::fs::File::create("config.yaml").unwrap(), &config)
