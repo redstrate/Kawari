@@ -120,7 +120,15 @@ impl Conditions {
 
 impl std::fmt::Debug for Conditions {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Conditions {:#?} ({:#?})", self.flags, self.conditions())
+        if self.flags.iter().all(|x| *x == 0) {
+            return write!(f, "None");
+        }
+
+        if self.conditions().is_empty() {
+            write!(f, "{:#?}", self.flags)
+        } else {
+            write!(f, "{:?}", self.conditions())
+        }
     }
 }
 
