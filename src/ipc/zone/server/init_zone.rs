@@ -39,6 +39,8 @@ bitflags! {
         /// Informs the client that this is an instanced area. Also needs instance_id to be a non-zero value.
         const INSTANCED_AREA = 0x080;
 
+        // TODO: 256 seems to be something else UI related
+
         // TODO: 512 seems to be something weather-related?
     }
 }
