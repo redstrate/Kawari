@@ -2,8 +2,11 @@ use axum::response::{Html, Redirect};
 use axum::routing::post;
 use axum::{Router, extract::Form, routing::get};
 use kawari::config::get_config;
+use kawari::ipc::kawari::{CustomIpcData, CustomIpcSegment};
 use kawari::login::User;
+use kawari::packet::send_custom_world_packet;
 use kawari::web_static_dir;
+use kawari::world::BasicCharacterData;
 use minijinja::Environment;
 use minijinja::context;
 use serde::Deserialize;
@@ -32,6 +35,12 @@ fn setup_default_environment() -> Environment<'static> {
     env.add_template_owned(
         "admin_users.html",
         std::fs::read_to_string("resources/web/templates/admin_users.html")
+            .expect("Failed to find template!"),
+    )
+    .unwrap();
+    env.add_template_owned(
+        "admin_characters.html",
+        std::fs::read_to_string("resources/web/templates/admin_characters.html")
             .expect("Failed to find template!"),
     )
     .unwrap();
@@ -70,7 +79,24 @@ async fn users() -> Html<String> {
 
     let users: Option<Vec<User>> = serde_json::from_str(&body).ok();
 
-    Html(template.render(context! { users => users }).unwrap())
+    Html(template.render(context! { users }).unwrap())
+}
+
+async fn characters() -> Html<String> {
+    let environment = setup_default_environment();
+    let template = environment.get_template("admin_characters.html").unwrap();
+
+    let ipc_segment = CustomIpcSegment::new(CustomIpcData::RequestFullCharacterList {});
+
+    if let Some(response) = send_custom_world_packet(ipc_segment).await
+        && let CustomIpcData::FullCharacterListResponse { json } = response.data
+    {
+        let characters: Option<Vec<BasicCharacterData>> = serde_json::from_str(&json).ok();
+        Html(template.render(context! { characters }).unwrap())
+    } else {
+        // error out better than this
+        Html(template.render(context! {}).unwrap())
+    }
 }
 
 #[derive(Deserialize, Debug)]
@@ -132,6 +158,7 @@ async fn main() {
         .route("/", get(root))
         .route("/apply", post(apply))
         .route("/users", get(users))
+        .route("/characters", get(characters))
         .nest_service("/static", ServeDir::new(web_static_dir!("")));
 
     let config = get_config();

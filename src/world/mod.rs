@@ -11,7 +11,7 @@ mod zone_connection;
 pub use zone_connection::{ObsfucationData, PlayerData, TeleportReason, ZoneConnection};
 
 mod database;
-pub use database::{CharacterData, WorldDatabase};
+pub use database::{BasicCharacterData, CharacterData, WorldDatabase};
 
 pub mod lua;
 

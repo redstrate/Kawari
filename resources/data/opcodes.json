@@ -935,6 +935,18 @@
             "comment": "Removes the characters associated with a given service account.",
             "opcode": 15,
             "size": 4
+        },
+        {
+            "name": "RequestFullCharacterList",
+            "comment": "Requests information about all characters on this world.",
+            "opcode": 16,
+            "size": 0
+        },
+        {
+            "name": "FullCharacterListResponse",
+            "comment": "Response to requesting the full character list.",
+            "opcode": 17,
+            "size": 1024
         }
     ]
 }

@@ -1,0 +1,23 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Kawari Admin Panel{% endblock %}
+{% set current_page = "characters" %}
+
+{% block adminbody %}
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">Content ID</th>
+      <th scope="col">Name</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for char in characters %}
+      <tr>
+        <td>{{ char.content_id }}</td>
+        <td>{{ char.name }}</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

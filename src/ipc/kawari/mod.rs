@@ -96,6 +96,14 @@ pub enum CustomIpcData {
     DeleteServiceAccount {
         service_account_id: u32,
     },
+    RequestFullCharacterList {},
+    FullCharacterListResponse {
+        #[bw(pad_size_to = 1024)]
+        #[br(count = 1024)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        json: String,
+    },
     Unknown,
 }
 

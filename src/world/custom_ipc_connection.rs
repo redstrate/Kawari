@@ -246,6 +246,18 @@ impl CustomIpcConnection {
             CustomIpcData::DeleteServiceAccount { service_account_id } => {
                 self.database.delete_characters(*service_account_id);
             }
+            CustomIpcData::RequestFullCharacterList {} => {
+                let json = self.database.request_full_character_list();
+
+                self.send_custom_response(PacketSegment {
+                    segment_type: SegmentType::KawariIpc,
+                    data: SegmentData::KawariIpc(CustomIpcSegment::new(
+                        CustomIpcData::FullCharacterListResponse { json },
+                    )),
+                    ..Default::default()
+                })
+                .await;
+            }
             _ => {
                 panic!("The server is recieving a response or unknown custom IPC! {data:#?}")
             }

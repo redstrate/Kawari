@@ -1,7 +1,7 @@
 use std::{io::BufReader, io::Read, sync::Mutex};
 
 use rusqlite::Connection;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     CLASSJOB_ARRAY_SIZE,
@@ -25,6 +25,12 @@ pub struct CharacterData {
     pub city_state: u8,
     pub position: Position,
     pub zone_id: u16,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct BasicCharacterData {
+    pub content_id: u64,
+    pub name: String,
 }
 
 impl Default for WorldDatabase {
@@ -785,5 +791,27 @@ impl WorldDatabase {
                 )
                 .unwrap();
         }
+    }
+
+    // Returns surface-level information about all of the characters in the database.
+    pub fn request_full_character_list(&self) -> String {
+        let connection = self.connection.lock().unwrap();
+
+        let mut stmt = connection
+            .prepare("SELECT content_id, name FROM character_data")
+            .unwrap();
+
+        let characters: Vec<BasicCharacterData> = stmt
+            .query_map((), |row| {
+                Ok(BasicCharacterData {
+                    content_id: row.get(0)?,
+                    name: row.get(1)?,
+                })
+            })
+            .unwrap()
+            .map(|x| x.unwrap())
+            .collect();
+
+        serde_json::to_string(&characters).unwrap_or_default()
     }
 }
