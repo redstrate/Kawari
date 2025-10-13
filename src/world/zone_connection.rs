@@ -556,7 +556,7 @@ impl ZoneConnection {
 
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InitZone(InitZone {
                 territory_type: new_zone_id,
-                weather_id,
+                weather_id: weather_id as u8,
                 flags: InitZoneFlags::ENABLE_FLYING | InitZoneFlags::HIDE_SERVER | extra_flags,
                 obsfucation_mode: if config.world.enable_packet_obsfucation {
                     OBFUSCATION_ENABLED_MODE

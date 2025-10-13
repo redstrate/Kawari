@@ -63,7 +63,8 @@ pub struct InitZone {
     /// Unknown purpose.
     pub layout_id: u32,
     /// Index into the Weather Excel sheet.
-    pub weather_id: u16, // FIXME: this seems to actually be read as a byte in the client, investigate further
+    #[brw(pad_after = 1)] // Empty. Currently it's read as a byte, however it's more than likely going to change into a u16 in the future.
+    pub weather_id: u8,
     pub flags: InitZoneFlags,
     pub unk_bitmask1: u8, // unknown purpose, seems to always be 170 for me. 168 in instanced areas.
     /// Zero means "no obsfucation" (not really, but functionally yes.)
