@@ -716,7 +716,7 @@ async fn client_loop(
                                                         connection.handle.send(ToServer::ZoneIn(connection.id, connection.player_data.actor_id, connection.player_data.teleport_reason == TeleportReason::Aetheryte)).await;
                                                     },
                                                     ClientTriggerCommand::BeginContentsReplay {} => {
-                                                        connection.conditions.set_condition(Condition::ContentsReplay);
+                                                        connection.conditions.set_condition(Condition::ExecutingGatheringAction);
                                                         connection.send_conditions().await;
 
                                                         connection.actor_control_self(ActorControlSelf {
@@ -1431,7 +1431,7 @@ async fn client_loop(
                                                         unk_flag: 1,
                                                     }
                                                 }).await;
-                                                connection.conditions.set_condition(Condition::WalkInEvent);
+                                                connection.conditions.set_condition(Condition::OccupiedInEvent);
                                                 connection.send_conditions().await;
                                                 let actor_id = ObjectTypeId { object_id: ObjectId(connection.player_data.actor_id), object_type: ObjectTypeKind::None };
                                                 connection.start_event(actor_id, *event_id, 10, *event_arg, &mut lua_player).await;

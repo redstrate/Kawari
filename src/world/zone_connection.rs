@@ -1318,7 +1318,7 @@ impl ZoneConnection {
             }
             EventFinishType::Jumping => {
                 // We want it set here, because when the client finishes the animation, they will send us a client trigger to tell us.
-                self.conditions.set_condition(Condition::WalkInEvent);
+                self.conditions.set_condition(Condition::OccupiedInEvent);
             }
         };
 
