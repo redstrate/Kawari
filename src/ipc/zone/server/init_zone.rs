@@ -21,7 +21,11 @@ bitflags! {
         /// Enables the Playguide window, and also the Duty Recorder. Only sent for the first zone logged into.
         const INITIAL_LOGIN = 0x001;
 
-        // TODO: 4 seems to reset the content finder queue info?
+        // TODO: no idea, I didn't find this in the disassembly so it may be unused/no effect. Set while in an instanced duty (explorer mode.)
+        const UNK1 = 0x002;
+
+        // TODO: I think this is for resetting the content finder queue info? This is set when returning from a duty.
+        const UNK2 = 0x004;
 
         /// Hides the server information in the status bar.
         const HIDE_SERVER = 0x008;
@@ -29,7 +33,8 @@ bitflags! {
         /// Allows flying on your mount. This only works if you completed A Realm Reborn.
         const ENABLE_FLYING = 0x010;
 
-        // TODO: 32 seems to control some UI state
+        // TODO: 32 seems to control some UI state. Set while in an instanced duty (explorer mode.)
+        const UNK3 = 0x020;
 
         /// Informs the client that this is an instanced area. Also needs instance_id to be a non-zero value.
         const INSTANCED_AREA = 0x080;
@@ -60,7 +65,7 @@ pub struct InitZone {
     /// Index into the Weather Excel sheet.
     pub weather_id: u16, // FIXME: this seems to actually be read as a byte in the client, investigate further
     pub flags: InitZoneFlags,
-    pub unk_bitmask1: u8, // unknown purpose, seems to always be 170 for me
+    pub unk_bitmask1: u8, // unknown purpose, seems to always be 170 for me. 168 in instanced areas.
     /// Zero means "no obsfucation" (not really, but functionally yes.)
     /// To enable obsfucation, you need to set this to a constant that changes every patch. See lib.rs for the constant.
     pub obsfucation_mode: u8,
@@ -71,8 +76,10 @@ pub struct InitZone {
     /// Third seed used in deobsfucation on the client side.
     pub seed3: u32,
     pub unk7: [u8; 18],
+    /// Might be the festivals active in the current zone? Unsure.
     pub festivals_id1: [u16; 4],
     pub festivals_phase1: [u16; 4],
+    /// Might be festivals active on the current server? Unsure.
     pub festivals_id2: [u16; 4],
     pub festivals_phase2: [u16; 4],
     pub unk8_9: [u8; 2],
