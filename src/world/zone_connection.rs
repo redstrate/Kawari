@@ -566,6 +566,8 @@ impl ZoneConnection {
                 seed1: !self.obsfucation_data.seed1,
                 seed2: !self.obsfucation_data.seed2,
                 seed3: !self.obsfucation_data.seed3,
+                festivals_id1: config.world.active_festivals,
+                festivals_id2: config.world.active_festivals,
                 ..Default::default()
             }));
             self.send_ipc_self(ipc).await;

@@ -321,6 +321,9 @@ pub struct WorldConfig {
     /// Whether we generate new navmeshes on-demand. This consumes a lot of resources when entering a new zone!
     #[serde(default = "WorldConfig::default_generate_navmesh")]
     pub generate_navmesh: bool,
+    /// The active festivals.
+    #[serde(default = "WorldConfig::default_active_festivals")]
+    pub active_festivals: [u16; 4],
 }
 
 impl Default for WorldConfig {
@@ -335,6 +338,7 @@ impl Default for WorldConfig {
             enable_packet_compression: Self::default_packet_compression(),
             login_message: Self::default_login_message(),
             generate_navmesh: Self::default_generate_navmesh(),
+            active_festivals: Self::default_active_festivals(),
         }
     }
 }
@@ -370,6 +374,10 @@ impl WorldConfig {
 
     fn default_generate_navmesh() -> bool {
         true
+    }
+
+    fn default_active_festivals() -> [u16; 4] {
+        [0; 4]
     }
 }
 
