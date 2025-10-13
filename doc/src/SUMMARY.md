@@ -19,3 +19,4 @@
 
 # Resources
 - [Tips](tips.md)
+- [Acceptable Usage](acceptable_usage.md)

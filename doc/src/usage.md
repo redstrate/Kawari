@@ -4,9 +4,9 @@ Kawari is designed to be easy to run, and should be accessible to anyone who wan
 
 **Note:** Persisted data (logins, characters, etc) are expected to _not_ be stable or secure. Treat all data as disposable.
 
-## Copyright Notice
+## Acceptable Usage
 
-**Kawari requires that you have an active subscription**, and are in possession of a legitimate copy of the game. Kawari is not related or affiliated to SqEx, and by using it you are in explicit violation of the User Agreement (_Limitation 2.4_.)
+Before continuing, you must familiarize yourself with the [Acceptable Usage](acceptable_usage.md) of the software.
 
 ## Prerequisites
 

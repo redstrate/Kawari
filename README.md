@@ -32,7 +32,7 @@ Kawari is primarily a research project, but also a way to preserve the modern cl
 * **NOT** a way to play the game without a valid subscription. The server can't, nor ever will be a suitable replacement for the real game.
 * **NOT** for creating bots, packet modifications or doing anything on the retail servers.
 
-Also please don't use Kawari to spoil new and unreleased content, thanks.
+For more information, see our [Acceptable Usage](https://docs.xiv.zone/kawari/acceptable_usage.html) document.
 
 ## Supported Game Version
 
