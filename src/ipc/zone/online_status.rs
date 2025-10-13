@@ -102,7 +102,15 @@ impl OnlineStatusMask {
 
 impl std::fmt::Debug for OnlineStatusMask {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "OnlineStatusMask {:#?} ({:#?})", self.flags, self.mask())
+        if self.flags.iter().all(|x| *x == 0) {
+            return write!(f, "None");
+        }
+
+        if self.mask().is_empty() {
+            write!(f, "{:#?}", self.flags)
+        } else {
+            write!(f, "{:?}", self.mask())
+        }
     }
 }
 
