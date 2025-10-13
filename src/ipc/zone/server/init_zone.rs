@@ -18,14 +18,24 @@ bitflags! {
     impl InitZoneFlags : u16 {
         /// No flags.
         const NONE = 0x000;
+
         /// Enables the Playguide window, and also the Duty Recorder. Only sent for the first zone logged into.
         const INITIAL_LOGIN = 0x001;
+
+        // TODO: 4 seems to reset the content finder queue info?
+
         /// Hides the server information in the status bar.
         const HIDE_SERVER = 0x008;
+
         /// Allows flying on your mount. This only works if you completed A Realm Reborn.
         const ENABLE_FLYING = 0x010;
+
+        // TODO: 32 seems to control some UI state
+
         /// Informs the client that this is an instanced area. Also needs instance_id to be a non-zero value.
         const INSTANCED_AREA = 0x080;
+
+        // TODO: 512 seems to be something weather-related?
     }
 }
 
@@ -45,12 +55,13 @@ pub struct InitZone {
     /// The id of the instanced area, has no effect if non-zero and flags doesn't contain `INSTANCED_AREA`.
     pub instance_id: u16,
     pub content_finder_condition_id: u16,
-    pub layer_set_id: u32,
+    pub transition_territory_filter_key: u32,
+    /// Unknown purpose.
     pub layout_id: u32,
     /// Index into the Weather Excel sheet.
-    pub weather_id: u16,
+    pub weather_id: u16, // FIXME: this seems to actually be read as a byte in the client, investigate further
     pub flags: InitZoneFlags,
-    pub unk_bitmask1: u8,
+    pub unk_bitmask1: u8, // unknown purpose, seems to always be 170 for me
     /// Zero means "no obsfucation" (not really, but functionally yes.)
     /// To enable obsfucation, you need to set this to a constant that changes every patch. See lib.rs for the constant.
     pub obsfucation_mode: u8,
@@ -58,16 +69,15 @@ pub struct InitZone {
     pub seed1: u8,
     /// Second seed used in deobsfucation on the client side.
     pub seed2: u8,
-    /// Third seed used in deobsfucation on the client size.
+    /// Third seed used in deobsfucation on the client side.
     pub seed3: u32,
-    pub festival_id: u16,
-    pub additional_festival_id: u16,
-    pub unk3: u32,
-    pub unk4: u32,
-    pub unk5: u32,
-    pub unk6: [u32; 4],
-    pub unk7: [u32; 3],
-    pub unk8_9: [u8; 8],
+    pub unk7: [u8; 18],
+    pub festivals_id1: [u16; 4],
+    pub festivals_phase1: [u16; 4],
+    pub festivals_id2: [u16; 4],
+    pub festivals_phase2: [u16; 4],
+    pub unk8_9: [u8; 2],
+    /// This gives a hint to level streaming so it can preload this area.
     pub position: Position,
     pub unk8: [u32; 4],
     pub unk9: u32,
