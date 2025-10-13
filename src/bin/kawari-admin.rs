@@ -46,7 +46,7 @@ async fn root() -> Html<String> {
 
     let environment = setup_default_environment();
     let template = environment.get_template("admin_general.html").unwrap();
-    Html(template.render(context! { worlds_open => config.frontier.worlds_open, login_open => config.frontier.login_open, boot_patch_location => config.patch.patches_location, festivals => config.world.active_festivals }).unwrap())
+    Html(template.render(context! { config }).unwrap())
 }
 
 async fn users() -> Html<String> {
@@ -78,11 +78,11 @@ async fn users() -> Html<String> {
 struct Input {
     worlds_open: Option<String>,
     login_open: Option<String>,
-    boot_patch_location: Option<String>,
     festival0: Option<u16>,
     festival1: Option<u16>,
     festival2: Option<u16>,
     festival3: Option<u16>,
+    world: Option<u16>,
 }
 
 async fn apply(Form(input): Form<Input>) -> Redirect {
@@ -102,16 +102,16 @@ async fn apply(Form(input): Form<Input>) -> Redirect {
         config.frontier.login_open = false;
     }
 
-    if let Some(boot_patch_location) = input.boot_patch_location {
-        config.patch.patches_location = boot_patch_location;
-    }
-
     config.world.active_festivals = [
         input.festival0.unwrap_or(0),
         input.festival1.unwrap_or(1),
         input.festival2.unwrap_or(2),
         input.festival3.unwrap_or(3),
     ];
+
+    if let Some(world) = input.world {
+        config.world.world_id = world;
+    }
 
     serde_yaml_ng::to_writer(&std::fs::File::create("config.yaml").unwrap(), &config)
         .expect("TODO: panic message");
