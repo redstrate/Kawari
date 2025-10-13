@@ -31,3 +31,9 @@ This is currently only possible by manually editing the database.
 2. Look at the `chara_make` column, this is where you'll find JSON. You can copy this to a text editor so it's easier to work with.
 3. Go to the thirteenth value of the first array, that is the character's facial features. (If you have no facial features selected, this value would be zero.)
 4. We need to set the left-most bit. For example: if you don't care about any other facial feature, set this value to 128.
+
+## Replaying old festivals and events
+
+The game regularly rotates various festivals or events throughout the year. Their content is normally unavailable after they finished on retail, however parts of them can still be seen in Kawari. You can set festivals temporarily using the `!festival` [debug command](debug_commands.md), or permanently change the active festivals on [the Admin Panel](https://admin.ffxiv.localhost).
+
+Patch updates may retroactively change or remove older festival content due to the nature of the format.
