@@ -1,6 +1,7 @@
 use binrw::binrw;
 use paramacro::opcode_data;
 
+use super::OnlineStatusMask;
 pub use super::social_list::{
     ClientLanguage, PlayerEntry, SocialList, SocialListRequest, SocialListRequestType,
     SocialListUIFlags, SocialListUILanguages,
@@ -430,6 +431,7 @@ pub enum ServerZoneIpcData {
         id: u16,
         unk1: [u8; 14],
     },
+    SetOnlineStatus(OnlineStatusMask),
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -684,7 +686,7 @@ mod tests {
                 id: 0,
                 unk1: [0; 14],
             },
-            ServerZoneIpcData::Linkshells { unk: [0; 448] },
+            ServerZoneIpcData::SetOnlineStatus(OnlineStatusMask::default()),
         ];
 
         for data in &ipc_types {

@@ -467,6 +467,12 @@
             "comment": "Sent by the server to mount the player.",
             "opcode": 506,
             "size": 16
+        },
+        {
+            "name": "SetOnlineStatus",
+            "comment": "Sent by the server to update your online status.",
+            "opcode": 424,
+            "size": 8
         }
     ],
     "ClientZoneIpcType": [

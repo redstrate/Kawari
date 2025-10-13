@@ -70,6 +70,12 @@ pub struct OnlineStatusMask {
     flags: [u8; 8],
 }
 
+impl From<[u8; 8]> for OnlineStatusMask {
+    fn from(flags: [u8; 8]) -> Self {
+        Self { flags }
+    }
+}
+
 impl OnlineStatusMask {
     pub fn mask(&self) -> Vec<OnlineStatus> {
         let mut statuses = Vec::new();
@@ -97,5 +103,28 @@ impl OnlineStatusMask {
 impl std::fmt::Debug for OnlineStatusMask {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "OnlineStatusMask {:#?} ({:#?})", self.flags, self.mask())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn read_onlinestatus_duty() {
+        let mask: [u8; 8] = [0, 0, 0, 0, 0, 129, 0, 0];
+        assert_eq!(
+            OnlineStatusMask::from(mask).mask(),
+            vec![OnlineStatus::AnotherWorld, OnlineStatus::Online]
+        );
+    }
+
+    #[test]
+    fn read_onlinestatus_normal() {
+        let mask: [u8; 8] = [0, 0, 0, 0, 0, 128, 0, 0];
+        assert_eq!(
+            OnlineStatusMask::from(mask).mask(),
+            vec![OnlineStatus::Online]
+        );
     }
 }
