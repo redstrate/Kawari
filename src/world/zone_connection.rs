@@ -1618,8 +1618,53 @@ impl ZoneConnection {
 
         let mut effects_builder = None;
 
-        // run action script
-        {
+        if request.action_kind == ActionKind::Item {
+            let lua = self.lua.lock();
+
+            let key = request.action_key;
+            let (action_type, action_data, additional_data);
+
+            {
+                let mut gamedata = self.gamedata.lock();
+                (action_type, action_data, additional_data) =
+                    gamedata.lookup_item_action_data(key).unwrap_or_default();
+            }
+
+            // FIXME: we should check if this data is valid instead of silently returning zeroes
+
+            lua.scope(|scope| {
+                let connection_data = scope.create_userdata_ref_mut(lua_player).unwrap();
+
+                let func: Function = lua.globals().get("dispatchItem").unwrap();
+
+                if let Ok((action_script, arg)) = func.call::<(String, u32)>((
+                    &connection_data,
+                    self.gamedata.clone(),
+                    key,
+                    action_type,
+                    action_data,
+                    additional_data,
+                )) {
+                    let config = get_config();
+
+                    let file_name = format!("{}/{}", &config.world.scripts_location, action_script);
+                    lua.load(
+                        std::fs::read(&file_name).expect("Failed to locate scripts directory!"),
+                    )
+                    .set_name("@".to_string() + &file_name)
+                    .exec()
+                    .unwrap();
+
+                    let func: Function = lua.globals().get("doAction").unwrap();
+
+                    effects_builder =
+                        Some(func.call::<EffectsBuilder>((connection_data, arg)).unwrap());
+                }
+
+                Ok(())
+            })
+            .unwrap();
+        } else {
             let lua = self.lua.lock();
             let state = lua.app_data_ref::<ExtraLuaState>().unwrap();
 

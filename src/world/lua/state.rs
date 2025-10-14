@@ -80,6 +80,9 @@ pub fn load_init_script(lua: &mut Lua) -> mlua::Result<()> {
         Ok(Event::new(event_id, &event_script))
     })?;
 
+    let run_action_func =
+        lua.create_function(|_, (action_script, arg): (String, u32)| Ok((action_script, arg)))?;
+
     lua.set_app_data(ExtraLuaState::default());
     lua.globals().set("registerAction", register_action_func)?;
     lua.globals()
@@ -92,6 +95,7 @@ pub fn load_init_script(lua: &mut Lua) -> mlua::Result<()> {
     lua.globals()
         .set("getLoginMessage", get_login_message_func)?;
     lua.globals().set("runEvent", run_event_func)?;
+    lua.globals().set("runAction", run_action_func)?;
 
     let effectsbuilder_constructor = lua.create_function(|_, ()| Ok(EffectsBuilder::default()))?;
     lua.globals()

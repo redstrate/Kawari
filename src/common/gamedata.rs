@@ -11,6 +11,7 @@ use icarus::EquipSlotCategory::EquipSlotCategorySheet;
 use icarus::GilShopItem::GilShopItemSheet;
 use icarus::InstanceContent::InstanceContentSheet;
 use icarus::Item::ItemSheet;
+use icarus::ItemAction::ItemActionSheet;
 use icarus::ModelChara::ModelCharaSheet;
 use icarus::Mount::MountSheet;
 use icarus::Opening::OpeningSheet;
@@ -667,6 +668,27 @@ impl GameData {
         let row = sheet.get_row(opening_id).unwrap();
 
         row.Name().into_string().cloned().unwrap_or_default()
+    }
+
+    /// Returns data useful for performing item actions.
+    pub fn lookup_item_action_data(&mut self, item_id: u32) -> Option<(u16, [u16; 9], u32)> {
+        if let Some(row) = self.item_sheet.get_row(item_id) {
+            let additional_data = row.AdditionalData().into_u32()?;
+
+            let item_action_sheet = ItemActionSheet::read_from(&mut self.resource, Language::None)?;
+            let item_action_row =
+                item_action_sheet.get_row(row.ItemAction().into_u16().cloned()? as u32)?;
+
+            return Some((
+                item_action_row.Type().into_u16().cloned()?,
+                item_action_row
+                    .Data()
+                    .map(|x| x.into_u16().cloned().unwrap_or_default()),
+                *additional_data,
+            ));
+        }
+
+        None
     }
 }
 

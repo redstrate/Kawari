@@ -1,4 +1,4 @@
-function doAction(player)
+function doAction(player, arg)
     effects = EffectsBuilder()
 
     -- TODO: match retail fantasia behavior
