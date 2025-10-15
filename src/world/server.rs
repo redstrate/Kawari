@@ -13,14 +13,16 @@ use tokio::sync::mpsc::Receiver;
 use crate::{
     common::{
         CustomizeData, GameData, INVALID_OBJECT_ID, JumpState, MoveAnimationState,
-        MoveAnimationType, ObjectId, ObjectTypeId, ObjectTypeKind, Position,
+        MoveAnimationType, ObjectId, ObjectTypeId, ObjectTypeKind, Position, euler_to_direction,
     },
     config::get_config,
-    ipc::chat::TellNotFoundError,
-    ipc::zone::{
-        ActorControl, ActorControlCategory, ActorControlSelf, ActorControlTarget, BattleNpcSubKind,
-        ClientTriggerCommand, CommonSpawn, Conditions, NpcSpawn, ObjectKind, PlayerSpawn,
-        ServerZoneIpcData, ServerZoneIpcSegment,
+    ipc::{
+        chat::TellNotFoundError,
+        zone::{
+            ActorControl, ActorControlCategory, ActorControlSelf, ActorControlTarget,
+            BattleNpcSubKind, ClientTriggerCommand, CommonSpawn, Conditions, NpcSpawn, ObjectKind,
+            PlayerSpawn, ServerZoneIpcData, ServerZoneIpcSegment,
+        },
     },
     opcodes::ServerZoneIpcType,
     packet::{IpcSegmentHeader, PacketSegment, SegmentData, SegmentType, ServerIpcSegmentHeader},
@@ -726,6 +728,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
 
                 // TODO: this same code is 99% the same for zone jumps, aetherytes and warps. it should be consolidated!
                 let exit_position;
+                let exit_rotation;
                 if let Some((destination_object, _)) =
                     target_instance.zone.find_pop_range(destination_instance_id)
                 {
@@ -734,8 +737,10 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         y: destination_object.transform.translation[1],
                         z: destination_object.transform.translation[2],
                     };
+                    exit_rotation = euler_to_direction(destination_object.transform.rotation);
                 } else {
                     exit_position = Position::default();
+                    exit_rotation = 0.0;
                 }
 
                 // now that we have all of the data needed, inform the connection of where they need to be
@@ -743,7 +748,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     destination_zone_id,
                     target_instance.weather_id,
                     exit_position,
-                    0.0, // TODO: exit rotation
+                    exit_rotation,
                     LuaZone::from_zone(&target_instance.zone, target_instance.weather_id),
                     false,
                 );
@@ -770,6 +775,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 let target_instance = data.find_instance_mut(destination_zone_id);
 
                 let exit_position;
+                let exit_rotation;
                 if let Some((destination_object, _)) =
                     target_instance.zone.find_pop_range(destination_instance_id)
                 {
@@ -778,8 +784,10 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         y: destination_object.transform.translation[1],
                         z: destination_object.transform.translation[2],
                     };
+                    exit_rotation = euler_to_direction(destination_object.transform.rotation);
                 } else {
                     exit_position = Position::default();
+                    exit_rotation = 0.0;
                 }
 
                 // now that we have all of the data needed, inform the connection of where they need to be
@@ -787,7 +795,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     destination_zone_id,
                     target_instance.weather_id,
                     exit_position,
-                    0.0, // TODO: exit rotation
+                    exit_rotation,
                     LuaZone::from_zone(&target_instance.zone, target_instance.weather_id),
                     false,
                 );
@@ -814,6 +822,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 let target_instance = data.find_instance_mut(destination_zone_id);
 
                 let exit_position;
+                let exit_rotation;
                 if let Some((destination_object, _)) =
                     target_instance.zone.find_pop_range(destination_instance_id)
                 {
@@ -822,8 +831,10 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         y: destination_object.transform.translation[1],
                         z: destination_object.transform.translation[2],
                     };
+                    exit_rotation = euler_to_direction(destination_object.transform.rotation);
                 } else {
                     exit_position = Position::default();
+                    exit_rotation = 0.0;
                 }
 
                 // now that we have all of the data needed, inform the connection of where they need to be
@@ -831,7 +842,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     destination_zone_id,
                     target_instance.weather_id,
                     exit_position,
-                    0.0, // TODO: exit rotation
+                    exit_rotation,
                     LuaZone::from_zone(&target_instance.zone, target_instance.weather_id),
                     false,
                 );

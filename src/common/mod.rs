@@ -332,6 +332,46 @@ pub enum MoveAnimationSpeed {
     Sprinting = 78,
 }
 
+// Just based off of Sapphire's version
+pub fn euler_to_direction(euler: [f32; 3]) -> f32 {
+    let sin_z = f32::sin(euler[2]);
+    let cos_z = f32::cos(euler[2]);
+    let sin_y = f32::sin(euler[1]);
+    let cos_y = f32::cos(euler[1]);
+    let sin_x = f32::sin(euler[0]);
+    let cos_x = f32::cos(euler[0]);
+
+    let m00 = cos_z * cos_y;
+    let m02 = sin_z * sin_x + (-cos_z * sin_y) * cos_x;
+
+    let m10 = -sin_z * cos_y;
+    let m12 = cos_z * sin_x + sin_z * sin_y * cos_x;
+
+    let m20 = sin_y;
+    let m22 = cos_y * cos_x;
+
+    let vector = [0.0, 0.0, 1.0];
+    let dst_x = vector[2] * m20 + vector[0] * m00 + vector[1] * m10;
+    let dst_z = vector[2] * m22 + vector[0] * m02 + vector[1] * m12;
+
+    let squared = dst_z * dst_z + dst_x * dst_x;
+    let v1;
+    let v2;
+
+    if squared > 0.00000011920929 {
+        let mut ret = f32::sqrt(squared);
+        ret = -((squared * ret) * ret - 1.0) * (0.5 * ret) + ret;
+        ret = -((squared * ret) * ret - 1.0) * (0.5 * ret) + ret;
+        v1 = dst_z * (-(((squared * ret) * ret) - 1.0) * (0.5 * ret) + ret);
+        v2 = dst_x * (-(((squared * ret) * ret) - 1.0) * (0.5 * ret) + ret);
+    } else {
+        v1 = 0.0;
+        v2 = 0.0;
+    }
+
+    return f32::atan2(v2, v1);
+}
+
 #[macro_export]
 macro_rules! web_templates_dir {
     ($rel_path:literal) => {
