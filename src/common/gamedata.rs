@@ -16,6 +16,7 @@ use icarus::ModelChara::ModelCharaSheet;
 use icarus::Mount::MountSheet;
 use icarus::Opening::OpeningSheet;
 use icarus::PlaceName::PlaceNameSheet;
+use icarus::PreHandler::PreHandlerSheet;
 use icarus::TerritoryType::TerritoryTypeSheet;
 use icarus::WarpLogic::WarpLogicSheet;
 use icarus::WeatherRate::WeatherRateSheet;
@@ -689,6 +690,14 @@ impl GameData {
         }
 
         None
+    }
+
+    /// Returns the target event for a given PreHandler events.
+    pub fn get_pre_handler_target(&mut self, pre_handler_id: u32) -> Option<u32> {
+        let sheet = PreHandlerSheet::read_from(&mut self.resource, Language::English)?;
+        let row = sheet.get_row(pre_handler_id)?;
+
+        Some(*row.Target().into_u32()?)
     }
 }
 

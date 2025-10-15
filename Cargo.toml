@@ -98,7 +98,7 @@ physis = { git = "https://github.com/redstrate/physis", default-features = false
 bitflags = { version = "2.9", default-features = false }
 
 # excel sheet data
-icarus = { git = "https://github.com/redstrate/Icarus", branch = "ver/2025.07.30.0000.0000", features = ["Warp", "Tribe", "ClassJob", "World", "TerritoryType", "Race", "Aetheryte", "EquipSlotCategory", "Action", "WeatherRate", "PlaceName", "GilShopItem", "InstanceContent", "ContentFinderCondition", "BNpcBase", "ModelChara", "Mount", "AetherCurrentCompFlgSet", "WarpLogic", "Item", "AetherCurrentCompFlgSet", "CustomTalk", "Opening", "ItemAction"], default-features = false }
+icarus = { git = "https://github.com/redstrate/Icarus", branch = "ver/2025.07.30.0000.0000", features = ["Warp", "Tribe", "ClassJob", "World", "TerritoryType", "Race", "Aetheryte", "EquipSlotCategory", "Action", "WeatherRate", "PlaceName", "GilShopItem", "InstanceContent", "ContentFinderCondition", "BNpcBase", "ModelChara", "Mount", "AetherCurrentCompFlgSet", "WarpLogic", "Item", "AetherCurrentCompFlgSet", "CustomTalk", "Opening", "ItemAction", "PreHandler"], default-features = false }
 
 # doing stuff with enums Rust doesn't allow for some reason
 strum = { version = "0.27", default-features = false }
