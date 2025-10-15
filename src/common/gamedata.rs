@@ -17,6 +17,7 @@ use icarus::Mount::MountSheet;
 use icarus::Opening::OpeningSheet;
 use icarus::PlaceName::PlaceNameSheet;
 use icarus::PreHandler::PreHandlerSheet;
+use icarus::SwitchTalkVariation::SwitchTalkVariationSheet;
 use icarus::TerritoryType::TerritoryTypeSheet;
 use icarus::WarpLogic::WarpLogicSheet;
 use icarus::WeatherRate::WeatherRateSheet;
@@ -692,12 +693,20 @@ impl GameData {
         None
     }
 
-    /// Returns the target event for a given PreHandler events.
+    /// Returns the target event for a given PreHandler event.
     pub fn get_pre_handler_target(&mut self, pre_handler_id: u32) -> Option<u32> {
         let sheet = PreHandlerSheet::read_from(&mut self.resource, Language::English)?;
         let row = sheet.get_row(pre_handler_id)?;
 
         Some(*row.Target().into_u32()?)
+    }
+
+    /// Returns the target DefaultTalk event for a given SwitchTalk event.
+    pub fn get_switch_talk_target(&mut self, switch_talk_id: u32) -> Option<u32> {
+        let sheet = SwitchTalkVariationSheet::read_from(&mut self.resource, Language::None)?;
+        let row = sheet.get_subrow(switch_talk_id, 0)?;
+
+        Some(*row.DefaultTalk().into_u32()?)
     }
 }
 

@@ -116,5 +116,8 @@ impl UserData for GameData {
         methods.add_method_mut("get_pre_handler_target", |_, this, pre_handler_id: u32| {
             Ok(this.get_pre_handler_target(pre_handler_id))
         });
+        methods.add_method_mut("get_switch_talk_target", |_, this, switch_talk_id: u32| {
+            Ok(this.get_switch_talk_target(switch_talk_id))
+        });
     }
 }

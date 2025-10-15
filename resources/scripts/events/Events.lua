@@ -94,6 +94,11 @@ function dispatchEvent(player, event_id, game_data)
         return runEvent(event_id, "events/quest/opening/"..script_name..".lua")
     elseif event_type == EVENT_TYPE_SPECIAL_SHOP then
         return runEvent(event_id, "events/generic/SpecialShop.lua")
+    elseif event_type == EVENT_TYPE_SWITCH_TALK then
+        -- TODO: check the quest requirement for these
+        local target_event_id = game_data:get_switch_talk_target(event_id)
+        -- FIXME: this doesn't nest the event properly... yet
+        return dispatchEvent(player, target_event_id, game_data)
     elseif event_type == EVENT_TYPE_TOPIC_SELECT then
         return runEvent(event_id, "events/generic/TopicSelect.lua")
     elseif event_type == EVENT_TYPE_PRE_HANDLER then
