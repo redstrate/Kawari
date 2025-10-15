@@ -2,7 +2,6 @@
 /oodle
 .idea/
 config.json
-*.bin
 *.db
 config.yaml
 src/opcodes.rs
