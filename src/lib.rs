@@ -52,14 +52,14 @@ pub const RECEIVE_BUFFER_SIZE: usize = 0xFFFF;
 pub const SUPPORTED_BOOT_VERSION: Version = Version("2025.07.17.0000.0001");
 
 /// Supported game version.
-pub const SUPPORTED_GAME_VERSION: Version = Version("2025.09.30.0000.0000");
+pub const SUPPORTED_GAME_VERSION: Version = Version("2025.10.13.0000.0000");
 
 const SUPPORTED_EXPAC_VERSIONS: [(&str, Version); 5] = [
     ("ex1", Version("2025.07.25.0000.0000")),
     ("ex2", Version("2025.07.23.0000.0000")),
-    ("ex3", Version("2025.09.30.0000.0000")),
-    ("ex4", Version("2025.09.30.0000.0000")),
-    ("ex5", Version("2025.09.30.0000.0000")),
+    ("ex3", Version("2025.10.13.0000.0000")),
+    ("ex4", Version("2025.10.13.0000.0000")),
+    ("ex5", Version("2025.10.13.0000.0000")),
 ];
 
 /// Supported expansion versions.
@@ -150,7 +150,7 @@ pub const CHOCOBO_TAXI_STANDS_BITMASK_SIZE: usize = 12;
 pub const ITEM_CONDITION_MAX: u16 = 30000;
 
 // This operation code changes regularly, so update it when needed!
-pub const BASE_INVENTORY_ACTION: u32 = 585;
+pub const BASE_INVENTORY_ACTION: u32 = 364;
 
 /// The server's acknowledgement of a shop item being purchased.
 pub const INVENTORY_ACTION_ACK_SHOP: u8 = 6;
