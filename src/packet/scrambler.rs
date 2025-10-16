@@ -6,7 +6,7 @@ use std::num::Wrapping;
 use crate::common::CHAR_NAME_MAX_LENGTH;
 
 /// Constant to enable packet obfuscation. Changes every patch.
-pub const OBFUSCATION_ENABLED_MODE: u8 = 52;
+pub const OBFUSCATION_ENABLED_MODE: u8 = 96;
 
 // Helper macro so we don't repeat ourselves a bunch of times
 macro_rules! scrambler_dir {
@@ -56,8 +56,8 @@ impl ScramblerKeyGenerator {
                 .collect(),
 
             // TODO: is it possible to calculate these automatically?
-            table_radixes: &[89, 91, 100],
-            table_max: &[64, 203, 90],
+            table_radixes: &[100, 117, 96],
+            table_max: &[210, 102, 121],
         }
     }
 
