@@ -13,7 +13,7 @@ function onReturn(scene, results, player)
         -- has inn access
         player:play_scene(player.id, EVENT_ID, 00001, HIDE_HOTBAR, {0})
     else
-        player:finish_event(EVENT_ID, 0)
+        player:finish_event(EVENT_ID)
 
         if results[1] == 1 then
             -- get warp

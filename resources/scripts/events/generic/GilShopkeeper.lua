@@ -38,6 +38,6 @@ function onReturn(scene, results, player)
             player:play_scene(player.id, EVENT_ID, SCENE_SHOP_END, NO_DEFAULT_CAMERA | HIDE_HOTBAR, {})
         end
     else
-        player:finish_event(EVENT_ID, 0)
+        player:finish_event(EVENT_ID)
     end
 end

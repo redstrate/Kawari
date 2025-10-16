@@ -36,7 +36,7 @@ function onReturn(scene, results, player)
             end ]]
         elseif menu_option == AETHERNET_SUBMENU then
             if decision ~= AETHERNET_SUBMENU_CANCEL then
-                player:finish_event(EVENT_ID, 0) -- Need to finish the event here, because warping does not return to this callback (the game will crash or softlock otherwise)
+                player:finish_event(EVENT_ID) -- Need to finish the event here, because warping does not return to this callback (the game will crash or softlock otherwise)
                 player:warp_aetheryte(decision)
                 return
             end
@@ -47,5 +47,5 @@ function onReturn(scene, results, player)
         end
     end
 
-    player:finish_event(EVENT_ID, 0)
+    player:finish_event(EVENT_ID)
 end

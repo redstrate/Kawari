@@ -1103,15 +1103,15 @@ async fn client_loop(
                                                             } else {
                                                                 tracing::error!(ERR_INVENTORY_ADD_FAILED);
                                                                 connection.send_notice(ERR_INVENTORY_ADD_FAILED).await;
-                                                                connection.event_finish(*event_id, 0, EventFinishType::Normal).await;
+                                                                connection.event_finish(*event_id, EventFinishType::Normal).await;
                                                             }
                                                         } else {
                                                             connection.send_notice("Insufficient gil to buy item. Nice try bypassing the client-side check!").await;
-                                                            connection.event_finish(*event_id, 0, EventFinishType::Normal).await;
+                                                            connection.event_finish(*event_id, EventFinishType::Normal).await;
                                                         }
                                                     } else {
                                                         connection.send_notice("Unable to find shop item, this is a bug in Kawari!").await;
-                                                        connection.event_finish(*event_id, 0, EventFinishType::Normal).await;
+                                                        connection.event_finish(*event_id, EventFinishType::Normal).await;
                                                     }
                                                 } else if *buy_sell_mode == SELL {
                                                     let storage = get_container_type(*item_index).unwrap();
@@ -1196,11 +1196,11 @@ async fn client_loop(
                                                         connection.event_scene(&target_id, *event_id, 10, SceneFlags::from_bits(8193).unwrap(), params).await;
                                                     } else {
                                                         connection.send_notice("Unable to find shop item, this is a bug in Kawari!").await;
-                                                        connection.event_finish(*event_id, 0, EventFinishType::Normal).await;
+                                                        connection.event_finish(*event_id, EventFinishType::Normal).await;
                                                     }
                                                 } else {
                                                     tracing::error!("Received unknown transaction mode {buy_sell_mode}!");
-                                                    connection.event_finish(*event_id, 0, EventFinishType::Normal).await;
+                                                    connection.event_finish(*event_id, EventFinishType::Normal).await;
                                                 }
                                             }
                                             ClientZoneIpcData::StartTalkEvent { actor_id, event_id } => {

@@ -9,7 +9,7 @@ end
 function onReturn(scene, results, player)
     -- first result is the selected topic
     local selected_topic = results[1]
-    player:finish_event(EVENT_ID, 0)
+    player:finish_event(EVENT_ID)
 
     -- TODO: start the new shop event
     player:send_message("Submenu shops aren't implemented yet!")

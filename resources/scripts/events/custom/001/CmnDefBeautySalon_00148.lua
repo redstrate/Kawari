@@ -25,5 +25,5 @@ function onReturn(scene, results, player)
         player:play_scene(player.id, EVENT_ID, 00003, FADE_OUT | HIDE_UI | CONDITION_CUTSCENE, {0})
         return
     end
-    player:finish_event(EVENT_ID, 0)
+    player:finish_event(EVENT_ID)
 end

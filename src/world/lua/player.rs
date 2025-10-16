@@ -81,7 +81,7 @@ impl LuaPlayer {
             let error_message = "Unsupported amount of parameters in play_scene! This is likely a bug in your script! Cancelling event...".to_string();
             tracing::warn!(error_message);
             self.send_message(&error_message, 0);
-            self.finish_event(event_id, 0, EventFinishType::Normal);
+            self.finish_event(event_id, EventFinishType::Normal);
         }
     }
 
@@ -154,10 +154,9 @@ impl LuaPlayer {
         self.queued_tasks.push(Task::BeginLogOut);
     }
 
-    fn finish_event(&mut self, handler_id: u32, arg: u32, finish_type: EventFinishType) {
+    fn finish_event(&mut self, handler_id: u32, finish_type: EventFinishType) {
         self.queued_tasks.push(Task::FinishEvent {
             handler_id,
-            arg,
             finish_type,
         });
     }
@@ -591,7 +590,7 @@ impl UserData for LuaPlayer {
         });
         methods.add_method_mut(
             "finish_event",
-            |lua, this, (handler_id, arg, finish_type): (u32, u32, Value)| {
+            |lua, this, (handler_id, finish_type): (u32, Value)| {
                 // It's desirable for finish_type to be optional since we do normal finishes 99% of the time.
                 let finish_type: u32 = lua.from_value(finish_type).unwrap_or(0);
                 let finish_type = match finish_type {
@@ -599,7 +598,7 @@ impl UserData for LuaPlayer {
                     1 => EventFinishType::Jumping,
                     _ => EventFinishType::Normal,
                 };
-                this.finish_event(handler_id, arg, finish_type);
+                this.finish_event(handler_id, finish_type);
                 Ok(())
             },
         );

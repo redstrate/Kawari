@@ -10,5 +10,5 @@ end
 
 function onReturn(scene, results, player)
     -- first result is 1 if requesting to warp, otherwise 0
-    player:finish_event(EVENT_ID, 0)
+    player:finish_event(EVENT_ID)
 end

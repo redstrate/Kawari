@@ -27,7 +27,7 @@ function onReturn(scene, results, player)
 
     if scene == SCENE_SHOW_MENU then
         if decision == NOTHING or decision == CANCEL_SCENE then
-            player:finish_event(EVENT_ID, 0)
+            player:finish_event(EVENT_ID)
         else
             if decision == LOG_OUT or decision == EXIT_GAME then
                 player:begin_log_out()
@@ -45,13 +45,8 @@ function onReturn(scene, results, player)
         is_dreamfitting = true
         player:play_scene(player.id, EVENT_ID, SCENE_AWAKEN_ANIM, CUTSCENE_FLAGS, {0})
     elseif scene == SCENE_AWAKEN_ANIM then
-        -- Dreamfitting doesn't finish with the zone id, if it does the client crashes!
-        if is_dreamfitting then
-            player:finish_event(EVENT_ID, 0)
-        else
-            player:finish_event(EVENT_ID, player.zone.id)
-        end
+        player:finish_event(EVENT_ID)
     else
-        player:finish_event(EVENT_ID, 0)
+        player:finish_event(EVENT_ID)
     end
 end

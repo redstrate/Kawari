@@ -18,7 +18,6 @@ pub enum Task {
     BeginLogOut,
     FinishEvent {
         handler_id: u32,
-        arg: u32,
         finish_type: EventFinishType,
     },
     SetClassJob {

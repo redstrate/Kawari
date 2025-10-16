@@ -33,5 +33,5 @@ function onReturn(scene, results, player)
         end
     end
 
-    player:finish_event(EVENT_ID, 0)
+    player:finish_event(EVENT_ID)
 end

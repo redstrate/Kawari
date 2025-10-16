@@ -852,10 +852,9 @@ impl ZoneConnection {
                 Task::BeginLogOut => self.begin_log_out().await,
                 Task::FinishEvent {
                     handler_id,
-                    arg,
                     finish_type,
                 } => {
-                    self.event_finish(*handler_id, *arg, *finish_type).await;
+                    self.event_finish(*handler_id, *finish_type).await;
                     run_finish_event = true;
                 }
                 Task::SetClassJob { classjob_id } => {
@@ -1322,13 +1321,13 @@ impl ZoneConnection {
                 "Unable to play event {event_id}, scene {:?}, scene_flags {scene_flags}!",
                 scene
             );
-            self.event_finish(event_id, 0, EventFinishType::Normal)
-                .await;
+            self.event_finish(event_id, EventFinishType::Normal).await;
         }
     }
 
-    pub async fn event_finish(&mut self, handler_id: u32, arg: u32, finish_type: EventFinishType) {
+    pub async fn event_finish(&mut self, handler_id: u32, finish_type: EventFinishType) {
         let event_type = self.events.last().unwrap().event_type;
+        let event_arg = self.events.last().unwrap().event_arg;
 
         self.player_data.target_actorid = ObjectTypeId::default();
         // sent event finish
@@ -1337,7 +1336,7 @@ impl ZoneConnection {
                 handler_id,
                 event_type,
                 result: 1,
-                arg,
+                arg: event_arg,
             });
             self.send_ipc_self(ipc).await;
         }
@@ -2052,6 +2051,7 @@ impl ZoneConnection {
 
         if let Some(mut event) = event {
             event.event_type = event_type;
+            event.event_arg = event_arg; // It turns out these same values HAVE to be sent in EventFinish, otherwise the game client crashes.
             self.events.push(event);
 
             return true;

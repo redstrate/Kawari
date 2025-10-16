@@ -7,7 +7,7 @@ function onTalk(target, player, game_data)
 end
 
 function onReturn(scene, results, player)
-    player:finish_event(EVENT_ID, 0)
+    player:finish_event(EVENT_ID)
 
     if results[1] == 1 then
         -- get warp

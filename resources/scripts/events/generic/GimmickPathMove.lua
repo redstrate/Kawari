@@ -22,5 +22,5 @@ EVENT_ARG = {
 function onEnterTrigger(player)
     player:do_solnine_teleporter(EVENT_ID, table.unpack(TELEPORTER_INFO[EVENT_ID]))
     -- TODO: We should probably take the event arg in Event::new on the rust side, but this works for now.
-    player:finish_event(EVENT_ID, EVENT_ARG[EVENT_ID], 1)
+    player:finish_event(EVENT_ID)
 end

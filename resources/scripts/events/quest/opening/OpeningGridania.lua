@@ -14,6 +14,6 @@ function onReturn(scene, results, player)
         player:play_scene(player.id, EVENT_ID, 1, NO_DEFAULT_CAMERA | HIDE_HOTBAR, {0})
     elseif scene == 1 then
         -- just quit for now
-        player:finish_event(EVENT_ID, 0)
+        player:finish_event(EVENT_ID)
     end
 end

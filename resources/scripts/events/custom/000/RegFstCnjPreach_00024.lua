@@ -9,6 +9,6 @@ function onReturn(scene, results, player)
     if scene == 0 then
         player:play_scene(player.id, EVENT_ID, 00001, HIDE_HOTBAR, {})
     else
-        player:finish_event(EVENT_ID, 0)
+        player:finish_event(EVENT_ID)
     end
 end

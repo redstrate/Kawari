@@ -17,6 +17,7 @@ pub struct Event {
     lua: Lua,
     pub id: u32,
     pub event_type: EventType,
+    pub event_arg: u32,
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -47,12 +48,13 @@ impl Event {
 
         lua.globals().set("EVENT_ID", id).unwrap();
 
-        // The event_type is set later, so don't care about this value we set!
+        // The event_type/event_arg is set later, so don't care about this value we set!
         Some(Self {
             file_name,
             lua,
             event_type: EventType::Talk,
             id,
+            event_arg: 0,
         })
     }
 
