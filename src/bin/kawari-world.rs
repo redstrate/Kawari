@@ -1217,6 +1217,9 @@ async fn client_loop(
                                                     if let Some(event) = connection.events.last_mut() {
                                                         event.talk(*actor_id, &mut lua_player, connection.gamedata.clone());
                                                     }
+                                                } else {
+                                                    connection.conditions = Conditions::default();
+                                                    connection.send_conditions().await;
                                                 }
                                             }
                                             ClientZoneIpcData::EventYieldHandler(handler) => {
