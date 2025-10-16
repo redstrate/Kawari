@@ -2011,6 +2011,7 @@ impl ZoneConnection {
         }
     }
 
+    /// Starts a new event. This can be nested, depending on the event type you chose. Returns true if the event was successfully found and scripted, otherwise flase.
     pub async fn start_event(
         &mut self,
         actor_id: ObjectTypeId,
@@ -2018,7 +2019,7 @@ impl ZoneConnection {
         event_type: EventType,
         event_arg: u32,
         lua_player: &mut LuaPlayer,
-    ) {
+    ) -> bool {
         self.player_data.target_actorid = actor_id;
 
         // tell the client the event has started
@@ -2052,16 +2053,28 @@ impl ZoneConnection {
         if let Some(mut event) = event {
             event.event_type = event_type;
             self.events.push(event);
+
+            return true;
         } else {
             tracing::warn!("Event {event_id} isn't scripted yet! Ignoring...");
 
             // give control back to the player so they aren't stuck
-            self.event_finish(event_id, 0, EventFinishType::Normal)
-                .await;
+            {
+                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::EventFinish {
+                    handler_id: event_id,
+                    event_type,
+                    result: 1,
+                    arg: event_arg,
+                });
+                self.send_ipc_self(ipc).await;
+            }
+
             self.send_notice(&format!(
                 "Event {event_id} tried to start, but it doesn't have a script associated with it!"
             ))
             .await;
+
+            return false;
         }
     }
 

@@ -1204,19 +1204,19 @@ async fn client_loop(
                                                 }
                                             }
                                             ClientZoneIpcData::StartTalkEvent { actor_id, event_id } => {
-                                                connection.start_event(*actor_id, *event_id, EventType::Talk, 0, &mut lua_player).await;
+                                                if connection.start_event(*actor_id, *event_id, EventType::Talk, 0, &mut lua_player).await {
+                                                    connection.conditions.set_condition(Condition::OccupiedInEvent);
+                                                    connection.send_conditions().await;
 
-                                                connection.conditions.set_condition(Condition::OccupiedInEvent);
-                                                connection.send_conditions().await;
+                                                    /* TODO: ServerZoneIpcType::Unk18 with data [64,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+                                                        * was observed to always be sent by the server upon interacting with shops. They open and function fine without
+                                                        * it, but should we send it anyway, for the sake of accuracy? It's also still unclear if this
+                                                        * happens for -every- NPC/actor. */
 
-                                                /* TODO: ServerZoneIpcType::Unk18 with data [64,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-                                                    * was observed to always be sent by the server upon interacting with shops. They open and function fine without
-                                                    * it, but should we send it anyway, for the sake of accuracy? It's also still unclear if this
-                                                    * happens for -every- NPC/actor. */
-
-                                                // begin talk function if it exists
-                                                if let Some(event) = connection.events.last_mut() {
-                                                     event.talk(*actor_id, &mut lua_player, connection.gamedata.clone());
+                                                    // begin talk function if it exists
+                                                    if let Some(event) = connection.events.last_mut() {
+                                                        event.talk(*actor_id, &mut lua_player, connection.gamedata.clone());
+                                                    }
                                                 }
                                             }
                                             ClientZoneIpcData::EventYieldHandler(handler) => {
