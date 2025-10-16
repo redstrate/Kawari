@@ -8,8 +8,8 @@ use crate::{
     },
     inventory::{ContainerType, CurrencyKind, Item},
     ipc::zone::{
-        ActorControlCategory, ActorControlSelf, EventScene, SceneFlags, ServerNoticeFlags,
-        ServerNoticeMessage, ServerZoneIpcData, ServerZoneIpcSegment, Warp,
+        ActorControlCategory, ActorControlSelf, EventScene, EventType, SceneFlags,
+        ServerNoticeFlags, ServerNoticeMessage, ServerZoneIpcData, ServerZoneIpcSegment, Warp,
     },
     packet::PacketSegment,
     world::{EventFinishType, PlayerData, StatusEffects},
@@ -21,14 +21,13 @@ use super::{LuaZone, QueueSegments, Task, create_ipc_self};
 pub struct LuaPlayer {
     pub player_data: PlayerData,
     pub status_effects: StatusEffects,
-    pub queued_segments: Vec<PacketSegment<ServerZoneIpcSegment>>,
     pub queued_tasks: Vec<Task>,
     pub zone_data: LuaZone,
 }
 
 impl QueueSegments for LuaPlayer {
     fn queue_segment(&mut self, segment: PacketSegment<ServerZoneIpcSegment>) {
-        self.queued_segments.push(segment);
+        self.queued_tasks.push(Task::SendSegment { segment });
     }
 }
 
@@ -357,7 +356,7 @@ impl LuaPlayer {
         &mut self,
         actor_id: ObjectTypeId,
         event_id: u32,
-        event_type: u8,
+        event_type: EventType,
         event_arg: u32,
     ) {
         self.queued_tasks.push(Task::StartEvent {
@@ -670,7 +669,7 @@ impl UserData for LuaPlayer {
         methods.add_method_mut(
             "start_event",
             |_, this, (target, event_id, event_type, event_arg): (ObjectTypeId, u32, u8, u32)| {
-                this.start_event(target, event_id, event_type, event_arg);
+                this.start_event(target, event_id, event_type.into(), event_arg);
                 Ok(())
             },
         );

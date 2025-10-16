@@ -4,7 +4,7 @@
 -- Scene 1: "quest of great import" quest, which maybe is used in the initial quests?
 -- Scene 2: some version of "you cannot use the levemete at the moment"
 
-function onTalk(target, player)
+function onTalk(target, player, game_data)
     player:play_scene(target, EVENT_ID, 00002, HIDE_HOTBAR, {0})
 end
 

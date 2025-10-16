@@ -3,7 +3,7 @@
 -- scene 2: release a retainer
 -- scene 3: you cannot hire a retainer
 
-function onTalk(target, player)
+function onTalk(target, player, game_data)
     player:play_scene(target, EVENT_ID, 00003, HIDE_HOTBAR, {})
 end
 

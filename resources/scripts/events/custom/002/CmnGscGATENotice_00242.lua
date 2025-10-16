@@ -2,7 +2,7 @@
 -- scene 1: currently crashes the client?
 -- scene 2: next event will happen
 
-function onTalk(target, player)
+function onTalk(target, player, game_data)
     -- first arg is the GATE, second arg is the location
     -- currently placeholders for now
     player:play_scene(target, EVENT_ID, 00000, HIDE_HOTBAR, {5, 1})

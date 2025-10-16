@@ -1,7 +1,7 @@
 -- Scene 0: Default greeting
 -- Scene 1: Regular menu asking stuff like "What do you do here?"
 
-function onTalk(target, player)
+function onTalk(target, player, game_data)
     player:play_scene(target, EVENT_ID, 00000, HIDE_HOTBAR, {})
 end
 

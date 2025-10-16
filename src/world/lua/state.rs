@@ -6,7 +6,7 @@ use strum::IntoEnumIterator;
 
 use crate::{
     config::get_config,
-    ipc::zone::{GameMasterRank, SceneFlags, ServerNoticeFlags},
+    ipc::zone::{EventType, GameMasterRank, SceneFlags, ServerNoticeFlags},
     world::Event,
 };
 
@@ -28,6 +28,7 @@ pub fn initial_setup(lua: &mut Lua) {
     register_flags::<ServerNoticeFlags>(lua, "SERVER_NOTICE");
     register_enum::<GameMasterRank>(lua, "GM_RANK");
     register_flags::<SceneFlags>(lua, ""); // TODO: might want to prefix these at some point
+    register_enum::<EventType>(lua, "EVENT_TYPE");
 }
 
 /// Loads `Init.lua`

@@ -1,6 +1,13 @@
-use mlua::{Function, Lua};
+use std::sync::Arc;
 
-use crate::{common::ObjectTypeId, config::get_config};
+use mlua::{Function, Lua};
+use parking_lot::Mutex;
+
+use crate::{
+    common::{GameData, ObjectTypeId},
+    config::get_config,
+    ipc::zone::EventType,
+};
 
 use super::lua::{LuaPlayer, initial_setup};
 
@@ -9,6 +16,7 @@ pub struct Event {
     pub file_name: String,
     lua: Lua,
     pub id: u32,
+    pub event_type: EventType,
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -39,7 +47,13 @@ impl Event {
 
         lua.globals().set("EVENT_ID", id).unwrap();
 
-        Some(Self { file_name, lua, id })
+        // The event_type is set later, so don't care about this value we set!
+        Some(Self {
+            file_name,
+            lua,
+            event_type: EventType::Talk,
+            id,
+        })
     }
 
     // TODO: this is a terrible hold-over name. what it actually is an onStart function that's really only useful for cutscenes.
@@ -56,7 +70,11 @@ impl Event {
             })
         };
         if let Err(err) = run_script() {
-            tracing::warn!("Syntax error in {}: {:?}", self.file_name, err);
+            tracing::warn!(
+                "Syntax error during enter_territory in {}: {:?}",
+                self.file_name,
+                err
+            );
         }
     }
 
@@ -74,41 +92,33 @@ impl Event {
         };
 
         if let Err(err) = run_script() {
-            tracing::warn!("Syntax error in {}: {:?}", self.file_name, err);
+            tracing::warn!(
+                "Syntax error during enter_trigger in {}: {:?}",
+                self.file_name,
+                err
+            );
         }
     }
 
-    pub fn scene_finished(&mut self, player: &mut LuaPlayer, scene: u16) {
-        let mut run_script = || {
-            self.lua.scope(|scope| {
-                let player = scope.create_userdata_ref_mut(player)?;
-
-                let func: Function = self.lua.globals().get("onSceneFinished")?;
-
-                func.call::<()>((player, scene))?;
-
-                Ok(())
-            })
-        };
-        if let Err(err) = run_script() {
-            tracing::warn!("Syntax error in {}: {:?}", self.file_name, err);
-        }
-    }
-
-    pub fn talk(&mut self, target_id: ObjectTypeId, player: &mut LuaPlayer) {
-        let mut run_script = || {
+    pub fn talk(
+        &mut self,
+        target_id: ObjectTypeId,
+        player: &mut LuaPlayer,
+        game_data: Arc<Mutex<GameData>>,
+    ) {
+        let run_script = || {
             self.lua.scope(|scope| {
                 let player = scope.create_userdata_ref_mut(player)?;
 
                 let func: Function = self.lua.globals().get("onTalk")?;
 
-                func.call::<()>((target_id, player))?;
+                func.call::<()>((target_id, player, game_data))?;
 
                 Ok(())
             })
         };
         if let Err(err) = run_script() {
-            tracing::warn!("Syntax error in {}: {:?}", self.file_name, err);
+            tracing::warn!("Syntax error during talk in {}: {:?}", self.file_name, err);
         }
     }
 
@@ -125,7 +135,11 @@ impl Event {
             })
         };
         if let Err(err) = run_script() {
-            tracing::warn!("Syntax error in {}: {:?}", self.file_name, err);
+            tracing::warn!(
+                "Syntax error during finish in {}: {:?}",
+                self.file_name,
+                err
+            );
         }
     }
 }

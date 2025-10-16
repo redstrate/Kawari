@@ -53,7 +53,7 @@ mod event_scene;
 pub use event_scene::{EventScene, SceneFlags};
 
 mod event_start;
-pub use event_start::EventStart;
+pub use event_start::{EventStart, EventType};
 
 mod action_result;
 pub use action_result::{
@@ -199,7 +199,7 @@ pub enum ServerZoneIpcData {
     },
     EventFinish {
         handler_id: u32,
-        event: u8,
+        event_type: EventType,
         result: u8,
         #[brw(pad_before = 2)] // padding
         #[brw(pad_after = 4)] // padding
@@ -537,7 +537,7 @@ mod tests {
             },
             ServerZoneIpcData::EventFinish {
                 handler_id: 0,
-                event: 0,
+                event_type: EventType::Talk,
                 result: 0,
                 arg: 0,
             },

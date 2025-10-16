@@ -1,6 +1,41 @@
 use binrw::binrw;
+use strum_macros::{Display, EnumIter};
 
 use crate::common::ObjectTypeId;
+
+#[binrw]
+#[brw(repr = u8)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Display, EnumIter)]
+#[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
+pub enum EventType {
+    /// Used when talking to NPCs.
+    #[default]
+    Talk = 1,
+    /// Used when events want to nest another event.
+    Nest = 7,
+    /// Used for gimmick path events?
+    WithinRange = 10,
+    /// Unknown?
+    EnterTerritory = 15,
+}
+
+impl From<u8> for EventType {
+    fn from(value: u8) -> Self {
+        match value {
+            1 => Self::Talk,
+            7 => Self::Nest,
+            15 => Self::EnterTerritory,
+            _ => unreachable!(),
+        }
+    }
+}
+
+#[cfg(all(not(target_family = "wasm"), feature = "server"))]
+impl mlua::IntoLua for EventType {
+    fn into_lua(self, _: &mlua::Lua) -> mlua::Result<mlua::Value> {
+        Ok(mlua::Value::Integer(self as i64))
+    }
+}
 
 #[binrw]
 #[brw(little)]
@@ -8,7 +43,7 @@ use crate::common::ObjectTypeId;
 pub struct EventStart {
     pub target_id: ObjectTypeId,
     pub event_id: u32,
-    pub event_type: u8,
+    pub event_type: EventType,
     pub flags: u8,
     #[brw(pad_before = 2)]
     #[brw(pad_after = 4)]
@@ -44,7 +79,7 @@ mod tests {
             }
         );
         assert_eq!(event_start.event_id, 0x130003); // aether intro
-        assert_eq!(event_start.event_type, 15);
+        assert_eq!(event_start.event_type, EventType::EnterTerritory);
         assert_eq!(event_start.flags, 0);
         assert_eq!(event_start.event_arg, 182);
     }

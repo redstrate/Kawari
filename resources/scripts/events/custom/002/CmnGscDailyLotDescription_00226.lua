@@ -1,6 +1,6 @@
 -- scene 0: basic greeting
 
-function onTalk(target, player)
+function onTalk(target, player, game_data)
     player:play_scene(target, EVENT_ID, 00000, HIDE_HOTBAR, {})
 end
 

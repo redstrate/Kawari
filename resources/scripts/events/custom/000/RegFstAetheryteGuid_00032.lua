@@ -1,7 +1,7 @@
 -- scene 0: greeting
 -- scene 1: menu asking about aetherytes
 
-function onTalk(target, player)
+function onTalk(target, player, game_data)
     player:play_scene(target, EVENT_ID, 00000, HIDE_HOTBAR, {})
 end
 

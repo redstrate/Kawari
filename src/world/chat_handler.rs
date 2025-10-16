@@ -123,7 +123,7 @@ impl ChatHandler {
                 true
             }
             "!finishevent" => {
-                if let Some(event) = &connection.event {
+                if let Some(event) = connection.events.last() {
                     connection
                         .event_finish(event.id, 0, EventFinishType::Normal)
                         .await;

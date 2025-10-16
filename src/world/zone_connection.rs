@@ -23,8 +23,8 @@ use crate::{
     config::{WorldConfig, get_config},
     inventory::{BuyBackList, ContainerType, Inventory, Item, Storage},
     ipc::zone::{
-        ActionKind, ChatMessage, DisplayFlag, InitZoneFlags, OnlineStatus, PlayerSpawn, SceneFlags,
-        ServerNoticeFlags, ServerNoticeMessage,
+        ActionKind, ChatMessage, DisplayFlag, EventType, InitZoneFlags, OnlineStatus, PlayerSpawn,
+        SceneFlags, ServerNoticeFlags, ServerNoticeMessage,
         client::{ActionRequest, ClientZoneIpcSegment},
         server::{
             ActionEffect, ActionResult, ActorControl, ActorControlCategory, ActorControlSelf,
@@ -189,8 +189,7 @@ pub struct ZoneConnection {
 
     pub status_effects: StatusEffects,
 
-    pub event: Option<Event>,
-    pub event_type: u8,
+    pub events: Vec<Event>,
     pub actors: Vec<Actor>,
 
     pub ip: SocketAddr,
@@ -827,13 +826,7 @@ impl ZoneConnection {
     }
 
     pub async fn process_lua_player(&mut self, player: &mut LuaPlayer) {
-        // First, send player-related segments
-        for segment in &player.queued_segments {
-            self.send_segment(segment.clone()).await;
-        }
-        player.queued_segments.clear();
-
-        // Second, send zone-related segments
+        // First, send zone-related segments
         for segment in &player.zone_data.queued_segments {
             let mut edited_segment = segment.clone();
             edited_segment.target_actor = player.player_data.actor_id;
@@ -841,7 +834,10 @@ impl ZoneConnection {
         }
         player.zone_data.queued_segments.clear();
 
+        // These are to run functions that could possibly generate more tasks.
+        // We can't do this in the loop!'
         let mut run_enter_territory = false;
+        let mut run_finish_event = false;
 
         let tasks = player.queued_tasks.clone();
         for task in &tasks {
@@ -858,7 +854,10 @@ impl ZoneConnection {
                     handler_id,
                     arg,
                     finish_type,
-                } => self.event_finish(*handler_id, *arg, *finish_type).await,
+                } => {
+                    self.event_finish(*handler_id, *arg, *finish_type).await;
+                    run_finish_event = true;
+                }
                 Task::SetClassJob { classjob_id } => {
                     self.player_data.classjob_id = *classjob_id;
                     self.update_class_info().await;
@@ -1046,7 +1045,9 @@ impl ZoneConnection {
                 } => {
                     self.start_event(*actor_id, *event_id, *event_type, *event_arg, player)
                         .await;
-                    run_enter_territory = true;
+                    if *event_type == EventType::EnterTerritory {
+                        run_enter_territory = true;
+                    }
                 }
                 Task::SetInnWakeup { watched } => {
                     self.player_data.saw_inn_wakeup = *watched;
@@ -1260,6 +1261,9 @@ impl ZoneConnection {
                     );
                     self.respawn_player(false).await;
                 }
+                Task::SendSegment { segment } => {
+                    self.send_segment(segment.clone()).await;
+                }
             }
         }
         player.queued_tasks.clear();
@@ -1267,9 +1271,22 @@ impl ZoneConnection {
         // We have to do this because the onEnterTerritory may add new tasks
         if run_enter_territory {
             // Let the script now that it just loaded
-            if let Some(event) = &mut self.event {
+            if let Some(event) = self.events.last_mut() {
                 event.enter_territory(player);
             }
+        }
+
+        if run_finish_event {
+            // Yield the last event again so it can pick up from nesting
+            if let Some(event) = self.events.last_mut() {
+                event.finish(0, &[], player);
+            }
+        }
+
+        // We want to process again, since we probably added more tasks.
+        // If we *don't* do this there is a pretty big delay before this can happen again.
+        if run_enter_territory || run_finish_event {
+            Box::pin(self.process_lua_player(player)).await;
         }
     }
 
@@ -1311,12 +1328,14 @@ impl ZoneConnection {
     }
 
     pub async fn event_finish(&mut self, handler_id: u32, arg: u32, finish_type: EventFinishType) {
+        let event_type = self.events.last().unwrap().event_type;
+
         self.player_data.target_actorid = ObjectTypeId::default();
         // sent event finish
         {
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::EventFinish {
                 handler_id,
-                event: self.event_type,
+                event_type,
                 result: 1,
                 arg,
             });
@@ -1336,6 +1355,9 @@ impl ZoneConnection {
         };
 
         self.send_conditions().await;
+
+        // Pop off the event stack
+        self.events.pop();
     }
 
     pub async fn send_conditions(&mut self) {
@@ -1993,12 +2015,11 @@ impl ZoneConnection {
         &mut self,
         actor_id: ObjectTypeId,
         event_id: u32,
-        event_type: u8,
+        event_type: EventType,
         event_arg: u32,
         lua_player: &mut LuaPlayer,
     ) {
         self.player_data.target_actorid = actor_id;
-        self.event_type = event_type;
 
         // tell the client the event has started
         {
@@ -2028,8 +2049,9 @@ impl ZoneConnection {
                 .unwrap();
         }
 
-        if let Some(event) = event {
-            self.event = Some(event);
+        if let Some(mut event) = event {
+            event.event_type = event_type;
+            self.events.push(event);
         } else {
             tracing::warn!("Event {event_id} isn't scripted yet! Ignoring...");
 

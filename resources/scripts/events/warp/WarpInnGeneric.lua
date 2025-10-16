@@ -1,6 +1,6 @@
 -- generic warp shared by all inn scripts
 
-function onTalk(target, player)
+function onTalk(target, player, game_data)
     -- greeting
     player:play_scene(target, EVENT_ID, 00000, HIDE_HOTBAR, {0})
 

@@ -1,4 +1,4 @@
-function onTalk(target, player)
+function onTalk(target, player, game_data)
     -- TODO: the client Lua script can't handle the case where *no* quests are unlocked, which is currently the defualt state of the player
     -- but once the initial unlocked quests are unlocked, we can safely run scene 0
     -- (and by can't handle i mean it crashes the game LMAO)

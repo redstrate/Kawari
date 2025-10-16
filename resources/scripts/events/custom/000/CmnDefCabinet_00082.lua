@@ -1,6 +1,6 @@
 -- TODO: actually implement this menu, attempting to open the "Remove an item." softlocks for now
 
-function onTalk(target, player)
+function onTalk(target, player, game_data)
     player:play_scene(target, EVENT_ID, 00000, HIDE_HOTBAR, {0})
 end
 

@@ -2,7 +2,7 @@
 
 -- Scene 1000 - despawns player, angles camera upward, softlocks
 -- Scene 1001 - same as 1000
-function onTalk(target, player)
+function onTalk(target, player, game_data)
     player:play_scene(target, EVENT_ID, 00000, HIDE_HOTBAR, {0})
 end
 

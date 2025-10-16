@@ -4,7 +4,7 @@
 -- scene 1: obtain the mogpendium
 -- scene 2: open the mogpendium only
 
-function onTalk(target, player)
+function onTalk(target, player, game_data)
     player:play_scene(target, EVENT_ID, 0, 0, {0})
 end
 

@@ -15,8 +15,8 @@ use kawari::ipc::chat::ClientChatIpcData;
 
 use kawari::ipc::zone::{
     ActorControl, ActorControlCategory, ActorControlSelf, ClientLanguage, Condition, Conditions,
-    ItemOperation, OnlineStatus, OnlineStatusMask, PlayerEntry, PlayerSpawn, PlayerStatus,
-    SceneFlags, SocialList, SocialListUILanguages,
+    EventType, ItemOperation, OnlineStatus, OnlineStatusMask, PlayerEntry, PlayerSpawn,
+    PlayerStatus, SceneFlags, SocialList, SocialListUILanguages,
 };
 
 use kawari::ipc::zone::{
@@ -149,7 +149,7 @@ async fn initial_setup(
                                     player_data: PlayerData::default(),
                                     spawn_index: 0,
                                     status_effects: StatusEffects::default(),
-                                    event: None,
+                                    events: Vec::new(),
                                     actors: Vec::new(),
                                     ip,
                                     id,
@@ -164,7 +164,6 @@ async fn initial_setup(
                                     weather_id: 0,
                                     obsfucation_data: ObsfucationData::default(),
                                     queued_content: None,
-                                    event_type: 0,
                                     conditions: Conditions::default(),
                                 };
 
@@ -1035,10 +1034,6 @@ async fn client_loop(
                                                 tracing::info!(
                                                     "Recieved EventRelatedUnk! {unk1} {unk2} {unk3} {unk4}"
                                                 );
-
-                                                if let Some(event) = connection.event.as_mut() {
-                                                    event.scene_finished(&mut lua_player, *unk2);
-                                                }
                                             }
                                             ClientZoneIpcData::Unk19 { .. } => {
                                                 // no-op
@@ -1209,7 +1204,10 @@ async fn client_loop(
                                                 }
                                             }
                                             ClientZoneIpcData::StartTalkEvent { actor_id, event_id } => {
-                                                connection.start_event(*actor_id, *event_id, 1, 0, &mut lua_player).await;
+                                                connection.start_event(*actor_id, *event_id, EventType::Talk, 0, &mut lua_player).await;
+
+                                                connection.conditions.set_condition(Condition::OccupiedInEvent);
+                                                connection.send_conditions().await;
 
                                                 /* TODO: ServerZoneIpcType::Unk18 with data [64,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
                                                     * was observed to always be sent by the server upon interacting with shops. They open and function fine without
@@ -1217,16 +1215,16 @@ async fn client_loop(
                                                     * happens for -every- NPC/actor. */
 
                                                 // begin talk function if it exists
-                                                if let Some(event) = connection.event.as_mut() {
-                                                     event.talk(*actor_id, &mut lua_player);
+                                                if let Some(event) = connection.events.last_mut() {
+                                                     event.talk(*actor_id, &mut lua_player, connection.gamedata.clone());
                                                 }
                                             }
                                             ClientZoneIpcData::EventYieldHandler(handler) => {
                                                 tracing::info!(message = "Event yielded", handler_id = handler.handler_id, error_code = handler.error_code, scene = handler.scene, params = ?&handler.params[..handler.num_results as usize]);
 
                                                 connection
-                                                .event
-                                                    .as_mut()
+                                                .events
+                                                    .last_mut()
                                                     .unwrap()
                                                     .finish(handler.scene, &handler.params[..handler.num_results as usize], &mut lua_player);
                                             }
@@ -1234,8 +1232,8 @@ async fn client_loop(
                                                 tracing::info!(message = "Event yielded", handler_id = handler.handler_id, error_code = handler.error_code, scene = handler.scene, params = ?&handler.params[..handler.num_results as usize]);
 
                                                 connection
-                                                    .event
-                                                    .as_mut()
+                                                    .events
+                                                    .last_mut()
                                                     .unwrap()
                                                     .finish(handler.scene, &handler.params[..handler.num_results as usize], &mut lua_player);
                                             }
@@ -1434,10 +1432,10 @@ async fn client_loop(
                                                 connection.conditions.set_condition(Condition::OccupiedInEvent);
                                                 connection.send_conditions().await;
                                                 let actor_id = ObjectTypeId { object_id: ObjectId(connection.player_data.actor_id), object_type: ObjectTypeKind::None };
-                                                connection.start_event(actor_id, *event_id, 10, *event_arg, &mut lua_player).await;
+                                                connection.start_event(actor_id, *event_id, EventType::WithinRange, *event_arg, &mut lua_player).await;
 
                                                 // begin walk-in trigger function if it exists
-                                                if let Some(event) = connection.event.as_mut() {
+                                                if let Some(event) = connection.events.last_mut() {
                                                      event.enter_trigger(&mut lua_player);
                                                 }
                                             }

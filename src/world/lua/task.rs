@@ -1,6 +1,8 @@
 use crate::{
     common::{ObjectTypeId, workdefinitions::RemakeMode},
     inventory::BuyBackList,
+    ipc::zone::{EventType, ServerZoneIpcSegment},
+    packet::PacketSegment,
     world::EventFinishType,
 };
 
@@ -71,7 +73,7 @@ pub enum Task {
     StartEvent {
         actor_id: ObjectTypeId,
         event_id: u32,
-        event_type: u8,
+        event_type: EventType,
         event_arg: u32,
     },
     SetInnWakeup {
@@ -145,5 +147,12 @@ pub enum Task {
     },
     SetSex {
         sex: u8,
+    },
+    // previously, this was kept as a separate thing apart from tasks
+    // but I discovered that this doesn't mix well - for example with play_scene (segment-based) and start_event (task)
+    // this is because segments were always sent before tasks and there wasn't strong ordering
+    // so be careful when changing this system!
+    SendSegment {
+        segment: PacketSegment<ServerZoneIpcSegment>,
     },
 }
