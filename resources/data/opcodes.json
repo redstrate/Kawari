@@ -701,7 +701,7 @@
         {
             "name": "RequestCrossworldLinkshells",
             "comment": "Seems to happen when opening the Cross-world Linkshells window. Weird that it can do this, considering it's sent on login?",
-            "opcode": 888,
+            "opcode": 954,
             "size": 8
         },
         {
