@@ -1,6 +1,6 @@
 -- TODO: actually implement this menu; you can open it and push buttons but nothing responds, of course
 
-function onTalk(target, player, game_data)
+function onTalk(target, player)
     player:play_scene(target, EVENT_ID, 00000, HIDE_HOTBAR, {0})
 end
 

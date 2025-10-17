@@ -1292,7 +1292,7 @@ impl ZoneConnection {
     /// Reloads Global.lua
     pub fn reload_scripts(&mut self) {
         let mut lua = self.lua.lock();
-        if let Err(err) = load_init_script(&mut lua) {
+        if let Err(err) = load_init_script(&mut lua, self.gamedata.clone()) {
             tracing::warn!("Failed to load Init.lua: {:?}", err);
         }
     }
@@ -1806,6 +1806,16 @@ impl ZoneConnection {
                                 source_actor_id,
                             ))
                             .await;
+
+                        self.status_effects.add(effect_id, param, duration);
+                    }
+
+                    // To lose effects, we just omit them from the list but increase the entry count!
+                    if let EffectKind::Unk5 { effect_id, .. } = effect.kind {
+                        entries[num_entries as usize] = EffectEntry::default();
+                        num_entries += 1;
+
+                        self.status_effects.remove(effect_id);
                     }
                 }
 
@@ -2044,7 +2054,7 @@ impl ZoneConnection {
 
                     let func: Function = lua.globals().get("dispatchEvent").unwrap();
 
-                    func.call::<Option<Event>>((connection_data, event_id, self.gamedata.clone()))
+                    func.call::<Option<Event>>((connection_data, event_id))
                 })
                 .unwrap();
         }

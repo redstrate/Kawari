@@ -6,7 +6,7 @@
 --Scene 00002 does nothing (for now)
 --Scene 00003 "You must progress further through the <expansion name> main scenario in order to access this vendor's wares."
 
-function onTalk(target, player, game_data)
+function onTalk(target, player)
     -- "You must progress further through the <expansion name> main scenario in order to access this vendor's wares."
     player:play_scene(target, EVENT_ID, 00003, HIDE_HOTBAR, {0})
 end

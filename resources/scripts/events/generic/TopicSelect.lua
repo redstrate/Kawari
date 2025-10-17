@@ -2,7 +2,7 @@
 -- For example, the Battle Supplier in Limsa has a couple of events for DoW and DoM gear.
 -- Then, these events lead into a TopicSelect used for the various level categories.
 
-function onTalk(target, player, game_data)
+function onTalk(target, player)
     player:play_scene(target, EVENT_ID, 00000, HIDE_HOTBAR, {})
 end
 

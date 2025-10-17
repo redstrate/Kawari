@@ -18,7 +18,7 @@ pub use zone::LuaZone;
 
 use crate::{
     common::{GameData, ObjectTypeId, Position},
-    ipc::zone::{ObjectSpawn, ServerZoneIpcSegment},
+    ipc::zone::{ObjectSpawn, ServerZoneIpcSegment, StatusEffect},
     packet::{PacketSegment, SegmentData, SegmentType},
 };
 
@@ -119,5 +119,14 @@ impl UserData for GameData {
         methods.add_method_mut("get_switch_talk_target", |_, this, switch_talk_id: u32| {
             Ok(this.get_switch_talk_target(switch_talk_id))
         });
+        methods.add_method_mut("get_halloween_npc_transform", |_, this, npc_id: u32| {
+            Ok(this.get_halloween_npc_transform(npc_id))
+        });
+    }
+}
+
+impl UserData for StatusEffect {
+    fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
+        fields.add_field_method_get("param", |_, this| Ok(this.param));
     }
 }

@@ -4,7 +4,7 @@
 -- scene 3: rename deny
 -- scene 4: disband deny
 
-function onTalk(target, player, game_data)
+function onTalk(target, player)
     player:play_scene(target, EVENT_ID, 00000, HIDE_HOTBAR, {})
 end
 

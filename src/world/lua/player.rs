@@ -54,7 +54,7 @@ impl LuaPlayer {
             }));
         create_ipc_self(self, ipc, self.player_data.actor_id);
 
-        self.status_effects.add(effect_id, duration);
+        self.status_effects.add(effect_id, effect_param, duration);
     }
 
     fn play_scene(
@@ -809,6 +809,9 @@ impl UserData for LuaPlayer {
         methods.add_method_mut("set_sex", |_, this, sex: u8| {
             this.set_sex(sex);
             Ok(())
+        });
+        methods.add_method("get_effect", |_, this, effect_id: u16| {
+            Ok(this.status_effects.get(effect_id))
         });
     }
 

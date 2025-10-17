@@ -11,7 +11,7 @@ SCENE_AWAKEN_ANIM  = 00100
 -- if true, we are in the dreamfitting sequence
 local is_dreamfitting = false
 
-function onTalk(target, player, game_data)
+function onTalk(target, player)
     player:play_scene(target, EVENT_ID, SCENE_SHOW_MENU, HIDE_HOTBAR, {0})
 end
 

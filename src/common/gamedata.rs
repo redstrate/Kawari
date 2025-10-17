@@ -9,6 +9,7 @@ use icarus::ContentFinderCondition::ContentFinderConditionSheet;
 use icarus::CustomTalk::CustomTalkSheet;
 use icarus::EquipSlotCategory::EquipSlotCategorySheet;
 use icarus::GilShopItem::GilShopItemSheet;
+use icarus::HalloweenNpcSelect::HalloweenNpcSelectSheet;
 use icarus::InstanceContent::InstanceContentSheet;
 use icarus::Item::ItemSheet;
 use icarus::ItemAction::ItemActionSheet;
@@ -707,6 +708,15 @@ impl GameData {
         let row = sheet.get_subrow(switch_talk_id, 0)?;
 
         Some(*row.DefaultTalk().into_u32()?)
+    }
+
+    /// Returns the target Transform Row ID for a given selected NPC. (Only applicable to the Halloween Transform NPC.)
+    pub fn get_halloween_npc_transform(&mut self, npc_id: u32) -> Option<u16> {
+        let sheet = HalloweenNpcSelectSheet::read_from(&mut self.resource, Language::English)?;
+        let row = sheet.get_row(npc_id)?;
+
+        // FIXME: will change to Transformation in a future schema update
+        Some(*row.Unknown4().into_u16()?)
     }
 }
 

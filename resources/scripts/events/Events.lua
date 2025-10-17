@@ -44,13 +44,13 @@ function folderFromScriptId(id)
 end
 
 -- This is called whenever the client requests to start an event
-function dispatchEvent(player, event_id, game_data)
+function dispatchEvent(player, event_id)
     local event_type = event_id >> 16
 
     if event_type == EVENT_TYPE_GIL_SHOP then
         return runEvent(event_id, "events/generic/GilShopkeeper.lua")
     elseif event_type == EVENT_TYPE_WARP then
-        local warp_name = game_data:get_warp_logic_name(event_id)
+        local warp_name = GAME_DATA:get_warp_logic_name(event_id)
 
         if warp_name == '' then
             return runEvent(event_id, "events/generic/Warp.lua")
@@ -68,7 +68,7 @@ function dispatchEvent(player, event_id, game_data)
         local aetheryte_id = event_id & 0xFFF
 
         --- Aetherytes and Aethernet shards are handled by different event scripts
-        if game_data:is_aetheryte(aetheryte_id) then
+        if GAME_DATA:is_aetheryte(aetheryte_id) then
             return runEvent(event_id, "events/generic/Aetheryte.lua")
         else
             return runEvent(event_id, "events/generic/AethernetShard.lua")
@@ -78,7 +78,7 @@ function dispatchEvent(player, event_id, game_data)
     elseif event_type == EVENT_TYPE_DEFAULT_TALK then
         return runEvent(event_id, "events/generic/DefaultTalk.lua")
     elseif event_type == EVENT_TYPE_CUSTOM_TALK then
-        local script_name = game_data:get_custom_talk_name(event_id)
+        local script_name = GAME_DATA:get_custom_talk_name(event_id)
         local script_id = extractScriptId(script_name)
         local script_folder = folderFromScriptId(script_id)
         local script_path = "events/custom/"..script_folder.."/"..script_name..".lua"
@@ -92,7 +92,7 @@ function dispatchEvent(player, event_id, game_data)
     elseif event_type == EVENT_TYPE_CHOCOBO_TAXI_STAND then
         return runEvent(event_id, "events/generic/Chocobokeep.lua")
     elseif event_type == EVENT_TYPE_OPENING then
-        local script_name = game_data:get_opening_name(event_id)
+        local script_name = GAME_DATA:get_opening_name(event_id)
         return runEvent(event_id, "events/quest/opening/"..script_name..".lua")
     elseif event_type == EVENT_TYPE_SPECIAL_SHOP then
         return runEvent(event_id, "events/generic/SpecialShop.lua")
@@ -102,8 +102,8 @@ function dispatchEvent(player, event_id, game_data)
         return runEvent(event_id, "events/generic/TopicSelect.lua")
     elseif event_type == EVENT_TYPE_PRE_HANDLER then
         -- TODO: check the quest requirement for these/
-        local target_event_id = game_data:get_pre_handler_target(event_id)
-        return dispatchEvent(player, target_event_id, game_data)
+        local target_event_id = GAME_DATA:get_pre_handler_target(event_id)
+        return dispatchEvent(player, target_event_id)
     elseif event_type == EVENT_TYPE_EVENT_GIMMICK_PATH_MOVE then
         return runEvent(event_id, "events/generic/GimmickPathMove.lua")
     end

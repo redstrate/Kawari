@@ -1,6 +1,6 @@
 -- TODO: figure out why nothing shows up?
 
-function onTalk(target, player, game_data)
+function onTalk(target, player)
     player:play_scene(target, EVENT_ID, 0, 0, {0})
 end
 

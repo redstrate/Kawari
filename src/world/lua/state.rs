@@ -1,10 +1,12 @@
-use std::{collections::HashMap, fmt::Display};
+use std::{collections::HashMap, fmt::Display, sync::Arc};
 
 use bitflags::Flags;
 use mlua::{IntoLua, Lua};
+use parking_lot::Mutex;
 use strum::IntoEnumIterator;
 
 use crate::{
+    common::GameData,
     config::get_config,
     ipc::zone::{EventType, GameMasterRank, SceneFlags, ServerNoticeFlags},
     world::Event,
@@ -32,7 +34,7 @@ pub fn initial_setup(lua: &mut Lua) {
 }
 
 /// Loads `Init.lua`
-pub fn load_init_script(lua: &mut Lua) -> mlua::Result<()> {
+pub fn load_init_script(lua: &mut Lua, game_data: Arc<Mutex<GameData>>) -> mlua::Result<()> {
     initial_setup(lua);
 
     let register_action_func =
@@ -77,8 +79,12 @@ pub fn load_init_script(lua: &mut Lua) -> mlua::Result<()> {
         Ok(config.world.login_message)
     })?;
 
-    let run_event_func = lua.create_function(|_, (event_id, event_script): (u32, String)| {
-        Ok(Event::new(event_id, &event_script))
+    let run_event_func = lua.create_function(|lua, (event_id, event_script): (u32, String)| {
+        Ok(Event::new(
+            event_id,
+            &event_script,
+            lua.globals().get("GAME_DATA").unwrap(),
+        ))
     })?;
 
     let run_action_func =
@@ -101,6 +107,8 @@ pub fn load_init_script(lua: &mut Lua) -> mlua::Result<()> {
     let effectsbuilder_constructor = lua.create_function(|_, ()| Ok(EffectsBuilder::default()))?;
     lua.globals()
         .set("EffectsBuilder", effectsbuilder_constructor)?;
+
+    lua.globals().set("GAME_DATA", game_data.clone())?;
 
     let config = get_config();
     let file_name = format!("{}/Init.lua", &config.world.scripts_location);

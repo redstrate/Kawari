@@ -2,7 +2,7 @@
 
 -- TODO: we probably need to see what retail does, probably event nesting
 
-function onTalk(target, player, game_data)
+function onTalk(target, player)
     player:play_scene(target, EVENT_ID, 00000, HIDE_HOTBAR, {})
 end
 

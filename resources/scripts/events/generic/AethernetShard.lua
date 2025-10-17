@@ -10,7 +10,7 @@
 SCENE_SHOW_MENU = 00002
 SCENE_HAVE_AETHERNET_ACCESS = 00003
 
-function onTalk(target, player, game_data)
+function onTalk(target, player)
     player:play_scene(target, EVENT_ID, SCENE_SHOW_MENU, HIDE_HOTBAR, {0})
 end
 

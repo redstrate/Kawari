@@ -27,7 +27,7 @@ pub enum EventFinishType {
 }
 
 impl Event {
-    pub fn new(id: u32, path: &str) -> Option<Self> {
+    pub fn new(id: u32, path: &str, game_data: mlua::Value) -> Option<Self> {
         let mut lua = Lua::new();
         initial_setup(&mut lua);
 
@@ -47,6 +47,14 @@ impl Event {
         }
 
         lua.globals().set("EVENT_ID", id).unwrap();
+
+        // "steal"" the game data global from the other lua state
+        let game_data = match game_data {
+            mlua::Value::UserData(ud) => ud.borrow::<Arc<Mutex<GameData>>>().unwrap().clone(),
+            _ => unreachable!(),
+        };
+
+        lua.globals().set("GAME_DATA", game_data).unwrap();
 
         // The event_type/event_arg is set later, so don't care about this value we set!
         Some(Self {
@@ -102,19 +110,14 @@ impl Event {
         }
     }
 
-    pub fn talk(
-        &mut self,
-        target_id: ObjectTypeId,
-        player: &mut LuaPlayer,
-        game_data: Arc<Mutex<GameData>>,
-    ) {
-        let run_script = || {
+    pub fn talk(&mut self, target_id: ObjectTypeId, player: &mut LuaPlayer) {
+        let mut run_script = || {
             self.lua.scope(|scope| {
                 let player = scope.create_userdata_ref_mut(player)?;
 
                 let func: Function = self.lua.globals().get("onTalk")?;
 
-                func.call::<()>((target_id, player, game_data))?;
+                func.call::<()>((target_id, player))?;
 
                 Ok(())
             })

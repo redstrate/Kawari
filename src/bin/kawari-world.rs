@@ -1215,7 +1215,7 @@ async fn client_loop(
 
                                                     // begin talk function if it exists
                                                     if let Some(event) = connection.events.last_mut() {
-                                                        event.talk(*actor_id, &mut lua_player, connection.gamedata.clone());
+                                                        event.talk(*actor_id, &mut lua_player);
                                                     }
                                                 } else {
                                                     connection.conditions = Conditions::default();
@@ -1491,8 +1491,9 @@ async fn client_loop(
                             }
 
                             // copy from lua player state, as they modify the status effects list
-                            // TODO: i dunno?
-                            connection.status_effects = lua_player.status_effects.clone();
+                            if lua_player.status_effects.dirty {
+                                connection.status_effects = lua_player.status_effects.clone();
+                            }
 
                             // Process any queued packets from scripts and whatnot
                             connection.process_lua_player(&mut lua_player).await;
@@ -1585,7 +1586,7 @@ async fn main() {
 
     {
         let mut lua = lua.lock();
-        if let Err(err) = load_init_script(&mut lua) {
+        if let Err(err) = load_init_script(&mut lua, game_data.clone()) {
             tracing::warn!("Failed to load Init.lua: {:?}", err);
         }
     }

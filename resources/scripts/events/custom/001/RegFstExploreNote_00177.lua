@@ -4,7 +4,7 @@
 -- scene 4: a unique talk scene I don't remember the purpose of
 -- scene 5: log completion message
 
-function onTalk(target, player, game_data)
+function onTalk(target, player)
     player:play_scene(target, EVENT_ID, 00000, HIDE_HOTBAR, {})
 end
 

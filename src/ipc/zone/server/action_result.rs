@@ -63,6 +63,13 @@ pub enum EffectKind {
         id: u16,
         unk3: u8,
     },
+    /// Seen during the Unveil action.
+    #[brw(magic = 16u8)]
+    Unk5 {
+        param: u16,
+        unk: [u8; 3], // empty?
+        effect_id: u16,
+    },
 }
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy, Default, Deserialize, Serialize)]
@@ -293,5 +300,42 @@ mod tests {
         );
 
         assert_eq!(action_result.target_id_again.object_id, ObjectId(1082476));
+    }
+
+    #[test]
+    fn read_actionresult_unveil() {
+        let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        d.push(server_zone_tests_dir!("action_result_unveil.bin"));
+
+        let buffer = read(d).unwrap();
+        let mut buffer = Cursor::new(&buffer);
+
+        let action_result = ActionResult::read_le(&mut buffer).unwrap();
+        assert_eq!(action_result.main_target.object_id, ObjectId(277114100));
+        assert_eq!(action_result.action_id, 13266);
+        assert_eq!(action_result.unk1, 749); // TODO: probably means this field is wrong
+        assert_eq!(action_result.animation_lock_time, 0.6);
+        assert_eq!(action_result.unk2, 3758096384); // TODO: ditto
+        assert_eq!(action_result.hidden_animation, 18);
+        assert_eq!(action_result.rotation, -2.0225368);
+        assert_eq!(action_result.action_animation_id, 13266);
+        assert_eq!(action_result.variation, 0);
+        assert_eq!(action_result.flag, 1);
+        assert_eq!(action_result.unk3, 0);
+        assert_eq!(action_result.effect_count, 1);
+        assert_eq!(action_result.unk4, 0);
+        assert_eq!(action_result.unk5, [0; 6]);
+
+        // effect 0: unk2
+        assert_eq!(
+            action_result.effects[0].kind,
+            EffectKind::Unk5 {
+                param: 219,
+                unk: [0; 3],
+                effect_id: 565
+            }
+        );
+
+        assert_eq!(action_result.target_id_again.object_id, ObjectId(277114100));
     }
 }
