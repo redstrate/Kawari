@@ -1615,7 +1615,7 @@ impl ZoneConnection {
         if request.action_kind == ActionKind::Mount {
             let mut effects = [ActionEffect::default(); 8];
             effects[0] = ActionEffect {
-                kind: EffectKind::Unk2 {
+                kind: EffectKind::Mount {
                     unk1: 1,
                     unk2: 0,
                     id: request.action_key as u16,
@@ -1776,7 +1776,7 @@ impl ZoneConnection {
                 let mut entries = [EffectEntry::default(); 4];
 
                 for effect in &effects_builder.effects {
-                    if let EffectKind::Unk1 {
+                    if let EffectKind::GainEffect {
                         effect_id,
                         duration,
                         param,
@@ -1811,7 +1811,7 @@ impl ZoneConnection {
                     }
 
                     // To lose effects, we just omit them from the list but increase the entry count!
-                    if let EffectKind::Unk5 { effect_id, .. } = effect.kind {
+                    if let EffectKind::LoseEffect { effect_id, .. } = effect.kind {
                         entries[num_entries as usize] = EffectEntry::default();
                         num_entries += 1;
 

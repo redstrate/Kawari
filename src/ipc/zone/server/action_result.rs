@@ -41,7 +41,7 @@ pub enum EffectKind {
     BeginCombo,
     /// Seen during sprint.
     #[brw(magic = 14u8)]
-    Unk1 {
+    GainEffect {
         unk1: u8,
         unk2: u32,
         effect_id: u16,
@@ -57,7 +57,7 @@ pub enum EffectKind {
     },
     /// Seen during mounting.
     #[brw(magic = 39u8)]
-    Unk2 {
+    Mount {
         unk1: u8,
         unk2: u32,
         id: u16,
@@ -65,7 +65,7 @@ pub enum EffectKind {
     },
     /// Seen during the Unveil action.
     #[brw(magic = 16u8)]
-    Unk5 {
+    LoseEffect {
         param: u16,
         unk: [u8; 3], // empty?
         effect_id: u16,
@@ -251,7 +251,7 @@ mod tests {
         // effect 0: unk
         assert_eq!(
             action_result.effects[0].kind,
-            EffectKind::Unk1 {
+            EffectKind::GainEffect {
                 unk1: 0,
                 unk2: 7728,
                 effect_id: 50,
@@ -291,7 +291,7 @@ mod tests {
         // effect 0: unk2
         assert_eq!(
             action_result.effects[0].kind,
-            EffectKind::Unk2 {
+            EffectKind::Mount {
                 unk1: 1,
                 unk2: 0,
                 id: 55,
@@ -329,7 +329,7 @@ mod tests {
         // effect 0: unk2
         assert_eq!(
             action_result.effects[0].kind,
-            EffectKind::Unk5 {
+            EffectKind::LoseEffect {
                 param: 219,
                 unk: [0; 3],
                 effect_id: 565

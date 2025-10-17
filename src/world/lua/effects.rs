@@ -34,7 +34,7 @@ impl UserData for EffectsBuilder {
             "gain_effect",
             |_, this, (effect_id, param, duration): (u16, u16, f32)| {
                 this.effects.push(ActionEffect {
-                    kind: EffectKind::Unk1 {
+                    kind: EffectKind::GainEffect {
                         unk1: 0,
                         unk2: 7728,
                         effect_id,
@@ -52,7 +52,7 @@ impl UserData for EffectsBuilder {
             "lose_effect",
             |_, this, (effect_id, effect_param): (u16, u16)| {
                 this.effects.push(ActionEffect {
-                    kind: EffectKind::Unk5 {
+                    kind: EffectKind::LoseEffect {
                         param: effect_param,
                         unk: [0; 3],
                         effect_id,
