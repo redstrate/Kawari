@@ -1111,6 +1111,8 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                             source_actor_id,
                             ..
                         } => {
+                            // TODO: we need to inform the ZoneConnection as well since it keeps track of its own status effect list...
+
                             let msg =
                                 FromServer::LoseEffect(*effect_id as u16, 0, *source_actor_id);
 

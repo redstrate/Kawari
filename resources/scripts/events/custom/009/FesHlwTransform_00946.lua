@@ -8,7 +8,7 @@ function onTalk(target, player)
 end
 
 function onReturn(scene, results, player)
-    if scene == 0 then
+    if scene == 0 and results[1] > 0 then
        -- first param is your transformation selection
        local effect_param_id = GAME_DATA:get_halloween_npc_transform(results[1])
        player:gain_effect(EFFECT_TRANSFIGURATION, effect_param_id, EFFECT_DURATION)
