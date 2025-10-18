@@ -9,18 +9,7 @@ TELEPORTER_INFO = {
     [4194310] = { 10114944, 1970, 11837439, 1670053889, 2009628707 }, -- Teleporter from upper balcony to Nexus Arcade ground floor
 }
 
--- TODO: this can be extrapolated from EventGimmickPathMove
-EVENT_ARG = {
-    [4194305] = 10611851,
-    [4194306] = 10611861,
-    [4194307] = 10611862,
-    [4194308] = 10611864,
-    [4194309] = 10611868,
-    [4194310] = 10611881,
-}
-
 function onEnterTrigger(player)
     player:do_solnine_teleporter(EVENT_ID, table.unpack(TELEPORTER_INFO[EVENT_ID]))
-    -- TODO: We should probably take the event arg in Event::new on the rust side, but this works for now.
     player:finish_event(EVENT_ID)
 end
