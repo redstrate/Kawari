@@ -8,6 +8,9 @@ dofile(BASE_DIR.."events/Events.lua")
 dofile(BASE_DIR.."items/Items.lua")
 dofile(BASE_DIR.."Global.lua")
 
+-- As seen on retail
+INITIAL_CUTSCENE_FLAGS = NO_DEFAULT_CAMERA | INVIS_ENPC | CONDITION_CUTSCENE | HIDE_UI | HIDE_HOTBAR | SILENT_ENTER_TERRI_ENV | SILENT_ENTER_TERRI_BGM | SILENT_ENTER_TERRI_SE | DISABLE_SKIP | DISABLE_STEALTH
+
 -- Lua error handlers, and other server events like player login
 function onBeginLogin(player)
     -- send a welcome message
@@ -23,16 +26,16 @@ function onFinishZoning(player)
 
         if starting_town == 1 then
             -- limsa
-            player:start_event(player.id, 1245185, EVENT_TYPE_ENTER_TERRITORY, 0)
-            player:play_scene(player.id, 1245185, 0, 8193, {})
+            player:start_event(player.id, 1245185, EVENT_TYPE_ENTER_TERRITORY, 181)
+            player:play_scene(player.id, 1245185, 0, INITIAL_CUTSCENE_FLAGS, {0})
         elseif starting_town == 2 then
             -- gridania
-            player:start_event(player.id, 1245186, EVENT_TYPE_ENTER_TERRITORY, 0)
-            player:play_scene(player.id, 1245186, 0, 8193, {0})
+            player:start_event(player.id, 1245186, EVENT_TYPE_ENTER_TERRITORY, 183)
+            player:play_scene(player.id, 1245186, 0, INITIAL_CUTSCENE_FLAGS, {0})
         elseif starting_town == 3 then
             -- ul'dah
-            player:start_event(player.id, 1245187, EVENT_TYPE_ENTER_TERRITORY, 0)
-            player:play_scene(player.id, 1245187, 0, 8193, {})
+            player:start_event(player.id, 1245187, EVENT_TYPE_ENTER_TERRITORY, 182)
+            player:play_scene(player.id, 1245187, 0, INITIAL_CUTSCENE_FLAGS, {0})
         end
     elseif in_inn and not player.saw_inn_wakeup then
         -- play the wakeup animation

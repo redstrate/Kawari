@@ -72,6 +72,10 @@ pub enum ClientTriggerCommand {
     #[brw(magic = 0x0132u32)]
     ShownActiveHelp { id: u32 },
 
+    /// The client has seen this cutscene. This is usually followed up by a ToggleCutsceneSeen ACS.
+    #[brw(magic = 0x0133u32)]
+    SeenCutscene { id: u32 },
+
     /// The client clears all waymarks.
     #[brw(magic = 0x0139u32)]
     ClearAllWaymarks {},

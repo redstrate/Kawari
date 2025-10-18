@@ -16,6 +16,9 @@ pub use crate::ipc::zone::client::event_yield_handler::EventYieldHandler;
 mod item_operation;
 pub use crate::ipc::zone::client::item_operation::ItemOperation;
 
+mod event_return_handler;
+pub use crate::ipc::zone::client::event_return_handler::EventReturnHandler;
+
 use crate::ipc::zone::black_list::RequestBlacklist;
 
 pub use super::social_list::{PlayerEntry, SocialList, SocialListRequest, SocialListRequestType};
@@ -141,20 +144,7 @@ pub enum ClientZoneIpcData {
         #[brw(pad_after = 4)] // padding
         event_id: u32,
     },
-    GilShopTransaction {
-        event_id: u32,
-        /// Seems to always be 0x300000a at gil shops
-        unk1: u32,
-        /// 1 is buy, 2 is sell
-        buy_sell_mode: u32,
-        /// Index into the shopkeeper's or the player's inventory
-        item_index: u32,
-        /// Quantity of items being bought or sold
-        item_quantity: u32,
-        /// unk 2: Flags? These change quite a bit when dealing with stackable items, but are apparently always 0 when buying non-stackable
-        /// Observed values so far: 0xDDDDDDDD (when buying 99 of a stackable item), 0xFFFFFFFF, 0xFFE0FFD0, 0xfffefffe, 0x0000FF64
-        unk2: u32,
-    },
+    EventReturnHandler4(EventReturnHandler<4>),
     StandardControlsPivot {
         /// Set to 4 when beginning to pivot.
         /// Set to 0 when pivoting ends.
@@ -327,14 +317,7 @@ mod tests {
                 actor_id: ObjectTypeId::default(),
                 event_id: 0,
             },
-            ClientZoneIpcData::GilShopTransaction {
-                event_id: 0,
-                unk1: 0,
-                buy_sell_mode: 0,
-                item_index: 0,
-                item_quantity: 0,
-                unk2: 0,
-            },
+            ClientZoneIpcData::EventReturnHandler4(EventReturnHandler::default()),
             ClientZoneIpcData::StandardControlsPivot { is_pivoting: 0 },
             ClientZoneIpcData::EventYieldHandler(EventYieldHandler::<2>::default()),
             ClientZoneIpcData::EventYieldHandler8(EventYieldHandler::<8>::default()),

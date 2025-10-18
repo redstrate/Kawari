@@ -633,7 +633,7 @@
             "size": 16
         },
         {
-            "name": "GilShopTransaction",
+            "name": "EventReturnHandler4",
             "comment": "Unknown purpose.",
             "opcode": 722,
             "size": 24

@@ -51,7 +51,7 @@ function dispatchEvent(player, event_id)
         local script_name = GAME_DATA:get_quest_name(event_id)
         local script_id = extractScriptId(script_name)
         local script_folder = folderFromScriptId(script_id)
-        local script_path = "quests/"..script_folder.."/"..script_name..".lua"
+        local script_path = "events/quest/"..script_folder.."/"..script_name..".lua"
 
         local event = runEvent(event_id, script_path)
         if event == nil then

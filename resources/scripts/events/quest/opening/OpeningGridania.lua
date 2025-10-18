@@ -11,9 +11,12 @@ end
 
 function onReturn(scene, results, player)
     if scene == 0 then
-        player:play_scene(player.id, EVENT_ID, 1, NO_DEFAULT_CAMERA | HIDE_HOTBAR, {0})
-    elseif scene == 1 then
-        -- just quit for now
-        player:finish_event(EVENT_ID)
+        player:play_scene(player.id, EVENT_ID, 1, NO_DEFAULT_CAMERA | HIDE_HOTBAR, {})
     end
+
+    player:finish_event(EVENT_ID)
+end
+
+function onEnterTrigger(player)
+    player:play_scene(player.id, EVENT_ID, 20, NO_DEFAULT_CAMERA | HIDE_HOTBAR, {})
 end
