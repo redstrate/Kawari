@@ -5,6 +5,7 @@
 SCENE_GREETING  = 00000
 SCENE_SHOW_SHOP = 00010
 SCENE_SHOP_END  = 00255
+
 function onTalk(target, player)
     --[[ Params observed for SCENE_GREETING:
         Gil shops: [0, 1]

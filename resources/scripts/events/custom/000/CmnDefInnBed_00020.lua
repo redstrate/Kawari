@@ -1,6 +1,3 @@
--- Event flags, courtesy of Sapphire
--- https://github.com/SapphireServer/Sapphire/blob/bf3368224a00c180cbb7ba413b52395eba58ec0b/src/world/Event/EventDefs.h#L9
-
 -- Scene numbers
 SCENE_SHOW_MENU    = 00000
 SCENE_SLEEP_ANIM   = 00001

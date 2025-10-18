@@ -1,5 +1,3 @@
-EFFECT_TRANSFIGURATION = 565
-
 function doAction(player)
     effects = EffectsBuilder()
 

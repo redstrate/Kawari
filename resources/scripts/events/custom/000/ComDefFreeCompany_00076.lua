@@ -7,7 +7,6 @@
 -- scene 7: choose company tag
 -- scene 8: change name
 
-
 function onTalk(target, player)
     player:play_scene(target, EVENT_ID, 00000, HIDE_HOTBAR, {})
 end

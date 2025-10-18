@@ -1,6 +1,5 @@
 -- Scene 0: Show menu, depends on quest completion
 
-EFFECT_TRANSFIGURATION = 565
 EFFECT_DURATION = 1800.0 -- as seen in retail
 
 function onTalk(target, player)

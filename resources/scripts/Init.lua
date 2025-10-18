@@ -11,6 +11,13 @@ dofile(BASE_DIR.."Global.lua")
 -- As seen on retail
 INITIAL_CUTSCENE_FLAGS = NO_DEFAULT_CAMERA | INVIS_ENPC | CONDITION_CUTSCENE | HIDE_UI | HIDE_HOTBAR | SILENT_ENTER_TERRI_ENV | SILENT_ENTER_TERRI_BGM | SILENT_ENTER_TERRI_SE | DISABLE_SKIP | DISABLE_STEALTH
 
+BED_EVENT_HANDLER = 720916
+BED_CUTSCENE_FLAGS = 4165480179 -- TODO: remove this hardcode
+BED_SCENE_WAKEUP_ANIM = 00100
+
+ZONE_INTENDED_USE_INN = 2
+ZONE_INTENDED_USE_OPENING_AREA = 6
+
 -- Lua error handlers, and other server events like player login
 function onBeginLogin(player)
     -- send a welcome message

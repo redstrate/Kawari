@@ -2,6 +2,7 @@ DBG_DIR = "commands/debug/"
 GM_DIR = "commands/gm/"
 
 -- GM commands
+-- Please keep these IDs sorted!
 
 GM_SET_POS = 0
 GM_SET_LEVEL = 1

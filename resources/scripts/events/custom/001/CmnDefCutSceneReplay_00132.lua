@@ -1,4 +1,3 @@
--- Cutscene flags, TODO: move these to Global.lua, or maybe a new file named Cutscene.lua or something along those lines, to store all of them
 --[[ Captured from retail, this allows smooth fading in and out on both sides of the cutscene, and it would be a good idea
 to see what flags are set that make it different than SET_BASE, but for now this makes the Unending Journey as accurate
 as it possibly can be on our end. ]]
