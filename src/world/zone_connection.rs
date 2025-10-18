@@ -2064,7 +2064,7 @@ impl ZoneConnection {
             event.event_arg = event_arg; // It turns out these same values HAVE to be sent in EventFinish, otherwise the game client crashes.
             self.events.push(event);
 
-            return true;
+            true
         } else {
             tracing::warn!("Event {event_id} isn't scripted yet! Ignoring...");
 
@@ -2084,7 +2084,7 @@ impl ZoneConnection {
             ))
             .await;
 
-            return false;
+            false
         }
     }
 
