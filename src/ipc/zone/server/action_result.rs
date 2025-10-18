@@ -57,12 +57,7 @@ pub enum EffectKind {
     },
     /// Seen during mounting.
     #[brw(magic = 39u8)]
-    Mount {
-        unk1: u8,
-        unk2: u32,
-        id: u16,
-        unk3: u8,
-    },
+    Mount { unk1: u8, unk2: u32, id: u16 },
     /// Seen during the Unveil action.
     #[brw(magic = 16u8)]
     LoseEffect {
@@ -295,11 +290,10 @@ mod tests {
                 unk1: 1,
                 unk2: 0,
                 id: 55,
-                unk3: 27,
             }
         );
 
-        assert_eq!(action_result.target_id_again.object_id, ObjectId(1082476));
+        assert_eq!(action_result.target_id_again.object_id, ObjectId(277114100));
     }
 
     #[test]

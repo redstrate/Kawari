@@ -398,7 +398,9 @@ mod tests {
             ClientZoneIpcData::SetFreeCompanyGreeting {
                 message: "".to_string(),
             },
-            ClientZoneIpcData::SetClientLanguage { language: ClientLanguage::Japanese },
+            ClientZoneIpcData::SetClientLanguage {
+                language: ClientLanguage::Japanese,
+            },
         ];
 
         for data in &ipc_types {

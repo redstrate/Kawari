@@ -80,19 +80,24 @@ pub struct PlayerStatus {
     pub sightseeing_heavensward_unlock: u8, // TODO: might be SightseeingLogUnlockStateEx in ClientStructs?
     pub unknown9e: u32,
     pub aether_current_comp_flg_set_bitmask1: u8, // This is the first byte of the full bitmask. It contains the HW zones, The Fringes and The Ruby Sea. Why this one is here and the rest far down, no idea.
-    pub unknowna3: [u8; 25],
+    pub unknowna3: [u8; 21],
     /// Current EXP for all classjobs. This doesn't control the class' "unlocked state" in the Character UI.
-    pub exp: [u32; CLASSJOB_ARRAY_SIZE],
+    #[br(count = CLASSJOB_ARRAY_SIZE)]
+    #[bw(pad_size_to = CLASSJOB_ARRAY_SIZE * 4)]
+    pub exp: Vec<i32>,
+    pub unknown_after_exp: u8,
     pub unknown_pvp124: u32,
     pub pvp_exp: u32,
     pub pvp_frontline_overall_ranks: [u32; 3],
-    #[br(count = 16)]
-    #[bw(pad_size_to = 16)]
+    #[br(count = 7)]
+    #[bw(pad_size_to = 7)]
     pub unknown138: Vec<u8>,
     /// Current levels for all classjobs. If non-zero, the class is visibly "unlocked" in the Character UI.
-    pub levels: [u16; CLASSJOB_ARRAY_SIZE],
-    #[br(count = 8)]
-    #[bw(pad_size_to = 8)]
+    #[br(count = CLASSJOB_ARRAY_SIZE)]
+    #[bw(pad_size_to = CLASSJOB_ARRAY_SIZE * 2)]
+    pub levels: Vec<u16>,
+    #[br(count = 2)]
+    #[bw(pad_size_to = 2)]
     pub unknown186: Vec<u8>,
     #[br(count = 268)]
     #[bw(pad_size_to = 268)]

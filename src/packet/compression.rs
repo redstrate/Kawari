@@ -96,9 +96,28 @@ pub(crate) fn compress<T: ReadWriteIpcSegment>(
 
         // write to buffer
         {
-            let mut cursor = Cursor::new(&mut buffer);
+            let old_size = buffer.len();
 
-            segment.write_le_args(&mut cursor, (state,)).unwrap();
+            {
+                let mut cursor = Cursor::new(&mut buffer);
+                segment.write_le_args(&mut cursor, (state,)).unwrap();
+            }
+
+            let new_size = buffer.len();
+            let written_len = new_size - old_size;
+
+            let expected_size = segment.calc_size() as usize;
+            let size_matches = expected_size == written_len;
+            if !size_matches {
+                // This WILL break the client in unexpected ways (especially when using Oodle compression) and has to be fixed immediately.
+                tracing::warn!(
+                    "{:#?} does not match the size that was actually written! (expected: {}, written: {})",
+                    segment,
+                    expected_size,
+                    written_len
+                );
+                panic!();
+            }
         }
 
         // obsfucate if needed
@@ -126,7 +145,7 @@ pub(crate) fn compress<T: ReadWriteIpcSegment>(
     let segments_buffer_len = segments_buffer.len();
 
     match compression_type {
-        CompressionType::Uncompressed => (segments_buffer, 0),
+        CompressionType::Uncompressed => (segments_buffer, segments_buffer_len),
         CompressionType::ZLib => unimplemented!(),
         CompressionType::Oodle => {
             let ConnectionState::Zone {

@@ -8,6 +8,6 @@ pub struct UpdateClassInfo {
     pub current_level: u16,
     pub class_level: u16,
     pub synced_level: u16,
-    pub current_exp: u32,
+    pub current_exp: i32,
     pub rested_exp: u32,
 }

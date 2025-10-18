@@ -43,7 +43,7 @@ impl rusqlite::types::FromSql for RemakeMode {
 pub struct ClientSelectData {
     pub character_name: String,
     pub current_class: i32,
-    pub class_levels: [i32; CLASSJOB_ARRAY_SIZE],
+    pub class_levels: Vec<i32>,
     pub race: i32,
     pub subrace: i32,
     pub gender: i32,
@@ -78,7 +78,10 @@ impl ClientSelectData {
         let content = json!([
             self.character_name,
             self.current_class.to_string(),
-            self.class_levels.map(|x| x.to_string()),
+            self.class_levels
+                .iter()
+                .map(|x| x.to_string())
+                .collect::<Vec<String>>(),
             self.race.to_string(),
             self.subrace.to_string(),
             self.gender.to_string(),

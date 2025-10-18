@@ -231,8 +231,8 @@ pub enum ServerZoneIpcData {
         #[bw(pad_size_to = COMPLETED_QUEST_BITMASK_SIZE)]
         completed_quests: Vec<u8>,
         // TODO: what is in here?
-        #[br(count = 69)]
-        #[bw(pad_size_to = 69)]
+        #[br(count = 65)]
+        #[bw(pad_size_to = 65)]
         unk2: Vec<u8>,
     },
     UnkResponse2 {

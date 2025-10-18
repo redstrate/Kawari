@@ -38,7 +38,7 @@ pub enum Task {
         on: bool,
     },
     SetLevel {
-        level: i32,
+        level: u16,
     },
     ChangeWeather {
         id: u16,
@@ -67,7 +67,7 @@ pub enum Task {
         list: BuyBackList,
     },
     AddExp {
-        amount: u32,
+        amount: i32,
     },
     StartEvent {
         actor_id: ObjectTypeId,

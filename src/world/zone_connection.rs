@@ -131,8 +131,8 @@ pub struct PlayerData {
     pub account_id: u64,
 
     pub classjob_id: u8,
-    pub classjob_levels: [i32; CLASSJOB_ARRAY_SIZE],
-    pub classjob_exp: [u32; CLASSJOB_ARRAY_SIZE],
+    pub classjob_levels: Vec<u16>,
+    pub classjob_exp: Vec<i32>,
     pub curr_hp: u32,
     pub max_hp: u32,
     pub curr_mp: u16,
@@ -1607,7 +1607,6 @@ impl ZoneConnection {
                     unk1: 1,
                     unk2: 0,
                     id: request.action_key as u16,
-                    unk3: 27,
                 },
             };
 
@@ -1844,14 +1843,14 @@ impl ZoneConnection {
         .await;
     }
 
-    pub fn current_level(&self, game_data: &GameData) -> i32 {
+    pub fn current_level(&self, game_data: &GameData) -> u16 {
         let index = game_data
             .get_exp_array_index(self.player_data.classjob_id as u16)
             .unwrap();
         self.player_data.classjob_levels[index as usize]
     }
 
-    pub fn set_current_level(&mut self, level: i32) {
+    pub fn set_current_level(&mut self, level: u16) {
         let game_data = self.gamedata.lock();
 
         let index = game_data
@@ -1860,14 +1859,14 @@ impl ZoneConnection {
         self.player_data.classjob_levels[index as usize] = level;
     }
 
-    pub fn current_exp(&self, game_data: &GameData) -> u32 {
+    pub fn current_exp(&self, game_data: &GameData) -> i32 {
         let index = game_data
             .get_exp_array_index(self.player_data.classjob_id as u16)
             .unwrap();
         self.player_data.classjob_exp[index as usize]
     }
 
-    pub fn set_current_exp(&mut self, exp: u32) {
+    pub fn set_current_exp(&mut self, exp: i32) {
         let game_data = self.gamedata.lock();
 
         let index = game_data
@@ -1905,7 +1904,7 @@ impl ZoneConnection {
         {
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::QuestCompleteList {
                 completed_quests: self.player_data.unlocks.completed_quests.0.clone(),
-                unk2: vec![0xFF; 69],
+                unk2: vec![0xFF; 65],
             });
             self.send_ipc_self(ipc).await;
         }

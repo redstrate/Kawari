@@ -584,7 +584,7 @@ async fn client_loop(
                                                 {
                                                     let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PlayerStatus(PlayerStatus {
                                                         content_id: connection.player_data.content_id,
-                                                        exp: connection.player_data.classjob_exp,
+                                                        exp: connection.player_data.classjob_exp.clone(),
                                                         max_level: calculate_max_level(expansion),
                                                         expansion,
                                                         name: chara_details.name,
@@ -599,7 +599,7 @@ async fn client_loop(
                                                         deity: chara_details.chara_make.guardian as u8,
                                                         current_class: current_class as u8,
                                                         current_job: connection.player_data.classjob_id,
-                                                        levels: connection.player_data.classjob_levels.map(|x| x as u16),
+                                                        levels: connection.player_data.classjob_levels.clone(),
                                                         unlocks: connection.player_data.unlocks.unlocks.0.clone(),
                                                         aetherytes: connection.player_data.unlocks.aetherytes.0.clone(),
                                                         unlocked_raids: connection.player_data.unlocks.unlocked_raids.0.clone(),

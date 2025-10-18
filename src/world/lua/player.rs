@@ -179,7 +179,7 @@ impl LuaPlayer {
         });
     }
 
-    fn set_level(&mut self, level: i32) {
+    fn set_level(&mut self, level: u16) {
         self.queued_tasks.push(Task::SetLevel { level });
     }
 
@@ -350,7 +350,7 @@ impl LuaPlayer {
         }
     }
 
-    fn add_exp(&mut self, amount: u32) {
+    fn add_exp(&mut self, amount: i32) {
         self.queued_tasks.push(Task::AddExp { amount });
     }
 
@@ -617,7 +617,7 @@ impl UserData for LuaPlayer {
             this.reload_scripts();
             Ok(())
         });
-        methods.add_method_mut("set_level", |_, this, level: i32| {
+        methods.add_method_mut("set_level", |_, this, level: u16| {
             this.set_level(level);
             Ok(())
         });
@@ -664,7 +664,7 @@ impl UserData for LuaPlayer {
                 Ok(())
             },
         );
-        methods.add_method_mut("add_exp", |_, this, amount: u32| {
+        methods.add_method_mut("add_exp", |_, this, amount: i32| {
             this.add_exp(amount);
             Ok(())
         });

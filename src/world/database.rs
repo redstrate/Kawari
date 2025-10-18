@@ -241,9 +241,9 @@ impl WorldDatabase {
                 .get_exp_array_index(classjob.value as u16)
                 .ok_or(ImportError::ParseError)?;
 
-            player_data.classjob_levels[index as usize] = classjob.level;
+            player_data.classjob_levels[index as usize] = classjob.level as u16;
             if let Some(exp) = classjob.exp {
-                player_data.classjob_exp[index as usize] = exp;
+                player_data.classjob_exp[index as usize] = exp as i32;
             }
         }
 
@@ -373,8 +373,8 @@ impl WorldDatabase {
                     inventory: row.get(5)?,
                     gm_rank: row.get(6)?,
                     classjob_id: row.get(7)?,
-                    classjob_levels: json_unpack::<[i32; CLASSJOB_ARRAY_SIZE]>(row.get(8)?),
-                    classjob_exp: json_unpack::<[u32; CLASSJOB_ARRAY_SIZE]>(row.get(9)?),
+                    classjob_levels: json_unpack(row.get(8)?),
+                    classjob_exp: json_unpack(row.get(9)?),
                     unlocks: json_unpack(row.get(10)?),
                     display_flags: EquipDisplayFlag::from_bits(row.get(11)?).unwrap_or_default(),
                     city_state: row.get(12)?,
@@ -519,7 +519,7 @@ impl WorldDatabase {
                 inventory: Inventory,
                 remake_mode: RemakeMode,
                 classjob_id: i32,
-                classjob_levels: [i32; CLASSJOB_ARRAY_SIZE],
+                classjob_levels: Vec<i32>,
                 display_flags: u16,
             }
 
@@ -532,7 +532,7 @@ impl WorldDatabase {
                         inventory: row.get(3)?,
                         remake_mode: row.get(4)?,
                         classjob_id: row.get(5)?,
-                        classjob_levels: json_unpack::<[i32; CLASSJOB_ARRAY_SIZE]>(row.get(6)?),
+                        classjob_levels: json_unpack(row.get(6)?),
                         display_flags: row.get(7)?,
                     })
                 });
@@ -616,7 +616,7 @@ impl WorldDatabase {
 
         // fill out the initial classjob
         let chara_make = CharaMake::from_json(chara_make_str);
-        let mut classjob_levels = [0i32; CLASSJOB_ARRAY_SIZE];
+        let mut classjob_levels = vec![0i32; CLASSJOB_ARRAY_SIZE];
 
         {
             let index = game_data
@@ -626,7 +626,7 @@ impl WorldDatabase {
             classjob_levels[index as usize] = 1; // inital level
         }
 
-        let classjob_exp = [0u32; CLASSJOB_ARRAY_SIZE];
+        let classjob_exp = vec![0u32; CLASSJOB_ARRAY_SIZE];
 
         // insert ids
         connection

@@ -67,23 +67,28 @@ pub const SUPPORTED_EXPAC_VERSIONS: [Version; MAX_EXPANSION] = [
 ];
 
 /// The size of the unlock bitmask.
+/// See https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Client/Game/UI/UIState.cs
 pub const UNLOCK_BITMASK_SIZE: usize = 92;
 
 /// The size of the aetheryte unlock bitmask.
 // TODO: this can be automatically derived from game data
+/// See https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Client/Game/UI/UIState.cs
 pub const AETHERYTE_UNLOCK_BITMASK_SIZE: usize = 30;
 
 /// The size of the completed quest bitmask.
-pub const COMPLETED_QUEST_BITMASK_SIZE: usize = 747;
+/// See https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Client/Game/QuestManager.cs
+pub const COMPLETED_QUEST_BITMASK_SIZE: usize = 751;
 
 /// The size of the unlocked title bitmask.
 pub const TITLE_UNLOCK_BITMASK_SIZE: usize = 112;
 
 /// The size of the completed levequest bitmask.
+/// See https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Client/Game/QuestManager.cs
 pub const COMPLETED_LEVEQUEST_BITMASK_SIZE: usize = 226;
 
 /// The size of various classjob arrays.
-pub const CLASSJOB_ARRAY_SIZE: usize = 32;
+/// See https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Client/Game/UI/PlayerState.cs
+pub const CLASSJOB_ARRAY_SIZE: usize = 35;
 
 /// The size of various raid bitmasks.
 pub const RAID_ARRAY_SIZE: usize = 28;
@@ -104,9 +109,11 @@ pub const PVP_ARRAY_SIZE: usize = 7;
 pub const MINION_BITMASK_SIZE: usize = 71;
 
 /// The size of the mount bitmask.
+/// See https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Client/Game/UI/PlayerState.cs
 pub const MOUNT_BITMASK_SIZE: usize = 41;
 
 /// The size of the active help bitmask.
+/// See _unlockedHowtoBitmask in https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Client/Game/UI/UIState.cs
 pub const ACTIVE_HELP_BITMASK_SIZE: usize = 37;
 
 /// The size of the AetherCurrentCompFlgSet bitmask.
@@ -122,27 +129,35 @@ pub const ORCHESTRION_ROLL_BITMASK_SIZE: usize = 99;
 pub const BUDDY_EQUIP_BITMASK_SIZE: usize = 14;
 
 /// The size of the Cutscenes (that has been seen) bitmask.
+/// See https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Client/Game/UI/UIState.cs
 pub const CUTSCENE_SEEN_BITMASK_SIZE: usize = 173;
 
 /// The size of the Ornament (Accessories) bitmask.
+/// See https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Client/Game/UI/PlayerState.cs
 pub const ORNAMENT_BITMASK_SIZE: usize = 7;
 
 /// The size of the Fish caught bitmask.
+/// See https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Client/Game/UI/PlayerState.cs
 pub const CAUGHT_FISH_BITMASK_SIZE: usize = 182;
 
 /// The size of the Fish caught with Spearfishing bitmask.
+/// See https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Client/Game/UI/PlayerState.cs
 pub const CAUGHT_SPEARFISH_BITMASK_SIZE: usize = 38;
 
 /// The size of the Adventure (Sightseeing) bitmask.
+/// See https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Client/Game/UI/PlayerState.cs
 pub const ADVENTURE_BITMASK_SIZE: usize = 43;
 
 /// The size of the Triple Triad cards bitmask.
+/// See https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Client/Game/UI/UIState.cs
 pub const TRIPLE_TRIAD_CARDS_BITMASK_SIZE: usize = 57;
 
 /// The size of the GlassesStyle bitmask.
+/// See https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Client/Game/UI/PlayerState.cs
 pub const GLASSES_STYLES_BITMASK_SIZE: usize = 5;
 
 /// The size of the Chocobo Taxi Stands bitmask.
+/// See https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Client/Game/UI/UIState.cs
 pub const CHOCOBO_TAXI_STANDS_BITMASK_SIZE: usize = 12;
 
 /// The maximum durability of an item.
