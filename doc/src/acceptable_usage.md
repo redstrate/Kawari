@@ -1,6 +1,6 @@
 # Acceptable Usage
 
-Kawari is a "server emulator", and thus sits in a largely grey area in terms of legality and copyright. While we do not intend to infringe on copyrighted work, courts rarely go in an individual's favor and we definitely aren't the exception. We also actively target the latest game version, thus could be (unfortunately) viewed a competitor to the retail servers.
+Kawari is a "server emulator", and thus sits in a largely grey area in terms of legality and copyright. While we do not intend to infringe on copyrighted work, courts rarely go in an individual's favor and we definitely aren't the exception. We also actively target the latest game version, thus could be (unfortunately) viewed as a competitor to the retail servers.
 
 **The primary objective of Kawari is to extend the game's longevity, while enabling research of the game's internals**. To make our stances absolutely clear, we have some explicitly disallowed actions while using Kawari publicly or working on it as a community project.
 
@@ -18,7 +18,7 @@ Any questions or implications of the above is not allowed in any part of our com
 Additionally, here are some explicit limitations for contributions in our community:
 
 * All contributors must be in possession of a playable retail account to participate in the community.
-  * "Participation" does include the implication of using Kawari. We won't force you to leave if you're taking a break from the game, of course. But we see you say: "Wow Kawari is so cool, I'm using it right now!" but you cancelled your subscription, we will ask you to stop.
+  * "Participation" does include the implication of using Kawari. We won't force you to leave if you're taking a break from the game, of course. But if we see you say: "Wow Kawari is so cool, I'm using it right now!" but you cancelled your subscription, we have to ask you to stop.
 * All contributors must not accept donations on behalf of the Kawari project.
 * Support for patches must only be made available[^2] _after_ they are publicly available in their respective region.
   * This means the game allows you to login, enter a retail World and actually play.
