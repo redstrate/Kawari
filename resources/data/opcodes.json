@@ -473,6 +473,12 @@
             "comment": "Sent by the server to update your online status.",
             "opcode": 437,
             "size": 8
+        },
+        {
+            "name": "FreeCompanyGreeting",
+            "comment": "Sent by the server to inform clients about their free company's message of the day. May have additional uses?",
+            "opcode": 922,
+            "size": 200
         }
     ],
     "ClientZoneIpcType": [
@@ -721,7 +727,14 @@
             "comment": "Happens when the client requests the playtime using the /playtime command.",
             "opcode": 920,
             "size": 8
+        },
+        {
+            "name": "SetFreeCompanyGreeting",
+            "comment": "Happens when the client sets their free company's message of the day. May have additional uses?",
+            "opcode": 827,
+            "size": 200
         }
+
     ],
     "ServerLobbyIpcType": [
         {

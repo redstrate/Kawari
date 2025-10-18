@@ -432,6 +432,15 @@ pub enum ServerZoneIpcData {
         unk1: [u8; 14],
     },
     SetOnlineStatus(OnlineStatusMask),
+    FreeCompanyGreeting {
+        unk: u8, // TODO: What is this? Seems to commonly be 0x01 or 0x02. Could this opcode be used as a general updater? Needs more research.
+        #[brw(pad_size_to = 192)]
+        #[br(count = 192)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        #[brw(pad_after = 7)]
+        message: String,
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -687,6 +696,10 @@ mod tests {
                 unk1: [0; 14],
             },
             ServerZoneIpcData::SetOnlineStatus(OnlineStatusMask::default()),
+            ServerZoneIpcData::FreeCompanyGreeting {
+                unk: 0,
+                message: "".to_string(),
+            },
         ];
 
         for data in &ipc_types {
