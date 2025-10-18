@@ -54,7 +54,7 @@ pub enum CustomIpcData {
     RequestCharacterList {
         service_account_id: u64,
     },
-    RequestCharacterListRepsonse {
+    RequestCharacterListResponse {
         #[bw(calc = characters.len() as u8)]
         num_characters: u8,
         #[br(count = num_characters)]
@@ -113,6 +113,98 @@ impl Default for CustomIpcData {
             service_account_id: 0,
             chara_make_json: String::new(),
             name: String::new(),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::io::Cursor;
+
+    use binrw::BinWrite;
+
+    use crate::packet::{IpcSegmentHeader, ReadWriteIpcOpcode, ReadWriteIpcSegment};
+
+    use super::*;
+
+    /// Ensure that the IPC data size as reported matches up with what we write
+    #[test]
+    fn custom_ipc_sizes() {
+        let ipc_types = [
+            CustomIpcData::RequestCreateCharacter {
+                service_account_id: 0,
+                name: "".to_string(),
+                chara_make_json: "".to_string(),
+            },
+            CustomIpcData::CharacterCreated {
+                actor_id: 0,
+                content_id: 0,
+            },
+            CustomIpcData::GetActorId {
+                content_id: 0,
+            },
+            CustomIpcData::ActorIdFound {
+                actor_id: 0,
+            },
+            CustomIpcData::CheckNameIsAvailable {
+                name: "".to_string(),
+            },
+            CustomIpcData::NameIsAvailableResponse {
+                free: false,
+            },
+            CustomIpcData::RequestCharacterList {
+                service_account_id: 0,
+            },
+            CustomIpcData::RequestCharacterListResponse {
+                characters: vec![CharacterDetails::default(); 8],
+            },
+            CustomIpcData::DeleteCharacter {
+                content_id: 0,
+            },
+            CustomIpcData::CharacterDeleted {
+                deleted: 0,
+            },
+            CustomIpcData::ImportCharacter {
+                service_account_id: 0,
+                path: "".to_string(),
+            },
+            CustomIpcData::RemakeCharacter {
+                content_id: 0,
+                chara_make_json: "".to_string(),
+            },
+            CustomIpcData::CharacterRemade {
+                content_id: 0,
+            },
+            CustomIpcData::CharacterImported {
+                message: "".to_string(),
+            },
+            CustomIpcData::DeleteServiceAccount {
+                service_account_id: 0,
+            },
+            CustomIpcData::RequestFullCharacterList {}, // Included here for completeness despite the 0 size
+            CustomIpcData::FullCharacterListResponse {
+                json: "".to_string(),
+            },
+        ];
+
+        for data in &ipc_types {
+            let mut cursor = Cursor::new(Vec::new());
+
+            let opcode: CustomIpcType = ReadWriteIpcOpcode::from_data(data);
+            let ipc_segment = CustomIpcSegment {
+                header: IpcSegmentHeader::from_opcode(opcode.clone()),
+                data: data.clone(),
+                ..Default::default()
+            };
+            ipc_segment.write_le(&mut cursor).unwrap();
+
+            let buffer = cursor.into_inner();
+
+            assert_eq!(
+                buffer.len(),
+                ipc_segment.calc_size() as usize,
+                "{opcode:#?} did not match size!"
+            );
         }
     }
 }

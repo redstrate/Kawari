@@ -863,7 +863,7 @@
             "name": "RequestCreateCharacter",
             "comment": "Request the world server to create a character",
             "opcode": 1,
-            "size": 1060
+            "size": 1064
         },
         {
             "name": "CharacterCreated",
@@ -902,7 +902,7 @@
             "size": 8
         },
         {
-            "name": "RequestCharacterListRepsonse",
+            "name": "RequestCharacterListResponse",
             "comment": "Response to RequestCharacterList",
             "opcode": 8,
             "size": 9473
