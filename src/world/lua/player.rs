@@ -315,10 +315,10 @@ impl LuaPlayer {
     fn do_solnine_teleporter(
         &mut self,
         event_id: u32,
-        unk1: u32,
+        path_id: u32,
         unk2: u16,
         unk3: u32,
-        unk4: u32,
+        unk4: u16,
         unk5: u32,
     ) {
         let packets_to_send = [
@@ -326,9 +326,10 @@ impl LuaPlayer {
                 category: ActorControlCategory::EventRelatedUnk3 { event_id },
             })),
             ServerZoneIpcSegment::new(ServerZoneIpcData::WalkInEvent {
-                unk1,
+                path_id,
                 unk2,
                 unk3,
+                constant: 1,
                 unk4,
                 unk5,
             }),
@@ -678,8 +679,8 @@ impl UserData for LuaPlayer {
         });
         methods.add_method_mut(
             "do_solnine_teleporter",
-            |_, this, (event_id, unk1, unk2, unk3, unk4, unk5): (u32, u32, u16, u32, u32, u32)| {
-                this.do_solnine_teleporter(event_id, unk1, unk2, unk3, unk4, unk5);
+            |_, this, (event_id, path_id, unk2, unk3, unk4, unk5): (u32, u32, u16, u32, u16, u32)| {
+                this.do_solnine_teleporter(event_id, path_id, unk2, unk3, unk4, unk5);
                 Ok(())
             },
         );

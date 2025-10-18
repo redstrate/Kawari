@@ -388,11 +388,14 @@ pub enum ServerZoneIpcData {
     },
     Blacklist(Blacklist),
     WalkInEvent {
-        unk1: u32,
+        /// Object ID of the ClientPath in the zone.
+        path_id: u32,
         unk2: u16,
         #[brw(pad_before = 2)]
         unk3: u32,
-        unk4: u32,
+        /// Always seems to be 1.
+        constant: u16,
+        unk4: u16,
         #[brw(pad_after = 4)]
         unk5: u32,
     },
@@ -659,7 +662,8 @@ mod tests {
                 sequence: 0,
             }),
             ServerZoneIpcData::WalkInEvent {
-                unk1: 0,
+                path_id: 0,
+                constant: 1,
                 unk2: 0,
                 unk3: 0,
                 unk4: 0,
