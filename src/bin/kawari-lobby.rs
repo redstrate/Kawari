@@ -202,9 +202,10 @@ async fn main() {
 
     let listener = TcpListener::bind(addr).await.unwrap();
 
+    let mut game_data = GameData::new();
+
     tracing::info!("Server started on {addr}");
 
-    let mut game_data = GameData::new();
     let world_name = game_data
         .get_world_name(config.world.world_id)
         .expect("Unknown world name");

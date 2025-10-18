@@ -1624,11 +1624,11 @@ async fn main() {
 
     let listener = TcpListener::bind(addr).await.unwrap();
 
-    tracing::info!("Server started on {addr}");
-
     let database = Arc::new(WorldDatabase::new());
     let lua = Arc::new(Mutex::new(Lua::new()));
     let game_data = Arc::new(Mutex::new(GameData::new()));
+
+    tracing::info!("Server started on {addr}");
 
     {
         let mut lua = lua.lock();

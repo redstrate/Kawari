@@ -1,6 +1,4 @@
-use icarus::TerritoryType::TerritoryTypeSheet;
 use physis::{
-    common::Language,
     layer::{
         ExitRangeInstanceObject, InstanceObject, LayerEntryData, LayerGroup, PopRangeInstanceObject,
     },
@@ -30,8 +28,7 @@ impl Zone {
             ..Default::default()
         };
 
-        let sheet = TerritoryTypeSheet::read_from(&mut game_data.resource, Language::None).unwrap();
-        let Some(row) = sheet.get_row(id as u32) else {
+        let Some(row) = game_data.territory_type_sheet.get_row(id as u32) else {
             tracing::warn!("Invalid zone id {id}, allowing anyway...");
             return zone;
         };

@@ -79,8 +79,17 @@ fn get_aether_current_comp_flg_set_to_screenimage() -> HashMap<u32, u32> {
 /// Convenient methods built on top of Physis to access data relevant to the server
 pub struct GameData {
     pub resource: ResourceResolver,
+
+    // Remember to keep frequently accessed or large sheets here, until we have a better caching solution.
     pub item_sheet: ItemSheet,
     pub classjob_exp_indexes: Vec<i8>,
+    pub weather_rate_sheet: WeatherRateSheet,
+    pub territory_type_sheet: TerritoryTypeSheet,
+    pub quest_sheet: QuestSheet,
+    pub warp_sheet: WarpSheet,
+    pub action_sheet: ActionSheet,
+    pub place_name_sheet: PlaceNameSheet,
+    pub custom_talk_sheet: CustomTalkSheet,
 }
 
 impl Default for GameData {
@@ -179,7 +188,7 @@ impl GameData {
         let config = get_config();
 
         // setup resolvers
-        let sqpack_resource = SqPackResourceSpy::from(
+        let mut sqpack_resource = SqPackResourceSpy::from(
             SqPackResource::from_existing(Platform::Win32, &config.filesystem.game_path),
             &config.filesystem.unpack_path,
         );
@@ -190,6 +199,12 @@ impl GameData {
                 config.filesystem.game_path
             );
         }
+
+        // We want to preload all index files, because the cost for not doing this can be high.
+        // For example: someone travels to a new zone (that wasn't previously loaded), so the server has to basically halt to read the index file from disk.
+        // Index files are small and will take up very little memory once serialized, so this is an easy optimization.
+        // (We could move this to an option, if you prefer marginally faster loading times over I/O overhead.)
+        sqpack_resource.sqpack_resource.preload_index_files();
 
         let mut resource_resolver = ResourceResolver::new();
         for path in config.filesystem.additional_search_paths {
@@ -211,10 +226,41 @@ impl GameData {
         let item_sheet = ItemSheet::read_from(&mut resource_resolver, Language::English)
             .expect("Failed to read ItemSheet, does the Excel files exist?");
 
+        let weather_rate_sheet =
+            WeatherRateSheet::read_from(&mut resource_resolver, Language::None)
+                .expect("Failed to read WeatherRateSheet, does the Excel files exist?");
+
+        let quest_sheet = QuestSheet::read_from(&mut resource_resolver, Language::English)
+            .expect("Failed to read Quest, does the Excel files exist?");
+
+        let territory_type_sheet =
+            TerritoryTypeSheet::read_from(&mut resource_resolver, Language::None)
+                .expect("Failed to read TerritoryTypeSheet, does the Excel files exist?");
+
+        let warp_sheet = WarpSheet::read_from(&mut resource_resolver, Language::English)
+            .expect("Failed to read Warp, does the Excel files exist?");
+
+        let action_sheet = ActionSheet::read_from(&mut resource_resolver, Language::English)
+            .expect("Failed to read Action, does the Excel files exist?");
+
+        let place_name_sheet = PlaceNameSheet::read_from(&mut resource_resolver, Language::English)
+            .expect("Failed to read Action, does the Excel files exist?");
+
+        let custom_talk_sheet =
+            CustomTalkSheet::read_from(&mut resource_resolver, Language::English)
+                .expect("Failed to read Action, does the Excel files exist?");
+
         Self {
             resource: resource_resolver,
             item_sheet,
             classjob_exp_indexes,
+            weather_rate_sheet,
+            quest_sheet,
+            territory_type_sheet,
+            warp_sheet,
+            action_sheet,
+            place_name_sheet,
+            custom_talk_sheet,
         }
     }
 
@@ -318,8 +364,7 @@ impl GameData {
 
     /// Returns the pop range object id that's associated with the warp id
     pub fn get_warp(&mut self, warp_id: u32) -> Option<(u32, u16)> {
-        let sheet = WarpSheet::read_from(&mut self.resource, Language::English)?;
-        let row = sheet.get_row(warp_id)?;
+        let row = self.warp_sheet.get_row(warp_id)?;
 
         let pop_range_id = row.PopRange().into_u32()?;
         let zone_id = row.TerritoryType().into_u16()?;
@@ -329,8 +374,7 @@ impl GameData {
 
     /// Returns the warp logic name (if any) for this Warp.
     pub fn get_warp_logic_name(&mut self, warp_id: u32) -> String {
-        let sheet = WarpSheet::read_from(&mut self.resource, Language::English).unwrap();
-        let row = sheet.get_row(warp_id).unwrap();
+        let row = self.warp_sheet.get_row(warp_id).unwrap();
 
         let warp_logic_id = row.WarpLogic().into_u16().unwrap();
 
@@ -366,8 +410,7 @@ impl GameData {
 
     /// Retrieves a zone's internal name, place name or parent region name.
     pub fn get_territory_name(&mut self, zone_id: u32, which: TerritoryNameKind) -> Option<String> {
-        let sheet = TerritoryTypeSheet::read_from(&mut self.resource, Language::None)?;
-        let row = sheet.get_row(zone_id)?;
+        let row = self.territory_type_sheet.get_row(zone_id)?;
 
         let offset = match which {
             TerritoryNameKind::Internal => {
@@ -377,9 +420,7 @@ impl GameData {
             TerritoryNameKind::Place => row.PlaceName().into_u16()?,
         };
 
-        let sheet = PlaceNameSheet::read_from(&mut self.resource, Language::English)?;
-        let row = sheet.get_row(*offset as u32)?;
-
+        let row = self.place_name_sheet.get_row(*offset as u32)?;
         let value = row.Name().into_string()?;
 
         Some(value.clone())
@@ -459,8 +500,7 @@ impl GameData {
     }
 
     pub fn get_casttime(&mut self, action_id: u32) -> Option<u16> {
-        let sheet = ActionSheet::read_from(&mut self.resource, Language::English)?;
-        let row = sheet.get_row(action_id)?;
+        let row = self.action_sheet.get_row(action_id)?;
 
         row.Cast100ms().into_u16().copied()
     }
@@ -468,8 +508,7 @@ impl GameData {
     /// Calculates the current weather at the current time
     // TODO: instead allow targetting a specific time to calculate forcecasts
     pub fn get_weather_rate(&mut self, weather_rate_id: u32) -> Option<i32> {
-        let sheet = WeatherRateSheet::read_from(&mut self.resource, Language::None)?;
-        let row = sheet.get_row(weather_rate_id)?;
+        let row = self.weather_rate_sheet.get_row(weather_rate_id)?;
 
         // sum up the rates
         let mut rates = row.Rate().map(|x| *x.into_u8().unwrap());
@@ -518,8 +557,7 @@ impl GameData {
 
     /// Gets the current weather for the given zone id
     pub fn get_weather(&mut self, zone_id: u32) -> Option<i32> {
-        let sheet = TerritoryTypeSheet::read_from(&mut self.resource, Language::None)?;
-        let row = sheet.get_row(zone_id)?;
+        let row = self.territory_type_sheet.get_row(zone_id)?;
 
         let weather_rate_id = row.WeatherRate().into_u8()?;
         self.get_weather_rate(*weather_rate_id as u32)
@@ -660,8 +698,7 @@ impl GameData {
 
     /// Returns the internal script name for this CustomTalk event.
     pub fn get_custom_talk_name(&mut self, custom_talk_id: u32) -> String {
-        let sheet = CustomTalkSheet::read_from(&mut self.resource, Language::English).unwrap();
-        let row = sheet.get_row(custom_talk_id).unwrap();
+        let row = self.custom_talk_sheet.get_row(custom_talk_id).unwrap();
 
         row.Name().into_string().cloned().unwrap_or_default()
     }
@@ -722,8 +759,7 @@ impl GameData {
 
     /// Returns the internal script name for this Quest event.
     pub fn get_quest_name(&mut self, quest_id: u32) -> String {
-        let sheet = QuestSheet::read_from(&mut self.resource, Language::English).unwrap();
-        let row = sheet.get_row(quest_id).unwrap();
+        let row = self.quest_sheet.get_row(quest_id).unwrap();
 
         row.Id().into_string().cloned().unwrap_or_default()
     }
