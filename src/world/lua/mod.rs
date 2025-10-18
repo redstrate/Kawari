@@ -122,6 +122,9 @@ impl UserData for GameData {
         methods.add_method_mut("get_halloween_npc_transform", |_, this, npc_id: u32| {
             Ok(this.get_halloween_npc_transform(npc_id))
         });
+        methods.add_method_mut("get_quest_name", |_, this, quest_id: u32| {
+            Ok(this.get_quest_name(quest_id))
+        });
     }
 }
 

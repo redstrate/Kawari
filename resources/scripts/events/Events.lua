@@ -47,7 +47,19 @@ end
 function dispatchEvent(player, event_id)
     local event_type = event_id >> 16
 
-    if event_type == EVENT_TYPE_GIL_SHOP then
+    if event_type == EVENT_TYPE_QUESTS then
+        local script_name = GAME_DATA:get_quest_name(event_id)
+        local script_id = extractScriptId(script_name)
+        local script_folder = folderFromScriptId(script_id)
+        local script_path = "quests/"..script_folder.."/"..script_name..".lua"
+
+        local event = runEvent(event_id, script_path)
+        if event == nil then
+            player:send_message(script_path.." was not found!")
+        end
+
+        return event
+    elseif event_type == EVENT_TYPE_GIL_SHOP then
         return runEvent(event_id, "events/generic/GilShopkeeper.lua")
     elseif event_type == EVENT_TYPE_WARP then
         local warp_name = GAME_DATA:get_warp_logic_name(event_id)

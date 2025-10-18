@@ -9,8 +9,6 @@ use crate::{
         client::SendChatMessage,
         server::{Condition, Conditions, GameMasterRank},
     },
-    opcodes::ServerZoneIpcType,
-    packet::ServerIpcSegmentHeader,
     world::{EventFinishType, ToServer},
 };
 
@@ -212,34 +210,6 @@ impl ChatHandler {
                     });
                     connection.send_ipc_self(ipc).await;
                 }
-
-                true
-            }
-            "!test" => {
-                let ipc = ServerZoneIpcSegment {
-                    header: ServerIpcSegmentHeader {
-                        op_code: ServerZoneIpcType::Unknown(428),
-                        ..Default::default()
-                    },
-                    data: ServerZoneIpcData::Unknown {
-                        unk: vec![255, 20, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                    },
-                };
-                connection.send_ipc_self(ipc).await;
-
-                let ipc = ServerZoneIpcSegment {
-                    header: ServerIpcSegmentHeader {
-                        op_code: ServerZoneIpcType::Unknown(737),
-                        ..Default::default()
-                    },
-                    data: ServerZoneIpcData::Unknown {
-                        unk: vec![
-                            12, 0, 0, 0, 255, 20, 3, 0, 23, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                            0, 0,
-                        ],
-                    },
-                };
-                connection.send_ipc_self(ipc).await;
 
                 true
             }

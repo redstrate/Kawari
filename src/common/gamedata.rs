@@ -18,6 +18,7 @@ use icarus::Mount::MountSheet;
 use icarus::Opening::OpeningSheet;
 use icarus::PlaceName::PlaceNameSheet;
 use icarus::PreHandler::PreHandlerSheet;
+use icarus::Quest::QuestSheet;
 use icarus::SwitchTalkVariation::SwitchTalkVariationSheet;
 use icarus::TerritoryType::TerritoryTypeSheet;
 use icarus::WarpLogic::WarpLogicSheet;
@@ -717,6 +718,14 @@ impl GameData {
 
         // FIXME: will change to Transformation in a future schema update
         Some(*row.Unknown4().into_u16()?)
+    }
+
+    /// Returns the internal script name for this Quest event.
+    pub fn get_quest_name(&mut self, quest_id: u32) -> String {
+        let sheet = QuestSheet::read_from(&mut self.resource, Language::English).unwrap();
+        let row = sheet.get_row(quest_id).unwrap();
+
+        row.Id().into_string().cloned().unwrap_or_default()
     }
 }
 
