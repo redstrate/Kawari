@@ -10,3 +10,4 @@ temp.zip
 patches/
 doc/book
 navimesh/
+*.db-journal

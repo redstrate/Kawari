@@ -148,14 +148,14 @@ impl Event {
         }
     }
 
-    pub fn do_return(&mut self, player: &mut LuaPlayer) {
+    pub fn do_return(&mut self, scene: u16, results: &[i32], player: &mut LuaPlayer) {
         let mut run_script = || {
             self.lua.scope(|scope| {
                 let player = scope.create_userdata_ref_mut(player)?;
 
                 let func: Function = self.lua.globals().get("onReturn")?;
 
-                func.call::<()>(player)?;
+                func.call::<()>((scene, results, player))?;
 
                 Ok(())
             })

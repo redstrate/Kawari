@@ -1216,8 +1216,10 @@ async fn client_loop(
                                                         connection.event_finish(event_id, EventFinishType::Normal).await;
                                                     }
                                                 } else {
+                                                    tracing::info!(message = "Event returned", handler_id = handler.handler_id, error_code = handler.error_code, scene = handler.scene, params = ?&handler.params[..handler.num_results as usize]);
+
                                                     if let Some(event) = connection.events.last_mut() {
-                                                        event.do_return(&mut lua_player);
+                                                        event.do_return(handler.scene, &handler.params[..handler.num_results as usize], &mut lua_player);
                                                     } else {
                                                         tracing::warn!("Don't know how to return in {event_type} and there's no current event!");
                                                     }
