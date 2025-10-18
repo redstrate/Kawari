@@ -155,7 +155,7 @@ impl LobbyConnection {
             let name_response = send_custom_world_packet(charlist_request)
                 .await
                 .expect("Failed to get name request packet!");
-            let CustomIpcData::RequestCharacterListRepsonse { characters } = &name_response.data
+            let CustomIpcData::RequestCharacterListResponse { characters } = &name_response.data
             else {
                 panic!("Unexpedted custom IPC type!")
             };

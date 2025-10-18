@@ -168,7 +168,7 @@ impl CustomIpcConnection {
                     self.send_custom_response(PacketSegment {
                         segment_type: SegmentType::KawariIpc,
                         data: SegmentData::KawariIpc(CustomIpcSegment::new(
-                            CustomIpcData::RequestCharacterListRepsonse { characters },
+                            CustomIpcData::RequestCharacterListResponse { characters },
                         )),
                         ..Default::default()
                     })
