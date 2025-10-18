@@ -36,15 +36,10 @@ impl StatusEffects {
     }
 
     pub fn get(&self, effect_id: u16) -> Option<StatusEffect> {
-        if let Some(i) = self
+        self
             .status_effects
             .iter()
-            .position(|effect| effect.effect_id == effect_id)
-        {
-            Some(self.status_effects[i])
-        } else {
-            None
-        }
+            .position(|effect| effect.effect_id == effect_id).map(|i| self.status_effects[i])
     }
 
     pub fn remove(&mut self, effect_id: u16) {
