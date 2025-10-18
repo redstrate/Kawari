@@ -1503,6 +1503,9 @@ async fn client_loop(
                                             ClientZoneIpcData::RequestPlaytime { .. } => {
                                                 tracing::info!("Playtime is unimplemented");
                                             }
+                                            ClientZoneIpcData::SetFreeCompanyGreeting { .. } => {
+                                                tracing::info!("Setting the free company greeting is unimplemented");
+                                            }
                                             ClientZoneIpcData::Unknown { unk } => {
                                                 tracing::warn!("Unknown Zone packet {:?} recieved ({} bytes), this should be handled!", data.header.op_code, unk.len());
                                             }

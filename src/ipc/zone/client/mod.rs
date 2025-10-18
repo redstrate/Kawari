@@ -234,6 +234,14 @@ pub enum ClientZoneIpcData {
     RequestPlaytime {
         unk: [u8; 8],
     },
+    SetFreeCompanyGreeting {
+        #[brw(pad_size_to = 192)]
+        #[br(count = 192)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        #[brw(pad_after = 8)]
+        message: String,
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -382,6 +390,9 @@ mod tests {
                 unk: Vec::default(),
             },
             ClientZoneIpcData::RequestPlaytime { unk: [0; 8] },
+            ClientZoneIpcData::SetFreeCompanyGreeting {
+                message: "".to_string(),
+            },
         ];
 
         for data in &ipc_types {
