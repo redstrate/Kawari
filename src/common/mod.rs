@@ -370,7 +370,7 @@ pub fn euler_to_direction(euler: [f32; 3]) -> f32 {
         v2 = 0.0;
     }
 
-    return f32::atan2(v2, v1);
+    f32::atan2(v2, v1)
 }
 
 /// This allows us (and probably the client as well) to determine which event belongs to each sheet, or type of NPC.
