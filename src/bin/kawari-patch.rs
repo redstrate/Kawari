@@ -7,7 +7,7 @@ use axum::routing::post;
 use axum::{Router, routing::get};
 use kawari::config::get_config;
 use kawari::patch::{Version, list_patch_files};
-use kawari::{SUPPORTED_BOOT_VERSION, SUPPORTED_GAME_VERSION, get_supported_expac_versions};
+use kawari::{SUPPORTED_BOOT_VERSION, SUPPORTED_EXPAC_VERSIONS, SUPPORTED_GAME_VERSION};
 use physis::patchlist::{PatchEntry, PatchList, PatchListType};
 use reqwest::header::USER_AGENT;
 
@@ -76,17 +76,20 @@ async fn verify_session(
 
         let game_version = Version(&game_version);
 
-        let supported_expac_versions = get_supported_expac_versions();
-
         for expansion_version in expansion_versions {
             let expac_version_parts: Vec<&str> = expansion_version.split('\t').collect();
-            let expansion_name = expac_version_parts[0]; // e.g. ex1
+            let expansion_index = expac_version_parts[0]
+                .replace("ex", "")
+                .parse::<usize>()
+                .unwrap()
+                - 1; // e.g. ex1 turns into 0
             let expansion_version = expac_version_parts[1];
 
-            if Version(expansion_version) > supported_expac_versions[expansion_name] {
+            if Version(expansion_version) > SUPPORTED_EXPAC_VERSIONS[expansion_index] {
                 tracing::warn!(
-                    "{expansion_name} {expansion_version} is above supported version {}!",
-                    supported_expac_versions[expansion_name]
+                    "{} {expansion_version} is above supported version {}!",
+                    expac_version_parts[0],
+                    SUPPORTED_EXPAC_VERSIONS[expansion_index]
                 );
                 return StatusCode::INTERNAL_SERVER_ERROR.into_response();
             }

@@ -2,7 +2,7 @@
 
 #![allow(clippy::large_enum_variant)]
 
-use std::{collections::HashMap, time::Duration};
+use std::time::Duration;
 
 use patch::Version;
 
@@ -57,18 +57,14 @@ pub const SUPPORTED_GAME_VERSION: Version = Version("2025.10.13.0000.0000");
 /// The maximum supported expansion.
 pub const MAX_EXPANSION: usize = 5;
 
-const SUPPORTED_EXPAC_VERSIONS: [(&str, Version); MAX_EXPANSION] = [
-    ("ex1", Version("2025.07.25.0000.0000")),
-    ("ex2", Version("2025.07.23.0000.0000")),
-    ("ex3", Version("2025.10.13.0000.0000")),
-    ("ex4", Version("2025.10.13.0000.0000")),
-    ("ex5", Version("2025.10.13.0000.0000")),
+/// Supported expansion data versions.
+pub const SUPPORTED_EXPAC_VERSIONS: [Version; MAX_EXPANSION] = [
+    Version("2025.07.25.0000.0000"), // ex1, Heavensward
+    Version("2025.07.23.0000.0000"), // ex2, Stormblood
+    Version("2025.10.13.0000.0000"), // ex3, Shadowbringers
+    Version("2025.10.13.0000.0000"), // ex4, Endwalker
+    Version("2025.10.13.0000.0000"), // ex5, Dawntrail
 ];
-
-/// Supported expansion versions.
-pub fn get_supported_expac_versions() -> HashMap<&'static str, Version<'static>> {
-    HashMap::from(SUPPORTED_EXPAC_VERSIONS)
-}
 
 /// The size of the unlock bitmask.
 pub const UNLOCK_BITMASK_SIZE: usize = 92;

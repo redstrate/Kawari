@@ -140,30 +140,20 @@ mod tests {
                 actor_id: 0,
                 content_id: 0,
             },
-            CustomIpcData::GetActorId {
-                content_id: 0,
-            },
-            CustomIpcData::ActorIdFound {
-                actor_id: 0,
-            },
+            CustomIpcData::GetActorId { content_id: 0 },
+            CustomIpcData::ActorIdFound { actor_id: 0 },
             CustomIpcData::CheckNameIsAvailable {
                 name: "".to_string(),
             },
-            CustomIpcData::NameIsAvailableResponse {
-                free: false,
-            },
+            CustomIpcData::NameIsAvailableResponse { free: false },
             CustomIpcData::RequestCharacterList {
                 service_account_id: 0,
             },
             CustomIpcData::RequestCharacterListResponse {
                 characters: vec![CharacterDetails::default(); 8],
             },
-            CustomIpcData::DeleteCharacter {
-                content_id: 0,
-            },
-            CustomIpcData::CharacterDeleted {
-                deleted: 0,
-            },
+            CustomIpcData::DeleteCharacter { content_id: 0 },
+            CustomIpcData::CharacterDeleted { deleted: 0 },
             CustomIpcData::ImportCharacter {
                 service_account_id: 0,
                 path: "".to_string(),
@@ -172,9 +162,7 @@ mod tests {
                 content_id: 0,
                 chara_make_json: "".to_string(),
             },
-            CustomIpcData::CharacterRemade {
-                content_id: 0,
-            },
+            CustomIpcData::CharacterRemade { content_id: 0 },
             CustomIpcData::CharacterImported {
                 message: "".to_string(),
             },

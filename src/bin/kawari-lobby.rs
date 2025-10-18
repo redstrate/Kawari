@@ -1,9 +1,9 @@
 use kawari::GAME_SERVICE;
 use kawari::RECEIVE_BUFFER_SIZE;
+use kawari::SUPPORTED_EXPAC_VERSIONS;
 use kawari::common::GameData;
 use kawari::common::timestamp_secs;
 use kawari::config::get_config;
-use kawari::get_supported_expac_versions;
 use kawari::ipc::kawari::CustomIpcData;
 use kawari::ipc::kawari::CustomIpcSegment;
 use kawari::ipc::lobby::ServiceAccount;
@@ -84,25 +84,13 @@ fn do_game_version_check(client_version_str: &str) -> bool {
             }
         }
 
-        let supported_expansion_versions = get_supported_expac_versions();
-
-        // We need these in order, and hashmaps don't guarantee this.
-        let expected_versions = [
-            &supported_expansion_versions["ex1"].0,
-            &supported_expansion_versions["ex2"].0,
-            &supported_expansion_versions["ex3"].0,
-            &supported_expansion_versions["ex4"].0,
-            &supported_expansion_versions["ex5"].0,
-        ];
-
-        for expansion in client_version_data
+        for (client_version, expected_version) in client_version_data
             .expansion_pack_versions
             .iter()
-            .zip(expected_versions.iter())
+            .zip(SUPPORTED_EXPAC_VERSIONS.iter())
         {
             // The client doesn't send a patch2 value in its expansion version strings, so we just pretend it doesn't exist on our side.
-            let expected_version = &expansion.1[..expansion.1.len() - 5].to_string();
-            let client_version = expansion.0;
+            let expected_version = &expected_version.0[..expected_version.0.len() - 5].to_string();
             if client_version != expected_version {
                 tracing::error!(
                     "One of the client's expansion versions does not match! Rejecting session! Got {}, expected {}",
