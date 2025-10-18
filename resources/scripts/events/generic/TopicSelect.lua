@@ -6,7 +6,7 @@ function onTalk(target, player)
     player:play_scene(target, EVENT_ID, 00000, HIDE_HOTBAR, {})
 end
 
-function onReturn(scene, results, player)
+function onYield(scene, results, player)
     -- first result is the selected topic
     local selected_topic = results[1]
     player:finish_event(EVENT_ID)

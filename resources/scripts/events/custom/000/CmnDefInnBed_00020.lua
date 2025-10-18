@@ -15,7 +15,7 @@ function onTalk(target, player)
     player:play_scene(target, EVENT_ID, SCENE_SHOW_MENU, HIDE_HOTBAR, {0})
 end
 
-function onReturn(scene, results, player)
+function onYield(scene, results, player)
     local CUTSCENE_FLAGS <const> = FADE_OUT | HIDE_UI | CONDITION_CUTSCENE
     -- Decision values the player can choose
     local CANCEL_SCENE   <const> = 0 -- If the player hits escape/cancel on controller to cancel the menu

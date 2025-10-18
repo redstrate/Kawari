@@ -12,7 +12,7 @@ function onTalk(target, player)
     player:play_scene(target, EVENT_ID, 00000, HIDE_HOTBAR, {})
 end
 
-function onReturn(scene, results, player)
+function onYield(scene, results, player)
     if scene == 0 then
         -- 1 means you hit the "learn about free company" button
         if results[1] == 1 then

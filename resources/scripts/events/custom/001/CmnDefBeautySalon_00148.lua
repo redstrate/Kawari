@@ -11,7 +11,7 @@ function onTalk(target, player)
     player:play_scene(target, EVENT_ID, 00000, HIDE_HOTBAR, {0})
 end
 
-function onReturn(scene, results, player)
+function onYield(scene, results, player)
     if scene == 0 then
         -- results[1] is 1 if you want to summon, otherwise 0
         if results[1] == 1 then

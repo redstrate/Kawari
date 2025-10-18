@@ -14,7 +14,7 @@ function onTalk(target, player)
     player:play_scene(target, EVENT_ID, SCENE_SHOW_MENU, HIDE_HOTBAR, {0})
 end
 
-function onReturn(scene, results, player)
+function onYield(scene, results, player)
     local AETHERNET_MENU_CANCEL = 0
     local destination = results[1]
 

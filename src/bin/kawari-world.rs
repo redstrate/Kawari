@@ -1216,7 +1216,11 @@ async fn client_loop(
                                                         connection.event_finish(event_id, EventFinishType::Normal).await;
                                                     }
                                                 } else {
-                                                    tracing::warn!("Don't know how to return in {event_type}!");
+                                                    if let Some(event) = connection.events.last_mut() {
+                                                        event.do_return(&mut lua_player);
+                                                    } else {
+                                                        tracing::warn!("Don't know how to return in {event_type} and there's no current event!");
+                                                    }
                                                 }
                                             }
                                             ClientZoneIpcData::StartTalkEvent { actor_id, event_id } => {

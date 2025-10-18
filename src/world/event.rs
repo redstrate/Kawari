@@ -132,7 +132,7 @@ impl Event {
             self.lua.scope(|scope| {
                 let player = scope.create_userdata_ref_mut(player)?;
 
-                let func: Function = self.lua.globals().get("onReturn")?;
+                let func: Function = self.lua.globals().get("onYield")?;
 
                 func.call::<()>((scene, results, player))?;
 
@@ -142,6 +142,27 @@ impl Event {
         if let Err(err) = run_script() {
             tracing::warn!(
                 "Syntax error during finish in {}: {:?}",
+                self.file_name,
+                err
+            );
+        }
+    }
+
+    pub fn do_return(&mut self, player: &mut LuaPlayer) {
+        let mut run_script = || {
+            self.lua.scope(|scope| {
+                let player = scope.create_userdata_ref_mut(player)?;
+
+                let func: Function = self.lua.globals().get("onReturn")?;
+
+                func.call::<()>(player)?;
+
+                Ok(())
+            })
+        };
+        if let Err(err) = run_script() {
+            tracing::warn!(
+                "Syntax error during return in {}: {:?}",
                 self.file_name,
                 err
             );

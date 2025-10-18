@@ -11,7 +11,7 @@ function onTalk(target, player)
     player:play_scene(target, EVENT_ID, SCENE_SHOW_MENU, HIDE_HOTBAR, {0})
 end
 
-function onReturn(scene, results, player)
+function onYield(scene, results, player)
     local NO_SCENE <const> = 0
     local decision <const> = results[1]
 
