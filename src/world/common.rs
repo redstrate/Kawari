@@ -45,7 +45,7 @@ pub struct MessageInfo {
     /// The sender's actor id.
     pub sender_actor_id: u32,
     /// The sender's account id. Likely used by the client to know to ignore the message if this player is blocked.
-    pub sender_account_id: u32,
+    pub sender_account_id: u64,
     /// The sender's home world id. Used for purposes of displaying their home world in the chat window.
     pub sender_world_id: u16,
     /// The sender's name.

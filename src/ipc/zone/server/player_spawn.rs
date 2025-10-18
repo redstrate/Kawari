@@ -8,9 +8,7 @@ use super::{CommonSpawn, GameMasterRank};
 #[brw(little)]
 #[derive(Debug, Clone, Default)]
 pub struct PlayerSpawn {
-    pub account_id: u32,
-
-    #[brw(pad_before = 4)] // always empty?
+    pub account_id: u64,
     pub content_id: u64,
 
     /// Index into the Title Excel sheet.

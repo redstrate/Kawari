@@ -134,7 +134,7 @@ pub struct PlayerData {
     // Static data
     pub actor_id: u32,
     pub content_id: u64,
-    pub account_id: u32,
+    pub account_id: u64,
 
     pub classjob_id: u8,
     pub classjob_levels: [i32; CLASSJOB_ARRAY_SIZE],

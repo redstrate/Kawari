@@ -27,7 +27,7 @@ pub struct LobbyConnection {
     pub stored_character_creation_name: String,
     pub world_name: String,
     pub service_accounts: Vec<ServiceAccount>,
-    pub selected_service_account: Option<u32>,
+    pub selected_service_account: Option<u64>,
     pub last_keep_alive: Instant,
 }
 

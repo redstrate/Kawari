@@ -352,7 +352,6 @@ async fn main() {
                                             connection.selected_service_account = Some(
                                                 connection.service_accounts[*account_index as usize]
                                                     .id
-                                                    as u32,
                                             );
                                             connection.send_lobby_info(*sequence).await
                                         }

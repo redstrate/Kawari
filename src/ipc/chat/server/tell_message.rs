@@ -5,10 +5,9 @@ use crate::common::{CHAR_NAME_MAX_LENGTH, read_string, write_string};
 #[binrw]
 #[derive(Clone, Debug, Default)]
 pub struct TellMessage {
-    pub sender_account_id: u32,
+    pub sender_account_id: u64,
+    pub unk1: u32,
     pub unk2: u32,
-    pub unk3: u32,
-    pub unk4: u32,
     pub sender_world_id: u16,
     /// Indicates if it's a GM tell or not.
     pub flags: u8,
@@ -31,19 +30,11 @@ pub struct TellMessage {
 #[derive(Clone, Debug, Default)]
 pub struct TellNotFoundError {
     /// Assumed.
-    pub recipient_account_id: u32,
-    /// Commonly seen as 0x0000.
-    pub unk1: u16,
-    /// Commonly seen as 0x0040.
-    pub unk2: u16,
+    pub recipient_account_id: u64,
     /// Assumed.
-    pub sender_account_id: u32,
-    /// Commonly seen as 0x0017.
-    pub unk3: u16,
-    /// Commonly seen as 0x0040.
-    pub unk4: u16,
+    pub sender_account_id: u64,
     /// Commonly seen as 0x68.
-    pub unk5: u32,
+    pub unk: u32,
     /// The recipient's world id.
     pub recipient_world_id: u16,
     /// The recipient's name.
