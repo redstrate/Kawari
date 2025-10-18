@@ -64,9 +64,8 @@ pub struct InitZone {
     pub transition_territory_filter_key: u32,
     /// Unknown purpose.
     pub layout_id: u32,
-    /// Index into the Weather Excel sheet.
     #[brw(pad_after = 1)]
-    // Empty. Currently it's read as a byte, however it's more than likely going to change into a u16 in the future.
+    /// Index into the Weather Excel sheet. Currently it's read as a byte, however it's more than likely going to change into a u16 in the future.
     pub weather_id: u8,
     pub flags: InitZoneFlags,
     pub unk_bitmask1: u8, // unknown purpose, seems to always be 170 for me. 168 in instanced areas.
