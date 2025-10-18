@@ -25,15 +25,14 @@ pub struct PlayerStatus {
     pub unknown1c: u32,
     pub fish_caught: u32,
     pub use_bait_catalog_id: u32,
-    pub unknown28: u32,
+    pub num_spearfish_caught: u32,
     pub unknown_pvp2c: u16,
-    pub unknown2e: u16,
-    /// How many Frontline campaigns you participated in.
-    pub pvp_frontline_overall_campaigns: u32,
-    pub unknown_timestamp34: u32,
+    pub total_frontline_matches: u16,
+    pub squadron_mission_completion_timestamp: u32,
+    pub squadron_training_completion_timestamp: u32,
     pub unknown_timestamp38: u32,
-    pub unknown3c: u32,
-    pub unknown40: u32,
+    pub weekly_bingo_task_status: [u8; 4],
+    pub weekly_bingo_flags: u32,
     pub unknown44: u32,
     pub companion_time_passed: f32,
     pub unknown4c: u32,
@@ -110,11 +109,10 @@ pub struct PlayerStatus {
     #[br(count = CLASSJOB_ARRAY_SIZE)]
     #[bw(pad_size_to = CLASSJOB_ARRAY_SIZE * 2)]
     pub levels: Vec<u16>,
-    #[br(count = 2)]
-    #[bw(pad_size_to = 2)]
-    pub unknown186: Vec<u8>,
-    #[br(count = 268)]
-    #[bw(pad_size_to = 268)]
+    pub active_festival_ids: [u16; 4],
+    pub active_festival_phases: [u16; 4],
+    #[br(count = 254)]
+    #[bw(pad_size_to = 254)]
     pub unknown194: Vec<u8>,
     #[br(count = 21)]
     #[bw(pad_size_to = 21)]
@@ -127,6 +125,7 @@ pub struct PlayerStatus {
     #[br(count = MOUNT_BITMASK_SIZE)]
     #[bw(pad_size_to = MOUNT_BITMASK_SIZE)]
     pub mount_guide_mask: Vec<u8>,
+    // TODO: there's an empty space after this, im pretty sure the clientstructs bitmask is sized wrong
     #[br(count = ORNAMENT_BITMASK_SIZE)]
     #[bw(pad_size_to = ORNAMENT_BITMASK_SIZE)]
     pub ornament_mask: Vec<u8>,
@@ -134,17 +133,23 @@ pub struct PlayerStatus {
     #[br(count = GLASSES_STYLES_BITMASK_SIZE)]
     #[bw(pad_size_to = GLASSES_STYLES_BITMASK_SIZE)]
     pub glasses_styles_mask: Vec<u8>,
+    // TODO: make a proper bitmask
     #[br(count = 33)]
     #[bw(pad_size_to = 33)]
-    pub unknown302: Vec<u8>,
+    pub framers_kits_mask: Vec<u8>,
     #[br(count = CHAR_NAME_MAX_LENGTH)]
     #[bw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
     #[br(map = read_string)]
     #[bw(map = write_string)]
     pub name: String,
+    // Size is a guesswork, but it fits! This is used on the PSN and Xbox for their online usernames.
+    #[br(count = 32)]
+    #[bw(pad_size_to = 32)]
+    #[br(map = read_string)]
+    #[bw(map = write_string)]
+    pub online_id: String,
     /// Unlock bitmask for everything else, mostly for game features.
     /// This might also be referred to as "rewards".
-    #[brw(pad_before = 32)]
     #[br(count = UNLOCK_BITMASK_SIZE)]
     #[bw(pad_size_to = UNLOCK_BITMASK_SIZE)]
     pub unlocks: Vec<u8>,
