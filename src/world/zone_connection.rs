@@ -16,9 +16,10 @@ use crate::{
     PVP_ARRAY_SIZE, RAID_ARRAY_SIZE, TRIAL_ARRAY_SIZE, TRIPLE_TRIAD_CARDS_BITMASK_SIZE,
     UNLOCK_BITMASK_SIZE,
     common::{
-        Bitmask, EquipDisplayFlag, GameData, INVALID_OBJECT_ID, InstanceContentType, ItemInfoQuery,
-        JumpState, MoveAnimationSpeed, MoveAnimationState, MoveAnimationType, ObjectId,
-        ObjectTypeId, ObjectTypeKind, Position, timestamp_secs, value_to_flag_byte_index_value,
+        Bitmask, ClientLanguage, EquipDisplayFlag, GameData, INVALID_OBJECT_ID,
+        InstanceContentType, ItemInfoQuery, JumpState, MoveAnimationSpeed, MoveAnimationState,
+        MoveAnimationType, ObjectId, ObjectTypeId, ObjectTypeKind, Position, timestamp_secs,
+        value_to_flag_byte_index_value,
     },
     config::{WorldConfig, get_config},
     inventory::{BuyBackList, ContainerType, Inventory, Item, Storage},
@@ -210,6 +211,7 @@ pub struct ZoneConnection {
     pub queued_content: Option<u16>,
 
     pub conditions: Conditions,
+    pub client_language: ClientLanguage,
 }
 
 impl ZoneConnection {

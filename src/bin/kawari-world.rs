@@ -3,8 +3,8 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use kawari::common::{
-    EventHandlerType, GameData, INVALID_OBJECT_ID, ItemInfoQuery, ObjectId, ObjectTypeId,
-    ObjectTypeKind, calculate_max_level,
+    ClientLanguage, EventHandlerType, GameData, INVALID_OBJECT_ID, ItemInfoQuery, ObjectId,
+    ObjectTypeId, ObjectTypeKind, calculate_max_level,
 };
 use kawari::config::get_config;
 use kawari::inventory::{
@@ -14,9 +14,9 @@ use kawari::inventory::{
 use kawari::ipc::chat::ClientChatIpcData;
 
 use kawari::ipc::zone::{
-    ActorControl, ActorControlCategory, ActorControlSelf, ClientLanguage, Condition, Conditions,
-    EventType, ItemOperation, OnlineStatus, OnlineStatusMask, PlayerEntry, PlayerSpawn,
-    PlayerStatus, SceneFlags, SocialList, SocialListUILanguages,
+    ActorControl, ActorControlCategory, ActorControlSelf, Condition, Conditions, EventType,
+    ItemOperation, OnlineStatus, OnlineStatusMask, PlayerEntry, PlayerSpawn, PlayerStatus,
+    SceneFlags, SocialList, SocialListUILanguages,
 };
 
 use kawari::ipc::zone::{
@@ -165,6 +165,7 @@ async fn initial_setup(
                                     obsfucation_data: ObsfucationData::default(),
                                     queued_content: None,
                                     conditions: Conditions::default(),
+                                    client_language: ClientLanguage::English,
                                 };
 
                                 // Handle setup before passing off control to the zone connection.
@@ -1520,6 +1521,11 @@ async fn client_loop(
                                             }
                                             ClientZoneIpcData::SetFreeCompanyGreeting { .. } => {
                                                 tracing::info!("Setting the free company greeting is unimplemented");
+                                            }
+                                            ClientZoneIpcData::SetClientLanguage { language } => {
+                                                tracing::info!("Setting language to {language:?}!");
+
+                                                connection.client_language = *language;
                                             }
                                             ClientZoneIpcData::Unknown { unk } => {
                                                 tracing::warn!("Unknown Zone packet {:?} recieved ({} bytes), this should be handled!", data.header.op_code, unk.len());

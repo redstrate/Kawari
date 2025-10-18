@@ -733,6 +733,12 @@
             "comment": "Happens when the client sets their free company's message of the day. May have additional uses?",
             "opcode": 827,
             "size": 200
+        },
+        {
+            "name": "SetClientLanguage",
+            "comment": "Happens during initialization, informs the server what the client's language is set to.",
+            "opcode": 120,
+            "size": 8
         }
 
     ],

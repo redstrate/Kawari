@@ -25,8 +25,8 @@ pub use super::social_list::{PlayerEntry, SocialList, SocialListRequest, SocialL
 
 use super::config::Config;
 use crate::common::{
-    CHAR_NAME_MAX_LENGTH, JumpState, MoveAnimationState, MoveAnimationType, Position, read_string,
-    write_string,
+    CHAR_NAME_MAX_LENGTH, ClientLanguage, JumpState, MoveAnimationState, MoveAnimationType,
+    Position, read_string, write_string,
 };
 use crate::opcodes::ClientZoneIpcType;
 use crate::packet::ServerIpcSegmentHeader;
@@ -242,6 +242,11 @@ pub enum ClientZoneIpcData {
         #[brw(pad_after = 8)]
         message: String,
     },
+    SetClientLanguage {
+        #[brw(pad_before = 4)] // empty
+        #[brw(pad_after = 3)] // empty
+        language: ClientLanguage,
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -393,6 +398,7 @@ mod tests {
             ClientZoneIpcData::SetFreeCompanyGreeting {
                 message: "".to_string(),
             },
+            ClientZoneIpcData::SetClientLanguage { language: ClientLanguage::Japanese },
         ];
 
         for data in &ipc_types {

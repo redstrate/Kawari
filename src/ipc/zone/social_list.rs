@@ -1,7 +1,7 @@
 use binrw::binrw;
 
 use crate::common::{
-    CHAR_NAME_MAX_LENGTH, read_bool_from, read_string, write_bool_as, write_string,
+    CHAR_NAME_MAX_LENGTH, ClientLanguage, read_bool_from, read_string, write_bool_as, write_string,
 };
 use bitflags::bitflags;
 
@@ -45,19 +45,6 @@ impl Default for SocialListUILanguages {
     fn default() -> Self {
         SocialListUILanguages::JAPANESE
     }
-}
-
-/// Which language the client indicates as its primary language.
-/// Not to be confused with physis::common::Language.
-#[binrw]
-#[brw(repr = u8)]
-#[derive(Clone, Copy, Debug, Default)]
-pub enum ClientLanguage {
-    #[default]
-    Japanese = 0,
-    English = 1,
-    German = 2,
-    French = 3,
 }
 
 /// Which Grand Company the player is currently associated with.

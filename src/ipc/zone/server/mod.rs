@@ -3,8 +3,8 @@ use paramacro::opcode_data;
 
 use super::OnlineStatusMask;
 pub use super::social_list::{
-    ClientLanguage, PlayerEntry, SocialList, SocialListRequest, SocialListRequestType,
-    SocialListUIFlags, SocialListUILanguages,
+    PlayerEntry, SocialList, SocialListRequest, SocialListRequestType, SocialListUIFlags,
+    SocialListUILanguages,
 };
 
 mod player_spawn;

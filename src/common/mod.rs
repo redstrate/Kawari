@@ -462,6 +462,19 @@ pub fn calculate_max_level(expansion: u8) -> u8 {
     50 + (expansion * 10)
 }
 
+/// Which language the client indicates as its primary language.
+/// Not to be confused with physis::common::Language.
+#[binrw]
+#[brw(repr = u8)]
+#[derive(Clone, Copy, Debug, Default)]
+pub enum ClientLanguage {
+    #[default]
+    Japanese = 0,
+    English = 1,
+    German = 2,
+    French = 3,
+}
+
 #[macro_export]
 macro_rules! web_templates_dir {
     ($rel_path:literal) => {
