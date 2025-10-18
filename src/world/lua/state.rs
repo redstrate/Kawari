@@ -6,7 +6,7 @@ use parking_lot::Mutex;
 use strum::IntoEnumIterator;
 
 use crate::{
-    common::GameData,
+    common::{EventHandlerType, GameData},
     config::get_config,
     ipc::zone::{EventType, GameMasterRank, SceneFlags, ServerNoticeFlags},
     world::Event,
@@ -31,6 +31,7 @@ pub fn initial_setup(lua: &mut Lua) {
     register_enum::<GameMasterRank>(lua, "GM_RANK");
     register_flags::<SceneFlags>(lua, ""); // TODO: might want to prefix these at some point
     register_enum::<EventType>(lua, "EVENT_TYPE");
+    register_enum::<EventHandlerType>(lua, "HANDLER_TYPE");
 }
 
 /// Loads `Init.lua`

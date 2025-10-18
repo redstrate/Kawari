@@ -3,8 +3,8 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use kawari::common::{
-    GameData, INVALID_OBJECT_ID, ItemInfoQuery, ObjectId, ObjectTypeId, ObjectTypeKind,
-    value_to_flag_byte_index_value,
+    EventHandlerType, GameData, INVALID_OBJECT_ID, ItemInfoQuery, ObjectId, ObjectTypeId,
+    ObjectTypeKind, value_to_flag_byte_index_value,
 };
 use kawari::config::get_config;
 use kawari::inventory::{
@@ -1074,8 +1074,14 @@ async fn client_loop(
                                                 connection.player_data.item_sequence += 1;
                                             }
                                             ClientZoneIpcData::EventReturnHandler4(handler) => {
+                                                let event_type = handler.handler_id >> 16;
+                                                let Ok(event_type) = EventHandlerType::try_from(event_type) else {
+                                                    tracing::warn!("Unknown event type: {event_type}!");
+                                                    continue;
+                                                };
+
                                                 // It always assumes a shop... for now
-                                                if true {
+                                                if event_type == EventHandlerType::GilShop {
                                                     let event_id = handler.handler_id;
                                                     let buy_sell_mode = handler.params[0];
                                                     let item_quantity = handler.params[1] as u32;
@@ -1209,6 +1215,8 @@ async fn client_loop(
                                                         tracing::error!("Received unknown transaction mode {buy_sell_mode}!");
                                                         connection.event_finish(event_id, EventFinishType::Normal).await;
                                                     }
+                                                } else {
+                                                    tracing::warn!("Don't know how to return in {event_type}!");
                                                 }
                                             }
                                             ClientZoneIpcData::StartTalkEvent { actor_id, event_id } => {

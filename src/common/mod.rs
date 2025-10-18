@@ -3,6 +3,7 @@ use std::{
     ffi::CString,
     time::{SystemTime, UNIX_EPOCH},
 };
+use strum_macros::{Display, EnumIter, FromRepr};
 
 mod customize_data;
 use binrw::binrw;
@@ -370,6 +371,86 @@ pub fn euler_to_direction(euler: [f32; 3]) -> f32 {
     }
 
     return f32::atan2(v2, v1);
+}
+
+/// This allows us (and probably the client as well) to determine which event belongs to each sheet, or type of NPC.
+#[repr(u32)]
+#[derive(Debug, Clone, Copy, PartialEq, Display, EnumIter, FromRepr)]
+#[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
+pub enum EventHandlerType {
+    /// See Quests Excel sheet.
+    Quests = 1,
+    /// See Warp Excel sheet.
+    Warp = 2,
+    /// See GilShop Excel sheet.
+    GilShop = 4,
+    /// See Aetheryte Excel sheet.
+    Aetheryte = 5,
+    /// See GuildleveAssignment Excel sheet.
+    GuildLeveAssignment = 6,
+    /// See DefaultTalk Excel sheet.
+    DefaultTalk = 9,
+    /// See CustomTalk Excel sheet.
+    CustomTalk = 11,
+    /// See CraftLeve Excel sheet.
+    CraftLevel = 14,
+    /// See ChocoboTaxiStand Excel sheet.
+    ChocoboTaxiStand = 18,
+    /// See Opening Excel sheet.
+    Opening = 19,
+    /// See GCShop Excel sheet.
+    GcShop = 22,
+    /// See GuildOrderGuide Excel sheet.
+    GuildOrderGuide = 23,
+    /// See GuildOrderOfficer Excel sheet.
+    GuildOrderOfficer = 24,
+    /// See ContentNpc Excel sheet.
+    ContentNpc = 25,
+    /// See Story Excel sheet.
+    Story = 26,
+    /// See SpecialShop Excel sheet.
+    SpecialShop = 27,
+    // See SwitchTalk Excel sheet.
+    SwitchTalk = 31,
+    /// See TripleTriad Excel sheet.
+    TripleTriad = 35,
+    /// See GoldSaucerArcadeMachine Excel sheet.
+    GoldSaucerArcadeMachine = 36,
+    /// See FccShop Excel sheet.
+    FccShop = 42,
+    /// See DpsChallengeOfficer Excel sheet.
+    DpsChallengeOfficer = 47,
+    /// See TopicSelect Excel sheet.
+    TopicSelect = 50,
+    /// See LotteryExchangeShop Excel sheet.
+    LotteryExchangeShop = 52,
+    /// See DisposalShop Excel sheet.
+    DisposalShop = 53,
+    /// See PreHandler Excel sheet.
+    PreHandler = 54,
+    /// See InclusionShop Excel sheet.
+    InclusionShop = 58,
+    /// See CollectablesShop Excel sheet.
+    CollectablesShop = 59,
+    /// See EventPathMove Excel sheet.
+    EventPathMove = 61,
+    /// These are used for the Solution Nine teleporter pads, for example. See EventGimmickPathMove Excel sheet.
+    EventGimmickPathMove = 64,
+}
+
+#[cfg(all(not(target_family = "wasm"), feature = "server"))]
+impl mlua::IntoLua for EventHandlerType {
+    fn into_lua(self, _: &mlua::Lua) -> mlua::Result<mlua::Value> {
+        Ok(mlua::Value::Integer(self as i64))
+    }
+}
+
+impl TryFrom<u32> for EventHandlerType {
+    type Error = ();
+
+    fn try_from(value: u32) -> Result<Self, Self::Error> {
+        Self::from_repr(value).ok_or(())
+    }
 }
 
 #[macro_export]

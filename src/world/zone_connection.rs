@@ -1338,7 +1338,6 @@ impl ZoneConnection {
                 result: 1,
                 arg: event_arg,
             });
-            dbg!(&ipc);
             self.send_ipc_self(ipc).await;
         }
 
