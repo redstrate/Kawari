@@ -793,7 +793,7 @@ impl WorldDatabase {
         }
     }
 
-    // Returns surface-level information about all of the characters in the database.
+    /// Returns surface-level information about all of the characters in the database.
     pub fn request_full_character_list(&self) -> String {
         let connection = self.connection.lock().unwrap();
 
@@ -813,5 +813,16 @@ impl WorldDatabase {
             .collect();
 
         serde_json::to_string(&characters).unwrap_or_default()
+    }
+
+    /// returns
+    pub fn find_service_account(&self, content_id: u64) -> u64 {
+        let connection = self.connection.lock().unwrap();
+
+        let mut stmt = connection
+            .prepare("SELECT service_account_id FROM characters WHERE content_id = ?1")
+            .unwrap();
+        stmt.query_row((content_id,), |row| Ok(row.get(0)?))
+            .unwrap()
     }
 }

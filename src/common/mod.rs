@@ -456,6 +456,12 @@ impl TryFrom<u32> for EventHandlerType {
     }
 }
 
+/// Calculates the maximum achievable level for a given expansion.
+/// For example, 0 (ARR) would be 50.
+pub fn calculate_max_level(expansion: u8) -> u8 {
+    50 + (expansion * 10)
+}
+
 #[macro_export]
 macro_rules! web_templates_dir {
     ($rel_path:literal) => {
@@ -529,6 +535,16 @@ mod tests {
         assert_eq!(value_to_flag_byte_index_value(0), (1, 0));
         assert_eq!(value_to_flag_byte_index_value(32), (1, 4));
         assert_eq!(value_to_flag_byte_index_value(64), (1, 8));
+    }
+
+    #[test]
+    fn test_max_ex_levels() {
+        assert_eq!(calculate_max_level(0), 50); // A Realm Reborn
+        assert_eq!(calculate_max_level(1), 60); // Heavensward
+        assert_eq!(calculate_max_level(2), 70); // Stormblood
+        assert_eq!(calculate_max_level(3), 80); // Shadowbringers
+        assert_eq!(calculate_max_level(4), 90); // Endwalker
+        assert_eq!(calculate_max_level(5), 100); // Dawntrail
     }
 
     // Helper macros so we don't repeat ourselves in tests a bunch of times

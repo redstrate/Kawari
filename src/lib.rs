@@ -54,7 +54,10 @@ pub const SUPPORTED_BOOT_VERSION: Version = Version("2025.07.17.0000.0001");
 /// Supported game version.
 pub const SUPPORTED_GAME_VERSION: Version = Version("2025.10.13.0000.0000");
 
-const SUPPORTED_EXPAC_VERSIONS: [(&str, Version); 5] = [
+/// The maximum supported expansion.
+pub const MAX_EXPANSION: usize = 5;
+
+const SUPPORTED_EXPAC_VERSIONS: [(&str, Version); MAX_EXPANSION] = [
     ("ex1", Version("2025.07.25.0000.0000")),
     ("ex2", Version("2025.07.23.0000.0000")),
     ("ex3", Version("2025.10.13.0000.0000")),

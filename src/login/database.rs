@@ -3,7 +3,7 @@ use std::sync::Mutex;
 use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
 
-use crate::ipc::lobby::ServiceAccount;
+use crate::{MAX_EXPANSION, ipc::lobby::ServiceAccount};
 
 pub struct LoginDatabase {
     connection: Mutex<Connection>,
@@ -52,7 +52,7 @@ impl LoginDatabase {
 
         // Create service accounts table
         {
-            let query = "CREATE TABLE IF NOT EXISTS service_accounts (id INTEGER PRIMARY KEY, user_id INTEGER);";
+            let query = "CREATE TABLE IF NOT EXISTS service_accounts (id INTEGER PRIMARY KEY, user_id INTEGER, max_ex INTEGER);";
             connection.execute(query, ()).unwrap();
         }
 
@@ -90,9 +90,9 @@ impl LoginDatabase {
         {
             let connection = self.connection.lock().unwrap();
 
-            let query = "INSERT INTO service_accounts VALUES (?1, ?2);";
+            let query = "INSERT INTO service_accounts VALUES (?1, ?2, ?3);";
             connection
-                .execute(query, (Self::generate_account_id(), user_id))
+                .execute(query, (Self::generate_account_id(), user_id, MAX_EXPANSION))
                 .expect("Failed to write service account to database!");
         }
     }
@@ -328,5 +328,26 @@ impl LoginDatabase {
         .unwrap()
         .map(|x| x.unwrap())
         .collect()
+    }
+
+    /// Returns the max expansion level for a given service account.
+    pub fn get_max_expansion(&self, service_account_id: u64) -> Option<u8> {
+        let connection = self.connection.lock().unwrap();
+
+        let mut stmt = connection
+            .prepare("SELECT max_ex FROM service_accounts WHERE id = ?1")
+            .unwrap();
+        stmt.query_row((service_account_id,), |row| row.get(0))
+            .ok()?
+    }
+
+    /// Returns the max expansion level for this user. This takes the highest expansion level from all service accounts.
+    pub fn get_user_max_expansion(&self, user_id: u64) -> Option<u8> {
+        let connection = self.connection.lock().unwrap();
+
+        let mut stmt = connection
+            .prepare("SELECT MAX(max_ex) FROM service_accounts WHERE user_id = ?1")
+            .unwrap();
+        stmt.query_row((user_id,), |row| row.get(0)).ok()?
     }
 }

@@ -4,7 +4,7 @@ use std::time::Instant;
 
 use kawari::common::{
     EventHandlerType, GameData, INVALID_OBJECT_ID, ItemInfoQuery, ObjectId, ObjectTypeId,
-    ObjectTypeKind,
+    ObjectTypeKind, calculate_max_level,
 };
 use kawari::config::get_config;
 use kawari::inventory::{
@@ -539,6 +539,22 @@ async fn client_loop(
                                                     connection.send_ipc_self(ipc).await;
                                                 }
 
+                                                let service_account_id = database.find_service_account(connection.player_data.content_id);
+
+                                                let Ok(login_reply) = reqwest::get(format!(
+                                                    "{}/_private/max_ex?service={}",
+                                                    config.login.server_name, service_account_id,
+                                                ))
+                                                .await
+                                                else {
+                                                    tracing::warn!(
+                                                        "Failed to find service account {service_account_id}, just going to stop talking tot his connection..."
+                                                    );
+                                                    break;
+                                                };
+
+                                                let expansion = login_reply.text().await.unwrap().parse().unwrap();
+
                                                 let chara_details =
                                                 database.find_chara_make(connection.player_data.content_id);
 
@@ -568,8 +584,8 @@ async fn client_loop(
                                                     let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PlayerStatus(PlayerStatus {
                                                         content_id: connection.player_data.content_id,
                                                         exp: connection.player_data.classjob_exp,
-                                                        max_level: 100,
-                                                        expansion: 5,
+                                                        max_level: calculate_max_level(expansion),
+                                                        expansion,
                                                         name: chara_details.name,
                                                         actor_id: connection.player_data.actor_id,
                                                         race: chara_details.chara_make.customize.race,

@@ -186,9 +186,14 @@ async fn login_send(
             .database
             .login_user(GAME_SERVICE, &input.sqexid, &input.password);
         match user {
-            Ok(session_id) => Html(format!(
-                "window.external.user(\"login=auth,ok,sid,{session_id},terms,1,region,2,etmadd,0,playable,1,ps3pkg,0,maxex,5,product,1\");"
-            )),
+            Ok(session_id) => {
+                let user_id = state.database.get_user_id(&session_id).unwrap();
+                let max_ex = state.database.get_user_max_expansion(user_id).unwrap();
+
+                Html(format!(
+                    "window.external.user(\"login=auth,ok,sid,{session_id},terms,1,region,2,etmadd,0,playable,1,ps3pkg,0,maxex,{max_ex},product,1\");"
+                ))
+            }
             Err(err) => {
                 // TODO: see what the official error messages are
                 match err {
@@ -290,6 +295,23 @@ async fn check_session(
 async fn get_users(State(state): State<LoginServerState>) -> String {
     let users = state.database.get_users();
     serde_json::to_string(&users).unwrap_or(String::new())
+}
+
+#[derive(Deserialize)]
+#[allow(dead_code)]
+struct MaxExParams {
+    service: String,
+}
+
+async fn get_max_ex(
+    State(state): State<LoginServerState>,
+    Query(params): Query<MaxExParams>,
+) -> String {
+    // TODO: introduce a better failure state
+    let max_ex = state
+        .database
+        .get_max_expansion(params.service.parse().unwrap());
+    max_ex.unwrap_or(0).to_string()
 }
 
 async fn login() -> Html<String> {
@@ -585,6 +607,7 @@ async fn main() {
         // TODO: make these actually private
         .route("/_private/service_accounts", get(check_session))
         .route("/_private/users", get(get_users))
+        .route("/_private/max_ex", get(get_max_ex))
         // public website
         .route("/oauth/oa/oauthlogin", get(login))
         .route("/oauth/oa/oauthlogin", post(do_login))
