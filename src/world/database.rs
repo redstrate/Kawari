@@ -321,8 +321,8 @@ impl WorldDatabase {
         );
 
         // import unlock flags
-        player_data.unlocks.unlocks = character.unlock_flags;
-        player_data.unlocks.aetherytes = character.unlock_aetherytes;
+        player_data.unlocks.unlocks = character.unlock_flags.into();
+        player_data.unlocks.aetherytes = character.unlock_aetherytes.into();
 
         self.commit_player_data(&player_data);
 

@@ -124,6 +124,7 @@ pub struct PlayerStatus {
     #[bw(map = write_string)]
     pub name: String,
     /// Unlock bitmask for everything else, mostly for game features.
+    /// This might also be referred to as "rewards".
     #[brw(pad_before = 32)]
     #[br(count = UNLOCK_BITMASK_SIZE)]
     #[bw(pad_size_to = UNLOCK_BITMASK_SIZE)]

@@ -18,6 +18,9 @@ pub use gamedata::{InstanceContentType, ItemInfo, ItemInfoQuery, TerritoryNameKi
 
 pub mod workdefinitions;
 
+mod bitmask;
+pub use bitmask::Bitmask;
+
 #[binrw]
 #[brw(little)]
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]

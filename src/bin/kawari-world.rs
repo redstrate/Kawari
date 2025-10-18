@@ -4,7 +4,7 @@ use std::time::Instant;
 
 use kawari::common::{
     EventHandlerType, GameData, INVALID_OBJECT_ID, ItemInfoQuery, ObjectId, ObjectTypeId,
-    ObjectTypeKind, value_to_flag_byte_index_value,
+    ObjectTypeKind,
 };
 use kawari::config::get_config;
 use kawari::inventory::{
@@ -583,37 +583,37 @@ async fn client_loop(
                                                         current_class: current_class as u8,
                                                         current_job: connection.player_data.classjob_id,
                                                         levels: connection.player_data.classjob_levels.map(|x| x as u16),
-                                                        unlocks: connection.player_data.unlocks.unlocks.clone(),
-                                                        aetherytes: connection.player_data.unlocks.aetherytes.clone(),
-                                                        unlocked_raids: connection.player_data.unlocks.unlocked_raids.clone(),
-                                                        unlocked_dungeons: connection.player_data.unlocks.unlocked_dungeons.clone(),
-                                                        unlocked_guildhests: connection.player_data.unlocks.unlocked_guildhests.clone(),
-                                                        unlocked_trials: connection.player_data.unlocks.unlocked_trials.clone(),
-                                                        unlocked_pvp: connection.player_data.unlocks.unlocked_pvp.clone(),
-                                                        cleared_raids: connection.player_data.unlocks.cleared_raids.clone(),
-                                                        cleared_dungeons: connection.player_data.unlocks.cleared_dungeons.clone(),
-                                                        cleared_guildhests: connection.player_data.unlocks.cleared_guildhests.clone(),
-                                                        cleared_trials: connection.player_data.unlocks.cleared_trials.clone(),
-                                                        cleared_pvp: connection.player_data.unlocks.cleared_pvp.clone(),
-                                                        minions: connection.player_data.unlocks.minions.clone(),
-                                                        mount_guide_mask: connection.player_data.unlocks.mounts.clone(),
+                                                        unlocks: connection.player_data.unlocks.unlocks.0.clone(),
+                                                        aetherytes: connection.player_data.unlocks.aetherytes.0.clone(),
+                                                        unlocked_raids: connection.player_data.unlocks.unlocked_raids.0.clone(),
+                                                        unlocked_dungeons: connection.player_data.unlocks.unlocked_dungeons.0.clone(),
+                                                        unlocked_guildhests: connection.player_data.unlocks.unlocked_guildhests.0.clone(),
+                                                        unlocked_trials: connection.player_data.unlocks.unlocked_trials.0.clone(),
+                                                        unlocked_pvp: connection.player_data.unlocks.unlocked_pvp.0.clone(),
+                                                        cleared_raids: connection.player_data.unlocks.cleared_raids.0.clone(),
+                                                        cleared_dungeons: connection.player_data.unlocks.cleared_dungeons.0.clone(),
+                                                        cleared_guildhests: connection.player_data.unlocks.cleared_guildhests.0.clone(),
+                                                        cleared_trials: connection.player_data.unlocks.cleared_trials.0.clone(),
+                                                        cleared_pvp: connection.player_data.unlocks.cleared_pvp.0.clone(),
+                                                        minions: connection.player_data.unlocks.minions.0.clone(),
+                                                        mount_guide_mask: connection.player_data.unlocks.mounts.0.clone(),
                                                         homepoint: 8, // hardcoded to limsa for now
                                                         fav_aetheryte_count: 1,
                                                         favorite_aetheryte_ids: [8, 0, 0, 0],
-                                                        seen_active_help: connection.player_data.unlocks.seen_active_help.clone(),
-                                                        aether_currents_mask: connection.player_data.unlocks.aether_currents.clone(),
-                                                        orchestrion_roll_mask: connection.player_data.unlocks.orchestrion_rolls.clone(),
-                                                        buddy_equip_mask: connection.player_data.unlocks.buddy_equip.clone(),
-                                                        cutscene_seen_mask: connection.player_data.unlocks.cutscene_seen.clone(),
-                                                        ornament_mask: connection.player_data.unlocks.ornaments.clone(),
-                                                        caught_fish_mask: connection.player_data.unlocks.caught_fish.clone(),
-                                                        caught_spearfish_mask: connection.player_data.unlocks.caught_spearfish.clone(),
-                                                        adventure_mask: connection.player_data.unlocks.adventures.clone(),
-                                                        triple_triad_cards: connection.player_data.unlocks.triple_triad_cards.clone(),
-                                                        glasses_styles_mask: connection.player_data.unlocks.glasses_styles.clone(),
-                                                        chocobo_taxi_stands_mask: connection.player_data.unlocks.chocobo_taxi_stands.clone(),
-                                                        aether_current_comp_flg_set_bitmask1: connection.player_data.unlocks.aether_current_comp_flg_set[0],
-                                                        aether_current_comp_flg_set_bitmask2: connection.player_data.unlocks.aether_current_comp_flg_set[1..AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE].to_vec(),
+                                                        seen_active_help: connection.player_data.unlocks.seen_active_help.0.clone(),
+                                                        aether_currents_mask: connection.player_data.unlocks.aether_currents.0.clone(),
+                                                        orchestrion_roll_mask: connection.player_data.unlocks.orchestrion_rolls.0.clone(),
+                                                        buddy_equip_mask: connection.player_data.unlocks.buddy_equip.0.clone(),
+                                                        cutscene_seen_mask: connection.player_data.unlocks.cutscene_seen.0.clone(),
+                                                        ornament_mask: connection.player_data.unlocks.ornaments.0.clone(),
+                                                        caught_fish_mask: connection.player_data.unlocks.caught_fish.0.clone(),
+                                                        caught_spearfish_mask: connection.player_data.unlocks.caught_spearfish.0.clone(),
+                                                        adventure_mask: connection.player_data.unlocks.adventures.0.clone(),
+                                                        triple_triad_cards: connection.player_data.unlocks.triple_triad_cards.0.clone(),
+                                                        glasses_styles_mask: connection.player_data.unlocks.glasses_styles.0.clone(),
+                                                        chocobo_taxi_stands_mask: connection.player_data.unlocks.chocobo_taxi_stands.0.clone(),
+                                                        aether_current_comp_flg_set_bitmask1: connection.player_data.unlocks.aether_current_comp_flg_set.0[0],
+                                                        aether_current_comp_flg_set_bitmask2: connection.player_data.unlocks.aether_current_comp_flg_set.0[1..AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE].to_vec(),
                                                         ..Default::default()
                                                     }));
                                                     connection.send_ipc_self(ipc).await;
@@ -772,8 +772,7 @@ async fn client_loop(
                                                     },
                                                     ClientTriggerCommand::ShownActiveHelp { id } => {
                                                         // Save this so it isn't shown again on next login
-                                                        let (value, index) = value_to_flag_byte_index_value(id);
-                                                        connection.player_data.unlocks.seen_active_help[index as usize] |= value;
+                                                        connection.player_data.unlocks.seen_active_help.set(id);
                                                     }
                                                     _ => {
                                                         // inform the server of our trigger, it will handle sending it to other clients
