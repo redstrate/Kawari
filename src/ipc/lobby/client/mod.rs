@@ -26,8 +26,7 @@ pub enum ClientLobbyIpcData {
         unk1: u8,
         unk2: u16,
         unk3: u32, // TODO: probably multiple params
-        account_id: u32,
-        unk4: u32,
+        account_id: u64,
     },
     GameLogin {
         sequence: u64,
@@ -97,9 +96,8 @@ mod tests {
                 account_index: 0,
                 unk1: 0,
                 unk2: 0,
-                account_id: 0,
                 unk3: 0,
-                unk4: 0,
+                account_id: 0,
             },
             ClientLobbyIpcData::GameLogin {
                 sequence: 0,

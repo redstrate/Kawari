@@ -61,8 +61,8 @@ impl LoginDatabase {
         }
     }
 
-    fn generate_account_id() -> u32 {
-        fastrand::u32(..)
+    fn generate_account_id() -> u64 {
+        fastrand::u64(..)
     }
 
     /// Adds a new user to the database.
@@ -104,7 +104,7 @@ impl LoginDatabase {
         username: &str,
         password: &str,
     ) -> Result<String, LoginError> {
-        let selected_row: Result<(u32, String), rusqlite::Error>;
+        let selected_row: Result<(u64, String), rusqlite::Error>;
 
         tracing::info!("Finding user with username {username}");
 
@@ -138,7 +138,7 @@ impl LoginDatabase {
     }
 
     /// Create a new session for user, which replaces the last one (if any) of a given `service`
-    pub fn create_session(&self, service: &str, user_id: u32) -> Option<String> {
+    pub fn create_session(&self, service: &str, user_id: u64) -> Option<String> {
         let connection = self.connection.lock().unwrap();
 
         let sid = Self::generate_sid();
@@ -160,7 +160,7 @@ impl LoginDatabase {
         let connection = self.connection.lock().unwrap();
 
         // get user id
-        let user_id: u32;
+        let user_id: u64;
         {
             let mut stmt = connection
                 .prepare("SELECT user_id FROM sessions WHERE service = ?1 AND sid = ?2")
@@ -201,14 +201,14 @@ impl LoginDatabase {
             .prepare("SELECT id FROM users WHERE username = ?1")
             .ok()
             .unwrap();
-        let selected_row: Result<u32, rusqlite::Error> =
+        let selected_row: Result<u64, rusqlite::Error> =
             stmt.query_row((username,), |row| row.get(0));
 
         selected_row.is_ok()
     }
 
     /// Returns the user ID associated with `sid`, or None if it's invalid or not found.
-    pub fn get_user_id(&self, sid: &str) -> Option<u32> {
+    pub fn get_user_id(&self, sid: &str) -> Option<u64> {
         let connection = self.connection.lock().unwrap();
 
         let mut stmt = connection
@@ -218,7 +218,7 @@ impl LoginDatabase {
         stmt.query_row((sid,), |row| row.get(0)).ok()?
     }
 
-    pub fn get_username(&self, user_id: u32) -> String {
+    pub fn get_username(&self, user_id: u64) -> String {
         let connection = self.connection.lock().unwrap();
 
         let mut stmt = connection
@@ -229,7 +229,7 @@ impl LoginDatabase {
     }
 
     // TODO: only returns one account right now
-    pub fn get_service_account(&self, user_id: u32) -> u32 {
+    pub fn get_service_account(&self, user_id: u64) -> u64 {
         let connection = self.connection.lock().unwrap();
 
         let mut stmt = connection
@@ -240,7 +240,7 @@ impl LoginDatabase {
     }
 
     /// Gets the current session list, at some point it will return past sessions too.
-    pub fn get_sessions(&self, user_id: u32) -> Vec<SessionInformation> {
+    pub fn get_sessions(&self, user_id: u64) -> Vec<SessionInformation> {
         let connection = self.connection.lock().unwrap();
 
         let mut stmt = connection
@@ -273,7 +273,7 @@ impl LoginDatabase {
     }
 
     /// Revokes a given `service` from the active session list for the `user_id`.
-    pub fn revoke_session(&self, user_id: u32, service: &str) {
+    pub fn revoke_session(&self, user_id: u64, service: &str) {
         let connection = self.connection.lock().unwrap();
 
         connection
@@ -287,7 +287,7 @@ impl LoginDatabase {
     }
 
     /// Deletes the given user and also scrubs their service accounts.
-    pub fn delete_user(&self, user_id: u32) {
+    pub fn delete_user(&self, user_id: u64) {
         let connection = self.connection.lock().unwrap();
 
         // delete from users table

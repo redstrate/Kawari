@@ -4,8 +4,8 @@ use binrw::binrw;
 #[binrw]
 #[derive(Debug, Copy, Clone, Default)]
 pub struct BlacklistedCharacter {
-    /// The blocked character's content id, or account id, unclear which.
-    pub content_id: u64,
+    /// The blocked character's account id.
+    pub account_id: u64,
     /// An unknown flag/boolean, possibly related to blocking chat messages, or visibility when in the same zone.
     pub flag1: u16, // Assumed, seems to be set to 1
     // TODO: The padding after seems to be empty, but more testing needs to be done to see if it doesn't hold a world id or other info for players that aren't from the client's world

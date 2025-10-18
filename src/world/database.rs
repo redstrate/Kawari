@@ -106,7 +106,7 @@ impl WorldDatabase {
     pub fn import_character(
         &self,
         game_data: &mut GameData,
-        service_account_id: u32,
+        service_account_id: u64,
         path: &str,
     ) -> Result<(), ImportError> {
         tracing::info!("Importing character backup from {path}...");
@@ -335,7 +335,7 @@ impl WorldDatabase {
         let mut stmt = connection
             .prepare("SELECT content_id, service_account_id FROM characters WHERE actor_id = ?1")
             .unwrap();
-        let (content_id, account_id): (u64, u32) = stmt
+        let (content_id, account_id): (u64, u64) = stmt
             .query_row((actor_id,), |row| Ok((row.get(0)?, row.get(1)?)))
             .unwrap();
 
@@ -479,7 +479,7 @@ impl WorldDatabase {
 
     pub fn get_character_list(
         &self,
-        service_account_id: u32,
+        service_account_id: u64,
         world_id: u16,
         world_name: &str,
         game_data: &mut GameData,
@@ -601,7 +601,7 @@ impl WorldDatabase {
     /// Gives (content_id, actor_id)
     pub fn create_player_data(
         &self,
-        service_account_id: u32,
+        service_account_id: u64,
         name: &str,
         chara_make_str: &str,
         city_state: u8,
@@ -754,7 +754,7 @@ impl WorldDatabase {
     }
 
     /// Deletes all character associated with the service account.
-    pub fn delete_characters(&self, service_account_id: u32) {
+    pub fn delete_characters(&self, service_account_id: u64) {
         let connection = self.connection.lock().unwrap();
 
         let content_actor_ids: Vec<(u32, u32)>;

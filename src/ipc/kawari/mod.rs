@@ -17,7 +17,7 @@ pub type CustomIpcSegment =
 #[derive(Debug, Clone)]
 pub enum CustomIpcData {
     RequestCreateCharacter {
-        service_account_id: u32,
+        service_account_id: u64,
         #[bw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
         #[br(count = CHAR_NAME_MAX_LENGTH)]
         #[br(map = read_string)]
@@ -52,7 +52,7 @@ pub enum CustomIpcData {
         free: bool,
     },
     RequestCharacterList {
-        service_account_id: u32,
+        service_account_id: u64,
     },
     RequestCharacterListRepsonse {
         #[bw(calc = characters.len() as u8)]
@@ -68,7 +68,7 @@ pub enum CustomIpcData {
         deleted: u8,
     },
     ImportCharacter {
-        service_account_id: u32,
+        service_account_id: u64,
         #[bw(pad_size_to = 128)]
         #[br(count = 128)]
         #[br(map = read_string)]
@@ -94,7 +94,7 @@ pub enum CustomIpcData {
         message: String,
     },
     DeleteServiceAccount {
-        service_account_id: u32,
+        service_account_id: u64,
     },
     RequestFullCharacterList {},
     FullCharacterListResponse {

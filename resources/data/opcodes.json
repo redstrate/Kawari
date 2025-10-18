@@ -863,7 +863,7 @@
             "name": "RequestCreateCharacter",
             "comment": "Request the world server to create a character",
             "opcode": 1,
-            "size": 1056
+            "size": 1060
         },
         {
             "name": "CharacterCreated",
@@ -899,7 +899,7 @@
             "name": "RequestCharacterList",
             "comment": "Request the character list from the world server",
             "opcode": 7,
-            "size": 4
+            "size": 8
         },
         {
             "name": "RequestCharacterListRepsonse",
@@ -923,7 +923,7 @@
             "name": "ImportCharacter",
             "comment": "Request to import a character backup",
             "opcode": 11,
-            "size": 132
+            "size": 136
         },
         {
             "name": "RemakeCharacter",
@@ -947,7 +947,7 @@
             "name": "DeleteServiceAccount",
             "comment": "Removes the characters associated with a given service account.",
             "opcode": 15,
-            "size": 4
+            "size": 8
         },
         {
             "name": "RequestFullCharacterList",
