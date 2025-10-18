@@ -36,10 +36,10 @@ impl StatusEffects {
     }
 
     pub fn get(&self, effect_id: u16) -> Option<StatusEffect> {
-        self
-            .status_effects
+        self.status_effects
             .iter()
-            .position(|effect| effect.effect_id == effect_id).map(|i| self.status_effects[i])
+            .position(|effect| effect.effect_id == effect_id)
+            .map(|i| self.status_effects[i])
     }
 
     pub fn remove(&mut self, effect_id: u16) {
