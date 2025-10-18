@@ -392,7 +392,9 @@ pub enum ServerZoneIpcData {
         path_id: u32,
         unk2: u16,
         #[brw(pad_before = 2)]
-        unk3: u32,
+        unk3: u16,
+        /// In some unknown amount of units.
+        speed: u16,
         /// Always seems to be 1.
         constant: u16,
         unk4: u16,
@@ -666,6 +668,7 @@ mod tests {
                 constant: 1,
                 unk2: 0,
                 unk3: 0,
+                speed: 0,
                 unk4: 0,
                 unk5: 0,
             },
