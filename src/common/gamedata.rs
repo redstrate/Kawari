@@ -568,6 +568,14 @@ impl GameData {
         self.classjob_exp_indexes.get(classjob_id as usize).copied()
     }
 
+    /// Gets the job index for a given class.
+    pub fn get_job_index(&mut self, classjob_id: u16) -> Option<u8> {
+        let sheet = ClassJobSheet::read_from(&mut self.resource, Language::English)?;
+        let row = sheet.get_row(classjob_id as u32)?;
+
+        Some(row.JobIndex().into_u8().cloned()?)
+    }
+
     /// Gets the item and its cost from the specified shop.
     pub fn get_gilshop_item(&mut self, gilshop_id: u32, index: u16) -> Option<ItemInfo> {
         let sheet = GilShopItemSheet::read_from(&mut self.resource, Language::None)?;

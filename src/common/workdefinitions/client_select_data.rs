@@ -1,10 +1,7 @@
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-use crate::{
-    CLASSJOB_ARRAY_SIZE,
-    common::{CustomizeData, EquipDisplayFlag},
-};
+use crate::common::{CustomizeData, EquipDisplayFlag};
 
 // TODO: this isn't really an enum in the game, nor is it a flag either. it's weird!
 #[derive(Debug, Clone, Copy, Deserialize, Serialize)]

@@ -57,8 +57,10 @@ pub struct PlayerStatus {
     pub race: u8,
     pub tribe: u8,
     pub gender: u8,
-    pub current_job: u8,
+    /// Refers to an index in the ClassJob Excel sheet.
     pub current_class: u8,
+    /// Refers to the JobIndex of current_class in the ClassJob Excel sheet.
+    pub current_job: u8,
     /// The character's chosen deity. Indexed into the GuardianDeity Excel sheet.
     pub deity: u8,
     pub nameday_month: u8,
@@ -67,31 +69,43 @@ pub struct PlayerStatus {
     pub city_state: u8,
     /// The Aetheryte used for the Return action. Indexed into the Aetheryte Excel sheet.
     pub homepoint: u8,
-    pub unknown8d: [u8; 3],
+    pub unknown8d: [u8; 1],
+    pub quest_special_flags: u8,
+    pub pet_data: u8,
     pub companion_rank: u8,
     pub companion_stars: u8,
-    pub companion_sp: u8,
-    pub companion_unk93: u8,
+    pub companion_skill_points: u8,
+    pub companion_active_command: u8,
     pub companion_color: u8,
-    pub companion_fav_feed: u8,
-    pub fav_aetheryte_count: u8,
-    pub unknown97: [u8; 5],
+    pub companion_favorite_feed: u8,
+    pub favourite_aetheryte_count: u8,
+    pub daily_quest_seed: u8,
+    pub unknown97: u8,
+    pub weekly_lockout_info: u8,
+    pub relic_id: u8,
+    pub relic_note_id: u8,
     pub sightseeing21_to_80_unlock: u8, // TODO: might be SightseeingLogUnlockState in ClientStructs?
     pub sightseeing_heavensward_unlock: u8, // TODO: might be SightseeingLogUnlockStateEx in ClientStructs?
     pub unknown9e: u32,
     pub aether_current_comp_flg_set_bitmask1: u8, // This is the first byte of the full bitmask. It contains the HW zones, The Fringes and The Ruby Sea. Why this one is here and the rest far down, no idea.
-    pub unknowna3: [u8; 21],
+    pub unknown_after_aether: [u8; 8],
+    pub weekly_bingo_exp_multiplier: u8,
+    pub weekly_bingo_unk63: u8,
+    pub series_current_rank: u8,
+    pub series_claimed_rank: u8,
+    pub previous_series_claimed_rank: u8,
+    pub previous_series_rank: u8,
+    pub unknowna3: [u8; 6],
+    pub unknown_after_exp: u8,
     /// Current EXP for all classjobs. This doesn't control the class' "unlocked state" in the Character UI.
     #[br(count = CLASSJOB_ARRAY_SIZE)]
     #[bw(pad_size_to = CLASSJOB_ARRAY_SIZE * 4)]
     pub exp: Vec<i32>,
-    pub unknown_after_exp: u8,
-    pub unknown_pvp124: u32,
-    pub pvp_exp: u32,
-    pub pvp_frontline_overall_ranks: [u32; 3],
-    #[br(count = 7)]
-    #[bw(pad_size_to = 7)]
+    pub pvp_experience: [u32; 3],
+    #[br(count = 12)]
+    #[bw(pad_size_to = 12)]
     pub unknown138: Vec<u8>,
+    pub unknown_unix_timestamp: i32,
     /// Current levels for all classjobs. If non-zero, the class is visibly "unlocked" in the Character UI.
     #[br(count = CLASSJOB_ARRAY_SIZE)]
     #[bw(pad_size_to = CLASSJOB_ARRAY_SIZE * 2)]

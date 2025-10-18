@@ -36,8 +36,8 @@ use kawari::world::{
     StatusEffects, ToServer, WorldDatabase, server_main_loop,
 };
 use kawari::{
-    AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE, ERR_INVENTORY_ADD_FAILED, LogMessageType,
-    NETWORK_TIMEOUT, RECEIVE_BUFFER_SIZE, TITLE_UNLOCK_BITMASK_SIZE,
+    AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE, CLASSJOB_ARRAY_SIZE, ERR_INVENTORY_ADD_FAILED,
+    LogMessageType, NETWORK_TIMEOUT, RECEIVE_BUFFER_SIZE, TITLE_UNLOCK_BITMASK_SIZE,
 };
 
 use mlua::{Function, Lua};
@@ -574,17 +574,25 @@ async fn client_loop(
                                                 // Stats
                                                 connection.send_stats(&chara_details).await;
 
-                                                let current_class;
+                                                let current_job;
                                                 {
-                                                    let game_data = connection.gamedata.lock();
-                                                    current_class = game_data.get_exp_array_index(connection.player_data.classjob_id as u16).unwrap();
+                                                    let mut game_data = connection.gamedata.lock();
+                                                    current_job = game_data.get_job_index(connection.player_data.classjob_id as u16).unwrap();
                                                 }
+
+                                                // As seen in retail, they pad it with the first value
+                                                let mut padded_exp = connection.player_data.classjob_exp.clone();
+                                                padded_exp.resize(CLASSJOB_ARRAY_SIZE, connection.player_data.classjob_exp[0]);
+
+                                                // Ditto for levels
+                                                let mut padded_levels = connection.player_data.classjob_levels.clone();
+                                                padded_levels.resize(CLASSJOB_ARRAY_SIZE, connection.player_data.classjob_levels[0]);
 
                                                 // Player Setup
                                                 {
                                                     let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PlayerStatus(PlayerStatus {
                                                         content_id: connection.player_data.content_id,
-                                                        exp: connection.player_data.classjob_exp.clone(),
+                                                        exp: padded_exp,
                                                         max_level: calculate_max_level(expansion),
                                                         expansion,
                                                         name: chara_details.name,
@@ -597,9 +605,9 @@ async fn client_loop(
                                                         as u8,
                                                         nameday_day: chara_details.chara_make.birth_day as u8,
                                                         deity: chara_details.chara_make.guardian as u8,
-                                                        current_class: current_class as u8,
-                                                        current_job: connection.player_data.classjob_id,
-                                                        levels: connection.player_data.classjob_levels.clone(),
+                                                        current_class: connection.player_data.classjob_id,
+                                                        current_job: current_job,
+                                                        levels: padded_levels,
                                                         unlocks: connection.player_data.unlocks.unlocks.0.clone(),
                                                         aetherytes: connection.player_data.unlocks.aetherytes.0.clone(),
                                                         unlocked_raids: connection.player_data.unlocks.unlocked_raids.0.clone(),
@@ -615,7 +623,7 @@ async fn client_loop(
                                                         minions: connection.player_data.unlocks.minions.0.clone(),
                                                         mount_guide_mask: connection.player_data.unlocks.mounts.0.clone(),
                                                         homepoint: 8, // hardcoded to limsa for now
-                                                        fav_aetheryte_count: 1,
+                                                        favourite_aetheryte_count: 1,
                                                         favorite_aetheryte_ids: [8, 0, 0, 0],
                                                         seen_active_help: connection.player_data.unlocks.seen_active_help.0.clone(),
                                                         aether_currents_mask: connection.player_data.unlocks.aether_currents.0.clone(),
