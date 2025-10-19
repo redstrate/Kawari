@@ -98,6 +98,9 @@ pub const INVALID_OBJECT_ID: ObjectId = ObjectId(0xE0000000);
 /// Maxmimum length of a character's name.
 pub const CHAR_NAME_MAX_LENGTH: usize = 32;
 
+/// Maximum length of most (all?) chat messages.
+pub const MESSAGE_MAX_LENGTH: usize = 1024;
+
 pub(crate) fn read_bool_from<T: std::convert::From<u8> + std::cmp::PartialEq>(x: T) -> bool {
     x == T::from(1u8)
 }

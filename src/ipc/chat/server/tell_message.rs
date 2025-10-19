@@ -1,6 +1,6 @@
 use binrw::binrw;
 
-use crate::common::{CHAR_NAME_MAX_LENGTH, read_string, write_string};
+use crate::common::{CHAR_NAME_MAX_LENGTH, MESSAGE_MAX_LENGTH, read_string, write_string};
 
 #[binrw]
 #[derive(Clone, Debug, Default)]
@@ -18,8 +18,8 @@ pub struct TellMessage {
     #[bw(map = write_string)]
     pub sender_name: String,
 
-    #[br(count = 1024)]
-    #[bw(pad_size_to = 1024)]
+    #[br(count = MESSAGE_MAX_LENGTH)]
+    #[bw(pad_size_to = MESSAGE_MAX_LENGTH)]
     #[br(map = read_string)]
     #[bw(map = write_string)]
     #[brw(pad_after = 5)]
@@ -38,8 +38,8 @@ pub struct TellNotFoundError {
     /// The recipient's world id.
     pub recipient_world_id: u16,
     /// The recipient's name.
-    #[br(count = 32)]
-    #[bw(pad_size_to = 32)]
+    #[br(count = CHAR_NAME_MAX_LENGTH)]
+    #[bw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
     #[br(map = read_string)]
     #[bw(map = write_string)]
     #[brw(pad_after = 2)]
