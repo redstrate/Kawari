@@ -479,6 +479,42 @@
             "comment": "Sent by the server to inform clients about their free company's message of the day. May have additional uses?",
             "opcode": 922,
             "size": 200
+        },
+        {
+            "name": "CharaInfoFromContentIds",
+            "comment": "Sent by the server in response to RequestCharaInfoFromContentIds.",
+            "opcode": 407,
+            "size": 568
+        },
+        {
+            "name": "InviteCharacterResult",
+            "comment": "Sent by the server to inform the client about their own new invite to another character.",
+            "opcode": 574,
+            "size": 48
+        },
+        {
+            "name": "InviteUpdate",
+            "comment": "Sent by the server to inform the client of an invitation changing state.",
+            "opcode": 674,
+            "size": 72
+        },
+        {
+            "name": "PartyUpdate",
+            "comment": "Sent by the server when the party needs to be updated.",
+            "opcode": 908,
+            "size": 104
+        },
+        {
+            "name": "PartyList",
+            "comment": "Sent by the server when the party list needs to be updated.",
+            "opcode": 890,
+            "size": 3672
+        },
+        {
+            "name": "InviteReplyResult",
+            "comment": "Sent by the server to inform the client about its own invite reply.",
+            "opcode": 491,
+            "size": 48
         }
     ],
     "ClientZoneIpcType": [
@@ -739,8 +775,49 @@
             "comment": "Happens during initialization, informs the server what the client's language is set to.",
             "opcode": 120,
             "size": 8
+        },
+        {
+            "name": "RequestCharaInfoFromContentIds",
+            "comment": "Happens when the client requests more information about other characters, and only has their content id.",
+            "opcode": 686,
+            "size": 80
+        },
+        {
+            "name": "PartyLeave",
+            "comment": "Happens when the client leaves their party.",
+            "opcode": 617,
+            "size": 8
+        },
+        {
+            "name": "PartyDisband",
+            "comment": "Happens when the client disbands their party.",
+            "opcode": 635,
+            "size": 8
+        },
+        {
+            "name": "InviteCharacter",
+            "comment": "Happens when the client invites another player to a party, adds them to their friend list, etc.",
+            "opcode": 888,
+            "size": 48
+        },
+        {
+            "name": "InviteReply",
+            "comment": "Happens when the client responds to another player's party invitation.",
+            "opcode": 916,
+            "size": 16
+        },
+        {
+            "name": "PartyMemberKick",
+            "comment": "Sent by the client to remove another player from their party.",
+            "opcode": 498,
+            "size": 48
+        },
+        {
+            "name": "PartyChangeLeader",
+            "comment": "Sent by the client to relinquish leadership to another player in their party.",
+            "opcode": 276,
+            "size": 48
         }
-
     ],
     "ServerLobbyIpcType": [
         {
@@ -848,6 +925,18 @@
             "comment": "Sent by the server in response to a client sending a private message to another client that is offline.",
             "opcode": 112,
             "size": 56
+        },
+        {
+            "name": "JoinChannelResult",
+            "comment": "Presumably sent by the server in response to the client joining a chat channel: fc. linkshell, etc. Doesn't seem to be needed for party chat.",
+            "opcode": 200,
+            "size": 32
+        },
+        {
+            "name": "FreeCompanyEvent",
+            "comment": "Sent by the server in response to a free company-related event taking place: member logging in, logging out, etc.",
+            "opcode": 300,
+            "size": 104
         }
     ],
     "ClientChatIpcType": [
@@ -862,6 +951,12 @@
             "comment": "Sent by the client when sending a message to party chat.",
             "opcode": 101,
             "size": 1032
+        },
+        {
+            "name": "GetChannelList",
+            "comment": "Sent by the client, but its purpose is unknown at this time.",
+            "opcode": 104,
+            "size": 8
         }
     ],
     "CustomIpcType": [

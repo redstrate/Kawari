@@ -1,0 +1,85 @@
+use crate::common::{CHAR_NAME_MAX_LENGTH, ObjectId, read_string, write_string};
+use crate::ipc::zone::StatusEffect;
+use binrw::binrw;
+
+#[binrw]
+#[brw(repr = u16)]
+#[derive(Clone, Copy, Debug, Default)]
+pub enum PartyUpdateStatus {
+    #[default]
+    None = 0,
+    JoinParty = 1,
+    PromoteLeader = 2,
+    DisbandingParty = 3,
+    MemberKicked = 4,
+    SelfKicked = 5, // TODO: What is this?
+    MemberLeftParty = 6,
+    SelfLeftParty = 7,
+}
+
+// TODO: This should maybe be moved to a more common place since it encompasses all (?) invite types?
+#[binrw]
+#[brw(repr = u8)]
+#[derive(Clone, Copy, Debug, Default)]
+pub enum InviteType {
+    #[default]
+    Party = 1,
+    FriendList = 2,
+    // TODO: This probably also includes linkshells/cwls, free companies, and maybe novice network, but more captures are needed
+}
+
+#[binrw]
+#[brw(repr = u8)]
+#[derive(Clone, Copy, Debug, Default)]
+pub enum InviteReply {
+    #[default]
+    Declined = 0,
+    Accepted = 1,
+    Cancelled = 2,
+}
+
+#[binrw]
+#[brw(repr = u8)]
+#[derive(Clone, Copy, Debug, Default)]
+pub enum InviteUpdateType {
+    #[default]
+    NewInvite = 1,
+    InviteCancelled = 2,
+    JoinedParty = 3,
+    InviteAccepted = 4,
+    InviteDeclined = 5,
+}
+
+#[binrw]
+#[derive(Clone, Debug, Default)]
+pub struct PartyMemberEntry {
+    #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+    #[br(count = CHAR_NAME_MAX_LENGTH)]
+    #[br(map = read_string)]
+    #[bw(map = write_string)]
+    pub name: String,
+    #[brw(pad_before = 8)] // empty
+    pub account_id: u64,
+    pub content_id: u64,
+    pub actor_id: ObjectId,
+    pub entity_id: ObjectId,
+    pub parent_id: ObjectId,
+    #[brw(pad_after = 2)] // empty
+    pub current_hp: u16,
+    #[brw(pad_after = 2)] //empty
+    pub max_hp: u16,
+    pub current_mp: u16,
+    pub max_mp: u16,
+    pub home_world_id: u16,
+    pub current_zone_id: u16,
+    pub unk1: u8,
+    pub classjob_id: u8,
+    pub unk2: u8,
+    pub classjob_level: u8,
+    #[brw(pad_after = 8)] // empty
+    pub status_effects: [StatusEffect; 30],
+}
+
+impl PartyMemberEntry {
+    pub const SIZE: usize = 456;
+}

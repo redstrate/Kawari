@@ -19,6 +19,8 @@ pub use crate::ipc::zone::client::item_operation::ItemOperation;
 mod event_return_handler;
 pub use crate::ipc::zone::client::event_return_handler::EventReturnHandler;
 
+use crate::ipc::zone::{InviteReply, InviteType};
+
 use crate::ipc::zone::black_list::RequestBlacklist;
 
 pub use super::social_list::{PlayerEntry, SocialList, SocialListRequest, SocialListRequestType};
@@ -247,6 +249,58 @@ pub enum ClientZoneIpcData {
         #[brw(pad_after = 3)] // empty
         language: ClientLanguage,
     },
+    RequestCharaInfoFromContentIds {
+        content_ids: [u64; 10],
+    },
+    PartyLeave {
+        unk: [u8; 8], // seems to always be zeroes?
+    },
+    PartyDisband {
+        unk: [u8; 8], // seems to always be zeroes?
+    },
+    PartyMemberKick {
+        #[brw(pad_after = 4)]
+        party_index: u32,
+        unk: u16, // Always 0x003F?
+
+        #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+        #[br(count = CHAR_NAME_MAX_LENGTH)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        #[brw(pad_after = 6)] // empty
+        character_name: String,
+    },
+    PartyChangeLeader {
+        #[brw(pad_after = 4)] // empty
+        party_index: u32,
+        unk: u16, // Always 0x003F?
+
+        #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+        #[br(count = CHAR_NAME_MAX_LENGTH)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        #[brw(pad_after = 6)] // empty
+        character_name: String,
+    },
+    InviteCharacter {
+        content_id: u64,
+        world_id: u16,
+        invite_type: InviteType,
+        // TODO: This opcode currently has an issue where garbage data is apparently left in this buffer if the sender's name is longer than the recipient's, and it's also unclear if the name field's length is actually 32 here. A retail capture is needed in this situation.
+        #[brw(pad_size_to = 21)]
+        #[br(count = 21)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        #[brw(pad_after = 16)] // empty, but see above
+        character_name: String,
+    },
+    InviteReply {
+        sender_content_id: u64, // The inviter's content_id
+        sender_world_id: u16,   // The current world id
+        invite_type: InviteType,
+        #[brw(pad_after = 4)] // empty
+        response: InviteReply,
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -400,6 +454,33 @@ mod tests {
             },
             ClientZoneIpcData::SetClientLanguage {
                 language: ClientLanguage::Japanese,
+            },
+            ClientZoneIpcData::RequestCharaInfoFromContentIds {
+                content_ids: [0; 10],
+            },
+            ClientZoneIpcData::PartyLeave { unk: [0; 8] },
+            ClientZoneIpcData::PartyDisband { unk: [0; 8] },
+            ClientZoneIpcData::PartyMemberKick {
+                party_index: 0,
+                unk: 0,
+                character_name: "".to_string(),
+            },
+            ClientZoneIpcData::PartyChangeLeader {
+                party_index: 0,
+                unk: 0,
+                character_name: "".to_string(),
+            },
+            ClientZoneIpcData::InviteCharacter {
+                content_id: 0,
+                world_id: 0,
+                character_name: "".to_string(),
+                invite_type: InviteType::Party,
+            },
+            ClientZoneIpcData::InviteReply {
+                sender_content_id: 0,
+                sender_world_id: 0,
+                invite_type: InviteType::Party,
+                response: InviteReply::Declined,
             },
         ];
 

@@ -27,6 +27,14 @@ pub enum ServerChatIpcData {
     TellMessage(TellMessage),
     PartyMessage(PartyMessage),
     TellNotFoundError(TellNotFoundError),
+    FreeCompanyEvent {
+        // TODO: fill this in
+        unk: [u8; 104],
+    },
+    JoinChannelResult {
+        // TODO: fill this in
+        unk: [u8; 32],
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -62,6 +70,8 @@ mod tests {
             ServerChatIpcData::TellMessage(TellMessage::default()),
             ServerChatIpcData::PartyMessage(PartyMessage::default()),
             ServerChatIpcData::TellNotFoundError(TellNotFoundError::default()),
+            ServerChatIpcData::FreeCompanyEvent { unk: [0; 104] },
+            ServerChatIpcData::JoinChannelResult { unk: [0; 32] },
         ];
 
         for data in &ipc_types {

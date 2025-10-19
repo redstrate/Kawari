@@ -9,8 +9,8 @@ use std::{
 use tokio::sync::mpsc::Sender;
 
 use crate::{
-    common::{ChatChannel, JumpState, MoveAnimationState, MoveAnimationType, ObjectId, Position},
-    ipc::chat::{SendTellMessage, TellNotFoundError},
+    common::{JumpState, MoveAnimationState, MoveAnimationType, ObjectId, Position},
+    ipc::chat::{ChatChannelType, SendTellMessage, TellNotFoundError},
     ipc::zone::{
         ActionRequest, ActorControl, ActorControlSelf, ActorControlTarget, ClientTrigger,
         Conditions, Config, NpcSpawn, PlayerSpawn, ServerZoneIpcSegment,
@@ -53,7 +53,7 @@ pub struct MessageInfo {
     /// The sender's position in the zone, used for creating a radius around which the message is heard (not yet implemented on Kawari).
     pub sender_position: Position,
     /// The channel the message is intended for (say, shout, yell, custom emote (/em)).
-    pub channel: ChatChannel,
+    pub channel: ChatChannelType,
     /// The chat message itself.
     pub message: String,
 }

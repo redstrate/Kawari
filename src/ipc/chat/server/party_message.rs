@@ -1,11 +1,12 @@
 use binrw::binrw;
 
 use crate::common::{CHAR_NAME_MAX_LENGTH, MESSAGE_MAX_LENGTH, read_string, write_string};
+use crate::ipc::chat::ChatChannel;
 
 #[binrw]
 #[derive(Clone, Debug, Default)]
 pub struct PartyMessage {
-    pub party_chatchannel: u64, // TODO: This will be changed in a future PR to use the proper ChatChannel type (not to be confused with our currently named one)!
+    pub party_chatchannel: ChatChannel,
     pub sender_account_id: u64,
     pub sender_content_id: u64,
 
