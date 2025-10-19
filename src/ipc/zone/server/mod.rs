@@ -7,6 +7,9 @@ pub use super::social_list::{
     SocialListUILanguages,
 };
 
+mod chara_info;
+use chara_info::CharaInfoFromContentIdsData;
+
 mod player_spawn;
 pub use player_spawn::PlayerSpawn;
 
@@ -95,14 +98,19 @@ pub use server_notice::{ServerNoticeFlags, ServerNoticeMessage};
 use crate::COMPLETED_LEVEQUEST_BITMASK_SIZE;
 use crate::COMPLETED_QUEST_BITMASK_SIZE;
 use crate::TITLE_UNLOCK_BITMASK_SIZE;
-use crate::common::read_string;
-use crate::common::write_string;
+use crate::common::{CHAR_NAME_MAX_LENGTH, read_string, write_string};
 use crate::inventory::{ContainerType, ItemOperationKind};
+pub use crate::ipc::zone::black_list::{Blacklist, BlacklistedCharacter};
 use crate::opcodes::ServerZoneIpcType;
 use crate::packet::IpcSegment;
 use crate::packet::ServerIpcSegmentHeader;
 
-pub use crate::ipc::zone::black_list::{Blacklist, BlacklistedCharacter};
+use crate::ipc::{
+    chat::ChatChannel,
+    zone::{PartyMemberEntry, PartyUpdateStatus},
+};
+
+use crate::ipc::zone::{InviteReply, InviteType, InviteUpdateType};
 
 pub type ServerZoneIpcSegment =
     IpcSegment<ServerIpcSegmentHeader<ServerZoneIpcType>, ServerZoneIpcType, ServerZoneIpcData>;
@@ -446,6 +454,85 @@ pub enum ServerZoneIpcData {
         #[brw(pad_after = 7)]
         message: String,
     },
+    CharaInfoFromContentIds {
+        #[brw(pad_before = 8)] // empty
+        #[br(count = 10)]
+        #[bw(pad_size_to = 10 * CharaInfoFromContentIdsData::SIZE)]
+        info: Vec<CharaInfoFromContentIdsData>,
+    },
+    InviteCharacterResult {
+        content_id: u64,
+        #[brw(pad_before = 4)]
+        world_id: u16,
+        unk1: u8, // TODO: One of these unks is likely the InviteType
+        unk2: u8,
+        #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+        #[br(count = CHAR_NAME_MAX_LENGTH)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        character_name: String,
+    },
+    InviteReplyResult {
+        content_id: u64,
+        #[brw(pad_before = 4)]
+        invite_type: InviteType,
+        response: InviteReply,
+        unk1: u8,
+        #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+        #[br(count = CHAR_NAME_MAX_LENGTH)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        #[brw(pad_after = 1)]
+        character_name: String,
+    },
+    InviteUpdate {
+        sender_account_id: u64,
+        #[brw(pad_after = 8)] // empty
+        sender_content_id: u64,
+        expiration_timestamp: u32, // usually the packet's timestamp + 300
+        world_id: u16,
+        #[brw(pad_after = 1)] // Pretty sure this is empty
+        invite_type: InviteType,
+        update_type: InviteUpdateType,
+        unk1: u8, // TODO: Usually 1? What is this?
+        #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+        #[br(count = CHAR_NAME_MAX_LENGTH)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        #[brw(pad_after = 6)] // empty
+        sender_name: String,
+    },
+    PartyUpdate {
+        execute_account_id: u64,
+        target_account_id: u64,
+        execute_content_id: u64,
+        target_content_id: u64,
+        unk1: u8, // TODO: Usually 1? What is this?
+        unk2: u8, // TODO: Usually 1? What is this?
+        update_status: PartyUpdateStatus,
+        unk3: u8, // TODO: Usually 2? What is this?
+        #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+        #[br(count = CHAR_NAME_MAX_LENGTH)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        execute_name: String,
+        #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+        #[br(count = CHAR_NAME_MAX_LENGTH)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        #[brw(pad_after = 3)] // empty
+        target_name: String,
+    },
+    PartyList {
+        #[br(count = 8)]
+        #[bw(pad_size_to = 8 * PartyMemberEntry::SIZE)]
+        members: Vec<PartyMemberEntry>,
+        party_id: u64,
+        party_chatchannel: ChatChannel,
+        leader_index: u8,
+        #[brw(pad_after = 6)]
+        member_count: u8,
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -706,6 +793,53 @@ mod tests {
             ServerZoneIpcData::FreeCompanyGreeting {
                 unk: 0,
                 message: "".to_string(),
+            },
+            ServerZoneIpcData::Linkshells { unk: [0; 448] },
+            ServerZoneIpcData::CharaInfoFromContentIds {
+                info: vec![CharaInfoFromContentIdsData::default(); 10],
+            },
+            ServerZoneIpcData::InviteCharacterResult {
+                content_id: 0,
+                world_id: 0,
+                character_name: "".to_string(),
+                unk1: 0,
+                unk2: 0,
+            },
+            ServerZoneIpcData::InviteReplyResult {
+                content_id: 0,
+                invite_type: InviteType::Party,
+                response: InviteReply::Declined,
+                unk1: 0,
+                character_name: "".to_string(),
+            },
+            ServerZoneIpcData::InviteUpdate {
+                sender_content_id: 0,
+                sender_account_id: 0,
+                expiration_timestamp: 0,
+                world_id: 0,
+                invite_type: InviteType::Party,
+                update_type: InviteUpdateType::InviteDeclined,
+                sender_name: "".to_string(),
+                unk1: 0,
+            },
+            ServerZoneIpcData::PartyUpdate {
+                execute_account_id: 0,
+                target_account_id: 0,
+                execute_content_id: 0,
+                target_content_id: 0,
+                unk1: 0,
+                unk2: 0,
+                update_status: PartyUpdateStatus::None,
+                unk3: 0,
+                execute_name: "".to_string(),
+                target_name: "".to_string(),
+            },
+            ServerZoneIpcData::PartyList {
+                members: vec![PartyMemberEntry::default(); 8],
+                party_id: 0,
+                party_chatchannel: ChatChannel::default(),
+                leader_index: 0,
+                member_count: 0,
             },
         ];
 

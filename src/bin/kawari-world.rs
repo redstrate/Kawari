@@ -384,6 +384,9 @@ async fn client_chat_loop(
                                             ClientChatIpcData::SendPartyMessage(data) => {
                                                  tracing::info!("SendPartyMessage: {:#?} from {}", data, connection.actor_id);
                                             }
+                                            ClientChatIpcData::GetChannelList { unk } => {
+                                                tracing::info!("GetChannelList: {:#?} from {}", unk, connection.actor_id);
+                                            }
                                             ClientChatIpcData::Unknown { unk } => {
                                                 tracing::warn!("Unknown Chat packet {:?} recieved ({} bytes), this should be handled!", data.header.op_code, unk.len());
                                             }
@@ -1530,6 +1533,27 @@ async fn client_loop(
                                                 tracing::info!("Setting language to {language:?}!");
 
                                                 connection.client_language = *language;
+                                            }
+                                            ClientZoneIpcData::RequestCharaInfoFromContentIds { .. } => {
+                                                tracing::info!("Requesting character info from content ids is unimplemented");
+                                            }
+                                            ClientZoneIpcData::PartyLeave { .. } => {
+                                                tracing::info!("Leaving parties is unimplemented");
+                                            }
+                                            ClientZoneIpcData::PartyDisband { .. } => {
+                                                tracing::info!("Disbanding parties is unimplemented");
+                                            }
+                                            ClientZoneIpcData::PartyMemberKick { .. } => {
+                                                tracing::info!("Kicking members from parties is unimplemented");
+                                            }
+                                            ClientZoneIpcData::PartyChangeLeader { .. } => {
+                                                tracing::info!("Promoting other players to party leader is unimplemented");
+                                            }
+                                            ClientZoneIpcData::InviteCharacter { .. } => {
+                                                tracing::info!("Inviting other players to your party/friend list/etc. is unimplemented");
+                                            }
+                                            ClientZoneIpcData::InviteReply { .. } => {
+                                                tracing::info!("Replying to other players' invitations is unimplemented");
                                             }
                                             ClientZoneIpcData::Unknown { unk } => {
                                                 tracing::warn!("Unknown Zone packet {:?} recieved ({} bytes), this should be handled!", data.header.op_code, unk.len());

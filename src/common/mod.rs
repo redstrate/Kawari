@@ -218,18 +218,6 @@ pub enum DistanceRange {
     Maximum = 0x2,
 }
 
-// TODO: Possibly relocate this to src/world/common.rs as it's unclear if we'll need this in more places, so it was placed here for now.
-#[binrw]
-#[brw(repr(u16))]
-#[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
-pub enum ChatChannel {
-    #[default]
-    Say = 10,
-    Shout = 11,
-    CustomEmote = 28,
-    Yell = 30,
-}
-
 #[binrw]
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct EquipDisplayFlag(pub u16);

@@ -22,6 +22,9 @@ pub type ClientChatIpcSegment =
 pub enum ClientChatIpcData {
     SendTellMessage(SendTellMessage),
     SendPartyMessage(SendPartyMessage),
+    GetChannelList {
+        unk: [u8; 8],
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -52,6 +55,7 @@ mod tests {
         let ipc_types = [
             ClientChatIpcData::SendTellMessage(SendTellMessage::default()),
             ClientChatIpcData::SendPartyMessage(SendPartyMessage::default()),
+            ClientChatIpcData::GetChannelList { unk: [0; 8] },
         ];
 
         for data in &ipc_types {
