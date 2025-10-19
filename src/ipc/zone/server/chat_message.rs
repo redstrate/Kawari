@@ -1,6 +1,8 @@
 use binrw::binrw;
 
-use crate::common::{ChatChannel, read_string, write_string};
+use crate::common::{
+    CHAR_NAME_MAX_LENGTH, ChatChannel, MESSAGE_MAX_LENGTH, read_string, write_string,
+};
 
 #[binrw]
 #[derive(Clone, Debug, Default)]
@@ -14,14 +16,14 @@ pub struct ChatMessage {
     pub sender_world_id: u16,
     pub channel: ChatChannel,
 
-    #[br(count = 32)]
-    #[bw(pad_size_to = 32)]
+    #[br(count = CHAR_NAME_MAX_LENGTH)]
+    #[bw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
     #[br(map = read_string)]
     #[bw(map = write_string)]
     pub sender_name: String,
 
-    #[br(count = 1024)]
-    #[bw(pad_size_to = 1024)]
+    #[br(count = MESSAGE_MAX_LENGTH)]
+    #[bw(pad_size_to = MESSAGE_MAX_LENGTH)]
     #[br(map = read_string)]
     #[bw(map = write_string)]
     pub message: String,
