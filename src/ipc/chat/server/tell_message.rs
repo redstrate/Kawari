@@ -6,8 +6,8 @@ use crate::common::{CHAR_NAME_MAX_LENGTH, read_string, write_string};
 #[derive(Clone, Debug, Default)]
 pub struct TellMessage {
     pub sender_account_id: u64,
-    pub unk1: u32,
-    pub unk2: u32,
+    pub sender_content_id: u64,
+
     pub sender_world_id: u16,
     /// Indicates if it's a GM tell or not.
     pub flags: u8,

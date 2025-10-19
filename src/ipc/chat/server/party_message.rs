@@ -5,11 +5,9 @@ use crate::common::{read_string, write_string};
 #[binrw]
 #[derive(Clone, Debug, Default)]
 pub struct PartyMessage {
-    pub party_id: u64,
+    pub party_chatchannel: u64, // TODO: This will be changed in a future PR to use the proper ChatChannel type (not to be confused with our currently named one)!
     pub sender_account_id: u64,
-    pub unk1: u32,
-    pub unk2: u16,
-    pub unk3: u16,
+    pub sender_content_id: u64,
 
     pub sender_actor_id: u32,
     pub sender_world_id: u16,
