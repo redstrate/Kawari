@@ -8,8 +8,7 @@ use crate::common::{
 #[derive(Clone, Debug, Default)]
 pub struct ChatMessage {
     pub sender_account_id: u64,
-    pub unk1: u32,
-    pub unk2: u32,
+    pub sender_content_id: u64,
 
     pub sender_actor_id: u32,
 
