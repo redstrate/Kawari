@@ -102,8 +102,11 @@ pub const GUILDHEST_ARRAY_SIZE: usize = 10;
 /// The size of various trial bitmasks.
 pub const TRIAL_ARRAY_SIZE: usize = 14;
 
-/// The size of various PvP bitmasks.
-pub const PVP_ARRAY_SIZE: usize = 7;
+/// The size of various Crystalline Conflict bitmasks.
+pub const CRYSTALLINE_CONFLICT_ARRAY_SIZE: usize = 3;
+
+/// The size of various Frontline bitmasks.
+pub const FRONTLINE_ARRAY_SIZE: usize = 2;
 
 /// The size of the minion bitmask.
 pub const MINION_BITMASK_SIZE: usize = 71;

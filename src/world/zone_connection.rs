@@ -10,11 +10,11 @@ use crate::{
     AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE, AETHERYTE_UNLOCK_BITMASK_SIZE,
     BUDDY_EQUIP_BITMASK_SIZE, CAUGHT_FISH_BITMASK_SIZE, CAUGHT_SPEARFISH_BITMASK_SIZE,
     CHOCOBO_TAXI_STANDS_BITMASK_SIZE, COMPLETED_LEVEQUEST_BITMASK_SIZE,
-    COMPLETED_QUEST_BITMASK_SIZE, CUTSCENE_SEEN_BITMASK_SIZE, DUNGEON_ARRAY_SIZE,
-    ERR_INVENTORY_ADD_FAILED, GLASSES_STYLES_BITMASK_SIZE, GUILDHEST_ARRAY_SIZE, LogMessageType,
-    MINION_BITMASK_SIZE, MOUNT_BITMASK_SIZE, ORCHESTRION_ROLL_BITMASK_SIZE, ORNAMENT_BITMASK_SIZE,
-    PVP_ARRAY_SIZE, RAID_ARRAY_SIZE, TRIAL_ARRAY_SIZE, TRIPLE_TRIAD_CARDS_BITMASK_SIZE,
-    UNLOCK_BITMASK_SIZE,
+    COMPLETED_QUEST_BITMASK_SIZE, CRYSTALLINE_CONFLICT_ARRAY_SIZE, CUTSCENE_SEEN_BITMASK_SIZE,
+    DUNGEON_ARRAY_SIZE, ERR_INVENTORY_ADD_FAILED, FRONTLINE_ARRAY_SIZE,
+    GLASSES_STYLES_BITMASK_SIZE, GUILDHEST_ARRAY_SIZE, LogMessageType, MINION_BITMASK_SIZE,
+    MOUNT_BITMASK_SIZE, ORCHESTRION_ROLL_BITMASK_SIZE, ORNAMENT_BITMASK_SIZE, RAID_ARRAY_SIZE,
+    TRIAL_ARRAY_SIZE, TRIPLE_TRIAD_CARDS_BITMASK_SIZE, UNLOCK_BITMASK_SIZE,
     common::{
         Bitmask, ClientLanguage, EquipDisplayFlag, GameData, INVALID_OBJECT_ID,
         InstanceContentType, ItemInfoQuery, JumpState, MoveAnimationSpeed, MoveAnimationState,
@@ -72,7 +72,9 @@ pub struct UnlockData {
     #[serde(default = "Bitmask::default")]
     pub unlocked_trials: Bitmask<TRIAL_ARRAY_SIZE>,
     #[serde(default = "Bitmask::default")]
-    pub unlocked_pvp: Bitmask<PVP_ARRAY_SIZE>,
+    pub unlocked_crystalline_conflict: Bitmask<CRYSTALLINE_CONFLICT_ARRAY_SIZE>,
+    #[serde(default = "Bitmask::default")]
+    pub unlocked_frontline: Bitmask<FRONTLINE_ARRAY_SIZE>,
     #[serde(default = "Bitmask::default")]
     pub cleared_raids: Bitmask<RAID_ARRAY_SIZE>,
     #[serde(default = "Bitmask::default")]
@@ -82,7 +84,9 @@ pub struct UnlockData {
     #[serde(default = "Bitmask::default")]
     pub cleared_trials: Bitmask<TRIAL_ARRAY_SIZE>,
     #[serde(default = "Bitmask::default")]
-    pub cleared_pvp: Bitmask<PVP_ARRAY_SIZE>,
+    pub cleared_crystalline_conflict: Bitmask<CRYSTALLINE_CONFLICT_ARRAY_SIZE>,
+    #[serde(default = "Bitmask::default")]
+    pub cleared_frontline: Bitmask<FRONTLINE_ARRAY_SIZE>,
     #[serde(default = "Bitmask::default")]
     pub seen_active_help: Bitmask<ACTIVE_HELP_BITMASK_SIZE>,
     #[serde(default = "Bitmask::default")]

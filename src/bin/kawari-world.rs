@@ -574,12 +574,6 @@ async fn client_loop(
                                                 // Stats
                                                 connection.send_stats(&chara_details).await;
 
-                                                let current_job;
-                                                {
-                                                    let mut game_data = connection.gamedata.lock();
-                                                    current_job = game_data.get_job_index(connection.player_data.classjob_id as u16).unwrap();
-                                                }
-
                                                 // As seen in retail, they pad it with the first value
                                                 let mut padded_exp = connection.player_data.classjob_exp.clone();
                                                 padded_exp.resize(CLASSJOB_ARRAY_SIZE, connection.player_data.classjob_exp[0]);
@@ -606,7 +600,7 @@ async fn client_loop(
                                                         nameday_day: chara_details.chara_make.birth_day as u8,
                                                         deity: chara_details.chara_make.guardian as u8,
                                                         current_class: connection.player_data.classjob_id,
-                                                        current_job: current_job,
+                                                        first_class: 1, // TODO: placeholder
                                                         levels: padded_levels,
                                                         unlocks: connection.player_data.unlocks.unlocks.0.clone(),
                                                         aetherytes: connection.player_data.unlocks.aetherytes.0.clone(),
@@ -614,15 +608,17 @@ async fn client_loop(
                                                         unlocked_dungeons: connection.player_data.unlocks.unlocked_dungeons.0.clone(),
                                                         unlocked_guildhests: connection.player_data.unlocks.unlocked_guildhests.0.clone(),
                                                         unlocked_trials: connection.player_data.unlocks.unlocked_trials.0.clone(),
-                                                        unlocked_pvp: connection.player_data.unlocks.unlocked_pvp.0.clone(),
+                                                        unlocked_crystalline_conflict: connection.player_data.unlocks.unlocked_crystalline_conflict.0.clone(),
+                                                        unlocked_frontline: connection.player_data.unlocks.unlocked_frontline.0.clone(),
                                                         cleared_raids: connection.player_data.unlocks.cleared_raids.0.clone(),
                                                         cleared_dungeons: connection.player_data.unlocks.cleared_dungeons.0.clone(),
                                                         cleared_guildhests: connection.player_data.unlocks.cleared_guildhests.0.clone(),
                                                         cleared_trials: connection.player_data.unlocks.cleared_trials.0.clone(),
-                                                        cleared_pvp: connection.player_data.unlocks.cleared_pvp.0.clone(),
+                                                        cleared_crystalline_conflict: connection.player_data.unlocks.cleared_crystalline_conflict.0.clone(),
+                                                        cleared_frontline: connection.player_data.unlocks.cleared_frontline.0.clone(),
                                                         minions: connection.player_data.unlocks.minions.0.clone(),
                                                         mount_guide_mask: connection.player_data.unlocks.mounts.0.clone(),
-                                                        homepoint: 8, // hardcoded to limsa for now
+                                                        home_aetheryte_id: 8, // hardcoded to limsa for now
                                                         favourite_aetheryte_count: 1,
                                                         favorite_aetheryte_ids: [8, 0, 0, 0],
                                                         seen_active_help: connection.player_data.unlocks.seen_active_help.0.clone(),
