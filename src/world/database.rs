@@ -822,7 +822,7 @@ impl WorldDatabase {
         let mut stmt = connection
             .prepare("SELECT service_account_id FROM characters WHERE content_id = ?1")
             .unwrap();
-        stmt.query_row((content_id,), |row| Ok(row.get(0)?))
+        stmt.query_row((content_id,), |row| row.get(0))
             .unwrap()
     }
 }
