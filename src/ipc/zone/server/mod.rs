@@ -110,7 +110,7 @@ use crate::ipc::{
     zone::{PartyMemberEntry, PartyUpdateStatus},
 };
 
-use crate::ipc::zone::{InviteReply, InviteType, InviteUpdateType};
+use crate::ipc::zone::{InviteReply, InviteType, InviteUpdateType, SearchInfo};
 
 pub type ServerZoneIpcSegment =
     IpcSegment<ServerIpcSegmentHeader<ServerZoneIpcType>, ServerZoneIpcType, ServerZoneIpcData>;
@@ -384,17 +384,7 @@ pub enum ServerZoneIpcData {
         // TODO: fill this out, each entry is 57 bytes probably
         unk1: [u8; 456],
     },
-    SetSearchInfo {
-        online_status: OnlineStatusMask,
-        // TODO: fill this out
-        unk1: [u8; 10],
-        #[brw(pad_size_to = 32)]
-        #[br(count = 32)]
-        #[br(map = read_string)]
-        #[bw(map = write_string)]
-        comment: String,
-        unk2: [u8; 166],
-    },
+    SetSearchInfo(SearchInfo),
     Blacklist(Blacklist),
     WalkInEvent {
         /// Object ID of the ClientPath in the zone.
@@ -752,12 +742,7 @@ mod tests {
                 status_effects: [StatusEffect::default(); 30],
             },
             ServerZoneIpcData::CrossworldLinkshells { unk1: [0; 456] },
-            ServerZoneIpcData::SetSearchInfo {
-                online_status: OnlineStatusMask::default(),
-                unk1: [0; 10],
-                comment: String::default(),
-                unk2: [0; 166],
-            },
+            ServerZoneIpcData::SetSearchInfo(SearchInfo::default()),
             ServerZoneIpcData::Blacklist(Blacklist {
                 data: vec![BlacklistedCharacter::default(); Blacklist::NUM_ENTRIES],
                 sequence: 0,

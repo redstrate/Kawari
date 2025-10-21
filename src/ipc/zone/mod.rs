@@ -15,3 +15,6 @@ pub use party_misc::*;
 
 pub mod server;
 pub use server::*;
+
+mod search_info;
+pub use search_info::*;

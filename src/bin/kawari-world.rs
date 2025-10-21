@@ -16,7 +16,7 @@ use kawari::ipc::chat::ClientChatIpcData;
 use kawari::ipc::zone::{
     ActorControl, ActorControlCategory, ActorControlSelf, Condition, Conditions, EventType,
     ItemOperation, OnlineStatus, OnlineStatusMask, PlayerEntry, PlayerSpawn, PlayerStatus,
-    SceneFlags, SocialList, SocialListUILanguages,
+    SceneFlags, SearchInfo, SocialList, SocialListUILanguages,
 };
 
 use kawari::ipc::zone::{
@@ -1564,34 +1564,12 @@ async fn client_loop(
                                             ClientZoneIpcData::SearchPlayers { .. } => {
                                                 tracing::info!("Searching for players is unimplemented");
                                             }
-                                            ClientZoneIpcData::EditSearchInfo { online_status, .. } => {
-                                                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateSearchInfo {
-                                                    online_status: *online_status,
-                                                    unk1: 0,
-                                                    unk2: 4294967295,
-                                                    region: 2,
-                                                    message: String::new(),
-                                                });
+                                            ClientZoneIpcData::EditSearchInfo { .. } => {
+                                                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateSearchInfo { online_status: OnlineStatusMask::default(), unk1: 0, unk2: 0, region: 0, message: String::default() });
                                                 connection.send_ipc_self(ipc).await;
                                             }
                                             ClientZoneIpcData::RequestOwnSearchInfo { .. } => {
-                                                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::SetSearchInfo {
-                                                        online_status: OnlineStatusMask::default(),
-                                                        unk1: [
-                                                            0,
-                                                            0,
-                                                            0,
-                                                            0,
-                                                            0,
-                                                            128,
-                                                            0,
-                                                            0,
-                                                            0,
-                                                            0,
-                                                        ],
-                                                        comment: "".to_string(),
-                                                        unk2: [0; 166],
-                                                });
+                                                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::SetSearchInfo(SearchInfo::default()));
                                                 connection.send_ipc_self(ipc).await;
                                             }
                                             ClientZoneIpcData::Unknown { unk } => {
