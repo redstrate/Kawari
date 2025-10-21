@@ -11,7 +11,7 @@ use crate::{
         FRONTLINE_ARRAY_SIZE, GLASSES_STYLES_BITMASK_SIZE, GUILDHEST_ARRAY_SIZE,
         MINION_BITMASK_SIZE, MOUNT_BITMASK_SIZE, ORCHESTRION_ROLL_BITMASK_SIZE,
         ORNAMENT_BITMASK_SIZE, RAID_ARRAY_SIZE, TRIAL_ARRAY_SIZE, TRIPLE_TRIAD_CARDS_BITMASK_SIZE,
-        UNLOCK_BITMASK_SIZE,
+        UNLOCK_BITMASK_SIZE, UNLOCKED_FISHING_SPOTS_BITMASK_SIZE,
     },
 };
 
@@ -213,8 +213,8 @@ pub struct PlayerStatus {
     #[br(count = CAUGHT_FISH_BITMASK_SIZE)]
     #[bw(pad_size_to = CAUGHT_FISH_BITMASK_SIZE)]
     pub caught_fish_mask: Vec<u8>,
-    #[br(count = 41)]
-    #[bw(pad_size_to = 41)]
+    #[br(count = UNLOCKED_FISHING_SPOTS_BITMASK_SIZE)]
+    #[bw(pad_size_to = UNLOCKED_FISHING_SPOTS_BITMASK_SIZE)]
     pub unlocked_fishing_spots: Vec<u8>,
     pub fishing_spots_padding: u8,
     #[br(count = CAUGHT_SPEARFISH_BITMASK_SIZE)]
