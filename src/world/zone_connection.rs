@@ -447,9 +447,9 @@ impl ZoneConnection {
 
             ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateClassInfo(UpdateClassInfo {
                 class_id: self.player_data.classjob_id,
-                synced_level: self.current_level(&game_data) as u16,
-                class_level: self.current_level(&game_data) as u16,
-                current_level: self.current_level(&game_data) as u16,
+                synced_level: self.current_level(&game_data),
+                class_level: self.current_level(&game_data),
+                current_level: self.current_level(&game_data),
                 current_exp: self.current_exp(&game_data),
                 ..Default::default()
             }));
