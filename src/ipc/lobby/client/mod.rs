@@ -58,9 +58,29 @@ pub enum ClientLobbyIpcData {
         unk2: u64,
     },
     ShandaLogin {
-        #[bw(pad_size_to = 1456)]
-        #[br(count = 1456)]
-        unk: Vec<u8>,
+        sequence: u64,
+        unk1: u32, // possibly timestamps?
+        unk2: u32,
+
+        #[br(count = 64)]
+        #[bw(pad_size_to = 64)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        session_id: String,
+
+        #[br(count = 320)]
+        #[bw(pad_size_to = 320)]
+        padding: Vec<u8>, // all empty
+
+        #[br(count = 144)]
+        #[bw(pad_size_to = 144)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        version_info: String,
+
+        #[br(count = 912)]
+        #[bw(pad_size_to = 912)]
+        padding2: Vec<u8>, // all empty
     },
     CharaMake(CharaMake),
     Unknown {
@@ -116,7 +136,13 @@ mod tests {
                 unk2: 0,
             },
             ClientLobbyIpcData::ShandaLogin {
-                unk: Vec::default(),
+                sequence: 0,
+                session_id: String::default(),
+                version_info: String::default(),
+                unk1: 0,
+                unk2: 0,
+                padding: Vec::new(),
+                padding2: Vec::new(),
             },
             ClientLobbyIpcData::CharaMake(CharaMake::default()),
         ];

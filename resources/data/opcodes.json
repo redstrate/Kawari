@@ -890,7 +890,7 @@
         },
         {
             "name": "ShandaLogin",
-            "comment": "Used by the Chinese client to login.",
+            "comment": "Used by the Chinese and Korean client to login.",
             "opcode": 6,
             "size": 1456
         },
