@@ -151,7 +151,7 @@ fn main() {
         let constants_buffer = std::fs::read_to_string(d).unwrap();
         let yml: Value = serde_yaml_ng::from_str(&constants_buffer).unwrap();
         for (key, value) in yml.as_object().unwrap() {
-            output_str.push_str(&*format!("pub const {}: u32 = {};\n", key, value));
+            output_str.push_str(*format!("pub const {}: u32 = {};\n", key, value));
         }
 
         std::fs::write("src/constants.rs", output_str).expect("Failed to write constants file!");
