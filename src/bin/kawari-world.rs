@@ -1249,8 +1249,6 @@ async fn client_loop(
                                                 }
                                             }
                                             ClientZoneIpcData::StartTalkEvent { actor_id, event_id } => {
-                                                dbg!(actor_id);
-
                                                 if connection.start_event(*actor_id, *event_id, EventType::Talk, 0, &mut lua_player).await {
                                                     connection.conditions.set_condition(Condition::OccupiedInEvent);
                                                     connection.send_conditions().await;
