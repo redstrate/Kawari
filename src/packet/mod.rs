@@ -26,6 +26,4 @@ mod send_helpers;
 pub use send_helpers::{send_custom_world_packet, send_keep_alive, send_packet};
 
 mod scrambler;
-pub use scrambler::{
-    OBFUSCATION_ENABLED_MODE, ScramblerKeyGenerator, ScramblerKeys, scramble_packet,
-};
+pub use scrambler::{ScramblerKeyGenerator, ScramblerKeys, scramble_packet};

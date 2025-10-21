@@ -24,6 +24,9 @@ use kawari::ipc::zone::{
     ServerZoneIpcData, ServerZoneIpcSegment, SocialListRequestType, SocialListUIFlags,
 };
 
+use kawari::constants::{
+    AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE, CLASSJOB_ARRAY_SIZE, TITLE_UNLOCK_BITMASK_SIZE,
+};
 use kawari::packet::oodle::OodleNetwork;
 use kawari::packet::{ConnectionState, ConnectionType, SegmentData, parse_packet_header};
 use kawari::world::lua::{ExtraLuaState, LuaPlayer, load_init_script};
@@ -35,10 +38,7 @@ use kawari::world::{
     ClientHandle, ClientId, EventFinishType, FromServer, MessageInfo, PlayerData, ServerHandle,
     StatusEffects, ToServer, WorldDatabase, server_main_loop,
 };
-use kawari::{
-    AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE, CLASSJOB_ARRAY_SIZE, ERR_INVENTORY_ADD_FAILED,
-    LogMessageType, NETWORK_TIMEOUT, RECEIVE_BUFFER_SIZE, TITLE_UNLOCK_BITMASK_SIZE,
-};
+use kawari::{ERR_INVENTORY_ADD_FAILED, LogMessageType, NETWORK_TIMEOUT, RECEIVE_BUFFER_SIZE};
 
 use mlua::{Function, Lua};
 use parking_lot::Mutex;

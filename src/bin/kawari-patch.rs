@@ -6,8 +6,8 @@ use axum::response::IntoResponse;
 use axum::routing::post;
 use axum::{Router, routing::get};
 use kawari::config::get_config;
+use kawari::constants::{SUPPORTED_BOOT_VERSION, SUPPORTED_EXPAC_VERSIONS, SUPPORTED_GAME_VERSION};
 use kawari::patch::{Version, list_patch_files};
-use kawari::{SUPPORTED_BOOT_VERSION, SUPPORTED_EXPAC_VERSIONS, SUPPORTED_GAME_VERSION};
 use physis::patchlist::{PatchEntry, PatchList, PatchListType};
 use reqwest::header::USER_AGENT;
 
@@ -85,7 +85,7 @@ async fn verify_session(
                 - 1; // e.g. ex1 turns into 0
             let expansion_version = expac_version_parts[1];
 
-            if Version(expansion_version) > SUPPORTED_EXPAC_VERSIONS[expansion_index] {
+            if Version(expansion_version) > Version(SUPPORTED_EXPAC_VERSIONS[expansion_index]) {
                 tracing::warn!(
                     "{} {expansion_version} is above supported version {}!",
                     expac_version_parts[0],
@@ -96,7 +96,7 @@ async fn verify_session(
         }
 
         // Their version is too new
-        if game_version > SUPPORTED_GAME_VERSION {
+        if game_version > Version(SUPPORTED_GAME_VERSION) {
             tracing::warn!(
                 "{game_version} is above supported game version {SUPPORTED_GAME_VERSION}!"
             );
@@ -104,7 +104,7 @@ async fn verify_session(
         }
 
         // If we are up to date, yay!
-        if game_version == SUPPORTED_GAME_VERSION {
+        if game_version == Version(SUPPORTED_GAME_VERSION) {
             let mut headers = HeaderMap::new();
             headers.insert("X-Patch-Unique-Id", sid.parse().unwrap());
 
@@ -249,12 +249,12 @@ async fn verify_boot(
         let boot_version = Version(actual_boot_version);
 
         // If we are up to date, yay!
-        if boot_version == SUPPORTED_BOOT_VERSION {
+        if boot_version == Version(SUPPORTED_BOOT_VERSION) {
             return (headers).into_response();
         }
 
         // Their version is too new
-        if boot_version > SUPPORTED_BOOT_VERSION {
+        if boot_version > Version(SUPPORTED_BOOT_VERSION) {
             tracing::warn!(
                 "{boot_version} is above supported boot version {SUPPORTED_BOOT_VERSION}!"
             );

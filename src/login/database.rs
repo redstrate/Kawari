@@ -3,7 +3,7 @@ use std::sync::Mutex;
 use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
 
-use crate::{MAX_EXPANSION, ipc::lobby::ServiceAccount};
+use crate::{constants::MAX_EXPANSION, ipc::lobby::ServiceAccount};
 
 pub struct LoginDatabase {
     connection: Mutex<Connection>,

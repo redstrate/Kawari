@@ -3,9 +3,10 @@ use std::{cmp::min, fs, path::MAIN_SEPARATOR_STR, time::Instant};
 use tokio::net::TcpStream;
 
 use crate::{
-    GAME_SERVICE, SUPPORTED_EXPAC_VERSIONS,
+    GAME_SERVICE,
     blowfish::Blowfish,
     config::get_config,
+    constants::SUPPORTED_EXPAC_VERSIONS,
     ipc::lobby::{DistRetainerInfo, NackReply},
     packet::{
         CompressionType, ConnectionState, ConnectionType, PacketSegment, SegmentData, SegmentType,
@@ -89,7 +90,7 @@ fn do_game_version_check(client_version_str: &str) -> bool {
             .zip(SUPPORTED_EXPAC_VERSIONS.iter())
         {
             // The client doesn't send a patch2 value in its expansion version strings, so we just pretend it doesn't exist on our side.
-            let expected_version = &expected_version.0[..expected_version.0.len() - 5].to_string();
+            let expected_version = &expected_version[..expected_version.len() - 5].to_string();
             if client_version != expected_version {
                 tracing::error!(
                     "One of the client's expansion versions does not match! Rejecting session! Got {}, expected {}",

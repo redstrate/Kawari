@@ -2,14 +2,14 @@ use std::io::Cursor;
 
 use binrw::BinResult;
 
-use crate::{blowfish::Blowfish, constants::GAME_VERSION};
+use crate::{blowfish::Blowfish, constants::LOBBY_GAME_VERSION};
 
 use super::{IPC_HEADER_SIZE, ReadWriteIpcSegment, parsing::ConnectionState};
 
 pub fn generate_encryption_key(key: &[u8], phrase: &str) -> [u8; 16] {
-    let mut base_key = vec![0x78, 0x56, 0x34, 0x12];
+    let mut base_key = vec![0x78, 0x56, 0x34, 0x12]; // 0x12345678
     base_key.extend_from_slice(key);
-    base_key.extend_from_slice(&GAME_VERSION.to_le_bytes());
+    base_key.extend_from_slice(&LOBBY_GAME_VERSION.to_le_bytes());
     base_key.extend_from_slice(phrase.as_bytes());
 
     md5::compute(&base_key).0

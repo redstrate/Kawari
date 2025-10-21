@@ -4,11 +4,11 @@ use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    CLASSJOB_ARRAY_SIZE,
     common::{
         CustomizeData, EquipDisplayFlag, GameData, ItemInfoQuery, Position,
         workdefinitions::{CharaMake, ClientSelectData, RemakeMode},
     },
+    constants::CLASSJOB_ARRAY_SIZE,
     inventory::{Inventory, Item, Storage},
     ipc::lobby::{CharacterDetails, CharacterFlag},
 };
@@ -822,7 +822,6 @@ impl WorldDatabase {
         let mut stmt = connection
             .prepare("SELECT service_account_id FROM characters WHERE content_id = ?1")
             .unwrap();
-        stmt.query_row((content_id,), |row| row.get(0))
-            .unwrap()
+        stmt.query_row((content_id,), |row| row.get(0)).unwrap()
     }
 }

@@ -36,7 +36,7 @@ For more information, see our [Acceptable Usage](https://docs.xiv.zone/kawari/ac
 
 ## Supported Game Version
 
-Kawari currently supports patch **7.35h1** (2025.10.13.0000.0000.) Previously supported patches are provided on as tags (e.g. `2025.02.27.0000.0000`.) These may or may not function or build correctly, the tag is moreso a historical marker.
+Kawari currently supports patch **7.35h1** (2025.10.13.0000.0000) Previously supported patches are provided on as tags (e.g. `2025.02.27.0000.0000`.) These may or may not function or build correctly, the tag is moreso a historical marker.
 
 Only the Global region is supported. Only the Windows client is supported. Supporting other regions or clients are out of scope of this project.
 

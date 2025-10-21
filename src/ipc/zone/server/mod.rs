@@ -90,14 +90,14 @@ mod chat_message;
 pub use chat_message::ChatMessage;
 
 mod actor_move;
+use crate::constants::{
+    COMPLETED_LEVEQUEST_BITMASK_SIZE, COMPLETED_QUEST_BITMASK_SIZE, TITLE_UNLOCK_BITMASK_SIZE,
+};
 pub use crate::ipc::zone::server::actor_move::ActorMove;
 
 mod server_notice;
 pub use server_notice::{ServerNoticeFlags, ServerNoticeMessage};
 
-use crate::COMPLETED_LEVEQUEST_BITMASK_SIZE;
-use crate::COMPLETED_QUEST_BITMASK_SIZE;
-use crate::TITLE_UNLOCK_BITMASK_SIZE;
 use crate::common::{CHAR_NAME_MAX_LENGTH, read_string, write_string};
 use crate::inventory::{ContainerType, ItemOperationKind};
 pub use crate::ipc::zone::black_list::{Blacklist, BlacklistedCharacter};
@@ -555,6 +555,7 @@ mod tests {
     use binrw::BinWrite;
 
     use crate::{
+        constants::TITLE_UNLOCK_BITMASK_SIZE,
         opcodes::ServerZoneIpcType,
         packet::{IpcSegmentHeader, ReadWriteIpcOpcode, ReadWriteIpcSegment},
     };
