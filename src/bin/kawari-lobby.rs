@@ -93,7 +93,7 @@ async fn main() {
                                             ..
                                         } => {
                                             connection
-                                                .login(*sequence, &session_id, &version_info)
+                                                .login(*sequence, session_id, version_info)
                                                 .await;
                                         }
                                         ClientLobbyIpcData::ServiceLogin {
@@ -120,7 +120,7 @@ async fn main() {
                                             ..
                                         } => {
                                             connection
-                                                .login(*sequence, &session_id, &version_info)
+                                                .login(*sequence, session_id, version_info)
                                                 .await;
                                         }
                                         ClientLobbyIpcData::GameLogin {
