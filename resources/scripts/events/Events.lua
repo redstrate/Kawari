@@ -81,13 +81,9 @@ function dispatchEvent(player, event_id)
     elseif event_type == HANDLER_TYPE_TOPIC_SELECT then
         return runEvent(event_id, "events/generic/TopicSelect.lua")
     elseif event_type == HANDLER_TYPE_PRE_HANDLER then
-        -- TODO: check the quest requirement for these:
-        local target_event_id = GAME_DATA:get_pre_handler_target(event_id)
-        local event = dispatchEvent(player, target_event_id)
-        if event == nil then
-            player:send_message("PreHandler target event "..target_event_id.. " is not handled!")
-        end
-        return event
+        return runEvent(event_id, "events/generic/PreHandler.lua")
+    elseif event_type == HANDLER_TYPE_INCLUSION_SHOP then
+        return runEvent(event_id, "events/generic/InclusionShop.lua")
     elseif event_type == HANDLER_TYPE_EVENT_GIMMICK_PATH_MOVE then
         return runEvent(event_id, "events/generic/GimmickPathMove.lua")
     end
