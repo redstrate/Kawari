@@ -19,7 +19,7 @@ pub use crate::ipc::zone::client::item_operation::ItemOperation;
 mod event_return_handler;
 pub use crate::ipc::zone::client::event_return_handler::EventReturnHandler;
 
-use crate::ipc::zone::{InviteReply, InviteType};
+use crate::ipc::zone::{InviteReply, InviteType, OnlineStatusMask};
 
 use crate::ipc::zone::black_list::RequestBlacklist;
 
@@ -301,6 +301,27 @@ pub enum ClientZoneIpcData {
         #[brw(pad_after = 4)] // empty
         response: InviteReply,
     },
+    RequestSearchInfo {
+        content_id: u64,
+        unk: [u8; 16], // unsure if this is always empty
+    },
+    RequestAdventurerPlate {
+        unk: [u8; 16],
+    },
+    SearchPlayers {
+        #[br(count = 176)]
+        #[bw(pad_size_to = 176)]
+        unk: Vec<u8>,
+    },
+    EditSearchInfo {
+        online_status: OnlineStatusMask,
+        #[br(count = 208)]
+        #[bw(pad_size_to = 208)]
+        unk: Vec<u8>,
+    },
+    RequestOwnSearchInfo {
+        unk: [u8; 8],
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -482,6 +503,17 @@ mod tests {
                 invite_type: InviteType::Party,
                 response: InviteReply::Declined,
             },
+            ClientZoneIpcData::RequestSearchInfo {
+                content_id: 0,
+                unk: [0; 16],
+            },
+            ClientZoneIpcData::RequestAdventurerPlate { unk: [0; 16] },
+            ClientZoneIpcData::SearchPlayers { unk: Vec::new() },
+            ClientZoneIpcData::EditSearchInfo {
+                unk: Vec::new(),
+                online_status: OnlineStatusMask::default(),
+            },
+            ClientZoneIpcData::RequestOwnSearchInfo { unk: [0; 8] },
         ];
 
         for data in &ipc_types {

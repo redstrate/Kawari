@@ -397,8 +397,8 @@
             "size": 456
         },
         {
-            "name": "SetSearchComment",
-            "comment": "Unknown purpose.",
+            "name": "SetSearchInfo",
+            "comment": "Updates the search info for the client in response to RequestOwnSearchInfo.",
             "opcode": 900,
             "size": 216
         },
@@ -817,6 +817,36 @@
             "comment": "Sent by the client to relinquish leadership to another player in their party.",
             "opcode": 276,
             "size": 48
+        },
+        {
+            "name": "RequestSearchInfo",
+            "comment": "Happens when the client requests search info for any player.",
+            "opcode": 559,
+            "size": 24
+        },
+        {
+            "name": "RequestAdventurerPlate",
+            "comment": "Happens when the client requests the adventurer plate for any player.",
+            "opcode": 848,
+            "size": 16
+        },
+        {
+            "name": "SearchPlayers",
+            "comment": "Happens when the client searches for players under the Social window.",
+            "opcode": 167,
+            "size": 176
+        },
+        {
+            "name": "EditSearchInfo",
+            "comment": "Happens when the client wants to update the search info of the player.",
+            "opcode": 736,
+            "size": 216
+        },
+        {
+            "name": "RequestOwnSearchInfo",
+            "comment": "Seems to happen when the client wants to know its own search info.",
+            "opcode": 300,
+            "size": 8
         }
     ],
     "ServerLobbyIpcType": [

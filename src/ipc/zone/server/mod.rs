@@ -308,7 +308,7 @@ pub enum ServerZoneIpcData {
         data: [u8; 15],
     },
     UpdateSearchInfo {
-        online_status_flags: u64,
+        online_status: OnlineStatusMask,
         unk1: u64,
         #[brw(pad_after = 1)] // padding
         unk2: u32,
@@ -384,9 +384,10 @@ pub enum ServerZoneIpcData {
         // TODO: fill this out, each entry is 57 bytes probably
         unk1: [u8; 456],
     },
-    SetSearchComment {
+    SetSearchInfo {
+        online_status: OnlineStatusMask,
         // TODO: fill this out
-        unk1: [u8; 18],
+        unk1: [u8; 10],
         #[brw(pad_size_to = 32)]
         #[br(count = 32)]
         #[br(map = read_string)]
@@ -703,7 +704,7 @@ mod tests {
                 data: [0; 15],
             },
             ServerZoneIpcData::UpdateSearchInfo {
-                online_status_flags: 0,
+                online_status: OnlineStatusMask::default(),
                 unk1: 0,
                 unk2: 0,
                 region: 0,
@@ -750,8 +751,9 @@ mod tests {
                 status_effects: [StatusEffect::default(); 30],
             },
             ServerZoneIpcData::CrossworldLinkshells { unk1: [0; 456] },
-            ServerZoneIpcData::SetSearchComment {
-                unk1: [0; 18],
+            ServerZoneIpcData::SetSearchInfo {
+                online_status: OnlineStatusMask::default(),
+                unk1: [0; 10],
                 comment: String::default(),
                 unk2: [0; 166],
             },
