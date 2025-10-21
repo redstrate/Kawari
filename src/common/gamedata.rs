@@ -21,6 +21,7 @@ use icarus::PreHandler::PreHandlerSheet;
 use icarus::Quest::QuestSheet;
 use icarus::SwitchTalkVariation::SwitchTalkVariationSheet;
 use icarus::TerritoryType::TerritoryTypeSheet;
+use icarus::TopicSelect::TopicSelectSheet;
 use icarus::WarpLogic::WarpLogicSheet;
 use icarus::WeatherRate::WeatherRateSheet;
 use icarus::World::WorldSheet;
@@ -770,6 +771,18 @@ impl GameData {
         let row = self.quest_sheet.get_row(quest_id).unwrap();
 
         row.Id().into_string().cloned().unwrap_or_default()
+    }
+
+    /// Returns the target event of a TopicSelect event.
+    pub fn get_topic_select_target(
+        &mut self,
+        topic_select_id: u32,
+        selected_index: usize,
+    ) -> Option<u32> {
+        let sheet = TopicSelectSheet::read_from(&mut self.resource, Language::English)?;
+        let row = sheet.get_row(topic_select_id)?;
+
+        Some(*row.Shop()[selected_index].into_u32()?)
     }
 }
 

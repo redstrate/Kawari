@@ -154,4 +154,6 @@ pub enum Task {
     SendSegment {
         segment: PacketSegment<ServerZoneIpcSegment>,
     },
+    // NOTE: this is mostly a workaround in a limitation in the scripting API
+    StartTalkEvent {},
 }

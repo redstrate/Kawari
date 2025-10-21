@@ -1258,6 +1258,17 @@ impl ZoneConnection {
                 Task::SendSegment { segment } => {
                     self.send_segment(segment.clone()).await;
                 }
+                Task::StartTalkEvent {} => {
+                    if let Some(event) = self.events.last_mut() {
+                        event.talk(
+                            ObjectTypeId {
+                                object_id: ObjectId(self.player_data.actor_id),
+                                object_type: ObjectTypeKind::None,
+                            },
+                            player,
+                        );
+                    }
+                }
             }
         }
         player.queued_tasks.clear();

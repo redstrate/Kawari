@@ -125,6 +125,12 @@ impl UserData for GameData {
         methods.add_method_mut("get_quest_name", |_, this, quest_id: u32| {
             Ok(this.get_quest_name(quest_id))
         });
+        methods.add_method_mut(
+            "get_topic_select_target",
+            |_, this, (topic_select_id, selected_topic): (u32, usize)| {
+                Ok(this.get_topic_select_target(topic_select_id, selected_topic))
+            },
+        );
     }
 }
 

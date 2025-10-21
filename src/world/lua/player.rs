@@ -498,6 +498,10 @@ impl LuaPlayer {
     fn set_sex(&mut self, sex: u8) {
         self.queued_tasks.push(Task::SetSex { sex });
     }
+
+    fn start_talk_event(&mut self) {
+        self.queued_tasks.push(Task::StartTalkEvent {});
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -825,6 +829,10 @@ impl UserData for LuaPlayer {
         });
         methods.add_method("get_effect", |_, this, effect_id: u16| {
             Ok(this.status_effects.get(effect_id))
+        });
+        methods.add_method_mut("start_talk_event", |_, this, _: ()| {
+            this.start_talk_event();
+            Ok(())
         });
     }
 
