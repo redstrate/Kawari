@@ -573,7 +573,7 @@ impl GameData {
         let sheet = ClassJobSheet::read_from(&mut self.resource, Language::English)?;
         let row = sheet.get_row(classjob_id as u32)?;
 
-        Some(row.JobIndex().into_u8().cloned()?)
+        row.JobIndex().into_u8().cloned()
     }
 
     /// Gets the item and its cost from the specified shop.
