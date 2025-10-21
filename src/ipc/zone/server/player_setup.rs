@@ -8,10 +8,10 @@ use crate::{
         BEAST_TRIBE_ARRAY_SIZE, BUDDY_EQUIP_BITMASK_SIZE, CAUGHT_FISH_BITMASK_SIZE,
         CAUGHT_SPEARFISH_BITMASK_SIZE, CHOCOBO_TAXI_STANDS_BITMASK_SIZE, CLASSJOB_ARRAY_SIZE,
         CRYSTALLINE_CONFLICT_ARRAY_SIZE, CUTSCENE_SEEN_BITMASK_SIZE, DUNGEON_ARRAY_SIZE,
-        FRONTLINE_ARRAY_SIZE, GLASSES_STYLES_BITMASK_SIZE, GUILDHEST_ARRAY_SIZE,
-        MINION_BITMASK_SIZE, MOUNT_BITMASK_SIZE, ORCHESTRION_ROLL_BITMASK_SIZE,
-        ORNAMENT_BITMASK_SIZE, RAID_ARRAY_SIZE, TRIAL_ARRAY_SIZE, TRIPLE_TRIAD_CARDS_BITMASK_SIZE,
-        UNLOCK_BITMASK_SIZE, UNLOCKED_FISHING_SPOTS_BITMASK_SIZE,
+        FRAMERS_KIT_BITMASK_SIZE, FRONTLINE_ARRAY_SIZE, GLASSES_STYLES_BITMASK_SIZE,
+        GUILDHEST_ARRAY_SIZE, MINION_BITMASK_SIZE, MOUNT_BITMASK_SIZE,
+        ORCHESTRION_ROLL_BITMASK_SIZE, ORNAMENT_BITMASK_SIZE, RAID_ARRAY_SIZE, TRIAL_ARRAY_SIZE,
+        TRIPLE_TRIAD_CARDS_BITMASK_SIZE, UNLOCK_BITMASK_SIZE, UNLOCKED_FISHING_SPOTS_BITMASK_SIZE,
     },
 };
 
@@ -146,7 +146,6 @@ pub struct PlayerStatus {
     #[br(count = MOUNT_BITMASK_SIZE)]
     #[bw(pad_size_to = MOUNT_BITMASK_SIZE)]
     pub mount_guide_mask: Vec<u8>,
-    // TODO: there's an empty space after this, im pretty sure the clientstructs bitmask is sized wrong
     #[br(count = ORNAMENT_BITMASK_SIZE)]
     #[bw(pad_size_to = ORNAMENT_BITMASK_SIZE)]
     pub ornament_mask: Vec<u8>,
@@ -154,9 +153,8 @@ pub struct PlayerStatus {
     #[br(count = GLASSES_STYLES_BITMASK_SIZE)]
     #[bw(pad_size_to = GLASSES_STYLES_BITMASK_SIZE)]
     pub glasses_styles_mask: Vec<u8>,
-    // TODO: make a proper bitmask
-    #[br(count = 33)]
-    #[bw(pad_size_to = 33)]
+    #[br(count = FRAMERS_KIT_BITMASK_SIZE)]
+    #[bw(pad_size_to = FRAMERS_KIT_BITMASK_SIZE)]
     pub framers_kits_mask: Vec<u8>,
     #[br(count = CHAR_NAME_MAX_LENGTH)]
     #[bw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
