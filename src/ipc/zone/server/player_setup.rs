@@ -5,12 +5,13 @@ use crate::{
     constants::{
         ACTIVE_HELP_BITMASK_SIZE, ADVENTURE_BITMASK_SIZE, AETHER_CURRENT_BITMASK_SIZE,
         AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE, AETHERYTE_UNLOCK_BITMASK_SIZE,
-        BUDDY_EQUIP_BITMASK_SIZE, CAUGHT_FISH_BITMASK_SIZE, CAUGHT_SPEARFISH_BITMASK_SIZE,
-        CHOCOBO_TAXI_STANDS_BITMASK_SIZE, CLASSJOB_ARRAY_SIZE, CRYSTALLINE_CONFLICT_ARRAY_SIZE,
-        CUTSCENE_SEEN_BITMASK_SIZE, DUNGEON_ARRAY_SIZE, FRONTLINE_ARRAY_SIZE,
-        GLASSES_STYLES_BITMASK_SIZE, GUILDHEST_ARRAY_SIZE, MINION_BITMASK_SIZE, MOUNT_BITMASK_SIZE,
-        ORCHESTRION_ROLL_BITMASK_SIZE, ORNAMENT_BITMASK_SIZE, RAID_ARRAY_SIZE, TRIAL_ARRAY_SIZE,
-        TRIPLE_TRIAD_CARDS_BITMASK_SIZE, UNLOCK_BITMASK_SIZE,
+        BEAST_TRIBE_ARRAY_SIZE, BUDDY_EQUIP_BITMASK_SIZE, CAUGHT_FISH_BITMASK_SIZE,
+        CAUGHT_SPEARFISH_BITMASK_SIZE, CHOCOBO_TAXI_STANDS_BITMASK_SIZE, CLASSJOB_ARRAY_SIZE,
+        CRYSTALLINE_CONFLICT_ARRAY_SIZE, CUTSCENE_SEEN_BITMASK_SIZE, DUNGEON_ARRAY_SIZE,
+        FRONTLINE_ARRAY_SIZE, GLASSES_STYLES_BITMASK_SIZE, GUILDHEST_ARRAY_SIZE,
+        MINION_BITMASK_SIZE, MOUNT_BITMASK_SIZE, ORCHESTRION_ROLL_BITMASK_SIZE,
+        ORNAMENT_BITMASK_SIZE, RAID_ARRAY_SIZE, TRIAL_ARRAY_SIZE, TRIPLE_TRIAD_CARDS_BITMASK_SIZE,
+        UNLOCK_BITMASK_SIZE,
     },
 };
 
@@ -19,7 +20,7 @@ use crate::{
 pub struct PlayerStatus {
     /// The content ID of the player.
     pub content_id: u64,
-    /// This seems to be unused by the client/
+    /// This seems to be unused by the client.
     pub padding: [u64; 2],
     /// The actor ID of the player.
     pub actor_id: u32,
@@ -128,7 +129,7 @@ pub struct PlayerStatus {
     #[br(count = 176)]
     #[bw(pad_size_to = 176)]
     pub unknown194: Vec<u8>,
-    pub beast_reputation_value: [u16; 20],
+    pub beast_reputation_value: [u16; BEAST_TRIBE_ARRAY_SIZE],
     pub quest_manager_related_unks: [u16; 5],
     pub quest_padding: [u8; 6],
     #[br(count = 11)]
@@ -224,7 +225,7 @@ pub struct PlayerStatus {
     pub rank_malestrom: u8,
     pub rank_twin_adder: u8,
     pub rank_immortal_flames: u8,
-    pub beast_reputation_rank: [u8; 20],
+    pub beast_reputation_rank: [u8; BEAST_TRIBE_ARRAY_SIZE],
     pub content_roulette_completion: [u8; 10],
     pub unknown_mask6f7: [u8; 9],
     pub player_state_flags: [u8; 3],
