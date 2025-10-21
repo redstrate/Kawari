@@ -1,10 +1,12 @@
+src/opcodes.rs
+src/constants.rs
+
 **/target
 /oodle
 .idea/
 config.json
 *.db
 config.yaml
-src/opcodes.rs
 backups/
 temp.zip
 patches/

@@ -33,17 +33,17 @@ pub mod login;
 /// Patch server-specific code.
 pub mod patch;
 
-/// Opcodes, see `resources/opcodes.json`
+/// Opcodes, see `resources/opcodes.json`.
 pub mod opcodes;
+
+/// Constants, see `resources/constants.yml`.
+pub mod constants;
 
 /// IPC
 pub mod ipc;
 
 /// Inventory and storage management.
 pub mod inventory;
-
-/// Used in the encryption key.
-const GAME_VERSION: u32 = 7201;
 
 /// The maximum size of our packet buffers, anything bigger than this from the client is truncated.
 pub const RECEIVE_BUFFER_SIZE: usize = 0xFFFF;
@@ -165,9 +165,6 @@ pub const CHOCOBO_TAXI_STANDS_BITMASK_SIZE: usize = 12;
 
 /// The maximum durability of an item.
 pub const ITEM_CONDITION_MAX: u16 = 30000;
-
-// This operation code changes regularly, so update it when needed!
-pub const BASE_INVENTORY_ACTION: u32 = 364;
 
 /// The server's acknowledgement of a shop item being purchased.
 pub const INVENTORY_ACTION_ACK_SHOP: u8 = 6;

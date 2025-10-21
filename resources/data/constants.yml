@@ -1,0 +1,5 @@
+# Used in the encryption key.
+GAME_VERSION: 7201
+
+# This operation code changes regularly, so update it when needed!
+BASE_INVENTORY_ACTION: 364

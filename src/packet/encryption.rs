@@ -2,7 +2,7 @@ use std::io::Cursor;
 
 use binrw::BinResult;
 
-use crate::{GAME_VERSION, blowfish::Blowfish};
+use crate::{blowfish::Blowfish, constants::GAME_VERSION};
 
 use super::{IPC_HEADER_SIZE, ReadWriteIpcSegment, parsing::ConnectionState};
 

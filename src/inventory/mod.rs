@@ -1,4 +1,7 @@
-use crate::common::{GameData, ItemInfoQuery};
+use crate::{
+    common::{GameData, ItemInfoQuery},
+    constants::BASE_INVENTORY_ACTION,
+};
 use binrw::binrw;
 use icarus::{ClassJob::ClassJobSheet, Race::RaceSheet};
 use physis::common::Language;
@@ -26,8 +29,6 @@ pub use currency::{CurrencyKind, CurrencyStorage};
 
 mod iterators;
 pub use iterators::{InventoryIterator, get_container_type};
-
-use crate::BASE_INVENTORY_ACTION;
 
 const MAX_NORMAL_STORAGE: usize = 35;
 const MAX_LARGE_STORAGE: usize = 50;
