@@ -785,13 +785,13 @@
         {
             "name": "PartyLeave",
             "comment": "Happens when the client leaves their party.",
-            "opcode": 617,
+            "opcode": 635,
             "size": 8
         },
         {
             "name": "PartyDisband",
             "comment": "Happens when the client disbands their party.",
-            "opcode": 635,
+            "opcode": 617,
             "size": 8
         },
         {
