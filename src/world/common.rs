@@ -107,6 +107,8 @@ pub enum FromServer {
     TellMessageSent(MessageInfo),
     /// We need to inform the sender that the recipient was not found or is offline.
     TellRecipientNotFound(TellNotFoundError),
+    /// We need to tell our chat connection that our zone connection has disconnected.
+    ChatDisconnected(),
 }
 
 #[derive(Debug, Clone)]
@@ -168,7 +170,7 @@ pub enum ToServer {
     /// The player walks through a zone change line.
     EnterZoneJump(ClientId, u32, u32),
     /// The connection disconnected.
-    Disconnected(ClientId),
+    Disconnected(ClientId, u32),
     /// A fatal error occured.
     FatalError(std::io::Error),
     /// Spawn a friendly debug NPC.

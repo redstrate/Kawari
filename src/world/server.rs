@@ -1566,10 +1566,20 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     }
                 }
             }
-            ToServer::Disconnected(from_id) => {
+            ToServer::Disconnected(from_id, from_actor_id) => {
                 let mut network = network.lock().unwrap();
 
                 network.to_remove.push(from_id);
+
+                // Tell our sibling chat connection that it's time to go too.
+                for (id, (handle, _)) in &mut network.chat_clients {
+                    if from_actor_id == handle.actor_id {
+                        let msg = FromServer::ChatDisconnected();
+                        if handle.send(msg).is_err() {
+                            to_remove.push(*id);
+                        }
+                    }
+                }
             }
             ToServer::ActorSummonsMinion(from_id, from_actor_id, minion_id) => {
                 let mut network = network.lock().unwrap();
