@@ -28,12 +28,6 @@ fn setup_default_environment() -> Environment<'static> {
     )
     .unwrap();
     env.add_template_owned(
-        "worldstatus.html",
-        std::fs::read_to_string(web_templates_dir!("worldstatus.html"))
-            .expect("Failed to find template!"),
-    )
-    .unwrap();
-    env.add_template_owned(
         "account.html",
         std::fs::read_to_string(web_templates_dir!("account.html"))
             .expect("Failed to find template!"),
@@ -69,18 +63,6 @@ async fn root() -> Html<String> {
     Html(
         template
             .render(context! { login_server => config.login.server_name })
-            .unwrap(),
-    )
-}
-
-async fn world_status() -> Html<String> {
-    let config = get_config();
-
-    let environment = setup_default_environment();
-    let template = environment.get_template("worldstatus.html").unwrap();
-    Html(
-        template
-            .render(context! { login_server => config.login.server_name, login_open => config.frontier.login_open, worlds_open => config.frontier.worlds_open })
             .unwrap(),
     )
 }
@@ -137,7 +119,6 @@ async fn main() {
 
     let app = Router::new()
         .route("/", get(root))
-        .route("/worldstatus", get(world_status))
         .route("/setup", get(setup))
         .route("/launcherconfig", get(launcher_config))
         .route("/.well-known/xiv", get(auto_config))

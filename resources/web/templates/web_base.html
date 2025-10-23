@@ -3,20 +3,17 @@
 {% block body %}
 <nav class="navbar navbar-expand-lg bg-body-tertiary">
   <div class="container-fluid">
-    <a class="navbar-brand" href="/">Kawari</a>
+    <a class="navbar-brand" href="{{ web_server_name }}/">Kawari</a>
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav">
         <li class="nav-item">
-          <a class="nav-link" href="{{ login_server }}/oauth/oa/oauthlogin">Login</a>
+          <a class="nav-link {% if current_page == 'login' %}active{% endif %}" href="{{ login_server }}/oauth/oa/oauthlogin">Login</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{{ login_server }}/oauth/oa/registligt">Register</a>
+          <a class="nav-link {% if current_page == 'register' %}active{% endif %}" href="{{ login_server }}/oauth/oa/registligt">Register</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="/worldstatus">World Status</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/setup">Setup</a>
+          <a class="nav-link {% if current_page == 'setup' %}active{% endif %}" href="{{ web_server_name }}/setup">Setup</a>
         </li>
       </ul>
     </div>

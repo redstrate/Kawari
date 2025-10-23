@@ -1,12 +1,19 @@
-# Summary
+# General
 
-- [Usage](usage.md)
 - [Contributing](contributing.md)
 - [Sapphire Proxy](sapphire.md)
 - [Scripting](scripting/intro.md)
   - [Commands](scripting/commands.md)
   - [Using Scripter](scripting/scripter.md)
 
+# Setup
+
+- [Overview](setup/overview.md)
+- [Windows](setup/windows.md)
+- [macOS](setup/macos.md)
+- [Linux](setup/linux.md)
+- [Local development](setup/source.md)
+  
 # Commands
 - [GM Commands](gm_commands.md)
 - [Debug Commands](debug_commands.md)

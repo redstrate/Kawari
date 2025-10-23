@@ -1,36 +1,84 @@
 {% extends "web_base.html" %}
 
 {% block title %}Kawari - Setup{% endblock %}
+{% set current_page = "setup" %}
 
 {% block webbody %}
-<section class="py-5 text-center container">
-    <h2>Official Launcher</h2>
+<section class="py-5 container">
+    <p>You have several options you can use to connect, select the preferred one below:</p>
 
-    <p>First, download <a href="https://github.com/redstrate/LauncherTweaks">LauncherTweaks</a> and place the <code>winmm.dll</code> next to <code>ffxivboot64.exe</code>. Download the config below, and place it in the same folder.</p>
+    <div class="accordion" id="launchers">
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                    Official Launcher
+                </button>
+            </h2>
+            <div id="collapseOne" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                <div class="accordion-body">
+                    <p>First, follow the Usage guide for <a href="https://github.com/redstrate/LauncherTweaks#usage">LauncherTweaks</a>. Then download the config below, and place it in the same folder.</p>
 
-    <p><a href="/launcherconfig?type=webview2" download="launchertweaks.toml" class="btn btn-primary">Download Config (WebView2)</a></p>
-    <p><a href="/launcherconfig?type=ie11" download="launchertweaks.toml" class="btn btn-secondary">Download Config (IE)</a></p>
+                    <p>
+                        <a href="/launcherconfig?type=webview2" download="launchertweaks.toml" class="btn btn-primary">Download Config (WebView2)</a>
+                        <a href="/launcherconfig?type=ie11" download="launchertweaks.toml" class="btn btn-secondary">Download Config (IE)</a>
+                    </p>
 
-    <p><small>If you're using Linux and have problems with WebView2, download the "IE" config. If you don't know what this means, then download the WebView2 config.</small></p>
+                    <p><small>If you're running the launcher in Wine and had problems with the new WebView2 launcher, download the "IE" config. Otherwise, use the WebView2 config.</small></p>
 
-    <h2>Astra</h2>
+                    <p>Browsers can connect to the <code>.localhost</code> sites without any additional configuration, e.g. <code>ffxiv.localhost</code>. However, some parts of the official launcher will fail to connect. To work around this, add this to your hosts file:</p>
 
-    <p>Connecting to this server with <a href="https://xiv.zone/software/astra">Astra</a> is very easy, as the functionality is built-in. You currently need a pre-release version of Astra (>=0.7)</p>
+                    <pre>
+127.0.0.1 admin.ffxiv.localhost
+127.0.0.1 ffxiv.localhost
+127.0.0.1 launcher.ffxiv.localhost
+127.0.0.1 config-dl.ffxiv.localhost
+127.0.0.1 frontier.ffxiv.localhost
+127.0.0.1 patch-bootver.ffxiv.localhost
+127.0.0.1 patch-gamever.ffxiv.localhost
+127.0.0.1 ffxiv-login.square.localhost
+127.0.0.1 patch-dl.ffxiv.localhost
+127.0.0.1 dctravel.ffxiv.localhost</pre>
 
-    <ol>
-        <li>Open Astra, tap the "Settings" button in the top-right.</li>
-        <li>Under the General page, check the "Show Developer Settings" checkbox.</li>
-        <li>Select or create the account you want to log in to Kawari with. You should see a new "Developer" tab to the far-right.</li>
-    </ol>
+                    <p>This file is located under <code>C:\Windows\System32\Drivers\etc\hosts</code> on Windows, and <code>/etc/hosts</code> on macOS and Windows.</p>
+                </div>
+            </div>
+        </div>
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                    Astra
+                </button>
+            </h2>
+            <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                <div class="accordion-body">
+                    <p>Connecting to this server with <a href="https://xiv.zone/software/astra">Astra</a> is very easy, as the functionality is built-in. You currently need a pre-release version of Astra (>=0.7)</p>
 
-    <p>Then paste the Server URL (<code>{{ server_url }}</code>) and Astra will automatically configure the correct server configuration. That's it!</p>
+                    <ol>
+                        <li>Open Astra, tap the "Settings" button in the top-right.</li>
+                        <li>Under the General page, check the "Show Developer Settings" checkbox.</li>
+                        <li>Select or create the account you want to log in to Kawari with. You should see a new "Developer" tab to the far-right.</li>
+                    </ol>
 
-    <h2>Manually Running</h2>
+                    <p>Then paste the Server URL (<code>{{ server_url }}</code>) and Astra will automatically configure the correct server configuration. That's it!</p>
+                </div>
+            </div>
+        </div>
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                    No Launcher
+                </button>
+            </h2>
+            <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                <div class="accordion-body">
+                    <p>It's possible to manually run the game if you can't or don't want to use a launcher. Here are the following arguments you should pass to the game:</p>
 
-    <p>It's possible to manually run the game if you can't or don't want to use a launcher. Here are the following arguments you should pass to the game:</p>
+                    <pre>DEV.TestSID=replace_this_with_your_sid DEV.UseSqPack=1 DEV.DataPathType=1 SYS.region=3 language=1 version={{ game_version }} DEV.MaxEntitledExpansionID=5 DEV.LobbyHost01={{ lobby_host }} DEV.LobbyPort01={{ lobby_port }} DEV.LobbyHost02={{ lobby_host }} DEV.LobbyPort02={{ lobby_port }} DEV.LobbyHost03={{ lobby_host }} DEV.LobbyPort03={{ lobby_port }} DEV.LobbyHost04={{ lobby_host }} DEV.LobbyPort04={{ lobby_port }} DEV.LobbyHost05={{ lobby_host }} DEV.LobbyPort05={{ lobby_port }} DEV.LobbyHost06={{ lobby_host }} DEV.LobbyPort06={{ lobby_port }} DEV.LobbyHost07={{ lobby_host }} DEV.LobbyPort07={{ lobby_port }} DEV.LobbyHost08={{ lobby_host }} DEV.LobbyPort08={{ lobby_port }} DEV.LobbyHost09={{ lobby_host }} DEV.LobbyPort09={{ lobby_port }} DEV.LobbyHost10={{ lobby_host }} DEV.LobbyPort10={{ lobby_port }} DEV.LobbyHost11={{ lobby_host }} DEV.LobbyPort11={{ lobby_port }} DEV.LobbyHost12={{ lobby_host }} DEV.LobbyPort12={{ lobby_port }}</pre>
 
-    <pre>DEV.TestSID=replace_this_with_your_sid DEV.UseSqPack=1 DEV.DataPathType=1 SYS.region=3 language=1 version={{ game_version }} DEV.MaxEntitledExpansionID=5 DEV.LobbyHost01={{ lobby_host }} DEV.LobbyPort01={{ lobby_port }} DEV.LobbyHost02={{ lobby_host }} DEV.LobbyPort02={{ lobby_port }} DEV.LobbyHost03={{ lobby_host }} DEV.LobbyPort03={{ lobby_port }} DEV.LobbyHost04={{ lobby_host }} DEV.LobbyPort04={{ lobby_port }} DEV.LobbyHost05={{ lobby_host }} DEV.LobbyPort05={{ lobby_port }} DEV.LobbyHost06={{ lobby_host }} DEV.LobbyPort06={{ lobby_port }} DEV.LobbyHost07={{ lobby_host }} DEV.LobbyPort07={{ lobby_port }} DEV.LobbyHost08={{ lobby_host }} DEV.LobbyPort08={{ lobby_port }} DEV.LobbyHost09={{ lobby_host }} DEV.LobbyPort09={{ lobby_port }} DEV.LobbyHost10={{ lobby_host }} DEV.LobbyPort10={{ lobby_port }} DEV.LobbyHost11={{ lobby_host }} DEV.LobbyPort11={{ lobby_port }} DEV.LobbyHost12={{ lobby_host }} DEV.LobbyPort12={{ lobby_port }}</pre>
-
-    <p>(The SID can be generated from the Account Management > Login History page.)</p>
+                    <p>(The SID can be generated from the Account Management > Login History page.)</p>
+                </div>
+            </div>
+        </div>
+    </div>
 </section>
 {% endblock %}

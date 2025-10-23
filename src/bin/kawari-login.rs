@@ -33,8 +33,8 @@ fn setup_default_environment() -> Environment<'static> {
     )
     .unwrap();
     env.add_template_owned(
-        "login_base.html",
-        std::fs::read_to_string(web_templates_dir!("login_base.html"))
+        "web_base.html",
+        std::fs::read_to_string(web_templates_dir!("web_base.html"))
             .expect("Failed to find template!"),
     )
     .unwrap();

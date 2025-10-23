@@ -1,18 +1,18 @@
-{% extends "login_base.html" %}
+{% extends "web_base.html" %}
 
 {% block title %}Kawari - Login{% endblock %}
+{% set current_page = "login" %}
 
-{% block loginbody %}
-<form method='post' class="mb-3">
-    <label for="username" class="form-label">Username</label><br>
-    <input type='text' id='username' name='username' class="form-control" autofocus/><br>
-    <label for="password" class="form-label">Password</label><br>
-    <input id='password' name='password' class="form-control" type="password"/><br>
-    <button type='submit'  class="btn btn-primary">Login</button>
-</form>
+{% block webbody %}
+<section class="py-5 text-center container" style="max-width:300px">
+    <form method='post' class="mb-3">
+        <label for="username" class="form-label">Username</label><br>
+        <input type='text' id='username' name='username' class="form-control" autofocus/><br>
+        <label for="password" class="form-label">Password</label><br>
+        <input id='password' name='password' class="form-control" type="password"/><br>
+        <button type='submit'  class="btn btn-primary">Login</button>
+    </form>
 
-<p><small>This is not an official login page. It will <i>not</i> accept your official account's credentials, please do not enter them here!</small></p>
-
-<a href="{{ web_server_name }}">Return Home</a>
-
+    <p><small>This is not an official login page. It will <i>not</i> accept your official account's credentials, please do not enter them here!</small></p>
+</section>
 {% endblock %}
