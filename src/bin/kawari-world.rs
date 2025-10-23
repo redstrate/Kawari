@@ -364,7 +364,7 @@ async fn client_chat_loop(
                         if n == 0 {
                             let now = Instant::now();
                             if now.duration_since(connection.last_keep_alive) > NETWORK_TIMEOUT {
-                                tracing::info!("Connection {:#?} was killed because of timeout", client_handle.id);
+                                tracing::info!("ChatConnection {:#?} was killed because of timeout", client_handle.id);
                                 break;
                             }
                         } else {
@@ -402,7 +402,7 @@ async fn client_chat_loop(
                         }
                     }
                     Err(_) => {
-                        tracing::info!("Connection {:#?} was killed because of a network error!", client_handle.id);
+                        tracing::info!("ChatConnection {:#?} was killed because of a network error!", client_handle.id);
                         break;
                     },
                 }
@@ -412,7 +412,8 @@ async fn client_chat_loop(
                 Some(msg) => match msg {
                     FromServer::TellMessageSent(message_info) => connection.tell_message_received(message_info).await,
                     FromServer::TellRecipientNotFound(error_info) => connection.tell_recipient_not_found(error_info).await,
-                    _ => tracing::error!("Chat connection {:#?} received a FromServer message we don't care about: {:#?}, ensure you're using the right client network or that you've implemented a handler for it if we actually care about it!", client_handle.id, msg),
+                    FromServer::ChatDisconnected() => { tracing::info!("ChatConnection {:#?} received shutdown, disconnecting!", connection.id); break; }
+                    _ => tracing::error!("ChatConnection {:#?} received a FromServer message we don't care about: {:#?}, ensure you're using the right client network or that you've implemented a handler for it if we actually care about it!", client_handle.id, msg),
                 },
                 None => break,
             }
@@ -474,7 +475,11 @@ async fn client_server_loop(
     internal_send: UnboundedSender<FromServer>,
 ) {
     while let Some(msg) = data.recv().await {
-        internal_send.send(msg).unwrap()
+        let Ok(_) = internal_send.send(msg) else {
+            // In most cases this should be fine, as it's simply the zone and chat connection loops ending
+            // If needed we can log messages here for troubleshooting, but previously this was just an unwrap which assumed it'd never fail
+            break;
+        };
     }
 }
 
@@ -503,7 +508,7 @@ async fn client_loop(
         .send(ToServer::NewClient(client_handle.clone()))
         .await;
 
-    loop {
+    'outer: loop {
         tokio::select! {
             biased; // client data should always be prioritized
             n = connection.socket.read(&mut buf) => {
@@ -513,7 +518,7 @@ async fn client_loop(
                         if n == 0 {
                             let now = Instant::now();
                             if now.duration_since(connection.last_keep_alive) > NETWORK_TIMEOUT {
-                                tracing::info!("Connection {:#?} was killed because of timeout", client_handle.id);
+                                tracing::info!("ZoneConnection {:#?} was killed because of timeout", client_handle.id);
                                 break;
                             }
                         } else {
@@ -554,7 +559,7 @@ async fn client_loop(
                                                     tracing::warn!(
                                                         "Failed to find service account {service_account_id}, just going to stop talking tot his connection..."
                                                     );
-                                                    break;
+                                                    break 'outer; // We break the outer loop here because we're in the middle of a segment loop!
                                                 };
 
                                                 let expansion = login_reply.text().await.unwrap().parse().unwrap();
@@ -870,10 +875,8 @@ async fn client_loop(
                                             }
                                             ClientZoneIpcData::Disconnected { .. } => {
                                                 tracing::info!("Client disconnected!");
-
-                                                connection.handle.send(ToServer::Disconnected(connection.id)).await;
-
-                                                break;
+                                                // We no longer send ToServer::Disconnected here because the end of the function already does it unconditionally
+                                                break 'outer;  // We break the outer loop here because we're in the middle of a segment loop!
                                             }
                                             ClientZoneIpcData::SendChatMessage(chat_message) => {
                                                 let chara_details = database.find_chara_make(connection.player_data.content_id);
@@ -1602,7 +1605,7 @@ async fn client_loop(
                         }
                     },
                     Err(_) => {
-                        tracing::info!("Connection {:#?} was killed because of a network error!", client_handle.id);
+                        tracing::info!("ZoneConnection {:#?} was killed because of a network error!", client_handle.id);
                         break;
                     },
                 }
@@ -1658,7 +1661,10 @@ async fn client_loop(
         }
         connection
             .handle
-            .send(ToServer::Disconnected(connection.id))
+            .send(ToServer::Disconnected(
+                connection.id,
+                connection.player_data.actor_id,
+            ))
             .await;
     }
 }
