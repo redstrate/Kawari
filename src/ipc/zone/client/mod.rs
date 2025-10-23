@@ -286,12 +286,12 @@ pub enum ClientZoneIpcData {
         content_id: u64,
         world_id: u16,
         invite_type: InviteType,
-        // TODO: This opcode currently has an issue where garbage data is apparently left in this buffer if the sender's name is longer than the recipient's, and it's also unclear if the name field's length is actually 32 here. A retail capture is needed in this situation.
-        #[brw(pad_size_to = 21)]
-        #[br(count = 21)]
+        // TODO: The client leaves garbage (probably due to a bug) in the character_name field, so reading it can be a little tricky. Our string parsing had to be updated a little bit to retry when Rusts's String::from_utf8 function fails. Parsing it as a C string (CStr in rust) can work around this issue.
+        #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+        #[br(count = CHAR_NAME_MAX_LENGTH)]
         #[br(map = read_string)]
         #[bw(map = write_string)]
-        #[brw(pad_after = 16)] // empty, but see above
+        #[brw(pad_after = 5)] // "empty", but see above
         character_name: String,
     },
     InviteReply {
