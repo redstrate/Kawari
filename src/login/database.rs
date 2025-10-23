@@ -61,8 +61,9 @@ impl LoginDatabase {
         }
     }
 
-    fn generate_account_id() -> u64 {
-        fastrand::u64(..)
+    // NOE: We pass account IDs as u64, however SQLite doesn't support u64. So we *want* to create u32 account IDs.
+    fn generate_account_id() -> u32 {
+        fastrand::u32(..)
     }
 
     /// Adds a new user to the database.
