@@ -110,17 +110,22 @@ pub(crate) fn write_bool_as<T: std::convert::From<u8>>(x: &bool) -> T {
 }
 
 pub(crate) fn read_string(byte_stream: Vec<u8>) -> String {
-    // TODO: better error handling here
-    if let Ok(str) = String::from_utf8(byte_stream.clone()) {
-        str.trim_matches(char::from(0)).to_string() // trim \0 from the end of strings
-    } else {
-        // There might be a better solution than this, but if the nicer stuff above fails then we have to give it one last chance
-        let Ok(result) = CStr::from_bytes_until_nul(&byte_stream) else {
+    // TODO: This can surely be made better, but it seems to satisfy some strange edge cases. If there are even more found, then we should probably rewrite this function altogether.
+    let Ok(result) = CStr::from_bytes_until_nul(&byte_stream) else {
+        if let Ok(str) = String::from_utf8(byte_stream.clone()) {
+            return str.trim_matches(char::from(0)).to_string(); // trim \0 from the end of strings
+        } else {
+            tracing::error!("Found an edge-case where both CStr::from_bytes_until_nul and String::from_utf8 failed: {:#?}", byte_stream.clone());
             return String::default();
-        };
+        }
+    };
 
-        result.to_str().to_owned().unwrap().to_string()
-    }
+    let Ok(result) = result.to_str().to_owned() else {
+        tracing::error!("Unable to make this CStr an owned string, what happened?");
+        return String::default();
+    };
+
+    result.to_string()
 }
 
 pub(crate) fn write_string(str: &String) -> Vec<u8> {
@@ -513,6 +518,12 @@ mod tests {
         0xD8, 0x33,
     ];
 
+    // "Edda Miller" with garbage at the very end of the field
+    const MALFORMED_SECOND_EXAMPLE: [u8; 32] = [
+        69, 100, 100, 97, 32, 77, 105, 108, 108, 101, 114, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 40, 86,
+    ];
+
     #[test]
     fn read_string() {
         // The nul terminator is supposed to be removed
@@ -525,6 +536,11 @@ mod tests {
         assert_eq!(
             crate::common::read_string(MALFORMED_STRING_DATA.to_vec()),
             "Helper Name".to_string()
+        );
+
+        assert_eq!(
+            crate::common::read_string(MALFORMED_SECOND_EXAMPLE.to_vec()),
+            "Edda Miller".to_string()
         );
     }
 
