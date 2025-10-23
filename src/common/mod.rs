@@ -1,6 +1,6 @@
 use bitflags::bitflags;
 use std::{
-    ffi::CString,
+    ffi::{CStr, CString},
     time::{SystemTime, UNIX_EPOCH},
 };
 use strum_macros::{Display, EnumIter, FromRepr};
@@ -111,10 +111,15 @@ pub(crate) fn write_bool_as<T: std::convert::From<u8>>(x: &bool) -> T {
 
 pub(crate) fn read_string(byte_stream: Vec<u8>) -> String {
     // TODO: better error handling here
-    if let Ok(str) = String::from_utf8(byte_stream) {
+    if let Ok(str) = String::from_utf8(byte_stream.clone()) {
         str.trim_matches(char::from(0)).to_string() // trim \0 from the end of strings
     } else {
-        String::default()
+        // There might be a better solution than this, but if the nicer stuff above fails then we have to give it one last chance
+        let Ok(result) = CStr::from_bytes_until_nul(&byte_stream) else {
+            return String::default();
+        };
+
+        result.to_str().to_owned().unwrap().to_string()
     }
 }
 
@@ -501,12 +506,25 @@ mod tests {
     // "FOO\0"
     const STRING_DATA: [u8; 4] = [0x46u8, 0x4Fu8, 0x4Fu8, 0x0u8];
 
+    // "Helper Name" followed by numerous zeroes and garbage data at the end, intended to trip up our old string parser
+    const MALFORMED_STRING_DATA: [u8; 32] = [
+        0x48, 0x65, 0x6C, 0x70, 0x65, 0x72, 0x20, 0x4E, 0x61, 0x6D, 0x65, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0xD8, 0x33,
+    ];
+
     #[test]
     fn read_string() {
         // The nul terminator is supposed to be removed
         assert_eq!(
             crate::common::read_string(STRING_DATA.to_vec()),
             "FOO".to_string()
+        );
+
+        // Will this malformed name string trip up our parser? It makes our previous one blow up.
+        assert_eq!(
+            crate::common::read_string(MALFORMED_STRING_DATA.to_vec()),
+            "Helper Name".to_string()
         );
     }
 
