@@ -236,6 +236,12 @@ struct NetworkState {
     chat_clients: HashMap<ClientId, (ClientHandle, ClientState)>,
 }
 
+#[derive(Debug)]
+enum DestinationNetwork {
+    ZoneClients,
+    ChatClients,
+}
+
 impl NetworkState {
     /// Tell all the clients that a new actor spawned.
     fn send_actor(&mut self, actor: Actor, spawn: SpawnKind) {
@@ -274,11 +280,69 @@ impl NetworkState {
         }
     }
 
-    fn send_to(&mut self, client_id: ClientId, message: FromServer) {
-        for (id, (handle, _)) in &mut self.clients {
+    fn send_to_all(
+        &mut self,
+        id_to_skip: Option<ClientId>,
+        message: FromServer,
+        destination: DestinationNetwork,
+    ) {
+        let clients = match destination {
+            DestinationNetwork::ZoneClients => &mut self.clients,
+            DestinationNetwork::ChatClients => &mut self.chat_clients,
+        };
+
+        for (id, (handle, _)) in clients {
+            let id = *id;
+            if let Some(id_to_skip) = id_to_skip
+                && id == id_to_skip
+            {
+                continue;
+            }
+
+            if handle.send(message.clone()).is_err() {
+                self.to_remove.push(id);
+            }
+        }
+    }
+
+    fn send_to(
+        &mut self,
+        client_id: ClientId,
+        message: FromServer,
+        destination: DestinationNetwork,
+    ) {
+        let clients = match destination {
+            DestinationNetwork::ZoneClients => &mut self.clients,
+            DestinationNetwork::ChatClients => &mut self.chat_clients,
+        };
+
+        for (id, (handle, _)) in clients {
             let id = *id;
 
             if id == client_id {
+                if handle.send(message).is_err() {
+                    self.to_remove.push(id);
+                }
+                break;
+            }
+        }
+    }
+
+    fn send_to_by_actor_id(
+        &mut self,
+        actor_id: u32,
+        message: FromServer,
+        destination: DestinationNetwork,
+    ) {
+        let clients = match destination {
+            DestinationNetwork::ZoneClients => &mut self.clients,
+            DestinationNetwork::ChatClients => &mut self.chat_clients,
+        };
+
+        for (id, (handle, _)) in clients {
+            let id = *id;
+
+            if handle.actor_id == actor_id {
                 if handle.send(message).is_err() {
                     self.to_remove.push(id);
                 }
@@ -586,7 +650,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     true, // since this is initial login
                 );
 
-                network.send_to(from_id, msg);
+                network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
             }
             ToServer::ZoneLoaded(from_id, zone_id, player_spawn) => {
                 tracing::info!(
@@ -617,7 +681,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                             kind,
                         );
 
-                        network.send_to(from_id, msg);
+                        network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
                     }
                 }
 
@@ -691,7 +755,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     LuaZone::from_zone(&target_instance.zone, target_instance.weather_id),
                     false,
                 );
-                network.send_to(from_id, msg);
+                network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
             }
             ToServer::EnterZoneJump(from_id, actor_id, exitbox_id) => {
                 let mut data = data.lock().unwrap();
@@ -752,7 +816,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     LuaZone::from_zone(&target_instance.zone, target_instance.weather_id),
                     false,
                 );
-                network.send_to(from_id, msg);
+                network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
             }
             ToServer::Warp(from_id, actor_id, warp_id) => {
                 let mut data = data.lock().unwrap();
@@ -799,7 +863,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     LuaZone::from_zone(&target_instance.zone, target_instance.weather_id),
                     false,
                 );
-                network.send_to(from_id, msg);
+                network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
             }
             ToServer::WarpAetheryte(from_id, actor_id, aetheryte_id) => {
                 let mut data = data.lock().unwrap();
@@ -846,24 +910,16 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     LuaZone::from_zone(&target_instance.zone, target_instance.weather_id),
                     false,
                 );
-                network.send_to(from_id, msg);
+                network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
             }
             ToServer::Message(from_id, msg) => {
                 let mut network = network.lock().unwrap();
 
-                for (id, (handle, _)) in &mut network.clients {
-                    let id = *id;
-
-                    if id == from_id {
-                        continue;
-                    }
-
-                    let msg = FromServer::Message(msg.clone());
-
-                    if handle.send(msg).is_err() {
-                        to_remove.push(id);
-                    }
-                }
+                network.send_to_all(
+                    Some(from_id),
+                    FromServer::Message(msg),
+                    DestinationNetwork::ZoneClients,
+                );
             }
             ToServer::ActorMoved(
                 from_id,
@@ -891,21 +947,10 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         common.rotation = rotation;
                     }
 
-                    for (id, (handle, _)) in &mut network.clients {
-                        let id = *id;
-
-                        if id == from_id {
-                            continue;
-                        }
-
-                        let msg = FromServer::ActorMove(
-                            actor_id, position, rotation, anim_type, anim_state, jump_state,
-                        );
-
-                        if handle.send(msg).is_err() {
-                            to_remove.push(id);
-                        }
-                    }
+                    let msg = FromServer::ActorMove(
+                        actor_id, position, rotation, anim_type, anim_state, jump_state,
+                    );
+                    network.send_to_all(Some(from_id), msg, DestinationNetwork::ZoneClients);
                 }
             }
             ToServer::ClientTrigger(from_id, from_actor_id, trigger) => {
@@ -1290,7 +1335,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     tracing::info!("Now finishing delayed cast!");
 
                     let msg = FromServer::ActionComplete(request);
-                    network.send_to(from_id, msg);
+                    network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
                 };
 
                 if cast_time == 0 {
@@ -1337,15 +1382,9 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 }
 
                 let mut network = network.lock().unwrap();
-                for (id, (handle, _)) in &mut network.clients {
-                    let id = *id;
+                let msg = FromServer::UpdateConfig(from_actor_id, config.clone());
 
-                    let msg = FromServer::UpdateConfig(from_actor_id, config.clone());
-
-                    if handle.send(msg).is_err() {
-                        to_remove.push(id);
-                    }
-                }
+                network.send_to_all(None, msg, DestinationNetwork::ZoneClients);
             }
             ToServer::Equip(_from_id, from_actor_id, main_weapon_id, sub_weapon_id, model_ids) => {
                 // update their stored state so it's correctly sent on new spawns
@@ -1370,21 +1409,11 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 }
 
                 // Inform all clients about their new equipped model ids
+                let msg =
+                    FromServer::ActorEquip(from_actor_id, main_weapon_id, sub_weapon_id, model_ids);
+
                 let mut network = network.lock().unwrap();
-                for (id, (handle, _)) in &mut network.clients {
-                    let id = *id;
-
-                    let msg = FromServer::ActorEquip(
-                        from_actor_id,
-                        main_weapon_id,
-                        sub_weapon_id,
-                        model_ids,
-                    );
-
-                    if handle.send(msg).is_err() {
-                        to_remove.push(id);
-                    }
-                }
+                network.send_to_all(None, msg, DestinationNetwork::ZoneClients);
             }
             ToServer::BeginReplay(from_id, path) => {
                 let mut entries = std::fs::read_dir(path)
@@ -1480,7 +1509,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                             data: ServerZoneIpcData::Unknown { unk: ipc_data },
                         }),
                     });
-                    network.send_to(from_id, msg);
+                    network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
                 };
 
                 let network = network.clone();
@@ -1513,7 +1542,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
 
                         let msg =
                             FromServer::LoseEffect(effect_id, effect_param, effect_source_actor_id);
-                        network.send_to(from_id, msg);
+                        network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
                     };
 
                 // Eventually tell the player they lost this effect
@@ -1572,14 +1601,11 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 network.to_remove.push(from_id);
 
                 // Tell our sibling chat connection that it's time to go too.
-                for (id, (handle, _)) in &mut network.chat_clients {
-                    if from_actor_id == handle.actor_id {
-                        let msg = FromServer::ChatDisconnected();
-                        if handle.send(msg).is_err() {
-                            to_remove.push(*id);
-                        }
-                    }
-                }
+                network.send_to_by_actor_id(
+                    from_actor_id,
+                    FromServer::ChatDisconnected(),
+                    DestinationNetwork::ChatClients,
+                );
             }
             ToServer::ActorSummonsMinion(from_id, from_actor_id, minion_id) => {
                 let mut network = network.lock().unwrap();
@@ -1617,23 +1643,14 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     if let Some(pop_range) = instance.zone.find_pop_range(id) {
                         let trans = pop_range.0.transform.translation;
 
+                        let msg = FromServer::NewPosition(Position {
+                            x: trans[0],
+                            y: trans[1],
+                            z: trans[2],
+                        });
+
                         // send new position to the client
-                        for (id, (handle, _)) in &mut network.clients {
-                            let id = *id;
-
-                            if id == from_id {
-                                let msg = FromServer::NewPosition(Position {
-                                    x: trans[0],
-                                    y: trans[1],
-                                    z: trans[2],
-                                });
-
-                                if handle.send(msg).is_err() {
-                                    to_remove.push(id);
-                                }
-                                break;
-                            }
-                        }
+                        network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
                     } else {
                         tracing::warn!("Failed to find pop range for {id}!");
                     }
@@ -1685,23 +1702,20 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
 
                 // Next, if the recipient is online, fetch their handle from the network and send them the message!
                 if recipient_actor_id != INVALID_OBJECT_ID {
-                    for (id, (handle, _)) in &mut network.chat_clients {
-                        if handle.actor_id == recipient_actor_id.0 {
-                            let message_info = MessageInfo {
-                                sender_actor_id: from_actor_id,
-                                sender_account_id,
-                                sender_name: sender_name.clone(),
-                                sender_world_id,
-                                message: message_info.message.clone(),
-                                ..Default::default()
-                            };
-                            let msg = FromServer::TellMessageSent(message_info);
-                            if handle.send(msg.clone()).is_err() {
-                                to_remove.push(*id);
-                            }
-                            break;
-                        }
-                    }
+                    let message_info = MessageInfo {
+                        sender_actor_id: from_actor_id,
+                        sender_account_id,
+                        sender_name: sender_name.clone(),
+                        sender_world_id,
+                        message: message_info.message.clone(),
+                        ..Default::default()
+                    };
+
+                    network.send_to_by_actor_id(
+                        recipient_actor_id.0,
+                        FromServer::TellMessageSent(message_info),
+                        DestinationNetwork::ChatClients,
+                    );
                 } else {
                     // Else, if the recipient is offline, inform the sender.
                     let response = TellNotFoundError {
@@ -1711,15 +1725,11 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         ..Default::default()
                     };
 
-                    for (id, (handle, _)) in &mut network.chat_clients {
-                        if *id == from_id {
-                            let msg = FromServer::TellRecipientNotFound(response);
-                            if handle.send(msg.clone()).is_err() {
-                                to_remove.push(*id);
-                            }
-                            break;
-                        }
-                    }
+                    network.send_to(
+                        from_id,
+                        FromServer::TellRecipientNotFound(response),
+                        DestinationNetwork::ChatClients,
+                    );
                 }
             }
             ToServer::FatalError(err) => return Err(err),
