@@ -352,6 +352,53 @@ impl NetworkState {
     }
 }
 
+fn do_change_zone(
+    data: &mut WorldServer,
+    network: &mut NetworkState,
+    game_data: &mut GameData,
+    destination_zone_id: u16,
+    destination_instance_id: u32,
+    actor_id: u32,
+    from_id: ClientId,
+) {
+    // inform the players in this zone that this actor left
+    if let Some(current_instance) = data.find_actor_instance_mut(actor_id) {
+        current_instance.actors.remove(&ObjectId(actor_id));
+        network.inform_remove_actor(current_instance, from_id, actor_id);
+    }
+
+    // then find or create a new instance with the zone id
+    data.ensure_exists(destination_zone_id, game_data);
+    let target_instance = data.find_instance_mut(destination_zone_id);
+
+    let exit_position;
+    let exit_rotation;
+    if let Some((destination_object, _)) =
+        target_instance.zone.find_pop_range(destination_instance_id)
+    {
+        exit_position = Position {
+            x: destination_object.transform.translation[0],
+            y: destination_object.transform.translation[1],
+            z: destination_object.transform.translation[2],
+        };
+        exit_rotation = euler_to_direction(destination_object.transform.rotation);
+    } else {
+        exit_position = Position::default();
+        exit_rotation = 0.0;
+    }
+
+    // now that we have all of the data needed, inform the connection of where they need to be
+    let msg = FromServer::ChangeZone(
+        destination_zone_id,
+        target_instance.weather_id,
+        exit_position,
+        exit_rotation,
+        LuaZone::from_zone(&target_instance.zone, target_instance.weather_id),
+        false,
+    );
+    network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
+}
+
 fn set_player_minion(
     data: &mut WorldServer,
     network: &mut NetworkState,
@@ -760,6 +807,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
             ToServer::EnterZoneJump(from_id, actor_id, exitbox_id) => {
                 let mut data = data.lock().unwrap();
                 let mut network = network.lock().unwrap();
+                let mut game_data = game_data.lock().unwrap();
 
                 // first, find the zone jump in the current zone
                 let destination_zone_id;
@@ -779,44 +827,15 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     break;
                 }
 
-                // inform the players in this zone that this actor left
-                if let Some(current_instance) = data.find_actor_instance_mut(actor_id) {
-                    current_instance.actors.remove(&ObjectId(actor_id));
-                    network.inform_remove_actor(current_instance, from_id, actor_id);
-                }
-
-                // then find or create a new instance with the zone id
-                let mut game_data = game_data.lock().unwrap();
-                data.ensure_exists(destination_zone_id, &mut game_data);
-                let target_instance = data.find_instance_mut(destination_zone_id);
-
-                // TODO: this same code is 99% the same for zone jumps, aetherytes and warps. it should be consolidated!
-                let exit_position;
-                let exit_rotation;
-                if let Some((destination_object, _)) =
-                    target_instance.zone.find_pop_range(destination_instance_id)
-                {
-                    exit_position = Position {
-                        x: destination_object.transform.translation[0],
-                        y: destination_object.transform.translation[1],
-                        z: destination_object.transform.translation[2],
-                    };
-                    exit_rotation = euler_to_direction(destination_object.transform.rotation);
-                } else {
-                    exit_position = Position::default();
-                    exit_rotation = 0.0;
-                }
-
-                // now that we have all of the data needed, inform the connection of where they need to be
-                let msg = FromServer::ChangeZone(
+                do_change_zone(
+                    &mut data,
+                    &mut network,
+                    &mut game_data,
                     destination_zone_id,
-                    target_instance.weather_id,
-                    exit_position,
-                    exit_rotation,
-                    LuaZone::from_zone(&target_instance.zone, target_instance.weather_id),
-                    false,
+                    destination_instance_id,
+                    actor_id,
+                    from_id,
                 );
-                network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
             }
             ToServer::Warp(from_id, actor_id, warp_id) => {
                 let mut data = data.lock().unwrap();
@@ -828,42 +847,15 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     .get_warp(warp_id)
                     .expect("Failed to find the warp!");
 
-                // inform the players in this zone that this actor left
-                if let Some(current_instance) = data.find_actor_instance_mut(actor_id) {
-                    current_instance.actors.remove(&ObjectId(actor_id));
-                    network.inform_remove_actor(current_instance, from_id, actor_id);
-                }
-
-                // then find or create a new instance with the zone id
-                data.ensure_exists(destination_zone_id, &mut game_data);
-                let target_instance = data.find_instance_mut(destination_zone_id);
-
-                let exit_position;
-                let exit_rotation;
-                if let Some((destination_object, _)) =
-                    target_instance.zone.find_pop_range(destination_instance_id)
-                {
-                    exit_position = Position {
-                        x: destination_object.transform.translation[0],
-                        y: destination_object.transform.translation[1],
-                        z: destination_object.transform.translation[2],
-                    };
-                    exit_rotation = euler_to_direction(destination_object.transform.rotation);
-                } else {
-                    exit_position = Position::default();
-                    exit_rotation = 0.0;
-                }
-
-                // now that we have all of the data needed, inform the connection of where they need to be
-                let msg = FromServer::ChangeZone(
+                do_change_zone(
+                    &mut data,
+                    &mut network,
+                    &mut game_data,
                     destination_zone_id,
-                    target_instance.weather_id,
-                    exit_position,
-                    exit_rotation,
-                    LuaZone::from_zone(&target_instance.zone, target_instance.weather_id),
-                    false,
+                    destination_instance_id,
+                    actor_id,
+                    from_id,
                 );
-                network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
             }
             ToServer::WarpAetheryte(from_id, actor_id, aetheryte_id) => {
                 let mut data = data.lock().unwrap();
@@ -875,42 +867,15 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     .get_aetheryte(aetheryte_id)
                     .expect("Failed to find the aetheryte!");
 
-                // inform the players in this zone that this actor left
-                if let Some(current_instance) = data.find_actor_instance_mut(actor_id) {
-                    current_instance.actors.remove(&ObjectId(actor_id));
-                    network.inform_remove_actor(current_instance, from_id, actor_id);
-                }
-
-                // then find or create a new instance with the zone id
-                data.ensure_exists(destination_zone_id, &mut game_data);
-                let target_instance = data.find_instance_mut(destination_zone_id);
-
-                let exit_position;
-                let exit_rotation;
-                if let Some((destination_object, _)) =
-                    target_instance.zone.find_pop_range(destination_instance_id)
-                {
-                    exit_position = Position {
-                        x: destination_object.transform.translation[0],
-                        y: destination_object.transform.translation[1],
-                        z: destination_object.transform.translation[2],
-                    };
-                    exit_rotation = euler_to_direction(destination_object.transform.rotation);
-                } else {
-                    exit_position = Position::default();
-                    exit_rotation = 0.0;
-                }
-
-                // now that we have all of the data needed, inform the connection of where they need to be
-                let msg = FromServer::ChangeZone(
+                do_change_zone(
+                    &mut data,
+                    &mut network,
+                    &mut game_data,
                     destination_zone_id,
-                    target_instance.weather_id,
-                    exit_position,
-                    exit_rotation,
-                    LuaZone::from_zone(&target_instance.zone, target_instance.weather_id),
-                    false,
+                    destination_instance_id,
+                    actor_id,
+                    from_id,
                 );
-                network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
             }
             ToServer::Message(from_id, msg) => {
                 let mut network = network.lock().unwrap();
