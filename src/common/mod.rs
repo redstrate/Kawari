@@ -115,7 +115,10 @@ pub(crate) fn read_string(byte_stream: Vec<u8>) -> String {
         if let Ok(str) = String::from_utf8(byte_stream.clone()) {
             return str.trim_matches(char::from(0)).to_string(); // trim \0 from the end of strings
         } else {
-            tracing::error!("Found an edge-case where both CStr::from_bytes_until_nul and String::from_utf8 failed: {:#?}", byte_stream.clone());
+            tracing::error!(
+                "Found an edge-case where both CStr::from_bytes_until_nul and String::from_utf8 failed: {:#?}",
+                byte_stream.clone()
+            );
             return String::default();
         }
     };
