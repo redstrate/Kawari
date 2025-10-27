@@ -42,7 +42,7 @@ Only the Global region is supported. Only the Windows client is supported. Suppo
 
 ## Running
 
-Kawari is designed to be easy to run. A guide to running Kawari can be followed [here](https://docs.xiv.zone/kawari/usage.html).
+Kawari is designed to be easy to run. A guide to running Kawari can be followed [here](https://docs.xiv.zone/kawari/setup/overview.html).
 
 ## Contributing
 
