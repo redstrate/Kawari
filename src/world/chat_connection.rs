@@ -2,7 +2,8 @@ use super::common::ClientId;
 use crate::common::timestamp_secs;
 use crate::config::WorldConfig;
 use crate::ipc::chat::{
-    ClientChatIpcSegment, ServerChatIpcData, ServerChatIpcSegment, TellMessage, TellNotFoundError,
+    ChatChannel, ChatChannelType, ClientChatIpcSegment, PartyMessage, ServerChatIpcData,
+    ServerChatIpcSegment, TellMessage, TellNotFoundError,
 };
 use crate::opcodes::ServerChatIpcType;
 use crate::packet::IpcSegmentHeader;
@@ -25,6 +26,7 @@ pub struct ChatConnection {
     pub config: WorldConfig,
     pub last_keep_alive: Instant,
     pub handle: ServerHandle,
+    pub party_chatchannel: ChatChannel,
 }
 
 impl ChatConnection {
@@ -139,6 +141,9 @@ impl ChatConnection {
             )
             .await;
         }
+
+        self.party_chatchannel.world_id = self.config.world_id;
+        self.party_chatchannel.channel_type = ChatChannelType::Party;
     }
 
     pub async fn tell_message_received(&mut self, message_info: MessageInfo) {
@@ -157,6 +162,17 @@ impl ChatConnection {
         let ipc = ServerChatIpcSegment::new(ServerChatIpcData::TellNotFoundError(error_info));
 
         self.send_ipc_self(ipc).await;
+    }
+
+    pub async fn party_message_received(&mut self, message_info: PartyMessage) {
+        let sender_actor_id = message_info.sender_actor_id;
+        let ipc = ServerChatIpcSegment::new(ServerChatIpcData::PartyMessage(message_info));
+
+        self.send_ipc(ipc, sender_actor_id).await;
+    }
+
+    pub async fn set_party_chatchannel(&mut self, party_channel_number: u32) {
+        self.party_chatchannel.channel_number = party_channel_number;
     }
 
     pub async fn send_keep_alive(&mut self, id: u32, timestamp: u32) {

@@ -259,8 +259,7 @@ pub enum ClientZoneIpcData {
         unk: [u8; 8], // seems to always be zeroes?
     },
     PartyMemberKick {
-        #[brw(pad_after = 4)]
-        party_index: u32,
+        content_id: u64,
         unk: u16, // Always 0x003F?
 
         #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
@@ -271,10 +270,11 @@ pub enum ClientZoneIpcData {
         character_name: String,
     },
     PartyChangeLeader {
-        #[brw(pad_after = 4)] // empty
-        party_index: u32,
+        /// The actor id of the new leader.
+        content_id: u64,
         unk: u16, // Always 0x003F?
 
+        /// The name of the new leader.
         #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
         #[br(count = CHAR_NAME_MAX_LENGTH)]
         #[br(map = read_string)]
@@ -477,12 +477,12 @@ mod tests {
             ClientZoneIpcData::PartyLeave { unk: [0; 8] },
             ClientZoneIpcData::PartyDisband { unk: [0; 8] },
             ClientZoneIpcData::PartyMemberKick {
-                party_index: 0,
+                content_id: 0,
                 unk: 0,
                 character_name: "".to_string(),
             },
             ClientZoneIpcData::PartyChangeLeader {
-                party_index: 0,
+                content_id: 0,
                 unk: 0,
                 character_name: "".to_string(),
             },

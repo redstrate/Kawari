@@ -1,11 +1,12 @@
 use binrw::binrw;
 
 use crate::common::{MESSAGE_MAX_LENGTH, read_string, write_string};
+use crate::ipc::chat::ChatChannel;
 
 #[binrw]
 #[derive(Clone, Debug, Default)]
 pub struct SendPartyMessage {
-    pub party_id: u64,
+    pub chatchannel: ChatChannel,
 
     #[br(count = MESSAGE_MAX_LENGTH)]
     #[bw(pad_size_to = MESSAGE_MAX_LENGTH)]
