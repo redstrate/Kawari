@@ -10,17 +10,20 @@ use tokio::sync::mpsc::Sender;
 
 use crate::{
     common::{JumpState, MoveAnimationState, MoveAnimationType, ObjectId, Position},
-    ipc::chat::{ChatChannelType, SendTellMessage, TellNotFoundError},
+    ipc::chat::{
+        ChatChannelType, PartyMessage, SendPartyMessage, SendTellMessage, TellNotFoundError,
+    },
     ipc::zone::{
         ActionRequest, ActorControl, ActorControlSelf, ActorControlTarget, ClientTrigger,
-        Conditions, Config, NpcSpawn, PlayerSpawn, ServerZoneIpcSegment,
+        Conditions, Config, InviteReply, InviteType, NpcSpawn, PartyMemberEntry, PartyUpdateStatus,
+        PlayerEntry, PlayerSpawn, ServerZoneIpcSegment, SocialListRequest, SocialListRequestType,
     },
     packet::PacketSegment,
 };
 
 use super::{Actor, lua::LuaZone};
 
-#[derive(Copy, Clone, Eq, PartialEq, Hash)]
+#[derive(Copy, Clone, Default, Eq, PartialEq, Hash)]
 pub struct ClientId(usize);
 
 impl std::fmt::Debug for ClientId {
@@ -37,6 +40,18 @@ pub enum SpawnKind {
     Player(PlayerSpawn),
     /// An NPC's spawn data is contained within.
     Npc(NpcSpawn),
+}
+
+/// A type encapsulating party update sender and recipient info.
+/// This is internal to Kawari, hence it being placed here.
+#[derive(Clone, Debug)]
+pub struct PartyUpdateTargets {
+    pub execute_account_id: u64,
+    pub execute_content_id: u64,
+    pub execute_name: String,
+    pub target_account_id: u64,
+    pub target_content_id: u64,
+    pub target_name: String,
 }
 
 /// A type encapsulating various information about a zone chat mesage to be sent.
@@ -109,6 +124,27 @@ pub enum FromServer {
     TellRecipientNotFound(TellNotFoundError),
     /// We need to tell our chat connection that our zone connection has disconnected.
     ChatDisconnected(),
+    /// Inform the chat connection that its zone connection has joined a party.
+    SetPartyChatChannel(u32),
+    /// Inform the client that they've received a party invite.
+    PartyInvite(u64, u64, String),
+    /// Inform the client about the results of an invite sent to another player.
+    InvitationResult(u64, u64, String, InviteType, InviteReply),
+    /// The client who received the invite also needs to be informed.
+    InvitationReplyResult(u64, String, InviteType, InviteReply),
+    /// A chat message from the client's party has been received.
+    PartyMessageSent(PartyMessage),
+    /// The client who requested a social list update needs to be informed.
+    SocialListResponse(SocialListRequestType, u8, Vec<PlayerEntry>),
+    /// Members of this party need to be informed of an update.
+    PartyUpdate(
+        PartyUpdateTargets,
+        PartyUpdateStatus,
+        Option<(u64, u32, ObjectId, Vec<PartyMemberEntry>)>,
+    ),
+    /// The character the client invited is already in a party.
+    // TODO: This is actually incorrect behaviour, we need to research more how the client "knows" another player is already in a party since the server doesn't seem to intervene.
+    CharacterAlreadyInParty(),
 }
 
 #[derive(Debug, Clone)]
@@ -205,6 +241,28 @@ pub enum ToServer {
     MoveToPopRange(ClientId, u32, u32),
     /// The connection sent a direct message to another client.
     TellMessageSent(ClientId, u32, SendTellMessage),
+    /// The client invited another player to join their party.
+    InvitePlayerToParty(ObjectId, u64, String),
+    /// The client replied to another player's invite.
+    InvitationResponse(ClientId, u64, u64, String, u64, InviteType, InviteReply),
+    /// The party leader is adding a member to their party.
+    AddPartyMember(u64, u32, u64),
+    /// The client sent a message to their party.
+    PartyMessageSent(u32, SendPartyMessage),
+    /// The client is requesting a social list update.
+    RequestSocialList(ClientId, u32, u64, SocialListRequest),
+    /// The client is designating another player in the party as leader.
+    PartyChangeLeader(u64, u64, u64, String, u64, String),
+    /// The client is removing another player from the party.
+    PartyMemberKick(u64, u64, u64, String, u64, String),
+    /// The client changed areas.
+    PartyMemberChangedAreas(u64, u64, u64, String),
+    /// The client left their party.
+    PartyMemberLeft(u64, u64, u64, u32, String),
+    /// The client disbands their party.
+    PartyDisband(u64, u64, u64, String),
+    /// The chat connection acknowledges the shutdown notice, and now we need to remove it from our internal state.
+    ChatDisconnected(ClientId),
 }
 
 #[derive(Clone, Debug)]

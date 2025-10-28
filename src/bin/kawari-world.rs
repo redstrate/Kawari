@@ -11,17 +11,17 @@ use kawari::inventory::{
     BuyBackItem, ContainerType, CurrencyKind, Item, ItemOperationKind, get_container_type,
 };
 
-use kawari::ipc::chat::ClientChatIpcData;
+use kawari::ipc::chat::{ChatChannel, ClientChatIpcData};
 
 use kawari::ipc::zone::{
     ActorControl, ActorControlCategory, ActorControlSelf, Condition, Conditions, EventType,
-    ItemOperation, OnlineStatus, OnlineStatusMask, PlayerEntry, PlayerSpawn, PlayerStatus,
-    SceneFlags, SearchInfo, SocialList, SocialListUILanguages,
+    InviteType, ItemOperation, OnlineStatus, OnlineStatusMask, PlayerSpawn, PlayerStatus,
+    SceneFlags, SearchInfo,
 };
 
 use kawari::ipc::zone::{
     Blacklist, BlacklistedCharacter, ClientTriggerCommand, ClientZoneIpcData, GameMasterRank,
-    ServerZoneIpcData, ServerZoneIpcSegment, SocialListRequestType, SocialListUIFlags,
+    ServerZoneIpcData, ServerZoneIpcSegment,
 };
 
 use kawari::constants::{
@@ -211,6 +211,7 @@ async fn initial_setup(
                                     last_keep_alive: Instant::now(),
                                     socket,
                                     handle,
+                                    party_chatchannel: ChatChannel::default(),
                                 };
 
                                 // Handle setup before passing off control to the chat connection.
@@ -382,7 +383,7 @@ async fn client_chat_loop(
                                                 connection.handle.send(ToServer::TellMessageSent(connection.id, connection.actor_id, data.clone())).await;
                                             }
                                             ClientChatIpcData::SendPartyMessage(data) => {
-                                                 tracing::info!("SendPartyMessage: {:#?} from {}", data, connection.actor_id);
+                                                connection.handle.send(ToServer::PartyMessageSent(connection.actor_id, data.clone())).await;
                                             }
                                             ClientChatIpcData::GetChannelList { unk } => {
                                                 tracing::info!("GetChannelList: {:#?} from {}", unk, connection.actor_id);
@@ -412,13 +413,23 @@ async fn client_chat_loop(
                 Some(msg) => match msg {
                     FromServer::TellMessageSent(message_info) => connection.tell_message_received(message_info).await,
                     FromServer::TellRecipientNotFound(error_info) => connection.tell_recipient_not_found(error_info).await,
-                    FromServer::ChatDisconnected() => { tracing::info!("ChatConnection {:#?} received shutdown, disconnecting!", connection.id); break; }
+                    FromServer::ChatDisconnected() => {
+                        tracing::info!("ChatConnection {:#?} received shutdown, disconnecting!", connection.id);
+                        break;
+                    }
+                    FromServer::SetPartyChatChannel(channel_id) => connection.set_party_chatchannel(channel_id).await,
+                    FromServer::PartyMessageSent(message_info) => connection.party_message_received(message_info).await,
                     _ => tracing::error!("ChatConnection {:#?} received a FromServer message we don't care about: {:#?}, ensure you're using the right client network or that you've implemented a handler for it if we actually care about it!", client_handle.id, msg),
                 },
                 None => break,
             }
         }
     }
+
+    connection
+        .handle
+        .send(ToServer::ChatDisconnected(connection.id))
+        .await;
 }
 
 struct ClientZoneData {
@@ -557,7 +568,7 @@ async fn client_loop(
                                                 .await
                                                 else {
                                                     tracing::warn!(
-                                                        "Failed to find service account {service_account_id}, just going to stop talking tot his connection..."
+                                                        "Failed to find service account {service_account_id}, just going to stop talking to this connection..."
                                                     );
                                                     break 'outer; // We break the outer loop here because we're in the middle of a segment loop!
                                                 };
@@ -696,6 +707,11 @@ async fn client_loop(
 
                                                 let chara_details = database.find_chara_make(connection.player_data.content_id);
 
+                                                // If we're in a party, we need to tell the other members we changed areas.
+                                                if connection.is_in_party() {
+                                                    connection.handle.send(ToServer::PartyMemberChangedAreas(connection.player_data.party_id, connection.player_data.account_id, connection.player_data.content_id, chara_details.name.clone())).await;
+                                                }
+
                                                 connection.send_inventory(false).await;
                                                 connection.send_stats(&chara_details).await;
 
@@ -823,43 +839,7 @@ async fn client_loop(
                                             }
                                             ClientZoneIpcData::SocialListRequest(request) => {
                                                 tracing::info!("Recieved social list request!");
-                                                // TODO: store this in player_data, and also update it when in parties, duties, etc.
-                                                let mut online_status_mask = OnlineStatusMask::default();
-                                                online_status_mask.set_status(OnlineStatus::Online);
-
-                                                match &request.request_type {
-                                                    // TODO: Fill in with other party members once support for parties is implemented.
-                                                    SocialListRequestType::Party => {
-                                                        let chara_details = database.find_chara_make(connection.player_data.content_id);
-                                                        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::SocialList(SocialList {
-                                                            request_type: request.request_type,
-                                                            sequence: request.count,
-                                                            entries: vec![PlayerEntry {
-                                                                current_world_id: config.world.world_id,
-                                                                ui_flags: SocialListUIFlags::ENABLE_CONTEXT_MENU,
-                                                                content_id: connection.player_data.content_id,
-                                                                zone_id: connection.player_data.zone_id,
-                                                                social_ui_languages: SocialListUILanguages::ENGLISH, // TODO: These languages and the primary client language seem to be set in the search info, but that is not yet implemented.
-                                                                client_language: ClientLanguage::English,
-                                                                online_status_mask,
-                                                                home_world_id: config.world.world_id,
-                                                                name: chara_details.name.to_string(),
-                                                                classjob_id: connection.player_data.classjob_id,
-                                                                classjob_level: connection.player_data.classjob_levels[connection.player_data.classjob_id as usize] as u8,
-                                                                ..Default::default()
-                                                            },],
-                                                        }));
-                                                        connection.send_ipc_self(ipc).await;
-                                                    }
-                                                    SocialListRequestType::Friends => {
-                                                        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::SocialList(SocialList {
-                                                            request_type: request.request_type,
-                                                            sequence: request.count,
-                                                            entries: Default::default(),
-                                                        }));
-                                                        connection.send_ipc_self(ipc).await;
-                                                    }
-                                                }
+                                                connection.handle.send(ToServer::RequestSocialList(connection.id, connection.player_data.actor_id, connection.player_data.party_id, request.clone())).await;
                                             }
                                             ClientZoneIpcData::UpdatePositionHandler { position, rotation, anim_type, anim_state, jump_state, } => {
                                                 connection.player_data.rotation = *rotation;
@@ -875,6 +855,7 @@ async fn client_loop(
                                             }
                                             ClientZoneIpcData::Disconnected { .. } => {
                                                 tracing::info!("Client disconnected!");
+
                                                 // We no longer send ToServer::Disconnected here because the end of the function already does it unconditionally
                                                 break 'outer;  // We break the outer loop here because we're in the middle of a segment loop!
                                             }
@@ -1538,23 +1519,49 @@ async fn client_loop(
                                             ClientZoneIpcData::RequestCharaInfoFromContentIds { .. } => {
                                                 tracing::info!("Requesting character info from content ids is unimplemented");
                                             }
-                                            ClientZoneIpcData::PartyLeave { .. } => {
-                                                tracing::info!("Leaving parties is unimplemented");
+                                            ClientZoneIpcData::InviteCharacter {content_id, world_id, invite_type, character_name } => {
+                                                tracing::info!("Client invited a character! {:#?} {:#?} {:#?} {:#?} {:#?}", content_id, world_id, invite_type, character_name, data.data);
+                                                match invite_type {
+                                                    InviteType::Party => {
+                                                        connection.handle.send(ToServer::InvitePlayerToParty(ObjectId(connection.player_data.actor_id), *content_id, character_name.clone())).await;
+                                                        // Inform the client about the invite they just sent.
+                                                        // TODO: Is this static? unk1 and unk2 haven't been observed to have other values so far.
+                                                        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InviteCharacterResult {
+                                                            content_id: *content_id,
+                                                            world_id: *world_id,
+                                                            unk1: 1,
+                                                            unk2: 1,
+                                                            character_name: character_name.clone(),
+                                                        });
+                                                        connection.send_ipc_self(ipc).await;
+                                                    }
+                                                    InviteType::FriendList => connection.send_notice("The friend list is not yet implemented.").await,
+                                                }
+                                            }
+                                            ClientZoneIpcData::InviteReply { sender_content_id, sender_world_id, invite_type, response } => {
+                                                tracing::info!("Client replied to invite: {:#?} {:#?} {:#?} {:#?}", sender_content_id, sender_world_id, invite_type, response);
+                                                let chara_details = database.find_chara_make(connection.player_data.content_id);
+                                                connection.handle.send(ToServer::InvitationResponse(connection.id, connection.player_data.account_id, connection.player_data.content_id, chara_details.name, *sender_content_id, *invite_type, *response)).await;
                                             }
                                             ClientZoneIpcData::PartyDisband { .. } => {
-                                                tracing::info!("Disbanding parties is unimplemented");
+                                                tracing::info!("Client is disbanding their party!");
+                                                let chara_details = database.find_chara_make(connection.player_data.content_id);
+                                                connection.handle.send(ToServer::PartyDisband(connection.player_data.party_id, connection.player_data.account_id, connection.player_data.content_id, chara_details.name)).await;
                                             }
-                                            ClientZoneIpcData::PartyMemberKick { .. } => {
-                                                tracing::info!("Kicking members from parties is unimplemented");
+                                            ClientZoneIpcData::PartyMemberKick { content_id, character_name, .. } => {
+                                                tracing::info!("Player is kicking another player from their party! {} {}", content_id, character_name);
+                                                let chara_details = database.find_chara_make(connection.player_data.content_id);
+                                                connection.handle.send(ToServer::PartyMemberKick(connection.player_data.party_id, connection.player_data.account_id, connection.player_data.content_id, chara_details.name, *content_id, character_name.clone())).await;
                                             }
-                                            ClientZoneIpcData::PartyChangeLeader { .. } => {
-                                                tracing::info!("Promoting other players to party leader is unimplemented");
+                                            ClientZoneIpcData::PartyChangeLeader { content_id, character_name, .. } => {
+                                                 tracing::info!("Player is promoting another player in their party to leader! {} {}", content_id, character_name);
+                                                let chara_details = database.find_chara_make(connection.player_data.content_id);
+                                                connection.handle.send(ToServer::PartyChangeLeader(connection.player_data.party_id, connection.player_data.account_id, connection.player_data.content_id, chara_details.name, *content_id, character_name.clone())).await;
                                             }
-                                            ClientZoneIpcData::InviteCharacter { .. } => {
-                                                tracing::info!("Inviting other players to your party/friend list/etc. is unimplemented");
-                                            }
-                                            ClientZoneIpcData::InviteReply { .. } => {
-                                                tracing::info!("Replying to other players' invitations is unimplemented");
+                                            ClientZoneIpcData::PartyLeave { .. } => {
+                                                tracing::info!("Client is leaving their party!");
+                                                let chara_details = database.find_chara_make(connection.player_data.content_id);
+                                                connection.handle.send(ToServer::PartyMemberLeft(connection.player_data.party_id, connection.player_data.account_id, connection.player_data.content_id, connection.player_data.actor_id, chara_details.name.clone(),)).await;
                                             }
                                             ClientZoneIpcData::RequestSearchInfo { .. } => {
                                                 tracing::info!("Requesting search info is unimplemented");
@@ -1642,7 +1649,12 @@ async fn client_loop(
                         connection.handle_zone_change(zone_id, weather_id, position, rotation, initial_login).await;
                     },
                     FromServer::NewPosition(position) => connection.set_player_position(position).await,
-
+                    FromServer::PartyInvite(sender_account_id, sender_content_id, sender_name) => connection.received_party_invite(sender_account_id, sender_content_id, sender_name).await,
+                    FromServer::InvitationResult(sender_account_id, sender_content_id, sender_name, invite_type, invite_reply) => connection.received_invitation_response(sender_account_id, sender_content_id, sender_name, invite_type, invite_reply).await,
+                    FromServer::InvitationReplyResult(sender_account_id, sender_name, invite_type, invite_reply) => connection.send_invite_reply_result(sender_account_id, sender_name, invite_type, invite_reply).await,
+                    FromServer::SocialListResponse(request_type, sequence, entries) => connection.send_social_list(request_type, sequence, entries).await,
+                    FromServer::PartyUpdate(targets, update_status, party_info) => connection.send_party_update(targets, update_status, party_info).await,
+                    FromServer::CharacterAlreadyInParty() => connection.send_notice("That player is already in a party. You are seeing this message because Kawari doesn't yet send information correctly in a way that your game will display the error on its own.").await,
                     _ => { tracing::error!("Zone connection {:#?} received a FromServer message we don't care about: {:#?}, ensure you're using the right client network or that you've implemented a handler for it if we actually care about it!", client_handle.id, msg); }
                 },
                 None => break,
@@ -1666,6 +1678,21 @@ async fn client_loop(
                 connection.player_data.actor_id,
             ))
             .await;
+
+        // TODO: Handle the player going offline instead of yeeting them out of the party
+        if connection.is_in_party() {
+            let chara_details = database.find_chara_make(connection.player_data.content_id);
+            connection
+                .handle
+                .send(ToServer::PartyMemberLeft(
+                    connection.player_data.party_id,
+                    connection.player_data.account_id,
+                    connection.player_data.content_id,
+                    connection.player_data.actor_id,
+                    chara_details.name.clone(),
+                ))
+                .await;
+        }
     }
 }
 

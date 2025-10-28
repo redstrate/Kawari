@@ -515,8 +515,8 @@ pub enum ServerZoneIpcData {
         target_name: String,
     },
     PartyList {
-        #[br(count = 8)]
-        #[bw(pad_size_to = 8 * PartyMemberEntry::SIZE)]
+        #[br(count = PartyMemberEntry::NUM_ENTRIES)]
+        #[bw(pad_size_to = PartyMemberEntry::NUM_ENTRIES * PartyMemberEntry::SIZE)]
         members: Vec<PartyMemberEntry>,
         party_id: u64,
         party_chatchannel: ChatChannel,
@@ -823,7 +823,7 @@ mod tests {
                 target_name: "".to_string(),
             },
             ServerZoneIpcData::PartyList {
-                members: vec![PartyMemberEntry::default(); 8],
+                members: vec![PartyMemberEntry::default(); PartyMemberEntry::NUM_ENTRIES],
                 party_id: 0,
                 party_chatchannel: ChatChannel::default(),
                 leader_index: 0,

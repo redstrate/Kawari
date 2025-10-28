@@ -4,7 +4,7 @@ use binrw::binrw;
 
 #[binrw]
 #[brw(repr = u16)]
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub enum PartyUpdateStatus {
     #[default]
     None = 0,
@@ -15,12 +15,16 @@ pub enum PartyUpdateStatus {
     SelfKicked = 5, // TODO: What is this?
     MemberLeftParty = 6,
     SelfLeftParty = 7,
+    MemberChangedZones = 8,
+    Unknown = 9, // TODO: This hasn't been observed yet, but it's included for completeness in case it does exist.
+    MemberWentOffline = 0xA,
+    MemberReturned = 0xB,
 }
 
 // TODO: This should maybe be moved to a more common place since it encompasses all (?) invite types?
 #[binrw]
 #[brw(repr = u8)]
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub enum InviteType {
     #[default]
     Party = 1,
@@ -30,7 +34,7 @@ pub enum InviteType {
 
 #[binrw]
 #[brw(repr = u8)]
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub enum InviteReply {
     #[default]
     Declined = 0,
@@ -64,10 +68,8 @@ pub struct PartyMemberEntry {
     pub actor_id: ObjectId,
     pub entity_id: ObjectId,
     pub parent_id: ObjectId,
-    #[brw(pad_after = 2)] // empty
-    pub current_hp: u16,
-    #[brw(pad_after = 2)] //empty
-    pub max_hp: u16,
+    pub current_hp: u32,
+    pub max_hp: u32,
     pub current_mp: u16,
     pub max_mp: u16,
     pub home_world_id: u16,
@@ -82,4 +84,5 @@ pub struct PartyMemberEntry {
 
 impl PartyMemberEntry {
     pub const SIZE: usize = 456;
+    pub const NUM_ENTRIES: usize = 8;
 }
