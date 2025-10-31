@@ -258,6 +258,16 @@ impl Default for PartyMember {
     }
 }
 
+impl PartyMember {
+    pub fn is_valid(&self) -> bool {
+        self.actor_id != INVALID_OBJECT_ID
+    }
+
+    pub fn is_online(&self) -> bool {
+        self.zone_client_id != ClientId::default() && self.chat_client_id != ClientId::default()
+    }
+}
+
 #[derive(Clone, Debug, Default)]
 struct Party {
     members: [PartyMember; PartyMemberEntry::NUM_ENTRIES],
@@ -267,9 +277,13 @@ struct Party {
 
 impl Party {
     pub fn get_member_count(&self) -> usize {
+        self.members.iter().filter(|x| x.is_valid()).count()
+    }
+
+    pub fn get_online_member_count(&self) -> usize {
         self.members
             .iter()
-            .filter(|x| x.actor_id != INVALID_OBJECT_ID)
+            .filter(|x| x.is_valid() && x.is_online())
             .count()
     }
 
@@ -280,6 +294,27 @@ impl Party {
                 break;
             }
         }
+    }
+
+    pub fn set_member_offline(&mut self, offline_member: u32) {
+        for member in self.members.iter_mut() {
+            if member.actor_id.0 == offline_member {
+                member.zone_client_id = ClientId::default();
+                member.chat_client_id = ClientId::default();
+                break;
+            }
+        }
+    }
+
+    pub fn auto_promote_member(&mut self) -> u32 {
+        for member in &self.members {
+            if member.is_valid() && member.is_online() && member.actor_id.0 != self.leader_id {
+                self.leader_id = member.actor_id.0;
+                break;
+            }
+        }
+
+        self.leader_id
     }
 
     pub fn get_member_by_content_id(&self, content_id: u64) -> Option<PartyMember> {
@@ -474,6 +509,7 @@ impl NetworkState {
 fn build_party_list(party: &Party, data: &WorldServer) -> Vec<PartyMemberEntry> {
     let mut party_list = Vec::<PartyMemberEntry>::new();
 
+    // Online members
     for instance in data.instances.values() {
         for (id, actor) in &instance.actors {
             let spawn = match actor {
@@ -494,11 +530,26 @@ fn build_party_list(party: &Party, data: &WorldServer) -> Vec<PartyMemberEntry> 
                         current_mp: spawn.common.mp_curr,
                         max_mp: spawn.common.mp_max,
                         current_zone_id: instance.zone.id,
+                        home_world_id: spawn.home_world_id,
                         ..Default::default()
                     });
                     break;
                 }
             }
+        }
+    }
+
+    // Offline members
+    for member in &party.members {
+        if member.is_valid() && !member.is_online() {
+            party_list.push(PartyMemberEntry {
+                account_id: member.account_id,
+                content_id: member.content_id,
+                name: member.name.clone(),
+                home_world_id: member.world_id,
+                actor_id: ObjectId(0), // It doesn't seem to matter, but retail sets offline members' actor ids to 0.
+                ..Default::default()
+            })
         }
     }
 
@@ -813,10 +864,34 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 );
 
                 let mut network = network.lock().unwrap();
+                let mut party_id = None;
+                let handle_id = handle.id;
+
+                // Refresh the party member's client id, if applicable.
+                'outer: for (id, party) in &mut network.parties {
+                    for member in &mut party.members {
+                        if member.actor_id.0 == handle.actor_id {
+                            member.zone_client_id = handle.id;
+                            party_id = Some(*id);
+                            break 'outer;
+                        }
+                    }
+                }
 
                 network
                     .clients
-                    .insert(handle.id, (handle, ClientState::default()));
+                    .insert(handle.id, (handle.clone(), ClientState::default()));
+
+                if let Some(party_id) = party_id {
+                    tracing::info!("{} is rejoining party {}", handle.actor_id, party_id);
+                    network.send_to(
+                        handle_id,
+                        FromServer::RejoinPartyAfterDisconnect(party_id),
+                        DestinationNetwork::ZoneClients,
+                    );
+                } else {
+                    tracing::info!("{} was not in a party before connecting.", handle.actor_id);
+                }
             }
             ToServer::NewChatClient(handle) => {
                 tracing::info!(
@@ -826,6 +901,16 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 );
 
                 let mut network = network.lock().unwrap();
+
+                // Refresh the party member's client id, if applicable.
+                'outer: for party in &mut network.parties.values_mut() {
+                    for member in &mut party.members {
+                        if member.actor_id.0 == handle.actor_id {
+                            member.chat_client_id = handle.id; // The chat connection doesn't get informed here since it'll happen later.
+                            break 'outer;
+                        }
+                    }
+                }
 
                 network
                     .chat_clients
@@ -2013,8 +2098,30 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                             let leader_actor_id = network.parties[&from_party_id].leader_id;
                             let mut index: usize = 0;
                             for member in &network.parties[&from_party_id].members {
+                                // The internal party list can and will contain invalid entries representing empty slots, so skip them.
+                                if !member.is_valid() {
+                                    continue;
+                                }
+
+                                if !member.is_online() {
+                                    entries[index].content_id = member.content_id;
+                                    entries[index].name = member.name.clone();
+                                    entries[index].current_world_id = 65535; // This doesn't seem to matter, but retail does it.
+                                    entries[index].ui_flags =
+                                        SocialListUIFlags::ENABLE_CONTEXT_MENU;
+                                    entries[index].home_world_id = member.world_id;
+                                    index += 1;
+                                    continue;
+                                }
+
                                 let Some(instance) = data.find_actor_instance(member.actor_id.0)
                                 else {
+                                    // TOOD: This situation might be panic-worthy? Reality should have broken, or an invalid party member slipped past the earlier check if this trips.
+                                    tracing::error!(
+                                        "Unable to find this actor in any instance, what happened? {} {}",
+                                        member.actor_id.0,
+                                        member.name.clone()
+                                    );
                                     continue;
                                 };
 
@@ -2025,26 +2132,21 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                                                 "Why are we trying to get the PlayerSpawn of an NPC?"
                                             );
                                         };
-
-                                        if member.zone_client_id != ClientId::default() {
-                                            let mut online_status_mask =
-                                                OnlineStatusMask::default();
-                                            //TODO: account for people being offline
-                                            online_status_mask.set_status(OnlineStatus::Online);
+                                        let mut online_status_mask = OnlineStatusMask::default();
+                                        online_status_mask.set_status(OnlineStatus::Online);
+                                        online_status_mask.set_status(OnlineStatus::PartyMember);
+                                        if member.actor_id.0 == leader_actor_id {
                                             online_status_mask
-                                                .set_status(OnlineStatus::PartyMember);
-                                            if member.actor_id.0 == leader_actor_id {
-                                                online_status_mask
-                                                    .set_status(OnlineStatus::PartyLeader);
-                                            }
-                                            entries[index].online_status_mask = online_status_mask;
-                                            entries[index].classjob_id = spawn.common.class_job;
-                                            entries[index].classjob_level = spawn.common.level;
-                                            entries[index].zone_id = instance.zone.id;
+                                                .set_status(OnlineStatus::PartyLeader);
                                         }
+                                        entries[index].online_status_mask = online_status_mask;
+                                        entries[index].classjob_id = spawn.common.class_job;
+                                        entries[index].classjob_level = spawn.common.level;
+                                        entries[index].zone_id = instance.zone.id;
 
                                         entries[index].content_id = spawn.content_id;
-                                        entries[index].current_world_id = spawn.home_world_id;
+                                        entries[index].home_world_id = member.world_id;
+                                        entries[index].current_world_id = spawn.current_world_id;
                                         entries[index].name = spawn.common.name.clone();
                                         entries[index].ui_flags =
                                             SocialListUIFlags::ENABLE_CONTEXT_MENU;
@@ -2073,6 +2175,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
 
                                     entries[0].content_id = spawn.content_id;
                                     entries[0].current_world_id = spawn.home_world_id;
+                                    entries[0].home_world_id = spawn.home_world_id;
                                     entries[0].name = spawn.common.name.clone();
                                     entries[0].ui_flags = SocialListUIFlags::ENABLE_CONTEXT_MENU;
                                     entries[0].online_status_mask = online_status_mask;
@@ -2171,6 +2274,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                                         current_mp: spawn.common.mp_curr,
                                         max_mp: spawn.common.mp_max,
                                         current_zone_id: instance.zone.id,
+                                        home_world_id: spawn.home_world_id,
                                         ..Default::default()
                                     });
                                     break;
@@ -2231,7 +2335,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         }
                     }
 
-                    network.parties.get_mut(&party_id).unwrap().members = party; // now we can give the clone back after all that nonsense
+                    network.parties.get_mut(&party_id).unwrap().members = party; // Now we can give the clone back after all that nonsense
                 } else {
                     tracing::error!(
                         "AddPartyMember: Party id wasn't in the hashmap! What happened?"
@@ -2294,9 +2398,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         execute_account_id,
                         execute_content_id,
                         execute_name: execute_name.clone(),
-                        target_account_id: 0,
-                        target_content_id: 0,
-                        target_name: String::default(),
+                        ..Default::default()
                     },
                     PartyUpdateStatus::MemberChangedZones,
                     Some((
@@ -2373,14 +2475,13 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 let leaving_zone_client_id;
                 let leaving_chat_client_id;
                 let chatchannel_id;
-                let leader_id;
+                let mut leader_id;
                 let member_count;
                 {
                     let Some(party) = network.parties.get_mut(&party_id) else {
                         continue;
                     };
                     chatchannel_id = party.chatchannel_id;
-                    leader_id = party.leader_id;
 
                     // Construct the party list we're sending back to the clients in this party.
                     leaving_zone_client_id = party
@@ -2394,14 +2495,20 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
 
                     party.remove_member(execute_actor_id);
                     member_count = party.get_member_count();
+                    leader_id = party.leader_id;
+
+                    // If the leader left the party, and there are still enough members, auto-promote the next available player
+                    if execute_actor_id == party.leader_id && member_count >= 2 {
+                        leader_id = party.auto_promote_member();
+                    }
+
                     party_list = build_party_list(party, &data);
                 }
 
                 let update_status;
                 let party_info;
 
-                // TODO: Instead of auto-disbanding when the leader goes offline, promote someene instead!
-                if member_count < 2 || execute_actor_id == leader_id {
+                if member_count < 2 {
                     update_status = PartyUpdateStatus::DisbandingParty;
                     party_info = None;
                 } else {
@@ -2414,9 +2521,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         execute_account_id,
                         execute_content_id,
                         execute_name: execute_name.clone(),
-                        target_account_id: 0,
-                        target_content_id: 0,
-                        target_name: String::default(),
+                        ..Default::default()
                     },
                     update_status,
                     party_info,
@@ -2427,9 +2532,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         execute_account_id,
                         execute_content_id,
                         execute_name: execute_name.clone(),
-                        target_account_id: 0,
-                        target_content_id: 0,
-                        target_name: String::default(),
+                        ..Default::default()
                     },
                     update_status,
                     None,
@@ -2451,8 +2554,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 );
 
                 // Clean up the party on our side, if necessary.
-                // TODO: Instead of auto-disbanding when the leader goes offline, promote someene instead!
-                if member_count < 2 || execute_actor_id == leader_id {
+                if member_count < 2 {
                     // Tell their chat connections they're no longer in a party.
                     network.send_to_party(
                         party_id,
@@ -2476,9 +2578,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         execute_account_id,
                         execute_content_id,
                         execute_name: execute_name.clone(),
-                        target_account_id: 0,
-                        target_content_id: 0,
-                        target_name: String::default(),
+                        ..Default::default()
                     },
                     PartyUpdateStatus::DisbandingParty,
                     None,
@@ -2552,9 +2652,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         execute_account_id,
                         execute_content_id,
                         execute_name: execute_name.clone(),
-                        target_account_id: 0,
-                        target_content_id: 0,
-                        target_name: String::default(),
+                        ..Default::default()
                     },
                     update_status,
                     None,
@@ -2586,6 +2684,99 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     );
                     network.parties.remove(&party_id);
                 }
+            }
+            ToServer::PartyMemberOffline(
+                party_id,
+                execute_account_id,
+                execute_content_id,
+                from_actor_id,
+                execute_name,
+            ) => {
+                let mut network = network.lock().unwrap();
+                let data = data.lock().unwrap();
+
+                if !network.parties.contains_key(&party_id) {
+                    tracing::error!(
+                        "PartyMemberOffline: We were given an invalid party id {}. What happened?",
+                        party_id
+                    );
+                    continue;
+                }
+
+                let party = &mut network.parties.get_mut(&party_id).unwrap();
+                party.set_member_offline(from_actor_id);
+
+                if party.get_online_member_count() > 0 {
+                    let party_list = build_party_list(party, &data);
+
+                    // Auto-promote the first available player to leader if the previous leader went offline.
+                    // In this situation: retail uses PartyLeaderWentOffline as the update status, followed by sending another full MemberWentOffline update,
+                    // but this is very inefficient and wasteful, so we will not do that (unless we have good reason to).
+                    // The client still accepts a leader change during MemberWentOffline.
+                    if party.leader_id == from_actor_id {
+                        party.leader_id = party.auto_promote_member();
+                    }
+
+                    let msg = FromServer::PartyUpdate(
+                        PartyUpdateTargets {
+                            execute_account_id,
+                            execute_content_id,
+                            execute_name: execute_name.clone(),
+                            ..Default::default()
+                        },
+                        PartyUpdateStatus::MemberWentOffline,
+                        Some((
+                            party_id,
+                            party.chatchannel_id,
+                            ObjectId(party.leader_id),
+                            party_list,
+                        )),
+                    );
+
+                    network.send_to_party(party_id, None, msg, DestinationNetwork::ZoneClients);
+                } else {
+                    // If nobody in the party is online, disband it.
+                    // Retail keeps it around for ~2 hours or so if everyone is offline, but there's no point doing that.
+                    network.parties.remove(&party_id);
+                }
+            }
+            ToServer::PartyMemberReturned(execute_actor_id) => {
+                let mut network = network.lock().unwrap();
+                let data = data.lock().unwrap();
+
+                let mut member = PartyMember::default();
+                let mut party_id = 0;
+                let mut party = Party::default();
+
+                'outer: for (id, my_party) in &mut network.parties.iter() {
+                    for my_member in &my_party.members {
+                        if my_member.actor_id.0 == execute_actor_id {
+                            member = my_member.clone();
+                            party_id = *id;
+                            party = my_party.clone();
+                            break 'outer;
+                        }
+                    }
+                }
+
+                let party_list = build_party_list(&party, &data);
+                let msg = FromServer::PartyUpdate(
+                    PartyUpdateTargets {
+                        execute_account_id: member.account_id,
+                        execute_content_id: member.content_id,
+                        execute_name: member.name.clone(),
+                        ..Default::default()
+                    },
+                    PartyUpdateStatus::MemberReturned,
+                    Some((
+                        party_id,
+                        party.chatchannel_id,
+                        ObjectId(party.leader_id),
+                        party_list,
+                    )),
+                );
+
+                network.send_to_party(party_id, None, msg, DestinationNetwork::ZoneClients);
             }
             ToServer::ChatDisconnected(from_id) => {
                 let mut network = network.lock().unwrap();

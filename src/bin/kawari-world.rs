@@ -707,9 +707,14 @@ async fn client_loop(
 
                                                 let chara_details = database.find_chara_make(connection.player_data.content_id);
 
-                                                // If we're in a party, we need to tell the other members we changed areas.
+                                                // If we're in a party, we need to tell the other members we changed areas or reconnected.
                                                 if connection.is_in_party() {
+                                                    if !connection.player_data.rejoining_party {
                                                     connection.handle.send(ToServer::PartyMemberChangedAreas(connection.player_data.party_id, connection.player_data.account_id, connection.player_data.content_id, chara_details.name.clone())).await;
+                                                    } else {
+                                                        connection.handle.send(ToServer::PartyMemberReturned(connection.player_data.actor_id)).await;
+                                                        connection.player_data.rejoining_party = false;
+                                                    }
                                                 }
 
                                                 connection.send_inventory(false).await;
@@ -1655,6 +1660,10 @@ async fn client_loop(
                     FromServer::SocialListResponse(request_type, sequence, entries) => connection.send_social_list(request_type, sequence, entries).await,
                     FromServer::PartyUpdate(targets, update_status, party_info) => connection.send_party_update(targets, update_status, party_info).await,
                     FromServer::CharacterAlreadyInParty() => connection.send_notice("That player is already in a party. You are seeing this message because Kawari doesn't yet send information correctly in a way that your game will display the error on its own.").await,
+                    FromServer::RejoinPartyAfterDisconnect(party_id) => {
+                        connection.player_data.party_id = party_id;
+                        connection.player_data.rejoining_party = true;
+                    }
                     _ => { tracing::error!("Zone connection {:#?} received a FromServer message we don't care about: {:#?}, ensure you're using the right client network or that you've implemented a handler for it if we actually care about it!", client_handle.id, msg); }
                 },
                 None => break,
@@ -1679,12 +1688,11 @@ async fn client_loop(
             ))
             .await;
 
-        // TODO: Handle the player going offline instead of yeeting them out of the party
         if connection.is_in_party() {
             let chara_details = database.find_chara_make(connection.player_data.content_id);
             connection
                 .handle
-                .send(ToServer::PartyMemberLeft(
+                .send(ToServer::PartyMemberOffline(
                     connection.player_data.party_id,
                     connection.player_data.account_id,
                     connection.player_data.content_id,

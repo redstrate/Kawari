@@ -515,6 +515,12 @@
             "comment": "Sent by the server to inform the client about its own invite reply.",
             "opcode": 491,
             "size": 48
+        },
+        {
+            "name": "PartyMemberPositions",
+            "comment": "Sent by the server to inform the client about the party's positions in the world.",
+            "opcode": 199,
+            "size": 64
         }
     ],
     "ClientZoneIpcType": [
