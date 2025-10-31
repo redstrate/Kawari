@@ -408,7 +408,11 @@ impl NetworkState {
             }
 
             if handle.send(message.clone()).is_err() {
-                self.to_remove.push(id);
+                if destination == DestinationNetwork::ZoneClients {
+                    self.to_remove.push(id);
+                } else {
+                    self.to_remove_chat.push(id);
+                }
             }
         }
     }
@@ -429,7 +433,11 @@ impl NetworkState {
 
             if id == client_id {
                 if handle.send(message).is_err() {
-                    self.to_remove.push(id);
+                    if destination == DestinationNetwork::ZoneClients {
+                        self.to_remove.push(id);
+                    } else {
+                        self.to_remove_chat.push(id);
+                    }
                 }
                 break;
             }
