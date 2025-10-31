@@ -174,6 +174,8 @@ pub struct PlayerData {
     pub active_minion: u32,
     /// The player's party id number, used for networking party-related events
     pub party_id: u64,
+    /// The player's status when connecting/reconnecting. If true, they need to rejoin their party.
+    pub rejoining_party: bool,
 }
 
 /// Various obsfucation-related bits like the seeds and keys for this connection.

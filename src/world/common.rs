@@ -44,7 +44,7 @@ pub enum SpawnKind {
 
 /// A type encapsulating party update sender and recipient info.
 /// This is internal to Kawari, hence it being placed here.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct PartyUpdateTargets {
     pub execute_account_id: u64,
     pub execute_content_id: u64,
@@ -145,6 +145,8 @@ pub enum FromServer {
     /// The character the client invited is already in a party.
     // TODO: This is actually incorrect behaviour, we need to research more how the client "knows" another player is already in a party since the server doesn't seem to intervene.
     CharacterAlreadyInParty(),
+    /// Inform the client they were in a party, and request that they inform us of their return.
+    RejoinPartyAfterDisconnect(u64),
 }
 
 #[derive(Debug, Clone)]
@@ -263,6 +265,10 @@ pub enum ToServer {
     PartyDisband(u64, u64, u64, String),
     /// The chat connection acknowledges the shutdown notice, and now we need to remove it from our internal state.
     ChatDisconnected(ClientId),
+    /// The client went offline and we need to inform other party members.
+    PartyMemberOffline(u64, u64, u64, u32, String),
+    /// The client returned online and we need to inform other party .
+    PartyMemberReturned(u32),
 }
 
 #[derive(Clone, Debug)]

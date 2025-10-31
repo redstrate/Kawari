@@ -1,4 +1,7 @@
-use crate::common::{CHAR_NAME_MAX_LENGTH, ObjectId, read_string, write_string};
+use crate::common::{
+    CHAR_NAME_MAX_LENGTH, ObjectId, Position, read_packed_position, read_string,
+    write_packed_position, write_string,
+};
 use crate::ipc::zone::StatusEffect;
 use binrw::binrw;
 
@@ -19,6 +22,7 @@ pub enum PartyUpdateStatus {
     Unknown = 9, // TODO: This hasn't been observed yet, but it's included for completeness in case it does exist.
     MemberWentOffline = 0xA,
     MemberReturned = 0xB,
+    PartyLeaderWentOffline = 0x12, // While this does get used on retail, we don't use it ourselves.
 }
 
 // TODO: This should maybe be moved to a more common place since it encompasses all (?) invite types?
@@ -85,4 +89,21 @@ pub struct PartyMemberEntry {
 impl PartyMemberEntry {
     pub const SIZE: usize = 456;
     pub const NUM_ENTRIES: usize = 8;
+}
+
+// TODO: Move these position-related structs elsewhere in an eventual refactor
+#[binrw]
+#[derive(Clone, Debug, Default)]
+pub struct MemberPosition {
+    #[brw(pad_after = 1)]
+    pub valid: u8, // Assumed, it's what Sapphire calls it. Seems to be set to 1 when there's position info, and 0 when there's not.
+    #[br(map = read_packed_position)]
+    #[bw(map = write_packed_position)]
+    pub pos: Position,
+}
+
+#[binrw]
+#[derive(Clone, Debug, Default)]
+pub struct PartyMemberPositions {
+    pub positions: [MemberPosition; PartyMemberEntry::NUM_ENTRIES],
 }

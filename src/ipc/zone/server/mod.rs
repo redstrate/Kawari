@@ -107,7 +107,7 @@ use crate::packet::ServerIpcSegmentHeader;
 
 use crate::ipc::{
     chat::ChatChannel,
-    zone::{PartyMemberEntry, PartyUpdateStatus},
+    zone::{PartyMemberEntry, PartyMemberPositions, PartyUpdateStatus},
 };
 
 use crate::ipc::zone::{InviteReply, InviteType, InviteUpdateType, SearchInfo};
@@ -524,6 +524,7 @@ pub enum ServerZoneIpcData {
         #[brw(pad_after = 6)]
         member_count: u8,
     },
+    PartyMemberPositions(PartyMemberPositions),
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -829,6 +830,7 @@ mod tests {
                 leader_index: 0,
                 member_count: 0,
             },
+            ServerZoneIpcData::PartyMemberPositions(PartyMemberPositions::default()),
         ];
 
         for data in &ipc_types {
