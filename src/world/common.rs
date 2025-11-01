@@ -267,7 +267,7 @@ pub enum ToServer {
     ChatDisconnected(ClientId),
     /// The client went offline and we need to inform other party members.
     PartyMemberOffline(u64, u64, u64, u32, String),
-    /// The client returned online and we need to inform other party .
+    /// The client returned online and we need to inform other party members.
     PartyMemberReturned(u32),
 }
 
