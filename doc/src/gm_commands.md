@@ -2,7 +2,8 @@
 
 These are commands already built-in into the FFXIV client. Normally only available to "Game Masters", they are also reimplemented in Kawari.
 
-**Note:** We obviously lack the original documentation for these commands, so the names and functionality are left up to our interpretation.
+> [!NOTE]
+> We obviously lack the original documentation for these commands, so the names and functionality are left up to our interpretation.
 
 | Name | Usage | Details |
 | --- | --- | --- |

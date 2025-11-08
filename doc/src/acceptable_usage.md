@@ -4,7 +4,8 @@ Kawari is a "server emulator", and thus sits in a largely grey area in terms of 
 
 **The primary objective of Kawari is to extend the game's longevity, while enabling research of the game's internals**. To make our stances absolutely clear, we have some explicitly disallowed actions while using Kawari publicly or working on it as a community project.
 
-In this document we mention "playable retail account" which means what it says: you are in possession of an account able to log in to the retail server. This is usually an active paid subscription, but can also include a free trial account.
+> [!NOTE]
+> In this document we mention "playable retail account" which means what it says: you are in possession of an account able to log in to the retail server. This is usually an active paid subscription, but could also mean a free trial account.
 
 You may **not** use Kawari, meaning our code, resources and community to:
 

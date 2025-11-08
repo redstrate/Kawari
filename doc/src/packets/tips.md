@@ -30,7 +30,8 @@ There are a multitude of other projects that can be used for reference, inspirat
 
 Something we have needed from time to time is a way to truly understand some obscure packet seen in retail. One way is to "block" the client from recieving it and seeing what happens. This might not seem super useful at first, but it's been used to fix problems like long loading times - by figuring out which packets are truly needed during zone loading.
 
-**NOTE:** This process could potentially be interpreted as cheating, messing with retail network operation is inherently risky. Do not try this on an account you care about!
+> [!WARNING]
+> This could potentially be interpreted as cheating, and messing with retail network operation is inherently risky. Do not try this on an account you care about!
 
 You can use the [Firewall plugin](https://codeberg.org/redstrate/Firewall) for this task. Due to the dangerous nature of the plugin, you will have to figure out how to build it yourself.
 

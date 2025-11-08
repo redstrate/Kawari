@@ -21,7 +21,8 @@ The game lacks a noclip or flying mode, so getting around zones can appear a bit
 
 It's possible to import existing characters from the retail server using [Auracite](https://auracite.xiv.zone). You can upload the backup ZIP on the account management page.
 
-**NOTE:** This feature is still a work-in-progress, and not all data is imported yet. You also have to use the Dalamud integration, as not all of the required data is provided by the Lodestone alone.
+> [!NOTE]
+> This feature is still a work-in-progress, and not all data is imported yet. You also have to use the Dalamud integration, as not all of the required data is provided by the Lodestone alone.
 
 ## Legacy Mark/Tattoo
 
