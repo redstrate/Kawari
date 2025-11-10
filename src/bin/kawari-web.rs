@@ -85,13 +85,22 @@ struct Params {
     r#type: String,
 }
 
+// Removes the protocol bit from a URL e.g. turning http://patch-gamever.ffxiv.localhost to patch-gamever.ffxiv.localhost
+// We have to do this, because LauncherTweaks expects it to be a hostname.
+fn strip_out_protocol(url: &str) -> &str {
+    url.split_once("://").unwrap().1
+}
+
 async fn launcher_config(Query(params): Query<Params>) -> String {
     let config = get_config();
 
     let environment = setup_default_environment();
     let template = environment.get_template("launchertweaks.toml").unwrap();
+    let game_patch_server = strip_out_protocol(&config.patch.game_server_name);
+    let boot_patch_server = strip_out_protocol(&config.patch.boot_server_name);
+
     template
-            .render(context! { launcher_url => config.launcher.server_name, enable_webview2 => params.r#type != "webview2", game_patch_server => config.patch.game_server_name, boot_patch_server => config.patch.boot_server_name, lobby_port => config.lobby.port, lobby_host => config.lobby.server_name })
+            .render(context! { launcher_url => config.launcher.server_name, enable_webview2 => params.r#type != "webview2", game_patch_server, boot_patch_server, lobby_port => config.lobby.port, lobby_host => config.lobby.server_name })
             .unwrap()
 }
 
