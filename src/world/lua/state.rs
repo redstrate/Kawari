@@ -32,6 +32,13 @@ pub fn initial_setup(lua: &mut Lua) {
     register_flags::<SceneFlags>(lua, ""); // TODO: might want to prefix these at some point
     register_enum::<EventType>(lua, "EVENT_TYPE");
     register_enum::<EventHandlerType>(lua, "HANDLER_TYPE");
+
+    // Load globals
+    let config = get_config();
+    let file_name = format!("{}/Global.lua", &config.world.scripts_location);
+    lua.load(std::fs::read(&file_name).expect("Failed to locate scripts directory!"))
+        .exec()
+        .unwrap();
 }
 
 /// Loads `Init.lua`

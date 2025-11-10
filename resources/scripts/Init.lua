@@ -6,7 +6,6 @@ dofile(BASE_DIR.."effects/Effects.lua")
 dofile(BASE_DIR.."eobjs/EObjects.lua")
 dofile(BASE_DIR.."events/Events.lua")
 dofile(BASE_DIR.."items/Items.lua")
-dofile(BASE_DIR.."Global.lua")
 
 -- As seen on retail
 INITIAL_CUTSCENE_FLAGS = NO_DEFAULT_CAMERA | INVIS_ENPC | CONDITION_CUTSCENE | HIDE_UI | HIDE_HOTBAR | SILENT_ENTER_TERRI_ENV | SILENT_ENTER_TERRI_BGM | SILENT_ENTER_TERRI_SE | DISABLE_SKIP | DISABLE_STEALTH
