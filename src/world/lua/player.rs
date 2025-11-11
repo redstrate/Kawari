@@ -4,7 +4,7 @@ use crate::{
     INVENTORY_ACTION_ACK_SHOP, LogMessageType,
     common::{
         INVALID_OBJECT_ID, ObjectId, ObjectTypeId, ObjectTypeKind, Position,
-        workdefinitions::RemakeMode, write_quantized_rotation,
+        workdefinitions::RemakeMode,
     },
     inventory::{ContainerType, CurrencyKind, Item},
     ipc::zone::{
@@ -87,7 +87,7 @@ impl LuaPlayer {
 
     fn set_position(&mut self, position: Position, rotation: f32) {
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Warp(Warp {
-            dir: write_quantized_rotation(&rotation),
+            dir: rotation,
             position,
             ..Default::default()
         }));

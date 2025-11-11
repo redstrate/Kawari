@@ -9,7 +9,7 @@ use crate::{
     inventory::BuyBackList,
     ipc::zone::{
         ActorControlCategory, ActorControlSelf, InitZone, InitZoneFlags, ServerZoneIpcData,
-        ServerZoneIpcSegment, WeatherChange,
+        ServerZoneIpcSegment, Warp, WeatherChange,
     },
     packet::{ConnectionState, PacketSegment, ScramblerKeyGenerator, SegmentData, SegmentType},
     world::{
@@ -40,10 +40,6 @@ impl ZoneConnection {
         exit_rotation: f32,
         initial_login: bool,
     ) {
-        self.player_data.zone_id = new_zone_id;
-        self.exit_position = Some(exit_position);
-        self.exit_rotation = Some(exit_rotation);
-
         // fade in?
         {
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PrepareZoning {
@@ -60,6 +56,22 @@ impl ZoneConnection {
             });
             self.send_ipc_self(ipc).await;
         }
+
+        // If we are already in the same zone, we can do a Warp instead!
+        if self.player_data.zone_id == new_zone_id && !initial_login {
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Warp(Warp {
+                dir: exit_rotation,
+                position: exit_position,
+                warp_type: 4, // for teleporting
+                ..Default::default()
+            }));
+            self.send_ipc_self(ipc).await;
+            return;
+        }
+
+        self.player_data.zone_id = new_zone_id;
+        self.exit_position = Some(exit_position);
+        self.exit_rotation = Some(exit_rotation);
 
         // Player Class Info
         self.update_class_info().await;
