@@ -17,7 +17,6 @@ These special debug commands start with `!` and are custom to Kawari.
 | `mount` | `!mount <id>` | Allows you to mount in any zone, on the specified mount ID. |
 | `nudge` | `!nudge <distance> <up/down (optional)>` | Teleport forward, back, up or down `distance` yalms. Specifying up or down will move the player up or down instead of forward or back. |
 | `reload` | `!reload` | Reloads `Global.lua` that is normally only loaded once at start-up. |
-| `replay` | `!replay <path>` | Replays packets, must be in the format generated from cfcap-capture. |
 | `unlock` | `!unlock <id>` | Unlock an action, emote, etc. for example: `1` for Return and `4` for Teleport. |
 | `unlockbuddyequip` | `!unlockbuddyequip <id>` | Unlocks the specified BuddyEquip (Companion Barding) ID. |
 | `unlockcontent` | `!unlockcontent <id>` | Unlocks the specified instanced content. The ID to use is from the InstanceContent Excel sheet. |

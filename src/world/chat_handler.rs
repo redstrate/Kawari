@@ -133,13 +133,6 @@ impl ChatHandler {
                 }
                 true
             }
-            "!replay" => {
-                if let Some((_, path)) = chat_message.message.split_once(' ') {
-                    connection.replay_packets(path).await;
-                }
-
-                true
-            }
             "!condition" => {
                 if let Some((_, condition_name)) = chat_message.message.split_once(' ') {
                     if let Ok(condition) = Condition::from_str(condition_name) {

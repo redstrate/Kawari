@@ -108,8 +108,6 @@ pub enum FromServer {
     ActorSummonsMinion(u32),
     /// We need to despawn a player's minion, and tell other clients
     ActorDespawnsMinion(),
-    /// Informs the connection to replay packet data to the client.
-    ReplayPacket(PacketSegment<ServerZoneIpcSegment>),
     /// The player should lose this effect.
     LoseEffect(u16, u16, ObjectId),
     // TODO: temporary
@@ -223,8 +221,6 @@ pub enum ToServer {
     Config(ClientId, u32, Config),
     /// Tell the server what models IDs we have equipped.
     Equip(ClientId, u32, u64, u64, [u32; 10]),
-    /// Begins a packet replay.
-    BeginReplay(ClientId, String),
     /// The player gains an effect.
     GainEffect(ClientId, u32, u16, f32, u16, ObjectId),
     /// Warp with the specified id.

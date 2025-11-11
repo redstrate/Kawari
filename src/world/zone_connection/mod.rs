@@ -322,13 +322,6 @@ impl ZoneConnection {
         }
     }
 
-    pub async fn replay_packets(&mut self, path: &str) {
-        tracing::info!("Beginning replay from {path}...");
-        self.handle
-            .send(ToServer::BeginReplay(self.id, path.to_string()))
-            .await;
-    }
-
     pub async fn send_arbitrary_packet(&mut self, op_code: u16, data: Vec<u8>) {
         let ipc = ServerZoneIpcSegment {
             header: ServerIpcSegmentHeader::from_opcode(ServerZoneIpcType::Unknown(op_code)),

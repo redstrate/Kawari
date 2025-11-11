@@ -1643,7 +1643,6 @@ async fn client_loop(
                     FromServer::ActionCancelled() => connection.cancel_action().await,
                     FromServer::UpdateConfig(actor_id, config) => connection.update_config(actor_id, config).await,
                     FromServer::ActorEquip(actor_id, main_weapon_id, sub_weapon_id, model_ids) => connection.update_equip(actor_id, main_weapon_id, sub_weapon_id, model_ids).await,
-                    FromServer::ReplayPacket(segment) => connection.send_segment(segment).await,
                     FromServer::LoseEffect(effect_id, effect_param, effect_source_actor_id) => connection.lose_effect(effect_id, effect_param, effect_source_actor_id, &mut lua_player).await,
                     FromServer::Conditions(conditions) => {
                         connection.conditions = conditions;
