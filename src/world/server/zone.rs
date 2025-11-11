@@ -239,7 +239,7 @@ pub fn handle_zone_messages(
                 }
             }
 
-            let (client, _) = network.clients.get(&from_id).unwrap().clone();
+            let (client, _) = network.clients.get(from_id).unwrap().clone();
 
             if let Some(instance) = data.find_instance(*zone_id) {
                 let mut to_remove = Vec::new();

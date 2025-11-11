@@ -16,9 +16,8 @@ use crate::{
     ipc::zone::{
         ActionRequest, ActorControl, ActorControlSelf, ActorControlTarget, ClientTrigger,
         Conditions, Config, InviteReply, InviteType, NpcSpawn, PartyMemberEntry, PartyUpdateStatus,
-        PlayerEntry, PlayerSpawn, ServerZoneIpcSegment, SocialListRequest, SocialListRequestType,
+        PlayerEntry, PlayerSpawn, SocialListRequest, SocialListRequestType,
     },
-    packet::PacketSegment,
 };
 
 use super::{Actor, lua::LuaZone};

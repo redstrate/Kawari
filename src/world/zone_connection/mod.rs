@@ -34,7 +34,7 @@ use crate::{
 };
 
 use super::{
-    Actor, Event, StatusEffects, ToServer, WorldDatabase,
+    Actor, Event, StatusEffects, WorldDatabase,
     common::{ClientId, ServerHandle},
 };
 

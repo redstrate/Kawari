@@ -1,9 +1,6 @@
-use binrw::{BinRead, BinWrite};
 use std::{
     collections::HashMap,
     env::consts::EXE_SUFFIX,
-    io::Cursor,
-    path::PathBuf,
     process::Command,
     sync::{Arc, Mutex},
     time::Duration,
@@ -12,16 +9,13 @@ use tokio::sync::mpsc::Receiver;
 
 use crate::{
     common::{
-        CustomizeData, GameData, JumpState, MoveAnimationState, MoveAnimationType, ObjectId,
-        ObjectTypeId, ObjectTypeKind, Position,
+        GameData, JumpState, MoveAnimationState, MoveAnimationType, ObjectId, ObjectTypeId,
+        ObjectTypeKind, Position,
     },
     ipc::zone::{
         ActorControl, ActorControlCategory, ActorControlSelf, ActorControlTarget, BattleNpcSubKind,
-        ClientTriggerCommand, CommonSpawn, Conditions, NpcSpawn, ObjectKind, ServerZoneIpcData,
-        ServerZoneIpcSegment,
+        ClientTriggerCommand, CommonSpawn, Conditions, NpcSpawn, ObjectKind,
     },
-    opcodes::ServerZoneIpcType,
-    packet::{IpcSegmentHeader, PacketSegment, SegmentData, SegmentType, ServerIpcSegmentHeader},
     world::{
         Navmesh,
         server::{

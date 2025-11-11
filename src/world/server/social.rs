@@ -211,11 +211,11 @@ pub fn handle_social_messages(
             // Since we don't implement multiple worlds, the world id isn't useful for anything here.
             'outer: for instance in data.instances.values() {
                 for (id, actor) in &instance.actors {
-                    if let NetworkedActor::Player(spawn) = actor {
-                        if spawn.content_id == *content_id || spawn.common.name == *character_name {
-                            recipient_actor_id = *id;
-                            break 'outer;
-                        }
+                    if let NetworkedActor::Player(spawn) = actor
+                        && (spawn.content_id == *content_id || spawn.common.name == *character_name)
+                    {
+                        recipient_actor_id = *id;
+                        break 'outer;
                     }
                 }
             }
@@ -331,9 +331,9 @@ pub fn handle_social_messages(
             match &request.request_type {
                 SocialListRequestType::Party => {
                     if *from_party_id != 0 {
-                        let leader_actor_id = network.parties[&from_party_id].leader_id;
+                        let leader_actor_id = network.parties[from_party_id].leader_id;
                         let mut index: usize = 0;
-                        for member in &network.parties[&from_party_id].members {
+                        for member in &network.parties[from_party_id].members {
                             // The internal party list can and will contain invalid entries representing empty slots, so skip them.
                             if !member.is_valid() {
                                 continue;
@@ -581,7 +581,7 @@ pub fn handle_social_messages(
         ) => {
             let mut network = network.lock().unwrap();
             let data = data.lock().unwrap();
-            let party = network.parties.get_mut(&party_id).unwrap();
+            let party = network.parties.get_mut(party_id).unwrap();
 
             let party_list = build_party_list(party, &data);
 
@@ -614,14 +614,14 @@ pub fn handle_social_messages(
         ) => {
             let mut network = network.lock().unwrap();
 
-            if !network.parties.contains_key(&party_id) {
+            if !network.parties.contains_key(party_id) {
                 panic!("Why are we trying to do party operations on an invalid party?");
             }
 
             let data = data.lock().unwrap();
             let target_account_id;
             {
-                let party = &mut network.parties.get_mut(&party_id).unwrap();
+                let party = &mut network.parties.get_mut(party_id).unwrap();
                 let Some(member) = party.get_member_by_content_id(*target_content_id) else {
                     return;
                 };
@@ -629,7 +629,7 @@ pub fn handle_social_messages(
                 target_account_id = member.account_id;
             }
 
-            let party = &network.parties.get(&party_id).unwrap();
+            let party = &network.parties.get(party_id).unwrap();
 
             let party_list = build_party_list(party, &data);
 
@@ -670,7 +670,7 @@ pub fn handle_social_messages(
             let mut leader_id;
             let member_count;
             {
-                let Some(party) = network.parties.get_mut(&party_id) else {
+                let Some(party) = network.parties.get_mut(party_id) else {
                     return;
                 };
                 chatchannel_id = party.chatchannel_id;
@@ -754,7 +754,7 @@ pub fn handle_social_messages(
                     FromServer::SetPartyChatChannel(0),
                     DestinationNetwork::ChatClients,
                 );
-                network.parties.remove(&party_id);
+                network.parties.remove(party_id);
             }
         }
         ToServer::PartyDisband(party_id, execute_account_id, execute_content_id, execute_name) => {
@@ -783,7 +783,7 @@ pub fn handle_social_messages(
             );
 
             // We don't need to keep track of this party anymore.
-            network.parties.remove(&party_id);
+            network.parties.remove(party_id);
         }
         ToServer::PartyMemberKick(
             party_id,
@@ -795,7 +795,7 @@ pub fn handle_social_messages(
         ) => {
             let mut network = network.lock().unwrap();
             let data = data.lock().unwrap();
-            let party = network.parties.get_mut(&party_id).unwrap();
+            let party = network.parties.get_mut(party_id).unwrap();
 
             let Some(member) = party.get_member_by_content_id(*target_content_id) else {
                 return;
@@ -869,7 +869,7 @@ pub fn handle_social_messages(
                     FromServer::SetPartyChatChannel(0),
                     DestinationNetwork::ChatClients,
                 );
-                network.parties.remove(&party_id);
+                network.parties.remove(party_id);
             }
         }
         ToServer::PartyMemberOffline(
@@ -882,7 +882,7 @@ pub fn handle_social_messages(
             let mut network = network.lock().unwrap();
             let data = data.lock().unwrap();
 
-            if !network.parties.contains_key(&party_id) {
+            if !network.parties.contains_key(party_id) {
                 tracing::error!(
                     "PartyMemberOffline: We were given an invalid party id {}. What happened?",
                     party_id
@@ -890,7 +890,7 @@ pub fn handle_social_messages(
                 return;
             }
 
-            let party = &mut network.parties.get_mut(&party_id).unwrap();
+            let party = &mut network.parties.get_mut(party_id).unwrap();
             party.set_member_offline(*from_actor_id);
 
             if party.get_online_member_count() > 0 {
@@ -924,7 +924,7 @@ pub fn handle_social_messages(
             } else {
                 // If nobody in the party is online, disband it.
                 // Retail keeps it around for ~2 hours or so if everyone is offline, but there's no point doing that.
-                network.parties.remove(&party_id);
+                network.parties.remove(party_id);
             }
         }
         ToServer::PartyMemberReturned(execute_actor_id) => {
