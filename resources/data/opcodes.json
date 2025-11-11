@@ -767,7 +767,7 @@
         {
             "name": "RequestPlaytime",
             "comment": "Happens when the client requests the playtime using the /playtime command.",
-            "opcode": 920,
+            "opcode": 339,
             "size": 8
         },
         {
