@@ -8,5 +8,5 @@ Kawari is easily accessible to anyone who wants to run a local server for themse
 If you want to [contribute to Kawari](../contributing.md) or try it on an unsupported platform, see the [Local Development](source.md) guide. Otherwise follow one of these for your platform:
 
 * [Windows](windows.md)
-* [macOS](macos.md)
+* [macOS](macos.md) (Compilation required)
 * [Linux](linux.md)
