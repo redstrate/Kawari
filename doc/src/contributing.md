@@ -1,6 +1,12 @@
 # Contributing and working on Kawari
 
-Here are various helpful resources and tips when working on Kawari.
+Pull requests for new scripts, features, patch updates, and documentation are welcome. A guide for contributing and updating Kawari can be found [here](https://docs.xiv.zone/kawari/contributing.html).
+
+For informal development discussion outside of GitHub, join the [Kawari Dev Chat](https://matrix.to/#/#kawari-welcome:pyra.sh).
+
+## Acceptable Usage
+
+Ensure you read our [Acceptable Usage policy](acceptable_usage.md) before contributing to the project.
 
 ## Recommended Dalamud plugins
 
