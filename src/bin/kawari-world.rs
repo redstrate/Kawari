@@ -1096,8 +1096,8 @@ async fn client_loop(
                                                 if event_type == EventHandlerType::GilShop {
                                                     let event_id = handler.handler_id;
                                                     let buy_sell_mode = handler.params[0];
-                                                    let item_quantity = handler.params[1] as u32;
-                                                    let item_index = handler.params[2];
+                                                    let item_index = handler.params[1];
+                                                    let item_quantity = handler.params[2] as u32;
 
                                                     tracing::info!("Client is interacting with a shop! {event_id:#?} {buy_sell_mode:#?} {item_quantity:#?} {item_index:#?}");
 
