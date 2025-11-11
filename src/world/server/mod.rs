@@ -28,13 +28,14 @@ use crate::{
     },
     opcodes::ServerZoneIpcType,
     packet::{IpcSegmentHeader, PacketSegment, SegmentData, SegmentType, ServerIpcSegmentHeader},
-    world::MessageInfo,
-    world::common::PartyUpdateTargets,
+    world::{MessageInfo, Navmesh, common::PartyUpdateTargets, server::zone::Zone},
 };
 
-use super::{Actor, ClientHandle, ClientId, FromServer, Navmesh, ToServer, Zone, lua::LuaZone};
+use super::{Actor, ClientHandle, ClientId, FromServer, ToServer};
 
 use crate::world::common::SpawnKind;
+
+mod zone;
 
 /// Used for the debug NPC.
 pub const CUSTOMIZE_DATA: CustomizeData = CustomizeData {
@@ -605,7 +606,7 @@ fn do_change_zone(
         target_instance.weather_id,
         exit_position,
         exit_rotation,
-        LuaZone::from_zone(&target_instance.zone, target_instance.weather_id),
+        target_instance.zone.to_lua_zone(target_instance.weather_id),
         false,
     );
     network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
@@ -939,7 +940,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     target_instance.weather_id,
                     position,
                     rotation,
-                    LuaZone::from_zone(&target_instance.zone, target_instance.weather_id),
+                    target_instance.zone.to_lua_zone(target_instance.weather_id),
                     true, // since this is initial login
                 );
 
@@ -1045,7 +1046,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     target_instance.weather_id,
                     Position::default(),
                     0.0,
-                    LuaZone::from_zone(&target_instance.zone, target_instance.weather_id),
+                    target_instance.zone.to_lua_zone(target_instance.weather_id),
                     false,
                 );
                 network.send_to(from_id, msg, DestinationNetwork::ZoneClients);

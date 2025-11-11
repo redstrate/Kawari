@@ -1,6 +1,3 @@
-mod zone;
-pub use zone::Zone;
-
 mod chat_handler;
 pub use chat_handler::ChatHandler;
 

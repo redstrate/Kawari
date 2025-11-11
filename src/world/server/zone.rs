@@ -6,7 +6,10 @@ use physis::{
     resource::Resource,
 };
 
-use crate::common::{GameData, TerritoryNameKind};
+use crate::{
+    common::{GameData, TerritoryNameKind},
+    world::lua::LuaZone,
+};
 
 /// Represents a loaded zone
 #[derive(Default, Debug)]
@@ -122,5 +125,18 @@ impl Zone {
         }
 
         None
+    }
+
+    pub fn to_lua_zone(&self, weather_id: u16) -> LuaZone {
+        LuaZone {
+            zone_id: self.id,
+            weather_id,
+            internal_name: self.internal_name.clone(),
+            region_name: self.region_name.clone(),
+            place_name: self.place_name.clone(),
+            intended_use: self.intended_use,
+            map_id: self.map_id,
+            ..Default::default()
+        }
     }
 }
