@@ -6,7 +6,7 @@ For informal development discussion outside of GitHub, join the [Kawari Dev Chat
 
 ## Acceptable Usage
 
-Ensure you read our [Acceptable Usage policy](acceptable_usage.md) before contributing to the project.
+Ensure you read our [Acceptable Usage policy](https://docs.xiv.zone/kawari/acceptable_usage.html) before contributing to the project.
 
 ## Recommended Dalamud plugins
 
