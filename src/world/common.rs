@@ -209,8 +209,6 @@ pub enum ToServer {
     Disconnected(ClientId, u32),
     /// A fatal error occured.
     FatalError(std::io::Error),
-    /// Spawn a friendly debug NPC.
-    DebugNewNpc(ClientId, u32),
     /// Spawn an enemy debug NPC.
     DebugNewEnemy(ClientId, u32, u32),
     /// Spawn a debug clone.

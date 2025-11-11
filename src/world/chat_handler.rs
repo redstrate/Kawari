@@ -29,16 +29,6 @@ impl ChatHandler {
 
         let parts: Vec<&str> = chat_message.message.split(' ').collect();
         match parts[0] {
-            "!spawnnpc" => {
-                connection
-                    .handle
-                    .send(ToServer::DebugNewNpc(
-                        connection.id,
-                        connection.player_data.actor_id,
-                    ))
-                    .await;
-                true
-            }
             "!spawnmonster" => {
                 if let Some((_, id)) = chat_message.message.split_once(' ')
                     && let Ok(id) = id.parse::<u32>()

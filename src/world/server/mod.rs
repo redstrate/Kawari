@@ -46,36 +46,6 @@ mod network;
 mod social;
 mod zone;
 
-/// Used for the debug NPC.
-pub const CUSTOMIZE_DATA: CustomizeData = CustomizeData {
-    race: 4,
-    gender: 1,
-    age: 1,
-    height: 50,
-    subrace: 7,
-    face: 3,
-    hair: 5,
-    enable_highlights: 0,
-    skin_tone: 10,
-    right_eye_color: 75,
-    hair_tone: 50,
-    highlights: 0,
-    facial_features: 1,
-    facial_feature_color: 19,
-    eyebrows: 1,
-    left_eye_color: 75,
-    eyes: 1,
-    nose: 0,
-    jaw: 1,
-    mouth: 1,
-    lips_tone_fur_pattern: 169,
-    race_feature_size: 100,
-    race_feature_type: 1,
-    bust: 100,
-    face_paint: 0,
-    face_paint_color: 167,
-};
-
 #[derive(Default, Debug, Clone)]
 struct ClientState {}
 
@@ -705,70 +675,6 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         _ => tracing::warn!("Server doesn't know what to do with {:#?}", trigger),
                     }
                 }
-            }
-            ToServer::DebugNewNpc(_from_id, from_actor_id) => {
-                let mut data = data.lock().unwrap();
-                let mut network = network.lock().unwrap();
-
-                let actor_id = Instance::generate_actor_id();
-                let spawn;
-                {
-                    let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
-                        break;
-                    };
-
-                    let Some(actor) = instance.find_actor(ObjectId(from_actor_id)) else {
-                        break;
-                    };
-
-                    let NetworkedActor::Player(player) = actor else {
-                        break;
-                    };
-
-                    spawn = NpcSpawn {
-                        aggression_mode: 1,
-                        common: CommonSpawn {
-                            hp_curr: 100,
-                            hp_max: 100,
-                            mp_curr: 100,
-                            mp_max: 100,
-                            look: CUSTOMIZE_DATA,
-                            bnpc_base: 13498,
-                            bnpc_name: 10261,
-                            object_kind: ObjectKind::BattleNpc(BattleNpcSubKind::Enemy),
-                            target_id: ObjectTypeId {
-                                object_id: ObjectId(from_actor_id),
-                                object_type: ObjectTypeKind::None,
-                            }, // target the player
-                            level: 1,
-                            models: [
-                                0,  // head
-                                89, // body
-                                89, // hands
-                                89, // legs
-                                89, // feet
-                                0,  // ears
-                                0,  // neck
-                                0,  // wrists
-                                0,  // left finger
-                                0,  // right finger
-                            ],
-                            pos: player.common.pos,
-                            ..Default::default()
-                        },
-                        ..Default::default()
-                    };
-
-                    instance.insert_npc(ObjectId(actor_id), spawn.clone());
-                }
-
-                network.send_actor(
-                    Actor {
-                        id: ObjectId(actor_id),
-                        ..Default::default()
-                    },
-                    SpawnKind::Npc(spawn),
-                );
             }
             ToServer::DebugNewEnemy(_from_id, from_actor_id, id) => {
                 let mut data = data.lock().unwrap();
