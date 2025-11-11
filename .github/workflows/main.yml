@@ -81,9 +81,9 @@ jobs:
       run: cargo test --verbose
     - name: Build documentation
       run: |
-        mdbook build --dest-dir=doc-build ./docs
-        mv docs docs-1
-        mv doc-build docs
+        mdbook build --dest-dir=doc-build ./doc
+        mv doc doc-1
+        mv doc-build doc
     - name: Prepare artifacts
       if: runner.os == 'Windows'
       run: |
