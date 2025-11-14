@@ -155,6 +155,7 @@ fn server_logic_tick(data: &mut WorldServer, network: &mut NetworkState) {
                 } = actor
                     && current_target.is_some()
                 {
+                    let current_target = current_target.unwrap();
                     let needs_repath = current_path.is_empty();
                     if !needs_repath {
                         // follow current path
@@ -180,14 +181,14 @@ fn server_logic_tick(data: &mut WorldServer, network: &mut NetworkState) {
                     }
 
                     let target_pos;
-                    if let Some(target_actor) = instance.find_actor(current_target.unwrap()) {
+                    if let Some(target_actor) = instance.find_actor(current_target) {
                         target_pos = target_actor.get_common_spawn().pos;
                     } else {
                         // If we can't find the target actor for some reason (despawn, disconnect, left zone), fall back on a sane-ish destination
                         target_pos = last_position.unwrap_or(spawn.common.pos);
                     }
 
-                    target_actor_pos.insert(current_target.unwrap(), target_pos);
+                    target_actor_pos.insert(current_target, target_pos);
                 }
             }
 
