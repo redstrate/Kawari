@@ -137,143 +137,141 @@ fn set_player_minion(
 
 fn server_logic_tick(data: &mut WorldServer, network: &mut NetworkState) {
     for instance in data.instances.values_mut() {
-        // If there's no navmesh data, don't pathfind!
-        if !instance.navmesh.is_available() {
-            continue;
-        }
+        // Only pathfind if there's navmesh data available.
+        if instance.navmesh.is_available() {
+            let mut actor_moves = Vec::new();
+            let players = instance.find_all_players();
 
-        let mut actor_moves = Vec::new();
-        let players = instance.find_all_players();
+            let mut target_actor_pos = HashMap::new();
 
-        let mut target_actor_pos = HashMap::new();
-
-        // const pass
-        for (id, actor) in &instance.actors {
-            if let NetworkedActor::Npc {
-                current_path,
-                current_path_lerp,
-                current_target,
-                spawn,
-                last_position,
-            } = actor
-                && current_target.is_some()
-            {
-                let needs_repath = current_path.is_empty();
-                if !needs_repath {
-                    // follow current path
-                    let next_position = Position {
-                        x: current_path[0][0],
-                        y: current_path[0][1],
-                        z: current_path[0][2],
-                    };
-                    let current_position = last_position.unwrap_or(spawn.common.pos);
-
-                    let dir_x = current_position.x - next_position.x;
-                    let dir_z = current_position.z - next_position.z;
-                    let rotation = f32::atan2(-dir_z, dir_x).to_degrees();
-
-                    actor_moves.push(FromServer::ActorMove(
-                        id.0,
-                        Position::lerp(current_position, next_position, *current_path_lerp),
-                        rotation,
-                        MoveAnimationType::RUNNING,
-                        MoveAnimationState::None,
-                        JumpState::NoneOrFalling,
-                    ));
-                }
-
-                target_actor_pos.insert(
-                    current_target.unwrap(),
-                    instance
-                        .find_actor(current_target.unwrap())
-                        .unwrap()
-                        .get_common_spawn()
-                        .pos,
-                );
-            }
-        }
-
-        // mut pass
-        for (id, actor) in &mut instance.actors {
-            if let NetworkedActor::Npc {
-                current_path,
-                current_path_lerp,
-                current_target,
-                spawn,
-                last_position,
-            } = actor
-            {
-                // switch to the next node if we passed this one
-                if *current_path_lerp >= 1.0 {
-                    *current_path_lerp = 0.0;
-                    if !current_path.is_empty() {
-                        *last_position = Some(Position {
+            // const pass
+            for (id, actor) in &instance.actors {
+                if let NetworkedActor::Npc {
+                    current_path,
+                    current_path_lerp,
+                    current_target,
+                    spawn,
+                    last_position,
+                } = actor
+                    && current_target.is_some()
+                {
+                    let needs_repath = current_path.is_empty();
+                    if !needs_repath {
+                        // follow current path
+                        let next_position = Position {
                             x: current_path[0][0],
                             y: current_path[0][1],
                             z: current_path[0][2],
-                        });
-                        current_path.pop_front();
+                        };
+                        let current_position = last_position.unwrap_or(spawn.common.pos);
+
+                        let dir_x = current_position.x - next_position.x;
+                        let dir_z = current_position.z - next_position.z;
+                        let rotation = f32::atan2(-dir_z, dir_x).to_degrees();
+
+                        actor_moves.push(FromServer::ActorMove(
+                            id.0,
+                            Position::lerp(current_position, next_position, *current_path_lerp),
+                            rotation,
+                            MoveAnimationType::RUNNING,
+                            MoveAnimationState::None,
+                            JumpState::NoneOrFalling,
+                        ));
                     }
-                }
 
-                if current_target.is_none() {
-                    // find a player
-                    if !players.is_empty() {
-                        *current_target = Some(players[0]);
+                    target_actor_pos.insert(
+                        current_target.unwrap(),
+                        instance
+                            .find_actor(current_target.unwrap())
+                            .unwrap()
+                            .get_common_spawn()
+                            .pos,
+                    );
+                }
+            }
+
+            // mut pass
+            for (id, actor) in &mut instance.actors {
+                if let NetworkedActor::Npc {
+                    current_path,
+                    current_path_lerp,
+                    current_target,
+                    spawn,
+                    last_position,
+                } = actor
+                {
+                    // switch to the next node if we passed this one
+                    if *current_path_lerp >= 1.0 {
+                        *current_path_lerp = 0.0;
+                        if !current_path.is_empty() {
+                            *last_position = Some(Position {
+                                x: current_path[0][0],
+                                y: current_path[0][1],
+                                z: current_path[0][2],
+                            });
+                            current_path.pop_front();
+                        }
                     }
-                } else if !current_path.is_empty() {
-                    let next_position = Position {
-                        x: current_path[0][0],
-                        y: current_path[0][1],
-                        z: current_path[0][2],
-                    };
-                    let current_position = last_position.unwrap_or(spawn.common.pos);
-                    let distance = Position::distance(current_position, next_position);
 
-                    // TODO: this doesn't work like it should
-                    *current_path_lerp += (10.0 / distance).clamp(0.0, 1.0);
-                }
+                    if current_target.is_none() {
+                        // find a player
+                        if !players.is_empty() {
+                            *current_target = Some(players[0]);
+                        }
+                    } else if !current_path.is_empty() {
+                        let next_position = Position {
+                            x: current_path[0][0],
+                            y: current_path[0][1],
+                            z: current_path[0][2],
+                        };
+                        let current_position = last_position.unwrap_or(spawn.common.pos);
+                        let distance = Position::distance(current_position, next_position);
 
-                if target_actor_pos.contains_key(&current_target.unwrap()) {
-                    let target_pos = target_actor_pos[&current_target.unwrap()];
-                    let distance = Position::distance(spawn.common.pos, target_pos);
-                    let needs_repath = current_path.is_empty() && distance > 5.0; // TODO: confirm distance this in retail
-                    if needs_repath && current_target.is_some() {
-                        let current_pos = spawn.common.pos;
-                        *current_path = instance
-                            .navmesh
-                            .calculate_path(
-                                [current_pos.x, current_pos.y, current_pos.z],
-                                [target_pos.x, target_pos.y, target_pos.z],
-                            )
-                            .into();
+                        // TODO: this doesn't work like it should
+                        *current_path_lerp += (10.0 / distance).clamp(0.0, 1.0);
                     }
-                }
 
-                // update common spawn
-                for msg in &actor_moves {
-                    if let FromServer::ActorMove(
-                        msg_id,
-                        pos,
-                        rotation,
-                        MoveAnimationType::RUNNING,
-                        MoveAnimationState::None,
-                        JumpState::NoneOrFalling,
-                    ) = msg
-                        && id.0 == *msg_id
-                    {
-                        spawn.common.pos = *pos;
-                        spawn.common.rotation = *rotation;
+                    if target_actor_pos.contains_key(&current_target.unwrap()) {
+                        let target_pos = target_actor_pos[&current_target.unwrap()];
+                        let distance = Position::distance(spawn.common.pos, target_pos);
+                        let needs_repath = current_path.is_empty() && distance > 5.0; // TODO: confirm distance this in retail
+                        if needs_repath && current_target.is_some() {
+                            let current_pos = spawn.common.pos;
+                            *current_path = instance
+                                .navmesh
+                                .calculate_path(
+                                    [current_pos.x, current_pos.y, current_pos.z],
+                                    [target_pos.x, target_pos.y, target_pos.z],
+                                )
+                                .into();
+                        }
+                    }
+
+                    // update common spawn
+                    for msg in &actor_moves {
+                        if let FromServer::ActorMove(
+                            msg_id,
+                            pos,
+                            rotation,
+                            MoveAnimationType::RUNNING,
+                            MoveAnimationState::None,
+                            JumpState::NoneOrFalling,
+                        ) = msg
+                            && id.0 == *msg_id
+                        {
+                            spawn.common.pos = *pos;
+                            spawn.common.rotation = *rotation;
+                        }
                     }
                 }
             }
-        }
 
-        // inform clients of the NPCs new positions
-        for msg in actor_moves {
-            for (handle, _) in network.clients.values_mut() {
-                if handle.send(msg.clone()).is_err() {
-                    //to_remove.push(id);
+            // inform clients of the NPCs new positions
+            for msg in actor_moves {
+                for (handle, _) in network.clients.values_mut() {
+                    if handle.send(msg.clone()).is_err() {
+                        //to_remove.push(id);
+                    }
                 }
             }
         }
