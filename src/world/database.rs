@@ -71,7 +71,7 @@ impl WorldDatabase {
 
         // Create characters table
         {
-            let query = "CREATE TABLE IF NOT EXISTS characters (content_id INTEGER PRIMARY KEY, service_account_id INTEGER, actor_id INTEGER);";
+            let query = "CREATE TABLE IF NOT EXISTS character (content_id INTEGER PRIMARY KEY, service_account_id INTEGER, actor_id INTEGER);";
             connection.execute(query, ()).unwrap();
         }
 
@@ -333,7 +333,7 @@ impl WorldDatabase {
         let connection = self.connection.lock().unwrap();
 
         let mut stmt = connection
-            .prepare("SELECT content_id, service_account_id FROM characters WHERE actor_id = ?1")
+            .prepare("SELECT content_id, service_account_id FROM character WHERE actor_id = ?1")
             .unwrap();
         let (content_id, account_id): (u64, u64) = stmt
             .query_row((actor_id,), |row| Ok((row.get(0)?, row.get(1)?)))
@@ -471,7 +471,7 @@ impl WorldDatabase {
         let connection = self.connection.lock().unwrap();
 
         let mut stmt = connection
-            .prepare("SELECT actor_id FROM characters WHERE content_id = ?1")
+            .prepare("SELECT actor_id FROM character WHERE content_id = ?1")
             .unwrap();
 
         stmt.query_row((content_id,), |row| row.get(0)).unwrap()
@@ -491,9 +491,7 @@ impl WorldDatabase {
         // find the content ids associated with the service account
         {
             let mut stmt = connection
-                .prepare(
-                    "SELECT content_id, actor_id FROM characters WHERE service_account_id = ?1",
-                )
+                .prepare("SELECT content_id, actor_id FROM character WHERE service_account_id = ?1")
                 .unwrap();
 
             content_actor_ids = stmt
@@ -631,7 +629,7 @@ impl WorldDatabase {
         // insert ids
         connection
             .execute(
-                "INSERT INTO characters VALUES (?1, ?2, ?3);",
+                "INSERT INTO character VALUES (?1, ?2, ?3);",
                 (content_id, service_account_id, actor_id),
             )
             .unwrap();
@@ -727,7 +725,7 @@ impl WorldDatabase {
         // delete char
         {
             let mut stmt = connection
-                .prepare("DELETE FROM characters WHERE content_id = ?1")
+                .prepare("DELETE FROM character WHERE content_id = ?1")
                 .unwrap();
             stmt.execute((content_id,)).unwrap();
         }
@@ -762,9 +760,7 @@ impl WorldDatabase {
         // find the content ids associated with the service account
         {
             let mut stmt = connection
-                .prepare(
-                    "SELECT content_id, actor_id FROM characters WHERE service_account_id = ?1",
-                )
+                .prepare("SELECT content_id, actor_id FROM character WHERE service_account_id = ?1")
                 .unwrap();
 
             content_actor_ids = stmt
@@ -777,10 +773,7 @@ impl WorldDatabase {
         for (content_id, _actor_id) in content_actor_ids {
             // delete from characters table
             connection
-                .execute(
-                    "DELETE FROM characters WHERE content_id = ?1",
-                    (content_id,),
-                )
+                .execute("DELETE FROM character WHERE content_id = ?1", (content_id,))
                 .unwrap();
 
             // delete from character_data table
@@ -820,7 +813,7 @@ impl WorldDatabase {
         let connection = self.connection.lock().unwrap();
 
         let mut stmt = connection
-            .prepare("SELECT service_account_id FROM characters WHERE content_id = ?1")
+            .prepare("SELECT service_account_id FROM character WHERE content_id = ?1")
             .unwrap();
         stmt.query_row((content_id,), |row| row.get(0)).unwrap()
     }

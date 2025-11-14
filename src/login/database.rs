@@ -40,19 +40,19 @@ impl LoginDatabase {
 
         // Create users table
         {
-            let query = "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT, password TEXT);";
+            let query = "CREATE TABLE IF NOT EXISTS user (id INTEGER PRIMARY KEY, username TEXT, password TEXT);";
             connection.execute(query, ()).unwrap();
         }
 
         // Create active sessions table
         {
-            let query = "CREATE TABLE IF NOT EXISTS sessions (user_id INTEGER, time TEXT, service TEXT, sid TEXT, PRIMARY KEY(user_id, service));";
+            let query = "CREATE TABLE IF NOT EXISTS session (user_id INTEGER, time TEXT, service TEXT, sid TEXT, PRIMARY KEY(user_id, service));";
             connection.execute(query, ()).unwrap();
         }
 
         // Create service accounts table
         {
-            let query = "CREATE TABLE IF NOT EXISTS service_accounts (id INTEGER PRIMARY KEY, user_id INTEGER, max_ex INTEGER);";
+            let query = "CREATE TABLE IF NOT EXISTS service_account (id INTEGER PRIMARY KEY, user_id INTEGER, max_ex INTEGER);";
             connection.execute(query, ()).unwrap();
         }
 
@@ -81,7 +81,7 @@ impl LoginDatabase {
 
             tracing::info!("Adding user with username {username}");
 
-            let query = "INSERT INTO users VALUES (?1, ?2, ?3);";
+            let query = "INSERT INTO user VALUES (?1, ?2, ?3);";
             connection
                 .execute(query, (user_id, username, password))
                 .expect("Failed to write user to database!");
@@ -91,7 +91,7 @@ impl LoginDatabase {
         {
             let connection = self.connection.lock().unwrap();
 
-            let query = "INSERT INTO service_accounts VALUES (?1, ?2, ?3);";
+            let query = "INSERT INTO service_account VALUES (?1, ?2, ?3);";
             connection
                 .execute(query, (Self::generate_account_id(), user_id, MAX_EXPANSION))
                 .expect("Failed to write service account to database!");
@@ -113,7 +113,7 @@ impl LoginDatabase {
             let connection = self.connection.lock().unwrap();
 
             let mut stmt = connection
-                .prepare("SELECT id, password FROM users WHERE username = ?1")
+                .prepare("SELECT id, password FROM user WHERE username = ?1")
                 .map_err(|_err| LoginError::WrongUsername)?;
             selected_row = stmt.query_row((username,), |row| Ok((row.get(0)?, row.get(1)?)));
         }
@@ -146,7 +146,7 @@ impl LoginDatabase {
 
         connection
             .execute(
-                "INSERT OR REPLACE INTO sessions VALUES (?1, datetime('now'), ?2, ?3);",
+                "INSERT OR REPLACE INTO session VALUES (?1, datetime('now'), ?2, ?3);",
                 (user_id, service, &sid),
             )
             .ok()?;
@@ -164,7 +164,7 @@ impl LoginDatabase {
         let user_id: u64;
         {
             let mut stmt = connection
-                .prepare("SELECT user_id FROM sessions WHERE service = ?1 AND sid = ?2")
+                .prepare("SELECT user_id FROM session WHERE service = ?1 AND sid = ?2")
                 .unwrap();
             if let Ok(found_user_id) = stmt.query_row((service, sid), |row| row.get(0)) {
                 user_id = found_user_id;
@@ -176,7 +176,7 @@ impl LoginDatabase {
         // service accounts
         {
             let mut stmt = connection
-                .prepare("SELECT id FROM service_accounts WHERE user_id = ?1")
+                .prepare("SELECT id FROM service_account WHERE user_id = ?1")
                 .ok()
                 .unwrap();
             let accounts = stmt.query_map((user_id,), |row| row.get(0)).unwrap();
@@ -199,7 +199,7 @@ impl LoginDatabase {
         let connection = self.connection.lock().unwrap();
 
         let mut stmt = connection
-            .prepare("SELECT id FROM users WHERE username = ?1")
+            .prepare("SELECT id FROM user WHERE username = ?1")
             .ok()
             .unwrap();
         let selected_row: Result<u64, rusqlite::Error> =
@@ -213,7 +213,7 @@ impl LoginDatabase {
         let connection = self.connection.lock().unwrap();
 
         let mut stmt = connection
-            .prepare("SELECT user_id FROM sessions WHERE sid = ?1")
+            .prepare("SELECT user_id FROM session WHERE sid = ?1")
             .ok()
             .unwrap();
         stmt.query_row((sid,), |row| row.get(0)).ok()?
@@ -223,7 +223,7 @@ impl LoginDatabase {
         let connection = self.connection.lock().unwrap();
 
         let mut stmt = connection
-            .prepare("SELECT username FROM users WHERE id = ?1")
+            .prepare("SELECT username FROM user WHERE id = ?1")
             .ok()
             .unwrap();
         stmt.query_row((user_id,), |row| row.get(0)).unwrap()
@@ -234,7 +234,7 @@ impl LoginDatabase {
         let connection = self.connection.lock().unwrap();
 
         let mut stmt = connection
-            .prepare("SELECT id FROM service_accounts WHERE user_id = ?1")
+            .prepare("SELECT id FROM service_account WHERE user_id = ?1")
             .ok()
             .unwrap();
         stmt.query_row((user_id,), |row| row.get(0)).unwrap()
@@ -245,7 +245,7 @@ impl LoginDatabase {
         let connection = self.connection.lock().unwrap();
 
         let mut stmt = connection
-            .prepare("SELECT time, service FROM sessions WHERE user_id = ?1 ORDER BY time DESC;")
+            .prepare("SELECT time, service FROM session WHERE user_id = ?1 ORDER BY time DESC;")
             .ok()
             .unwrap();
         if let Ok(mut rows) = stmt.query((user_id,)) {
@@ -267,7 +267,7 @@ impl LoginDatabase {
         let connection = self.connection.lock().unwrap();
 
         let mut stmt = connection
-            .prepare("SELECT user_id FROM sessions WHERE service = ?1 AND sid = ?2")
+            .prepare("SELECT user_id FROM session WHERE service = ?1 AND sid = ?2")
             .unwrap();
         stmt.query_row((service, sid), |row| row.get::<usize, u32>(0))
             .is_ok()
@@ -279,7 +279,7 @@ impl LoginDatabase {
 
         connection
             .execute(
-                "DELETE FROM sessions WHERE user_id = ?1 AND service = ?2",
+                "DELETE FROM session WHERE user_id = ?1 AND service = ?2",
                 (user_id, service),
             )
             .unwrap();
@@ -293,20 +293,17 @@ impl LoginDatabase {
 
         // delete from users table
         connection
-            .execute("DELETE FROM users WHERE id = ?1", (user_id,))
+            .execute("DELETE FROM user WHERE id = ?1", (user_id,))
             .unwrap();
 
         // delete from service accounts table
         connection
-            .execute(
-                "DELETE FROM service_accounts WHERE user_id = ?1",
-                (user_id,),
-            )
+            .execute("DELETE FROM service_account WHERE user_id = ?1", (user_id,))
             .unwrap();
 
         // delete from sessions table
         connection
-            .execute("DELETE FROM sessions WHERE user_id = ?1", (user_id,))
+            .execute("DELETE FROM session WHERE user_id = ?1", (user_id,))
             .unwrap();
 
         tracing::info!("Deleted {user_id}!");
@@ -316,9 +313,7 @@ impl LoginDatabase {
     pub fn get_users(&self) -> Vec<User> {
         let connection = self.connection.lock().unwrap();
 
-        let mut stmt = connection
-            .prepare("SELECT id, username FROM users")
-            .unwrap();
+        let mut stmt = connection.prepare("SELECT id, username FROM user").unwrap();
 
         stmt.query_map((), |row| {
             Ok(User {
@@ -336,7 +331,7 @@ impl LoginDatabase {
         let connection = self.connection.lock().unwrap();
 
         let mut stmt = connection
-            .prepare("SELECT max_ex FROM service_accounts WHERE id = ?1")
+            .prepare("SELECT max_ex FROM service_account WHERE id = ?1")
             .unwrap();
         stmt.query_row((service_account_id,), |row| row.get(0))
             .ok()?
@@ -347,7 +342,7 @@ impl LoginDatabase {
         let connection = self.connection.lock().unwrap();
 
         let mut stmt = connection
-            .prepare("SELECT MAX(max_ex) FROM service_accounts WHERE user_id = ?1")
+            .prepare("SELECT MAX(max_ex) FROM service_account WHERE user_id = ?1")
             .unwrap();
         stmt.query_row((user_id,), |row| row.get(0)).ok()?
     }
