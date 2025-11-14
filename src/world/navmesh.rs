@@ -207,4 +207,9 @@ impl Navmesh {
             (nearest_ref, nearest_pt)
         }
     }
+
+    // TODO: There might be more checks desired here, but this suffices for now
+    pub fn is_available(&self) -> bool {
+        !self.navmesh.is_null()
+    }
 }
