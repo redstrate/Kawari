@@ -2,7 +2,7 @@
 
 use crate::{
     LogMessageType,
-    inventory::{ContainerType, Item},
+    inventory::{ContainerType, Item, ItemOperationKind, Storage},
     ipc::zone::{
         ActorControlCategory, ActorControlSelf, ContainerInfo, CurrencyInfo, Equip, ItemInfo,
         ServerZoneIpcData, ServerZoneIpcSegment,
@@ -130,6 +130,44 @@ impl ZoneConnection {
         }
     }
 
+    /// Sends the updateitem and containerinfo packets for the equipped container.
+    pub async fn send_equipped_inventory(&mut self) {
+        let equipped = self.player_data.inventory.equipped.clone();
+
+        let mut send_slot = async |slot_index: u16, item: &Item| {
+            if item.quantity == 0 {
+                return;
+            }
+
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateItem(ItemInfo {
+                sequence: self.player_data.item_sequence as u32,
+                container: ContainerType::Equipped,
+                slot: slot_index,
+                quantity: item.quantity,
+                catalog_id: item.id,
+                condition: item.condition,
+                glamour_catalog_id: item.glamour_catalog_id,
+                ..Default::default()
+            }));
+            self.send_ipc_self(ipc).await;
+        };
+
+        for i in 0..equipped.max_slots() {
+            send_slot(i as u16, equipped.get_slot(i as u16)).await;
+        }
+
+        // inform the client of container state
+        {
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ContainerInfo(ContainerInfo {
+                container: ContainerType::Equipped,
+                num_items: self.player_data.inventory.equipped.num_items(),
+                sequence: self.player_data.item_sequence as u32,
+                ..Default::default()
+            }));
+            self.send_ipc_self(ipc).await;
+        }
+    }
+
     pub async fn update_equip(
         &mut self,
         actor_id: u32,
@@ -210,7 +248,7 @@ impl ZoneConnection {
 
     pub async fn send_gilshop_item_update(
         &mut self,
-        dst_storage_id: u16,
+        dst_storage_id: ContainerType,
         dst_container_index: u16,
         dst_stack: u32,
         dst_catalog_id: u32,
@@ -229,10 +267,105 @@ impl ZoneConnection {
 
     pub async fn send_inventory_transaction_finish(&mut self, unk1: u32, unk2: u32) {
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InventoryTransactionFinish {
-            sequence: self.player_data.item_sequence,
-            sequence_repeat: self.player_data.item_sequence,
+            sequence: self.player_data.transaction_sequence,
+            sequence_repeat: self.player_data.transaction_sequence,
             unk1,
             unk2,
+        });
+        self.send_ipc_self(ipc).await;
+        self.player_data.transaction_sequence += 1;
+    }
+
+    /// Swaps two items from two (possibly different) containers and informs the client of this change.
+    pub async fn swap_items(
+        &mut self,
+        src_container: ContainerType,
+        src_index: u16,
+        dst_container: ContainerType,
+        dst_index: u16,
+    ) {
+        tracing::info!(
+            "Swapping {src_index} in {src_container:?} with {dst_index} in {dst_container:?}!"
+        );
+
+        let mut src_item = self
+            .player_data
+            .inventory
+            .get_item(src_container, src_index);
+
+        // move src item into dst slot
+        let dst_slot = self
+            .player_data
+            .inventory
+            .get_item_mut(dst_container, dst_index);
+
+        dbg!(&src_item);
+        dbg!(&dst_slot);
+
+        let dst_item = *dst_slot;
+        let was_empty = dst_item.quantity == 0;
+        dst_slot.clone_from(&src_item);
+
+        dbg!(dst_slot);
+
+        // move dst item into src slot
+        if src_container != ContainerType::Invalid {
+            let src_slot = self
+                .player_data
+                .inventory
+                .get_item_mut(src_container, src_index);
+            src_slot.clone_from(&dst_item);
+            src_item = *src_slot;
+        }
+
+        // Then inform the client of the updated slots, we have to do this since this is caused server-side.
+        {
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateInventorySlot {
+                sequence: self.player_data.item_sequence,
+                dst_storage_id: src_container,
+                dst_container_index: src_index,
+                dst_stack: src_item.quantity,
+                dst_catalog_id: src_item.id,
+                unk1: 1966080000,
+            });
+            self.send_ipc_self(ipc).await;
+            self.player_data.item_sequence += 1;
+        }
+
+        {
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateInventorySlot {
+                sequence: self.player_data.item_sequence,
+                dst_storage_id: dst_container,
+                dst_container_index: dst_index,
+                dst_stack: dst_item.quantity,
+                dst_catalog_id: dst_item.id,
+                unk1: 1966080000,
+            });
+            self.send_ipc_self(ipc).await;
+            self.player_data.item_sequence += 1;
+        }
+
+        dbg!(&self.player_data.inventory.armoury_body);
+
+        // And also update the current transaction
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InventoryTransaction {
+            sequence: self.player_data.transaction_sequence,
+            operation_type: if was_empty {
+                ItemOperationKind::Move
+            } else {
+                ItemOperationKind::Exchange
+            },
+            src_actor_id: self.player_data.actor_id,
+            src_storage_id: src_container,
+            src_container_index: src_index,
+            src_stack: src_item.quantity,
+            src_catalog_id: src_item.id,
+            dst_actor_id: self.player_data.actor_id,
+            dst_storage_id: dst_container,
+            dst_container_index: dst_index,
+            dst_stack: dst_item.quantity,
+            dst_catalog_id: dst_item.id,
+            dummy_container: ContainerType::Equipped,
         });
         self.send_ipc_self(ipc).await;
     }

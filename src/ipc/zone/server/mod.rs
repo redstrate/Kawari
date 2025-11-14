@@ -365,7 +365,7 @@ pub enum ServerZoneIpcData {
         /// Starts from zero and increases by one for each of these packets during this gameplay session
         sequence: u32,
         #[brw(pad_before = 4)]
-        dst_storage_id: u16,
+        dst_storage_id: ContainerType,
         dst_container_index: u16,
         dst_stack: u32,
         dst_catalog_id: u32,
@@ -731,7 +731,7 @@ mod tests {
             },
             ServerZoneIpcData::UpdateInventorySlot {
                 sequence: 0,
-                dst_storage_id: 0,
+                dst_storage_id: ContainerType::Inventory0,
                 dst_container_index: 0,
                 dst_stack: 0,
                 dst_catalog_id: 0,

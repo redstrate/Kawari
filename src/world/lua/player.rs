@@ -278,7 +278,7 @@ impl LuaPlayer {
         let shop_packets_to_send = [
             ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateInventorySlot {
                 sequence: self.player_data.shop_sequence,
-                dst_storage_id: ContainerType::Currency as u16,
+                dst_storage_id: ContainerType::Currency,
                 dst_container_index: 0,
                 dst_stack: new_gil,
                 dst_catalog_id: CurrencyKind::Gil as u32,
@@ -290,7 +290,7 @@ impl LuaPlayer {
             }),
             ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateInventorySlot {
                 sequence: self.player_data.shop_sequence,
-                dst_storage_id: item_dst_info.container as u16,
+                dst_storage_id: item_dst_info.container,
                 dst_container_index: item_dst_info.index,
                 dst_stack: item_dst_info.quantity,
                 dst_catalog_id: bb_item.id,
