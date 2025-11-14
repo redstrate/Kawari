@@ -296,8 +296,7 @@ fn server_logic_tick(data: &mut WorldServer, network: &mut NetworkState) {
                     }
                     Err(err) => {
                         tracing::error!(
-                            "Unable to run kawari-navimesh due to the following error: {}",
-                            err
+                            "Unable to run kawari-navimesh due to the following error: {err}"
                         );
                         instance.generate_navmesh = NavmeshGenerationStep::None;
                     }
