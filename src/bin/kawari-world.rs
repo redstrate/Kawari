@@ -9,7 +9,8 @@ use kawari::common::{
 };
 use kawari::config::get_config;
 use kawari::inventory::{
-    BuyBackItem, ContainerType, CurrencyKind, Item, ItemOperationKind, get_container_type,
+    BuyBackItem, ContainerType, CurrencyKind, Item, ItemOperationKind, Storage, get_container_type,
+    get_next_free_slot,
 };
 
 use kawari::ipc::chat::{ChatChannel, ClientChatIpcData};
@@ -555,9 +556,7 @@ async fn client_loop(
                                                 // IPC Init(?)
                                                 {
                                                     let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InitResponse {
-                                                        unk1: 0,
                                                         actor_id: connection.player_data.actor_id,
-                                                        unk2: 0,
                                                     });
                                                     connection.send_ipc_self(ipc).await;
                                                 }
@@ -1079,7 +1078,7 @@ async fn client_loop(
                                                         src_container_index: action.src_container_index,
                                                         src_stack: action.src_stack,
                                                         src_catalog_id: action.src_catalog_id,
-                                                        dst_actor_id: INVALID_OBJECT_ID.0,
+                                                        dst_actor_id: INVALID_OBJECT_ID,
                                                         dummy_container: ContainerType::DiscardingItemSentinel,
                                                         dst_storage_id: ContainerType::DiscardingItemSentinel,
                                                         dst_container_index: u16::MAX,
@@ -1122,11 +1121,11 @@ async fn client_loop(
                                                             if connection.player_data.inventory.currency.gil.quantity >= item_quantity * item_info.price_mid {
                                                                 if let Some(add_result) = connection.player_data.inventory.add_in_next_free_slot(Item::new(item_info.clone(), item_quantity)) {
                                                                     connection.player_data.inventory.currency.gil.quantity -= item_quantity * item_info.price_mid;
-                                                                    connection.send_gilshop_item_update(ContainerType::Currency as u16, 0, connection.player_data.inventory.currency.gil.quantity, CurrencyKind::Gil as u32).await;
+                                                                    connection.send_gilshop_item_update(ContainerType::Currency, 0, connection.player_data.inventory.currency.gil.quantity, CurrencyKind::Gil as u32).await;
 
                                                                     connection.send_inventory_ack(u32::MAX, INVENTORY_ACTION_ACK_SHOP as u16).await;
 
-                                                                    connection.send_gilshop_item_update(add_result.container as u16, add_result.index, add_result.quantity, item_info.id).await;
+                                                                    connection.send_gilshop_item_update(add_result.container, add_result.index, add_result.quantity, item_info.id).await;
                                                                     connection.send_gilshop_ack(event_id, item_info.id, item_quantity, item_info.price_mid, LogMessageType::ItemBought).await;
 
                                                                     let target_id = connection.player_data.target_actorid;
@@ -1168,8 +1167,8 @@ async fn client_loop(
                                                             connection.player_data.buyback_list.push_item(event_id, bb_item);
 
                                                             connection.player_data.inventory.currency.gil.quantity += quantity * item_info.price_low;
-                                                            connection.send_gilshop_item_update(ContainerType::Currency as u16, 0, connection.player_data.inventory.currency.gil.quantity, CurrencyKind::Gil as u32).await;
-                                                            connection.send_gilshop_item_update(storage as u16, index as u16, 0, 0).await;
+                                                            connection.send_gilshop_item_update(ContainerType::Currency, 0, connection.player_data.inventory.currency.gil.quantity, CurrencyKind::Gil as u32).await;
+                                                            connection.send_gilshop_item_update(storage, index as u16, 0, 0).await;
 
                                                             // TODO: Refactor InventoryTransactions into connection.rs
                                                             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InventoryTransaction {
@@ -1180,7 +1179,7 @@ async fn client_loop(
                                                                 src_container_index: 0,
                                                                 src_stack: connection.player_data.inventory.currency.gil.quantity,
                                                                 src_catalog_id: CurrencyKind::Gil as u32,
-                                                                dst_actor_id: INVALID_OBJECT_ID.0,
+                                                                dst_actor_id: INVALID_OBJECT_ID,
                                                                 dummy_container: ContainerType::DiscardingItemSentinel,
                                                                 dst_storage_id: ContainerType::DiscardingItemSentinel,
                                                                 dst_container_index: u16::MAX,
@@ -1207,7 +1206,7 @@ async fn client_loop(
                                                                 src_container_index: index as u16,
                                                                 src_stack: quantity,
                                                                 src_catalog_id: item_info.id,
-                                                                dst_actor_id: INVALID_OBJECT_ID.0,
+                                                                dst_actor_id: INVALID_OBJECT_ID,
                                                                 dummy_container: ContainerType::DiscardingItemSentinel,
                                                                 dst_storage_id: ContainerType::DiscardingItemSentinel,
                                                                 dst_container_index: u16::MAX,
@@ -1447,9 +1446,69 @@ async fn client_loop(
 
                                                 connection.queued_content = None;
                                             }
-                                            ClientZoneIpcData::EquipGearset { .. } => {
-                                                tracing::info!("Client tried to equip a gearset!");
-                                                connection.send_notice("Gearsets are not yet implemented.").await;
+                                            ClientZoneIpcData::EquipGearset { gearset_index, containers, indices, .. } => {
+                                                // TODO: handle missing items, full inventory and such
+                                                for slot in 0..14 {
+                                                    let from_slot = indices[slot];
+                                                    let from_container = containers[slot];
+
+                                                    if from_container == ContainerType::Equipped {
+                                                        continue;
+                                                    }
+
+                                                    let from_item = if from_slot != -1 {
+                                                        connection.player_data.inventory.get_item(from_container, from_slot as u16)
+                                                    } else {
+                                                        Item::default()
+                                                    };
+                                                    let equipped_item = connection.player_data.inventory.equipped.get_slot(slot as u16);
+
+                                                    if !from_item.is_empty_slot() && !equipped_item.is_empty_slot() {
+                                                        // If there is something equipped and a replacement for it, we must swap.
+                                                        connection.swap_items(from_container, from_slot as u16, ContainerType::Equipped, slot as u16).await;
+                                                    } else if !from_item.is_empty_slot() && equipped_item.is_empty_slot() {
+                                                        // If there is nothing equipped but a new item in that slot, we just have to move it.
+                                                        // TODO: be a little smarter about this maybe?
+                                                        connection.swap_items(from_container, from_slot as u16, ContainerType::Equipped, slot as u16).await;
+                                                    } else if from_item.is_empty_slot() && !equipped_item.is_empty_slot() {
+                                                        // If there is something equipped but the slot is empty in the gearset, we have to move it somewhere.
+
+                                                        let target_container_type = match slot {
+                                                            0 => ContainerType::ArmoryWeapon,
+                                                            1 => ContainerType::ArmoryOffWeapon,
+                                                            2 => ContainerType::ArmoryHead,
+                                                            3 => ContainerType::ArmoryBody,
+                                                            4 => ContainerType::ArmoryHand,
+                                                            5 => ContainerType::ArmoryWaist,
+                                                            6 => ContainerType::ArmoryLeg,
+                                                            7 => ContainerType::ArmoryFoot,
+                                                            8 => ContainerType::ArmoryEarring,
+                                                            9 => ContainerType::ArmoryNeck,
+                                                            10 => ContainerType::ArmoryWrist,
+                                                            11 => ContainerType::ArmoryRing,
+                                                            12 => ContainerType::ArmoryRing,
+                                                            13 => ContainerType::ArmorySoulCrystal,
+                                                            _ => unreachable!(),
+                                                        };
+
+                                                        let target_container = connection.player_data.inventory.get_container(target_container_type);
+                                                        if let Some(free_slot) = get_next_free_slot(target_container) {
+                                                            connection.swap_items(ContainerType::Equipped, slot as u16, target_container_type, free_slot).await;
+                                                        }
+                                                    }
+                                                }
+
+                                                // Inform the client that the gearset was successfully equipped.
+                                                connection.actor_control_self(ActorControlSelf { category: ActorControlCategory::GearSetEquipped { gearset_index: *gearset_index } }).await;
+
+                                                // And that we're done modifying the inventory.
+                                                connection.send_inventory_transaction_finish(567, 3584).await;
+
+                                                // Retail also re-sends the equipped container
+                                                connection.send_equipped_inventory().await;
+                                            }
+                                            ClientZoneIpcData::EquipGearset2 { .. } => {
+                                                tracing::warn!("Bigger gearsets not supported yet!");
                                             }
                                             ClientZoneIpcData::StartWalkInEvent { event_arg, event_id, .. } => {
                                                 // Yes, an ActorControl is sent here, not an ActorControlSelf!

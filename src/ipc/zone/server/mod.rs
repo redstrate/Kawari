@@ -270,7 +270,7 @@ pub enum ServerZoneIpcData {
 
         /// This section was observed to be static, across two captures and a bunch of discards these never changed.
         /// Always set to 0xE000_0000, also known as no/invalid actor.
-        dst_actor_id: u32,
+        dst_actor_id: ObjectId,
         /// Used in discard operations, both this dummy container and dst_storage_id are set to a container type of 0xFFFF.
         /// While this struct is nearly identical to ItemOperation, it deviates here by not having 2 bytes of padding.
         dummy_container: ContainerType,
@@ -373,7 +373,7 @@ pub enum ServerZoneIpcData {
         /// Starts from zero and increases by one for each of these packets during this gameplay session
         sequence: u32,
         #[brw(pad_before = 4)]
-        dst_storage_id: u16,
+        dst_storage_id: ContainerType,
         dst_container_index: u16,
         dst_stack: u32,
         dst_catalog_id: u32,
@@ -715,7 +715,7 @@ mod tests {
                 src_container_index: 0,
                 src_stack: 0,
                 src_catalog_id: 0,
-                dst_actor_id: 0,
+                dst_actor_id: INVALID_OBJECT_ID,
                 dummy_container: ContainerType::Inventory0,
                 dst_storage_id: ContainerType::Inventory0,
                 dst_container_index: 0,
@@ -781,7 +781,7 @@ mod tests {
             },
             ServerZoneIpcData::UpdateInventorySlot {
                 sequence: 0,
-                dst_storage_id: 0,
+                dst_storage_id: ContainerType::Inventory0,
                 dst_container_index: 0,
                 dst_stack: 0,
                 dst_catalog_id: 0,

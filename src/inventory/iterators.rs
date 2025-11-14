@@ -63,9 +63,6 @@ impl<'a> Iterator for InventoryIterator<'a> {
 
         let container_type = get_container_type(curr as u32).unwrap();
 
-        Some((
-            container_type,
-            self.inventory.get_container(&container_type),
-        ))
+        Some((container_type, self.inventory.get_container(container_type)))
     }
 }

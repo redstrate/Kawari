@@ -263,6 +263,9 @@ pub enum ActorControlCategory {
     #[brw(magic = 609u32)]
     ToggleWireframeRendering(),
 
+    #[brw(magic = 801u32)]
+    GearSetEquipped { gearset_index: u32 },
+
     /// Multiple festivals can be set at the same time.
     #[brw(magic = 902u32)]
     SetFestival {

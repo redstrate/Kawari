@@ -22,7 +22,7 @@ mod item;
 pub use item::Item;
 
 mod storage;
-pub use storage::{ContainerType, Storage};
+pub use storage::{ContainerType, Storage, get_next_free_slot};
 
 mod currency;
 pub use currency::{CurrencyKind, CurrencyStorage};
@@ -73,6 +73,7 @@ impl TryFrom<u32> for ItemOperationKind {
     }
 }
 
+#[derive(Debug)]
 pub struct ItemDestinationInfo {
     pub container: ContainerType,
     pub index: u16,
@@ -242,13 +243,17 @@ impl Inventory {
     }
 
     /// Helper functions to reduce boilerplate
-    fn get_item_mut(&mut self, storage_id: ContainerType, storage_index: u16) -> &mut Item {
+    pub fn get_item_mut(&mut self, storage_id: ContainerType, storage_index: u16) -> &mut Item {
         let container = self.get_container_mut(&storage_id);
         container.get_slot_mut(storage_index)
     }
 
     pub fn get_item(&self, storage_id: ContainerType, storage_index: u16) -> Item {
-        let container = self.get_container(&storage_id);
+        if storage_id == ContainerType::Invalid {
+            return Item::default();
+        }
+
+        let container = self.get_container(storage_id);
         *container.get_slot(storage_index)
     }
 
@@ -374,7 +379,7 @@ impl Inventory {
         }
     }
 
-    fn get_container(&self, container_type: &ContainerType) -> &dyn Storage {
+    pub fn get_container(&self, container_type: ContainerType) -> &dyn Storage {
         match container_type {
             ContainerType::Inventory0 => &self.pages[0],
             ContainerType::Inventory1 => &self.pages[1],
