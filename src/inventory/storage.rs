@@ -107,3 +107,14 @@ pub trait Storage: Sync {
     fn get_slot_mut(&mut self, index: u16) -> &mut Item;
     fn get_slot(&self, index: u16) -> &Item;
 }
+
+/// Finds the first free slot in this container.
+pub fn get_next_free_slot(storage: &dyn Storage) -> Option<u16> {
+    for i in 0..storage.max_slots() as u16 {
+        if storage.get_slot(i).is_empty_slot() {
+            return Some(i);
+        }
+    }
+
+    None
+}

@@ -167,6 +167,7 @@ pub struct PlayerData {
 
     pub item_sequence: u32,
     pub shop_sequence: u32,
+    pub transaction_sequence: u32,
     /// Store the target actor id for the purpose of chaining cutscenes.
     pub target_actorid: ObjectTypeId,
     /// The server-side copy of NPC shop buyback lists.
