@@ -137,6 +137,11 @@ fn set_player_minion(
 
 fn server_logic_tick(data: &mut WorldServer, network: &mut NetworkState) {
     for instance in data.instances.values_mut() {
+        // If there's no navmesh data, don't pathfind!
+        if !instance.navmesh.is_available() {
+            continue;
+        }
+
         let mut actor_moves = Vec::new();
         let players = instance.find_all_players();
 
