@@ -291,13 +291,21 @@ fn server_logic_tick(data: &mut WorldServer, network: &mut NetworkState) {
                 dir.push(format!("kawari-navimesh{EXE_SUFFIX}"));
 
                 // start navimesh generator
-                Command::new(dir)
+                match Command::new(dir)
                     .arg(instance.zone.id.to_string())
                     .arg(nvm_path)
                     .spawn()
-                    .unwrap();
-
-                instance.generate_navmesh = NavmeshGenerationStep::Started(nvm_path.clone());
+                {
+                    Ok(_) => {
+                        instance.generate_navmesh = NavmeshGenerationStep::Started(nvm_path.clone())
+                    }
+                    Err(err) => {
+                        tracing::error!(
+                            "Unable to run kawari-navimesh due to the following error: {err}"
+                        );
+                        instance.generate_navmesh = NavmeshGenerationStep::None;
+                    }
+                }
             }
             NavmeshGenerationStep::Started(nvm_path) => {
                 if let Ok(nvm_bytes) = std::fs::read(nvm_path) {
