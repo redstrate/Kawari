@@ -521,6 +521,18 @@
             "comment": "Sent by the server to inform the client about the party's positions in the world.",
             "opcode": 393,
             "size": 64
+        },
+        {
+            "name": "AcceptQuest",
+            "comment": "Sent by the server to add a quest to your journal, I think.",
+            "opcode": 405,
+            "size": 8
+        },
+        {
+            "name": "UpdateQuest",
+            "comment": "Sent by the server to update a quest.",
+            "opcode": 635,
+            "size": 24
         }
     ],
     "ClientZoneIpcType": [

@@ -2,7 +2,7 @@
 
 use crate::{
     constants::COMPLETED_LEVEQUEST_BITMASK_SIZE,
-    ipc::zone::{QuestActiveList, ServerZoneIpcData, ServerZoneIpcSegment},
+    ipc::zone::{ActiveQuest, QuestActiveList, ServerZoneIpcData, ServerZoneIpcSegment},
     world::ZoneConnection,
 };
 
@@ -34,5 +34,27 @@ impl ZoneConnection {
             });
             self.send_ipc_self(ipc).await;
         }
+    }
+
+    pub async fn accept_quest(&mut self, id: u32) {
+        let adjusted_id = id - 65536;
+
+        // TODO: add to internal data model
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::AcceptQuest {
+            quest_id: adjusted_id,
+        });
+        self.send_ipc_self(ipc).await;
+
+        // Ensure its updated in the journal or whatever
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateQuest {
+            index: 0,
+            quest: ActiveQuest {
+                id: adjusted_id as u16,
+                sequence: 0xFF,
+                flags: 0,
+                bitflags: [0; 6],
+            },
+        });
+        self.send_ipc_self(ipc).await;
     }
 }

@@ -237,7 +237,8 @@ impl ZoneConnection {
             data: SegmentData::Ipc(ipc),
         };
 
-        send_packet(
+        // This is meant to protect against stack-smashing in nested futures
+        Box::pin(send_packet(
             &mut self.socket,
             &mut self.state,
             ConnectionType::Zone,
@@ -247,13 +248,14 @@ impl ZoneConnection {
                 CompressionType::Uncompressed
             },
             &[segment],
-        )
+        ))
         .await;
     }
 
     // TODO: Get rid of this? Lua.rs doesn't really need it but we'll continue using it for now.
     pub async fn send_segment(&mut self, segment: PacketSegment<ServerZoneIpcSegment>) {
-        send_packet(
+        // Ditto as above
+        Box::pin(send_packet(
             &mut self.socket,
             &mut self.state,
             ConnectionType::Zone,
@@ -263,7 +265,7 @@ impl ZoneConnection {
                 CompressionType::Uncompressed
             },
             &[segment],
-        )
+        ))
         .await;
     }
 

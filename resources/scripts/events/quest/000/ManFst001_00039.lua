@@ -30,6 +30,8 @@ function onReturn(scene, results, player)
         player:play_scene(player.id, EVENT_ID, 00002, HIDE_HOTBAR, {})
         return
     elseif scene == 2 then
+        player:accept_quest(EVENT_ID)
+
         -- call back into the opening, presumably to update the borders of the play area
         -- FIXME: doesn't work :')
         player:start_event(player.id, 1245186, EVENT_TYPE_NEST, 0)

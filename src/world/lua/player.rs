@@ -502,6 +502,10 @@ impl LuaPlayer {
     fn start_talk_event(&mut self) {
         self.queued_tasks.push(Task::StartTalkEvent {});
     }
+
+    fn accept_quest(&mut self, id: u32) {
+        self.queued_tasks.push(Task::AcceptQuest { id });
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -832,6 +836,10 @@ impl UserData for LuaPlayer {
         });
         methods.add_method_mut("start_talk_event", |_, this, _: ()| {
             this.start_talk_event();
+            Ok(())
+        });
+        methods.add_method_mut("accept_quest", |_, this, quest_id: u32| {
+            this.accept_quest(quest_id);
             Ok(())
         });
     }

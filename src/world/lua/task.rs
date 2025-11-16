@@ -156,4 +156,7 @@ pub enum Task {
     },
     // NOTE: this is mostly a workaround in a limitation in the scripting API
     StartTalkEvent {},
+    AcceptQuest {
+        id: u32,
+    },
 }

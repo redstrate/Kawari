@@ -461,6 +461,9 @@ impl ZoneConnection {
                         );
                     }
                 }
+                Task::AcceptQuest { id } => {
+                    self.accept_quest(*id).await;
+                }
             }
         }
         player.queued_tasks.clear();

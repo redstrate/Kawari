@@ -78,7 +78,7 @@ mod object_spawn;
 pub use object_spawn::ObjectSpawn;
 
 mod quest_active_list;
-pub use quest_active_list::QuestActiveList;
+pub use quest_active_list::{ActiveQuest, QuestActiveList};
 
 mod effect_result;
 pub use effect_result::{EffectEntry, EffectResult};
@@ -525,6 +525,18 @@ pub enum ServerZoneIpcData {
         member_count: u8,
     },
     PartyMemberPositions(PartyMemberPositions),
+    AcceptQuest {
+        /// Row ID - 65535
+        #[brw(pad_after = 4)]
+        quest_id: u32,
+    },
+    UpdateQuest {
+        // TODO: index into what?
+        #[brw(pad_after = 3)]
+        index: u8,
+        #[brw(pad_after = 8)] // seems empty
+        quest: ActiveQuest,
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -831,6 +843,11 @@ mod tests {
                 member_count: 0,
             },
             ServerZoneIpcData::PartyMemberPositions(PartyMemberPositions::default()),
+            ServerZoneIpcData::AcceptQuest { quest_id: 0 },
+            ServerZoneIpcData::UpdateQuest {
+                index: 0,
+                quest: ActiveQuest::default(),
+            },
         ];
 
         for data in &ipc_types {
