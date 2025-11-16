@@ -103,20 +103,27 @@ pub(crate) fn compress<T: ReadWriteIpcSegment>(
                 segment.write_le_args(&mut cursor, (state,)).unwrap();
             }
 
-            let new_size = buffer.len();
-            let written_len = new_size - old_size;
+            let is_unknown = match &segment.data {
+                SegmentData::Ipc(data) => data.get_name() == "Unknown",
+                _ => false,
+            };
 
-            let expected_size = segment.calc_size() as usize;
-            let size_matches = expected_size == written_len;
-            if !size_matches {
-                // This WILL break the client in unexpected ways (especially when using Oodle compression) and has to be fixed immediately.
-                tracing::warn!(
-                    "{:#?} does not match the size that was actually written! (expected: {}, written: {})",
-                    segment,
-                    expected_size,
-                    written_len
-                );
-                panic!();
+            if !is_unknown {
+                let new_size = buffer.len();
+                let written_len = new_size - old_size;
+
+                let expected_size = segment.calc_size() as usize;
+                let size_matches = expected_size == written_len;
+                if !size_matches {
+                    // This WILL break the client in unexpected ways (especially when using Oodle compression) and has to be fixed immediately.
+                    tracing::warn!(
+                        "{:#?} does not match the size that was actually written! (expected: {}, written: {})",
+                        segment,
+                        expected_size,
+                        written_len
+                    );
+                    panic!();
+                }
             }
         }
 
