@@ -2,7 +2,10 @@
 
 use crate::{
     common::{GameData, ObjectId},
-    ipc::zone::{PlayerStats, ServerZoneIpcData, ServerZoneIpcSegment, UpdateClassInfo},
+    ipc::zone::{
+        ActorControlCategory, ActorControlSelf, PlayerStats, ServerZoneIpcData,
+        ServerZoneIpcSegment, UpdateClassInfo,
+    },
     packet::{PacketSegment, SegmentData, SegmentType},
     world::{CharacterData, ZoneConnection},
 };
@@ -90,5 +93,64 @@ impl ZoneConnection {
             data: SegmentData::Ipc(ipc),
         })
         .await;
+    }
+
+    /// Adds EXP to the current classjob, handles level-up and so on.
+    pub async fn add_exp(&mut self, exp: i32) {
+        self.actor_control_self(ActorControlSelf {
+            category: ActorControlCategory::EXPFloatingMessage {
+                classjob_id: self.player_data.classjob_id as u32,
+                amount: exp as u32,
+                unk2: 0,
+                unk3: 0,
+            },
+        })
+        .await;
+
+        let index;
+        let mut level_up = 0;
+        {
+            let mut game_data = self.gamedata.lock();
+
+            index = game_data
+                .get_exp_array_index(self.player_data.classjob_id as u16)
+                .unwrap();
+
+            self.player_data.classjob_exp[index as usize] += exp;
+
+            // Keep going until we have leftover EXP
+            loop {
+                let curr_exp = self.player_data.classjob_exp[index as usize];
+                let max_exp =
+                    game_data.get_max_exp(self.player_data.classjob_levels[index as usize] as u32);
+                let difference = curr_exp - max_exp;
+                if difference > 0 {
+                    level_up += 1;
+                    self.player_data.classjob_exp[index as usize] -= difference;
+                } else {
+                    break;
+                }
+            }
+        }
+
+        if level_up > 0 {
+            let curr_level = self.player_data.classjob_levels[index as usize];
+            let new_level = curr_level + level_up;
+            self.set_current_level(new_level);
+
+            self.actor_control_self(ActorControlSelf {
+                category: ActorControlCategory::LevelUpMessage {
+                    classjob_id: self.player_data.classjob_id as u32,
+                    level: new_level as u32,
+                    unk2: 0,
+                    unk3: 0,
+                },
+            })
+            .await;
+        }
+
+        // TODO: re-send stats like in retail
+
+        self.update_class_info().await;
     }
 }

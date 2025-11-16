@@ -16,6 +16,7 @@ use icarus::ItemAction::ItemActionSheet;
 use icarus::ModelChara::ModelCharaSheet;
 use icarus::Mount::MountSheet;
 use icarus::Opening::OpeningSheet;
+use icarus::ParamGrow::ParamGrowSheet;
 use icarus::PlaceName::PlaceNameSheet;
 use icarus::PreHandler::PreHandlerSheet;
 use icarus::Quest::QuestSheet;
@@ -783,6 +784,24 @@ impl GameData {
         let row = sheet.get_row(topic_select_id)?;
 
         Some(*row.Shop()[selected_index].into_u32()?)
+    }
+
+    /// Returns the rewards for this Quest, EXP and Gil respectively.
+    pub fn get_quest_rewards(&mut self, quest_id: u32) -> (u16, u32) {
+        let row = self.quest_sheet.get_row(quest_id).unwrap();
+
+        (
+            row.ExpFactor().into_u16().cloned().unwrap_or_default(),
+            row.GilReward().into_u32().cloned().unwrap_or_default(),
+        )
+    }
+
+    /// Returns the max EXP or the exp "needed to grow" for a given level.
+    pub fn get_max_exp(&mut self, level: u32) -> i32 {
+        let sheet = ParamGrowSheet::read_from(&mut self.resource, Language::None).unwrap();
+        let row = sheet.get_row(level).unwrap();
+
+        row.ExpToNext().into_i32().cloned().unwrap_or_default()
     }
 }
 

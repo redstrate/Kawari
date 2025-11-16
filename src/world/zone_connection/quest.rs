@@ -2,6 +2,7 @@
 
 use crate::{
     constants::COMPLETED_LEVEQUEST_BITMASK_SIZE,
+    inventory::Storage,
     ipc::zone::{ActiveQuest, QuestActiveList, ServerZoneIpcData, ServerZoneIpcSegment},
     world::ZoneConnection,
 };
@@ -59,6 +60,21 @@ impl ZoneConnection {
 
     pub async fn finish_quest(&mut self, id: u32) {
         let adjusted_id = id - 65536;
+
+        // Grant rewards
+        let rewards;
+        {
+            let mut gamedata = self.gamedata.lock();
+            rewards = gamedata.get_quest_rewards(id);
+        }
+
+        // Add gil
+        // TODO: send log message
+        self.player_data.inventory.currency.get_slot_mut(0).quantity += rewards.1;
+        self.send_inventory(false).await;
+
+        // Add exp
+        self.add_exp(rewards.0 as i32).await;
 
         // Ensure its updated in the journal or whatever
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateQuest {
