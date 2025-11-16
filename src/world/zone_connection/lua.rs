@@ -464,6 +464,9 @@ impl ZoneConnection {
                 Task::AcceptQuest { id } => {
                     self.accept_quest(*id).await;
                 }
+                Task::FinishQuest { id } => {
+                    self.finish_quest(*id).await;
+                }
             }
         }
         player.queued_tasks.clear();

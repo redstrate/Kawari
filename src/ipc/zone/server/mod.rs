@@ -537,6 +537,13 @@ pub enum ServerZoneIpcData {
         #[brw(pad_after = 8)] // seems empty
         quest: ActiveQuest,
     },
+    FinishQuest {
+        /// Row ID - 65535
+        quest_id: u16,
+        flag1: u8,
+        #[brw(pad_after = 4)]
+        flag2: u8,
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -847,6 +854,11 @@ mod tests {
             ServerZoneIpcData::UpdateQuest {
                 index: 0,
                 quest: ActiveQuest::default(),
+            },
+            ServerZoneIpcData::FinishQuest {
+                quest_id: 0,
+                flag1: 0,
+                flag2: 0,
             },
         ];
 

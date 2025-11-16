@@ -51,9 +51,26 @@ impl ZoneConnection {
             quest: ActiveQuest {
                 id: adjusted_id as u16,
                 sequence: 0xFF,
-                flags: 0,
-                bitflags: [0; 6],
+                ..Default::default()
             },
+        });
+        self.send_ipc_self(ipc).await;
+    }
+
+    pub async fn finish_quest(&mut self, id: u32) {
+        let adjusted_id = id - 65536;
+
+        // Ensure its updated in the journal or whatever
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateQuest {
+            index: 0,
+            quest: ActiveQuest::default(),
+        });
+        self.send_ipc_self(ipc).await;
+
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::FinishQuest {
+            quest_id: adjusted_id as u16,
+            flag1: 1,
+            flag2: 1,
         });
         self.send_ipc_self(ipc).await;
     }

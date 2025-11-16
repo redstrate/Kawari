@@ -2,15 +2,29 @@
 -- scene 3: decline
 -- scene 1: after quest acceptance
 -- scene 2: you have begun a quest!
+-- scene 4: miounne's cutscene
+-- scene 5: accept reward dialog
 
 -- As seen in retail
 CUTSCENE_FLAGS = NO_DEFAULT_CAMERA | FADE_OUT | INVIS_EOBJ | INVIS_BNPC | INVIS_OTHER_PC | INVIS_PARTY_PC | INVIS_PARTY_BUDDY | INVIS_GATHERING_POINT | INVIS_TREASURE | CONDITION_CUTSCENE | HIDE_UI | HIDE_HOTBAR | DISABLE_SKIP | DISABLE_STEALTH | INVIS_AOE | INVIS_ALLIANCE_PC | INVIS_ALLIANCE_BUDDY | INVIS_COMPANION
 
+ENPC_BERTENNANT = 1985150
+ENPC_MIOUNNE = 1985113
+
 function onTalk(target, player)
-    player:play_scene(target, EVENT_ID, 00000, HIDE_HOTBAR, {})
+    if target.object_id == ENPC_BERTENNANT then
+        player:play_scene(target, EVENT_ID, 00000, HIDE_HOTBAR, {})
+    elseif target.object_id == ENPC_MIOUNNE then
+        player:play_scene(target, EVENT_ID, 00004, CUTSCENE_FLAGS, {})
+    end
 end
 
 function onYield(scene, results, player)
+    if scene == 4 then
+        player:play_scene(player.id, EVENT_ID, 00005, HIDE_HOTBAR, {})
+        return
+    end
+
     player:finish_event(EVENT_ID)
 end
 
@@ -37,6 +51,9 @@ function onReturn(scene, results, player)
         player:start_event(player.id, 1245186, EVENT_TYPE_NEST, 0)
         player:play_scene(player.id, 1245186, 30, HIDE_HOTBAR | NO_DEFAULT_CAMERA, {2})
         return
+    elseif scene == 5 then
+        local completed = results[1] == 1
+        player:finish_quest(EVENT_ID)
     end
 
     player:finish_event(EVENT_ID)

@@ -159,4 +159,7 @@ pub enum Task {
     AcceptQuest {
         id: u32,
     },
+    FinishQuest {
+        id: u32,
+    },
 }

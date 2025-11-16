@@ -66,7 +66,11 @@ impl UserData for Position {
     }
 }
 
-impl UserData for ObjectTypeId {}
+impl UserData for ObjectTypeId {
+    fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
+        fields.add_field_method_get("object_id", |_, this| Ok(this.object_id.0));
+    }
+}
 
 impl FromLua for ObjectTypeId {
     fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {

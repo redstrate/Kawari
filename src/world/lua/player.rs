@@ -506,6 +506,10 @@ impl LuaPlayer {
     fn accept_quest(&mut self, id: u32) {
         self.queued_tasks.push(Task::AcceptQuest { id });
     }
+
+    fn finish_quest(&mut self, id: u32) {
+        self.queued_tasks.push(Task::FinishQuest { id });
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -840,6 +844,10 @@ impl UserData for LuaPlayer {
         });
         methods.add_method_mut("accept_quest", |_, this, quest_id: u32| {
             this.accept_quest(quest_id);
+            Ok(())
+        });
+        methods.add_method_mut("finish_quest", |_, this, quest_id: u32| {
+            this.finish_quest(quest_id);
             Ok(())
         });
     }
