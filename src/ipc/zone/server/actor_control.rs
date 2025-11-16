@@ -18,6 +18,25 @@ pub enum ActorControlCategory {
         unk_flag: u32,
     },
 
+    /// Only shows the floating message, it doesn't actually update your EXP!
+    #[brw(magic = 7u32)]
+    EXPFloatingMessage {
+        classjob_id: u32,
+        amount: u32,
+        unk2: u32,
+        unk3: u32,
+    },
+
+    /// Shows the message and also updates some character data.
+    /// It's also interesting in that it handles the in-between levels. So you can give it a level of 99 and it'll go through *each* level.
+    #[brw(magic = 10u32)]
+    LevelUpMessage {
+        classjob_id: u32,
+        level: u32,
+        unk2: u32,
+        unk3: u32,
+    },
+
     #[brw(magic = 15u32)]
     CancelCast {},
 
@@ -60,6 +79,10 @@ pub enum ActorControlCategory {
         #[bw(map = write_bool_as::<u32>)]
         unlocked: bool,
     },
+
+    /// Sets the EXP, but doesn't display anything visually.
+    #[brw(magic = 43u32)]
+    SetEXP { classjob_id: u32, amount: u32 },
 
     #[brw(magic = 50u32)]
     SetTarget {
