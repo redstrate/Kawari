@@ -9,7 +9,7 @@ pub struct LoginDatabase {
     connection: Mutex<Connection>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum LoginError {
     WrongUsername,
     WrongPassword,
@@ -35,9 +35,30 @@ pub struct User {
 }
 
 impl LoginDatabase {
+    /// Creates a new connection to the database, and creates tables as needed.
     pub fn new() -> Self {
         let connection = Connection::open("login.db").expect("Failed to open database!");
 
+        Self::create_tables(&connection);
+
+        Self {
+            connection: Mutex::new(connection),
+        }
+    }
+
+    /// Creates a new connection to a database, but in memory. Only meant for our own testing.
+    #[cfg(test)]
+    fn new_in_memory() -> Self {
+        let connection = Connection::open_in_memory().expect("Failed to open database!");
+
+        Self::create_tables(&connection);
+
+        Self {
+            connection: Mutex::new(connection),
+        }
+    }
+
+    fn create_tables(connection: &Connection) {
         // Create users table
         {
             let query = "CREATE TABLE IF NOT EXISTS user (id INTEGER PRIMARY KEY, username TEXT, password TEXT);";
@@ -55,13 +76,9 @@ impl LoginDatabase {
             let query = "CREATE TABLE IF NOT EXISTS service_account (id INTEGER PRIMARY KEY, user_id INTEGER, max_ex INTEGER);";
             connection.execute(query, ()).unwrap();
         }
-
-        Self {
-            connection: Mutex::new(connection),
-        }
     }
 
-    // NOE: We pass account IDs as u64, however SQLite doesn't support u64. So we *want* to create u32 account IDs.
+    // NOTE: We pass account IDs as u64, however SQLite doesn't support u64. So we *want* to create u32 account IDs.
     fn generate_account_id() -> u32 {
         fastrand::u32(..)
     }
@@ -345,5 +362,33 @@ impl LoginDatabase {
             .prepare("SELECT MAX(max_ex) FROM service_account WHERE user_id = ?1")
             .unwrap();
         stmt.query_row((user_id,), |row| row.get(0)).ok()?
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const SERVICE_NAME: &'static str = "Unit Test";
+
+    #[test]
+    fn test_login() {
+        let database = LoginDatabase::new_in_memory();
+
+        // No users exist in the database yet.
+        assert_eq!(
+            database.login_user(SERVICE_NAME, "test", "test"),
+            Err(LoginError::WrongUsername)
+        );
+
+        // Now add said user, the login should now succeed.
+        database.add_user("test", "test");
+        assert!(database.login_user(SERVICE_NAME, "test", "test").is_ok());
+
+        // But the same user with the wrong password should fail!
+        assert_eq!(
+            database.login_user(SERVICE_NAME, "test", "wrong"),
+            Err(LoginError::WrongPassword)
+        );
     }
 }
