@@ -83,11 +83,10 @@ impl LoginDatabase {
         fastrand::u32(..)
     }
 
-    /// Adds a new user to the database.
-    pub fn add_user(&self, username: &str, password: &str) {
+    /// Adds a new user to the database. Returns false if the username was already taken.
+    pub fn add_user(&self, username: &str, password: &str) -> bool {
         if self.check_username(username) {
-            tracing::info!("{username} already taken!");
-            return;
+            return false;
         }
 
         let user_id = Self::generate_account_id();
@@ -113,6 +112,8 @@ impl LoginDatabase {
                 .execute(query, (Self::generate_account_id(), user_id, MAX_EXPANSION))
                 .expect("Failed to write service account to database!");
         }
+
+        true
     }
 
     /// Login as user, returns a session id.
@@ -382,7 +383,7 @@ mod tests {
         );
 
         // Now add said user, the login should now succeed.
-        database.add_user("test", "test");
+        assert!(database.add_user("test", "test"));
         assert!(database.login_user(SERVICE_NAME, "test", "test").is_ok());
 
         // But the same user with the wrong password should fail!
@@ -390,5 +391,14 @@ mod tests {
             database.login_user(SERVICE_NAME, "test", "wrong"),
             Err(LoginError::WrongPassword)
         );
+    }
+
+    #[test]
+    fn test_username_check() {
+        let database = LoginDatabase::new_in_memory();
+        assert!(database.add_user("test", "test"));
+
+        // Adding the same username should fail!
+        assert!(!database.add_user("test", "test"));
     }
 }
