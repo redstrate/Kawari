@@ -1239,7 +1239,7 @@ async fn client_loop(
                                             }
                                             ClientZoneIpcData::StartTalkEvent { actor_id, event_id } => {
                                                 if connection.start_event(*actor_id, *event_id, EventType::Talk, 0, &mut lua_player).await {
-                                                    connection.conditions.set_condition(Condition::OccupiedInEvent);
+                                                    connection.conditions.set_condition(Condition::OccupiedInQuestEvent);
                                                     connection.send_conditions().await;
 
                                                     /* TODO: ServerZoneIpcType::Unk18 with data [64,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
@@ -1459,9 +1459,6 @@ async fn client_loop(
                                                 connection.send_notice("Gearsets are not yet implemented.").await;
                                             }
                                             ClientZoneIpcData::StartWalkInEvent { event_arg, event_id, .. } => {
-                                                dbg!(event_arg);
-                                                dbg!(event_id);
-
                                                 // Yes, an ActorControl is sent here, not an ActorControlSelf!
                                                 connection.actor_control(connection.player_data.actor_id, ActorControl {
                                                     category: ActorControlCategory::ToggleWeapon {
@@ -1469,7 +1466,7 @@ async fn client_loop(
                                                         unk_flag: 1,
                                                     }
                                                 }).await;
-                                                connection.conditions.set_condition(Condition::OccupiedInEvent);
+                                                connection.conditions.set_condition(Condition::OccupiedInQuestEvent);
                                                 connection.send_conditions().await;
 
                                                 let actor_id = ObjectTypeId { object_id: ObjectId(connection.player_data.actor_id), object_type: ObjectTypeKind::None };
