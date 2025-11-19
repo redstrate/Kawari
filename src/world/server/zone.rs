@@ -425,11 +425,14 @@ pub fn handle_zone_messages(
                 if let Some(pop_range) = instance.zone.find_pop_range(*id) {
                     let trans = pop_range.0.transform.translation;
 
-                    let msg = FromServer::NewPosition(Position {
-                        x: trans[0],
-                        y: trans[1],
-                        z: trans[2],
-                    });
+                    let msg = FromServer::NewPosition(
+                        Position {
+                            x: trans[0],
+                            y: trans[1],
+                            z: trans[2],
+                        },
+                        euler_to_direction(pop_range.0.transform.rotation),
+                    );
 
                     // send new position to the client
                     network.send_to(*from_id, msg, DestinationNetwork::ZoneClients);

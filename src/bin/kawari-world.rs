@@ -1649,7 +1649,7 @@ async fn client_loop(
                         lua_player.zone_data = lua_zone;
                         connection.handle_zone_change(zone_id, weather_id, position, rotation, initial_login).await;
                     },
-                    FromServer::NewPosition(position) => connection.set_player_position(position).await,
+                    FromServer::NewPosition(position, rotation) => connection.set_player_position(position, rotation).await,
                     FromServer::PartyInvite(sender_account_id, sender_content_id, sender_name) => connection.received_party_invite(sender_account_id, sender_content_id, sender_name).await,
                     FromServer::InvitationResult(sender_account_id, sender_content_id, sender_name, invite_type, invite_reply) => connection.received_invitation_response(sender_account_id, sender_content_id, sender_name, invite_type, invite_reply).await,
                     FromServer::InvitationReplyResult(sender_account_id, sender_name, invite_type, invite_reply) => connection.send_invite_reply_result(sender_account_id, sender_name, invite_type, invite_reply).await,

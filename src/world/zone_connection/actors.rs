@@ -16,11 +16,13 @@ use crate::{
 };
 
 impl ZoneConnection {
-    pub async fn set_player_position(&mut self, position: Position) {
+    /// Sets the player new position and rotation. Must be a location within the current zone.
+    pub async fn set_player_position(&mut self, position: Position, rotation: f32) {
         // set pos
         {
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Warp(Warp {
                 position,
+                dir: rotation,
                 ..Default::default()
             }));
             self.send_ipc_self(ipc).await;

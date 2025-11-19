@@ -113,8 +113,8 @@ pub enum FromServer {
     Conditions(Conditions),
     /// To inform the connection of the zone they're loading into.
     ChangeZone(u16, u16, Position, f32, LuaZone, bool),
-    /// The returned position from ToServer::MoveToPopRange.
-    NewPosition(Position),
+    /// The returned position and rotation from ToServer::MoveToPopRange.
+    NewPosition(Position, f32),
     /// We need to inform the recipent about the direct message they're receiving.
     TellMessageSent(MessageInfo),
     /// We need to inform the sender that the recipient was not found or is offline.
