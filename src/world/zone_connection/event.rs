@@ -12,6 +12,7 @@ use crate::{
 };
 
 impl ZoneConnection {
+    /// Starts a scene for the current event.
     pub async fn event_scene(
         &mut self,
         target: &ObjectTypeId,
@@ -40,6 +41,7 @@ impl ZoneConnection {
         }
     }
 
+    /// Finishes the current event, including resetting any conditions set during the start of said event.
     pub async fn event_finish(&mut self, handler_id: u32, finish_type: EventFinishType) {
         let event_type = self.events.last().unwrap().event_type;
         let event_arg = self.events.last().unwrap().event_arg;
