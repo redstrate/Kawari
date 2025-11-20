@@ -1,5 +1,5 @@
 use crate::{
-    common::{ObjectTypeId, workdefinitions::RemakeMode},
+    common::{ObjectTypeId, Position, workdefinitions::RemakeMode},
     inventory::BuyBackList,
     ipc::zone::{EventType, ServerZoneIpcSegment},
     packet::PacketSegment,
@@ -10,6 +10,8 @@ use crate::{
 pub enum Task {
     ChangeTerritory {
         zone_id: u16,
+        exit_position: Option<Position>,
+        exit_rotation: Option<f32>,
     },
     SetRemakeMode(RemakeMode),
     Warp {

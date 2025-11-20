@@ -201,7 +201,7 @@ pub enum ToServer {
     ZoneLoaded(ClientId, u16, PlayerSpawn),
     /// The connection wants to enter a new zone.
     // TODO: temporary as this is only used for commands and those aren't run on global server state yet
-    ChangeZone(ClientId, u32, u16),
+    ChangeZone(ClientId, u32, u16, Option<Position>, Option<f32>),
     /// The player walks through a zone change line.
     EnterZoneJump(ClientId, u32, u32),
     /// The connection disconnected.

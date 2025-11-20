@@ -36,7 +36,14 @@ impl ZoneConnection {
         let tasks = player.queued_tasks.clone();
         for task in &tasks {
             match task {
-                Task::ChangeTerritory { zone_id } => self.change_zone(*zone_id).await,
+                Task::ChangeTerritory {
+                    zone_id,
+                    exit_position,
+                    exit_rotation,
+                } => {
+                    self.change_zone(*zone_id, *exit_position, *exit_rotation)
+                        .await
+                }
                 Task::SetRemakeMode(remake_mode) => self
                     .database
                     .set_remake_mode(player.player_data.content_id, *remake_mode),

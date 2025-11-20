@@ -284,7 +284,7 @@ pub fn handle_zone_messages(
                 );
             }
         }
-        ToServer::ChangeZone(from_id, actor_id, zone_id) => {
+        ToServer::ChangeZone(from_id, actor_id, zone_id, new_position, new_rotation) => {
             tracing::info!("Client {from_id:?} is requesting to go to {zone_id}!");
 
             let mut data = data.lock().unwrap();
@@ -308,8 +308,8 @@ pub fn handle_zone_messages(
             let msg = FromServer::ChangeZone(
                 *zone_id,
                 target_instance.weather_id,
-                Position::default(),
-                0.0,
+                new_position.unwrap_or_default(),
+                new_rotation.unwrap_or_default(),
                 target_instance.zone.to_lua_zone(target_instance.weather_id),
                 false,
             );

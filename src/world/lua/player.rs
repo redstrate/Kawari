@@ -138,8 +138,17 @@ impl LuaPlayer {
         });
     }
 
-    fn change_territory(&mut self, zone_id: u16) {
-        self.queued_tasks.push(Task::ChangeTerritory { zone_id });
+    fn change_territory(
+        &mut self,
+        zone_id: u16,
+        exit_position: Option<Position>,
+        exit_rotation: Option<f32>,
+    ) {
+        self.queued_tasks.push(Task::ChangeTerritory {
+            zone_id,
+            exit_position,
+            exit_rotation,
+        });
     }
 
     fn set_remake_mode(&mut self, mode: RemakeMode) {
@@ -586,10 +595,17 @@ impl UserData for LuaPlayer {
             this.toggle_invisiblity();
             Ok(())
         });
-        methods.add_method_mut("change_territory", |_, this, zone_id: u16| {
-            this.change_territory(zone_id);
-            Ok(())
-        });
+        methods.add_method_mut(
+            "change_territory",
+            |lua, this, (zone_id, exit_position, exit_rotation): (u16, Value, Value)| {
+                this.change_territory(
+                    zone_id,
+                    lua.from_value(exit_position).unwrap_or_default(),
+                    lua.from_value(exit_rotation).unwrap_or_default(),
+                );
+                Ok(())
+            },
+        );
         methods.add_method_mut("set_remake_mode", |lua, this, mode: Value| {
             let mode: RemakeMode = lua.from_value(mode).unwrap();
             this.set_remake_mode(mode);

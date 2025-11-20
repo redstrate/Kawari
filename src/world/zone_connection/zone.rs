@@ -20,13 +20,20 @@ use crate::{
 
 impl ZoneConnection {
     /// Request the global server state to change our zone.
-    pub async fn change_zone(&mut self, new_zone_id: u16) {
+    pub async fn change_zone(
+        &mut self,
+        new_zone_id: u16,
+        new_position: Option<Position>,
+        new_rotation: Option<f32>,
+    ) {
         self.player_data.teleport_reason = TeleportReason::NotSpecified;
         self.handle
             .send(ToServer::ChangeZone(
                 self.id,
                 self.player_data.actor_id,
                 new_zone_id,
+                new_position,
+                new_rotation,
             ))
             .await;
     }

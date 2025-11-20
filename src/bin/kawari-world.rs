@@ -1447,7 +1447,7 @@ async fn client_loop(
                                                 }
 
                                                 if let Some(zone_id) = zone_id {
-                                                    connection.change_zone(zone_id).await;
+                                                    connection.change_zone(zone_id, None, None).await;
                                                 } else {
                                                     tracing::warn!("Failed to find zone id for content?!");
                                                 }
