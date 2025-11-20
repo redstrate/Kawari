@@ -539,6 +539,12 @@
             "comment": "Sent by the server when finshing a quest.",
             "opcode": 413,
             "size": 8
+        },
+        {
+            "name": "UpdateMapMarkers",
+            "comment": "Unknown purpose.",
+            "opcode": 957,
+            "size": 32
         }
     ],
     "ClientZoneIpcType": [

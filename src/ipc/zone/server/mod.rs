@@ -544,6 +544,9 @@ pub enum ServerZoneIpcData {
         #[brw(pad_after = 4)]
         flag2: u8,
     },
+    UpdateMapMarkers {
+        unk1: [u8; 32],
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -860,6 +863,7 @@ mod tests {
                 flag1: 0,
                 flag2: 0,
             },
+            ServerZoneIpcData::UpdateMapMarkers { unk1: [0; 32] },
         ];
 
         for data in &ipc_types {

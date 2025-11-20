@@ -229,10 +229,10 @@ pub enum ActorControlCategory {
     },
 
     #[brw(magic = 511u32)]
-    EventRelatedUnk1 { unk1: u32 },
+    MapMarkerUpdateBegin { unk1: u32 },
 
     #[brw(magic = 512u32)]
-    EventRelatedUnk2 { unk1: u32 },
+    MapMarkerUpdateEnd { unk1: u32 },
 
     #[brw(magic = 516u32)]
     ToggleCutsceneSeen {
