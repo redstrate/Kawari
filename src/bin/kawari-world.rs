@@ -1477,6 +1477,27 @@ async fn client_loop(
                                                      event.enter_trigger(&mut lua_player);
                                                 }
                                             }
+                                            ClientZoneIpcData::WalkOutsideEvent { event_arg, event_id, .. } => {
+                                                // TODO: allow Lua scripts to handle these differently?
+
+                                                // Yes, an ActorControl is sent here, not an ActorControlSelf!
+                                                connection.actor_control(connection.player_data.actor_id, ActorControl {
+                                                    category: ActorControlCategory::ToggleWeapon {
+                                                        shown: false,
+                                                        unk_flag: 1,
+                                                    }
+                                                }).await;
+                                                connection.conditions.set_condition(Condition::OccupiedInQuestEvent);
+                                                connection.send_conditions().await;
+
+                                                let actor_id = ObjectTypeId { object_id: ObjectId(connection.player_data.actor_id), object_type: ObjectTypeKind::None };
+                                                connection.start_event(actor_id, *event_id, EventType::OutsideRange, *event_arg, &mut lua_player).await;
+
+                                                // begin walk-in trigger function if it exists
+                                                if let Some(event) = connection.events.last_mut() {
+                                                    event.enter_trigger(&mut lua_player);
+                                                }
+                                            }
                                             ClientZoneIpcData::NewDiscovery { layout_id, pos } => {
                                                 tracing::info!("Client discovered a new location on {:?} at {:?}!", layout_id, pos);
 

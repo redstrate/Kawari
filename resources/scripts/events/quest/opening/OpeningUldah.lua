@@ -1,7 +1,8 @@
---- Scene 0 is the actual cutscene
---- Scene 1 is the starting text asking you which controls you want to use.
+-- Scene 0 is the actual cutscene
+-- Scene 1 is the starting text asking you which controls you want to use.
 
---- We have to hardcode the pop range, because SqEx no longer provides this is in the Opening sheet
+-- We have to hardcode the pop range, because SqEx no longer provides this is in the Opening sheet.
+-- For future reference, this is from the EVT_OP_ONLY_BOX layer.
 POS_START = 4101669
 
 function onEnterTerritory(player)
@@ -11,9 +12,14 @@ end
 
 function onYield(scene, results, player)
     if scene == 0 then
-        player:play_scene(player.id, EVENT_ID, 1, NO_DEFAULT_CAMERA | HIDE_HOTBAR, {0})
-    elseif scene == 1 then
-        -- just quit for now
-        player:finish_event(EVENT_ID)
+        player:play_scene(player.id, EVENT_ID, 1, NO_DEFAULT_CAMERA | HIDE_HOTBAR, {})
+        return
     end
+
+    player:finish_event(EVENT_ID)
+end
+
+function onEnterTrigger(player)
+    -- Play the "where are you going?!" text when entering any trigger
+    player:play_scene(player.id, EVENT_ID, 20, NO_DEFAULT_CAMERA | HIDE_HOTBAR, {})
 end

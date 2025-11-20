@@ -15,6 +15,7 @@ pub enum EventType {
     Nest = 7,
     /// Used for gimmick path events?
     WithinRange = 10,
+    OutsideRange = 11,
     /// Unknown?
     EnterTerritory = 15,
 }

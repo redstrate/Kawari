@@ -317,6 +317,12 @@ pub enum ClientZoneIpcData {
     RequestOwnSearchInfo {
         unk: [u8; 8],
     },
+    WalkOutsideEvent {
+        event_arg: u32,
+        event_id: u32,
+        #[brw(pad_after = 4)]
+        pos: Position,
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -506,6 +512,11 @@ mod tests {
             ClientZoneIpcData::SearchPlayers { unk: Vec::new() },
             ClientZoneIpcData::EditSearchInfo(SearchInfo::default()),
             ClientZoneIpcData::RequestOwnSearchInfo { unk: [0; 8] },
+            ClientZoneIpcData::WalkOutsideEvent {
+                event_arg: 0,
+                event_id: 0,
+                pos: Position::default(),
+            },
         ];
 
         for data in &ipc_types {
