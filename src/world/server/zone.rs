@@ -17,6 +17,7 @@ use crate::{
         lua::LuaZone,
         server::{
             NetworkedActor, WorldServer,
+            instance::Instance,
             network::{DestinationNetwork, NetworkState},
         },
     },
@@ -150,18 +151,34 @@ impl Zone {
             ..Default::default()
         }
     }
+
+    /// Tries to locate the dungeon entrance based on the game object ID.
+    pub fn find_entrance(&self) -> Option<&InstanceObject> {
+        // TODO: also check position!
+        for layer_group in &self.layer_groups {
+            for layer in &layer_group.chunks[0].layers {
+                for object in &layer.objects {
+                    if let LayerEntryData::EventObject(eobj) = &object.data
+                        && eobj.parent_data.base_id == 2000182
+                    {
+                        return Some(object);
+                    }
+                }
+            }
+        }
+
+        None
+    }
 }
 
-/// Sends the needed information to ZoneConnection for a zone change.
-fn do_change_zone(
-    data: &mut WorldServer,
+fn begin_change_zone<'a>(
+    data: &'a mut WorldServer,
     network: &mut NetworkState,
     game_data: &mut GameData,
     destination_zone_id: u16,
-    destination_instance_id: u32,
     actor_id: u32,
     from_id: ClientId,
-) {
+) -> &'a mut Instance {
     // inform the players in this zone that this actor left
     if let Some(current_instance) = data.find_actor_instance_mut(actor_id) {
         current_instance.actors.remove(&ObjectId(actor_id));
@@ -170,30 +187,126 @@ fn do_change_zone(
 
     // then find or create a new instance with the zone id
     data.ensure_exists(destination_zone_id, game_data);
-    let target_instance = data.find_instance_mut(destination_zone_id);
+    data.find_instance_mut(destination_zone_id)
+}
+
+/// Sends the needed information to ZoneConnection for a zone change.
+fn change_zone_warp_to_pop_range(
+    data: &mut WorldServer,
+    network: &mut NetworkState,
+    game_data: &mut GameData,
+    destination_zone_id: u16,
+    destination_instance_id: u32,
+    actor_id: u32,
+    from_id: ClientId,
+) {
+    let target_instance = begin_change_zone(
+        data,
+        network,
+        game_data,
+        destination_zone_id,
+        actor_id,
+        from_id,
+    );
 
     let exit_position;
     let exit_rotation;
     if let Some((destination_object, _)) =
         target_instance.zone.find_pop_range(destination_instance_id)
     {
-        exit_position = Position {
+        exit_position = Some(Position {
             x: destination_object.transform.translation[0],
             y: destination_object.transform.translation[1],
             z: destination_object.transform.translation[2],
-        };
-        exit_rotation = euler_to_direction(destination_object.transform.rotation);
+        });
+        exit_rotation = Some(euler_to_direction(destination_object.transform.rotation));
     } else {
-        exit_position = Position::default();
-        exit_rotation = 0.0;
+        exit_position = None;
+        exit_rotation = None;
     }
+
+    do_change_zone(
+        data,
+        network,
+        game_data,
+        destination_zone_id,
+        exit_position,
+        exit_rotation,
+        actor_id,
+        from_id,
+    );
+}
+
+/// Sends the needed information to ZoneConnection for a zone change.
+pub fn change_zone_warp_to_entrance(
+    data: &mut WorldServer,
+    network: &mut NetworkState,
+    game_data: &mut GameData,
+    destination_zone_id: u16,
+    actor_id: u32,
+    from_id: ClientId,
+) {
+    let target_instance = begin_change_zone(
+        data,
+        network,
+        game_data,
+        destination_zone_id,
+        actor_id,
+        from_id,
+    );
+
+    let exit_position;
+    let exit_rotation;
+    if let Some(destination_object) = target_instance.zone.find_entrance() {
+        exit_position = Some(Position {
+            x: destination_object.transform.translation[0],
+            y: destination_object.transform.translation[1],
+            z: destination_object.transform.translation[2],
+        });
+        exit_rotation = Some(euler_to_direction(destination_object.transform.rotation));
+    } else {
+        exit_position = None;
+        exit_rotation = None;
+    }
+
+    do_change_zone(
+        data,
+        network,
+        game_data,
+        destination_zone_id,
+        exit_position,
+        exit_rotation,
+        actor_id,
+        from_id,
+    );
+}
+
+/// Sends the needed information to ZoneConnection for a zone change.
+fn do_change_zone(
+    data: &mut WorldServer,
+    network: &mut NetworkState,
+    game_data: &mut GameData,
+    destination_zone_id: u16,
+    exit_position: Option<Position>,
+    exit_rotation: Option<f32>,
+    actor_id: u32,
+    from_id: ClientId,
+) {
+    let target_instance = begin_change_zone(
+        data,
+        network,
+        game_data,
+        destination_zone_id,
+        actor_id,
+        from_id,
+    );
 
     // now that we have all of the data needed, inform the connection of where they need to be
     let msg = FromServer::ChangeZone(
         destination_zone_id,
         target_instance.weather_id,
-        exit_position,
-        exit_rotation,
+        exit_position.unwrap_or_default(),
+        exit_rotation.unwrap_or_default(),
         target_instance.zone.to_lua_zone(target_instance.weather_id),
         false,
     );
@@ -336,7 +449,7 @@ pub fn handle_zone_messages(
                 return;
             }
 
-            do_change_zone(
+            change_zone_warp_to_pop_range(
                 &mut data,
                 &mut network,
                 &mut game_data,
@@ -356,7 +469,7 @@ pub fn handle_zone_messages(
                 .get_warp(*warp_id)
                 .expect("Failed to find the warp!");
 
-            do_change_zone(
+            change_zone_warp_to_pop_range(
                 &mut data,
                 &mut network,
                 &mut game_data,
@@ -376,7 +489,7 @@ pub fn handle_zone_messages(
                 .get_aetheryte(*aetheryte_id)
                 .expect("Failed to find the aetheryte!");
 
-            do_change_zone(
+            change_zone_warp_to_pop_range(
                 &mut data,
                 &mut network,
                 &mut game_data,

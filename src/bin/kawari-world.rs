@@ -500,7 +500,6 @@ async fn client_loop(
     client_handle: ClientHandle,
 ) {
     let database = connection.database.clone();
-    let game_data = connection.gamedata.clone();
     let lua = connection.lua.clone();
     let config = get_config();
 
@@ -1438,19 +1437,7 @@ async fn client_loop(
                                                     connection.send_ipc_self(ipc).await;
                                                 }
 
-                                                // TODO: content finder should be moved to global state
-                                                // For now, just send them to do the zone if they do anything
-                                                let zone_id;
-                                                {
-                                                    let mut game_data = game_data.lock();
-                                                    zone_id = game_data.find_zone_for_content(connection.queued_content.unwrap());
-                                                }
-
-                                                if let Some(zone_id) = zone_id {
-                                                    connection.change_zone(zone_id, None, None).await;
-                                                } else {
-                                                    tracing::warn!("Failed to find zone id for content?!");
-                                                }
+                                                connection.handle.send(ToServer::JoinContent(connection.id, connection.player_data.actor_id, connection.queued_content.unwrap())).await;
 
                                                 connection.queued_content = None;
                                             }

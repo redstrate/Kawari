@@ -24,7 +24,7 @@ use crate::{
             instance::{Instance, NavmeshGenerationStep},
             network::{DestinationNetwork, NetworkState},
             social::handle_social_messages,
-            zone::handle_zone_messages,
+            zone::{change_zone_warp_to_entrance, handle_zone_messages},
         },
     },
 };
@@ -950,6 +950,31 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
             ToServer::ChatDisconnected(from_id) => {
                 let mut network = network.lock().unwrap();
                 network.to_remove_chat.push(from_id);
+            }
+            ToServer::JoinContent(from_id, from_actor_id, content_id) => {
+                // For now, just send them to do the zone if they do anything
+                let zone_id;
+                {
+                    let mut game_data = game_data.lock().unwrap();
+                    zone_id = game_data.find_zone_for_content(content_id);
+                }
+
+                if let Some(zone_id) = zone_id {
+                    let mut data = data.lock().unwrap();
+                    let mut network = network.lock().unwrap();
+                    let mut game_data = game_data.lock().unwrap();
+
+                    change_zone_warp_to_entrance(
+                        &mut data,
+                        &mut network,
+                        &mut game_data,
+                        zone_id,
+                        from_actor_id,
+                        from_id,
+                    );
+                } else {
+                    tracing::warn!("Failed to find zone id for content?!");
+                }
             }
             ToServer::FatalError(err) => return Err(err),
             _ => {}

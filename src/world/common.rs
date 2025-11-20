@@ -262,6 +262,8 @@ pub enum ToServer {
     PartyMemberOffline(u64, u64, u64, u32, String),
     /// The client returned online and we need to inform other party members.
     PartyMemberReturned(u32),
+    /// The client is requesting to join the following content.
+    JoinContent(ClientId, u32, u16),
 }
 
 #[derive(Clone, Debug)]
