@@ -1,3 +1,4 @@
+-- Quest: Coming to Gridania
 -- NOTE: These openings are so similar, ensure changes are synced between all of them!
 
 -- scene 0: show quest prompt
