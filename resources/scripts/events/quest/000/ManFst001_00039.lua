@@ -13,7 +13,11 @@ CUTSCENE_FLAGS = NO_DEFAULT_CAMERA | FADE_OUT | INVIS_EOBJ | INVIS_BNPC | INVIS_
 ENPC_BERTENNANT = 1985150
 ENPC_MIOUNNE = 1985113
 
+local originating_npc
+
 function onTalk(target, player)
+    originating_npc = target
+
     if target.object_id == ENPC_BERTENNANT then
         player:play_scene(target, EVENT_ID, 00000, HIDE_HOTBAR, {})
     elseif target.object_id == ENPC_MIOUNNE then
@@ -35,8 +39,7 @@ function onReturn(scene, results, player)
         -- first param: whether the quest was accepted
         local accepted = results[1] == 1
         if accepted then
-            -- FIXME: i have no idea why, but the camera is suddenly stuck here right now
-            player:play_scene(player.id, EVENT_ID, 00001, CUTSCENE_FLAGS, {})
+            player:play_scene(originating_npc, EVENT_ID, 00001, CUTSCENE_FLAGS, {})
             return
         else
             player:play_scene(player.id, EVENT_ID, 00003, HIDE_HOTBAR, {})
