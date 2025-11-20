@@ -96,7 +96,7 @@ md5 = { version = "0.8", default-features = false }
 physis = { git = "https://github.com/redstrate/physis", default-features = false }
 
 # needed for c-style bitflags
-bitflags = { version = "2.9", default-features = false }
+bitflags = { version = "2.10", default-features = false }
 
 # excel sheet data
 icarus = { git = "https://github.com/redstrate/Icarus", branch = "ver/2025.07.30.0000.0000", features = ["Warp", "Tribe", "ClassJob", "World", "TerritoryType", "Race", "Aetheryte", "EquipSlotCategory", "Action", "WeatherRate", "PlaceName", "GilShopItem", "InstanceContent", "ContentFinderCondition", "BNpcBase", "ModelChara", "Mount", "AetherCurrentCompFlgSet", "WarpLogic", "Item", "AetherCurrentCompFlgSet", "CustomTalk", "Opening", "ItemAction", "PreHandler", "SwitchTalkVariation", "HalloweenNpcSelect", "Quest", "TopicSelect", "ParamGrow"], default-features = false }
@@ -111,10 +111,10 @@ paramacro = { path = "paramacro" }
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
 # Used for the web servers
 axum = { version = "0.8", features = ["json", "tokio", "http1", "form", "query", "multipart"], default-features = false, optional = true }
-axum-extra = { version = "0.10", features = ["cookie"], default-features = false, optional = true }
+axum-extra = { version = "0.12", features = ["cookie"], default-features = false, optional = true }
 
 # Async runtime
-tokio = { version = "1.47", features = ["macros", "rt", "rt-multi-thread", "io-util"], default-features = false, optional = true }
+tokio = { version = "1.48", features = ["macros", "rt", "rt-multi-thread", "io-util"], default-features = false, optional = true }
 
 # Logging
 tracing-subscriber = { version = "0.3", features = ["fmt"], default-features = false, optional = true }
@@ -132,7 +132,7 @@ rusqlite = { version = "0.37", features = ["bundled"], default-features = false,
 mlua = { version = "0.11", features = ["lua54", "vendored", "send", "async", "serialize", "userdata-wrappers"], default-features = false, optional = true }
 
 # For character backup decompression
-zip = { version = "5.1", features = ["deflate", "lzma", "bzip2"], default-features = false, optional = true }
+zip = { version = "6.0", features = ["deflate", "lzma", "bzip2"], default-features = false, optional = true }
 
 # For some login<->lobby server communication
 reqwest = { version = "0.12", default-features = false, optional = true }
