@@ -40,3 +40,6 @@ end
 -- Constants, if two or more scripts share the same global they should be placed here
 EFFECT_TRANSFIGURATION = 565
 
+OPENING_GRIDANIA = 1245186
+OPENING_ULDAH = 1245187
+OPENING_LIMSA = 1245185

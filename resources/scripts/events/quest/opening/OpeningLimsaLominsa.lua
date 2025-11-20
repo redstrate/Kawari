@@ -1,3 +1,5 @@
+-- NOTE: These openings are so similar, ensure changes are synced between all of them!
+
 --- Scene 0 is the actual cutscene
 --- Scene 1 is the starting text asking you which controls you want to use.
 

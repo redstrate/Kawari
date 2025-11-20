@@ -1,3 +1,5 @@
+-- NOTE: These openings are so similar, ensure changes are synced between all of them!
+
 -- TODO: when we get a new EXDSchema release, we can automatically pull in the client-side lua variables!
 -- this could be useful for the trigger IDs, for example.
 

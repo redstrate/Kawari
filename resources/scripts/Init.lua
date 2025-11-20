@@ -30,19 +30,21 @@ function onFinishZoning(player)
     if in_opening then
         local starting_town <const> = player.city_state
 
+        local event_handler_id
         if starting_town == 1 then
             -- limsa
-            player:start_event(player.id, 1245185, EVENT_TYPE_ENTER_TERRITORY, 181)
-            player:play_scene(player.id, 1245185, 0, INITIAL_CUTSCENE_FLAGS, {0})
+            event_handler_id = OPENING_LIMSA
         elseif starting_town == 2 then
             -- gridania
-            player:start_event(player.id, 1245186, EVENT_TYPE_ENTER_TERRITORY, 183)
-            player:play_scene(player.id, 1245186, 0, INITIAL_CUTSCENE_FLAGS, {0})
+            event_handler_id = OPENING_GRIDANIA
         elseif starting_town == 3 then
             -- ul'dah
-            player:start_event(player.id, 1245187, EVENT_TYPE_ENTER_TERRITORY, 182)
-            player:play_scene(player.id, 1245187, 0, INITIAL_CUTSCENE_FLAGS, {0})
+            event_handler_id = OPENING_ULDAH
         end
+
+        -- begin initial cutscene
+        player:start_event(player.id, event_handler_id, EVENT_TYPE_ENTER_TERRITORY, player.zone.id)
+        player:play_scene(player.id, event_handler_id, 0, INITIAL_CUTSCENE_FLAGS, {0})
     elseif in_inn and not player.saw_inn_wakeup then
         -- play the wakeup animation
         player:start_event(player.id, BED_EVENT_HANDLER, EVENT_TYPE_ENTER_TERRITORY, player.zone.id)
