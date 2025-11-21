@@ -200,11 +200,11 @@ pub fn timestamp_msecs() -> u64 {
 pub fn determine_initial_starting_zone(citystate_id: u8) -> u16 {
     match citystate_id {
         // Limsa
-        1 => 128,
+        1 => 181,
         // Gridania
-        2 => 132,
+        2 => 183,
         // Ul'dah
-        3 => 130,
+        3 => 182,
         _ => panic!("This is not a valid city-state id!"),
     }
 }
