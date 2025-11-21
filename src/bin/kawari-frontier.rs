@@ -103,8 +103,7 @@ impl<T> From<T> for Xml<T> {
     }
 }
 
-async fn session_get_init(body: String) -> Xml<Vec<u8>> {
-    dbg!(body);
+async fn session_get_init(_body: String) -> Xml<Vec<u8>> {
     // TODO: just a guess
     Xml(
         "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><result>
