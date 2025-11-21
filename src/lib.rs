@@ -29,10 +29,12 @@ pub mod packet;
 pub mod login;
 
 /// Patch server-specific code.
+#[cfg(all(not(target_family = "wasm"), feature = "server"))]
 pub mod patch;
 
 pub mod constants;
-pub mod opcodes;
+#[doc(hidden)]
+mod opcodes;
 
 /// IPC
 pub mod ipc;
@@ -51,7 +53,7 @@ pub const INVENTORY_ACTION_ACK_SHOP: u8 = 6;
 
 /// The server's acknowledgement of the client modifying their inventory.
 /// In the past, many more values were used according to Sapphire:
-/// https://github.com/SapphireServer/Sapphire/blob/044bff026c01b4cc3a37cbc9b0881fadca3fc477/src/common/Common.h#L83
+/// <https://github.com/SapphireServer/Sapphire/blob/044bff026c01b4cc3a37cbc9b0881fadca3fc477/src/common/Common.h#L83>
 pub const INVENTORY_ACTION_ACK_GENERAL: u8 = 7;
 
 // TODO: Where should this be moved to...?

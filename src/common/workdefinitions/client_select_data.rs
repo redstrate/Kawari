@@ -35,7 +35,7 @@ impl rusqlite::types::FromSql for RemakeMode {
     }
 }
 
-/// See https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Application/Network/WorkDefinitions/ClientSelectData.cs
+/// See <https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Application/Network/WorkDefinitions/ClientSelectData.cs>
 #[derive(Debug)]
 pub struct ClientSelectData {
     pub character_name: String,

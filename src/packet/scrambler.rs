@@ -1,4 +1,4 @@
-//! Obfuscation-related structures and procedures. This is based on the ever fantastic work of Perchbird and his Unscrambler: https://github.com/perchbirdd/Unscrambler
+//! Obfuscation-related structures and procedures. This is based on the ever fantastic work of Perchbird and his Unscrambler: <https://github.com/perchbirdd/Unscrambler>
 //! This is simply a Rust-reimplementation of Unscrambler.
 
 use std::num::Wrapping;
