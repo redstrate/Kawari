@@ -1,4 +1,5 @@
 use bitflags::bitflags;
+use serde::Deserialize;
 use std::{
     ffi::{CStr, CString},
     time::{SystemTime, UNIX_EPOCH},
@@ -23,7 +24,7 @@ pub use bitmask::Bitmask;
 
 #[binrw]
 #[brw(little)]
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Deserialize)]
 pub struct ObjectId(pub u32);
 
 impl ObjectId {

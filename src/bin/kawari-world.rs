@@ -1399,7 +1399,7 @@ async fn client_loop(
                                                     connection.send_ipc_self(ipc).await;
                                                 }
                                             }
-                                            ClientZoneIpcData::ContentFinderAction { unk1 } => {
+                                            ClientZoneIpcData::ContentFinderAction { .. } => {
                                                 // commencing
                                                 {
                                                     let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ContentFinderCommencing {
