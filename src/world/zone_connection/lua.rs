@@ -226,13 +226,7 @@ impl ZoneConnection {
                     self.player_data.buyback_list = list.clone();
                 }
                 Task::AddExp { amount } => {
-                    let current_exp;
-                    {
-                        let game_data = self.gamedata.lock();
-                        current_exp = self.current_exp(&game_data);
-                    }
-                    self.set_current_exp(current_exp + amount);
-                    self.update_class_info().await;
+                    self.add_exp(*amount).await;
                 }
                 Task::StartEvent {
                     actor_id,

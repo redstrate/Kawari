@@ -123,9 +123,9 @@ impl ZoneConnection {
                 let max_exp =
                     game_data.get_max_exp(self.player_data.classjob_levels[index as usize] as u32);
                 let difference = curr_exp - max_exp;
-                if difference > 0 {
+                if difference >= 0 {
                     level_up += 1;
-                    self.player_data.classjob_exp[index as usize] -= difference;
+                    self.player_data.classjob_exp[index as usize] = difference;
                 } else {
                     break;
                 }
