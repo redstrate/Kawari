@@ -589,6 +589,17 @@ mod tests {
         assert_eq!(calculate_max_level(5), 100); // Dawntrail
     }
 
+    #[test]
+    fn test_euler_to_direction() {
+        assert_eq!(euler_to_direction([0.0, 0.0, 0.0]), 0.0);
+        assert_eq!(euler_to_direction([90.0, 0.0, 0.0]), 3.1415927);
+        assert_eq!(euler_to_direction([0.0, 90.0, 0.0]), 2.0354056);
+        assert_eq!(euler_to_direction([0.0, 0.0, 90.0]), 0.0);
+        assert_eq!(euler_to_direction([-90.0, 0.0, 0.0]), 3.1415927);
+        assert_eq!(euler_to_direction([0.0, -90.0, 0.0]), -2.0354056);
+        assert_eq!(euler_to_direction([0.0, 0.0, -90.0]), 0.0);
+    }
+
     // Helper macros so we don't repeat ourselves in tests a bunch of times
     #[macro_export]
     macro_rules! client_zone_tests_dir {
