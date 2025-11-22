@@ -11,7 +11,7 @@ TELEPORTER_INFO = {
     [4194310] = { 10114944, 1970, 40959, 180, 25483, 2009628707 }, -- Teleporter from upper balcony to Nexus Arcade ground floor
 }
 
-function onEnterTrigger(player)
+function onEnterTrigger(player, arg)
     player:do_solnine_teleporter(EVENT_ID, table.unpack(TELEPORTER_INFO[EVENT_ID]))
     player:finish_event(EVENT_ID)
 end

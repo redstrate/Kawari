@@ -1462,7 +1462,7 @@ async fn client_loop(
 
                                                 // begin walk-in trigger function if it exists
                                                 if let Some(event) = connection.events.last_mut() {
-                                                     event.enter_trigger(&mut lua_player);
+                                                     event.enter_trigger(&mut lua_player, *event_arg);
                                                 }
                                             }
                                             ClientZoneIpcData::WalkOutsideEvent { event_arg, event_id, .. } => {
@@ -1483,7 +1483,7 @@ async fn client_loop(
 
                                                 // begin walk-in trigger function if it exists
                                                 if let Some(event) = connection.events.last_mut() {
-                                                    event.enter_trigger(&mut lua_player);
+                                                    event.enter_trigger(&mut lua_player, *event_arg);
                                                 }
                                             }
                                             ClientZoneIpcData::NewDiscovery { layout_id, pos } => {

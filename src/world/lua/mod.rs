@@ -17,7 +17,7 @@ mod zone;
 pub use zone::LuaZone;
 
 use crate::{
-    common::{GameData, ObjectTypeId, Position},
+    common::{GameData, ObjectId, ObjectTypeId, ObjectTypeKind, Position},
     ipc::zone::{ObjectSpawn, ServerZoneIpcSegment, StatusEffect},
     packet::{PacketSegment, SegmentData, SegmentType},
 };
@@ -76,6 +76,11 @@ impl FromLua for ObjectTypeId {
     fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
         match value {
             Value::UserData(ud) => Ok(*ud.borrow::<Self>()?),
+            // Currently always assume its referring to an ENPC or something:
+            Value::Integer(integer) => Ok(Self {
+                object_id: ObjectId(integer as u32),
+                object_type: ObjectTypeKind::EObjOrNpc,
+            }),
             _ => unreachable!(),
         }
     }

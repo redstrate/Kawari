@@ -88,14 +88,14 @@ impl Event {
         }
     }
 
-    pub fn enter_trigger(&mut self, player: &mut LuaPlayer) {
+    pub fn enter_trigger(&mut self, player: &mut LuaPlayer, arg: u32) {
         let mut run_script = || {
             self.lua.scope(|scope| {
                 let player = scope.create_userdata_ref_mut(player)?;
 
                 let func: Function = self.lua.globals().get("onEnterTrigger")?;
 
-                func.call::<()>(player)?;
+                func.call::<()>((player, arg))?;
 
                 Ok(())
             })

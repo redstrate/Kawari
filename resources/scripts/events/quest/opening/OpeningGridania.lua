@@ -12,6 +12,9 @@
 -- For future reference, this is located in the QST_OP_ENPC_001 layer.
 POS_START = 2213211
 
+-- When walking out of the city gates
+ERANGE_SEQ_1_CLOSED_1 = 2351918
+
 function onEnterTerritory(player)
     -- Move the player into the starting position
     player:move_to_pop_range(POS_START)
@@ -27,7 +30,12 @@ function onYield(scene, results, player)
     player:finish_event(EVENT_ID)
 end
 
-function onEnterTrigger(player)
+function onEnterTrigger(player, arg)
     -- Play the "where are you going?!" text when entering any trigger
-    player:play_scene(player.id, EVENT_ID, 20, NO_DEFAULT_CAMERA | HIDE_HOTBAR, {})
+    if arg == ERANGE_SEQ_1_CLOSED_1 then
+        player:play_scene(player.id, EVENT_ID, 20, NO_DEFAULT_CAMERA | HIDE_HOTBAR, {})
+    else
+        -- Deciding the different messages and NPCs are actually handled client-side!
+        player:play_scene(player.id, EVENT_ID, 10, NO_DEFAULT_CAMERA | HIDE_HOTBAR, {arg})
+    end
 end
