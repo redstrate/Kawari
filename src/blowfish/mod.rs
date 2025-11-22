@@ -123,3 +123,26 @@ impl Blowfish {
         *xr ^= self.p[1];
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_encrypt_decrypt() {
+        let blowfish = Blowfish::new(b"test_case");
+
+        let mut expected_encrypted =
+            vec![104, 101, 108, 108, 111, 44, 32, 119, 111, 114, 108, 100, 33];
+
+        let mut buffer = Vec::from(b"hello, world!");
+
+        blowfish.encrypt(&mut buffer);
+        assert_eq!(buffer, expected_encrypted);
+        blowfish.decrypt(&mut expected_encrypted);
+        assert_eq!(
+            String::from_utf8(expected_encrypted).unwrap(),
+            "hello, world!"
+        );
+    }
+}
