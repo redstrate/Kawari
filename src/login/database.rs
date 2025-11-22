@@ -58,6 +58,7 @@ impl LoginDatabase {
         }
     }
 
+    /// Setups up the initial database schema.
     fn create_tables(connection: &Connection) {
         // Create users table
         {
@@ -78,12 +79,15 @@ impl LoginDatabase {
         }
     }
 
-    // NOTE: We pass account IDs as u64, however SQLite doesn't support u64. So we *want* to create u32 account IDs.
+    /// Generates a random account ID.
     fn generate_account_id() -> u32 {
+        // NOTE: We pass account IDs as u64, however SQLite doesn't support u64. So we *want* to create u32 account IDs.
         fastrand::u32(..)
     }
 
-    /// Adds a new user to the database. Returns false if the username was already taken.
+    /// Adds a new user to the database with `username` and `password`.
+    ///
+    /// Returns false if the username was already taken.
     pub fn add_user(&self, username: &str, password: &str) -> bool {
         if self.check_username(username) {
             return false;
@@ -116,7 +120,10 @@ impl LoginDatabase {
         true
     }
 
-    /// Login as user, returns a session id.
+    /// Login as a user, and returns a session id if successful.
+    ///
+    /// `service` is the purpose of this login.
+    /// `username` and `password` is the user's credentials.
     pub fn login_user(
         &self,
         service: &str,
@@ -149,6 +156,7 @@ impl LoginDatabase {
         Err(LoginError::WrongUsername)
     }
 
+    /// Generates a random session ID.
     fn generate_sid() -> String {
         let random_id: String =
             String::from_utf8((0..56).map(|_| fastrand::alphanumeric() as u8).collect())
@@ -305,7 +313,7 @@ impl LoginDatabase {
         tracing::info!("Revoked {service} for {user_id}!");
     }
 
-    /// Deletes the given user and also scrubs their service accounts.
+    /// Deletes the given `user_id` and also scrubs their service accounts.
     pub fn delete_user(&self, user_id: u64) {
         let connection = self.connection.lock().unwrap();
 
@@ -344,7 +352,7 @@ impl LoginDatabase {
         .collect()
     }
 
-    /// Returns the max expansion level for a given service account.
+    /// Returns the max expansion level for the `service_account_id`
     pub fn get_max_expansion(&self, service_account_id: u64) -> Option<u8> {
         let connection = self.connection.lock().unwrap();
 
@@ -355,7 +363,9 @@ impl LoginDatabase {
             .ok()?
     }
 
-    /// Returns the max expansion level for this user. This takes the highest expansion level from all service accounts.
+    /// Returns the max expansion level for this `user_id`.
+    ///
+    /// This takes the highest expansion level from all service accounts.
     pub fn get_user_max_expansion(&self, user_id: u64) -> Option<u8> {
         let connection = self.connection.lock().unwrap();
 
@@ -400,5 +410,53 @@ mod tests {
 
         // Adding the same username should fail!
         assert!(!database.add_user("test", "test"));
+    }
+
+    #[test]
+    fn test_sessions() {
+        let database = LoginDatabase::new_in_memory();
+        assert!(database.add_user("test", "test"));
+
+        // User should be able to login.
+        let sid = database.login_user(SERVICE_NAME, "test", "test");
+        assert!(sid.is_ok());
+        let sid = sid.unwrap();
+
+        // This SID we just got should be valid.
+        assert!(database.is_session_valid(SERVICE_NAME, &sid));
+        // The same SID but with a different service name should be invalid.
+        assert!(!database.is_session_valid("Something Other", &sid));
+        // The same service name, but with an invalid SID should obviously be invalid.
+        assert!(!database.is_session_valid(SERVICE_NAME, "abc"));
+    }
+
+    #[test]
+    fn test_delete_user() {
+        let database = LoginDatabase::new_in_memory();
+
+        // User shouldn't exist in the database yet.
+        assert_eq!(
+            database.login_user(SERVICE_NAME, "test", "test"),
+            Err(LoginError::WrongUsername)
+        );
+
+        // Now add said user, the login should now succeed.
+        assert!(database.add_user("test", "test"));
+
+        // User should be able to login.
+        let sid = database.login_user(SERVICE_NAME, "test", "test");
+        assert!(sid.is_ok());
+        let user_id = database.get_user_id(&sid.unwrap());
+        assert!(user_id.is_some());
+        let user_id = user_id.unwrap();
+
+        // Delete the user...
+        database.delete_user(user_id);
+
+        // And we should be denied login again.
+        assert_eq!(
+            database.login_user(SERVICE_NAME, "test", "test"),
+            Err(LoginError::WrongUsername)
+        );
     }
 }
