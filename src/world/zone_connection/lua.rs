@@ -11,7 +11,9 @@ use crate::{
         MINION_BITMASK_SIZE, ORNAMENT_BITMASK_SIZE, TRIPLE_TRIAD_CARDS_BITMASK_SIZE,
     },
     inventory::{Item, Storage},
-    ipc::zone::{ActorControlCategory, ActorControlSelf, EventType},
+    ipc::zone::{
+        ActorControlCategory, ActorControlSelf, EventType, ServerZoneIpcData, ServerZoneIpcSegment,
+    },
     world::{
         ToServer, ZoneConnection,
         lua::{LuaPlayer, Task, load_init_script},
@@ -261,12 +263,30 @@ impl ZoneConnection {
                     })
                     .await;
                 }
-                Task::MoveToPopRange { id } => {
+                Task::MoveToPopRange { id, fade_out } => {
+                    // Fade out the screen if requested.
+                    if *fade_out {
+                        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PrepareZoning {
+                            log_message: 0,
+                            target_zone: self.player_data.zone_id,
+                            animation: 0,
+                            param4: 0,
+                            hide_character: 0,
+                            fade_out: 1,
+                            param_7: 1,
+                            fade_out_time: 1,
+                            unk1: 0,
+                            unk2: 0,
+                        });
+                        self.send_ipc_self(ipc).await;
+                    }
+
                     self.handle
                         .send(ToServer::MoveToPopRange(
                             self.id,
                             self.player_data.actor_id,
                             *id,
+                            *fade_out,
                         ))
                         .await;
                 }

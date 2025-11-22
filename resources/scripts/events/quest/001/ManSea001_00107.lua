@@ -42,8 +42,7 @@ function onYield(scene, results, player)
         return
     elseif scene == 6 then
         -- Move the player into the destination position
-        -- TODO: fade to black with PrepareZoning to hide the teleport like in retail
-        player:move_to_pop_range(POS_INN_WARP)
+        player:move_to_pop_range(POS_INN_WARP, true)
     elseif scene == 11 then
         player:play_scene(player.id, EVENT_ID, 00012, HIDE_HOTBAR, {})
         return

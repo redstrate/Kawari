@@ -85,6 +85,7 @@ pub enum Task {
     },
     MoveToPopRange {
         id: u32,
+        fade_out: bool,
     },
     SetHP {
         hp: u32,

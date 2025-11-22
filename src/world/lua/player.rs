@@ -484,8 +484,9 @@ impl LuaPlayer {
             .push(Task::ToggleAetherCurrentCompFlgSetAll {});
     }
 
-    fn move_to_pop_range(&mut self, id: u32) {
-        self.queued_tasks.push(Task::MoveToPopRange { id });
+    fn move_to_pop_range(&mut self, id: u32, fade_out: bool) {
+        self.queued_tasks
+            .push(Task::MoveToPopRange { id, fade_out });
     }
 
     fn set_hp(&mut self, hp: u32) {
@@ -518,6 +519,25 @@ impl LuaPlayer {
 
     fn finish_quest(&mut self, id: u32) {
         self.queued_tasks.push(Task::FinishQuest { id });
+    }
+
+    fn prepare_zoning(&mut self, timeout: u8) {
+        create_ipc_self(
+            self,
+            ServerZoneIpcSegment::new(ServerZoneIpcData::PrepareZoning {
+                log_message: 0,
+                target_zone: self.zone_data.zone_id,
+                animation: 0,
+                param4: 0,
+                hide_character: 0,
+                fade_out: 1,
+                param_7: 1,
+                fade_out_time: timeout,
+                unk1: 0,
+                unk2: 0,
+            }),
+            self.player_data.actor_id,
+        );
     }
 }
 
@@ -827,10 +847,14 @@ impl UserData for LuaPlayer {
                 Ok(())
             },
         );
-        methods.add_method_mut("move_to_pop_range", |_, this, id: u32| {
-            this.move_to_pop_range(id);
-            Ok(())
-        });
+        methods.add_method_mut(
+            "move_to_pop_range",
+            |lua, this, (id, fade_out): (u32, Value)| {
+                let fade_out: bool = lua.from_value(fade_out).unwrap_or_default();
+                this.move_to_pop_range(id, fade_out);
+                Ok(())
+            },
+        );
         methods.add_method_mut("set_hp", |_, this, hp: u32| {
             this.set_hp(hp);
             Ok(())
@@ -864,6 +888,10 @@ impl UserData for LuaPlayer {
         });
         methods.add_method_mut("finish_quest", |_, this, quest_id: u32| {
             this.finish_quest(quest_id);
+            Ok(())
+        });
+        methods.add_method_mut("prepare_zoning", |_, this, timeout: u8| {
+            this.prepare_zoning(timeout);
             Ok(())
         });
     }

@@ -166,6 +166,7 @@ async fn initial_setup(
                                     queued_content: None,
                                     conditions: Conditions::default(),
                                     client_language: ClientLanguage::English,
+                                    should_run_finish_zoning: false,
                                 };
 
                                 // Handle setup before passing off control to the zone connection.
@@ -744,19 +745,23 @@ async fn client_loop(
                                                         connection.send_ipc_self(ipc).await;
                                                     },
                                                     ClientTriggerCommand::FinishZoning {} => {
-                                                        {
-                                                            let lua = lua.lock();
-                                                            lua.scope(|scope| {
-                                                                let connection_data =
-                                                                scope.create_userdata_ref_mut(&mut lua_player).unwrap();
+                                                        if connection.should_run_finish_zoning {
+                                                            {
+                                                                let lua = lua.lock();
+                                                                lua.scope(|scope| {
+                                                                    let connection_data =
+                                                                    scope.create_userdata_ref_mut(&mut lua_player).unwrap();
 
-                                                                let func: Function = lua.globals().get("onFinishZoning").unwrap();
+                                                                    let func: Function = lua.globals().get("onFinishZoning").unwrap();
 
-                                                                func.call::<()>(connection_data).unwrap();
+                                                                    func.call::<()>(connection_data).unwrap();
 
-                                                                Ok(())
-                                                            })
-                                                            .unwrap();
+                                                                    Ok(())
+                                                                })
+                                                                .unwrap();
+                                                            }
+
+                                                            connection.should_run_finish_zoning = false;
                                                         }
 
                                                         connection.handle.send(ToServer::ZoneIn(connection.id, connection.player_data.actor_id, connection.player_data.teleport_reason == TeleportReason::Aetheryte)).await;
@@ -1653,7 +1658,7 @@ async fn client_loop(
                         lua_player.zone_data = lua_zone;
                         connection.handle_zone_change(zone_id, weather_id, position, rotation, initial_login).await;
                     },
-                    FromServer::NewPosition(position, rotation) => connection.set_player_position(position, rotation).await,
+                    FromServer::NewPosition(position, rotation, fade_out) => connection.set_player_position(position, rotation, fade_out).await,
                     FromServer::PartyInvite(sender_account_id, sender_content_id, sender_name) => connection.received_party_invite(sender_account_id, sender_content_id, sender_name).await,
                     FromServer::InvitationResult(sender_account_id, sender_content_id, sender_name, invite_type, invite_reply) => connection.received_invitation_response(sender_account_id, sender_content_id, sender_name, invite_type, invite_reply).await,
                     FromServer::InvitationReplyResult(sender_account_id, sender_name, invite_type, invite_reply) => connection.send_invite_reply_result(sender_account_id, sender_name, invite_type, invite_reply).await,

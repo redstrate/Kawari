@@ -221,6 +221,8 @@ pub struct ZoneConnection {
 
     pub conditions: Conditions,
     pub client_language: ClientLanguage,
+
+    pub should_run_finish_zoning: bool,
 }
 
 impl ZoneConnection {

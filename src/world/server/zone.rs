@@ -1,8 +1,12 @@
-use std::sync::{Arc, Mutex};
+use std::{
+    sync::{Arc, Mutex},
+    time::Duration,
+};
 
 use physis::{
     layer::{
-        ExitRangeInstanceObject, InstanceObject, LayerEntryData, LayerGroup, PopRangeInstanceObject,
+        ExitRangeInstanceObject, InstanceObject, LayerEntryData, LayerGroup,
+        PopRangeInstanceObject, Transformation,
     },
     lvb::Lvb,
     resource::Resource,
@@ -528,30 +532,58 @@ pub fn handle_zone_messages(
             }
             network.to_remove.append(&mut to_remove);
         }
-        ToServer::MoveToPopRange(from_id, from_actor_id, id) => {
-            let mut data = data.lock().unwrap();
-            let mut network = network.lock().unwrap();
+        ToServer::MoveToPopRange(from_id, from_actor_id, id, fade_out) => {
+            let send_new_position = |from_id: ClientId,
+                                     network: Arc<Mutex<NetworkState>>,
+                                     transform: Transformation,
+                                     fade_out: bool| {
+                let mut network = network.lock().unwrap();
+                let trans = transform.translation;
 
-            tracing::info!("finding {id}");
+                let msg = FromServer::NewPosition(
+                    Position {
+                        x: trans[0],
+                        y: trans[1],
+                        z: trans[2],
+                    },
+                    euler_to_direction(transform.rotation),
+                    fade_out,
+                );
 
-            if let Some(instance) = data.find_actor_instance_mut(*from_actor_id) {
-                if let Some(pop_range) = instance.zone.find_pop_range(*id) {
-                    let trans = pop_range.0.transform.translation;
+                // send new position to the client
+                network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
+            };
 
-                    let msg = FromServer::NewPosition(
-                        Position {
-                            x: trans[0],
-                            y: trans[1],
-                            z: trans[2],
-                        },
-                        euler_to_direction(pop_range.0.transform.rotation),
-                    );
+            let transform;
+            {
+                let mut data = data.lock().unwrap();
+                let instance = data.find_actor_instance_mut(*from_actor_id);
 
-                    // send new position to the client
-                    network.send_to(*from_id, msg, DestinationNetwork::ZoneClients);
+                if let Some(instance) = instance {
+                    if let Some(pop_range) = instance.zone.find_pop_range(*id) {
+                        transform = pop_range.0.transform;
+                    } else {
+                        tracing::warn!("Failed to find pop range for {id}!");
+                        return;
+                    }
                 } else {
-                    tracing::warn!("Failed to find pop range for {id}!");
+                    return;
                 }
+            }
+
+            // If fading out, we need to delay the actual warp ever so slightly.
+            // Otherwise it actually happens before the screen fades out.
+            if *fade_out {
+                let network = network.clone();
+                let from_id = *from_id;
+                tokio::task::spawn(async move {
+                    let mut interval = tokio::time::interval(Duration::from_millis(1000));
+                    interval.tick().await;
+                    interval.tick().await;
+                    send_new_position(from_id, network, transform, true);
+                });
+            } else {
+                send_new_position(*from_id, network, transform, *fade_out);
             }
         }
         _ => {}

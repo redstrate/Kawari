@@ -79,6 +79,7 @@ impl ZoneConnection {
         self.player_data.zone_id = new_zone_id;
         self.exit_position = Some(exit_position);
         self.exit_rotation = Some(exit_rotation);
+        self.should_run_finish_zoning = true;
 
         // Player Class Info
         self.update_class_info().await;

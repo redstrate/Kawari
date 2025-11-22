@@ -114,7 +114,7 @@ pub enum FromServer {
     /// To inform the connection of the zone they're loading into.
     ChangeZone(u16, u16, Position, f32, LuaZone, bool),
     /// The returned position and rotation from ToServer::MoveToPopRange.
-    NewPosition(Position, f32),
+    NewPosition(Position, f32, bool),
     /// We need to inform the recipent about the direct message they're receiving.
     TellMessageSent(MessageInfo),
     /// We need to inform the sender that the recipient was not found or is offline.
@@ -233,7 +233,7 @@ pub enum ToServer {
     /// We need to despawn a player's minion, and tell other clients
     ActorDespawnsMinion(ClientId, u32),
     /// Move the player's actor to the specified pop range.
-    MoveToPopRange(ClientId, u32, u32),
+    MoveToPopRange(ClientId, u32, u32, bool),
     /// The connection sent a direct message to another client.
     TellMessageSent(ClientId, u32, SendTellMessage),
     /// The client invited another player to join their party.
