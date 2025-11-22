@@ -128,6 +128,15 @@ pub enum TeleportReason {
     Aetheryte,
 }
 
+/// Quest information stored in the database.
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct PersistentQuest {
+    /// ID of the quest.
+    pub id: u16,
+    /// Sequence in the quest.
+    pub sequence: u8,
+}
+
 #[derive(Debug, Default, Clone)]
 pub struct PlayerData {
     // Static data
@@ -170,6 +179,8 @@ pub struct PlayerData {
     pub party_id: u64,
     /// The player's status when connecting/reconnecting. If true, they need to rejoin their party.
     pub rejoining_party: bool,
+    /// The player's currently active quests.
+    pub active_quests: Vec<PersistentQuest>,
 }
 
 /// Various obsfucation-related bits like the seeds and keys for this connection.

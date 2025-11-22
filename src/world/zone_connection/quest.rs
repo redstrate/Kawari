@@ -5,17 +5,29 @@ use crate::{
     inventory::Storage,
     ipc::zone::{
         ActiveQuest, QuestActiveList, QuestTracker, ServerZoneIpcData, ServerZoneIpcSegment,
+        TrackedQuest,
     },
-    world::ZoneConnection,
+    world::{ZoneConnection, zone_connection::PersistentQuest},
 };
 
 impl ZoneConnection {
     pub async fn send_quest_information(&mut self) {
         // quest active list
         {
-            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::QuestActiveList(
-                QuestActiveList::default(),
-            ));
+            let mut quests = Vec::new();
+            for quest in &self.player_data.active_quests {
+                quests.push(ActiveQuest {
+                    id: quest.id,
+                    sequence: quest.sequence,
+                    flags: 1,
+                    ..Default::default()
+                });
+            }
+
+            let ipc =
+                ServerZoneIpcSegment::new(ServerZoneIpcData::QuestActiveList(QuestActiveList {
+                    quests,
+                }));
             self.send_ipc_self(ipc).await;
         }
 
@@ -42,7 +54,6 @@ impl ZoneConnection {
     pub async fn accept_quest(&mut self, id: u32) {
         let adjusted_id = id - 65536;
 
-        // TODO: add to internal data model
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::AcceptQuest {
             quest_id: adjusted_id,
         });
@@ -59,6 +70,12 @@ impl ZoneConnection {
             },
         });
         self.send_ipc_self(ipc).await;
+
+        // Then add it to our own internal data model
+        self.player_data.active_quests.push(PersistentQuest {
+            id: adjusted_id as u16,
+            sequence: 0xFF,
+        });
 
         self.send_quest_tracker().await;
     }
@@ -97,9 +114,18 @@ impl ZoneConnection {
     }
 
     pub async fn send_quest_tracker(&mut self) {
-        // TODO: send a list
-        let ipc =
-            ServerZoneIpcSegment::new(ServerZoneIpcData::QuestTracker(QuestTracker::default()));
+        // Right now we don't support tracking, so just send the first five quests.
+        let mut tracked_quests = [TrackedQuest::default(); 5];
+        for (i, _) in self.player_data.active_quests.iter().take(5).enumerate() {
+            tracked_quests[i] = TrackedQuest {
+                active: true,
+                quest_index: i as u8,
+            };
+        }
+
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::QuestTracker(QuestTracker {
+            tracked_quests,
+        }));
         self.send_ipc_self(ipc).await;
     }
 }

@@ -11,6 +11,7 @@ use crate::{
     constants::CLASSJOB_ARRAY_SIZE,
     inventory::{Inventory, Storage},
     ipc::lobby::{CharacterDetails, CharacterFlag},
+    world::zone_connection::PersistentQuest,
 };
 
 use super::{PlayerData, zone_connection::UnlockData};
@@ -72,7 +73,8 @@ impl WorldDatabase {
                 classjob_levels STRING,
                 classjob_exp STRING,
                 unlocks STRING,
-                display_flags INTEGER);";
+                display_flags INTEGER,
+                active_quests STRING);";
             connection.execute(query, ()).unwrap();
         }
 
@@ -105,7 +107,8 @@ impl WorldDatabase {
                      classjob_exp,
                      unlocks,
                      display_flags,
-                     city_state
+                     city_state,
+                     active_quests
                      FROM character_data WHERE content_id = ?1",
             )
             .unwrap();
@@ -130,6 +133,7 @@ impl WorldDatabase {
                     unlocks: json_unpack(row.get(10)?),
                     display_flags: EquipDisplayFlag::from_bits(row.get(11)?).unwrap_or_default(),
                     city_state: row.get(12)?,
+                    active_quests: json_unpack(row.get(13)?),
                     ..Default::default()
                 })
             })
@@ -196,8 +200,9 @@ impl WorldDatabase {
                         classjob_levels=?8,
                         classjob_exp=?9,
                         unlocks=?10,
-                        display_flags=?11
-                        WHERE content_id = ?12",
+                        display_flags=?11,
+                        active_quests=?12
+                        WHERE content_id = ?13",
             )
             .unwrap();
         stmt.execute(rusqlite::params![
@@ -212,6 +217,7 @@ impl WorldDatabase {
             serde_json::to_string(&data.classjob_exp).unwrap(),
             serde_json::to_string(&data.unlocks).unwrap(),
             data.display_flags.0,
+            serde_json::to_string(&data.active_quests).unwrap(),
             data.content_id,
         ])
         .unwrap();
@@ -389,7 +395,7 @@ impl WorldDatabase {
         // insert char data
         connection
             .execute(
-                "INSERT INTO character_data VALUES (?1, ?2, ?3, ?4, ?5, 0.0, 0.0, 0.0, 0.0, ?6, 0, 90, ?7, ?8, ?9, ?10, 0);",
+                "INSERT INTO character_data VALUES (?1, ?2, ?3, ?4, ?5, 0.0, 0.0, 0.0, 0.0, ?6, 0, 90, ?7, ?8, ?9, ?10, ?11, 0);",
                 (
                     content_id,
                     name,
@@ -401,6 +407,7 @@ impl WorldDatabase {
                     serde_json::to_string(&classjob_levels).unwrap(),
                     serde_json::to_string(&classjob_exp).unwrap(),
                     serde_json::to_string(&UnlockData::default()).unwrap(),
+                    serde_json::to_string::<Vec<PersistentQuest>>(&Vec::default()).unwrap(),
                 ),
             )
             .unwrap();
