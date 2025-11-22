@@ -29,6 +29,7 @@ function onFinishZoning(player)
 
     if in_opening then
         local starting_town <const> = player.city_state
+        local has_seen_intro <const> = player:has_seen_cutscene(OPENING_CUTSCENE)
 
         local event_handler_id
         if starting_town == 1 then
@@ -42,9 +43,15 @@ function onFinishZoning(player)
             event_handler_id = OPENING_ULDAH
         end
 
-        -- begin initial cutscene
         player:start_event(player.id, event_handler_id, EVENT_TYPE_ENTER_TERRITORY, player.zone.id)
-        player:play_scene(player.id, event_handler_id, 0, INITIAL_CUTSCENE_FLAGS, {0})
+
+        -- If they have already seen the intro, no reason to play the cutscene again!
+        if not has_seen_intro then
+            player:play_scene(player.id, event_handler_id, 0, INITIAL_CUTSCENE_FLAGS, {0})
+        else
+            -- We have to play *some* scene for it to load.
+            player:play_scene(player.id, event_handler_id, 40, NO_DEFAULT_CAMERA | HIDE_HOTBAR, {2, 0})
+        end
     elseif in_inn and not player.saw_inn_wakeup then
         -- play the wakeup animation
         player:start_event(player.id, BED_EVENT_HANDLER, EVENT_TYPE_ENTER_TERRITORY, player.zone.id)

@@ -826,6 +826,9 @@ async fn client_loop(
                                                         // Save this so it isn't shown again on next login
                                                         connection.player_data.unlocks.seen_active_help.set(id);
                                                     }
+                                                    ClientTriggerCommand::SeenCutscene { id } => {
+                                                        connection.player_data.unlocks.cutscene_seen.set(id);
+                                                    }
                                                     _ => {
                                                         // inform the server of our trigger, it will handle sending it to other clients
                                                         connection.handle.send(ToServer::ClientTrigger(connection.id, connection.player_data.actor_id, trigger.clone())).await;

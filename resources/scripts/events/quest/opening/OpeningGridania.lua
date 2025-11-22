@@ -13,11 +13,13 @@
 POS_START = 2213211
 
 -- When walking out of the city gates
-ERANGE_SEQ_1_CLOSED_1 = 2351918
+ERANGE_SEQ_1_CLOSED_1 = 2351919
 
 function onEnterTerritory(player)
-    -- Move the player into the starting position
-    player:move_to_pop_range(POS_START)
+    if not player:has_seen_cutscene(OPENING_CUTSCENE) then
+        -- Move the player into the starting position
+        player:move_to_pop_range(POS_START)
+    end
 end
 
 function onYield(scene, results, player)

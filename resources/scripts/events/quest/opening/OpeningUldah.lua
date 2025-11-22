@@ -11,8 +11,10 @@ POS_START = 4101669
 ERANGE_SEQ_1_CLOSED_1 = 4101587
 
 function onEnterTerritory(player)
-    --- Move the player into the starting position
-    player:move_to_pop_range(POS_START)
+    if not player:has_seen_cutscene(OPENING_CUTSCENE) then
+        -- Move the player into the starting position
+        player:move_to_pop_range(POS_START)
+    end
 end
 
 function onYield(scene, results, player)

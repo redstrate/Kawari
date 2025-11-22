@@ -395,7 +395,7 @@ impl WorldDatabase {
         // insert char data
         connection
             .execute(
-                "INSERT INTO character_data VALUES (?1, ?2, ?3, ?4, ?5, 0.0, 0.0, 0.0, 0.0, ?6, 0, 90, ?7, ?8, ?9, ?10, ?11, 0);",
+                "INSERT INTO character_data VALUES (?1, ?2, ?3, ?4, ?5, 0.0, 0.0, 0.0, 0.0, ?6, 0, 90, ?7, ?8, ?9, ?10, 0, ?11);",
                 (
                     content_id,
                     name,

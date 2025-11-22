@@ -14,8 +14,10 @@ POS_START = 4101800
 ERANGE_SEQ_1_CLOSED_1 = 4101785
 
 function onEnterTerritory(player)
-    -- Move the player into the starting position
-    player:move_to_pop_range(POS_START)
+    if not player:has_seen_cutscene(OPENING_CUTSCENE) then
+        -- Move the player into the starting position
+        player:move_to_pop_range(POS_START)
+    end
 end
 
 function onYield(scene, results, player)
@@ -23,6 +25,8 @@ function onYield(scene, results, player)
     if scene == 0 then
         player:play_scene(player.id, EVENT_ID, 1, NO_DEFAULT_CAMERA | HIDE_HOTBAR, {})
         return
+    elseif scene == 40 then
+        -- TODO: check if quest is accepted
     end
 
     player:finish_event(EVENT_ID)

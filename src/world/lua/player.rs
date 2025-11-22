@@ -894,6 +894,9 @@ impl UserData for LuaPlayer {
             this.prepare_zoning(timeout);
             Ok(())
         });
+        methods.add_method_mut("has_seen_cutscene", |_, this, cutscene_id: u32| {
+            Ok(this.player_data.unlocks.cutscene_seen.contains(cutscene_id))
+        });
     }
 
     fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
