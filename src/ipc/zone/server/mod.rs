@@ -547,8 +547,16 @@ pub enum ServerZoneIpcData {
         #[brw(pad_after = 4)]
         flag2: u8,
     },
-    UpdateMapMarkers {
-        unk1: [u8; 32],
+    UpdateMapMarkers2 {
+        /// How many markers to update.
+        marker_count: u32,
+        /// Icons to set.
+        icon_ids: [u32; 2],
+        /// The instance ID in the level.
+        layout_ids: [u32; 2],
+        /// The event ID to update for, usually a quest ID.
+        #[brw(pad_after = 4)] // padding
+        handler_ids: [u32; 2],
     },
     QuestTracker(QuestTracker),
     Unknown {
@@ -867,7 +875,12 @@ mod tests {
                 flag1: 0,
                 flag2: 0,
             },
-            ServerZoneIpcData::UpdateMapMarkers { unk1: [0; 32] },
+            ServerZoneIpcData::UpdateMapMarkers2 {
+                marker_count: 0,
+                icon_ids: [0; 2],
+                layout_ids: [0; 2],
+                handler_ids: [0; 2],
+            },
             ServerZoneIpcData::QuestTracker(QuestTracker::default()),
         ];
 

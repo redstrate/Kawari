@@ -541,7 +541,7 @@
             "size": 8
         },
         {
-            "name": "UpdateMapMarkers",
+            "name": "UpdateMapMarkers2",
             "comment": "Unknown purpose.",
             "opcode": 957,
             "size": 32
