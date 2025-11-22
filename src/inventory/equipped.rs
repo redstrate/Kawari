@@ -114,3 +114,34 @@ impl Storage for EquippedStorage {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_item_level() {
+        let equipped = EquippedStorage::default();
+        assert_eq!(equipped.calculate_item_level(), 0);
+
+        let base_item = Item {
+            quantity: 1,
+            item_level: 5,
+            ..Default::default()
+        };
+        let equipped = EquippedStorage {
+            main_hand: base_item,
+            body: base_item,
+            hands: base_item,
+            legs: base_item,
+            feet: base_item,
+            ears: base_item,
+            neck: base_item,
+            wrists: base_item,
+            right_ring: base_item,
+            left_ring: base_item,
+            ..Default::default()
+        };
+        assert_eq!(equipped.calculate_item_level(), 4);
+    }
+}
