@@ -115,6 +115,8 @@ impl ZoneConnection {
         });
         self.send_ipc_self(ipc).await;
 
+        self.player_data.unlocks.completed_quests.set(adjusted_id);
+
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::FinishQuest {
             quest_id: adjusted_id as u16,
             flag1: 1,
