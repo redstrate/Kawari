@@ -215,6 +215,11 @@ pub fn value_to_flag_byte_index_value(in_value: u32) -> (u8, u16) {
     (1 << bit_index, (in_value / 8) as u16)
 }
 
+pub fn value_to_flag_byte_index_value_quests(in_value: u32) -> (u8, u16) {
+    let bit_index = in_value % 8;
+    (0x80 >> bit_index, (in_value / 8) as u16)
+}
+
 pub struct Attributes {
     pub strength: u32,
     pub dexterity: u32,
