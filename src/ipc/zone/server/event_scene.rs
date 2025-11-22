@@ -24,6 +24,9 @@ impl std::fmt::Display for SceneFlags {
 // TODO: should be documented which each of these do
 bitflags! {
     impl SceneFlags : u32 {
+        // Due to some bitflags crate nonsense, these combination flags need to be declared first.
+        const SET_BASE = Self::NO_DEFAULT_CAMERA.bits() | Self::FADE_OUT.bits() | Self::INVIS_EOBJ.bits() | Self::INVIS_BNPC.bits() | Self::INVIS_OTHER_PC.bits() | Self::INVIS_PARTY_PC.bits() | Self::INVIS_PARTY_BUDDY.bits() | Self::INVIS_GATHERING_POINT.bits() | Self::INVIS_TREASURE.bits() | Self::CONDITION_CUTSCENE.bits() | Self::HIDE_UI.bits() | Self::DISABLE_STEALTH.bits() | Self::INVIS_AOE.bits() | Self::INVIS_ALLIANCE_PC.bits() | Self::INVIS_ALLIANCE_BUDDY.bits() | Self::INVIS_COMPANION.bits();
+
         const NONE = 0x00000000;
         const NO_DEFAULT_CAMERA = 0x00000001;
         const FADE_OUT = 0x00000002;

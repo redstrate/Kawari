@@ -8,9 +8,6 @@
 -- scene 4: miounne's cutscene
 -- scene 5: accept reward dialog
 
--- As seen in retail
-CUTSCENE_FLAGS = NO_DEFAULT_CAMERA | FADE_OUT | INVIS_EOBJ | INVIS_BNPC | INVIS_OTHER_PC | INVIS_PARTY_PC | INVIS_PARTY_BUDDY | INVIS_GATHERING_POINT | INVIS_TREASURE | CONDITION_CUTSCENE | HIDE_UI | HIDE_HOTBAR | DISABLE_SKIP | DISABLE_STEALTH | INVIS_AOE | INVIS_ALLIANCE_PC | INVIS_ALLIANCE_BUDDY | INVIS_COMPANION
-
 ENPC_WYMOND = 3969639
 ENPC_MOMODI = 3969632
 
@@ -22,7 +19,7 @@ function onTalk(target, player)
     if target.object_id == ENPC_WYMOND then
         player:play_scene(target, EVENT_ID, 00000, HIDE_HOTBAR, {})
     elseif target.object_id == ENPC_MOMODI then
-        player:play_scene(target, EVENT_ID, 00004, CUTSCENE_FLAGS, {})
+        player:play_scene(target, EVENT_ID, 00004, SET_BASE | HIDE_HOTBAR, {})
     end
 end
 
@@ -40,7 +37,7 @@ function onReturn(scene, results, player)
         -- first param: whether the quest was accepted
         local accepted = results[1] == 1
         if accepted then
-            player:play_scene(originating_npc, EVENT_ID, 00001, CUTSCENE_FLAGS, {})
+            player:play_scene(originating_npc, EVENT_ID, 00001, SET_BASE | HIDE_HOTBAR | DISABLE_SKIP, {})
             return
         else
             player:play_scene(player.id, EVENT_ID, 00003, HIDE_HOTBAR, {})
