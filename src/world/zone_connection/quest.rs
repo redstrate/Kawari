@@ -83,6 +83,16 @@ impl ZoneConnection {
     pub async fn finish_quest(&mut self, id: u32) {
         let adjusted_id = id - 65536;
 
+        // Remove it from our internal data model
+        if let Some(index) = self
+            .player_data
+            .active_quests
+            .iter()
+            .position(|x| x.id == adjusted_id as u16)
+        {
+            self.player_data.active_quests.remove(index);
+        }
+
         // Grant rewards
         let rewards;
         {
@@ -111,6 +121,8 @@ impl ZoneConnection {
             flag2: 1,
         });
         self.send_ipc_self(ipc).await;
+
+        self.send_quest_tracker().await;
     }
 
     pub async fn send_quest_tracker(&mut self) {
