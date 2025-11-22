@@ -545,6 +545,12 @@
             "comment": "Unknown purpose.",
             "opcode": 957,
             "size": 32
+        },
+        {
+            "name": "QuestTracker",
+            "comment": "A list of active or pinned quests, shows up under the duty list.",
+            "opcode": 935,
+            "size": 24
         }
     ],
     "ClientZoneIpcType": [

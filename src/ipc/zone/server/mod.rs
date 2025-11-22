@@ -98,6 +98,9 @@ pub use crate::ipc::zone::server::actor_move::ActorMove;
 mod server_notice;
 pub use server_notice::{ServerNoticeFlags, ServerNoticeMessage};
 
+mod quest_tracker;
+pub use quest_tracker::{QuestTracker, TrackedQuest};
+
 use crate::common::{CHAR_NAME_MAX_LENGTH, read_string, write_string};
 use crate::inventory::{ContainerType, ItemOperationKind};
 pub use crate::ipc::zone::black_list::{Blacklist, BlacklistedCharacter};
@@ -547,6 +550,7 @@ pub enum ServerZoneIpcData {
     UpdateMapMarkers {
         unk1: [u8; 32],
     },
+    QuestTracker(QuestTracker),
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -864,6 +868,7 @@ mod tests {
                 flag2: 0,
             },
             ServerZoneIpcData::UpdateMapMarkers { unk1: [0; 32] },
+            ServerZoneIpcData::QuestTracker(QuestTracker::default()),
         ];
 
         for data in &ipc_types {

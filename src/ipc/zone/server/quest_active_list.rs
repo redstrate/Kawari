@@ -4,8 +4,8 @@ use binrw::binrw;
 #[derive(Debug, Clone, Copy, Default)]
 pub struct ActiveQuest {
     pub id: u16,
-    pub sequence: u8,
     #[brw(pad_after = 1)] // padding
+    pub sequence: u8,
     pub flags: u8,
     #[brw(pad_after = 1)] // padding
     pub bitflags: [u8; 6],

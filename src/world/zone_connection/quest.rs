@@ -3,7 +3,9 @@
 use crate::{
     constants::COMPLETED_LEVEQUEST_BITMASK_SIZE,
     inventory::Storage,
-    ipc::zone::{ActiveQuest, QuestActiveList, ServerZoneIpcData, ServerZoneIpcSegment},
+    ipc::zone::{
+        ActiveQuest, QuestActiveList, QuestTracker, ServerZoneIpcData, ServerZoneIpcSegment,
+    },
     world::ZoneConnection,
 };
 
@@ -52,10 +54,13 @@ impl ZoneConnection {
             quest: ActiveQuest {
                 id: adjusted_id as u16,
                 sequence: 0xFF,
+                flags: 1,
                 ..Default::default()
             },
         });
         self.send_ipc_self(ipc).await;
+
+        self.send_quest_tracker().await;
     }
 
     pub async fn finish_quest(&mut self, id: u32) {
@@ -88,6 +93,13 @@ impl ZoneConnection {
             flag1: 1,
             flag2: 1,
         });
+        self.send_ipc_self(ipc).await;
+    }
+
+    pub async fn send_quest_tracker(&mut self) {
+        // TODO: send a list
+        let ipc =
+            ServerZoneIpcSegment::new(ServerZoneIpcData::QuestTracker(QuestTracker::default()));
         self.send_ipc_self(ipc).await;
     }
 }
