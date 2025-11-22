@@ -33,3 +33,5 @@ pub use common::{ClientHandle, ClientId, FromServer, MessageInfo, ServerHandle, 
 
 mod navmesh;
 pub use navmesh::{Navmesh, NavmeshParams, NavmeshTile};
+
+pub mod auracite;
