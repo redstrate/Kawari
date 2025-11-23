@@ -22,6 +22,7 @@ function onYield(scene, results, player)
     local HOME_PNT_NO = 0
     -- local REGISTER_FAVORITE_DSTN = ??? -- Unable to obtain right now, seems to return 0 regardless
     -- local REGISTER_SECURITY_TOKEN_DSTN = ??? -- Unable to obtain right now, seems to return 0 regardless
+    local ACCESS_RESIDENTAL_AREA = 5
 
     local resultc = #results -- TODO: Do we need to check this still? Can the favorite/security menus return more than 2, once they work?
 
@@ -44,6 +45,11 @@ function onYield(scene, results, player)
             -- TODO: Favorite Destination logic
         else -- REGISTER_SECURITY_TOKEN_DSTN
             -- TODO: Security Token Free Destination logic ]]
+        elseif menu_option == ACCESS_RESIDENTAL_AREA then
+            -- open the housing menu
+            player:start_event(player.id, 1310721, EVENT_TYPE_NEST, 0)
+            player:play_scene(player.id, 1310721, 0, HIDE_HOTBAR | NO_DEFAULT_CAMERA, {340})
+            return
         end
     end
 

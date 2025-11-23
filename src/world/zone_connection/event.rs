@@ -3,7 +3,7 @@
 use mlua::Function;
 
 use crate::{
-    common::ObjectTypeId,
+    common::{EventHandlerType, ObjectTypeId},
     ipc::zone::{
         Condition, Conditions, EventScene, EventStart, EventType, SceneFlags, ServerZoneIpcData,
         ServerZoneIpcSegment,
@@ -122,7 +122,14 @@ impl ZoneConnection {
 
             true
         } else {
-            tracing::warn!("Event {event_id} isn't scripted yet! Ignoring...");
+            let event_handler_type = event_id >> 16;
+
+            tracing::warn!(
+                "Event {event_id} ({}) isn't scripted yet! Ignoring...",
+                TryInto::<EventHandlerType>::try_into(event_handler_type)
+                    .map(|x| format!("{:?}", x))
+                    .unwrap_or(format!("{event_handler_type}"))
+            );
 
             // give control back to the player so they aren't stuck
             {

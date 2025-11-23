@@ -411,6 +411,8 @@ pub enum EventHandlerType {
     ChocoboTaxiStand = 18,
     /// See Opening Excel sheet.
     Opening = 19,
+    /// Used for housing.
+    ExitRange = 20,
     /// See GCShop Excel sheet.
     GcShop = 22,
     /// See GuildOrderGuide Excel sheet.
