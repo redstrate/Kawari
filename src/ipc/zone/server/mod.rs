@@ -101,6 +101,9 @@ pub use server_notice::{ServerNoticeFlags, ServerNoticeMessage};
 mod quest_tracker;
 pub use quest_tracker::{QuestTracker, TrackedQuest};
 
+mod house_list;
+pub use house_list::{House, HouseList};
+
 use crate::common::{CHAR_NAME_MAX_LENGTH, read_string, write_string};
 use crate::inventory::{ContainerType, ItemOperationKind};
 pub use crate::ipc::zone::black_list::{Blacklist, BlacklistedCharacter};
@@ -559,6 +562,7 @@ pub enum ServerZoneIpcData {
         handler_ids: [u32; 2],
     },
     QuestTracker(QuestTracker),
+    HouseList(HouseList),
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -882,6 +886,7 @@ mod tests {
                 handler_ids: [0; 2],
             },
             ServerZoneIpcData::QuestTracker(QuestTracker::default()),
+            ServerZoneIpcData::HouseList(HouseList::default()),
         ];
 
         for data in &ipc_types {

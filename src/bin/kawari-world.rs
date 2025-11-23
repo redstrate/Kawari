@@ -1658,8 +1658,8 @@ async fn client_loop(
                         connection.send_conditions().await;
                     },
                     FromServer::ChangeZone(zone_id, weather_id, position, rotation, lua_zone, initial_login) => {
+                        connection.handle_zone_change(zone_id, weather_id, position, rotation, initial_login, &lua_zone).await;
                         lua_player.zone_data = lua_zone;
-                        connection.handle_zone_change(zone_id, weather_id, position, rotation, initial_login).await;
                     },
                     FromServer::NewPosition(position, rotation, fade_out) => connection.set_player_position(position, rotation, fade_out).await,
                     FromServer::PartyInvite(sender_account_id, sender_content_id, sender_name) => connection.received_party_invite(sender_account_id, sender_content_id, sender_name).await,

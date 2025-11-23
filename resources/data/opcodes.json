@@ -551,6 +551,12 @@
             "comment": "A list of active or pinned quests, shows up under the duty list.",
             "opcode": 935,
             "size": 24
+        },
+        {
+            "name": "HouseList",
+            "comment": "A list of basic house information.",
+            "opcode": 460,
+            "size": 1216
         }
     ],
     "ClientZoneIpcType": [

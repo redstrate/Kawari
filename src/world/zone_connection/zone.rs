@@ -8,13 +8,13 @@ use crate::{
     constants::OBFUSCATION_ENABLED_MODE,
     inventory::BuyBackList,
     ipc::zone::{
-        ActorControlCategory, ActorControlSelf, InitZone, InitZoneFlags, ServerZoneIpcData,
-        ServerZoneIpcSegment, Warp, WeatherChange,
+        ActorControlCategory, ActorControlSelf, House, HouseList, InitZone, InitZoneFlags,
+        ServerZoneIpcData, ServerZoneIpcSegment, Warp, WeatherChange,
     },
     packet::{ConnectionState, PacketSegment, ScramblerKeyGenerator, SegmentData, SegmentType},
     world::{
         ObsfucationData, TeleportReason, ToServer, ZoneConnection,
-        lua::{ExtraLuaState, LuaPlayer},
+        lua::{ExtraLuaState, LuaPlayer, LuaZone},
     },
 };
 
@@ -46,6 +46,7 @@ impl ZoneConnection {
         exit_position: Position,
         exit_rotation: f32,
         initial_login: bool,
+        lua_zone: &LuaZone,
     ) {
         // fade in?
         {
@@ -170,6 +171,22 @@ impl ZoneConnection {
             self.send_ipc_self(ServerZoneIpcSegment::new(ServerZoneIpcData::UnkZoneLoad2 {
                 unk1: [0; 8],
             }))
+            .await;
+        }
+
+        // 13 is housing area
+        if lua_zone.intended_use == 13 {
+            let config = get_config();
+            self.send_ipc_self(ServerZoneIpcSegment::new(ServerZoneIpcData::HouseList(
+                HouseList {
+                    land_id: 0,
+                    ward: 0,
+                    territory_type_id: self.player_data.zone_id,
+                    world_id: config.world.world_id,
+                    subdivision: 0,
+                    houses: [House::default(); 30],
+                },
+            )))
             .await;
         }
     }
