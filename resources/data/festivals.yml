@@ -1,0 +1,255 @@
+# A list of festival IDs and their names.
+#
+# This was originally based off of a file found in Hyperborea,
+# but I found more festival IDs by looking at level data.
+
+- Id: 2
+  Name: All Saint's Wake (2013)
+- Id: 3
+  Name: FFXIII Lightning Strikes (2013)
+- Id: 4
+  Name: Starlight Celebration (2013)
+- Id: 6
+  Name: Burgeoning Dread (2014)
+- Id: 7
+  Name: Breaking Brick Mountains (2014)
+- Id: 14
+  Name: All Saint's Wake (2014)
+- Id: 15
+  Name: Starlight Celebration (2014)
+- Id: 26
+  Name: New Year Machinations (Music) (2015)
+- Id: 27
+  Name: China New Year (2015/2016)
+- Id: 28
+  Name: All Saint's Wake (2015)
+- Id: 30
+  Name: The Maiden's Rhapsody
+- Id: 31
+  Name: Starlight Celebration (2015)
+- Id: 39
+  Name: Yo-kai Watch
+- Id: 40
+  Name: China New Year (2017)
+- Id: 41
+  Name: New Year Machinations (Music) (2016)
+- Id: 42
+  Name: All Saint's Wake (2016)
+- Id: 43
+  Name: Starlight Celebration (2016)
+- Id: 44
+  Name: Heavensturn (2016)
+- Id: 45
+  Name: Valentione's Day (2017)
+- Id: 46
+  Name: Little Ladies' Day (2017)
+- Id: 47
+  Name: Hatching Tide (2017)
+- Id: 48
+  Name: Make It Rain (2017)
+- Id: 49
+  Name: Heavensturn (2017)
+- Id: 50
+  Name: New Year (2017)
+- Id: 51
+  Name: China New Year (2017)
+- Id: 52
+  Name: Korea New Year (2017)
+- Id: 53
+  Name: Moonfire Faire (2017)
+- Id: 54
+  Name: The Rising (2017)
+- Id: 58
+  Name: All Saint's Wake (2017)
+- Id: 59
+  Name: Starlight Celebration (2017)
+- Id: 60
+  Name: Heavensturn (2018)
+- Id: 61
+  Name: New Year (2018)
+- Id: 62
+  Name: China New Year (2018)
+- Id: 63
+  Name: Korea New Year (2018)
+- Id: 64
+  Name: Valentione's Day (2018)
+- Id: 65
+  Name: Little Ladies' Day (2018)
+- Id: 66
+  Name: Hatching Tide (2018)
+- Id: 70
+  Name: Make It Rain (2018)
+- Id: 71
+  Name: Moonfire Faire (2018)
+- Id: 72
+  Name: The Rising (2018)
+- Id: 73
+  Name: Fifth Anniversary Content (2018)
+- Id: 76
+  Name: All Saint's Wake (2018)
+- Id: 77
+  Name: Starlight Celebration (2018)
+- Id: 78
+  Name: Heavensturn (2019)
+- Id: 79
+  Name: New Year (2019)
+- Id: 80
+  Name: China New Year (2019)
+- Id: 81
+  Name: Korea New Year (2019)
+- Id: 82
+  Name: Valentione's Day (2019)
+- Id: 83
+  Name: Little Ladies' Day (2019)
+- Id: 84
+  Name: FFXV Crossover (2019)
+- Id: 85
+  Name: Hatching Tide (2019)
+- Id: 86
+  Name: Make It Rain (2019)
+- Id: 89
+  Name: Moonfire Faire (2019)
+- Id: 90
+  Name: The Rising (2019)
+- Id: 91
+  Name: All Saint's Wake (2019)
+- Id: 93
+  Name: Ishgard Restoration
+- Id: 95
+  Name: Starlight Celebration (2019)
+- Id: 96
+  Name: Heavensturn (2020)
+- Id: 97
+  Name: New Year (2020)
+- Id: 98
+  Name: China New Year (2020)
+- Id: 99
+  Name: Korea New Year (2020)
+- Id: 100
+  Name: Valentione's Day (2020)
+- Id: 103
+  Name: Little Ladies' Day (2020)
+- Id: 104
+  Name: Hatching Tide (2020)
+- Id: 105
+  Name: Make It Rain (2020)
+- Id: 106
+  Name: Moonfire Faire (2020)
+- Id: 107
+  Name: The Rising (2020)
+- Id: 108
+  Name: Starlight Celebration (2020)
+- Id: 109
+  Name: Heavensturn (2021)
+- Id: 110
+  Name: New Year (2021)
+- Id: 111
+  Name: China New Year (2021)
+- Id: 112
+  Name: Korea New Year (2021)
+- Id: 113
+  Name: Little Ladies' Day & Valentione's Day (2021)
+- Id: 114
+  Name: Hatching Tide (2021)
+- Id: 115
+  Name: Hatching Tide (2021)
+- Id: 116
+  Name: Moonfire Faire (2021)
+- Id: 117
+  Name: The Rising (2021)
+- Id: 118
+  Name: All Saints' Wake (2021)
+- Id: 121
+  Name: Starlight Celebration (2021)
+- Id: 122
+  Name: Valentione's Day (2022)
+- Id: 123
+  Name: Little Ladies' Day (2022)
+- Id: 124
+  Name: Hatching Tide (2022)
+- Id: 125
+  Name: Make It Rain (2022)
+- Id: 126
+  Name: Moonfire Faire (2022)
+- Id: 127
+  Name: The Rising (2022)
+- Id: 128
+  Name: Heavensturn (2023)
+- Id: 129
+  Name: New Year (2022)
+- Id: 130
+  Name: China New Year (2023)
+- Id: 131
+  Name: China New Year (2023)
+- Id: 132
+  Name: All Saint's Wake (2022)
+- Id: 133
+  Name: Starlight Celebration (2022)
+- Id: 134
+  Name: New Year (2023)
+- Id: 135
+  Name: Valentione's Day (2023)
+- Id: 136
+  Name: Hatching Tide (2023)
+- Id: 138
+  Name: Little Ladies Day (2023)
+- Id: 139
+  Name: Make It Rain (2023)
+- Id: 140
+  Name: Moonfire Faire (2023)
+- Id: 141
+  Name: The Rising (2023)
+- Id: 142
+  Name: All Saints' Wake (2023)
+- Id: 143
+  Name: Starlight Celebration (2023)
+- Id: 144
+  Name: Valentione's Day (2024)
+- Id: 145
+  Name: Hatching Tide (2024)
+- Id: 146
+  Name: Make It Rain (2024)
+- Id: 147
+  Name: The Path Infernal
+- Id: 148
+  Name: Blunderville
+- Id: 149
+  Name: New Year (2024)
+- Id: 150
+  Name: Moonfire Faire (2024)
+- Id: 151
+  Name: The Rising (2024)
+- Id: 152
+  Name: All Saints' Wake (2024)
+- Id: 153
+  Name: Starlight Celebration (2024)
+- Id: 154
+  Name: Valentione's Day (2025)
+- Id: 155
+  Name: Little Ladies Day (2025)
+- Id: 156
+  Name: Hatching Tide (2025)
+- Id: 157
+  Name: New Year (2025)
+- Id: 157
+  Name: Cosmic Exploration (Sinus Ardorum)
+- Id: 159
+  Name: Moonfire Faire (2025)
+- Id: 161
+  Name: Make It Rain (2025)
+- Id: 162
+  Name: The Rising (2025)
+- Id: 163
+  Name: Valentione's Day (2026)
+- Id: 164
+  Name: All Saints' Wake (2025)
+- Id: 165
+  Name: Starlight Celebration (2025)
+- Id: 166
+  Name: Guardian Arkveld Descends!
+- Id: 167
+  Name: New Year (2026)
+- Id: 168
+  Name: Cosmic Exploration (Phaenna)
+- Id: 169
+  Name: Little Ladies Day (2026)
