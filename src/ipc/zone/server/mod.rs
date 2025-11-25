@@ -104,6 +104,9 @@ pub use quest_tracker::{QuestTracker, TrackedQuest};
 mod house_list;
 pub use house_list::{House, HouseList};
 
+mod housing_ward;
+pub use housing_ward::HousingWardMenuSummaryItem;
+
 use crate::common::{CHAR_NAME_MAX_LENGTH, read_string, write_string};
 use crate::inventory::{ContainerType, ItemOperationKind};
 pub use crate::ipc::zone::black_list::{Blacklist, BlacklistedCharacter};
@@ -563,6 +566,17 @@ pub enum ServerZoneIpcData {
     },
     QuestTracker(QuestTracker),
     HouseList(HouseList),
+    HousingWardInfo {
+        #[brw(pad_before = 2)]
+        ward_index: u16,
+        /// The territory/zone id shifted left by 16 bits and then ORed with the ward number. (could also just be split into two u16s I suppose ^^, was following sapphire at this point)
+        land_set_id: u32,
+        #[br(count = 60)]
+        #[bw(pad_size_to = 60 * HousingWardMenuSummaryItem::SIZE)]
+        house_summaries: Vec<HousingWardMenuSummaryItem>,
+        #[brw(pad_after = 4)]
+        terminator: u32,
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -887,6 +901,12 @@ mod tests {
             },
             ServerZoneIpcData::QuestTracker(QuestTracker::default()),
             ServerZoneIpcData::HouseList(HouseList::default()),
+            ServerZoneIpcData::HousingWardInfo {
+                ward_index: 0,
+                land_set_id: 0,
+                house_summaries: Vec::default(),
+                terminator: 0,
+            },
         ];
 
         for data in &ipc_types {

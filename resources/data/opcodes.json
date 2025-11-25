@@ -557,6 +557,12 @@
             "comment": "A list of basic house information.",
             "opcode": 460,
             "size": 1216
+        },
+        {
+            "name": "HousingWardInfo",
+            "comment": "Sent by the server in response to the client requesting housing ward info on the residential aetheryte menu.",
+            "opcode": 721,
+            "size": 2416
         }
     ],
     "ClientZoneIpcType": [

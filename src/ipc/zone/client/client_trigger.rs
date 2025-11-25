@@ -143,6 +143,14 @@ pub enum ClientTriggerCommand {
     #[brw(magic = 0x232Du32)]
     SetDistanceRange { range: DistanceRange },
 
+    #[brw(magic = 0x453u32)]
+    RequestHousingWardInfo {
+        /// The zone id of the housing ward.
+        zone_id: u32,
+        /// 0-based index, so ward number - 1.
+        ward_index: u32,
+    },
+
     #[brw(magic = 0x07BCu32)]
     BeginContentsReplay {},
 
