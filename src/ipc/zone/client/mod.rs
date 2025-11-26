@@ -178,18 +178,35 @@ pub enum ClientZoneIpcData {
         content_ids: [u16; 5],
     },
     EquipGearset {
-        /// Sapphire calls this a context id but it was observed as an actual index into the list of gearsets that the client keeps on its side.
+        /// Index into the list of gearsets that the client keeps on its side.
         gearset_index: u32,
         /// In order: weapon, off-hand, head, body, hands, invalid/waist, legs, feet, earrings, neck, wrist, left ring, right ring, soul crystal
         /// When a container is irrelevant, it is marked as 9999/ContainerType::Invalid.
         containers: [ContainerType; 14],
         /// Indices into the containers.
-        indices: [u16; 14],
+        indices: [i16; 14],
         /// For the moment, it is completely unclear what unk1 and unk2 are used for or represent.
         #[brw(pad_before = 6)]
         unk1: u16,
         #[brw(pad_after = 2)]
         unk2: u16,
+    },
+    EquipGearset2 {
+        /// Index into the list of gearsets that the client keeps on its side.
+        gearset_index: u32,
+        /// In order: weapon, off-hand, head, body, hands, invalid/waist, legs, feet, earrings, neck, wrist, left ring, right ring, soul crystal
+        /// When a container is irrelevant, it is marked as 9999/ContainerType::Invalid.
+        containers: [ContainerType; 14],
+        /// Indices into the containers.
+        indices: [i16; 14],
+        /// For the moment, it is completely unclear what unk1/unk2/unk3 are used for or represent.
+        #[brw(pad_before = 6)]
+        unk1: u16,
+        #[brw(pad_after = 2)]
+        unk2: u16,
+        #[br(count = 56)]
+        #[bw(pad_size_to = 56)]
+        unk3: Vec<u8>,
     },
     StartWalkInEvent {
         event_arg: u32,
@@ -434,6 +451,14 @@ mod tests {
                 indices: [0; 14],
                 unk1: 0,
                 unk2: 0,
+            },
+            ClientZoneIpcData::EquipGearset2 {
+                gearset_index: 0,
+                containers: [ContainerType::Inventory0; 14],
+                indices: [0; 14],
+                unk1: 0,
+                unk2: 0,
+                unk3: Vec::new(),
             },
             ClientZoneIpcData::StartWalkInEvent {
                 event_arg: 0,

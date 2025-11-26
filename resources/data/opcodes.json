@@ -759,6 +759,12 @@
             "size": 72
         },
         {
+            "name": "EquipGearset2",
+            "comment": "Unknown purpose, and also unsure why it's different from EquipGearset.",
+            "opcode": 216,
+            "size": 128
+        },
+        {
             "name": "StartWalkInEvent",
             "comment": "Unknown purpose.",
             "opcode": 988,
