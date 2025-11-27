@@ -225,6 +225,10 @@ fn main() {
                 contour_set,
                 build_flags
             ));
+            if (*contour_set).nconts <= 0 {
+                tracing::warn!("Failed to build contours for a tile, for some reason?");
+                continue;
+            }
             assert!((*contour_set).nconts > 0);
 
             // Step 5: Build the polymesh out of the contour set
