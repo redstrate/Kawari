@@ -161,20 +161,20 @@ pub fn scramble_packet(opcode_name: &str, base_key: u8, opcode_based_key: i32, d
     unsafe {
         match opcode_name {
             "PlayerSpawn" => {
-                // content id
+                // Content ID
                 unscramble_add::<u64>(data, 24, base_key as u64);
-                // home world
+                // Current World ID
                 unscramble_add::<u16>(data, 36, base_key as u16);
-                // current world
+                // Home World ID
                 unscramble_add::<u16>(data, 38, base_key as u16);
 
-                // name
+                // Name
                 let name_offset = 610;
                 for i in 0..CHAR_NAME_MAX_LENGTH {
                     unscramble_add::<u8>(data, name_offset + i, base_key);
                 }
 
-                // equipment
+                // Equipment model IDs
                 let equip_offset = 556;
                 let int_key_to_use = base_key as u32 + opcode_based_key as u32;
                 for i in 0..10 {
@@ -183,16 +183,21 @@ pub fn scramble_packet(opcode_name: &str, base_key: u8, opcode_based_key: i32, d
                 }
             }
             "NpcSpawn" => {
-                // TODO: note what these fields are and upstream said comments
+                // BNPC Base ID
                 unscramble_add::<u32>(data, 80, base_key as u32);
+                // BNPC Name ID
                 unscramble_add::<u32>(data, 84, base_key as u32);
+                // Unused, seems to be a level ID
                 unscramble_add::<u32>(data, 88, base_key as u32);
+                // Companion Owner ID
                 unscramble_add::<u32>(data, 96, base_key as u32);
+                // Event ID
                 unscramble_add::<u32>(data, 100, base_key as u32);
 
+                // Tether ID
                 unscramble_xor::<u32>(data, 108, opcode_based_key as u32);
 
-                // ops?
+                // Status effects
                 let op_offset = 168;
                 for i in 0..30 {
                     let offset = op_offset + i * 22;

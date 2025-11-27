@@ -13,7 +13,7 @@ pub struct PlayerSpawn {
 
     /// Index into the Title Excel sheet.
     pub title_id: u16,
-    pub u1b: u16,
+    pub timeline_base_override: u16,
     pub current_world_id: u16,
     pub home_world_id: u16,
 

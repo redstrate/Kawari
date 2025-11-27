@@ -67,6 +67,9 @@ mod tests {
         );
         assert_eq!(npc_spawn.common.battalion, 0);
         assert_eq!(npc_spawn.aggression_mode, 1); // passive
+        assert_eq!(npc_spawn.common.tether_id, INVALID_OBJECT_ID);
+        assert_eq!(npc_spawn.common.event_id, 0);
+        assert_eq!(npc_spawn.common.layout_id, 0);
         assert_eq!(npc_spawn.online_status, OnlineStatus::Offline);
         assert_eq!(npc_spawn.common.name, "カーバンクル");
     }
@@ -98,8 +101,10 @@ mod tests {
             ObjectKind::BattleNpc(BattleNpcSubKind::Enemy)
         );
         assert_eq!(npc_spawn.common.battalion, 4);
-        assert_eq!(npc_spawn.common.parent_actor_id, INVALID_OBJECT_ID);
-        assert_eq!(npc_spawn.common.spawner_id, INVALID_OBJECT_ID);
+        assert_eq!(npc_spawn.common.owner_id, INVALID_OBJECT_ID);
+        assert_eq!(npc_spawn.common.event_id, 0);
+        assert_eq!(npc_spawn.common.tether_id, INVALID_OBJECT_ID);
+        assert_eq!(npc_spawn.common.layout_id, 3929856);
         assert_eq!(npc_spawn.aggression_mode, 1); // passive
         assert_eq!(npc_spawn.online_status, OnlineStatus::Offline);
         assert_eq!(npc_spawn.common.name, "タイニー・マンドラゴ");

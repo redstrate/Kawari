@@ -186,22 +186,25 @@ impl Default for DisplayFlag {
 #[derive(Debug, Clone, Default)]
 pub struct CommonSpawn {
     pub target_id: ObjectTypeId,
-    pub u6: u32,
-    pub u7: u32,
+    /// FC Crest data.
+    pub fc_data: u64,
+    /// Model ID for a main weapon.
     pub main_weapon_model: u64,
+    /// Model ID for a secondary weapon.
     pub sec_weapon_model: u64,
+    /// Model ID for a craft weapon.
     pub craft_tool_model: u64,
 
-    pub u14: u32,
-    pub u15: u32,
-    /// See BNpcBase Excel sheet
+    pub u14: u64,
+    /// See BNpcBase Excel sheet.
     pub bnpc_base: u32,
-    /// See BNpcName Excel sheet
+    /// See BNpcName Excel sheet.
     pub bnpc_name: u32,
-    pub unk3: [u8; 8],
-    pub director_id: u32, // FIXME: i think the next three are in the wrong order
-    pub spawner_id: ObjectId,
-    pub parent_actor_id: ObjectId,
+    pub layout_id: u32,
+    pub companion_owner_id: u32,
+    pub event_id: u32,
+    pub owner_id: ObjectId,
+    pub tether_id: ObjectId,
     pub hp_max: u32,
     pub hp_curr: u32,
     pub display_flags: DisplayFlag,
