@@ -201,7 +201,7 @@ fn main() {
 
             assert!(rcBuildDistanceField(context, compact_heightfield));
 
-            let border_size = 2;
+            let border_size = 0;
             let min_region_area = 1;
             let merge_region_area = 0;
             assert!(rcBuildRegions(
