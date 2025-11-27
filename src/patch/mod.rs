@@ -1,8 +1,5 @@
 use std::{cmp::Ordering, fs::read_dir};
 
-mod version;
-pub use version::Version;
-
 pub fn list_patch_files(dir_path: &str) -> Vec<String> {
     // If the dir doesn't exist, pretend there is no patch files
     let Ok(dir) = read_dir(dir_path) else {

@@ -7,7 +7,8 @@ use axum::routing::post;
 use axum::{Router, routing::get};
 use kawari::config::get_config;
 use kawari::constants::{SUPPORTED_BOOT_VERSION, SUPPORTED_EXPAC_VERSIONS, SUPPORTED_GAME_VERSION};
-use kawari::patch::{Version, list_patch_files};
+use kawari::patch::list_patch_files;
+use physis::common::Version;
 use physis::patchlist::{PatchEntry, PatchList, PatchListType};
 use reqwest::header::USER_AGENT;
 
