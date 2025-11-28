@@ -652,20 +652,21 @@ impl LobbyConnection {
             return;
         }
 
-        let Ok(login_reply) = reqwest::get(format!(
-            "{}/_private/service_accounts?sid={}&service={}",
-            config.login.server_name, session_id, GAME_SERVICE
+        let Ok(mut login_reply) = ureq::get(format!(
+            "{}/_private/service_accounts",
+            config.login.server_name,
         ))
-        .await
-        else {
+        .query("sid", session_id)
+        .query("service", GAME_SERVICE)
+        .call() else {
             tracing::warn!("Failed to contact login server, is it running?");
             // "The lobby server connection has encountered an error."
             self.send_error(sequence, 2002, 13001).await;
             return;
         };
 
-        let Ok(body) = login_reply.text().await else {
-            tracing::warn!("Failed to contact login server, is it running?");
+        let Ok(body) = login_reply.body_mut().read_to_string() else {
+            tracing::warn!("Failed to parse login server response, is it running?");
             // "The lobby server connection has encountered an error."
             self.send_error(sequence, 2002, 13001).await;
             return;

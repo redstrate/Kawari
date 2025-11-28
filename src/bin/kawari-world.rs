@@ -561,11 +561,10 @@ async fn client_loop(
 
                                                 let service_account_id = database.find_service_account(connection.player_data.content_id);
 
-                                                let Ok(login_reply) = reqwest::get(format!(
+                                                let Ok(mut login_reply) = ureq::get(format!(
                                                     "{}/_private/max_ex?service={}",
                                                     config.login.server_name, service_account_id,
-                                                ))
-                                                .await
+                                                )).call()
                                                 else {
                                                     tracing::warn!(
                                                         "Failed to find service account {service_account_id}, just going to stop talking to this connection..."
@@ -573,7 +572,7 @@ async fn client_loop(
                                                     break 'outer; // We break the outer loop here because we're in the middle of a segment loop!
                                                 };
 
-                                                let expansion = login_reply.text().await.unwrap().parse().unwrap();
+                                                let expansion = login_reply.body_mut().read_to_string().unwrap().parse().unwrap();
 
                                                 let chara_details =
                                                 database.find_chara_make(connection.player_data.content_id);

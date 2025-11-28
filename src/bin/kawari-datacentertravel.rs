@@ -1,6 +1,8 @@
-use axum::{Router, http::Uri};
+use axum::{
+    Router,
+    http::{StatusCode, Uri},
+};
 use kawari::config::get_config;
-use reqwest::StatusCode;
 
 async fn fallback(uri: Uri) -> (StatusCode, String) {
     tracing::warn!("{}", uri);

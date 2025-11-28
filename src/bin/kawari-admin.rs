@@ -63,15 +63,15 @@ async fn users() -> Html<String> {
     let template = environment.get_template("admin_users.html").unwrap();
     let config = get_config();
 
-    let Ok(login_reply) =
-        reqwest::get(&*format!("{}/_private/users", config.login.server_name)).await
+    let Ok(mut login_reply) =
+        ureq::get(&*format!("{}/_private/users", config.login.server_name)).call()
     else {
         // TODO: add a better error message here
         tracing::warn!("Failed to contact login server, is it running?");
         return Html(template.render(context! {}).unwrap());
     };
 
-    let Ok(body) = login_reply.text().await else {
+    let Ok(body) = login_reply.body_mut().read_to_string() else {
         // TODO: add a better error message here
         tracing::warn!("Failed to contact login server, is it running?");
         return Html(template.render(context! {}).unwrap());

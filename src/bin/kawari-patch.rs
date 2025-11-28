@@ -1,6 +1,7 @@
 use std::cmp::Ordering;
 
 use axum::extract::Path;
+use axum::http::header::USER_AGENT;
 use axum::http::{HeaderMap, StatusCode, Uri};
 use axum::response::IntoResponse;
 use axum::routing::post;
@@ -10,7 +11,6 @@ use kawari::constants::{SUPPORTED_BOOT_VERSION, SUPPORTED_EXPAC_VERSIONS, SUPPOR
 use kawari::patch::list_patch_files;
 use physis::common::Version;
 use physis::patchlist::{PatchEntry, PatchList, PatchListType};
-use reqwest::header::USER_AGENT;
 
 const BOUNDARY_ID: &str = "477D80B1_38BC_41d4_8B48_5273ADB89CAC";
 const BOOT_ID: &str = "2b5cbc63";

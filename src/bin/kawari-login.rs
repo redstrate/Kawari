@@ -147,16 +147,11 @@ async fn login_send(
         };
         let body = serde_json::to_string(&sapphire_login).unwrap();
 
-        let client = reqwest::Client::new();
-        let Ok(login_reply) = client
-            .post(format!(
-                "http://{}/sapphire-api/lobby/login",
-                config.sapphire_api_server
-            ))
-            .body(body)
-            .send()
-            .await
-        else {
+        let Ok(mut login_reply) = ureq::post(format!(
+            "http://{}/sapphire-api/lobby/login",
+            config.sapphire_api_server
+        ))
+        .send(body) else {
             tracing::warn!("Failed to contact Sapphire API, is it running?");
             return Html(
                 "window.external.user(\"login=auth,ng,err,Failed to contact Sapphire API\");"
@@ -164,7 +159,7 @@ async fn login_send(
             );
         };
 
-        let Ok(body) = login_reply.text().await else {
+        let Ok(body) = login_reply.body_mut().read_to_string() else {
             return Html(
                 "window.external.user(\"login=auth,ng,err,Failed to contact Sapphire API\");"
                     .to_string(),
@@ -246,16 +241,11 @@ async fn do_register(
         };
         let body = serde_json::to_string(&sapphire_login).unwrap();
 
-        let client = reqwest::Client::new();
-        client
-            .post(format!(
-                "http://{}/sapphire-api/lobby/createAccount",
-                config.sapphire_api_server
-            ))
-            .body(body)
-            .send()
-            .await
-            .unwrap();
+        let _ = ureq::post(format!(
+            "http://{}/sapphire-api/lobby/createAccount",
+            config.sapphire_api_server
+        ))
+        .send(body);
 
         // TODO: don't redirect to account management page, we can't do that for sapphire
         (jar, Redirect::to("/account/app/svc/manage"))

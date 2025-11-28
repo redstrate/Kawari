@@ -1,11 +1,10 @@
 use axum::{
     Json, Router,
-    http::{HeaderValue, Uri},
+    http::{HeaderValue, StatusCode, Uri, header},
     response::{IntoResponse, Response},
     routing::{get, post},
 };
 use kawari::config::get_config;
-use reqwest::{StatusCode, header};
 use serde::{Deserialize, Serialize};
 use tower_http::services::ServeDir;
 
