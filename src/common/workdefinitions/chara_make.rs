@@ -48,9 +48,9 @@ impl CharaMake {
         ]);
 
         let obj = json!({
-            "content": content,
-            "classname": "CharaMake",
             "classid": 118,
+            "classname": "CharaMake",
+            "content": content,
         });
 
         serde_json::to_string(&obj).unwrap()
@@ -73,5 +73,11 @@ mod tests {
         assert_eq!(chara_make.birth_day, 1);
         assert_eq!(chara_make.classjob_id, 1);
         assert_eq!(chara_make.unk2, 1);
+    }
+
+    #[test]
+    fn roundtrip_chara_make() {
+        let json = "{\"classid\":118,\"classname\":\"CharaMake\",\"content\":[[\"1\",\"0\",\"1\",\"50\",\"1\",\"5\",\"161\",\"0\",\"3\",\"30\",\"103\",\"0\",\"0\",\"0\",\"1\",\"30\",\"4\",\"5\",\"2\",\"128\",\"35\",\"50\",\"0\",\"0\",\"0\",\"0\"],\"1\",\"1\",\"1\",\"1\",\"1\",\"1\"]}";
+        assert_eq!(CharaMake::from_json(json).to_json(), json);
     }
 }

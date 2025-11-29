@@ -73,13 +73,13 @@ server = ["dep:axum", "dep:axum-extra", "dep:tokio", "dep:tracing-subscriber", "
 [build-dependencies]
 # Serialization of IPC opcodes
 serde = { version = "1.0", features = ["derive"], default-features = false }
-serde_json = { version = "1.0", features = ["std"], default-features = false }
+serde_json = { version = "1.0", features = ["std", "preserve_order"], default-features = false }
 serde_yaml_ng = { version = "0.10", default-features = false }
 
 [dependencies]
 # Serialization used in almost every server
 serde = { version = "1.0", features = ["derive"], default-features = false }
-serde_json = { version = "1.0", features = ["std"], default-features = false }
+serde_json = { version = "1.0", features = ["std", "preserve_order"], default-features = false }
 serde_yaml_ng = { version = "0.10", default-features = false }
 serde-xml-rs = { version = "0.8", default-features = false }
 
