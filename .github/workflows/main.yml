@@ -118,6 +118,9 @@ jobs:
           resources/
           !resources/data/tests
           !resources/data/opcodes.json
+          !resources/data/scrambler
+          !resources/data/constants.yml
+          !resources/data/README.md
           run.sh
           run.bat
           version.txt
