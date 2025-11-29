@@ -128,3 +128,52 @@ impl CustomizeData {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn read_customize_data() {
+        let json = "[\"1\",\"1\",\"1\",\"46\",\"2\",\"2\",\"122\",\"0\",\"0\",\"137\",\"98\",\"0\",\"1\",\"0\",\"2\",\"137\",\"5\",\"5\",\"0\",\"131\",\"169\",\"0\",\"0\",\"100\",\"1\",\"5\"]";
+
+        let customize = CustomizeData::from_json(&serde_json::from_str(json).unwrap());
+        assert_eq!(customize.race, 1);
+        assert_eq!(customize.gender, 1);
+        assert_eq!(customize.age, 1);
+        assert_eq!(customize.height, 46);
+        assert_eq!(customize.subrace, 2);
+        assert_eq!(customize.face, 2);
+        assert_eq!(customize.hair, 122);
+        assert_eq!(customize.enable_highlights, 0);
+        assert_eq!(customize.skin_tone, 0);
+        assert_eq!(customize.right_eye_color, 137);
+        assert_eq!(customize.hair_tone, 98);
+        assert_eq!(customize.highlights, 0);
+        assert_eq!(customize.facial_features, 1);
+        assert_eq!(customize.facial_feature_color, 0);
+        assert_eq!(customize.eyebrows, 2);
+        assert_eq!(customize.left_eye_color, 137);
+        assert_eq!(customize.eyes, 5);
+        assert_eq!(customize.nose, 5);
+        assert_eq!(customize.jaw, 0);
+        assert_eq!(customize.mouth, 131);
+        assert_eq!(customize.lips_tone_fur_pattern, 169);
+        assert_eq!(customize.race_feature_size, 0);
+        assert_eq!(customize.race_feature_type, 0);
+        assert_eq!(customize.bust, 100);
+        assert_eq!(customize.face_paint, 1);
+        assert_eq!(customize.face_paint_color, 5);
+    }
+
+    #[test]
+    fn roundtrip_customize_data() {
+        let json = "[\"1\",\"1\",\"1\",\"46\",\"2\",\"2\",\"122\",\"0\",\"0\",\"137\",\"98\",\"0\",\"1\",\"0\",\"2\",\"137\",\"5\",\"5\",\"0\",\"131\",\"169\",\"0\",\"0\",\"100\",\"1\",\"5\"]";
+        assert_eq!(
+            CustomizeData::from_json(&serde_json::from_str(json).unwrap())
+                .to_json()
+                .to_string(),
+            json
+        );
+    }
+}
