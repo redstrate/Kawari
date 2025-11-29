@@ -125,7 +125,7 @@ impl ScramblerKeys {
     }
 }
 
-pub unsafe fn unscramble_add<T: Copy + Sized>(data: &mut [u8], offset: usize, key: T)
+unsafe fn unscramble_add<T: Copy + Sized>(data: &mut [u8], offset: usize, key: T)
 where
     Wrapping<T>: std::ops::Add<Wrapping<T>, Output = Wrapping<T>>,
 {
@@ -140,7 +140,7 @@ where
     }
 }
 
-pub unsafe fn unscramble_xor<T: Copy + Sized>(data: &mut [u8], offset: usize, key: T)
+unsafe fn unscramble_xor<T: Copy + Sized>(data: &mut [u8], offset: usize, key: T)
 where
     Wrapping<T>: std::ops::BitXor<Wrapping<T>, Output = Wrapping<T>>,
 {
@@ -228,5 +228,36 @@ pub fn scramble_packet(opcode_name: &str, base_key: u8, opcode_based_key: i32, d
             }
             _ => {}
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_unscramble_add() {
+        let mut bytes = [0, 0, 0, 0, 0, 0, 0, 0];
+        unsafe {
+            unscramble_add(&mut bytes, 0, 1);
+        }
+        assert_eq!(bytes, [1, 0, 0, 0, 0, 0, 0, 0]);
+        unsafe {
+            unscramble_add(&mut bytes, 4, 2);
+        }
+        assert_eq!(bytes, [1, 0, 0, 0, 2, 0, 0, 0]);
+    }
+
+    #[test]
+    fn test_unscramble_xor() {
+        let mut bytes = [1, 0, 0, 0, 2, 0, 0, 0];
+        unsafe {
+            unscramble_xor(&mut bytes, 0, 1);
+        }
+        assert_eq!(bytes, [0, 0, 0, 0, 2, 0, 0, 0]);
+        unsafe {
+            unscramble_xor(&mut bytes, 4, 2);
+        }
+        assert_eq!(bytes, [0, 0, 0, 0, 0, 0, 0, 0]);
     }
 }
