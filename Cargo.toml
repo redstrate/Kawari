@@ -135,7 +135,7 @@ mlua = { version = "0.11", features = ["lua54", "vendored", "send", "async", "se
 zip = { version = "6.0", features = ["deflate", "lzma", "bzip2"], default-features = false, optional = true }
 
 # For some inter-server communication
-ureq = { version = "3.1.4", default-features = false, optional = true }
+ureq = { version = "3.1", default-features = false, optional = true }
 
 # For serving static files on the website
 tower-http = { version = "0.6", features = ["fs", "cors"], default-features = false, optional = true }
