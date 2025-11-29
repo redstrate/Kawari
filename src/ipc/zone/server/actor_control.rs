@@ -207,7 +207,13 @@ pub enum ActorControlCategory {
     SetCaughtSpearfishBitmask { index: u32, value: u32 },
 
     #[brw(magic = 378u32)]
-    PlayerCurrency { unk1: u32, unk2: u32, unk3: u32 },
+    PlayerCurrency {
+        unk1: u32,
+        /// Index into the Item Excel sheet.
+        catalog_id: u32,
+        /// Max number of held currency.
+        max_count: u32,
+    },
 
     #[brw(magic = 504u32)]
     SetStatusIcon { icon: OnlineStatus },
