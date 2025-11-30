@@ -47,26 +47,30 @@ impl Instance {
         if config.filesystem.navimesh_path.is_empty() {
             tracing::warn!("Navimesh path is not set! Monsters will not function correctly!");
         } else {
-            let mut nvm_path = PathBuf::from(config.filesystem.navimesh_path);
-            nvm_path.push(instance.zone.navimesh_path.clone());
+            if instance.zone.navimesh_path.is_empty() {
+                tracing::warn!("No navimesh path for this zone, skipping generation!");
+            } else {
+                let mut nvm_path = PathBuf::from(config.filesystem.navimesh_path);
+                nvm_path.push(instance.zone.navimesh_path.clone());
 
-            if let Ok(nvm_bytes) = std::fs::read(&nvm_path) {
-                if let Some(navmesh) = Navmesh::from_existing(&nvm_bytes) {
-                    instance.navmesh = navmesh;
+                if let Ok(nvm_bytes) = std::fs::read(&nvm_path) {
+                    if let Some(navmesh) = Navmesh::from_existing(&nvm_bytes) {
+                        instance.navmesh = navmesh;
 
-                    tracing::info!("Successfully loaded navimesh from {nvm_path:?}");
+                        tracing::info!("Successfully loaded navimesh from {nvm_path:?}");
+                    } else {
+                        tracing::warn!(
+                            "Failed to read {nvm_path:?}, monsters will not function correctly!"
+                        );
+                    }
+                } else if config.world.generate_navmesh {
+                    instance.generate_navmesh =
+                        NavmeshGenerationStep::Needed(nvm_path.to_str().unwrap().to_string());
                 } else {
                     tracing::warn!(
                         "Failed to read {nvm_path:?}, monsters will not function correctly!"
                     );
                 }
-            } else if config.world.generate_navmesh {
-                instance.generate_navmesh =
-                    NavmeshGenerationStep::Needed(nvm_path.to_str().unwrap().to_string());
-            } else {
-                tracing::warn!(
-                    "Failed to read {nvm_path:?}, monsters will not function correctly!"
-                );
             }
         }
 

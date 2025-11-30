@@ -57,6 +57,10 @@ impl Zone {
 
         // e.g. ffxiv/fst_f1/fld/f1f3/level/f1f3
         let bg_path = row.Bg().into_string().unwrap();
+        if bg_path.is_empty() {
+            tracing::warn!("Invalid zone id {id}, allowing anyway...");
+            return zone;
+        }
 
         let path = format!("bg/{}.lvb", &bg_path);
         tracing::info!("Loading {}", path);
@@ -402,7 +406,7 @@ pub fn handle_zone_messages(
             }
         }
         ToServer::ChangeZone(from_id, actor_id, zone_id, new_position, new_rotation) => {
-            tracing::info!("Client {from_id:?} is requesting to go to {zone_id}!");
+            tracing::info!("{from_id:?} is requesting to go to zone {zone_id}");
 
             let mut data = data.lock().unwrap();
             let mut network = network.lock().unwrap();
