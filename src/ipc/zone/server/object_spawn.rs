@@ -14,7 +14,8 @@ pub struct ObjectSpawn {
     /// Seems to control whether or not its targetable?
     #[brw(pad_after = 1)]
     pub flag: u8,
-    /// Index into the EObj Excel sheet.
+    /// If this is an ENPC, represents an index into the EObj Excel sheet.
+    /// If this is an AreaObject, represents an index into the VFX Excel sheet.
     pub base_id: u32,
     pub entity_id: u32,
     /// Instance ID of the EventObject in the LGB.

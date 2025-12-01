@@ -37,10 +37,13 @@ pub enum ObjectKind {
     #[default]
     #[brw(magic = 0u8)]
     None,
+    /// Regular players. They usually have blue nameplates.
     #[brw(magic = 1u8)]
     Player(PlayerSubKind),
+    /// NPCs that you fight with. They usually have yellow/red nameplates.
     #[brw(magic = 2u8)]
     BattleNpc(BattleNpcSubKind),
+    /// NPCs that are friendly/non-interactable. They usually have green nameplates.
     #[brw(magic = 3u8)]
     EventNpc,
     #[brw(magic = 4u8)]
@@ -57,6 +60,7 @@ pub enum ObjectKind {
     Companion,
     #[brw(magic = 10u8)]
     Retainer,
+    /// Supposedly used for VFX/AoE effects.
     #[brw(magic = 11u8)]
     AreaObject,
     #[brw(magic = 12u8)]
