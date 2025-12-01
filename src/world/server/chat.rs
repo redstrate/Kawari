@@ -1,4 +1,6 @@
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
+
+use parking_lot::Mutex;
 
 use crate::{
     common::INVALID_OBJECT_ID,
@@ -21,7 +23,7 @@ pub fn handle_chat_messages(
 ) {
     match msg {
         ToServer::Message(from_id, msg) => {
-            let mut network = network.lock().unwrap();
+            let mut network = network.lock();
 
             network.send_to_all(
                 Some(*from_id),
@@ -32,8 +34,8 @@ pub fn handle_chat_messages(
         ToServer::TellMessageSent(from_id, from_actor_id, message_info) => {
             // TODO: Maybe this can be simplified with fewer loops?
 
-            let mut network = network.lock().unwrap();
-            let data = data.lock().unwrap();
+            let mut network = network.lock();
+            let data = data.lock();
 
             // First pull up some info about the sender, as tell packets require it
             let Some(sender_instance) = data.find_actor_instance(*from_actor_id) else {
@@ -106,7 +108,7 @@ pub fn handle_chat_messages(
             }
         }
         ToServer::PartyMessageSent(from_actor_id, message_info) => {
-            let mut network = network.lock().unwrap();
+            let mut network = network.lock();
 
             let mut sender = PartyMember::default();
             let mut party_id = 0;

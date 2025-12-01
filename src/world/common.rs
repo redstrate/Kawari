@@ -10,14 +10,18 @@ use tokio::sync::mpsc::Sender;
 
 use crate::{
     common::{JumpState, MoveAnimationState, MoveAnimationType, ObjectId, Position},
-    ipc::chat::{
-        ChatChannelType, PartyMessage, SendPartyMessage, SendTellMessage, TellNotFoundError,
+    ipc::{
+        chat::{
+            ChatChannelType, PartyMessage, SendPartyMessage, SendTellMessage, TellNotFoundError,
+        },
+        zone::{
+            ActionRequest, ActorControl, ActorControlSelf, ActorControlTarget, ClientTrigger,
+            Conditions, Config, InviteReply, InviteType, NpcSpawn, PartyMemberEntry,
+            PartyUpdateStatus, PlayerEntry, PlayerSpawn, ServerZoneIpcSegment, SocialListRequest,
+            SocialListRequestType,
+        },
     },
-    ipc::zone::{
-        ActionRequest, ActorControl, ActorControlSelf, ActorControlTarget, ClientTrigger,
-        Conditions, Config, InviteReply, InviteType, NpcSpawn, PartyMemberEntry, PartyUpdateStatus,
-        PlayerEntry, PlayerSpawn, SocialListRequest, SocialListRequestType,
-    },
+    world::lua::Task,
 };
 
 use super::{Actor, lua::LuaZone};
@@ -95,10 +99,6 @@ pub enum FromServer {
     ActorControlTarget(u32, ActorControlTarget),
     /// We need to update the player actor
     ActorControlSelf(ActorControlSelf),
-    /// Action has completed and needs to be executed
-    ActionComplete(ActionRequest),
-    /// Action has been cancelled
-    ActionCancelled(),
     /// Update an actor's equip display flags.
     UpdateConfig(u32, Config),
     /// Update an actor's model IDs.
@@ -144,6 +144,10 @@ pub enum FromServer {
     CharacterAlreadyInParty(),
     /// Inform the client they were in a party, and request that they inform us of their return.
     RejoinPartyAfterDisconnect(u64),
+    /// Send an arbitrary IPC segment to the client.
+    PacketSegment(ServerZoneIpcSegment, u32),
+    /// Set of Lua tasks queued up from the server.
+    NewTasks(Vec<Task>),
 }
 
 #[derive(Debug, Clone)]

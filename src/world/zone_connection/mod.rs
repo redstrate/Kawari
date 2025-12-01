@@ -31,6 +31,7 @@ use crate::{
         SegmentData, SegmentType, ServerIpcSegmentHeader, parse_packet, send_keep_alive,
         send_packet,
     },
+    world::lua::Task,
 };
 
 use super::{
@@ -38,7 +39,6 @@ use super::{
     common::{ClientId, ServerHandle},
 };
 
-mod action;
 mod actors;
 mod chat;
 mod effect;
@@ -234,6 +234,9 @@ pub struct ZoneConnection {
     pub client_language: ClientLanguage,
 
     pub should_run_finish_zoning: bool,
+
+    /// List of queued tasks from the server.
+    pub queued_tasks: Vec<Task>,
 }
 
 impl ZoneConnection {

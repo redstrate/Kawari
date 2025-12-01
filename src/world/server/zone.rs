@@ -1,8 +1,6 @@
-use std::{
-    sync::{Arc, Mutex},
-    time::Duration,
-};
+use std::{sync::Arc, time::Duration};
 
+use parking_lot::Mutex;
 use physis::{
     layer::{
         ExitRangeInstanceObject, InstanceObject, LayerEntryData, LayerGroup,
@@ -332,8 +330,8 @@ pub fn handle_zone_messages(
         ToServer::ZoneLoaded(from_id, zone_id, player_spawn) => {
             tracing::info!("Client {from_id:?} has now loaded, sending them existing player data.");
 
-            let mut data = data.lock().unwrap();
-            let mut network = network.lock().unwrap();
+            let mut data = data.lock();
+            let mut network = network.lock();
 
             // Send existing player data to the connection, if any
             if let Some(instance) = data.find_instance(*zone_id) {
@@ -408,11 +406,11 @@ pub fn handle_zone_messages(
         ToServer::ChangeZone(from_id, actor_id, zone_id, new_position, new_rotation) => {
             tracing::info!("{from_id:?} is requesting to go to zone {zone_id}");
 
-            let mut data = data.lock().unwrap();
-            let mut network = network.lock().unwrap();
+            let mut data = data.lock();
+            let mut network = network.lock();
 
             // create a new instance if necessary
-            let mut game_data = game_data.lock().unwrap();
+            let mut game_data = game_data.lock();
             data.ensure_exists(*zone_id, &mut game_data);
 
             // inform the players in this zone that this actor left
@@ -437,9 +435,9 @@ pub fn handle_zone_messages(
             network.send_to(*from_id, msg, DestinationNetwork::ZoneClients);
         }
         ToServer::EnterZoneJump(from_id, actor_id, exitbox_id) => {
-            let mut data = data.lock().unwrap();
-            let mut network = network.lock().unwrap();
-            let mut game_data = game_data.lock().unwrap();
+            let mut data = data.lock();
+            let mut network = network.lock();
+            let mut game_data = game_data.lock();
 
             // first, find the zone jump in the current zone
             let destination_zone_id;
@@ -468,9 +466,9 @@ pub fn handle_zone_messages(
             );
         }
         ToServer::Warp(from_id, actor_id, warp_id) => {
-            let mut data = data.lock().unwrap();
-            let mut network = network.lock().unwrap();
-            let mut game_data = game_data.lock().unwrap();
+            let mut data = data.lock();
+            let mut network = network.lock();
+            let mut game_data = game_data.lock();
 
             // first, find the warp and it's destination
             let (destination_instance_id, destination_zone_id) = game_data
@@ -488,9 +486,9 @@ pub fn handle_zone_messages(
             );
         }
         ToServer::WarpAetheryte(from_id, actor_id, aetheryte_id) => {
-            let mut data = data.lock().unwrap();
-            let mut network = network.lock().unwrap();
-            let mut game_data = game_data.lock().unwrap();
+            let mut data = data.lock();
+            let mut network = network.lock();
+            let mut game_data = game_data.lock();
 
             // first, find the warp and it's destination
             let (destination_instance_id, destination_zone_id) = game_data
@@ -509,7 +507,7 @@ pub fn handle_zone_messages(
         }
         ToServer::ZoneIn(from_id, from_actor_id, is_teleport) => {
             // Inform all clients to play the zone in animation
-            let mut network = network.lock().unwrap();
+            let mut network = network.lock();
             let mut to_remove = Vec::new();
             for (id, (handle, _)) in &mut network.clients {
                 let id = *id;
@@ -541,7 +539,7 @@ pub fn handle_zone_messages(
                                      network: Arc<Mutex<NetworkState>>,
                                      transform: Transformation,
                                      fade_out: bool| {
-                let mut network = network.lock().unwrap();
+                let mut network = network.lock();
                 let trans = transform.translation;
 
                 let msg = FromServer::NewPosition(
@@ -560,7 +558,7 @@ pub fn handle_zone_messages(
 
             let transform;
             {
-                let mut data = data.lock().unwrap();
+                let mut data = data.lock();
                 let instance = data.find_actor_instance_mut(*from_actor_id);
 
                 if let Some(instance) = instance {

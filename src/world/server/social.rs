@@ -1,4 +1,6 @@
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
+
+use parking_lot::Mutex;
 
 use crate::{
     common::{INVALID_OBJECT_ID, ObjectId},
@@ -174,8 +176,8 @@ pub fn handle_social_messages(
     match msg {
         ToServer::InvitePlayerToParty(from_actor_id, content_id, character_name) => {
             // TODO: Return an error when the target player's already in a party or offline somehow
-            let mut network = network.lock().unwrap();
-            let data = data.lock().unwrap();
+            let mut network = network.lock();
+            let data = data.lock();
 
             // First pull up some info about the sender, as tell packets require it
             let Some(sender_instance) = data.find_actor_instance(from_actor_id.0) else {
@@ -270,8 +272,8 @@ pub fn handle_social_messages(
             invite_type,
             response,
         ) => {
-            let mut network = network.lock().unwrap();
-            let data = data.lock().unwrap();
+            let mut network = network.lock();
+            let data = data.lock();
 
             // Look up the invite sender and tell them the response.
             let mut recipient_actor_id = INVALID_OBJECT_ID;
@@ -324,8 +326,8 @@ pub fn handle_social_messages(
             }
         }
         ToServer::RequestSocialList(from_id, from_actor_id, from_party_id, request) => {
-            let mut network = network.lock().unwrap();
-            let data = data.lock().unwrap();
+            let mut network = network.lock();
+            let data = data.lock();
             let mut entries = vec![PlayerEntry::default(); 10];
 
             match &request.request_type {
@@ -429,8 +431,8 @@ pub fn handle_social_messages(
             network.send_to(*from_id, msg, DestinationNetwork::ZoneClients);
         }
         ToServer::AddPartyMember(party_id, leader_actor_id, new_member_content_id) => {
-            let mut network = network.lock().unwrap();
-            let data = data.lock().unwrap();
+            let mut network = network.lock();
+            let data = data.lock();
             let mut party_id = *party_id;
 
             // This client is creating a party.
@@ -579,8 +581,8 @@ pub fn handle_social_messages(
             execute_content_id,
             execute_name,
         ) => {
-            let mut network = network.lock().unwrap();
-            let data = data.lock().unwrap();
+            let mut network = network.lock();
+            let data = data.lock();
             let party = network.parties.get_mut(party_id).unwrap();
 
             let party_list = build_party_list(party, &data);
@@ -612,13 +614,13 @@ pub fn handle_social_messages(
             target_content_id,
             target_name,
         ) => {
-            let mut network = network.lock().unwrap();
+            let mut network = network.lock();
 
             if !network.parties.contains_key(party_id) {
                 panic!("Why are we trying to do party operations on an invalid party?");
             }
 
-            let data = data.lock().unwrap();
+            let data = data.lock();
             let target_account_id;
             {
                 let party = &mut network.parties.get_mut(party_id).unwrap();
@@ -661,8 +663,8 @@ pub fn handle_social_messages(
             execute_actor_id,
             execute_name,
         ) => {
-            let mut network = network.lock().unwrap();
-            let data = data.lock().unwrap();
+            let mut network = network.lock();
+            let data = data.lock();
             let party_list;
             let leaving_zone_client_id;
             let leaving_chat_client_id;
@@ -758,7 +760,7 @@ pub fn handle_social_messages(
             }
         }
         ToServer::PartyDisband(party_id, execute_account_id, execute_content_id, execute_name) => {
-            let mut network = network.lock().unwrap();
+            let mut network = network.lock();
 
             let msg = FromServer::PartyUpdate(
                 PartyUpdateTargets {
@@ -793,8 +795,8 @@ pub fn handle_social_messages(
             target_content_id,
             target_name,
         ) => {
-            let mut network = network.lock().unwrap();
-            let data = data.lock().unwrap();
+            let mut network = network.lock();
+            let data = data.lock();
             let party = network.parties.get_mut(party_id).unwrap();
 
             let Some(member) = party.get_member_by_content_id(*target_content_id) else {
@@ -879,8 +881,8 @@ pub fn handle_social_messages(
             from_actor_id,
             execute_name,
         ) => {
-            let mut network = network.lock().unwrap();
-            let data = data.lock().unwrap();
+            let mut network = network.lock();
+            let data = data.lock();
 
             if !network.parties.contains_key(party_id) {
                 tracing::error!(
@@ -928,8 +930,8 @@ pub fn handle_social_messages(
             }
         }
         ToServer::PartyMemberReturned(execute_actor_id) => {
-            let mut network = network.lock().unwrap();
-            let data = data.lock().unwrap();
+            let mut network = network.lock();
+            let data = data.lock();
 
             let mut member = PartyMember::default();
             let mut party_id = 0;

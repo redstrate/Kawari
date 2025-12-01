@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use crate::{
     common::{INVALID_OBJECT_ID, ObjectId},
+    ipc::zone::ServerZoneIpcSegment,
     world::{
         Actor, ClientHandle, ClientId, FromServer,
         common::SpawnKind,
@@ -183,6 +184,27 @@ impl NetworkState {
                         self.to_remove_chat.push(member.chat_client_id);
                     }
                 }
+            }
+        }
+    }
+
+    pub fn send_ipc_to(
+        &mut self,
+        client_id: ClientId,
+        ipc: ServerZoneIpcSegment,
+        from_actor_id: u32,
+    ) {
+        let clients = &mut self.clients;
+        let message = FromServer::PacketSegment(ipc, from_actor_id);
+
+        for (id, (handle, _)) in clients {
+            let id = *id;
+
+            if id == client_id {
+                if handle.send(message).is_err() {
+                    self.to_remove.push(id);
+                }
+                break;
             }
         }
     }

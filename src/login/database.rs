@@ -1,5 +1,4 @@
-use std::sync::Mutex;
-
+use parking_lot::Mutex;
 use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
 
@@ -97,7 +96,7 @@ impl LoginDatabase {
 
         // add user
         {
-            let connection = self.connection.lock().unwrap();
+            let connection = self.connection.lock();
 
             tracing::info!("Adding user with username {username}");
 
@@ -109,7 +108,7 @@ impl LoginDatabase {
 
         // add service account
         {
-            let connection = self.connection.lock().unwrap();
+            let connection = self.connection.lock();
 
             let query = "INSERT INTO service_account VALUES (?1, ?2, ?3);";
             connection
@@ -135,7 +134,7 @@ impl LoginDatabase {
         tracing::info!("Finding user with username {username}");
 
         {
-            let connection = self.connection.lock().unwrap();
+            let connection = self.connection.lock();
 
             let mut stmt = connection
                 .prepare("SELECT id, password FROM user WHERE username = ?1")
@@ -166,7 +165,7 @@ impl LoginDatabase {
 
     /// Create a new session for user, which replaces the last one (if any) of a given `service`
     pub fn create_session(&self, service: &str, user_id: u64) -> Option<String> {
-        let connection = self.connection.lock().unwrap();
+        let connection = self.connection.lock();
 
         let sid = Self::generate_sid();
 
@@ -184,7 +183,7 @@ impl LoginDatabase {
 
     /// Gets the service account list
     pub fn check_session(&self, service: &str, sid: &str) -> Vec<ServiceAccount> {
-        let connection = self.connection.lock().unwrap();
+        let connection = self.connection.lock();
 
         // get user id
         let user_id: u64;
@@ -222,7 +221,7 @@ impl LoginDatabase {
 
     /// Checks if a username is taken
     pub fn check_username(&self, username: &str) -> bool {
-        let connection = self.connection.lock().unwrap();
+        let connection = self.connection.lock();
 
         let mut stmt = connection
             .prepare("SELECT id FROM user WHERE username = ?1")
@@ -236,7 +235,7 @@ impl LoginDatabase {
 
     /// Returns the user ID associated with `sid`, or None if it's invalid or not found.
     pub fn get_user_id(&self, sid: &str) -> Option<u64> {
-        let connection = self.connection.lock().unwrap();
+        let connection = self.connection.lock();
 
         let mut stmt = connection
             .prepare("SELECT user_id FROM session WHERE sid = ?1")
@@ -246,7 +245,7 @@ impl LoginDatabase {
     }
 
     pub fn get_username(&self, user_id: u64) -> String {
-        let connection = self.connection.lock().unwrap();
+        let connection = self.connection.lock();
 
         let mut stmt = connection
             .prepare("SELECT username FROM user WHERE id = ?1")
@@ -257,7 +256,7 @@ impl LoginDatabase {
 
     // TODO: only returns one account right now
     pub fn get_service_account(&self, user_id: u64) -> u64 {
-        let connection = self.connection.lock().unwrap();
+        let connection = self.connection.lock();
 
         let mut stmt = connection
             .prepare("SELECT id FROM service_account WHERE user_id = ?1")
@@ -268,7 +267,7 @@ impl LoginDatabase {
 
     /// Gets the current session list, at some point it will return past sessions too.
     pub fn get_sessions(&self, user_id: u64) -> Vec<SessionInformation> {
-        let connection = self.connection.lock().unwrap();
+        let connection = self.connection.lock();
 
         let mut stmt = connection
             .prepare("SELECT time, service FROM session WHERE user_id = ?1 ORDER BY time DESC;")
@@ -290,7 +289,7 @@ impl LoginDatabase {
 
     /// Simply checks if this is a valid session or not.
     pub fn is_session_valid(&self, service: &str, sid: &str) -> bool {
-        let connection = self.connection.lock().unwrap();
+        let connection = self.connection.lock();
 
         let mut stmt = connection
             .prepare("SELECT user_id FROM session WHERE service = ?1 AND sid = ?2")
@@ -301,7 +300,7 @@ impl LoginDatabase {
 
     /// Revokes a given `service` from the active session list for the `user_id`.
     pub fn revoke_session(&self, user_id: u64, service: &str) {
-        let connection = self.connection.lock().unwrap();
+        let connection = self.connection.lock();
 
         connection
             .execute(
@@ -315,7 +314,7 @@ impl LoginDatabase {
 
     /// Deletes the given `user_id` and also scrubs their service accounts.
     pub fn delete_user(&self, user_id: u64) {
-        let connection = self.connection.lock().unwrap();
+        let connection = self.connection.lock();
 
         // delete from users table
         connection
@@ -337,7 +336,7 @@ impl LoginDatabase {
 
     /// Grabs basic information about every user in the database.
     pub fn get_users(&self) -> Vec<User> {
-        let connection = self.connection.lock().unwrap();
+        let connection = self.connection.lock();
 
         let mut stmt = connection.prepare("SELECT id, username FROM user").unwrap();
 
@@ -354,7 +353,7 @@ impl LoginDatabase {
 
     /// Returns the max expansion level for the `service_account_id`
     pub fn get_max_expansion(&self, service_account_id: u64) -> Option<u8> {
-        let connection = self.connection.lock().unwrap();
+        let connection = self.connection.lock();
 
         let mut stmt = connection
             .prepare("SELECT max_ex FROM service_account WHERE id = ?1")
@@ -367,7 +366,7 @@ impl LoginDatabase {
     ///
     /// This takes the highest expansion level from all service accounts.
     pub fn get_user_max_expansion(&self, user_id: u64) -> Option<u8> {
-        let connection = self.connection.lock().unwrap();
+        let connection = self.connection.lock();
 
         let mut stmt = connection
             .prepare("SELECT MAX(max_ex) FROM service_account WHERE user_id = ?1")

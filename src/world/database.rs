@@ -1,4 +1,4 @@
-use std::sync::Mutex;
+use parking_lot::Mutex;
 
 use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
@@ -84,7 +84,7 @@ impl WorldDatabase {
     }
 
     pub fn find_player_data(&self, actor_id: u32, game_data: &mut GameData) -> PlayerData {
-        let connection = self.connection.lock().unwrap();
+        let connection = self.connection.lock();
 
         let mut stmt = connection
             .prepare("SELECT content_id, service_account_id FROM character WHERE actor_id = ?1")
@@ -185,7 +185,7 @@ impl WorldDatabase {
 
     /// Commit the dynamic player data back to the database
     pub fn commit_player_data(&self, data: &PlayerData) {
-        let connection = self.connection.lock().unwrap();
+        let connection = self.connection.lock();
 
         let mut stmt = connection
             .prepare(
@@ -226,7 +226,7 @@ impl WorldDatabase {
     // TODO: from/to sql int
 
     pub fn find_actor_id(&self, content_id: u64) -> u32 {
-        let connection = self.connection.lock().unwrap();
+        let connection = self.connection.lock();
 
         let mut stmt = connection
             .prepare("SELECT actor_id FROM character WHERE content_id = ?1")
@@ -242,7 +242,7 @@ impl WorldDatabase {
         world_name: &str,
         game_data: &mut GameData,
     ) -> Vec<CharacterDetails> {
-        let connection = self.connection.lock().unwrap();
+        let connection = self.connection.lock();
 
         let content_actor_ids: Vec<(u32, u32)>;
 
@@ -368,7 +368,7 @@ impl WorldDatabase {
         let content_id = Self::generate_content_id();
         let actor_id = Self::generate_actor_id();
 
-        let connection = self.connection.lock().unwrap();
+        let connection = self.connection.lock();
 
         // fill out the initial classjob
         let chara_make = CharaMake::from_json(chara_make_str);
@@ -417,7 +417,7 @@ impl WorldDatabase {
 
     /// Checks if `name` is in the character data table
     pub fn check_is_name_free(&self, name: &str) -> bool {
-        let connection = self.connection.lock().unwrap();
+        let connection = self.connection.lock();
 
         let mut stmt = connection
             .prepare("SELECT content_id FROM character_data WHERE name = ?1")
@@ -427,7 +427,7 @@ impl WorldDatabase {
     }
 
     pub fn find_chara_make(&self, content_id: u64) -> CharacterData {
-        let connection = self.connection.lock().unwrap();
+        let connection = self.connection.lock();
 
         let mut stmt = connection
             .prepare(
@@ -471,7 +471,7 @@ impl WorldDatabase {
 
     /// Deletes a character and all associated data
     pub fn delete_character(&self, content_id: u64) {
-        let connection = self.connection.lock().unwrap();
+        let connection = self.connection.lock();
 
         // delete data
         {
@@ -492,7 +492,7 @@ impl WorldDatabase {
 
     /// Sets the remake mode for a character
     pub fn set_remake_mode(&self, content_id: u64, mode: RemakeMode) {
-        let connection = self.connection.lock().unwrap();
+        let connection = self.connection.lock();
 
         let mut stmt = connection
             .prepare("UPDATE character_data SET remake_mode=?1 WHERE content_id = ?2")
@@ -502,7 +502,7 @@ impl WorldDatabase {
 
     /// Sets the chara make JSON for a character
     pub fn set_chara_make(&self, content_id: u64, chara_make_json: &str) {
-        let connection = self.connection.lock().unwrap();
+        let connection = self.connection.lock();
 
         let mut stmt = connection
             .prepare("UPDATE character_data SET chara_make=?1 WHERE content_id = ?2")
@@ -512,7 +512,7 @@ impl WorldDatabase {
 
     /// Deletes all character associated with the service account.
     pub fn delete_characters(&self, service_account_id: u64) {
-        let connection = self.connection.lock().unwrap();
+        let connection = self.connection.lock();
 
         let content_actor_ids: Vec<(u32, u32)>;
 
@@ -547,7 +547,7 @@ impl WorldDatabase {
 
     /// Returns surface-level information about all of the characters in the database.
     pub fn request_full_character_list(&self) -> String {
-        let connection = self.connection.lock().unwrap();
+        let connection = self.connection.lock();
 
         let mut stmt = connection
             .prepare("SELECT content_id, name FROM character_data")
@@ -569,7 +569,7 @@ impl WorldDatabase {
 
     /// returns
     pub fn find_service_account(&self, content_id: u64) -> u64 {
-        let connection = self.connection.lock().unwrap();
+        let connection = self.connection.lock();
 
         let mut stmt = connection
             .prepare("SELECT service_account_id FROM character WHERE content_id = ?1")

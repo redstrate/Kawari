@@ -28,7 +28,9 @@ use kawari::constants::{
     AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE, CLASSJOB_ARRAY_SIZE, TITLE_UNLOCK_BITMASK_SIZE,
 };
 use kawari::packet::oodle::OodleNetwork;
-use kawari::packet::{ConnectionState, ConnectionType, SegmentData, parse_packet_header};
+use kawari::packet::{
+    ConnectionState, ConnectionType, PacketSegment, SegmentData, SegmentType, parse_packet_header,
+};
 use kawari::world::lua::{ExtraLuaState, LuaPlayer, load_init_script};
 use kawari::world::{
     ChatConnection, ChatHandler, CustomIpcConnection, ObsfucationData, TeleportReason,
@@ -167,6 +169,7 @@ async fn initial_setup(
                                     conditions: Conditions::default(),
                                     client_language: ClientLanguage::English,
                                     should_run_finish_zoning: false,
+                                    queued_tasks: Vec::new(),
                                 };
 
                                 // Handle setup before passing off control to the zone connection.
@@ -1614,6 +1617,7 @@ async fn client_loop(
                             }
 
                             // Process any queued packets from scripts and whatnot
+                            lua_player.queued_tasks.append(&mut connection.queued_tasks);
                             connection.process_lua_player(&mut lua_player).await;
 
                             // check if status effects need sending
@@ -1647,8 +1651,6 @@ async fn client_loop(
                         connection.handle.send(ToServer::ActorDespawnsMinion(connection.id, connection.player_data.actor_id)).await;
                         connection.player_data.active_minion = 0;
                     }
-                    FromServer::ActionComplete(request) => connection.execute_action(request, &mut lua_player).await,
-                    FromServer::ActionCancelled() => connection.cancel_action().await,
                     FromServer::UpdateConfig(actor_id, config) => connection.update_config(actor_id, config).await,
                     FromServer::ActorEquip(actor_id, main_weapon_id, sub_weapon_id, model_ids) => connection.update_equip(actor_id, main_weapon_id, sub_weapon_id, model_ids).await,
                     FromServer::LoseEffect(effect_id, effect_param, effect_source_actor_id) => connection.lose_effect(effect_id, effect_param, effect_source_actor_id, &mut lua_player).await,
@@ -1671,6 +1673,16 @@ async fn client_loop(
                         connection.player_data.party_id = party_id;
                         connection.player_data.rejoining_party = true;
                     }
+                    FromServer::PacketSegment(ipc, from_actor_id) => {
+                        let segment = PacketSegment {
+                            source_actor: from_actor_id,
+                            target_actor: connection.player_data.actor_id,
+                            segment_type: SegmentType::Ipc,
+                            data: SegmentData::Ipc(ipc),
+                        };
+                        connection.send_segment(segment).await;
+                    }
+                    FromServer::NewTasks(mut tasks) => connection.queued_tasks.append(&mut tasks),
                     _ => { tracing::error!("Zone connection {:#?} received a FromServer message we don't care about: {:#?}, ensure you're using the right client network or that you've implemented a handler for it if we actually care about it!", client_handle.id, msg); }
                 },
                 None => break,

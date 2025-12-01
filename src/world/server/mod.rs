@@ -1,9 +1,7 @@
+use mlua::Lua;
+use parking_lot::Mutex;
 use std::{
-    collections::HashMap,
-    env::consts::EXE_SUFFIX,
-    process::Command,
-    sync::{Arc, Mutex},
-    time::Duration,
+    collections::HashMap, env::consts::EXE_SUFFIX, process::Command, sync::Arc, time::Duration,
 };
 use tokio::sync::mpsc::Receiver;
 
@@ -18,7 +16,9 @@ use crate::{
     },
     world::{
         Navmesh,
+        lua::load_init_script,
         server::{
+            action::handle_action_messages,
             actor::NetworkedActor,
             chat::handle_chat_messages,
             instance::{Instance, NavmeshGenerationStep},
@@ -33,6 +33,7 @@ use super::{Actor, ClientId, FromServer, ToServer};
 
 use crate::world::common::SpawnKind;
 
+mod action;
 mod actor;
 mod chat;
 mod instance;
@@ -329,6 +330,15 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
     let data = Arc::new(Mutex::new(WorldServer::default()));
     let network = Arc::new(Mutex::new(NetworkState::default()));
     let game_data = Arc::new(Mutex::new(GameData::new()));
+    let lua = Arc::new(Mutex::new(Lua::new()));
+
+    // Run Init.lua and set up other Lua state
+    {
+        let mut lua = lua.lock();
+        if let Err(err) = load_init_script(&mut lua, game_data.clone()) {
+            tracing::warn!("Failed to load Init.lua: {:?}", err);
+        }
+    }
 
     {
         let data = data.clone();
@@ -338,8 +348,8 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
             interval.tick().await;
             loop {
                 interval.tick().await;
-                let mut data = data.lock().unwrap();
-                let mut network = network.lock().unwrap();
+                let mut data = data.lock();
+                let mut network = network.lock();
                 server_logic_tick(&mut data, &mut network);
             }
         });
@@ -352,6 +362,13 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
         handle_chat_messages(data.clone(), network.clone(), &msg);
         handle_social_messages(data.clone(), network.clone(), &msg);
         handle_zone_messages(data.clone(), network.clone(), game_data.clone(), &msg);
+        handle_action_messages(
+            data.clone(),
+            network.clone(),
+            game_data.clone(),
+            lua.clone(),
+            &msg,
+        );
 
         match msg {
             ToServer::NewClient(handle) => {
@@ -361,7 +378,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     handle.actor_id
                 );
 
-                let mut network = network.lock().unwrap();
+                let mut network = network.lock();
                 let mut party_id = None;
                 let handle_id = handle.id;
 
@@ -398,7 +415,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     handle.actor_id
                 );
 
-                let mut network = network.lock().unwrap();
+                let mut network = network.lock();
 
                 // Refresh the party member's client id, if applicable.
                 'outer: for party in &mut network.parties.values_mut() {
@@ -415,11 +432,11 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     .insert(handle.id, (handle, ClientState::default()));
             }
             ToServer::ReadySpawnPlayer(from_id, zone_id, position, rotation) => {
-                let mut network = network.lock().unwrap();
-                let mut data = data.lock().unwrap();
+                let mut network = network.lock();
+                let mut data = data.lock();
 
                 // create a new instance if necessary
-                let mut game_data = game_data.lock().unwrap();
+                let mut game_data = game_data.lock();
                 data.ensure_exists(zone_id, &mut game_data);
                 let target_instance = data.find_instance_mut(zone_id);
 
@@ -444,8 +461,8 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 anim_state,
                 jump_state,
             ) => {
-                let mut data = data.lock().unwrap();
-                let mut network = network.lock().unwrap();
+                let mut data = data.lock();
+                let mut network = network.lock();
 
                 if let Some(instance) = data.find_actor_instance_mut(actor_id) {
                     if let Some((_, spawn)) = instance
@@ -468,7 +485,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 }
             }
             ToServer::ClientTrigger(from_id, from_actor_id, trigger) => {
-                let mut network = network.lock().unwrap();
+                let mut network = network.lock();
 
                 for (id, (handle, _)) in &mut network.clients {
                     let id = *id;
@@ -684,8 +701,8 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 }
             }
             ToServer::DebugNewEnemy(_from_id, from_actor_id, id) => {
-                let mut data = data.lock().unwrap();
-                let mut network = network.lock().unwrap();
+                let mut data = data.lock();
+                let mut network = network.lock();
 
                 let actor_id = Instance::generate_actor_id();
                 let spawn;
@@ -704,7 +721,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
 
                     let model_chara;
                     {
-                        let mut game_data = game_data.lock().unwrap();
+                        let mut game_data = game_data.lock();
                         model_chara = game_data.find_bnpc(id).unwrap();
                     }
 
@@ -740,8 +757,8 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 );
             }
             ToServer::DebugSpawnClone(_from_id, from_actor_id) => {
-                let mut data = data.lock().unwrap();
-                let mut network = network.lock().unwrap();
+                let mut data = data.lock();
+                let mut network = network.lock();
 
                 let actor_id = Instance::generate_actor_id();
                 let spawn;
@@ -775,46 +792,10 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     SpawnKind::Npc(spawn),
                 );
             }
-            ToServer::ActionRequest(from_id, _from_actor_id, request) => {
-                let mut game_data = game_data.lock().unwrap();
-                let cast_time = game_data.get_casttime(request.action_key).unwrap();
-
-                let send_execution = |from_id: ClientId, network: Arc<Mutex<NetworkState>>| {
-                    let mut network = network.lock().unwrap();
-
-                    tracing::info!("Now finishing delayed cast!");
-
-                    let msg = FromServer::ActionComplete(request);
-                    network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
-                };
-
-                if cast_time == 0 {
-                    // If instantaneous, send right back
-                    send_execution(from_id, network.clone());
-                } else {
-                    // Otherwise, delay
-                    // NOTE: I know this won't scale, but it's a fine hack for now
-
-                    tracing::info!(
-                        "Delaying spell cast for {} milliseconds",
-                        cast_time as u64 * 100
-                    );
-
-                    // we have to shadow these variables to tell rust not to move them into the async closure
-                    let network = network.clone();
-                    tokio::task::spawn(async move {
-                        let mut interval =
-                            tokio::time::interval(Duration::from_millis(cast_time as u64 * 100));
-                        interval.tick().await;
-                        interval.tick().await;
-                        send_execution(from_id, network);
-                    });
-                }
-            }
             ToServer::Config(_from_id, from_actor_id, config) => {
                 // update their stored state so it's correctly sent on new spawns
                 {
-                    let mut data = data.lock().unwrap();
+                    let mut data = data.lock();
 
                     let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
                         break;
@@ -831,7 +812,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     player.common.display_flags = config.display_flag.into();
                 }
 
-                let mut network = network.lock().unwrap();
+                let mut network = network.lock();
                 let msg = FromServer::UpdateConfig(from_actor_id, config.clone());
 
                 network.send_to_all(None, msg, DestinationNetwork::ZoneClients);
@@ -839,7 +820,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
             ToServer::Equip(_from_id, from_actor_id, main_weapon_id, sub_weapon_id, model_ids) => {
                 // update their stored state so it's correctly sent on new spawns
                 {
-                    let mut data = data.lock().unwrap();
+                    let mut data = data.lock();
 
                     let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
                         break;
@@ -862,7 +843,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 let msg =
                     FromServer::ActorEquip(from_actor_id, main_weapon_id, sub_weapon_id, model_ids);
 
-                let mut network = network.lock().unwrap();
+                let mut network = network.lock();
                 network.send_to_all(None, msg, DestinationNetwork::ZoneClients);
             }
             ToServer::GainEffect(
@@ -879,7 +860,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                      effect_id: u16,
                      effect_param: u16,
                      effect_source_actor_id: ObjectId| {
-                        let mut network = network.lock().unwrap();
+                        let mut network = network.lock();
 
                         tracing::info!("Now losing effect {}!", effect_id);
 
@@ -911,7 +892,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 });
             }
             ToServer::Disconnected(from_id, from_actor_id) => {
-                let mut network = network.lock().unwrap();
+                let mut network = network.lock();
                 network.to_remove.push(from_id);
 
                 // Tell our sibling chat connection that it's time to go too.
@@ -922,8 +903,8 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 );
             }
             ToServer::ActorSummonsMinion(from_id, from_actor_id, minion_id) => {
-                let mut network = network.lock().unwrap();
-                let mut data = data.lock().unwrap();
+                let mut network = network.lock();
+                let mut data = data.lock();
 
                 set_player_minion(
                     &mut data,
@@ -935,8 +916,8 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 );
             }
             ToServer::ActorDespawnsMinion(from_id, from_actor_id) => {
-                let mut network = network.lock().unwrap();
-                let mut data = data.lock().unwrap();
+                let mut network = network.lock();
+                let mut data = data.lock();
 
                 set_player_minion(
                     &mut data,
@@ -948,21 +929,21 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 );
             }
             ToServer::ChatDisconnected(from_id) => {
-                let mut network = network.lock().unwrap();
+                let mut network = network.lock();
                 network.to_remove_chat.push(from_id);
             }
             ToServer::JoinContent(from_id, from_actor_id, content_id) => {
                 // For now, just send them to do the zone if they do anything
                 let zone_id;
                 {
-                    let mut game_data = game_data.lock().unwrap();
+                    let mut game_data = game_data.lock();
                     zone_id = game_data.find_zone_for_content(content_id);
                 }
 
                 if let Some(zone_id) = zone_id {
-                    let mut data = data.lock().unwrap();
-                    let mut network = network.lock().unwrap();
-                    let mut game_data = game_data.lock().unwrap();
+                    let mut data = data.lock();
+                    let mut network = network.lock();
+                    let mut game_data = game_data.lock();
 
                     change_zone_warp_to_entrance(
                         &mut data,
@@ -982,8 +963,8 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
 
         // Remove any clients that errored out
         {
-            let mut network = network.lock().unwrap();
-            let mut data = data.lock().unwrap();
+            let mut network = network.lock();
+            let mut data = data.lock();
 
             network.to_remove.append(&mut to_remove);
 
