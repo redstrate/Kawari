@@ -490,81 +490,74 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
             ToServer::ClientTrigger(from_id, from_actor_id, trigger) => {
                 tracing::info!("{:#X?}", trigger);
 
-                // TODO: why are these separated?
-                // handle player-to-server actions
-                if let ClientTriggerCommand::TeleportQuery { aetheryte_id } = &trigger.trigger {
-                    let msg = FromServer::ActorControlSelf(ActorControlSelf {
-                        category: ActorControlCategory::TeleportStart {
-                            insufficient_gil: 0,
-                            aetheryte_id: *aetheryte_id,
-                        },
-                    });
-
-                    let mut network = network.lock();
-                    network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
-                }
-
-                if let ClientTriggerCommand::EventRelatedUnk { .. } = &trigger.trigger {
-                    let msg = FromServer::ActorControlSelf(ActorControlSelf {
-                        category: ActorControlCategory::MapMarkerUpdateBegin { unk1: 1 },
-                    });
-
-                    let mut network = network.lock();
-                    network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
-
-                    let msg = FromServer::ActorControlSelf(ActorControlSelf {
-                        category: ActorControlCategory::MapMarkerUpdateEnd { unk1: 0 },
-                    });
-                    network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
-                }
-
-                if let ClientTriggerCommand::WalkInTriggerFinished { .. } = &trigger.trigger {
-                    // This is where we finally release the client after the walk-in trigger.
-                    let msg = FromServer::Conditions(Conditions::default());
-
-                    let mut network = network.lock();
-                    network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
-
-                    let msg = FromServer::ActorControlSelf(ActorControlSelf {
-                        category: ActorControlCategory::WalkInTriggerRelatedUnk1 { unk1: 0 },
-                    });
-
-                    network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
-
-                    // Yes, this is actually sent every time the trigger event finishes...
-                    let msg = FromServer::ActorControlSelf(ActorControlSelf {
-                        category: ActorControlCategory::CompanionUnlock { unk1: 0, unk2: 1 },
-                    });
-
-                    network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
-
-                    let msg = FromServer::ActorControlSelf(ActorControlSelf {
-                        category: ActorControlCategory::WalkInTriggerRelatedUnk2 {
-                            unk1: 0,
-                            unk2: 0,
-                            unk3: 0,
-                            unk4: 7,
-                        },
-                    });
-
-                    network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
-                }
-
-                if let ClientTriggerCommand::SummonMinion { minion_id } = &trigger.trigger {
-                    let msg = FromServer::ActorSummonsMinion(*minion_id);
-
-                    let mut network = network.lock();
-                    network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
-                }
-
-                if let ClientTriggerCommand::DespawnMinion { .. } = &trigger.trigger {
-                    let msg = FromServer::ActorDespawnsMinion();
-
-                    let mut network = network.lock();
-                    network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
-                }
-
                 match &trigger.trigger {
+                    ClientTriggerCommand::TeleportQuery { aetheryte_id } => {
+                        let msg = FromServer::ActorControlSelf(ActorControlSelf {
+                            category: ActorControlCategory::TeleportStart {
+                                insufficient_gil: 0,
+                                aetheryte_id: *aetheryte_id,
+                            },
+                        });
+
+                        let mut network = network.lock();
+                        network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
+                    }
+                    ClientTriggerCommand::EventRelatedUnk { .. } => {
+                        let msg = FromServer::ActorControlSelf(ActorControlSelf {
+                            category: ActorControlCategory::MapMarkerUpdateBegin { unk1: 1 },
+                        });
+
+                        let mut network = network.lock();
+                        network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
+
+                        let msg = FromServer::ActorControlSelf(ActorControlSelf {
+                            category: ActorControlCategory::MapMarkerUpdateEnd { unk1: 0 },
+                        });
+                        network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
+                    }
+                    ClientTriggerCommand::WalkInTriggerFinished { .. } => {
+                        // This is where we finally release the client after the walk-in trigger.
+                        let msg = FromServer::Conditions(Conditions::default());
+
+                        let mut network = network.lock();
+                        network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
+
+                        let msg = FromServer::ActorControlSelf(ActorControlSelf {
+                            category: ActorControlCategory::WalkInTriggerRelatedUnk1 { unk1: 0 },
+                        });
+
+                        network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
+
+                        // Yes, this is actually sent every time the trigger event finishes...
+                        let msg = FromServer::ActorControlSelf(ActorControlSelf {
+                            category: ActorControlCategory::CompanionUnlock { unk1: 0, unk2: 1 },
+                        });
+
+                        network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
+
+                        let msg = FromServer::ActorControlSelf(ActorControlSelf {
+                            category: ActorControlCategory::WalkInTriggerRelatedUnk2 {
+                                unk1: 0,
+                                unk2: 0,
+                                unk3: 0,
+                                unk4: 7,
+                            },
+                        });
+
+                        network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
+                    }
+                    ClientTriggerCommand::SummonMinion { minion_id } => {
+                        let msg = FromServer::ActorSummonsMinion(*minion_id);
+
+                        let mut network = network.lock();
+                        network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
+                    }
+                    ClientTriggerCommand::DespawnMinion { .. } => {
+                        let msg = FromServer::ActorDespawnsMinion();
+
+                        let mut network = network.lock();
+                        network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
+                    }
                     ClientTriggerCommand::SetTarget {
                         actor_id,
                         actor_type,
