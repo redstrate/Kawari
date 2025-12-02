@@ -371,7 +371,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
             lua.clone(),
             &msg,
         );
-        handle_effect_messages(data.clone(), network.clone(), &msg);
+        handle_effect_messages(data.clone(), network.clone(), lua.clone(), &msg);
 
         match msg {
             ToServer::NewClient(handle) => {

@@ -2,17 +2,24 @@
 
 use std::{sync::Arc, time::Duration};
 
+use mlua::{Function, Lua};
 use parking_lot::Mutex;
 
 use crate::{
     common::ObjectId,
+    config::get_config,
     ipc::zone::{
         ActorControlCategory, ActorControlSelf, CommonSpawn, ServerZoneIpcData,
         ServerZoneIpcSegment, StatusEffect, StatusEffectList,
     },
     world::{
-        ClientId, StatusEffects, ToServer,
-        server::{WorldServer, actor::NetworkedActor, network::NetworkState},
+        ClientId, FromServer, PlayerData, StatusEffects, ToServer,
+        lua::{ExtraLuaState, LuaPlayer, LuaZone},
+        server::{
+            WorldServer,
+            actor::NetworkedActor,
+            network::{DestinationNetwork, NetworkState},
+        },
     },
 };
 
@@ -20,6 +27,7 @@ use crate::{
 pub fn handle_effect_messages(
     data: Arc<Mutex<WorldServer>>,
     network: Arc<Mutex<NetworkState>>,
+    lua: Arc<Mutex<Lua>>,
     msg: &ToServer,
 ) {
     match msg {
@@ -34,6 +42,7 @@ pub fn handle_effect_messages(
             gain_effect(
                 network.clone(),
                 data.clone(),
+                lua.clone(),
                 *from_id,
                 *from_actor_id,
                 *effect_id,
@@ -53,6 +62,7 @@ pub fn handle_effect_messages(
             remove_effect(
                 network.clone(),
                 data.clone(),
+                lua.clone(),
                 *from_id,
                 *from_actor_id,
                 *effect_id,
@@ -99,6 +109,7 @@ fn process_effects_list(
 pub fn gain_effect(
     network: Arc<Mutex<NetworkState>>,
     data: Arc<Mutex<WorldServer>>,
+    lua: Arc<Mutex<Lua>>,
     from_id: ClientId,
     from_actor_id: u32,
     effect_id: u16,
@@ -154,11 +165,17 @@ pub fn gain_effect(
         );
     }
 
+    // Scheduling doesn't make sense when the effect never ends.
+    if effect_duration == 0.0 {
+        return;
+    }
+
     // Finally, start scheduling the effect when it ends
     let send_lost_effect = |from_id: ClientId,
                             from_actor_id: u32,
                             network: Arc<Mutex<NetworkState>>,
                             data: Arc<Mutex<WorldServer>>,
+                            lua: Arc<Mutex<Lua>>,
                             effect_id: u16,
                             effect_param: u16,
                             effect_source_actor_id: ObjectId| {
@@ -167,6 +184,7 @@ pub fn gain_effect(
         remove_effect(
             network.clone(),
             data.clone(),
+            lua.clone(),
             from_id,
             from_actor_id,
             effect_id,
@@ -183,6 +201,7 @@ pub fn gain_effect(
     // we have to shadow these variables to tell rust not to move them into the async closure
     let network = network.clone();
     let data = data.clone();
+    let lua = lua.clone();
     let from_id = from_id.clone();
     let from_actor_id = from_actor_id.clone();
     let effect_id = effect_id.clone();
@@ -199,6 +218,7 @@ pub fn gain_effect(
             from_actor_id,
             network,
             data,
+            lua,
             effect_id,
             effect_param,
             effect_source_actor_id,
@@ -210,6 +230,7 @@ pub fn gain_effect(
 pub fn remove_effect(
     network: Arc<Mutex<NetworkState>>,
     data: Arc<Mutex<WorldServer>>,
+    lua: Arc<Mutex<Lua>>,
     from_id: ClientId,
     from_actor_id: u32,
     effect_id: u16,
@@ -266,5 +287,45 @@ pub fn remove_effect(
         from_actor_id,
     );
 
-    // TODO: run the effect script here...
+    // Also run the effect's Lua script in case it wants to do something!
+    {
+        let lua = lua.lock();
+        let state = lua.app_data_ref::<ExtraLuaState>().unwrap();
+
+        let mut lua_player = LuaPlayer {
+            player_data: PlayerData::default(),
+            status_effects: StatusEffects::default(),
+            queued_tasks: Vec::new(),
+            zone_data: LuaZone::default(),
+        };
+
+        let key = effect_id as u32;
+        if let Some(effect_script) = state.effect_scripts.get(&key) {
+            lua.scope(|scope| {
+                let connection_data = scope.create_userdata_ref_mut(&mut lua_player).unwrap();
+
+                let config = get_config();
+
+                let file_name = format!("{}/{}", &config.world.scripts_location, effect_script);
+                lua.load(std::fs::read(&file_name).expect("Failed to locate scripts directory!"))
+                    .set_name("@".to_string() + &file_name)
+                    .exec()
+                    .unwrap();
+
+                let func: Function = lua.globals().get("onLose").unwrap();
+
+                func.call::<()>(connection_data).unwrap();
+
+                Ok(())
+            })
+            .unwrap();
+        } else {
+            tracing::warn!("Effect {effect_id} isn't scripted yet! Ignoring...");
+        }
+
+        // Inform the client of any new Lua tasks
+        let mut network = network.lock();
+        let msg = FromServer::NewTasks(lua_player.queued_tasks);
+        network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
+    }
 }

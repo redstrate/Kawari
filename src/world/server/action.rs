@@ -233,6 +233,7 @@ pub fn execute_action(
                     gain_effect(
                         network.clone(),
                         data.clone(),
+                        lua.clone(),
                         from_id,
                         from_actor_id,
                         effect_id,
