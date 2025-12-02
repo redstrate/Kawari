@@ -102,6 +102,12 @@ pub enum ActorControlCategory {
     #[brw(magic = 138u32)]
     EventRelatedUnk3 { event_id: u32 },
 
+    #[brw(magic = 142u32)]
+    SetPvpMoveMode { unk1: u32 },
+
+    #[brw(magic = 142u32)]
+    SetImmediateAction { unk1: u32 },
+
     #[brw(magic = 156u32)]
     ToggleAdventureUnlock {
         id: u32, // Index to Adventure sheet
@@ -166,8 +172,9 @@ pub enum ActorControlCategory {
     },
 
     #[brw(magic = 260u32)]
-    WalkInTriggerRelatedUnk2 {
-        unk1: u32,
+    SetPetParameters {
+        /// If set to 0, hides the pet hotbar.
+        pet_id: u32,
         unk2: u32,
         unk3: u32,
         /// Usually 7?
@@ -195,7 +202,7 @@ pub enum ActorControlCategory {
     Pose { unk1: u32, pose: u32 },
 
     #[brw(magic = 263u32)]
-    WalkInTriggerRelatedUnk1 { unk1: u32 },
+    SetPetEntityId { unk1: u32 },
 
     #[brw(magic = 290u32)]
     Emote(CommonEmoteInfo),
@@ -235,10 +242,10 @@ pub enum ActorControlCategory {
     },
 
     #[brw(magic = 511u32)]
-    MapMarkerUpdateBegin { unk1: u32 },
+    MapMarkerUpdateBegin { flags: u32 },
 
     #[brw(magic = 512u32)]
-    MapMarkerUpdateEnd { unk1: u32 },
+    MapMarkerUpdateEnd {},
 
     #[brw(magic = 516u32)]
     ToggleCutsceneSeen {

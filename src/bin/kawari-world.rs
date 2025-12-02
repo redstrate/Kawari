@@ -807,7 +807,7 @@ async fn client_loop(
 
                                                         // Then these are also sent!
                                                         connection.actor_control_self(ActorControlSelf {
-                                                            category: ActorControlCategory::WalkInTriggerRelatedUnk1 { unk1: 0 }
+                                                            category: ActorControlCategory::SetPetEntityId { unk1: 0 }
                                                         }).await;
 
                                                         connection.actor_control_self(ActorControlSelf {
@@ -815,8 +815,8 @@ async fn client_loop(
                                                         }).await;
 
                                                         connection.actor_control_self(ActorControlSelf {
-                                                            category: ActorControlCategory::WalkInTriggerRelatedUnk2 {
-                                                                unk1: 0,
+                                                            category: ActorControlCategory::SetPetParameters {
+                                                                pet_id: 0,
                                                                 unk2: 0,
                                                                 unk3: 0,
                                                                 unk4: 7,

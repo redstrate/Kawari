@@ -341,7 +341,7 @@ impl LuaPlayer {
                 },
             })),
             ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
-                category: ActorControlCategory::WalkInTriggerRelatedUnk1 { unk1: 1 },
+                category: ActorControlCategory::SetPetEntityId { unk1: 1 },
             })),
         ];
 

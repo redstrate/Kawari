@@ -576,6 +576,9 @@ pub enum ServerZoneIpcData {
         #[brw(pad_after = 4)]
         terminator: u32,
     },
+    SupportDeskNotification {
+        unk1: [u8; 32],
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -905,6 +908,7 @@ mod tests {
                 house_summaries: Vec::default(),
                 terminator: 0,
             },
+            ServerZoneIpcData::SupportDeskNotification { unk1: [0; 32] },
         ];
 
         for data in &ipc_types {

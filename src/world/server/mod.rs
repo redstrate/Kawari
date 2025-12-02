@@ -504,14 +504,14 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     }
                     ClientTriggerCommand::EventRelatedUnk { .. } => {
                         let msg = FromServer::ActorControlSelf(ActorControlSelf {
-                            category: ActorControlCategory::MapMarkerUpdateBegin { unk1: 1 },
+                            category: ActorControlCategory::MapMarkerUpdateBegin { flags: 1 },
                         });
 
                         let mut network = network.lock();
                         network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
 
                         let msg = FromServer::ActorControlSelf(ActorControlSelf {
-                            category: ActorControlCategory::MapMarkerUpdateEnd { unk1: 0 },
+                            category: ActorControlCategory::MapMarkerUpdateEnd {},
                         });
                         network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
                     }
@@ -523,7 +523,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
 
                         let msg = FromServer::ActorControlSelf(ActorControlSelf {
-                            category: ActorControlCategory::WalkInTriggerRelatedUnk1 { unk1: 0 },
+                            category: ActorControlCategory::SetPetEntityId { unk1: 0 },
                         });
 
                         network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
@@ -536,8 +536,8 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
 
                         let msg = FromServer::ActorControlSelf(ActorControlSelf {
-                            category: ActorControlCategory::WalkInTriggerRelatedUnk2 {
-                                unk1: 0,
+                            category: ActorControlCategory::SetPetParameters {
+                                pet_id: 0,
                                 unk2: 0,
                                 unk3: 0,
                                 unk4: 7,

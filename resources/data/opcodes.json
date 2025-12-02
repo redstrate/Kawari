@@ -563,6 +563,12 @@
             "comment": "Sent by the server in response to the client requesting housing ward info on the residential aetheryte menu.",
             "opcode": 721,
             "size": 2416
+        },
+        {
+            "name": "SupportDeskNotification",
+            "comment": "Sent by the server to indicate you have a support desk notification(?)",
+            "opcode": 391,
+            "size": 32
         }
     ],
     "ClientZoneIpcType": [
