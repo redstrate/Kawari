@@ -1,5 +1,5 @@
-mod effects;
-pub use effects::EffectsBuilder;
+mod effects_builder;
+pub use effects_builder::EffectsBuilder;
 
 mod inventory;
 
