@@ -21,6 +21,7 @@ use crate::{
             action::handle_action_messages,
             actor::NetworkedActor,
             chat::handle_chat_messages,
+            effect::handle_effect_messages,
             instance::{Instance, NavmeshGenerationStep},
             network::{DestinationNetwork, NetworkState},
             social::handle_social_messages,
@@ -36,6 +37,7 @@ use crate::world::common::SpawnKind;
 mod action;
 mod actor;
 mod chat;
+mod effect;
 mod instance;
 mod network;
 mod social;
@@ -369,6 +371,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
             lua.clone(),
             &msg,
         );
+        handle_effect_messages(data.clone(), network.clone(), &msg);
 
         match msg {
             ToServer::NewClient(handle) => {
