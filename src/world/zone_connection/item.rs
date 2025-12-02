@@ -181,6 +181,7 @@ impl ZoneConnection {
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Equip(Equip {
             main_weapon_id,
             sub_weapon_id,
+            classjob_id: self.player_data.classjob_id,
             model_ids,
             ..Default::default()
         }));
@@ -201,7 +202,7 @@ impl ZoneConnection {
                 },
             })
             .await;
-            // Uknown what this is, it's seen when (un)equipping stuff.
+            // This seems to be pattern/crest related, it's seen when (un)equipping stuff.
             self.actor_control_self(ActorControlSelf {
                 category: ActorControlCategory::Unknown {
                     category: 57,

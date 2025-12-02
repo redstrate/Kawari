@@ -7,7 +7,7 @@ pub struct Equip {
     pub main_weapon_id: u64,
     pub sub_weapon_id: u64,
     pub crest_enable: u8,
-    #[brw(pad_before = 1)]
+    pub classjob_id: u8,
     pub pattern_invalid: u16,
     pub model_ids: [u32; 10],
     /// These appear to be some sort of display flags? They're continually included as long as the gear in question remains equipped.
