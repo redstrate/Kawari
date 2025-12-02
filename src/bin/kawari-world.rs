@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Instant;
@@ -151,7 +152,7 @@ async fn initial_setup(
                                     player_data: PlayerData::default(),
                                     spawn_index: 0,
                                     events: Vec::new(),
-                                    actors: Vec::new(),
+                                    spawned_actors: HashMap::new(),
                                     ip,
                                     id,
                                     handle: handle.clone(),

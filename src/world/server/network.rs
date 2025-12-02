@@ -4,7 +4,7 @@ use crate::{
     common::{INVALID_OBJECT_ID, ObjectId},
     ipc::zone::ServerZoneIpcSegment,
     world::{
-        Actor, ClientHandle, ClientId, FromServer,
+        ClientHandle, ClientId, FromServer,
         common::SpawnKind,
         server::{ClientState, instance::Instance, social::Party},
     },
@@ -27,12 +27,12 @@ pub enum DestinationNetwork {
 
 impl NetworkState {
     /// Tell all the clients that a new actor spawned.
-    pub fn send_actor(&mut self, actor: Actor, spawn: SpawnKind) {
+    pub fn send_actor(&mut self, actor_id: u32, spawn: SpawnKind) {
         // TODO: only send in the relevant instance
         for (id, (handle, _)) in &mut self.clients {
             let id = *id;
 
-            let msg = FromServer::ActorSpawn(actor, spawn.clone());
+            let msg = FromServer::ActorSpawn(actor_id, spawn.clone());
 
             if handle.send(msg).is_err() {
                 self.to_remove.push(id);

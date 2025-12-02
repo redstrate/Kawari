@@ -24,7 +24,7 @@ use crate::{
     world::{StatusEffects, lua::Task},
 };
 
-use super::{Actor, lua::LuaZone};
+use super::lua::LuaZone;
 
 #[derive(Copy, Clone, Default, Eq, PartialEq, Hash)]
 pub struct ClientId(usize);
@@ -81,7 +81,7 @@ pub enum FromServer {
     /// A chat message.
     Message(MessageInfo),
     /// An actor has been spawned.
-    ActorSpawn(Actor, SpawnKind),
+    ActorSpawn(u32, SpawnKind),
     /// An actor moved to a new position.
     ActorMove(
         u32,

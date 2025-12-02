@@ -14,7 +14,7 @@ use crate::{
     common::{GameData, ObjectId, Position, TerritoryNameKind, euler_to_direction},
     ipc::zone::{ActorControl, ActorControlCategory, ActorControlSelf},
     world::{
-        Actor, ClientId, FromServer, StatusEffects, ToServer,
+        ClientId, FromServer, StatusEffects, ToServer,
         common::SpawnKind,
         lua::LuaZone,
         server::{
@@ -345,14 +345,7 @@ pub fn handle_zone_messages(
                         }
                     };
 
-                    let msg = FromServer::ActorSpawn(
-                        Actor {
-                            id: *id,
-                            hp: 100,
-                            spawn_index: 0,
-                        },
-                        kind,
-                    );
+                    let msg = FromServer::ActorSpawn(id.0, kind);
 
                     network.send_to(*from_id, msg, DestinationNetwork::ZoneClients);
                 }
@@ -378,11 +371,7 @@ pub fn handle_zone_messages(
                     }
 
                     let msg = FromServer::ActorSpawn(
-                        Actor {
-                            id: ObjectId(client.actor_id),
-                            hp: 0,
-                            spawn_index: 0,
-                        },
+                        client.actor_id,
                         SpawnKind::Player(player_spawn.clone()),
                     );
 

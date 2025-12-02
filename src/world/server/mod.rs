@@ -30,7 +30,7 @@ use crate::{
     },
 };
 
-use super::{Actor, ClientId, FromServer, ToServer};
+use super::{ClientId, FromServer, ToServer};
 
 use crate::world::common::SpawnKind;
 
@@ -712,13 +712,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     instance.insert_npc(ObjectId(actor_id), npc_spawn.clone());
                 }
 
-                network.send_actor(
-                    Actor {
-                        id: ObjectId(actor_id),
-                        ..Default::default()
-                    },
-                    SpawnKind::Npc(npc_spawn),
-                );
+                network.send_actor(actor_id, SpawnKind::Npc(npc_spawn));
             }
             ToServer::DebugSpawnClone(_from_id, from_actor_id) => {
                 let mut data = data.lock();
@@ -748,13 +742,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     instance.insert_npc(ObjectId(actor_id), npc_spawn.clone());
                 }
 
-                network.send_actor(
-                    Actor {
-                        id: ObjectId(actor_id),
-                        ..Default::default()
-                    },
-                    SpawnKind::Npc(npc_spawn),
-                );
+                network.send_actor(actor_id, SpawnKind::Npc(npc_spawn));
             }
             ToServer::Config(_from_id, from_actor_id, config) => {
                 // update their stored state so it's correctly sent on new spawns

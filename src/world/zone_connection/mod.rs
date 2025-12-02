@@ -1,4 +1,4 @@
-use std::{net::SocketAddr, sync::Arc, time::Instant};
+use std::{collections::HashMap, net::SocketAddr, sync::Arc, time::Instant};
 
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
@@ -35,7 +35,7 @@ use crate::{
 };
 
 use super::{
-    Actor, Event, WorldDatabase,
+    Event, WorldDatabase,
     common::{ClientId, ServerHandle},
 };
 
@@ -200,9 +200,9 @@ pub struct ZoneConnection {
     pub player_data: PlayerData,
 
     pub spawn_index: u8,
+    pub spawned_actors: HashMap<u32, u8>,
 
     pub events: Vec<Event>,
-    pub actors: Vec<Actor>,
 
     pub ip: SocketAddr,
     pub id: ClientId,

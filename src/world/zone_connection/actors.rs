@@ -12,7 +12,7 @@ use crate::{
         PlayerSubKind, ServerZoneIpcData, ServerZoneIpcSegment, Warp,
     },
     packet::{PacketSegment, SegmentData, SegmentType},
-    world::{Actor, ZoneConnection, common::SpawnKind},
+    world::{ZoneConnection, common::SpawnKind},
 };
 
 impl ZoneConnection {
@@ -87,27 +87,27 @@ impl ZoneConnection {
         .await;
     }
 
-    pub async fn spawn_actor(&mut self, mut actor: Actor, spawn: SpawnKind) {
+    pub async fn spawn_actor(&mut self, actor_id: u32, spawn: SpawnKind) {
         // There is no reason for us to spawn our own player again. It's probably a bug!
-        assert!(actor.id.0 != self.player_data.actor_id);
+        assert!(actor_id != self.player_data.actor_id);
 
         let ipc;
-        actor.spawn_index = self.get_free_spawn_index() as u32;
+        let spawn_index = self.get_free_spawn_index();
 
         // TODO: Can this be deduplicated somehow?
         match spawn {
             SpawnKind::Player(mut spawn) => {
-                spawn.common.spawn_index = actor.spawn_index as u8;
+                spawn.common.spawn_index = spawn_index as u8;
                 spawn.common.target_id = ObjectTypeId {
-                    object_id: actor.id,
+                    object_id: ObjectId(actor_id),
                     object_type: ObjectTypeKind::None,
                 };
                 ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PlayerSpawn(spawn));
             }
             SpawnKind::Npc(mut spawn) => {
-                spawn.common.spawn_index = actor.spawn_index as u8;
+                spawn.common.spawn_index = spawn_index as u8;
                 spawn.common.target_id = ObjectTypeId {
-                    object_id: actor.id,
+                    object_id: ObjectId(actor_id),
                     object_type: ObjectTypeKind::None,
                 };
                 ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::NpcSpawn(spawn));
@@ -115,17 +115,17 @@ impl ZoneConnection {
         }
 
         self.send_segment(PacketSegment {
-            source_actor: actor.id.0,
+            source_actor: actor_id,
             target_actor: self.player_data.actor_id,
             segment_type: SegmentType::Ipc,
             data: SegmentData::Ipc(ipc),
         })
         .await;
 
-        self.actors.push(actor);
+        self.spawned_actors.insert(actor_id, spawn_index);
 
         self.actor_control(
-            actor.id.0,
+            actor_id,
             ActorControl {
                 category: ActorControlCategory::ZoneIn {
                     warp_finish_anim: 1,
@@ -138,28 +138,23 @@ impl ZoneConnection {
     }
 
     pub async fn remove_actor(&mut self, actor_id: u32) {
-        if let Some(actor) = self.get_actor(ObjectId(actor_id)).cloned() {
-            tracing::info!("Removing actor {actor_id} {}!", actor.spawn_index);
+        if let Some(spawn_index) = self.get_actor_spawn_index(ObjectId(actor_id)) {
+            tracing::info!("Removing actor {actor_id} {}!", spawn_index);
 
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Delete {
-                spawn_index: actor.spawn_index as u8,
+                spawn_index: spawn_index,
                 actor_id,
             });
 
             self.send_segment(PacketSegment {
-                source_actor: actor.id.0,
+                source_actor: actor_id,
                 target_actor: self.player_data.actor_id,
                 segment_type: SegmentType::Ipc,
                 data: SegmentData::Ipc(ipc),
             })
             .await;
 
-            self.actors.remove(
-                self.actors
-                    .iter()
-                    .position(|actor| actor.id == ObjectId(actor_id))
-                    .unwrap(),
-            );
+            self.spawned_actors.remove(&actor_id);
         }
     }
 
@@ -171,12 +166,8 @@ impl ZoneConnection {
         .await;
     }
 
-    pub fn get_actor_mut(&mut self, id: ObjectId) -> Option<&mut Actor> {
-        self.actors.iter_mut().find(|actor| actor.id == id)
-    }
-
-    pub fn get_actor(&self, id: ObjectId) -> Option<&Actor> {
-        self.actors.iter().find(|actor| actor.id == id)
+    pub fn get_actor_spawn_index(&self, id: ObjectId) -> Option<u8> {
+        self.spawned_actors.get(&id.0).copied()
     }
 
     pub async fn actor_control_self(&mut self, actor_control: ActorControlSelf) {

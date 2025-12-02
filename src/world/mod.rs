@@ -16,9 +16,6 @@ mod event;
 pub use event::Event;
 pub use event::EventFinishType;
 
-mod actor;
-pub use actor::Actor;
-
 mod status_effects;
 pub use status_effects::StatusEffects;
 
