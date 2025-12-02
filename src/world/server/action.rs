@@ -159,20 +159,39 @@ pub fn execute_action(
 
     // tell them the action results
     if let Some(effects_builder) = effects_builder {
-        // TODO: restore HP update
-        /*if let Some(actor) = self.get_actor_mut(request.target.object_id) {
+        // Update our internal data model to their new HP
+        {
+            let mut data = data.lock();
+
+            let Some(instance) = data.find_actor_instance_mut(request.target.object_id.0) else {
+                return Vec::default();
+            };
+
+            let Some(actor) = instance.find_actor_mut(request.target.object_id) else {
+                return Vec::default();
+            };
+
+            let common_spawn = actor.get_common_spawn_mut();
+
             for effect in &effects_builder.effects {
                 match effect.kind {
                     EffectKind::Damage { amount, .. } => {
-                        actor.hp = actor.hp.saturating_sub(amount as u32);
+                        common_spawn.hp_curr = common_spawn.hp_curr.saturating_sub(amount as u32);
                     }
                     _ => todo!(),
                 }
             }
 
-            let actor = *actor;
-            self.update_hp_mp(actor.id, actor.hp, 10000).await;
-        }*/
+            // Inform the client of the new actor's HP/MP
+            // TODO: send to all relevant players
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateHpMpTp {
+                hp: common_spawn.hp_curr,
+                mp: common_spawn.mp_curr,
+                unk: 0,
+            });
+            let mut network = network.lock();
+            network.send_ipc_to(from_id, ipc, request.target.object_id.0);
+        }
 
         // TODO: send Cooldown ActorControlSelf
 

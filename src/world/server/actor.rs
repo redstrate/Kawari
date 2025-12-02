@@ -30,6 +30,13 @@ impl NetworkedActor {
         }
     }
 
+    pub fn get_common_spawn_mut(&mut self) -> &mut CommonSpawn {
+        match self {
+            NetworkedActor::Player { spawn, .. } => &mut spawn.common,
+            NetworkedActor::Npc { spawn, .. } => &mut spawn.common,
+        }
+    }
+
     pub fn get_player_spawn(&self) -> Option<&PlayerSpawn> {
         match &self {
             NetworkedActor::Player { spawn, .. } => Some(spawn),
