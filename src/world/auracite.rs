@@ -2,7 +2,7 @@ use serde::Deserialize;
 use std::{io::BufReader, io::Read};
 
 use crate::{
-    common::{CustomizeData, GameData, workdefinitions::CharaMake},
+    common::{CustomizeData, GameData, ObjectId, workdefinitions::CharaMake},
     inventory::{Inventory, Item, Storage},
     world::WorldDatabase,
 };
@@ -160,7 +160,7 @@ impl WorldDatabase {
             game_data,
         );
 
-        let mut player_data = self.find_player_data(actor_id, game_data);
+        let mut player_data = self.find_player_data(ObjectId(actor_id), game_data);
 
         // import jobs
         for classjob in &character.classjob_levels {

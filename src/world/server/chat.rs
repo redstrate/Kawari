@@ -47,7 +47,7 @@ pub fn handle_chat_messages(
             let mut sender_account_id = 0;
 
             for (id, actor) in &sender_instance.actors {
-                if id.0 == *from_actor_id {
+                if *id == *from_actor_id {
                     let Some(spawn) = actor.get_player_spawn() else {
                         panic!("Why are we trying to get the PlayerSpawn of an NPC?");
                     };
@@ -87,7 +87,7 @@ pub fn handle_chat_messages(
                 };
 
                 network.send_to_by_actor_id(
-                    recipient_actor_id.0,
+                    recipient_actor_id,
                     FromServer::TellMessageSent(message_info),
                     DestinationNetwork::ChatClients,
                 );
@@ -118,7 +118,7 @@ pub fn handle_chat_messages(
                 if party.chatchannel_id == message_info.chatchannel.channel_number {
                     party_id = *id;
                     for member in &party.members {
-                        if member.actor_id.0 == *from_actor_id {
+                        if member.actor_id == *from_actor_id {
                             sender = member.clone();
                         }
                     }
@@ -132,7 +132,7 @@ pub fn handle_chat_messages(
                 sender_account_id: sender.account_id,
                 sender_content_id: sender.content_id,
                 sender_world_id: sender.world_id,
-                sender_actor_id: sender.actor_id.0,
+                sender_actor_id: sender.actor_id,
                 sender_name: sender.name.clone(),
                 message: message_info.message.clone(),
             };

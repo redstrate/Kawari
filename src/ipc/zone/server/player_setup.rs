@@ -1,7 +1,7 @@
 use binrw::binrw;
 
 use crate::{
-    common::{CHAR_NAME_MAX_LENGTH, read_string, write_string},
+    common::{CHAR_NAME_MAX_LENGTH, ObjectId, read_string, write_string},
     constants::{
         ACTIVE_HELP_BITMASK_SIZE, ADVENTURE_BITMASK_SIZE, AETHER_CURRENT_BITMASK_SIZE,
         AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE, AETHERYTE_UNLOCK_BITMASK_SIZE,
@@ -23,7 +23,7 @@ pub struct PlayerStatus {
     /// This seems to be unused by the client.
     pub padding: [u64; 2],
     /// The actor ID of the player.
-    pub actor_id: u32,
+    pub actor_id: ObjectId,
     pub rested_exp: u32,
     pub companion_current_exp: u32,
     pub unknown1c: u32,

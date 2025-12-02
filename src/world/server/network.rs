@@ -27,7 +27,7 @@ pub enum DestinationNetwork {
 
 impl NetworkState {
     /// Tell all the clients that a new actor spawned.
-    pub fn send_actor(&mut self, actor_id: u32, spawn: SpawnKind) {
+    pub fn send_actor(&mut self, actor_id: ObjectId, spawn: SpawnKind) {
         // TODO: only send in the relevant instance
         for (id, (handle, _)) in &mut self.clients {
             let id = *id;
@@ -41,7 +41,12 @@ impl NetworkState {
     }
 
     /// Inform all clients in an instance that the actor has left.
-    pub fn inform_remove_actor(&mut self, instance: &Instance, from_id: ClientId, actor_id: u32) {
+    pub fn inform_remove_actor(
+        &mut self,
+        instance: &Instance,
+        from_id: ClientId,
+        actor_id: ObjectId,
+    ) {
         for (id, (handle, _)) in &mut self.clients {
             let id = *id;
 
@@ -51,7 +56,7 @@ impl NetworkState {
             }
 
             // Skip any clients not in this instance
-            if !instance.actors.contains_key(&ObjectId(handle.actor_id)) {
+            if !instance.actors.contains_key(&handle.actor_id) {
                 continue;
             }
 
@@ -121,7 +126,7 @@ impl NetworkState {
 
     pub fn send_to_by_actor_id(
         &mut self,
-        actor_id: u32,
+        actor_id: ObjectId,
         message: FromServer,
         destination: DestinationNetwork,
     ) {
@@ -149,7 +154,7 @@ impl NetworkState {
     pub fn send_to_party(
         &mut self,
         party_id: u64,
-        from_actor_id: Option<u32>,
+        from_actor_id: Option<ObjectId>,
         message: FromServer,
         destination: DestinationNetwork,
     ) {
@@ -166,7 +171,7 @@ impl NetworkState {
 
             // Skip a desired party member if needed.
             if let Some(from_actor_id) = from_actor_id
-                && from_actor_id == member.actor_id.0
+                && from_actor_id == member.actor_id
             {
                 continue;
             }
@@ -192,7 +197,7 @@ impl NetworkState {
         &mut self,
         client_id: ClientId,
         ipc: ServerZoneIpcSegment,
-        from_actor_id: u32,
+        from_actor_id: ObjectId,
     ) {
         let clients = &mut self.clients;
         let message = FromServer::PacketSegment(ipc, from_actor_id);

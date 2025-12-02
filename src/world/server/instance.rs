@@ -98,9 +98,9 @@ impl Instance {
         );
     }
 
-    pub fn generate_actor_id() -> u32 {
+    pub fn generate_actor_id() -> ObjectId {
         // TODO: ensure we don't collide with another actor
-        fastrand::u32(..)
+        ObjectId(fastrand::u32(..))
     }
 
     pub fn find_all_players(&self) -> Vec<ObjectId> {

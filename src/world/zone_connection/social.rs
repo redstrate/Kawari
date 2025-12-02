@@ -145,7 +145,7 @@ impl ZoneConnection {
             new_status_mask.set_status(OnlineStatus::Online);
             new_status_mask.set_status(OnlineStatus::PartyMember);
             let mut icon = OnlineStatus::PartyMember;
-            if self.player_data.actor_id == leader_actor_id.0 {
+            if self.player_data.actor_id == leader_actor_id {
                 new_status_mask.set_status(OnlineStatus::PartyLeader);
                 icon = OnlineStatus::PartyLeader;
             }
@@ -162,7 +162,7 @@ impl ZoneConnection {
 
             // We edit the party list to hide information of players not in our zone.
             for member in party_list.iter_mut() {
-                if (member.actor_id.0 != self.player_data.actor_id
+                if (member.actor_id != self.player_data.actor_id
                     && member.current_zone_id != self.player_data.zone_id)
                     || (update_status == PartyUpdateStatus::MemberWentOffline
                         && member.content_id == targets.execute_content_id)

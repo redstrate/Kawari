@@ -6,7 +6,8 @@ use tokio::net::TcpStream;
 
 use crate::{
     common::{
-        Bitmask, ClientLanguage, EquipDisplayFlag, GameData, ObjectTypeId, Position, timestamp_secs,
+        Bitmask, ClientLanguage, EquipDisplayFlag, GameData, ObjectId, ObjectTypeId, Position,
+        timestamp_secs,
     },
     config::WorldConfig,
     constants::{
@@ -140,7 +141,7 @@ pub struct PersistentQuest {
 #[derive(Debug, Default, Clone)]
 pub struct PlayerData {
     // Static data
-    pub actor_id: u32,
+    pub actor_id: ObjectId,
     pub content_id: u64,
     pub account_id: u64,
 
@@ -200,7 +201,7 @@ pub struct ZoneConnection {
     pub player_data: PlayerData,
 
     pub spawn_index: u8,
-    pub spawned_actors: HashMap<u32, u8>,
+    pub spawned_actors: HashMap<ObjectId, u8>,
 
     pub events: Vec<Event>,
 

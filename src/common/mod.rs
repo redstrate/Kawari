@@ -29,7 +29,7 @@ pub struct ObjectId(pub u32);
 
 impl ObjectId {
     /// Returns true if it points to a *valid-looking* object id.
-    fn is_valid(&self) -> bool {
+    pub fn is_valid(&self) -> bool {
         *self != INVALID_OBJECT_ID
     }
 }

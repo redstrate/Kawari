@@ -61,7 +61,7 @@ pub struct PartyUpdateTargets {
 #[derive(Clone, Debug, Default)]
 pub struct MessageInfo {
     /// The sender's actor id.
-    pub sender_actor_id: u32,
+    pub sender_actor_id: ObjectId,
     /// The sender's account id. Likely used by the client to know to ignore the message if this player is blocked.
     pub sender_account_id: u64,
     /// The sender's home world id. Used for purposes of displaying their home world in the chat window.
@@ -81,10 +81,10 @@ pub enum FromServer {
     /// A chat message.
     Message(MessageInfo),
     /// An actor has been spawned.
-    ActorSpawn(u32, SpawnKind),
+    ActorSpawn(ObjectId, SpawnKind),
     /// An actor moved to a new position.
     ActorMove(
-        u32,
+        ObjectId,
         Position,
         f32,
         MoveAnimationType,
@@ -92,17 +92,17 @@ pub enum FromServer {
         JumpState,
     ),
     // An actor has despawned.
-    ActorDespawn(u32),
+    ActorDespawn(ObjectId),
     /// We need to update an actor
-    ActorControl(u32, ActorControl),
+    ActorControl(ObjectId, ActorControl),
     /// We need to update an actor's target
-    ActorControlTarget(u32, ActorControlTarget),
+    ActorControlTarget(ObjectId, ActorControlTarget),
     /// We need to update the player actor
     ActorControlSelf(ActorControlSelf),
     /// Update an actor's equip display flags.
-    UpdateConfig(u32, Config),
+    UpdateConfig(ObjectId, Config),
     /// Update an actor's model IDs.
-    ActorEquip(u32, u64, u64, [u32; 10]),
+    ActorEquip(ObjectId, u64, u64, [u32; 10]),
     /// We need to summon a player's minion, and tell other clients
     ActorSummonsMinion(u32),
     /// We need to despawn a player's minion, and tell other clients
@@ -145,7 +145,7 @@ pub enum FromServer {
     /// Inform the client they were in a party, and request that they inform us of their return.
     RejoinPartyAfterDisconnect(u64),
     /// Send an arbitrary IPC segment to the client.
-    PacketSegment(ServerZoneIpcSegment, u32),
+    PacketSegment(ServerZoneIpcSegment, ObjectId),
     /// Set of Lua tasks queued up from the server.
     NewTasks(Vec<Task>),
     /// New copy of the status effects list, for use in Lua scripting.
@@ -157,7 +157,7 @@ pub struct ClientHandle {
     pub id: ClientId,
     pub ip: SocketAddr,
     pub channel: Sender<FromServer>,
-    pub actor_id: u32,
+    pub actor_id: ObjectId,
 }
 
 impl ClientHandle {
@@ -193,7 +193,7 @@ pub enum ToServer {
     /// The connection's player moved.
     ActorMoved(
         ClientId,
-        u32,
+        ObjectId,
         Position,
         f32,
         MoveAnimationType,
@@ -201,59 +201,59 @@ pub enum ToServer {
         JumpState,
     ),
     /// The connection has recieved a client trigger.
-    ClientTrigger(ClientId, u32, ClientTrigger),
+    ClientTrigger(ClientId, ObjectId, ClientTrigger),
     /// The connection loaded into a zone.
     // TODO: the connection should not be in charge and telling the global server what zone they just loaded in! but this will work for now
     ZoneLoaded(ClientId, u16, PlayerSpawn),
     /// The connection wants to enter a new zone.
     // TODO: temporary as this is only used for commands and those aren't run on global server state yet
-    ChangeZone(ClientId, u32, u16, Option<Position>, Option<f32>),
+    ChangeZone(ClientId, ObjectId, u16, Option<Position>, Option<f32>),
     /// The player walks through a zone change line.
-    EnterZoneJump(ClientId, u32, u32),
+    EnterZoneJump(ClientId, ObjectId, u32),
     /// The connection disconnected.
-    Disconnected(ClientId, u32),
+    Disconnected(ClientId, ObjectId),
     /// A fatal error occured.
     FatalError(std::io::Error),
     /// Spawn an enemy debug NPC.
-    DebugNewEnemy(ClientId, u32, u32),
+    DebugNewEnemy(ClientId, ObjectId, u32),
     /// Spawn a debug clone.
-    DebugSpawnClone(ClientId, u32),
+    DebugSpawnClone(ClientId, ObjectId),
     /// Request to perform an action
-    ActionRequest(ClientId, u32, ActionRequest),
+    ActionRequest(ClientId, ObjectId, ActionRequest),
     /// We want to update our own equip display flags.
-    Config(ClientId, u32, Config),
+    Config(ClientId, ObjectId, Config),
     /// Tell the server what models IDs we have equipped.
-    Equip(ClientId, u32, u64, u64, [u32; 10]),
+    Equip(ClientId, ObjectId, u64, u64, [u32; 10]),
     /// The player gains an effect.
-    GainEffect(ClientId, u32, u16, u16, f32, ObjectId),
+    GainEffect(ClientId, ObjectId, u16, u16, f32, ObjectId),
     /// The player loses an effect.
-    LoseEffect(ClientId, u32, u16, u16, ObjectId),
+    LoseEffect(ClientId, ObjectId, u16, u16, ObjectId),
     /// Warp with the specified id.
-    Warp(ClientId, u32, u32),
+    Warp(ClientId, ObjectId, u32),
     /// Warp with the specified aetheryte id.
-    WarpAetheryte(ClientId, u32, u32),
+    WarpAetheryte(ClientId, ObjectId, u32),
     /// Ready to spawn the player (this happens during initrequest)
     ReadySpawnPlayer(ClientId, u16, Position, f32),
     /// Ready to send the ZoneIn ACS
-    ZoneIn(ClientId, u32, bool),
+    ZoneIn(ClientId, ObjectId, bool),
     /// We need to summon a player's minion, and tell other clients
-    ActorSummonsMinion(ClientId, u32, u32),
+    ActorSummonsMinion(ClientId, ObjectId, u32),
     /// We need to despawn a player's minion, and tell other clients
-    ActorDespawnsMinion(ClientId, u32),
+    ActorDespawnsMinion(ClientId, ObjectId),
     /// Move the player's actor to the specified pop range.
-    MoveToPopRange(ClientId, u32, u32, bool),
+    MoveToPopRange(ClientId, ObjectId, u32, bool),
     /// The connection sent a direct message to another client.
-    TellMessageSent(ClientId, u32, SendTellMessage),
+    TellMessageSent(ClientId, ObjectId, SendTellMessage),
     /// The client invited another player to join their party.
     InvitePlayerToParty(ObjectId, u64, String),
     /// The client replied to another player's invite.
     InvitationResponse(ClientId, u64, u64, String, u64, InviteType, InviteReply),
     /// The party leader is adding a member to their party.
-    AddPartyMember(u64, u32, u64),
+    AddPartyMember(u64, ObjectId, u64),
     /// The client sent a message to their party.
-    PartyMessageSent(u32, SendPartyMessage),
+    PartyMessageSent(ObjectId, SendPartyMessage),
     /// The client is requesting a social list update.
-    RequestSocialList(ClientId, u32, u64, SocialListRequest),
+    RequestSocialList(ClientId, ObjectId, u64, SocialListRequest),
     /// The client is designating another player in the party as leader.
     PartyChangeLeader(u64, u64, u64, String, u64, String),
     /// The client is removing another player from the party.
@@ -261,17 +261,17 @@ pub enum ToServer {
     /// The client changed areas.
     PartyMemberChangedAreas(u64, u64, u64, String),
     /// The client left their party.
-    PartyMemberLeft(u64, u64, u64, u32, String),
+    PartyMemberLeft(u64, u64, u64, ObjectId, String),
     /// The client disbands their party.
     PartyDisband(u64, u64, u64, String),
     /// The chat connection acknowledges the shutdown notice, and now we need to remove it from our internal state.
     ChatDisconnected(ClientId),
     /// The client went offline and we need to inform other party members.
-    PartyMemberOffline(u64, u64, u64, u32, String),
+    PartyMemberOffline(u64, u64, u64, ObjectId, String),
     /// The client returned online and we need to inform other party members.
-    PartyMemberReturned(u32),
+    PartyMemberReturned(ObjectId),
     /// The client is requesting to join the following content.
-    JoinContent(ClientId, u32, u16),
+    JoinContent(ClientId, ObjectId, u16),
 }
 
 #[derive(Clone, Debug)]

@@ -181,11 +181,11 @@ async fn initial_setup(
                                             let actor_id = actor_id.parse::<u32>().unwrap();
 
                                             // initialize player data if it doesn't exist
-                                            if connection.player_data.actor_id == 0 {
+                                            if !connection.player_data.actor_id.is_valid() {
                                                 let player_data;
                                                 {
                                                     let mut game_data = connection.gamedata.lock();
-                                                    player_data = database.find_player_data(actor_id, &mut game_data);
+                                                    player_data = database.find_player_data(ObjectId(actor_id), &mut game_data);
                                                 }
                                                 connection.player_data = player_data;
                                             }
@@ -210,7 +210,7 @@ async fn initial_setup(
                                     config: get_config().world,
                                     ip,
                                     id,
-                                    actor_id: 0,
+                                    actor_id: INVALID_OBJECT_ID,
                                     state,
                                     last_keep_alive: Instant::now(),
                                     socket,
@@ -225,7 +225,7 @@ async fn initial_setup(
                                         SegmentData::Setup { actor_id } => {
                                             // for some reason they send a string representation
                                             let actor_id = actor_id.parse::<u32>().unwrap();
-                                            connection.actor_id = actor_id;
+                                            connection.actor_id = ObjectId(actor_id);
                                             connection.initialize().await;
                                         }
                                         _ => panic!("initial_setup: The chat connection type must start with a Setup segment! What happened? Received: {segment:#?}")
@@ -1462,7 +1462,7 @@ async fn client_loop(
                                                 connection.conditions.set_condition(Condition::OccupiedInQuestEvent);
                                                 connection.send_conditions().await;
 
-                                                let actor_id = ObjectTypeId { object_id: ObjectId(connection.player_data.actor_id), object_type: ObjectTypeKind::None };
+                                                let actor_id = ObjectTypeId { object_id: connection.player_data.actor_id, object_type: ObjectTypeKind::None };
                                                 connection.start_event(actor_id, *event_id, EventType::WithinRange, *event_arg, &mut lua_player).await;
 
                                                 // begin walk-in trigger function if it exists
@@ -1483,7 +1483,7 @@ async fn client_loop(
                                                 connection.conditions.set_condition(Condition::OccupiedInQuestEvent);
                                                 connection.send_conditions().await;
 
-                                                let actor_id = ObjectTypeId { object_id: ObjectId(connection.player_data.actor_id), object_type: ObjectTypeKind::None };
+                                                let actor_id = ObjectTypeId { object_id: connection.player_data.actor_id, object_type: ObjectTypeKind::None };
                                                 connection.start_event(actor_id, *event_id, EventType::OutsideRange, *event_arg, &mut lua_player).await;
 
                                                 // begin walk-in trigger function if it exists
@@ -1539,7 +1539,7 @@ async fn client_loop(
                                                 tracing::info!("Client invited a character! {:#?} {:#?} {:#?} {:#?} {:#?}", content_id, world_id, invite_type, character_name, data.data);
                                                 match invite_type {
                                                     InviteType::Party => {
-                                                        connection.handle.send(ToServer::InvitePlayerToParty(ObjectId(connection.player_data.actor_id), *content_id, character_name.clone())).await;
+                                                        connection.handle.send(ToServer::InvitePlayerToParty(connection.player_data.actor_id, *content_id, character_name.clone())).await;
                                                         // Inform the client about the invite they just sent.
                                                         // TODO: Is this static? unk1 and unk2 haven't been observed to have other values so far.
                                                         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InviteCharacterResult {
@@ -1683,7 +1683,7 @@ async fn client_loop(
     }
 
     // forcefully log out the player if they weren't logging out but force D/C'd
-    if connection.player_data.actor_id != 0 {
+    if connection.player_data.actor_id != INVALID_OBJECT_ID {
         if !connection.gracefully_logged_out {
             tracing::info!(
                 "Forcefully logging out connection {:#?}...",

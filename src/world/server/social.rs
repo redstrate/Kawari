@@ -53,7 +53,7 @@ impl PartyMember {
 #[derive(Clone, Debug, Default)]
 pub struct Party {
     pub members: [PartyMember; PartyMemberEntry::NUM_ENTRIES],
-    leader_id: u32,
+    leader_id: ObjectId,
     pub chatchannel_id: u32, // There's no reason to store a full u64/ChatChannel here, as it's created properly in the chat connection!
 }
 
@@ -69,18 +69,18 @@ impl Party {
             .count()
     }
 
-    pub fn remove_member(&mut self, member_to_remove: u32) {
+    pub fn remove_member(&mut self, member_to_remove: ObjectId) {
         for member in self.members.iter_mut() {
-            if member.actor_id.0 == member_to_remove {
+            if member.actor_id == member_to_remove {
                 *member = PartyMember::default();
                 break;
             }
         }
     }
 
-    pub fn set_member_offline(&mut self, offline_member: u32) {
+    pub fn set_member_offline(&mut self, offline_member: ObjectId) {
         for member in self.members.iter_mut() {
-            if member.actor_id.0 == offline_member {
+            if member.actor_id == offline_member {
                 member.zone_client_id = ClientId::default();
                 member.chat_client_id = ClientId::default();
                 break;
@@ -88,10 +88,10 @@ impl Party {
         }
     }
 
-    pub fn auto_promote_member(&mut self) -> u32 {
+    pub fn auto_promote_member(&mut self) -> ObjectId {
         for member in &self.members {
-            if member.is_valid() && member.is_online() && member.actor_id.0 != self.leader_id {
-                self.leader_id = member.actor_id.0;
+            if member.is_valid() && member.is_online() && member.actor_id != self.leader_id {
+                self.leader_id = member.actor_id;
                 break;
             }
         }
@@ -107,9 +107,9 @@ impl Party {
         }
         None
     }
-    pub fn get_member_by_actor_id(&self, actor_id: u32) -> Option<PartyMember> {
+    pub fn get_member_by_actor_id(&self, actor_id: ObjectId) -> Option<PartyMember> {
         for member in &self.members {
-            if member.actor_id.0 == actor_id {
+            if member.actor_id == actor_id {
                 return Some(member.clone());
             }
         }
@@ -180,7 +180,7 @@ pub fn handle_social_messages(
             let data = data.lock();
 
             // First pull up some info about the sender, as tell packets require it
-            let Some(sender_instance) = data.find_actor_instance(from_actor_id.0) else {
+            let Some(sender_instance) = data.find_actor_instance(*from_actor_id) else {
                 tracing::error!(
                     "ToServer::InvitePlayerToParty: Unable to find the sender! What happened?"
                 );
@@ -192,7 +192,7 @@ pub fn handle_social_messages(
             let mut sender_content_id = 0;
 
             for (id, actor) in &sender_instance.actors {
-                if id.0 == from_actor_id.0 {
+                if id == from_actor_id {
                     let Some(spawn) = actor.get_player_spawn() else {
                         panic!("Why are we trying to get the PlayerSpawn of an NPC?");
                     };
@@ -239,7 +239,7 @@ pub fn handle_social_messages(
                 if recipient_actor_id != INVALID_OBJECT_ID {
                     let mut to_remove = Vec::new();
                     for (id, (handle, _)) in &mut network.clients {
-                        if handle.actor_id == recipient_actor_id.0 {
+                        if handle.actor_id == recipient_actor_id {
                             let msg = FromServer::PartyInvite(
                                 sender_account_id,
                                 sender_content_id,
@@ -260,7 +260,7 @@ pub fn handle_social_messages(
                 }
             } else {
                 let msg = FromServer::CharacterAlreadyInParty();
-                network.send_to_by_actor_id(from_actor_id.0, msg, DestinationNetwork::ZoneClients);
+                network.send_to_by_actor_id(*from_actor_id, msg, DestinationNetwork::ZoneClients);
             }
         }
         ToServer::InvitationResponse(
@@ -295,7 +295,7 @@ pub fn handle_social_messages(
                 let mut to_remove = Vec::new();
                 for (id, (handle, _)) in &mut network.clients {
                     // Tell the invite sender about the invite result
-                    if handle.actor_id == recipient_actor_id.0
+                    if handle.actor_id == recipient_actor_id
                         && recipient_actor_id != INVALID_OBJECT_ID
                     {
                         let msg = FromServer::InvitationResult(
@@ -351,11 +351,11 @@ pub fn handle_social_messages(
                                 continue;
                             }
 
-                            let Some(instance) = data.find_actor_instance(member.actor_id.0) else {
+                            let Some(instance) = data.find_actor_instance(member.actor_id) else {
                                 // TOOD: This situation might be panic-worthy? Reality should have broken, or an invalid party member slipped past the earlier check if this trips.
                                 tracing::error!(
                                     "Unable to find this actor in any instance, what happened? {} {}",
-                                    member.actor_id.0,
+                                    member.actor_id,
                                     member.name.clone()
                                 );
                                 continue;
@@ -371,7 +371,7 @@ pub fn handle_social_messages(
                                     let mut online_status_mask = OnlineStatusMask::default();
                                     online_status_mask.set_status(OnlineStatus::Online);
                                     online_status_mask.set_status(OnlineStatus::PartyMember);
-                                    if member.actor_id.0 == leader_actor_id {
+                                    if member.actor_id == leader_actor_id {
                                         online_status_mask.set_status(OnlineStatus::PartyLeader);
                                     }
                                     entries[index].online_status_mask = online_status_mask;
@@ -397,7 +397,7 @@ pub fn handle_social_messages(
                         };
 
                         for (id, actor) in &instance.actors {
-                            if id.0 == *from_actor_id {
+                            if *id == *from_actor_id {
                                 let Some(spawn) = actor.get_player_spawn() else {
                                     panic!("Why are we trying to get the PlayerSpawn of an NPC?");
                                 };
@@ -443,7 +443,7 @@ pub fn handle_social_messages(
                 let party = network.parties.entry(party_id).or_default();
                 party.chatchannel_id = chatchannel_id;
                 party.leader_id = *leader_actor_id;
-                party.members[0].actor_id = ObjectId(*leader_actor_id);
+                party.members[0].actor_id = *leader_actor_id;
             }
 
             if let Some(party) = network.parties.get(&party_id) {
@@ -482,7 +482,7 @@ pub fn handle_social_messages(
                             target_name = spawn.common.name.clone();
                         }
 
-                        if id.0 == *leader_actor_id {
+                        if *id == *leader_actor_id {
                             execute_account_id = spawn.account_id;
                             execute_content_id = spawn.content_id;
                             execute_name = spawn.common.name.clone();
@@ -534,7 +534,7 @@ pub fn handle_social_messages(
                     Some((
                         party_id,
                         chatchannel_id,
-                        ObjectId(*leader_actor_id),
+                        *leader_actor_id,
                         party_list.clone(),
                     )),
                 );
@@ -545,7 +545,7 @@ pub fn handle_social_messages(
                 // Also cache their client ids to speed up sending future replies.
                 for (id, (handle, _)) in &mut network.clients {
                     for member in &mut party {
-                        if member.actor_id.0 == handle.actor_id {
+                        if member.actor_id == handle.actor_id {
                             member.zone_client_id = *id;
                             if handle.send(msg.clone()).is_err() {
                                 to_remove.push(*id);
@@ -560,7 +560,7 @@ pub fn handle_social_messages(
                 // Also cache their client ids to speed up sending future replies.
                 for (id, (handle, _)) in &mut network.chat_clients {
                     for member in &mut party {
-                        if member.actor_id.0 == handle.actor_id {
+                        if member.actor_id == handle.actor_id {
                             member.chat_client_id = *id;
                             if handle.send(msg.clone()).is_err() {
                                 to_remove.push(*id);
@@ -595,12 +595,7 @@ pub fn handle_social_messages(
                     ..Default::default()
                 },
                 PartyUpdateStatus::MemberChangedZones,
-                Some((
-                    *party_id,
-                    party.chatchannel_id,
-                    ObjectId(party.leader_id),
-                    party_list,
-                )),
+                Some((*party_id, party.chatchannel_id, party.leader_id, party_list)),
             );
 
             // Finally, tell everyone in the party about the update.
@@ -627,7 +622,7 @@ pub fn handle_social_messages(
                 let Some(member) = party.get_member_by_content_id(*target_content_id) else {
                     return;
                 };
-                party.leader_id = member.actor_id.0;
+                party.leader_id = member.actor_id;
                 target_account_id = member.account_id;
             }
 
@@ -645,12 +640,7 @@ pub fn handle_social_messages(
                     target_name: target_name.clone(),
                 },
                 PartyUpdateStatus::PromoteLeader,
-                Some((
-                    *party_id,
-                    party.chatchannel_id,
-                    ObjectId(party.leader_id),
-                    party_list,
-                )),
+                Some((*party_id, party.chatchannel_id, party.leader_id, party_list)),
             );
 
             // Finally, tell everyone in the party about the update.
@@ -707,7 +697,7 @@ pub fn handle_social_messages(
                 party_info = None;
             } else {
                 update_status = PartyUpdateStatus::MemberLeftParty;
-                party_info = Some((*party_id, chatchannel_id, ObjectId(leader_id), party_list));
+                party_info = Some((*party_id, chatchannel_id, leader_id, party_list));
             }
 
             let msg = FromServer::PartyUpdate(
@@ -802,7 +792,7 @@ pub fn handle_social_messages(
             let Some(member) = party.get_member_by_content_id(*target_content_id) else {
                 return;
             };
-            party.remove_member(member.actor_id.0);
+            party.remove_member(member.actor_id);
 
             // Construct the party list we're sending back to the clients in this party.
             let party_list = build_party_list(party, &data);
@@ -815,12 +805,7 @@ pub fn handle_social_messages(
                 party_info = None;
             } else {
                 update_status = PartyUpdateStatus::MemberKicked;
-                party_info = Some((
-                    *party_id,
-                    party.chatchannel_id,
-                    ObjectId(party.leader_id),
-                    party_list,
-                ));
+                party_info = Some((*party_id, party.chatchannel_id, party.leader_id, party_list));
             }
 
             let msg = FromServer::PartyUpdate(
@@ -914,12 +899,7 @@ pub fn handle_social_messages(
                         ..Default::default()
                     },
                     PartyUpdateStatus::MemberWentOffline,
-                    Some((
-                        *party_id,
-                        party.chatchannel_id,
-                        ObjectId(party.leader_id),
-                        party_list,
-                    )),
+                    Some((*party_id, party.chatchannel_id, party.leader_id, party_list)),
                 );
 
                 network.send_to_party(*party_id, None, msg, DestinationNetwork::ZoneClients);
@@ -939,7 +919,7 @@ pub fn handle_social_messages(
 
             'outer: for (id, my_party) in &mut network.parties.iter() {
                 for my_member in &my_party.members {
-                    if my_member.actor_id.0 == *execute_actor_id {
+                    if my_member.actor_id == *execute_actor_id {
                         member = my_member.clone();
                         party_id = *id;
                         party = my_party.clone();
@@ -957,12 +937,7 @@ pub fn handle_social_messages(
                     ..Default::default()
                 },
                 PartyUpdateStatus::MemberReturned,
-                Some((
-                    party_id,
-                    party.chatchannel_id,
-                    ObjectId(party.leader_id),
-                    party_list,
-                )),
+                Some((party_id, party.chatchannel_id, party.leader_id, party_list)),
             );
 
             network.send_to_party(party_id, None, msg, DestinationNetwork::ZoneClients);

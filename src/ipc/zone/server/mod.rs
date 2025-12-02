@@ -107,7 +107,7 @@ pub use house_list::{House, HouseList};
 mod housing_ward;
 pub use housing_ward::HousingWardMenuSummaryItem;
 
-use crate::common::{CHAR_NAME_MAX_LENGTH, read_string, write_string};
+use crate::common::{CHAR_NAME_MAX_LENGTH, ObjectId, read_string, write_string};
 use crate::inventory::{ContainerType, ItemOperationKind};
 pub use crate::ipc::zone::black_list::{Blacklist, BlacklistedCharacter};
 use crate::opcodes::ServerZoneIpcType;
@@ -131,7 +131,7 @@ pub type ServerZoneIpcSegment =
 pub enum ServerZoneIpcData {
     InitResponse {
         unk1: u64,
-        character_id: u32,
+        character_id: ObjectId,
         unk2: u32,
     },
     InitZone(InitZone),
@@ -212,7 +212,7 @@ pub enum ServerZoneIpcData {
     Delete {
         spawn_index: u8,
         #[brw(pad_before = 3)] // padding
-        actor_id: u32,
+        actor_id: ObjectId,
     },
     EventFinish {
         handler_id: u32,
@@ -261,7 +261,7 @@ pub enum ServerZoneIpcData {
         sequence: u32,
         /// Same as the one sent by the client, not the one that the server responds with in InventoryActionAck!
         operation_type: ItemOperationKind,
-        src_actor_id: u32,
+        src_actor_id: ObjectId,
         #[brw(pad_size_to = 4)]
         src_storage_id: ContainerType,
         src_container_index: u16,
@@ -598,6 +598,7 @@ mod tests {
     use binrw::BinWrite;
 
     use crate::{
+        common::INVALID_OBJECT_ID,
         constants::TITLE_UNLOCK_BITMASK_SIZE,
         opcodes::ServerZoneIpcType,
         packet::{IpcSegmentHeader, ReadWriteIpcOpcode, ReadWriteIpcSegment},
@@ -611,7 +612,7 @@ mod tests {
         let ipc_types = [
             ServerZoneIpcData::InitResponse {
                 unk1: 0,
-                character_id: 0,
+                character_id: INVALID_OBJECT_ID,
                 unk2: 0,
             },
             ServerZoneIpcData::InitZone(InitZone::default()),
@@ -679,7 +680,7 @@ mod tests {
             ServerZoneIpcData::ActionResult(ActionResult::default()),
             ServerZoneIpcData::Delete {
                 spawn_index: 0,
-                actor_id: 0,
+                actor_id: INVALID_OBJECT_ID,
             },
             ServerZoneIpcData::EventFinish {
                 handler_id: 0,
@@ -712,7 +713,7 @@ mod tests {
             ServerZoneIpcData::InventoryTransaction {
                 sequence: 0,
                 operation_type: ItemOperationKind::Move,
-                src_actor_id: 0,
+                src_actor_id: INVALID_OBJECT_ID,
                 src_storage_id: ContainerType::Inventory0,
                 src_container_index: 0,
                 src_stack: 0,

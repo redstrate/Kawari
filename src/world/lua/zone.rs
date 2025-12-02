@@ -1,6 +1,7 @@
 use mlua::{LuaSerdeExt, UserData, UserDataFields, UserDataMethods, Value};
 
 use crate::{
+    common::ObjectId,
     ipc::zone::{ObjectSpawn, ServerZoneIpcData, ServerZoneIpcSegment},
     packet::PacketSegment,
 };
@@ -48,6 +49,6 @@ impl LuaZone {
     fn spawn_eobj(&mut self, eobj: ObjectSpawn) {
         let data = ServerZoneIpcSegment::new(ServerZoneIpcData::ObjectSpawn(eobj));
 
-        create_ipc_target(self, data, eobj.entity_id, 0); // Setting the target actor id to 0 for later post-processing.
+        create_ipc_target(self, data, ObjectId(eobj.entity_id), ObjectId(0)); // NOTE: Setting the target actor id to 0 for later post-processing.
     }
 }

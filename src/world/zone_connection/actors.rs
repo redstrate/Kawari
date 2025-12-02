@@ -33,7 +33,7 @@ impl ZoneConnection {
 
     pub async fn set_actor_position(
         &mut self,
-        actor_id: u32,
+        actor_id: ObjectId,
         position: Position,
         rotation: f32,
         anim_type: MoveAnimationType,
@@ -87,7 +87,7 @@ impl ZoneConnection {
         .await;
     }
 
-    pub async fn spawn_actor(&mut self, actor_id: u32, spawn: SpawnKind) {
+    pub async fn spawn_actor(&mut self, actor_id: ObjectId, spawn: SpawnKind) {
         // There is no reason for us to spawn our own player again. It's probably a bug!
         assert!(actor_id != self.player_data.actor_id);
 
@@ -99,7 +99,7 @@ impl ZoneConnection {
             SpawnKind::Player(mut spawn) => {
                 spawn.common.spawn_index = spawn_index as u8;
                 spawn.common.target_id = ObjectTypeId {
-                    object_id: ObjectId(actor_id),
+                    object_id: actor_id,
                     object_type: ObjectTypeKind::None,
                 };
                 ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PlayerSpawn(spawn));
@@ -107,7 +107,7 @@ impl ZoneConnection {
             SpawnKind::Npc(mut spawn) => {
                 spawn.common.spawn_index = spawn_index as u8;
                 spawn.common.target_id = ObjectTypeId {
-                    object_id: ObjectId(actor_id),
+                    object_id: actor_id,
                     object_type: ObjectTypeKind::None,
                 };
                 ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::NpcSpawn(spawn));
@@ -137,8 +137,8 @@ impl ZoneConnection {
         .await;
     }
 
-    pub async fn remove_actor(&mut self, actor_id: u32) {
-        if let Some(spawn_index) = self.get_actor_spawn_index(ObjectId(actor_id)) {
+    pub async fn remove_actor(&mut self, actor_id: ObjectId) {
+        if let Some(spawn_index) = self.get_actor_spawn_index(actor_id) {
             tracing::info!("Removing actor {actor_id} {}!", spawn_index);
 
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Delete {
@@ -167,7 +167,7 @@ impl ZoneConnection {
     }
 
     pub fn get_actor_spawn_index(&self, id: ObjectId) -> Option<u8> {
-        self.spawned_actors.get(&id.0).copied()
+        self.spawned_actors.get(&id).copied()
     }
 
     pub async fn actor_control_self(&mut self, actor_control: ActorControlSelf) {
@@ -175,7 +175,7 @@ impl ZoneConnection {
         self.send_ipc_self(ipc).await;
     }
 
-    pub async fn actor_control(&mut self, actor_id: u32, actor_control: ActorControl) {
+    pub async fn actor_control(&mut self, actor_id: ObjectId, actor_control: ActorControl) {
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControl(actor_control));
 
         self.send_segment(PacketSegment {
@@ -187,7 +187,11 @@ impl ZoneConnection {
         .await;
     }
 
-    pub async fn actor_control_target(&mut self, actor_id: u32, actor_control: ActorControlTarget) {
+    pub async fn actor_control_target(
+        &mut self,
+        actor_id: ObjectId,
+        actor_control: ActorControlTarget,
+    ) {
         tracing::info!(
             "we are sending actor control target to {actor_id}: {actor_control:#?} and WE ARE {:#?}",
             self.player_data.actor_id
@@ -239,7 +243,7 @@ impl ZoneConnection {
         self.spawn_index
     }
 
-    pub async fn update_config(&mut self, actor_id: u32, config: Config) {
+    pub async fn update_config(&mut self, actor_id: ObjectId, config: Config) {
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Config(config));
 
         self.send_segment(PacketSegment {

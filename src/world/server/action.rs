@@ -41,7 +41,7 @@ pub fn handle_action_messages(
             }
 
             let send_execution = |from_id: ClientId,
-                                  from_actor_id: u32,
+                                  from_actor_id: ObjectId,
                                   request: ActionRequest,
                                   network: Arc<Mutex<NetworkState>>,
                                   data: Arc<Mutex<WorldServer>>,
@@ -120,7 +120,7 @@ pub fn execute_action(
     game_data: Arc<Mutex<GameData>>,
     lua: Arc<Mutex<Lua>>,
     from_id: ClientId,
-    from_actor_id: u32,
+    from_actor_id: ObjectId,
     request: ActionRequest,
 ) -> Vec<Task> {
     let mut lua_player = LuaPlayer {
@@ -139,7 +139,7 @@ pub fn execute_action(
             return Vec::default();
         };
 
-        let Some(actor) = instance.find_actor(ObjectId(from_actor_id)) else {
+        let Some(actor) = instance.find_actor(from_actor_id) else {
             return Vec::default();
         };
 
@@ -163,7 +163,7 @@ pub fn execute_action(
         {
             let mut data = data.lock();
 
-            let Some(instance) = data.find_actor_instance_mut(request.target.object_id.0) else {
+            let Some(instance) = data.find_actor_instance_mut(request.target.object_id) else {
                 return Vec::default();
             };
 
@@ -190,7 +190,7 @@ pub fn execute_action(
                 unk: 0,
             });
             let mut network = network.lock();
-            network.send_ipc_to(from_id, ipc, request.target.object_id.0);
+            network.send_ipc_to(from_id, ipc, request.target.object_id);
         }
 
         // TODO: send Cooldown ActorControlSelf
@@ -413,7 +413,7 @@ pub fn execute_item_action(
 pub fn execute_mount_action(
     network: Arc<Mutex<NetworkState>>,
     from_id: ClientId,
-    from_actor_id: u32,
+    from_actor_id: ObjectId,
     request: &ActionRequest,
     actor: &NetworkedActor,
 ) -> Option<EffectsBuilder> {

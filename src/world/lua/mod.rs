@@ -31,7 +31,7 @@ trait QueueSegments {
 fn create_ipc_self<T: QueueSegments>(
     user_data: &mut T,
     ipc: ServerZoneIpcSegment,
-    source_actor: u32,
+    source_actor: ObjectId,
 ) {
     create_ipc_target(user_data, ipc, source_actor, source_actor);
 }
@@ -39,8 +39,8 @@ fn create_ipc_self<T: QueueSegments>(
 fn create_ipc_target<T: QueueSegments>(
     user_data: &mut T,
     ipc: ServerZoneIpcSegment,
-    source_actor: u32,
-    target_actor: u32,
+    source_actor: ObjectId,
+    target_actor: ObjectId,
 ) {
     let segment = PacketSegment {
         source_actor,

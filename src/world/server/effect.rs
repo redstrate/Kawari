@@ -80,7 +80,7 @@ fn process_effects_list(
     status_effects: &mut StatusEffects,
     common_spawn: &CommonSpawn,
     from_id: ClientId,
-    from_actor_id: u32,
+    from_actor_id: ObjectId,
 ) {
     // Only update the client if absolutely necessary (e.g. an effect is added, removed or changed duration)
     if status_effects.dirty {
@@ -111,7 +111,7 @@ pub fn gain_effect(
     data: Arc<Mutex<WorldServer>>,
     lua: Arc<Mutex<Lua>>,
     from_id: ClientId,
-    from_actor_id: u32,
+    from_actor_id: ObjectId,
     effect_id: u16,
     effect_param: u16,
     effect_duration: f32,
@@ -126,7 +126,7 @@ pub fn gain_effect(
             return;
         };
 
-        let Some(actor) = instance.find_actor_mut(ObjectId(from_actor_id)) else {
+        let Some(actor) = instance.find_actor_mut(from_actor_id) else {
             return;
         };
 
@@ -172,7 +172,7 @@ pub fn gain_effect(
 
     // Finally, start scheduling the effect when it ends
     let send_lost_effect = |from_id: ClientId,
-                            from_actor_id: u32,
+                            from_actor_id: ObjectId,
                             network: Arc<Mutex<NetworkState>>,
                             data: Arc<Mutex<WorldServer>>,
                             lua: Arc<Mutex<Lua>>,
@@ -232,7 +232,7 @@ pub fn remove_effect(
     data: Arc<Mutex<WorldServer>>,
     lua: Arc<Mutex<Lua>>,
     from_id: ClientId,
-    from_actor_id: u32,
+    from_actor_id: ObjectId,
     effect_id: u16,
     effect_param: u16,
     effect_source_actor_id: ObjectId,
@@ -244,7 +244,7 @@ pub fn remove_effect(
         return;
     };
 
-    let Some(actor) = instance.find_actor_mut(ObjectId(from_actor_id)) else {
+    let Some(actor) = instance.find_actor_mut(from_actor_id) else {
         return;
     };
 

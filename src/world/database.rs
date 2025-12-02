@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     common::{
-        EquipDisplayFlag, GameData, ItemInfoQuery, Position,
+        EquipDisplayFlag, GameData, ItemInfoQuery, ObjectId, Position,
         workdefinitions::{CharaMake, ClientSelectData, RemakeMode},
     },
     constants::CLASSJOB_ARRAY_SIZE,
@@ -83,14 +83,14 @@ impl WorldDatabase {
         }
     }
 
-    pub fn find_player_data(&self, actor_id: u32, game_data: &mut GameData) -> PlayerData {
+    pub fn find_player_data(&self, actor_id: ObjectId, game_data: &mut GameData) -> PlayerData {
         let connection = self.connection.lock();
 
         let mut stmt = connection
             .prepare("SELECT content_id, service_account_id FROM character WHERE actor_id = ?1")
             .unwrap();
         let (content_id, account_id): (u64, u64) = stmt
-            .query_row((actor_id,), |row| Ok((row.get(0)?, row.get(1)?)))
+            .query_row((actor_id.0,), |row| Ok((row.get(0)?, row.get(1)?)))
             .unwrap();
 
         stmt = connection

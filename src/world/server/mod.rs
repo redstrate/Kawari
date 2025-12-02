@@ -72,17 +72,17 @@ impl WorldServer {
     }
 
     /// Finds the instance associated with an actor, or returns None if they are not found.
-    fn find_actor_instance(&self, actor_id: u32) -> Option<&Instance> {
+    fn find_actor_instance(&self, actor_id: ObjectId) -> Option<&Instance> {
         self.instances
             .values()
-            .find(|instance| instance.actors.contains_key(&ObjectId(actor_id)))
+            .find(|instance| instance.actors.contains_key(&actor_id))
     }
 
     /// Finds the instance associated with an actor, or returns None if they are not found.
-    fn find_actor_instance_mut(&mut self, actor_id: u32) -> Option<&mut Instance> {
+    fn find_actor_instance_mut(&mut self, actor_id: ObjectId) -> Option<&mut Instance> {
         self.instances
             .values_mut()
-            .find(|instance| instance.actors.contains_key(&ObjectId(actor_id)))
+            .find(|instance| instance.actors.contains_key(&actor_id))
     }
 }
 
@@ -92,7 +92,7 @@ fn set_player_minion(
     to_remove: &mut Vec<ClientId>,
     minion_id: u32,
     from_id: ClientId,
-    from_actor_id: u32,
+    from_actor_id: ObjectId,
 ) {
     for (id, (handle, _)) in &mut network.clients {
         let id = *id;
@@ -103,7 +103,7 @@ fn set_player_minion(
                 break;
             };
 
-            let Some(actor) = instance.find_actor_mut(ObjectId(from_actor_id)) else {
+            let Some(actor) = instance.find_actor_mut(from_actor_id) else {
                 break;
             };
 
@@ -174,7 +174,7 @@ fn server_logic_tick(data: &mut WorldServer, network: &mut NetworkState) {
                         let rotation = f32::atan2(-dir_z, dir_x).to_degrees();
 
                         actor_moves.push(FromServer::ActorMove(
-                            id.0,
+                            *id,
                             Position::lerp(current_position, next_position, *current_path_lerp),
                             rotation,
                             MoveAnimationType::RUNNING,
@@ -262,7 +262,7 @@ fn server_logic_tick(data: &mut WorldServer, network: &mut NetworkState) {
                             MoveAnimationState::None,
                             JumpState::NoneOrFalling,
                         ) = msg
-                            && id.0 == *msg_id
+                            && *id == *msg_id
                         {
                             spawn.common.pos = *pos;
                             spawn.common.rotation = *rotation;
@@ -388,7 +388,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 // Refresh the party member's client id, if applicable.
                 'outer: for (id, party) in &mut network.parties {
                     for member in &mut party.members {
-                        if member.actor_id.0 == handle.actor_id {
+                        if member.actor_id == handle.actor_id {
                             member.zone_client_id = handle.id;
                             party_id = Some(*id);
                             break 'outer;
@@ -423,7 +423,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 // Refresh the party member's client id, if applicable.
                 'outer: for party in &mut network.parties.values_mut() {
                     for member in &mut party.members {
-                        if member.actor_id.0 == handle.actor_id {
+                        if member.actor_id == handle.actor_id {
                             member.chat_client_id = handle.id; // The chat connection doesn't get informed here since it'll happen later.
                             break 'outer;
                         }
@@ -471,7 +471,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     if let Some((_, spawn)) = instance
                         .actors
                         .iter_mut()
-                        .find(|actor| *actor.0 == ObjectId(actor_id))
+                        .find(|actor| *actor.0 == actor_id)
                     {
                         let common = match spawn {
                             NetworkedActor::Player { spawn, .. } => &mut spawn.common,
@@ -675,7 +675,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         break;
                     };
 
-                    let Some(actor) = instance.find_actor(ObjectId(from_actor_id)) else {
+                    let Some(actor) = instance.find_actor(from_actor_id) else {
                         break;
                     };
 
@@ -709,7 +709,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         ..Default::default()
                     };
 
-                    instance.insert_npc(ObjectId(actor_id), npc_spawn.clone());
+                    instance.insert_npc(actor_id, npc_spawn.clone());
                 }
 
                 network.send_actor(actor_id, SpawnKind::Npc(npc_spawn));
@@ -725,7 +725,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         break;
                     };
 
-                    let Some(actor) = instance.find_actor(ObjectId(from_actor_id)) else {
+                    let Some(actor) = instance.find_actor(from_actor_id) else {
                         break;
                     };
 
@@ -739,7 +739,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         ..Default::default()
                     };
 
-                    instance.insert_npc(ObjectId(actor_id), npc_spawn.clone());
+                    instance.insert_npc(actor_id, npc_spawn.clone());
                 }
 
                 network.send_actor(actor_id, SpawnKind::Npc(npc_spawn));
@@ -753,7 +753,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         break;
                     };
 
-                    let Some(actor) = instance.find_actor_mut(ObjectId(from_actor_id)) else {
+                    let Some(actor) = instance.find_actor_mut(from_actor_id) else {
                         break;
                     };
 
@@ -778,7 +778,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         break;
                     };
 
-                    let Some(actor) = instance.find_actor_mut(ObjectId(from_actor_id)) else {
+                    let Some(actor) = instance.find_actor_mut(from_actor_id) else {
                         break;
                     };
 
@@ -887,7 +887,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 if let Some(actor_id) = actor_id {
                     // remove them from the instance
                     if let Some(current_instance) = data.find_actor_instance_mut(actor_id) {
-                        current_instance.actors.remove(&ObjectId(actor_id));
+                        current_instance.actors.remove(&actor_id);
                         network.inform_remove_actor(current_instance, remove_id, actor_id);
                     }
                 }

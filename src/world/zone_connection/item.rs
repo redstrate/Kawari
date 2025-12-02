@@ -2,6 +2,7 @@
 
 use crate::{
     LogMessageType,
+    common::ObjectId,
     inventory::{ContainerType, Item},
     ipc::zone::{
         ActorControlCategory, ActorControlSelf, ContainerInfo, CurrencyInfo, Equip, ItemInfo,
@@ -132,7 +133,7 @@ impl ZoneConnection {
 
     pub async fn update_equip(
         &mut self,
-        actor_id: u32,
+        actor_id: ObjectId,
         main_weapon_id: u64,
         sub_weapon_id: u64,
         model_ids: [u32; 10],

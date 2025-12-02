@@ -1,5 +1,5 @@
 use super::common::ClientId;
-use crate::common::timestamp_secs;
+use crate::common::{ObjectId, timestamp_secs};
 use crate::config::WorldConfig;
 use crate::ipc::chat::{
     ChatChannel, ChatChannelType, ClientChatIpcSegment, PartyMessage, ServerChatIpcData,
@@ -22,7 +22,7 @@ pub struct ChatConnection {
     pub ip: SocketAddr,
     pub id: ClientId,
     pub state: ConnectionState,
-    pub actor_id: u32,
+    pub actor_id: ObjectId,
     pub config: WorldConfig,
     pub last_keep_alive: Instant,
     pub handle: ServerHandle,
@@ -57,7 +57,7 @@ impl ChatConnection {
         .await;
     }
 
-    pub async fn send_ipc(&mut self, ipc: ServerChatIpcSegment, from_actor_id: u32) {
+    pub async fn send_ipc(&mut self, ipc: ServerChatIpcSegment, from_actor_id: ObjectId) {
         let segment = PacketSegment {
             source_actor: from_actor_id,
             target_actor: self.actor_id,

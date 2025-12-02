@@ -182,12 +182,12 @@ fn begin_change_zone<'a>(
     network: &mut NetworkState,
     game_data: &mut GameData,
     destination_zone_id: u16,
-    actor_id: u32,
+    actor_id: ObjectId,
     from_id: ClientId,
 ) -> &'a mut Instance {
     // inform the players in this zone that this actor left
     if let Some(current_instance) = data.find_actor_instance_mut(actor_id) {
-        current_instance.actors.remove(&ObjectId(actor_id));
+        current_instance.actors.remove(&actor_id);
         network.inform_remove_actor(current_instance, from_id, actor_id);
     }
 
@@ -203,7 +203,7 @@ fn change_zone_warp_to_pop_range(
     game_data: &mut GameData,
     destination_zone_id: u16,
     destination_instance_id: u32,
-    actor_id: u32,
+    actor_id: ObjectId,
     from_id: ClientId,
 ) {
     let target_instance = begin_change_zone(
@@ -249,7 +249,7 @@ pub fn change_zone_warp_to_entrance(
     network: &mut NetworkState,
     game_data: &mut GameData,
     destination_zone_id: u16,
-    actor_id: u32,
+    actor_id: ObjectId,
     from_id: ClientId,
 ) {
     let target_instance = begin_change_zone(
@@ -295,7 +295,7 @@ fn do_change_zone(
     destination_zone_id: u16,
     exit_position: Option<Position>,
     exit_rotation: Option<f32>,
-    actor_id: u32,
+    actor_id: ObjectId,
     from_id: ClientId,
 ) {
     let target_instance = begin_change_zone(
@@ -345,7 +345,7 @@ pub fn handle_zone_messages(
                         }
                     };
 
-                    let msg = FromServer::ActorSpawn(id.0, kind);
+                    let msg = FromServer::ActorSpawn(*id, kind);
 
                     network.send_to(*from_id, msg, DestinationNetwork::ZoneClients);
                 }
@@ -366,7 +366,7 @@ pub fn handle_zone_messages(
                     }
 
                     // skip any clients not in our zone
-                    if !instance.actors.contains_key(&ObjectId(handle.actor_id)) {
+                    if !instance.actors.contains_key(&handle.actor_id) {
                         continue;
                     }
 
@@ -387,7 +387,7 @@ pub fn handle_zone_messages(
             {
                 let instance = data.find_instance_mut(*zone_id);
                 instance.actors.insert(
-                    ObjectId(client.actor_id),
+                    client.actor_id,
                     NetworkedActor::Player {
                         spawn: player_spawn.clone(),
                         status_effects: StatusEffects::default(),
@@ -407,7 +407,7 @@ pub fn handle_zone_messages(
 
             // inform the players in this zone that this actor left
             if let Some(current_instance) = data.find_actor_instance_mut(*actor_id) {
-                current_instance.actors.remove(&ObjectId(*actor_id));
+                current_instance.actors.remove(&*actor_id);
                 network.inform_remove_actor(current_instance, *from_id, *actor_id);
             }
 

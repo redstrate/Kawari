@@ -15,7 +15,7 @@ impl ZoneConnection {
                 effect_id,
                 effect_param,
                 effect_duration,
-                ObjectId(self.player_data.actor_id),
+                self.player_data.actor_id,
             ))
             .await;
     }

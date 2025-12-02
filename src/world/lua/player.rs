@@ -2,7 +2,7 @@ use mlua::{LuaSerdeExt, UserData, UserDataFields, UserDataMethods, Value};
 
 use crate::{
     INVENTORY_ACTION_ACK_SHOP, LogMessageType,
-    common::{ObjectId, ObjectTypeId, ObjectTypeKind, Position, workdefinitions::RemakeMode},
+    common::{ObjectTypeId, ObjectTypeKind, Position, workdefinitions::RemakeMode},
     inventory::{ContainerType, CurrencyKind, Item},
     ipc::zone::{
         ActorControlCategory, ActorControlSelf, EventScene, EventType, SceneFlags,
@@ -893,7 +893,7 @@ impl UserData for LuaPlayer {
     fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
         fields.add_field_method_get("id", |_, this| {
             Ok(ObjectTypeId {
-                object_id: ObjectId(this.player_data.actor_id),
+                object_id: this.player_data.actor_id,
                 object_type: ObjectTypeKind::None,
             })
         });

@@ -2,7 +2,7 @@
 
 use crate::{
     ERR_INVENTORY_ADD_FAILED,
-    common::{InstanceContentType, ItemInfoQuery, ObjectId, ObjectTypeId, ObjectTypeKind},
+    common::{InstanceContentType, ItemInfoQuery, ObjectTypeId, ObjectTypeKind},
     constants::{
         ADVENTURE_BITMASK_SIZE, AETHER_CURRENT_BITMASK_SIZE,
         AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE, BUDDY_EQUIP_BITMASK_SIZE,
@@ -293,7 +293,7 @@ impl ZoneConnection {
                 Task::SetHP { hp } => {
                     self.player_data.curr_hp = *hp;
                     self.update_hp_mp(
-                        ObjectId(self.player_data.actor_id),
+                        self.player_data.actor_id,
                         self.player_data.curr_hp,
                         self.player_data.curr_mp,
                     )
@@ -302,7 +302,7 @@ impl ZoneConnection {
                 Task::SetMP { mp } => {
                     self.player_data.curr_mp = *mp;
                     self.update_hp_mp(
-                        ObjectId(self.player_data.actor_id),
+                        self.player_data.actor_id,
                         self.player_data.curr_hp,
                         self.player_data.curr_mp,
                     )
@@ -475,7 +475,7 @@ impl ZoneConnection {
                     if let Some(event) = self.events.last_mut() {
                         event.talk(
                             ObjectTypeId {
-                                object_id: ObjectId(self.player_data.actor_id),
+                                object_id: self.player_data.actor_id,
                                 object_type: ObjectTypeKind::None,
                             },
                             player,

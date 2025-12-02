@@ -3,7 +3,7 @@ use std::io::Cursor;
 use binrw::{BinRead, binrw};
 
 use crate::{
-    common::{read_string, write_string},
+    common::{INVALID_OBJECT_ID, ObjectId, read_string, write_string},
     ipc::kawari::CustomIpcSegment,
     packet::encryption::decrypt,
 };
@@ -71,7 +71,7 @@ pub enum SegmentData<T: ReadWriteIpcSegment> {
     },
     #[br(pre_assert(kind == SegmentType::Initialize))]
     Initialize {
-        actor_id: u32,
+        actor_id: ObjectId,
         #[brw(pad_after = 32)]
         timestamp: u32,
     },
@@ -139,8 +139,8 @@ pub struct PacketHeader {
 pub struct PacketSegment<T: ReadWriteIpcSegment> {
     #[bw(calc = self.calc_size())]
     pub size: u32,
-    pub source_actor: u32,
-    pub target_actor: u32,
+    pub source_actor: ObjectId,
+    pub target_actor: ObjectId,
     #[brw(pad_after = 2)] // padding
     pub segment_type: SegmentType,
     #[bw(args(*segment_type, size, state))]
@@ -152,8 +152,8 @@ pub struct PacketSegment<T: ReadWriteIpcSegment> {
 impl<T: ReadWriteIpcSegment> Default for PacketSegment<T> {
     fn default() -> Self {
         Self {
-            source_actor: 0,
-            target_actor: 0,
+            source_actor: INVALID_OBJECT_ID,
+            target_actor: INVALID_OBJECT_ID,
             segment_type: SegmentType::default(),
             data: SegmentData::default(),
         }
