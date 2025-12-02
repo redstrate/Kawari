@@ -83,9 +83,10 @@ fn process_effects_list(
     from_actor_id: ObjectId,
 ) {
     // Only update the client if absolutely necessary (e.g. an effect is added, removed or changed duration)
-    if status_effects.dirty {
+    if status_effects.is_dirty() {
         let mut list = [StatusEffect::default(); 30];
-        list[..status_effects.status_effects.len()].copy_from_slice(&status_effects.status_effects);
+        let data = status_effects.data();
+        list[..data.len()].copy_from_slice(&data);
 
         let ipc =
             ServerZoneIpcSegment::new(ServerZoneIpcData::StatusEffectList(StatusEffectList {
@@ -101,7 +102,7 @@ fn process_effects_list(
         let mut network = network.lock();
         network.send_ipc_to(from_id, ipc, from_actor_id);
 
-        status_effects.dirty = false;
+        status_effects.reset_dirty();
     }
 }
 
