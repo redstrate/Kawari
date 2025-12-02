@@ -17,7 +17,6 @@ use std::sync::Arc;
 
 use parking_lot::Mutex;
 use std::net::SocketAddr;
-use std::time::Instant;
 use tokio::net::TcpStream;
 
 /// Represents a single connection between an instance of the world server and the lobby server.
@@ -25,7 +24,6 @@ pub struct CustomIpcConnection {
     pub socket: TcpStream,
     pub ip: SocketAddr,
     pub state: ConnectionState,
-    pub last_keep_alive: Instant,
     pub database: Arc<WorldDatabase>,
     pub gamedata: Arc<Mutex<GameData>>,
 }

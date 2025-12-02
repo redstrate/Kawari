@@ -92,6 +92,7 @@ pub struct GameData {
     pub action_sheet: ActionSheet,
     pub place_name_sheet: PlaceNameSheet,
     pub custom_talk_sheet: CustomTalkSheet,
+    pub tribe_sheet: TribeSheet,
 }
 
 impl Default for GameData {
@@ -246,11 +247,14 @@ impl GameData {
             .expect("Failed to read Action, does the Excel files exist?");
 
         let place_name_sheet = PlaceNameSheet::read_from(&mut resource_resolver, Language::English)
-            .expect("Failed to read Action, does the Excel files exist?");
+            .expect("Failed to read PlaceName, does the Excel files exist?");
 
         let custom_talk_sheet =
             CustomTalkSheet::read_from(&mut resource_resolver, Language::English)
-                .expect("Failed to read Action, does the Excel files exist?");
+                .expect("Failed to read CustomTalk, does the Excel files exist?");
+
+        let tribe_sheet = TribeSheet::read_from(&mut resource_resolver, Language::English)
+            .expect("Failed to read Tribe, does the Excel files exist?");
 
         Self {
             resource: resource_resolver,
@@ -263,6 +267,7 @@ impl GameData {
             action_sheet,
             place_name_sheet,
             custom_talk_sheet,
+            tribe_sheet,
         }
     }
 
@@ -286,8 +291,7 @@ impl GameData {
         // The Tribe Excel sheet only has deltas (e.g. 2 or -2) which are applied to a base 20 number... from somewhere
         let base_stat = 20;
 
-        let sheet = TribeSheet::read_from(&mut self.resource, Language::English)?;
-        let row = sheet.get_row(tribe_id as u32)?;
+        let row = self.tribe_sheet.get_row(tribe_id as u32)?;
 
         Some(Attributes {
             strength: (base_stat + row.STR().into_i8()?) as u32,

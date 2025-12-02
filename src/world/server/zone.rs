@@ -66,6 +66,14 @@ impl Zone {
             let lgb = Lvb::from_existing(&lgb_file).unwrap();
 
             let mut load_lgb = |path: &str| -> Option<LayerGroup> {
+                // Skip LGBs that aren't relevant for the server
+                if path.ends_with("bg.lgb")
+                    || path.ends_with("vfx.lgb")
+                    || path.ends_with("sound.lgb")
+                {
+                    return None;
+                }
+
                 let lgb_file = game_data.resource.read(path)?;
                 tracing::info!("Loading {path}");
                 let lgb = LayerGroup::from_existing(&lgb_file);
