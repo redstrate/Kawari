@@ -21,7 +21,7 @@ use crate::{
             action::handle_action_messages,
             actor::NetworkedActor,
             chat::handle_chat_messages,
-            effect::handle_effect_messages,
+            effect::{handle_effect_messages, remove_effect},
             instance::{Instance, NavmeshGenerationStep},
             network::{DestinationNetwork, NetworkState},
             social::handle_social_messages,
@@ -488,219 +488,187 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 }
             }
             ToServer::ClientTrigger(from_id, from_actor_id, trigger) => {
-                let mut network = network.lock();
+                tracing::info!("{:#X?}", trigger);
 
-                for (id, (handle, _)) in &mut network.clients {
-                    let id = *id;
+                // TODO: why are these separated?
+                // handle player-to-server actions
+                if let ClientTriggerCommand::TeleportQuery { aetheryte_id } = &trigger.trigger {
+                    let msg = FromServer::ActorControlSelf(ActorControlSelf {
+                        category: ActorControlCategory::TeleportStart {
+                            insufficient_gil: 0,
+                            aetheryte_id: *aetheryte_id,
+                        },
+                    });
 
-                    tracing::info!("{:#X?}", trigger);
+                    let mut network = network.lock();
+                    network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
+                }
 
-                    // handle player-to-server actions
-                    if id == from_id {
-                        if let ClientTriggerCommand::TeleportQuery { aetheryte_id } =
-                            &trigger.trigger
-                        {
-                            let msg = FromServer::ActorControlSelf(ActorControlSelf {
-                                category: ActorControlCategory::TeleportStart {
-                                    insufficient_gil: 0,
-                                    aetheryte_id: *aetheryte_id,
+                if let ClientTriggerCommand::EventRelatedUnk { .. } = &trigger.trigger {
+                    let msg = FromServer::ActorControlSelf(ActorControlSelf {
+                        category: ActorControlCategory::MapMarkerUpdateBegin { unk1: 1 },
+                    });
+
+                    let mut network = network.lock();
+                    network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
+
+                    let msg = FromServer::ActorControlSelf(ActorControlSelf {
+                        category: ActorControlCategory::MapMarkerUpdateEnd { unk1: 0 },
+                    });
+                    network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
+                }
+
+                if let ClientTriggerCommand::WalkInTriggerFinished { .. } = &trigger.trigger {
+                    // This is where we finally release the client after the walk-in trigger.
+                    let msg = FromServer::Conditions(Conditions::default());
+
+                    let mut network = network.lock();
+                    network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
+
+                    let msg = FromServer::ActorControlSelf(ActorControlSelf {
+                        category: ActorControlCategory::WalkInTriggerRelatedUnk1 { unk1: 0 },
+                    });
+
+                    network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
+
+                    // Yes, this is actually sent every time the trigger event finishes...
+                    let msg = FromServer::ActorControlSelf(ActorControlSelf {
+                        category: ActorControlCategory::CompanionUnlock { unk1: 0, unk2: 1 },
+                    });
+
+                    network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
+
+                    let msg = FromServer::ActorControlSelf(ActorControlSelf {
+                        category: ActorControlCategory::WalkInTriggerRelatedUnk2 {
+                            unk1: 0,
+                            unk2: 0,
+                            unk3: 0,
+                            unk4: 7,
+                        },
+                    });
+
+                    network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
+                }
+
+                if let ClientTriggerCommand::SummonMinion { minion_id } = &trigger.trigger {
+                    let msg = FromServer::ActorSummonsMinion(*minion_id);
+
+                    let mut network = network.lock();
+                    network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
+                }
+
+                if let ClientTriggerCommand::DespawnMinion { .. } = &trigger.trigger {
+                    let msg = FromServer::ActorDespawnsMinion();
+
+                    let mut network = network.lock();
+                    network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
+                }
+
+                match &trigger.trigger {
+                    ClientTriggerCommand::SetTarget {
+                        actor_id,
+                        actor_type,
+                    } => {
+                        // For whatever reason these don't match what the server has to send back, so they cannot be directly reused.
+                        let actor_type = match *actor_type {
+                            0 => ObjectTypeKind::None,
+                            1 => ObjectTypeKind::EObjOrNpc,
+                            2 => ObjectTypeKind::Minion,
+                            _ => {
+                                // TODO: Are there other types?
+                                tracing::warn!(
+                                    "SetTarget: Unknown actor target type {}! Defaulting to None!",
+                                    *actor_type
+                                );
+                                ObjectTypeKind::None
+                            }
+                        };
+
+                        let msg = FromServer::ActorControlTarget(
+                            from_actor_id,
+                            ActorControlTarget {
+                                category: ActorControlCategory::SetTarget {
+                                    target: ObjectTypeId {
+                                        object_id: *actor_id,
+                                        object_type: actor_type,
+                                    },
                                 },
-                            });
+                            },
+                        );
 
-                            if handle.send(msg).is_err() {
-                                to_remove.push(id);
-                            }
-                        }
-
-                        if let ClientTriggerCommand::EventRelatedUnk { .. } = &trigger.trigger {
-                            let msg = FromServer::ActorControlSelf(ActorControlSelf {
-                                category: ActorControlCategory::MapMarkerUpdateBegin { unk1: 1 },
-                            });
-
-                            if handle.send(msg).is_err() {
-                                to_remove.push(id);
-                            }
-                            let msg = FromServer::ActorControlSelf(ActorControlSelf {
-                                category: ActorControlCategory::MapMarkerUpdateEnd { unk1: 0 },
-                            });
-
-                            if handle.send(msg).is_err() {
-                                to_remove.push(id);
-                            }
-                        }
-
-                        if let ClientTriggerCommand::WalkInTriggerFinished { .. } = &trigger.trigger
-                        {
-                            // This is where we finally release the client after the walk-in trigger.
-                            let msg = FromServer::Conditions(Conditions::default());
-
-                            if handle.send(msg).is_err() {
-                                to_remove.push(id);
-                            }
-
-                            let msg = FromServer::ActorControlSelf(ActorControlSelf {
-                                category: ActorControlCategory::WalkInTriggerRelatedUnk1 {
-                                    unk1: 0,
-                                },
-                            });
-
-                            if handle.send(msg).is_err() {
-                                to_remove.push(id);
-                            }
-
-                            // Yes, this is actually sent every time the trigger event finishes...
-                            let msg = FromServer::ActorControlSelf(ActorControlSelf {
-                                category: ActorControlCategory::CompanionUnlock {
-                                    unk1: 0,
-                                    unk2: 1,
-                                },
-                            });
-
-                            if handle.send(msg).is_err() {
-                                to_remove.push(id);
-                            }
-
-                            let msg = FromServer::ActorControlSelf(ActorControlSelf {
-                                category: ActorControlCategory::WalkInTriggerRelatedUnk2 {
-                                    unk1: 0,
-                                    unk2: 0,
-                                    unk3: 0,
-                                    unk4: 7,
-                                },
-                            });
-
-                            if handle.send(msg).is_err() {
-                                to_remove.push(id);
-                            }
-                        }
-
-                        if let ClientTriggerCommand::SummonMinion { minion_id } = &trigger.trigger {
-                            let msg = FromServer::ActorSummonsMinion(*minion_id);
-
-                            if handle.send(msg).is_err() {
-                                to_remove.push(id);
-                            }
-                        }
-
-                        if let ClientTriggerCommand::DespawnMinion { .. } = &trigger.trigger {
-                            let msg = FromServer::ActorDespawnsMinion();
-
-                            if handle.send(msg).is_err() {
-                                to_remove.push(id);
-                            }
-                        }
-                        continue;
+                        let mut network = network.lock();
+                        network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
                     }
-
-                    match &trigger.trigger {
-                        ClientTriggerCommand::SetTarget {
-                            actor_id,
-                            actor_type,
-                        } => {
-                            // For whatever reason these don't match what the server has to send back, so they cannot be directly reused.
-                            let actor_type = match *actor_type {
-                                0 => ObjectTypeKind::None,
-                                1 => ObjectTypeKind::EObjOrNpc,
-                                2 => ObjectTypeKind::Minion,
-                                _ => {
-                                    // TODO: Are there other types?
-                                    tracing::warn!(
-                                        "SetTarget: Unknown actor target type {}! Defaulting to None!",
-                                        *actor_type
-                                    );
-                                    ObjectTypeKind::None
-                                }
-                            };
-
-                            let msg = FromServer::ActorControlTarget(
-                                from_actor_id,
-                                ActorControlTarget {
-                                    category: ActorControlCategory::SetTarget {
-                                        target: ObjectTypeId {
-                                            object_id: *actor_id,
-                                            object_type: actor_type,
-                                        },
-                                    },
+                    ClientTriggerCommand::ChangePose { unk1, pose } => {
+                        let msg = FromServer::ActorControl(
+                            from_actor_id,
+                            ActorControl {
+                                category: ActorControlCategory::Pose {
+                                    unk1: *unk1,
+                                    pose: *pose,
                                 },
-                            );
+                            },
+                        );
 
-                            if handle.send(msg).is_err() {
-                                to_remove.push(id);
-                            }
-                        }
-                        ClientTriggerCommand::ChangePose { unk1, pose } => {
-                            let msg = FromServer::ActorControl(
-                                from_actor_id,
-                                ActorControl {
-                                    category: ActorControlCategory::Pose {
-                                        unk1: *unk1,
-                                        pose: *pose,
-                                    },
-                                },
-                            );
-
-                            if handle.send(msg).is_err() {
-                                to_remove.push(id);
-                            }
-                        }
-                        ClientTriggerCommand::ReapplyPose { unk1, pose } => {
-                            let msg = FromServer::ActorControl(
-                                from_actor_id,
-                                ActorControl {
-                                    category: ActorControlCategory::Pose {
-                                        unk1: *unk1,
-                                        pose: *pose,
-                                    },
-                                },
-                            );
-
-                            if handle.send(msg).is_err() {
-                                to_remove.push(id);
-                            }
-                        }
-                        ClientTriggerCommand::Emote(emote_info) => {
-                            let msg = FromServer::ActorControlTarget(
-                                from_actor_id,
-                                ActorControlTarget {
-                                    category: ActorControlCategory::Emote(*emote_info),
-                                },
-                            );
-
-                            if handle.send(msg).is_err() {
-                                to_remove.push(id);
-                            }
-                        }
-                        ClientTriggerCommand::ToggleWeapon { shown, unk_flag } => {
-                            let msg = FromServer::ActorControl(
-                                from_actor_id,
-                                ActorControl {
-                                    category: ActorControlCategory::ToggleWeapon {
-                                        shown: *shown,
-                                        unk_flag: *unk_flag,
-                                    },
-                                },
-                            );
-
-                            if handle.send(msg).is_err() {
-                                to_remove.push(id);
-                            }
-                        }
-                        ClientTriggerCommand::ManuallyRemoveEffect {
-                            effect_id,
-                            source_actor_id,
-                            ..
-                        } => {
-                            // TODO: we need to inform the ZoneConnection as well since it keeps track of its own status effect list...
-
-                            let msg =
-                                FromServer::LoseEffect(*effect_id as u16, 0, *source_actor_id);
-
-                            if handle.send(msg).is_err() {
-                                to_remove.push(id);
-                            }
-                        }
-                        _ => tracing::warn!("Server doesn't know what to do with {:#?}", trigger),
+                        let mut network = network.lock();
+                        network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
                     }
+                    ClientTriggerCommand::ReapplyPose { unk1, pose } => {
+                        let msg = FromServer::ActorControl(
+                            from_actor_id,
+                            ActorControl {
+                                category: ActorControlCategory::Pose {
+                                    unk1: *unk1,
+                                    pose: *pose,
+                                },
+                            },
+                        );
+
+                        let mut network = network.lock();
+                        network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
+                    }
+                    ClientTriggerCommand::Emote(emote_info) => {
+                        let msg = FromServer::ActorControlTarget(
+                            from_actor_id,
+                            ActorControlTarget {
+                                category: ActorControlCategory::Emote(*emote_info),
+                            },
+                        );
+
+                        let mut network = network.lock();
+                        network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
+                    }
+                    ClientTriggerCommand::ToggleWeapon { shown, unk_flag } => {
+                        let msg = FromServer::ActorControl(
+                            from_actor_id,
+                            ActorControl {
+                                category: ActorControlCategory::ToggleWeapon {
+                                    shown: *shown,
+                                    unk_flag: *unk_flag,
+                                },
+                            },
+                        );
+
+                        let mut network = network.lock();
+                        network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
+                    }
+                    ClientTriggerCommand::ManuallyRemoveEffect {
+                        effect_id,
+                        source_actor_id,
+                        effect_param,
+                    } => {
+                        remove_effect(
+                            network.clone(),
+                            data.clone(),
+                            lua.clone(),
+                            from_id,
+                            from_actor_id,
+                            *effect_id as u16,
+                            *effect_param as u16,
+                            *source_actor_id,
+                        );
+                    }
+                    _ => tracing::warn!("Server doesn't know what to do with {:#?}", trigger),
                 }
             }
             ToServer::DebugNewEnemy(_from_id, from_actor_id, id) => {

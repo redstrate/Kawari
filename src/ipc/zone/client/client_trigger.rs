@@ -41,7 +41,7 @@ pub enum ClientTriggerCommand {
     #[brw(magic = 0x0068u32)]
     ManuallyRemoveEffect {
         effect_id: u32,
-        unk1: u32,
+        effect_param: u32,
         source_actor_id: ObjectId,
     },
 
