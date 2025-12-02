@@ -130,9 +130,8 @@ pub type ServerZoneIpcSegment =
 #[derive(Debug, Clone)]
 pub enum ServerZoneIpcData {
     InitResponse {
-        unk1: u64,
-        character_id: ObjectId,
-        unk2: u32,
+        #[brw(pad_before = 8, pad_after = 4)] // empty
+        actor_id: ObjectId,
     },
     InitZone(InitZone),
     ActorControlSelf(ActorControlSelf),
@@ -611,9 +610,7 @@ mod tests {
     fn server_zone_ipc_sizes() {
         let ipc_types = [
             ServerZoneIpcData::InitResponse {
-                unk1: 0,
-                character_id: INVALID_OBJECT_ID,
-                unk2: 0,
+                actor_id: INVALID_OBJECT_ID,
             },
             ServerZoneIpcData::InitZone(InitZone::default()),
             ServerZoneIpcData::ActorControlSelf(ActorControlSelf::default()),

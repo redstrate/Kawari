@@ -556,7 +556,7 @@ async fn client_loop(
                                                 {
                                                     let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InitResponse {
                                                         unk1: 0,
-                                                        character_id: connection.player_data.actor_id,
+                                                        actor_id: connection.player_data.actor_id,
                                                         unk2: 0,
                                                     });
                                                     connection.send_ipc_self(ipc).await;
