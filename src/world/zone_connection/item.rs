@@ -175,7 +175,6 @@ impl ZoneConnection {
             .await;
         }
 
-        self.process_effects_list().await;
         self.update_class_info().await;
     }
 

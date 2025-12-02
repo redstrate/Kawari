@@ -2,10 +2,7 @@ use mlua::{LuaSerdeExt, UserData, UserDataFields, UserDataMethods, Value};
 
 use crate::{
     INVENTORY_ACTION_ACK_SHOP, LogMessageType,
-    common::{
-        INVALID_OBJECT_ID, ObjectId, ObjectTypeId, ObjectTypeKind, Position,
-        workdefinitions::RemakeMode,
-    },
+    common::{ObjectId, ObjectTypeId, ObjectTypeKind, Position, workdefinitions::RemakeMode},
     inventory::{ContainerType, CurrencyKind, Item},
     ipc::zone::{
         ActorControlCategory, ActorControlSelf, EventScene, EventType, SceneFlags,
@@ -20,9 +17,9 @@ use super::{LuaZone, QueueSegments, Task, create_ipc_self};
 #[derive(Default)]
 pub struct LuaPlayer {
     pub player_data: PlayerData,
-    pub status_effects: StatusEffects,
     pub queued_tasks: Vec<Task>,
     pub zone_data: LuaZone,
+    pub status_effects: StatusEffects,
 }
 
 impl QueueSegments for LuaPlayer {
@@ -44,17 +41,11 @@ impl LuaPlayer {
     }
 
     fn give_status_effect(&mut self, effect_id: u16, effect_param: u16, duration: f32) {
-        let ipc =
-            ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
-                category: ActorControlCategory::GainEffect {
-                    effect_id: effect_id as u32,
-                    param: effect_param as u32,
-                    source_actor_id: INVALID_OBJECT_ID, // TODO: fill
-                },
-            }));
-        create_ipc_self(self, ipc, self.player_data.actor_id);
-
-        self.status_effects.add(effect_id, effect_param, duration);
+        self.queued_tasks.push(Task::GainStatusEffect {
+            effect_id,
+            effect_param,
+            duration,
+        });
     }
 
     fn play_scene(

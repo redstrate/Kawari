@@ -38,7 +38,7 @@ use kawari::world::{
 };
 use kawari::world::{
     ClientHandle, ClientId, EventFinishType, FromServer, MessageInfo, PlayerData, ServerHandle,
-    StatusEffects, ToServer, WorldDatabase, server_main_loop,
+    ToServer, WorldDatabase, server_main_loop,
 };
 use kawari::{ERR_INVENTORY_ADD_FAILED, LogMessageType, NETWORK_TIMEOUT, RECEIVE_BUFFER_SIZE};
 
@@ -150,7 +150,6 @@ async fn initial_setup(
                                     state,
                                     player_data: PlayerData::default(),
                                     spawn_index: 0,
-                                    status_effects: StatusEffects::default(),
                                     events: Vec::new(),
                                     actors: Vec::new(),
                                     ip,
@@ -1611,21 +1610,12 @@ async fn client_loop(
                                 }
                             }
 
-                            // copy from lua player state, as they modify the status effects list
-                            if lua_player.status_effects.dirty {
-                                connection.status_effects = lua_player.status_effects.clone();
-                            }
-
                             // Process any queued packets from scripts and whatnot
                             lua_player.queued_tasks.append(&mut connection.queued_tasks);
                             connection.process_lua_player(&mut lua_player).await;
 
-                            // check if status effects need sending
-                            connection.process_effects_list().await;
-
                             // update lua player
                             lua_player.player_data = connection.player_data.clone();
-                            lua_player.status_effects = connection.status_effects.clone();
                         }
                     },
                     Err(_) => {
@@ -1683,6 +1673,7 @@ async fn client_loop(
                         connection.send_segment(segment).await;
                     }
                     FromServer::NewTasks(mut tasks) => connection.queued_tasks.append(&mut tasks),
+                    FromServer::NewStatusEffects(status_effects) => lua_player.status_effects = status_effects,
                     _ => { tracing::error!("Zone connection {:#?} received a FromServer message we don't care about: {:#?}, ensure you're using the right client network or that you've implemented a handler for it if we actually care about it!", client_handle.id, msg); }
                 },
                 None => break,

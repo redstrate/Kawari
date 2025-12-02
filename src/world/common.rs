@@ -21,7 +21,7 @@ use crate::{
             SocialListRequestType,
         },
     },
-    world::lua::Task,
+    world::{StatusEffects, lua::Task},
 };
 
 use super::{Actor, lua::LuaZone};
@@ -148,6 +148,8 @@ pub enum FromServer {
     PacketSegment(ServerZoneIpcSegment, u32),
     /// Set of Lua tasks queued up from the server.
     NewTasks(Vec<Task>),
+    /// New copy of the status effects list, for use in Lua scripting.
+    NewStatusEffects(StatusEffects),
 }
 
 #[derive(Debug, Clone)]
@@ -223,7 +225,9 @@ pub enum ToServer {
     /// Tell the server what models IDs we have equipped.
     Equip(ClientId, u32, u64, u64, [u32; 10]),
     /// The player gains an effect.
-    GainEffect(ClientId, u32, u16, f32, u16, ObjectId),
+    GainEffect(ClientId, u32, u16, u16, f32, ObjectId),
+    /// The player loses an effect.
+    LoseEffect(ClientId, u32, u16, u16, ObjectId),
     /// Warp with the specified id.
     Warp(ClientId, u32, u32),
     /// Warp with the specified aetheryte id.

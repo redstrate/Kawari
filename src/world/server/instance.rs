@@ -106,7 +106,7 @@ impl Instance {
     pub fn find_all_players(&self) -> Vec<ObjectId> {
         self.actors
             .iter()
-            .filter(|(_, y)| matches!(y, NetworkedActor::Player(_)))
+            .filter(|(_, y)| matches!(y, NetworkedActor::Player { .. }))
             .map(|(x, _)| *x)
             .collect()
     }

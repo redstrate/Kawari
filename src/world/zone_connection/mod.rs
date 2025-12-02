@@ -35,7 +35,7 @@ use crate::{
 };
 
 use super::{
-    Actor, Event, StatusEffects, WorldDatabase,
+    Actor, Event, WorldDatabase,
     common::{ClientId, ServerHandle},
 };
 
@@ -200,8 +200,6 @@ pub struct ZoneConnection {
     pub player_data: PlayerData,
 
     pub spawn_index: u8,
-
-    pub status_effects: StatusEffects,
 
     pub events: Vec<Event>,
     pub actors: Vec<Actor>,

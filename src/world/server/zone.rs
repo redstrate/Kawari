@@ -14,7 +14,7 @@ use crate::{
     common::{GameData, ObjectId, Position, TerritoryNameKind, euler_to_direction},
     ipc::zone::{ActorControl, ActorControlCategory, ActorControlSelf},
     world::{
-        Actor, ClientId, FromServer, ToServer,
+        Actor, ClientId, FromServer, StatusEffects, ToServer,
         common::SpawnKind,
         lua::LuaZone,
         server::{
@@ -338,7 +338,7 @@ pub fn handle_zone_messages(
                 // send existing player data
                 for (id, spawn) in &instance.actors {
                     let kind = match spawn {
-                        NetworkedActor::Player(spawn) => SpawnKind::Player(spawn.clone()),
+                        NetworkedActor::Player { spawn, .. } => SpawnKind::Player(spawn.clone()),
                         NetworkedActor::Npc { spawn, .. } => {
                             // TODO: Do we actually care about NPCs here if we're only sending *player* data?
                             SpawnKind::Npc(spawn.clone())
@@ -399,7 +399,10 @@ pub fn handle_zone_messages(
                 let instance = data.find_instance_mut(*zone_id);
                 instance.actors.insert(
                     ObjectId(client.actor_id),
-                    NetworkedActor::Player(player_spawn.clone()),
+                    NetworkedActor::Player {
+                        spawn: player_spawn.clone(),
+                        status_effects: StatusEffects::default(),
+                    },
                 );
             }
         }

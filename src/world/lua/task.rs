@@ -165,4 +165,9 @@ pub enum Task {
     FinishQuest {
         id: u32,
     },
+    GainStatusEffect {
+        effect_id: u16,
+        effect_param: u16,
+        duration: f32,
+    },
 }

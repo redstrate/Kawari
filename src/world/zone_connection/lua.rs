@@ -488,6 +488,13 @@ impl ZoneConnection {
                 Task::FinishQuest { id } => {
                     self.finish_quest(*id).await;
                 }
+                Task::GainStatusEffect {
+                    effect_id,
+                    effect_param,
+                    duration,
+                } => {
+                    self.gain_effect(*effect_id, *effect_param, *duration).await;
+                }
             }
         }
         player.queued_tasks.clear();

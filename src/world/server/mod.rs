@@ -105,11 +105,11 @@ fn set_player_minion(
                 break;
             };
 
-            let NetworkedActor::Player(player) = actor else {
+            let NetworkedActor::Player { spawn, .. } = actor else {
                 break;
             };
 
-            player.common.active_minion = minion_id as u16;
+            spawn.common.active_minion = minion_id as u16;
 
             let msg = FromServer::ActorControlSelf(ActorControlSelf {
                 category: ActorControlCategory::MinionSpawnControl { minion_id },
@@ -471,7 +471,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         .find(|actor| *actor.0 == ObjectId(actor_id))
                     {
                         let common = match spawn {
-                            NetworkedActor::Player(npc_spawn) => &mut npc_spawn.common,
+                            NetworkedActor::Player { spawn, .. } => &mut spawn.common,
                             NetworkedActor::Npc { spawn, .. } => &mut spawn.common,
                         };
                         common.pos = position;
@@ -705,7 +705,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 let mut network = network.lock();
 
                 let actor_id = Instance::generate_actor_id();
-                let spawn;
+                let npc_spawn;
                 {
                     let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
                         break;
@@ -715,7 +715,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         break;
                     };
 
-                    let NetworkedActor::Player(player) = actor else {
+                    let NetworkedActor::Player { spawn, .. } = actor else {
                         break;
                     };
 
@@ -725,7 +725,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         model_chara = game_data.find_bnpc(id).unwrap();
                     }
 
-                    spawn = NpcSpawn {
+                    npc_spawn = NpcSpawn {
                         aggression_mode: 1,
                         common: CommonSpawn {
                             hp_curr: 91,
@@ -739,13 +739,13 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                             level: 1,
                             battalion: 4,
                             model_chara,
-                            pos: player.common.pos,
+                            pos: spawn.common.pos,
                             ..Default::default()
                         },
                         ..Default::default()
                     };
 
-                    instance.insert_npc(ObjectId(actor_id), spawn.clone());
+                    instance.insert_npc(ObjectId(actor_id), npc_spawn.clone());
                 }
 
                 network.send_actor(
@@ -753,7 +753,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         id: ObjectId(actor_id),
                         ..Default::default()
                     },
-                    SpawnKind::Npc(spawn),
+                    SpawnKind::Npc(npc_spawn),
                 );
             }
             ToServer::DebugSpawnClone(_from_id, from_actor_id) => {
@@ -761,7 +761,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 let mut network = network.lock();
 
                 let actor_id = Instance::generate_actor_id();
-                let spawn;
+                let npc_spawn;
                 {
                     let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
                         break;
@@ -771,17 +771,17 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         break;
                     };
 
-                    let NetworkedActor::Player(player) = actor else {
+                    let NetworkedActor::Player { spawn, .. } = actor else {
                         break;
                     };
 
-                    spawn = NpcSpawn {
+                    npc_spawn = NpcSpawn {
                         aggression_mode: 1,
-                        common: player.common.clone(),
+                        common: spawn.common.clone(),
                         ..Default::default()
                     };
 
-                    instance.insert_npc(ObjectId(actor_id), spawn.clone());
+                    instance.insert_npc(ObjectId(actor_id), npc_spawn.clone());
                 }
 
                 network.send_actor(
@@ -789,7 +789,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         id: ObjectId(actor_id),
                         ..Default::default()
                     },
-                    SpawnKind::Npc(spawn),
+                    SpawnKind::Npc(npc_spawn),
                 );
             }
             ToServer::Config(_from_id, from_actor_id, config) => {
@@ -805,11 +805,11 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         break;
                     };
 
-                    let NetworkedActor::Player(player) = actor else {
+                    let NetworkedActor::Player { spawn, .. } = actor else {
                         break;
                     };
 
-                    player.common.display_flags = config.display_flag.into();
+                    spawn.common.display_flags = config.display_flag.into();
                 }
 
                 let mut network = network.lock();
@@ -830,13 +830,13 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         break;
                     };
 
-                    let NetworkedActor::Player(player) = actor else {
+                    let NetworkedActor::Player { spawn, .. } = actor else {
                         break;
                     };
 
-                    player.common.main_weapon_model = main_weapon_id;
-                    player.common.sec_weapon_model = sub_weapon_id;
-                    player.common.models = model_ids;
+                    spawn.common.main_weapon_model = main_weapon_id;
+                    spawn.common.sec_weapon_model = sub_weapon_id;
+                    spawn.common.models = model_ids;
                 }
 
                 // Inform all clients about their new equipped model ids
@@ -845,51 +845,6 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
 
                 let mut network = network.lock();
                 network.send_to_all(None, msg, DestinationNetwork::ZoneClients);
-            }
-            ToServer::GainEffect(
-                from_id,
-                _from_actor_id,
-                effect_id,
-                effect_duration,
-                effect_param,
-                effect_source_actor_id,
-            ) => {
-                let send_lost_effect =
-                    |from_id: ClientId,
-                     network: Arc<Mutex<NetworkState>>,
-                     effect_id: u16,
-                     effect_param: u16,
-                     effect_source_actor_id: ObjectId| {
-                        let mut network = network.lock();
-
-                        tracing::info!("Now losing effect {}!", effect_id);
-
-                        let msg =
-                            FromServer::LoseEffect(effect_id, effect_param, effect_source_actor_id);
-                        network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
-                    };
-
-                // Eventually tell the player they lost this effect
-                // NOTE: I know this won't scale, but it's a fine hack for now
-
-                tracing::info!("Effect {effect_id} lasts for {effect_duration} seconds");
-
-                // we have to shadow these variables to tell rust not to move them into the async closure
-                let network = network.clone();
-                tokio::task::spawn(async move {
-                    let mut interval = tokio::time::interval(Duration::from_millis(
-                        (effect_duration * 1000.0) as u64,
-                    ));
-                    interval.tick().await;
-                    interval.tick().await;
-                    send_lost_effect(
-                        from_id,
-                        network,
-                        effect_id,
-                        effect_param,
-                        effect_source_actor_id,
-                    );
-                });
             }
             ToServer::Disconnected(from_id, from_actor_id) => {
                 let mut network = network.lock();

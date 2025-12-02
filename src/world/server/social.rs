@@ -124,7 +124,7 @@ fn build_party_list(party: &Party, data: &WorldServer) -> Vec<PartyMemberEntry> 
     for instance in data.instances.values() {
         for (id, actor) in &instance.actors {
             let spawn = match actor {
-                NetworkedActor::Player(spawn) => spawn,
+                NetworkedActor::Player { spawn, .. } => spawn,
                 _ => continue,
             };
             for member in &party.members {
@@ -213,7 +213,7 @@ pub fn handle_social_messages(
             // Since we don't implement multiple worlds, the world id isn't useful for anything here.
             'outer: for instance in data.instances.values() {
                 for (id, actor) in &instance.actors {
-                    if let NetworkedActor::Player(spawn) = actor
+                    if let NetworkedActor::Player { spawn, .. } = actor
                         && (spawn.content_id == *content_id || spawn.common.name == *character_name)
                     {
                         recipient_actor_id = *id;
