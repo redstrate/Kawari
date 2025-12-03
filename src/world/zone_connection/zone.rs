@@ -154,6 +154,10 @@ impl ZoneConnection {
             self.send_ipc_self(ipc).await;
         }
 
+        if initial_login {
+            self.send_quest_information().await;
+        }
+
         self.actor_control_self(ActorControlSelf {
             category: ActorControlCategory::SetItemLevel {
                 level: self.player_data.inventory.equipped.calculate_item_level() as u32,

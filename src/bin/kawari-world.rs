@@ -569,7 +569,7 @@ async fn client_loop(
                                                         nameday_day: chara_details.chara_make.birth_day as u8,
                                                         deity: chara_details.chara_make.guardian as u8,
                                                         current_class: connection.player_data.classjob_id,
-                                                        first_class: 1, // TODO: placeholder
+                                                        first_class: connection.player_data.classjob_id, // TODO: placeholder
                                                         levels: padded_levels,
                                                         unlocks: connection.player_data.unlocks.unlocks.0.clone(),
                                                         aetherytes: connection.player_data.unlocks.aetherytes.0.clone(),
@@ -614,8 +614,6 @@ async fn client_loop(
                                                         level: connection.player_data.inventory.equipped.calculate_item_level() as u32,
                                                     }
                                                 }).await;
-
-                                                connection.send_quest_information().await;
 
                                                 connection.handle.send(ToServer::ReadySpawnPlayer(connection.id, connection.player_data.zone_id, connection.player_data.position, connection.player_data.rotation)).await;
 

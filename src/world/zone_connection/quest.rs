@@ -50,6 +50,19 @@ impl ZoneConnection {
             });
             self.send_ipc_self(ipc).await;
         }
+
+        // scenario guide
+        {
+            // TODO: temporary
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ScenarioGuide {
+                quest_id_1: 39,
+                next_quest_id: 85,
+                layout_id: 1985113,
+            });
+            self.send_ipc_self(ipc).await;
+        }
+
+        self.send_quest_tracker().await;
     }
 
     pub async fn accept_quest(&mut self, id: u32) {

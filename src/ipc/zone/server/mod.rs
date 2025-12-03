@@ -577,7 +577,16 @@ pub enum ServerZoneIpcData {
         terminator: u32,
     },
     SupportDeskNotification {
-        unk1: [u8; 32],
+        unk1: [u8; 16],
+    },
+    ScenarioGuide {
+        /// Not sure what this controls.
+        quest_id_1: u32,
+        /// Quest ID (Row ID - 65535) shown in big text. The next job quest is automatically determined.
+        next_quest_id: u32,
+        /// The game object ID to center on when opening the map.
+        #[brw(pad_before = 4, pad_after = 16)] // seems empty
+        layout_id: u32,
     },
     Unknown {
         #[br(count = size - 32)]
@@ -908,7 +917,12 @@ mod tests {
                 house_summaries: Vec::default(),
                 terminator: 0,
             },
-            ServerZoneIpcData::SupportDeskNotification { unk1: [0; 32] },
+            ServerZoneIpcData::SupportDeskNotification { unk1: [0; 16] },
+            ServerZoneIpcData::ScenarioGuide {
+                quest_id_1: 0,
+                next_quest_id: 0,
+                layout_id: 0,
+            },
         ];
 
         for data in &ipc_types {

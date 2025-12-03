@@ -568,6 +568,12 @@
             "name": "SupportDeskNotification",
             "comment": "Sent by the server to indicate you have a support desk notification(?)",
             "opcode": 391,
+            "size": 16
+        },
+        {
+            "name": "ScenarioGuide",
+            "comment": "Sent by the server to update the scenario guide UI.",
+            "opcode": 358,
             "size": 32
         }
     ],
