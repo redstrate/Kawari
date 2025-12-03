@@ -415,7 +415,7 @@ pub fn handle_zone_messages(
 
             // inform the players in this zone that this actor left
             if let Some(current_instance) = data.find_actor_instance_mut(*actor_id) {
-                current_instance.actors.remove(&*actor_id);
+                current_instance.actors.remove(actor_id);
                 network.inform_remove_actor(current_instance, *from_id, *actor_id);
             }
 

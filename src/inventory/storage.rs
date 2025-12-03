@@ -110,11 +110,5 @@ pub trait Storage: Sync {
 
 /// Finds the first free slot in this container.
 pub fn get_next_free_slot(storage: &dyn Storage) -> Option<u16> {
-    for i in 0..storage.max_slots() as u16 {
-        if storage.get_slot(i).is_empty_slot() {
-            return Some(i);
-        }
-    }
-
-    None
+    (0..storage.max_slots() as u16).find(|&i| storage.get_slot(i).is_empty_slot())
 }

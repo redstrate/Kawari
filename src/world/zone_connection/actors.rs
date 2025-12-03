@@ -97,7 +97,7 @@ impl ZoneConnection {
         // TODO: Can this be deduplicated somehow?
         match spawn {
             SpawnKind::Player(mut spawn) => {
-                spawn.common.spawn_index = spawn_index as u8;
+                spawn.common.spawn_index = spawn_index;
                 spawn.common.target_id = ObjectTypeId {
                     object_id: actor_id,
                     object_type: ObjectTypeKind::None,
@@ -105,7 +105,7 @@ impl ZoneConnection {
                 ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PlayerSpawn(spawn));
             }
             SpawnKind::Npc(mut spawn) => {
-                spawn.common.spawn_index = spawn_index as u8;
+                spawn.common.spawn_index = spawn_index;
                 spawn.common.target_id = ObjectTypeId {
                     object_id: actor_id,
                     object_type: ObjectTypeKind::None,
@@ -142,7 +142,7 @@ impl ZoneConnection {
             tracing::info!("Removing actor {actor_id} {}!", spawn_index);
 
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Delete {
-                spawn_index: spawn_index,
+                spawn_index,
                 actor_id,
             });
 

@@ -86,13 +86,13 @@ fn process_effects_list(
     if status_effects.is_dirty() {
         let mut list = [StatusEffect::default(); 30];
         let data = status_effects.data();
-        list[..data.len()].copy_from_slice(&data);
+        list[..data.len()].copy_from_slice(data);
 
         let ipc =
             ServerZoneIpcSegment::new(ServerZoneIpcData::StatusEffectList(StatusEffectList {
                 statues: list,
                 classjob_id: common_spawn.class_job,
-                level: common_spawn.level as u8,
+                level: common_spawn.level,
                 curr_hp: common_spawn.hp_curr,
                 max_hp: common_spawn.hp_max,
                 curr_mp: common_spawn.mp_curr,
@@ -203,12 +203,12 @@ pub fn gain_effect(
     let network = network.clone();
     let data = data.clone();
     let lua = lua.clone();
-    let from_id = from_id.clone();
-    let from_actor_id = from_actor_id.clone();
-    let effect_id = effect_id.clone();
-    let effect_duration = effect_duration.clone();
-    let effect_param = effect_param.clone();
-    let effect_source_actor_id = effect_source_actor_id.clone();
+    let from_id = from_id;
+    let from_actor_id = from_actor_id;
+    let effect_id = effect_id;
+    let effect_duration = effect_duration;
+    let effect_param = effect_param;
+    let effect_source_actor_id = effect_source_actor_id;
     tokio::task::spawn(async move {
         let mut interval =
             tokio::time::interval(Duration::from_millis((effect_duration * 1000.0) as u64));

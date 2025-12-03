@@ -133,7 +133,7 @@ impl ZoneConnection {
 
     /// Sends the updateitem and containerinfo packets for the equipped container.
     pub async fn send_equipped_inventory(&mut self) {
-        let equipped = self.player_data.inventory.equipped.clone();
+        let equipped = self.player_data.inventory.equipped;
 
         let mut send_slot = async |slot_index: u16, item: &Item| {
             if item.quantity == 0 {
@@ -141,7 +141,7 @@ impl ZoneConnection {
             }
 
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateItem(ItemInfo {
-                sequence: self.player_data.item_sequence as u32,
+                sequence: self.player_data.item_sequence,
                 container: ContainerType::Equipped,
                 slot: slot_index,
                 quantity: item.quantity,
@@ -162,7 +162,7 @@ impl ZoneConnection {
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ContainerInfo(ContainerInfo {
                 container: ContainerType::Equipped,
                 num_items: self.player_data.inventory.equipped.num_items(),
-                sequence: self.player_data.item_sequence as u32,
+                sequence: self.player_data.item_sequence,
                 ..Default::default()
             }));
             self.send_ipc_self(ipc).await;

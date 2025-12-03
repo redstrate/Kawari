@@ -32,84 +32,81 @@ pub fn handle_action_messages(
     lua: Arc<Mutex<Lua>>,
     msg: &ToServer,
 ) {
-    match msg {
-        ToServer::ActionRequest(from_id, from_actor_id, request) => {
-            let cast_time;
-            {
-                let mut game_data = game_data.lock();
-                cast_time = game_data.get_casttime(request.action_key).unwrap();
-            }
+    if let ToServer::ActionRequest(from_id, from_actor_id, request) = msg {
+        let cast_time;
+        {
+            let mut game_data = game_data.lock();
+            cast_time = game_data.get_casttime(request.action_key).unwrap();
+        }
 
-            let send_execution = |from_id: ClientId,
-                                  from_actor_id: ObjectId,
-                                  request: ActionRequest,
-                                  network: Arc<Mutex<NetworkState>>,
-                                  data: Arc<Mutex<WorldServer>>,
-                                  game_data: Arc<Mutex<GameData>>,
-                                  lua: Arc<Mutex<Lua>>| {
-                tracing::info!("Now finishing delayed cast!");
+        let send_execution = |from_id: ClientId,
+                              from_actor_id: ObjectId,
+                              request: ActionRequest,
+                              network: Arc<Mutex<NetworkState>>,
+                              data: Arc<Mutex<WorldServer>>,
+                              game_data: Arc<Mutex<GameData>>,
+                              lua: Arc<Mutex<Lua>>| {
+            tracing::info!("Now finishing delayed cast!");
 
-                let tasks = execute_action(
-                    network.clone(),
-                    data,
-                    game_data,
-                    lua,
+            let tasks = execute_action(
+                network.clone(),
+                data,
+                game_data,
+                lua,
+                from_id,
+                from_actor_id,
+                request,
+            );
+
+            let mut network = network.lock();
+            let msg = FromServer::NewTasks(tasks);
+            network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
+        };
+
+        if cast_time == 0 {
+            // If instantaneous, send right back
+            send_execution(
+                *from_id,
+                *from_actor_id,
+                request.clone(),
+                network.clone(),
+                data.clone(),
+                game_data.clone(),
+                lua.clone(),
+            );
+        } else {
+            // Otherwise, delay
+            // NOTE: I know this won't scale, but it's a fine hack for now
+
+            tracing::info!(
+                "Delaying spell cast for {} milliseconds",
+                cast_time as u64 * 100
+            );
+
+            // we have to shadow these variables to tell rust not to move them into the async closure
+            let network = network.clone();
+            let data = data.clone();
+            let game_data = game_data.clone();
+            let lua = lua.clone();
+            let request = request.clone();
+            let from_id = *from_id;
+            let from_actor_id = *from_actor_id;
+            tokio::task::spawn(async move {
+                let mut interval =
+                    tokio::time::interval(Duration::from_millis(cast_time as u64 * 100));
+                interval.tick().await;
+                interval.tick().await;
+                send_execution(
                     from_id,
                     from_actor_id,
                     request,
+                    network,
+                    data,
+                    game_data,
+                    lua,
                 );
-
-                let mut network = network.lock();
-                let msg = FromServer::NewTasks(tasks);
-                network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
-            };
-
-            if cast_time == 0 {
-                // If instantaneous, send right back
-                send_execution(
-                    *from_id,
-                    *from_actor_id,
-                    request.clone(),
-                    network.clone(),
-                    data.clone(),
-                    game_data.clone(),
-                    lua.clone(),
-                );
-            } else {
-                // Otherwise, delay
-                // NOTE: I know this won't scale, but it's a fine hack for now
-
-                tracing::info!(
-                    "Delaying spell cast for {} milliseconds",
-                    cast_time as u64 * 100
-                );
-
-                // we have to shadow these variables to tell rust not to move them into the async closure
-                let network = network.clone();
-                let data = data.clone();
-                let game_data = game_data.clone();
-                let lua = lua.clone();
-                let request = request.clone();
-                let from_id = from_id.clone();
-                let from_actor_id = from_actor_id.clone();
-                tokio::task::spawn(async move {
-                    let mut interval =
-                        tokio::time::interval(Duration::from_millis(cast_time as u64 * 100));
-                    interval.tick().await;
-                    interval.tick().await;
-                    send_execution(
-                        from_id,
-                        from_actor_id,
-                        request,
-                        network,
-                        data,
-                        game_data,
-                        lua,
-                    );
-                });
-            }
+            });
         }
-        _ => {}
     }
 }
 
