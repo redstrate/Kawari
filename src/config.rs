@@ -324,6 +324,9 @@ pub struct WorldConfig {
     /// The active festivals.
     #[serde(default = "WorldConfig::default_active_festivals")]
     pub active_festivals: [u16; 4],
+    /// Whether the World should accept new characters.
+    #[serde(default = "WorldConfig::default_accept_new_characters")]
+    pub accept_new_characters: bool,
 }
 
 impl Default for WorldConfig {
@@ -339,6 +342,7 @@ impl Default for WorldConfig {
             login_message: Self::default_login_message(),
             generate_navmesh: Self::default_generate_navmesh(),
             active_festivals: Self::default_active_festivals(),
+            accept_new_characters: Self::default_accept_new_characters(),
         }
     }
 }
@@ -378,6 +382,10 @@ impl WorldConfig {
 
     fn default_active_festivals() -> [u16; 4] {
         [0; 4]
+    }
+
+    fn default_accept_new_characters() -> bool {
+        true
     }
 }
 

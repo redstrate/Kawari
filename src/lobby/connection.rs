@@ -271,6 +271,7 @@ impl LobbyConnection {
             let mut servers = [Server {
                 id: config.world.world_id,
                 name: self.world_name.clone(),
+                restricted: !config.world.accept_new_characters,
                 ..Default::default()
             }]
             .to_vec();
@@ -335,6 +336,9 @@ impl LobbyConnection {
 
             let mut characters = characters.to_vec();
 
+            let max_characters_per_world = 8;
+            let can_create_character = characters.len() < max_characters_per_world;
+
             for i in 0..4 {
                 let mut characters_in_packet = Vec::new();
                 for _ in 0..min(characters.len(), 2) {
@@ -355,9 +359,9 @@ impl LobbyConnection {
                         days_subscribed: 30,
                         remaining_days: 30,
                         days_to_next_rank: 0,
-                        unk8: 1,
-                        max_characters_on_world: 8,
-                        entitled_expansion: 5,
+                        unk8: if can_create_character { 1 } else { 0 },
+                        max_characters_on_world: max_characters_per_world as u16,
+                        entitled_expansion: 5, // TODO: use service account max expansion
                         characters: characters_in_packet,
                         ..Default::default()
                     }
