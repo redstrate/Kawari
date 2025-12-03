@@ -41,6 +41,14 @@ impl ZoneConnection {
             self.send_ipc_self(ipc).await;
         }
 
+        // legacy quest complete list
+        {
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::LegacyQuestList {
+                bitmask: [0xFF; 40],
+            });
+            self.send_ipc_self(ipc).await;
+        }
+
         // levequest complete list
         // NOTE: all levequests are unlocked by default
         {

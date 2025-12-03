@@ -575,6 +575,12 @@
             "comment": "Sent by the server to update the scenario guide UI.",
             "opcode": 358,
             "size": 32
+        },
+        {
+            "name": "LegacyQuestList",
+            "comment": "Sent by the server to send a list of completed FFXIV 1.x quests.",
+            "opcode": 845,
+            "size": 40
         }
     ],
     "ClientZoneIpcType": [

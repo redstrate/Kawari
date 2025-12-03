@@ -588,6 +588,9 @@ pub enum ServerZoneIpcData {
         #[brw(pad_before = 4, pad_after = 16)] // seems empty
         layout_id: u32,
     },
+    LegacyQuestList {
+        bitmask: [u8; 40],
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -923,6 +926,7 @@ mod tests {
                 next_quest_id: 0,
                 layout_id: 0,
             },
+            ServerZoneIpcData::LegacyQuestList { bitmask: [0; 40] },
         ];
 
         for data in &ipc_types {
