@@ -81,9 +81,10 @@ pub struct ServiceLoginReply {
     pub unk1: u8,
     pub unk2: u8,
     pub unk3: u8,
-    /// Set to 128 if legacy character
+    /// 128 = legacy character
     pub unk4: u8,
     pub unk5: [u32; 7],
+    /// 64 = Config system online
     pub unk6: u8,
     pub veteran_rank: u8,
     #[brw(pad_after = 1)]
@@ -92,7 +93,9 @@ pub struct ServiceLoginReply {
     pub remaining_days: u32,
     pub days_to_next_rank: u32,
     pub max_characters_on_world: u16,
+    /// 1 = Can create character
     pub unk8: u16,
+    /// Seems to control which races are available.
     #[brw(pad_after = 12)]
     pub entitled_expansion: u32,
     #[br(count = 2)]
