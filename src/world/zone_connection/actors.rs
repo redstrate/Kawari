@@ -192,11 +192,6 @@ impl ZoneConnection {
         actor_id: ObjectId,
         actor_control: ActorControlTarget,
     ) {
-        tracing::info!(
-            "we are sending actor control target to {actor_id}: {actor_control:#?} and WE ARE {:#?}",
-            self.player_data.actor_id
-        );
-
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlTarget(actor_control));
 
         self.send_segment(PacketSegment {

@@ -775,7 +775,6 @@ async fn client_loop(
                                                 // no-op
                                             }
                                             ClientZoneIpcData::SocialListRequest(request) => {
-                                                tracing::info!("Recieved social list request!");
                                                 connection.handle.send(ToServer::RequestSocialList(connection.id, connection.player_data.actor_id, connection.player_data.party_id, request.clone())).await;
                                             }
                                             ClientZoneIpcData::UpdatePositionHandler { position, rotation, anim_type, anim_state, jump_state, } => {
@@ -785,8 +784,6 @@ async fn client_loop(
                                                 connection.handle.send(ToServer::ActorMoved(connection.id, connection.player_data.actor_id, *position, *rotation, *anim_type, *anim_state, *jump_state)).await;
                                             }
                                             ClientZoneIpcData::LogOut { .. } => {
-                                                tracing::info!("Recieved log out from client!");
-
                                                 connection.gracefully_logged_out = true;
                                                 connection.begin_log_out().await;
                                             }
@@ -1512,8 +1509,6 @@ async fn client_loop(
                                                 tracing::info!("Setting the free company greeting is unimplemented");
                                             }
                                             ClientZoneIpcData::SetClientLanguage { language } => {
-                                                tracing::info!("Setting language to {language:?}!");
-
                                                 connection.client_language = *language;
                                             }
                                             ClientZoneIpcData::RequestCharaInfoFromContentIds { .. } => {
