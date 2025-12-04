@@ -121,7 +121,7 @@ fn build_party_list(party: &Party, data: &WorldServer) -> Vec<PartyMemberEntry> 
     let mut party_list = Vec::<PartyMemberEntry>::new();
 
     // Online members
-    for instance in data.instances.values() {
+    for instance in &data.instances {
         for (id, actor) in &instance.actors {
             let spawn = match actor {
                 NetworkedActor::Player { spawn, .. } => spawn,
@@ -211,7 +211,7 @@ pub fn handle_social_messages(
 
             // Second, look up the recipient by name, since that and their content id are all we're given by the sending client.
             // Since we don't implement multiple worlds, the world id isn't useful for anything here.
-            'outer: for instance in data.instances.values() {
+            'outer: for instance in &data.instances {
                 for (id, actor) in &instance.actors {
                     if let NetworkedActor::Player { spawn, .. } = actor
                         && (spawn.content_id == *content_id || spawn.common.name == *character_name)
@@ -279,7 +279,7 @@ pub fn handle_social_messages(
             let mut recipient_actor_id = INVALID_OBJECT_ID;
 
             // Second, look up the recipient (the original invite sender) by content id, since that is all we're given by the sending client.
-            'outer: for instance in data.instances.values() {
+            'outer: for instance in &data.instances {
                 for (id, actor) in &instance.actors {
                     let Some(spawn) = actor.get_player_spawn() else {
                         panic!("Why are we looking up the PlayerSpawn of an NPC?");
@@ -460,7 +460,7 @@ pub fn handle_social_messages(
                 let mut target_name = String::default();
 
                 // TODO: This can probably be simplified/the logic can probably be adjusted, need to think more on this
-                for instance in data.instances.values() {
+                for instance in &data.instances {
                     for (id, actor) in &instance.actors {
                         let Some(spawn) = actor.get_player_spawn() else {
                             continue;

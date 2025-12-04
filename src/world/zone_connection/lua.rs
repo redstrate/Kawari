@@ -12,7 +12,7 @@ use crate::{
     },
     inventory::{Item, Storage},
     ipc::zone::{
-        ActorControlCategory, ActorControlSelf, EventType, ServerZoneIpcData, ServerZoneIpcSegment,
+        ActorControlCategory, ActorControlSelf, ServerZoneIpcData, ServerZoneIpcSegment,
     },
     world::{
         ToServer, ZoneConnection,
@@ -32,7 +32,6 @@ impl ZoneConnection {
 
         // These are to run functions that could possibly generate more tasks.
         // We can't do this in the loop!'
-        let mut run_enter_territory = false;
         let mut run_finish_event = false;
 
         let tasks = player.queued_tasks.clone();
@@ -238,9 +237,6 @@ impl ZoneConnection {
                 } => {
                     self.start_event(*actor_id, *event_id, *event_type, *event_arg, player)
                         .await;
-                    if *event_type == EventType::EnterTerritory {
-                        run_enter_territory = true;
-                    }
                 }
                 Task::SetInnWakeup { watched } => {
                     self.player_data.saw_inn_wakeup = *watched;
@@ -499,14 +495,6 @@ impl ZoneConnection {
         }
         player.queued_tasks.clear();
 
-        // We have to do this because the onEnterTerritory may add new tasks
-        if run_enter_territory {
-            // Let the script now that it just loaded
-            if let Some(event) = self.events.last_mut() {
-                event.enter_territory(player);
-            }
-        }
-
         if run_finish_event {
             // Yield the last event again so it can pick up from nesting
             if let Some(event) = self.events.last_mut() {
@@ -516,7 +504,7 @@ impl ZoneConnection {
 
         // We want to process again, since we probably added more tasks.
         // If we *don't* do this there is a pretty big delay before this can happen again.
-        if run_enter_territory || run_finish_event {
+        if run_finish_event {
             Box::pin(self.process_lua_player(player)).await;
         }
     }

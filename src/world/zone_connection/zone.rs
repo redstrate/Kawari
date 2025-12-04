@@ -42,6 +42,7 @@ impl ZoneConnection {
     pub async fn handle_zone_change(
         &mut self,
         new_zone_id: u16,
+        content_finder_condition_id: u16,
         weather_id: u16,
         exit_position: Position,
         exit_rotation: f32,
@@ -80,7 +81,6 @@ impl ZoneConnection {
         self.player_data.zone_id = new_zone_id;
         self.exit_position = Some(exit_position);
         self.exit_rotation = Some(exit_rotation);
-        self.should_run_finish_zoning = true;
 
         // Player Class Info
         self.update_class_info().await;
@@ -131,6 +131,8 @@ impl ZoneConnection {
 
             let extra_flags = if initial_login {
                 InitZoneFlags::INITIAL_LOGIN
+            } else if content_finder_condition_id != 0 {
+                InitZoneFlags::UNK1 | InitZoneFlags::UNK3
             } else {
                 InitZoneFlags::default()
             };
@@ -139,6 +141,7 @@ impl ZoneConnection {
                 territory_type: new_zone_id,
                 weather_id: weather_id as u8,
                 flags: InitZoneFlags::ENABLE_FLYING | InitZoneFlags::HIDE_SERVER | extra_flags,
+                content_finder_condition_id: content_finder_condition_id,
                 obsfucation_mode: if config.world.enable_packet_obsfucation {
                     OBFUSCATION_ENABLED_MODE
                 } else {

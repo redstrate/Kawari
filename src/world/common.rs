@@ -112,7 +112,7 @@ pub enum FromServer {
     // TODO: temporary
     Conditions(Conditions),
     /// To inform the connection of the zone they're loading into.
-    ChangeZone(u16, u16, Position, f32, LuaZone, bool),
+    ChangeZone(u16, u16, u16, Position, f32, LuaZone, bool),
     /// The returned position and rotation from ToServer::MoveToPopRange.
     NewPosition(Position, f32, bool),
     /// We need to inform the recipent about the direct message they're receiving.
@@ -204,7 +204,7 @@ pub enum ToServer {
     ClientTrigger(ClientId, ObjectId, ClientTrigger),
     /// The connection loaded into a zone.
     // TODO: the connection should not be in charge and telling the global server what zone they just loaded in! but this will work for now
-    ZoneLoaded(ClientId, u16, PlayerSpawn),
+    ZoneLoaded(ClientId, ObjectId, PlayerSpawn),
     /// The connection wants to enter a new zone.
     // TODO: temporary as this is only used for commands and those aren't run on global server state yet
     ChangeZone(ClientId, ObjectId, u16, Option<Position>, Option<f32>),
@@ -233,7 +233,7 @@ pub enum ToServer {
     /// Warp with the specified aetheryte id.
     WarpAetheryte(ClientId, ObjectId, u32),
     /// Ready to spawn the player (this happens during initrequest)
-    ReadySpawnPlayer(ClientId, u16, Position, f32),
+    ReadySpawnPlayer(ClientId, ObjectId, u16, Position, f32),
     /// Ready to send the ZoneIn ACS
     ZoneIn(ClientId, ObjectId, bool),
     /// We need to summon a player's minion, and tell other clients

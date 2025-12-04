@@ -340,6 +340,10 @@ pub enum ClientZoneIpcData {
         #[brw(pad_after = 4)]
         pos: Position,
     },
+    EnterTerritoryEvent {
+        #[brw(pad_after = 4)] // empty
+        event_id: u32,
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -542,6 +546,7 @@ mod tests {
                 event_id: 0,
                 pos: Position::default(),
             },
+            ClientZoneIpcData::EnterTerritoryEvent { event_id: 0 },
         ];
 
         for data in &ipc_types {

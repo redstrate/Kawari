@@ -66,7 +66,7 @@ pub fn handle_chat_messages(
 
             // Second, look up the recipient by name, since that and their world id are all we're given by the sending client.
             // Since we don't implement multiple worlds, the world id isn't useful for anything here.
-            'outer: for instance in data.instances.values() {
+            'outer: for instance in &data.instances {
                 for (id, actor) in &instance.actors {
                     if actor.get_common_spawn().name == message_info.recipient_name {
                         recipient_actor_id = *id;

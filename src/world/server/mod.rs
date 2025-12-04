@@ -15,8 +15,7 @@ use crate::{
         ClientTriggerCommand, CommonSpawn, Conditions, NpcSpawn, ObjectKind,
     },
     world::{
-        Navmesh,
-        lua::load_init_script,
+        Navmesh, lua::load_init_script,
         server::{
             action::handle_action_messages,
             actor::NetworkedActor,
@@ -48,41 +47,56 @@ struct ClientState {}
 
 #[derive(Default, Debug)]
 struct WorldServer {
-    /// Indexed by zone id
-    instances: HashMap<u16, Instance>,
+    instances: Vec<Instance>,
 }
 
 impl WorldServer {
-    /// Ensures an instance exists, and creates one if not found.
+    /// Ensures a public instance exists, and creates one if not found.
     fn ensure_exists(&mut self, zone_id: u16, game_data: &mut GameData) {
         // create a new instance if necessary
+        if self
+            .instances
+            .iter()
+            .find(|x| x.zone.id == zone_id && x.content_finder_condition_id == 0)
+            .is_none()
+        {
+            self.instances.push(Instance::new(zone_id, game_data));
+        }
+    }
+
+    /// Finds a public instance associated with a zone, or None if it doesn't exist yet.
+    fn find_instance_mut(&mut self, zone_id: u16) -> Option<&mut Instance> {
         self.instances
-            .entry(zone_id)
-            .or_insert_with(|| Instance::new(zone_id, game_data));
-    }
-
-    /// Finds the instance associated with a zone, or None if it doesn't exist yet.
-    fn find_instance(&self, zone_id: u16) -> Option<&Instance> {
-        self.instances.get(&zone_id)
-    }
-
-    /// Finds the instance associated with a zone, or creates it if it doesn't exist yet
-    fn find_instance_mut(&mut self, zone_id: u16) -> &mut Instance {
-        self.instances.entry(zone_id).or_default()
+            .iter_mut()
+            .find(|x| x.zone.id == zone_id && x.content_finder_condition_id == 0)
     }
 
     /// Finds the instance associated with an actor, or returns None if they are not found.
     fn find_actor_instance(&self, actor_id: ObjectId) -> Option<&Instance> {
         self.instances
-            .values()
+            .iter()
             .find(|instance| instance.actors.contains_key(&actor_id))
     }
 
     /// Finds the instance associated with an actor, or returns None if they are not found.
     fn find_actor_instance_mut(&mut self, actor_id: ObjectId) -> Option<&mut Instance> {
         self.instances
-            .values_mut()
+            .iter_mut()
             .find(|instance| instance.actors.contains_key(&actor_id))
+    }
+
+    fn create_new_instance(
+        &mut self,
+        zone_id: u16,
+        content_finder_condition: u16,
+        game_data: &mut GameData,
+    ) -> Option<&mut Instance> {
+        let mut instance = Instance::new(zone_id, game_data);
+        instance.content_finder_condition_id = content_finder_condition;
+
+        self.instances.push(instance);
+
+        self.instances.last_mut()
     }
 }
 
@@ -139,7 +153,7 @@ fn set_player_minion(
 }
 
 fn server_logic_tick(data: &mut WorldServer, network: &mut NetworkState) {
-    for instance in data.instances.values_mut() {
+    for instance in &mut data.instances {
         // Only pathfind if there's navmesh data available.
         if instance.navmesh.is_available() {
             let mut actor_moves = Vec::new();
@@ -434,26 +448,32 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     .chat_clients
                     .insert(handle.id, (handle, ClientState::default()));
             }
-            ToServer::ReadySpawnPlayer(from_id, zone_id, position, rotation) => {
+            ToServer::ReadySpawnPlayer(from_id, from_actor_id, zone_id, position, rotation) => {
                 let mut network = network.lock();
                 let mut data = data.lock();
 
                 // create a new instance if necessary
                 let mut game_data = game_data.lock();
                 data.ensure_exists(zone_id, &mut game_data);
-                let target_instance = data.find_instance_mut(zone_id);
 
-                // tell the client to load into the zone
-                let msg = FromServer::ChangeZone(
-                    zone_id,
-                    target_instance.weather_id,
-                    position,
-                    rotation,
-                    target_instance.zone.to_lua_zone(target_instance.weather_id),
-                    true, // since this is initial login
-                );
+                if let Some(target_instance) = data.find_instance_mut(zone_id) {
+                    target_instance.insert_empty_actor(from_actor_id);
 
-                network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
+                    // tell the client to load into the zone
+                    let msg = FromServer::ChangeZone(
+                        zone_id,
+                        target_instance.content_finder_condition_id,
+                        target_instance.weather_id,
+                        position,
+                        rotation,
+                        target_instance.zone.to_lua_zone(target_instance.weather_id),
+                        true, // since this is initial login
+                    );
+
+                    network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
+                } else {
+                    tracing::error!("Didn't find a target instance for this player!");
+                }
             }
             ToServer::ActorMoved(
                 from_id,
@@ -852,14 +872,27 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     let mut network = network.lock();
                     let mut game_data = game_data.lock();
 
-                    change_zone_warp_to_entrance(
-                        &mut data,
-                        &mut network,
-                        &mut game_data,
-                        zone_id,
-                        from_actor_id,
-                        from_id,
-                    );
+                    // inform the players in this zone that this actor left
+                    if let Some(current_instance) = data.find_actor_instance_mut(from_actor_id) {
+                        current_instance.actors.remove(&from_actor_id);
+                        network.inform_remove_actor(current_instance, from_id, from_actor_id);
+                    }
+
+                    // then find or create a new instance with the zone id and content finder condition
+                    if let Some(target_instance) =
+                        data.create_new_instance(zone_id, content_id, &mut game_data)
+                    {
+                        target_instance.insert_empty_actor(from_actor_id);
+
+                        change_zone_warp_to_entrance(
+                            &mut network,
+                            &target_instance,
+                            zone_id,
+                            from_id,
+                        );
+                    } else {
+                        tracing::warn!("Failed to create a new instance for content?!");
+                    }
                 } else {
                     tracing::warn!("Failed to find zone id for content?!");
                 }

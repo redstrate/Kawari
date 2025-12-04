@@ -165,7 +165,6 @@ async fn initial_setup(
                         queued_content: None,
                         conditions: Conditions::default(),
                         client_language: ClientLanguage::English,
-                        should_run_finish_zoning: false,
                         queued_tasks: Vec::new(),
                     };
 
@@ -615,7 +614,7 @@ async fn client_loop(
                                                     }
                                                 }).await;
 
-                                                connection.handle.send(ToServer::ReadySpawnPlayer(connection.id, connection.player_data.zone_id, connection.player_data.position, connection.player_data.rotation)).await;
+                                                connection.handle.send(ToServer::ReadySpawnPlayer(connection.id, connection.player_data.actor_id, connection.player_data.zone_id, connection.player_data.position, connection.player_data.rotation)).await;
 
                                                 let lua = lua.lock();
                                                 lua.scope(|scope| {
@@ -651,7 +650,7 @@ async fn client_loop(
                                                 };
 
                                                 // tell the server we loaded into the zone, so it can start sending us actors
-                                                connection.handle.send(ToServer::ZoneLoaded(connection.id, connection.player_data.zone_id, spawn.clone())).await;
+                                                connection.handle.send(ToServer::ZoneLoaded(connection.id, connection.player_data.actor_id, spawn.clone())).await;
 
                                                 let chara_details = database.find_chara_make(connection.player_data.content_id);
 
@@ -693,25 +692,6 @@ async fn client_loop(
                                                         connection.send_ipc_self(ipc).await;
                                                     },
                                                     ClientTriggerCommand::FinishZoning {} => {
-                                                        if connection.should_run_finish_zoning {
-                                                            {
-                                                                let lua = lua.lock();
-                                                                lua.scope(|scope| {
-                                                                    let connection_data =
-                                                                    scope.create_userdata_ref_mut(&mut lua_player).unwrap();
-
-                                                                    let func: Function = lua.globals().get("onFinishZoning").unwrap();
-
-                                                                    func.call::<()>(connection_data).unwrap();
-
-                                                                    Ok(())
-                                                                })
-                                                                .unwrap();
-                                                            }
-
-                                                            connection.should_run_finish_zoning = false;
-                                                        }
-
                                                         connection.handle.send(ToServer::ZoneIn(connection.id, connection.player_data.actor_id, connection.player_data.teleport_reason == TeleportReason::Aetheryte)).await;
                                                     },
                                                     ClientTriggerCommand::BeginContentsReplay {} => {
@@ -1602,6 +1582,12 @@ async fn client_loop(
                                                 let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::SetSearchInfo(SearchInfo::default()));
                                                 connection.send_ipc_self(ipc).await;
                                             }
+                                            ClientZoneIpcData::EnterTerritoryEvent { event_id } => {
+                                                connection.start_event(ObjectTypeId { object_id: connection.player_data.actor_id, object_type: ObjectTypeKind::None }, *event_id, EventType::EnterTerritory, connection.player_data.zone_id as u32, &mut lua_player).await;
+                                                if let Some(event) = connection.events.last_mut() {
+                                                    event.enter_territory(&mut lua_player);
+                                                }
+                                            }
                                             ClientZoneIpcData::Unknown { unk } => {
                                                 tracing::warn!("Unknown Zone packet {:?} recieved ({} bytes), this should be handled!", data.header.op_code, unk.len());
                                             }
@@ -1655,8 +1641,8 @@ async fn client_loop(
                         connection.conditions = conditions;
                         connection.send_conditions().await;
                     },
-                    FromServer::ChangeZone(zone_id, weather_id, position, rotation, lua_zone, initial_login) => {
-                        connection.handle_zone_change(zone_id, weather_id, position, rotation, initial_login, &lua_zone).await;
+                    FromServer::ChangeZone(zone_id, content_finder_condition_id, weather_id, position, rotation, lua_zone, initial_login) => {
+                        connection.handle_zone_change(zone_id, content_finder_condition_id, weather_id, position, rotation, initial_login, &lua_zone).await;
                         lua_player.zone_data = lua_zone;
                     },
                     FromServer::NewPosition(position, rotation, fade_out) => connection.set_player_position(position, rotation, fade_out).await,

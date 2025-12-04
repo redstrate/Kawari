@@ -6,9 +6,9 @@ use std::{
 use crate::{
     common::{GameData, ObjectId},
     config::get_config,
-    ipc::zone::NpcSpawn,
+    ipc::zone::{NpcSpawn, PlayerSpawn},
     world::{
-        Navmesh,
+        Navmesh, StatusEffects,
         server::{actor::NetworkedActor, zone::Zone},
     },
 };
@@ -31,6 +31,7 @@ pub struct Instance {
     pub navmesh: Navmesh,
     pub zone: Zone,
     pub weather_id: u16,
+    pub content_finder_condition_id: u16,
     /// If Some, then this is the path of the navmesh we need to generate.
     pub generate_navmesh: NavmeshGenerationStep,
 }
@@ -107,5 +108,15 @@ impl Instance {
             .filter(|(_, y)| matches!(y, NetworkedActor::Player { .. }))
             .map(|(x, _)| *x)
             .collect()
+    }
+
+    pub fn insert_empty_actor(&mut self, actor_id: ObjectId) {
+        self.actors.insert(
+            actor_id,
+            NetworkedActor::Player {
+                spawn: PlayerSpawn::default(),
+                status_effects: StatusEffects::default(),
+            },
+        );
     }
 }

@@ -922,9 +922,15 @@
         },
         {
             "name": "WalkOutsideEvent",
-            "comment": "Sent by the server when walking outside a trigger (e.g. exiting Ul'dah in the opening.)",
+            "comment": "Sent by the client when walking outside a trigger (e.g. exiting Ul'dah in the opening.)",
             "opcode": 736,
             "size": 24
+        },
+        {
+            "name": "EnterTerritoryEvent",
+            "comment": "Sent by the client when requesting to play an event (because we entered a territory.)",
+            "opcode": 309,
+            "size": 8
         }
     ],
     "ServerLobbyIpcType": [

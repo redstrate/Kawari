@@ -192,7 +192,7 @@ fn begin_change_zone<'a>(
     destination_zone_id: u16,
     actor_id: ObjectId,
     from_id: ClientId,
-) -> &'a mut Instance {
+) -> Option<&'a mut Instance> {
     // inform the players in this zone that this actor left
     if let Some(current_instance) = data.find_actor_instance_mut(actor_id) {
         current_instance.actors.remove(&actor_id);
@@ -221,7 +221,10 @@ fn change_zone_warp_to_pop_range(
         destination_zone_id,
         actor_id,
         from_id,
-    );
+    )
+    .unwrap();
+
+    target_instance.insert_empty_actor(actor_id);
 
     let exit_position;
     let exit_rotation;
@@ -240,35 +243,22 @@ fn change_zone_warp_to_pop_range(
     }
 
     do_change_zone(
-        data,
         network,
-        game_data,
+        target_instance,
         destination_zone_id,
         exit_position,
         exit_rotation,
-        actor_id,
         from_id,
     );
 }
 
 /// Sends the needed information to ZoneConnection for a zone change.
 pub fn change_zone_warp_to_entrance(
-    data: &mut WorldServer,
     network: &mut NetworkState,
-    game_data: &mut GameData,
+    target_instance: &Instance,
     destination_zone_id: u16,
-    actor_id: ObjectId,
     from_id: ClientId,
 ) {
-    let target_instance = begin_change_zone(
-        data,
-        network,
-        game_data,
-        destination_zone_id,
-        actor_id,
-        from_id,
-    );
-
     let exit_position;
     let exit_rotation;
     if let Some(destination_object) = target_instance.zone.find_entrance() {
@@ -284,40 +274,28 @@ pub fn change_zone_warp_to_entrance(
     }
 
     do_change_zone(
-        data,
         network,
-        game_data,
+        target_instance,
         destination_zone_id,
         exit_position,
         exit_rotation,
-        actor_id,
         from_id,
     );
 }
 
 /// Sends the needed information to ZoneConnection for a zone change.
 fn do_change_zone(
-    data: &mut WorldServer,
     network: &mut NetworkState,
-    game_data: &mut GameData,
+    target_instance: &Instance,
     destination_zone_id: u16,
     exit_position: Option<Position>,
     exit_rotation: Option<f32>,
-    actor_id: ObjectId,
     from_id: ClientId,
 ) {
-    let target_instance = begin_change_zone(
-        data,
-        network,
-        game_data,
-        destination_zone_id,
-        actor_id,
-        from_id,
-    );
-
     // now that we have all of the data needed, inform the connection of where they need to be
     let msg = FromServer::ChangeZone(
         destination_zone_id,
+        target_instance.content_finder_condition_id,
         target_instance.weather_id,
         exit_position.unwrap_or_default(),
         exit_rotation.unwrap_or_default(),
@@ -335,33 +313,15 @@ pub fn handle_zone_messages(
     msg: &ToServer,
 ) {
     match msg {
-        ToServer::ZoneLoaded(from_id, zone_id, player_spawn) => {
+        ToServer::ZoneLoaded(from_id, from_actor_id, player_spawn) => {
             tracing::info!("Client {from_id:?} has now loaded, sending them existing player data.");
 
             let mut data = data.lock();
             let mut network = network.lock();
 
-            // Send existing player data to the connection, if any
-            if let Some(instance) = data.find_instance(*zone_id) {
-                // send existing player data
-                for (id, spawn) in &instance.actors {
-                    let kind = match spawn {
-                        NetworkedActor::Player { spawn, .. } => SpawnKind::Player(spawn.clone()),
-                        NetworkedActor::Npc { spawn, .. } => {
-                            // TODO: Do we actually care about NPCs here if we're only sending *player* data?
-                            SpawnKind::Npc(spawn.clone())
-                        }
-                    };
-
-                    let msg = FromServer::ActorSpawn(*id, kind);
-
-                    network.send_to(*from_id, msg, DestinationNetwork::ZoneClients);
-                }
-            }
-
             let (client, _) = network.clients.get(from_id).unwrap().clone();
 
-            if let Some(instance) = data.find_instance(*zone_id) {
+            if let Some(instance) = data.find_actor_instance_mut(*from_actor_id) {
                 let mut to_remove = Vec::new();
 
                 // Then tell any clients in the zone that we spawned
@@ -389,18 +349,13 @@ pub fn handle_zone_messages(
                 }
 
                 network.to_remove.append(&mut to_remove);
-            }
 
-            // add the connection's actor to the table
-            {
-                let instance = data.find_instance_mut(*zone_id);
-                instance.actors.insert(
-                    client.actor_id,
-                    NetworkedActor::Player {
-                        spawn: player_spawn.clone(),
-                        status_effects: StatusEffects::default(),
-                    },
-                );
+                // replace the connection's actor in the table
+                let instance = data.find_actor_instance_mut(*from_actor_id).unwrap();
+                *instance.find_actor_mut(*from_actor_id).unwrap() = NetworkedActor::Player {
+                    spawn: player_spawn.clone(),
+                    status_effects: StatusEffects::default(),
+                };
             }
         }
         ToServer::ChangeZone(from_id, actor_id, zone_id, new_position, new_rotation) => {
@@ -421,11 +376,13 @@ pub fn handle_zone_messages(
 
             // then find or create a new instance with the zone id
             data.ensure_exists(*zone_id, &mut game_data);
-            let target_instance = data.find_instance_mut(*zone_id);
+            let target_instance = data.find_instance_mut(*zone_id).unwrap();
+            target_instance.insert_empty_actor(*actor_id);
 
             // tell the client to load into the zone
             let msg = FromServer::ChangeZone(
                 *zone_id,
+                target_instance.content_finder_condition_id,
                 target_instance.weather_id,
                 new_position.unwrap_or_default(),
                 new_rotation.unwrap_or_default(),

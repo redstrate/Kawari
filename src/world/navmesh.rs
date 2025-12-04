@@ -126,6 +126,9 @@ impl Navmesh {
             assert!(!self.navmesh_query.is_null());
             assert!(dtNavMeshQuery_init(self.navmesh_query, self.navmesh, 2048) == DT_SUCCESS);
         }
+
+        // We can clear the tiles, we don't need them anymore.
+        self.tiles.clear();
     }
 
     pub fn calculate_path(&self, start_pos: [f32; 3], end_pos: [f32; 3]) -> Vec<[f32; 3]> {

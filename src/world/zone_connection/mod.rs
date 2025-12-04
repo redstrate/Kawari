@@ -233,8 +233,6 @@ pub struct ZoneConnection {
     pub conditions: Conditions,
     pub client_language: ClientLanguage,
 
-    pub should_run_finish_zoning: bool,
-
     /// List of queued tasks from the server.
     pub queued_tasks: Vec<Task>,
 }
