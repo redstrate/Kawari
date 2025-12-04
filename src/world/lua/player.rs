@@ -2,7 +2,7 @@ use mlua::{LuaSerdeExt, UserData, UserDataFields, UserDataMethods, Value};
 
 use crate::{
     INVENTORY_ACTION_ACK_SHOP, LogMessageType,
-    common::{ObjectTypeId, ObjectTypeKind, Position, workdefinitions::RemakeMode},
+    common::{DirectorEvent, ObjectTypeId, ObjectTypeKind, Position, workdefinitions::RemakeMode},
     inventory::{ContainerType, CurrencyKind, Item},
     ipc::zone::{
         ActorControlCategory, ActorControlSelf, EventScene, EventType, SceneFlags,
@@ -530,6 +530,20 @@ impl LuaPlayer {
             self.player_data.actor_id,
         );
     }
+
+    fn commence_duty(&mut self, director_id: u32) {
+        create_ipc_self(
+            self,
+            ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
+                category: ActorControlCategory::DirectorEvent {
+                    director_id,
+                    event: DirectorEvent::DutyCommence,
+                    arg: 5400,
+                },
+            })),
+            self.player_data.actor_id,
+        );
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -887,6 +901,10 @@ impl UserData for LuaPlayer {
         });
         methods.add_method_mut("has_seen_cutscene", |_, this, cutscene_id: u32| {
             Ok(this.player_data.unlocks.cutscene_seen.contains(cutscene_id))
+        });
+        methods.add_method_mut("commence_duty", |_, this, director_id: u32| {
+            this.commence_duty(director_id);
+            Ok(())
         });
     }
 

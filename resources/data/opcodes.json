@@ -581,6 +581,30 @@
             "comment": "Sent by the server to send a list of completed FFXIV 1.x quests.",
             "opcode": 845,
             "size": 40
+        },
+        {
+            "name": "DirectorVars",
+            "comment": "Unknown purpose.",
+            "opcode": 450,
+            "size": 24
+        },
+        {
+            "name": "UnkDirector1",
+            "comment": "Unknown purpose.",
+            "opcode": 389,
+            "size": 32
+        },
+        {
+            "name": "UnkDirector2",
+            "comment": "Unknown purpose.",
+            "opcode": 356,
+            "size": 184
+        },
+        {
+            "name": "FieldMarkerPreset",
+            "comment": "Unknown purpose.",
+            "opcode": 898,
+            "size": 104
         }
     ],
     "ClientZoneIpcType": [
@@ -1051,6 +1075,12 @@
             "comment": "Sent by the server in response to a free company-related event taking place: member logging in, logging out, etc.",
             "opcode": 300,
             "size": 104
+        },
+        {
+            "name": "GetChannelListResponse",
+            "comment": "Sent by the server in response to GetChannelList, presumably.",
+            "opcode": 105,
+            "size": 768
         }
     ],
     "ClientChatIpcType": [

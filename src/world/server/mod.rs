@@ -15,7 +15,8 @@ use crate::{
         ClientTriggerCommand, CommonSpawn, Conditions, NpcSpawn, ObjectKind,
     },
     world::{
-        Navmesh, lua::load_init_script,
+        Navmesh,
+        lua::load_init_script,
         server::{
             action::handle_action_messages,
             actor::NetworkedActor,

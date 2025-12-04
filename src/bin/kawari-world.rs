@@ -713,8 +713,7 @@ async fn client_loop(
 
                                                         connection.respawn_player(false).await;
 
-                                                        // TODO: clear the ContentsReplay flag instead of going nuclear (see also: event_finish)
-                                                        connection.conditions = Conditions::default();
+                                                        connection.conditions.remove_condition(Condition::ExecutingGatheringAction);
                                                         connection.send_conditions().await;
                                                     },
                                                     ClientTriggerCommand::Dismount { sequence } => {
@@ -1185,7 +1184,6 @@ async fn client_loop(
                                                         event.talk(*actor_id, &mut lua_player);
                                                     }
                                                 } else {
-                                                    connection.conditions = Conditions::default();
                                                     connection.send_conditions().await;
                                                 }
                                             }

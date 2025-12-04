@@ -6,7 +6,7 @@ use parking_lot::Mutex;
 use strum::IntoEnumIterator;
 
 use crate::{
-    common::{EventHandlerType, GameData},
+    common::{DirectorType, EventHandlerType, GameData},
     config::get_config,
     ipc::zone::{EventType, GameMasterRank, SceneFlags, ServerNoticeFlags},
     world::Event,
@@ -32,6 +32,7 @@ pub fn initial_setup(lua: &mut Lua) {
     register_flags::<SceneFlags>(lua, ""); // TODO: might want to prefix these at some point
     register_enum::<EventType>(lua, "EVENT_TYPE");
     register_enum::<EventHandlerType>(lua, "HANDLER_TYPE");
+    register_enum::<DirectorType>(lua, "DIRECTOR_TYPE");
 
     // Load globals
     let config = get_config();

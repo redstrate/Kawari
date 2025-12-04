@@ -807,6 +807,15 @@ impl GameData {
 
         row.ExpToNext().into_i32().cloned().unwrap_or_default()
     }
+
+    /// Gets the short name for a given content finder condition.
+    pub fn get_content_short_name(&mut self, content_finder_row_id: u16) -> Option<String> {
+        let content_finder_sheet =
+            ContentFinderConditionSheet::read_from(&mut self.resource, Language::English).unwrap();
+        let content_finder_row = content_finder_sheet.get_row(content_finder_row_id as u32)?;
+
+        content_finder_row.ShortCode().into_string().cloned()
+    }
 }
 
 /// Simple enum for GameData::get_territory_name

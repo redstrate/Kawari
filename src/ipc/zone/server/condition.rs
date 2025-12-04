@@ -107,6 +107,14 @@ impl Conditions {
         conditions
     }
 
+    pub fn toggle_condition(&mut self, condition: Condition, set: bool) {
+        if set {
+            self.set_condition(condition);
+        } else {
+            self.remove_condition(condition);
+        }
+    }
+
     pub fn set_condition(&mut self, condition: Condition) {
         let (value, index) = value_to_flag_byte_index_value(condition as u32);
         self.flags[index as usize] |= value;
@@ -114,7 +122,7 @@ impl Conditions {
 
     pub fn remove_condition(&mut self, condition: Condition) {
         let (value, index) = value_to_flag_byte_index_value(condition as u32);
-        self.flags[index as usize] ^= value;
+        self.flags[index as usize] &= !value;
     }
 }
 

@@ -22,6 +22,9 @@ pub mod workdefinitions;
 mod bitmask;
 pub use bitmask::Bitmask;
 
+mod director;
+pub use director::{DirectorEvent, DirectorTrigger, DirectorType};
+
 #[binrw]
 #[brw(little)]
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Deserialize)]

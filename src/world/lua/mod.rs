@@ -140,6 +140,12 @@ impl UserData for GameData {
                 Ok(this.get_topic_select_target(topic_select_id, selected_topic))
             },
         );
+        methods.add_method_mut(
+            "get_content_short_name",
+            |_, this, content_finder_row_id: u16| {
+                Ok(this.get_content_short_name(content_finder_row_id))
+            },
+        );
     }
 }
 

@@ -15,6 +15,7 @@ end
 function dispatchEvent(player, event_id)
     local event_type = event_id >> 16
 
+    -- 'Normal' events
     if event_type == HANDLER_TYPE_QUESTS then
         local script_name = GAME_DATA:get_quest_name(event_id)
         local script_id = extractScriptId(script_name)
@@ -88,6 +89,21 @@ function dispatchEvent(player, event_id)
         return runEvent(event_id, "events/generic/InclusionShop.lua")
     elseif event_type == HANDLER_TYPE_EVENT_GIMMICK_PATH_MOVE then
         return runEvent(event_id, "events/generic/GimmickPathMove.lua")
+    end
+
+    -- Directors
+    -- TODO: support more than just dungeons
+    if event_type == DIRECTOR_TYPE_INSTANCE_CONTENT then
+        local content_id = event_id & 0xFF
+        local short_name = GAME_DATA:get_content_short_name(content_id)
+        local script_path = "content/"..short_name..".lua"
+
+        local event = runEvent(event_id, script_path)
+        if event == nil then
+            player:send_message(script_path.." was not found!")
+        end
+
+        return event
     end
 
     return nil

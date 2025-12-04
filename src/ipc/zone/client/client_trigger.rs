@@ -1,7 +1,7 @@
 use binrw::binrw;
 use strum_macros::IntoStaticStr;
 
-use crate::common::{DistanceRange, ObjectId, read_bool_from, write_bool_as};
+use crate::common::{DirectorTrigger, DistanceRange, ObjectId, read_bool_from, write_bool_as};
 use crate::ipc::zone::common_emote::CommonEmoteInfo;
 
 #[binrw]
@@ -125,6 +125,18 @@ pub enum ClientTriggerCommand {
     /// When the player starts flying on their mount.
     #[brw(magic = 0x0268u32)]
     StartFlying {},
+
+    /// Various triggers related to instanced content.
+    #[brw(magic = 0x0328u32)]
+    DirectorTrigger {
+        director_id: u32,
+        trigger: DirectorTrigger,
+        arg: u32,
+    },
+
+    /// When a player requests to abandon their instanced content.
+    #[brw(magic = 0x0333u32)]
+    AbandonContent {},
 
     /// Unknown purpose, but is seen during the crystal bell/aesthetician cutscenes.
     #[brw(magic = 0x033Eu32)]

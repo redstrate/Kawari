@@ -35,6 +35,9 @@ pub enum ServerChatIpcData {
         // TODO: fill this in
         unk: [u8; 32],
     },
+    GetChannelListResponse {
+        unk: [u8; 768],
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -72,6 +75,7 @@ mod tests {
             ServerChatIpcData::TellNotFoundError(TellNotFoundError::default()),
             ServerChatIpcData::FreeCompanyEvent { unk: [0; 104] },
             ServerChatIpcData::JoinChannelResult { unk: [0; 32] },
+            ServerChatIpcData::GetChannelListResponse { unk: [0; 768] },
         ];
 
         for data in &ipc_types {

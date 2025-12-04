@@ -8,8 +8,8 @@ use crate::{
     constants::OBFUSCATION_ENABLED_MODE,
     inventory::BuyBackList,
     ipc::zone::{
-        ActorControlCategory, ActorControlSelf, House, HouseList, InitZone, InitZoneFlags,
-        ServerZoneIpcData, ServerZoneIpcSegment, Warp, WeatherChange,
+        ActorControlCategory, ActorControlSelf, Condition, House, HouseList, InitZone,
+        InitZoneFlags, ServerZoneIpcData, ServerZoneIpcSegment, Warp, WeatherChange,
     },
     packet::{ConnectionState, PacketSegment, ScramblerKeyGenerator, SegmentData, SegmentType},
     world::{
@@ -49,6 +49,8 @@ impl ZoneConnection {
         initial_login: bool,
         lua_zone: &LuaZone,
     ) {
+        let bound_by_duty = content_finder_condition_id != 0;
+
         // fade in?
         {
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PrepareZoning {
@@ -129,18 +131,22 @@ impl ZoneConnection {
         {
             let config = get_config();
 
-            let extra_flags = if initial_login {
+            let mut extra_flags = if initial_login {
                 InitZoneFlags::INITIAL_LOGIN
-            } else if content_finder_condition_id != 0 {
+            } else if bound_by_duty {
                 InitZoneFlags::UNK1 | InitZoneFlags::UNK3
             } else {
                 InitZoneFlags::default()
             };
 
+            if !bound_by_duty {
+                extra_flags = extra_flags | InitZoneFlags::ENABLE_FLYING;
+            }
+
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InitZone(InitZone {
                 territory_type: new_zone_id,
                 weather_id: weather_id as u8,
-                flags: InitZoneFlags::ENABLE_FLYING | InitZoneFlags::HIDE_SERVER | extra_flags,
+                flags: InitZoneFlags::HIDE_SERVER | extra_flags,
                 content_finder_condition_id: content_finder_condition_id,
                 obsfucation_mode: if config.world.enable_packet_obsfucation {
                     OBFUSCATION_ENABLED_MODE
@@ -194,6 +200,41 @@ impl ZoneConnection {
                     houses: [House::default(); 30],
                 },
             )))
+            .await;
+        }
+
+        self.conditions
+            .toggle_condition(Condition::BoundByDuty, bound_by_duty);
+        self.conditions
+            .toggle_condition(Condition::BoundByDuty56, bound_by_duty);
+
+        self.send_conditions().await;
+
+        if bound_by_duty {
+            let director_id = 2147680260;
+            let sequence = 1;
+
+            // Initialize the content director
+            // TODO: don't hardcode to satasha lol
+            self.actor_control_self(ActorControlSelf {
+                category: ActorControlCategory::InitDirector {
+                    director_id,
+                    context_id: 4,
+                    sequence,
+                },
+            })
+            .await;
+
+            self.send_ipc_self(ServerZoneIpcSegment::new(ServerZoneIpcData::DirectorVars {
+                director_id,
+                sequence: sequence as u8,
+                branch: 0,
+                data: [0; 10],
+                unk1: 0,
+                unk2: 0,
+                unk3: 0,
+                unk4: 0,
+            }))
             .await;
         }
     }

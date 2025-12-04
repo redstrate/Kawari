@@ -1,7 +1,9 @@
 use binrw::binrw;
 use strum_macros::IntoStaticStr;
 
-use crate::common::{EquipDisplayFlag, ObjectId, ObjectTypeId, read_bool_from, write_bool_as};
+use crate::common::{
+    DirectorEvent, EquipDisplayFlag, ObjectId, ObjectTypeId, read_bool_from, write_bool_as,
+};
 use crate::ipc::zone::common_emote::CommonEmoteInfo;
 use crate::ipc::zone::online_status::OnlineStatus;
 
@@ -88,6 +90,20 @@ pub enum ActorControlCategory {
     SetTarget {
         #[brw(pad_before = 20)] // Blank since there are no params in the ACT
         target: ObjectTypeId,
+    },
+
+    #[brw(magic = 100u32)]
+    InitDirector {
+        director_id: u32,
+        context_id: u32,
+        sequence: u32,
+    },
+
+    #[brw(magic = 109u32)]
+    DirectorEvent {
+        director_id: u32,
+        event: DirectorEvent,
+        arg: u32,
     },
 
     #[brw(magic = 131u32)]
@@ -224,6 +240,13 @@ pub enum ActorControlCategory {
 
     #[brw(magic = 504u32)]
     SetStatusIcon { icon: OnlineStatus },
+
+    #[brw(magic = 504u32)]
+    SetLimitBreak {
+        level: u32,
+        amount: u32,
+        limit_type: u32,
+    },
 
     #[brw(magic = 509u32)]
     LearnTeleport {

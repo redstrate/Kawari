@@ -591,6 +591,25 @@ pub enum ServerZoneIpcData {
     LegacyQuestList {
         bitmask: [u8; 40],
     },
+    DirectorVars {
+        director_id: u32,
+        sequence: u8,
+        branch: u8,
+        data: [u8; 10],
+        unk1: u16,
+        unk2: u16,
+        unk3: u16,
+        unk4: u16,
+    },
+    UnkDirector1 {
+        unk: [u8; 32],
+    },
+    UnkDirector2 {
+        unk: [u8; 184],
+    },
+    FieldMarkerPreset {
+        unk: [u8; 104],
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -927,6 +946,19 @@ mod tests {
                 layout_id: 0,
             },
             ServerZoneIpcData::LegacyQuestList { bitmask: [0; 40] },
+            ServerZoneIpcData::DirectorVars {
+                director_id: 0,
+                sequence: 0,
+                branch: 0,
+                data: [0; 10],
+                unk1: 0,
+                unk2: 0,
+                unk3: 0,
+                unk4: 0,
+            },
+            ServerZoneIpcData::UnkDirector1 { unk: [0; 32] },
+            ServerZoneIpcData::UnkDirector2 { unk: [0; 184] },
+            ServerZoneIpcData::FieldMarkerPreset { unk: [0; 104] },
         ];
 
         for data in &ipc_types {

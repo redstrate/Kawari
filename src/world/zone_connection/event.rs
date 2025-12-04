@@ -5,7 +5,7 @@ use mlua::Function;
 use crate::{
     common::{EventHandlerType, ObjectTypeId},
     ipc::zone::{
-        Condition, Conditions, EventScene, EventStart, EventType, SceneFlags, ServerZoneIpcData,
+        Condition, EventScene, EventStart, EventType, SceneFlags, ServerZoneIpcData,
         ServerZoneIpcSegment,
     },
     world::{Event, EventFinishType, ZoneConnection, lua::LuaPlayer},
@@ -61,8 +61,8 @@ impl ZoneConnection {
         // give back control to the player, or mark them as busy for some events
         match finish_type {
             EventFinishType::Normal => {
-                // TODO: clear the cutscene flag instead of going nuclear
-                self.conditions = Conditions::default();
+                self.conditions
+                    .remove_condition(Condition::OccupiedInQuestEvent);
             }
             EventFinishType::Jumping => {
                 // We want it set here, because when the client finishes the animation, they will send us a client trigger to tell us.

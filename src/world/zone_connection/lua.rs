@@ -11,9 +11,7 @@ use crate::{
         MINION_BITMASK_SIZE, ORNAMENT_BITMASK_SIZE, TRIPLE_TRIAD_CARDS_BITMASK_SIZE,
     },
     inventory::{Item, Storage},
-    ipc::zone::{
-        ActorControlCategory, ActorControlSelf, ServerZoneIpcData, ServerZoneIpcSegment,
-    },
+    ipc::zone::{ActorControlCategory, ActorControlSelf, ServerZoneIpcData, ServerZoneIpcSegment},
     world::{
         ToServer, ZoneConnection,
         lua::{LuaPlayer, Task, load_init_script},
