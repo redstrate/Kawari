@@ -88,13 +88,13 @@ jobs:
       if: runner.os == 'Windows'
       run: |
         mv target/release/* .
-        mv scripts/run_artifacts_windows.bat run.bat
+        mv .github/run_artifacts_windows.bat run.bat
         echo "${{ github.sha }}" >> version.txt
     - name: Prepare artifacts
       if: runner.os == 'Linux'
       run: |
         mv target/release/* .
-        mv scripts/run_artifacts_linux.sh run.sh
+        mv .github/run_artifacts_linux.sh run.sh
         echo "${{ github.sha }}" >> version.txt
     - name: Archive artifacts
       uses: actions/upload-artifact@v4
