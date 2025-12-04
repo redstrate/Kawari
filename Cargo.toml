@@ -117,7 +117,7 @@ axum-extra = { version = "0.12", features = ["cookie"], default-features = false
 tokio = { version = "1.48", features = ["macros", "rt", "rt-multi-thread", "io-util"], default-features = false, optional = true }
 
 # Logging
-tracing-subscriber = { version = "0.3", features = ["fmt"], default-features = false, optional = true }
+tracing-subscriber = { version = "0.3", features = ["fmt", "ansi"], default-features = false, optional = true }
 
 # Used currently for SID generation
 fastrand = { version = "2.3", features = ["std"], default-features = false, optional = true }
