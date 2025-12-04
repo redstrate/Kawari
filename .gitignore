@@ -1,5 +1,5 @@
-src/opcodes.rs
-src/constants.rs
+core/src/opcodes.rs
+core/src/constants.rs
 
 **/target
 /oodle
@@ -11,5 +11,5 @@ backups/
 temp.zip
 patches/
 doc/book
-navimesh/
+/navimesh
 *.db-journal

@@ -1,0 +1,14 @@
+[package]
+name = "kawari-launcher"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+kawari = { path = "../../core" }
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+axum = { workspace = true }
+minijinja = { workspace = true }
+tower-http = { workspace = true }
+serde = { workspace = true }

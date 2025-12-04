@@ -1,56 +1,27 @@
-[package]
-name = "kawari"
-description = "A server replacement for a certain MMO."
-authors = ["Joshua Goins <josh@redstrate.com>"]
+[workspace]
+members = [
+    "core",
+
+    # Servers
+    "server/admin",
+    "server/datacentertravel",
+    "server/frontier",
+    "server/launcher",
+    "server/lobby",
+    "server/login",
+    "server/patch",
+    "server/savedatabank",
+    "server/web",
+
+    # Tools
+    "tool/navimesh",
+    "tool/run",
+]
+resolver = "3"
+
+[workspace.package]
+version = "7.38.0"
 edition = "2024"
-license = "GPL-3.0"
-homepage = "https://xiv.zone/kawari"
-repository = "https://github.com/redstrate/Kawari"
-readme = "README.md"
-
-[[bin]]
-name = "kawari-frontier"
-required-features = ["server"]
-
-[[bin]]
-name = "kawari-admin"
-required-features = ["server"]
-
-[[bin]]
-name = "kawari-login"
-required-features = ["server"]
-
-[[bin]]
-name = "kawari-patch"
-required-features = ["server"]
-
-[[bin]]
-name = "kawari-web"
-required-features = ["server"]
-
-[[bin]]
-name = "kawari-lobby"
-required-features = ["server"]
-
-[[bin]]
-name = "kawari-world"
-required-features = ["oodle", "server"]
-
-[[bin]]
-name = "kawari-launcher"
-required-features = ["server"]
-
-[[bin]]
-name = "kawari-navimesh"
-required-features = ["server"]
-
-[[bin]]
-name = "kawari-datacentertravel"
-required-features = ["server"]
-
-[[bin]]
-name = "kawari-savedatabank"
-required-features = ["server"]
 
 [profile.release]
 lto = true
@@ -59,92 +30,69 @@ opt-level = "z"
 codegen-units = 1
 panic = "abort"
 
-[features]
-# Default featureset
-default = ["server"]
+[workspace.dependencies]
+# Used to read game data
+physis = { git = "https://github.com/redstrate/physis", default-features = false }
 
-# Oodle compression, not needed unless you are connecting to the retail client.
-# This is especially useful for downstream projects, so they don't have to install Oodle but still want to reuse our packet parsing
-oodle = []
-
-# Server-related functionality. Projects that only need our packet parsing can safely disable this.
-server = ["dep:axum", "dep:axum-extra", "dep:tokio", "dep:tracing-subscriber", "dep:fastrand", "dep:minijinja", "dep:rusqlite", "dep:mlua", "dep:zip", "dep:ureq", "dep:tower-http", "dep:sha1_smol", "dep:recastnavigation-sys", "dep:parking_lot"]
-
-[build-dependencies]
-# Serialization of IPC opcodes
+# Serialization used everywhere
 serde = { version = "1.0", features = ["derive"], default-features = false }
 serde_json = { version = "1.0", features = ["std", "preserve_order"], default-features = false }
-serde_yaml_ng = { version = "0.10", default-features = false }
-
-[dependencies]
-# Serialization used in almost every server
-serde = { version = "1.0", features = ["derive"], default-features = false }
-serde_json = { version = "1.0", features = ["std", "preserve_order"], default-features = false }
-serde_yaml_ng = { version = "0.10", default-features = false }
 serde-xml-rs = { version = "0.8", default-features = false }
+serde_yaml_ng = { version = "0.10", default-features = false }
 
 # Logging
 tracing = { version = "0.1", default-features = false }
+tracing-subscriber = { version = "0.3", features = ["fmt", "ansi"], default-features = false }
 
-# Serialization of packets
-binrw = { version = "0.15", features = ["std"], default-features = false }
+# Used for inthe web servers
+axum = { version = "0.8", features = ["json", "tokio", "http1", "form", "query", "multipart"], default-features = false }
+axum-extra = { version = "0.12", features = ["cookie"], default-features = false }
 
-# Used in encryption of packets
-md5 = { version = "0.8", default-features = false }
+# Async runtime
+tokio = { version = "1.48", features = ["macros", "rt", "rt-multi-thread", "io-util", "net", "process"], default-features = false }
 
-# Used to access game data
-physis = { git = "https://github.com/redstrate/physis", default-features = false }
+# Used for all kinds of RNG
+fastrand = { version = "2.3", features = ["std"], default-features = false }
 
-# needed for c-style bitflags
+# HTML templates used in the web servers
+minijinja = { version = "2.12", features = ["serde", "loader", "multi_template"], default-features = false }
+
+# Used for data persistence
+rusqlite = { version = "0.37", features = ["bundled"], default-features = false }
+
+# For server-side scripting
+mlua = { version = "0.11", features = ["lua54", "vendored", "send", "async", "serialize", "userdata-wrappers"], default-features = false }
+
+# For character backup decompression
+zip = { version = "6.0", features = ["deflate", "lzma", "bzip2"], default-features = false }
+
+# For inter-server HTTP communication
+ureq = { version = "3.1", default-features = false }
+
+# For serving static files on our websites
+tower-http = { version = "0.6", features = ["fs", "cors"], default-features = false }
+
+# For obtaining SHA1 hashes of game components
+sha1_smol = { version = "1.0", default-features = false }
+
+# For navimesh generation
+recastnavigation-sys = { git = "https://github.com/redstrate/recastnavigation-rs-sys", features = ["recast", "detour"], default-features = false }
+
+# Used as our sync primitive (that's also compatible with mlua)
+parking_lot = { version = "0.12", default-features = false }
+
+# For c-style bitflags
 bitflags = { version = "2.10", default-features = false }
 
-# excel sheet data
-icarus = { git = "https://github.com/redstrate/Icarus", branch = "ver/2025.07.30.0000.0000", features = ["Warp", "Tribe", "ClassJob", "World", "TerritoryType", "Race", "Aetheryte", "EquipSlotCategory", "Action", "WeatherRate", "PlaceName", "GilShopItem", "InstanceContent", "ContentFinderCondition", "BNpcBase", "ModelChara", "Mount", "AetherCurrentCompFlgSet", "WarpLogic", "Item", "AetherCurrentCompFlgSet", "CustomTalk", "Opening", "ItemAction", "PreHandler", "SwitchTalkVariation", "HalloweenNpcSelect", "Quest", "TopicSelect", "ParamGrow"], default-features = false }
-
-# doing stuff with enums Rust doesn't allow for some reason
+# Doing cool stuff with enums Rust doesn't have built-in
 strum = { version = "0.27", default-features = false }
 strum_macros = { version = "0.27", default-features = false }
 
-# used for simplifying some of the heavy opcode things
-paramacro = { path = "paramacro" }
+# Serialization of packets and other data
+binrw = { version = "0.15", features = ["std"], default-features = false }
 
-[target.'cfg(not(target_family = "wasm"))'.dependencies]
-# Used for the web servers
-axum = { version = "0.8", features = ["json", "tokio", "http1", "form", "query", "multipart"], default-features = false, optional = true }
-axum-extra = { version = "0.12", features = ["cookie"], default-features = false, optional = true }
+# Reading Excel sheet data
+icarus = { git = "https://github.com/redstrate/Icarus", branch = "ver/2025.07.30.0000.0000", features = ["Warp", "Tribe", "ClassJob", "World", "TerritoryType", "Race", "Aetheryte", "EquipSlotCategory", "Action", "WeatherRate", "PlaceName", "GilShopItem", "InstanceContent", "ContentFinderCondition", "BNpcBase", "ModelChara", "Mount", "AetherCurrentCompFlgSet", "WarpLogic", "Item", "AetherCurrentCompFlgSet", "CustomTalk", "Opening", "ItemAction", "PreHandler", "SwitchTalkVariation", "HalloweenNpcSelect", "Quest", "TopicSelect", "ParamGrow"], default-features = false }
 
-# Async runtime
-tokio = { version = "1.48", features = ["macros", "rt", "rt-multi-thread", "io-util"], default-features = false, optional = true }
-
-# Logging
-tracing-subscriber = { version = "0.3", features = ["fmt", "ansi"], default-features = false, optional = true }
-
-# Used currently for SID generation
-fastrand = { version = "2.3", features = ["std"], default-features = false, optional = true }
-
-# HTML templates used in the web servers
-minijinja = { version = "2.12", features = ["serde", "loader", "multi_template"], default-features = false, optional = true }
-
-# Used for data persistence
-rusqlite = { version = "0.37", features = ["bundled"], default-features = false, optional = true }
-
-# For server-side scripting
-mlua = { version = "0.11", features = ["lua54", "vendored", "send", "async", "serialize", "userdata-wrappers"], default-features = false, optional = true }
-
-# For character backup decompression
-zip = { version = "6.0", features = ["deflate", "lzma", "bzip2"], default-features = false, optional = true }
-
-# For some inter-server communication
-ureq = { version = "3.1", default-features = false, optional = true }
-
-# For serving static files on the website
-tower-http = { version = "0.6", features = ["fs", "cors"], default-features = false, optional = true }
-
-# For obtaining SHA1 hashes of game components
-sha1_smol = { version = "1.0", default-features = false, optional = true }
-
-# for navimesh generation
-recastnavigation-sys = { git = "https://github.com/redstrate/recastnavigation-rs-sys", features = ["recast", "detour"], default-features = false, optional = true }
-
-# Used for passing GameData to Lua
-parking_lot = { version = "0.12", default-features = false, optional = true }
+# Used in encryption of lobby packets
+md5 = { version = "0.8", default-features = false }

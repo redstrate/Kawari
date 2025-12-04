@@ -1,0 +1,39 @@
+[package]
+name = "kawari"
+edition.workspace = true
+version.workspace = true
+
+[features]
+# Default featureset
+default = ["server"]
+
+# Oodle compression, not needed unless you are connecting to the retail client.
+# This is especially useful for downstream projects, so they don't have to install Oodle but still want to reuse our packet parsing
+oodle = []
+
+# Used while compiling with the server binaries
+server = ["dep:tokio", "dep:mlua", "dep:rusqlite"]
+
+[build-dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_yaml_ng = { workspace = true }
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_yaml_ng = { workspace = true }
+tracing = { workspace = true }
+binrw = { workspace = true }
+md5 = { workspace = true }
+physis = { workspace = true }
+bitflags = { workspace = true }
+icarus = { workspace = true }
+strum = { workspace = true }
+strum_macros = { workspace = true }
+tokio = { workspace = true, optional = true }
+mlua = { workspace = true, optional = true }
+rusqlite = { workspace = true, optional = true }
+
+# Used for simplifying some of the heavy opcode things
+kawari-core-macro = { path = "macro" }

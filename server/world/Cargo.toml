@@ -1,0 +1,26 @@
+[package]
+name = "kawari-world"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+kawari = { path = "../../core" }
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+axum = { workspace = true }
+mlua = { workspace = true }
+parking_lot = { workspace = true }
+rusqlite = { workspace = true }
+physis = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+bitflags = { workspace = true }
+strum = { workspace = true }
+strum_macros = { workspace = true }
+binrw = { workspace = true }
+recastnavigation-sys = { workspace = true }
+zip = { workspace = true }
+icarus = { workspace = true } # TODO: we only have one usage of icarus here, I think
+fastrand = { workspace = true }
+ureq = { workspace = true }

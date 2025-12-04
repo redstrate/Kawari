@@ -1,0 +1,13 @@
+[package]
+name = "kawari-navimesh"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+icarus = { workspace = true }
+kawari = { path = "../../core" }
+physis = { workspace = true }
+tracing = { workspace = true }
+recastnavigation-sys = { workspace = true }
+tracing-subscriber = { workspace = true }
+kawari-world = { path = "../../server/world" }

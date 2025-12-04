@@ -1,0 +1,11 @@
+[package]
+name = "kawari-core-macro"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+syn = { version = "2.0", features = ["full"] }
+quote = "1.0"
+
+[lib]
+proc-macro = true

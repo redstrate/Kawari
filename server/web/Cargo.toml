@@ -1,0 +1,14 @@
+[package]
+name = "kawari-web"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+kawari = { path = "../../core" }
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+axum = { workspace = true }
+serde = { workspace = true }
+minijinja = { workspace = true }
+tower-http = { workspace = true }

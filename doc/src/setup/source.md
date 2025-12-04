@@ -29,7 +29,7 @@ Place the Oodle library for your platform in a new directory called `oodle` insi
 
 ## Running
 
-Run the development start-up script at `scripts/run.sh`. This will also compile the servers for you.
+You can compile and run the servers with `cargo run`. You can also run a specific server individually with `cargo run --bin`.
 
 ## Logging in
 
