@@ -27,7 +27,7 @@ jobs:
           target/
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
     - name: Build
-      run: cargo build --release --verbose --target=wasm32-unknown-unknown --lib
+      run: cargo build --release --verbose --target=wasm32-unknown-unknown --lib --no-default-features
 
   build:
     name: "Build"
