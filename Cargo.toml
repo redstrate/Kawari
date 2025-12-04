@@ -49,7 +49,7 @@ axum = { version = "0.8", features = ["json", "tokio", "http1", "form", "query",
 axum-extra = { version = "0.12", features = ["cookie"], default-features = false }
 
 # Async runtime
-tokio = { version = "1.48", features = ["macros", "rt", "rt-multi-thread", "io-util", "net", "process"], default-features = false }
+tokio = { version = "1.48", features = ["macros", "rt", "rt-multi-thread", "io-util", "process"], default-features = false }
 
 # Used for all kinds of RNG
 fastrand = { version = "2.3", features = ["std"], default-features = false }
