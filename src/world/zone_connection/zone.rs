@@ -140,14 +140,14 @@ impl ZoneConnection {
             };
 
             if !bound_by_duty {
-                extra_flags = extra_flags | InitZoneFlags::ENABLE_FLYING;
+                extra_flags |= InitZoneFlags::ENABLE_FLYING;
             }
 
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InitZone(InitZone {
                 territory_type: new_zone_id,
                 weather_id: weather_id as u8,
                 flags: InitZoneFlags::HIDE_SERVER | extra_flags,
-                content_finder_condition_id: content_finder_condition_id,
+                content_finder_condition_id,
                 obsfucation_mode: if config.world.enable_packet_obsfucation {
                     OBFUSCATION_ENABLED_MODE
                 } else {

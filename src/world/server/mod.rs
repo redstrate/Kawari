@@ -55,11 +55,10 @@ impl WorldServer {
     /// Ensures a public instance exists, and creates one if not found.
     fn ensure_exists(&mut self, zone_id: u16, game_data: &mut GameData) {
         // create a new instance if necessary
-        if self
+        if !self
             .instances
             .iter()
-            .find(|x| x.zone.id == zone_id && x.content_finder_condition_id == 0)
-            .is_none()
+            .any(|x| x.zone.id == zone_id && x.content_finder_condition_id == 0)
         {
             self.instances.push(Instance::new(zone_id, game_data));
         }
@@ -885,7 +884,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
 
                         change_zone_warp_to_entrance(
                             &mut network,
-                            &target_instance,
+                            target_instance,
                             zone_id,
                             from_id,
                         );
