@@ -509,8 +509,6 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 }
             }
             ToServer::ClientTrigger(from_id, from_actor_id, trigger) => {
-                tracing::info!("{:#X?}", trigger);
-
                 match &trigger.trigger {
                     ClientTriggerCommand::TeleportQuery { aetheryte_id } => {
                         let msg = FromServer::ActorControlSelf(ActorControlSelf {

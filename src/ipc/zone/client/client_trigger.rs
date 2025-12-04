@@ -8,7 +8,7 @@ use crate::ipc::zone::common_emote::CommonEmoteInfo;
 #[derive(Debug, PartialEq, Clone, IntoStaticStr)]
 pub enum ClientTriggerCommand {
     /// The player sheathes/unsheathes their weapon.
-    #[brw(magic = 0x0001u32)]
+    #[brw(magic = 1u32)]
     ToggleWeapon {
         #[br(map = read_bool_from::<u32>)]
         #[bw(map = write_bool_as::<u32>)]
@@ -17,7 +17,7 @@ pub enum ClientTriggerCommand {
     },
 
     /// The player looks or stops looking at an actor.
-    #[brw(magic = 0x0003u32)]
+    #[brw(magic = 3u32)]
     SetTarget {
         actor_id: ObjectId,
         /// The client sends value(s) that differ from ObjectTypeKind, so we cannot use it here.
@@ -26,19 +26,19 @@ pub enum ClientTriggerCommand {
     },
 
     /// The client is trying to dismount their current mount.
-    #[brw(magic = 0x0065u32)]
+    #[brw(magic = 101u32)]
     Dismount { sequence: u32 },
 
     /// The client requests a minion to be summoned.
-    #[brw(magic = 0x0066u32)]
+    #[brw(magic = 102u32)]
     SummonMinion { minion_id: u32 },
 
     /// The client requests a minion to be despawned.
-    #[brw(magic = 0x0067u32)]
+    #[brw(magic = 103u32)]
     DespawnMinion {},
 
     /// When the player right-clicks their status effect to remove it.
-    #[brw(magic = 0x0068u32)]
+    #[brw(magic = 104u32)]
     ManuallyRemoveEffect {
         effect_id: u32,
         effect_param: u32,
@@ -46,42 +46,42 @@ pub enum ClientTriggerCommand {
     },
 
     /// The client is finished zoning.
-    #[brw(magic = 0x00C9u32)]
+    #[brw(magic = 201u32)]
     FinishZoning {},
 
     /// The player selects a teleport destination.
-    #[brw(magic = 0x00CAu32)]
+    #[brw(magic = 202u32)]
     TeleportQuery {
         aetheryte_id: u32,
         // TODO: fill out the rest
     },
 
     /// The client toggles a sign for their current target.
-    #[brw(magic = 0x012Du32)]
+    #[brw(magic = 301u32)]
     ToggleSign { id: u32 },
 
     /// The client sets a specific title.
-    #[brw(magic = 0x012Eu32)]
+    #[brw(magic = 302u32)]
     SetTitle { title_id: u32 },
 
     /// The client requests the player's unlocked titles.
-    #[brw(magic = 0x012Fu32)]
+    #[brw(magic = 303u32)]
     RequestTitleList {},
 
     /// The client shows an Active Help pop-up. This is triggered *when* it's shown, not when closed.
-    #[brw(magic = 0x0132u32)]
+    #[brw(magic = 306u32)]
     ShownActiveHelp { id: u32 },
 
     /// The client has seen this cutscene. This is usually followed up by a ToggleCutsceneSeen ACS.
-    #[brw(magic = 0x0133u32)]
+    #[brw(magic = 307u32)]
     SeenCutscene { id: u32 },
 
     /// The client clears all waymarks.
-    #[brw(magic = 0x0139u32)]
+    #[brw(magic = 313u32)]
     ClearAllWaymarks {},
 
     /// The client places a waymark.
-    #[brw(magic = 0x013Du32)]
+    #[brw(magic = 317u32)]
     PlaceWaymark {
         id: u32,
 
@@ -92,42 +92,42 @@ pub enum ClientTriggerCommand {
     },
 
     /// The client clears a waymark.
-    #[brw(magic = 0x013Eu32)]
+    #[brw(magic = 318u32)]
     ClearWaymark { id: u32 },
 
     /// The player begins an emote.
-    #[brw(magic = 0x01F4u32)]
+    #[brw(magic = 500u32)]
     Emote(CommonEmoteInfo),
 
     /// The player explicitly changed their pose.
-    #[brw(magic = 0x01F9u32)]
+    #[brw(magic = 505u32)]
     ChangePose { unk1: u32, pose: u32 },
 
     /// The client is "reapplying" the existing pose, like after idling.
-    #[brw(magic = 0x01FAu32)]
+    #[brw(magic = 506u32)]
     ReapplyPose { unk1: u32, pose: u32 },
 
-    #[brw(magic = 0x025Eu32)]
+    #[brw(magic = 606u32)]
     WalkInTriggerFinished { unk1: u32 },
 
     /// When the player begins swimming. Seems to have no parameters.
-    #[brw(magic = 0x0260u32)]
+    #[brw(magic = 608u32)]
     BeginSwimming {},
 
     /// When the player stops swimming (by going back on land, mounting, etc.). Seems to have no parameters.
-    #[brw(magic = 0x0261u32)]
+    #[brw(magic = 609u32)]
     EndSwimming {},
 
     /// When the player enters an area where mounting is prohibited in a zone that otherwise permits zoning. Commonly seen during Moonfire Faire festivals, and does not seem to have an exit counterpart.
-    #[brw(magic = 0x0264u32)]
+    #[brw(magic = 612u32)]
     EnterMountingProhibitedArea { enabled: u32 },
 
     /// When the player starts flying on their mount.
-    #[brw(magic = 0x0268u32)]
+    #[brw(magic = 616u32)]
     StartFlying {},
 
     /// Various triggers related to instanced content.
-    #[brw(magic = 0x0328u32)]
+    #[brw(magic = 808u32)]
     DirectorTrigger {
         director_id: u32,
         trigger: DirectorTrigger,
@@ -135,11 +135,11 @@ pub enum ClientTriggerCommand {
     },
 
     /// When a player requests to abandon their instanced content.
-    #[brw(magic = 0x0333u32)]
+    #[brw(magic = 819u32)]
     AbandonContent {},
 
     /// Unknown purpose, but is seen during the crystal bell/aesthetician cutscenes.
-    #[brw(magic = 0x033Eu32)]
+    #[brw(magic = 830u32)]
     EventRelatedUnk {
         unk1: u32,
         unk2: u32,
@@ -147,15 +147,7 @@ pub enum ClientTriggerCommand {
         unk4: u32,
     },
 
-    /// The client is ready to begin loading a zone.
-    #[brw(magic = 0x0C81u32)]
-    BeginLoading {},
-
-    /// The client tells us how far in the distance we should see actors.
-    #[brw(magic = 0x232Du32)]
-    SetDistanceRange { range: DistanceRange },
-
-    #[brw(magic = 0x453u32)]
+    #[brw(magic = 1107u32)]
     RequestHousingWardInfo {
         /// The zone id of the housing ward.
         zone_id: u32,
@@ -163,25 +155,33 @@ pub enum ClientTriggerCommand {
         ward_index: u32,
     },
 
-    #[brw(magic = 0x07BCu32)]
+    /// The client is ready to begin loading a zone.
+    #[brw(magic = 3201u32)]
+    BeginLoading {},
+
+    #[brw(magic = 1980u32)]
     BeginContentsReplay {},
 
-    #[brw(magic = 0x07BDu32)]
+    #[brw(magic = 1981u32)]
     EndContentsReplay {},
 
     /// Sent whenever the client tries to begin a Hall of the Novice exercise.
-    #[brw(magic = 0x0802u32)]
+    #[brw(magic = 2050u32)]
     BeginNoviceExercise {
         id: u32, // not specific to a class/job
     },
 
     /// Sent whenever the Glamour Plates window is opened or closed.
-    #[brw(magic = 0x934u32)]
+    #[brw(magic = 2356u32)]
     ToggleGlamourPlatesWindow {
         #[br(map = read_bool_from::<u32>)]
         #[bw(map = write_bool_as::<u32>)]
         open: bool,
     },
+
+    /// The client tells us how far in the distance we should see actors.
+    #[brw(magic = 9005u32)]
+    SetDistanceRange { range: DistanceRange },
 
     Unknown {
         category: u32,
