@@ -23,7 +23,7 @@ pub fn opcode_data(_metadata: TokenStream, input: TokenStream) -> TokenStream {
     for variant in &mut input.variants {
         let variant_name = variant.ident.clone();
         let variant_tokens = variant.to_token_stream();
-        let new_field_token_stream = if variant_name.to_string() != "Unknown" {
+        let new_field_token_stream = if variant_name != "Unknown" {
             quote! {
                 #[br(pre_assert(*magic == #opcode_ident::#variant_name))]
                 #variant_tokens
@@ -41,7 +41,7 @@ pub fn opcode_data(_metadata: TokenStream, input: TokenStream) -> TokenStream {
     {
         for variant in &mut input.variants {
             // Unknown is special-cased, see below
-            if variant.ident.to_string() != "Unknown" {
+            if variant.ident != "Unknown" {
                 variant_idents.push(&variant.ident);
             }
         }
