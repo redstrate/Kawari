@@ -27,7 +27,7 @@ Place the `oodle-network-shared.dll` from the Oodle zip you downloaded next to t
 
 ## Running
 
-Run the server by executing `run.bat`.
+Run the server by executing `kawari-run.exe`.
 
 ## Logging in
 
