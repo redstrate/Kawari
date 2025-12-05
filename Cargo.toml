@@ -55,7 +55,7 @@ tokio = { version = "1.48", features = ["macros", "rt", "rt-multi-thread", "io-u
 fastrand = { version = "2.3", features = ["std"], default-features = false }
 
 # HTML templates used in the web servers
-minijinja = { version = "2.12", features = ["serde", "loader", "multi_template"], default-features = false }
+minijinja = { version = "2.13", features = ["serde", "loader", "multi_template"], default-features = false }
 
 # Used for data persistence
 rusqlite = { version = "0.37", features = ["bundled"], default-features = false }
