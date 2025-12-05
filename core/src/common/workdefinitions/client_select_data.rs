@@ -28,7 +28,7 @@ impl TryFrom<i32> for RemakeMode {
     }
 }
 
-#[cfg(all(not(target_family = "wasm"), feature = "server"))]
+#[cfg(feature = "server")]
 impl rusqlite::types::FromSql for RemakeMode {
     fn column_result(value: rusqlite::types::ValueRef<'_>) -> rusqlite::types::FromSqlResult<Self> {
         Ok(Self::try_from(i32::column_result(value)?).unwrap())

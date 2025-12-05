@@ -98,14 +98,14 @@ impl Default for ObjectTypeId {
     }
 }
 
-#[cfg(all(not(target_family = "wasm"), feature = "server"))]
+#[cfg(feature = "server")]
 impl mlua::UserData for ObjectTypeId {
     fn add_fields<F: mlua::UserDataFields<Self>>(fields: &mut F) {
         fields.add_field_method_get("object_id", |_, this| Ok(this.object_id.0));
     }
 }
 
-#[cfg(all(not(target_family = "wasm"), feature = "server"))]
+#[cfg(feature = "server")]
 impl mlua::FromLua for ObjectTypeId {
     fn from_lua(value: mlua::Value, _: &mlua::Lua) -> mlua::Result<Self> {
         match value {
@@ -480,7 +480,7 @@ pub enum EventHandlerType {
     EventGimmickPathMove = 64,
 }
 
-#[cfg(all(not(target_family = "wasm"), feature = "server"))]
+#[cfg(feature = "server")]
 impl mlua::IntoLua for EventHandlerType {
     fn into_lua(self, _: &mlua::Lua) -> mlua::Result<mlua::Value> {
         Ok(mlua::Value::Integer(self as i64))

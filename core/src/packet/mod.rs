@@ -20,9 +20,9 @@ pub use ipc::{
 pub mod oodle;
 
 /// Send packet helpers.
-#[cfg(all(not(target_family = "wasm"), feature = "server"))]
+#[cfg(feature = "server")]
 mod send_helpers;
-#[cfg(all(not(target_family = "wasm"), feature = "server"))]
+#[cfg(feature = "server")]
 pub use send_helpers::{send_custom_world_packet, send_keep_alive, send_packet};
 
 mod scrambler;

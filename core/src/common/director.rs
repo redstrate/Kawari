@@ -8,7 +8,7 @@ pub enum DirectorType {
     InstanceContent = 0x8003,
 }
 
-#[cfg(all(not(target_family = "wasm"), feature = "server"))]
+#[cfg(feature = "server")]
 impl mlua::IntoLua for DirectorType {
     fn into_lua(self, _: &mlua::Lua) -> mlua::Result<mlua::Value> {
         Ok(mlua::Value::Integer(self as i64))

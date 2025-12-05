@@ -31,7 +31,7 @@ impl From<u8> for EventType {
     }
 }
 
-#[cfg(all(not(target_family = "wasm"), feature = "server"))]
+#[cfg(feature = "server")]
 impl mlua::IntoLua for EventType {
     fn into_lua(self, _: &mlua::Lua) -> mlua::Result<mlua::Value> {
         Ok(mlua::Value::Integer(self as i64))

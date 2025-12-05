@@ -31,7 +31,7 @@ impl Position {
     }
 }
 
-#[cfg(all(not(target_family = "wasm"), feature = "server"))]
+#[cfg(feature = "server")]
 impl mlua::UserData for Position {
     fn add_fields<F: mlua::UserDataFields<Self>>(fields: &mut F) {
         fields.add_field_method_get("x", |_, this| Ok(this.x));
