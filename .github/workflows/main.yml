@@ -15,7 +15,7 @@ jobs:
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: Add WebAssembly Target
       run: |
         rustup target add wasm32-unknown-unknown
@@ -40,7 +40,7 @@ jobs:
         os: [windows-latest, ubuntu-latest]
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - uses: actions/cache@v4
       id: cache-deps
       with:
@@ -89,7 +89,7 @@ jobs:
         mv target/release/* .
         echo "${{ github.sha }}" >> version.txt
     - name: Archive artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: Kawari-${{ runner.os }}
         path: |
@@ -128,7 +128,7 @@ jobs:
 
     steps:
     - name: Download artifacts
-      uses: actions/download-artifact@v5
+      uses: actions/download-artifact@v6
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
     - name: Set up SSH key
