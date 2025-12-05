@@ -19,7 +19,6 @@ server = ["dep:tokio", "dep:mlua", "dep:rusqlite"]
 
 [build-dependencies]
 serde = { workspace = true }
-serde_json = { workspace = true }
 serde_yaml_ng = { workspace = true }
 
 [dependencies]
