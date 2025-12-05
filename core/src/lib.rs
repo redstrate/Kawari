@@ -12,7 +12,9 @@ pub mod config;
 /// Everything packet parsing related.
 pub mod packet;
 
+#[rustfmt::skip]
 pub mod constants;
+#[rustfmt::skip]
 pub mod opcodes;
 
 /// IPC
