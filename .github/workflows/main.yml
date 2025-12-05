@@ -81,9 +81,9 @@ jobs:
       run: cargo test --verbose
     - name: Build documentation
       run: |
-        mdbook build --dest-dir=doc-build ./doc
-        mv doc doc-1
-        mv doc-build doc
+        mdbook build --dest-dir=docs-build ./docs
+        mv docs docs-1
+        mv docs-build docs
     - name: Prepare artifacts
       run: |
         mv target/release/* .
@@ -116,9 +116,9 @@ jobs:
           !resources/data/constants.yml
           !resources/data/README.md
           version.txt
-          doc/
-          !doc/src/
-          !doc/book.toml
+          docs/
+          !docs/src/
+          !docs/book.toml
 
   deploy:
     name: "Deploy"
@@ -152,5 +152,5 @@ jobs:
         rsync --recursive "Kawari-Linux.zip" deploy@ryne.moe:/srv/http/astra-distrib/kawari/
         rsync --recursive "Kawari-Windows.zip" deploy@ryne.moe:/srv/http/astra-distrib/kawari/
         unzip "Kawari-Linux.zip"
-        rsync --recursive --delete doc/ deploy@ryne.moe:/srv/http/kawari-docs
+        rsync --recursive --delete docs/ deploy@ryne.moe:/srv/http/kawari-docs
 

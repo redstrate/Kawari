@@ -10,6 +10,6 @@ config.yaml
 backups/
 temp.zip
 patches/
-doc/book
+docs/book
 /navimesh
 *.db-journal

@@ -3,19 +3,20 @@ members = [
     "core",
 
     # Servers
-    "server/admin",
-    "server/datacentertravel",
-    "server/frontier",
-    "server/launcher",
-    "server/lobby",
-    "server/login",
-    "server/patch",
-    "server/savedatabank",
-    "server/web",
+    "servers/admin",
+    "servers/datacentertravel",
+    "servers/frontier",
+    "servers/launcher",
+    "servers/lobby",
+    "servers/login",
+    "servers/patch",
+    "servers/savedatabank",
+    "servers/web",
+    "servers/world",
 
     # Tools
-    "tool/navimesh",
-    "tool/run",
+    "tools/navimesh",
+    "tools/run",
 ]
 resolver = "3"
 

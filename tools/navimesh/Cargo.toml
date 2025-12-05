@@ -10,4 +10,4 @@ physis = { workspace = true }
 tracing = { workspace = true }
 recastnavigation-sys = { workspace = true }
 tracing-subscriber = { workspace = true }
-kawari-world = { path = "../../server/world" }
+kawari-world = { path = "../../servers/world" }
