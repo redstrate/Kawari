@@ -1,0 +1,3 @@
+disallowed-types = [
+    { path = "std::sync::Mutex", reason = "Faster, and can also be used with the mlua crate.", replacement = "parking_lot::Mutex" },
+]

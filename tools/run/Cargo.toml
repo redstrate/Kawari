@@ -4,5 +4,8 @@ default-run = "kawari-run"
 edition.workspace = true
 version.workspace = true
 
+[lints]
+workspace = true
+
 [dependencies]
 tokio = { workspace = true }

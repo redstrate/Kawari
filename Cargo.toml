@@ -24,6 +24,9 @@ resolver = "3"
 version = "7.38.0"
 edition = "2024"
 
+[workspace.lints.clippy]
+disallowed-types = "deny"
+
 [profile.release]
 lto = true
 strip = true

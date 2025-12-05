@@ -3,6 +3,9 @@ name = "kawari"
 edition.workspace = true
 version.workspace = true
 
+[lints]
+workspace = true
+
 [features]
 # Default featureset
 default = ["server"]

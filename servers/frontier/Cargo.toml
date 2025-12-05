@@ -3,6 +3,9 @@ name = "kawari-frontier"
 edition.workspace = true
 version.workspace = true
 
+[lints]
+workspace = true
+
 [dependencies]
 kawari = { path = "../../core" }
 tokio = { workspace = true }
