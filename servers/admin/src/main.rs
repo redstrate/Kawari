@@ -1,12 +1,11 @@
 use axum::response::{Html, Redirect};
 use axum::routing::post;
 use axum::{Router, extract::Form, routing::get};
+use kawari::common::{BasicCharacterData, User};
 use kawari::config::get_config;
 use kawari::ipc::kawari::{CustomIpcData, CustomIpcSegment};
 use kawari::packet::send_custom_world_packet;
 use kawari::web_static_dir;
-use kawari_login::User;
-use kawari_world::BasicCharacterData;
 use minijinja::context;
 use minijinja::{Environment, path_loader};
 use serde::Deserialize;

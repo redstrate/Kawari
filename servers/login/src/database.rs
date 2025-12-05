@@ -1,4 +1,4 @@
-use kawari::{constants::MAX_EXPANSION, ipc::lobby::ServiceAccount};
+use kawari::{common::User, constants::MAX_EXPANSION, ipc::lobby::ServiceAccount};
 use parking_lot::Mutex;
 use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
@@ -24,12 +24,6 @@ impl Default for LoginDatabase {
 pub struct SessionInformation {
     pub time: String,
     pub service: String,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct User {
-    pub id: u32,
-    pub username: String,
 }
 
 impl LoginDatabase {

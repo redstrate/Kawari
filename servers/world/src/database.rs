@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use crate::zone_connection::PersistentQuest;
 use kawari::{
     common::{
-        EquipDisplayFlag, GameData, ItemInfoQuery, ObjectId, Position,
+        BasicCharacterData, EquipDisplayFlag, GameData, ItemInfoQuery, ObjectId, Position,
         workdefinitions::{CharaMake, ClientSelectData, RemakeMode},
     },
     constants::CLASSJOB_ARRAY_SIZE,
@@ -29,12 +29,6 @@ pub struct CharacterData {
     pub city_state: u8,
     pub position: Position,
     pub zone_id: u16,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct BasicCharacterData {
-    pub content_id: u64,
-    pub name: String,
 }
 
 impl Default for WorldDatabase {

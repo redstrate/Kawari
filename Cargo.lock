@@ -694,8 +694,6 @@ version = "7.38.0"
 dependencies = [
  "axum",
  "kawari",
- "kawari-login",
- "kawari-world",
  "minijinja",
  "serde",
  "serde_json",

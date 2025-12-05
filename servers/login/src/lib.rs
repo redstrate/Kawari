@@ -1,2 +1,2 @@
 mod database;
-pub use database::{LoginDatabase, LoginError, SessionInformation, User};
+pub use database::{LoginDatabase, LoginError, SessionInformation};

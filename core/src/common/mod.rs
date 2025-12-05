@@ -1,5 +1,5 @@
 use bitflags::bitflags;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::{
     ffi::{CStr, CString},
     time::{Duration, SystemTime, UNIX_EPOCH},
@@ -686,6 +686,18 @@ pub const GAME_SERVICE: &str = "Kawari: Game Client";
 
 /// Timeout in seconds before clients are disconnected because of idle network activity.
 pub const NETWORK_TIMEOUT: Duration = Duration::from_secs(5);
+
+#[derive(Serialize, Deserialize)]
+pub struct User {
+    pub id: u32,
+    pub username: String,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct BasicCharacterData {
+    pub content_id: u64,
+    pub name: String,
+}
 
 #[macro_export]
 macro_rules! web_static_dir {

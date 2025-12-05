@@ -12,8 +12,6 @@ axum = { workspace = true }
 serde = { workspace = true }
 minijinja = { workspace = true }
 tower-http = { workspace = true }
-kawari-login = { path = "../login" }
-kawari-world = { path = "../world" }
 ureq = { workspace = true }
 serde_json = { workspace = true }
 serde_yaml_ng = { workspace = true }
