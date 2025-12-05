@@ -688,13 +688,6 @@ pub const GAME_SERVICE: &str = "Kawari: Game Client";
 pub const NETWORK_TIMEOUT: Duration = Duration::from_secs(5);
 
 #[macro_export]
-macro_rules! web_templates_dir {
-    ($rel_path:literal) => {
-        concat!("resources/web/templates/", $rel_path)
-    };
-}
-
-#[macro_export]
 macro_rules! web_static_dir {
     ($rel_path:literal) => {
         concat!("resources/web/static/", $rel_path)

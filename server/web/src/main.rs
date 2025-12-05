@@ -2,55 +2,15 @@ use axum::extract::Query;
 use axum::response::Html;
 use axum::{Router, routing::get};
 use kawari::config::get_config;
-use kawari::{constants::SUPPORTED_GAME_VERSION, web_static_dir, web_templates_dir};
-use minijinja::Environment;
+use kawari::{constants::SUPPORTED_GAME_VERSION, web_static_dir};
 use minijinja::context;
+use minijinja::{Environment, path_loader};
 use serde::Deserialize;
 use tower_http::services::ServeDir;
 
 fn setup_default_environment() -> Environment<'static> {
     let mut env = Environment::new();
-    env.add_template_owned(
-        "layout.html",
-        std::fs::read_to_string(web_templates_dir!("layout.html"))
-            .expect("Failed to find template!"),
-    )
-    .unwrap();
-    env.add_template_owned(
-        "web_base.html",
-        std::fs::read_to_string(web_templates_dir!("web_base.html"))
-            .expect("Failed to find template!"),
-    )
-    .unwrap();
-    env.add_template_owned(
-        "web.html",
-        std::fs::read_to_string(web_templates_dir!("web.html")).expect("Failed to find template!"),
-    )
-    .unwrap();
-    env.add_template_owned(
-        "account.html",
-        std::fs::read_to_string(web_templates_dir!("account.html"))
-            .expect("Failed to find template!"),
-    )
-    .unwrap();
-    env.add_template_owned(
-        "setup.html",
-        std::fs::read_to_string(web_templates_dir!("setup.html"))
-            .expect("Failed to find template!"),
-    )
-    .unwrap();
-    env.add_template_owned(
-        "launchertweaks.toml",
-        std::fs::read_to_string(web_templates_dir!("launchertweaks.toml"))
-            .expect("Failed to find template!"),
-    )
-    .unwrap();
-    env.add_template_owned(
-        "autoconfig.json",
-        std::fs::read_to_string(web_templates_dir!("autoconfig.json"))
-            .expect("Failed to find template!"),
-    )
-    .unwrap();
+    env.set_loader(path_loader("resources/web/templates"));
 
     env
 }
