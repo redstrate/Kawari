@@ -1,7 +1,5 @@
 //! A server replacement for a certain MMO.
 
-#![allow(clippy::large_enum_variant)]
-
 /// The blowfish implementation used for packet encryption.
 pub mod blowfish;
 

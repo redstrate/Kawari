@@ -25,7 +25,10 @@ version = "7.38.0"
 edition = "2024"
 
 [workspace.lints.clippy]
-disallowed-types = "deny"
+disallowed-types = "deny" # See clippy.toml
+large_enum_variant = "allow" # This is just how we use enums
+redundant_locals = "allow" # Too many false positives right now
+too_many_arguments = "allow" # Not productive to fix at the moment
 
 [profile.release]
 lto = true
