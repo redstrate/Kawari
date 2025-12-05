@@ -74,7 +74,7 @@ jobs:
         cp ar/Release/oodle-network-shared.lib oodle/
     - name: Build
       run: cargo build --release --verbose --features oodle
-    - name: Run clippy
+    - name: Run Clippy
       if: runner.os == 'Linux'
       run: cargo clippy --features oodle
     - name: Run tests
@@ -85,16 +85,8 @@ jobs:
         mv doc doc-1
         mv doc-build doc
     - name: Prepare artifacts
-      if: runner.os == 'Windows'
       run: |
         mv target/release/* .
-        mv .github/run_artifacts_windows.bat run.bat
-        echo "${{ github.sha }}" >> version.txt
-    - name: Prepare artifacts
-      if: runner.os == 'Linux'
-      run: |
-        mv target/release/* .
-        mv .github/run_artifacts_linux.sh run.sh
         echo "${{ github.sha }}" >> version.txt
     - name: Archive artifacts
       uses: actions/upload-artifact@v4
@@ -123,8 +115,6 @@ jobs:
           !resources/data/scrambler
           !resources/data/constants.yml
           !resources/data/README.md
-          run.sh
-          run.bat
           version.txt
           doc/
           !doc/src/

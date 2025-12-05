@@ -4,7 +4,13 @@ use tokio::process::Command;
 async fn start_server(name: &str) {
     let mut dir = std::env::current_exe().expect("Couldn't get current executable path");
     dir.pop();
-    dir.push(name);
+
+    let mut extension = std::env::consts::EXE_EXTENSION.to_string();
+    if !extension.is_empty() {
+        extension = format!(".{extension}");
+    }
+
+    dir.push(format!("{name}{}", extension));
 
     Command::new(dir)
         .stdout(Stdio::inherit())

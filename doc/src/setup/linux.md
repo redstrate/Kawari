@@ -28,7 +28,7 @@ If you get a "permission denied" error starting Caddy, you must either start Cad
 
 ## Running
 
-Run the server by executing `run.bat`.
+Run the server by executing `kawari-run` in your terminal emulator.
 
 ## Logging in
 
