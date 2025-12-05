@@ -1,7 +1,7 @@
 use parking_lot::Mutex;
 
 use rusqlite::Connection;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
 use crate::zone_connection::PersistentQuest;
 use kawari::{

@@ -1,7 +1,7 @@
 use kawari::{common::User, constants::MAX_EXPANSION, ipc::lobby::ServiceAccount};
 use parking_lot::Mutex;
 use rusqlite::Connection;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
 pub struct LoginDatabase {
     connection: Mutex<Connection>,
