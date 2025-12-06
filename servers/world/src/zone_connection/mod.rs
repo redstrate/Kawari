@@ -47,6 +47,7 @@ mod event;
 mod item;
 mod lua;
 mod quest;
+mod shop;
 mod social;
 mod stats;
 mod unlock;

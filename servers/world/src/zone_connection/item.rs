@@ -5,7 +5,7 @@ use crate::{
     inventory::{Item, Storage},
 };
 use kawari::{
-    common::{ContainerType, ItemOperationKind, LogMessageType, ObjectId},
+    common::{ContainerType, ItemOperationKind, ObjectId},
     ipc::zone::{
         ActorControlCategory, ActorControlSelf, ContainerInfo, CurrencyInfo, Equip, ItemInfo,
         ServerZoneIpcData, ServerZoneIpcSegment,
@@ -226,45 +226,6 @@ impl ZoneConnection {
         });
         self.send_ipc_self(ipc).await;
         self.player_data.item_sequence += 1;
-    }
-
-    // TODO: When we add support for ItemObtainedLogMessage, rename this and update this
-    pub async fn send_gilshop_ack(
-        &mut self,
-        event_id: u32,
-        item_id: u32,
-        item_quantity: u32,
-        price_per_item: u32,
-        message_type: LogMessageType,
-    ) {
-        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ShopLogMessage {
-            event_id,
-            message_type: message_type as u32,
-            params_count: 3,
-            item_id,
-            item_quantity,
-            total_sale_cost: item_quantity * price_per_item,
-        });
-        self.send_ipc_self(ipc).await;
-    }
-
-    pub async fn send_gilshop_item_update(
-        &mut self,
-        dst_storage_id: ContainerType,
-        dst_container_index: u16,
-        dst_stack: u32,
-        dst_catalog_id: u32,
-    ) {
-        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateInventorySlot {
-            sequence: self.player_data.shop_sequence,
-            dst_storage_id,
-            dst_container_index,
-            dst_stack,
-            dst_catalog_id,
-            unk1: 0x7530_0000,
-        });
-        self.send_ipc_self(ipc).await;
-        self.player_data.shop_sequence += 1;
     }
 
     pub async fn send_inventory_transaction_finish(&mut self, unk1: u32, unk2: u32) {
