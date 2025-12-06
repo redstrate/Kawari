@@ -8,10 +8,18 @@ ARG C="clang"
 ARG CXX="clang++"
 
 # Begin setting up the build folder
-COPY . /opt/kawari-build
+COPY --exclude=target/ . /opt/kawari-build
 WORKDIR /opt/kawari-build
 
 # Build for release
 RUN cargo build --release
 
-CMD ["kawari-world"]
+# Copy binaries
+RUN mkdir /opt/kawari
+RUN cp /opt/kawari-build/target/release/kawari-* /opt/kawari
+
+# Clean up the build folder, it's no longer needed
+RUN rm -rf /opt/kawari-build
+
+WORKDIR /opt/kawari
+CMD /opt/kawari/kawari-run

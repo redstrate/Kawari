@@ -13,6 +13,18 @@ This guide covers how to setup Kawari with containers (Podman/Docker.) Despite o
 
 The container image must be manually built, because of the non-redistributable Oodle requirement. Place your copy of Oodle in a new `oodle` folder before continuing.
 
+If you're using Podman run: 
+
+```shell
+podman build -t kawari .
+```
+
+Or else, with Docker:
+
+```shell
+docker build -t kawari .
+```
+
 ## Reverse proxy setup
 
 {{#include reverse_proxy.md}}
