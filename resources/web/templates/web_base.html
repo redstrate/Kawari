@@ -9,9 +9,11 @@
         <li class="nav-item">
           <a class="nav-link {% if current_page == 'login' %}active{% endif %}" href="{{ login_server }}/oauth/oa/oauthlogin">Login</a>
         </li>
+        {% if enable_registration %}
         <li class="nav-item">
           <a class="nav-link {% if current_page == 'register' %}active{% endif %}" href="{{ login_server }}/oauth/oa/registligt">Register</a>
         </li>
+        {% endif %}
         <li class="nav-item">
           <a class="nav-link {% if current_page == 'setup' %}active{% endif %}" href="{{ web_server_name }}/setup">Setup</a>
         </li>

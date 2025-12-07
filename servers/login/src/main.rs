@@ -162,6 +162,16 @@ async fn do_register(
     State(state): State<LoginServerState>,
     Form(input): Form<RegisterInput>,
 ) -> (CookieJar, Redirect) {
+    let config = get_config();
+
+    // Redirect if registration is disabled, and they tried to be smart.
+    if !config.login.enable_registration {
+        return (
+            CookieJar::default(),
+            Redirect::to(&format!("{}/", config.web.server_name)),
+        );
+    }
+
     tracing::info!(
         "Registering with {:#?} and {:#?}!",
         input.username,
@@ -175,7 +185,6 @@ async fn do_register(
         panic!("Expected password!");
     };
 
-    let config = get_config();
     if config.enable_sapphire_proxy {
         let sapphire_login = SapphireLogin {
             username,
@@ -252,20 +261,26 @@ async fn login() -> Html<String> {
     let template = environment.get_template("login.html").unwrap();
     Html(
         template
-            .render(context! { web_server_name => config.web.server_name })
+            .render(context! { web_server_name => config.web.server_name, enable_registration => config.login.enable_registration })
             .unwrap(),
     )
 }
 
-async fn register() -> Html<String> {
+async fn register() -> Response<Body> {
     let config = get_config();
+
+    // Redirect if registration is disabled, and they tried to be smart.
+    if !config.login.enable_registration {
+        return Redirect::to(&format!("{}/", config.web.server_name)).into_response();
+    }
+
     let environment = setup_default_environment();
     let template = environment.get_template("register.html").unwrap();
     Html(
         template
-            .render(context! { web_server_name => config.web.server_name })
+            .render(context! { web_server_name => config.web.server_name, enable_registration => config.login.enable_registration })
             .unwrap(),
-    )
+    ).into_response()
 }
 
 #[derive(Deserialize, Debug)]

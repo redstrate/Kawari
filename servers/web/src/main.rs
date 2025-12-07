@@ -20,7 +20,7 @@ async fn root() -> Html<String> {
     let template = environment.get_template("web.html").unwrap();
     Html(
         template
-            .render(context! { login_server => config.login.server_name })
+            .render(context! { login_server => config.login.server_name, enable_registration => config.login.enable_registration })
             .unwrap(),
     )
 }
@@ -32,7 +32,7 @@ async fn setup() -> Html<String> {
     let template = environment.get_template("setup.html").unwrap();
     Html(
         template
-            .render(context! { login_server => config.login.server_name, lobby_port => config.lobby.port, lobby_host => config.lobby.server_name, game_version => SUPPORTED_GAME_VERSION, frontier_host => config.frontier.server_name, login_host => config.login.server_name, server_url => config.web.server_name, runs_on_localhost => config.runs_on_localhost })
+            .render(context! { login_server => config.login.server_name, lobby_port => config.lobby.port, lobby_host => config.lobby.server_name, game_version => SUPPORTED_GAME_VERSION, frontier_host => config.frontier.server_name, login_host => config.login.server_name, server_url => config.web.server_name, runs_on_localhost => config.web.runs_on_localhost, enable_registration => config.login.enable_registration })
             .unwrap(),
     )
 }

@@ -138,11 +138,18 @@ impl LobbyConfig {
 pub struct LoginConfig {
     #[serde(default = "LoginConfig::default_port")]
     pub port: u16,
+
     #[serde(default = "default_listen_address")]
     pub listen_address: String,
+
     /// Public-facing domain of the server.
     #[serde(default = "LoginConfig::default_server_name")]
     pub server_name: String,
+
+    /// Whether registrations are enabled, and by default they are.
+    /// Turning this off also hides the UI for this feature.
+    #[serde(default = "LoginConfig::default_enable_registration")]
+    pub enable_registration: bool,
 }
 
 impl Default for LoginConfig {
@@ -151,6 +158,7 @@ impl Default for LoginConfig {
             port: Self::default_port(),
             listen_address: default_listen_address(),
             server_name: Self::default_server_name(),
+            enable_registration: Self::default_enable_registration(),
         }
     }
 }
@@ -170,6 +178,10 @@ impl LoginConfig {
 
     fn default_server_name() -> String {
         "http://ffxiv-login.square.localhost".to_string()
+    }
+
+    fn default_enable_registration() -> bool {
+        true
     }
 }
 
@@ -258,11 +270,18 @@ impl PatchConfig {
 pub struct WebConfig {
     #[serde(default = "WebConfig::default_port")]
     pub port: u16,
+
     #[serde(default = "default_listen_address")]
     pub listen_address: String,
+
     /// Public-facing domain of the server.
     #[serde(default = "WebConfig::default_server_name")]
     pub server_name: String,
+
+    /// Our configuration assumes you're only running and connecting on the same machine, so it's on by default.
+    /// If true the site provides documentation for setting up a hosts file.
+    #[serde(default = "WebConfig::default_runs_on_localhost")]
+    pub runs_on_localhost: bool,
 }
 
 impl Default for WebConfig {
@@ -271,6 +290,7 @@ impl Default for WebConfig {
             port: Self::default_port(),
             listen_address: default_listen_address(),
             server_name: Self::default_server_name(),
+            runs_on_localhost: Self::default_runs_on_localhost(),
         }
     }
 }
@@ -290,6 +310,10 @@ impl WebConfig {
 
     fn default_server_name() -> String {
         "http://ffxiv.localhost".to_string()
+    }
+
+    fn default_runs_on_localhost() -> bool {
+        true
     }
 }
 
@@ -593,11 +617,6 @@ pub struct Config {
     /// The URL to the Sapphire API (e.g. 127.0.0.1:80)
     #[serde(default)]
     pub sapphire_api_server: String,
-
-    /// Our configuration assumes you're only running and connecting on the same machine, so it's on by default.
-    /// If true the site provides documentation for setting up a hosts file.
-    #[serde(default = "Config::default_runs_on_localhost")]
-    pub runs_on_localhost: bool,
 }
 
 impl Default for Config {
@@ -617,7 +636,6 @@ impl Default for Config {
             enforce_validity_checks: Self::default_enforce_validity_checks(),
             enable_sapphire_proxy: Self::default_enable_sapphire_proxy(),
             sapphire_api_server: String::default(),
-            runs_on_localhost: Self::default_runs_on_localhost(),
         }
     }
 }
@@ -629,10 +647,6 @@ impl Config {
 
     fn default_enable_sapphire_proxy() -> bool {
         false
-    }
-
-    fn default_runs_on_localhost() -> bool {
-        true
     }
 }
 
