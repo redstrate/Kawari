@@ -183,6 +183,10 @@ pub enum ClientTriggerCommand {
     #[brw(magic = 9005u32)]
     SetDistanceRange { range: DistanceRange },
 
+    /// The client requests to repair and item at a mender.
+    #[brw(magic = 1600u32)]
+    RepairItem { unk1: u32, unk2: u32, unk3: u32 },
+
     Unknown {
         category: u32,
         // seen in haircut event
