@@ -5,6 +5,7 @@
 
 {% block webbody %}
 <section class="py-5 container">
+    {% if runs_on_localhost %}
     <p>Browsers can connect to the <code>.localhost</code> sites without any additional configuration, e.g. <code>ffxiv.localhost</code>. However, some parts of the official launcher will fail to connect. To work around this, add this to your hosts file:</p>
 
     <pre>
@@ -22,6 +23,7 @@
     <p>This file is located under <code>C:\Windows\System32\Drivers\etc\hosts</code> on Windows, and <code>/etc/hosts</code> on macOS and Windows.</p>
 
     <p>On Windows, run <code>ipconfig /flushdns</code> if you get network issues while trying to launch. This ensures the modifications to your hosts file is actually used. If you get a version check failed message, it means the patch servers are unreachable.</p>
+    {% endif %}
 
     <p>You have several options you can use to connect, select the preferred one below:</p>
 

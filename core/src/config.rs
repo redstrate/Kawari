@@ -593,6 +593,11 @@ pub struct Config {
     /// The URL to the Sapphire API (e.g. 127.0.0.1:80)
     #[serde(default)]
     pub sapphire_api_server: String,
+
+    /// Our configuration assumes you're only running and connecting on the same machine, so it's on by default.
+    /// If true the site provides documentation for setting up a hosts file.
+    #[serde(default = "Config::default_runs_on_localhost")]
+    pub runs_on_localhost: bool,
 }
 
 impl Default for Config {
@@ -612,6 +617,7 @@ impl Default for Config {
             enforce_validity_checks: Self::default_enforce_validity_checks(),
             enable_sapphire_proxy: Self::default_enable_sapphire_proxy(),
             sapphire_api_server: String::default(),
+            runs_on_localhost: Self::default_runs_on_localhost(),
         }
     }
 }
@@ -623,6 +629,10 @@ impl Config {
 
     fn default_enable_sapphire_proxy() -> bool {
         false
+    }
+
+    fn default_runs_on_localhost() -> bool {
+        true
     }
 }
 
