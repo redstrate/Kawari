@@ -1,11 +1,9 @@
-use axum::extract::Query;
 use axum::response::Html;
 use axum::{Router, routing::get};
 use kawari::config::get_config;
 use kawari::{constants::SUPPORTED_GAME_VERSION, web_static_dir};
 use minijinja::context;
 use minijinja::{Environment, path_loader};
-use serde::Deserialize;
 use tower_http::services::ServeDir;
 
 fn setup_default_environment() -> Environment<'static> {
@@ -39,19 +37,13 @@ async fn setup() -> Html<String> {
     )
 }
 
-#[derive(Deserialize)]
-#[allow(dead_code)]
-struct Params {
-    r#type: String,
-}
-
 // Removes the protocol bit from a URL e.g. turning http://patch-gamever.ffxiv.localhost to patch-gamever.ffxiv.localhost
 // We have to do this, because LauncherTweaks expects it to be a hostname.
 fn strip_out_protocol(url: &str) -> &str {
     url.split_once("://").unwrap().1
 }
 
-async fn launcher_config(Query(params): Query<Params>) -> String {
+async fn launcher_config() -> String {
     let config = get_config();
 
     let environment = setup_default_environment();
@@ -60,7 +52,7 @@ async fn launcher_config(Query(params): Query<Params>) -> String {
     let boot_patch_server = strip_out_protocol(&config.patch.boot_server_name);
 
     template
-            .render(context! { launcher_url => config.launcher.server_name, enable_webview2 => params.r#type != "webview2", game_patch_server, boot_patch_server, lobby_port => config.lobby.port, lobby_host => config.lobby.server_name })
+            .render(context! { launcher_url => config.launcher.server_name, game_patch_server, boot_patch_server, lobby_port => config.lobby.port, lobby_host => config.lobby.server_name })
             .unwrap()
 }
 

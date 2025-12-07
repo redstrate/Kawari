@@ -1,5 +1,4 @@
 launcher_url = "{{ launcher_url }}/v700/"
-disable_webview2_install = {{ enable_webview2 }}
 disable_boot_version_check = true
 force_http = true
 game_patch_server = "{{ game_patch_server }}"

@@ -835,7 +835,6 @@ dependencies = [
  "axum",
  "kawari",
  "minijinja",
- "serde",
  "tokio",
  "tower-http",
  "tracing",
