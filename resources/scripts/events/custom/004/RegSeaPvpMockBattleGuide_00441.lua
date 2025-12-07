@@ -1,7 +1,7 @@
--- Foreign Levy Flyer, and any other Frontline Attendants
+-- Softknox in Wolves Den Pier
 
 function onTalk(target, player)
-    player:play_scene(target, EVENT_ID, 00000, HIDE_HOTBAR, {})
+    player:play_scene(target, EVENT_ID, 00000, HIDE_HOTBAR,{0})
 end
 
 function onYield(scene, results, player)

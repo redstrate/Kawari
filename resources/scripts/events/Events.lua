@@ -85,6 +85,8 @@ function dispatchEvent(player, event_id)
         return runEvent(event_id, "events/generic/TopicSelect.lua")
     elseif event_type == HANDLER_TYPE_PRE_HANDLER then
         return runEvent(event_id, "events/generic/PreHandler.lua")
+    elseif event_type == HANDLER_TYPE_UNK_PVP then
+        return runEvent(event_id, "events/generic/UnkPvP.lua")
     elseif event_type == HANDLER_TYPE_INCLUSION_SHOP then
         return runEvent(event_id, "events/generic/InclusionShop.lua")
     elseif event_type == HANDLER_TYPE_EVENT_GIMMICK_PATH_MOVE then

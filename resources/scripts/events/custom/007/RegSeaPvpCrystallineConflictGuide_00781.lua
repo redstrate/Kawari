@@ -1,4 +1,4 @@
--- Foreign Levy Flyer, and any other Frontline Attendants
+-- Gungi Zelungi, and any other CC Attendants
 
 function onTalk(target, player)
     player:play_scene(target, EVENT_ID, 00000, HIDE_HOTBAR, {})

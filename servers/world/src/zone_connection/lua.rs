@@ -1,7 +1,7 @@
 //! Translates tasks and handles other information from `LuaPlayer`.
 
 use crate::{
-    ToServer, ZoneConnection,
+    EventFinishType, ToServer, ZoneConnection,
     inventory::{Item, Storage},
     lua::{LuaPlayer, Task, load_init_script},
 };
@@ -496,8 +496,9 @@ impl ZoneConnection {
 
         if run_finish_event {
             // Yield the last event again so it can pick up from nesting
-            if let Some(event) = self.events.last_mut() {
-                event.finish(0, &[], player);
+            // TODO: this makes no sense, and probably needs to be re-worked
+            if let Some(event) = self.events.last() {
+                self.event_finish(event.id, EventFinishType::Normal).await;
             }
         }
 

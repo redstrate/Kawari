@@ -206,6 +206,8 @@ pub enum EventHandlerType {
     DisposalShop = 53,
     /// See PreHandler Excel sheet.
     PreHandler = 54,
+    /// Unknown, but seen when talking to the Frontline Attendant.
+    UnkPVP = 55,
     /// See InclusionShop Excel sheet.
     InclusionShop = 58,
     /// See CollectablesShop Excel sheet.

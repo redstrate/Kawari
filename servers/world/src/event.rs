@@ -11,7 +11,7 @@ use kawari::{
 
 use super::lua::{LuaPlayer, initial_setup};
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Event {
     pub file_name: String,
     lua: Lua,

@@ -8,6 +8,7 @@ use super::{CommonSpawn, GameMasterRank};
 #[brw(little)]
 #[derive(Debug, Clone, Default)]
 pub struct NpcSpawn {
+    /// Purpose mostly unknown, but refers to a Game Object ID in the zone.
     pub gimmick_id: u32,
     pub u1b: u8,
     pub u2b: u8,
