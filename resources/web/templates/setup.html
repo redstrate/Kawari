@@ -5,6 +5,24 @@
 
 {% block webbody %}
 <section class="py-5 container">
+    <p>Browsers can connect to the <code>.localhost</code> sites without any additional configuration, e.g. <code>ffxiv.localhost</code>. However, some parts of the official launcher will fail to connect. To work around this, add this to your hosts file:</p>
+
+    <pre>
+127.0.0.1 admin.ffxiv.localhost
+127.0.0.1 ffxiv.localhost
+127.0.0.1 launcher.ffxiv.localhost
+127.0.0.1 config-dl.ffxiv.localhost
+127.0.0.1 frontier.ffxiv.localhost
+127.0.0.1 patch-bootver.ffxiv.localhost
+127.0.0.1 patch-gamever.ffxiv.localhost
+127.0.0.1 ffxiv-login.square.localhost
+127.0.0.1 patch-dl.ffxiv.localhost
+127.0.0.1 dctravel.ffxiv.localhost</pre>
+
+    <p>This file is located under <code>C:\Windows\System32\Drivers\etc\hosts</code> on Windows, and <code>/etc/hosts</code> on macOS and Windows.</p>
+
+    <p>On Windows, run <code>ipconfig /flushdns</code> if you get network issues while trying to launch. This ensures the modifications to your hosts file is actually used. If you get a version check failed message, it means the patch servers are unreachable.</p>
+
     <p>You have several options you can use to connect, select the preferred one below:</p>
 
     <div class="accordion" id="launchers">
@@ -24,24 +42,6 @@
                     </p>
 
                     <p><small>If you're running the launcher in Wine and had problems with the new WebView2 launcher, download the "IE" config. Otherwise, use the WebView2 config.</small></p>
-
-                    <p>Browsers can connect to the <code>.localhost</code> sites without any additional configuration, e.g. <code>ffxiv.localhost</code>. However, some parts of the official launcher will fail to connect. To work around this, add this to your hosts file:</p>
-
-                    <pre>
-127.0.0.1 admin.ffxiv.localhost
-127.0.0.1 ffxiv.localhost
-127.0.0.1 launcher.ffxiv.localhost
-127.0.0.1 config-dl.ffxiv.localhost
-127.0.0.1 frontier.ffxiv.localhost
-127.0.0.1 patch-bootver.ffxiv.localhost
-127.0.0.1 patch-gamever.ffxiv.localhost
-127.0.0.1 ffxiv-login.square.localhost
-127.0.0.1 patch-dl.ffxiv.localhost
-127.0.0.1 dctravel.ffxiv.localhost</pre>
-
-                    <p>This file is located under <code>C:\Windows\System32\Drivers\etc\hosts</code> on Windows, and <code>/etc/hosts</code> on macOS and Windows.</p>
-
-                    <p>On Windows, run <code>ipconfig /flushdns</code> if you get network issues while trying to launch. This ensures the modifications to your hosts file is actually used. If you get a version check failed message, it means the patch servers are unreachable.</p>
                 </div>
             </div>
         </div>
