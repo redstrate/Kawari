@@ -516,8 +516,22 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                             },
                         });
 
-                        let mut network = network.lock();
-                        network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
+                        {
+                            let mut network = network.lock();
+                            network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
+                        }
+
+                        let mut data = data.lock();
+                        if let Some(instance) = data.find_actor_instance_mut(from_actor_id)
+                            && let Some(actor) = instance.find_actor_mut(from_actor_id)
+                        {
+                            match actor {
+                                NetworkedActor::Player { teleport_query, .. } => {
+                                    teleport_query.aetheryte_id = *aetheryte_id as u16
+                                }
+                                NetworkedActor::Npc { .. } => unreachable!(),
+                            }
+                        }
                     }
                     ClientTriggerCommand::EventRelatedUnk { .. } => {
                         let msg = FromServer::ActorControlSelf(ActorControlSelf {

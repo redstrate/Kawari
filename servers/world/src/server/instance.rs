@@ -6,6 +6,7 @@ use std::{
 use crate::{
     Navmesh, StatusEffects,
     server::{actor::NetworkedActor, zone::Zone},
+    zone_connection::TeleportQuery,
 };
 use kawari::{
     common::{GameData, ObjectId},
@@ -116,6 +117,7 @@ impl Instance {
             NetworkedActor::Player {
                 spawn: PlayerSpawn::default(),
                 status_effects: StatusEffects::default(),
+                teleport_query: TeleportQuery::default(),
             },
         );
     }

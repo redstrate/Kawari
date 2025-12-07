@@ -134,6 +134,7 @@ pub fn gain_effect(
         let NetworkedActor::Player {
             status_effects,
             spawn,
+            ..
         } = actor
         else {
             return;
@@ -252,6 +253,7 @@ pub fn remove_effect(
     let NetworkedActor::Player {
         status_effects,
         spawn,
+        ..
     } = actor
     else {
         return;

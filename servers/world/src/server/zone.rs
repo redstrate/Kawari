@@ -19,6 +19,7 @@ use crate::{
         instance::Instance,
         network::{DestinationNetwork, NetworkState},
     },
+    zone_connection::TeleportQuery,
 };
 use kawari::{
     common::{GameData, ObjectId, Position, TerritoryNameKind, euler_to_direction},
@@ -355,6 +356,7 @@ pub fn handle_zone_messages(
                 *instance.find_actor_mut(*from_actor_id).unwrap() = NetworkedActor::Player {
                     spawn: player_spawn.clone(),
                     status_effects: StatusEffects::default(),
+                    teleport_query: TeleportQuery::default(),
                 };
             }
         }

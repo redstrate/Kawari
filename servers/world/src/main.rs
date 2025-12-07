@@ -673,11 +673,6 @@ async fn client_loop(
                                                 connection.exit_rotation = None;
                                             }
                                             ClientZoneIpcData::ClientTrigger(trigger) => {
-                                                // store the query for scripts
-                                                if let ClientTriggerCommand::TeleportQuery { aetheryte_id } = trigger.trigger {
-                                                    connection.player_data.teleport_query.aetheryte_id = aetheryte_id as u16;
-                                                }
-
                                                 match trigger.trigger {
                                                     ClientTriggerCommand::RequestTitleList {} => {
                                                         // send full title list for now

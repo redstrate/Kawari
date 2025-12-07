@@ -140,6 +140,11 @@ pub fn execute_action(
             return Vec::default();
         };
 
+        lua_player.player_data.teleport_query = match actor {
+            NetworkedActor::Player { teleport_query, .. } => teleport_query.clone(),
+            NetworkedActor::Npc { .. } => unreachable!(),
+        };
+
         common_spawn = actor.get_common_spawn().clone();
 
         effects_builder = match &request.action_kind {

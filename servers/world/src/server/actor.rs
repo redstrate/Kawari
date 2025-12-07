@@ -1,6 +1,6 @@
 use std::collections::VecDeque;
 
-use crate::StatusEffects;
+use crate::{StatusEffects, zone_connection::TeleportQuery};
 use kawari::{
     common::{ObjectId, Position},
     ipc::zone::{CommonSpawn, NpcSpawn, PlayerSpawn},
@@ -12,6 +12,7 @@ pub enum NetworkedActor {
         spawn: PlayerSpawn,
         // TODO: of course, Npcs will need status effects as well!
         status_effects: StatusEffects,
+        teleport_query: TeleportQuery,
     },
     Npc {
         current_path: VecDeque<[f32; 3]>,
