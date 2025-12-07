@@ -322,35 +322,49 @@ impl WebConfig {
 pub struct WorldConfig {
     #[serde(default = "WorldConfig::default_port")]
     pub port: u16,
+
     #[serde(default = "default_listen_address")]
     pub listen_address: String,
+
     #[serde(default = "WorldConfig::default_server_name")]
     pub server_name: String,
+
     /// See the World Excel sheet.
     #[serde(default = "WorldConfig::default_world_id")]
     pub world_id: u16,
+
     /// Location of the scripts directory.
     /// Defaults to a sensible value if the project is self-built.
     #[serde(default = "WorldConfig::default_scripts_location")]
     pub scripts_location: String,
+
     /// Enable packet obsfucation. There's literally no reason to do this!
     #[serde(default = "WorldConfig::default_packet_obsfucation")]
     pub enable_packet_obsfucation: bool,
+
     /// Enable packet compression for packets from the server. It's recommended to keep this on.
     #[serde(default = "WorldConfig::default_packet_compression")]
     pub enable_packet_compression: bool,
+
     /// Default message received when logging into the world.
     #[serde(default = "WorldConfig::default_login_message")]
     pub login_message: String,
+
     /// Whether we generate new navmeshes on-demand. This consumes a lot of resources when entering a new zone!
     #[serde(default = "WorldConfig::default_generate_navmesh")]
     pub generate_navmesh: bool,
+
     /// The active festivals.
     #[serde(default = "WorldConfig::default_active_festivals")]
     pub active_festivals: [u16; 4],
+
     /// Whether the World should accept new characters.
     #[serde(default = "WorldConfig::default_accept_new_characters")]
     pub accept_new_characters: bool,
+
+    /// Whether the World has the EXP bonus bonus.
+    #[serde(default = "WorldConfig::default_exp_bonus")]
+    pub exp_bonus: bool,
 }
 
 impl Default for WorldConfig {
@@ -367,6 +381,7 @@ impl Default for WorldConfig {
             generate_navmesh: Self::default_generate_navmesh(),
             active_festivals: Self::default_active_festivals(),
             accept_new_characters: Self::default_accept_new_characters(),
+            exp_bonus: Self::default_exp_bonus(),
         }
     }
 }
@@ -410,6 +425,10 @@ impl WorldConfig {
 
     fn default_accept_new_characters() -> bool {
         true
+    }
+
+    fn default_exp_bonus() -> bool {
+        false
     }
 }
 

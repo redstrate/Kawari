@@ -272,6 +272,7 @@ impl LobbyConnection {
                 id: config.world.world_id,
                 name: self.world_name.clone(),
                 restricted: !config.world.accept_new_characters,
+                exp_bonus: config.world.exp_bonus,
                 ..Default::default()
             }]
             .to_vec();
