@@ -134,6 +134,12 @@ pub enum ClientTriggerCommand {
         arg: u32,
     },
 
+    /// When a player requests an NPC (or player?) to a Triple Triad match.
+    #[brw(magic = 815u32)]
+    TripleTriadChallenge {
+        actor_id: u32, // probably
+    },
+
     /// When a player requests to abandon their instanced content.
     #[brw(magic = 819u32)]
     AbandonContent {},
@@ -154,6 +160,10 @@ pub enum ClientTriggerCommand {
         /// 0-based index, so ward number - 1.
         ward_index: u32,
     },
+
+    /// The client requests to repair and item at a mender.
+    #[brw(magic = 1600u32)]
+    RepairItem { unk1: u32, unk2: u32, unk3: u32 },
 
     /// The client is ready to begin loading a zone.
     #[brw(magic = 3201u32)]
@@ -182,11 +192,6 @@ pub enum ClientTriggerCommand {
     /// The client tells us how far in the distance we should see actors.
     #[brw(magic = 9005u32)]
     SetDistanceRange { range: DistanceRange },
-
-    /// The client requests to repair and item at a mender.
-    #[brw(magic = 1600u32)]
-    RepairItem { unk1: u32, unk2: u32, unk3: u32 },
-
     Unknown {
         category: u32,
         // seen in haircut event
