@@ -9,6 +9,10 @@ end
 function onYield(scene, results, player)
     -- first result is the selected topic
     local selected_topic = results[1]
+    if selected_topic == -1 then
+        player:finish_event(EVENT_ID)
+        return
+    end
 
     local target_event_id = GAME_DATA:get_topic_select_target(EVENT_ID, selected_topic)
 

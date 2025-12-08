@@ -16,7 +16,7 @@ function dispatchEvent(player, event_id)
     local event_type = event_id >> 16
 
     -- 'Normal' events
-    if event_type == HANDLER_TYPE_QUESTS then
+    if event_type == HANDLER_TYPE_QUEST then
         local script_name = GAME_DATA:get_quest_name(event_id)
         local script_id = extractScriptId(script_name)
         local script_folder = folderFromScriptId(script_id)
@@ -85,8 +85,8 @@ function dispatchEvent(player, event_id)
         return runEvent(event_id, "events/generic/TopicSelect.lua")
     elseif event_type == HANDLER_TYPE_PRE_HANDLER then
         return runEvent(event_id, "events/generic/PreHandler.lua")
-    elseif event_type == HANDLER_TYPE_UNK_PVP then
-        return runEvent(event_id, "events/generic/UnkPvP.lua")
+    elseif event_type == HANDLER_TYPE_DESCRIPTION then
+        return runEvent(event_id, "events/generic/Description.lua")
     elseif event_type == HANDLER_TYPE_INCLUSION_SHOP then
         return runEvent(event_id, "events/generic/InclusionShop.lua")
     elseif event_type == HANDLER_TYPE_EVENT_GIMMICK_PATH_MOVE then

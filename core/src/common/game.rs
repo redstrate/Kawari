@@ -154,30 +154,46 @@ pub enum MoveAnimationSpeed {
 #[derive(Debug, Clone, Copy, PartialEq, Display, EnumIter, FromRepr)]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 pub enum EventHandlerType {
-    /// See Quests Excel sheet.
-    Quests = 1,
+    /// See Quest Excel sheet.
+    Quest = 1,
     /// See Warp Excel sheet.
     Warp = 2,
+    /// Unknown purpose.
+    GatheringPoint = 3,
     /// See GilShop Excel sheet.
     GilShop = 4,
-    /// See Aetheryte Excel sheet.
+    /// See Aetheryte Excel sheet (event_id & 0xFFF.)
     Aetheryte = 5,
     /// See GuildleveAssignment Excel sheet.
     GuildLeveAssignment = 6,
     /// See DefaultTalk Excel sheet.
     DefaultTalk = 9,
+    /// Unknown purpose.
+    Craft = 10,
     /// See CustomTalk Excel sheet.
     CustomTalk = 11,
+    /// Unknown purpose.
+    CompanyLeveOfficer = 12,
+    /// See ArrayEventHandler sheet.
+    Array = 13,
     /// See CraftLeve Excel sheet.
-    CraftLevel = 14,
+    CraftLeve = 14,
+    /// Unknown purpose.
+    GimmickAccessor = 15,
+    /// Unknown purpose.
+    GimmickBill = 16,
+    /// Unknown purpose.
+    GimmickRect = 17,
     /// See ChocoboTaxiStand Excel sheet.
     ChocoboTaxiStand = 18,
     /// See Opening Excel sheet.
     Opening = 19,
-    /// Used for housing.
+    /// Used for housing?
     ExitRange = 20,
+    /// Unknown purpose.
+    Fishing = 21,
     /// See GCShop Excel sheet.
-    GcShop = 22,
+    GrandCompanyShop = 22,
     /// See GuildOrderGuide Excel sheet.
     GuildOrderGuide = 23,
     /// See GuildOrderOfficer Excel sheet.
@@ -188,16 +204,48 @@ pub enum EventHandlerType {
     Story = 26,
     /// See SpecialShop Excel sheet.
     SpecialShop = 27,
+    /// Unknown purpose.
+    DeepDungeon = 28,
+    /// See InstanceContentGuide sheet.
+    InstanceContentGuide = 29,
+    /// See HousingAethernet sheet.
+    HousingAethernet = 30,
     // See SwitchTalk Excel sheet.
     SwitchTalk = 31,
+    /// Unknown purpose.
+    MobHunt = 32,
+    /// See Adventure Excel sheet.
+    Adventure = 33,
+    /// Unknown purpose.
+    DailyQuestSupply = 34,
     /// See TripleTriad Excel sheet.
     TripleTriad = 35,
     /// See GoldSaucerArcadeMachine Excel sheet.
     GoldSaucerArcadeMachine = 36,
+    /// Unknown purpose.
+    LotteryDaily = 37,
+    /// Unknown purpose.
+    LotteryWeekly = 38,
+    /// Unknown purpose.
+    RaceChocoboRegistrar = 39,
+    /// Unknown purpose.
+    GoldSaucerTalk = 41,
     /// See FccShop Excel sheet.
-    FccShop = 42,
+    FreeCompanyCreditShop = 42,
+    /// See AetherCurrent Excel sheet.
+    AetherCurrent = 43,
+    /// See ContentEntry Excel sheet.
+    ContentEntry = 44,
+    /// Unknown purpose.
+    Verminion = 45,
+    /// Unknown purpose.
+    SkyIslandEntrance = 46,
     /// See DpsChallengeOfficer Excel sheet.
     DpsChallengeOfficer = 47,
+    /// Unknown purpose.
+    BeginnerTrainingOfficer = 48,
+    /// Unknown purpose.
+    RetainerBuyback = 49,
     /// See TopicSelect Excel sheet.
     TopicSelect = 50,
     /// See LotteryExchangeShop Excel sheet.
@@ -206,16 +254,26 @@ pub enum EventHandlerType {
     DisposalShop = 53,
     /// See PreHandler Excel sheet.
     PreHandler = 54,
-    /// Unknown, but seen when talking to the Frontline Attendant.
-    UnkPVP = 55,
+    /// See Description Excel sheet.
+    Description = 55,
+    /// Unknown purpose.
+    HwdDev = 56,
+    /// Unknown purpose.
+    Materialize = 57,
     /// See InclusionShop Excel sheet.
     InclusionShop = 58,
     /// See CollectablesShop Excel sheet.
     CollectablesShop = 59,
+    /// Unknown purpose.
+    MJIPasture = 60,
     /// See EventPathMove Excel sheet.
     EventPathMove = 61,
-    /// These are used for the Solution Nine teleporter pads, for example. See EventGimmickPathMove Excel sheet.
+    /// Unknown purpose.
+    ReactionEvent = 62,
+    /// Used for the Solution Nine teleporter pads, for example. See EventGimmickPathMove Excel sheet.
     EventGimmickPathMove = 64,
+    /// See EventMountGimmickPathMove Excel sheet.
+    EventMountGimmickPathMove = 65,
 }
 
 #[cfg(feature = "server")]
