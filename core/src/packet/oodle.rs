@@ -43,7 +43,7 @@ unsafe extern "C" {
         dec: *const c_void,
         dec_size: isize,
         enc: *mut c_void,
-    ) -> bool;
+    ) -> i32;
     pub fn OodleNetwork1_CompressedBufferSizeNeeded(rawLen: isize) -> isize;
 }
 
@@ -98,7 +98,7 @@ pub fn OodleNetwork1TCP_Encode(
     dec: *const c_void,
     dec_size: isize,
     enc: *mut c_void,
-) -> bool {
+) -> i32 {
     panic!("Something is trying to use Oodle but the feature isn't enabled!")
 }
 
