@@ -39,5 +39,5 @@ EOBJS = {
 }
 
 function onRequestEObjSpawn(zone)
-    spawnZoneEObjs(zone, EOBJS)
+    --spawnZoneEObjs(zone, EOBJS)
 end
