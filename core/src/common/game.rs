@@ -12,6 +12,13 @@ pub const CHAR_NAME_MAX_LENGTH: usize = 32;
 /// Maximum length of most (all?) chat messages.
 pub const MESSAGE_MAX_LENGTH: usize = 1024;
 
+/// Maximum spawnable amount of actors in the client. Going over this limit crashes the game.
+/// This is 99 - which is a weird number - except that the player always takes the first index.
+pub const MAX_SPAWNED_ACTORS: usize = 99;
+
+/// Maximum spawnable amount of objects in the client. Going over this limit crashes the game.
+pub const MAX_SPAWNED_OBJECTS: usize = 40;
+
 /// The maximum durability of an item.
 pub const ITEM_CONDITION_MAX: u16 = 30000;
 

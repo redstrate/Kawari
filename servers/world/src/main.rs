@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Instant;
@@ -32,8 +31,8 @@ use kawari::packet::{
 };
 use kawari_world::lua::{ExtraLuaState, LuaPlayer, load_init_script};
 use kawari_world::{
-    ChatConnection, ChatHandler, CustomIpcConnection, ObsfucationData, TeleportReason,
-    ZoneConnection,
+    ChatConnection, ChatHandler, CustomIpcConnection, ObsfucationData, SpawnAllocator,
+    TeleportReason, ZoneConnection,
 };
 use kawari_world::{
     ClientHandle, ClientId, FromServer, MessageInfo, PlayerData, ServerHandle, ToServer,
@@ -143,10 +142,9 @@ async fn initial_setup(
                         socket,
                         state,
                         player_data: PlayerData::default(),
-                        spawn_index: 0,
-                        object_spawn_index: 0,
                         events: Vec::new(),
-                        spawned_actors: HashMap::new(),
+                        object_allocator: SpawnAllocator::new(),
+                        actor_allocator: SpawnAllocator::new(),
                         ip,
                         id,
                         handle: handle.clone(),

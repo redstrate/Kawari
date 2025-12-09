@@ -207,8 +207,8 @@ impl ZoneConnection {
         self.send_conditions().await;
 
         // Reset spawn pool
-        self.object_spawn_index = 0;
-        self.spawn_index = 0;
+        self.object_allocator.clear();
+        self.actor_allocator.clear();
 
         if bound_by_duty {
             let director_id = 2147680260;

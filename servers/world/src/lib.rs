@@ -5,7 +5,9 @@ mod chat_connection;
 pub use chat_connection::ChatConnection;
 
 mod zone_connection;
-pub use zone_connection::{ObsfucationData, PlayerData, TeleportReason, ZoneConnection};
+pub use zone_connection::{
+    ObsfucationData, PlayerData, TeleportReason, ZoneConnection, spawn_allocator::SpawnAllocator,
+};
 
 mod database;
 pub use database::{CharacterData, WorldDatabase};

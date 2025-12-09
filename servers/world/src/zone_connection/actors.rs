@@ -92,7 +92,9 @@ impl ZoneConnection {
         assert!(actor_id != self.player_data.actor_id);
 
         let ipc;
-        let spawn_index = self.get_free_spawn_index();
+        let Some(spawn_index) = self.actor_allocator.reserve(actor_id) else {
+            return; // TODO: log
+        };
 
         // TODO: Can this be deduplicated somehow?
         match spawn {
@@ -122,8 +124,6 @@ impl ZoneConnection {
         })
         .await;
 
-        self.spawned_actors.insert(actor_id, spawn_index);
-
         self.actor_control(
             actor_id,
             ActorControl {
@@ -138,7 +138,7 @@ impl ZoneConnection {
     }
 
     pub async fn remove_actor(&mut self, actor_id: ObjectId) {
-        if let Some(spawn_index) = self.get_actor_spawn_index(actor_id) {
+        if let Some(spawn_index) = self.actor_allocator.free(actor_id) {
             tracing::info!("Removing actor {actor_id} {}!", spawn_index);
 
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Delete {
@@ -153,8 +153,6 @@ impl ZoneConnection {
                 data: SegmentData::Ipc(ipc),
             })
             .await;
-
-            self.spawned_actors.remove(&actor_id);
         }
     }
 
@@ -164,10 +162,6 @@ impl ZoneConnection {
             category: ActorControlCategory::ToggleInvisibility { invisible },
         })
         .await;
-    }
-
-    pub fn get_actor_spawn_index(&self, id: ObjectId) -> Option<u8> {
-        self.spawned_actors.get(&id).copied()
     }
 
     pub async fn actor_control_self(&mut self, actor_control: ActorControlSelf) {
@@ -230,20 +224,6 @@ impl ZoneConnection {
         {
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PlayerSpawn(spawn));
             self.send_ipc_self(ipc).await;
-        }
-    }
-
-    pub fn get_free_spawn_index(&mut self) -> u8 {
-        self.spawn_index += 1;
-        self.spawn_index
-    }
-
-    pub fn get_free_spawn_object_index(&mut self) -> Option<u8> {
-        if self.object_spawn_index < 39 {
-            self.object_spawn_index += 1;
-            Some(self.object_spawn_index)
-        } else {
-            None
         }
     }
 
@@ -315,13 +295,12 @@ impl ZoneConnection {
     }
 
     pub async fn spawn_object(&mut self, mut spawn: ObjectSpawn) {
-        let Some(spawn_index) = self.get_free_spawn_object_index() else {
-            return;
+        let Some(spawn_index) = self.object_allocator.reserve(spawn.entity_id) else {
+            return; // TODO: log
         };
         spawn.index = spawn_index;
 
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ObjectSpawn(spawn));
-        dbg!(&ipc);
 
         self.send_segment(PacketSegment {
             source_actor: spawn.entity_id,
