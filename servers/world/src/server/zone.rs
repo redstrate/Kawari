@@ -331,7 +331,9 @@ pub fn handle_zone_messages(
 ) {
     match msg {
         ToServer::ZoneLoaded(from_id, from_actor_id, player_spawn) => {
-            tracing::info!("Client {from_id:?} has now loaded, sending them existing player data.");
+            tracing::info!(
+                "Client {from_id:?} has now loaded into the zone, sending them existing player data."
+            );
 
             let mut data = data.lock();
             let mut network = network.lock();
@@ -481,6 +483,8 @@ pub fn handle_zone_messages(
             );
         }
         ToServer::ZoneIn(from_id, from_actor_id, is_teleport) => {
+            tracing::info!("Player {from_id:?} has finally zoned in, informing other players...");
+
             // Inform all clients to play the zone in animation
             let mut network = network.lock();
             let mut to_remove = Vec::new();

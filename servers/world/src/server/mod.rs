@@ -448,6 +448,8 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     .insert(handle.id, (handle, ClientState::default()));
             }
             ToServer::ReadySpawnPlayer(from_id, from_actor_id, zone_id, position, rotation) => {
+                tracing::info!("Player {from_id:?} is now spawning into {zone_id}....");
+
                 let mut network = network.lock();
                 let mut data = data.lock();
 
