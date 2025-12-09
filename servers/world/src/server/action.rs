@@ -7,11 +7,12 @@ use parking_lot::Mutex;
 
 use crate::{
     ClientId, FromServer, PlayerData, StatusEffects, ToServer,
-    lua::{EffectsBuilder, ExtraLuaState, LuaPlayer, LuaZone, Task},
+    lua::{EffectsBuilder, ExtraLuaState, LuaPlayer, LuaZone},
     server::{
         WorldServer,
         actor::NetworkedActor,
         effect::gain_effect,
+        instance::QueuedTaskData,
         network::{DestinationNetwork, NetworkState},
     },
 };
@@ -19,17 +20,16 @@ use kawari::{
     common::{GameData, INVALID_OBJECT_ID, ObjectId},
     config::get_config,
     ipc::zone::{
-        ActionEffect, ActionKind, ActionRequest, ActionResult, EffectEntry, EffectKind,
-        EffectResult, ServerZoneIpcData, ServerZoneIpcSegment,
+        ActionEffect, ActionKind, ActionRequest, ActionResult, ActorControlCategory,
+        ActorControlSelf, EffectEntry, EffectKind, EffectResult, ServerZoneIpcData,
+        ServerZoneIpcSegment,
     },
 };
 
 /// Process action-related messages.
 pub fn handle_action_messages(
     data: Arc<Mutex<WorldServer>>,
-    network: Arc<Mutex<NetworkState>>,
     game_data: Arc<Mutex<GameData>>,
-    lua: Arc<Mutex<Lua>>,
     msg: &ToServer,
 ) {
     if let ToServer::ActionRequest(from_id, from_actor_id, request) = msg {
@@ -39,74 +39,27 @@ pub fn handle_action_messages(
             cast_time = game_data.get_casttime(request.action_key).unwrap();
         }
 
-        let send_execution = |from_id: ClientId,
-                              from_actor_id: ObjectId,
-                              request: ActionRequest,
-                              network: Arc<Mutex<NetworkState>>,
-                              data: Arc<Mutex<WorldServer>>,
-                              game_data: Arc<Mutex<GameData>>,
-                              lua: Arc<Mutex<Lua>>| {
-            tracing::info!("Now finishing delayed cast!");
+        let delay_milliseconds = cast_time as u64 * 100;
 
-            let tasks = execute_action(
-                network.clone(),
-                data,
-                game_data,
-                lua,
-                from_id,
-                from_actor_id,
-                request,
-            );
+        tracing::info!(
+            "Delaying spell cast for {} milliseconds",
+            delay_milliseconds
+        );
 
-            let mut network = network.lock();
-            let msg = FromServer::NewTasks(tasks);
-            network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
+        let mut data = data.lock();
+        let Some(instance) = data.find_actor_instance_mut(*from_actor_id) else {
+            return;
         };
 
-        if cast_time == 0 {
-            // If instantaneous, send right back
-            send_execution(
-                *from_id,
-                *from_actor_id,
-                request.clone(),
-                network.clone(),
-                data.clone(),
-                game_data.clone(),
-                lua.clone(),
-            );
-        } else {
-            // Otherwise, delay
-            // NOTE: I know this won't scale, but it's a fine hack for now
-
-            tracing::info!(
-                "Delaying spell cast for {} milliseconds",
-                cast_time as u64 * 100
-            );
-
-            // we have to shadow these variables to tell rust not to move them into the async closure
-            let network = network.clone();
-            let data = data.clone();
-            let game_data = game_data.clone();
-            let lua = lua.clone();
-            let request = request.clone();
-            let from_id = *from_id;
-            let from_actor_id = *from_actor_id;
-            tokio::task::spawn(async move {
-                let mut interval =
-                    tokio::time::interval(Duration::from_millis(cast_time as u64 * 100));
-                interval.tick().await;
-                interval.tick().await;
-                send_execution(
-                    from_id,
-                    from_actor_id,
-                    request,
-                    network,
-                    data,
-                    game_data,
-                    lua,
-                );
-            });
-        }
+        instance.insert_task(
+            *from_id,
+            *from_actor_id,
+            Duration::from_millis(delay_milliseconds),
+            QueuedTaskData::CastAction {
+                request: request.clone(),
+                interruptible: delay_milliseconds > 0,
+            },
+        );
     }
 }
 
@@ -119,7 +72,7 @@ pub fn execute_action(
     from_id: ClientId,
     from_actor_id: ObjectId,
     request: ActionRequest,
-) -> Vec<Task> {
+) {
     let mut lua_player = LuaPlayer {
         player_data: PlayerData::default(),
         status_effects: StatusEffects::default(),
@@ -133,11 +86,11 @@ pub fn execute_action(
         let data = data.lock();
 
         let Some(instance) = data.find_actor_instance(from_actor_id) else {
-            return Vec::default();
+            return;
         };
 
         let Some(actor) = instance.find_actor(from_actor_id) else {
-            return Vec::default();
+            return;
         };
 
         lua_player.player_data.teleport_query = match actor {
@@ -166,21 +119,18 @@ pub fn execute_action(
             let mut data = data.lock();
 
             let Some(instance) = data.find_actor_instance_mut(request.target.object_id) else {
-                return Vec::default();
+                return;
             };
 
             let Some(actor) = instance.find_actor_mut(request.target.object_id) else {
-                return Vec::default();
+                return;
             };
 
             let common_spawn = actor.get_common_spawn_mut();
 
             for effect in &effects_builder.effects {
-                match effect.kind {
-                    EffectKind::Damage { amount, .. } => {
-                        common_spawn.hp_curr = common_spawn.hp_curr.saturating_sub(amount as u32);
-                    }
-                    _ => todo!(),
+                if let EffectKind::Damage { amount, .. } = effect.kind {
+                    common_spawn.hp_curr = common_spawn.hp_curr.saturating_sub(amount as u32);
                 }
             }
 
@@ -254,7 +204,6 @@ pub fn execute_action(
                     gain_effect(
                         network.clone(),
                         data.clone(),
-                        lua.clone(),
                         from_id,
                         from_actor_id,
                         effect_id,
@@ -304,16 +253,21 @@ pub fn execute_action(
         }*/
     }
 
-    lua_player.queued_tasks
+    let mut network = network.lock();
+    let msg = FromServer::NewTasks(lua_player.queued_tasks);
+    network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
 }
 
-// TODO: re-implement action cancelling
-/*pub async fn cancel_action(&mut self) {
-    self.actor_control_self(ActorControlSelf {
+pub fn cancel_action(network: Arc<Mutex<NetworkState>>, from_id: ClientId) {
+    let msg = FromServer::ActorControlSelf(ActorControlSelf {
         category: ActorControlCategory::CancelCast {},
-    })
-    .await;
-}*/
+    });
+
+    {
+        let mut network = network.lock();
+        network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
+    }
+}
 
 /// Handles normal actions, powered by Lua.
 pub fn execute_normal_action(

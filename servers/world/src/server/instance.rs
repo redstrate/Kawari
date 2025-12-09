@@ -1,18 +1,21 @@
 use std::{
     collections::{HashMap, VecDeque},
     path::PathBuf,
+    sync::Arc,
+    time::{Duration, Instant},
 };
 
 use crate::{
-    Navmesh, StatusEffects,
-    server::{actor::NetworkedActor, zone::Zone},
+    ClientId, Navmesh, StatusEffects,
+    server::{action::cancel_action, actor::NetworkedActor, network::NetworkState, zone::Zone},
     zone_connection::TeleportQuery,
 };
 use kawari::{
     common::{GameData, ObjectId},
     config::get_config,
-    ipc::zone::{NpcSpawn, PlayerSpawn},
+    ipc::zone::{ActionRequest, NpcSpawn, PlayerSpawn},
 };
+use parking_lot::Mutex;
 
 #[derive(Default, Debug)]
 pub enum NavmeshGenerationStep {
@@ -25,6 +28,28 @@ pub enum NavmeshGenerationStep {
     Started(String),
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum QueuedTaskData {
+    CastAction {
+        request: ActionRequest,
+        /// Currently means if it has a cast bar.
+        interruptible: bool,
+    },
+    LoseStatusEffect {
+        effect_id: u16,
+        effect_param: u16,
+        effect_source_actor_id: ObjectId,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct QueuedTask {
+    pub point: Instant,
+    pub from_id: ClientId,
+    pub from_actor_id: ObjectId,
+    pub data: QueuedTaskData,
+}
+
 // TODO: structure is temporary, of course
 #[derive(Default, Debug)]
 pub struct Instance {
@@ -35,6 +60,8 @@ pub struct Instance {
     pub content_finder_condition_id: u16,
     /// If Some, then this is the path of the navmesh we need to generate.
     pub generate_navmesh: NavmeshGenerationStep,
+    /// List of tasks that has to be executed an arbitrary point in the future.
+    pub queued_task: Vec<QueuedTask>,
 }
 
 impl Instance {
@@ -120,5 +147,43 @@ impl Instance {
                 teleport_query: TeleportQuery::default(),
             },
         );
+    }
+
+    /// Inserts a new task into the queue, with a set `duration` and given `data`.
+    pub fn insert_task(
+        &mut self,
+        from_id: ClientId,
+        from_actor_id: ObjectId,
+        duration: Duration,
+        data: QueuedTaskData,
+    ) {
+        self.queued_task.push(QueuedTask {
+            point: Instant::now() + duration,
+            from_id,
+            from_actor_id,
+            data,
+        });
+    }
+
+    /// Finds all tasks relevant to a given actor.
+    pub fn find_tasks(&self, for_actor_id: ObjectId) -> Vec<QueuedTask> {
+        self.queued_task
+            .iter()
+            .filter(|x| x.from_actor_id == for_actor_id)
+            .cloned()
+            .collect()
+    }
+
+    pub fn cancel_task(&mut self, network: Arc<Mutex<NetworkState>>, task: &QueuedTask) {
+        tracing::info!("Removing task {task:#?} from the schedule!");
+
+        // Delete the selected task:
+        self.queued_task.retain(|x| x != task);
+
+        // Then actually do the work:
+        match task.data {
+            QueuedTaskData::CastAction { .. } => cancel_action(network.clone(), task.from_id),
+            QueuedTaskData::LoseStatusEffect { .. } => {} // Nothing needs to happen for status effects
+        }
     }
 }

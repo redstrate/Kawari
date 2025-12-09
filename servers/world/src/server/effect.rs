@@ -11,6 +11,7 @@ use crate::{
     server::{
         WorldServer,
         actor::NetworkedActor,
+        instance::QueuedTaskData,
         network::{DestinationNetwork, NetworkState},
     },
 };
@@ -42,7 +43,6 @@ pub fn handle_effect_messages(
             gain_effect(
                 network.clone(),
                 data.clone(),
-                lua.clone(),
                 *from_id,
                 *from_actor_id,
                 *effect_id,
@@ -110,7 +110,6 @@ fn process_effects_list(
 pub fn gain_effect(
     network: Arc<Mutex<NetworkState>>,
     data: Arc<Mutex<WorldServer>>,
-    lua: Arc<Mutex<Lua>>,
     from_id: ClientId,
     from_actor_id: ObjectId,
     effect_id: u16,
@@ -172,60 +171,24 @@ pub fn gain_effect(
         return;
     }
 
-    // Finally, start scheduling the effect when it ends
-    let send_lost_effect = |from_id: ClientId,
-                            from_actor_id: ObjectId,
-                            network: Arc<Mutex<NetworkState>>,
-                            data: Arc<Mutex<WorldServer>>,
-                            lua: Arc<Mutex<Lua>>,
-                            effect_id: u16,
-                            effect_param: u16,
-                            effect_source_actor_id: ObjectId| {
-        tracing::info!("Now losing effect {}!", effect_id);
-
-        remove_effect(
-            network.clone(),
-            data.clone(),
-            lua.clone(),
-            from_id,
-            from_actor_id,
-            effect_id,
-            effect_param,
-            effect_source_actor_id,
-        );
-    };
-
     // Eventually tell the player they lost this effect
-    // NOTE: I know this won't scale, but it's a fine hack for now
-
     tracing::info!("Effect {effect_id} lasts for {effect_duration} seconds");
 
-    // we have to shadow these variables to tell rust not to move them into the async closure
-    let network = network.clone();
-    let data = data.clone();
-    let lua = lua.clone();
-    let from_id = from_id;
-    let from_actor_id = from_actor_id;
-    let effect_id = effect_id;
-    let effect_duration = effect_duration;
-    let effect_param = effect_param;
-    let effect_source_actor_id = effect_source_actor_id;
-    tokio::task::spawn(async move {
-        let mut interval =
-            tokio::time::interval(Duration::from_millis((effect_duration * 1000.0) as u64));
-        interval.tick().await;
-        interval.tick().await;
-        send_lost_effect(
-            from_id,
-            from_actor_id,
-            network,
-            data,
-            lua,
+    let mut data = data.lock();
+    let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
+        return;
+    };
+
+    instance.insert_task(
+        from_id,
+        from_actor_id,
+        Duration::from_secs_f32(effect_duration),
+        QueuedTaskData::LoseStatusEffect {
             effect_id,
             effect_param,
             effect_source_actor_id,
-        );
-    });
+        },
+    );
 }
 
 /// Removes an effect from the actor.

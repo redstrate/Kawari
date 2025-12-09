@@ -1,7 +1,11 @@
 use mlua::Lua;
 use parking_lot::Mutex;
 use std::{
-    collections::HashMap, env::consts::EXE_SUFFIX, process::Command, sync::Arc, time::Duration,
+    collections::HashMap,
+    env::consts::EXE_SUFFIX,
+    process::Command,
+    sync::Arc,
+    time::{Duration, Instant},
 };
 use tokio::sync::mpsc::Receiver;
 
@@ -10,11 +14,11 @@ use crate::{
     common::SpawnKind,
     lua::load_init_script,
     server::{
-        action::handle_action_messages,
+        action::{execute_action, handle_action_messages},
         actor::NetworkedActor,
         chat::handle_chat_messages,
         effect::{handle_effect_messages, remove_effect},
-        instance::{Instance, NavmeshGenerationStep},
+        instance::{Instance, NavmeshGenerationStep, QueuedTaskData},
         network::{DestinationNetwork, NetworkState},
         social::handle_social_messages,
         zone::{change_zone_warp_to_entrance, handle_zone_messages},
@@ -358,14 +362,71 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
     {
         let data = data.clone();
         let network = network.clone();
+        let game_data = game_data.clone();
+        let lua = lua.clone();
         tokio::task::spawn(async move {
             let mut interval = tokio::time::interval(Duration::from_millis(500));
             interval.tick().await;
             loop {
                 interval.tick().await;
-                let mut data = data.lock();
-                let mut network = network.lock();
-                server_logic_tick(&mut data, &mut network);
+
+                // Execute general server logic
+                {
+                    let mut data = data.lock();
+                    let mut network = network.lock();
+                    server_logic_tick(&mut data, &mut network);
+                }
+
+                // Execute list of queued tasks
+                {
+                    let mut tasks_to_execute = Vec::new();
+
+                    // Gather list of tasks to execute
+                    {
+                        let mut data = data.lock();
+                        for instance in &mut data.instances {
+                            for task in &instance.queued_task {
+                                if task.point <= Instant::now() {
+                                    tasks_to_execute.push(task.clone());
+                                }
+                            }
+                            // Keep all tasks that happen in the future.
+                            instance.queued_task.retain(|x| x.point > Instant::now());
+                        }
+                    }
+
+                    for task in &tasks_to_execute {
+                        match &task.data {
+                            QueuedTaskData::CastAction { request, .. } => {
+                                execute_action(
+                                    network.clone(),
+                                    data.clone(),
+                                    game_data.clone(),
+                                    lua.clone(),
+                                    task.from_id,
+                                    task.from_actor_id,
+                                    request.clone(),
+                                );
+                            }
+                            QueuedTaskData::LoseStatusEffect {
+                                effect_id,
+                                effect_param,
+                                effect_source_actor_id,
+                            } => {
+                                remove_effect(
+                                    network.clone(),
+                                    data.clone(),
+                                    lua.clone(),
+                                    task.from_id,
+                                    task.from_actor_id,
+                                    *effect_id,
+                                    *effect_param,
+                                    *effect_source_actor_id,
+                                );
+                            }
+                        }
+                    }
+                }
             }
         });
     }
@@ -377,13 +438,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
         handle_chat_messages(data.clone(), network.clone(), &msg);
         handle_social_messages(data.clone(), network.clone(), &msg);
         handle_zone_messages(data.clone(), network.clone(), game_data.clone(), &msg);
-        handle_action_messages(
-            data.clone(),
-            network.clone(),
-            game_data.clone(),
-            lua.clone(),
-            &msg,
-        );
+        handle_action_messages(data.clone(), game_data.clone(), &msg);
         handle_effect_messages(data.clone(), network.clone(), lua.clone(), &msg);
 
         match msg {
@@ -486,7 +541,6 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 jump_state,
             ) => {
                 let mut data = data.lock();
-                let mut network = network.lock();
 
                 if let Some(instance) = data.find_actor_instance_mut(actor_id) {
                     if let Some((_, spawn)) = instance
@@ -502,10 +556,23 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         common.rotation = rotation;
                     }
 
-                    let msg = FromServer::ActorMove(
-                        actor_id, position, rotation, anim_type, anim_state, jump_state,
-                    );
-                    network.send_to_all(Some(from_id), msg, DestinationNetwork::ZoneClients);
+                    // Send actor move!
+                    {
+                        let mut network = network.lock();
+                        let msg = FromServer::ActorMove(
+                            actor_id, position, rotation, anim_type, anim_state, jump_state,
+                        );
+                        network.send_to_all(Some(from_id), msg, DestinationNetwork::ZoneClients);
+                    }
+
+                    // Check if the actor has any in-progress actions, and cancel them if so.
+                    for task in instance.find_tasks(actor_id) {
+                        if let QueuedTaskData::CastAction { interruptible, .. } = task.data
+                            && interruptible
+                        {
+                            instance.cancel_task(network.clone(), &task);
+                        }
+                    }
                 }
             }
             ToServer::ClientTrigger(from_id, from_actor_id, trigger) => {
@@ -683,6 +750,29 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         source_actor_id,
                         effect_param,
                     } => {
+                        // If there is a scheduled task to remove it, cancel it!
+                        // This is harmless to keep, but it's better not to clog the queue.
+                        {
+                            let mut data = data.lock();
+                            if let Some(instance) = data.find_actor_instance_mut(from_actor_id) {
+                                for task in instance.find_tasks(from_actor_id) {
+                                    let target_effect_id = *effect_id as u16;
+                                    let target_actor_id = *source_actor_id;
+                                    // NOTE: I intentionally don't match on effect_param, I don't think that's truly reflective from CT?
+                                    if let QueuedTaskData::LoseStatusEffect {
+                                        effect_id,
+                                        effect_source_actor_id,
+                                        ..
+                                    } = task.data
+                                        && effect_id == target_effect_id
+                                        && effect_source_actor_id == target_actor_id
+                                    {
+                                        instance.cancel_task(network.clone(), &task);
+                                    }
+                                }
+                            }
+                        }
+
                         remove_effect(
                             network.clone(),
                             data.clone(),

@@ -14,7 +14,7 @@ pub enum ActionKind {
 }
 
 #[binrw]
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct ActionRequest {
     pub exec_proc: u8, // what?
     pub action_kind: ActionKind,
