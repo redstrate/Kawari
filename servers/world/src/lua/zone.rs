@@ -1,14 +1,10 @@
 use std::collections::HashMap;
 
-use mlua::{LuaSerdeExt, UserData, UserDataFields, UserDataMethods, Value};
+use mlua::{UserData, UserDataFields, UserDataMethods};
 
-use kawari::{
-    common::ObjectId,
-    ipc::zone::{ObjectSpawn, ServerZoneIpcData, ServerZoneIpcSegment},
-    packet::PacketSegment,
-};
+use kawari::{ipc::zone::ServerZoneIpcSegment, packet::PacketSegment};
 
-use super::{QueueSegments, create_ipc_target};
+use super::QueueSegments;
 
 #[derive(Default, Debug, Clone)]
 pub struct LuaZone {
@@ -35,11 +31,6 @@ impl UserData for LuaZone {
     }
 
     fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
-        methods.add_method_mut("spawn_eobj", |lua, this, eobj: Value| {
-            let eobj: ObjectSpawn = lua.from_value(eobj).unwrap();
-            this.spawn_eobj(eobj);
-            Ok(())
-        });
         methods.add_method("get_npc_base_id", |_, this, instance_id: u32| {
             Ok(this.cached_npc_base_ids.get(&instance_id).copied())
         });
@@ -49,13 +40,5 @@ impl UserData for LuaZone {
 impl QueueSegments for LuaZone {
     fn queue_segment(&mut self, segment: PacketSegment<ServerZoneIpcSegment>) {
         self.queued_segments.push(segment);
-    }
-}
-
-impl LuaZone {
-    fn spawn_eobj(&mut self, eobj: ObjectSpawn) {
-        let data = ServerZoneIpcSegment::new(ServerZoneIpcData::ObjectSpawn(eobj));
-
-        create_ipc_target(self, data, ObjectId(eobj.entity_id), ObjectId(0)); // NOTE: Setting the target actor id to 0 for later post-processing.
     }
 }

@@ -203,6 +203,7 @@ pub struct ZoneConnection {
     pub player_data: PlayerData,
 
     pub spawn_index: u8,
+    pub object_spawn_index: u8,
     pub spawned_actors: HashMap<ObjectId, u8>,
 
     pub events: Vec<Event>,

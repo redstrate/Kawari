@@ -22,8 +22,10 @@ use crate::{
     zone_connection::TeleportQuery,
 };
 use kawari::{
-    common::{GameData, ObjectId, Position, TerritoryNameKind, euler_to_direction},
-    ipc::zone::{ActorControl, ActorControlCategory, ActorControlSelf},
+    common::{
+        GameData, INVALID_OBJECT_ID, ObjectId, Position, TerritoryNameKind, euler_to_direction,
+    },
+    ipc::zone::{ActorControl, ActorControlCategory, ActorControlSelf, ObjectSpawn},
 };
 
 /// Represents a loaded zone
@@ -200,6 +202,45 @@ impl Zone {
 
         None
     }
+
+    /// Returns a list of event objects to spawn by default.
+    ///
+    /// For example, the Gold Saucer arcade machines or shortcuts in dungeons.
+    pub fn get_event_objects(&self, game_data: &mut GameData) -> Vec<ObjectSpawn> {
+        let mut object_spawns = Vec::new();
+
+        for layer_group in &self.layer_groups {
+            for layer in &layer_group.chunks[0].layers {
+                for object in &layer.objects {
+                    if let LayerEntryData::EventObject(eobj) = &object.data {
+                        // NOTE: this seems to keep the gold saucer machines, and not much else. needs more testing!
+                        if game_data.get_eobj_pop_type(eobj.parent_data.base_id) != 1 {
+                            continue;
+                        }
+
+                        object_spawns.push(ObjectSpawn {
+                            kind: 7, // ObjectKind::EventObj
+                            base_id: eobj.parent_data.base_id,
+                            entity_id: ObjectId(fastrand::u32(..)),
+                            layout_id: object.instance_id,
+                            bind_layout_id: eobj.bound_instance_id,
+                            owner_id: INVALID_OBJECT_ID,
+                            radius: 1.0,
+                            rotation: euler_to_direction(object.transform.rotation),
+                            position: Position {
+                                x: object.transform.translation[0],
+                                y: object.transform.translation[1],
+                                z: object.transform.translation[2],
+                            },
+                            ..Default::default()
+                        });
+                    }
+                }
+            }
+        }
+
+        object_spawns
+    }
 }
 
 fn begin_change_zone<'a>(
@@ -342,6 +383,17 @@ pub fn handle_zone_messages(
 
             if let Some(instance) = data.find_actor_instance_mut(*from_actor_id) {
                 let mut to_remove = Vec::new();
+
+                // Send existing objects
+                for actor in instance.actors.values() {
+                    if let NetworkedActor::Object { object } = actor {
+                        network.send_to(
+                            *from_id,
+                            FromServer::ObjectSpawn(*object),
+                            DestinationNetwork::ZoneClients,
+                        );
+                    }
+                }
 
                 // Then tell any clients in the zone that we spawned
                 for (id, (handle, _)) in &mut network.clients {

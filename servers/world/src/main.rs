@@ -144,6 +144,7 @@ async fn initial_setup(
                         state,
                         player_data: PlayerData::default(),
                         spawn_index: 0,
+                        object_spawn_index: 0,
                         events: Vec::new(),
                         spawned_actors: HashMap::new(),
                         ip,
@@ -664,9 +665,6 @@ async fn client_loop(
                                                 connection.send_stats(&chara_details).await;
 
                                                 connection.respawn_player(true).await;
-
-                                                // If a zone has any eobjs that need spawning (e.g. Chocobo Square), do so
-                                                connection.spawn_eobjs(&mut lua_player).await;
 
                                                 // wipe any exit position so it isn't accidentally reused
                                                 connection.exit_position = None;
@@ -1519,6 +1517,7 @@ async fn client_loop(
                     }
                     FromServer::NewTasks(mut tasks) => connection.queued_tasks.append(&mut tasks),
                     FromServer::NewStatusEffects(status_effects) => lua_player.status_effects = status_effects,
+                    FromServer::ObjectSpawn(object) => connection.spawn_object(object).await,
                     _ => { tracing::error!("Zone connection {:#?} received a FromServer message we don't care about: {:#?}, ensure you're using the right client network or that you've implemented a handler for it if we actually care about it!", client_handle.id, msg); }
                 },
                 None => break,

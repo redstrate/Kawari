@@ -76,13 +76,6 @@ pub fn load_init_script(lua: &mut Lua, game_data: Arc<Mutex<GameData>>) -> mlua:
             Ok(())
         })?;
 
-    let register_zone_eobjs_func =
-        lua.create_function(|lua, (zone_id, zone_eobj_script): (u32, String)| {
-            let mut state = lua.app_data_mut::<ExtraLuaState>().unwrap();
-            let _ = state.zone_eobj_scripts.insert(zone_id, zone_eobj_script);
-            Ok(())
-        })?;
-
     let get_login_message_func = lua.create_function(|_, _: ()| {
         let config = get_config();
         Ok(config.world.login_message)
@@ -106,8 +99,6 @@ pub fn load_init_script(lua: &mut Lua, game_data: Arc<Mutex<GameData>>) -> mlua:
     lua.globals()
         .set("registerGMCommand", register_gm_command_func)?;
     lua.globals().set("registerEffect", register_effects_func)?;
-    lua.globals()
-        .set("registerZoneEObjs", register_zone_eobjs_func)?;
     lua.globals()
         .set("getLoginMessage", get_login_message_func)?;
     lua.globals().set("runEvent", run_event_func)?;

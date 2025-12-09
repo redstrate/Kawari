@@ -17,7 +17,7 @@ pub struct ObjectSpawn {
     /// If this is an ENPC, represents an index into the EObj Excel sheet.
     /// If this is an AreaObject, represents an index into the VFX Excel sheet.
     pub base_id: u32,
-    pub entity_id: u32,
+    pub entity_id: ObjectId,
     /// Instance ID of the EventObject in the LGB.
     pub layout_id: u32,
     pub event_id: u32,

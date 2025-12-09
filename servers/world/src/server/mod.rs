@@ -551,6 +551,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         let common = match spawn {
                             NetworkedActor::Player { spawn, .. } => &mut spawn.common,
                             NetworkedActor::Npc { spawn, .. } => &mut spawn.common,
+                            NetworkedActor::Object { .. } => unreachable!(),
                         };
                         common.pos = position;
                         common.rotation = rotation;
@@ -598,7 +599,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                                 NetworkedActor::Player { teleport_query, .. } => {
                                     teleport_query.aetheryte_id = *aetheryte_id as u16
                                 }
-                                NetworkedActor::Npc { .. } => unreachable!(),
+                                _ => unreachable!(),
                             }
                         }
                     }
@@ -835,7 +836,11 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     instance.insert_npc(actor_id, npc_spawn.clone());
                 }
 
-                network.send_actor(actor_id, SpawnKind::Npc(npc_spawn));
+                let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
+                    break;
+                };
+
+                network.send_actor(instance, actor_id, SpawnKind::Npc(npc_spawn));
             }
             ToServer::DebugSpawnClone(_from_id, from_actor_id) => {
                 let mut data = data.lock();
@@ -865,7 +870,11 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     instance.insert_npc(actor_id, npc_spawn.clone());
                 }
 
-                network.send_actor(actor_id, SpawnKind::Npc(npc_spawn));
+                let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
+                    break;
+                };
+
+                network.send_actor(instance, actor_id, SpawnKind::Npc(npc_spawn));
             }
             ToServer::Config(_from_id, from_actor_id, config) => {
                 // update their stored state so it's correctly sent on new spawns

@@ -3,7 +3,7 @@ use std::collections::VecDeque;
 use crate::{StatusEffects, zone_connection::TeleportQuery};
 use kawari::{
     common::{ObjectId, Position},
-    ipc::zone::{CommonSpawn, NpcSpawn, PlayerSpawn},
+    ipc::zone::{CommonSpawn, NpcSpawn, ObjectSpawn, PlayerSpawn},
 };
 
 #[derive(Debug, Clone)]
@@ -21,6 +21,9 @@ pub enum NetworkedActor {
         last_position: Option<Position>,
         spawn: NpcSpawn,
     },
+    Object {
+        object: ObjectSpawn,
+    },
 }
 
 impl NetworkedActor {
@@ -28,6 +31,7 @@ impl NetworkedActor {
         match &self {
             NetworkedActor::Player { spawn, .. } => &spawn.common,
             NetworkedActor::Npc { spawn, .. } => &spawn.common,
+            NetworkedActor::Object { .. } => unreachable!(),
         }
     }
 
@@ -35,6 +39,7 @@ impl NetworkedActor {
         match self {
             NetworkedActor::Player { spawn, .. } => &mut spawn.common,
             NetworkedActor::Npc { spawn, .. } => &mut spawn.common,
+            NetworkedActor::Object { .. } => unreachable!(),
         }
     }
 
@@ -42,6 +47,7 @@ impl NetworkedActor {
         match &self {
             NetworkedActor::Player { spawn, .. } => Some(spawn),
             NetworkedActor::Npc { .. } => None,
+            NetworkedActor::Object { .. } => None,
         }
     }
 }

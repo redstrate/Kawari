@@ -17,7 +17,7 @@ use kawari::{
         },
         zone::{
             ActionRequest, ActorControl, ActorControlSelf, ActorControlTarget, ClientTrigger,
-            Conditions, Config, InviteReply, InviteType, NpcSpawn, PartyMemberEntry,
+            Conditions, Config, InviteReply, InviteType, NpcSpawn, ObjectSpawn, PartyMemberEntry,
             PartyUpdateStatus, PlayerEntry, PlayerSpawn, ServerZoneIpcSegment, SocialListRequest,
             SocialListRequestType,
         },
@@ -150,6 +150,8 @@ pub enum FromServer {
     NewTasks(Vec<Task>),
     /// New copy of the status effects list, for use in Lua scripting.
     NewStatusEffects(StatusEffects),
+    /// An event object was spawned.
+    ObjectSpawn(ObjectSpawn),
 }
 
 #[derive(Debug, Clone)]

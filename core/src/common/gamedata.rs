@@ -7,6 +7,7 @@ use icarus::BNpcBase::BNpcBaseSheet;
 use icarus::ClassJob::ClassJobSheet;
 use icarus::ContentFinderCondition::ContentFinderConditionSheet;
 use icarus::CustomTalk::CustomTalkSheet;
+use icarus::EObj::EObjSheet;
 use icarus::EquipSlotCategory::EquipSlotCategorySheet;
 use icarus::FateShop::FateShopSheet;
 use icarus::GilShopItem::GilShopItemSheet;
@@ -94,6 +95,7 @@ pub struct GameData {
     pub place_name_sheet: PlaceNameSheet,
     pub custom_talk_sheet: CustomTalkSheet,
     pub tribe_sheet: TribeSheet,
+    pub eobj_sheet: EObjSheet,
 }
 
 impl Default for GameData {
@@ -257,6 +259,9 @@ impl GameData {
         let tribe_sheet = TribeSheet::read_from(&mut resource_resolver, Language::English)
             .expect("Failed to read Tribe, does the Excel files exist?");
 
+        let eobj_sheet = EObjSheet::read_from(&mut resource_resolver, Language::None)
+            .expect("Failed to read EObj, does the Excel files exist?");
+
         Self {
             resource: resource_resolver,
             item_sheet,
@@ -269,6 +274,7 @@ impl GameData {
             place_name_sheet,
             custom_talk_sheet,
             tribe_sheet,
+            eobj_sheet,
         }
     }
 
@@ -827,6 +833,13 @@ impl GameData {
             .into_u32()
             .cloned()
             .unwrap_or_default()
+    }
+
+    /// Returns the pop type for this EObj.
+    pub fn get_eobj_pop_type(&mut self, eobj_id: u32) -> u8 {
+        let row = self.eobj_sheet.get_row(eobj_id).unwrap();
+
+        row.PopType().into_u8().cloned().unwrap_or_default()
     }
 }
 

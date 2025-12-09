@@ -13,7 +13,7 @@ use crate::{
 use kawari::{
     common::{GameData, ObjectId},
     config::get_config,
-    ipc::zone::{ActionRequest, NpcSpawn, PlayerSpawn},
+    ipc::zone::{ActionRequest, NpcSpawn, ObjectSpawn, PlayerSpawn},
 };
 use parking_lot::Mutex;
 
@@ -101,6 +101,11 @@ impl Instance {
             }
         }
 
+        // Load initial event objects into instance
+        for object in instance.zone.get_event_objects(game_data) {
+            instance.insert_object(object.entity_id, object);
+        }
+
         instance
     }
 
@@ -147,6 +152,11 @@ impl Instance {
                 teleport_query: TeleportQuery::default(),
             },
         );
+    }
+
+    pub fn insert_object(&mut self, actor_id: ObjectId, object: ObjectSpawn) {
+        self.actors
+            .insert(actor_id, NetworkedActor::Object { object });
     }
 
     /// Inserts a new task into the queue, with a set `duration` and given `data`.

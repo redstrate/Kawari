@@ -95,7 +95,7 @@ pub fn execute_action(
 
         lua_player.player_data.teleport_query = match actor {
             NetworkedActor::Player { teleport_query, .. } => teleport_query.clone(),
-            NetworkedActor::Npc { .. } => unreachable!(),
+            _ => unreachable!(),
         };
 
         common_spawn = actor.get_common_spawn().clone();

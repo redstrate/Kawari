@@ -9,8 +9,8 @@ use kawari::{
     config::get_config,
     ipc::zone::{
         ActorControl, ActorControlCategory, ActorControlSelf, ActorControlTarget, ActorMove,
-        CommonSpawn, Config, DisplayFlag, GameMasterRank, ObjectKind, OnlineStatus, PlayerSpawn,
-        PlayerSubKind, ServerZoneIpcData, ServerZoneIpcSegment, Warp,
+        CommonSpawn, Config, DisplayFlag, GameMasterRank, ObjectKind, ObjectSpawn, OnlineStatus,
+        PlayerSpawn, PlayerSubKind, ServerZoneIpcData, ServerZoneIpcSegment, Warp,
     },
     packet::{PacketSegment, SegmentData, SegmentType},
 };
@@ -238,6 +238,15 @@ impl ZoneConnection {
         self.spawn_index
     }
 
+    pub fn get_free_spawn_object_index(&mut self) -> Option<u8> {
+        if self.object_spawn_index < 39 {
+            self.object_spawn_index += 1;
+            Some(self.object_spawn_index)
+        } else {
+            None
+        }
+    }
+
     pub async fn update_config(&mut self, actor_id: ObjectId, config: Config) {
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Config(config));
 
@@ -303,5 +312,23 @@ impl ZoneConnection {
     pub async fn send_conditions(&mut self) {
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Condition(self.conditions));
         self.send_ipc_self(ipc).await;
+    }
+
+    pub async fn spawn_object(&mut self, mut spawn: ObjectSpawn) {
+        let Some(spawn_index) = self.get_free_spawn_object_index() else {
+            return;
+        };
+        spawn.index = spawn_index;
+
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ObjectSpawn(spawn));
+        dbg!(&ipc);
+
+        self.send_segment(PacketSegment {
+            source_actor: spawn.entity_id,
+            target_actor: self.player_data.actor_id,
+            segment_type: SegmentType::Ipc,
+            data: SegmentData::Ipc(ipc),
+        })
+        .await;
     }
 }

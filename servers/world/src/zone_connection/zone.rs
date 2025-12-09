@@ -1,11 +1,7 @@
 //! All things zone related, such as changing the weather or warping.
 
-use mlua::Function;
-
 use crate::{
-    ObsfucationData, TeleportReason, ToServer, ZoneConnection,
-    inventory::BuyBackList,
-    lua::{ExtraLuaState, LuaPlayer, LuaZone},
+    ObsfucationData, TeleportReason, ToServer, ZoneConnection, inventory::BuyBackList, lua::LuaZone,
 };
 use kawari::{
     common::{Position, timestamp_secs},
@@ -210,6 +206,10 @@ impl ZoneConnection {
 
         self.send_conditions().await;
 
+        // Reset spawn pool
+        self.object_spawn_index = 0;
+        self.spawn_index = 0;
+
         if bound_by_duty {
             let director_id = 2147680260;
             let sequence = 1;
@@ -265,39 +265,5 @@ impl ZoneConnection {
             transistion_time: 1.0,
         }));
         self.send_ipc_self(ipc).await;
-    }
-
-    pub async fn spawn_eobjs(&mut self, lua_player: &mut LuaPlayer) {
-        let lua = self.lua.lock();
-        let state = lua.app_data_ref::<ExtraLuaState>().unwrap();
-
-        let key = self.player_data.zone_id as u32;
-        if let Some(zone_eobj_script) = state.zone_eobj_scripts.get(&key) {
-            lua.scope(|scope| {
-                let connection_data = scope
-                    .create_userdata_ref_mut(&mut lua_player.zone_data)
-                    .unwrap();
-
-                let config = get_config();
-
-                let file_name = format!("{}/{}", &config.world.scripts_location, zone_eobj_script);
-                lua.load(std::fs::read(&file_name).expect("Failed to locate scripts directory!"))
-                    .set_name("@".to_string() + &file_name)
-                    .exec()
-                    .unwrap();
-
-                let func: Function = lua.globals().get("onRequestEObjSpawn").unwrap();
-
-                func.call::<()>(connection_data).unwrap();
-
-                Ok(())
-            })
-            .unwrap();
-        } else {
-            tracing::info!(
-                "Zone {} doesn't have an eobj script.",
-                self.player_data.zone_id
-            );
-        }
     }
 }
