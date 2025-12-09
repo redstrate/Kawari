@@ -1,4 +1,4 @@
-use std::{sync::Arc, time::Duration};
+use std::{collections::HashMap, sync::Arc, time::Duration};
 
 use parking_lot::Mutex;
 use physis::{
@@ -37,6 +37,7 @@ pub struct Zone {
     pub layer_groups: Vec<LayerGroup>,
     pub navimesh_path: String,
     pub map_id: u16,
+    cached_npc_base_ids: HashMap<u32, u32>,
 }
 
 impl Zone {
@@ -95,6 +96,20 @@ impl Zone {
             for layer_set in &lgb.scns[0].unk3.unk2 {
                 // FIXME: this is wrong. I think there might be multiple, separate navimeshes in really big zones but I'm not sure yet.
                 zone.navimesh_path = layer_set.path_nvm.replace("/server/data/", "").to_string();
+            }
+        }
+
+        // create NPC ID cache
+        for layer_group in &zone.layer_groups {
+            for chunk in &layer_group.chunks {
+                for layer in &chunk.layers {
+                    for object in &layer.objects {
+                        if let LayerEntryData::EventNPC(npc) = &object.data {
+                            zone.cached_npc_base_ids
+                                .insert(object.instance_id, npc.parent_data.parent_data.base_id);
+                        }
+                    }
+                }
             }
         }
 
@@ -163,6 +178,7 @@ impl Zone {
             place_name: self.place_name.clone(),
             intended_use: self.intended_use,
             map_id: self.map_id,
+            cached_npc_base_ids: self.cached_npc_base_ids.clone(),
             ..Default::default()
         }
     }

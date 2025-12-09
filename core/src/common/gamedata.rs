@@ -8,6 +8,7 @@ use icarus::ClassJob::ClassJobSheet;
 use icarus::ContentFinderCondition::ContentFinderConditionSheet;
 use icarus::CustomTalk::CustomTalkSheet;
 use icarus::EquipSlotCategory::EquipSlotCategorySheet;
+use icarus::FateShop::FateShopSheet;
 use icarus::GilShopItem::GilShopItemSheet;
 use icarus::HalloweenNpcSelect::HalloweenNpcSelectSheet;
 use icarus::InstanceContent::InstanceContentSheet;
@@ -816,6 +817,17 @@ impl GameData {
 
         content_finder_row.ShortCode().into_string().cloned()
     }
+
+    /// Returns the DefaultTalk for a given FateShop and rank.
+    pub fn get_fate_default_talk(&mut self, fate_shop_id: u32, rank: u8) -> u32 {
+        let sheet = FateShopSheet::read_from(&mut self.resource, Language::None).unwrap();
+        let row = sheet.get_row(fate_shop_id).unwrap();
+
+        row.DefaultTalk()[rank as usize]
+            .into_u32()
+            .cloned()
+            .unwrap_or_default()
+    }
 }
 
 #[cfg(feature = "server")]
@@ -855,6 +867,12 @@ impl mlua::UserData for GameData {
             "get_content_short_name",
             |_, this, content_finder_row_id: u16| {
                 Ok(this.get_content_short_name(content_finder_row_id))
+            },
+        );
+        methods.add_method_mut(
+            "get_fate_default_talk",
+            |_, this, (fate_shop_id, rank): (u32, u8)| {
+                Ok(this.get_fate_default_talk(fate_shop_id, rank))
             },
         );
     }

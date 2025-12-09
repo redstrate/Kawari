@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use mlua::{LuaSerdeExt, UserData, UserDataFields, UserDataMethods, Value};
 
 use kawari::{
@@ -18,6 +20,8 @@ pub struct LuaZone {
     pub intended_use: u8,
     pub map_id: u16,
     pub queued_segments: Vec<PacketSegment<ServerZoneIpcSegment>>,
+    // TODO: lol, this is only here for the get_npc_base_id function
+    pub cached_npc_base_ids: HashMap<u32, u32>,
 }
 
 impl UserData for LuaZone {
@@ -35,6 +39,9 @@ impl UserData for LuaZone {
             let eobj: ObjectSpawn = lua.from_value(eobj).unwrap();
             this.spawn_eobj(eobj);
             Ok(())
+        });
+        methods.add_method("get_npc_base_id", |_, this, instance_id: u32| {
+            Ok(this.cached_npc_base_ids.get(&instance_id).copied())
         });
     }
 }
