@@ -34,9 +34,13 @@ impl QueueSegments for LuaPlayer {
 
 impl LuaPlayer {
     fn send_message(&mut self, message: &str, param: u8) {
+        // This is a completely arbitrary string, so we have to make sure it's the proper size.
+        let mut message = message.to_string();
+        message.truncate(775);
+
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ServerNoticeMessage(
             ServerNoticeMessage {
-                message: message.to_string(),
+                message,
                 flags: ServerNoticeFlags::from_bits(param).unwrap_or_default(),
             },
         ));
