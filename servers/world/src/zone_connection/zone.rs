@@ -206,10 +206,6 @@ impl ZoneConnection {
 
         self.send_conditions().await;
 
-        // Reset spawn pool
-        self.object_allocator.clear();
-        self.actor_allocator.clear();
-
         if bound_by_duty {
             let director_id = 2147680260;
             let sequence = 1;

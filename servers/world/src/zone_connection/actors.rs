@@ -92,14 +92,10 @@ impl ZoneConnection {
         assert!(actor_id != self.player_data.actor_id);
 
         let ipc;
-        let Some(spawn_index) = self.actor_allocator.reserve(actor_id) else {
-            return; // TODO: log
-        };
 
         // TODO: Can this be deduplicated somehow?
         match spawn {
             SpawnKind::Player(mut spawn) => {
-                spawn.common.spawn_index = spawn_index;
                 spawn.common.target_id = ObjectTypeId {
                     object_id: actor_id,
                     object_type: ObjectTypeKind::None,
@@ -107,7 +103,6 @@ impl ZoneConnection {
                 ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PlayerSpawn(spawn));
             }
             SpawnKind::Npc(mut spawn) => {
-                spawn.common.spawn_index = spawn_index;
                 spawn.common.target_id = ObjectTypeId {
                     object_id: actor_id,
                     object_type: ObjectTypeKind::None,
@@ -137,8 +132,9 @@ impl ZoneConnection {
         .await;
     }
 
-    pub async fn remove_actor(&mut self, actor_id: ObjectId) {
-        if let Some(spawn_index) = self.actor_allocator.free(actor_id) {
+    pub async fn remove_actor(&mut self, _actor_id: ObjectId) {
+        // TODO: restore eventually
+        /*if let Some(spawn_index) = self.actor_allocator.free(actor_id) {
             tracing::info!("Removing actor {actor_id} {}!", spawn_index);
 
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Delete {
@@ -153,7 +149,7 @@ impl ZoneConnection {
                 data: SegmentData::Ipc(ipc),
             })
             .await;
-        }
+        }*/
     }
 
     pub async fn toggle_invisibility(&mut self, invisible: bool) {
@@ -294,12 +290,7 @@ impl ZoneConnection {
         self.send_ipc_self(ipc).await;
     }
 
-    pub async fn spawn_object(&mut self, mut spawn: ObjectSpawn) {
-        let Some(spawn_index) = self.object_allocator.reserve(spawn.entity_id) else {
-            return; // TODO: log
-        };
-        spawn.index = spawn_index;
-
+    pub async fn spawn_object(&mut self, spawn: ObjectSpawn) {
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ObjectSpawn(spawn));
 
         self.send_segment(PacketSegment {

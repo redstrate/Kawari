@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::{
     ClientHandle, ClientId, FromServer,
     common::SpawnKind,
-    server::{ClientState, instance::Instance, social::Party},
+    server::{ClientState, actor::NetworkedActor, instance::Instance, social::Party},
 };
 use kawari::{
     common::{INVALID_OBJECT_ID, ObjectId},
@@ -43,6 +43,76 @@ impl NetworkState {
                 self.to_remove.push(id);
             }
         }
+    }
+
+    /// Spawn the actor for this client, and also allocate it in their pool.
+    ///
+    /// If this returns false, it means the actor cannot be spawned and you should probably stop trying.
+    pub fn spawn_existing_actor(
+        &mut self,
+        from_id: ClientId,
+        client_state: &mut ClientState,
+        object_id: ObjectId,
+        actor: &NetworkedActor,
+    ) -> bool {
+        let Some(spawn_index) = (match actor {
+            NetworkedActor::Player { .. } => client_state.actor_allocator.reserve(object_id),
+            NetworkedActor::Npc { .. } => client_state.actor_allocator.reserve(object_id),
+            NetworkedActor::Object { .. } => client_state.object_allocator.reserve(object_id),
+        }) else {
+            return false;
+        };
+
+        let msg = match actor {
+            NetworkedActor::Player { spawn, .. } => {
+                let mut spawn = spawn.clone();
+                spawn.common.spawn_index = spawn_index;
+                FromServer::ActorSpawn(object_id, SpawnKind::Player(spawn))
+            }
+            NetworkedActor::Npc { spawn, .. } => {
+                let mut spawn = spawn.clone();
+                spawn.common.spawn_index = spawn_index;
+                FromServer::ActorSpawn(object_id, SpawnKind::Npc(spawn))
+            }
+            NetworkedActor::Object { object } => {
+                let mut object = *object;
+                object.index = spawn_index;
+                FromServer::ObjectSpawn(object)
+            }
+        };
+
+        self.send_to(from_id, msg, DestinationNetwork::ZoneClients);
+
+        true
+    }
+
+    pub fn get_clients_in_range_of(
+        &self,
+        from_id: ClientId,
+        instance: &Instance,
+        actor: &NetworkedActor,
+    ) -> Vec<ClientId> {
+        let mut clients = Vec::new();
+
+        for (id, (handle, _)) in &self.clients {
+            let id = *id;
+
+            // don't bother telling the client who told us
+            if id == from_id {
+                continue;
+            }
+
+            // skip any clients not in our zone
+            let Some(other_actor) = instance.actors.get(&handle.actor_id) else {
+                continue;
+            };
+
+            if other_actor.in_range_of(actor) {
+                clients.push(id);
+            }
+        }
+
+        clients
     }
 
     /// Inform all clients in an instance that the actor has left.
@@ -217,5 +287,9 @@ impl NetworkState {
                 break;
             }
         }
+    }
+
+    pub fn get_state_mut(&mut self, client_id: ClientId) -> Option<&mut ClientState> {
+        self.clients.get_mut(&client_id).map(|x| &mut x.1)
     }
 }

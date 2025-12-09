@@ -10,7 +10,7 @@ use std::{
 use tokio::sync::mpsc::Receiver;
 
 use crate::{
-    Navmesh,
+    Navmesh, SpawnAllocator,
     common::SpawnKind,
     lua::load_init_script,
     server::{
@@ -26,8 +26,8 @@ use crate::{
 };
 use kawari::{
     common::{
-        GameData, JumpState, MoveAnimationState, MoveAnimationType, ObjectId, ObjectTypeId,
-        ObjectTypeKind, Position,
+        GameData, JumpState, MAX_SPAWNED_ACTORS, MAX_SPAWNED_OBJECTS, MoveAnimationState,
+        MoveAnimationType, ObjectId, ObjectTypeId, ObjectTypeKind, Position,
     },
     ipc::zone::{
         ActorControl, ActorControlCategory, ActorControlSelf, ActorControlTarget, BattleNpcSubKind,
@@ -47,7 +47,10 @@ mod social;
 mod zone;
 
 #[derive(Default, Debug, Clone)]
-struct ClientState {}
+struct ClientState {
+    actor_allocator: SpawnAllocator<MAX_SPAWNED_ACTORS, 1>, // Indices start at 1 because the player always takes the 0 index.
+    object_allocator: SpawnAllocator<MAX_SPAWNED_OBJECTS>,
+}
 
 #[derive(Default, Debug)]
 struct WorldServer {

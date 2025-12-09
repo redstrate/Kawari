@@ -12,7 +12,6 @@ use physis::{
 
 use crate::{
     ClientId, FromServer, StatusEffects, ToServer,
-    common::SpawnKind,
     lua::LuaZone,
     server::{
         NetworkedActor, WorldServer,
@@ -350,6 +349,11 @@ fn do_change_zone(
     exit_rotation: Option<f32>,
     from_id: ClientId,
 ) {
+    // Clear spawn pools
+    let state = network.get_state_mut(from_id).unwrap();
+    state.actor_allocator.clear();
+    state.object_allocator.clear();
+
     // now that we have all of the data needed, inform the connection of where they need to be
     let msg = FromServer::ChangeZone(
         destination_zone_id,
@@ -379,55 +383,46 @@ pub fn handle_zone_messages(
             let mut data = data.lock();
             let mut network = network.lock();
 
-            let (client, _) = network.clients.get(from_id).unwrap().clone();
+            let (_, mut client_state) = network.clients.get_mut(from_id).unwrap().clone();
 
             if let Some(instance) = data.find_actor_instance_mut(*from_actor_id) {
-                let mut to_remove = Vec::new();
-
-                // Send existing objects
-                for actor in instance.actors.values() {
-                    if let NetworkedActor::Object { object } = actor {
-                        network.send_to(
-                            *from_id,
-                            FromServer::ObjectSpawn(*object),
-                            DestinationNetwork::ZoneClients,
-                        );
-                    }
-                }
-
-                // Then tell any clients in the zone that we spawned
-                for (id, (handle, _)) in &mut network.clients {
-                    let id = *id;
-
-                    // don't bother telling the client who told us
-                    if id == *from_id {
-                        continue;
-                    }
-
-                    // skip any clients not in our zone
-                    if !instance.actors.contains_key(&handle.actor_id) {
-                        continue;
-                    }
-
-                    let msg = FromServer::ActorSpawn(
-                        client.actor_id,
-                        SpawnKind::Player(player_spawn.clone()),
-                    );
-
-                    if handle.send(msg).is_err() {
-                        to_remove.push(id);
-                    }
-                }
-
-                network.to_remove.append(&mut to_remove);
-
-                // replace the connection's actor in the table
-                let instance = data.find_actor_instance_mut(*from_actor_id).unwrap();
-                *instance.find_actor_mut(*from_actor_id).unwrap() = NetworkedActor::Player {
+                let new_actor = NetworkedActor::Player {
                     spawn: player_spawn.clone(),
                     status_effects: StatusEffects::default(),
                     teleport_query: TeleportQuery::default(),
                 };
+
+                // Send existing actors
+                for (id, actor) in &instance.actors {
+                    // Skip anything out of range
+                    if !actor.in_range_of(&new_actor) {
+                        continue;
+                    }
+
+                    if !network.spawn_existing_actor(*from_id, &mut client_state, *id, actor) {
+                        // Early exit if the client refuses to spawn any more actors
+                        continue;
+                    }
+                }
+
+                // Then tell all relevant clients that we spawned
+                let clients_in_range =
+                    network.get_clients_in_range_of(*from_id, instance, &new_actor);
+                for id in &clients_in_range {
+                    if !network.spawn_existing_actor(
+                        *id,
+                        &mut client_state,
+                        *from_actor_id,
+                        &new_actor,
+                    ) {
+                        // Early exit if the client refuses to spawn any more actors
+                        continue;
+                    }
+                }
+
+                // replace the connection's actor in the table
+                let instance = data.find_actor_instance_mut(*from_actor_id).unwrap();
+                *instance.find_actor_mut(*from_actor_id).unwrap() = new_actor;
             }
         }
         ToServer::ChangeZone(from_id, actor_id, zone_id, new_position, new_rotation) => {

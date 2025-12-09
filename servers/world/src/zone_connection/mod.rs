@@ -4,11 +4,11 @@ use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpStream;
 
-use crate::{lua::Task, zone_connection::spawn_allocator::SpawnAllocator};
+use crate::lua::Task;
 use kawari::{
     common::{
-        Bitmask, ClientLanguage, EquipDisplayFlag, GameData, MAX_SPAWNED_ACTORS,
-        MAX_SPAWNED_OBJECTS, ObjectId, ObjectTypeId, Position, timestamp_secs,
+        Bitmask, ClientLanguage, EquipDisplayFlag, GameData, ObjectId, ObjectTypeId, Position,
+        timestamp_secs,
     },
     config::WorldConfig,
     constants::{
@@ -202,9 +202,6 @@ pub struct ZoneConnection {
 
     pub state: ConnectionState,
     pub player_data: PlayerData,
-
-    pub actor_allocator: SpawnAllocator<MAX_SPAWNED_ACTORS, 1>, // Indices start at 1 because the player always takes the 0 index.
-    pub object_allocator: SpawnAllocator<MAX_SPAWNED_OBJECTS>,
 
     pub events: Vec<Event>,
 

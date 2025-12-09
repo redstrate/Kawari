@@ -31,8 +31,8 @@ use kawari::packet::{
 };
 use kawari_world::lua::{ExtraLuaState, LuaPlayer, load_init_script};
 use kawari_world::{
-    ChatConnection, ChatHandler, CustomIpcConnection, ObsfucationData, SpawnAllocator,
-    TeleportReason, ZoneConnection,
+    ChatConnection, ChatHandler, CustomIpcConnection, ObsfucationData, TeleportReason,
+    ZoneConnection,
 };
 use kawari_world::{
     ClientHandle, ClientId, FromServer, MessageInfo, PlayerData, ServerHandle, ToServer,
@@ -143,8 +143,6 @@ async fn initial_setup(
                         state,
                         player_data: PlayerData::default(),
                         events: Vec::new(),
-                        object_allocator: SpawnAllocator::new(),
-                        actor_allocator: SpawnAllocator::new(),
                         ip,
                         id,
                         handle: handle.clone(),

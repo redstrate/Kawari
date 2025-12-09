@@ -8,6 +8,7 @@ use kawari::common::ObjectId;
 ///
 /// Due to Rust limitations, the `MAX_SIZE` has to exclude the `START_INDEX` by the callee.
 /// For example, if you have 100 objects and the first object index is reserved then `MAX_SIZE` should be 99 and `START_INDEX` should be 1.
+#[derive(Debug, Clone)]
 pub struct SpawnAllocator<const MAX_SIZE: usize, const START_INDEX: usize = 0> {
     pool: [Option<ObjectId>; MAX_SIZE],
 }
@@ -53,6 +54,17 @@ impl<const MAX_SIZE: usize, const START_INDEX: usize>
         None
     }
 
+    /// Checks if the object exists in the pool.
+    pub fn contains(&self, object_id: ObjectId) -> bool {
+        for space in &self.pool {
+            if *space == Some(object_id) {
+                return true;
+            }
+        }
+
+        false
+    }
+
     /// Frees all objects from the pool.
     pub fn clear(&mut self) {
         self.pool = [None; MAX_SIZE];
@@ -69,6 +81,9 @@ mod tests {
         assert_eq!(allocator.reserve(ObjectId(0)), Some(0));
         assert_eq!(allocator.reserve(ObjectId(1)), Some(1));
         assert_eq!(allocator.reserve(ObjectId(2)), None); // Reserving a 3rd object should fail
+
+        assert_eq!(allocator.contains(ObjectId(1)), true);
+        assert_eq!(allocator.contains(ObjectId(2)), false);
 
         // Removing the last spot should free it up
         allocator.free(ObjectId(1));

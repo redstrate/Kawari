@@ -50,4 +50,17 @@ impl NetworkedActor {
             NetworkedActor::Object { .. } => None,
         }
     }
+
+    pub fn position(&self) -> Position {
+        match &self {
+            NetworkedActor::Player { spawn, .. } => spawn.common.pos,
+            NetworkedActor::Npc { spawn, .. } => spawn.common.pos,
+            NetworkedActor::Object { object } => object.position,
+        }
+    }
+
+    pub fn in_range_of(&self, other: &NetworkedActor) -> bool {
+        let distance = Position::distance(self.position(), other.position());
+        distance < 25.0 // TODO: hardcoded
+    }
 }
