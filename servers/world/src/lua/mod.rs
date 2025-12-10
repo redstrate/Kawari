@@ -11,7 +11,7 @@ mod state;
 pub use state::{ExtraLuaState, initial_setup, load_init_script};
 
 mod task;
-pub use task::Task;
+pub use task::LuaTask;
 
 mod zone;
 pub use zone::LuaZone;

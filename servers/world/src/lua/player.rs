@@ -16,19 +16,19 @@ use kawari::{
     packet::PacketSegment,
 };
 
-use super::{LuaZone, QueueSegments, Task, create_ipc_self};
+use super::{LuaTask, LuaZone, QueueSegments, create_ipc_self};
 
 #[derive(Default)]
 pub struct LuaPlayer {
     pub player_data: PlayerData,
-    pub queued_tasks: Vec<Task>,
+    pub queued_tasks: Vec<LuaTask>,
     pub zone_data: LuaZone,
     pub status_effects: StatusEffects,
 }
 
 impl QueueSegments for LuaPlayer {
     fn queue_segment(&mut self, segment: PacketSegment<ServerZoneIpcSegment>) {
-        self.queued_tasks.push(Task::SendSegment { segment });
+        self.queued_tasks.push(LuaTask::SendSegment { segment });
     }
 }
 
@@ -49,7 +49,7 @@ impl LuaPlayer {
     }
 
     fn give_status_effect(&mut self, effect_id: u16, effect_param: u16, duration: f32) {
-        self.queued_tasks.push(Task::GainStatusEffect {
+        self.queued_tasks.push(LuaTask::GainStatusEffect {
             effect_id,
             effect_param,
             duration,
@@ -109,7 +109,7 @@ impl LuaPlayer {
     }
 
     fn unlock(&mut self, id: u32) {
-        self.queued_tasks.push(Task::Unlock { id });
+        self.queued_tasks.push(LuaTask::Unlock { id });
     }
 
     fn set_speed(&mut self, speed: u16) {
@@ -131,7 +131,7 @@ impl LuaPlayer {
     }
 
     fn unlock_aetheryte(&mut self, unlocked: u32, id: u32) {
-        self.queued_tasks.push(Task::UnlockAetheryte {
+        self.queued_tasks.push(LuaTask::UnlockAetheryte {
             id,
             on: unlocked == 1,
         });
@@ -143,7 +143,7 @@ impl LuaPlayer {
         exit_position: Option<Position>,
         exit_rotation: Option<f32>,
     ) {
-        self.queued_tasks.push(Task::ChangeTerritory {
+        self.queued_tasks.push(LuaTask::ChangeTerritory {
             zone_id,
             exit_position,
             exit_rotation,
@@ -151,52 +151,53 @@ impl LuaPlayer {
     }
 
     fn set_remake_mode(&mut self, mode: RemakeMode) {
-        self.queued_tasks.push(Task::SetRemakeMode(mode));
+        self.queued_tasks.push(LuaTask::SetRemakeMode(mode));
     }
 
     fn warp(&mut self, warp_id: u32) {
-        self.queued_tasks.push(Task::Warp { warp_id });
+        self.queued_tasks.push(LuaTask::Warp { warp_id });
     }
 
     fn begin_log_out(&mut self) {
-        self.queued_tasks.push(Task::BeginLogOut);
+        self.queued_tasks.push(LuaTask::BeginLogOut);
     }
 
     fn finish_event(&mut self, handler_id: u32, finish_type: EventFinishType) {
-        self.queued_tasks.push(Task::FinishEvent {
+        self.queued_tasks.push(LuaTask::FinishEvent {
             handler_id,
             finish_type,
         });
     }
 
     fn set_classjob(&mut self, classjob_id: u8) {
-        self.queued_tasks.push(Task::SetClassJob { classjob_id });
+        self.queued_tasks.push(LuaTask::SetClassJob { classjob_id });
     }
 
     fn warp_aetheryte(&mut self, aetheryte_id: u32) {
-        self.queued_tasks.push(Task::WarpAetheryte { aetheryte_id });
+        self.queued_tasks
+            .push(LuaTask::WarpAetheryte { aetheryte_id });
     }
 
     fn reload_scripts(&mut self) {
-        self.queued_tasks.push(Task::ReloadScripts);
+        self.queued_tasks.push(LuaTask::ReloadScripts);
     }
 
     fn toggle_invisiblity(&mut self) {
-        self.queued_tasks.push(Task::ToggleInvisibility {
+        self.queued_tasks.push(LuaTask::ToggleInvisibility {
             invisible: !self.player_data.gm_invisible,
         });
     }
 
     fn set_level(&mut self, level: u16) {
-        self.queued_tasks.push(Task::SetLevel { level });
+        self.queued_tasks.push(LuaTask::SetLevel { level });
     }
 
     fn change_weather(&mut self, id: u16) {
-        self.queued_tasks.push(Task::ChangeWeather { id });
+        self.queued_tasks.push(LuaTask::ChangeWeather { id });
     }
 
     fn modify_currency(&mut self, id: u32, amount: i32, send_client_update: bool) {
-        self.queued_tasks.push(Task::ModifyCurrency {
+        self.queued_tasks.push(LuaTask::ModifyCurrency {
             id,
             amount,
             send_client_update,
@@ -204,11 +205,12 @@ impl LuaPlayer {
     }
 
     fn gm_set_orchestrion(&mut self, value: bool, id: u32) {
-        self.queued_tasks.push(Task::GmSetOrchestrion { value, id });
+        self.queued_tasks
+            .push(LuaTask::GmSetOrchestrion { value, id });
     }
 
     fn add_item(&mut self, id: u32, quantity: u32, send_client_update: bool) {
-        self.queued_tasks.push(Task::AddItem {
+        self.queued_tasks.push(LuaTask::AddItem {
             id,
             quantity,
             send_client_update,
@@ -216,11 +218,11 @@ impl LuaPlayer {
     }
 
     fn complete_all_quests(&mut self) {
-        self.queued_tasks.push(Task::CompleteAllQuests {});
+        self.queued_tasks.push(LuaTask::CompleteAllQuests {});
     }
 
     fn unlock_content(&mut self, id: u16) {
-        self.queued_tasks.push(Task::UnlockContent { id });
+        self.queued_tasks.push(LuaTask::UnlockContent { id });
     }
 
     fn get_buyback_list(&mut self, shop_id: u32, shop_intro: bool) -> Vec<u32> {
@@ -229,7 +231,7 @@ impl LuaPlayer {
             .buyback_list
             .as_scene_params(shop_id, shop_intro);
         if !shop_intro {
-            self.queued_tasks.push(Task::UpdateBuyBackList {
+            self.queued_tasks.push(LuaTask::UpdateBuyBackList {
                 list: self.player_data.buyback_list.clone(),
             })
         }
@@ -356,7 +358,7 @@ impl LuaPlayer {
     }
 
     fn add_exp(&mut self, amount: i32) {
-        self.queued_tasks.push(Task::AddExp { amount });
+        self.queued_tasks.push(LuaTask::AddExp { amount });
     }
 
     fn start_event(
@@ -366,7 +368,7 @@ impl LuaPlayer {
         event_type: EventType,
         event_arg: u32,
     ) {
-        self.queued_tasks.push(Task::StartEvent {
+        self.queued_tasks.push(LuaTask::StartEvent {
             actor_id,
             event_id,
             event_type,
@@ -375,146 +377,150 @@ impl LuaPlayer {
     }
 
     fn set_inn_wakeup(&mut self, watched: bool) {
-        self.queued_tasks.push(Task::SetInnWakeup { watched });
+        self.queued_tasks.push(LuaTask::SetInnWakeup { watched });
     }
 
     fn toggle_mount(&mut self, id: u32) {
-        self.queued_tasks.push(Task::ToggleMount { id });
+        self.queued_tasks.push(LuaTask::ToggleMount { id });
     }
 
     fn toggle_glasses_style(&mut self, id: u32) {
-        self.queued_tasks.push(Task::ToggleGlassesStyle { id });
+        self.queued_tasks.push(LuaTask::ToggleGlassesStyle { id });
     }
 
     fn toggle_glasses_style_all(&mut self) {
-        self.queued_tasks.push(Task::ToggleGlassesStyleAll {});
+        self.queued_tasks.push(LuaTask::ToggleGlassesStyleAll {});
     }
 
     fn toggle_ornament(&mut self, id: u32) {
-        self.queued_tasks.push(Task::ToggleOrnament { id });
+        self.queued_tasks.push(LuaTask::ToggleOrnament { id });
     }
 
     fn toggle_ornament_all(&mut self) {
-        self.queued_tasks.push(Task::ToggleOrnamentAll {});
+        self.queued_tasks.push(LuaTask::ToggleOrnamentAll {});
     }
 
     fn unlock_buddy_equip(&mut self, id: u32) {
-        self.queued_tasks.push(Task::UnlockBuddyEquip { id });
+        self.queued_tasks.push(LuaTask::UnlockBuddyEquip { id });
     }
 
     fn unlock_buddy_equip_all(&mut self) {
-        self.queued_tasks.push(Task::UnlockBuddyEquipAll {});
+        self.queued_tasks.push(LuaTask::UnlockBuddyEquipAll {});
     }
 
     fn toggle_chocobo_taxi_stand(&mut self, id: u32) {
-        self.queued_tasks.push(Task::ToggleChocoboTaxiStand { id });
+        self.queued_tasks
+            .push(LuaTask::ToggleChocoboTaxiStand { id });
     }
 
     fn toggle_chocobo_taxi_stand_all(&mut self) {
-        self.queued_tasks.push(Task::ToggleChocoboTaxiStandAll {});
+        self.queued_tasks
+            .push(LuaTask::ToggleChocoboTaxiStandAll {});
     }
 
     fn toggle_caught_fish(&mut self, id: u32) {
-        self.queued_tasks.push(Task::ToggleCaughtFish { id });
+        self.queued_tasks.push(LuaTask::ToggleCaughtFish { id });
     }
 
     fn toggle_caught_fish_all(&mut self) {
-        self.queued_tasks.push(Task::ToggleCaughtFishAll {});
+        self.queued_tasks.push(LuaTask::ToggleCaughtFishAll {});
     }
 
     fn toggle_caught_spearfish(&mut self, id: u32) {
-        self.queued_tasks.push(Task::ToggleCaughtSpearfish { id });
+        self.queued_tasks
+            .push(LuaTask::ToggleCaughtSpearfish { id });
     }
 
     fn toggle_caught_spearfish_all(&mut self) {
-        self.queued_tasks.push(Task::ToggleCaughtSpearfishAll {});
+        self.queued_tasks.push(LuaTask::ToggleCaughtSpearfishAll {});
     }
 
     fn toggle_triple_triad_card(&mut self, id: u32) {
-        self.queued_tasks.push(Task::ToggleTripleTriadCard { id });
+        self.queued_tasks
+            .push(LuaTask::ToggleTripleTriadCard { id });
     }
 
     fn toggle_triple_triad_card_all(&mut self) {
-        self.queued_tasks.push(Task::ToggleTripleTriadCardAll {});
+        self.queued_tasks.push(LuaTask::ToggleTripleTriadCardAll {});
     }
 
     fn toggle_adventure(&mut self, id: u32) {
-        self.queued_tasks.push(Task::ToggleAdventure { id });
+        self.queued_tasks.push(LuaTask::ToggleAdventure { id });
     }
 
     fn toggle_adventure_all(&mut self) {
-        self.queued_tasks.push(Task::ToggleAdventureAll {});
+        self.queued_tasks.push(LuaTask::ToggleAdventureAll {});
     }
 
     fn toggle_cutscene_seen(&mut self, id: u32) {
-        self.queued_tasks.push(Task::ToggleCutsceneSeen { id });
+        self.queued_tasks.push(LuaTask::ToggleCutsceneSeen { id });
     }
 
     fn toggle_cutscene_seen_all(&mut self) {
-        self.queued_tasks.push(Task::ToggleCutsceneSeenAll {});
+        self.queued_tasks.push(LuaTask::ToggleCutsceneSeenAll {});
     }
 
     fn toggle_minion(&mut self, id: u32) {
-        self.queued_tasks.push(Task::ToggleMinion { id });
+        self.queued_tasks.push(LuaTask::ToggleMinion { id });
     }
 
     fn toggle_minion_all(&mut self) {
-        self.queued_tasks.push(Task::ToggleMinionAll {});
+        self.queued_tasks.push(LuaTask::ToggleMinionAll {});
     }
 
     fn toggle_aether_current(&mut self, id: u32) {
-        self.queued_tasks.push(Task::ToggleAetherCurrent { id });
+        self.queued_tasks.push(LuaTask::ToggleAetherCurrent { id });
     }
 
     fn toggle_aether_current_all(&mut self) {
-        self.queued_tasks.push(Task::ToggleAetherCurrentAll {});
+        self.queued_tasks.push(LuaTask::ToggleAetherCurrentAll {});
     }
 
     fn toggle_aether_current_comp_flg_set(&mut self, id: u32) {
         self.queued_tasks
-            .push(Task::ToggleAetherCurrentCompFlgSet { id });
+            .push(LuaTask::ToggleAetherCurrentCompFlgSet { id });
     }
 
     fn toggle_aether_current_comp_flg_set_all(&mut self) {
         self.queued_tasks
-            .push(Task::ToggleAetherCurrentCompFlgSetAll {});
+            .push(LuaTask::ToggleAetherCurrentCompFlgSetAll {});
     }
 
     fn move_to_pop_range(&mut self, id: u32, fade_out: bool) {
         self.queued_tasks
-            .push(Task::MoveToPopRange { id, fade_out });
+            .push(LuaTask::MoveToPopRange { id, fade_out });
     }
 
     fn set_hp(&mut self, hp: u32) {
-        self.queued_tasks.push(Task::SetHP { hp });
+        self.queued_tasks.push(LuaTask::SetHP { hp });
     }
 
     fn set_mp(&mut self, mp: u16) {
-        self.queued_tasks.push(Task::SetMP { mp });
+        self.queued_tasks.push(LuaTask::SetMP { mp });
     }
 
     fn set_race(&mut self, race: u8) {
-        self.queued_tasks.push(Task::SetRace { race });
+        self.queued_tasks.push(LuaTask::SetRace { race });
     }
 
     fn set_tribe(&mut self, tribe: u8) {
-        self.queued_tasks.push(Task::SetTribe { tribe });
+        self.queued_tasks.push(LuaTask::SetTribe { tribe });
     }
 
     fn set_sex(&mut self, sex: u8) {
-        self.queued_tasks.push(Task::SetSex { sex });
+        self.queued_tasks.push(LuaTask::SetSex { sex });
     }
 
     fn start_talk_event(&mut self) {
-        self.queued_tasks.push(Task::StartTalkEvent {});
+        self.queued_tasks.push(LuaTask::StartTalkEvent {});
     }
 
     fn accept_quest(&mut self, id: u32) {
-        self.queued_tasks.push(Task::AcceptQuest { id });
+        self.queued_tasks.push(LuaTask::AcceptQuest { id });
     }
 
     fn finish_quest(&mut self, id: u32) {
-        self.queued_tasks.push(Task::FinishQuest { id });
+        self.queued_tasks.push(LuaTask::FinishQuest { id });
     }
 
     fn prepare_zoning(&mut self, timeout: u8) {

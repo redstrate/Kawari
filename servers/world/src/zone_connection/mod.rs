@@ -4,7 +4,7 @@ use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpStream;
 
-use crate::lua::Task;
+use crate::lua::LuaTask;
 use kawari::{
     common::{
         Bitmask, ClientLanguage, EquipDisplayFlag, GameData, ObjectId, ObjectTypeId, Position,
@@ -233,7 +233,7 @@ pub struct ZoneConnection {
     pub client_language: ClientLanguage,
 
     /// List of queued tasks from the server.
-    pub queued_tasks: Vec<Task>,
+    pub queued_tasks: Vec<LuaTask>,
 }
 
 impl ZoneConnection {

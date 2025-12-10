@@ -3,7 +3,7 @@
 use crate::{
     EventFinishType, ToServer, ZoneConnection,
     inventory::{CurrencyStorage, Item},
-    lua::{LuaPlayer, Task, load_init_script},
+    lua::{LuaPlayer, LuaTask, load_init_script},
 };
 use kawari::{
     common::{
@@ -37,7 +37,7 @@ impl ZoneConnection {
         let tasks = player.queued_tasks.clone();
         for task in &tasks {
             match task {
-                Task::ChangeTerritory {
+                LuaTask::ChangeTerritory {
                     zone_id,
                     exit_position,
                     exit_rotation,
@@ -45,34 +45,34 @@ impl ZoneConnection {
                     self.change_zone(*zone_id, *exit_position, *exit_rotation)
                         .await
                 }
-                Task::SetRemakeMode(remake_mode) => self
+                LuaTask::SetRemakeMode(remake_mode) => self
                     .database
                     .set_remake_mode(player.player_data.content_id, *remake_mode),
-                Task::Warp { warp_id } => {
+                LuaTask::Warp { warp_id } => {
                     self.warp(*warp_id).await;
                 }
-                Task::BeginLogOut => self.begin_log_out().await,
-                Task::FinishEvent {
+                LuaTask::BeginLogOut => self.begin_log_out().await,
+                LuaTask::FinishEvent {
                     handler_id,
                     finish_type,
                 } => {
                     self.event_finish(*handler_id, *finish_type).await;
                     run_finish_event = true;
                 }
-                Task::SetClassJob { classjob_id } => {
+                LuaTask::SetClassJob { classjob_id } => {
                     self.player_data.classjob_id = *classjob_id;
                     self.update_class_info().await;
                 }
-                Task::WarpAetheryte { aetheryte_id } => {
+                LuaTask::WarpAetheryte { aetheryte_id } => {
                     self.warp_aetheryte(*aetheryte_id).await;
                 }
-                Task::ReloadScripts => {
+                LuaTask::ReloadScripts => {
                     self.reload_scripts();
                 }
-                Task::ToggleInvisibility { invisible } => {
+                LuaTask::ToggleInvisibility { invisible } => {
                     self.toggle_invisibility(*invisible).await;
                 }
-                Task::Unlock { id } => {
+                LuaTask::Unlock { id } => {
                     self.player_data.unlocks.unlocks.set(*id);
 
                     self.actor_control_self(ActorControlSelf {
@@ -83,7 +83,7 @@ impl ZoneConnection {
                     })
                     .await;
                 }
-                Task::UnlockAetheryte { id, on } => {
+                LuaTask::UnlockAetheryte { id, on } => {
                     let unlock_all = *id == 0;
                     if unlock_all {
                         for i in 1..239 {
@@ -117,14 +117,14 @@ impl ZoneConnection {
                         .await;
                     }
                 }
-                Task::SetLevel { level } => {
+                LuaTask::SetLevel { level } => {
                     self.set_current_level(*level);
                     self.update_class_info().await;
                 }
-                Task::ChangeWeather { id } => {
+                LuaTask::ChangeWeather { id } => {
                     self.change_weather(*id).await;
                 }
-                Task::ModifyCurrency {
+                LuaTask::ModifyCurrency {
                     id,
                     amount,
                     send_client_update,
@@ -152,10 +152,10 @@ impl ZoneConnection {
                         self.send_ipc_self(ipc).await;
                     }
                 }
-                Task::GmSetOrchestrion { value, id } => {
+                LuaTask::GmSetOrchestrion { value, id } => {
                     self.gm_set_orchestrion(*value, *id);
                 }
-                Task::AddItem {
+                LuaTask::AddItem {
                     id,
                     quantity,
                     send_client_update,
@@ -184,12 +184,12 @@ impl ZoneConnection {
                         self.send_notice(ERR_INVENTORY_ADD_FAILED).await;
                     }
                 }
-                Task::CompleteAllQuests {} => {
+                LuaTask::CompleteAllQuests {} => {
                     self.player_data.unlocks.completed_quests.0 =
                         vec![0xFF; COMPLETED_QUEST_BITMASK_SIZE];
                     self.send_quest_information().await;
                 }
-                Task::UnlockContent { id } => {
+                LuaTask::UnlockContent { id } => {
                     {
                         let mut game_data = self.gamedata.lock();
                         if let Some(instance_content_type) = game_data.find_type_for_content(*id) {
@@ -238,13 +238,13 @@ impl ZoneConnection {
                     })
                     .await;
                 }
-                Task::UpdateBuyBackList { list } => {
+                LuaTask::UpdateBuyBackList { list } => {
                     self.player_data.buyback_list = list.clone();
                 }
-                Task::AddExp { amount } => {
+                LuaTask::AddExp { amount } => {
                     self.add_exp(*amount).await;
                 }
-                Task::StartEvent {
+                LuaTask::StartEvent {
                     actor_id,
                     event_id,
                     event_type,
@@ -253,10 +253,10 @@ impl ZoneConnection {
                     self.start_event(*actor_id, *event_id, *event_type, *event_arg, player)
                         .await;
                 }
-                Task::SetInnWakeup { watched } => {
+                LuaTask::SetInnWakeup { watched } => {
                     self.player_data.saw_inn_wakeup = *watched;
                 }
-                Task::ToggleMount { id } => {
+                LuaTask::ToggleMount { id } => {
                     let order;
                     {
                         let mut game_data = self.gamedata.lock();
@@ -274,7 +274,7 @@ impl ZoneConnection {
                     })
                     .await;
                 }
-                Task::MoveToPopRange { id, fade_out } => {
+                LuaTask::MoveToPopRange { id, fade_out } => {
                     // Fade out the screen if requested.
                     if *fade_out {
                         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PrepareZoning {
@@ -301,7 +301,7 @@ impl ZoneConnection {
                         ))
                         .await;
                 }
-                Task::SetHP { hp } => {
+                LuaTask::SetHP { hp } => {
                     self.player_data.curr_hp = *hp;
                     self.update_hp_mp(
                         self.player_data.actor_id,
@@ -310,7 +310,7 @@ impl ZoneConnection {
                     )
                     .await;
                 }
-                Task::SetMP { mp } => {
+                LuaTask::SetMP { mp } => {
                     self.player_data.curr_mp = *mp;
                     self.update_hp_mp(
                         self.player_data.actor_id,
@@ -319,80 +319,80 @@ impl ZoneConnection {
                     )
                     .await;
                 }
-                Task::ToggleGlassesStyle { id } => {
+                LuaTask::ToggleGlassesStyle { id } => {
                     self.toggle_glasses_style(*id).await;
                 }
-                Task::ToggleGlassesStyleAll {} => {
+                LuaTask::ToggleGlassesStyleAll {} => {
                     let max_glasses_style_id = GLASSES_STYLES_BITMASK_SIZE as u32 * 8;
 
                     for i in 0..max_glasses_style_id {
                         self.toggle_glasses_style(i).await;
                     }
                 }
-                Task::ToggleOrnament { id } => {
+                LuaTask::ToggleOrnament { id } => {
                     self.toggle_ornament(*id).await;
                 }
-                Task::ToggleOrnamentAll {} => {
+                LuaTask::ToggleOrnamentAll {} => {
                     let max_ornament_id = ORNAMENT_BITMASK_SIZE as u32 * 8;
 
                     for i in 0..max_ornament_id {
                         self.toggle_ornament(i).await;
                     }
                 }
-                Task::UnlockBuddyEquip { id } => {
+                LuaTask::UnlockBuddyEquip { id } => {
                     self.unlock_buddy_equip(*id).await;
                 }
-                Task::UnlockBuddyEquipAll {} => {
+                LuaTask::UnlockBuddyEquipAll {} => {
                     let max_buddy_equip_id = BUDDY_EQUIP_BITMASK_SIZE as u32 * 8;
 
                     for i in 0..max_buddy_equip_id {
                         self.unlock_buddy_equip(i).await;
                     }
                 }
-                Task::ToggleChocoboTaxiStand { id } => {
+                LuaTask::ToggleChocoboTaxiStand { id } => {
                     self.toggle_chocobo_taxi_stand(*id).await;
                 }
-                Task::ToggleChocoboTaxiStandAll {} => {
+                LuaTask::ToggleChocoboTaxiStandAll {} => {
                     let max_chocobo_taxi_stand_id = CHOCOBO_TAXI_STANDS_BITMASK_SIZE as u32 * 8;
 
                     for i in 0..max_chocobo_taxi_stand_id {
                         self.toggle_chocobo_taxi_stand(i).await;
                     }
                 }
-                Task::ToggleCaughtFish { id } => {
+                LuaTask::ToggleCaughtFish { id } => {
                     self.toggle_caught_fish(*id).await;
                 }
-                Task::ToggleCaughtFishAll {} => {
+                LuaTask::ToggleCaughtFishAll {} => {
                     let max_caught_fish_id = CAUGHT_FISH_BITMASK_SIZE as u32 * 8;
 
                     for i in 0..max_caught_fish_id {
                         self.toggle_caught_fish(i).await;
                     }
                 }
-                Task::ToggleCaughtSpearfish { id } => {
+                LuaTask::ToggleCaughtSpearfish { id } => {
                     self.toggle_caught_spearfish(*id).await;
                 }
-                Task::ToggleCaughtSpearfishAll {} => {
+                LuaTask::ToggleCaughtSpearfishAll {} => {
                     let max_caught_spearfish_id = CAUGHT_SPEARFISH_BITMASK_SIZE as u32 * 8;
 
                     for i in 0..max_caught_spearfish_id {
                         self.toggle_caught_spearfish(i).await;
                     }
                 }
-                Task::ToggleTripleTriadCard { id } => {
+                LuaTask::ToggleTripleTriadCard { id } => {
                     self.toggle_triple_triad_card(*id).await;
                 }
-                Task::ToggleTripleTriadCardAll {} => {
+                LuaTask::ToggleTripleTriadCardAll {} => {
                     let max_triple_triad_card_id = TRIPLE_TRIAD_CARDS_BITMASK_SIZE as u32 * 8;
 
                     for i in 0..max_triple_triad_card_id {
                         self.toggle_triple_triad_card(i).await;
                     }
                 }
-                Task::ToggleAdventure { id } => {
+                LuaTask::ToggleAdventure { id } => {
                     self.toggle_adventure(*id, false).await;
                 }
-                Task::ToggleAdventureAll {} => {
+                LuaTask::ToggleAdventureAll {} => {
                     let max_adventure_id = ADVENTURE_BITMASK_SIZE as u32 * 8;
 
                     for i in 0..max_adventure_id {
@@ -403,30 +403,30 @@ impl ZoneConnection {
                         }
                     }
                 }
-                Task::ToggleCutsceneSeen { id } => {
+                LuaTask::ToggleCutsceneSeen { id } => {
                     self.toggle_cutscene_seen(*id).await;
                 }
-                Task::ToggleCutsceneSeenAll {} => {
+                LuaTask::ToggleCutsceneSeenAll {} => {
                     let max_cutscene_seen_id = CUTSCENE_SEEN_BITMASK_SIZE as u32 * 8;
 
                     for i in 0..max_cutscene_seen_id {
                         self.toggle_cutscene_seen(i).await;
                     }
                 }
-                Task::ToggleMinion { id } => {
+                LuaTask::ToggleMinion { id } => {
                     self.toggle_minion(*id).await;
                 }
-                Task::ToggleMinionAll {} => {
+                LuaTask::ToggleMinionAll {} => {
                     let max_minion_id = MINION_BITMASK_SIZE as u32 * 8;
 
                     for i in 0..max_minion_id {
                         self.toggle_minion(i).await;
                     }
                 }
-                Task::ToggleAetherCurrent { id } => {
+                LuaTask::ToggleAetherCurrent { id } => {
                     self.toggle_aether_current(*id).await;
                 }
-                Task::ToggleAetherCurrentAll {} => {
+                LuaTask::ToggleAetherCurrentAll {} => {
                     // TODO: seems like server has issues after executing it, but when you login back after being disconnected, seems to be alright?
                     let max_aether_current_id = AETHER_CURRENT_BITMASK_SIZE as u32 * 8;
 
@@ -434,10 +434,10 @@ impl ZoneConnection {
                         self.toggle_aether_current(i).await;
                     }
                 }
-                Task::ToggleAetherCurrentCompFlgSet { id } => {
+                LuaTask::ToggleAetherCurrentCompFlgSet { id } => {
                     self.toggle_aether_current_comp_flg_set(*id).await;
                 }
-                Task::ToggleAetherCurrentCompFlgSetAll {} => {
+                LuaTask::ToggleAetherCurrentCompFlgSetAll {} => {
                     let max_aether_current_comp_flg_set_id =
                         AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE as u32 * 8;
 
@@ -446,7 +446,7 @@ impl ZoneConnection {
                         self.toggle_aether_current_comp_flg_set(i).await;
                     }
                 }
-                Task::SetRace { race } => {
+                LuaTask::SetRace { race } => {
                     let mut chara_details =
                         self.database.find_chara_make(self.player_data.content_id);
                     chara_details.chara_make.customize.race = *race;
@@ -457,7 +457,7 @@ impl ZoneConnection {
                     );
                     self.respawn_player(false).await;
                 }
-                Task::SetTribe { tribe } => {
+                LuaTask::SetTribe { tribe } => {
                     let mut chara_details =
                         self.database.find_chara_make(self.player_data.content_id);
                     chara_details.chara_make.customize.subrace = *tribe;
@@ -468,7 +468,7 @@ impl ZoneConnection {
                     );
                     self.respawn_player(false).await;
                 }
-                Task::SetSex { sex } => {
+                LuaTask::SetSex { sex } => {
                     let mut chara_details =
                         self.database.find_chara_make(self.player_data.content_id);
                     chara_details.chara_make.customize.gender = *sex;
@@ -479,10 +479,10 @@ impl ZoneConnection {
                     );
                     self.respawn_player(false).await;
                 }
-                Task::SendSegment { segment } => {
+                LuaTask::SendSegment { segment } => {
                     self.send_segment(segment.clone()).await;
                 }
-                Task::StartTalkEvent {} => {
+                LuaTask::StartTalkEvent {} => {
                     if let Some(event) = self.events.last_mut() {
                         event.talk(
                             ObjectTypeId {
@@ -493,13 +493,13 @@ impl ZoneConnection {
                         );
                     }
                 }
-                Task::AcceptQuest { id } => {
+                LuaTask::AcceptQuest { id } => {
                     self.accept_quest(*id).await;
                 }
-                Task::FinishQuest { id } => {
+                LuaTask::FinishQuest { id } => {
                     self.finish_quest(*id).await;
                 }
-                Task::GainStatusEffect {
+                LuaTask::GainStatusEffect {
                     effect_id,
                     effect_param,
                     duration,

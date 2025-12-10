@@ -8,7 +8,7 @@ use std::{
 
 use tokio::sync::mpsc::Sender;
 
-use crate::{StatusEffects, lua::Task};
+use crate::{StatusEffects, lua::LuaTask};
 use kawari::{
     common::{JumpState, MoveAnimationState, MoveAnimationType, ObjectId, Position},
     ipc::{
@@ -149,7 +149,7 @@ pub enum FromServer {
     /// Send an arbitrary IPC segment to the client.
     PacketSegment(ServerZoneIpcSegment, ObjectId),
     /// Set of Lua tasks queued up from the server.
-    NewTasks(Vec<Task>),
+    NewTasks(Vec<LuaTask>),
     /// New copy of the status effects list, for use in Lua scripting.
     NewStatusEffects(StatusEffects),
     /// An event object was spawned.

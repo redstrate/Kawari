@@ -6,7 +6,7 @@ use kawari::{
 };
 
 #[derive(Clone, Debug)]
-pub enum Task {
+pub enum LuaTask {
     ChangeTerritory {
         zone_id: u16,
         exit_position: Option<Position>,
