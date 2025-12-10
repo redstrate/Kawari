@@ -81,6 +81,8 @@ function dispatchEvent(player, event_id)
         return runEvent(event_id, "events/generic/SpecialShop.lua")
     elseif event_type == HANDLER_TYPE_SWITCH_TALK then
         return runEvent(event_id, "events/generic/SwitchTalk.lua")
+    elseif event_type == HANDLER_TYPE_GOLD_SAUCER_ARCADE_MACHINE then
+        return runEvent(event_id, "events/generic/GoldSaucerArcadeMachine.lua")
     elseif event_type == HANDLER_TYPE_TOPIC_SELECT then
         return runEvent(event_id, "events/generic/TopicSelect.lua")
     elseif event_type == HANDLER_TYPE_PRE_HANDLER then

@@ -76,7 +76,7 @@ impl ChatHandler {
                         }
                     }
 
-                    connection.send_inventory(false).await;
+                    connection.send_inventory().await;
                     connection.inform_equip().await;
                 }
 
@@ -99,7 +99,7 @@ impl ChatHandler {
                     }
 
                     if result.is_some() {
-                        connection.send_inventory(false).await;
+                        connection.send_inventory().await;
                     } else {
                         tracing::error!(ERR_INVENTORY_ADD_FAILED);
                         connection.send_notice(ERR_INVENTORY_ADD_FAILED).await;

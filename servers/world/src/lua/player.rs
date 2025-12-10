@@ -195,12 +195,9 @@ impl LuaPlayer {
         self.queued_tasks.push(Task::ChangeWeather { id });
     }
 
-    fn add_gil(&mut self, amount: u32) {
-        self.queued_tasks.push(Task::AddGil { amount });
-    }
-
-    fn remove_gil(&mut self, amount: u32, send_client_update: bool) {
-        self.queued_tasks.push(Task::RemoveGil {
+    fn modify_currency(&mut self, id: u32, amount: i32, send_client_update: bool) {
+        self.queued_tasks.push(Task::ModifyCurrency {
+            id,
             amount,
             send_client_update,
         });
@@ -281,7 +278,7 @@ impl LuaPlayer {
         // Queue up the player's adjusted gil, but we're not going to send an entire inventory update to the client.
         let cost = item_dst_info.quantity * bb_item.price_low;
         let new_gil = self.player_data.inventory.currency.gil.quantity - cost;
-        self.remove_gil(cost, false);
+        self.modify_currency(1, -(cost as i32), false);
 
         let shop_packets_to_send = [
             ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateInventorySlot {
@@ -686,13 +683,8 @@ impl UserData for LuaPlayer {
             this.change_weather(id);
             Ok(())
         });
-        methods.add_method_mut("add_gil", |_, this, amount: u32| {
-            this.add_gil(amount);
-            Ok(())
-        });
-        methods.add_method_mut("remove_gil", |_, this, amount: u32| {
-            // Can't think of any situations where we wouldn't want to force a client currency update after using debug commands.
-            this.remove_gil(amount, true);
+        methods.add_method_mut("modify_currency", |_, this, (id, amount): (u32, i32)| {
+            this.modify_currency(id, amount, true);
             Ok(())
         });
         methods.add_method_mut("gm_set_orchestrion", |_, this, (value, id): (bool, u32)| {

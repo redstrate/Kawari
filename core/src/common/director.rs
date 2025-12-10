@@ -38,19 +38,25 @@ impl TryFrom<u32> for DirectorType {
 }
 
 #[binrw]
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum DirectorEvent {
     /// Shows "Duty Commenced", and starts the clock ticking down. `arg` is the number of seconds the duty should last.
     #[brw(magic = 0x40000001u32)]
     DutyCommence,
+    /// Seems to be in response to the Sync trigger. Arg seems to always be 1.
+    #[brw(magic = 0x80000000u32)]
+    SyncResponse,
     Unknown(u32),
 }
 
 #[binrw]
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum DirectorTrigger {
     /// When the player requests to summon a striking dummy. `arg` always seems to be 1.
     #[brw(magic = 0x40000006u32)]
     SummonStrikingDummy,
+    /// Unknown purpose.
+    #[brw(magic = 0x80000000u32)]
+    Sync,
     Unknown(u32),
 }

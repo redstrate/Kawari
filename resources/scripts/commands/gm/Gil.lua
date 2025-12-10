@@ -4,6 +4,6 @@ command_sender = "[gil] "
 function onCommand(args, player)
     local amount = args[1]
 
-    player:add_gil(amount)
+    player:modify_currency(CURRENCY_GIL, amount)
     printf(player, "Added %s gil.", amount)
 end

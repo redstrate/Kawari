@@ -615,6 +615,9 @@ pub enum ServerZoneIpcData {
         #[brw(pad_after = 7)] // padding
         spawn_index: u8,
     },
+    GoldSaucerInformation {
+        unk: [u8; 40],
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -965,6 +968,7 @@ mod tests {
             ServerZoneIpcData::UnkDirector2 { unk: [0; 184] },
             ServerZoneIpcData::FieldMarkerPreset { unk: [0; 104] },
             ServerZoneIpcData::DeleteObject { spawn_index: 0 },
+            ServerZoneIpcData::GoldSaucerInformation { unk: [0; 40] },
         ];
 
         for data in &ipc_types {

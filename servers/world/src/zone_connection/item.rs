@@ -39,17 +39,19 @@ impl ZoneConnection {
             .await;
     }
 
-    pub async fn send_inventory(&mut self, first_update: bool) {
+    pub async fn send_inventory(&mut self) {
         let mut last_sequence = 0;
         for (sequence, (container_type, container)) in (&self.player_data.inventory.clone())
             .into_iter()
             .enumerate()
         {
-            // currencies
+            let mut num_items = 0;
+
             if container_type == ContainerType::Currency {
-                let mut send_currency = async |item: &Item| {
+                // currencies
+                let mut send_currency = async |slot: u16, item: &Item| {
                     // skip telling the client what they don't have
-                    if item.quantity == 0 && first_update {
+                    if item.quantity == 0 || item.id == 0 {
                         return;
                     }
 
@@ -59,29 +61,30 @@ impl ZoneConnection {
                             container: container_type,
                             quantity: item.quantity,
                             catalog_id: item.id,
-                            unk1: 1,
+                            slot,
                             ..Default::default()
                         },
                     ));
                     self.send_ipc_self(ipc).await;
+
+                    num_items += 1;
                 };
 
                 for i in 0..container.max_slots() {
-                    send_currency(container.get_slot(i as u16)).await;
+                    send_currency(i as u16, container.get_slot(i as u16)).await;
                 }
             } else {
                 // items
-
-                let mut send_slot = async |slot_index: u16, item: &Item| {
+                let mut send_slot = async |slot: u16, item: &Item| {
                     // skip telling the client what they don't have
-                    if item.quantity == 0 && first_update {
+                    if item.quantity == 0 || item.id == 0 {
                         return;
                     }
 
                     let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateItem(ItemInfo {
                         sequence: sequence as u32,
                         container: container_type,
-                        slot: slot_index,
+                        slot,
                         quantity: item.quantity,
                         catalog_id: item.id,
                         condition: item.condition,
@@ -89,6 +92,8 @@ impl ZoneConnection {
                         ..Default::default()
                     }));
                     self.send_ipc_self(ipc).await;
+
+                    num_items += 1;
                 };
 
                 for i in 0..container.max_slots() {
@@ -101,7 +106,7 @@ impl ZoneConnection {
                 let ipc =
                     ServerZoneIpcSegment::new(ServerZoneIpcData::ContainerInfo(ContainerInfo {
                         container: container_type,
-                        num_items: container.num_items(),
+                        num_items,
                         sequence: sequence as u32,
                         ..Default::default()
                     }));
@@ -136,8 +141,10 @@ impl ZoneConnection {
     pub async fn send_equipped_inventory(&mut self) {
         let equipped = self.player_data.inventory.equipped;
 
+        let mut num_items = 0;
+
         let mut send_slot = async |slot_index: u16, item: &Item| {
-            if item.quantity == 0 {
+            if item.quantity == 0 || item.id == 0 {
                 return;
             }
 
@@ -152,6 +159,8 @@ impl ZoneConnection {
                 ..Default::default()
             }));
             self.send_ipc_self(ipc).await;
+
+            num_items += 1;
         };
 
         for i in 0..equipped.max_slots() {
@@ -162,7 +171,7 @@ impl ZoneConnection {
         {
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ContainerInfo(ContainerInfo {
                 container: ContainerType::Equipped,
-                num_items: self.player_data.inventory.equipped.num_items(),
+                num_items,
                 sequence: self.player_data.item_sequence,
                 ..Default::default()
             }));

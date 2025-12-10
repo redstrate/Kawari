@@ -182,7 +182,6 @@ fn main() {
 
         let constants_buffer = std::fs::read_to_string(d).unwrap();
         let yml: Value = serde_yaml_ng::from_str(&constants_buffer).unwrap();
-        dbg!(&yml);
         for (key, value) in yml.as_mapping().unwrap() {
             let mut value_type = type_map
                 .get(key.clone().as_str().unwrap())

@@ -44,11 +44,9 @@ pub enum Task {
     ChangeWeather {
         id: u16,
     },
-    AddGil {
-        amount: u32,
-    },
-    RemoveGil {
-        amount: u32,
+    ModifyCurrency {
+        id: u32,
+        amount: i32,
         send_client_update: bool,
     },
     GmSetOrchestrion {

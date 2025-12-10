@@ -124,7 +124,7 @@ impl ZoneConnection {
         // Add gil
         // TODO: send log message
         self.player_data.inventory.currency.get_slot_mut(0).quantity += rewards.1;
-        self.send_inventory(false).await;
+        self.send_inventory().await;
 
         // Add exp
         self.add_exp(rewards.0 as i32).await;
