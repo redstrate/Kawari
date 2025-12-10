@@ -183,7 +183,7 @@ pub enum EventHandlerType {
     /// Unknown purpose.
     GatheringPoint = 3,
     /// See GilShop Excel sheet.
-    GilShop = 4,
+    Shop = 4,
     /// See Aetheryte Excel sheet (event_id & 0xFFF.)
     Aetheryte = 5,
     /// See GuildleveAssignment Excel sheet.
@@ -199,7 +199,7 @@ pub enum EventHandlerType {
     /// See ArrayEventHandler sheet.
     Array = 13,
     /// See CraftLeve Excel sheet.
-    CraftLeve = 14,
+    CraftLeveClient = 14,
     /// Unknown purpose.
     GimmickAccessor = 15,
     /// Unknown purpose.

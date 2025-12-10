@@ -1019,7 +1019,7 @@ async fn client_loop(
                                                 };
 
                                                 // It always assumes a shop... for now
-                                                if event_type == EventHandlerType::GilShop {
+                                                if event_type == EventHandlerType::Shop {
                                                     connection.process_shop_event_return(handler).await;
                                                 } else {
                                                     tracing::info!(message = "Event returned", handler_id = handler.handler_id, error_code = handler.error_code, scene = handler.scene, params = ?&handler.params[..handler.num_results as usize]);

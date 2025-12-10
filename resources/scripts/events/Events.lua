@@ -28,7 +28,7 @@ function dispatchEvent(player, event_id)
         end
 
         return event
-    elseif event_type == HANDLER_TYPE_GIL_SHOP then
+    elseif event_type == HANDLER_TYPE_SHOP then
         return runEvent(event_id, "events/generic/GilShopkeeper.lua")
     elseif event_type == HANDLER_TYPE_WARP then
         local warp_name = GAME_DATA:get_warp_logic_name(event_id)
