@@ -459,6 +459,10 @@ ServerZoneIpcType:
     comment: Sent to the client to free up an object spawn index.
     opcode: 488
     size: 8
+  - name: GoldSaucerInformation
+    comment: Sent to the client when opening the Gold Saucer window.
+    opcode: 128
+    size: 40
 ClientZoneIpcType:
   - name: InitRequest
     comment: >-

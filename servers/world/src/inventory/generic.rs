@@ -24,10 +24,6 @@ impl<const N: usize> Storage for GenericStorage<N> {
         N as u32
     }
 
-    fn num_items(&self) -> u32 {
-        self.slots.iter().filter(|item| item.quantity > 0).count() as u32
-    }
-
     fn get_slot_mut(&mut self, index: u16) -> &mut Item {
         self.slots.get_mut(index as usize).unwrap()
     }

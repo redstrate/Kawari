@@ -4,6 +4,8 @@ use serde::{Deserialize, Serialize};
 
 use super::{Item, Storage};
 
+// TODO: look at TomestonesItem Excel sheet for inventory slots
+
 // TODO: Add society currencies, this is just a good baseline
 #[repr(u32)]
 pub enum CurrencyKind {
@@ -30,7 +32,7 @@ pub enum CurrencyKind {
     SerpentSeal,
     FlameSeal,
     WolfMark = 25,
-    AlliedSeal,
+    AlliedSeal = 27,
     TomestonePoetics,
     MGP = 29,
     TomestoneHelio = 47,
@@ -41,20 +43,32 @@ pub enum CurrencyKind {
     TrophyCrystal = 36656,
 }
 
-// TODO: Should we just pull this from the Item sheet?
-// Otherwise, should we not use Default and instead use new with a GameData parameter?
-pub enum CurrencyStack {
-    _CompanySeal = 90000,
-    _ElementalCrystal = 9999,
-    Gil = 999_999_999,
-    _MGP = 9_999_999,
-    _Tomestone = 2000,
-    _Pvp = 20000,
-}
-
 #[derive(Clone, Copy, Deserialize, Serialize, Debug)]
 pub struct CurrencyStorage {
     pub gil: Item,
+    pub flame_seal: Item, // TODO: rename to something company agnostic
+    pub wolf_mark: Item,
+    pub tomestone_poetics: Item,
+    pub tomestone_mathematics: Item, // TODO: rename season agnostic
+    pub allied_seal: Item,
+    pub mgp: Item,
+    pub tomestone_heliometry: Item, // TODO: rename season agnostic
+    pub dummy: Item,
+}
+
+impl CurrencyStorage {
+    pub fn get_slot_for_id(id: u32) -> u16 {
+        // TODO: duplicated between Rust and Lua
+        match id {
+            1 => 0,
+            29 => 9,
+            _ => unimplemented!(),
+        }
+    }
+
+    pub fn get_item_for_id(&mut self, id: u32) -> &mut Item {
+        self.get_slot_mut(Self::get_slot_for_id(id))
+    }
 }
 
 impl Default for CurrencyStorage {
@@ -63,35 +77,94 @@ impl Default for CurrencyStorage {
             gil: Item::new(
                 ItemInfo {
                     id: CurrencyKind::Gil as u32,
-                    stack_size: CurrencyStack::Gil as u32,
                     ..Default::default()
                 },
                 0,
             ),
+            flame_seal: Item::new(
+                ItemInfo {
+                    id: CurrencyKind::FlameSeal as u32,
+                    ..Default::default()
+                },
+                0,
+            ),
+            wolf_mark: Item::new(
+                ItemInfo {
+                    id: CurrencyKind::WolfMark as u32,
+                    ..Default::default()
+                },
+                0,
+            ),
+            tomestone_poetics: Item::new(
+                ItemInfo {
+                    id: CurrencyKind::TomestonePoetics as u32,
+                    ..Default::default()
+                },
+                0,
+            ),
+            tomestone_mathematics: Item::new(
+                ItemInfo {
+                    id: CurrencyKind::TomestoneMaths as u32,
+                    ..Default::default()
+                },
+                0,
+            ),
+            allied_seal: Item::new(
+                ItemInfo {
+                    id: CurrencyKind::AlliedSeal as u32,
+                    ..Default::default()
+                },
+                0,
+            ),
+            mgp: Item::new(
+                ItemInfo {
+                    id: CurrencyKind::MGP as u32,
+                    ..Default::default()
+                },
+                0,
+            ),
+            tomestone_heliometry: Item::new(
+                ItemInfo {
+                    id: CurrencyKind::TomestoneHelio as u32,
+                    ..Default::default()
+                },
+                0,
+            ),
+            dummy: Item::default(),
         }
     }
 }
 
 impl Storage for CurrencyStorage {
     fn max_slots(&self) -> u32 {
-        1
-    }
-
-    fn num_items(&self) -> u32 {
-        1
+        11
     }
 
     fn get_slot_mut(&mut self, index: u16) -> &mut Item {
         match index {
             0 => &mut self.gil,
-            _ => panic!("{index} is not a valid src_container_index?!?"),
+            3 => &mut self.flame_seal,
+            4 => &mut self.wolf_mark,
+            6 => &mut self.tomestone_poetics,
+            7 => &mut self.tomestone_mathematics,
+            8 => &mut self.allied_seal,
+            9 => &mut self.mgp,
+            10 => &mut self.tomestone_heliometry,
+            _ => &mut self.dummy,
         }
     }
 
     fn get_slot(&self, index: u16) -> &Item {
         match index {
             0 => &self.gil,
-            _ => panic!("{index} is not a valid src_container_index?!?"),
+            3 => &self.flame_seal,
+            4 => &self.wolf_mark,
+            6 => &self.tomestone_poetics,
+            7 => &self.tomestone_mathematics,
+            8 => &self.allied_seal,
+            9 => &self.mgp,
+            10 => &self.tomestone_heliometry,
+            _ => &self.dummy,
         }
     }
 }

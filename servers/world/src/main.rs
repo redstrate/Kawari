@@ -3,8 +3,9 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use kawari::common::{
-    ClientLanguage, ContainerType, EventHandlerType, GameData, INVALID_OBJECT_ID,
-    ItemOperationKind, ObjectId, ObjectTypeId, ObjectTypeKind, calculate_max_level,
+    ClientLanguage, ContainerType, DirectorEvent, DirectorTrigger, EventHandlerType, GameData,
+    INVALID_OBJECT_ID, ItemOperationKind, ObjectId, ObjectTypeId, ObjectTypeKind,
+    calculate_max_level,
 };
 use kawari::config::get_config;
 use kawari_world::inventory::{Item, Storage, get_next_free_slot};
@@ -521,7 +522,7 @@ async fn client_loop(
                                                 database.find_chara_make(connection.player_data.content_id);
 
                                                 // Send inventory
-                                                connection.send_inventory(true).await;
+                                                connection.send_inventory().await;
 
                                                 // set equip display flags
                                                 connection
@@ -657,7 +658,6 @@ async fn client_loop(
                                                     }
                                                 }
 
-                                                connection.send_inventory(false).await;
                                                 connection.send_stats(&chara_details).await;
 
                                                 connection.respawn_player(true).await;
@@ -740,6 +740,18 @@ async fn client_loop(
                                                     }
                                                     ClientTriggerCommand::SeenCutscene { id } => {
                                                         connection.player_data.unlocks.cutscene_seen.set(id);
+                                                    }
+                                                    ClientTriggerCommand::DirectorTrigger { director_id, trigger, arg } => {
+                                                        // Always send a sync response
+                                                        if trigger == DirectorTrigger::Sync {
+                                                            connection.actor_control_self(ActorControlSelf { category: ActorControlCategory::DirectorEvent { director_id, event: DirectorEvent::SyncResponse, arg: 1 } }).await;
+                                                        } else {
+                                                            tracing::info!("DirectorTrigger: {director_id} {trigger:?} {arg}");
+                                                        }
+                                                    }
+                                                    ClientTriggerCommand::OpenGoldSaucerGeneralTab {} => {
+                                                        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::GoldSaucerInformation { unk: [0; 40] });
+                                                        connection.send_ipc_self(ipc).await;
                                                     }
                                                     _ => {
                                                         // inform the server of our trigger, it will handle sending it to other clients

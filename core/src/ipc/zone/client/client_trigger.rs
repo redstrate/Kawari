@@ -165,6 +165,14 @@ pub enum ClientTriggerCommand {
     #[brw(magic = 1600u32)]
     RepairItem { unk1: u32, unk2: u32, unk3: u32 },
 
+    /// The client opens the General tab in the Gold Saucer window.
+    #[brw(magic = 1850u32)]
+    OpenGoldSaucerGeneralTab {},
+
+    /// The client opens the Chocobo tab in the Gold Saucer window.
+    #[brw(magic = 1850u32)]
+    OpenGoldSaucerChocoboTab {},
+
     /// The client is ready to begin loading a zone.
     #[brw(magic = 3201u32)]
     BeginLoading {},
@@ -188,6 +196,10 @@ pub enum ClientTriggerCommand {
         #[bw(map = write_bool_as::<u32>)]
         open: bool,
     },
+
+    /// The client opens the Mahjong tab in the Gold Saucer window.
+    #[brw(magic = 2550u32)]
+    OpenGoldSaucerMahjongTab {},
 
     /// The client tells us how far in the distance we should see actors.
     #[brw(magic = 9005u32)]

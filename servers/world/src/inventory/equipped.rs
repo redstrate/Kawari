@@ -58,22 +58,6 @@ impl Storage for EquippedStorage {
         14
     }
 
-    fn num_items(&self) -> u32 {
-        self.main_hand.quantity
-            + self.off_hand.quantity
-            + self.head.quantity
-            + self.body.quantity
-            + self.hands.quantity
-            + self.legs.quantity
-            + self.feet.quantity
-            + self.ears.quantity
-            + self.neck.quantity
-            + self.wrists.quantity
-            + self.right_ring.quantity
-            + self.left_ring.quantity
-            + self.soul_crystal.quantity
-    }
-
     fn get_slot_mut(&mut self, index: u16) -> &mut Item {
         match index {
             0 => &mut self.main_hand,

@@ -2,12 +2,13 @@
 
 use crate::{
     EventFinishType, ToServer, ZoneConnection,
-    inventory::{Item, Storage},
+    inventory::{CurrencyStorage, Item},
     lua::{LuaPlayer, Task, load_init_script},
 };
 use kawari::{
     common::{
-        ERR_INVENTORY_ADD_FAILED, InstanceContentType, ItemInfoQuery, ObjectTypeId, ObjectTypeKind,
+        ContainerType, ERR_INVENTORY_ADD_FAILED, InstanceContentType, ItemInfoQuery, ObjectTypeId,
+        ObjectTypeKind,
     },
     constants::{
         ADVENTURE_BITMASK_SIZE, AETHER_CURRENT_BITMASK_SIZE,
@@ -123,17 +124,32 @@ impl ZoneConnection {
                 Task::ChangeWeather { id } => {
                     self.change_weather(*id).await;
                 }
-                Task::AddGil { amount } => {
-                    self.player_data.inventory.currency.get_slot_mut(0).quantity += *amount;
-                    self.send_inventory(false).await;
-                }
-                Task::RemoveGil {
+                Task::ModifyCurrency {
+                    id,
                     amount,
                     send_client_update,
                 } => {
-                    self.player_data.inventory.currency.get_slot_mut(0).quantity -= *amount;
+                    let slot = self.player_data.inventory.currency.get_item_for_id(*id);
+
+                    if *amount > 0 {
+                        slot.quantity = slot.quantity.saturating_add(*amount as u32);
+                    } else {
+                        slot.quantity = slot.quantity.saturating_sub(-(*amount) as u32);
+                    }
+
                     if *send_client_update {
-                        self.send_inventory(false).await;
+                        let slot = *slot;
+
+                        let ipc =
+                            ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateInventorySlot {
+                                sequence: self.player_data.item_sequence,
+                                dst_storage_id: ContainerType::Currency,
+                                dst_container_index: CurrencyStorage::get_slot_for_id(*id),
+                                dst_stack: slot.quantity,
+                                dst_catalog_id: slot.id,
+                                unk1: 1966080000,
+                            });
+                        self.send_ipc_self(ipc).await;
                     }
                 }
                 Task::GmSetOrchestrion { value, id } => {
@@ -157,7 +173,7 @@ impl ZoneConnection {
                             .is_some()
                         {
                             if *send_client_update {
-                                self.send_inventory(false).await;
+                                self.send_inventory().await;
                             }
                         } else {
                             tracing::error!(ERR_INVENTORY_ADD_FAILED);

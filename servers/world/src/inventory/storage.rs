@@ -3,7 +3,6 @@ use super::Item;
 /// Represents a generic item storage.
 pub trait Storage: Sync {
     fn max_slots(&self) -> u32;
-    fn num_items(&self) -> u32;
     fn get_slot_mut(&mut self, index: u16) -> &mut Item;
     fn get_slot(&self, index: u16) -> &Item;
 }
