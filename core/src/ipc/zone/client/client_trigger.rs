@@ -99,6 +99,10 @@ pub enum ClientTriggerCommand {
     #[brw(magic = 500u32)]
     Emote(CommonEmoteInfo),
 
+    /// The player interrupts their emote.
+    #[brw(magic = 503u32)]
+    EmoteInterrupted {},
+
     /// The player explicitly changed their pose.
     #[brw(magic = 505u32)]
     ChangePose { unk1: u32, pose: u32 },

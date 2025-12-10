@@ -20,6 +20,15 @@ pub enum ActorControlCategory {
         unk_flag: u32,
     },
 
+    /// Unknown purpose, but seen while emoting.
+    #[brw(magic = 2u32)]
+    SetMode {
+        /// Seems to correspond to ConditionMode in the EmoteMode Excel sheet.
+        condition_mode: u32,
+        /// Seems to correspond to a row in the EmoteMode Excel sheet.
+        emote_mode: u32,
+    },
+
     /// Only shows the floating message, it doesn't actually update your EXP!
     #[brw(magic = 7u32)]
     EXPFloatingMessage {
