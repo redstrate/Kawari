@@ -1468,7 +1468,7 @@ async fn client_loop(
                     FromServer::Message(msg) => connection.send_message(msg).await,
                     FromServer::ActorSpawn(actor, spawn) => connection.spawn_actor(actor, spawn).await,
                     FromServer::ActorMove(actor_id, position, rotation, anim_type, anim_state, jump_state) => connection.set_actor_position(actor_id, position, rotation, anim_type, anim_state, jump_state).await,
-                    FromServer::ActorDespawn(actor_id) => connection.remove_actor(actor_id).await,
+                    FromServer::DeleteActor(actor_id, spawn_index) => connection.remove_actor(actor_id, spawn_index).await,
                     FromServer::ActorControl(actor_id, actor_control) => connection.actor_control(actor_id, actor_control).await,
                     FromServer::ActorControlTarget(actor_id, actor_control) => connection.actor_control_target(actor_id, actor_control).await,
                     FromServer::ActorControlSelf(actor_control) => connection.actor_control_self(actor_control).await,

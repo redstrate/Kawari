@@ -24,10 +24,21 @@ impl Position {
 
     /// Returns the distance between the two positions `a` and `b`.
     pub fn distance(a: Position, b: Position) -> f32 {
-        let delta_x = b.x - a.x;
-        let delta_y = b.y - a.y;
-        let delta_z = b.z - a.z;
-        delta_x.powi(2) + delta_y.powi(2) + delta_z.powi(2)
+        f32::sqrt(Self::sqr_distance(a, b))
+    }
+
+    /// Returns the distance between the two positions `a` and `b`.
+    pub fn sqr_distance(a: Position, b: Position) -> f32 {
+        let delta = Position {
+            x: a.x - b.x,
+            y: a.y - b.y,
+            z: a.z - b.z,
+        };
+        Self::dot(delta, delta)
+    }
+
+    pub fn dot(a: Position, b: Position) -> f32 {
+        a.x * b.x + a.y * b.y + a.z * b.z
     }
 }
 
@@ -82,6 +93,6 @@ mod tests {
         };
         assert_eq!(Position::distance(a, a), 0.0);
         assert_eq!(Position::distance(b, b), 0.0);
-        assert_eq!(Position::distance(a, b), 100.0);
+        assert_eq!(Position::distance(a, b), 10.0);
     }
 }

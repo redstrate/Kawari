@@ -40,11 +40,26 @@ pub struct Attributes {
 
 #[binrw]
 #[brw(repr(u32))]
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum DistanceRange {
     Normal = 0x0,
     Extended = 0x1,
     Maximum = 0x2,
+}
+
+// TODO: it would be nice to figure out how these are actually calculated
+// From a quick inspection, these are based on zone and increase later the expansion. These are probably encoded in some data somewhere.
+pub const DISTANCE_NORMAL: f32 = 100.0;
+pub const DISTANCE_EXTENDED: f32 = 300.0;
+pub const DISTANCE_MAXIMUM: f32 = 500.0;
+
+/// Gets the distance given a `DistanceRange`.
+pub fn get_distance_range(range: DistanceRange) -> f32 {
+    match range {
+        DistanceRange::Normal => DISTANCE_NORMAL,
+        DistanceRange::Extended => DISTANCE_EXTENDED,
+        DistanceRange::Maximum => DISTANCE_MAXIMUM,
+    }
 }
 
 #[binrw]

@@ -2,7 +2,7 @@ use std::collections::VecDeque;
 
 use crate::{StatusEffects, zone_connection::TeleportQuery};
 use kawari::{
-    common::{ObjectId, Position},
+    common::{DistanceRange, ObjectId, Position, get_distance_range},
     ipc::zone::{CommonSpawn, NpcSpawn, ObjectSpawn, PlayerSpawn},
 };
 
@@ -13,6 +13,7 @@ pub enum NetworkedActor {
         // TODO: of course, Npcs will need status effects as well!
         status_effects: StatusEffects,
         teleport_query: TeleportQuery,
+        distance_range: DistanceRange,
     },
     Npc {
         current_path: VecDeque<[f32; 3]>,
@@ -60,7 +61,34 @@ impl NetworkedActor {
     }
 
     pub fn in_range_of(&self, other: &NetworkedActor) -> bool {
-        let distance = Position::distance(self.position(), other.position());
-        distance < 25.0 // TODO: hardcoded
+        // This only makes sense for players
+        if let NetworkedActor::Player { distance_range, .. } = self {
+            // Retail doesn't take into account Y
+            let self_pos = Position {
+                x: self.position().x,
+                y: 0.0,
+                z: self.position().z,
+            };
+
+            let other_pos = Position {
+                x: other.position().x,
+                y: 0.0,
+                z: other.position().z,
+            };
+
+            let distance = Position::distance(self_pos, other_pos);
+            distance < get_distance_range(*distance_range)
+        } else {
+            false
+        }
+    }
+
+    /// Really only applies to Players, whether or not they have loaded in yet.
+    pub fn is_valid(&self) -> bool {
+        if let NetworkedActor::Player { spawn, .. } = self {
+            !spawn.common.name.is_empty()
+        } else {
+            true
+        }
     }
 }

@@ -11,7 +11,7 @@ use crate::{
     zone_connection::TeleportQuery,
 };
 use kawari::{
-    common::{GameData, ObjectId},
+    common::{DistanceRange, GameData, ObjectId},
     config::get_config,
     ipc::zone::{ActionRequest, NpcSpawn, ObjectSpawn, PlayerSpawn},
 };
@@ -150,6 +150,7 @@ impl Instance {
                 spawn: PlayerSpawn::default(),
                 status_effects: StatusEffects::default(),
                 teleport_query: TeleportQuery::default(),
+                distance_range: DistanceRange::Normal,
             },
         );
     }

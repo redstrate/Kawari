@@ -192,6 +192,7 @@ pub enum ClientTriggerCommand {
     /// The client tells us how far in the distance we should see actors.
     #[brw(magic = 9005u32)]
     SetDistanceRange { range: DistanceRange },
+
     Unknown {
         category: u32,
         // seen in haircut event

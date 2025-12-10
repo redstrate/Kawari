@@ -52,6 +52,13 @@ struct ClientState {
     object_allocator: SpawnAllocator<MAX_SPAWNED_OBJECTS>,
 }
 
+impl ClientState {
+    /// Check if this client has spawned said `object_id`.
+    pub fn has_spawned(&self, object_id: ObjectId) -> bool {
+        self.actor_allocator.contains(object_id) || self.object_allocator.contains(object_id)
+    }
+}
+
 #[derive(Default, Debug)]
 struct WorldServer {
     instances: Vec<Instance>,
@@ -296,6 +303,78 @@ fn server_logic_tick(data: &mut WorldServer, network: &mut NetworkState) {
                 for (handle, _) in network.clients.values_mut() {
                     if handle.send(msg.clone()).is_err() {
                         //to_remove.push(id);
+                    }
+                }
+            }
+
+            // Recalculate distance ranges
+            for (id, actor) in &instance.actors {
+                for (other_id, other_actor) in &instance.actors {
+                    // We're always in our own view
+                    if *id == *other_id {
+                        continue;
+                    }
+
+                    // Only check players
+                    let NetworkedActor::Player { .. } = actor else {
+                        continue;
+                    };
+
+                    // Find the ClientState for this player.
+                    let Some((handle, state)) = network.get_by_actor_mut(*id) else {
+                        continue;
+                    };
+
+                    // If the actor isn't valid, don't bother spawning yet.
+                    if !other_actor.is_valid() {
+                        continue;
+                    }
+
+                    // If the actor _should_ be in the view of the other.
+                    let in_range = actor.in_range_of(other_actor);
+                    let has_been_spawned = state.has_spawned(*other_id);
+
+                    // There are four states:
+                    // Walked out = (Has been spawned, no longer in range)
+                    // Walked in = (Hasn't been spawned, in range)
+                    // Still in = (Has been spawned, in range)
+                    // Still out = (Hasn't been spawned, not in range)
+
+                    let walked_out = has_been_spawned && !in_range;
+                    let walked_in = !has_been_spawned && in_range;
+                    let still_in = has_been_spawned && in_range;
+                    let still_out = !has_been_spawned && !in_range;
+
+                    if walked_out {
+                        if let Some(spawn_index) = state.actor_allocator.free(*other_id) {
+                            let msg = FromServer::DeleteActor(*other_id, spawn_index);
+
+                            if handle.send(msg).is_err() {
+                                // TODO: remove as needed
+                                //self.to_remove.push(id);
+                            }
+                        } else if let Some(_spawn_index) = state.object_allocator.free(*other_id) {
+                            // TODO: despawn objects
+                        }
+                    } else if walked_in {
+                        // Spawn this actor
+                        if let Some(msg) = NetworkState::spawn_existing_actor_message(
+                            state,
+                            *other_id,
+                            other_actor,
+                        ) {
+                            if handle.send(msg).is_err() {
+                                // TODO: remove as needed
+                                //self.to_remove.push(id);
+                            }
+                        } else {
+                            // Early exit if the client refuses to spawn any more actors
+                            continue;
+                        }
+                    } else if still_in || still_out {
+                        // Do nothing
+                    } else {
+                        unreachable!();
                     }
                 }
             }
@@ -787,6 +866,19 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                             *effect_param as u16,
                             *source_actor_id,
                         );
+                    }
+                    ClientTriggerCommand::SetDistanceRange { range } => {
+                        let mut data = data.lock();
+                        if let Some(instance) = data.find_actor_instance_mut(from_actor_id)
+                            && let Some(actor) = instance.find_actor_mut(from_actor_id)
+                        {
+                            match actor {
+                                NetworkedActor::Player { distance_range, .. } => {
+                                    *distance_range = *range;
+                                }
+                                _ => unreachable!(),
+                            }
+                        }
                     }
                     _ => tracing::warn!("Server doesn't know what to do with {:#?}", trigger),
                 }

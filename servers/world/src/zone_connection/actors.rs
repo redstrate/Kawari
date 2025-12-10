@@ -132,24 +132,19 @@ impl ZoneConnection {
         .await;
     }
 
-    pub async fn remove_actor(&mut self, _actor_id: ObjectId) {
-        // TODO: restore eventually
-        /*if let Some(spawn_index) = self.actor_allocator.free(actor_id) {
-            tracing::info!("Removing actor {actor_id} {}!", spawn_index);
+    pub async fn remove_actor(&mut self, actor_id: ObjectId, spawn_index: u8) {
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Delete {
+            spawn_index,
+            actor_id,
+        });
 
-            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Delete {
-                spawn_index,
-                actor_id,
-            });
-
-            self.send_segment(PacketSegment {
-                source_actor: actor_id,
-                target_actor: self.player_data.actor_id,
-                segment_type: SegmentType::Ipc,
-                data: SegmentData::Ipc(ipc),
-            })
-            .await;
-        }*/
+        self.send_segment(PacketSegment {
+            source_actor: actor_id,
+            target_actor: self.player_data.actor_id,
+            segment_type: SegmentType::Ipc,
+            data: SegmentData::Ipc(ipc),
+        })
+        .await;
     }
 
     pub async fn toggle_invisibility(&mut self, invisible: bool) {

@@ -45,23 +45,17 @@ impl NetworkState {
         }
     }
 
-    /// Spawn the actor for this client, and also allocate it in their pool.
-    ///
-    /// If this returns false, it means the actor cannot be spawned and you should probably stop trying.
-    pub fn spawn_existing_actor(
-        &mut self,
-        from_id: ClientId,
+    // TODO: replace following function with this?
+    pub fn spawn_existing_actor_message(
         client_state: &mut ClientState,
         object_id: ObjectId,
         actor: &NetworkedActor,
-    ) -> bool {
-        let Some(spawn_index) = (match actor {
+    ) -> Option<FromServer> {
+        let spawn_index = (match actor {
             NetworkedActor::Player { .. } => client_state.actor_allocator.reserve(object_id),
             NetworkedActor::Npc { .. } => client_state.actor_allocator.reserve(object_id),
             NetworkedActor::Object { .. } => client_state.object_allocator.reserve(object_id),
-        }) else {
-            return false;
-        };
+        })?;
 
         let msg = match actor {
             NetworkedActor::Player { spawn, .. } => {
@@ -81,48 +75,17 @@ impl NetworkState {
             }
         };
 
-        self.send_to(from_id, msg, DestinationNetwork::ZoneClients);
-
-        true
+        Some(msg)
     }
 
-    pub fn get_clients_in_range_of(
-        &self,
-        from_id: ClientId,
-        instance: &Instance,
-        actor: &NetworkedActor,
-    ) -> Vec<ClientId> {
-        let mut clients = Vec::new();
-
-        for (id, (handle, _)) in &self.clients {
-            let id = *id;
-
-            // don't bother telling the client who told us
-            if id == from_id {
-                continue;
-            }
-
-            // skip any clients not in our zone
-            let Some(other_actor) = instance.actors.get(&handle.actor_id) else {
-                continue;
-            };
-
-            if other_actor.in_range_of(actor) {
-                clients.push(id);
-            }
-        }
-
-        clients
-    }
-
-    /// Inform all clients in an instance that the actor has left.
+    /// Inform clients that have spawned this actor, that it should be deleted.
     pub fn inform_remove_actor(
         &mut self,
         instance: &Instance,
         from_id: ClientId,
         actor_id: ObjectId,
     ) {
-        for (id, (handle, _)) in &mut self.clients {
+        for (id, (handle, state)) in &mut self.clients {
             let id = *id;
 
             // Don't bother telling the client who told us
@@ -135,7 +98,12 @@ impl NetworkState {
                 continue;
             }
 
-            let msg = FromServer::ActorDespawn(actor_id);
+            // If the actor wasn't spawned for this client, skip.
+            let Some(spawn_index) = state.actor_allocator.free(actor_id) else {
+                continue;
+            };
+
+            let msg = FromServer::DeleteActor(actor_id, spawn_index);
 
             if handle.send(msg).is_err() {
                 self.to_remove.push(id);
@@ -291,5 +259,16 @@ impl NetworkState {
 
     pub fn get_state_mut(&mut self, client_id: ClientId) -> Option<&mut ClientState> {
         self.clients.get_mut(&client_id).map(|x| &mut x.1)
+    }
+
+    pub fn get_by_actor_mut(
+        &mut self,
+        actor_id: ObjectId,
+    ) -> Option<&mut (ClientHandle, ClientState)> {
+        self.clients
+            .iter_mut()
+            .filter(|x| x.1.0.actor_id == actor_id)
+            .last()
+            .map(|x| x.1)
     }
 }

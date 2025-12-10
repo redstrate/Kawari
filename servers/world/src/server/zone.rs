@@ -22,7 +22,8 @@ use crate::{
 };
 use kawari::{
     common::{
-        GameData, INVALID_OBJECT_ID, ObjectId, Position, TerritoryNameKind, euler_to_direction,
+        DistanceRange, GameData, INVALID_OBJECT_ID, ObjectId, Position, TerritoryNameKind,
+        euler_to_direction,
     },
     ipc::zone::{ActorControl, ActorControlCategory, ActorControlSelf, ObjectSpawn},
 };
@@ -381,49 +382,15 @@ pub fn handle_zone_messages(
             );
 
             let mut data = data.lock();
-            let mut network = network.lock();
 
-            let (_, mut client_state) = network.clients.get_mut(from_id).unwrap().clone();
-
-            if let Some(instance) = data.find_actor_instance_mut(*from_actor_id) {
-                let new_actor = NetworkedActor::Player {
-                    spawn: player_spawn.clone(),
-                    status_effects: StatusEffects::default(),
-                    teleport_query: TeleportQuery::default(),
-                };
-
-                // Send existing actors
-                for (id, actor) in &instance.actors {
-                    // Skip anything out of range
-                    if !actor.in_range_of(&new_actor) {
-                        continue;
-                    }
-
-                    if !network.spawn_existing_actor(*from_id, &mut client_state, *id, actor) {
-                        // Early exit if the client refuses to spawn any more actors
-                        continue;
-                    }
-                }
-
-                // Then tell all relevant clients that we spawned
-                let clients_in_range =
-                    network.get_clients_in_range_of(*from_id, instance, &new_actor);
-                for id in &clients_in_range {
-                    if !network.spawn_existing_actor(
-                        *id,
-                        &mut client_state,
-                        *from_actor_id,
-                        &new_actor,
-                    ) {
-                        // Early exit if the client refuses to spawn any more actors
-                        continue;
-                    }
-                }
-
-                // replace the connection's actor in the table
-                let instance = data.find_actor_instance_mut(*from_actor_id).unwrap();
-                *instance.find_actor_mut(*from_actor_id).unwrap() = new_actor;
-            }
+            // replace the connection's actor in the table
+            let instance = data.find_actor_instance_mut(*from_actor_id).unwrap();
+            *instance.find_actor_mut(*from_actor_id).unwrap() = NetworkedActor::Player {
+                spawn: player_spawn.clone(),
+                status_effects: StatusEffects::default(),
+                teleport_query: TeleportQuery::default(),
+                distance_range: DistanceRange::Normal,
+            };
         }
         ToServer::ChangeZone(from_id, actor_id, zone_id, new_position, new_rotation) => {
             tracing::info!("{from_id:?} is requesting to go to zone {zone_id}");
