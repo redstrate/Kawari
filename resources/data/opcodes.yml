@@ -164,8 +164,8 @@ ServerZoneIpcType:
     comment: Sent to to the client to update their appearance.
     opcode: 867
     size: 72
-  - name: Delete
-    comment: Sent to the client to free up a spawn index.
+  - name: DeleteActor
+    comment: Sent to the client to free up an actor spawn index.
     opcode: 278
     size: 8
   - name: EventFinish
@@ -455,6 +455,10 @@ ServerZoneIpcType:
     comment: Unknown purpose.
     opcode: 898
     size: 104
+  - name: DeleteObject
+    comment: Sent to the client to free up an object spawn index.
+    opcode: 488
+    size: 8
 ClientZoneIpcType:
   - name: InitRequest
     comment: >-

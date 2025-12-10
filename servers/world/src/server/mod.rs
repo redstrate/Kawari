@@ -353,8 +353,13 @@ fn server_logic_tick(data: &mut WorldServer, network: &mut NetworkState) {
                                 // TODO: remove as needed
                                 //self.to_remove.push(id);
                             }
-                        } else if let Some(_spawn_index) = state.object_allocator.free(*other_id) {
-                            // TODO: despawn objects
+                        } else if let Some(spawn_index) = state.object_allocator.free(*other_id) {
+                            let msg = FromServer::DeleteObject(spawn_index);
+
+                            if handle.send(msg).is_err() {
+                                // TODO: remove as needed
+                                //self.to_remove.push(id);
+                            }
                         }
                     } else if walked_in {
                         // Spawn this actor

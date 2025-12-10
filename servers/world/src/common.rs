@@ -93,6 +93,8 @@ pub enum FromServer {
     ),
     // An actor should be despawned.
     DeleteActor(ObjectId, u8),
+    // An object should be despawned.
+    DeleteObject(u8),
     /// We need to update an actor
     ActorControl(ObjectId, ActorControl),
     /// We need to update an actor's target

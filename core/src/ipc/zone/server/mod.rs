@@ -209,7 +209,7 @@ pub enum ServerZoneIpcData {
     },
     ActionResult(ActionResult),
     Equip(Equip),
-    Delete {
+    DeleteActor {
         spawn_index: u8,
         #[brw(pad_before = 3)] // padding
         actor_id: ObjectId,
@@ -611,6 +611,10 @@ pub enum ServerZoneIpcData {
     FieldMarkerPreset {
         unk: [u8; 104],
     },
+    DeleteObject {
+        #[brw(pad_after = 7)] // padding
+        spawn_index: u8,
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -710,7 +714,7 @@ mod tests {
             ServerZoneIpcData::ActionResult(ActionResult::default()),
             ServerZoneIpcData::Equip(Equip::default()),
             ServerZoneIpcData::ActionResult(ActionResult::default()),
-            ServerZoneIpcData::Delete {
+            ServerZoneIpcData::DeleteActor {
                 spawn_index: 0,
                 actor_id: INVALID_OBJECT_ID,
             },
@@ -960,6 +964,7 @@ mod tests {
             ServerZoneIpcData::UnkDirector1 { unk: [0; 32] },
             ServerZoneIpcData::UnkDirector2 { unk: [0; 184] },
             ServerZoneIpcData::FieldMarkerPreset { unk: [0; 104] },
+            ServerZoneIpcData::DeleteObject { spawn_index: 0 },
         ];
 
         for data in &ipc_types {
