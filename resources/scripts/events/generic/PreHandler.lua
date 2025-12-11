@@ -11,6 +11,8 @@ function onTalk(target, player)
         player:play_scene(target, target_event_id, 0, HIDE_HOTBAR | NO_DEFAULT_CAMERA, {})
     elseif event_type == HANDLER_TYPE_INCLUSION_SHOP then
         player:play_scene(target, target_event_id, 1, HIDE_HOTBAR | NO_DEFAULT_CAMERA, {})
+    elseif event_type == HANDLER_TYPE_SPECIAL_SHOP then
+        player:play_scene(target, target_event_id, 0, HIDE_HOTBAR | NO_DEFAULT_CAMERA, {})
     else
         print("Unknown PreHandler target event type: "..event_type)
     end
