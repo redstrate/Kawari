@@ -216,7 +216,7 @@ impl ZoneConnection {
                     .find_content_for_content_finder_id(content_finder_condition_id)
                     .unwrap()
             } else {
-                0xFF
+                0xFFFF
             };
 
             let director_id = ((director_type as u32) << 16) | content_id as u32;
