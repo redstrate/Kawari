@@ -131,7 +131,7 @@ impl ZoneConnection {
 
             tracing::warn!(
                 "Event {event_id} ({}) isn't scripted yet! Ignoring...",
-                TryInto::<EventHandlerType>::try_into(event_handler_type)
+                EventHandlerType::from_repr(event_handler_type)
                     .map(|x| format!("{:?}", x))
                     .unwrap_or(format!("{event_handler_type}"))
             );

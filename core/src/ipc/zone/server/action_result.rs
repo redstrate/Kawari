@@ -1,5 +1,6 @@
 use binrw::binrw;
 use serde::{Deserialize, Serialize};
+use strum_macros::FromRepr;
 
 use crate::common::{ObjectId, ObjectTypeId, read_quantized_rotation, write_quantized_rotation};
 
@@ -26,10 +27,10 @@ pub enum EffectKind {
         #[br(temp)]
         #[bw(calc = 0)]
         param1: u8,
-        #[br(calc = DamageType::from(param1 & 0x0F))]
+        #[br(calc = DamageType::from_repr(param1 & 0x0F).unwrap())]
         #[bw(ignore)]
         damage_type: DamageType,
-        #[br(calc = DamageElement::from(param1 >> 4))]
+        #[br(calc = DamageElement::from_repr(param1 >> 4).unwrap())]
         #[bw(ignore)]
         damage_element: DamageElement,
         bonus_percent: u8,
@@ -67,7 +68,8 @@ pub enum EffectKind {
     },
 }
 
-#[derive(Debug, Eq, PartialEq, Clone, Copy, Default, Deserialize, Serialize)]
+#[repr(u8)]
+#[derive(Debug, Eq, PartialEq, Clone, Copy, Default, Deserialize, Serialize, FromRepr)]
 pub enum DamageType {
     Unknown,
     Slashing,
@@ -81,24 +83,8 @@ pub enum DamageType {
     LimitBreak,
 }
 
-impl From<u8> for DamageType {
-    fn from(value: u8) -> Self {
-        match value {
-            0 => Self::Unknown,
-            1 => Self::Slashing,
-            2 => Self::Piercing,
-            3 => Self::Blunt,
-            4 => Self::Shot,
-            5 => Self::Magic,
-            6 => Self::Breath,
-            7 => Self::Physical,
-            8 => Self::LimitBreak,
-            _ => Self::Unknown,
-        }
-    }
-}
-
-#[derive(Debug, Eq, PartialEq, Clone, Copy, Default, Deserialize, Serialize)]
+#[repr(u8)]
+#[derive(Debug, Eq, PartialEq, Clone, Copy, Default, Deserialize, Serialize, FromRepr)]
 pub enum DamageElement {
     Unknown,
     Fire,
@@ -109,22 +95,6 @@ pub enum DamageElement {
     Water,
     #[default]
     Unaspected,
-}
-
-impl From<u8> for DamageElement {
-    fn from(value: u8) -> Self {
-        match value {
-            0 => Self::Unknown,
-            1 => Self::Fire,
-            2 => Self::Ice,
-            3 => Self::Air,
-            4 => Self::Earth,
-            5 => Self::Lightning,
-            6 => Self::Water,
-            7 => Self::Unaspected,
-            _ => Self::Unknown,
-        }
-    }
 }
 
 #[binrw]

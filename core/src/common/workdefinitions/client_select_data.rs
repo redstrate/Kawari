@@ -1,10 +1,11 @@
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
+use strum_macros::FromRepr;
 
 use crate::common::{CustomizeData, EquipDisplayFlag};
 
 // TODO: this isn't really an enum in the game, nor is it a flag either. it's weird!
-#[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq)]
+#[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, FromRepr)]
 #[repr(i32)]
 pub enum RemakeMode {
     /// No remake options are available.
@@ -15,23 +16,10 @@ pub enum RemakeMode {
     EditAppearance = 4,
 }
 
-impl TryFrom<i32> for RemakeMode {
-    type Error = ();
-
-    fn try_from(value: i32) -> Result<Self, Self::Error> {
-        match value {
-            0 => Ok(Self::None),
-            1 => Ok(Self::EditAppearanceName),
-            4 => Ok(Self::EditAppearance),
-            _ => Err(()),
-        }
-    }
-}
-
 #[cfg(feature = "server")]
 impl rusqlite::types::FromSql for RemakeMode {
     fn column_result(value: rusqlite::types::ValueRef<'_>) -> rusqlite::types::FromSqlResult<Self> {
-        Ok(Self::try_from(i32::column_result(value)?).unwrap())
+        Ok(Self::from_repr(i32::column_result(value)?).unwrap())
     }
 }
 
@@ -115,7 +103,7 @@ impl ClientSelectData {
                 .iter()
                 .map(|x| x.as_str().unwrap().parse::<u32>().unwrap_or_default())
                 .collect(),
-            remake_mode: RemakeMode::try_from(
+            remake_mode: RemakeMode::from_repr(
                 content[19].as_str().unwrap().parse::<i32>().unwrap(),
             )
             .unwrap(),

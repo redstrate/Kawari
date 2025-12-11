@@ -31,6 +31,7 @@ use icarus::World::WorldSheet;
 use icarus::{Tribe::TribeSheet, Warp::WarpSheet};
 use physis::common::{Language, Platform};
 use physis::resource::{Resource, ResourceResolver, SqPackResource, UnpackedResource};
+use strum_macros::FromRepr;
 
 use crate::{common::Attributes, config::get_config};
 
@@ -135,7 +136,8 @@ pub enum ItemInfoQuery {
 
 // From FFXIVClientStructs
 // This is actually indexes of InstanceContentType, but we want nice names.
-#[derive(Debug)]
+#[derive(Debug, FromRepr)]
+#[repr(u8)]
 pub enum InstanceContentType {
     Raid = 1,
     Dungeon = 2,
@@ -157,36 +159,6 @@ pub enum InstanceContentType {
     TripleTriad = 18,
     VariantDungeon = 19,
     CriterionDungeon = 20,
-}
-
-impl TryFrom<u8> for InstanceContentType {
-    type Error = ();
-
-    fn try_from(value: u8) -> Result<Self, Self::Error> {
-        match value {
-            1 => Ok(Self::Raid),
-            2 => Ok(Self::Dungeon),
-            3 => Ok(Self::Guildhests),
-            4 => Ok(Self::Trial),
-            5 => Ok(Self::CrystallineConflict),
-            6 => Ok(Self::Frontlines),
-            7 => Ok(Self::QuestBattle),
-            8 => Ok(Self::BeginnerTraining),
-            9 => Ok(Self::DeepDungeon),
-            10 => Ok(Self::TreasureHuntDungeon),
-            11 => Ok(Self::SeasonalDungeon),
-            12 => Ok(Self::RivalWing),
-            13 => Ok(Self::MaskedCarnivale),
-            14 => Ok(Self::Mahjong),
-            15 => Ok(Self::GoldSaucer),
-            16 => Ok(Self::OceanFishing),
-            17 => Ok(Self::UnrealTrial),
-            18 => Ok(Self::TripleTriad),
-            19 => Ok(Self::VariantDungeon),
-            20 => Ok(Self::CriterionDungeon),
-            _ => Err(()),
-        }
-    }
 }
 
 impl GameData {
@@ -625,12 +597,12 @@ impl GameData {
             InstanceContentSheet::read_from(&mut self.resource, Language::None).unwrap();
         let instance_content_row = instance_content_sheet.get_row(content_id as u32)?;
 
-        instance_content_row
-            .InstanceContentType()
-            .into_u8()
-            .copied()?
-            .try_into()
-            .ok()
+        InstanceContentType::from_repr(
+            instance_content_row
+                .InstanceContentType()
+                .into_u8()
+                .copied()?,
+        )
     }
 
     /// Gets the order of the mount.

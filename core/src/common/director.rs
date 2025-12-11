@@ -46,14 +46,6 @@ impl mlua::IntoLua for DirectorType {
     }
 }
 
-impl TryFrom<u32> for DirectorType {
-    type Error = ();
-
-    fn try_from(value: u32) -> Result<Self, Self::Error> {
-        Self::from_repr(value).ok_or(())
-    }
-}
-
 #[binrw]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum DirectorEvent {

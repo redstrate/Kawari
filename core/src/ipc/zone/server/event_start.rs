@@ -1,11 +1,12 @@
 use binrw::binrw;
-use strum_macros::{Display, EnumIter};
+use strum_macros::{Display, EnumIter, FromRepr};
 
 use crate::common::ObjectTypeId;
 
 #[binrw]
 #[brw(repr = u8)]
-#[derive(Debug, Clone, Copy, Default, PartialEq, Display, EnumIter)]
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Display, EnumIter, FromRepr)]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 pub enum EventType {
     /// Used when talking to NPCs.
@@ -18,17 +19,6 @@ pub enum EventType {
     OutsideRange = 11,
     /// Unknown?
     EnterTerritory = 15,
-}
-
-impl From<u8> for EventType {
-    fn from(value: u8) -> Self {
-        match value {
-            1 => Self::Talk,
-            7 => Self::Nest,
-            15 => Self::EnterTerritory,
-            _ => unreachable!(),
-        }
-    }
 }
 
 #[cfg(feature = "server")]

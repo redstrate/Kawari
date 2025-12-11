@@ -1,5 +1,5 @@
 use binrw::binrw;
-use strum_macros::{Display, EnumIter};
+use strum_macros::{Display, EnumIter, FromRepr};
 
 use crate::common::{
     CHAR_NAME_MAX_LENGTH, CustomizeData, EquipDisplayFlag, ObjectId, ObjectTypeId, Position,
@@ -91,7 +91,8 @@ pub enum CharacterMode {
 #[binrw]
 #[brw(little)]
 #[brw(repr = u8)]
-#[derive(Debug, Clone, Copy, Default, PartialEq, Display, EnumIter)]
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Display, EnumIter, FromRepr)]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 pub enum GameMasterRank {
     #[default]
@@ -107,7 +108,7 @@ pub enum GameMasterRank {
 #[cfg(feature = "server")]
 impl rusqlite::types::FromSql for GameMasterRank {
     fn column_result(value: rusqlite::types::ValueRef<'_>) -> rusqlite::types::FromSqlResult<Self> {
-        Ok(Self::try_from(u8::column_result(value)?).unwrap())
+        Ok(Self::from_repr(u8::column_result(value)?).unwrap())
     }
 }
 
@@ -115,23 +116,6 @@ impl rusqlite::types::FromSql for GameMasterRank {
 impl mlua::IntoLua for GameMasterRank {
     fn into_lua(self, _: &mlua::Lua) -> mlua::Result<mlua::Value> {
         Ok(mlua::Value::Integer(self as i64))
-    }
-}
-
-impl TryFrom<u8> for GameMasterRank {
-    type Error = ();
-
-    fn try_from(value: u8) -> Result<Self, Self::Error> {
-        match value {
-            0 => Ok(Self::NormalUser),
-            1 => Ok(Self::GameMaster),
-            3 => Ok(Self::EventJunior),
-            4 => Ok(Self::EventSenior),
-            5 => Ok(Self::Support),
-            7 => Ok(Self::Senior),
-            90 => Ok(Self::Debug),
-            _ => Err(()),
-        }
     }
 }
 

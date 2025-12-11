@@ -305,14 +305,6 @@ impl mlua::IntoLua for EventHandlerType {
     }
 }
 
-impl TryFrom<u32> for EventHandlerType {
-    type Error = ();
-
-    fn try_from(value: u32) -> Result<Self, Self::Error> {
-        Self::from_repr(value).ok_or(())
-    }
-}
-
 /// Which language the client indicates as its primary language.
 /// Not to be confused with physis::common::Language.
 #[binrw]
@@ -425,7 +417,7 @@ pub enum ContainerType {
 }
 
 #[binrw]
-#[derive(Debug, Clone, Default, Copy, PartialEq)]
+#[derive(Debug, Clone, Default, Copy, PartialEq, FromRepr)]
 #[brw(repr = u32)]
 #[repr(u32)]
 pub enum ItemOperationKind {
@@ -448,20 +440,6 @@ pub enum ItemOperationKind {
     CombineStack = BASE_INVENTORY_ACTION + 11,
     /// The operation opcode/type when the server wants the client to equip the mannequin (character sheet/try on preview model?). Seen during login and probably elsewhere.
     EquipMannequin = BASE_INVENTORY_ACTION + 18,
-}
-
-impl TryFrom<u32> for ItemOperationKind {
-    type Error = ();
-    fn try_from(value: u32) -> Result<Self, Self::Error> {
-        match value {
-            x if x == ItemOperationKind::Discard as u32 => Ok(ItemOperationKind::Discard),
-            x if x == ItemOperationKind::Move as u32 => Ok(ItemOperationKind::Move),
-            x if x == ItemOperationKind::Exchange as u32 => Ok(ItemOperationKind::Exchange),
-            x if x == ItemOperationKind::SplitStack as u32 => Ok(ItemOperationKind::SplitStack),
-            x if x == ItemOperationKind::CombineStack as u32 => Ok(ItemOperationKind::CombineStack),
-            _ => Err(()),
-        }
-    }
 }
 
 // TODO: Where should this be moved to...?

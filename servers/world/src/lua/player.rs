@@ -793,7 +793,12 @@ impl UserData for LuaPlayer {
         methods.add_method_mut(
             "start_event",
             |_, this, (target, event_id, event_type, event_arg): (ObjectTypeId, u32, u8, u32)| {
-                this.start_event(target, event_id, event_type.into(), event_arg);
+                this.start_event(
+                    target,
+                    event_id,
+                    EventType::from_repr(event_type).unwrap(),
+                    event_arg,
+                );
                 Ok(())
             },
         );

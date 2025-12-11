@@ -1013,7 +1013,7 @@ async fn client_loop(
                                             }
                                             ClientZoneIpcData::EventReturnHandler4(handler) => {
                                                 let event_type = handler.handler_id >> 16;
-                                                let Ok(event_type) = EventHandlerType::try_from(event_type) else {
+                                                let Some(event_type) = EventHandlerType::from_repr(event_type) else {
                                                     tracing::warn!("Unknown event type: {event_type}!");
                                                     continue;
                                                 };
