@@ -22,7 +22,7 @@ use icarus::ParamGrow::ParamGrowSheet;
 use icarus::PlaceName::PlaceNameSheet;
 use icarus::PreHandler::PreHandlerSheet;
 use icarus::Quest::QuestSheet;
-use icarus::SwitchTalkVariation::SwitchTalkVariationSheet;
+use icarus::SwitchTalkVariation::{SwitchTalkVariationRow, SwitchTalkVariationSheet};
 use icarus::TerritoryType::TerritoryTypeSheet;
 use icarus::TopicSelect::TopicSelectSheet;
 use icarus::WarpLogic::WarpLogicSheet;
@@ -762,11 +762,13 @@ impl GameData {
     }
 
     /// Returns the target DefaultTalk event for a given SwitchTalk event.
-    pub fn get_switch_talk_target(&mut self, switch_talk_id: u32) -> Option<u32> {
+    pub fn get_switch_talk_row(
+        &mut self,
+        switch_talk_id: u32,
+        subrow_id: u16,
+    ) -> Option<SwitchTalkVariationRow> {
         let sheet = SwitchTalkVariationSheet::read_from(&mut self.resource, Language::None)?;
-        let row = sheet.get_subrow(switch_talk_id, 0)?;
-
-        Some(*row.DefaultTalk().into_u32()?)
+        sheet.get_subrow(switch_talk_id, subrow_id)
     }
 
     /// Returns the target Transform Row ID for a given selected NPC. (Only applicable to the Halloween Transform NPC.)
@@ -860,9 +862,6 @@ impl mlua::UserData for GameData {
         });
         methods.add_method_mut("get_pre_handler_target", |_, this, pre_handler_id: u32| {
             Ok(this.get_pre_handler_target(pre_handler_id))
-        });
-        methods.add_method_mut("get_switch_talk_target", |_, this, switch_talk_id: u32| {
-            Ok(this.get_switch_talk_target(switch_talk_id))
         });
         methods.add_method_mut("get_halloween_npc_transform", |_, this, npc_id: u32| {
             Ok(this.get_halloween_npc_transform(npc_id))

@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::common::value_to_flag_byte_index_value;
+use crate::common::{value_to_flag_byte_index_value, value_to_flag_byte_index_value_quests};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Bitmask<const N: usize>(pub Vec<u8>);
@@ -43,6 +43,52 @@ impl<const N: usize> Bitmask<N> {
     /// Checks if this `value` is set.
     pub fn contains(&self, value: u32) -> bool {
         let (value, index) = value_to_flag_byte_index_value(value);
+        (self.0[index as usize] & value) == value
+    }
+}
+
+// TODO: de-duplicate the two implementations, this is stupid
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct QuestBitmask<const N: usize>(pub Vec<u8>);
+
+impl<const N: usize> From<Vec<u8>> for QuestBitmask<N> {
+    fn from(value: Vec<u8>) -> Self {
+        Self(value)
+    }
+}
+
+impl<const N: usize> Default for QuestBitmask<N> {
+    fn default() -> Self {
+        Self(vec![0; N])
+    }
+}
+
+impl<const N: usize> QuestBitmask<N> {
+    /// Sets this specific `value`.
+    pub fn set(&mut self, value: u32) {
+        let (value, index) = value_to_flag_byte_index_value_quests(value);
+        self.0[index as usize] |= value;
+    }
+
+    /// Clears this specific `value`.
+    pub fn clear(&mut self, value: u32) {
+        let (value, index) = value_to_flag_byte_index_value_quests(value);
+        self.0[index as usize] &= !value;
+    }
+
+    /// Toggles the `value`, and if wasn't previously set then this returns true. Otherwise false.
+    pub fn toggle(&mut self, value: u32) -> bool {
+        let previously_unset = !self.contains(value);
+
+        let (value, index) = value_to_flag_byte_index_value_quests(value);
+        self.0[index as usize] ^= value;
+
+        previously_unset
+    }
+
+    /// Checks if this `value` is set.
+    pub fn contains(&self, value: u32) -> bool {
+        let (value, index) = value_to_flag_byte_index_value_quests(value);
         (self.0[index as usize] & value) == value
     }
 }

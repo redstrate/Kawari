@@ -124,8 +124,9 @@ pub enum ActorControlCategory {
         unlocked: bool,
     },
 
+    /// Unknown purpose, maybe positioning related?
     #[brw(magic = 138u32)]
-    EventRelatedUnk3 { event_id: u32 },
+    DisableEventPosRollback { event_id: u32 },
 
     #[brw(magic = 142u32)]
     SetPvpMoveMode { unk1: u32 },

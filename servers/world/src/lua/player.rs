@@ -1,4 +1,7 @@
+use std::sync::Arc;
+
 use mlua::{LuaSerdeExt, UserData, UserDataFields, UserDataMethods, Value};
+use parking_lot::Mutex;
 
 use crate::{
     EventFinishType, PlayerData, StatusEffects,
@@ -6,8 +9,8 @@ use crate::{
 };
 use kawari::{
     common::{
-        ContainerType, DirectorEvent, INVENTORY_ACTION_ACK_SHOP, LogMessageType, ObjectTypeId,
-        ObjectTypeKind, Position, workdefinitions::RemakeMode,
+        ContainerType, DirectorEvent, GameData, INVENTORY_ACTION_ACK_SHOP, LogMessageType,
+        ObjectTypeId, ObjectTypeKind, Position, workdefinitions::RemakeMode,
     },
     ipc::zone::{
         ActorControlCategory, ActorControlSelf, EventScene, EventType, SceneFlags,
@@ -331,7 +334,7 @@ impl LuaPlayer {
     ) {
         let packets_to_send = [
             ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
-                category: ActorControlCategory::EventRelatedUnk3 { event_id },
+                category: ActorControlCategory::DisableEventPosRollback { event_id },
             })),
             ServerZoneIpcSegment::new(ServerZoneIpcData::WalkInEvent {
                 path_id,
@@ -554,6 +557,61 @@ impl LuaPlayer {
             })),
             self.player_data.actor_id,
         );
+    }
+
+    /// Returns the target DefaultTalk event for a given SwitchTalk event.
+    /// This takes quest completion into account.
+    fn get_switch_talk_target(
+        &mut self,
+        game_data: mlua::Value,
+        switch_talk_id: u32,
+    ) -> Option<u32> {
+        let game_data = match game_data {
+            mlua::Value::UserData(ud) => ud.borrow::<Arc<Mutex<GameData>>>().unwrap().clone(),
+            _ => unreachable!(),
+        };
+
+        let mut game_data = game_data.lock();
+        // TODO: iterate through the actual number of subrows
+        for subrow_id in (0..16).rev() {
+            if let Some(row) = game_data.get_switch_talk_row(switch_talk_id, subrow_id) {
+                let quest0 = row
+                    .Quest0()
+                    .into_u32()
+                    .copied()
+                    .map(|x| x.saturating_sub(65536))
+                    .unwrap_or_default();
+                let quest1 = row
+                    .Quest1()
+                    .into_u32()
+                    .copied()
+                    .map(|x| x.saturating_sub(65536))
+                    .unwrap_or_default();
+
+                let should_check_quest0 = quest0 != 0;
+                let should_check_quest1 = quest1 != 0;
+
+                let quest0_completed = self.player_data.unlocks.completed_quests.contains(quest0);
+                let quest1_completed = self.player_data.unlocks.completed_quests.contains(quest1);
+
+                let quest0_passed = if should_check_quest0 {
+                    quest0_completed
+                } else {
+                    true
+                };
+                let quest1_passed = if should_check_quest1 {
+                    quest1_completed
+                } else {
+                    true
+                };
+
+                if quest0_passed && quest1_passed {
+                    return row.DefaultTalk().into_u32().copied();
+                }
+            }
+        }
+
+        None
     }
 }
 
@@ -912,6 +970,15 @@ impl UserData for LuaPlayer {
             this.commence_duty(director_id);
             Ok(())
         });
+        methods.add_method_mut(
+            "get_switch_talk_target",
+            |lua, this, switch_talk_target: u32| {
+                Ok(this.get_switch_talk_target(
+                    lua.globals().get("GAME_DATA").unwrap(),
+                    switch_talk_target,
+                ))
+            },
+        );
     }
 
     fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {

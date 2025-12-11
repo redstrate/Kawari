@@ -14,7 +14,7 @@ pub use gamedata::{InstanceContentType, ItemInfo, ItemInfoQuery, TerritoryNameKi
 pub mod workdefinitions;
 
 mod bitmask;
-pub use bitmask::Bitmask;
+pub use bitmask::{Bitmask, QuestBitmask};
 
 mod director;
 pub use director::{DirectorEvent, DirectorTrigger, DirectorType};

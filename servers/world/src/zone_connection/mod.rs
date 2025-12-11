@@ -8,7 +8,7 @@ use crate::lua::LuaTask;
 use kawari::{
     common::{
         Bitmask, ClientLanguage, EquipDisplayFlag, GameData, ObjectId, ObjectTypeId, Position,
-        timestamp_secs,
+        QuestBitmask, timestamp_secs,
     },
     config::WorldConfig,
     constants::{
@@ -65,8 +65,8 @@ pub struct UnlockData {
     pub unlocks: Bitmask<UNLOCK_BITMASK_SIZE>,
     #[serde(default = "Bitmask::default")]
     pub aetherytes: Bitmask<AETHERYTE_UNLOCK_BITMASK_SIZE>,
-    #[serde(default = "Bitmask::default")]
-    pub completed_quests: Bitmask<COMPLETED_QUEST_BITMASK_SIZE>,
+    #[serde(default = "QuestBitmask::default")]
+    pub completed_quests: QuestBitmask<COMPLETED_QUEST_BITMASK_SIZE>,
     #[serde(default = "Bitmask::default")]
     pub unlocked_raids: Bitmask<RAID_ARRAY_SIZE>,
     #[serde(default = "Bitmask::default")]

@@ -2,7 +2,6 @@
 
 use crate::{ZoneConnection, inventory::Storage, zone_connection::PersistentQuest};
 use kawari::{
-    common::value_to_flag_byte_index_value_quests,
     constants::COMPLETED_LEVEQUEST_BITMASK_SIZE,
     ipc::zone::{
         ActiveQuest, QuestActiveList, QuestTracker, ServerZoneIpcData, ServerZoneIpcSegment,
@@ -136,9 +135,7 @@ impl ZoneConnection {
         });
         self.send_ipc_self(ipc).await;
 
-        // TODO: unsure why quests are different, upstream this to Bitmask.
-        let (value, index) = value_to_flag_byte_index_value_quests(adjusted_id);
-        self.player_data.unlocks.completed_quests.0[index as usize] |= value;
+        self.player_data.unlocks.completed_quests.set(adjusted_id);
 
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::FinishQuest {
             quest_id: adjusted_id as u16,
