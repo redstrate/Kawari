@@ -108,7 +108,7 @@ pub enum ActorControlCategory {
         /// Content ID for this director. Can be 0xFFFF to indicate there should be an associated content ID.
         #[brw(pad_after = 2)] // padding
         content_id: u16,
-        /// Unknown purpose.
+        /// If set to 1, enables explorer mode. Probably does a lot more too!
         sequence: u32,
     },
 

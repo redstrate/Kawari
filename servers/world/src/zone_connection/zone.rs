@@ -220,7 +220,7 @@ impl ZoneConnection {
             };
 
             let director_id = ((director_type as u32) << 16) | content_id as u32;
-            let sequence = 1;
+            let sequence = 0;
 
             tracing::info!("Initializing director {director_id}...");
 
