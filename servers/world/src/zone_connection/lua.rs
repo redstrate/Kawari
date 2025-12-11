@@ -506,6 +506,9 @@ impl ZoneConnection {
                 } => {
                     self.gain_effect(*effect_id, *effect_param, *duration).await;
                 }
+                LuaTask::RegisterForContent { content_id } => {
+                    self.register_for_content([*content_id, 0, 0, 0, 0]).await;
+                }
             }
         }
         player.queued_tasks.clear();

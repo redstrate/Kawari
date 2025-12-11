@@ -355,4 +355,33 @@ impl ZoneConnection {
         )
         .await;
     }
+
+    pub async fn register_for_content(&mut self, content_ids: [u16; 5]) {
+        self.queued_content = Some(content_ids[0]);
+
+        // update
+        {
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ContentFinderUpdate {
+                state1: 1,
+                classjob_id: self.player_data.classjob_id, // TODO: store what they registered with, because it can change
+                unk1: [0, 0, 0, 0, 0, 0, 96, 4, 2, 64, 1, 0, 0, 0, 0, 0, 1, 1],
+                content_ids,
+                unk2: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            });
+            self.send_ipc_self(ipc).await;
+        }
+
+        // found
+        {
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ContentFinderFound {
+                unk1: [
+                    3, 0, 0, 0, 0, 0, 0, 0, 96, 4, 2, 64, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
+                    0, 0,
+                ],
+                content_id: content_ids[0],
+                unk2: [0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            });
+            self.send_ipc_self(ipc).await;
+        }
+    }
 }

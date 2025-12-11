@@ -42,10 +42,10 @@ impl ZoneConnection {
     pub async fn run_gm_command(
         &mut self,
         command: u32,
-        arg0: u32,
-        arg1: u32,
-        arg2: u32,
-        arg3: u32,
+        arg0: i32,
+        arg1: i32,
+        arg2: i32,
+        arg3: i32,
         lua_player: &mut LuaPlayer,
     ) {
         let lua = self.lua.lock();

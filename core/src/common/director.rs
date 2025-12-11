@@ -3,12 +3,16 @@
 use binrw::binrw;
 use strum_macros::{Display, EnumIter, FromRepr};
 
+use crate::common::TerritoryIntendedUse;
+
+/// Also refer to the DirectorType Excel sheet.
 #[repr(u32)]
 #[derive(Debug, Clone, Copy, PartialEq, Display, EnumIter, FromRepr)]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 pub enum DirectorType {
     BattleLeve = 0x8001,
     GatheringLeve = 0x8002,
+    /// Used for dungeons, including Deep Dungeons.
     InstanceContent = 0x8003,
     PublicContent = 0x8004,
     QuestBattle = 0x8006,
@@ -19,7 +23,20 @@ pub enum DirectorType {
     SkyIsland = 0x800C,
     DpsChallenge = 0x800D,
     MassivePcContent = 0x800E,
+    /// Used in open world zones that have FATEs.
     Fate = 0x801A,
+}
+
+impl DirectorType {
+    /// Determine the correct director for use in this zone.
+    pub fn from_intended_use(intended_use: TerritoryIntendedUse) -> Option<Self> {
+        match intended_use {
+            TerritoryIntendedUse::OpenWorld => Some(Self::Fate),
+            TerritoryIntendedUse::Dungeon => Some(Self::InstanceContent),
+            TerritoryIntendedUse::DeepDungeon => Some(Self::InstanceContent),
+            _ => None,
+        }
+    }
 }
 
 #[cfg(feature = "server")]

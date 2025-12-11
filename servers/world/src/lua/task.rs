@@ -167,4 +167,7 @@ pub enum LuaTask {
         effect_param: u16,
         duration: f32,
     },
+    RegisterForContent {
+        content_id: u16,
+    },
 }

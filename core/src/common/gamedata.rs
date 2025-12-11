@@ -598,16 +598,11 @@ impl GameData {
         self.get_item_info(ItemInfoQuery::ById(*item_id as u32))
     }
 
-    /// Gets the zone id for the given InstanceContent.
+    /// Gets the zone id for the given ContentFinderCondition ID.
     pub fn find_zone_for_content(&mut self, content_id: u16) -> Option<u16> {
-        let instance_content_sheet =
-            InstanceContentSheet::read_from(&mut self.resource, Language::None).unwrap();
-        let instance_content_row = instance_content_sheet.get_row(content_id as u32)?;
-
-        let content_finder_row_id = instance_content_row.ContentFinderCondition().into_u16()?;
         let content_finder_sheet =
             ContentFinderConditionSheet::read_from(&mut self.resource, Language::English).unwrap();
-        let content_finder_row = content_finder_sheet.get_row(*content_finder_row_id as u32)?;
+        let content_finder_row = content_finder_sheet.get_row(content_id as u32)?;
 
         content_finder_row.TerritoryType().into_u16().copied()
     }
@@ -842,6 +837,18 @@ impl GameData {
         let row = self.eobj_sheet.get_row(eobj_id).unwrap();
 
         row.PopType().into_u8().cloned().unwrap_or_default()
+    }
+
+    /// Returns the InstanceContent for a given ContentFinderCondition id.
+    pub fn find_content_for_content_finder_id(
+        &mut self,
+        content_finder_row_id: u16,
+    ) -> Option<u16> {
+        let content_finder_sheet =
+            ContentFinderConditionSheet::read_from(&mut self.resource, Language::English).unwrap();
+        let content_finder_row = content_finder_sheet.get_row(content_finder_row_id as u32)?;
+
+        content_finder_row.Content().into_u16().copied()
     }
 }
 

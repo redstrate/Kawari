@@ -4,7 +4,7 @@ use crate::{
     ObsfucationData, TeleportReason, ToServer, ZoneConnection, inventory::BuyBackList, lua::LuaZone,
 };
 use kawari::{
-    common::{Position, timestamp_secs},
+    common::{DirectorType, Position, TerritoryIntendedUse, timestamp_secs},
     config::get_config,
     constants::OBFUSCATION_ENABLED_MODE,
     ipc::zone::{
@@ -206,16 +206,29 @@ impl ZoneConnection {
 
         self.send_conditions().await;
 
-        if bound_by_duty {
-            let director_id = 2147680260;
+        // Initialize director as needed
+        if let Some(intended_use) = TerritoryIntendedUse::from_repr(lua_zone.intended_use)
+            && let Some(director_type) = DirectorType::from_intended_use(intended_use)
+        {
+            let content_id = if bound_by_duty {
+                let mut game_data = self.gamedata.lock();
+                game_data
+                    .find_content_for_content_finder_id(content_finder_condition_id)
+                    .unwrap()
+            } else {
+                0xFF
+            };
+
+            let director_id = ((director_type as u32) << 16) | content_id as u32;
             let sequence = 1;
 
+            tracing::info!("Initializing director {director_id}...");
+
             // Initialize the content director
-            // TODO: don't hardcode to satasha lol
             self.actor_control_self(ActorControlSelf {
                 category: ActorControlCategory::InitDirector {
                     director_id,
-                    context_id: 4,
+                    content_id,
                     sequence,
                 },
             })

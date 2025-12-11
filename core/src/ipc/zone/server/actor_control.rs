@@ -103,8 +103,12 @@ pub enum ActorControlCategory {
 
     #[brw(magic = 100u32)]
     InitDirector {
+        /// The director to intiailize.
         director_id: u32,
-        context_id: u32,
+        /// Content ID for this director. Can be 0xFFFF to indicate there should be an associated content ID.
+        #[brw(pad_after = 2)] // padding
+        content_id: u16,
+        /// Unknown purpose.
         sequence: u32,
     },
 

@@ -613,6 +613,11 @@ impl LuaPlayer {
 
         None
     }
+
+    fn register_for_content(&mut self, content_id: u16) {
+        self.queued_tasks
+            .push(LuaTask::RegisterForContent { content_id });
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -979,6 +984,10 @@ impl UserData for LuaPlayer {
                 ))
             },
         );
+        methods.add_method_mut("register_for_content", |_, this, content_id: u16| {
+            this.register_for_content(content_id);
+            Ok(())
+        });
     }
 
     fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {

@@ -100,10 +100,10 @@ pub enum ClientZoneIpcData {
     SendChatMessage(SendChatMessage),
     GMCommand {
         command: u32,
-        arg0: u32,
-        arg1: u32,
-        arg2: u32,
-        arg3: u32,
+        arg0: i32,
+        arg1: i32,
+        arg2: i32,
+        arg3: i32,
         #[brw(pad_after = 4)]
         target: u64,
     },
@@ -222,10 +222,10 @@ pub enum ClientZoneIpcData {
     },
     GMCommandName {
         command: u32,
-        arg0: u32,
-        arg1: u32,
-        arg2: u32,
-        arg3: u32,
+        arg0: i32,
+        arg1: i32,
+        arg2: i32,
+        arg3: i32,
         #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
         #[br(count = CHAR_NAME_MAX_LENGTH)]
         #[br(map = read_string)]
