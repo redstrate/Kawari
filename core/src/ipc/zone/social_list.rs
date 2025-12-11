@@ -29,7 +29,7 @@ pub struct SocialListRequest {
 /// These are set by the client in the Edit Search Info menu (the Content Finder's seem to be used exclusively for grouping preferences?), but by default the primary language will be enabled.
 /// Not to be confused with physis::common::Language.
 #[binrw]
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Eq, PartialEq)]
 pub struct SocialListUILanguages(u8);
 
 bitflags! {
@@ -44,6 +44,12 @@ bitflags! {
 impl Default for SocialListUILanguages {
     fn default() -> Self {
         SocialListUILanguages::JAPANESE
+    }
+}
+
+impl std::fmt::Debug for SocialListUILanguages {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        bitflags::parser::to_writer(self, f)
     }
 }
 

@@ -13,8 +13,9 @@ use kawari_world::inventory::{Item, Storage, get_next_free_slot};
 use kawari::ipc::chat::{ChatChannel, ClientChatIpcData};
 
 use kawari::ipc::zone::{
-    ActorControl, ActorControlCategory, ActorControlSelf, Condition, Conditions, EventType,
-    InviteType, OnlineStatus, OnlineStatusMask, PlayerSpawn, PlayerStatus, SearchInfo,
+    ActorControl, ActorControlCategory, ActorControlSelf, Condition, Conditions,
+    ContentFinderUserAction, EventType, InviteType, OnlineStatus, OnlineStatusMask, PlayerSpawn,
+    PlayerStatus, SearchInfo,
 };
 
 use kawari::ipc::zone::{
@@ -1103,41 +1104,48 @@ async fn client_loop(
 
                                                 connection.register_for_content(*content_ids).await;
                                             }
-                                            ClientZoneIpcData::ContentFinderAction { .. } => {
-                                                // commencing
-                                                {
-                                                    let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ContentFinderCommencing {
-                                                        unk1: [
-                                                            4,
-                                                            0,
-                                                            0,
-                                                            0,
-                                                            1,
-                                                            0,
-                                                            0,
-                                                            0,
-                                                            4,
-                                                            0,
-                                                            0,
-                                                            0,
-                                                            0,
-                                                            0,
-                                                            0,
-                                                            0,
-                                                            0,
-                                                            0,
-                                                            1,
-                                                            1,
-                                                            0,
-                                                            0,
-                                                            0,
-                                                            0,
-                                                        ],
-                                                    });
-                                                    connection.send_ipc_self(ipc).await;
+                                            ClientZoneIpcData::ContentFinderAction { action, .. } => {
+                                                if *action == ContentFinderUserAction::Accepted {
+                                                    // commencing
+                                                    {
+                                                        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ContentFinderCommencing {
+                                                            unk1: [
+                                                                4,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                1,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                4,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                1,
+                                                                1,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                                0,
+                                                            ],
+                                                        });
+                                                        connection.send_ipc_self(ipc).await;
+                                                    }
+
+                                                    connection.handle.send(ToServer::JoinContent(connection.id, connection.player_data.actor_id, connection.queued_content.unwrap())).await;
                                                 }
 
-                                                connection.handle.send(ToServer::JoinContent(connection.id, connection.player_data.actor_id, connection.queued_content.unwrap())).await;
+                                                // If we don't send this, the content finder gets stuck.
+                                                // TODO: this may be screwing up the in-duty menu, probably need to fill it with data!
+                                                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UnkContentFinder { unk: [0; 16] });
+                                                connection.send_ipc_self(ipc).await;
 
                                                 connection.queued_content = None;
                                             }

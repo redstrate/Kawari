@@ -19,7 +19,7 @@ pub use crate::ipc::zone::client::item_operation::ItemOperation;
 mod event_return_handler;
 pub use crate::ipc::zone::client::event_return_handler::EventReturnHandler;
 
-use crate::ipc::zone::{InviteReply, InviteType, SearchInfo};
+use crate::ipc::zone::{InviteReply, InviteType, SearchInfo, SocialListUILanguages};
 
 use crate::ipc::zone::black_list::RequestBlacklist;
 
@@ -35,6 +35,18 @@ use crate::packet::ServerIpcSegmentHeader;
 
 use crate::common::{ContainerType, ObjectTypeId};
 use crate::packet::IpcSegment;
+
+#[binrw]
+#[brw(repr = u8)]
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum ContentFinderUserAction {
+    /// Accepted the duty.
+    Accepted = 0,
+    /// Withdrawn from the duty.
+    Withdrawn = 1,
+    /// Let the duty announcement time out.
+    Timeout = 2,
+}
 
 pub type ClientZoneIpcSegment =
     IpcSegment<ServerIpcSegmentHeader<ClientZoneIpcType>, ClientZoneIpcType, ClientZoneIpcData>;
@@ -167,14 +179,16 @@ pub enum ClientZoneIpcData {
     },
     ContentFinderRegister {
         unk1: [u8; 8],
-        flags: u32,
+        unk7: u32,
         unk2: [u8; 4],
-        language_flags: u8, // TODO: turn this into a readable bitflag
+        /// Selected languages to match with.
+        selected_languages: SocialListUILanguages,
         unk3: u8,
-        classjob_id: u8,
+        unk6: u8,
         unk4: [u8; 7],
-        #[brw(pad_after = 4)] // seems to empty
+        /// List of Content Finder Condition IDs the player signed up for.
         content_ids: [u16; 5],
+        unk5: [u8; 4],
     },
     EquipGearset {
         /// Index into the list of gearsets that the client keeps on its side.
@@ -214,7 +228,8 @@ pub enum ClientZoneIpcData {
         pos: Position,
     },
     ContentFinderAction {
-        unk1: [u8; 8],
+        action: ContentFinderUserAction,
+        unk1: [u8; 7],
     },
     NewDiscovery {
         layout_id: u32,
@@ -440,13 +455,14 @@ mod tests {
             ClientZoneIpcData::UnkCall2 { unk1: [0; 8] },
             ClientZoneIpcData::ContentFinderRegister {
                 unk1: [0; 8],
-                flags: 0,
+                unk7: 0,
                 unk2: [0; 4],
-                language_flags: 0,
+                selected_languages: SocialListUILanguages::default(),
                 unk3: 0,
-                classjob_id: 0,
+                unk6: 0,
                 unk4: [0; 7],
                 content_ids: [0; 5],
+                unk5: [0; 4],
             },
             ClientZoneIpcData::EquipGearset {
                 gearset_index: 0,
@@ -472,7 +488,10 @@ mod tests {
                     z: 0.0,
                 },
             },
-            ClientZoneIpcData::ContentFinderAction { unk1: [0; 8] },
+            ClientZoneIpcData::ContentFinderAction {
+                action: ContentFinderUserAction::Accepted,
+                unk1: [0; 7],
+            },
             ClientZoneIpcData::NewDiscovery {
                 layout_id: 0,
                 pos: Position {

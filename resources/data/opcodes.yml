@@ -463,6 +463,10 @@ ServerZoneIpcType:
     comment: Sent to the client when opening the Gold Saucer window.
     opcode: 128
     size: 40
+  - name: UnkContentFinder
+    comment: Unknown purpose, but it clears the currently operating content finder.
+    opcode: 866
+    size: 16
 ClientZoneIpcType:
   - name: InitRequest
     comment: >-
