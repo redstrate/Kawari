@@ -1,5 +1,7 @@
 //! Useful game types should be kept here. Functions should probably not.
 
+use std::collections::HashMap;
+
 use binrw::binrw;
 use bitflags::bitflags;
 use strum_macros::{Display, EnumIter, FromRepr};
@@ -552,4 +554,76 @@ pub enum TerritoryIntendedUse {
     /// Occult Crescent zones.
     OccultCrescent = 61,
     Unk22 = 62,
+}
+
+// From FFXIVClientStructs
+// This is actually indexes of InstanceContentType, but we want nice names.
+#[derive(Debug, FromRepr)]
+#[repr(u8)]
+pub enum InstanceContentType {
+    Raid = 1,
+    Dungeon = 2,
+    Guildhests = 3,
+    Trial = 4,
+    CrystallineConflict = 5,
+    Frontlines = 6,
+    QuestBattle = 7,
+    BeginnerTraining = 8,
+    DeepDungeon = 9,
+    TreasureHuntDungeon = 10,
+    SeasonalDungeon = 11,
+    RivalWing = 12,
+    MaskedCarnivale = 13,
+    Mahjong = 14,
+    GoldSaucer = 15,
+    OceanFishing = 16,
+    UnrealTrial = 17,
+    TripleTriad = 18,
+    VariantDungeon = 19,
+    CriterionDungeon = 20,
+}
+
+// TODO: see if this can be extrapolated from game data
+const AETHER_CURRENT_COMP_FLG_SET_TO_SCREENIMAGE: [(u32, u32); 31] = [
+    // HW
+    (1, 328), // Coerthas Western Highlands
+    (2, 329), // The Dravanian Forelands
+    (3, 330), // The Dravanian Hinterlands
+    (4, 331), // The Churning Mists
+    (5, 332), // The Sea of Clouds
+    (6, 333), // Azys Lla
+    // StB
+    (7, 511),  // The Fringes
+    (8, 514),  // The Ruby Sea
+    (9, 512),  // The Peaks
+    (10, 515), // Yanxia
+    (11, 513), // The Lochs
+    (12, 516), // The Azim Steppe
+    // ShB
+    (13, 762), // Lakeland
+    (14, 763), // Amh Araeng
+    (15, 764), // Il Mheg
+    (16, 765), // Kholusia
+    (17, 766), // The Rak'tika Greatwood
+    (18, 767), // The Tempest
+    // TODO: maybe Mor Dhona's ScreenImage is the "Flying Unlocked" seen at the end of "The Ultimate Weapon" (end of ARR MSQ)? Need a confirmation.
+    (19, 0), // Mor Dhona
+    // EW
+    (20, 1016), // Labyrinthos
+    (21, 1017), // Thavnair
+    (22, 1018), // Garlemald
+    (23, 1019), // Mare Lamentorum
+    (24, 1021), // Elpis
+    (25, 1020), // Ultima Thule
+    // DT
+    (26, 1269), // Urqopacha
+    (27, 1270), // Kozama'uka
+    (28, 1271), // Yak T'el
+    (29, 1272), // Shaaloani
+    (30, 1273), // Heritage Found
+    (31, 1274), // Living Memory
+];
+
+pub fn get_aether_current_comp_flg_set_to_screenimage() -> HashMap<u32, u32> {
+    HashMap::from(AETHER_CURRENT_COMP_FLG_SET_TO_SCREENIMAGE)
 }
