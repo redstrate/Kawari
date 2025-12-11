@@ -145,6 +145,11 @@ pub struct BasicCharacterData {
     pub name: String,
 }
 
+/// Turns a Quest row ID into a "normal" one. For example: 65537 to 1.
+pub fn adjust_quest_id(quest_id: u32) -> u32 {
+    quest_id.saturating_sub(65536)
+}
+
 #[macro_export]
 macro_rules! web_static_dir {
     ($rel_path:literal) => {

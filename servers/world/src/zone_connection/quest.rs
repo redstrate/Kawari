@@ -2,6 +2,7 @@
 
 use crate::{ZoneConnection, inventory::Storage, zone_connection::PersistentQuest};
 use kawari::{
+    common::adjust_quest_id,
     constants::COMPLETED_LEVEQUEST_BITMASK_SIZE,
     ipc::zone::{
         ActiveQuest, QuestActiveList, QuestTracker, ServerZoneIpcData, ServerZoneIpcSegment,
@@ -72,7 +73,7 @@ impl ZoneConnection {
     }
 
     pub async fn accept_quest(&mut self, id: u32) {
-        let adjusted_id = id - 65536;
+        let adjusted_id = adjust_quest_id(id);
 
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::AcceptQuest {
             quest_id: adjusted_id,
@@ -101,7 +102,7 @@ impl ZoneConnection {
     }
 
     pub async fn finish_quest(&mut self, id: u32) {
-        let adjusted_id = id - 65536;
+        let adjusted_id = adjust_quest_id(65536);
 
         // Remove it from our internal data model
         if let Some(index) = self

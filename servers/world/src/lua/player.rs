@@ -10,7 +10,7 @@ use crate::{
 use kawari::{
     common::{
         ContainerType, DirectorEvent, GameData, INVENTORY_ACTION_ACK_SHOP, LogMessageType,
-        ObjectTypeId, ObjectTypeKind, Position, workdefinitions::RemakeMode,
+        ObjectTypeId, ObjectTypeKind, Position, adjust_quest_id, workdefinitions::RemakeMode,
     },
     ipc::zone::{
         ActorControlCategory, ActorControlSelf, EventScene, EventType, SceneFlags,
@@ -579,13 +579,13 @@ impl LuaPlayer {
                     .Quest0()
                     .into_u32()
                     .copied()
-                    .map(|x| x.saturating_sub(65536))
+                    .map(adjust_quest_id)
                     .unwrap_or_default();
                 let quest1 = row
                     .Quest1()
                     .into_u32()
                     .copied()
-                    .map(|x| x.saturating_sub(65536))
+                    .map(adjust_quest_id)
                     .unwrap_or_default();
 
                 let should_check_quest0 = quest0 != 0;
