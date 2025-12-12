@@ -339,9 +339,19 @@ impl Zone {
                             continue;
                         }
 
+                        let unselectable = if let Some(event_type) = EventHandlerType::from_repr(
+                            game_data.get_eobj_data(eobj.parent_data.base_id) >> 16,
+                        ) {
+                            // Unsure if excluding certain types is the way to go, but let's see.
+                            matches!(event_type, EventHandlerType::GimmickRect)
+                        } else {
+                            false // don't make selectable to be on the safe side.
+                        };
+
                         object_spawns.push(ObjectSpawn {
                             kind: 7, // ObjectKind::EventObj
                             base_id: eobj.parent_data.base_id,
+                            unselectable,
                             entity_id: ObjectId(fastrand::u32(..)),
                             layout_id: object.instance_id,
                             bind_layout_id: eobj.bound_instance_id,

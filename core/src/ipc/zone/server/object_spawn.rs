@@ -1,6 +1,9 @@
 use binrw::binrw;
 
-use crate::common::{ObjectId, Position, read_quantized_rotation, write_quantized_rotation};
+use crate::common::{
+    ObjectId, Position, read_bool_from, read_quantized_rotation, write_bool_as,
+    write_quantized_rotation,
+};
 use serde::Deserialize;
 
 // TODO: this is all kinds of wrong, take the fields with a grain of salt
@@ -13,7 +16,9 @@ pub struct ObjectSpawn {
     pub kind: u8,
     /// Seems to control whether or not its targetable?
     #[brw(pad_after = 1)]
-    pub flag: u8,
+    #[br(map = read_bool_from::<u8>)]
+    #[bw(map = write_bool_as::<u8>)]
+    pub unselectable: bool,
     /// If this is an ENPC, represents an index into the EObj Excel sheet.
     /// If this is an AreaObject, represents an index into the VFX Excel sheet.
     pub base_id: u32,
