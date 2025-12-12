@@ -12,7 +12,14 @@ async fn start_server(name: &str) {
 
     dir.push(format!("{name}{}", extension));
 
+    let library_path = if let Ok(_) = std::env::var("CARGO") {
+        "./oodle"
+    } else {
+        "."
+    };
+
     Command::new(dir)
+        .env("LD_LIBRARY_PATH", library_path) // ensure we find the oodle .so at the right location
         .stdout(Stdio::inherit())
         .spawn()
         .expect("Failed to run server")
