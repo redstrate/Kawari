@@ -11,6 +11,7 @@ use icarus::EObj::EObjSheet;
 use icarus::EquipSlotCategory::EquipSlotCategorySheet;
 use icarus::FateShop::FateShopSheet;
 use icarus::GilShopItem::GilShopItemSheet;
+use icarus::GimmickRect::GimmickRectSheet;
 use icarus::HalloweenNpcSelect::HalloweenNpcSelectSheet;
 use icarus::InstanceContent::InstanceContentSheet;
 use icarus::Item::ItemSheet;
@@ -88,6 +89,14 @@ pub struct ItemInfo {
 pub enum ItemInfoQuery {
     ById(u32),
     ByName(String),
+}
+
+#[derive(Debug)]
+pub struct GimmickRectInfo {
+    pub layout_id: u32,
+    pub params: [u32; 8],
+    pub trigger_in: u8,
+    pub trigger_out: u8,
 }
 
 impl GameData {
@@ -750,6 +759,35 @@ impl GameData {
         let content_finder_row = content_finder_sheet.get_row(content_finder_row_id as u32)?;
 
         content_finder_row.Content().into_u16().copied()
+    }
+
+    /// Returns information about a specific GimmickRect.
+    pub fn get_gimmick_rect_info(&mut self, gimmick_rect_id: u32) -> Option<GimmickRectInfo> {
+        let sheet = GimmickRectSheet::read_from(&mut self.resource, Language::None).unwrap();
+        let row = sheet.get_row(gimmick_rect_id)?;
+
+        Some(GimmickRectInfo {
+            layout_id: row.LayoutID().into_u32().copied()?,
+            params: [
+                row.Param0().into_u32().copied()?,
+                row.Unknown0().into_u32().copied()?,
+                row.Unknown1().into_u32().copied()?,
+                row.Unknown2().into_u32().copied()?,
+                row.Param1().into_u32().copied()?,
+                row.Unknown3().into_u32().copied()?,
+                row.Unknown4().into_u32().copied()?,
+                row.Unknown5().into_u32().copied()?,
+            ],
+            trigger_in: row.TriggerIn().into_u8().copied()?,
+            trigger_out: row.TriggerOut().into_u8().copied()?,
+        })
+    }
+
+    /// Returns the data associated with this EObj.
+    pub fn get_eobj_data(&mut self, eobj_id: u32) -> u32 {
+        let row = self.eobj_sheet.get_row(eobj_id).unwrap();
+
+        row.Data().into_u32().cloned().unwrap_or_default()
     }
 }
 

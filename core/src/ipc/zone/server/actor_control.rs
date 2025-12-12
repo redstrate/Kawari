@@ -2,14 +2,15 @@ use binrw::binrw;
 use strum_macros::IntoStaticStr;
 
 use crate::common::{
-    DirectorEvent, EquipDisplayFlag, ObjectId, ObjectTypeId, read_bool_from, write_bool_as,
+    DirectorEvent, EquipDisplayFlag, ObjectId, ObjectTypeId, read_bool_from, read_packed_float,
+    write_bool_as, write_packed_float,
 };
 use crate::ipc::zone::common_emote::CommonEmoteInfo;
 use crate::ipc::zone::online_status::OnlineStatus;
 
 // See https://github.com/awgil/ffxiv_reverse/blob/f35b6226c1478234ca2b7149f82d251cffca2f56/vnetlog/vnetlog/ServerIPC.cs#L266 for a REALLY useful list of known values
 #[binrw]
-#[derive(Debug, Eq, PartialEq, Clone, IntoStaticStr)]
+#[derive(Debug, PartialEq, Clone, IntoStaticStr)]
 pub enum ActorControlCategory {
     #[brw(magic = 0u32)]
     ToggleWeapon {
@@ -188,6 +189,27 @@ pub enum ActorControlCategory {
         aetheryte_id: u32,
     },
 
+    /// Used for things like the water pads in Gold Saucer.
+    #[brw(magic = 220u32)]
+    ExecuteGimmickJump {
+        /// Y position to land on.
+        #[br(map = read_packed_float)]
+        #[bw(map = write_packed_float)]
+        landing_position_y: f32,
+        /// X position to land on.
+        #[br(map = read_packed_float)]
+        #[bw(map = write_packed_float)]
+        landing_position_x: f32,
+        /// Z position to land on.
+        #[br(map = read_packed_float)]
+        #[bw(map = write_packed_float)]
+        #[brw(pad_after = 2)] // empty
+        landing_position_z: f32,
+        /// Index into the GimmickJump Excel sheet.
+        gimmick_jump_type: u32,
+        unk1: u32,
+    },
+
     #[brw(magic = 236u32)]
     WalkInTriggerRelatedUnk3 { unk1: u32 },
 
@@ -252,6 +274,10 @@ pub enum ActorControlCategory {
         /// Max number of held currency.
         max_count: u32,
     },
+
+    /// Plays an animation for a SharedGroup object.
+    #[brw(magic = 410u32)]
+    PlaySharedGroupTimeline { timeline_id: u32 },
 
     #[brw(magic = 504u32)]
     SetStatusIcon { icon: OnlineStatus },

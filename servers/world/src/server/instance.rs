@@ -152,6 +152,7 @@ impl Instance {
                 teleport_query: TeleportQuery::default(),
                 distance_range: DistanceRange::Normal,
                 conditions: Conditions::default(),
+                executing_gimmick_jump: false,
             },
         );
     }
@@ -197,5 +198,18 @@ impl Instance {
             QueuedTaskData::CastAction { .. } => cancel_action(network.clone(), task.from_id),
             QueuedTaskData::LoseStatusEffect { .. } => {} // Nothing needs to happen for status effects
         }
+    }
+
+    /// Returns the actor ID (if any) of the spawned EObj by it's instance ID in the layout.
+    pub fn find_object(&self, layout_id: u32) -> Option<ObjectId> {
+        for (id, actor) in &self.actors {
+            if let NetworkedActor::Object { object } = actor
+                && object.layout_id == layout_id
+            {
+                return Some(*id);
+            }
+        }
+
+        None
     }
 }

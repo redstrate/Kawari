@@ -206,7 +206,7 @@ pub enum EventHandlerType {
     GimmickAccessor = 15,
     /// Unknown purpose.
     GimmickBill = 16,
-    /// Unknown purpose.
+    /// See GimmickRect Excel sheet (event_id & 0xFFF.)
     GimmickRect = 17,
     /// See ChocoboTaxiStand Excel sheet.
     ChocoboTaxiStand = 18,

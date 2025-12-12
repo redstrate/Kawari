@@ -114,6 +114,12 @@ pub enum ClientTriggerCommand {
     #[brw(magic = 506u32)]
     ReapplyPose { unk1: u32, pose: u32 },
 
+    #[brw(magic = 602u32)]
+    GimmickJumpLanded {
+        /// Index into the GimmickJump Excel sheet.
+        gimmick_jump_type: u32,
+    },
+
     #[brw(magic = 606u32)]
     WalkInTriggerFinished { unk1: u32 },
 

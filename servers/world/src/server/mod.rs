@@ -21,7 +21,7 @@ use crate::{
         instance::{Instance, NavmeshGenerationStep, QueuedTaskData},
         network::{DestinationNetwork, NetworkState},
         social::handle_social_messages,
-        zone::{change_zone_warp_to_entrance, handle_zone_messages},
+        zone::{MapGimmick, change_zone_warp_to_entrance, handle_zone_messages},
     },
 };
 use kawari::{
@@ -307,10 +307,17 @@ fn server_logic_tick(data: &mut WorldServer, network: &mut NetworkState) {
                 }
             }
 
+            let mut actors_now_gimmick_jumping = Vec::new();
+
             // Recalculate distance ranges
             for (id, actor) in &instance.actors {
                 // Only check players
-                let NetworkedActor::Player { conditions, .. } = actor else {
+                let NetworkedActor::Player {
+                    conditions,
+                    executing_gimmick_jump,
+                    ..
+                } = actor
+                else {
                     continue;
                 };
 
@@ -322,6 +329,55 @@ fn server_logic_tick(data: &mut WorldServer, network: &mut NetworkState) {
                 // Check for overlapping map ranges
                 let overlapping_ranges = instance.zone.get_overlapping_map_ranges(actor.position());
                 let _in_sanctuary = overlapping_ranges.iter().filter(|x| x.sanctuary).count() > 0;
+
+                // Process gimmicks
+                if !executing_gimmick_jump {
+                    for range in &overlapping_ranges {
+                        if let Some(gimmick) = &range.gimmick {
+                            match gimmick {
+                                MapGimmick::Jump {
+                                    to_position,
+                                    gimmick_jump_type,
+                                    sgb_animation_id,
+                                    eobj_instance_id,
+                                } => {
+                                    // Tell the client to execute the gimmick jump
+                                    let msg = FromServer::ActorControlSelf(ActorControlSelf {
+                                        category: ActorControlCategory::ExecuteGimmickJump {
+                                            landing_position_x: to_position.x,
+                                            landing_position_y: to_position.y,
+                                            landing_position_z: to_position.z,
+                                            gimmick_jump_type: *gimmick_jump_type,
+                                            unk1: 0,
+                                        },
+                                    });
+                                    actors_now_gimmick_jumping.push(*id);
+                                    if handle.send(msg).is_err() {
+                                        // TODO: remove as needed
+                                        //self.to_remove.push(id);
+                                    }
+
+                                    // Play the corresponding animation for the EObj
+                                    if let Some(eobj) = instance.find_object(*eobj_instance_id) {
+                                        let msg = FromServer::ActorControl(
+                                            eobj,
+                                            ActorControl {
+                                                category:
+                                                    ActorControlCategory::PlaySharedGroupTimeline {
+                                                        timeline_id: *sgb_animation_id,
+                                                    },
+                                            },
+                                        );
+                                        if handle.send(msg).is_err() {
+                                            // TODO: remove as needed
+                                            //self.to_remove.push(id);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
 
                 let is_in_duel_area = overlapping_ranges.iter().filter(|x| x.duel).count() > 0;
                 let has_duel_condition = conditions.has_condition(Condition::InDuelingArea);
@@ -420,6 +476,19 @@ fn server_logic_tick(data: &mut WorldServer, network: &mut NetworkState) {
                         unreachable!();
                     }
                 }
+            }
+
+            // Set players as gimmick jumping, as the client does *not* send position updates during it.
+            for actor in &actors_now_gimmick_jumping {
+                let Some(NetworkedActor::Player {
+                    executing_gimmick_jump,
+                    ..
+                }) = instance.find_actor_mut(*actor)
+                else {
+                    continue;
+                };
+
+                *executing_gimmick_jump = true;
             }
         }
 
@@ -918,6 +987,22 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                             match actor {
                                 NetworkedActor::Player { distance_range, .. } => {
                                     *distance_range = *range;
+                                }
+                                _ => unreachable!(),
+                            }
+                        }
+                    }
+                    ClientTriggerCommand::GimmickJumpLanded { .. } => {
+                        let mut data = data.lock();
+                        if let Some(instance) = data.find_actor_instance_mut(from_actor_id)
+                            && let Some(actor) = instance.find_actor_mut(from_actor_id)
+                        {
+                            match actor {
+                                NetworkedActor::Player {
+                                    executing_gimmick_jump,
+                                    ..
+                                } => {
+                                    *executing_gimmick_jump = false;
                                 }
                                 _ => unreachable!(),
                             }

@@ -22,11 +22,25 @@ use crate::{
 };
 use kawari::{
     common::{
-        DistanceRange, GameData, INVALID_OBJECT_ID, ObjectId, Position, TerritoryNameKind,
-        euler_to_direction,
+        DistanceRange, EventHandlerType, GameData, INVALID_OBJECT_ID, ObjectId, Position,
+        TerritoryNameKind, euler_to_direction,
     },
     ipc::zone::{ActorControl, ActorControlCategory, ActorControlSelf, Conditions, ObjectSpawn},
 };
+
+#[derive(Debug)]
+pub enum MapGimmick {
+    Jump {
+        /// The position to land on.
+        to_position: Position,
+        /// The GimmickJump type.
+        gimmick_jump_type: u32,
+        /// The animation ID to play for the EObj.
+        sgb_animation_id: u32,
+        /// The EObj's instance ID to play the animation for.
+        eobj_instance_id: u32,
+    },
+}
 
 /// Simpler form of a MapRange object designed for collision detection.
 #[derive(Debug)]
@@ -41,6 +55,10 @@ pub struct MapRange {
     pub sanctuary: bool,
     /// Whether this map range represents a PvP duel area.
     pub duel: bool,
+    /// Whether this map range represents a gimmick, like a jumping pad.
+    pub gimmick: Option<MapGimmick>,
+    /// Game Object ID.
+    pub instance_id: u32,
 }
 
 /// Represents a loaded zone
@@ -137,6 +155,8 @@ impl Zone {
                                 scale: object.transform.scale,
                                 sanctuary: map_range.rest_bonus_enabled,
                                 duel: false,
+                                gimmick: None,
+                                instance_id: object.instance_id,
                             });
                         }
                         if let LayerEntryData::EventRange(event_range) = &object.data {
@@ -154,7 +174,62 @@ impl Zone {
                                     && event_range.unk_flags[3] == 1
                                     && event_range.unk_flags[4] == 1
                                     && event_range.unk_flags[5] == 1,
+                                gimmick: None,
+                                instance_id: object.instance_id,
                             });
+                        }
+                    }
+
+                    // Second pass for eobjs
+                    for object in &layer.objects {
+                        if let LayerEntryData::EventObject(eobj) = &object.data {
+                            let eobj_data = game_data.get_eobj_data(eobj.parent_data.base_id);
+                            let event_type = EventHandlerType::from_repr(eobj_data >> 16);
+
+                            if let Some(EventHandlerType::GimmickRect) = event_type {
+                                // GimmickRects are used for stuff like the Golden Saucer jumping pads, and is handled server-side.
+                                // Thus, we need to go through and mark these MapRanges to play said event.
+                                if let Some(gimmick_rect_info) =
+                                    game_data.get_gimmick_rect_info(eobj_data & 0xFFF)
+                                    && let Some(target_pop_range) =
+                                        zone.find_pop_range(gimmick_rect_info.params[1])
+                                {
+                                    let gimmick_jump_type = gimmick_rect_info.params[0];
+                                    let target_event_range = gimmick_rect_info.layout_id;
+                                    let sgb_animation_id = gimmick_rect_info.params[2];
+
+                                    // 8 seems to indicate a jumping pad
+                                    if gimmick_rect_info.trigger_in == 8 {
+                                        let map_gimmick = MapGimmick::Jump {
+                                            to_position: Position {
+                                                x: target_pop_range.0.transform.translation[0],
+                                                y: target_pop_range.0.transform.translation[1],
+                                                z: target_pop_range.0.transform.translation[2],
+                                            },
+                                            gimmick_jump_type,
+                                            sgb_animation_id,
+                                            eobj_instance_id: object.instance_id,
+                                        };
+
+                                        for map_range in &mut zone.map_ranges {
+                                            if map_range.instance_id == target_event_range {
+                                                map_range.gimmick = Some(map_gimmick);
+                                                break;
+                                            }
+                                        }
+                                    } else {
+                                        tracing::warn!(
+                                            "Unsupported Gimmick trigger {}",
+                                            gimmick_rect_info.trigger_in
+                                        );
+                                    }
+                                } else {
+                                    tracing::warn!(
+                                        "Failed to lookup Gimmick {}?!",
+                                        eobj_data & 0xFFF
+                                    );
+                                }
+                            }
                         }
                     }
                 }
@@ -520,6 +595,7 @@ pub fn handle_zone_messages(
                 teleport_query: TeleportQuery::default(),
                 distance_range: DistanceRange::Normal,
                 conditions: Conditions::default(),
+                executing_gimmick_jump: false,
             };
         }
         ToServer::ChangeZone(from_id, actor_id, zone_id, new_position, new_rotation) => {

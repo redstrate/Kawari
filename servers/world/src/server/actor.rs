@@ -16,6 +16,8 @@ pub enum NetworkedActor {
         distance_range: DistanceRange,
         // TODO: make this is the single source-of-truth, instead of ZoneConnection handling it?
         conditions: Conditions,
+        /// If this actor is currently executing a gimmick jump, and has yet to land.
+        executing_gimmick_jump: bool,
     },
     Npc {
         current_path: VecDeque<[f32; 3]>,
