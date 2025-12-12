@@ -68,6 +68,7 @@ pub enum ActorControlCategory {
         source_actor_id: ObjectId,
     },
 
+    /// Updates the rested EXP bonus shown in the EXP bar.
     #[brw(magic = 24u32)]
     UpdateRestedExp { exp: u32 },
 
@@ -300,6 +301,11 @@ pub enum ActorControlCategory {
 
     #[brw(magic = 521u32)]
     SetItemLevel { level: u32 },
+
+    #[brw(magic = 533u32)]
+    LogMessage2 {
+        log_message: u32, // Index to LogMessage sheet
+    },
 
     #[brw(magic = 608u32)]
     SetEquipDisplayFlags { display_flag: EquipDisplayFlag },

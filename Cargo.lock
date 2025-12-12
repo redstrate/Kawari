@@ -908,9 +908,9 @@ dependencies = [
 
 [[package]]
 name = "libz-rs-sys"
-version = "0.5.3"
+version = "0.5.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8b484ba8d4f775eeca644c452a56650e544bf7e617f1d170fe7298122ead5222"
+checksum = "15413ef615ad868d4d65dce091cb233b229419c7c0c4bcaa746c0901c49ff39c"
 dependencies = [
  "zlib-rs",
 ]
@@ -947,9 +947,9 @@ dependencies = [
 
 [[package]]
 name = "luajit-src"
-version = "210.6.4+e17ee83"
+version = "210.6.5+7152e15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "35a0ceb2a395ffa403a863adcf365e82cc8d8338ac7f5f949b9df5ca3de251e1"
+checksum = "29e64ac463f01a02ee793423f9b351369cf244c5ee8bb9e2729a75b2eb404181"
 dependencies = [
  "cc",
  "which",
@@ -1174,7 +1174,7 @@ checksum = "9b4f627cb1b25917193a259e49bdad08f671f8d9708acfd5fe0a8c1455d87220"
 [[package]]
 name = "physis"
 version = "0.5.0"
-source = "git+https://github.com/redstrate/physis#c11e6b325c0c84accfed1047b692ecfdd541671d"
+source = "git+https://github.com/redstrate/physis#7b8e927157f24a515af92be93a189d3429d41773"
 dependencies = [
  "binrw",
  "bitflags",
@@ -1971,9 +1971,9 @@ dependencies = [
 
 [[package]]
 name = "zlib-rs"
-version = "0.5.3"
+version = "0.5.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "36134c44663532e6519d7a6dfdbbe06f6f8192bde8ae9ed076e9b213f0e31df7"
+checksum = "51f936044d677be1a1168fae1d03b583a285a5dd9d8cbf7b24c23aa1fc775235"
 
 [[package]]
 name = "zopfli"

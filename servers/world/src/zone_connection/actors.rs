@@ -1,6 +1,6 @@
 //! Everything to do with spawning, managing and moving actors - including the player.
 
-use crate::{ZoneConnection, common::SpawnKind};
+use crate::{ToServer, ZoneConnection, common::SpawnKind};
 use kawari::{
     common::{
         EquipDisplayFlag, JumpState, MoveAnimationSpeed, MoveAnimationState, MoveAnimationType,
@@ -295,6 +295,14 @@ impl ZoneConnection {
     pub async fn send_conditions(&mut self) {
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Condition(self.conditions));
         self.send_ipc_self(ipc).await;
+
+        // Inform the server state as well
+        self.handle
+            .send(ToServer::UpdateConditions(
+                self.player_data.actor_id,
+                self.conditions,
+            ))
+            .await;
     }
 
     pub async fn spawn_object(&mut self, spawn: ObjectSpawn) {

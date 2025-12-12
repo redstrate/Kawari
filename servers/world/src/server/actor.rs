@@ -3,7 +3,7 @@ use std::collections::VecDeque;
 use crate::{StatusEffects, zone_connection::TeleportQuery};
 use kawari::{
     common::{DistanceRange, ObjectId, Position, get_distance_range},
-    ipc::zone::{CommonSpawn, NpcSpawn, ObjectSpawn, PlayerSpawn},
+    ipc::zone::{CommonSpawn, Conditions, NpcSpawn, ObjectSpawn, PlayerSpawn},
 };
 
 #[derive(Debug, Clone)]
@@ -14,6 +14,8 @@ pub enum NetworkedActor {
         status_effects: StatusEffects,
         teleport_query: TeleportQuery,
         distance_range: DistanceRange,
+        // TODO: make this is the single source-of-truth, instead of ZoneConnection handling it?
+        conditions: Conditions,
     },
     Npc {
         current_path: VecDeque<[f32; 3]>,

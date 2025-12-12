@@ -13,7 +13,7 @@ use crate::{
 use kawari::{
     common::{DistanceRange, GameData, ObjectId},
     config::get_config,
-    ipc::zone::{ActionRequest, NpcSpawn, ObjectSpawn, PlayerSpawn},
+    ipc::zone::{ActionRequest, Conditions, NpcSpawn, ObjectSpawn, PlayerSpawn},
 };
 use parking_lot::Mutex;
 
@@ -151,6 +151,7 @@ impl Instance {
                 status_effects: StatusEffects::default(),
                 teleport_query: TeleportQuery::default(),
                 distance_range: DistanceRange::Normal,
+                conditions: Conditions::default(),
             },
         );
     }

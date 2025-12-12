@@ -31,7 +31,7 @@ use kawari::{
     },
     ipc::zone::{
         ActorControl, ActorControlCategory, ActorControlSelf, ActorControlTarget, BattleNpcSubKind,
-        ClientTriggerCommand, CommonSpawn, Conditions, NpcSpawn, ObjectKind,
+        ClientTriggerCommand, CommonSpawn, Condition, Conditions, NpcSpawn, ObjectKind,
     },
 };
 
@@ -309,21 +309,59 @@ fn server_logic_tick(data: &mut WorldServer, network: &mut NetworkState) {
 
             // Recalculate distance ranges
             for (id, actor) in &instance.actors {
+                // Only check players
+                let NetworkedActor::Player { conditions, .. } = actor else {
+                    continue;
+                };
+
+                // Find the ClientState for this player.
+                let Some((handle, state)) = network.get_by_actor_mut(*id) else {
+                    continue;
+                };
+
+                // Check for overlapping map ranges
+                let overlapping_ranges = instance.zone.get_overlapping_map_ranges(actor.position());
+                let _in_sanctuary = overlapping_ranges.iter().filter(|x| x.sanctuary).count() > 0;
+
+                let is_in_duel_area = overlapping_ranges.iter().filter(|x| x.duel).count() > 0;
+                let has_duel_condition = conditions.has_condition(Condition::InDuelingArea);
+
+                if is_in_duel_area != has_duel_condition {
+                    // Update conditions
+                    {
+                        let mut conditions = *conditions;
+                        conditions.toggle_condition(Condition::InDuelingArea, is_in_duel_area);
+
+                        let msg = FromServer::Conditions(conditions);
+                        if handle.send(msg).is_err() {
+                            // TODO: remove as needed
+                            //self.to_remove.push(id);
+                        }
+                    }
+
+                    // Send log message
+                    {
+                        let log_message = if is_in_duel_area {
+                            2692 // Duels permitted in current area.
+                        } else {
+                            2693 // Duels not permitted in current area.
+                        };
+
+                        let msg = FromServer::ActorControlSelf(ActorControlSelf {
+                            category: ActorControlCategory::LogMessage { log_message, id: 0 },
+                        });
+                        if handle.send(msg).is_err() {
+                            // TODO: remove as needed
+                            //self.to_remove.push(id);
+                        }
+                    }
+                }
+
                 for (other_id, other_actor) in &instance.actors {
                     // We're always in our own view
                     if *id == *other_id {
                         continue;
                     }
-
-                    // Only check players
-                    let NetworkedActor::Player { .. } = actor else {
-                        continue;
-                    };
-
-                    // Find the ClientState for this player.
-                    let Some((handle, state)) = network.get_by_actor_mut(*id) else {
-                        continue;
-                    };
 
                     // If the actor isn't valid, don't bother spawning yet.
                     if !other_actor.is_valid() {
@@ -1108,6 +1146,24 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 } else {
                     tracing::warn!("Failed to find zone id for content?!");
                 }
+            }
+            ToServer::UpdateConditions(from_actor_id, new_conditions) => {
+                // update their stored state
+                let mut data = data.lock();
+
+                let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
+                    break;
+                };
+
+                let Some(actor) = instance.find_actor_mut(from_actor_id) else {
+                    break;
+                };
+
+                let NetworkedActor::Player { conditions, .. } = actor else {
+                    break;
+                };
+
+                *conditions = new_conditions;
             }
             ToServer::FatalError(err) => return Err(err),
             _ => {}

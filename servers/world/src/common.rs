@@ -276,6 +276,8 @@ pub enum ToServer {
     PartyMemberReturned(ObjectId),
     /// The client is requesting to join the following content.
     JoinContent(ClientId, ObjectId, u16),
+    /// Update the global server state of the client's conditions.
+    UpdateConditions(ObjectId, Conditions),
 }
 
 #[derive(Clone, Debug)]

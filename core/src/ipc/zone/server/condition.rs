@@ -124,6 +124,11 @@ impl Conditions {
         let (value, index) = value_to_flag_byte_index_value(condition as u32);
         self.flags[index as usize] &= !value;
     }
+
+    pub fn has_condition(&self, condition: Condition) -> bool {
+        let (value, index) = value_to_flag_byte_index_value(condition as u32);
+        (self.flags[index as usize] & value) == value
+    }
 }
 
 impl std::fmt::Debug for Conditions {

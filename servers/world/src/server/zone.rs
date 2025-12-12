@@ -4,7 +4,7 @@ use parking_lot::Mutex;
 use physis::{
     layer::{
         ExitRangeInstanceObject, InstanceObject, LayerEntryData, LayerGroup,
-        PopRangeInstanceObject, Transformation,
+        PopRangeInstanceObject, Transformation, TriggerBoxShape,
     },
     lvb::Lvb,
     resource::Resource,
@@ -25,8 +25,23 @@ use kawari::{
         DistanceRange, GameData, INVALID_OBJECT_ID, ObjectId, Position, TerritoryNameKind,
         euler_to_direction,
     },
-    ipc::zone::{ActorControl, ActorControlCategory, ActorControlSelf, ObjectSpawn},
+    ipc::zone::{ActorControl, ActorControlCategory, ActorControlSelf, Conditions, ObjectSpawn},
 };
+
+/// Simpler form of a MapRange object designed for collision detection.
+#[derive(Debug)]
+pub struct MapRange {
+    /// Trigger box shape.
+    pub trigger_box_shape: TriggerBoxShape,
+    /// Position of this range in the world.
+    pub position: Position,
+    /// Relative scale of this range.
+    pub scale: [f32; 3],
+    /// Whether this map range represents a sanctuary.
+    pub sanctuary: bool,
+    /// Whether this map range represents a PvP duel area.
+    pub duel: bool,
+}
 
 /// Represents a loaded zone
 #[derive(Default, Debug)]
@@ -40,6 +55,7 @@ pub struct Zone {
     pub navimesh_path: String,
     pub map_id: u16,
     cached_npc_base_ids: HashMap<u32, u32>,
+    map_ranges: Vec<MapRange>,
 }
 
 impl Zone {
@@ -109,6 +125,36 @@ impl Zone {
                         if let LayerEntryData::EventNPC(npc) = &object.data {
                             zone.cached_npc_base_ids
                                 .insert(object.instance_id, npc.parent_data.parent_data.base_id);
+                        }
+                        if let LayerEntryData::MapRange(map_range) = &object.data {
+                            zone.map_ranges.push(MapRange {
+                                trigger_box_shape: map_range.parent_data.trigger_box_shape,
+                                position: Position {
+                                    x: object.transform.translation[0],
+                                    y: object.transform.translation[1],
+                                    z: object.transform.translation[2],
+                                },
+                                scale: object.transform.scale,
+                                sanctuary: map_range.rest_bonus_enabled,
+                                duel: false,
+                            });
+                        }
+                        if let LayerEntryData::EventRange(event_range) = &object.data {
+                            zone.map_ranges.push(MapRange {
+                                trigger_box_shape: event_range.parent_data.trigger_box_shape,
+                                position: Position {
+                                    x: object.transform.translation[0],
+                                    y: object.transform.translation[1],
+                                    z: object.transform.translation[2],
+                                },
+                                scale: object.transform.scale,
+                                sanctuary: false,
+                                // This is guesswork since there's only one dueling location in-game
+                                duel: event_range.unk_flags[0] == 1
+                                    && event_range.unk_flags[3] == 1
+                                    && event_range.unk_flags[4] == 1
+                                    && event_range.unk_flags[5] == 1,
+                            });
                         }
                     }
                 }
@@ -240,6 +286,89 @@ impl Zone {
         }
 
         object_spawns
+    }
+
+    /// Returns a list of MapRanges that overlap this position.
+    pub fn get_overlapping_map_ranges(&self, position: Position) -> Vec<&MapRange> {
+        let mut overlapping = Vec::new();
+
+        for map_range in &self.map_ranges {
+            match map_range.trigger_box_shape {
+                TriggerBoxShape::Box => {
+                    // TODO: support oriented boxes (this is used by sanctuary boundaries, for some reason)
+                    let min_x = map_range.position.x - (map_range.scale[0]);
+                    let max_x = map_range.position.x + (map_range.scale[0]);
+
+                    let min_y = map_range.position.y - (map_range.scale[1]);
+                    let max_y = map_range.position.y + (map_range.scale[1]);
+
+                    let min_z = map_range.position.z - (map_range.scale[2]);
+                    let max_z = map_range.position.z + (map_range.scale[2]);
+
+                    if position.x >= min_x
+                        && position.x <= max_x
+                        && position.y >= min_y
+                        && position.y <= max_y
+                        && position.z >= min_z
+                        && position.z <= max_z
+                    {
+                        overlapping.push(map_range);
+                    }
+                }
+                TriggerBoxShape::Cylinder => {
+                    // TODO: support arbitrarily-rotated cylinders
+                    let length = map_range.scale[1] * 2.0;
+                    let length_sq = f32::powi(length, 2);
+
+                    let pt1 = Position {
+                        x: map_range.position.x,
+                        y: map_range.position.y - map_range.scale[1],
+                        z: map_range.position.z,
+                    };
+                    let pt2 = Position {
+                        x: map_range.position.x,
+                        y: map_range.position.y + map_range.scale[1],
+                        z: map_range.position.z,
+                    };
+
+                    let radius = map_range.scale[0]; // TODO: support individual radii (if that's even a thing, assert please)
+                    let radius_sq = f32::powi(radius, 2);
+
+                    if Self::cylinder_test(pt1, pt2, length_sq, radius_sq, position) != -1.0 {
+                        overlapping.push(map_range);
+                    }
+                }
+                _ => {} // TODO
+            }
+        }
+
+        overlapping
+    }
+
+    // From https://www.flipcode.com/archives/Fast_Point-In-Cylinder_Test.shtml
+    fn cylinder_test(
+        pt1: Position,
+        pt2: Position,
+        length_sq: f32,
+        radius_sq: f32,
+        test_pt: Position,
+    ) -> f32 {
+        let dx = pt2.x - pt1.x;
+        let dy = pt2.y - pt1.y;
+        let dz = pt2.z - pt1.z;
+
+        let pdx = test_pt.x - pt1.x;
+        let pdy = test_pt.y - pt1.y;
+        let pdz = test_pt.z - pt1.z;
+
+        let dot = pdx * dx + pdy * dy + pdz * dz;
+        if dot < 0.0 || dot > length_sq {
+            -1.0
+        } else {
+            let dsq = (pdx * pdx + pdy * pdy + pdz * pdz) - dot * dot / length_sq;
+
+            if dsq > radius_sq { -1.0 } else { dsq }
+        }
     }
 }
 
@@ -390,6 +519,7 @@ pub fn handle_zone_messages(
                 status_effects: StatusEffects::default(),
                 teleport_query: TeleportQuery::default(),
                 distance_range: DistanceRange::Normal,
+                conditions: Conditions::default(),
             };
         }
         ToServer::ChangeZone(from_id, actor_id, zone_id, new_position, new_rotation) => {
