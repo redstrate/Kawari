@@ -95,6 +95,9 @@ pub enum ClientTriggerCommand {
     #[brw(magic = 318u32)]
     ClearWaymark { id: u32 },
 
+    #[brw(magic = 444u32)]
+    OpenChocoboSaddlebag {},
+
     /// The player begins an emote.
     #[brw(magic = 500u32)]
     Emote(CommonEmoteInfo),
@@ -204,6 +207,18 @@ pub enum ClientTriggerCommand {
     /// The client opens the Mahjong tab in the Gold Saucer window.
     #[brw(magic = 2550u32)]
     OpenGoldSaucerMahjongTab {},
+
+    /// The client opens the Trust window.
+    #[brw(magic = 2651u32)]
+    OpenTrustWindow {},
+
+    /// The client opens the Duty Support window.
+    #[brw(magic = 2653u32)]
+    OpenDutySupportWindow {},
+
+    /// The client opens the Portrait window.
+    #[brw(magic = 3200u32)]
+    OpenPortraitsWindow {},
 
     /// The client tells us how far in the distance we should see actors.
     #[brw(magic = 9005u32)]

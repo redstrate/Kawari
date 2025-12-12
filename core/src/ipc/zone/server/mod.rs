@@ -107,6 +107,9 @@ pub use house_list::{House, HouseList};
 mod housing_ward;
 pub use housing_ward::HousingWardMenuSummaryItem;
 
+mod trust_information;
+pub use trust_information::{TrustContent, TrustInformation};
+
 use crate::common::{
     CHAR_NAME_MAX_LENGTH, ContainerType, ItemOperationKind, ObjectId, read_string, write_string,
 };
@@ -621,6 +624,16 @@ pub enum ServerZoneIpcData {
     UnkContentFinder {
         unk: [u8; 16],
     },
+    TrustInformation(TrustInformation),
+    DutySupportInformation {
+        /// Indices into the DawnContent Excel sheet.
+        #[br(count = 80)]
+        #[bw(pad_size_to = 80)]
+        available_content: Vec<u8>,
+    },
+    PortraitsInformation {
+        unk: [u8; 56],
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -973,6 +986,11 @@ mod tests {
             ServerZoneIpcData::DeleteObject { spawn_index: 0 },
             ServerZoneIpcData::GoldSaucerInformation { unk: [0; 40] },
             ServerZoneIpcData::UnkContentFinder { unk: [0; 16] },
+            ServerZoneIpcData::TrustInformation(TrustInformation::default()),
+            ServerZoneIpcData::DutySupportInformation {
+                available_content: Vec::default(),
+            },
+            ServerZoneIpcData::PortraitsInformation { unk: [0; 56] },
         ];
 
         for data in &ipc_types {

@@ -467,6 +467,18 @@ ServerZoneIpcType:
     comment: Unknown purpose, but it clears the currently operating content finder.
     opcode: 866
     size: 16
+  - name: TrustInformation
+    comment: Sent to the client to initialize the Trust window.
+    opcode: 262
+    size: 728
+  - name: DutySupportInformation
+    comment: Sent to the client to initialize the Duty Support window.
+    opcode: 899
+    size: 80
+  - name: PortraitsInformation
+    comment: Sent to the client to initialize the Portraits window.
+    opcode: 875
+    size: 56
 ClientZoneIpcType:
   - name: InitRequest
     comment: >-

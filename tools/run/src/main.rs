@@ -12,7 +12,7 @@ async fn start_server(name: &str) {
 
     dir.push(format!("{name}{}", extension));
 
-    let library_path = if let Ok(_) = std::env::var("CARGO") {
+    let library_path = if std::env::var("CARGO").is_ok() {
         "./oodle"
     } else {
         "."

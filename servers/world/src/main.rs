@@ -15,7 +15,7 @@ use kawari::ipc::chat::{ChatChannel, ClientChatIpcData};
 use kawari::ipc::zone::{
     ActorControl, ActorControlCategory, ActorControlSelf, Condition, Conditions,
     ContentFinderUserAction, EventType, InviteType, OnlineStatus, OnlineStatusMask, PlayerSpawn,
-    PlayerStatus, SearchInfo,
+    PlayerStatus, SearchInfo, TrustContent, TrustInformation,
 };
 
 use kawari::ipc::zone::{
@@ -752,6 +752,29 @@ async fn client_loop(
                                                     }
                                                     ClientTriggerCommand::OpenGoldSaucerGeneralTab {} => {
                                                         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::GoldSaucerInformation { unk: [0; 40] });
+                                                        connection.send_ipc_self(ipc).await;
+                                                    }
+                                                    ClientTriggerCommand::OpenTrustWindow {} => {
+                                                        // We have to send at least one valid trust to the client, otherwise the window never shows.
+                                                        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::TrustInformation(
+                                                            TrustInformation {
+                                                                available_content: vec![
+                                                                    TrustContent { trust_content_id: 1, // Holminster Switch
+                                                                        last_selected_characters: [0xFF; 16] }
+                                                                ],
+                                                                levels: [0; 34],
+                                                                exp: [0; 34],
+                                                            }
+                                                        ));
+                                                        connection.send_ipc_self(ipc).await;
+                                                    }
+                                                    ClientTriggerCommand::OpenDutySupportWindow {} => {
+                                                        // We have to send at least one available duty to the client, otherwise it crashes.
+                                                        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::DutySupportInformation { available_content: vec![1] });
+                                                        connection.send_ipc_self(ipc).await;
+                                                    }
+                                                    ClientTriggerCommand::OpenPortraitsWindow {} => {
+                                                        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PortraitsInformation { unk: [0; 56] });
                                                         connection.send_ipc_self(ipc).await;
                                                     }
                                                     _ => {
