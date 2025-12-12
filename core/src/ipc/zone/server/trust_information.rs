@@ -9,6 +9,7 @@ pub struct TrustContent {
     /// Index into the DawnContent Excel sheet.
     pub trust_content_id: u8,
     /// The last selected characters. If no character should be specified, it will be 0xFF.
+    /// Index into the DawnGrowMember Excel sheet.
     pub last_selected_characters: [u8; 16],
 }
 
