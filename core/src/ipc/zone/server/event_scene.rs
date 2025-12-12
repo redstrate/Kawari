@@ -1,3 +1,5 @@
+#![allow(unused_assignments)] // false positive caused by binrw
+
 use binrw::binrw;
 use bitflags::bitflags;
 
