@@ -22,10 +22,12 @@ use crate::{
 };
 use kawari::{
     common::{
-        DistanceRange, EventHandlerType, GameData, INVALID_OBJECT_ID, ObjectId, Position,
-        TerritoryNameKind, euler_to_direction,
+        DistanceRange, EOBJ_ENTRANCE_CIRCLE, EventHandlerType, GameData, INVALID_OBJECT_ID,
+        ObjectId, Position, TerritoryNameKind, euler_to_direction,
     },
-    ipc::zone::{ActorControl, ActorControlCategory, ActorControlSelf, Conditions, ObjectSpawn},
+    ipc::zone::{
+        ActorControl, ActorControlCategory, ActorControlSelf, Conditions, ObjectKind, ObjectSpawn,
+    },
 };
 
 #[derive(Debug)]
@@ -313,7 +315,7 @@ impl Zone {
             for layer in &layer_group.chunks[0].layers {
                 for object in &layer.objects {
                     if let LayerEntryData::EventObject(eobj) = &object.data
-                        && eobj.parent_data.base_id == 2000182
+                        && eobj.parent_data.base_id == EOBJ_ENTRANCE_CIRCLE
                     {
                         return Some(object);
                     }
@@ -349,7 +351,7 @@ impl Zone {
                         };
 
                         object_spawns.push(ObjectSpawn {
-                            kind: 7, // ObjectKind::EventObj
+                            kind: ObjectKind::EventObj,
                             base_id: eobj.parent_data.base_id,
                             unselectable,
                             entity_id: ObjectId(fastrand::u32(..)),

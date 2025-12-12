@@ -20,6 +20,7 @@ async fn start_server(name: &str) {
 
     Command::new(dir)
         .env("LD_LIBRARY_PATH", library_path) // ensure we find the oodle .so at the right location
+        .env("RUST_BACKTRACE", "1") // Print backtraces on asserts
         .stdout(Stdio::inherit())
         .spawn()
         .expect("Failed to run server")

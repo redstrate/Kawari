@@ -1,19 +1,21 @@
 use binrw::binrw;
 
-use crate::common::{
-    ObjectId, Position, read_bool_from, read_quantized_rotation, write_bool_as,
-    write_quantized_rotation,
+use crate::{
+    common::{
+        ObjectId, Position, read_bool_from, read_quantized_rotation, write_bool_as,
+        write_quantized_rotation,
+    },
+    ipc::zone::ObjectKind,
 };
-use serde::Deserialize;
 
-// TODO: this is all kinds of wrong, take the fields with a grain of salt
 #[binrw]
 #[brw(little)]
-#[derive(Debug, Copy, Clone, Default, Deserialize)]
+#[derive(Debug, Copy, Clone, Default)]
 pub struct ObjectSpawn {
-    pub index: u8,
-    /// See `ObjectKind`.
-    pub kind: u8,
+    /// The object's spawn index. Note that this is a completely separate index from actors.
+    pub spawn_index: u8,
+    /// What kind of object this is.
+    pub kind: ObjectKind,
     /// Seems to control whether or not its targetable?
     #[brw(pad_after = 1)]
     #[br(map = read_bool_from::<u8>)]
@@ -39,7 +41,7 @@ pub struct ObjectSpawn {
     pub rotation: f32,
     /// The FATE to associate with.
     pub fate_id: u16,
-    pub event_state: u8,
+    pub event_state: u8, // TODO: may be invisibility flags?
     pub args1: u8,
     pub args2: u32,
     pub args3: u32,

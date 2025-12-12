@@ -212,4 +212,17 @@ impl Instance {
 
         None
     }
+
+    /// Returns the actor ID (if any) of the spawned EObj by it's EObj ID.
+    pub fn find_object_by_eobj_id(&self, eobj_id: u32) -> Option<ObjectId> {
+        for (id, actor) in &self.actors {
+            if let NetworkedActor::Object { object } = actor
+                && object.base_id == eobj_id
+            {
+                return Some(*id);
+            }
+        }
+
+        None
+    }
 }

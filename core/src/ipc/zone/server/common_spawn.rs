@@ -11,7 +11,7 @@ use super::StatusEffect;
 
 #[binrw]
 #[brw(repr = u8)]
-#[derive(Clone, PartialEq, Debug, Default)]
+#[derive(Clone, Copy, PartialEq, Debug, Default)]
 pub enum PlayerSubKind {
     #[default]
     Player = 4,
@@ -20,7 +20,7 @@ pub enum PlayerSubKind {
 // See https://github.com/Caraxi/Dalamud/blob/e6017f96c09b8cde20e02371914ec25cfa989ef7/Dalamud/Game/ClientState/Objects/Enums/BattleNpcSubKind.cs#L6
 #[binrw]
 #[brw(repr = u8)]
-#[derive(Clone, PartialEq, Debug, Default)]
+#[derive(Clone, Copy, PartialEq, Debug, Default)]
 pub enum BattleNpcSubKind {
     #[default]
     None = 0,
@@ -32,7 +32,7 @@ pub enum BattleNpcSubKind {
 }
 
 #[binrw]
-#[derive(Clone, PartialEq, Debug, Default)]
+#[derive(Clone, Copy, PartialEq, Debug, Default)]
 pub enum ObjectKind {
     #[default]
     #[brw(magic = 0u8)]
@@ -73,6 +73,7 @@ pub enum ObjectKind {
     Ornament,
     #[brw(magic = 16u8)]
     CardStand,
+    Unknown(u8),
 }
 
 #[binrw]

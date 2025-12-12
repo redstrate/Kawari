@@ -32,6 +32,9 @@ pub const INVENTORY_ACTION_ACK_SHOP: u8 = 6;
 /// <https://github.com/SapphireServer/Sapphire/blob/044bff026c01b4cc3a37cbc9b0881fadca3fc477/src/common/Common.h#L83>
 pub const INVENTORY_ACTION_ACK_GENERAL: u8 = 7;
 
+/// EObj ID for the "entrance circle" in instanced content.
+pub const EOBJ_ENTRANCE_CIRCLE: u32 = 2000182;
+
 pub struct Attributes {
     pub strength: u32,
     pub dexterity: u32,
@@ -626,4 +629,29 @@ const AETHER_CURRENT_COMP_FLG_SET_TO_SCREENIMAGE: [(u32, u32); 31] = [
 
 pub fn get_aether_current_comp_flg_set_to_screenimage() -> HashMap<u32, u32> {
     HashMap::from(AETHER_CURRENT_COMP_FLG_SET_TO_SCREENIMAGE)
+}
+
+#[binrw]
+#[derive(Clone, Copy, Eq, PartialEq)]
+pub struct InvisibilityFlags(u8);
+
+bitflags! {
+    impl InvisibilityFlags: u8 {
+        const VISIBLE = 0;
+        const UNK1 = 1;
+        const UNK2 = 2;
+        const UNK3 = 4;
+    }
+}
+
+impl Default for InvisibilityFlags {
+    fn default() -> Self {
+        InvisibilityFlags::VISIBLE
+    }
+}
+
+impl std::fmt::Debug for InvisibilityFlags {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        bitflags::parser::to_writer(self, f)
+    }
 }

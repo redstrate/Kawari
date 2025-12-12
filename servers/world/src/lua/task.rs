@@ -170,4 +170,7 @@ pub enum LuaTask {
     RegisterForContent {
         content_id: u16,
     },
+    CommenceDuty {
+        director_id: u32,
+    },
 }

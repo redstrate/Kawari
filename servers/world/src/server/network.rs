@@ -70,7 +70,7 @@ impl NetworkState {
             }
             NetworkedActor::Object { object } => {
                 let mut object = *object;
-                object.index = spawn_index;
+                object.spawn_index = spawn_index;
                 FromServer::ObjectSpawn(object)
             }
         };

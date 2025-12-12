@@ -9,8 +9,8 @@ use crate::{
 };
 use kawari::{
     common::{
-        ContainerType, DirectorEvent, GameData, INVENTORY_ACTION_ACK_SHOP, LogMessageType,
-        ObjectTypeId, ObjectTypeKind, Position, adjust_quest_id, workdefinitions::RemakeMode,
+        ContainerType, GameData, INVENTORY_ACTION_ACK_SHOP, LogMessageType, ObjectTypeId,
+        ObjectTypeKind, Position, adjust_quest_id, workdefinitions::RemakeMode,
     },
     ipc::zone::{
         ActorControlCategory, ActorControlSelf, EventScene, EventType, SceneFlags,
@@ -546,17 +546,8 @@ impl LuaPlayer {
     }
 
     fn commence_duty(&mut self, director_id: u32) {
-        create_ipc_self(
-            self,
-            ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
-                category: ActorControlCategory::DirectorEvent {
-                    director_id,
-                    event: DirectorEvent::DutyCommence,
-                    arg: 5400,
-                },
-            })),
-            self.player_data.actor_id,
-        );
+        self.queued_tasks
+            .push(LuaTask::CommenceDuty { director_id });
     }
 
     /// Returns the target DefaultTalk event for a given SwitchTalk event.

@@ -7,8 +7,8 @@ use crate::{
 };
 use kawari::{
     common::{
-        ContainerType, ERR_INVENTORY_ADD_FAILED, InstanceContentType, ItemInfoQuery, ObjectTypeId,
-        ObjectTypeKind,
+        ContainerType, DirectorEvent, ERR_INVENTORY_ADD_FAILED, InstanceContentType, ItemInfoQuery,
+        ObjectTypeId, ObjectTypeKind,
     },
     constants::{
         ADVENTURE_BITMASK_SIZE, AETHER_CURRENT_BITMASK_SIZE,
@@ -508,6 +508,24 @@ impl ZoneConnection {
                 }
                 LuaTask::RegisterForContent { content_id } => {
                     self.register_for_content([*content_id, 0, 0, 0, 0]).await;
+                }
+                LuaTask::CommenceDuty { director_id } => {
+                    // Have the director commence the duty
+                    let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlSelf(
+                        ActorControlSelf {
+                            category: ActorControlCategory::DirectorEvent {
+                                director_id: *director_id,
+                                event: DirectorEvent::DutyCommence,
+                                arg: 5400,
+                            },
+                        },
+                    ));
+                    self.send_ipc_self(ipc).await;
+
+                    // Signal to the global server to commence the duty as well, since they need to update the entrance circle.
+                    self.handle
+                        .send(ToServer::CommenceDuty(self.id, self.player_data.actor_id))
+                        .await;
                 }
             }
         }

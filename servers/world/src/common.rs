@@ -278,6 +278,8 @@ pub enum ToServer {
     JoinContent(ClientId, ObjectId, u16),
     /// Update the global server state of the client's conditions.
     UpdateConditions(ObjectId, Conditions),
+    /// (Temporary) Signal to the server to commence the duty.
+    CommenceDuty(ClientId, ObjectId),
 }
 
 #[derive(Clone, Debug)]

@@ -26,8 +26,9 @@ use crate::{
 };
 use kawari::{
     common::{
-        GameData, JumpState, MAX_SPAWNED_ACTORS, MAX_SPAWNED_OBJECTS, MoveAnimationState,
-        MoveAnimationType, ObjectId, ObjectTypeId, ObjectTypeKind, Position,
+        EOBJ_ENTRANCE_CIRCLE, GameData, InvisibilityFlags, JumpState, MAX_SPAWNED_ACTORS,
+        MAX_SPAWNED_OBJECTS, MoveAnimationState, MoveAnimationType, ObjectId, ObjectTypeId,
+        ObjectTypeKind, Position,
     },
     ipc::zone::{
         ActorControl, ActorControlCategory, ActorControlSelf, ActorControlTarget, BattleNpcSubKind,
@@ -1019,15 +1020,15 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 let npc_spawn;
                 {
                     let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
-                        break;
+                        continue;
                     };
 
                     let Some(actor) = instance.find_actor(from_actor_id) else {
-                        break;
+                        continue;
                     };
 
                     let NetworkedActor::Player { spawn, .. } = actor else {
-                        break;
+                        continue;
                     };
 
                     let model_chara;
@@ -1060,7 +1061,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 }
 
                 let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
-                    break;
+                    continue;
                 };
 
                 network.send_actor(instance, actor_id, SpawnKind::Npc(npc_spawn));
@@ -1073,15 +1074,15 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 let npc_spawn;
                 {
                     let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
-                        break;
+                        continue;
                     };
 
                     let Some(actor) = instance.find_actor(from_actor_id) else {
-                        break;
+                        continue;
                     };
 
                     let NetworkedActor::Player { spawn, .. } = actor else {
-                        break;
+                        continue;
                     };
 
                     npc_spawn = NpcSpawn {
@@ -1105,15 +1106,15 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     let mut data = data.lock();
 
                     let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
-                        break;
+                        continue;
                     };
 
                     let Some(actor) = instance.find_actor_mut(from_actor_id) else {
-                        break;
+                        continue;
                     };
 
                     let NetworkedActor::Player { spawn, .. } = actor else {
-                        break;
+                        continue;
                     };
 
                     spawn.common.display_flags = config.display_flag.into();
@@ -1130,15 +1131,15 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     let mut data = data.lock();
 
                     let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
-                        break;
+                        continue;
                     };
 
                     let Some(actor) = instance.find_actor_mut(from_actor_id) else {
-                        break;
+                        continue;
                     };
 
                     let NetworkedActor::Player { spawn, .. } = actor else {
-                        break;
+                        continue;
                     };
 
                     spawn.common.main_weapon_model = main_weapon_id;
@@ -1237,18 +1238,46 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 let mut data = data.lock();
 
                 let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
-                    break;
+                    continue;
                 };
 
                 let Some(actor) = instance.find_actor_mut(from_actor_id) else {
-                    break;
+                    continue;
                 };
 
                 let NetworkedActor::Player { conditions, .. } = actor else {
-                    break;
+                    continue;
                 };
 
                 *conditions = new_conditions;
+            }
+            ToServer::CommenceDuty(from_id, from_actor_id) => {
+                let mut data = data.lock();
+
+                let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
+                    continue;
+                };
+
+                // Find the spawned entrance circle
+                let Some(entrance_actor_id) = instance.find_object_by_eobj_id(EOBJ_ENTRANCE_CIRCLE)
+                else {
+                    continue;
+                };
+
+                // Make the entrance circle invisible.
+                let msg = FromServer::ActorControl(
+                    entrance_actor_id,
+                    ActorControl {
+                        category: ActorControlCategory::SetInvisibilityFlags {
+                            flags: InvisibilityFlags::UNK1
+                                | InvisibilityFlags::UNK2
+                                | InvisibilityFlags::UNK3,
+                        },
+                    },
+                );
+
+                let mut network = network.lock();
+                network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
             }
             ToServer::FatalError(err) => return Err(err),
             _ => {}

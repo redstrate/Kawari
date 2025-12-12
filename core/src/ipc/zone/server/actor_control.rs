@@ -2,8 +2,8 @@ use binrw::binrw;
 use strum_macros::IntoStaticStr;
 
 use crate::common::{
-    DirectorEvent, EquipDisplayFlag, ObjectId, ObjectTypeId, read_bool_from, read_packed_float,
-    write_bool_as, write_packed_float,
+    DirectorEvent, EquipDisplayFlag, InvisibilityFlags, ObjectId, ObjectTypeId, read_bool_from,
+    read_packed_float, write_bool_as, write_packed_float,
 };
 use crate::ipc::zone::common_emote::CommonEmoteInfo;
 use crate::ipc::zone::online_status::OnlineStatus;
@@ -113,6 +113,10 @@ pub enum ActorControlCategory {
         /// If set to 1, enables explorer mode. Probably does a lot more too!
         sequence: u32,
     },
+
+    /// Updates the invisibility flags for an actor.
+    #[brw(magic = 106u32)]
+    SetInvisibilityFlags { flags: InvisibilityFlags },
 
     #[brw(magic = 109u32)]
     DirectorEvent {
