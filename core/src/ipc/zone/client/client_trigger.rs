@@ -16,6 +16,16 @@ pub enum ClientTriggerCommand {
         unk_flag: u32,
     },
 
+    /// When toggling auto-attack on and off.
+    #[brw(magic = 2u32)]
+    ToggleAutoAttack {
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        on: bool,
+        unk1: u32,
+        unk3: u32,
+    },
+
     /// The player looks or stops looking at an actor.
     #[brw(magic = 3u32)]
     SetTarget {
@@ -79,6 +89,10 @@ pub enum ClientTriggerCommand {
     /// The client clears all waymarks.
     #[brw(magic = 313u32)]
     ClearAllWaymarks {},
+
+    /// The client begins using the Idle Camera or Group Pose feature.
+    #[brw(magic = 314u32)]
+    GroupPoseOrIdleCamera { unk1: u32, unk2: u32 },
 
     /// The client places a waymark.
     #[brw(magic = 317u32)]
