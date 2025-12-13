@@ -2,8 +2,8 @@ use binrw::binrw;
 use strum_macros::IntoStaticStr;
 
 use crate::common::{
-    DirectorEvent, EquipDisplayFlag, InvisibilityFlags, ObjectId, ObjectTypeId, read_bool_from,
-    read_packed_float, write_bool_as, write_packed_float,
+    CharacterMode, DirectorEvent, EquipDisplayFlag, InvisibilityFlags, ObjectId, ObjectTypeId,
+    read_bool_from, read_packed_float, write_bool_as, write_packed_float,
 };
 use crate::ipc::zone::common_emote::CommonEmoteInfo;
 use crate::ipc::zone::online_status::OnlineStatus;
@@ -23,12 +23,7 @@ pub enum ActorControlCategory {
 
     /// Unknown purpose, but seen while emoting.
     #[brw(magic = 2u32)]
-    SetMode {
-        /// Seems to correspond to ConditionMode in the EmoteMode Excel sheet.
-        condition_mode: u32,
-        /// Seems to correspond to a row in the EmoteMode Excel sheet.
-        emote_mode: u32,
-    },
+    SetMode { mode: CharacterMode, mode_arg: u32 },
 
     /// Only shows the floating message, it doesn't actually update your EXP!
     #[brw(magic = 7u32)]

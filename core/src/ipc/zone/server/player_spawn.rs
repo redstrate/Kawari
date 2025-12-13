@@ -38,7 +38,8 @@ mod tests {
 
     use binrw::BinRead;
 
-    use crate::ipc::zone::{CharacterMode, DisplayFlag, ObjectKind, PlayerSubKind};
+    use crate::common::CharacterMode;
+    use crate::ipc::zone::{DisplayFlag, ObjectKind, PlayerSubKind};
 
     use crate::server_zone_tests_dir;
 
@@ -60,6 +61,7 @@ mod tests {
         assert_eq!(player_spawn.common.mp_curr, 10000);
         assert_eq!(player_spawn.common.mp_max, 10000);
         assert_eq!(player_spawn.common.mode, CharacterMode::Normal);
+        assert_eq!(player_spawn.common.mode_arg, 0);
         assert_eq!(player_spawn.common.spawn_index, 0);
         assert_eq!(player_spawn.common.level, 1);
         assert_eq!(player_spawn.common.class_job, 1); // adventurer

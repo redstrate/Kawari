@@ -2,8 +2,8 @@ use binrw::binrw;
 use strum_macros::{Display, EnumIter, FromRepr};
 
 use crate::common::{
-    CHAR_NAME_MAX_LENGTH, CustomizeData, EquipDisplayFlag, ObjectId, ObjectTypeId, Position,
-    read_quantized_rotation, read_string, write_quantized_rotation, write_string,
+    CHAR_NAME_MAX_LENGTH, CharacterMode, CustomizeData, EquipDisplayFlag, ObjectId, ObjectTypeId,
+    Position, read_quantized_rotation, read_string, write_quantized_rotation, write_string,
 };
 use bitflags::bitflags;
 
@@ -74,17 +74,6 @@ pub enum ObjectKind {
     #[brw(magic = 16u8)]
     CardStand,
     Unknown(u8),
-}
-
-#[binrw]
-#[brw(little)]
-#[brw(repr = u8)]
-#[derive(Debug, Clone, Default, PartialEq)]
-pub enum CharacterMode {
-    None = 0x0,
-    #[default]
-    Normal = 0x1,
-    Dead = 0x2,
 }
 
 // From https://github.com/SapphireServer/Sapphire/blob/bf3368224a00c180cbb7ba413b52395eba58ec0b/src/common/Common.h#L212
@@ -216,8 +205,10 @@ pub struct CommonSpawn {
     pub u28: u8,            // assumed
     /// Must be unique for each actor.
     pub spawn_index: u8,
-    #[brw(pad_size_to = 2)] // for modes that don't have a param
+    /// What mode this actor should initially be in.
     pub mode: CharacterMode,
+    /// The argument for `mode`.
+    pub mode_arg: u8,
     #[brw(pad_size_to = 2)] // for kinds that don't have a param
     pub object_kind: ObjectKind,
     pub voice: u8,

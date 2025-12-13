@@ -33,8 +33,8 @@ mod tests {
     use binrw::BinRead;
 
     use crate::{
-        common::INVALID_OBJECT_ID,
-        ipc::zone::{BattleNpcSubKind, CharacterMode, DisplayFlag, ObjectKind},
+        common::{CharacterMode, INVALID_OBJECT_ID},
+        ipc::zone::{BattleNpcSubKind, DisplayFlag, ObjectKind},
         server_zone_tests_dir,
     };
 
@@ -62,6 +62,7 @@ mod tests {
         assert_eq!(npc_spawn.common.bnpc_name, 10261);
         assert_eq!(npc_spawn.common.spawn_index, 12);
         assert_eq!(npc_spawn.common.mode, CharacterMode::Normal);
+        assert_eq!(npc_spawn.common.mode_arg, 0);
         assert_eq!(
             npc_spawn.common.object_kind,
             ObjectKind::BattleNpc(BattleNpcSubKind::Pet)
@@ -97,6 +98,7 @@ mod tests {
         assert_eq!(npc_spawn.common.bnpc_name, 405);
         assert_eq!(npc_spawn.common.spawn_index, 18);
         assert_eq!(npc_spawn.common.mode, CharacterMode::Normal);
+        assert_eq!(npc_spawn.common.mode_arg, 0);
         assert_eq!(
             npc_spawn.common.object_kind,
             ObjectKind::BattleNpc(BattleNpcSubKind::Enemy)

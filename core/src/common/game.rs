@@ -655,3 +655,46 @@ impl std::fmt::Debug for InvisibilityFlags {
         bitflags::parser::to_writer(self, f)
     }
 }
+
+// TODO: should we include the param here?
+#[binrw]
+#[brw(little)]
+#[brw(repr = u8)]
+#[derive(Debug, Clone, Default, PartialEq)]
+pub enum CharacterMode {
+    /// Has no effect, never used.
+    None = 0,
+    /// Normal behavior. Param is always 0.
+    #[default]
+    Normal = 1,
+    /// Changes the nameplate color, and shows the return message. Param unknown.
+    Dead = 2,
+    /// Currently looping an emote. Param is the index into the EmoteMode Excel sheet.
+    EmoteLoop = 3,
+    /// Unknown purpose. Param is always 0.
+    Mounted = 4,
+    /// Currently crafting, blocks certain actions. Param is always 0.
+    Crafting = 5,
+    /// Currently gathering, blocks certain actions. Param unknown.
+    Gathering = 6,
+    /// Unknown purpose. Param unknown.
+    MateriaMelding = 7,
+    /// Unknown purpose. Param unknown.
+    AnimationLock = 8,
+    /// Currently carrying an object. Param is a index into the Carry Excel sheet.
+    Carrying = 9,
+    /// Riding in someone else's mount. Param is the seat number.
+    RidingPillion = 10,
+    /// Unknown purpose. Param is a index into the EmoteMode sheet.
+    InPositionLoop = 11,
+    /// Unknown purpose. Param unknown.
+    RaceChocobo = 12,
+    /// Displays the "playing Triple Triad" animation. Param unknown.
+    TripleTriad = 13,
+    /// Unknown purpose. Param unknown.
+    LordOfVerminion = 14,
+    /// Unknown purpose. Param unknown. But it makes your character disappear?!
+    Unknown1 = 15,
+    /// Playing an instrument. Param is a index into the Perform Excel sheet.
+    Performance = 16,
+}

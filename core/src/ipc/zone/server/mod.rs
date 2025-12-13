@@ -36,8 +36,7 @@ pub use npc_spawn::NpcSpawn;
 
 mod common_spawn;
 pub use common_spawn::{
-    BattleNpcSubKind, CharacterMode, CommonSpawn, DisplayFlag, GameMasterRank, ObjectKind,
-    PlayerSubKind,
+    BattleNpcSubKind, CommonSpawn, DisplayFlag, GameMasterRank, ObjectKind, PlayerSubKind,
 };
 
 mod status_effect_list;
