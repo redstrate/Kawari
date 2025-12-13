@@ -86,6 +86,10 @@ pub enum ActorControlCategory {
         invisible: bool,
     },
 
+    /// Seen while dead actors fade away.
+    #[brw(magic = 39u32)]
+    DeadFadeOut {},
+
     #[brw(magic = 41u32)]
     ToggleUnlock {
         /// Corresponds to an UnlockLink. Could be a spell, action, emote, etc.

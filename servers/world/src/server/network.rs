@@ -60,17 +60,14 @@ impl NetworkState {
     }
 
     /// Inform clients that have spawned this actor, that it should be deleted.
-    pub fn inform_remove_actor(
-        &mut self,
-        instance: &Instance,
-        from_id: ClientId,
-        actor_id: ObjectId,
-    ) {
+    pub fn remove_actor(&mut self, instance: &mut Instance, actor_id: ObjectId) {
+        instance.actors.remove(&actor_id);
+
         for (id, (handle, state)) in &mut self.clients {
             let id = *id;
 
-            // Don't bother telling the client who told us
-            if id == from_id {
+            // Don't tell itself
+            if handle.actor_id == actor_id {
                 continue;
             }
 

@@ -13,7 +13,7 @@ use crate::{
     Navmesh, SpawnAllocator,
     lua::load_init_script,
     server::{
-        action::{execute_action, handle_action_messages},
+        action::{execute_action, handle_action_messages, kill_actor},
         actor::NetworkedActor,
         chat::handle_chat_messages,
         effect::{handle_effect_messages, remove_effect},
@@ -25,9 +25,9 @@ use crate::{
 };
 use kawari::{
     common::{
-        CharacterMode, EOBJ_ENTRANCE_CIRCLE, GameData, InvisibilityFlags, JumpState,
-        MAX_SPAWNED_ACTORS, MAX_SPAWNED_OBJECTS, MoveAnimationState, MoveAnimationType, ObjectId,
-        ObjectTypeId, ObjectTypeKind, Position,
+        DEAD_DESPAWN_TIME, EOBJ_ENTRANCE_CIRCLE, GameData, INVALID_OBJECT_ID, InvisibilityFlags,
+        JumpState, MAX_SPAWNED_ACTORS, MAX_SPAWNED_OBJECTS, MoveAnimationState, MoveAnimationType,
+        ObjectId, ObjectTypeId, ObjectTypeKind, Position,
     },
     ipc::zone::{
         ActorControl, ActorControlCategory, ActorControlSelf, ActorControlTarget, BattleNpcSubKind,
@@ -578,10 +578,10 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     // Gather list of tasks to execute
                     {
                         let mut data = data.lock();
-                        for instance in &mut data.instances {
+                        for (i, instance) in data.instances.iter_mut().enumerate() {
                             for task in &instance.queued_task {
                                 if task.point <= Instant::now() {
-                                    tasks_to_execute.push(task.clone());
+                                    tasks_to_execute.push((i, task.clone()));
                                 }
                             }
                             // Keep all tasks that happen in the future.
@@ -589,7 +589,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         }
                     }
 
-                    for task in &tasks_to_execute {
+                    for (instance_index, task) in &tasks_to_execute {
                         match &task.data {
                             QueuedTaskData::CastAction { request, .. } => {
                                 execute_action(
@@ -617,6 +617,39 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                                     *effect_param,
                                     *effect_source_actor_id,
                                 );
+                            }
+                            QueuedTaskData::DeadFadeOut { actor_id } => {
+                                // fade out
+                                let msg = FromServer::ActorControl(
+                                    *actor_id,
+                                    ActorControl {
+                                        category: ActorControlCategory::DeadFadeOut {},
+                                    },
+                                );
+
+                                let mut network = network.lock();
+                                network.send_to_all(None, msg, DestinationNetwork::ZoneClients);
+
+                                // Then queue up a despawn
+                                let mut data = data.lock();
+                                if let Some(instance) = data.instances.get_mut(*instance_index) {
+                                    instance.insert_task(
+                                        ClientId::default(),
+                                        INVALID_OBJECT_ID,
+                                        DEAD_DESPAWN_TIME,
+                                        QueuedTaskData::DeadDespawn {
+                                            actor_id: *actor_id,
+                                        },
+                                    );
+                                }
+                            }
+                            QueuedTaskData::DeadDespawn { actor_id } => {
+                                // despawn
+                                let mut data = data.lock();
+                                if let Some(instance) = data.find_actor_instance_mut(*actor_id) {
+                                    let mut network = network.lock();
+                                    network.remove_actor(instance, *actor_id);
+                                }
                             }
                         }
                     }
@@ -1194,8 +1227,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
 
                     // inform the players in this zone that this actor left
                     if let Some(current_instance) = data.find_actor_instance_mut(from_actor_id) {
-                        current_instance.actors.remove(&from_actor_id);
-                        network.inform_remove_actor(current_instance, from_id, from_actor_id);
+                        network.remove_actor(current_instance, from_actor_id);
                     }
 
                     // then find or create a new instance with the zone id and content finder condition
@@ -1263,31 +1295,8 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 let mut network = network.lock();
                 network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
             }
-            ToServer::Kill(from_id, _from_actor_id) => {
-                // TODO: actually set their HP/MP here
-
-                // First, set their state (otherwise they can still walk)
-                {
-                    let msg = FromServer::ActorControlSelf(ActorControlSelf {
-                        category: ActorControlCategory::SetMode {
-                            mode: CharacterMode::Dead,
-                            mode_arg: 0,
-                        },
-                    });
-
-                    let mut network = network.lock();
-                    network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
-                }
-
-                // Then, play the death animation.
-                {
-                    let msg = FromServer::ActorControlSelf(ActorControlSelf {
-                        category: ActorControlCategory::Kill { animation_id: 0 },
-                    });
-
-                    let mut network = network.lock();
-                    network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
-                }
+            ToServer::Kill(_from_id, from_actor_id) => {
+                kill_actor(network.clone(), from_actor_id);
             }
             ToServer::FatalError(err) => return Err(err),
             _ => {}
@@ -1312,8 +1321,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                 if let Some(actor_id) = actor_id {
                     // remove them from the instance
                     if let Some(current_instance) = data.find_actor_instance_mut(actor_id) {
-                        current_instance.actors.remove(&actor_id);
-                        network.inform_remove_actor(current_instance, remove_id, actor_id);
+                        network.remove_actor(current_instance, actor_id);
                     }
                 }
 

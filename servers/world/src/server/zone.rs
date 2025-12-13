@@ -477,12 +477,10 @@ fn begin_change_zone<'a>(
     game_data: &mut GameData,
     destination_zone_id: u16,
     actor_id: ObjectId,
-    from_id: ClientId,
 ) -> Option<&'a mut Instance> {
     // inform the players in this zone that this actor left
     if let Some(current_instance) = data.find_actor_instance_mut(actor_id) {
-        current_instance.actors.remove(&actor_id);
-        network.inform_remove_actor(current_instance, from_id, actor_id);
+        network.remove_actor(current_instance, actor_id);
     }
 
     // then find or create a new instance with the zone id
@@ -500,15 +498,8 @@ fn change_zone_warp_to_pop_range(
     actor_id: ObjectId,
     from_id: ClientId,
 ) {
-    let target_instance = begin_change_zone(
-        data,
-        network,
-        game_data,
-        destination_zone_id,
-        actor_id,
-        from_id,
-    )
-    .unwrap();
+    let target_instance =
+        begin_change_zone(data, network, game_data, destination_zone_id, actor_id).unwrap();
 
     target_instance.insert_empty_actor(actor_id);
 
@@ -634,8 +625,7 @@ pub fn handle_zone_messages(
 
             // inform the players in this zone that this actor left
             if let Some(current_instance) = data.find_actor_instance_mut(*actor_id) {
-                current_instance.actors.remove(actor_id);
-                network.inform_remove_actor(current_instance, *from_id, *actor_id);
+                network.remove_actor(current_instance, *actor_id);
             }
 
             // then find or create a new instance with the zone id

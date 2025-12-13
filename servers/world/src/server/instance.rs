@@ -40,6 +40,10 @@ pub enum QueuedTaskData {
         effect_param: u16,
         effect_source_actor_id: ObjectId,
     },
+    /// Fade out a dead actor.
+    DeadFadeOut { actor_id: ObjectId },
+    /// Despawn a dead actor.
+    DeadDespawn { actor_id: ObjectId },
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -194,9 +198,8 @@ impl Instance {
         self.queued_task.retain(|x| x != task);
 
         // Then actually do the work:
-        match task.data {
-            QueuedTaskData::CastAction { .. } => cancel_action(network.clone(), task.from_id),
-            QueuedTaskData::LoseStatusEffect { .. } => {} // Nothing needs to happen for status effects
+        if let QueuedTaskData::CastAction { .. } = task.data {
+            cancel_action(network.clone(), task.from_id)
         }
     }
 

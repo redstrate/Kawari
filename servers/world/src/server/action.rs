@@ -17,10 +17,10 @@ use crate::{
     },
 };
 use kawari::{
-    common::{GameData, INVALID_OBJECT_ID, ObjectId},
+    common::{CharacterMode, DEAD_FADE_OUT_TIME, GameData, INVALID_OBJECT_ID, ObjectId},
     config::get_config,
     ipc::zone::{
-        ActionEffect, ActionKind, ActionRequest, ActionResult, ActorControlCategory,
+        ActionEffect, ActionKind, ActionRequest, ActionResult, ActorControl, ActorControlCategory,
         ActorControlSelf, EffectEntry, EffectKind, EffectResult, ServerZoneIpcData,
         ServerZoneIpcSegment,
     },
@@ -135,14 +135,32 @@ pub fn execute_action(
             }
 
             // Inform the client of the new actor's HP/MP
-            // TODO: send to all relevant players
-            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateHpMpTp {
-                hp: common_spawn.hp_curr,
-                mp: common_spawn.mp_curr,
-                unk: 0,
-            });
-            let mut network = network.lock();
-            network.send_ipc_to(from_id, ipc, request.target.object_id);
+            {
+                // TODO: send to all relevant players
+                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateHpMpTp {
+                    hp: common_spawn.hp_curr,
+                    mp: common_spawn.mp_curr,
+                    unk: 0,
+                });
+                let mut network = network.lock();
+                network.send_ipc_to(from_id, ipc, request.target.object_id);
+            }
+
+            if common_spawn.hp_curr == 0 {
+                kill_actor(network.clone(), request.target.object_id);
+
+                // Queue up despawn if this is an NPC
+                if !matches!(actor, NetworkedActor::Player { .. }) {
+                    instance.insert_task(
+                        from_id,
+                        from_actor_id,
+                        DEAD_FADE_OUT_TIME,
+                        QueuedTaskData::DeadFadeOut {
+                            actor_id: request.target.object_id,
+                        },
+                    );
+                }
+            }
         }
 
         // TODO: send Cooldown ActorControlSelf
@@ -410,4 +428,39 @@ pub fn execute_mount_action(
     network.send_ipc_to(from_id, ipc, from_actor_id);
 
     None
+}
+
+// Sends the ActorControls to inform the actor that they're dead.
+pub fn kill_actor(network: Arc<Mutex<NetworkState>>, from_actor_id: ObjectId) {
+    // TODO: set HP/MP to zero here
+
+    // First, set their state (otherwise they can still walk)
+    {
+        // TODO: these should be ActorControlSelf if target_actor_id == from_actor_id
+        let msg = FromServer::ActorControl(
+            from_actor_id,
+            ActorControl {
+                category: ActorControlCategory::SetMode {
+                    mode: CharacterMode::Dead,
+                    mode_arg: 0,
+                },
+            },
+        );
+
+        let mut network = network.lock();
+        network.send_to_all(None, msg, DestinationNetwork::ZoneClients);
+    }
+
+    // Then, play the death animation.
+    {
+        let msg = FromServer::ActorControl(
+            from_actor_id,
+            ActorControl {
+                category: ActorControlCategory::Kill { animation_id: 0 },
+            },
+        );
+
+        let mut network = network.lock();
+        network.send_to_all(None, msg, DestinationNetwork::ZoneClients);
+    }
 }

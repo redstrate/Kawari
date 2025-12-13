@@ -1,6 +1,6 @@
 //! Useful game types should be kept here. Functions should probably not.
 
-use std::collections::HashMap;
+use std::{collections::HashMap, time::Duration};
 
 use binrw::binrw;
 use bitflags::bitflags;
@@ -40,6 +40,12 @@ pub const EOBJ_SHORTCUT: u32 = 2000700;
 
 /// EObj ID for the "shortcut" used for explorer mode.
 pub const EOBJ_SHORTCUT_EXPLORER_MODE: u32 = 2011343;
+
+/// Time until a dead actor fades away. Estimated from retail.
+pub const DEAD_FADE_OUT_TIME: Duration = Duration::from_secs(8);
+
+/// Time until a dead actor despawns after fading away. Estimated from retail.
+pub const DEAD_DESPAWN_TIME: Duration = Duration::from_secs(2);
 
 pub struct Attributes {
     pub strength: u32,
