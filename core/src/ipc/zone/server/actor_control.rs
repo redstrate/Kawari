@@ -44,6 +44,14 @@ pub enum ActorControlCategory {
         unk3: u32,
     },
 
+    /// Kills this actor, including playing an animation and setting HP/MP to zero.
+    /// Does *not* change the state of the actor.
+    #[brw(magic = 14u32)]
+    Kill {
+        /// Index into the ActionTimeline sheet. If 0, plays the default death animation.
+        animation_id: u32,
+    },
+
     #[brw(magic = 15u32)]
     CancelCast {},
 

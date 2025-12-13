@@ -17,6 +17,7 @@ These are commands already built-in into the FFXIV client. Normally only availab
 | `gil` | `//gm gil <amount>` | Adds the specified amount of gil to the player. |
 | `hp` | `//gm hp <amount>` | Sets your current HP to the amount specified. |
 | `item` | `//gm item <id>` | Gives yourself an item. This can only place a single item in the first page of your inventory currently. |
+| `kill` | `//gm kill` | Kills the selected player, but only affects you for now. |
 | `lv` | `//gm lv <level>` | Sets your current level. |
 | `mp` | `//gm mp <amount>` | Sets your current MP to the amount specified. |
 | `quest accept` | `//gm quest accept <id>` | Adds the quest to your active quest list. |

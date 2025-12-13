@@ -26,9 +26,9 @@ use crate::{
 };
 use kawari::{
     common::{
-        EOBJ_ENTRANCE_CIRCLE, GameData, InvisibilityFlags, JumpState, MAX_SPAWNED_ACTORS,
-        MAX_SPAWNED_OBJECTS, MoveAnimationState, MoveAnimationType, ObjectId, ObjectTypeId,
-        ObjectTypeKind, Position,
+        CharacterMode, EOBJ_ENTRANCE_CIRCLE, GameData, InvisibilityFlags, JumpState,
+        MAX_SPAWNED_ACTORS, MAX_SPAWNED_OBJECTS, MoveAnimationState, MoveAnimationType, ObjectId,
+        ObjectTypeId, ObjectTypeKind, Position,
     },
     ipc::zone::{
         ActorControl, ActorControlCategory, ActorControlSelf, ActorControlTarget, BattleNpcSubKind,
@@ -1278,6 +1278,32 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
 
                 let mut network = network.lock();
                 network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
+            }
+            ToServer::Kill(from_id, _from_actor_id) => {
+                // TODO: actually set their HP/MP here
+
+                // First, set their state (otherwise they can still walk)
+                {
+                    let msg = FromServer::ActorControlSelf(ActorControlSelf {
+                        category: ActorControlCategory::SetMode {
+                            mode: CharacterMode::Dead,
+                            mode_arg: 0,
+                        },
+                    });
+
+                    let mut network = network.lock();
+                    network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
+                }
+
+                // Then, play the death animation.
+                {
+                    let msg = FromServer::ActorControlSelf(ActorControlSelf {
+                        category: ActorControlCategory::Kill { animation_id: 0 },
+                    });
+
+                    let mut network = network.lock();
+                    network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
+                }
             }
             ToServer::FatalError(err) => return Err(err),
             _ => {}

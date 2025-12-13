@@ -618,6 +618,10 @@ impl LuaPlayer {
     fn incomplete_quest(&mut self, id: u32) {
         self.queued_tasks.push(LuaTask::IncompleteQuest { id });
     }
+
+    fn kill(&mut self) {
+        self.queued_tasks.push(LuaTask::Kill {});
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -1002,6 +1006,10 @@ impl UserData for LuaPlayer {
         });
         methods.add_method_mut("incomplete_quest", |_, this, quest_id: u32| {
             this.incomplete_quest(quest_id);
+            Ok(())
+        });
+        methods.add_method_mut("kill", |_, this, _: ()| {
+            this.kill();
             Ok(())
         });
     }

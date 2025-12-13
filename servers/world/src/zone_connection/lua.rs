@@ -541,6 +541,12 @@ impl ZoneConnection {
                         self.incomplete_quest(*id).await;
                     }
                 }
+                LuaTask::Kill {} => {
+                    // Signal to the global server to kill us.
+                    self.handle
+                        .send(ToServer::Kill(self.id, self.player_data.actor_id))
+                        .await;
+                }
             }
         }
         player.queued_tasks.clear();

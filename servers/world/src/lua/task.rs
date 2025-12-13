@@ -182,4 +182,5 @@ pub enum LuaTask {
     IncompleteQuest {
         id: u32,
     },
+    Kill {},
 }

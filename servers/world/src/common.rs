@@ -280,6 +280,8 @@ pub enum ToServer {
     UpdateConditions(ObjectId, Conditions),
     /// (Temporary) Signal to the server to commence the duty.
     CommenceDuty(ClientId, ObjectId),
+    /// (Temporary) Signal to the server to kill this actor.
+    Kill(ClientId, ObjectId),
 }
 
 #[derive(Clone, Debug)]
