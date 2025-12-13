@@ -1,7 +1,10 @@
 use binrw::binrw;
 
 use crate::{
-    common::{CHAR_NAME_MAX_LENGTH, ObjectId, read_string, write_string},
+    common::{
+        CHAR_NAME_MAX_LENGTH, ObjectId, PlayerStateFlags1, PlayerStateFlags2, PlayerStateFlags3,
+        read_string, write_string,
+    },
     constants::{
         ACTIVE_HELP_BITMASK_SIZE, ADVENTURE_BITMASK_SIZE, AETHER_CURRENT_BITMASK_SIZE,
         AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE, AETHERYTE_UNLOCK_BITMASK_SIZE,
@@ -75,7 +78,7 @@ pub struct PlayerStatus {
     /// The character's initial city-state.
     pub city_state: u8,
     /// The Aetheryte used for the Return action. Indexed into the Aetheryte Excel sheet.
-    pub home_aetheryte_id: u16,
+    pub home_aetheryte_id: u16, // 0x8c
     pub quest_special_flags: u8,
     pub pet_data: u8,
     pub companion_rank: u8,
@@ -101,8 +104,9 @@ pub struct PlayerStatus {
     pub unknownauahab: u16,
     pub supply_seed: u8,
     pub unk4: u8,
-    pub mentor_version: u8,
     pub unk5: u8,
+    /// Last expansion mentorship was held. Starts at 1 with Shadowbringers.
+    pub mentor_version: u8,
     pub weekly_bingo_exp_multiplier: u8,
     pub weekly_bingo_unk63: u8,
     pub series_current_rank: u8,
@@ -225,10 +229,12 @@ pub struct PlayerStatus {
     pub rank_immortal_flames: u8,
     pub beast_reputation_rank: [u8; BEAST_TRIBE_ARRAY_SIZE],
     pub content_roulette_completion: [u8; 10],
-    pub unknown_mask6f7: [u8; 9],
-    pub player_state_flags: [u8; 3],
+    pub unknown_mask6f7: [u8; 8],
+    pub player_state_flags1: PlayerStateFlags1,
+    pub player_state_flags2: PlayerStateFlags2,
+    pub player_state_flags3: PlayerStateFlags3,
     pub contents_note_completion_flags: [u8; 8],
-    pub padding_after_content: [u8; 5],
+    pub padding_after_content: [u8; 6],
     pub unlocked_secret_recipe_books: [u8; 14],
     #[br(count = 28)]
     #[bw(pad_size_to = 28)]

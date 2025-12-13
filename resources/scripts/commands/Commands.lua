@@ -13,6 +13,7 @@ GM_CHANGE_WEATHER = 6
 GM_SPEED = 9
 GM_INVISIBILITY = 13
 GM_KILL = 14
+GM_ICON = 18
 GM_SET_HP = 100
 GM_SET_MP = 101
 GM_EXP = 104
@@ -41,6 +42,7 @@ registerGMCommand(GM_CHANGE_WEATHER,    GM_DIR.."ChangeWeather.lua")
 registerGMCommand(GM_SPEED,             GM_DIR.."SetSpeed.lua")
 registerGMCommand(GM_INVISIBILITY,      GM_DIR.."ToggleInvisibility.lua")
 registerGMCommand(GM_KILL,              GM_DIR.."Kill.lua")
+registerGMCommand(GM_ICON,              GM_DIR.."Icon.lua")
 registerGMCommand(GM_SET_HP,            GM_DIR.."SetHP.lua")
 registerGMCommand(GM_SET_MP,            GM_DIR.."SetMP.lua")
 -- TODO: Implement the GMInspect IPC opcode, it's completely different than the normal GMCommand opcode

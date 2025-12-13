@@ -710,3 +710,80 @@ pub enum CharacterMode {
     /// Playing an instrument. Param is a index into the Perform Excel sheet.
     Performance = 16,
 }
+
+#[binrw]
+#[derive(Clone, Copy, Eq, PartialEq)]
+pub struct PlayerStateFlags1(u8);
+
+bitflags! {
+    impl PlayerStateFlags1: u8 {
+        /// No flags set.
+        const NONE = 0;
+        /// If this player isn't a novice. If not set, considered a New Adventurer.
+        const NOT_NOVICE = 1;
+        /// If the player is a Battle mentor. This includes PvE and PvP.
+        const BATTLE_MENTOR = 8;
+    }
+}
+
+impl Default for PlayerStateFlags1 {
+    fn default() -> Self {
+        PlayerStateFlags1::NONE
+    }
+}
+
+impl std::fmt::Debug for PlayerStateFlags1 {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        bitflags::parser::to_writer(self, f)
+    }
+}
+
+#[binrw]
+#[derive(Clone, Copy, Eq, PartialEq)]
+pub struct PlayerStateFlags2(u8);
+
+bitflags! {
+    impl PlayerStateFlags2: u8 {
+        /// No flags set.
+        const NONE = 0;
+        /// Returning players.
+        const RETURNER = 32;
+    }
+}
+
+impl Default for PlayerStateFlags2 {
+    fn default() -> Self {
+        PlayerStateFlags2::NONE
+    }
+}
+
+impl std::fmt::Debug for PlayerStateFlags2 {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        bitflags::parser::to_writer(self, f)
+    }
+}
+
+#[binrw]
+#[derive(Clone, Copy, Eq, PartialEq)]
+pub struct PlayerStateFlags3(u8);
+
+bitflags! {
+    impl PlayerStateFlags3: u8 {
+        /// No flags set.
+        const NONE = 0;
+        /// If the player is a trade mentor.
+        const TRADE_MENTOR = 1;
+    }
+}
+
+impl Default for PlayerStateFlags3 {
+    fn default() -> Self {
+        PlayerStateFlags3::NONE
+    }
+}
+
+impl std::fmt::Debug for PlayerStateFlags3 {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        bitflags::parser::to_writer(self, f)
+    }
+}

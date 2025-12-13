@@ -13,7 +13,7 @@ use kawari::{
         ObjectTypeKind, Position, adjust_quest_id, workdefinitions::RemakeMode,
     },
     ipc::zone::{
-        ActorControlCategory, ActorControlSelf, EventScene, EventType, SceneFlags,
+        ActorControlCategory, ActorControlSelf, EventScene, EventType, OnlineStatus, SceneFlags,
         ServerNoticeFlags, ServerNoticeMessage, ServerZoneIpcData, ServerZoneIpcSegment, Warp,
     },
     packet::PacketSegment,
@@ -622,6 +622,17 @@ impl LuaPlayer {
     fn kill(&mut self) {
         self.queued_tasks.push(LuaTask::Kill {});
     }
+
+    fn set_online_status(&mut self, online_status_id: u8) {
+        let ipc =
+            ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
+                category: ActorControlCategory::SetStatusIcon {
+                    icon: OnlineStatus::from_repr(online_status_id).unwrap_or_default(),
+                },
+            }));
+
+        create_ipc_self(self, ipc, self.player_data.actor_id);
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -1010,6 +1021,10 @@ impl UserData for LuaPlayer {
         });
         methods.add_method_mut("kill", |_, this, _: ()| {
             this.kill();
+            Ok(())
+        });
+        methods.add_method_mut("set_online_status", |_, this, online_status_id: u8| {
+            this.set_online_status(online_status_id);
             Ok(())
         });
     }
