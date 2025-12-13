@@ -3,7 +3,7 @@
 use crate::{ZoneConnection, inventory::Storage, zone_connection::PersistentQuest};
 use kawari::{
     common::adjust_quest_id,
-    constants::COMPLETED_LEVEQUEST_BITMASK_SIZE,
+    constants::{COMPLETED_LEVEQUEST_BITMASK_SIZE, COMPLETED_QUEST_BITMASK_SIZE},
     ipc::zone::{
         ActiveQuest, QuestActiveList, QuestTracker, ServerZoneIpcData, ServerZoneIpcSegment,
         TrackedQuest,
@@ -11,25 +11,35 @@ use kawari::{
 };
 
 impl ZoneConnection {
-    pub async fn send_quest_information(&mut self) {
-        // quest active list
-        {
-            let mut quests = Vec::new();
-            for quest in &self.player_data.active_quests {
-                quests.push(ActiveQuest {
-                    id: quest.id,
-                    sequence: quest.sequence,
-                    flags: 1,
-                    ..Default::default()
-                });
-            }
-
-            let ipc =
-                ServerZoneIpcSegment::new(ServerZoneIpcData::QuestActiveList(QuestActiveList {
-                    quests,
-                }));
-            self.send_ipc_self(ipc).await;
+    pub async fn send_active_quests(&mut self) {
+        let mut quests = Vec::new();
+        for quest in &self.player_data.active_quests {
+            quests.push(ActiveQuest {
+                id: quest.id,
+                sequence: quest.sequence,
+                flags: 1,
+                ..Default::default()
+            });
         }
+
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::QuestActiveList(QuestActiveList {
+            quests,
+        }));
+        self.send_ipc_self(ipc).await;
+    }
+
+    pub async fn send_scenario_guide(&mut self) {
+        // TODO: temporary
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ScenarioGuide {
+            quest_id_1: 39,
+            next_quest_id: 85,
+            layout_id: 1985113,
+        });
+        self.send_ipc_self(ipc).await;
+    }
+
+    pub async fn send_quest_information(&mut self) {
+        self.send_active_quests().await;
 
         // quest complete list
         {
@@ -54,17 +64,6 @@ impl ZoneConnection {
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::LevequestCompleteList {
                 completed_levequests: vec![0xFF; COMPLETED_LEVEQUEST_BITMASK_SIZE],
                 unk2: Vec::default(),
-            });
-            self.send_ipc_self(ipc).await;
-        }
-
-        // scenario guide
-        {
-            // TODO: temporary
-            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ScenarioGuide {
-                quest_id_1: 39,
-                next_quest_id: 85,
-                layout_id: 1985113,
             });
             self.send_ipc_self(ipc).await;
         }
@@ -102,7 +101,7 @@ impl ZoneConnection {
     }
 
     pub async fn finish_quest(&mut self, id: u32) {
-        let adjusted_id = adjust_quest_id(65536);
+        let adjusted_id = adjust_quest_id(id);
 
         // Remove it from our internal data model
         if let Some(index) = self
@@ -148,6 +147,11 @@ impl ZoneConnection {
         self.send_quest_tracker().await;
     }
 
+    pub async fn finish_all_quests(&mut self) {
+        self.player_data.unlocks.completed_quests.0 = vec![0xFF; COMPLETED_QUEST_BITMASK_SIZE];
+        self.send_quest_information().await;
+    }
+
     pub async fn send_quest_tracker(&mut self) {
         // Right now we don't support tracking, so just send the first five quests.
         let mut tracked_quests = [TrackedQuest::default(); 5];
@@ -162,5 +166,39 @@ impl ZoneConnection {
             tracked_quests,
         }));
         self.send_ipc_self(ipc).await;
+    }
+
+    pub async fn cancel_quest(&mut self, id: u32) {
+        let adjusted_id = adjust_quest_id(id);
+
+        // Remove it from our internal data model
+        if let Some(index) = self
+            .player_data
+            .active_quests
+            .iter()
+            .position(|x| x.id == adjusted_id as u16)
+        {
+            self.player_data.active_quests.remove(index);
+        }
+
+        // TODO: inform the player, im not sure what this looks like in retail
+
+        self.send_active_quests().await;
+        self.send_quest_tracker().await;
+    }
+
+    pub async fn set_quest_sequence(&mut self, _id: u32, _sequence: u8) {
+        // TODO: implement
+    }
+
+    pub async fn incomplete_quest(&mut self, id: u32) {
+        let adjusted_id = adjust_quest_id(id);
+        self.player_data.unlocks.completed_quests.clear(adjusted_id);
+        self.send_quest_information().await;
+    }
+
+    pub async fn incomplete_all_quests(&mut self) {
+        self.player_data.unlocks.completed_quests.0 = vec![0x0; COMPLETED_QUEST_BITMASK_SIZE];
+        self.send_quest_information().await;
     }
 }

@@ -19,6 +19,12 @@ GM_ORCHESTRION = 116
 GM_GIVE_ITEM = 200
 GM_GIL = 201
 GM_COLLECT = 202
+GM_QUEST_ACCEPT = 300
+GM_QUEST_CANCEL = 301
+GM_QUEST_COMPLETE = 302
+GM_QUEST_INCOMPLETE = 303
+GM_QUEST_SEQUENCE = 304
+GM_QUEST_INSPECT = 305
 GM_AETHERYTE = 350
 GM_INSPECT = 422
 GM_WIREFRAME = 550
@@ -41,6 +47,13 @@ registerGMCommand(GM_EXP,               GM_DIR.."Exp.lua")
 registerGMCommand(GM_ORCHESTRION,       GM_DIR.."Orchestrion.lua")
 registerGMCommand(GM_GIVE_ITEM,         GM_DIR.."GiveItem.lua")
 registerGMCommand(GM_GIL,               GM_DIR.."Gil.lua")
+registerGMCommand(GM_COLLECT,           GM_DIR.."Collect.lua")
+registerGMCommand(GM_QUEST_ACCEPT,      GM_DIR.."QuestAccept.lua")
+registerGMCommand(GM_QUEST_CANCEL,      GM_DIR.."QuestCancel.lua")
+registerGMCommand(GM_QUEST_COMPLETE,    GM_DIR.."QuestComplete.lua")
+registerGMCommand(GM_QUEST_INCOMPLETE,  GM_DIR.."QuestIncomplete.lua")
+registerGMCommand(GM_QUEST_SEQUENCE,    GM_DIR.."QuestSequence.lua")
+registerGMCommand(GM_QUEST_INSPECT,     GM_DIR.."QuestInspect.lua")
 registerGMCommand(GM_COLLECT,           GM_DIR.."Collect.lua")
 registerGMCommand(GM_AETHERYTE,         GM_DIR.."UnlockAetheryte.lua")
 registerGMCommand(GM_WIREFRAME,         GM_DIR.."ToggleWireframe.lua")

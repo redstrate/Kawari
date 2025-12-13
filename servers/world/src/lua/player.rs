@@ -220,10 +220,6 @@ impl LuaPlayer {
         });
     }
 
-    fn complete_all_quests(&mut self) {
-        self.queued_tasks.push(LuaTask::CompleteAllQuests {});
-    }
-
     fn unlock_content(&mut self, id: u16) {
         self.queued_tasks.push(LuaTask::UnlockContent { id });
     }
@@ -609,6 +605,19 @@ impl LuaPlayer {
         self.queued_tasks
             .push(LuaTask::RegisterForContent { content_id });
     }
+
+    fn quest_sequence(&mut self, id: u32, sequence: u8) {
+        self.queued_tasks
+            .push(LuaTask::QuestSequence { id, sequence });
+    }
+
+    fn cancel_quest(&mut self, id: u32) {
+        self.queued_tasks.push(LuaTask::CancelQuest { id });
+    }
+
+    fn incomplete_quest(&mut self, id: u32) {
+        self.queued_tasks.push(LuaTask::IncompleteQuest { id });
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -754,10 +763,6 @@ impl UserData for LuaPlayer {
         methods.add_method_mut("add_item", |_, this, (id, quantity): (u32, u32)| {
             // Can't think of any situations where we wouldn't want to force a client inventory update after using debug commands.
             this.add_item(id, quantity, true);
-            Ok(())
-        });
-        methods.add_method_mut("complete_all_quests", |_, this, _: ()| {
-            this.complete_all_quests();
             Ok(())
         });
         methods.add_method_mut("unlock_content", |_, this, id: u16| {
@@ -982,6 +987,21 @@ impl UserData for LuaPlayer {
         );
         methods.add_method_mut("register_for_content", |_, this, content_id: u16| {
             this.register_for_content(content_id);
+            Ok(())
+        });
+        methods.add_method_mut(
+            "quest_sequence",
+            |_, this, (quest_id, sequence): (u32, u8)| {
+                this.quest_sequence(quest_id, sequence);
+                Ok(())
+            },
+        );
+        methods.add_method_mut("cancel_quest", |_, this, quest_id: u32| {
+            this.cancel_quest(quest_id);
+            Ok(())
+        });
+        methods.add_method_mut("incomplete_quest", |_, this, quest_id: u32| {
+            this.incomplete_quest(quest_id);
             Ok(())
         });
     }

@@ -58,7 +58,6 @@ pub enum LuaTask {
         quantity: u32,
         send_client_update: bool,
     },
-    CompleteAllQuests {},
     UnlockContent {
         id: u16,
     },
@@ -172,5 +171,15 @@ pub enum LuaTask {
     },
     CommenceDuty {
         director_id: u32,
+    },
+    QuestSequence {
+        id: u32,
+        sequence: u8,
+    },
+    CancelQuest {
+        id: u32,
+    },
+    IncompleteQuest {
+        id: u32,
     },
 }

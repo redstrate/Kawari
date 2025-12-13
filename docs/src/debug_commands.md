@@ -5,7 +5,6 @@ These special debug commands start with `!` and are custom to Kawari.
 | Name | Usage | Details|
 | --- | --- | --- |
 | `acs` | `!acs <category> <param1 (optional)> <param2 (optional)> <param3 (optional)> <param4 (optional)>` | Send an ActorControlSelf to the player. |
-| `completeallquests` | `!completeallquests` | Completes every quest in the game, useful for accessing stuff gated behind quest completion. |
 | `condition` | `!condition <name>` | Forcefully sets a condition, see `condition.rs` for what is supported. |
 | `classjob` | `!classjob <id>` | Changes to another class/job. |
 | `clearconditions` | `!clearconditions` | Forcefully clears all conditions set on your character. |

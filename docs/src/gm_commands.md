@@ -7,7 +7,7 @@ These are commands already built-in into the FFXIV client. Normally only availab
 
 | Name | Usage | Details |
 | --- | --- | --- |
-| `aetheryte` | `//gm aetheryte <on/off> <id>` | Unlock an Aetheryte. |
+| `aetheryte` | `//gm aetheryte <on/off> <id/all>` | Unlock an Aetheryte. |
 | `blacklist` | `//gm blacklist status` | Unknown purpose, looks like it just prints out your blacklist. |
 | `chr_info` | `//gm chr_info <pc/bnpc/enpc/enpc_lively>` | Returns the internal entity IDs for your player character. |
 | `collect` | `//gm collect <amount>` | Subtracts `amount` gil from the targeted player (yourself only for now). |
@@ -19,6 +19,12 @@ These are commands already built-in into the FFXIV client. Normally only availab
 | `item` | `//gm item <id>` | Gives yourself an item. This can only place a single item in the first page of your inventory currently. |
 | `lv` | `//gm lv <level>` | Sets your current level. |
 | `mp` | `//gm mp <amount>` | Sets your current MP to the amount specified. |
+| `quest accept` | `//gm quest accept <id>` | Adds the quest to your active quest list. |
+| `quest cancel` | `//gm quest cancel <id>` | Removes the quest from your active quest list. |
+| `quest incomplete` | `//gm quest incomplete <id>` | Removes the quest from the completed quest list. |
+| `quest complete` | `//gm quest complete <id/all>` | Adds the quest to the completed quest list. |
+| `quest sequence`  | `//gm quest sequence <id> <sequence>` | Sets the sequence for this quest. |
+| `quest inspect` | `//gm quest inspect <id> ` | Print information about this quest. |
 | `orchestrion` | `//gm orchestrion <on/off> <id>` | Unlock an Orchestrion song. |
 | `pos` | `//gm pos <x> <y> <z>` | Teleport to the specified location. |
 | `race` | `//gm race <id>` | Sets your player's race. |

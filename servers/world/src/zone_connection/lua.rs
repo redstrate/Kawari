@@ -14,8 +14,8 @@ use kawari::{
         ADVENTURE_BITMASK_SIZE, AETHER_CURRENT_BITMASK_SIZE,
         AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE, BUDDY_EQUIP_BITMASK_SIZE,
         CAUGHT_FISH_BITMASK_SIZE, CAUGHT_SPEARFISH_BITMASK_SIZE, CHOCOBO_TAXI_STANDS_BITMASK_SIZE,
-        COMPLETED_QUEST_BITMASK_SIZE, CUTSCENE_SEEN_BITMASK_SIZE, GLASSES_STYLES_BITMASK_SIZE,
-        MINION_BITMASK_SIZE, ORNAMENT_BITMASK_SIZE, TRIPLE_TRIAD_CARDS_BITMASK_SIZE,
+        CUTSCENE_SEEN_BITMASK_SIZE, GLASSES_STYLES_BITMASK_SIZE, MINION_BITMASK_SIZE,
+        ORNAMENT_BITMASK_SIZE, TRIPLE_TRIAD_CARDS_BITMASK_SIZE,
     },
     ipc::zone::{ActorControlCategory, ActorControlSelf, ServerZoneIpcData, ServerZoneIpcSegment},
 };
@@ -183,11 +183,6 @@ impl ZoneConnection {
                         tracing::error!(ERR_INVENTORY_ADD_FAILED);
                         self.send_notice(ERR_INVENTORY_ADD_FAILED).await;
                     }
-                }
-                LuaTask::CompleteAllQuests {} => {
-                    self.player_data.unlocks.completed_quests.0 =
-                        vec![0xFF; COMPLETED_QUEST_BITMASK_SIZE];
-                    self.send_quest_information().await;
                 }
                 LuaTask::UnlockContent { id } => {
                     {
@@ -497,7 +492,12 @@ impl ZoneConnection {
                     self.accept_quest(*id).await;
                 }
                 LuaTask::FinishQuest { id } => {
-                    self.finish_quest(*id).await;
+                    // this means "all"
+                    if *id == 65535 {
+                        self.finish_all_quests().await;
+                    } else {
+                        self.finish_quest(*id).await;
+                    }
                 }
                 LuaTask::GainStatusEffect {
                     effect_id,
@@ -526,6 +526,20 @@ impl ZoneConnection {
                     self.handle
                         .send(ToServer::CommenceDuty(self.id, self.player_data.actor_id))
                         .await;
+                }
+                LuaTask::QuestSequence { id, sequence } => {
+                    self.set_quest_sequence(*id, *sequence).await;
+                }
+                LuaTask::CancelQuest { id } => {
+                    self.cancel_quest(*id).await;
+                }
+                LuaTask::IncompleteQuest { id } => {
+                    // this means "all"
+                    if *id == 65535 {
+                        self.incomplete_all_quests().await;
+                    } else {
+                        self.incomplete_quest(*id).await;
+                    }
                 }
             }
         }
