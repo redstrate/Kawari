@@ -1280,20 +1280,27 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                     continue;
                 };
 
+                let flags =
+                    InvisibilityFlags::UNK1 | InvisibilityFlags::UNK2 | InvisibilityFlags::UNK3;
+
                 // Make the entrance circle invisible.
                 let msg = FromServer::ActorControl(
                     entrance_actor_id,
                     ActorControl {
-                        category: ActorControlCategory::SetInvisibilityFlags {
-                            flags: InvisibilityFlags::UNK1
-                                | InvisibilityFlags::UNK2
-                                | InvisibilityFlags::UNK3,
-                        },
+                        category: ActorControlCategory::SetInvisibilityFlags { flags },
                     },
                 );
 
                 let mut network = network.lock();
                 network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
+
+                // Update invisibility flags for next spawn
+                if let Some(NetworkedActor::Object { object }) =
+                    instance.find_actor_mut(entrance_actor_id)
+                {
+                    object.visibility = flags;
+                    object.unselectable = true;
+                }
             }
             ToServer::Kill(_from_id, from_actor_id) => {
                 kill_actor(network.clone(), from_actor_id);

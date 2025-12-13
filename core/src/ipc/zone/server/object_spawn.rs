@@ -2,8 +2,8 @@ use binrw::binrw;
 
 use crate::{
     common::{
-        ObjectId, Position, read_bool_from, read_quantized_rotation, write_bool_as,
-        write_quantized_rotation,
+        InvisibilityFlags, ObjectId, Position, read_bool_from, read_quantized_rotation,
+        write_bool_as, write_quantized_rotation,
     },
     ipc::zone::ObjectKind,
 };
@@ -17,10 +17,11 @@ pub struct ObjectSpawn {
     /// What kind of object this is.
     pub kind: ObjectKind,
     /// Seems to control whether or not its targetable?
-    #[brw(pad_after = 1)]
     #[br(map = read_bool_from::<u8>)]
     #[bw(map = write_bool_as::<u8>)]
     pub unselectable: bool,
+    /// Controls the visibility of the object.
+    pub visibility: InvisibilityFlags,
     /// If this is an ENPC, represents an index into the EObj Excel sheet.
     /// If this is an AreaObject, represents an index into the VFX Excel sheet.
     pub base_id: u32,
@@ -41,7 +42,7 @@ pub struct ObjectSpawn {
     pub rotation: f32,
     /// The FATE to associate with.
     pub fate_id: u16,
-    pub event_state: u8, // TODO: may be invisibility flags?
+    pub event_state: u8,
     pub args1: u8,
     pub args2: u32,
     pub args3: u32,
