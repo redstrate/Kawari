@@ -11,7 +11,6 @@ use tokio::sync::mpsc::Receiver;
 
 use crate::{
     Navmesh, SpawnAllocator,
-    common::SpawnKind,
     lua::load_init_script,
     server::{
         action::{execute_action, handle_action_messages},
@@ -1014,7 +1013,6 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
             }
             ToServer::DebugNewEnemy(_from_id, from_actor_id, id) => {
                 let mut data = data.lock();
-                let mut network = network.lock();
 
                 let actor_id = Instance::generate_actor_id();
                 let npc_spawn;
@@ -1044,7 +1042,6 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                             hp_max: 91,
                             mp_curr: 100,
                             mp_max: 100,
-                            spawn_index: 0, // not needed at this level
                             bnpc_base: id,
                             bnpc_name: 405,
                             object_kind: ObjectKind::BattleNpc(BattleNpcSubKind::Enemy),
@@ -1059,16 +1056,9 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
 
                     instance.insert_npc(actor_id, npc_spawn.clone());
                 }
-
-                let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
-                    continue;
-                };
-
-                network.send_actor(instance, actor_id, SpawnKind::Npc(npc_spawn));
             }
             ToServer::DebugSpawnClone(_from_id, from_actor_id) => {
                 let mut data = data.lock();
-                let mut network = network.lock();
 
                 let actor_id = Instance::generate_actor_id();
                 let npc_spawn;
@@ -1093,12 +1083,6 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
 
                     instance.insert_npc(actor_id, npc_spawn.clone());
                 }
-
-                let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
-                    break;
-                };
-
-                network.send_actor(instance, actor_id, SpawnKind::Npc(npc_spawn));
             }
             ToServer::Config(_from_id, from_actor_id, config) => {
                 // update their stored state so it's correctly sent on new spawns

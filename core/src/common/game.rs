@@ -35,6 +35,12 @@ pub const INVENTORY_ACTION_ACK_GENERAL: u8 = 7;
 /// EObj ID for the "entrance circle" in instanced content.
 pub const EOBJ_ENTRANCE_CIRCLE: u32 = 2000182;
 
+/// EObj ID for the "shortcut" in instanced content.
+pub const EOBJ_SHORTCUT: u32 = 2000700;
+
+/// EObj ID for the "shortcut" used for explorer mode.
+pub const EOBJ_SHORTCUT_EXPLORER_MODE: u32 = 2011343;
+
 pub struct Attributes {
     pub strength: u32,
     pub dexterity: u32,
@@ -207,7 +213,7 @@ pub enum EventHandlerType {
     CraftLeveClient = 14,
     /// Unknown purpose.
     GimmickAccessor = 15,
-    /// Unknown purpose.
+    /// See GimmickBill Excel sheet (event_id & 0xFFF.)
     GimmickBill = 16,
     /// See GimmickRect Excel sheet (event_id & 0xFFF.)
     GimmickRect = 17,

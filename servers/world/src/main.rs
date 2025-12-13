@@ -743,12 +743,24 @@ async fn client_loop(
                                                         connection.player_data.unlocks.cutscene_seen.set(id);
                                                     }
                                                     ClientTriggerCommand::DirectorTrigger { director_id, trigger, arg } => {
-                                                        // Always send a sync response
-                                                        if trigger == DirectorTrigger::Sync {
-                                                            connection.actor_control_self(ActorControlSelf { category: ActorControlCategory::DirectorEvent { director_id, event: DirectorEvent::SyncResponse, arg: 1 } }).await;
-                                                        } else {
-                                                            tracing::info!("DirectorTrigger: {director_id} {trigger:?} {arg}");
+                                                        match trigger {
+                                                            DirectorTrigger::Sync => {
+                                                                // Always send a sync response for now
+                                                                connection.actor_control_self(ActorControlSelf { category: ActorControlCategory::DirectorEvent { director_id, event: DirectorEvent::SyncResponse, arg: 1 } }).await;
+                                                            }
+                                                            DirectorTrigger::SummonStrikingDummy => {
+                                                                connection
+                                                                .handle
+                                                                .send(ToServer::DebugNewEnemy(
+                                                                    connection.id,
+                                                                    connection.player_data.actor_id,
+                                                                    11744, // TODO: this doesn't seem to be right?!
+                                                                ))
+                                                                .await;
+                                                            }
+                                                            _ => tracing::info!("DirectorTrigger: {director_id} {trigger:?} {arg}")
                                                         }
+
                                                     }
                                                     ClientTriggerCommand::OpenGoldSaucerGeneralTab {} => {
                                                         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::GoldSaucerInformation { unk: [0; 40] });

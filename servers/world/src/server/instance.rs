@@ -102,7 +102,7 @@ impl Instance {
         }
 
         // Load initial event objects into instance
-        for object in instance.zone.get_event_objects(game_data) {
+        for object in instance.zone.get_event_objects(game_data, false) {
             instance.insert_object(object.entity_id, object);
         }
 

@@ -26,25 +26,6 @@ pub enum DestinationNetwork {
 }
 
 impl NetworkState {
-    /// Tell all the clients that a new actor spawned.
-    pub fn send_actor(&mut self, instance: &Instance, actor_id: ObjectId, spawn: SpawnKind) {
-        // TODO: only send in the relevant instance
-        for (id, (handle, _)) in &mut self.clients {
-            let id = *id;
-
-            // Skip any clients not in this instance
-            if !instance.actors.contains_key(&handle.actor_id) {
-                continue;
-            }
-
-            let msg = FromServer::ActorSpawn(actor_id, spawn.clone());
-
-            if handle.send(msg).is_err() {
-                self.to_remove.push(id);
-            }
-        }
-    }
-
     // TODO: replace following function with this?
     pub fn spawn_existing_actor_message(
         client_state: &mut ClientState,

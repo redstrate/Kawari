@@ -22,8 +22,9 @@ use crate::{
 };
 use kawari::{
     common::{
-        DistanceRange, EOBJ_ENTRANCE_CIRCLE, EventHandlerType, GameData, INVALID_OBJECT_ID,
-        ObjectId, Position, TerritoryNameKind, euler_to_direction,
+        DistanceRange, EOBJ_ENTRANCE_CIRCLE, EOBJ_SHORTCUT, EOBJ_SHORTCUT_EXPLORER_MODE,
+        EventHandlerType, GameData, INVALID_OBJECT_ID, ObjectId, Position, TerritoryNameKind,
+        euler_to_direction,
     },
     ipc::zone::{
         ActorControl, ActorControlCategory, ActorControlSelf, Conditions, ObjectKind, ObjectSpawn,
@@ -326,10 +327,14 @@ impl Zone {
         None
     }
 
-    /// Returns a list of event objects to spawn by default.
+    /// Returns a list of event objects to spawn by default. If `explorer_mode`, replaces the shortcut object.
     ///
     /// For example, the Gold Saucer arcade machines or shortcuts in dungeons.
-    pub fn get_event_objects(&self, game_data: &mut GameData) -> Vec<ObjectSpawn> {
+    pub fn get_event_objects(
+        &self,
+        game_data: &mut GameData,
+        explorer_mode: bool,
+    ) -> Vec<ObjectSpawn> {
         let mut object_spawns = Vec::new();
 
         for layer_group in &self.layer_groups {
@@ -350,9 +355,16 @@ impl Zone {
                             false // don't make selectable to be on the safe side.
                         };
 
+                        let base_id = if eobj.parent_data.base_id == EOBJ_SHORTCUT && explorer_mode
+                        {
+                            EOBJ_SHORTCUT_EXPLORER_MODE
+                        } else {
+                            eobj.parent_data.base_id
+                        };
+
                         object_spawns.push(ObjectSpawn {
                             kind: ObjectKind::EventObj,
-                            base_id: eobj.parent_data.base_id,
+                            base_id,
                             unselectable,
                             entity_id: ObjectId(fastrand::u32(..)),
                             layout_id: object.instance_id,
