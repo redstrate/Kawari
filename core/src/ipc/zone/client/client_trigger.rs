@@ -226,6 +226,10 @@ pub enum ClientTriggerCommand {
     #[brw(magic = 3200u32)]
     OpenPortraitsWindow {},
 
+    /// The client opens the Mogpendium.
+    #[brw(magic = 9003u32)]
+    OpenMogpendium { unk1: u32, unk2: u32 },
+
     /// The client tells us how far in the distance we should see actors.
     #[brw(magic = 9005u32)]
     SetDistanceRange { range: DistanceRange },

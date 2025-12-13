@@ -93,6 +93,8 @@ function dispatchEvent(player, event_id)
         return runEvent(event_id, "events/generic/Description.lua")
     elseif event_type == HANDLER_TYPE_INCLUSION_SHOP then
         return runEvent(event_id, "events/generic/InclusionShop.lua")
+    elseif event_type == HANDLER_TYPE_COLLECTABLES_SHOP then
+        return runEvent(event_id, "events/generic/CollectablesShop.lua")
     elseif event_type == HANDLER_TYPE_EVENT_GIMMICK_PATH_MOVE then
         return runEvent(event_id, "events/generic/GimmickPathMove.lua")
     end
