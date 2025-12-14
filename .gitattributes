@@ -1,0 +1,2 @@
+servers/world/migrations/current_world/up.sql linguist-generated
+servers/login/migrations/current_login/up.sql linguist-generated
