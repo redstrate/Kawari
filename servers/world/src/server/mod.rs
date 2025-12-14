@@ -918,7 +918,7 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         );
 
                         let mut network = network.lock();
-                        network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
+                        network.send_to_all(None, msg, DestinationNetwork::ZoneClients);
                     }
                     ClientTriggerCommand::ChangePose { unk1, pose } => {
                         let msg = FromServer::ActorControl(
