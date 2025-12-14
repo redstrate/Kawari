@@ -5,7 +5,7 @@ use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
 use kawari::constants::MAX_EXPANSION;
 use serde::Serialize;
 
-pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("../../migrations");
+pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
 
 pub struct LoginDatabase {
     connection: SqliteConnection,

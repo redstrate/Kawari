@@ -1,11 +1,1 @@
-[print_schema.login]
-file = "servers/login/src/schema.rs"
-custom_type_derives = ["diesel::query_builder::QueryId", "Clone"]
-
-[print_schema.world]
-file = "servers/world/src/database/schema.rs"
-custom_type_derives = ["diesel::query_builder::QueryId", "Clone"]
-
-[migrations_directory]
-dir = "migrations"
-
+[print_schema.default]
