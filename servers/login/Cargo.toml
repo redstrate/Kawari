@@ -22,3 +22,4 @@ ureq = { workspace = true }
 serde_json = { workspace = true }
 diesel = { workspace = true }
 diesel_migrations = { workspace = true }
+libsqlite3-sys = { workspace = true }

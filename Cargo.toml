@@ -106,3 +106,6 @@ diesel = { version = "2.3", features = ["sqlite", "returning_clauses_for_sqlite_
 
 # Used for embedding our database migrations
 diesel_migrations = { version = "2.3", default-features = false }
+
+# For sqlite support
+libsqlite3-sys = { version = "0.35", features = ["bundled"], default-features = false }
