@@ -13,3 +13,4 @@ patches/
 docs/book
 /navimesh
 *.db-journal
+migrations/.diesel_lock

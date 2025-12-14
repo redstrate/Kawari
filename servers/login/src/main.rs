@@ -15,6 +15,7 @@ use kawari::packet::send_custom_world_packet;
 use kawari::web_static_dir;
 use kawari_login::{LoginDatabase, LoginError};
 use minijinja::{Environment, context, path_loader};
+use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::services::ServeDir;
@@ -28,7 +29,7 @@ fn setup_default_environment() -> Environment<'static> {
 
 #[derive(Clone)]
 struct LoginServerState {
-    database: Arc<LoginDatabase>,
+    database: Arc<Mutex<LoginDatabase>>,
 }
 
 #[derive(Deserialize)]
@@ -119,13 +120,12 @@ async fn login_send(
             response.sid,
         ))
     } else {
-        let user = state
-            .database
-            .login_user(GAME_SERVICE, &input.sqexid, &input.password);
+        let mut database = state.database.lock();
+        let user = database.login_user(GAME_SERVICE, &input.sqexid, &input.password);
         match user {
             Ok(session_id) => {
-                let user_id = state.database.get_user_id(&session_id).unwrap();
-                let max_ex = state.database.get_user_max_expansion(user_id).unwrap();
+                let user_id = database.get_user_id(&session_id).unwrap();
+                let max_ex = database.get_user_max_expansion(user_id).unwrap();
 
                 Html(format!(
                     "window.external.user(\"login=auth,ok,sid,{session_id},terms,1,region,2,etmadd,0,playable,1,ps3pkg,0,maxex,{max_ex},product,1\");"
@@ -201,11 +201,11 @@ async fn do_register(
         // TODO: don't redirect to account management page, we can't do that for sapphire
         (jar, Redirect::to("/account/app/svc/manage"))
     } else {
-        state.database.add_user(&username, &password);
+        let mut database = state.database.lock();
+        database.add_user(&username, &password);
 
         // redirect to account management page
-        let sid = state
-            .database
+        let sid = database
             .login_user(ACCOUNT_MANAGEMENT_SERVICE, &username, &password)
             .unwrap();
 
@@ -229,12 +229,14 @@ async fn check_session(
     State(state): State<LoginServerState>,
     Query(params): Query<CheckSessionParams>,
 ) -> String {
-    let accounts = state.database.check_session(&params.service, &params.sid);
+    let mut database = state.database.lock();
+    let accounts = database.check_session(&params.service, &params.sid);
     serde_json::to_string(&accounts).unwrap_or(String::new())
 }
 
 async fn get_users(State(state): State<LoginServerState>) -> String {
-    let users = state.database.get_users();
+    let mut database = state.database.lock();
+    let users = database.get_users();
     serde_json::to_string(&users).unwrap_or(String::new())
 }
 
@@ -249,9 +251,8 @@ async fn get_max_ex(
     Query(params): Query<MaxExParams>,
 ) -> String {
     // TODO: introduce a better failure state
-    let max_ex = state
-        .database
-        .get_max_expansion(params.service.parse().unwrap());
+    let mut database = state.database.lock();
+    let max_ex = database.get_max_expansion(params.service.parse().unwrap());
     max_ex.unwrap_or(0).to_string()
 }
 
@@ -304,8 +305,8 @@ async fn do_login(
         panic!("Expected password!");
     };
 
-    let sid = state
-        .database
+    let mut database = state.database.lock();
+    let sid = database
         .login_user(ACCOUNT_MANAGEMENT_SERVICE, &username, &password)
         .unwrap();
 
@@ -319,10 +320,12 @@ async fn do_login(
 }
 
 async fn account(State(state): State<LoginServerState>, jar: CookieJar) -> Html<String> {
+    let mut database = state.database.lock();
+
     if let Some(session_id) = jar.get("cis_sessid")
-        && let Some(user_id) = state.database.get_user_id(session_id.value())
+        && let Some(user_id) = database.get_user_id(session_id.value())
     {
-        let username = state.database.get_username(user_id);
+        let username = database.get_username(user_id);
 
         let environment = setup_default_environment();
         let template = environment.get_template("account.html").unwrap();
@@ -337,28 +340,39 @@ async fn upload_character_backup(
     jar: CookieJar,
     mut multipart: Multipart,
 ) -> Response<Body> {
-    if let Some(session_id) = jar.get("cis_sessid")
-        && let Some(user_id) = state.database.get_user_id(session_id.value())
+    let Some(session_id) = jar.get("cis_sessid") else {
+        return restore_backup_with_message("Unknown Error".to_string())
+            .await
+            .into_response();
+    };
+
+    let service_account_id;
     {
-        let service_account_id = state.database.get_service_account(user_id);
+        let Some(user_id) = state.database.lock().get_user_id(session_id.value()) else {
+            return restore_backup_with_message("Unknown Error".to_string())
+                .await
+                .into_response();
+        };
 
-        while let Some(field) = multipart.next_field().await.unwrap() {
-            let name = field.name().unwrap().to_string();
-            let data = field.bytes().await.unwrap();
+        service_account_id = state.database.lock().get_service_account(user_id);
+    }
 
-            std::fs::write("temp.zip", data).unwrap();
+    while let Some(field) = multipart.next_field().await.unwrap() {
+        let name = field.name().unwrap().to_string();
+        let data = field.bytes().await.unwrap();
 
-            if name == "charbak" {
-                let ipc_segment = CustomIpcSegment::new(CustomIpcData::ImportCharacter {
-                    service_account_id,
-                    path: "temp.zip".to_string(),
-                });
+        std::fs::write("temp.zip", data).unwrap();
 
-                if let Some(response) = send_custom_world_packet(ipc_segment).await
-                    && let CustomIpcData::CharacterImported { message } = response.data
-                {
-                    return restore_backup_with_message(message).await.into_response();
-                }
+        if name == "charbak" {
+            let ipc_segment = CustomIpcSegment::new(CustomIpcData::ImportCharacter {
+                service_account_id,
+                path: "temp.zip".to_string(),
+            });
+
+            if let Some(response) = send_custom_world_packet(ipc_segment).await
+                && let CustomIpcData::CharacterImported { message } = response.data
+            {
+                return restore_backup_with_message(message).await.into_response();
             }
         }
     }
@@ -370,12 +384,12 @@ async fn upload_character_backup(
 
 async fn logout(State(state): State<LoginServerState>, jar: CookieJar) -> (CookieJar, Redirect) {
     let config = get_config();
+    let mut database = state.database.lock();
+
     if let Some(session_id) = jar.get("cis_sessid")
-        && let Some(user_id) = state.database.get_user_id(session_id.value())
+        && let Some(user_id) = database.get_user_id(session_id.value())
     {
-        state
-            .database
-            .revoke_session(user_id, ACCOUNT_MANAGEMENT_SERVICE);
+        database.revoke_session(user_id, ACCOUNT_MANAGEMENT_SERVICE);
     }
 
     (
@@ -401,13 +415,19 @@ async fn cancel_account_perform(
     State(state): State<LoginServerState>,
     jar: CookieJar,
 ) -> (CookieJar, Redirect) {
-    if let Some(session_id) = jar.get("cis_sessid")
-        && let Some(user_id) = state.database.get_user_id(session_id.value())
+    let Some(session_id) = jar.get("cis_sessid") else {
+        return (jar.remove("cis_sessid"), Redirect::to("/"));
+    };
+
+    let Some(user_id) = state.database.lock().get_user_id(session_id.value()) else {
+        return (jar.remove("cis_sessid"), Redirect::to("/"));
+    };
+
     {
         // TODO: only supports one service account
-        let service_account_id = state.database.get_service_account(user_id);
+        let service_account_id = state.database.lock().get_service_account(user_id);
 
-        state.database.delete_user(user_id);
+        state.database.lock().delete_user(user_id);
 
         let ipc_segment =
             CustomIpcSegment::new(CustomIpcData::DeleteServiceAccount { service_account_id });
@@ -435,12 +455,14 @@ async fn restore_backup_with_message(status_message: String) -> Html<String> {
 }
 
 async fn login_history(State(state): State<LoginServerState>, jar: CookieJar) -> Html<String> {
+    let mut database = state.database.lock();
+
     if let Some(session_id) = jar.get("cis_sessid")
-        && let Some(user_id) = state.database.get_user_id(session_id.value())
+        && let Some(user_id) = database.get_user_id(session_id.value())
     {
         let environment = setup_default_environment();
         let template = environment.get_template("loginhistory.html").unwrap();
-        let past_logins = state.database.get_sessions(user_id);
+        let past_logins = database.get_sessions(user_id);
 
         return Html(
             template
@@ -457,13 +479,15 @@ async fn login_history_with_sid(
     jar: CookieJar,
     generated_sid: &str,
 ) -> Html<String> {
+    let mut database = state.database.lock();
+
     // TODO: de-duplicate with above function pls
     if let Some(session_id) = jar.get("cis_sessid")
-        && let Some(user_id) = state.database.get_user_id(session_id.value())
+        && let Some(user_id) = database.get_user_id(session_id.value())
     {
         let environment = setup_default_environment();
         let template = environment.get_template("loginhistory.html").unwrap();
-        let past_logins = state.database.get_sessions(user_id);
+        let past_logins = database.get_sessions(user_id);
 
         return Html(
                 template
@@ -490,20 +514,31 @@ async fn manual_generate_sid(
         panic!("Expected service!");
     };
 
-    if let Some(session_id) = jar.get("cis_sessid")
-        && state
-            .database
-            .is_session_valid(ACCOUNT_MANAGEMENT_SERVICE, session_id.value())
-        && let Some(user_id) = state.database.get_user_id(session_id.value())
     {
-        let new_sid = state
-            .database
-            .create_session(&service, user_id)
-            .expect("Failed to create new SID?!");
+        let Some(session_id) = jar.get("cis_sessid") else {
+            return login_history(State(state), jar).await.into_response();
+        };
 
-        return login_history_with_sid(State(state), jar, &new_sid)
-            .await
-            .into_response();
+        let Some(user_id) = state.database.lock().get_user_id(session_id.value()) else {
+            return Response::default();
+        };
+
+        let session_is_valid = state
+            .database
+            .lock()
+            .is_session_valid(&service, &session_id.to_string());
+
+        if session_is_valid {
+            let new_sid = state
+                .database
+                .lock()
+                .create_session(&service, user_id)
+                .expect("Failed to create new SID?!");
+
+            return login_history_with_sid(State(state), jar, &new_sid)
+                .await
+                .into_response();
+        }
     }
 
     login_history(State(state), jar).await.into_response()
@@ -524,13 +559,15 @@ async fn revoke_sid(
         panic!("Expected service!");
     };
 
-    if let Some(session_id) = jar.get("cis_sessid")
-        && state
-            .database
-            .is_session_valid(ACCOUNT_MANAGEMENT_SERVICE, session_id.value())
-        && let Some(user_id) = state.database.get_user_id(session_id.value())
     {
-        state.database.revoke_session(user_id, &service);
+        let mut database = state.database.lock();
+
+        if let Some(session_id) = jar.get("cis_sessid")
+            && database.is_session_valid(ACCOUNT_MANAGEMENT_SERVICE, session_id.value())
+            && let Some(user_id) = database.get_user_id(session_id.value())
+        {
+            database.revoke_session(user_id, &service);
+        }
     }
 
     login_history(State(state), jar).await.into_response()
@@ -541,7 +578,7 @@ async fn main() {
     tracing_subscriber::fmt::init();
 
     let state = LoginServerState {
-        database: Arc::new(LoginDatabase::new()),
+        database: Arc::new(Mutex::new(LoginDatabase::new())),
     };
 
     let cors = CorsLayer::new().allow_origin(Any);

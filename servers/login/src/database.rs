@@ -1,10 +1,14 @@
-use kawari::{common::User, constants::MAX_EXPANSION, ipc::lobby::ServiceAccount};
-use parking_lot::Mutex;
-use rusqlite::Connection;
+use crate::models::*;
+use diesel::prelude::*;
+use diesel::{Connection, SqliteConnection};
+use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
+use kawari::constants::MAX_EXPANSION;
 use serde::Serialize;
 
+pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("../../migrations");
+
 pub struct LoginDatabase {
-    connection: Mutex<Connection>,
+    connection: SqliteConnection,
 }
 
 #[derive(Debug, PartialEq)]
@@ -29,46 +33,26 @@ pub struct SessionInformation {
 impl LoginDatabase {
     /// Creates a new connection to the database, and creates tables as needed.
     pub fn new() -> Self {
-        let connection = Connection::open("login.db").expect("Failed to open database!");
+        let mut connection =
+            SqliteConnection::establish("login.db").expect("Failed to open database!");
+        Self::create_tables(&mut connection);
 
-        Self::create_tables(&connection);
-
-        Self {
-            connection: Mutex::new(connection),
-        }
+        Self { connection }
     }
 
     /// Creates a new connection to a database, but in memory. Only meant for our own testing.
     #[cfg(test)]
     fn new_in_memory() -> Self {
-        let connection = Connection::open_in_memory().expect("Failed to open database!");
+        let mut connection =
+            SqliteConnection::establish(":memory:").expect("Failed to open database!");
+        Self::create_tables(&mut connection);
 
-        Self::create_tables(&connection);
-
-        Self {
-            connection: Mutex::new(connection),
-        }
+        Self { connection }
     }
 
     /// Setups up the initial database schema.
-    fn create_tables(connection: &Connection) {
-        // Create users table
-        {
-            let query = "CREATE TABLE IF NOT EXISTS user (id INTEGER PRIMARY KEY, username TEXT, password TEXT);";
-            connection.execute(query, ()).unwrap();
-        }
-
-        // Create active sessions table
-        {
-            let query = "CREATE TABLE IF NOT EXISTS session (user_id INTEGER, time TEXT, service TEXT, sid TEXT, PRIMARY KEY(user_id, service));";
-            connection.execute(query, ()).unwrap();
-        }
-
-        // Create service accounts table
-        {
-            let query = "CREATE TABLE IF NOT EXISTS service_account (id INTEGER PRIMARY KEY, user_id INTEGER, max_ex INTEGER);";
-            connection.execute(query, ()).unwrap();
-        }
+    fn create_tables(connection: &mut SqliteConnection) {
+        connection.run_pending_migrations(MIGRATIONS).unwrap();
     }
 
     /// Generates a random account ID.
@@ -80,8 +64,11 @@ impl LoginDatabase {
     /// Adds a new user to the database with `username` and `password`.
     ///
     /// Returns false if the username was already taken.
-    pub fn add_user(&self, username: &str, password: &str) -> bool {
+    pub fn add_user(&mut self, username: &str, password: &str) -> bool {
+        use crate::schema::{service_account, user};
+
         if self.check_username(username) {
+            tracing::error!("Username {username} already taken!");
             return false;
         }
 
@@ -89,24 +76,31 @@ impl LoginDatabase {
 
         // add user
         {
-            let connection = self.connection.lock();
-
             tracing::info!("Adding user with username {username}");
 
-            let query = "INSERT INTO user VALUES (?1, ?2, ?3);";
-            connection
-                .execute(query, (user_id, username, password))
-                .expect("Failed to write user to database!");
+            if let Err(err) = diesel::insert_into(user::table)
+                .values(&User {
+                    id: user_id as i64,
+                    username: username.to_string(),
+                    password: password.to_string(),
+                })
+                .execute(&mut self.connection)
+            {
+                tracing::error!("While adding user: {err:?}");
+                return false;
+            }
         }
 
         // add service account
         {
-            let connection = self.connection.lock();
-
-            let query = "INSERT INTO service_account VALUES (?1, ?2, ?3);";
-            connection
-                .execute(query, (Self::generate_account_id(), user_id, MAX_EXPANSION))
-                .expect("Failed to write service account to database!");
+            diesel::insert_into(service_account::table)
+                .values(&ServiceAccount {
+                    id: Self::generate_account_id() as i64,
+                    user_id: user_id as i64,
+                    max_ex: MAX_EXPANSION as i32,
+                })
+                .execute(&mut self.connection)
+                .unwrap();
         }
 
         true
@@ -117,28 +111,23 @@ impl LoginDatabase {
     /// `service` is the purpose of this login.
     /// `username` and `password` is the user's credentials.
     pub fn login_user(
-        &self,
+        &mut self,
         service: &str,
-        username: &str,
-        password: &str,
+        for_username: &str,
+        for_password: &str,
     ) -> Result<String, LoginError> {
-        let selected_row: Result<(u64, String), rusqlite::Error>;
+        use crate::schema::user::dsl::*;
 
-        tracing::info!("Finding user with username {username}");
+        tracing::info!("Finding user with username {for_username}");
 
+        if let Ok(selected_user) = user
+            .filter(username.eq(for_username))
+            .select(User::as_select())
+            .first(&mut self.connection)
         {
-            let connection = self.connection.lock();
-
-            let mut stmt = connection
-                .prepare("SELECT id, password FROM user WHERE username = ?1")
-                .map_err(|_err| LoginError::WrongUsername)?;
-            selected_row = stmt.query_row((username,), |row| Ok((row.get(0)?, row.get(1)?)));
-        }
-
-        if let Ok((id, their_password)) = selected_row {
-            if their_password == password {
+            if selected_user.password == for_password {
                 return self
-                    .create_session(service, id)
+                    .create_session(service, selected_user.id as u64)
                     .ok_or(LoginError::InternalError);
             } else {
                 return Err(LoginError::WrongPassword);
@@ -157,17 +146,29 @@ impl LoginDatabase {
     }
 
     /// Create a new session for user, which replaces the last one (if any) of a given `service`
-    pub fn create_session(&self, service: &str, user_id: u64) -> Option<String> {
-        let connection = self.connection.lock();
+    pub fn create_session(&mut self, service: &str, user_id: u64) -> Option<String> {
+        use crate::schema::session;
 
         let sid = Self::generate_sid();
+        let time = diesel::select(datetime())
+            .get_result::<String>(&mut self.connection)
+            .unwrap();
 
-        connection
-            .execute(
-                "INSERT OR REPLACE INTO session VALUES (?1, datetime('now'), ?2, ?3);",
-                (user_id, service, &sid),
-            )
-            .ok()?;
+        // Delete an existing session if needed
+        let _ = diesel::delete(session::table)
+            .filter(crate::schema::session::dsl::user_id.eq(user_id as i64))
+            .execute(&mut self.connection);
+
+        diesel::insert_into(session::table)
+            .values(&Session {
+                user_id: user_id as i64,
+                time,
+                service: service.to_string(),
+                sid: sid.clone(),
+            })
+            .on_conflict_do_nothing()
+            .execute(&mut self.connection)
+            .unwrap();
 
         tracing::info!("Created new session for account {user_id}: {sid}");
 
@@ -175,196 +176,214 @@ impl LoginDatabase {
     }
 
     /// Gets the service account list
-    pub fn check_session(&self, service: &str, sid: &str) -> Vec<ServiceAccount> {
-        let connection = self.connection.lock();
-
+    pub fn check_session(
+        &mut self,
+        for_service: &str,
+        from_sid: &str,
+    ) -> Vec<kawari::ipc::lobby::ServiceAccount> {
         // get user id
-        let user_id: u64;
-        {
-            let mut stmt = connection
-                .prepare("SELECT user_id FROM session WHERE service = ?1 AND sid = ?2")
-                .unwrap();
-            if let Ok(found_user_id) = stmt.query_row((service, sid), |row| row.get(0)) {
-                user_id = found_user_id;
-            } else {
-                return Vec::default();
-            }
-        }
+        let Ok(found_user_id) = ({
+            use crate::schema::session::dsl::*;
+
+            session
+                .filter(service.eq(for_service))
+                .filter(sid.eq(from_sid))
+                .select(user_id)
+                .first::<i64>(&mut self.connection)
+        }) else {
+            return Vec::default();
+        };
 
         // service accounts
         {
-            let mut stmt = connection
-                .prepare("SELECT id FROM service_account WHERE user_id = ?1")
-                .ok()
-                .unwrap();
-            let accounts = stmt.query_map((user_id,), |row| row.get(0)).unwrap();
+            use crate::schema::service_account::dsl::*;
 
-            let mut service_accounts = Vec::new();
-            for (index, id) in accounts.enumerate() {
-                service_accounts.push(ServiceAccount {
-                    id: id.unwrap(),
-                    index: index as u32,
-                    name: format!("FINAL FANTASY XIV {}", index + 1), // TODO: don't add the "1" if you only have one service account
-                });
+            if let Ok(service_accounts) = service_account
+                .filter(user_id.eq(found_user_id))
+                .select(ServiceAccount::as_select())
+                .load(&mut self.connection)
+            {
+                service_accounts
+                    .iter()
+                    .enumerate()
+                    .map(|(i, x)| kawari::ipc::lobby::ServiceAccount {
+                        id: x.id as u64,
+                        index: i as u32,
+                        name: format!("FINAL FANTASY XIV {}", i + 1), // TODO: don't add the "1" if you only have one service account
+                    })
+                    .collect()
+            } else {
+                Vec::default()
             }
-
-            service_accounts
         }
     }
 
     /// Checks if a username is taken
-    pub fn check_username(&self, username: &str) -> bool {
-        let connection = self.connection.lock();
+    pub fn check_username(&mut self, for_username: &str) -> bool {
+        use crate::schema::user::dsl::*;
 
-        let mut stmt = connection
-            .prepare("SELECT id FROM user WHERE username = ?1")
-            .ok()
-            .unwrap();
-        let selected_row: Result<u64, rusqlite::Error> =
-            stmt.query_row((username,), |row| row.get(0));
-
-        selected_row.is_ok()
+        user.filter(username.eq(for_username))
+            .count()
+            .get_result::<i64>(&mut self.connection)
+            .unwrap_or_default()
+            > 0
     }
 
     /// Returns the user ID associated with `sid`, or None if it's invalid or not found.
-    pub fn get_user_id(&self, sid: &str) -> Option<u64> {
-        let connection = self.connection.lock();
+    pub fn get_user_id(&mut self, for_sid: &str) -> Option<u64> {
+        use crate::schema::session::dsl::*;
 
-        let mut stmt = connection
-            .prepare("SELECT user_id FROM session WHERE sid = ?1")
+        session
+            .filter(sid.eq(for_sid))
+            .select(user_id)
+            .first::<i64>(&mut self.connection)
+            .map(|x| x as u64)
             .ok()
-            .unwrap();
-        stmt.query_row((sid,), |row| row.get(0)).ok()?
     }
 
-    pub fn get_username(&self, user_id: u64) -> String {
-        let connection = self.connection.lock();
+    pub fn get_username(&mut self, for_user_id: u64) -> String {
+        use crate::schema::user::dsl::*;
 
-        let mut stmt = connection
-            .prepare("SELECT username FROM user WHERE id = ?1")
-            .ok()
-            .unwrap();
-        stmt.query_row((user_id,), |row| row.get(0)).unwrap()
+        user.filter(id.eq(for_user_id as i64))
+            .select(username)
+            .first::<String>(&mut self.connection)
+            .unwrap_or_default()
     }
 
     // TODO: only returns one account right now
-    pub fn get_service_account(&self, user_id: u64) -> u64 {
-        let connection = self.connection.lock();
+    pub fn get_service_account(&mut self, for_user_id: u64) -> u64 {
+        use crate::schema::service_account::dsl::*;
 
-        let mut stmt = connection
-            .prepare("SELECT id FROM service_account WHERE user_id = ?1")
-            .ok()
-            .unwrap();
-        stmt.query_row((user_id,), |row| row.get(0)).unwrap()
+        service_account
+            .filter(user_id.eq(for_user_id as i64))
+            .select(id)
+            .first::<i64>(&mut self.connection)
+            .unwrap_or_default() as u64
     }
 
     /// Gets the current session list, at some point it will return past sessions too.
-    pub fn get_sessions(&self, user_id: u64) -> Vec<SessionInformation> {
-        let connection = self.connection.lock();
+    pub fn get_sessions(&mut self, for_user_id: u64) -> Vec<SessionInformation> {
+        use crate::schema::session::dsl::*;
 
-        let mut stmt = connection
-            .prepare("SELECT time, service FROM session WHERE user_id = ?1 ORDER BY time DESC;")
-            .ok()
-            .unwrap();
-        if let Ok(mut rows) = stmt.query((user_id,)) {
-            let mut info = Vec::new();
-            while let Some(row) = rows.next().unwrap() {
-                info.push(SessionInformation {
-                    time: row.get(0).unwrap(),
-                    service: row.get(1).unwrap(),
-                });
-            }
-            info
+        if let Ok(sessions) = session
+            .filter(user_id.eq(for_user_id as i64))
+            .select(Session::as_select())
+            .load(&mut self.connection)
+        {
+            sessions
+                .iter()
+                .map(|x| SessionInformation {
+                    time: x.time.clone(),
+                    service: x.service.clone(),
+                })
+                .collect()
         } else {
             Vec::default()
         }
     }
 
     /// Simply checks if this is a valid session or not.
-    pub fn is_session_valid(&self, service: &str, sid: &str) -> bool {
-        let connection = self.connection.lock();
+    pub fn is_session_valid(&mut self, for_service: &str, for_sid: &str) -> bool {
+        use crate::schema::session::dsl::*;
 
-        let mut stmt = connection
-            .prepare("SELECT user_id FROM session WHERE service = ?1 AND sid = ?2")
-            .unwrap();
-        stmt.query_row((service, sid), |row| row.get::<usize, u32>(0))
-            .is_ok()
+        session
+            .filter(sid.eq(for_sid))
+            .filter(service.eq(for_service))
+            .count()
+            .first::<i64>(&mut self.connection)
+            .unwrap_or_default()
+            > 0
     }
 
     /// Revokes a given `service` from the active session list for the `user_id`.
-    pub fn revoke_session(&self, user_id: u64, service: &str) {
-        let connection = self.connection.lock();
+    pub fn revoke_session(&mut self, for_user_id: u64, for_service: &str) {
+        use crate::schema::session::dsl::*;
 
-        connection
-            .execute(
-                "DELETE FROM session WHERE user_id = ?1 AND service = ?2",
-                (user_id, service),
-            )
-            .unwrap();
+        diesel::delete(
+            session
+                .filter(user_id.eq(for_user_id as i64))
+                .filter(service.eq(for_service)),
+        )
+        .execute(&mut self.connection)
+        .unwrap();
 
-        tracing::info!("Revoked {service} for {user_id}!");
+        tracing::info!("Revoked {for_service} for user {for_user_id}!");
     }
 
     /// Deletes the given `user_id` and also scrubs their service accounts.
-    pub fn delete_user(&self, user_id: u64) {
-        let connection = self.connection.lock();
+    pub fn delete_user(&mut self, for_user_id: u64) {
+        // Delete service accounts
+        {
+            use crate::schema::service_account::dsl::*;
+            diesel::delete(service_account.filter(user_id.eq(for_user_id as i64)))
+                .execute(&mut self.connection)
+                .unwrap();
+        }
 
-        // delete from users table
-        connection
-            .execute("DELETE FROM user WHERE id = ?1", (user_id,))
-            .unwrap();
+        // Delete sessions
+        {
+            use crate::schema::session::dsl::*;
+            diesel::delete(session.filter(user_id.eq(for_user_id as i64)))
+                .execute(&mut self.connection)
+                .unwrap();
+        }
 
-        // delete from service accounts table
-        connection
-            .execute("DELETE FROM service_account WHERE user_id = ?1", (user_id,))
-            .unwrap();
+        // Delete user
+        {
+            use crate::schema::user::dsl::*;
+            diesel::delete(user.filter(id.eq(for_user_id as i64)))
+                .execute(&mut self.connection)
+                .unwrap();
+        }
 
-        // delete from sessions table
-        connection
-            .execute("DELETE FROM session WHERE user_id = ?1", (user_id,))
-            .unwrap();
-
-        tracing::info!("Deleted {user_id}!");
+        tracing::info!("Deleted user {for_user_id}!");
     }
 
     /// Grabs basic information about every user in the database.
-    pub fn get_users(&self) -> Vec<User> {
-        let connection = self.connection.lock();
+    pub fn get_users(&mut self) -> Vec<kawari::common::User> {
+        use crate::schema::user::dsl::*;
 
-        let mut stmt = connection.prepare("SELECT id, username FROM user").unwrap();
-
-        stmt.query_map((), |row| {
-            Ok(User {
-                id: row.get(0)?,
-                username: row.get(1)?,
-            })
-        })
-        .unwrap()
-        .map(|x| x.unwrap())
-        .collect()
+        if let Ok(users) = user.select(User::as_select()).load(&mut self.connection) {
+            users
+                .iter()
+                .map(|x| kawari::common::User {
+                    id: x.id as u32,
+                    username: x.username.clone(),
+                })
+                .collect()
+        } else {
+            Vec::default()
+        }
     }
 
     /// Returns the max expansion level for the `service_account_id`
-    pub fn get_max_expansion(&self, service_account_id: u64) -> Option<u8> {
-        let connection = self.connection.lock();
+    pub fn get_max_expansion(&mut self, for_service_account_id: u64) -> Option<u8> {
+        use crate::schema::service_account::dsl::*;
 
-        let mut stmt = connection
-            .prepare("SELECT max_ex FROM service_account WHERE id = ?1")
-            .unwrap();
-        stmt.query_row((service_account_id,), |row| row.get(0))
-            .ok()?
+        Some(
+            service_account
+                .filter(id.eq(for_service_account_id as i64))
+                .select(ServiceAccount::as_select())
+                .first(&mut self.connection)
+                .ok()?
+                .max_ex as u8,
+        )
     }
 
     /// Returns the max expansion level for this `user_id`.
     ///
     /// This takes the highest expansion level from all service accounts.
-    pub fn get_user_max_expansion(&self, user_id: u64) -> Option<u8> {
-        let connection = self.connection.lock();
+    pub fn get_user_max_expansion(&mut self, for_user_id: u64) -> Option<u8> {
+        use crate::schema::service_account::dsl::*;
 
-        let mut stmt = connection
-            .prepare("SELECT MAX(max_ex) FROM service_account WHERE user_id = ?1")
-            .unwrap();
-        stmt.query_row((user_id,), |row| row.get(0)).ok()?
+        Some(
+            service_account
+                .filter(user_id.eq(for_user_id as i64))
+                .select(ServiceAccount::as_select())
+                .first(&mut self.connection)
+                .ok()?
+                .max_ex as u8,
+        )
     }
 }
 
@@ -376,7 +395,7 @@ mod tests {
 
     #[test]
     fn test_login() {
-        let database = LoginDatabase::new_in_memory();
+        let mut database = LoginDatabase::new_in_memory();
 
         // No users exist in the database yet.
         assert_eq!(
@@ -397,7 +416,7 @@ mod tests {
 
     #[test]
     fn test_username_check() {
-        let database = LoginDatabase::new_in_memory();
+        let mut database = LoginDatabase::new_in_memory();
         assert!(database.add_user("test", "test"));
 
         // Adding the same username should fail!
@@ -406,7 +425,9 @@ mod tests {
 
     #[test]
     fn test_sessions() {
-        let database = LoginDatabase::new_in_memory();
+        tracing_subscriber::fmt::init();
+
+        let mut database = LoginDatabase::new_in_memory();
         assert!(database.add_user("test", "test"));
 
         // User should be able to login.
@@ -424,7 +445,7 @@ mod tests {
 
     #[test]
     fn test_delete_user() {
-        let database = LoginDatabase::new_in_memory();
+        let mut database = LoginDatabase::new_in_memory();
 
         // User shouldn't exist in the database yet.
         assert_eq!(

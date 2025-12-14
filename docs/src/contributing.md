@@ -42,3 +42,18 @@ physis = { path = "/path/to/your/Physis" }
 ```
 
 This will ensure all of the dependencies target your local Physis checkout and you don't end up with multiple conflicting library versions.
+
+## Working on databases
+
+We're beginning to adopt Diesel, a ORM library. It has a migration system, which we need to keep up-to-date in order for new databases to be created.
+
+(We do not version migrations, because we don't guarantee data stability.)
+
+### Login
+
+Here's how to recreate the login migrations:
+
+```shell
+rm -r migrations/current_login
+DATABASE_URL=:memory: diesel migration generate --version current --diff-schema login --no-down --locked-schema
+```
