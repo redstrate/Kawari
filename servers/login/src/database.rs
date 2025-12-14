@@ -157,6 +157,7 @@ impl LoginDatabase {
         // Delete an existing session if needed
         let _ = diesel::delete(session::table)
             .filter(crate::schema::session::dsl::user_id.eq(user_id as i64))
+            .filter(crate::schema::session::dsl::service.eq(service))
             .execute(&mut self.connection);
 
         diesel::insert_into(session::table)
@@ -166,7 +167,6 @@ impl LoginDatabase {
                 service: service.to_string(),
                 sid: sid.clone(),
             })
-            .on_conflict_do_nothing()
             .execute(&mut self.connection)
             .unwrap();
 
@@ -441,6 +441,15 @@ mod tests {
         assert!(!database.is_session_valid("Something Other", &sid));
         // The same service name, but with an invalid SID should obviously be invalid.
         assert!(!database.is_session_valid(SERVICE_NAME, "abc"));
+
+        // If we login with another session:
+        let other_sid = database.login_user("Unit Test 2", "test", "test");
+        assert!(other_sid.is_ok());
+        let other_sid = other_sid.unwrap();
+
+        // Both sessions should be valid:
+        assert!(database.is_session_valid(SERVICE_NAME, &sid));
+        assert!(database.is_session_valid("Unit Test 2", &other_sid));
     }
 
     #[test]
