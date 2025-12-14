@@ -54,8 +54,8 @@ We're beginning to adopt Diesel, a ORM library. It has a migration system, which
 Here's how to recreate the login migrations:
 
 ```shell
-rm -r migrations/current_login
-DATABASE_URL=:memory: diesel migration generate --version current --diff-schema login --no-down --locked-schema --schema-key login
+rm -r servers/login/migrations/current_login
+DATABASE_URL=:memory: diesel migration generate --version current --diff-schema=servers/login/src/schema.rs --no-down --locked-schema --migration-dir servers/login/migrations login
 ```
 
 ### World
@@ -63,6 +63,6 @@ DATABASE_URL=:memory: diesel migration generate --version current --diff-schema 
 Here's how to recreate the world migrations:
 
 ```shell
-rm -r migrations/current2_world
-DATABASE_URL=:memory: diesel migration generate --version current2 --diff-schema world --no-down --locked-schema --schema-key world
+rm -r servers/world/migrations/current_world
+DATABASE_URL=:memory: diesel migration generate --version current --diff-schema=servers/world/src/database/schema.rs --no-down --locked-schema --migration-dir servers/world/migrations world
 ```

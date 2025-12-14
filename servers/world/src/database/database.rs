@@ -16,7 +16,7 @@ use kawari::{
     ipc::lobby::{CharacterDetails, CharacterFlag},
 };
 
-pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("../../migrations");
+pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
 
 pub struct WorldDatabase {
     connection: SqliteConnection,
