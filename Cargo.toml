@@ -103,3 +103,9 @@ icarus = { git = "https://github.com/redstrate/Icarus", branch = "ver/2025.07.30
 
 # Used in encryption of lobby packets
 md5 = { version = "0.8", default-features = false }
+
+# Used for our databases
+diesel = { version = "2.3", features = ["sqlite", "returning_clauses_for_sqlite_3_35"], default-features = false }
+
+# Used for embedding our database migrations
+diesel_migrations = { version = "2.3", default-features = false }
