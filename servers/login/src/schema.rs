@@ -7,7 +7,7 @@ diesel::table! {
 }
 
 diesel::table! {
-    session (user_id) {
+    session (user_id, service) {
         user_id -> BigInt,
         time -> Text,
         service -> Text,
