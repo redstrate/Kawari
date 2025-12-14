@@ -55,5 +55,14 @@ Here's how to recreate the login migrations:
 
 ```shell
 rm -r migrations/current_login
-DATABASE_URL=:memory: diesel migration generate --version current --diff-schema login --no-down --locked-schema
+DATABASE_URL=:memory: diesel migration generate --version current --diff-schema login --no-down --locked-schema --schema-key login
+```
+
+### World
+
+Here's how to recreate the world migrations:
+
+```shell
+rm -r migrations/current2_world
+DATABASE_URL=:memory: diesel migration generate --version current2 --diff-schema world --no-down --locked-schema --schema-key world
 ```

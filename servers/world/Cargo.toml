@@ -14,7 +14,6 @@ tracing-subscriber = { workspace = true }
 axum = { workspace = true }
 mlua = { workspace = true }
 parking_lot = { workspace = true }
-rusqlite = { workspace = true }
 physis = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -27,3 +26,5 @@ zip = { workspace = true }
 icarus = { workspace = true } # TODO: we only have one usage of icarus here, I think
 fastrand = { workspace = true }
 ureq = { workspace = true }
+diesel = { workspace = true }
+diesel_migrations = { workspace = true }

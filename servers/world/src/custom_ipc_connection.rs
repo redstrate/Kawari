@@ -23,7 +23,7 @@ pub struct CustomIpcConnection {
     pub socket: TcpStream,
     pub ip: SocketAddr,
     pub state: ConnectionState,
-    pub database: Arc<WorldDatabase>,
+    pub database: Arc<Mutex<WorldDatabase>>,
     pub gamedata: Arc<Mutex<GameData>>,
 }
 
@@ -77,7 +77,8 @@ impl CustomIpcConnection {
                         &mut game_data,
                     );
 
-                    (content_id, actor_id) = self.database.create_player_data(
+                    let mut database = self.database.lock();
+                    (content_id, actor_id) = database.create_player_data(
                         *service_account_id,
                         name,
                         chara_make_json,
@@ -106,7 +107,11 @@ impl CustomIpcConnection {
                 }
             }
             CustomIpcData::GetActorId { content_id } => {
-                let actor_id = self.database.find_actor_id(*content_id);
+                let actor_id;
+                {
+                    let mut database = self.database.lock();
+                    actor_id = database.find_actor_id(*content_id);
+                }
 
                 tracing::info!("We found an actor id: {actor_id}");
 
@@ -123,7 +128,11 @@ impl CustomIpcConnection {
                 }
             }
             CustomIpcData::CheckNameIsAvailable { name } => {
-                let is_name_free = self.database.check_is_name_free(name);
+                let is_name_free;
+                {
+                    let mut database = self.database.lock();
+                    is_name_free = database.check_is_name_free(name);
+                }
 
                 // send response
                 {
@@ -152,7 +161,8 @@ impl CustomIpcConnection {
                 {
                     let mut game_data = self.gamedata.lock();
 
-                    characters = self.database.get_character_list(
+                    let mut database = self.database.lock();
+                    characters = database.get_character_list(
                         *service_account_id,
                         config.world.world_id,
                         &world_name,
@@ -173,7 +183,10 @@ impl CustomIpcConnection {
                 }
             }
             CustomIpcData::DeleteCharacter { content_id } => {
-                self.database.delete_character(*content_id);
+                {
+                    let mut database = self.database.lock();
+                    database.delete_character(*content_id);
+                }
 
                 // send response
                 {
@@ -194,9 +207,9 @@ impl CustomIpcConnection {
                 let message;
                 {
                     let mut game_data = self.gamedata.lock();
+                    let mut database = self.database.lock();
                     if let Err(err) =
-                        self.database
-                            .import_character(&mut game_data, *service_account_id, path)
+                        database.import_character(&mut game_data, *service_account_id, path)
                     {
                         message = err.to_string();
                     } else {
@@ -220,11 +233,15 @@ impl CustomIpcConnection {
                 content_id,
                 chara_make_json,
             } => {
-                // overwrite it in the database
-                self.database.set_chara_make(*content_id, chara_make_json);
+                {
+                    let mut database = self.database.lock();
 
-                // reset flag
-                self.database.set_remake_mode(*content_id, RemakeMode::None);
+                    // overwrite it in the database
+                    database.set_chara_make(*content_id, chara_make_json);
+
+                    // reset flag
+                    database.set_remake_mode(*content_id, RemakeMode::None);
+                }
 
                 // send response
                 {
@@ -241,10 +258,15 @@ impl CustomIpcConnection {
                 }
             }
             CustomIpcData::DeleteServiceAccount { service_account_id } => {
-                self.database.delete_characters(*service_account_id);
+                let mut database = self.database.lock();
+                database.delete_characters(*service_account_id);
             }
             CustomIpcData::RequestFullCharacterList {} => {
-                let json = self.database.request_full_character_list();
+                let json;
+                {
+                    let mut database = self.database.lock();
+                    json = database.request_full_character_list();
+                }
 
                 self.send_custom_response(PacketSegment {
                     segment_type: SegmentType::KawariIpc,

@@ -10,7 +10,7 @@ pub use zone_connection::{
 };
 
 mod database;
-pub use database::{CharacterData, WorldDatabase};
+pub use database::{Content, Unlock, WorldDatabase};
 
 pub mod lua;
 
@@ -37,3 +37,6 @@ pub mod auracite;
 
 /// Inventory and storage management.
 pub mod inventory;
+
+mod bitmask;
+pub use bitmask::{Bitmask, QuestBitmask};

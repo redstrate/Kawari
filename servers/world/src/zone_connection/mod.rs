@@ -4,24 +4,17 @@ use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpStream;
 
-use crate::lua::LuaTask;
+use crate::{
+    Content, Unlock,
+    database::{AetherCurrent, Aetheryte, Companion, Quest},
+    lua::LuaTask,
+};
 use kawari::{
     common::{
-        Bitmask, ClientLanguage, EquipDisplayFlag, GameData, ObjectId, ObjectTypeId, Position,
-        QuestBitmask, timestamp_secs,
+        ClientLanguage, EquipDisplayFlag, GameData, ObjectId, ObjectTypeId, Position,
+        timestamp_secs,
     },
     config::WorldConfig,
-    constants::{
-        ACTIVE_HELP_BITMASK_SIZE, ADVENTURE_BITMASK_SIZE, AETHER_CURRENT_BITMASK_SIZE,
-        AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE, AETHERYTE_UNLOCK_BITMASK_SIZE,
-        BUDDY_EQUIP_BITMASK_SIZE, CAUGHT_FISH_BITMASK_SIZE, CAUGHT_SPEARFISH_BITMASK_SIZE,
-        CHOCOBO_TAXI_STANDS_BITMASK_SIZE, COMPLETED_QUEST_BITMASK_SIZE,
-        CRYSTALLINE_CONFLICT_ARRAY_SIZE, CUTSCENE_SEEN_BITMASK_SIZE, DUNGEON_ARRAY_SIZE,
-        FRONTLINE_ARRAY_SIZE, GLASSES_STYLES_BITMASK_SIZE, GUILDHEST_ARRAY_SIZE,
-        MINION_BITMASK_SIZE, MOUNT_BITMASK_SIZE, ORCHESTRION_ROLL_BITMASK_SIZE,
-        ORNAMENT_BITMASK_SIZE, RAID_ARRAY_SIZE, TRIAL_ARRAY_SIZE, TRIPLE_TRIAD_CARDS_BITMASK_SIZE,
-        UNLOCK_BITMASK_SIZE,
-    },
     ipc::zone::{
         client::ClientZoneIpcSegment,
         server::{Condition, Conditions, GameMasterRank, ServerZoneIpcData, ServerZoneIpcSegment},
@@ -59,70 +52,6 @@ pub struct TeleportQuery {
     pub aetheryte_id: u16,
 }
 
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
-pub struct UnlockData {
-    #[serde(default = "Bitmask::default")]
-    pub unlocks: Bitmask<UNLOCK_BITMASK_SIZE>,
-    #[serde(default = "Bitmask::default")]
-    pub aetherytes: Bitmask<AETHERYTE_UNLOCK_BITMASK_SIZE>,
-    #[serde(default = "QuestBitmask::default")]
-    pub completed_quests: QuestBitmask<COMPLETED_QUEST_BITMASK_SIZE>,
-    #[serde(default = "Bitmask::default")]
-    pub unlocked_raids: Bitmask<RAID_ARRAY_SIZE>,
-    #[serde(default = "Bitmask::default")]
-    pub unlocked_dungeons: Bitmask<DUNGEON_ARRAY_SIZE>,
-    #[serde(default = "Bitmask::default")]
-    pub unlocked_guildhests: Bitmask<GUILDHEST_ARRAY_SIZE>,
-    #[serde(default = "Bitmask::default")]
-    pub unlocked_trials: Bitmask<TRIAL_ARRAY_SIZE>,
-    #[serde(default = "Bitmask::default")]
-    pub unlocked_crystalline_conflict: Bitmask<CRYSTALLINE_CONFLICT_ARRAY_SIZE>,
-    #[serde(default = "Bitmask::default")]
-    pub unlocked_frontline: Bitmask<FRONTLINE_ARRAY_SIZE>,
-    #[serde(default = "Bitmask::default")]
-    pub cleared_raids: Bitmask<RAID_ARRAY_SIZE>,
-    #[serde(default = "Bitmask::default")]
-    pub cleared_dungeons: Bitmask<DUNGEON_ARRAY_SIZE>,
-    #[serde(default = "Bitmask::default")]
-    pub cleared_guildhests: Bitmask<GUILDHEST_ARRAY_SIZE>,
-    #[serde(default = "Bitmask::default")]
-    pub cleared_trials: Bitmask<TRIAL_ARRAY_SIZE>,
-    #[serde(default = "Bitmask::default")]
-    pub cleared_crystalline_conflict: Bitmask<CRYSTALLINE_CONFLICT_ARRAY_SIZE>,
-    #[serde(default = "Bitmask::default")]
-    pub cleared_frontline: Bitmask<FRONTLINE_ARRAY_SIZE>,
-    #[serde(default = "Bitmask::default")]
-    pub seen_active_help: Bitmask<ACTIVE_HELP_BITMASK_SIZE>,
-    #[serde(default = "Bitmask::default")]
-    pub minions: Bitmask<MINION_BITMASK_SIZE>,
-    #[serde(default = "Bitmask::default")]
-    pub mounts: Bitmask<MOUNT_BITMASK_SIZE>,
-    #[serde(default = "Bitmask::default")]
-    pub aether_current_comp_flg_set: Bitmask<AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE>,
-    #[serde(default = "Bitmask::default")]
-    pub aether_currents: Bitmask<AETHER_CURRENT_BITMASK_SIZE>,
-    #[serde(default = "Bitmask::default")]
-    pub orchestrion_rolls: Bitmask<ORCHESTRION_ROLL_BITMASK_SIZE>,
-    #[serde(default = "Bitmask::default")]
-    pub buddy_equip: Bitmask<BUDDY_EQUIP_BITMASK_SIZE>,
-    #[serde(default = "Bitmask::default")]
-    pub cutscene_seen: Bitmask<CUTSCENE_SEEN_BITMASK_SIZE>,
-    #[serde(default = "Bitmask::default")]
-    pub ornaments: Bitmask<ORNAMENT_BITMASK_SIZE>,
-    #[serde(default = "Bitmask::default")]
-    pub caught_fish: Bitmask<CAUGHT_FISH_BITMASK_SIZE>,
-    #[serde(default = "Bitmask::default")]
-    pub caught_spearfish: Bitmask<CAUGHT_SPEARFISH_BITMASK_SIZE>,
-    #[serde(default = "Bitmask::default")]
-    pub adventures: Bitmask<ADVENTURE_BITMASK_SIZE>,
-    #[serde(default = "Bitmask::default")]
-    pub triple_triad_cards: Bitmask<TRIPLE_TRIAD_CARDS_BITMASK_SIZE>,
-    #[serde(default = "Bitmask::default")]
-    pub glasses_styles: Bitmask<GLASSES_STYLES_BITMASK_SIZE>,
-    #[serde(default = "Bitmask::default")]
-    pub chocobo_taxi_stands: Bitmask<CHOCOBO_TAXI_STANDS_BITMASK_SIZE>,
-}
-
 #[derive(Debug, Default, Clone, PartialEq)]
 pub enum TeleportReason {
     #[default]
@@ -146,6 +75,8 @@ pub struct PlayerData {
     pub actor_id: ObjectId,
     pub content_id: u64,
     pub account_id: u64,
+    pub name: String,
+    pub subrace: u8,
 
     pub classjob_id: u8,
     pub classjob_levels: Vec<u16>,
@@ -174,7 +105,12 @@ pub struct PlayerData {
     pub target_actorid: ObjectTypeId,
     /// The server-side copy of NPC shop buyback lists.
     pub buyback_list: BuyBackList,
-    pub unlocks: UnlockData,
+    pub unlock: Unlock,
+    pub content: Content,
+    pub aetheryte: Aetheryte,
+    pub aether_current: AetherCurrent,
+    pub companion: Companion,
+    pub quest: Quest,
     pub saw_inn_wakeup: bool,
     pub display_flags: EquipDisplayFlag,
     pub teleport_reason: TeleportReason,
@@ -209,7 +145,7 @@ pub struct ZoneConnection {
     pub id: ClientId,
     pub handle: ServerHandle,
 
-    pub database: Arc<WorldDatabase>,
+    pub database: Arc<Mutex<WorldDatabase>>,
     pub lua: Arc<Mutex<mlua::Lua>>,
     pub gamedata: Arc<Mutex<GameData>>,
 
@@ -319,7 +255,10 @@ impl ZoneConnection {
 
     pub async fn begin_log_out(&mut self) {
         // Write the player back to the database
-        self.database.commit_player_data(&self.player_data);
+        {
+            let mut database = self.database.lock();
+            database.commit_player_data(&self.player_data);
+        }
 
         // Don't bother sending these if the client forcefully D/C'd.
         if self.gracefully_logged_out {

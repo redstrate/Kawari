@@ -64,9 +64,6 @@ fastrand = { version = "2.3", features = ["std"], default-features = false }
 # HTML templates used in the web servers
 minijinja = { version = "2.13", features = ["serde", "loader", "multi_template"], default-features = false }
 
-# Used for data persistence
-rusqlite = { version = "0.37", features = ["bundled"], default-features = false }
-
 # For server-side scripting
 mlua = { version = "0.11", features = ["lua54", "vendored", "send", "async", "serialize", "userdata-wrappers"], default-features = false }
 
@@ -105,7 +102,7 @@ icarus = { git = "https://github.com/redstrate/Icarus", branch = "ver/2025.07.30
 md5 = { version = "0.8", default-features = false }
 
 # Used for our databases
-diesel = { version = "2.3", features = ["sqlite", "returning_clauses_for_sqlite_3_35"], default-features = false }
+diesel = { version = "2.3", features = ["sqlite", "returning_clauses_for_sqlite_3_35", "serde_json"], default-features = false }
 
 # Used for embedding our database migrations
 diesel_migrations = { version = "2.3", default-features = false }

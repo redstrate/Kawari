@@ -578,8 +578,8 @@ impl LuaPlayer {
                 let should_check_quest0 = quest0 != 0;
                 let should_check_quest1 = quest1 != 0;
 
-                let quest0_completed = self.player_data.unlocks.completed_quests.contains(quest0);
-                let quest1_completed = self.player_data.unlocks.completed_quests.contains(quest1);
+                let quest0_completed = self.player_data.quest.completed.contains(quest0);
+                let quest1_completed = self.player_data.quest.completed.contains(quest1);
 
                 let quest0_passed = if should_check_quest0 {
                     quest0_completed
@@ -985,7 +985,7 @@ impl UserData for LuaPlayer {
             Ok(())
         });
         methods.add_method_mut("has_seen_cutscene", |_, this, cutscene_id: u32| {
-            Ok(this.player_data.unlocks.cutscene_seen.contains(cutscene_id))
+            Ok(this.player_data.unlock.cutscene_seen.contains(cutscene_id))
         });
         methods.add_method_mut("commence_duty", |_, this, director_id: u32| {
             this.commence_duty(director_id);

@@ -32,7 +32,7 @@ impl std::fmt::Display for ImportError {
 impl WorldDatabase {
     /// Imports a character from an Auracite backup at `path`.
     pub fn import_character(
-        &self,
+        &mut self,
         game_data: &mut GameData,
         service_account_id: u64,
         path: &str,
@@ -249,8 +249,8 @@ impl WorldDatabase {
         );
 
         // import unlock flags
-        player_data.unlocks.unlocks = character.unlock_flags.into();
-        player_data.unlocks.aetherytes = character.unlock_aetherytes.into();
+        player_data.unlock.unlocks = character.unlock_flags.into();
+        player_data.aetheryte.unlocked = character.unlock_aetherytes.into();
 
         self.commit_player_data(&player_data);
 
