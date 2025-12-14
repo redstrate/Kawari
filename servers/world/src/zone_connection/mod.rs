@@ -1,4 +1,4 @@
-use std::{net::SocketAddr, sync::Arc, time::Instant};
+use std::{sync::Arc, time::Instant};
 
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
@@ -137,7 +137,6 @@ pub struct ZoneConnection {
 
     pub events: Vec<Event>,
 
-    pub ip: SocketAddr,
     pub id: ClientId,
     pub handle: ServerHandle,
 

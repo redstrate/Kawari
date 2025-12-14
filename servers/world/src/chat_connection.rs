@@ -12,14 +12,12 @@ use kawari::packet::{
     CompressionType, ConnectionState, ConnectionType, PacketSegment, SegmentData, SegmentType,
     ServerIpcSegmentHeader, parse_packet, send_keep_alive, send_packet,
 };
-use std::net::SocketAddr;
 use std::time::Instant;
 use tokio::net::TcpStream;
 
 /// Represents a single connection between an instance of the client and chat portion of the world server.
 pub struct ChatConnection {
     pub socket: TcpStream,
-    pub ip: SocketAddr,
     pub id: ClientId,
     pub state: ConnectionState,
     pub actor_id: ObjectId,

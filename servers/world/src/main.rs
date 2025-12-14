@@ -1,4 +1,3 @@
-use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Instant;
 
@@ -75,7 +74,6 @@ fn spawn_main_loop() -> (ServerHandle, JoinHandle<()>) {
 
 /// A task that will process the first few packets from each connection.
 fn spawn_initial_setup(
-    ip: SocketAddr,
     id: ClientId,
     socket: TcpStream,
     lua: Arc<Mutex<Lua>>,
@@ -83,14 +81,11 @@ fn spawn_initial_setup(
     gamedata: Arc<Mutex<GameData>>,
     handle: ServerHandle,
 ) {
-    let _kill = tokio::spawn(initial_setup(
-        ip, id, socket, lua, database, gamedata, handle,
-    ));
+    let _kill = tokio::spawn(initial_setup(id, socket, lua, database, gamedata, handle));
 }
 
 /// The initial setup loop, which figures out what the remote connection wants and branches off to provide a chat connection, zone connection, or custom IPC connection.
 async fn initial_setup(
-    ip: SocketAddr,
     id: ClientId,
     mut socket: TcpStream,
     lua: Arc<Mutex<Lua>>,
@@ -116,7 +111,6 @@ async fn initial_setup(
                 if header.connection_type == ConnectionType::KawariIpc {
                     let mut connection = CustomIpcConnection {
                         socket,
-                        ip,
                         state: ConnectionState::None,
                         database: database.clone(),
                         gamedata: game_data.clone(),
@@ -145,7 +139,6 @@ async fn initial_setup(
                         state,
                         player_data: PlayerData::default(),
                         events: Vec::new(),
-                        ip,
                         id,
                         handle: handle.clone(),
                         database: database.clone(),
@@ -200,7 +193,6 @@ async fn initial_setup(
 
                     let mut connection = ChatConnection {
                         config: get_config().world,
-                        ip,
                         id,
                         actor_id: INVALID_OBJECT_ID,
                         state,
@@ -249,7 +241,6 @@ fn spawn_chat_connection(connection: ChatConnection) {
     let (send, recv) = channel(64);
 
     let id = &connection.id.clone();
-    let ip = &connection.ip.clone();
     let actor_id = &connection.actor_id.clone();
 
     let data = ClientChatData { recv, connection };
@@ -261,7 +252,6 @@ fn spawn_chat_connection(connection: ChatConnection) {
     // Send client information to said task
     let handle = ClientHandle {
         id: *id,
-        ip: *ip,
         channel: send,
         actor_id: *actor_id, // We have the actor id by this point, since Setup is done earlier
     };
@@ -391,7 +381,6 @@ fn spawn_client(connection: ZoneConnection) {
     let (send, recv) = channel(64);
 
     let id = &connection.id.clone();
-    let ip = &connection.ip.clone();
     let actor_id = &connection.player_data.actor_id.clone();
 
     let data = ClientZoneData { recv, connection };
@@ -403,7 +392,6 @@ fn spawn_client(connection: ZoneConnection) {
     // Send client information to said task
     let handle = ClientHandle {
         id: *id,
-        ip: *ip,
         channel: send,
         actor_id: *actor_id, // We have the actor id by this point, since Setup is done earlier
     };
@@ -1543,11 +1531,10 @@ async fn main() {
     let (handle, _) = spawn_main_loop();
 
     loop {
-        if let Ok((socket, ip)) = listener.accept().await {
+        if let Ok((socket, _)) = listener.accept().await {
             let id = handle.next_id();
 
             spawn_initial_setup(
-                ip,
                 id,
                 socket,
                 lua.clone(),

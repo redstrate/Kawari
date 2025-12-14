@@ -1,9 +1,6 @@
-use std::{
-    net::SocketAddr,
-    sync::{
-        Arc,
-        atomic::{AtomicUsize, Ordering},
-    },
+use std::sync::{
+    Arc,
+    atomic::{AtomicUsize, Ordering},
 };
 
 use tokio::sync::mpsc::Sender;
@@ -159,7 +156,6 @@ pub enum FromServer {
 #[derive(Debug, Clone)]
 pub struct ClientHandle {
     pub id: ClientId,
-    pub ip: SocketAddr,
     pub channel: Sender<FromServer>,
     pub actor_id: ObjectId,
 }
