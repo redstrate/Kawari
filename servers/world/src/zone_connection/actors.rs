@@ -201,7 +201,7 @@ impl ZoneConnection {
     }
 
     /// Spawn the player actor. The client will handle replacing the existing one, if it exists.
-    pub async fn respawn_player(&mut self, start_invisible: bool) {
+    pub async fn respawn_player(&mut self, start_invisible: bool) -> PlayerSpawn {
         let common =
             self.get_player_common_spawn(self.exit_position, self.exit_rotation, start_invisible);
         let config = get_config();
@@ -226,9 +226,11 @@ impl ZoneConnection {
 
         // send player spawn
         {
-            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PlayerSpawn(spawn));
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PlayerSpawn(spawn.clone()));
             self.send_ipc_self(ipc).await;
         }
+
+        spawn
     }
 
     pub async fn update_config(&mut self, actor_id: ObjectId, config: Config) {

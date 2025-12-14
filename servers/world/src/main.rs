@@ -13,13 +13,13 @@ use kawari::ipc::chat::{ChatChannel, ClientChatIpcData};
 
 use kawari::ipc::zone::{
     ActorControl, ActorControlCategory, ActorControlSelf, Condition, Conditions,
-    ContentFinderUserAction, EventType, InviteType, OnlineStatus, OnlineStatusMask, PlayerSpawn,
-    PlayerStatus, SearchInfo, TrustContent, TrustInformation,
+    ContentFinderUserAction, EventType, InviteType, OnlineStatusMask, PlayerStatus, SearchInfo,
+    TrustContent, TrustInformation,
 };
 
 use kawari::ipc::zone::{
-    Blacklist, BlacklistedCharacter, ClientTriggerCommand, ClientZoneIpcData, GameMasterRank,
-    ServerZoneIpcData, ServerZoneIpcSegment,
+    Blacklist, BlacklistedCharacter, ClientTriggerCommand, ClientZoneIpcData, ServerZoneIpcData,
+    ServerZoneIpcSegment,
 };
 
 use kawari::common::{NETWORK_TIMEOUT, RECEIVE_BUFFER_SIZE};
@@ -619,25 +619,7 @@ async fn client_loop(
                                                 .unwrap();
                                             }
                                             ClientZoneIpcData::FinishLoading { .. } => {
-                                                let common = connection.get_player_common_spawn(connection.exit_position, connection.exit_rotation, true);
-
-                                                let online_status = if connection.player_data.gm_rank == GameMasterRank::NormalUser {
-                                                    OnlineStatus::Online
-                                                } else {
-                                                    OnlineStatus::GameMasterBlue
-                                                };
-
-                                                let spawn = PlayerSpawn {
-                                                    account_id: connection.player_data.account_id,
-                                                    content_id: connection.player_data.content_id,
-                                                    current_world_id: config.world.world_id,
-                                                    home_world_id: config.world.world_id,
-                                                    gm_rank: connection.player_data.gm_rank,
-                                                    online_status,
-                                                    common: common.clone(),
-                                                    title_id: connection.player_data.title,
-                                                    ..Default::default()
-                                                };
+                                                let spawn = connection.respawn_player(true).await;
 
                                                 // tell the server we loaded into the zone, so it can start sending us actors
                                                 connection.handle.send(ToServer::ZoneLoaded(connection.id, connection.player_data.actor_id, spawn.clone())).await;
@@ -653,8 +635,6 @@ async fn client_loop(
                                                 }
 
                                                 connection.send_stats().await;
-
-                                                connection.respawn_player(true).await;
 
                                                 // wipe any exit position so it isn't accidentally reused
                                                 connection.exit_position = None;
