@@ -1,6 +1,6 @@
 //! Managing statistics, including your classjob and other related information.
 
-use crate::{CharacterData, ZoneConnection};
+use crate::ZoneConnection;
 use kawari::{
     common::{GameData, ObjectId},
     ipc::zone::{
@@ -27,13 +27,13 @@ impl ZoneConnection {
         self.send_ipc_self(ipc).await;
     }
 
-    pub async fn send_stats(&mut self, chara_details: &CharacterData) {
+    pub async fn send_stats(&mut self) {
         let attributes;
         {
             let mut game_data = self.gamedata.lock();
 
             attributes = game_data
-                .get_racial_base_attributes(chara_details.chara_make.customize.subrace)
+                .get_racial_base_attributes(self.player_data.subrace)
                 .expect("Failed to read racial attributes");
         }
 

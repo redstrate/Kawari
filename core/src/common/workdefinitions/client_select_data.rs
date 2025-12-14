@@ -16,13 +16,6 @@ pub enum RemakeMode {
     EditAppearance = 4,
 }
 
-#[cfg(feature = "server")]
-impl rusqlite::types::FromSql for RemakeMode {
-    fn column_result(value: rusqlite::types::ValueRef<'_>) -> rusqlite::types::FromSqlResult<Self> {
-        Ok(Self::from_repr(i32::column_result(value)?).unwrap())
-    }
-}
-
 /// See <https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Application/Network/WorkDefinitions/ClientSelectData.cs>
 #[derive(Debug)]
 pub struct ClientSelectData {

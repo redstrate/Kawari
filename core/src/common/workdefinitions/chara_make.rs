@@ -13,13 +13,6 @@ pub struct CharaMake {
     pub unk2: i32,
 }
 
-#[cfg(feature = "server")]
-impl rusqlite::types::FromSql for CharaMake {
-    fn column_result(value: rusqlite::types::ValueRef<'_>) -> rusqlite::types::FromSqlResult<Self> {
-        Ok(Self::from_json(&String::column_result(value)?))
-    }
-}
-
 impl CharaMake {
     pub fn from_json(json: &str) -> Self {
         let v: Value = serde_json::from_str(json).unwrap();

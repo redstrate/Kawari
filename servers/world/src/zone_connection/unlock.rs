@@ -10,7 +10,7 @@ impl ZoneConnection {
     pub async fn toggle_orchestrion(&mut self, orchestrion_id: u32) {
         let should_unlock = self
             .player_data
-            .unlocks
+            .unlock
             .orchestrion_rolls
             .toggle(orchestrion_id);
 
@@ -38,7 +38,7 @@ impl ZoneConnection {
     pub async fn toggle_glasses_style(&mut self, glasses_style_id: u32) {
         let should_unlock = self
             .player_data
-            .unlocks
+            .unlock
             .glasses_styles
             .toggle(glasses_style_id);
 
@@ -52,7 +52,7 @@ impl ZoneConnection {
     }
 
     pub async fn toggle_ornament(&mut self, ornament_id: u32) {
-        let should_unlock = self.player_data.unlocks.ornaments.toggle(ornament_id);
+        let should_unlock = self.player_data.unlock.ornaments.toggle(ornament_id);
 
         self.actor_control_self(ActorControlSelf {
             category: ActorControlCategory::ToggleOrnamentUnlock {
@@ -64,7 +64,10 @@ impl ZoneConnection {
     }
 
     pub async fn unlock_buddy_equip(&mut self, buddy_equip_id: u32) {
-        self.player_data.unlocks.buddy_equip.set(buddy_equip_id);
+        self.player_data
+            .companion
+            .unlocked_equip
+            .set(buddy_equip_id);
 
         self.actor_control_self(ActorControlSelf {
             category: ActorControlCategory::BuddyEquipUnlock { id: buddy_equip_id },
@@ -75,7 +78,7 @@ impl ZoneConnection {
     pub async fn toggle_chocobo_taxi_stand(&mut self, chocobo_taxi_stand_id: u32) {
         let should_unlock = self
             .player_data
-            .unlocks
+            .unlock
             .chocobo_taxi_stands
             .toggle(chocobo_taxi_stand_id);
 
@@ -91,12 +94,12 @@ impl ZoneConnection {
     pub async fn toggle_caught_fish(&mut self, caught_fish_id: u32) {
         let (value, index) = value_to_flag_byte_index_value(caught_fish_id);
 
-        self.player_data.unlocks.caught_fish.0[index as usize] ^= value;
+        self.player_data.unlock.caught_fish.0[index as usize] ^= value;
 
         self.actor_control_self(ActorControlSelf {
             category: ActorControlCategory::SetCaughtFishBitmask {
                 index: index as u32,
-                value: self.player_data.unlocks.caught_fish.0[index as usize] as u32,
+                value: self.player_data.unlock.caught_fish.0[index as usize] as u32,
             },
         })
         .await;
@@ -105,12 +108,12 @@ impl ZoneConnection {
     pub async fn toggle_caught_spearfish(&mut self, caught_spearfish_id: u32) {
         let (value, index) = value_to_flag_byte_index_value(caught_spearfish_id);
 
-        self.player_data.unlocks.caught_spearfish.0[index as usize] ^= value;
+        self.player_data.unlock.caught_spearfish.0[index as usize] ^= value;
 
         self.actor_control_self(ActorControlSelf {
             category: ActorControlCategory::SetCaughtSpearfishBitmask {
                 index: index as u32,
-                value: self.player_data.unlocks.caught_spearfish.0[index as usize] as u32,
+                value: self.player_data.unlock.caught_spearfish.0[index as usize] as u32,
             },
         })
         .await;
@@ -119,7 +122,7 @@ impl ZoneConnection {
     pub async fn toggle_triple_triad_card(&mut self, triple_triad_card_id: u32) {
         let should_unlock = self
             .player_data
-            .unlocks
+            .unlock
             .triple_triad_cards
             .toggle(triple_triad_card_id);
 
@@ -134,7 +137,7 @@ impl ZoneConnection {
 
     // TODO: make logic that determines if all_vistas_recorded should be true or false automatically
     pub async fn toggle_adventure(&mut self, adventure_id: u32, all_vistas_recorded: bool) {
-        let should_unlock = self.player_data.unlocks.adventures.toggle(adventure_id);
+        let should_unlock = self.player_data.unlock.adventures.toggle(adventure_id);
 
         self.actor_control_self(ActorControlSelf {
             category: ActorControlCategory::ToggleAdventureUnlock {
@@ -147,7 +150,7 @@ impl ZoneConnection {
     }
 
     pub async fn toggle_cutscene_seen(&mut self, cutscene_id: u32) {
-        let should_unlock = self.player_data.unlocks.cutscene_seen.toggle(cutscene_id);
+        let should_unlock = self.player_data.unlock.cutscene_seen.toggle(cutscene_id);
 
         self.actor_control_self(ActorControlSelf {
             category: ActorControlCategory::ToggleCutsceneSeen {
@@ -159,7 +162,7 @@ impl ZoneConnection {
     }
 
     pub async fn toggle_minion(&mut self, minion_id: u32) {
-        let should_unlock = self.player_data.unlocks.minions.toggle(minion_id);
+        let should_unlock = self.player_data.unlock.minions.toggle(minion_id);
 
         self.actor_control_self(ActorControlSelf {
             category: ActorControlCategory::ToggleMinionUnlock {
@@ -180,8 +183,8 @@ impl ZoneConnection {
         if let Some(aether_current_set_id) = aether_current_set {
             let should_unlock = self
                 .player_data
-                .unlocks
-                .aether_currents
+                .aether_current
+                .unlocked
                 .toggle(aether_current_id - 2818048);
 
             if should_unlock {
@@ -205,8 +208,8 @@ impl ZoneConnection {
                 for current_needed in currents_needed_for_zone {
                     let current_unlocked = self
                         .player_data
-                        .unlocks
-                        .aether_currents
+                        .aether_current
+                        .unlocked
                         .contains((current_needed - 2818048) as u32);
 
                     if !current_unlocked {
@@ -253,8 +256,8 @@ impl ZoneConnection {
         // Because AetherCurrentCompFlgSet starts at Index 1, we need to adjust the mask so this gives the proper values
         let should_unlock = self
             .player_data
-            .unlocks
-            .aether_current_comp_flg_set
+            .aether_current
+            .comp_flg_set
             .toggle(aether_current_comp_flg_set_id - 1);
 
         let screen_image_id;
@@ -285,12 +288,12 @@ impl ZoneConnection {
     pub fn gm_set_orchestrion(&mut self, value: bool, orchestrion_id: u32) {
         if value {
             self.player_data
-                .unlocks
+                .unlock
                 .orchestrion_rolls
                 .set(orchestrion_id);
         } else {
             self.player_data
-                .unlocks
+                .unlock
                 .orchestrion_rolls
                 .clear(orchestrion_id);
         }

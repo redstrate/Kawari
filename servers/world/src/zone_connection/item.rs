@@ -186,8 +186,8 @@ impl ZoneConnection {
         sub_weapon_id: u64,
         model_ids: [u32; 10],
     ) {
-        let chara_details = self.database.find_chara_make(self.player_data.content_id);
-        self.send_stats(&chara_details).await;
+        self.send_stats().await;
+
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Equip(Equip {
             main_weapon_id,
             sub_weapon_id,

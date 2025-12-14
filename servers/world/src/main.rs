@@ -79,7 +79,7 @@ fn spawn_initial_setup(
     id: ClientId,
     socket: TcpStream,
     lua: Arc<Mutex<Lua>>,
-    database: Arc<WorldDatabase>,
+    database: Arc<Mutex<WorldDatabase>>,
     gamedata: Arc<Mutex<GameData>>,
     handle: ServerHandle,
 ) {
@@ -94,7 +94,7 @@ async fn initial_setup(
     id: ClientId,
     mut socket: TcpStream,
     lua: Arc<Mutex<Lua>>,
-    database: Arc<WorldDatabase>,
+    database: Arc<Mutex<WorldDatabase>>,
     game_data: Arc<Mutex<GameData>>,
     handle: ServerHandle,
 ) {
@@ -176,6 +176,7 @@ async fn initial_setup(
                                     let player_data;
                                     {
                                         let mut game_data = connection.gamedata.lock();
+                                        let mut database = connection.database.lock();
                                         player_data = database
                                             .find_player_data(ObjectId(actor_id), &mut game_data);
                                     }
@@ -504,7 +505,11 @@ async fn client_loop(
                                                     connection.send_ipc_self(ipc).await;
                                                 }
 
-                                                let service_account_id = database.find_service_account(connection.player_data.content_id);
+                                                let service_account_id;
+                                                {
+                                                    let mut database = database.lock();
+                                                    service_account_id = database.find_service_account(connection.player_data.content_id);
+                                                }
 
                                                 let Ok(mut login_reply) = ureq::get(format!(
                                                     "{}/_private/max_ex?service={}",
@@ -518,10 +523,6 @@ async fn client_loop(
                                                 };
 
                                                 let expansion = login_reply.body_mut().read_to_string().unwrap().parse().unwrap();
-
-                                                let chara_details =
-                                                database.find_chara_make(connection.player_data.content_id);
-
                                                 // Send inventory
                                                 connection.send_inventory().await;
 
@@ -535,7 +536,7 @@ async fn client_loop(
                                                 .await;
 
                                                 // Stats
-                                                connection.send_stats(&chara_details).await;
+                                                connection.send_stats().await;
 
                                                 // As seen in retail, they pad it with the first value
                                                 let mut padded_exp = connection.player_data.classjob_exp.clone();
@@ -545,6 +546,14 @@ async fn client_loop(
                                                 let mut padded_levels = connection.player_data.classjob_levels.clone();
                                                 padded_levels.resize(CLASSJOB_ARRAY_SIZE, connection.player_data.classjob_levels[0]);
 
+                                                let chara_make;
+                                                let city_state;
+                                                {
+                                                    let mut database = database.lock();
+                                                    chara_make = database.get_chara_make(connection.player_data.content_id);
+                                                    city_state = database.get_city_state(connection.player_data.content_id);
+                                                }
+
                                                 // Player Setup
                                                 {
                                                     let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PlayerStatus(PlayerStatus {
@@ -552,52 +561,52 @@ async fn client_loop(
                                                         exp: padded_exp,
                                                         max_level: calculate_max_level(expansion),
                                                         expansion,
-                                                        name: chara_details.name,
+                                                        name: connection.player_data.name.clone(),
                                                         actor_id: connection.player_data.actor_id,
-                                                        race: chara_details.chara_make.customize.race,
-                                                        gender: chara_details.chara_make.customize.gender,
-                                                        tribe: chara_details.chara_make.customize.subrace,
-                                                        city_state: chara_details.city_state,
-                                                        nameday_month: chara_details.chara_make.birth_month
+                                                        race: chara_make.customize.race,
+                                                        gender: chara_make.customize.gender,
+                                                        tribe: chara_make.customize.subrace,
+                                                        city_state,
+                                                        nameday_month: chara_make.birth_month
                                                         as u8,
-                                                        nameday_day: chara_details.chara_make.birth_day as u8,
-                                                        deity: chara_details.chara_make.guardian as u8,
+                                                        nameday_day: chara_make.birth_day as u8,
+                                                        deity: chara_make.guardian as u8,
                                                         current_class: connection.player_data.classjob_id,
                                                         first_class: connection.player_data.classjob_id, // TODO: placeholder
                                                         levels: padded_levels,
-                                                        unlocks: connection.player_data.unlocks.unlocks.0.clone(),
-                                                        aetherytes: connection.player_data.unlocks.aetherytes.0.clone(),
-                                                        unlocked_raids: connection.player_data.unlocks.unlocked_raids.0.clone(),
-                                                        unlocked_dungeons: connection.player_data.unlocks.unlocked_dungeons.0.clone(),
-                                                        unlocked_guildhests: connection.player_data.unlocks.unlocked_guildhests.0.clone(),
-                                                        unlocked_trials: connection.player_data.unlocks.unlocked_trials.0.clone(),
-                                                        unlocked_crystalline_conflict: connection.player_data.unlocks.unlocked_crystalline_conflict.0.clone(),
-                                                        unlocked_frontline: connection.player_data.unlocks.unlocked_frontline.0.clone(),
-                                                        cleared_raids: connection.player_data.unlocks.cleared_raids.0.clone(),
-                                                        cleared_dungeons: connection.player_data.unlocks.cleared_dungeons.0.clone(),
-                                                        cleared_guildhests: connection.player_data.unlocks.cleared_guildhests.0.clone(),
-                                                        cleared_trials: connection.player_data.unlocks.cleared_trials.0.clone(),
-                                                        cleared_crystalline_conflict: connection.player_data.unlocks.cleared_crystalline_conflict.0.clone(),
-                                                        cleared_frontline: connection.player_data.unlocks.cleared_frontline.0.clone(),
-                                                        minions: connection.player_data.unlocks.minions.0.clone(),
-                                                        mount_guide_mask: connection.player_data.unlocks.mounts.0.clone(),
+                                                        unlocks: connection.player_data.unlock.unlocks.0.clone(),
+                                                        aetherytes: connection.player_data.aetheryte.unlocked.0.clone(),
+                                                        unlocked_raids: connection.player_data.content.unlocked_raids.0.clone(),
+                                                        unlocked_dungeons: connection.player_data.content.unlocked_dungeons.0.clone(),
+                                                        unlocked_guildhests: connection.player_data.content.unlocked_guildhests.0.clone(),
+                                                        unlocked_trials: connection.player_data.content.unlocked_trials.0.clone(),
+                                                        unlocked_crystalline_conflict: connection.player_data.content.unlocked_crystalline_conflicts.0.clone(),
+                                                        unlocked_frontline: connection.player_data.content.unlocked_frontlines.0.clone(),
+                                                        cleared_raids: connection.player_data.content.cleared_raids.0.clone(),
+                                                        cleared_dungeons: connection.player_data.content.cleared_dungeons.0.clone(),
+                                                        cleared_guildhests: connection.player_data.content.cleared_guildhests.0.clone(),
+                                                        cleared_trials: connection.player_data.content.cleared_trials.0.clone(),
+                                                        cleared_crystalline_conflict: connection.player_data.content.cleared_crystalline_conflicts.0.clone(),
+                                                        cleared_frontline: connection.player_data.content.cleared_frontlines.0.clone(),
+                                                        minions: connection.player_data.unlock.minions.0.clone(),
+                                                        mount_guide_mask: connection.player_data.unlock.mounts.0.clone(),
                                                         home_aetheryte_id: 8, // hardcoded to limsa for now
                                                         favourite_aetheryte_count: 1,
                                                         favorite_aetheryte_ids: [8, 0, 0, 0],
-                                                        seen_active_help: connection.player_data.unlocks.seen_active_help.0.clone(),
-                                                        aether_currents_mask: connection.player_data.unlocks.aether_currents.0.clone(),
-                                                        orchestrion_roll_mask: connection.player_data.unlocks.orchestrion_rolls.0.clone(),
-                                                        buddy_equip_mask: connection.player_data.unlocks.buddy_equip.0.clone(),
-                                                        cutscene_seen_mask: connection.player_data.unlocks.cutscene_seen.0.clone(),
-                                                        ornament_mask: connection.player_data.unlocks.ornaments.0.clone(),
-                                                        caught_fish_mask: connection.player_data.unlocks.caught_fish.0.clone(),
-                                                        caught_spearfish_mask: connection.player_data.unlocks.caught_spearfish.0.clone(),
-                                                        adventure_mask: connection.player_data.unlocks.adventures.0.clone(),
-                                                        triple_triad_cards: connection.player_data.unlocks.triple_triad_cards.0.clone(),
-                                                        glasses_styles_mask: connection.player_data.unlocks.glasses_styles.0.clone(),
-                                                        chocobo_taxi_stands_mask: connection.player_data.unlocks.chocobo_taxi_stands.0.clone(),
-                                                        aether_current_comp_flg_set_bitmask1: connection.player_data.unlocks.aether_current_comp_flg_set.0[0],
-                                                        aether_current_comp_flg_set_bitmask2: connection.player_data.unlocks.aether_current_comp_flg_set.0[1..AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE].to_vec(),
+                                                        seen_active_help: connection.player_data.unlock.seen_active_help.0.clone(),
+                                                        aether_currents_mask: connection.player_data.aether_current.unlocked.0.clone(),
+                                                        orchestrion_roll_mask: connection.player_data.unlock.orchestrion_rolls.0.clone(),
+                                                        buddy_equip_mask: connection.player_data.companion.unlocked_equip.0.clone(),
+                                                        cutscene_seen_mask: connection.player_data.unlock.cutscene_seen.0.clone(),
+                                                        ornament_mask: connection.player_data.unlock.ornaments.0.clone(),
+                                                        caught_fish_mask: connection.player_data.unlock.caught_fish.0.clone(),
+                                                        caught_spearfish_mask: connection.player_data.unlock.caught_spearfish.0.clone(),
+                                                        adventure_mask: connection.player_data.unlock.adventures.0.clone(),
+                                                        triple_triad_cards: connection.player_data.unlock.triple_triad_cards.0.clone(),
+                                                        glasses_styles_mask: connection.player_data.unlock.glasses_styles.0.clone(),
+                                                        chocobo_taxi_stands_mask: connection.player_data.unlock.chocobo_taxi_stands.0.clone(),
+                                                        aether_current_comp_flg_set_bitmask1: connection.player_data.aether_current.comp_flg_set.0[0],
+                                                        aether_current_comp_flg_set_bitmask2: connection.player_data.aether_current.comp_flg_set.0[1..AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE].to_vec(),
                                                         ..Default::default()
                                                     }));
                                                     connection.send_ipc_self(ipc).await;
@@ -647,19 +656,17 @@ async fn client_loop(
                                                 // tell the server we loaded into the zone, so it can start sending us actors
                                                 connection.handle.send(ToServer::ZoneLoaded(connection.id, connection.player_data.actor_id, spawn.clone())).await;
 
-                                                let chara_details = database.find_chara_make(connection.player_data.content_id);
-
                                                 // If we're in a party, we need to tell the other members we changed areas or reconnected.
                                                 if connection.is_in_party() {
                                                     if !connection.player_data.rejoining_party {
-                                                    connection.handle.send(ToServer::PartyMemberChangedAreas(connection.player_data.party_id, connection.player_data.account_id, connection.player_data.content_id, chara_details.name.clone())).await;
+                                                    connection.handle.send(ToServer::PartyMemberChangedAreas(connection.player_data.party_id, connection.player_data.account_id, connection.player_data.content_id, connection.player_data.name.clone())).await;
                                                     } else {
                                                         connection.handle.send(ToServer::PartyMemberReturned(connection.player_data.actor_id)).await;
                                                         connection.player_data.rejoining_party = false;
                                                     }
                                                 }
 
-                                                connection.send_stats(&chara_details).await;
+                                                connection.send_stats().await;
 
                                                 connection.respawn_player(true).await;
 
@@ -737,10 +744,10 @@ async fn client_loop(
                                                     },
                                                     ClientTriggerCommand::ShownActiveHelp { id } => {
                                                         // Save this so it isn't shown again on next login
-                                                        connection.player_data.unlocks.seen_active_help.set(id);
+                                                        connection.player_data.unlock.seen_active_help.set(id);
                                                     }
                                                     ClientTriggerCommand::SeenCutscene { id } => {
-                                                        connection.player_data.unlocks.cutscene_seen.set(id);
+                                                        connection.player_data.unlock.cutscene_seen.set(id);
                                                     }
                                                     ClientTriggerCommand::DirectorTrigger { director_id, trigger, arg } => {
                                                         match trigger {
@@ -827,13 +834,12 @@ async fn client_loop(
                                                 break 'outer;  // We break the outer loop here because we're in the middle of a segment loop!
                                             }
                                             ClientZoneIpcData::SendChatMessage(chat_message) => {
-                                                let chara_details = database.find_chara_make(connection.player_data.content_id);
                                                 let info = MessageInfo {
                                                     sender_actor_id: connection.player_data.actor_id,
                                                     sender_account_id: connection.player_data.account_id,
                                                     sender_world_id: config.world.world_id,
                                                     sender_position: connection.player_data.position,
-                                                    sender_name: chara_details.name,
+                                                    sender_name: connection.player_data.name.clone(),
                                                     channel: chat_message.channel,
                                                     message: chat_message.message.clone(),
                                                 };
@@ -1351,28 +1357,23 @@ async fn client_loop(
                                             }
                                             ClientZoneIpcData::InviteReply { sender_content_id, sender_world_id, invite_type, response } => {
                                                 tracing::info!("Client replied to invite: {:#?} {:#?} {:#?} {:#?}", sender_content_id, sender_world_id, invite_type, response);
-                                                let chara_details = database.find_chara_make(connection.player_data.content_id);
-                                                connection.handle.send(ToServer::InvitationResponse(connection.id, connection.player_data.account_id, connection.player_data.content_id, chara_details.name, *sender_content_id, *invite_type, *response)).await;
+                                                connection.handle.send(ToServer::InvitationResponse(connection.id, connection.player_data.account_id, connection.player_data.content_id, connection.player_data.name.clone(), *sender_content_id, *invite_type, *response)).await;
                                             }
                                             ClientZoneIpcData::PartyDisband { .. } => {
                                                 tracing::info!("Client is disbanding their party!");
-                                                let chara_details = database.find_chara_make(connection.player_data.content_id);
-                                                connection.handle.send(ToServer::PartyDisband(connection.player_data.party_id, connection.player_data.account_id, connection.player_data.content_id, chara_details.name)).await;
+                                                connection.handle.send(ToServer::PartyDisband(connection.player_data.party_id, connection.player_data.account_id, connection.player_data.content_id, connection.player_data.name.clone())).await;
                                             }
                                             ClientZoneIpcData::PartyMemberKick { content_id, character_name, .. } => {
                                                 tracing::info!("Player is kicking another player from their party! {} {}", content_id, character_name);
-                                                let chara_details = database.find_chara_make(connection.player_data.content_id);
-                                                connection.handle.send(ToServer::PartyMemberKick(connection.player_data.party_id, connection.player_data.account_id, connection.player_data.content_id, chara_details.name, *content_id, character_name.clone())).await;
+                                                connection.handle.send(ToServer::PartyMemberKick(connection.player_data.party_id, connection.player_data.account_id, connection.player_data.content_id, connection.player_data.name.clone(), *content_id, character_name.clone())).await;
                                             }
                                             ClientZoneIpcData::PartyChangeLeader { content_id, character_name, .. } => {
-                                                 tracing::info!("Player is promoting another player in their party to leader! {} {}", content_id, character_name);
-                                                let chara_details = database.find_chara_make(connection.player_data.content_id);
-                                                connection.handle.send(ToServer::PartyChangeLeader(connection.player_data.party_id, connection.player_data.account_id, connection.player_data.content_id, chara_details.name, *content_id, character_name.clone())).await;
+                                                tracing::info!("Player is promoting another player in their party to leader! {} {}", content_id, character_name);
+                                                connection.handle.send(ToServer::PartyChangeLeader(connection.player_data.party_id, connection.player_data.account_id, connection.player_data.content_id, connection.player_data.name.clone(), *content_id, character_name.clone())).await;
                                             }
                                             ClientZoneIpcData::PartyLeave { .. } => {
                                                 tracing::info!("Client is leaving their party!");
-                                                let chara_details = database.find_chara_make(connection.player_data.content_id);
-                                                connection.handle.send(ToServer::PartyMemberLeft(connection.player_data.party_id, connection.player_data.account_id, connection.player_data.content_id, connection.player_data.actor_id, chara_details.name.clone(),)).await;
+                                                connection.handle.send(ToServer::PartyMemberLeft(connection.player_data.party_id, connection.player_data.account_id, connection.player_data.content_id, connection.player_data.actor_id, connection.player_data.name.clone(),)).await;
                                             }
                                             ClientZoneIpcData::RequestSearchInfo { .. } => {
                                                 tracing::info!("Requesting search info is unimplemented");
@@ -1503,7 +1504,6 @@ async fn client_loop(
             .await;
 
         if connection.is_in_party() {
-            let chara_details = database.find_chara_make(connection.player_data.content_id);
             connection
                 .handle
                 .send(ToServer::PartyMemberOffline(
@@ -1511,7 +1511,7 @@ async fn client_loop(
                     connection.player_data.account_id,
                     connection.player_data.content_id,
                     connection.player_data.actor_id,
-                    chara_details.name.clone(),
+                    connection.player_data.name.clone(),
                 ))
                 .await;
         }
@@ -1528,7 +1528,7 @@ async fn main() {
 
     let listener = TcpListener::bind(addr).await.unwrap();
 
-    let database = Arc::new(WorldDatabase::new());
+    let database = Arc::new(Mutex::new(WorldDatabase::new()));
     let lua = Arc::new(Mutex::new(Lua::new()));
     let game_data = Arc::new(Mutex::new(GameData::new()));
 

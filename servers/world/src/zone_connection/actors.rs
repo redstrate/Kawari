@@ -250,11 +250,11 @@ impl ZoneConnection {
     ) -> CommonSpawn {
         let mut game_data = self.gamedata.lock();
 
-        let chara_details = self.database.find_chara_make(self.player_data.content_id);
-
         let inventory = &self.player_data.inventory;
 
-        let mut look = chara_details.chara_make.customize;
+        let mut database = self.database.lock();
+        let chara_make = database.get_chara_make(self.player_data.content_id);
+        let mut look = chara_make.customize;
 
         // There seems to be no display flag for this, so clear the bit out
         if self
@@ -272,7 +272,7 @@ impl ZoneConnection {
 
         CommonSpawn {
             class_job: self.player_data.classjob_id,
-            name: chara_details.name,
+            name: self.player_data.name.clone(),
             hp_curr: self.player_data.curr_hp,
             hp_max: self.player_data.max_hp,
             mp_curr: self.player_data.curr_mp,
@@ -286,7 +286,7 @@ impl ZoneConnection {
             models: inventory.get_model_ids(&mut game_data),
             pos: exit_position.unwrap_or_default(),
             rotation: exit_rotation.unwrap_or(0.0),
-            voice: chara_details.chara_make.voice_id as u8,
+            voice: chara_make.voice_id as u8,
             active_minion: self.player_data.active_minion as u16,
             ..Default::default()
         }

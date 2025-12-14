@@ -96,13 +96,6 @@ pub enum GameMasterRank {
 }
 
 #[cfg(feature = "server")]
-impl rusqlite::types::FromSql for GameMasterRank {
-    fn column_result(value: rusqlite::types::ValueRef<'_>) -> rusqlite::types::FromSqlResult<Self> {
-        Ok(Self::from_repr(u8::column_result(value)?).unwrap())
-    }
-}
-
-#[cfg(feature = "server")]
 impl mlua::IntoLua for GameMasterRank {
     fn into_lua(self, _: &mlua::Lua) -> mlua::Result<mlua::Value> {
         Ok(mlua::Value::Integer(self as i64))

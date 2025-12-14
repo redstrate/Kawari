@@ -96,12 +96,6 @@ impl Default for Inventory {
     }
 }
 
-impl rusqlite::types::FromSql for Inventory {
-    fn column_result(value: rusqlite::types::ValueRef<'_>) -> rusqlite::types::FromSqlResult<Self> {
-        Ok(serde_json::from_str(&String::column_result(value)?).unwrap())
-    }
-}
-
 impl Inventory {
     /// Equip the starting items for a given classjob
     pub fn equip_classjob_items(&mut self, classjob_id: u16, game_data: &mut GameData) {
@@ -408,5 +402,42 @@ impl Inventory {
                 .get_primary_model_id(self.equipped.right_ring.apparent_id())
                 .unwrap_or(0) as u32,
         ]
+    }
+
+    fn prepare_items_in_container(container: &mut impl Storage, data: &mut GameData) {
+        for index in 0..container.max_slots() {
+            let item = container.get_slot_mut(index as u16);
+
+            if item.is_empty_slot() {
+                continue;
+            }
+
+            if let Some(info) = data.get_item_info(ItemInfoQuery::ById(item.id)) {
+                item.item_level = info.item_level;
+                item.stack_size = info.stack_size;
+                item.price_low = info.price_low;
+                // TODO: There will be much more in the future.
+            }
+        }
+    }
+
+    pub fn prepare_player_inventory(inventory: &mut Inventory, data: &mut GameData) {
+        // TODO: implement iter_mut for Inventory so all of this can be reduced down
+        for index in 0..inventory.pages.len() {
+            Self::prepare_items_in_container(&mut inventory.pages[index], data);
+        }
+
+        Self::prepare_items_in_container(&mut inventory.equipped, data);
+        Self::prepare_items_in_container(&mut inventory.armoury_main_hand, data);
+        Self::prepare_items_in_container(&mut inventory.armoury_body, data);
+        Self::prepare_items_in_container(&mut inventory.armoury_hands, data);
+        Self::prepare_items_in_container(&mut inventory.armoury_legs, data);
+        Self::prepare_items_in_container(&mut inventory.armoury_feet, data);
+        Self::prepare_items_in_container(&mut inventory.armoury_off_hand, data);
+        Self::prepare_items_in_container(&mut inventory.armoury_earring, data);
+        Self::prepare_items_in_container(&mut inventory.armoury_necklace, data);
+        Self::prepare_items_in_container(&mut inventory.armoury_bracelet, data);
+        Self::prepare_items_in_container(&mut inventory.armoury_rings, data);
+        // Skip soul crystals
     }
 }

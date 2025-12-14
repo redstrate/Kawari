@@ -1,9 +1,31 @@
+use diesel::{
+    backend::Backend,
+    deserialize::{self, FromSqlRow},
+    expression::AsExpression,
+    serialize::{self},
+    sql_types::Text,
+    sqlite::Sqlite,
+};
 use serde::{Deserialize, Serialize};
 
-use crate::common::{value_to_flag_byte_index_value, value_to_flag_byte_index_value_quests};
+use kawari::common::{value_to_flag_byte_index_value, value_to_flag_byte_index_value_quests};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, AsExpression, FromSqlRow)]
+#[diesel(sql_type = Text)]
 pub struct Bitmask<const N: usize>(pub Vec<u8>);
+
+impl<const N: usize> serialize::ToSql<Text, Sqlite> for Bitmask<N> {
+    fn to_sql<'b>(&'b self, out: &mut serialize::Output<'b, '_, Sqlite>) -> serialize::Result {
+        out.set_value(serde_json::to_string(&self).unwrap());
+        Ok(serialize::IsNull::No)
+    }
+}
+
+impl<const N: usize> deserialize::FromSql<Text, Sqlite> for Bitmask<N> {
+    fn from_sql(mut bytes: <Sqlite as Backend>::RawValue<'_>) -> deserialize::Result<Self> {
+        Ok(serde_json::from_str(bytes.read_text()).ok().unwrap())
+    }
+}
 
 impl<const N: usize> From<Vec<u8>> for Bitmask<N> {
     fn from(value: Vec<u8>) -> Self {
@@ -48,8 +70,22 @@ impl<const N: usize> Bitmask<N> {
 }
 
 // TODO: de-duplicate the two implementations, this is stupid
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, AsExpression, FromSqlRow)]
+#[diesel(sql_type = Text)]
 pub struct QuestBitmask<const N: usize>(pub Vec<u8>);
+
+impl<const N: usize> serialize::ToSql<Text, Sqlite> for QuestBitmask<N> {
+    fn to_sql<'b>(&'b self, out: &mut serialize::Output<'b, '_, Sqlite>) -> serialize::Result {
+        out.set_value(serde_json::to_string(&self).unwrap());
+        Ok(serialize::IsNull::No)
+    }
+}
+
+impl<const N: usize> deserialize::FromSql<Text, Sqlite> for QuestBitmask<N> {
+    fn from_sql(mut bytes: <Sqlite as Backend>::RawValue<'_>) -> deserialize::Result<Self> {
+        Ok(serde_json::from_str(bytes.read_text()).ok().unwrap())
+    }
+}
 
 impl<const N: usize> From<Vec<u8>> for QuestBitmask<N> {
     fn from(value: Vec<u8>) -> Self {

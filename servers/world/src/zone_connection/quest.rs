@@ -44,7 +44,7 @@ impl ZoneConnection {
         // quest complete list
         {
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::QuestCompleteList {
-                completed_quests: self.player_data.unlocks.completed_quests.0.clone(),
+                completed_quests: self.player_data.quest.completed.0.clone(),
                 unk2: vec![0xFF; 65],
             });
             self.send_ipc_self(ipc).await;
@@ -135,7 +135,7 @@ impl ZoneConnection {
         });
         self.send_ipc_self(ipc).await;
 
-        self.player_data.unlocks.completed_quests.set(adjusted_id);
+        self.player_data.quest.completed.set(adjusted_id);
 
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::FinishQuest {
             quest_id: adjusted_id as u16,
@@ -148,7 +148,7 @@ impl ZoneConnection {
     }
 
     pub async fn finish_all_quests(&mut self) {
-        self.player_data.unlocks.completed_quests.0 = vec![0xFF; COMPLETED_QUEST_BITMASK_SIZE];
+        self.player_data.quest.completed.0 = vec![0xFF; COMPLETED_QUEST_BITMASK_SIZE];
         self.send_quest_information().await;
     }
 
@@ -193,12 +193,12 @@ impl ZoneConnection {
 
     pub async fn incomplete_quest(&mut self, id: u32) {
         let adjusted_id = adjust_quest_id(id);
-        self.player_data.unlocks.completed_quests.clear(adjusted_id);
+        self.player_data.quest.completed.clear(adjusted_id);
         self.send_quest_information().await;
     }
 
     pub async fn incomplete_all_quests(&mut self) {
-        self.player_data.unlocks.completed_quests.0 = vec![0x0; COMPLETED_QUEST_BITMASK_SIZE];
+        self.player_data.quest.completed.0 = vec![0x0; COMPLETED_QUEST_BITMASK_SIZE];
         self.send_quest_information().await;
     }
 }

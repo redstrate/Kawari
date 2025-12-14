@@ -45,9 +45,10 @@ impl ZoneConnection {
                     self.change_zone(*zone_id, *exit_position, *exit_rotation)
                         .await
                 }
-                LuaTask::SetRemakeMode(remake_mode) => self
-                    .database
-                    .set_remake_mode(player.player_data.content_id, *remake_mode),
+                LuaTask::SetRemakeMode(remake_mode) => {
+                    let mut database = self.database.lock();
+                    database.set_remake_mode(player.player_data.content_id, *remake_mode);
+                }
                 LuaTask::Warp { warp_id } => {
                     self.warp(*warp_id).await;
                 }
@@ -73,7 +74,7 @@ impl ZoneConnection {
                     self.toggle_invisibility(*invisible).await;
                 }
                 LuaTask::Unlock { id } => {
-                    self.player_data.unlocks.unlocks.set(*id);
+                    self.player_data.unlock.unlocks.set(*id);
 
                     self.actor_control_self(ActorControlSelf {
                         category: ActorControlCategory::ToggleUnlock {
@@ -88,9 +89,9 @@ impl ZoneConnection {
                     if unlock_all {
                         for i in 1..239 {
                             if *on {
-                                self.player_data.unlocks.aetherytes.set(i);
+                                self.player_data.aetheryte.unlocked.set(i);
                             } else {
-                                self.player_data.unlocks.aetherytes.clear(i);
+                                self.player_data.aetheryte.unlocked.clear(i);
                             }
 
                             self.actor_control_self(ActorControlSelf {
@@ -103,9 +104,9 @@ impl ZoneConnection {
                         }
                     } else {
                         if *on {
-                            self.player_data.unlocks.aetherytes.set(*id);
+                            self.player_data.aetheryte.unlocked.set(*id);
                         } else {
-                            self.player_data.unlocks.aetherytes.clear(*id);
+                            self.player_data.aetheryte.unlocked.clear(*id);
                         }
 
                         self.actor_control_self(ActorControlSelf {
@@ -192,25 +193,25 @@ impl ZoneConnection {
                             match instance_content_type {
                                 InstanceContentType::Dungeon => {
                                     self.player_data
-                                        .unlocks
+                                        .content
                                         .unlocked_dungeons
                                         .set(*id as u32 - 1);
                                 }
                                 InstanceContentType::Raid => {
                                     self.player_data
-                                        .unlocks
+                                        .content
                                         .unlocked_raids
                                         .set(*id as u32 - 30001);
                                 }
                                 InstanceContentType::Guildhests => {
                                     self.player_data
-                                        .unlocks
+                                        .content
                                         .unlocked_guildhests
                                         .set(*id as u32 - 10001);
                                 }
                                 InstanceContentType::Trial => {
                                     self.player_data
-                                        .unlocks
+                                        .content
                                         .unlocked_trials
                                         .set(*id as u32 - 20001);
                                 }
@@ -258,7 +259,7 @@ impl ZoneConnection {
                         order = game_data.find_mount_order(*id).unwrap_or(0);
                     }
 
-                    let should_unlock = self.player_data.unlocks.mounts.toggle(*id);
+                    let should_unlock = self.player_data.unlock.mounts.toggle(*id);
 
                     self.actor_control_self(ActorControlSelf {
                         category: ActorControlCategory::ToggleMountUnlock {
@@ -442,36 +443,33 @@ impl ZoneConnection {
                     }
                 }
                 LuaTask::SetRace { race } => {
-                    let mut chara_details =
-                        self.database.find_chara_make(self.player_data.content_id);
-                    chara_details.chara_make.customize.race = *race;
+                    {
+                        let mut database = self.database.lock();
+                        let mut chara_make = database.get_chara_make(self.player_data.content_id);
+                        chara_make.customize.race = *race;
 
-                    self.database.set_chara_make(
-                        self.player_data.content_id,
-                        &chara_details.chara_make.to_json(),
-                    );
+                        database.set_chara_make(self.player_data.content_id, &chara_make.to_json());
+                    }
                     self.respawn_player(false).await;
                 }
                 LuaTask::SetTribe { tribe } => {
-                    let mut chara_details =
-                        self.database.find_chara_make(self.player_data.content_id);
-                    chara_details.chara_make.customize.subrace = *tribe;
+                    {
+                        let mut database = self.database.lock();
+                        let mut chara_make = database.get_chara_make(self.player_data.content_id);
+                        chara_make.customize.subrace = *tribe;
 
-                    self.database.set_chara_make(
-                        self.player_data.content_id,
-                        &chara_details.chara_make.to_json(),
-                    );
+                        database.set_chara_make(self.player_data.content_id, &chara_make.to_json());
+                    }
                     self.respawn_player(false).await;
                 }
                 LuaTask::SetSex { sex } => {
-                    let mut chara_details =
-                        self.database.find_chara_make(self.player_data.content_id);
-                    chara_details.chara_make.customize.gender = *sex;
+                    {
+                        let mut database = self.database.lock();
+                        let mut chara_make = database.get_chara_make(self.player_data.content_id);
+                        chara_make.customize.gender = *sex;
 
-                    self.database.set_chara_make(
-                        self.player_data.content_id,
-                        &chara_details.chara_make.to_json(),
-                    );
+                        database.set_chara_make(self.player_data.content_id, &chara_make.to_json());
+                    }
                     self.respawn_player(false).await;
                 }
                 LuaTask::SendSegment { segment } => {
