@@ -298,22 +298,14 @@ impl ZoneConnection {
                         .await;
                 }
                 LuaTask::SetHP { hp } => {
-                    self.player_data.curr_hp = *hp;
-                    self.update_hp_mp(
-                        self.player_data.actor_id,
-                        self.player_data.curr_hp,
-                        self.player_data.curr_mp,
-                    )
-                    .await;
+                    self.handle
+                        .send(ToServer::SetHP(self.id, self.player_data.actor_id, *hp))
+                        .await;
                 }
                 LuaTask::SetMP { mp } => {
-                    self.player_data.curr_mp = *mp;
-                    self.update_hp_mp(
-                        self.player_data.actor_id,
-                        self.player_data.curr_hp,
-                        self.player_data.curr_mp,
-                    )
-                    .await;
+                    self.handle
+                        .send(ToServer::SetMP(self.id, self.player_data.actor_id, *mp))
+                        .await;
                 }
                 LuaTask::ToggleGlassesStyle { id } => {
                     self.toggle_glasses_style(*id).await;

@@ -81,10 +81,6 @@ pub struct PlayerData {
     pub classjob_id: u8,
     pub classjob_levels: Vec<u16>,
     pub classjob_exp: Vec<i32>,
-    pub curr_hp: u32,
-    pub max_hp: u32,
-    pub curr_mp: u16,
-    pub max_mp: u16,
 
     // Dynamic data
     pub position: Position,
@@ -219,11 +215,6 @@ impl ZoneConnection {
     }
 
     pub async fn initialize(&mut self, actor_id: u32) {
-        // some still hardcoded values
-        self.player_data.curr_hp = 100;
-        self.player_data.max_hp = 100;
-        self.player_data.curr_mp = 10000;
-        self.player_data.max_mp = 10000;
         self.player_data.item_sequence = 0;
         self.player_data.shop_sequence = 0;
 

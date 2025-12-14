@@ -273,10 +273,10 @@ impl ZoneConnection {
         CommonSpawn {
             class_job: self.player_data.classjob_id,
             name: self.player_data.name.clone(),
-            hp_curr: self.player_data.curr_hp,
-            hp_max: self.player_data.max_hp,
-            mp_curr: self.player_data.curr_mp,
-            mp_max: self.player_data.max_mp,
+            hp_curr: 1000, // TODO: hardcoded
+            hp_max: 1000,
+            mp_curr: 10000,
+            mp_max: 10000,
             level: self.current_level(&game_data) as u8,
             object_kind: ObjectKind::Player(PlayerSubKind::Player),
             look,

@@ -282,6 +282,10 @@ pub enum ToServer {
     CommenceDuty(ClientId, ObjectId),
     /// (Temporary) Signal to the server to kill this actor.
     Kill(ClientId, ObjectId),
+    /// Inform the server to update our HP to this value.
+    SetHP(ClientId, ObjectId, u32),
+    /// Inform the server to update our MP to this value.
+    SetMP(ClientId, ObjectId, u16),
 }
 
 #[derive(Clone, Debug)]

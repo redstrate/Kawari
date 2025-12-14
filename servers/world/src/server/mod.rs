@@ -13,7 +13,7 @@ use crate::{
     Navmesh, SpawnAllocator,
     lua::load_init_script,
     server::{
-        action::{execute_action, handle_action_messages, kill_actor},
+        action::{execute_action, handle_action_messages, kill_actor, update_actor_hp_mp},
         actor::NetworkedActor,
         chat::handle_chat_messages,
         effect::{handle_effect_messages, remove_effect},
@@ -1304,6 +1304,34 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
             }
             ToServer::Kill(_from_id, from_actor_id) => {
                 kill_actor(network.clone(), from_actor_id);
+            }
+            ToServer::SetHP(_from_id, from_actor_id, hp) => {
+                let mut data = data.lock();
+                let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
+                    continue;
+                };
+
+                let Some(actor) = instance.find_actor_mut(from_actor_id) else {
+                    continue;
+                };
+
+                actor.get_common_spawn_mut().hp_curr = hp;
+
+                update_actor_hp_mp(network.clone(), instance, from_actor_id);
+            }
+            ToServer::SetMP(_from_id, from_actor_id, mp) => {
+                let mut data = data.lock();
+                let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
+                    continue;
+                };
+
+                let Some(actor) = instance.find_actor_mut(from_actor_id) else {
+                    continue;
+                };
+
+                actor.get_common_spawn_mut().mp_curr = mp;
+
+                update_actor_hp_mp(network.clone(), instance, from_actor_id);
             }
             ToServer::FatalError(err) => return Err(err),
             _ => {}

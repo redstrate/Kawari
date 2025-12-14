@@ -43,8 +43,8 @@ impl ZoneConnection {
             vitality: attributes.vitality,
             intelligence: attributes.intelligence,
             mind: attributes.mind,
-            hp: self.player_data.max_hp,
-            mp: self.player_data.max_mp as u32,
+            hp: 1000,  // TODO: hardcoded
+            mp: 10000, // TODO: hardcoded
             ..Default::default()
         }));
         self.send_ipc_self(ipc).await;

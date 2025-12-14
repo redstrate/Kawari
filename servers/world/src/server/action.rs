@@ -12,7 +12,7 @@ use crate::{
         WorldServer,
         actor::NetworkedActor,
         effect::gain_effect,
-        instance::QueuedTaskData,
+        instance::{Instance, QueuedTaskData},
         network::{DestinationNetwork, NetworkState},
     },
 };
@@ -134,33 +134,7 @@ pub fn execute_action(
                 }
             }
 
-            // Inform the client of the new actor's HP/MP
-            {
-                // TODO: send to all relevant players
-                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateHpMpTp {
-                    hp: common_spawn.hp_curr,
-                    mp: common_spawn.mp_curr,
-                    unk: 0,
-                });
-                let mut network = network.lock();
-                network.send_ipc_to(from_id, ipc, request.target.object_id);
-            }
-
-            if common_spawn.hp_curr == 0 {
-                kill_actor(network.clone(), request.target.object_id);
-
-                // Queue up despawn if this is an NPC
-                if !matches!(actor, NetworkedActor::Player { .. }) {
-                    instance.insert_task(
-                        from_id,
-                        from_actor_id,
-                        DEAD_FADE_OUT_TIME,
-                        QueuedTaskData::DeadFadeOut {
-                            actor_id: request.target.object_id,
-                        },
-                    );
-                }
-            }
+            update_actor_hp_mp(network.clone(), instance, request.target.object_id);
         }
 
         // TODO: send Cooldown ActorControlSelf
@@ -462,5 +436,50 @@ pub fn kill_actor(network: Arc<Mutex<NetworkState>>, from_actor_id: ObjectId) {
 
         let mut network = network.lock();
         network.send_to_all(None, msg, DestinationNetwork::ZoneClients);
+    }
+}
+
+/// Updates other actors about this actor's HP and MP.
+pub fn update_actor_hp_mp(
+    network: Arc<Mutex<NetworkState>>,
+    instance: &mut Instance,
+    target_actor_id: ObjectId,
+) {
+    let Some(actor) = instance.find_actor_mut(target_actor_id) else {
+        return;
+    };
+
+    let common_spawn = actor.get_common_spawn();
+
+    // Inform the client of the new actor's HP/MP
+    {
+        // TODO: send to all relevant players
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateHpMpTp {
+            hp: common_spawn.hp_curr,
+            mp: common_spawn.mp_curr,
+            unk: 0,
+        });
+        let mut network = network.lock();
+        network.send_to_all(
+            None,
+            FromServer::PacketSegment(ipc, target_actor_id),
+            DestinationNetwork::ZoneClients,
+        );
+    }
+
+    if common_spawn.hp_curr == 0 {
+        kill_actor(network.clone(), target_actor_id);
+
+        // Queue up despawn if this is an NPC
+        if !matches!(actor, NetworkedActor::Player { .. }) {
+            instance.insert_task(
+                ClientId::default(),
+                target_actor_id,
+                DEAD_FADE_OUT_TIME,
+                QueuedTaskData::DeadFadeOut {
+                    actor_id: target_actor_id,
+                },
+            );
+        }
     }
 }
