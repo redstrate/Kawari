@@ -2,7 +2,7 @@
 
 use crate::ZoneConnection;
 use kawari::{
-    common::{GameData, ObjectId},
+    common::{GameData, MAXIMUM_MP, ObjectId},
     ipc::zone::{
         ActorControlCategory, ActorControlSelf, PlayerStats, ServerZoneIpcData,
         ServerZoneIpcSegment, UpdateClassInfo,
@@ -43,8 +43,8 @@ impl ZoneConnection {
             vitality: attributes.vitality,
             intelligence: attributes.intelligence,
             mind: attributes.mind,
-            hp: 1000,  // TODO: hardcoded
-            mp: 10000, // TODO: hardcoded
+            hp: 1000, // TODO: hardcoded
+            mp: MAXIMUM_MP as u32,
             ..Default::default()
         }));
         self.send_ipc_self(ipc).await;

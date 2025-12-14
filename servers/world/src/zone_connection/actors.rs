@@ -3,8 +3,8 @@
 use crate::{ToServer, ZoneConnection, common::SpawnKind};
 use kawari::{
     common::{
-        EquipDisplayFlag, JumpState, MoveAnimationSpeed, MoveAnimationState, MoveAnimationType,
-        ObjectId, ObjectTypeId, ObjectTypeKind, Position,
+        EquipDisplayFlag, JumpState, MAXIMUM_MP, MoveAnimationSpeed, MoveAnimationState,
+        MoveAnimationType, ObjectId, ObjectTypeId, ObjectTypeKind, Position,
     },
     config::get_config,
     ipc::zone::{
@@ -275,8 +275,8 @@ impl ZoneConnection {
             name: self.player_data.name.clone(),
             hp_curr: 1000, // TODO: hardcoded
             hp_max: 1000,
-            mp_curr: 10000,
-            mp_max: 10000,
+            mp_curr: MAXIMUM_MP,
+            mp_max: MAXIMUM_MP,
             level: self.current_level(&game_data) as u8,
             object_kind: ObjectKind::Player(PlayerSubKind::Player),
             look,

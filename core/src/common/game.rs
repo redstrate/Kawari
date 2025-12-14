@@ -47,6 +47,9 @@ pub const DEAD_FADE_OUT_TIME: Duration = Duration::from_secs(8);
 /// Time until a dead actor despawns after fading away. Estimated from retail.
 pub const DEAD_DESPAWN_TIME: Duration = Duration::from_secs(2);
 
+/// Maximum MP.
+pub const MAXIMUM_MP: u16 = 10000;
+
 pub struct Attributes {
     pub strength: u32,
     pub dexterity: u32,
