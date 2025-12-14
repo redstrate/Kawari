@@ -1368,6 +1368,9 @@ async fn client_loop(
                                                     event.enter_territory(&mut lua_player);
                                                 }
                                             }
+                                            ClientZoneIpcData::Trade { .. } => {
+                                                tracing::info!("Trading is unimplemented");
+                                            }
                                             ClientZoneIpcData::Unknown { unk } => {
                                                 tracing::warn!("Unknown Zone packet {:?} recieved ({} bytes), this should be handled!", data.header.op_code, unk.len());
                                             }

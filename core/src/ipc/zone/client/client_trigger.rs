@@ -109,8 +109,16 @@ pub enum ClientTriggerCommand {
     #[brw(magic = 318u32)]
     ClearWaymark { id: u32 },
 
+    /// The client requests materia melding from another player.
+    #[brw(magic = 413u32)]
+    RequestMateriaMeld { actor_id: ObjectId },
+
     #[brw(magic = 444u32)]
     OpenChocoboSaddlebag {},
+
+    /// The client requests repair from another player.
+    #[brw(magic = 450u32)]
+    RequestRepair { actor_id: ObjectId },
 
     /// The player begins an emote.
     #[brw(magic = 500u32)]

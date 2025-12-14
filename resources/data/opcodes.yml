@@ -743,6 +743,10 @@ ClientZoneIpcType:
       territory.)
     opcode: 309
     size: 8
+  - name: Trade
+    comment: Sent by the client while trading
+    opcode: 693
+    size: 16
 ServerLobbyIpcType:
   - name: NackReply
     comment: Sent by the server to indicate an lobby error occured.
