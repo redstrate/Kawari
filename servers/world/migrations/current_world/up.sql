@@ -1,4 +1,13 @@
 -- Your SQL goes here
+CREATE TABLE `classjob`(
+	`content_id` BIGINT NOT NULL PRIMARY KEY,
+	`classjob_id` INTEGER NOT NULL,
+	`classjob_levels` TEXT NOT NULL,
+	`classjob_exp` TEXT NOT NULL,
+	`first_classjob` INTEGER NOT NULL,
+	FOREIGN KEY (`content_id`) REFERENCES `character`(`content_id`)
+);
+
 CREATE TABLE `customize`(
 	`content_id` BIGINT NOT NULL PRIMARY KEY,
 	`chara_make` TEXT NOT NULL,
@@ -7,27 +16,9 @@ CREATE TABLE `customize`(
 	FOREIGN KEY (`content_id`) REFERENCES `character`(`content_id`)
 );
 
-CREATE TABLE `content`(
+CREATE TABLE `inventory`(
 	`content_id` BIGINT NOT NULL PRIMARY KEY,
-	`unlocked_raids` TEXT NOT NULL,
-	`unlocked_dungeons` TEXT NOT NULL,
-	`unlocked_guildhests` TEXT NOT NULL,
-	`unlocked_trials` TEXT NOT NULL,
-	`unlocked_crystalline_conflicts` TEXT NOT NULL,
-	`unlocked_frontlines` TEXT NOT NULL,
-	`cleared_raids` TEXT NOT NULL,
-	`cleared_dungeons` TEXT NOT NULL,
-	`cleared_guildhests` TEXT NOT NULL,
-	`cleared_trials` TEXT NOT NULL,
-	`cleared_crystalline_conflicts` TEXT NOT NULL,
-	`cleared_frontlines` TEXT NOT NULL,
-	FOREIGN KEY (`content_id`) REFERENCES `character`(`content_id`)
-);
-
-CREATE TABLE `aether_current`(
-	`content_id` BIGINT NOT NULL PRIMARY KEY,
-	`comp_flg_set` TEXT NOT NULL,
-	`unlocked` TEXT NOT NULL,
+	`contents` TEXT NOT NULL,
 	FOREIGN KEY (`content_id`) REFERENCES `character`(`content_id`)
 );
 
@@ -45,12 +36,22 @@ CREATE TABLE `volatile`(
 	`rotation` DOUBLE NOT NULL,
 	`zone_id` INTEGER NOT NULL,
 	`display_flags` INTEGER NOT NULL,
+	`title` INTEGER NOT NULL,
 	FOREIGN KEY (`content_id`) REFERENCES `character`(`content_id`)
 );
 
-CREATE TABLE `inventory`(
+CREATE TABLE `character`(
 	`content_id` BIGINT NOT NULL PRIMARY KEY,
-	`contents` TEXT NOT NULL,
+	`service_account_id` BIGINT NOT NULL,
+	`actor_id` BIGINT NOT NULL,
+	`gm_rank` INTEGER NOT NULL,
+	`name` TEXT NOT NULL
+);
+
+CREATE TABLE `quest`(
+	`content_id` BIGINT NOT NULL PRIMARY KEY,
+	`completed` TEXT NOT NULL,
+	`active` TEXT NOT NULL,
 	FOREIGN KEY (`content_id`) REFERENCES `character`(`content_id`)
 );
 
@@ -69,22 +70,15 @@ CREATE TABLE `unlock`(
 	`triple_triad_cards` TEXT NOT NULL,
 	`glasses_styles` TEXT NOT NULL,
 	`chocobo_taxi_stands` TEXT NOT NULL,
+	`titles` TEXT NOT NULL,
 	FOREIGN KEY (`content_id`) REFERENCES `character`(`content_id`)
 );
 
-CREATE TABLE `quest`(
+CREATE TABLE `aether_current`(
 	`content_id` BIGINT NOT NULL PRIMARY KEY,
-	`completed` TEXT NOT NULL,
-	`active` TEXT NOT NULL,
+	`comp_flg_set` TEXT NOT NULL,
+	`unlocked` TEXT NOT NULL,
 	FOREIGN KEY (`content_id`) REFERENCES `character`(`content_id`)
-);
-
-CREATE TABLE `character`(
-	`content_id` BIGINT NOT NULL PRIMARY KEY,
-	`service_account_id` BIGINT NOT NULL,
-	`actor_id` BIGINT NOT NULL,
-	`gm_rank` INTEGER NOT NULL,
-	`name` TEXT NOT NULL
 );
 
 CREATE TABLE `aetheryte`(
@@ -96,12 +90,20 @@ CREATE TABLE `aetheryte`(
 	FOREIGN KEY (`content_id`) REFERENCES `character`(`content_id`)
 );
 
-CREATE TABLE `classjob`(
+CREATE TABLE `content`(
 	`content_id` BIGINT NOT NULL PRIMARY KEY,
-	`classjob_id` INTEGER NOT NULL,
-	`classjob_levels` TEXT NOT NULL,
-	`classjob_exp` TEXT NOT NULL,
-	`first_classjob` INTEGER NOT NULL,
+	`unlocked_raids` TEXT NOT NULL,
+	`unlocked_dungeons` TEXT NOT NULL,
+	`unlocked_guildhests` TEXT NOT NULL,
+	`unlocked_trials` TEXT NOT NULL,
+	`unlocked_crystalline_conflicts` TEXT NOT NULL,
+	`unlocked_frontlines` TEXT NOT NULL,
+	`cleared_raids` TEXT NOT NULL,
+	`cleared_dungeons` TEXT NOT NULL,
+	`cleared_guildhests` TEXT NOT NULL,
+	`cleared_trials` TEXT NOT NULL,
+	`cleared_crystalline_conflicts` TEXT NOT NULL,
+	`cleared_frontlines` TEXT NOT NULL,
 	FOREIGN KEY (`content_id`) REFERENCES `character`(`content_id`)
 );
 

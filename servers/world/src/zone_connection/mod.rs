@@ -89,6 +89,7 @@ pub struct PlayerData {
     pub zone_id: u16,
     pub inventory: Inventory,
     pub city_state: u8,
+    pub title: u16,
 
     pub teleport_query: TeleportQuery,
     pub gm_rank: GameMasterRank,

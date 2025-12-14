@@ -62,6 +62,7 @@ diesel::table! {
         rotation -> Double,
         zone_id -> Integer,
         display_flags -> Integer,
+        title -> Integer,
     }
 }
 
@@ -131,6 +132,7 @@ diesel::table! {
         triple_triad_cards -> Text,
         glasses_styles -> Text,
         chocobo_taxi_stands -> Text,
+        titles -> Text,
     }
 }
 

@@ -139,6 +139,7 @@ impl WorldDatabase {
                 city_state: customize.city_state as u8,
                 active_quests: json_unpack(&quest.active),
                 quest,
+                title: volatile.title as u16,
                 ..Default::default()
             };
         }
@@ -160,7 +161,8 @@ impl WorldDatabase {
             pos_z: data.position.z as f64,
             rotation: data.rotation as f64,
             zone_id: data.zone_id as i32,
-            display_flags: Default::default(),
+            display_flags: data.display_flags.bits() as i32,
+            title: data.title as i32,
         };
         volatile
             .save_changes::<Volatile>(&mut self.connection)
@@ -418,6 +420,7 @@ impl WorldDatabase {
             rotation: 0.0,
             zone_id: zone_id as i32,
             display_flags: Default::default(),
+            title: 0,
         };
         diesel::insert_into(schema::volatile::table)
             .values(volatile)
@@ -487,6 +490,7 @@ impl WorldDatabase {
             triple_triad_cards: Default::default(),
             glasses_styles: Default::default(),
             chocobo_taxi_stands: Default::default(),
+            titles: Default::default(),
         };
         diesel::insert_into(schema::unlock::table)
             .values(unlock)

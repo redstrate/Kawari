@@ -23,9 +23,7 @@ use kawari::ipc::zone::{
 };
 
 use kawari::common::{NETWORK_TIMEOUT, RECEIVE_BUFFER_SIZE};
-use kawari::constants::{
-    AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE, CLASSJOB_ARRAY_SIZE, TITLE_UNLOCK_BITMASK_SIZE,
-};
+use kawari::constants::{AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE, CLASSJOB_ARRAY_SIZE};
 use kawari::packet::oodle::OodleNetwork;
 use kawari::packet::{
     ConnectionState, ConnectionType, PacketSegment, SegmentData, SegmentType, parse_packet_header,
@@ -637,6 +635,7 @@ async fn client_loop(
                                                     gm_rank: connection.player_data.gm_rank,
                                                     online_status,
                                                     common: common.clone(),
+                                                    title_id: connection.player_data.title,
                                                     ..Default::default()
                                                 };
 
@@ -664,10 +663,8 @@ async fn client_loop(
                                             ClientZoneIpcData::ClientTrigger(trigger) => {
                                                 match trigger.trigger {
                                                     ClientTriggerCommand::RequestTitleList {} => {
-                                                        // send full title list for now
-
                                                         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::TitleList {
-                                                            unlock_bitmask: [0xFF; TITLE_UNLOCK_BITMASK_SIZE]
+                                                            unlock_bitmask: connection.player_data.unlock.titles.0.clone(),
                                                         });
                                                         connection.send_ipc_self(ipc).await;
                                                     },
@@ -782,6 +779,12 @@ async fn client_loop(
                                                     ClientTriggerCommand::OpenPortraitsWindow {} => {
                                                         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PortraitsInformation { unk: [0; 56] });
                                                         connection.send_ipc_self(ipc).await;
+                                                    }
+                                                    ClientTriggerCommand::SetTitle { title_id } => {
+                                                        connection.player_data.title = title_id as u16;
+
+                                                        // Inform the server, so it sends out the AC.
+                                                        connection.handle.send(ToServer::ClientTrigger(connection.id, connection.player_data.actor_id, trigger.clone())).await;
                                                     }
                                                     _ => {
                                                         // inform the server of our trigger, it will handle sending it to other clients

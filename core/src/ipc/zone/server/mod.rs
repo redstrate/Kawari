@@ -335,7 +335,9 @@ pub enum ServerZoneIpcData {
         unk: [u8; 80],
     },
     TitleList {
-        unlock_bitmask: [u8; TITLE_UNLOCK_BITMASK_SIZE],
+        #[br(count = TITLE_UNLOCK_BITMASK_SIZE)]
+        #[bw(pad_size_to = TITLE_UNLOCK_BITMASK_SIZE)]
+        unlock_bitmask: Vec<u8>,
     },
     QuestActiveList(QuestActiveList),
     LevequestCompleteList {
@@ -655,7 +657,6 @@ mod tests {
 
     use crate::{
         common::INVALID_OBJECT_ID,
-        constants::TITLE_UNLOCK_BITMASK_SIZE,
         opcodes::ServerZoneIpcType,
         packet::{IpcSegmentHeader, ReadWriteIpcOpcode, ReadWriteIpcSegment},
     };
@@ -810,12 +811,9 @@ mod tests {
                 message: String::default(),
             },
             ServerZoneIpcData::TitleList {
-                unlock_bitmask: [0; TITLE_UNLOCK_BITMASK_SIZE],
+                unlock_bitmask: Vec::default(),
             },
             ServerZoneIpcData::FreeCompanyInfo { unk: [0; 80] },
-            ServerZoneIpcData::TitleList {
-                unlock_bitmask: [0; TITLE_UNLOCK_BITMASK_SIZE],
-            },
             ServerZoneIpcData::QuestActiveList(QuestActiveList::default()),
             ServerZoneIpcData::LevequestCompleteList {
                 completed_levequests: Vec::default(),

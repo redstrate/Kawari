@@ -290,6 +290,12 @@ pub enum ActorControlCategory {
     #[brw(magic = 410u32)]
     PlaySharedGroupTimeline { timeline_id: u32 },
 
+    #[brw(magic = 500u32)]
+    SetTitle { title_id: u32 },
+
+    #[brw(magic = 501u32)]
+    UnlockTitle { title_id: u32 },
+
     #[brw(magic = 504u32)]
     SetStatusIcon { icon: OnlineStatus },
 

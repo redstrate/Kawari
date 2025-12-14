@@ -1041,6 +1041,32 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                             }
                         }
                     }
+                    ClientTriggerCommand::SetTitle { title_id } => {
+                        let mut data = data.lock();
+                        if let Some(instance) = data.find_actor_instance_mut(from_actor_id)
+                            && let Some(actor) = instance.find_actor_mut(from_actor_id)
+                        {
+                            match actor {
+                                NetworkedActor::Player { spawn, .. } => {
+                                    spawn.title_id = *title_id as u16;
+                                }
+                                _ => unreachable!(),
+                            }
+                        }
+
+                        // inform other players
+                        let msg = FromServer::ActorControl(
+                            from_actor_id,
+                            ActorControl {
+                                category: ActorControlCategory::SetTitle {
+                                    title_id: *title_id,
+                                },
+                            },
+                        );
+
+                        let mut network = network.lock();
+                        network.send_to_all(None, msg, DestinationNetwork::ZoneClients);
+                    }
                     _ => tracing::warn!("Server doesn't know what to do with {:#?}", trigger),
                 }
             }

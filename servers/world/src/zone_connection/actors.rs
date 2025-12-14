@@ -220,6 +220,7 @@ impl ZoneConnection {
             gm_rank: self.player_data.gm_rank,
             online_status,
             common: common.clone(),
+            title_id: self.player_data.title,
             ..Default::default()
         };
 

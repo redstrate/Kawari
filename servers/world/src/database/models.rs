@@ -7,7 +7,8 @@ use kawari::constants::{
     CRYSTALLINE_CONFLICT_ARRAY_SIZE, CUTSCENE_SEEN_BITMASK_SIZE, DUNGEON_ARRAY_SIZE,
     FRONTLINE_ARRAY_SIZE, GLASSES_STYLES_BITMASK_SIZE, GUILDHEST_ARRAY_SIZE, MINION_BITMASK_SIZE,
     MOUNT_BITMASK_SIZE, ORCHESTRION_ROLL_BITMASK_SIZE, ORNAMENT_BITMASK_SIZE, RAID_ARRAY_SIZE,
-    TRIAL_ARRAY_SIZE, TRIPLE_TRIAD_CARDS_BITMASK_SIZE, UNLOCK_BITMASK_SIZE,
+    TITLE_UNLOCK_BITMASK_SIZE, TRIAL_ARRAY_SIZE, TRIPLE_TRIAD_CARDS_BITMASK_SIZE,
+    UNLOCK_BITMASK_SIZE,
 };
 
 use crate::{Bitmask, QuestBitmask};
@@ -136,6 +137,7 @@ pub struct Volatile {
     pub rotation: f64,
     pub zone_id: i32,
     pub display_flags: i32,
+    pub title: i32,
 }
 
 #[derive(
@@ -260,4 +262,5 @@ pub struct Unlock {
     pub triple_triad_cards: Bitmask<TRIPLE_TRIAD_CARDS_BITMASK_SIZE>,
     pub glasses_styles: Bitmask<GLASSES_STYLES_BITMASK_SIZE>,
     pub chocobo_taxi_stands: Bitmask<CHOCOBO_TAXI_STANDS_BITMASK_SIZE>,
+    pub titles: Bitmask<TITLE_UNLOCK_BITMASK_SIZE>,
 }
