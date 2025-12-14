@@ -153,9 +153,6 @@ pub struct ZoneConnection {
     /// Whether the player was gracefully logged out
     pub gracefully_logged_out: bool,
 
-    // TODO: really needs to be moved somewhere else
-    pub weather_id: u16,
-
     pub obsfucation_data: ObsfucationData,
 
     // TODO: support more than one content in the queue

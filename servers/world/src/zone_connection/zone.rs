@@ -267,8 +267,6 @@ impl ZoneConnection {
     }
 
     pub async fn change_weather(&mut self, new_weather_id: u16) {
-        self.weather_id = new_weather_id;
-
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::WeatherId(WeatherChange {
             weather_id: new_weather_id,
             transistion_time: 1.0,

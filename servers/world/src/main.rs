@@ -155,7 +155,6 @@ async fn initial_setup(
                         exit_rotation: None,
                         last_keep_alive: Instant::now(),
                         gracefully_logged_out: false,
-                        weather_id: 0,
                         obsfucation_data: ObsfucationData::default(),
                         queued_content: None,
                         conditions: Conditions::default(),
