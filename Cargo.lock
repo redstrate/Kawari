@@ -757,7 +757,7 @@ dependencies = [
 
 [[package]]
 name = "kawari"
-version = "7.38.0"
+version = "7.40.0"
 dependencies = [
  "binrw",
  "bitflags",
@@ -777,7 +777,7 @@ dependencies = [
 
 [[package]]
 name = "kawari-admin"
-version = "7.38.0"
+version = "7.40.0"
 dependencies = [
  "axum",
  "kawari",
@@ -794,7 +794,7 @@ dependencies = [
 
 [[package]]
 name = "kawari-core-macro"
-version = "7.38.0"
+version = "7.40.0"
 dependencies = [
  "quote",
  "syn",
@@ -802,7 +802,7 @@ dependencies = [
 
 [[package]]
 name = "kawari-datacentertravel"
-version = "7.38.0"
+version = "7.40.0"
 dependencies = [
  "axum",
  "kawari",
@@ -813,7 +813,7 @@ dependencies = [
 
 [[package]]
 name = "kawari-frontier"
-version = "7.38.0"
+version = "7.40.0"
 dependencies = [
  "axum",
  "kawari",
@@ -827,7 +827,7 @@ dependencies = [
 
 [[package]]
 name = "kawari-launcher"
-version = "7.38.0"
+version = "7.40.0"
 dependencies = [
  "axum",
  "kawari",
@@ -841,7 +841,7 @@ dependencies = [
 
 [[package]]
 name = "kawari-lobby"
-version = "7.38.0"
+version = "7.40.0"
 dependencies = [
  "axum",
  "kawari",
@@ -855,7 +855,7 @@ dependencies = [
 
 [[package]]
 name = "kawari-login"
-version = "7.38.0"
+version = "7.40.0"
 dependencies = [
  "axum",
  "axum-extra",
@@ -877,7 +877,7 @@ dependencies = [
 
 [[package]]
 name = "kawari-navimesh"
-version = "7.38.0"
+version = "7.40.0"
 dependencies = [
  "icarus",
  "kawari",
@@ -890,7 +890,7 @@ dependencies = [
 
 [[package]]
 name = "kawari-patch"
-version = "7.38.0"
+version = "7.40.0"
 dependencies = [
  "axum",
  "kawari",
@@ -902,14 +902,14 @@ dependencies = [
 
 [[package]]
 name = "kawari-run"
-version = "7.38.0"
+version = "7.40.0"
 dependencies = [
  "tokio",
 ]
 
 [[package]]
 name = "kawari-savedatabank"
-version = "7.38.0"
+version = "7.40.0"
 dependencies = [
  "kawari",
  "tokio",
@@ -919,7 +919,7 @@ dependencies = [
 
 [[package]]
 name = "kawari-web"
-version = "7.38.0"
+version = "7.40.0"
 dependencies = [
  "axum",
  "kawari",
@@ -932,7 +932,7 @@ dependencies = [
 
 [[package]]
 name = "kawari-world"
-version = "7.38.0"
+version = "7.40.0"
 dependencies = [
  "axum",
  "binrw",
