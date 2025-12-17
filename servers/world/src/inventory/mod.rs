@@ -102,7 +102,7 @@ impl Inventory {
         let sheet = ClassJobSheet::read_from(&mut game_data.resource, Language::English).unwrap();
         let row = sheet.get_row(classjob_id as u32).unwrap();
 
-        let main_hand_id = *row.ItemStartingWeapon().into_i32().unwrap() as u32;
+        let main_hand_id = *row.ItemStartingWeaponMainHand().into_i32().unwrap() as u32;
         self.equipped.main_hand = Item::new(
             game_data
                 .get_item_info(ItemInfoQuery::ById(main_hand_id))

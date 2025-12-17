@@ -647,7 +647,7 @@ impl GameData {
                 item_action_sheet.get_row(row.ItemAction().into_u16().cloned()? as u32)?;
 
             return Some((
-                item_action_row.Type().into_u16().cloned()?,
+                item_action_row.Action().into_u16().cloned()?,
                 item_action_row
                     .Data()
                     .map(|x| x.into_u16().cloned().unwrap_or_default()),
@@ -681,8 +681,7 @@ impl GameData {
         let sheet = HalloweenNpcSelectSheet::read_from(&mut self.resource, Language::English)?;
         let row = sheet.get_row(npc_id)?;
 
-        // FIXME: will change to Transformation in a future schema update
-        Some(*row.Unknown4().into_u16()?)
+        Some(*row.Transformation().into_u16()?)
     }
 
     /// Returns the internal script name for this Quest event.
@@ -768,16 +767,7 @@ impl GameData {
 
         Some(GimmickRectInfo {
             layout_id: row.LayoutID().into_u32().copied()?,
-            params: [
-                row.Param0().into_u32().copied()?,
-                row.Unknown0().into_u32().copied()?,
-                row.Unknown1().into_u32().copied()?,
-                row.Unknown2().into_u32().copied()?,
-                row.Param1().into_u32().copied()?,
-                row.Unknown3().into_u32().copied()?,
-                row.Unknown4().into_u32().copied()?,
-                row.Unknown5().into_u32().copied()?,
-            ],
+            params: row.Params().map(|x| x.into_u32().copied().unwrap()),
             trigger_in: row.TriggerIn().into_u8().copied()?,
             trigger_out: row.TriggerOut().into_u8().copied()?,
         })
