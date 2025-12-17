@@ -516,11 +516,11 @@ ClientZoneIpcType:
     comment: >-
       Sent by the client when it requests the friends list and other related
       info.
-    opcode: 205
+    opcode: 600
     size: 16
   - name: UpdatePositionHandler
     comment: Contains the client's new position after the player moves their character.
-    opcode: 954
+    opcode: 167
     size: 24
   - name: LogOut
     comment: Sent by the client when the user requests to log out.
@@ -528,21 +528,21 @@ ClientZoneIpcType:
     size: 8
   - name: Disconnected
     comment: Sent by the client when it's actually disconnecting.
-    opcode: 195
+    opcode: 207
     size: 8
   - name: SendChatMessage
     comment: Sent by the client when they send a chat message.
-    opcode: 594
+    opcode: 341
     size: 1056
   - name: GMCommand
     comment: >-
       Sent by the client when they send a GM command. This can only be sent by
       the client if they are sent a GM rank.
-    opcode: 148
+    opcode: 498
     size: 32
   - name: ZoneJump
     comment: Sent by the client when the character walks into a zone transistion.
-    opcode: 793
+    opcode: 505
     size: 24
   - name: ActionRequest
     comment: Sent by the client when a character performs an action.
@@ -570,7 +570,7 @@ ClientZoneIpcType:
     size: 16
   - name: ItemOperation
     comment: Unknown purpose.
-    opcode: 377
+    opcode: 675
     size: 48
   - name: StartTalkEvent
     comment: Unknown purpose.
@@ -578,7 +578,7 @@ ClientZoneIpcType:
     size: 16
   - name: EventYieldHandler
     comment: Unknown purpose.
-    opcode: 504
+    opcode: 316
     size: 16
   - name: EventYieldHandler8
     comment: Unknown purpose.
@@ -607,15 +607,15 @@ ClientZoneIpcType:
       This packet is sent by the client when they pivot left or right on
       standard controls. It is sent once when beginning to pivot, and once when
       pivoting ends.
-    opcode: 498
+    opcode: 705
     size: 8
   - name: ContentFinderRegister
     comment: Unknown purpose.
-    opcode: 419
+    opcode: 848
     size: 40
   - name: ContentFinderAction
     comment: Unknown purpose.
-    opcode: 649
+    opcode: 170
     size: 8
   - name: EquipGearset
     comment: Unknown purpose.
@@ -637,15 +637,15 @@ ClientZoneIpcType:
     comment: >-
       Sent by the client when they send a GM command. This can only be sent by
       the client if they are sent a GM rank.
-    opcode: 789
+    opcode: 854
     size: 52
   - name: RequestBlacklist
     comment: Seems to happen when opening the Blacklist window.
-    opcode: 918
+    opcode: 402
     size: 8
   - name: RequestFellowships
     comment: Seems to happen when opening the Fellowships window.
-    opcode: 677
+    opcode: 224
     size: 8
   - name: RequestCrossworldLinkshells
     comment: >-
@@ -685,31 +685,31 @@ ClientZoneIpcType:
     size: 80
   - name: PartyLeave
     comment: Happens when the client leaves their party.
-    opcode: 597
+    opcode: 154
     size: 8
   - name: PartyDisband
     comment: Happens when the client disbands their party.
-    opcode: 484
+    opcode: 543
     size: 8
   - name: InviteCharacter
     comment: >-
       Happens when the client invites another player to a party, adds them to
       their friend list, etc.
-    opcode: 341
+    opcode: 935
     size: 48
   - name: InviteReply
     comment: Happens when the client responds to another player's party invitation.
-    opcode: 895
+    opcode: 475
     size: 16
   - name: PartyMemberKick
     comment: Sent by the client to remove another player from their party.
-    opcode: 856
+    opcode: 572
     size: 48
   - name: PartyChangeLeader
     comment: >-
       Sent by the client to relinquish leadership to another player in their
       party.
-    opcode: 449
+    opcode: 400
     size: 48
   - name: RequestSearchInfo
     comment: Happens when the client requests search info for any player.
@@ -741,11 +741,11 @@ ClientZoneIpcType:
     comment: >-
       Sent by the client when requesting to play an event (because we entered a
       territory.)
-    opcode: 559
+    opcode: 289
     size: 8
   - name: Trade
-    comment: Sent by the client while trading
-    opcode: 881
+    comment: Sent by the client while trading.
+    opcode: 445
     size: 16
 ServerLobbyIpcType:
   - name: NackReply
