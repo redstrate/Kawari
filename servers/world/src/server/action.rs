@@ -101,7 +101,7 @@ pub fn execute_action(
         common_spawn = actor.get_common_spawn().clone();
 
         effects_builder = match &request.action_kind {
-            ActionKind::Nothing => todo!(),
+            ActionKind::Nothing => None,
             ActionKind::Normal => execute_normal_action(lua.clone(), &request, &mut lua_player),
             ActionKind::Item => {
                 execute_item_action(game_data.clone(), lua.clone(), &request, &mut lua_player)
