@@ -627,7 +627,7 @@ ClientZoneIpcType:
     size: 128
   - name: StartWalkInEvent
     comment: Unknown purpose.
-    opcode: 213
+    opcode: 984
     size: 24
   - name: NewDiscovery
     comment: Sent by the client when they discover a new location on the map.
