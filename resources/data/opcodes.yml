@@ -546,7 +546,7 @@ ClientZoneIpcType:
     size: 24
   - name: ActionRequest
     comment: Sent by the client when a character performs an action.
-    opcode: 802
+    opcode: 789
     size: 32
   - name: Unk16
     comment: Unknown purpose.
@@ -659,11 +659,11 @@ ClientZoneIpcType:
     size: 112
   - name: StartCountdown
     comment: Happens when starting a countdown through the Countdown window.
-    opcode: 689
+    opcode: 360
     size: 40
   - name: RequestPlaytime
     comment: Happens when the client requests the playtime using the /playtime command.
-    opcode: 339
+    opcode: 249
     size: 8
   - name: SetFreeCompanyGreeting
     comment: >-
