@@ -20,7 +20,7 @@ ServerZoneIpcType:
       A large packet containing lots of useful and persistent information like
       which dungeons are unlocked.
     opcode: 144
-    size: 2848
+    size: 2861
   - name: UpdateClassInfo
     comment: 'Updates class-specific information, like your currently synced level.'
     opcode: 172
@@ -428,8 +428,8 @@ ServerZoneIpcType:
     opcode: 591
     size: 2416
   - name: SupportDeskNotification
-    comment: Sent by the server to indicate you have a support desk notification(?)
-    opcode: 326
+    comment: Sent by the server to indicate you have a support desk notification(?) !! Out of date as of 7.40.
+    opcode: 3260
     size: 16
   - name: ScenarioGuide
     comment: Sent by the server to update the scenario guide UI.
