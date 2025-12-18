@@ -3,7 +3,7 @@ use binrw::binrw;
 use crate::{
     common::{
         CHAR_NAME_MAX_LENGTH, ObjectId, PlayerStateFlags1, PlayerStateFlags2, PlayerStateFlags3,
-        read_string, write_string,
+        read_bool_from, read_string, write_bool_as, write_string,
     },
     constants::{
         ACTIVE_HELP_BITMASK_SIZE, ADVENTURE_BITMASK_SIZE, AETHER_CURRENT_BITMASK_SIZE,
@@ -40,6 +40,7 @@ pub struct PlayerStatus {
     pub unknown_timestamp38: u32,
     pub weekly_bingo_task_status: [u8; 4],
     pub weekly_bingo_flags: u32,
+    pub companion_time_left: f32,
     pub unknown44: [u8; 18],
     pub pvp_series_exp: u16,
     /// How many player commendations you received.
@@ -59,11 +60,15 @@ pub struct PlayerStatus {
     pub max_level: u8,
     /// Which expansion you have acquired. Unsure of it's in-game effect.
     pub expansion: u8,
-    pub has_premium_saddlebag: u8,
-    // Probably a boolean:
-    pub unknown77: u8,
-    // Probably a boolean:
-    pub unknown78: u8,
+    #[br(map = read_bool_from::<u8>)]
+    #[bw(map = write_bool_as::<u8>)]
+    pub has_premium_saddlebag: bool,
+    #[br(map = read_bool_from::<u8>)]
+    #[bw(map = write_bool_as::<u8>)]
+    pub unknown77: bool,
+    #[br(map = read_bool_from::<u8>)]
+    #[bw(map = write_bool_as::<u8>)]
+    pub unknown78: bool,
     pub race: u8,
     pub tribe: u8,
     pub gender: u8,
@@ -96,17 +101,20 @@ pub struct PlayerStatus {
     pub sightseeing21_to_80_unlock: u8, // TODO: might be SightseeingLogUnlockState in ClientStructs?
     pub sightseeing_heavensward_unlock: u8, // TODO: might be SightseeingLogUnlockStateEx in ClientStructs?
     pub unknown9e: u8,
+    pub unknown9e1: u8,
     pub meister_flag: u8,
     pub unknown10e: u8,
     pub aether_current_comp_flg_set_bitmask1: u8, // This is the first byte of the full bitmask. It contains the HW zones, The Fringes and The Ruby Sea. Why this one is here and the rest far down, no idea.
     pub unknown_after_aether: u8,
-    pub has_new_gc_army_candidate: u8,
+    #[br(map = read_bool_from::<u8>)]
+    #[bw(map = write_bool_as::<u8>)]
+    pub has_new_gc_army_candidate: bool,
     pub unknownauahab: u16,
     pub supply_seed: u8,
-    pub unk4: u8,
     pub unk5: u8,
     /// Last expansion mentorship was held. Starts at 1 with Shadowbringers.
     pub mentor_version: u8,
+    pub unk6: u8,
     pub weekly_bingo_exp_multiplier: u8,
     pub weekly_bingo_unk63: u8,
     pub series_current_rank: u8,
@@ -118,8 +126,9 @@ pub struct PlayerStatus {
     #[br(count = CLASSJOB_ARRAY_SIZE)]
     #[bw(pad_size_to = CLASSJOB_ARRAY_SIZE * 4)]
     pub exp: Vec<i32>,
-    pub unk_after_exp: u8,
-    pub pvp_experience: [u32; 3],
+    pub experience_maelstrom: u32,
+    pub experience_twin_adder: u32,
+    pub experience_immortal_flames: u32,
     #[br(count = 12)]
     #[bw(pad_size_to = 12)]
     pub unknown138: Vec<u8>,
@@ -128,16 +137,11 @@ pub struct PlayerStatus {
     #[br(count = CLASSJOB_ARRAY_SIZE)]
     #[bw(pad_size_to = CLASSJOB_ARRAY_SIZE * 2)]
     pub levels: Vec<u16>,
-    pub active_festival_ids: [u16; 4],
-    pub active_festival_phases: [u16; 4],
-    #[br(count = 176)]
-    #[bw(pad_size_to = 176)]
+    #[br(count = 264)]
+    #[bw(pad_size_to = 264)]
     pub unknown194: Vec<u8>,
-    pub beast_reputation_value: [u16; BEAST_TRIBE_ARRAY_SIZE],
-    pub quest_manager_related_unks: [u16; 5],
-    pub quest_padding: [u8; 6],
-    #[br(count = 11)]
-    #[bw(pad_size_to = 11 * 2)]
+    #[br(count = 12)]
+    #[bw(pad_size_to = 12 * 2)]
     pub supply_satisfcation: Vec<u16>,
     #[br(count = 21)]
     #[bw(pad_size_to = 21)]
@@ -160,6 +164,7 @@ pub struct PlayerStatus {
     #[br(count = FRAMERS_KIT_BITMASK_SIZE)]
     #[bw(pad_size_to = FRAMERS_KIT_BITMASK_SIZE)]
     pub framers_kits_mask: Vec<u8>,
+    pub padding_probably_after_framers_kit: [u8; 5],
     #[br(count = CHAR_NAME_MAX_LENGTH)]
     #[bw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
     #[br(map = read_string)]
@@ -180,13 +185,12 @@ pub struct PlayerStatus {
     #[br(count = AETHERYTE_UNLOCK_BITMASK_SIZE)]
     #[bw(pad_size_to = AETHERYTE_UNLOCK_BITMASK_SIZE)]
     pub aetherytes: Vec<u8>,
-    pub unk_after_aetheryte: u8,
     pub favorite_aetheryte_ids: [u16; 4],
     pub free_aetheryte_id: u16,
     pub ps_plus_free_aetheryte_id: u16,
-    #[br(count = 508)]
-    #[bw(pad_size_to = 508)]
-    pub discovery: Vec<u8>, // dunno if this is true
+    #[br(count = 516)]
+    #[bw(pad_size_to = 516)]
+    pub unk516: Vec<u8>,
     /// Which Active Help guides the player has seen.
     #[br(count = ACTIVE_HELP_BITMASK_SIZE)]
     #[bw(pad_size_to = ACTIVE_HELP_BITMASK_SIZE)]
@@ -201,11 +205,11 @@ pub struct PlayerStatus {
     #[br(count = CUTSCENE_SEEN_BITMASK_SIZE)]
     #[bw(pad_size_to = CUTSCENE_SEEN_BITMASK_SIZE)]
     pub cutscene_seen_mask: Vec<u8>,
-    pub unknown6ff: u8,
+    pub unknown6ff: u16,
     #[br(count = BUDDY_EQUIP_BITMASK_SIZE)]
     #[bw(pad_size_to = BUDDY_EQUIP_BITMASK_SIZE)]
     pub buddy_equip_mask: Vec<u8>,
-    pub buddy_equip_mask_padding: [u8; 2],
+    pub buddy_equip_mask_padding: u8,
     pub companion_equipped_head: u8,
     pub companion_equipped_body: u8,
     pub companion_equipped_legs: u8,
@@ -229,19 +233,18 @@ pub struct PlayerStatus {
     pub rank_immortal_flames: u8,
     pub beast_reputation_rank: [u8; BEAST_TRIBE_ARRAY_SIZE],
     pub content_roulette_completion: [u8; 10],
-    pub unknown_mask6f7: [u8; 8],
+    pub unknown_mask6f7: [u8; 9],
     pub player_state_flags1: PlayerStateFlags1,
     pub player_state_flags2: PlayerStateFlags2,
     pub player_state_flags3: PlayerStateFlags3,
     pub contents_note_completion_flags: [u8; 8],
-    pub padding_after_content: [u8; 6],
+    pub padding_after_content: [u8; 5],
     pub unlocked_secret_recipe_books: [u8; 14],
     #[br(count = 28)]
     #[bw(pad_size_to = 28)]
     pub unknown879: Vec<u8>,
     pub monster_progress: [u8; 10],
-    pub objective_progress: u8,
-    pub padding_after_obj: u8,
+    pub objective_progress: [u8; 2],
     #[br(count = ADVENTURE_BITMASK_SIZE)]
     #[bw(pad_size_to = ADVENTURE_BITMASK_SIZE)]
     pub adventure_mask: Vec<u8>,
@@ -267,12 +270,13 @@ pub struct PlayerStatus {
     #[br(count = ORCHESTRION_ROLL_BITMASK_SIZE)]
     #[bw(pad_size_to = ORCHESTRION_ROLL_BITMASK_SIZE)]
     pub orchestrion_roll_mask: Vec<u8>,
-    pub hall_of_novice_completion: [u8; 5],
-    pub unk_completion: [u8; 11],
+    pub unk_completion: [u8; 22],
     pub weekly_bingo_order_data: [u8; 16],
     pub weekly_bingo_reward_data: [u8; 4],
-    pub supply_satisfaction_ranks: [u8; 11],
-    pub used_supply_allowances: [u8; 11],
+    pub supply_satisfaction_ranks: [u8; 12],
+    pub used_supply_allowances: [u8; 12],
+
+    pub pad_before_unlocked_raids: u8,
 
     // unlocked status
     #[br(count = RAID_ARRAY_SIZE)]
@@ -301,7 +305,7 @@ pub struct PlayerStatus {
     pub unlocked_frontline: Vec<u8>,
 
     // probably more unlocks?
-    pub unk_padding: [u8; 2],
+    pub unk_padding: [u8; 4],
 
     // NOTE: all of the following fields are wrong in some way!
     #[br(count = GUILDHEST_ARRAY_SIZE)]
@@ -332,7 +336,7 @@ pub struct PlayerStatus {
     pub unk_padding2: [u8; 2],
 
     // FIXME: some of the following bytes might be beginner training/masked carnivale
-    #[br(count = 11)]
-    #[bw(pad_size_to = 11)]
+    #[br(count = 17)]
+    #[bw(pad_size_to = 17)]
     pub unknown949: Vec<u8>,
 }

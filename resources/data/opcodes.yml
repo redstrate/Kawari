@@ -20,7 +20,7 @@ ServerZoneIpcType:
       A large packet containing lots of useful and persistent information like
       which dungeons are unlocked.
     opcode: 144
-    size: 2861
+    size: 2912
   - name: UpdateClassInfo
     comment: 'Updates class-specific information, like your currently synced level.'
     opcode: 172
