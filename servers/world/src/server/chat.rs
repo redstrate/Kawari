@@ -68,7 +68,11 @@ pub fn handle_chat_messages(
             // Since we don't implement multiple worlds, the world id isn't useful for anything here.
             'outer: for instance in &data.instances {
                 for (id, actor) in &instance.actors {
-                    if actor.get_common_spawn().name == message_info.recipient_name {
+                    let Some(spawn) = actor.get_player_spawn() else {
+                        continue;
+                    };
+
+                    if spawn.common.name == message_info.recipient_name {
                         recipient_actor_id = *id;
                         break 'outer;
                     }

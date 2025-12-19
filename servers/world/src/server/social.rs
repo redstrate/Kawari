@@ -179,7 +179,7 @@ pub fn handle_social_messages(
             let mut network = network.lock();
             let data = data.lock();
 
-            // First pull up some info about the sender, as tell packets require it
+            // First pull up some info about the sender, as invite packets require it
             let Some(sender_instance) = data.find_actor_instance(*from_actor_id) else {
                 tracing::error!(
                     "ToServer::InvitePlayerToParty: Unable to find the sender! What happened?"
