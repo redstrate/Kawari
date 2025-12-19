@@ -458,7 +458,7 @@ ClientZoneIpcType:
     size: 8
   - name: SocialListRequest
     comment: Sent by the client when it requests the friends list and other related info.
-    opcode: 600
+    opcode: 616
     size: 16
   - name: UpdatePositionHandler
     comment: Contains the client's new position after the player moves their character.
@@ -546,11 +546,11 @@ ClientZoneIpcType:
     size: 8
   - name: ContentFinderRegister
     comment: Unknown purpose.
-    opcode: 848
+    opcode: 200
     size: 40
   - name: ContentFinderAction
     comment: Unknown purpose.
-    opcode: 170
+    opcode: 436
     size: 8
   - name: EquipGearset
     comment: Unknown purpose.
@@ -594,7 +594,7 @@ ClientZoneIpcType:
     size: 40
   - name: RequestPlaytime
     comment: Happens when the client requests the playtime using the /playtime command.
-    opcode: 249
+    opcode: 940
     size: 8
   - name: SetFreeCompanyGreeting
     comment: Happens when the client sets their free company's message of the day. May have additional uses?
@@ -618,11 +618,11 @@ ClientZoneIpcType:
     size: 8
   - name: InviteCharacter
     comment: "Happens when the client invites another player to a party, adds them to their friend list, etc."
-    opcode: 935
+    opcode: 242
     size: 48
   - name: InviteReply
     comment: Happens when the client responds to another player's party invitation.
-    opcode: 475
+    opcode: 569
     size: 16
   - name: PartyMemberKick
     comment: Sent by the client to remove another player from their party.
@@ -642,7 +642,7 @@ ClientZoneIpcType:
     size: 16
   - name: SearchPlayers
     comment: Happens when the client searches for players under the Social window.
-    opcode: 247
+    opcode: 274
     size: 176
   - name: EditSearchInfo
     comment: Happens when the client wants to update the search info of the player.
