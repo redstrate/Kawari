@@ -92,137 +92,124 @@ async fn initial_setup(
     handle: ServerHandle,
 ) {
     let mut buf = vec![0; RECEIVE_BUFFER_SIZE];
-    let last_keep_alive = Instant::now();
 
     match socket.read(&mut buf).await {
         Ok(n) => {
-            // if the last response was over >5 seconds, the client is probably gone
-            if n == 0 {
-                let now = Instant::now();
-                if now.duration_since(last_keep_alive) > NETWORK_TIMEOUT {
-                    tracing::info!(
-                        "initial_setup: Connection was killed because of timeout or they are now handled by the proper connection type"
-                    );
-                }
-            } else {
-                let header = parse_packet_header(&buf[..n]);
-                if header.connection_type == ConnectionType::KawariIpc {
-                    let mut connection = CustomIpcConnection {
-                        socket,
-                        state: ConnectionState::None,
-                        database: database.clone(),
-                        gamedata: game_data.clone(),
-                    };
-                    // Handle the first batch of segments before handing off control to the loop proper.
-                    let segments = connection.parse_packet(&buf[..n]);
-                    for segment in segments {
-                        match &segment.data {
-                            SegmentData::KawariIpc(data) => {
-                                connection.handle_custom_ipc(data).await
-                            }
-                            _ => panic!(
-                                "initial_setup: The KawariIpc connection type only supports KawariIpc segments! Was a mistake made somewhere? Received: {segment:#?}"
-                            ),
-                        }
+            let header = parse_packet_header(&buf[..n]);
+            if header.connection_type == ConnectionType::KawariIpc {
+                let mut connection = CustomIpcConnection {
+                    socket,
+                    state: ConnectionState::None,
+                    database: database.clone(),
+                    gamedata: game_data.clone(),
+                };
+                // Handle the first batch of segments before handing off control to the loop proper.
+                let segments = connection.parse_packet(&buf[..n]);
+                for segment in segments {
+                    match &segment.data {
+                        SegmentData::KawariIpc(data) => connection.handle_custom_ipc(data).await,
+                        _ => panic!(
+                            "initial_setup: The KawariIpc connection type only supports KawariIpc segments! Was a mistake made somewhere? Received: {segment:#?}"
+                        ),
                     }
-                } else if header.connection_type == ConnectionType::Zone {
-                    let state = ConnectionState::Zone {
-                        clientbound_oodle: OodleNetwork::new(),
-                        serverbound_oodle: OodleNetwork::new(),
-                        scrambler_keys: None,
-                    };
-                    let mut connection = ZoneConnection {
-                        config: get_config().world,
-                        socket,
-                        state,
-                        player_data: PlayerData::default(),
-                        events: Vec::new(),
-                        id,
-                        handle: handle.clone(),
-                        database: database.clone(),
-                        lua: lua.clone(),
-                        gamedata: game_data.clone(),
-                        exit_position: None,
-                        exit_rotation: None,
-                        last_keep_alive: Instant::now(),
-                        gracefully_logged_out: false,
-                        obsfucation_data: ObsfucationData::default(),
-                        queued_content: None,
-                        conditions: Conditions::default(),
-                        client_language: ClientLanguage::English,
-                        queued_tasks: Vec::new(),
-                    };
+                }
+            } else if header.connection_type == ConnectionType::Zone {
+                let state = ConnectionState::Zone {
+                    clientbound_oodle: OodleNetwork::new(),
+                    serverbound_oodle: OodleNetwork::new(),
+                    scrambler_keys: None,
+                };
+                let mut connection = ZoneConnection {
+                    config: get_config().world,
+                    socket,
+                    state,
+                    player_data: PlayerData::default(),
+                    events: Vec::new(),
+                    id,
+                    handle: handle.clone(),
+                    database: database.clone(),
+                    lua: lua.clone(),
+                    gamedata: game_data.clone(),
+                    exit_position: None,
+                    exit_rotation: None,
+                    last_keep_alive: Instant::now(),
+                    gracefully_logged_out: false,
+                    obsfucation_data: ObsfucationData::default(),
+                    queued_content: None,
+                    conditions: Conditions::default(),
+                    client_language: ClientLanguage::English,
+                    queued_tasks: Vec::new(),
+                };
 
-                    // Handle setup before passing off control to the zone connection.
-                    let segments = connection.parse_packet(&buf[..n]);
-                    for segment in segments {
-                        match &segment.data {
-                            SegmentData::Setup { actor_id } => {
-                                // for some reason they send a string representation
-                                let actor_id = actor_id.parse::<u32>().unwrap();
+                // Handle setup before passing off control to the zone connection.
+                let segments = connection.parse_packet(&buf[..n]);
+                for segment in segments {
+                    match &segment.data {
+                        SegmentData::Setup { actor_id } => {
+                            // for some reason they send a string representation
+                            let actor_id = actor_id.parse::<u32>().unwrap();
 
-                                // initialize player data if it doesn't exist
-                                if !connection.player_data.actor_id.is_valid() {
-                                    let player_data;
-                                    {
-                                        let mut game_data = connection.gamedata.lock();
-                                        let mut database = connection.database.lock();
-                                        player_data = database
-                                            .find_player_data(ObjectId(actor_id), &mut game_data);
-                                    }
-                                    connection.player_data = player_data;
+                            // initialize player data if it doesn't exist
+                            if !connection.player_data.actor_id.is_valid() {
+                                let player_data;
+                                {
+                                    let mut game_data = connection.gamedata.lock();
+                                    let mut database = connection.database.lock();
+                                    player_data = database
+                                        .find_player_data(ObjectId(actor_id), &mut game_data);
                                 }
-
-                                // collect actor data
-                                connection.initialize(actor_id).await;
+                                connection.player_data = player_data;
                             }
-                            _ => panic!(
-                                "initial_setup: The zone connection type must start with a Setup segment! What happened? Received: {segment:#?}"
-                            ),
-                        }
-                    }
-                    spawn_client(connection);
-                } else if header.connection_type == ConnectionType::Chat {
-                    let state = ConnectionState::Zone {
-                        clientbound_oodle: OodleNetwork::new(),
-                        serverbound_oodle: OodleNetwork::new(),
-                        scrambler_keys: None,
-                    };
 
-                    let mut connection = ChatConnection {
-                        config: get_config().world,
-                        id,
-                        actor_id: INVALID_OBJECT_ID,
-                        state,
-                        last_keep_alive: Instant::now(),
-                        socket,
-                        handle,
-                        party_chatchannel: ChatChannel::default(),
-                    };
-
-                    // Handle setup before passing off control to the chat connection.
-                    let segments = connection.parse_packet(&buf[..n]);
-                    for segment in segments {
-                        match &segment.data {
-                            SegmentData::Setup { actor_id } => {
-                                // for some reason they send a string representation
-                                let actor_id = actor_id.parse::<u32>().unwrap();
-                                connection.actor_id = ObjectId(actor_id);
-                                connection.initialize().await;
-                            }
-                            _ => panic!(
-                                "initial_setup: The chat connection type must start with a Setup segment! What happened? Received: {segment:#?}"
-                            ),
+                            // collect actor data
+                            connection.initialize(actor_id).await;
                         }
+                        _ => panic!(
+                            "initial_setup: The zone connection type must start with a Setup segment! What happened? Received: {segment:#?}"
+                        ),
                     }
-                    spawn_chat_connection(connection);
-                } else {
-                    tracing::error!("Connection type is None! How did this happen?");
                 }
+                spawn_client(connection);
+            } else if header.connection_type == ConnectionType::Chat {
+                let state = ConnectionState::Zone {
+                    clientbound_oodle: OodleNetwork::new(),
+                    serverbound_oodle: OodleNetwork::new(),
+                    scrambler_keys: None,
+                };
+
+                let mut connection = ChatConnection {
+                    config: get_config().world,
+                    id,
+                    actor_id: INVALID_OBJECT_ID,
+                    state,
+                    last_keep_alive: Instant::now(),
+                    socket,
+                    handle,
+                    party_chatchannel: ChatChannel::default(),
+                };
+
+                // Handle setup before passing off control to the chat connection.
+                let segments = connection.parse_packet(&buf[..n]);
+                for segment in segments {
+                    match &segment.data {
+                        SegmentData::Setup { actor_id } => {
+                            // for some reason they send a string representation
+                            let actor_id = actor_id.parse::<u32>().unwrap();
+                            connection.actor_id = ObjectId(actor_id);
+                            connection.initialize().await;
+                        }
+                        _ => panic!(
+                            "initial_setup: The chat connection type must start with a Setup segment! What happened? Received: {segment:#?}"
+                        ),
+                    }
+                }
+                spawn_chat_connection(connection);
+            } else {
+                tracing::error!("Connection type is None! How did this happen?");
             }
         }
-        Err(_) => {
-            tracing::info!("initial_setup: Connection was killed because of a network error!");
+        Err(err) => {
+            tracing::error!("Error while setting up connection: {err:?}");
         }
     }
 }
