@@ -614,7 +614,7 @@ ClientZoneIpcType:
     size: 8
   - name: PartyDisband
     comment: Happens when the client disbands their party.
-    opcode: 543
+    opcode: 400
     size: 8
   - name: InviteCharacter
     comment: "Happens when the client invites another player to a party, adds them to their friend list, etc."
@@ -630,7 +630,7 @@ ClientZoneIpcType:
     size: 48
   - name: PartyChangeLeader
     comment: Sent by the client to relinquish leadership to another player in their party.
-    opcode: 400
+    opcode: 955
     size: 48
   - name: RequestSearchInfo
     comment: Happens when the client requests search info for any player.

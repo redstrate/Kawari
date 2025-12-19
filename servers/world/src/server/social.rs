@@ -282,7 +282,7 @@ pub fn handle_social_messages(
             'outer: for instance in &data.instances {
                 for (id, actor) in &instance.actors {
                     let Some(spawn) = actor.get_player_spawn() else {
-                        panic!("Why are we looking up the PlayerSpawn of an NPC?");
+                        continue;
                     };
                     if spawn.content_id == *sender_content_id {
                         recipient_actor_id = *id;
