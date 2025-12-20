@@ -482,7 +482,7 @@ ClientZoneIpcType:
     size: 16
   - name: EventYieldHandler8
     comment: Unknown purpose.
-    opcode: 675
+    opcode: 995
     size: 40
   - name: Config
     comment: Unknown purpose.
@@ -498,7 +498,7 @@ ClientZoneIpcType:
     size: 24
   - name: UnkCall2
     comment: "Unsure the true purpose of this, but it's needed for the Unending Journey to function."
-    opcode: 699
+    opcode: 246
     size: 8
   - name: StandardControlsPivot
     comment: "This packet is sent by the client when they pivot left or right on standard controls. It is sent once when beginning to pivot, and once when pivoting ends."
