@@ -1,18 +1,18 @@
 ServerZoneIpcType:
   - name: InitZone
-    comment: "Informing the client which zone to load, along with some other miscellaneous information."
+    comment: "Inform the client which zone to load, along with some other miscellaneous information."
     opcode: 302
     size: 112
   - name: ActorControlSelf
-    comment: "Controls the player actor state, from playing emotes to making them invisible."
+    comment: "Control player actor state, from playing emotes to making them invisible."
     opcode: 906
     size: 32
   - name: PlayerStats
-    comment: Contains various character statistics like STR and HP.
+    comment: Contains various character statistics like Strength and HP.
     opcode: 703
     size: 144
   - name: PlayerStatus
-    comment: A large packet containing lots of useful and persistent information like which dungeons are unlocked.
+    comment: Lots of useful and persistent information like which dungeons are unlocked.
     opcode: 879
     size: 2912
   - name: UpdateClassInfo
@@ -20,7 +20,7 @@ ServerZoneIpcType:
     opcode: 889
     size: 16
   - name: PlayerSpawn
-    comment: Used to spawn players in.
+    comment: Used to spawn players actors in.
     opcode: 395
     size: 664
   - name: InitResponse
@@ -32,11 +32,11 @@ ServerZoneIpcType:
     opcode: 124
     size: 8
   - name: Warp
-    comment: Teleport to another position inside the current zone.
+    comment: Teleport to another position in the current zone.
     opcode: 504
     size: 24
   - name: ServerNoticeMessage
-    comment: "Displays a purple server notice message in the chat window, or in some cases, on-screen. Usually used for login messages and imminent maintenance notices."
+    comment: "Display a purple server notice message in the chat window, or in some cases, on-screen. Usually used for login messages and imminent maintenance notices."
     opcode: 660
     size: 776
   - name: LinkShellInformation
@@ -44,15 +44,15 @@ ServerZoneIpcType:
     opcode: 544
     size: 456
   - name: PrepareZoning
-    comment: "Tells the client how to display next loading screen, e.g. how long it should fade."
+    comment: "Inform the client to display next loading screen, how long it should last and other information."
     opcode: 962
     size: 16
   - name: ActorControl
-    comment: Unknown purpose.
+    comment: "Control another actor's state, from playing emotes to making them invisible."
     opcode: 216
     size: 24
   - name: ActorMove
-    comment: Used to move actors other than the current player. The client animates and interpolates the actor to this new position.
+    comment: Move actors other than the current player. The client animates the actor to this new position.
     opcode: 614
     size: 16
   - name: Blacklist
@@ -64,95 +64,95 @@ ServerZoneIpcType:
     opcode: 870
     size: 1136
   - name: NpcSpawn
-    comment: Used to spawn friendly and battle NPCs.
+    comment: Used to spawn friendly or battle NPCs.
     opcode: 286
     size: 656
   - name: StatusEffectList
-    comment: This is used to update an actor's status effect list.
+    comment: Update an actor's status effect list.
     opcode: 983
     size: 384
   - name: WeatherId
-    comment: Used to change the weather in the current zone.
+    comment: Change the weather in the current zone.
     opcode: 106
     size: 8
   - name: UpdateItem
-    comment: Updates a specific inventory slot.
+    comment: Update a specific inventory slot.
     opcode: 556
     size: 64
   - name: ContainerInfo
-    comment: "Informs the status of the entire container, for example the amount of items contained within."
+    comment: "Update the status of one container, for example the amount of items contained within."
     opcode: 293
     size: 16
   - name: EventScene
-    comment: Used to begin a scene in the current event.
+    comment: Start a scene for the current event.
     opcode: 592
     size: 40
   - name: EventScene4
-    comment: Used to begin a scene in the current event.
+    comment: Start a scene for the current event.
     opcode: 615
     size: 48
   - name: EventScene8
-    comment: Used to begin a scene in the current event.
+    comment: Start a scene for the current event.
     opcode: 727
     size: 64
   - name: EventScene16
-    comment: Used to begin a scene in the current event.
+    comment: Start a scene for the current event.
     opcode: 361
     size: 96
   - name: EventScene32
-    comment: Used to begin a scene in the current event.
+    comment: Start a scene for the current event.
     opcode: 624
     size: 160
   - name: EventScene64
-    comment: Used to begin a scene in the current event.
+    comment: Start a scene for the current event.
     opcode: 281
     size: 288
   - name: EventScene128
-    comment: Used to begin a scene in the current event.
+    comment: Start a scene for the current event.
     opcode: 999
     size: 544
   - name: EventScene255
-    comment: Used to begin a scene in the current event.
+    comment: Start a scene for the current event.
     opcode: 959
     size: 1052
   - name: EventStart
-    comment: "Sent to tell the client to load a scene, but not play it."
+    comment: "Have the client to load this event."
     opcode: 118
     size: 24
   - name: UpdateHpMpTp
-    comment: Sent to update an actor's hp & mp values.
+    comment: Update an actor's HP & MP values.
     opcode: 359
     size: 8
   - name: ActionResult
-    comment: Sent to inform the client the consequences of their actions.
+    comment: Results of an action, in response to ActionRequest.
     opcode: 193
     size: 124
   - name: Equip
-    comment: Sent to to the client to update their appearance.
+    comment: List of model IDs to apply to yourself or another actor.
     opcode: 699
     size: 72
   - name: DeleteActor
-    comment: Sent to the client to free up an actor spawn index.
+    comment: Free up the specified spawn index of an actor.
     opcode: 604
     size: 8
   - name: EventFinish
-    comment: Sent to the client to stop their currently playing event.
+    comment: Stop an event that was previously playing.
     opcode: 175
     size: 16
   - name: Condition
-    comment: Sent after EventFinish? it un-occupies the character.
+    comment: List of networked conditions applied to the player.
     opcode: 946
     size: 16
   - name: ActorControlTarget
-    comment: Used to control target information.
+    comment: Unknown purpose.
     opcode: 995
     size: 32
   - name: CurrencyCrystalInfo
-    comment: Used to update the player's currencies.
+    comment: Update the player's currencies, used instead of UpdateItem.
     opcode: 656
     size: 24
   - name: Config
-    comment: Used to update an actor's equip display flags.
+    comment: Update an actor's equip display flags.
     opcode: 404
     size: 8
   - name: EventUnkReply
@@ -160,15 +160,15 @@ ServerZoneIpcType:
     opcode: 900
     size: 16
   - name: PingSyncReply
-    comment: "Sent by the server in response to PingReply. In prior expansions, it seems to have had the following additional fields that are now deprecated and used as padding."
+    comment: "Sent by the server in response to PingReply."
     opcode: 781
     size: 32
   - name: InventoryActionAck
-    comment: Sent by the server to acknowledge when the client is updating their inventory in some way (typically when interacting with shops.)
+    comment: Acknowledging when the client is updating their inventory in some way (typically when interacting with shops.)
     opcode: 672
     size: 16
   - name: QuestCompleteList
-    comment: Contains the list of completed quests.
+    comment: List of already completed quests.
     opcode: 182
     size: 816
   - name: UnkResponse2
@@ -180,15 +180,15 @@ ServerZoneIpcType:
     opcode: 863
     size: 48
   - name: InventoryTransactionFinish
-    comment: Sent by the server when a sequence of InventoryTransaction packets have concluded.
+    comment: Sent at the end of a sequence of InventoryTransaction packets.
     opcode: 596
     size: 16
   - name: ContentFinderUpdate
-    comment: Sent to update the duty finder state.
+    comment: Update the duty finder state.
     opcode: 593
     size: 40
   - name: ContentFinderFound
-    comment: Sent when the duty finder content is found.
+    comment: Show a dialog that the duty finder content was found.
     opcode: 532
     size: 40
   - name: ObjectSpawn
