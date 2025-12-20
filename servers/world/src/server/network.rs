@@ -7,7 +7,7 @@ use crate::{
 };
 use kawari::{
     common::{INVALID_OBJECT_ID, ObjectId},
-    ipc::zone::ServerZoneIpcSegment,
+    ipc::zone::{ActorControl, ActorControlCategory, ActorControlSelf, ServerZoneIpcSegment},
 };
 
 #[derive(Default, Debug)]
@@ -278,6 +278,39 @@ impl NetworkState {
                 break;
             }
         }
+    }
+
+    /// Sends an ActorControl to in range actors, *excluding* the same actor.
+    pub fn send_ac_in_range(
+        &mut self,
+        data: &WorldServer,
+        from_actor_id: ObjectId,
+        category: ActorControlCategory,
+    ) {
+        let msg = FromServer::ActorControl(from_actor_id, ActorControl { category });
+
+        self.send_in_range(from_actor_id, data, msg, DestinationNetwork::ZoneClients);
+    }
+
+    /// Sends an ActorControl to in range actors, *including* the same actor but as an ACS.
+    pub fn send_ac_in_range_inclusive(
+        &mut self,
+        data: &WorldServer,
+        from_client_id: ClientId,
+        from_actor_id: ObjectId,
+        category: ActorControlCategory,
+    ) {
+        // First send to the actor itself:
+        {
+            let msg = FromServer::ActorControlSelf(ActorControlSelf {
+                category: category.clone(),
+            });
+
+            self.send_to(from_client_id, msg, DestinationNetwork::ZoneClients);
+        }
+
+        // Then to the other acotrs in range:
+        self.send_ac_in_range(data, from_actor_id, category);
     }
 
     pub fn get_state_mut(&mut self, client_id: ClientId) -> Option<&mut ClientState> {

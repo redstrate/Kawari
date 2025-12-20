@@ -19,8 +19,8 @@ use kawari::{
     common::ObjectId,
     config::get_config,
     ipc::zone::{
-        ActorControlCategory, ActorControlSelf, CommonSpawn, ServerZoneIpcData,
-        ServerZoneIpcSegment, StatusEffect, StatusEffectList,
+        ActorControlCategory, ServerZoneIpcData, ServerZoneIpcSegment, StatusEffect,
+        StatusEffectList,
     },
 };
 
@@ -77,32 +77,67 @@ pub fn handle_effect_messages(
 /// Sends an updated status effects list, as needed.
 fn process_effects_list(
     network: Arc<Mutex<NetworkState>>,
-    status_effects: &mut StatusEffects,
-    common_spawn: &CommonSpawn,
+    data: Arc<Mutex<WorldServer>>,
     from_id: ClientId,
     from_actor_id: ObjectId,
 ) {
+    let mut data = data.lock();
+
+    let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
+        return;
+    };
+
+    let Some(actor) = instance.find_actor_mut(from_actor_id) else {
+        return;
+    };
+
+    let NetworkedActor::Player {
+        status_effects,
+        spawn,
+        ..
+    } = actor
+    else {
+        return;
+    };
+
     // Only update the client if absolutely necessary (e.g. an effect is added, removed or changed duration)
+    let ipc;
     if status_effects.is_dirty() {
         let mut list = [StatusEffect::default(); 30];
-        let data = status_effects.data();
-        list[..data.len()].copy_from_slice(data);
+        let status_data = status_effects.data();
+        list[..status_data.len()].copy_from_slice(status_data);
 
-        let ipc =
-            ServerZoneIpcSegment::new(ServerZoneIpcData::StatusEffectList(StatusEffectList {
+        ipc = Some(ServerZoneIpcSegment::new(
+            ServerZoneIpcData::StatusEffectList(StatusEffectList {
                 statues: list,
-                classjob_id: common_spawn.class_job,
-                level: common_spawn.level,
-                curr_hp: common_spawn.hp_curr,
-                max_hp: common_spawn.hp_max,
-                curr_mp: common_spawn.mp_curr,
-                max_mp: common_spawn.mp_max,
+                classjob_id: spawn.common.class_job,
+                level: spawn.common.level,
+                curr_hp: spawn.common.hp_curr,
+                max_hp: spawn.common.hp_max,
+                curr_mp: spawn.common.mp_curr,
+                max_mp: spawn.common.mp_max,
                 ..Default::default()
-            }));
+            }),
+        ));
+
+        // Inform the player
         let mut network = network.lock();
-        network.send_ipc_to(from_id, ipc, from_actor_id);
+        network.send_ipc_to(from_id, ipc.clone().unwrap(), from_actor_id);
 
         status_effects.reset_dirty();
+    } else {
+        ipc = None;
+    }
+
+    // Inform other players in range
+    if let Some(ipc) = ipc {
+        let mut network = network.lock();
+        network.send_in_range(
+            from_actor_id,
+            &data,
+            FromServer::PacketSegment(ipc, from_actor_id),
+            DestinationNetwork::ZoneClients,
+        );
     }
 }
 
@@ -130,41 +165,30 @@ pub fn gain_effect(
             return;
         };
 
-        let NetworkedActor::Player {
-            status_effects,
-            spawn,
-            ..
-        } = actor
-        else {
+        let NetworkedActor::Player { status_effects, .. } = actor else {
             return;
         };
 
         status_effects.add(effect_id, effect_param, effect_duration);
 
-        // Then, Send an actor control to inform the client if requested
+        let mut network = network.lock();
+
+        let ipc = ActorControlCategory::GainEffect {
+            effect_id: effect_id as u32,
+            param: effect_param as u32,
+            source_actor_id: effect_source_actor_id,
+        };
+
+        // Then, Send an actor control to inform the client if needed
         if send_acs {
-            let mut network = network.lock();
-
-            let ipc =
-                ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
-                    category: ActorControlCategory::GainEffect {
-                        effect_id: effect_id as u32,
-                        param: effect_param as u32,
-                        source_actor_id: effect_source_actor_id,
-                    },
-                }));
-            network.send_ipc_to(from_id, ipc, from_actor_id);
+            network.send_ac_in_range_inclusive(&data, from_id, from_actor_id, ipc);
+        } else {
+            network.send_ac_in_range(&data, from_actor_id, ipc);
         }
-
-        // We also need to send them an updated StatusEffectsList
-        process_effects_list(
-            network.clone(),
-            status_effects,
-            &spawn.common,
-            from_id,
-            from_actor_id,
-        );
     }
+
+    // We also need to send them an updated StatusEffectsList
+    process_effects_list(network.clone(), data.clone(), from_id, from_actor_id);
 
     // Scheduling doesn't make sense when the effect never ends.
     if effect_duration == 0.0 {
@@ -203,55 +227,44 @@ pub fn remove_effect(
     effect_source_actor_id: ObjectId,
 ) {
     // Remove it from our internal data model first
-    let mut data = data.lock();
+    {
+        let mut data = data.lock();
 
-    let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
-        return;
-    };
+        let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
+            return;
+        };
 
-    let Some(actor) = instance.find_actor_mut(from_actor_id) else {
-        return;
-    };
+        let Some(actor) = instance.find_actor_mut(from_actor_id) else {
+            return;
+        };
 
-    let NetworkedActor::Player {
-        status_effects,
-        spawn,
-        ..
-    } = actor
-    else {
-        return;
-    };
+        let NetworkedActor::Player { status_effects, .. } = actor else {
+            return;
+        };
 
-    // If we don't have the status effect, just do nothing
-    if status_effects.get(effect_id).is_none() {
-        return;
+        // If we don't have the status effect, just do nothing
+        if status_effects.get(effect_id).is_none() {
+            return;
+        }
+
+        status_effects.remove(effect_id);
     }
-
-    status_effects.remove(effect_id);
 
     // Then send the actor control to lose the effect
     {
         let mut network = network.lock();
+        let data = data.lock();
 
-        let ipc =
-            ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
-                category: ActorControlCategory::LoseEffect {
-                    effect_id: effect_id as u32,
-                    unk2: effect_param as u32,
-                    source_actor_id: effect_source_actor_id,
-                },
-            }));
-        network.send_ipc_to(from_id, ipc, from_actor_id);
+        let ipc = ActorControlCategory::LoseEffect {
+            effect_id: effect_id as u32,
+            unk2: effect_param as u32,
+            source_actor_id: effect_source_actor_id,
+        };
+        network.send_ac_in_range_inclusive(&data, from_id, from_actor_id, ipc);
     }
 
     // Finally, inform the client of their new status effects list
-    process_effects_list(
-        network.clone(),
-        status_effects,
-        &spawn.common,
-        from_id,
-        from_actor_id,
-    );
+    process_effects_list(network.clone(), data.clone(), from_id, from_actor_id);
 
     // Also run the effect's Lua script in case it wants to do something!
     {
