@@ -1,6 +1,7 @@
 use crate::ItemInfo;
 
 use serde::{Deserialize, Serialize};
+use strum_macros::{Display, EnumIter, FromRepr};
 
 use super::{Item, Storage};
 
@@ -8,6 +9,8 @@ use super::{Item, Storage};
 
 // TODO: Add society currencies, this is just a good baseline
 #[repr(u32)]
+#[derive(Debug, Clone, Copy, PartialEq, Display, EnumIter, FromRepr)]
+#[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 pub enum CurrencyKind {
     Gil = 1,
     FireShard,
@@ -43,6 +46,21 @@ pub enum CurrencyKind {
     TrophyCrystal = 36656,
 }
 
+impl mlua::IntoLua for CurrencyKind {
+    fn into_lua(self, _: &mlua::Lua) -> mlua::Result<mlua::Value> {
+        Ok(mlua::Value::Integer(self as i64))
+    }
+}
+
+impl mlua::FromLua for CurrencyKind {
+    fn from_lua(value: mlua::Value, _: &mlua::Lua) -> mlua::Result<Self> {
+        match value {
+            mlua::Value::Integer(integer) => Ok(Self::from_repr(integer as u32).unwrap()),
+            _ => unreachable!(),
+        }
+    }
+}
+
 #[derive(Clone, Copy, Deserialize, Serialize, Debug)]
 pub struct CurrencyStorage {
     pub gil: Item,
@@ -57,16 +75,16 @@ pub struct CurrencyStorage {
 }
 
 impl CurrencyStorage {
-    pub fn get_slot_for_id(id: u32) -> u16 {
-        // TODO: duplicated between Rust and Lua
+    pub fn get_slot_for_id(id: CurrencyKind) -> u16 {
         match id {
-            1 => 0,
-            29 => 9,
+            CurrencyKind::Gil => 0,
+            CurrencyKind::WolfMark => 4,
+            CurrencyKind::MGP => 9,
             _ => unimplemented!(),
         }
     }
 
-    pub fn get_item_for_id(&mut self, id: u32) -> &mut Item {
+    pub fn get_item_for_id(&mut self, id: CurrencyKind) -> &mut Item {
         self.get_slot_mut(Self::get_slot_for_id(id))
     }
 }

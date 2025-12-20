@@ -1,4 +1,7 @@
-use crate::{EventFinishType, inventory::BuyBackList};
+use crate::{
+    EventFinishType,
+    inventory::{BuyBackList, CurrencyKind},
+};
 use kawari::{
     common::{ObjectTypeId, Position, workdefinitions::RemakeMode},
     ipc::zone::{EventType, ServerZoneIpcSegment},
@@ -45,7 +48,7 @@ pub enum LuaTask {
         id: u16,
     },
     ModifyCurrency {
-        id: u32,
+        id: CurrencyKind,
         amount: i32,
         send_client_update: bool,
     },

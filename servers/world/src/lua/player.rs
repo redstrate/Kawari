@@ -199,7 +199,7 @@ impl LuaPlayer {
         self.queued_tasks.push(LuaTask::ChangeWeather { id });
     }
 
-    fn modify_currency(&mut self, id: u32, amount: i32, send_client_update: bool) {
+    fn modify_currency(&mut self, id: CurrencyKind, amount: i32, send_client_update: bool) {
         self.queued_tasks.push(LuaTask::ModifyCurrency {
             id,
             amount,
@@ -283,7 +283,7 @@ impl LuaPlayer {
         // Queue up the player's adjusted gil, but we're not going to send an entire inventory update to the client.
         let cost = item_dst_info.quantity * bb_item.price_low;
         let new_gil = self.player_data.inventory.currency.gil.quantity - cost;
-        self.modify_currency(1, -(cost as i32), false);
+        self.modify_currency(CurrencyKind::Gil, -(cost as i32), false);
 
         let shop_packets_to_send = [
             ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateInventorySlot {
@@ -771,10 +771,13 @@ impl UserData for LuaPlayer {
             this.change_weather(id);
             Ok(())
         });
-        methods.add_method_mut("modify_currency", |_, this, (id, amount): (u32, i32)| {
-            this.modify_currency(id, amount, true);
-            Ok(())
-        });
+        methods.add_method_mut(
+            "modify_currency",
+            |_, this, (id, amount): (CurrencyKind, i32)| {
+                this.modify_currency(id, amount, true);
+                Ok(())
+            },
+        );
         methods.add_method_mut("gm_set_orchestrion", |_, this, (value, id): (bool, u32)| {
             this.gm_set_orchestrion(value, id);
             Ok(())

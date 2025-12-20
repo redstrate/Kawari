@@ -14,6 +14,7 @@ These special debug commands start with `!` and are custom to Kawari.
 | `festival` | `!festival <id1> <id2> <id3> <id4>` | Sets the festival in the current zone. Multiple festivals can be set together to create interesting effects. |
 | `finishevent` | `!finishevent` | Forcefully finishes the current event, useful if the script has an error and you're stuck talking to something. |
 | `mount` | `!mount <id>` | Allows you to mount in any zone, on the specified mount ID. |
+| `monies` | `!monies` | Give a unreasonable amount of some currencies. |
 | `nudge` | `!nudge <distance> <up/down (optional)>` | Teleport forward, back, up or down `distance` yalms. Specifying up or down will move the player up or down instead of forward or back. |
 | `reload` | `!reload` | Reloads `Global.lua` that is normally only loaded once at start-up. |
 | `unlock` | `!unlock <id>` | Unlock an action, emote, etc. for example: `1` for Return and `4` for Teleport. |

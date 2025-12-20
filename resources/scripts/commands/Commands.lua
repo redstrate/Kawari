@@ -70,6 +70,7 @@ registerGMCommand(GM_TERRITORY_INFO,    GM_DIR.."TerritoryInfo.lua")
 registerCommand("classjob",                         DBG_DIR.."ClassJob.lua")
 registerCommand("festival",                         DBG_DIR.."Festival.lua")
 registerCommand("inspect",                          GM_DIR.."InspectPlayer.lua") -- TODO: remove this once we figure out the GMInspect IPC opcode
+registerCommand("monies",                            DBG_DIR.."Monies.lua")
 registerCommand("nudge",                            DBG_DIR.."Nudge.lua")
 registerCommand("ost",                              DBG_DIR.."OnScreenTest.lua")
 registerCommand("permtest",                         DBG_DIR.."PermissionTest.lua")

@@ -5,7 +5,7 @@ use mlua::{IntoLua, Lua};
 use parking_lot::Mutex;
 use strum::IntoEnumIterator;
 
-use crate::{Event, GameData};
+use crate::{Event, GameData, inventory::CurrencyKind};
 use kawari::{
     common::{DirectorType, EventHandlerType},
     config::get_config,
@@ -33,6 +33,7 @@ pub fn initial_setup(lua: &mut Lua) {
     register_enum::<EventType>(lua, "EVENT_TYPE");
     register_enum::<EventHandlerType>(lua, "HANDLER_TYPE");
     register_enum::<DirectorType>(lua, "DIRECTOR_TYPE");
+    register_enum::<CurrencyKind>(lua, "CURRENCY");
 
     // Load globals
     let config = get_config();
