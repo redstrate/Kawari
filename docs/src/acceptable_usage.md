@@ -20,7 +20,7 @@ Additionally, here are some explicit limitations for contributions in our commun
 * All contributors **must not** accept donations on behalf of our project.
 * Support for patches **must only** be posted _after_ they are publicly available in their respective region.
   * "Publicly available" means: Maintenance is over, and you're able to log in to a World with the new client.
-* Support for limited-time festivals or events **must only** be made available[^2] after they are publicly available in their respective region.
+* Support for limited-time festivals or events **must only** be made available after they are publicly available in their respective region.
   * "Publicly available" means: The festival actually begun in-game.
   * The game may overwrite or change older festivals with newer NPCs or objects. To be safe, this rule will still apply - even if said things appear in an older event it wasn't designed originally for.
   
