@@ -514,7 +514,7 @@ ClientZoneIpcType:
     size: 48
   - name: StartTalkEvent
     comment: Unknown purpose.
-    opcode: 162
+    opcode: 648
     size: 16
   - name: EventYieldHandler
     comment: Unknown purpose.
@@ -654,7 +654,7 @@ ClientZoneIpcType:
     size: 8
   - name: WalkOutsideEvent
     comment: Sent by the client when walking outside a trigger (e.g. exiting Ul'dah in the opening.)
-    opcode: 648
+    opcode: 162
     size: 24
   - name: EnterTerritoryEvent
     comment: Sent by the client when requesting to play an event (because we entered a territory.)
