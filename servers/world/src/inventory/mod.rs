@@ -1,5 +1,5 @@
 use icarus::{ClassJob::ClassJobSheet, Race::RaceSheet};
-use kawari::common::{ContainerType, GameData, ItemInfoQuery, ItemOperationKind};
+use kawari::common::{ContainerType, ItemOperationKind};
 use physis::common::Language;
 use serde::{Deserialize, Serialize};
 
@@ -25,6 +25,8 @@ pub use currency::{CurrencyKind, CurrencyStorage};
 
 mod iterators;
 pub use iterators::{InventoryIterator, get_container_type};
+
+use crate::{GameData, ItemInfoQuery};
 
 const MAX_NORMAL_STORAGE: usize = 35;
 const MAX_LARGE_STORAGE: usize = 50;

@@ -2,10 +2,10 @@ use serde::Deserialize;
 use std::{io::BufReader, io::Read};
 
 use crate::{
-    WorldDatabase,
+    GameData, WorldDatabase,
     inventory::{Inventory, Item, Storage},
 };
-use kawari::common::{CustomizeData, GameData, ObjectId, workdefinitions::CharaMake};
+use kawari::common::{CustomizeData, ObjectId, workdefinitions::CharaMake};
 
 pub enum ImportError {
     CharacterExists,

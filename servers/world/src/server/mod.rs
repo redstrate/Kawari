@@ -10,7 +10,7 @@ use std::{
 use tokio::sync::mpsc::Receiver;
 
 use crate::{
-    Navmesh, SpawnAllocator,
+    GameData, Navmesh, SpawnAllocator,
     lua::load_init_script,
     server::{
         action::{execute_action, handle_action_messages, kill_actor, update_actor_hp_mp},
@@ -25,9 +25,9 @@ use crate::{
 };
 use kawari::{
     common::{
-        DEAD_DESPAWN_TIME, EOBJ_ENTRANCE_CIRCLE, GameData, INVALID_OBJECT_ID, InvisibilityFlags,
-        JumpState, MAX_SPAWNED_ACTORS, MAX_SPAWNED_OBJECTS, MoveAnimationState, MoveAnimationType,
-        ObjectId, ObjectTypeId, ObjectTypeKind, Position,
+        DEAD_DESPAWN_TIME, EOBJ_ENTRANCE_CIRCLE, INVALID_OBJECT_ID, InvisibilityFlags, JumpState,
+        MAX_SPAWNED_ACTORS, MAX_SPAWNED_OBJECTS, MoveAnimationState, MoveAnimationType, ObjectId,
+        ObjectTypeId, ObjectTypeKind, Position,
     },
     ipc::zone::{
         ActorControl, ActorControlCategory, ActorControlSelf, ActorControlTarget, BattleNpcSubKind,

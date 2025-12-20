@@ -6,7 +6,7 @@ use mlua::{Function, Lua};
 use parking_lot::Mutex;
 
 use crate::{
-    ClientId, FromServer, PlayerData, StatusEffects, ToServer,
+    ClientId, FromServer, GameData, PlayerData, StatusEffects, ToServer,
     lua::{EffectsBuilder, ExtraLuaState, LuaPlayer, LuaZone},
     server::{
         WorldServer,
@@ -17,7 +17,7 @@ use crate::{
     },
 };
 use kawari::{
-    common::{CharacterMode, DEAD_FADE_OUT_TIME, GameData, INVALID_OBJECT_ID, ObjectId},
+    common::{CharacterMode, DEAD_FADE_OUT_TIME, INVALID_OBJECT_ID, ObjectId},
     config::get_config,
     ipc::zone::{
         ActionEffect, ActionKind, ActionRequest, ActionResult, ActorControl, ActorControlCategory,

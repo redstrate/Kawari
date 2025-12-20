@@ -1,6 +1,6 @@
 use std::collections::{HashMap, VecDeque};
 
-use kawari::common::ItemInfo;
+use crate::ItemInfo;
 
 const BUYBACK_LIST_SIZE: usize = 10;
 const BUYBACK_PARAM_COUNT: usize = 22;

@@ -1,4 +1,4 @@
-use kawari::common::ItemInfo;
+use crate::ItemInfo;
 
 use serde::{Deserialize, Serialize};
 

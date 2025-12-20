@@ -1,7 +1,7 @@
 use kawari::{
     common::{
         ContainerType, ERR_INVENTORY_ADD_FAILED, INVALID_OBJECT_ID, INVENTORY_ACTION_ACK_SHOP,
-        ItemInfoQuery, ItemOperationKind, LogMessageType,
+        ItemOperationKind, LogMessageType,
     },
     ipc::zone::{
         EventReturnHandler, ItemOperation, SceneFlags, ServerZoneIpcData, ServerZoneIpcSegment,
@@ -9,7 +9,7 @@ use kawari::{
 };
 
 use crate::{
-    EventFinishType, ZoneConnection,
+    EventFinishType, ItemInfoQuery, ZoneConnection,
     inventory::{BuyBackItem, CurrencyKind, Item, get_container_type},
 };
 

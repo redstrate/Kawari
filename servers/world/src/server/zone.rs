@@ -11,7 +11,7 @@ use physis::{
 };
 
 use crate::{
-    ClientId, FromServer, StatusEffects, ToServer,
+    ClientId, FromServer, GameData, StatusEffects, TerritoryNameKind, ToServer,
     lua::LuaZone,
     server::{
         NetworkedActor, WorldServer,
@@ -23,8 +23,7 @@ use crate::{
 use kawari::{
     common::{
         DistanceRange, EOBJ_ENTRANCE_CIRCLE, EOBJ_SHORTCUT, EOBJ_SHORTCUT_EXPLORER_MODE,
-        EventHandlerType, GameData, INVALID_OBJECT_ID, ObjectId, Position, TerritoryNameKind,
-        euler_to_direction,
+        EventHandlerType, INVALID_OBJECT_ID, ObjectId, Position, euler_to_direction,
     },
     ipc::zone::{
         ActorControl, ActorControlCategory, ActorControlSelf, Conditions, ObjectKind, ObjectSpawn,

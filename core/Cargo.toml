@@ -30,7 +30,6 @@ binrw = { workspace = true }
 md5 = { workspace = true }
 physis = { workspace = true }
 bitflags = { workspace = true }
-icarus = { workspace = true }
 strum = { workspace = true }
 strum_macros = { workspace = true }
 tokio = { workspace = true, optional = true }

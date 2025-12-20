@@ -3,11 +3,9 @@ use std::sync::Arc;
 use mlua::{Function, Lua};
 use parking_lot::Mutex;
 
-use kawari::{
-    common::{GameData, ObjectTypeId},
-    config::get_config,
-    ipc::zone::EventType,
-};
+use kawari::{common::ObjectTypeId, config::get_config, ipc::zone::EventType};
+
+use crate::GameData;
 
 use super::lua::{LuaPlayer, initial_setup};
 

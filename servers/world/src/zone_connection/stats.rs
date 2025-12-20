@@ -1,8 +1,8 @@
 //! Managing statistics, including your classjob and other related information.
 
-use crate::ZoneConnection;
+use crate::{GameData, ZoneConnection};
 use kawari::{
-    common::{GameData, MAXIMUM_MP, ObjectId},
+    common::{MAXIMUM_MP, ObjectId},
     ipc::zone::{
         ActorControlCategory, ActorControlSelf, PlayerStats, ServerZoneIpcData,
         ServerZoneIpcSegment, UpdateClassInfo,

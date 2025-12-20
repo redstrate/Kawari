@@ -28,15 +28,13 @@ use icarus::TerritoryType::TerritoryTypeSheet;
 use icarus::TopicSelect::TopicSelectSheet;
 use icarus::WarpLogic::WarpLogicSheet;
 use icarus::WeatherRate::WeatherRateSheet;
-use icarus::World::WorldSheet;
 use icarus::{Tribe::TribeSheet, Warp::WarpSheet};
 use physis::common::{Language, Platform};
 use physis::resource::{Resource, ResourceResolver, SqPackResource, UnpackedResource};
 
-use crate::common::{InstanceContentType, get_aether_current_comp_flg_set_to_screenimage};
-use crate::{common::Attributes, config::get_config};
-
-use super::timestamp_secs;
+use kawari::common::timestamp_secs;
+use kawari::common::{InstanceContentType, get_aether_current_comp_flg_set_to_screenimage};
+use kawari::{common::Attributes, config::get_config};
 
 /// Convenient methods built on top of Physis to access data relevant to the server
 pub struct GameData {
@@ -186,14 +184,6 @@ impl GameData {
             tribe_sheet,
             eobj_sheet,
         }
-    }
-
-    /// Gets the world name from an id into the World Excel sheet.
-    pub fn get_world_name(&mut self, world_id: u16) -> Option<String> {
-        let sheet = WorldSheet::read_from(&mut self.resource, Language::None)?;
-        let row = sheet.get_row(world_id as u32)?;
-
-        row.Name().into_string().cloned()
     }
 
     /// Gets the starting city-state from a given class/job id.
@@ -781,7 +771,6 @@ impl GameData {
     }
 }
 
-#[cfg(feature = "server")]
 impl mlua::UserData for GameData {
     fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
         methods.add_method_mut("is_aetheryte", |_, this, aetheryte_id: u32| {

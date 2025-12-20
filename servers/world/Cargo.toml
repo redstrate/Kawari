@@ -23,7 +23,7 @@ strum_macros = { workspace = true }
 binrw = { workspace = true }
 recastnavigation-sys = { workspace = true }
 zip = { workspace = true }
-icarus = { workspace = true } # TODO: we only have one usage of icarus here, I think
+icarus = { workspace = true }
 fastrand = { workspace = true }
 ureq = { workspace = true }
 diesel = { workspace = true }

@@ -7,14 +7,15 @@ use diesel::prelude::*;
 use diesel::{Connection, QueryDsl, RunQueryDsl, SqliteConnection};
 
 use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
-use kawari::common::BasicCharacterData;
+use kawari::common::{BasicCharacterData, WORLD_NAME};
 use kawari::ipc::zone::GameMasterRank;
 use serde::Deserialize;
 
+use crate::GameData;
 use crate::{PlayerData, inventory::Inventory};
 use kawari::{
     common::{
-        EquipDisplayFlag, GameData, ObjectId, Position,
+        EquipDisplayFlag, ObjectId, Position,
         workdefinitions::{CharaMake, ClientSelectData, RemakeMode},
     },
     constants::CLASSJOB_ARRAY_SIZE,
@@ -227,7 +228,6 @@ impl WorldDatabase {
         &mut self,
         for_service_account_id: u64,
         world_id: u16,
-        world_name: &str,
         game_data: &mut GameData,
     ) -> Vec<CharacterDetails> {
         use models::*;
@@ -308,8 +308,8 @@ impl WorldDatabase {
                 origin_server_id: world_id,
                 current_server_id: world_id,
                 character_name: character.name.clone(),
-                origin_server_name: world_name.to_string(),
-                current_server_name: world_name.to_string(),
+                origin_server_name: WORLD_NAME.to_string(),
+                current_server_name: WORLD_NAME.to_string(),
                 character_detail_json: select_data.to_json(),
                 unk2: [255; 16],
                 unk3: [4; 5],

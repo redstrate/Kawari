@@ -1,6 +1,8 @@
-use kawari::common::{ITEM_CONDITION_MAX, ItemInfo};
+use kawari::common::ITEM_CONDITION_MAX;
 
 use serde::{Deserialize, Serialize};
+
+use crate::ItemInfo;
 
 /// Represents an item, or if the quantity is zero, an empty slot.
 #[derive(Default, Copy, Clone, Serialize, Deserialize, Debug)]

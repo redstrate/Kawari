@@ -6,12 +6,12 @@ use std::{
 };
 
 use crate::{
-    ClientId, Navmesh, StatusEffects,
+    ClientId, GameData, Navmesh, StatusEffects,
     server::{action::cancel_action, actor::NetworkedActor, network::NetworkState, zone::Zone},
     zone_connection::TeleportQuery,
 };
 use kawari::{
-    common::{DistanceRange, GameData, ObjectId},
+    common::{DistanceRange, ObjectId},
     config::get_config,
     ipc::zone::{ActionRequest, Conditions, NpcSpawn, ObjectSpawn, PlayerSpawn},
 };

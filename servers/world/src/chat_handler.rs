@@ -1,11 +1,11 @@
 use std::str::FromStr;
 
 use crate::{
-    EventFinishType, ToServer,
+    EventFinishType, ItemInfoQuery, ToServer,
     inventory::{Item, Storage},
 };
 use kawari::{
-    common::{ERR_INVENTORY_ADD_FAILED, ITEM_CONDITION_MAX, ItemInfoQuery},
+    common::{ERR_INVENTORY_ADD_FAILED, ITEM_CONDITION_MAX},
     ipc::zone::{
         ActorControlCategory, ActorControlSelf, ServerZoneIpcData, ServerZoneIpcSegment,
         client::SendChatMessage,

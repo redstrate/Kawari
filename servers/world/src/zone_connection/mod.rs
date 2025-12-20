@@ -5,15 +5,12 @@ use serde::{Deserialize, Serialize};
 use tokio::net::TcpStream;
 
 use crate::{
-    Content, Unlock,
+    Content, GameData, Unlock,
     database::{AetherCurrent, Aetheryte, Companion, Quest},
     lua::LuaTask,
 };
 use kawari::{
-    common::{
-        ClientLanguage, EquipDisplayFlag, GameData, ObjectId, ObjectTypeId, Position,
-        timestamp_secs,
-    },
+    common::{ClientLanguage, EquipDisplayFlag, ObjectId, ObjectTypeId, Position, timestamp_secs},
     config::WorldConfig,
     ipc::zone::{
         client::ClientZoneIpcSegment,

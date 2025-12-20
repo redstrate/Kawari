@@ -2,7 +2,7 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use kawari::common::{
-    ClientLanguage, ContainerType, DirectorEvent, DirectorTrigger, EventHandlerType, GameData,
+    ClientLanguage, ContainerType, DirectorEvent, DirectorTrigger, EventHandlerType,
     INVALID_OBJECT_ID, ItemOperationKind, ObjectId, ObjectTypeId, ObjectTypeKind,
     calculate_max_level,
 };
@@ -30,7 +30,7 @@ use kawari::packet::{
 };
 use kawari_world::lua::{ExtraLuaState, LuaPlayer, load_init_script};
 use kawari_world::{
-    ChatConnection, ChatHandler, CustomIpcConnection, ObsfucationData, TeleportReason,
+    ChatConnection, ChatHandler, CustomIpcConnection, GameData, ObsfucationData, TeleportReason,
     ZoneConnection,
 };
 use kawari_world::{

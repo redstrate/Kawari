@@ -761,7 +761,6 @@ version = "7.40.1"
 dependencies = [
  "binrw",
  "bitflags",
- "icarus",
  "kawari-core-macro",
  "md5",
  "mlua",

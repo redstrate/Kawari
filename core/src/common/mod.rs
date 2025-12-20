@@ -7,10 +7,6 @@ pub use customize_data::CustomizeData;
 mod position;
 pub use position::Position;
 
-mod gamedata;
-pub use gamedata::GameData;
-pub use gamedata::{ItemInfo, ItemInfoQuery, TerritoryNameKind};
-
 pub mod workdefinitions;
 
 mod director;
@@ -129,6 +125,9 @@ pub const GAME_SERVICE: &str = "Kawari: Game Client";
 
 /// Timeout in seconds before clients are disconnected because of idle network activity.
 pub const NETWORK_TIMEOUT: Duration = Duration::from_secs(5);
+
+/// Name of the World used in limited scenarios.
+pub const WORLD_NAME: &str = "Kawari";
 
 #[derive(Serialize, Deserialize)]
 pub struct User {

@@ -5,9 +5,9 @@ use mlua::{IntoLua, Lua};
 use parking_lot::Mutex;
 use strum::IntoEnumIterator;
 
-use crate::Event;
+use crate::{Event, GameData};
 use kawari::{
-    common::{DirectorType, EventHandlerType, GameData},
+    common::{DirectorType, EventHandlerType},
     config::get_config,
     ipc::zone::{EventType, GameMasterRank, SceneFlags, ServerNoticeFlags},
 };

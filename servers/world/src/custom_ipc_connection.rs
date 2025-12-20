@@ -1,7 +1,7 @@
-use crate::{WorldDatabase, inventory::Inventory};
+use crate::{GameData, WorldDatabase, inventory::Inventory};
 use kawari::{
     common::{
-        GameData, determine_initial_starting_zone,
+        determine_initial_starting_zone,
         workdefinitions::{CharaMake, RemakeMode},
     },
     config::get_config,
@@ -147,14 +147,6 @@ impl CustomIpcConnection {
             CustomIpcData::RequestCharacterList { service_account_id } => {
                 let config = get_config();
 
-                let world_name;
-                {
-                    let mut game_data = self.gamedata.lock();
-                    world_name = game_data
-                        .get_world_name(config.world.world_id)
-                        .expect("Couldn't read world name");
-                }
-
                 let characters;
                 {
                     let mut game_data = self.gamedata.lock();
@@ -163,7 +155,6 @@ impl CustomIpcConnection {
                     characters = database.get_character_list(
                         *service_account_id,
                         config.world.world_id,
-                        &world_name,
                         &mut game_data,
                     );
                 }

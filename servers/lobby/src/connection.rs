@@ -4,7 +4,7 @@ use tokio::net::TcpStream;
 
 use kawari::{
     blowfish::Blowfish,
-    common::GAME_SERVICE,
+    common::{GAME_SERVICE, WORLD_NAME},
     config::get_config,
     constants::SUPPORTED_EXPAC_VERSIONS,
     ipc::lobby::{DistRetainerInfo, NackReply},
@@ -198,7 +198,6 @@ pub struct LobbyConnection {
     pub session_id: Option<String>,
     pub state: ConnectionState,
     pub stored_character_creation_name: String,
-    pub world_name: String,
     pub service_accounts: Vec<ServiceAccount>,
     pub selected_service_account: Option<u64>,
     pub last_keep_alive: Instant,
@@ -270,7 +269,7 @@ impl LobbyConnection {
 
             let mut servers = [Server {
                 id: config.world.world_id,
-                name: self.world_name.clone(),
+                name: WORLD_NAME.to_string(),
                 restricted: !config.world.accept_new_characters,
                 exp_bonus: config.world.exp_bonus,
                 ..Default::default()
@@ -467,8 +466,8 @@ impl LobbyConnection {
                         action: LobbyCharacterActionKind::ReserveName,
                         details: CharacterDetails {
                             character_name: character_action.name.clone(),
-                            origin_server_name: self.world_name.clone(),
-                            current_server_name: self.world_name.clone(),
+                            origin_server_name: WORLD_NAME.to_string(),
+                            current_server_name: WORLD_NAME.to_string(),
                             ..Default::default()
                         },
                     });
@@ -545,8 +544,8 @@ impl LobbyConnection {
                             player_id: our_actor_id as u64, // TODO: not correct
                             content_id: our_content_id,
                             character_name: character_action.name.clone(),
-                            origin_server_name: self.world_name.clone(),
-                            current_server_name: self.world_name.clone(),
+                            origin_server_name: WORLD_NAME.to_string(),
+                            current_server_name: WORLD_NAME.to_string(),
                             ..Default::default()
                         },
                     });
@@ -583,8 +582,8 @@ impl LobbyConnection {
                             player_id: 0, // TODO: fill maybe?
                             content_id: character_action.content_id,
                             character_name: character_action.name.clone(),
-                            origin_server_name: self.world_name.clone(),
-                            current_server_name: self.world_name.clone(),
+                            origin_server_name: WORLD_NAME.to_string(),
+                            current_server_name: WORLD_NAME.to_string(),
                             ..Default::default()
                         },
                     });
@@ -623,8 +622,8 @@ impl LobbyConnection {
                             player_id: 0, // TODO: fill maybe?
                             content_id: character_action.content_id,
                             character_name: character_action.name.clone(),
-                            origin_server_name: self.world_name.clone(),
-                            current_server_name: self.world_name.clone(),
+                            origin_server_name: WORLD_NAME.to_string(),
+                            current_server_name: WORLD_NAME.to_string(),
                             ..Default::default()
                         },
                     });

@@ -1,4 +1,3 @@
-use kawari::common::GameData;
 use kawari::common::RECEIVE_BUFFER_SIZE;
 use kawari::common::timestamp_secs;
 use kawari::config::get_config;
@@ -26,13 +25,7 @@ async fn main() {
 
     let listener = TcpListener::bind(addr).await.unwrap();
 
-    let mut game_data = GameData::new();
-
     tracing::info!("Server started on {addr}");
-
-    let world_name = game_data
-        .get_world_name(config.world.world_id)
-        .expect("Unknown world name");
 
     loop {
         let (socket, _) = listener.accept().await.unwrap();
@@ -42,7 +35,6 @@ async fn main() {
             state: ConnectionState::None,
             session_id: None,
             stored_character_creation_name: String::new(),
-            world_name: world_name.clone(),
             service_accounts: Vec::new(),
             selected_service_account: None,
             last_keep_alive: Instant::now(),
