@@ -224,6 +224,10 @@ impl LuaPlayer {
         self.queued_tasks.push(LuaTask::UnlockContent { id });
     }
 
+    fn unlock_all_content(&mut self) {
+        self.queued_tasks.push(LuaTask::UnlockAllContent {});
+    }
+
     fn get_buyback_list(&mut self, shop_id: u32, shop_intro: bool) -> Vec<u32> {
         let ret = self
             .player_data
@@ -782,6 +786,10 @@ impl UserData for LuaPlayer {
         });
         methods.add_method_mut("unlock_content", |_, this, id: u16| {
             this.unlock_content(id);
+            Ok(())
+        });
+        methods.add_method_mut("unlock_all_content", |_, this, _: ()| {
+            this.unlock_all_content();
             Ok(())
         });
         methods.add_method_mut(

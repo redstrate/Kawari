@@ -67,6 +67,11 @@ impl<const N: usize> Bitmask<N> {
         let (value, index) = value_to_flag_byte_index_value(value);
         (self.0[index as usize] & value) == value
     }
+
+    /// Sets all bits of this mask to 0xFF (255)
+    pub fn set_all(&mut self) {
+        self.0 = vec![0xFF; N];
+    }
 }
 
 // TODO: de-duplicate the two implementations, this is stupid

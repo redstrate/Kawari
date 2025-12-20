@@ -234,6 +234,17 @@ impl ZoneConnection {
                     })
                     .await;
                 }
+                LuaTask::UnlockAllContent {} => {
+                    self.player_data.content.unlocked_raids.set_all();
+                    self.player_data.content.unlocked_dungeons.set_all();
+                    self.player_data.content.unlocked_guildhests.set_all();
+                    self.player_data.content.unlocked_trials.set_all();
+                    self.player_data
+                        .content
+                        .unlocked_crystalline_conflicts
+                        .set_all();
+                    self.player_data.content.unlocked_frontlines.set_all();
+                }
                 LuaTask::UpdateBuyBackList { list } => {
                     self.player_data.buyback_list = list.clone();
                 }

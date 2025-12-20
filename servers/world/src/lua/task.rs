@@ -61,6 +61,7 @@ pub enum LuaTask {
     UnlockContent {
         id: u16,
     },
+    UnlockAllContent {},
     UpdateBuyBackList {
         list: BuyBackList,
     },

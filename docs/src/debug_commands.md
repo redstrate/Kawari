@@ -18,7 +18,7 @@ These special debug commands start with `!` and are custom to Kawari.
 | `reload` | `!reload` | Reloads `Global.lua` that is normally only loaded once at start-up. |
 | `unlock` | `!unlock <id>` | Unlock an action, emote, etc. for example: `1` for Return and `4` for Teleport. |
 | `unlockbuddyequip` | `!unlockbuddyequip <id>` | Unlocks the specified BuddyEquip (Companion Barding) ID. |
-| `unlockcontent` | `!unlockcontent <id>` | Unlocks the specified instanced content. The ID to use is from the InstanceContent Excel sheet. |
+| `unlockcontent` | `!unlockcontent <id/all>` | Unlocks the specified instanced content. The ID to use is from the InstanceContent Excel sheet. |
 | `spawnmonster` | `!spawnmonster <id>` | Spawn a monster for debugging. |
 | `spawnclone` | `!spawnclone` | Spawn a clone of yourself. |
 | `togglemount` | `!togglemount <id>` | Toggles the unlock status of the specified mount ID. |
