@@ -6,7 +6,6 @@ use crate::{
 use kawari::{
     common::{DirectorType, Position, TerritoryIntendedUse, timestamp_secs},
     config::get_config,
-    constants::OBFUSCATION_ENABLED_MODE,
     ipc::zone::{
         ActorControlCategory, ActorControlSelf, Condition, House, HouseList, InitZone,
         InitZoneFlags, ServerZoneIpcData, ServerZoneIpcSegment, Warp, WeatherChange,
@@ -144,14 +143,15 @@ impl ZoneConnection {
                 weather_id: weather_id as u8,
                 flags: InitZoneFlags::HIDE_SERVER | extra_flags,
                 content_finder_condition_id,
-                obsfucation_mode: if config.world.enable_packet_obsfucation {
-                    OBFUSCATION_ENABLED_MODE
-                } else {
-                    0
-                },
-                seed1: !self.obsfucation_data.seed1,
-                seed2: !self.obsfucation_data.seed2,
-                seed3: !self.obsfucation_data.seed3,
+                // TODO: restore for 7.4
+                // obsfucation_mode: if config.world.enable_packet_obsfucation {
+                //     OBFUSCATION_ENABLED_MODE
+                // } else {
+                //     0
+                // },
+                // seed1: !self.obsfucation_data.seed1,
+                // seed2: !self.obsfucation_data.seed2,
+                // seed3: !self.obsfucation_data.seed3,
                 festivals_id1: config.world.active_festivals,
                 festivals_id2: config.world.active_festivals,
                 ..Default::default()

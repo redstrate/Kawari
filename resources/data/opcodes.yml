@@ -2,7 +2,7 @@ ServerZoneIpcType:
   - name: InitZone
     comment: "Inform the client which zone to load, along with some other miscellaneous information."
     opcode: 302
-    size: 112
+    size: 136
   - name: ActorControlSelf
     comment: "Control player actor state, from playing emotes to making them invisible."
     opcode: 906
@@ -411,6 +411,10 @@ ServerZoneIpcType:
     comment: Sent to the client to initialize the Portraits window.
     opcode: 903
     size: 56
+  - name: InitializeObfuscation
+    comment: Initialize the packet obfuscation system.
+    opcode: 852
+    size: 16
 ClientZoneIpcType:
   - name: InitRequest
     comment: "Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)"

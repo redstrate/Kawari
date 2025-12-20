@@ -137,8 +137,11 @@ pub struct PlayerStatus {
     #[br(count = CLASSJOB_ARRAY_SIZE)]
     #[bw(pad_size_to = CLASSJOB_ARRAY_SIZE * 2)]
     pub levels: Vec<u16>,
-    #[br(count = 264)]
-    #[bw(pad_size_to = 264)]
+    pub festivals_id1: [u16; 4],
+    pub festivals_phase1: [u16; 4],
+    pub festivals_unk1: [u16; 4],
+    #[br(count = 240)]
+    #[bw(pad_size_to = 240)]
     pub unknown194: Vec<u8>,
     #[br(count = 12)]
     #[bw(pad_size_to = 12 * 2)]

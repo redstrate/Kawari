@@ -635,6 +635,19 @@ pub enum ServerZoneIpcData {
     PortraitsInformation {
         unk: [u8; 56],
     },
+    InitializeObfuscation {
+        unk_before: [u8; 6],
+        /// Zero means "no obsfucation" (not really, but functionally yes.)
+        /// To enable obsfucation, you need to set this to a constant that changes every patch. See lib.rs for the constant.
+        obsfucation_mode: u8,
+        /// First seed used in deobsfucation on the client side.
+        seed1: u8,
+        /// Second seed used in deobsfucation on the client side.
+        seed2: u8,
+        #[brw(pad_before = 3)] // seems empty
+        /// Third seed used in deobsfucation on the client side.
+        seed3: u32,
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -988,6 +1001,13 @@ mod tests {
                 available_content: Vec::default(),
             },
             ServerZoneIpcData::PortraitsInformation { unk: [0; 56] },
+            ServerZoneIpcData::InitializeObfuscation {
+                unk_before: [0; 6],
+                obsfucation_mode: 0,
+                seed1: 0,
+                seed2: 0,
+                seed3: 0,
+            },
         ];
 
         for data in &ipc_types {

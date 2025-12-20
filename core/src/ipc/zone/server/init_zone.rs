@@ -60,36 +60,37 @@ pub struct InitZone {
     pub territory_type: u16,
     /// The id of the instanced area, has no effect if non-zero and flags doesn't contain `INSTANCED_AREA`.
     pub instance_id: u16,
+    /// Index into the ContentFinderCondition Excel sheet.
     pub content_finder_condition_id: u16,
-    pub transition_territory_filter_key: u32,
+    /// Uses the ambient sound from this row in the TerritoryIntendedUse Excel sheet. Isn't used for anything else.
+    pub ambient_territory_intended_use: u32,
     /// Unknown purpose.
-    pub layout_id: u32,
+    pub unk_setter: u32,
     #[brw(pad_after = 1)]
-    /// Index into the Weather Excel sheet. Currently it's read as a byte, however it's more than likely going to change into a u16 in the future.
+    /// Index into the Weather Excel sheet.
+    /// NOTE: Currently it's read as a byte, however it's more than likely going to change into a u16 in the future.
     pub weather_id: u8,
+    /// Various flags that can be set.
     pub flags: InitZoneFlags,
-    pub unk_bitmask1: u8, // unknown purpose, seems to always be 170 for me. 168 in instanced areas.
-    /// Zero means "no obsfucation" (not really, but functionally yes.)
-    /// To enable obsfucation, you need to set this to a constant that changes every patch. See lib.rs for the constant.
-    pub obsfucation_mode: u8,
-    /// First seed used in deobsfucation on the client side.
-    pub seed1: u8,
-    /// Second seed used in deobsfucation on the client side.
-    pub seed2: u8,
-    /// Third seed used in deobsfucation on the client side.
-    pub seed3: u32,
-    pub unk7: [u8; 18],
+    /// Unknown purpose, seems to always be 170 for me. 168 in instanced areas.
+    pub unk_bitmask1: u8,
+    /// Seems to only matter for content replay.
+    pub input_timer_related: u8,
+    pub unk7: [u8; 16],
     /// Might be the festivals active in the current zone? Unsure.
     pub festivals_id1: [u16; 4],
     pub festivals_phase1: [u16; 4],
+    pub festivals_unk1: [u16; 8],
     /// Might be festivals active on the current server? Unsure.
     pub festivals_id2: [u16; 4],
     pub festivals_phase2: [u16; 4],
+    pub festivals_unk2: [u16; 8],
     pub unk8_9: [u8; 2],
     /// This gives a hint to level streaming so it can preload this area.
     pub position: Position,
-    pub unk8: [u32; 4],
-    pub unk9: u32,
+    #[br(count = 20)]
+    #[bw(pad_size_to = 20)]
+    pub unk_end: Vec<u8>,
 }
 
 #[cfg(test)]
@@ -111,12 +112,12 @@ mod tests {
         let mut buffer = Cursor::new(&buffer);
 
         let init_zone = InitZone::read_le(&mut buffer).unwrap();
-        assert_eq!(init_zone.server_id, 1);
-        assert_eq!(init_zone.territory_type, 182);
+        assert_eq!(init_zone.server_id, 17);
+        assert_eq!(init_zone.territory_type, 144);
         assert_eq!(init_zone.instance_id, 0);
         assert_eq!(init_zone.weather_id, 2);
-        assert_eq!(init_zone.position.x, 40.519722);
-        assert_eq!(init_zone.position.y, 4.0);
-        assert_eq!(init_zone.position.z, -150.33124);
+        assert_eq!(init_zone.position.x, -33.66853);
+        assert_eq!(init_zone.position.y, 0.044279873);
+        assert_eq!(init_zone.position.z, 12.595009);
     }
 }
