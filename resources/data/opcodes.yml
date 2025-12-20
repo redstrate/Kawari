@@ -534,7 +534,7 @@ ClientZoneIpcType:
     size: 16
   - name: EventReturnHandler4
     comment: Unknown purpose.
-    opcode: 301
+    opcode: 906
     size: 24
   - name: UnkCall2
     comment: "Unsure the true purpose of this, but it's needed for the Unending Journey to function."
