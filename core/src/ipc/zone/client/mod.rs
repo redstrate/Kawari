@@ -74,19 +74,7 @@ pub enum ClientZoneIpcData {
         unk: [u8; 72],
     },
     ClientTrigger(ClientTrigger),
-    Unk3 {
-        // TODO: full of possibly interesting information
-        unk: [u8; 8],
-    },
-    Unk4 {
-        // TODO: full of possibly interesting information
-        unk: [u8; 8],
-    },
     SetSearchInfoHandler {
-        // TODO: full of possibly interesting information
-        unk: [u8; 8],
-    },
-    Unk5 {
         // TODO: full of possibly interesting information
         unk: [u8; 8],
     },
@@ -126,9 +114,6 @@ pub enum ClientZoneIpcData {
         landset_index: i32,
     },
     ActionRequest(ActionRequest),
-    Unk16 {
-        unk: [u8; 8], // TODO: unknown
-    },
     PingSync {
         timestamp: u32,
         /// Sapphire calls it this, but it never seems to have the player's actor id or any values resembling ids of any sort in it?
@@ -138,18 +123,12 @@ pub enum ClientZoneIpcData {
         #[brw(pad_after = 4)]
         rotation: f32,
     },
-    Unk18 {
-        unk: [u8; 8], // TODO: unknown
-    },
     EventRelatedUnk {
         unk1: u32,
         unk2: u16,
         #[brw(pad_before = 2)]
         unk3: u32,
         unk4: u32,
-    },
-    Unk19 {
-        unk: [u8; 16], // TODO: unknown
     },
     ItemOperation(ItemOperation),
     StartTalkEvent {
@@ -395,10 +374,7 @@ mod tests {
             },
             ClientZoneIpcData::FinishLoading { unk: [0; 72] },
             ClientZoneIpcData::ClientTrigger(ClientTrigger::default()),
-            ClientZoneIpcData::Unk3 { unk: [0; 8] },
-            ClientZoneIpcData::Unk4 { unk: [0; 8] },
             ClientZoneIpcData::SetSearchInfoHandler { unk: [0; 8] },
-            ClientZoneIpcData::Unk5 { unk: [0; 8] },
             ClientZoneIpcData::SocialListRequest(SocialListRequest::default()),
             ClientZoneIpcData::UpdatePositionHandler {
                 rotation: 0.0,
@@ -424,21 +400,18 @@ mod tests {
                 landset_index: 0,
             },
             ClientZoneIpcData::ActionRequest(ActionRequest::default()),
-            ClientZoneIpcData::Unk16 { unk: [0; 8] },
             ClientZoneIpcData::PingSync {
                 timestamp: 0,
                 origin_entity_id: 0,
                 position: Position::default(),
                 rotation: 0.0,
             },
-            ClientZoneIpcData::Unk18 { unk: [0; 8] },
             ClientZoneIpcData::EventRelatedUnk {
                 unk1: 0,
                 unk2: 0,
                 unk3: 0,
                 unk4: 0,
             },
-            ClientZoneIpcData::Unk19 { unk: [0; 16] },
             ClientZoneIpcData::ItemOperation(ItemOperation::default()),
             ClientZoneIpcData::StartTalkEvent {
                 actor_id: ObjectTypeId::default(),

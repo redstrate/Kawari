@@ -39,30 +39,14 @@ ServerZoneIpcType:
     comment: "Displays a purple server notice message in the chat window, or in some cases, on-screen. Usually used for login messages and imminent maintenance notices."
     opcode: 660
     size: 776
-  - name: Unk8
-    comment: Unknown purpose.
-    opcode: 500
-    size: 808
   - name: LinkShellInformation
     comment: "Unknown, but seems to contain information on cross-world linkshells"
     opcode: 544
     size: 456
-  - name: Unk11
-    comment: Unknown purpose.
-    opcode: 214
-    size: 32
   - name: PrepareZoning
     comment: "Tells the client how to display next loading screen, e.g. how long it should fade."
     opcode: 962
     size: 16
-  - name: Unk15
-    comment: Unknown purpose.
-    opcode: 759
-    size: 16
-  - name: Unk16
-    comment: Unknown purpose.
-    opcode: 667
-    size: 136
   - name: ActorControl
     comment: Unknown purpose.
     opcode: 216
@@ -440,22 +424,6 @@ ClientZoneIpcType:
     comment: "Sent for a variety of actions from the client, e.g. sheathing a weapon."
     opcode: 847
     size: 32
-  - name: Unk3
-    comment: Unknown purpose.
-    opcode: 521
-    size: 8
-  - name: Unk4
-    comment: Unknown purpose.
-    opcode: 632
-    size: 8
-  - name: Unk18
-    comment: Unknown purpose.
-    opcode: 905
-    size: 8
-  - name: Unk5
-    comment: Unknown purpose.
-    opcode: 695
-    size: 8
   - name: SocialListRequest
     comment: Sent by the client when it requests the friends list and other related info.
     opcode: 616
@@ -488,10 +456,6 @@ ClientZoneIpcType:
     comment: Sent by the client when a character performs an action.
     opcode: 836
     size: 32
-  - name: Unk16
-    comment: Unknown purpose.
-    opcode: 462
-    size: 8
   - name: PingSync
     comment: "Occasionally sent by the client, purpose is unknown."
     opcode: 726
@@ -503,10 +467,6 @@ ClientZoneIpcType:
   - name: EventRelatedUnk
     comment: Unknown purpose.
     opcode: 919
-    size: 16
-  - name: Unk19
-    comment: Unknown purpose.
-    opcode: 387
     size: 16
   - name: ItemOperation
     comment: Unknown purpose.

@@ -759,17 +759,8 @@ async fn client_loop(
                                                     }
                                                 }
                                             }
-                                            ClientZoneIpcData::Unk3 { .. } => {
-                                                // no-op
-                                            }
-                                            ClientZoneIpcData::Unk4 { .. } => {
-                                                // no-op
-                                            }
                                             ClientZoneIpcData::SetSearchInfoHandler { .. } => {
                                                 tracing::info!("Recieved SetSearchInfoHandler!");
-                                            }
-                                            ClientZoneIpcData::Unk5 { .. } => {
-                                                // no-op
                                             }
                                             ClientZoneIpcData::SocialListRequest(request) => {
                                                 connection.handle.send(ToServer::RequestSocialList(connection.id, connection.player_data.actor_id, connection.player_data.party_id, request.clone())).await;
@@ -948,9 +939,6 @@ async fn client_loop(
                                                     ))
                                                     .await;
                                             }
-                                            ClientZoneIpcData::Unk16 { .. } => {
-                                                // no-op
-                                            }
                                             ClientZoneIpcData::PingSync { timestamp, .. } => {
                                                 // this is *usually* sent in response, but not always
                                                 let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PingSyncReply {
@@ -958,9 +946,6 @@ async fn client_loop(
                                                     transmission_interval: 333, // always this for some reason
                                                 });
                                                 connection.send_ipc_self(ipc).await;
-                                            }
-                                            ClientZoneIpcData::Unk18 { .. } => {
-                                                // no-op
                                             }
                                             ClientZoneIpcData::EventRelatedUnk {
                                                 unk1,
@@ -971,9 +956,6 @@ async fn client_loop(
                                                 tracing::info!(
                                                     "Recieved EventRelatedUnk! {unk1} {unk2} {unk3} {unk4}"
                                                 );
-                                            }
-                                            ClientZoneIpcData::Unk19 { .. } => {
-                                                // no-op
                                             }
                                             ClientZoneIpcData::ItemOperation(action) => {
                                                 tracing::info!("Client is modifying inventory! {action:#?}");
