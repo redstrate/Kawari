@@ -23,6 +23,7 @@ use icarus::ParamGrow::ParamGrowSheet;
 use icarus::PlaceName::PlaceNameSheet;
 use icarus::PreHandler::PreHandlerSheet;
 use icarus::Quest::QuestSheet;
+use icarus::SpecialShop::SpecialShopSheet;
 use icarus::SwitchTalkVariation::{SwitchTalkVariationRow, SwitchTalkVariationSheet};
 use icarus::TerritoryType::TerritoryTypeSheet;
 use icarus::TopicSelect::TopicSelectSheet;
@@ -494,6 +495,15 @@ impl GameData {
         let sheet = GilShopItemSheet::read_from(&mut self.resource, Language::None)?;
         let row = sheet.get_subrow(gilshop_id, index)?;
         let item_id = row.Item().into_i32()?;
+
+        self.get_item_info(ItemInfoQuery::ById(*item_id as u32))
+    }
+
+    /// Gets the item and its cost from the specified SpecialShop.
+    pub fn get_specialshop_item(&mut self, gilshop_id: u32, index: u16) -> Option<ItemInfo> {
+        let sheet = SpecialShopSheet::read_from(&mut self.resource, Language::None)?;
+        let row = sheet.get_row(gilshop_id)?;
+        let item_id = row.Item()[index as usize].Item[0].into_i32()?; // TODO: why are there two items?
 
         self.get_item_info(ItemInfoQuery::ById(*item_id as u32))
     }

@@ -1340,6 +1340,10 @@ async fn client_loop(
                                             ClientZoneIpcData::Trade { .. } => {
                                                 tracing::info!("Trading is unimplemented");
                                             }
+                                            ClientZoneIpcData::BuyInclusionShop { shop_id, special_shop_id, item_index, .. } => {
+                                                tracing::info!("Buying item {item_index} from {special_shop_id}...");
+                                                connection.buy_special_shop(*shop_id, *special_shop_id, *item_index).await;
+                                            }
                                             ClientZoneIpcData::Unknown { unk } => {
                                                 tracing::warn!("Unknown Zone packet {:?} recieved ({} bytes), this should be handled!", data.header.op_code, unk.len());
                                             }

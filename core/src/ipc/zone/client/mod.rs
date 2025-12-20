@@ -340,6 +340,26 @@ pub enum ClientZoneIpcData {
     Trade {
         unk: [u8; 16],
     },
+    BuyInclusionShop {
+        /// ID of a row in the InclusionShop Excel sheet.
+        shop_id: u32,
+        /// Unknown purpose, I see 1?
+        unk1: u32,
+        /// The `shop_id` again.
+        shop_id_again: u32,
+        /// The category as seen in the InclusionShop Excel sheet.
+        category: u32,
+        /// ID of a row in the SpecialShop Excel sheet.
+        special_shop_id: u32,
+        /// Which item from the SpecialShop is selected.
+        item_index: u32,
+        /// Quantity? I see 1.
+        unk2: u32,
+        /// Unknown purpose, I see 9999?
+        unk3: u32,
+        // Dunno.
+        unk4: [u8; 40],
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -542,6 +562,17 @@ mod tests {
             },
             ClientZoneIpcData::EnterTerritoryEvent { event_id: 0 },
             ClientZoneIpcData::Trade { unk: [0; 16] },
+            ClientZoneIpcData::BuyInclusionShop {
+                shop_id: 0,
+                unk1: 0,
+                shop_id_again: 0,
+                category: 0,
+                special_shop_id: 0,
+                item_index: 0,
+                unk2: 0,
+                unk3: 0,
+                unk4: [0; 40],
+            },
         ];
 
         for data in &ipc_types {

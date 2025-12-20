@@ -628,6 +628,10 @@ ClientZoneIpcType:
     comment: Sent by the client while trading.
     opcode: 817
     size: 16
+  - name: BuyInclusionShop
+    comment: "Sent by the client while buying from an InclusionShop (usually called 'Item Exchange' in-game.)"
+    opcode: 359
+    size: 72
 ServerLobbyIpcType:
   - name: NackReply
     comment: Sent by the server to indicate an lobby error occured.

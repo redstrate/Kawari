@@ -252,4 +252,50 @@ impl ZoneConnection {
         self.send_ipc_self(ipc).await;
         self.player_data.shop_sequence += 1;
     }
+
+    pub async fn buy_special_shop(&mut self, event_id: u32, special_shop_id: u32, item_index: u32) {
+        // TODO: decrease currency
+        // TODO: figure out why it freezes still
+
+        let result;
+        {
+            let mut game_data = self.gamedata.lock();
+            result = game_data.get_specialshop_item(special_shop_id, item_index as u16);
+        }
+
+        let item_quantity = 1;
+
+        if let Some(item_info) = result
+            && let Some(add_result) = self
+                .player_data
+                .inventory
+                .add_in_next_free_slot(Item::new(item_info.clone(), item_quantity))
+        {
+            self.send_gilshop_item_update(
+                add_result.container,
+                add_result.index,
+                add_result.quantity,
+                item_info.id,
+            )
+            .await;
+            self.send_gilshop_ack(
+                special_shop_id,
+                item_info.id,
+                item_quantity,
+                item_info.price_mid,
+                LogMessageType::ItemBought,
+            )
+            .await;
+            let target_id = self.player_data.target_actorid;
+            // See GenericShopkeeper.lua for information about this scene, the flags, and the params.
+            self.event_scene(
+                &target_id,
+                event_id,
+                10,
+                SceneFlags::from_bits(8193).unwrap(),
+                vec![1, 100],
+            )
+            .await;
+        }
+    }
 }
