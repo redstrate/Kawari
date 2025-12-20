@@ -21,6 +21,7 @@
 # Reverse Engineering
 - [Packets](packets/intro.md)
   - [Setting up Chronofoil](packets/chronofoil.md)
+  - [Setting up TemporalStasis](packets/temporalstasis.md)
   - [Dissection](packets/dissection.md)
   - [Tips](packets/tips.md)
 

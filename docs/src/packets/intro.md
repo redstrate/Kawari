@@ -2,6 +2,8 @@
 
 If you want to help reverse engineer the network layer of FFXIV, you'll first need to setup a packet capturing solution. We will go over using [Project Chronofoil](https://github.com/ProjectChronofoil/), this is the easiest solution but requires Dalamud.
 
+In situations where you can't or don't want to use Dalamud, there is a standalone proxy called [TemporalStasis](https://github.com/NotNite/TemporalStasis.Chronofoil).
+
 We also won't go over the actual packet structure of the game. If you wish to familiarize yourself, [see this article on xiv.dev](https://xiv.dev/network/packet-structure).
 
-To begin, start by reading [our guide on setting up Chronofoil](chronofoil.md).
+To begin, start by reading [our guide on setting up Chronofoil](chronofoil.md) or [TemporalStasis](temporalstasis.md).
