@@ -224,6 +224,13 @@ pub enum ClientTriggerCommand {
         id: u32, // not specific to a class/job
     },
 
+    /// Sent whenever the client requests to duel another player.
+    #[brw(magic = 2200u32)]
+    RequestDuel {
+        /// Whom to duel with.
+        actor_id: ObjectId,
+    },
+
     /// Sent whenever the Glamour Plates window is opened or closed.
     #[brw(magic = 2356u32)]
     ToggleGlamourPlatesWindow {
