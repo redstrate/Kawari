@@ -304,8 +304,13 @@ pub struct PlayerStatus {
     #[bw(pad_size_to = FRONTLINE_ARRAY_SIZE)]
     pub unlocked_frontline: Vec<u8>,
 
-    // probably more unlocks?
-    pub unk_padding: [u8; 4],
+    #[br(count = RAID_ARRAY_SIZE)]
+    #[bw(pad_size_to = RAID_ARRAY_SIZE)]
+    pub cleared_raids: Vec<u8>,
+
+    #[br(count = DUNGEON_ARRAY_SIZE)]
+    #[bw(pad_size_to = DUNGEON_ARRAY_SIZE)]
+    pub cleared_dungeons: Vec<u8>,
 
     // NOTE: all of the following fields are wrong in some way!
     #[br(count = GUILDHEST_ARRAY_SIZE)]
@@ -316,14 +321,6 @@ pub struct PlayerStatus {
     #[bw(pad_size_to = TRIAL_ARRAY_SIZE)]
     pub cleared_trials: Vec<u8>,
 
-    #[br(count = DUNGEON_ARRAY_SIZE)]
-    #[bw(pad_size_to = DUNGEON_ARRAY_SIZE)]
-    pub cleared_dungeons: Vec<u8>,
-
-    #[br(count = RAID_ARRAY_SIZE)]
-    #[bw(pad_size_to = RAID_ARRAY_SIZE)]
-    pub cleared_raids: Vec<u8>,
-
     // TODO: i don't think this is actually a thing?
     #[br(count = CRYSTALLINE_CONFLICT_ARRAY_SIZE)]
     #[bw(pad_size_to = CRYSTALLINE_CONFLICT_ARRAY_SIZE)]
@@ -333,10 +330,8 @@ pub struct PlayerStatus {
     #[bw(pad_size_to = FRONTLINE_ARRAY_SIZE)]
     pub cleared_frontline: Vec<u8>,
 
-    pub unk_padding2: [u8; 2],
-
     // FIXME: some of the following bytes might be beginner training/masked carnivale
-    #[br(count = 17)]
-    #[bw(pad_size_to = 17)]
+    #[br(count = 23)]
+    #[bw(pad_size_to = 23)]
     pub unknown949: Vec<u8>,
 }
