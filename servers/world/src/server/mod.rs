@@ -918,7 +918,13 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         );
 
                         let mut network = network.lock();
-                        network.send_to_all(None, msg, DestinationNetwork::ZoneClients);
+                        let data = data.lock();
+                        network.send_in_range(
+                            from_actor_id,
+                            &data,
+                            msg,
+                            DestinationNetwork::ZoneClients,
+                        );
                     }
                     ClientTriggerCommand::ChangePose { unk1, pose } => {
                         let msg = FromServer::ActorControl(
@@ -932,7 +938,13 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         );
 
                         let mut network = network.lock();
-                        network.send_to_all(None, msg, DestinationNetwork::ZoneClients);
+                        let data = data.lock();
+                        network.send_in_range(
+                            from_actor_id,
+                            &data,
+                            msg,
+                            DestinationNetwork::ZoneClients,
+                        );
                     }
                     ClientTriggerCommand::ReapplyPose { unk1, pose } => {
                         let msg = FromServer::ActorControl(
@@ -946,7 +958,13 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         );
 
                         let mut network = network.lock();
-                        network.send_to_all(None, msg, DestinationNetwork::ZoneClients);
+                        let data = data.lock();
+                        network.send_in_range(
+                            from_actor_id,
+                            &data,
+                            msg,
+                            DestinationNetwork::ZoneClients,
+                        );
                     }
                     ClientTriggerCommand::Emote(emote_info) => {
                         let msg = FromServer::ActorControlTarget(
@@ -957,7 +975,13 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         );
 
                         let mut network = network.lock();
-                        network.send_to_all(None, msg, DestinationNetwork::ZoneClients);
+                        let data = data.lock();
+                        network.send_in_range(
+                            from_actor_id,
+                            &data,
+                            msg,
+                            DestinationNetwork::ZoneClients,
+                        );
                     }
                     ClientTriggerCommand::ToggleWeapon { shown, unk_flag } => {
                         let msg = FromServer::ActorControl(
@@ -971,7 +995,13 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         );
 
                         let mut network = network.lock();
-                        network.send_to_all(None, msg, DestinationNetwork::ZoneClients);
+                        let data = data.lock();
+                        network.send_in_range(
+                            from_actor_id,
+                            &data,
+                            msg,
+                            DestinationNetwork::ZoneClients,
+                        );
                     }
                     ClientTriggerCommand::ManuallyRemoveEffect {
                         effect_id,
@@ -1065,7 +1095,12 @@ pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::i
                         );
 
                         let mut network = network.lock();
-                        network.send_to_all(None, msg, DestinationNetwork::ZoneClients);
+                        network.send_in_range(
+                            from_actor_id,
+                            &data,
+                            msg,
+                            DestinationNetwork::ZoneClients,
+                        );
                     }
                     _ => tracing::warn!("Server doesn't know what to do with {:#?}", trigger),
                 }

@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::{
     ClientHandle, ClientId, FromServer,
     common::SpawnKind,
-    server::{ClientState, actor::NetworkedActor, instance::Instance, social::Party},
+    server::{ClientState, WorldServer, actor::NetworkedActor, instance::Instance, social::Party},
 };
 use kawari::{
     common::{INVALID_OBJECT_ID, ObjectId},
@@ -105,6 +105,51 @@ impl NetworkState {
             if let Some(id_to_skip) = id_to_skip
                 && id == id_to_skip
             {
+                continue;
+            }
+
+            if handle.send(message.clone()).is_err() {
+                if destination == DestinationNetwork::ZoneClients {
+                    self.to_remove.push(id);
+                } else {
+                    self.to_remove_chat.push(id);
+                }
+            }
+        }
+    }
+
+    /// Sends a message to every client in range of `actor_id` but not including it.
+    pub fn send_in_range(
+        &mut self,
+        actor_id: ObjectId,
+        data: &WorldServer,
+        message: FromServer,
+        destination: DestinationNetwork,
+    ) {
+        let Some(instance) = data.find_actor_instance(actor_id) else {
+            return;
+        };
+
+        let clients = match destination {
+            DestinationNetwork::ZoneClients => &mut self.clients,
+            DestinationNetwork::ChatClients => &mut self.chat_clients,
+        };
+
+        for (id, (handle, state)) in clients {
+            let id = *id;
+
+            // Don't include the actor itself
+            if actor_id == handle.actor_id {
+                continue;
+            }
+
+            // Skip any clients not in our instance
+            if !instance.actors.contains_key(&handle.actor_id) {
+                continue;
+            }
+
+            // Skip anything that hasn't spawned us
+            if !state.has_spawned(actor_id) {
                 continue;
             }
 
