@@ -277,4 +277,12 @@ impl ZoneConnection {
         }));
         self.send_ipc_self(ipc).await;
     }
+
+    pub async fn discover_location(&mut self, map_id: u32, map_part_id: u32) {
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::LocationDiscovered {
+            map_id,
+            map_part_id,
+        });
+        self.send_ipc_self(ipc).await;
+    }
 }

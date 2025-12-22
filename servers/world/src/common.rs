@@ -151,6 +151,8 @@ pub enum FromServer {
     NewStatusEffects(StatusEffects),
     /// An event object was spawned.
     ObjectSpawn(ObjectSpawn),
+    /// Inform the client about the location they discovered, so their map can be revealed.
+    LocationDiscovered(u32, u32),
 }
 
 #[derive(Debug, Clone)]
@@ -282,6 +284,8 @@ pub enum ToServer {
     SetHP(ClientId, ObjectId, u32),
     /// Inform the server to update our MP to this value.
     SetMP(ClientId, ObjectId, u16),
+    /// The client discovered a new location in this zone.
+    NewLocationDiscovered(ClientId, u32, Position, u16),
 }
 
 #[derive(Clone, Debug)]

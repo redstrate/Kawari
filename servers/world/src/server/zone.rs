@@ -59,8 +59,12 @@ pub struct MapRange {
     pub duel: bool,
     /// Whether this map range represents a gimmick, like a jumping pad.
     pub gimmick: Option<MapGimmick>,
-    /// Game Object ID.
+    /// Game Object ID. Also known as the layout ID. The client sends this when discovering new areas.
     pub instance_id: u32,
+    /// Whether this map range is discoverable or not.
+    pub discovery_enabled: bool,
+    /// The MapRange's discovery index. Unclear if this is the same as DiscoveryIndex on the Map sheet.
+    pub discovery_id: u8,
 }
 
 /// Represents a loaded zone
@@ -159,6 +163,12 @@ impl Zone {
                                 duel: false,
                                 gimmick: None,
                                 instance_id: object.instance_id,
+                                discovery_enabled: map_range.discovery_enabled,
+                                discovery_id: if map_range.discovery_enabled {
+                                    map_range.discovery_id
+                                } else {
+                                    255
+                                },
                             });
                         }
                         if let LayerEntryData::EventRange(event_range) = &object.data {
@@ -178,6 +188,8 @@ impl Zone {
                                     && event_range.unk_flags[5] == 1,
                                 gimmick: None,
                                 instance_id: object.instance_id,
+                                discovery_enabled: false,
+                                discovery_id: 255,
                             });
                         }
                     }
@@ -798,6 +810,32 @@ pub fn handle_zone_messages(
                 });
             } else {
                 send_new_position(*from_id, network, transform, *fade_out);
+            }
+        }
+        ToServer::NewLocationDiscovered(from_id, layout_id, _pos, zone_id) => {
+            let mut game_data = game_data.lock();
+            let data = data.lock();
+            let mut network = network.lock();
+
+            for instance in &data.instances {
+                if instance.zone.id == *zone_id {
+                    for range in &instance.zone.map_ranges {
+                        if range.instance_id == *layout_id && range.discovery_enabled {
+                            // TODO: Check if the player is actually in this range?
+                            // TODO: This is the "old" style of map discovery where every chunk is revealed one by one as the player runs into them. It's currently unclear how retail reveals the entire map at once. As an example, for North Shroud, retail sends map_part_id 164, which reveals its entire map. When we enter North Shroud from Old Gridania, Kawari currently sends 1.
+                            let map_id = game_data.get_territory_info_map_data(*zone_id);
+                            let msg = FromServer::LocationDiscovered(
+                                map_id.into(),
+                                range.discovery_id.into(),
+                            );
+                            network.send_to(*from_id, msg, DestinationNetwork::ZoneClients);
+                            return;
+                        }
+                    }
+
+                    // If we somehow didn't get any discoverable ranges, exit early. Is that even possible?
+                    break;
+                }
             }
         }
         _ => {}
