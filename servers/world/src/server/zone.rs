@@ -823,7 +823,15 @@ pub fn handle_zone_messages(
                         if range.instance_id == *layout_id && range.discovery_enabled {
                             // TODO: Check if the player is actually in this range?
                             // TODO: This is the "old" style of map discovery where every chunk is revealed one by one as the player runs into them. It's currently unclear how retail reveals the entire map at once. As an example, for North Shroud, retail sends map_part_id 164, which reveals its entire map. When we enter North Shroud from Old Gridania, Kawari currently sends 1.
-                            let map_id = game_data.get_territory_info_map_data(*zone_id);
+                            let Some(map_id) = game_data.get_territory_info_map_data(*zone_id)
+                            else {
+                                tracing::error!(
+                                    "Unable to get Map column data from TerritoryInfo sheet for zone id {}",
+                                    zone_id
+                                );
+                                return;
+                            };
+
                             let msg = FromServer::LocationDiscovered(
                                 map_id.into(),
                                 range.discovery_id.into(),
