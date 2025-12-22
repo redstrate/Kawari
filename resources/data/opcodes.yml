@@ -530,7 +530,7 @@ ClientZoneIpcType:
     size: 24
   - name: NewDiscovery
     comment: Sent by the client when they discover a new location on the map.
-    opcode: 496
+    opcode: 776
     size: 16
   - name: GMCommandName
     comment: Sent by the client when they send a GM command. This can only be sent by the client if they are sent a GM rank.

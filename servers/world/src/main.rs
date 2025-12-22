@@ -1236,11 +1236,7 @@ async fn client_loop(
                                             ClientZoneIpcData::NewDiscovery { layout_id, pos } => {
                                                 tracing::info!("Client discovered a new location on {:?} at {:?}!", layout_id, pos);
 
-                                                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::LocationDiscovered {
-                                                    map_part_id: 162, // I'm not sure what this?
-                                                    map_id: lua_player.zone_data.map_id as u32,
-                                                });
-                                                connection.send_ipc_self(ipc).await;
+                                                connection.handle.send(ToServer::NewLocationDiscovered(connection.id, *layout_id, *pos, connection.player_data.zone_id)).await;
                                             }
                                             ClientZoneIpcData::RequestBlacklist(request) => {
                                                 // TODO: Actually implement this beyond simply sending a blank list
@@ -1425,6 +1421,7 @@ async fn client_loop(
                     FromServer::NewTasks(mut tasks) => connection.queued_tasks.append(&mut tasks),
                     FromServer::NewStatusEffects(status_effects) => lua_player.status_effects = status_effects,
                     FromServer::ObjectSpawn(object) => connection.spawn_object(object).await,
+                    FromServer::LocationDiscovered(map_id, map_part_id) => connection.discover_location(map_id, map_part_id).await,
                     _ => { tracing::error!("Zone connection {:#?} received a FromServer message we don't care about: {:#?}, ensure you're using the right client network or that you've implemented a handler for it if we actually care about it!", client_handle.id, msg); }
                 },
                 None => break,
