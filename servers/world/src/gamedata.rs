@@ -781,9 +781,9 @@ impl GameData {
     }
 
     /// Returns the Map column value on the TerritoryType sheet. Used for revealing portions of ingame maps.
-    pub fn get_territory_info_map_data(&mut self, zone_id: u16) -> u16 {
-        let row = self.territory_type_sheet.get_row(zone_id.into()).unwrap();
-        *row.Map().into_u16().unwrap()
+    pub fn get_territory_info_map_data(&mut self, zone_id: u16) -> Option<u16> {
+        let row = self.territory_type_sheet.get_row(zone_id.into())?;
+        row.Map().into_u16().copied()
     }
 }
 
