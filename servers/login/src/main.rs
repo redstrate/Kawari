@@ -526,7 +526,7 @@ async fn manual_generate_sid(
         let session_is_valid = state
             .database
             .lock()
-            .is_session_valid(&service, &session_id.to_string());
+            .is_session_valid(ACCOUNT_MANAGEMENT_SERVICE, session_id.value());
 
         if session_is_valid {
             let new_sid = state
