@@ -30,7 +30,7 @@ use icarus::TopicSelect::TopicSelectSheet;
 use icarus::WarpLogic::WarpLogicSheet;
 use icarus::WeatherRate::WeatherRateSheet;
 use icarus::{Tribe::TribeSheet, Warp::WarpSheet};
-use physis::common::{Language, Platform};
+use physis::common::Language;
 use physis::resource::{Resource, ResourceResolver, SqPackResource, UnpackedResource};
 
 use kawari::common::timestamp_secs;
@@ -104,7 +104,7 @@ impl GameData {
 
         // setup resolvers
         let mut sqpack_resource = SqPackResourceSpy::from(
-            SqPackResource::from_existing(Platform::Win32, &config.filesystem.game_path),
+            SqPackResource::from_existing(&config.filesystem.game_path),
             &config.filesystem.unpack_path,
         );
 
@@ -189,7 +189,7 @@ impl GameData {
 
     /// Gets the starting city-state from a given class/job id.
     pub fn get_citystate(&mut self, classjob_id: u16) -> Option<u8> {
-        let sheet = ClassJobSheet::read_from(&mut self.resource, Language::English)?;
+        let sheet = ClassJobSheet::read_from(&mut self.resource, Language::English).ok()?;
         let row = sheet.get_row(classjob_id as u32)?;
 
         row.StartingTown().into_u8().copied()
@@ -304,7 +304,7 @@ impl GameData {
     }
 
     pub fn get_aetheryte(&mut self, aetheryte_id: u32) -> Option<(u32, u16)> {
-        let sheet = AetheryteSheet::read_from(&mut self.resource, Language::English)?;
+        let sheet = AetheryteSheet::read_from(&mut self.resource, Language::English).ok()?;
         let row = sheet.get_row(aetheryte_id)?;
 
         // TODO: just look in the level sheet?
@@ -342,7 +342,7 @@ impl GameData {
 
     /// Turn an equip slot category id into a slot for the equipped inventory
     pub fn get_equipslot_category(&mut self, equipslot_id: u8) -> Option<u16> {
-        let sheet = EquipSlotCategorySheet::read_from(&mut self.resource, Language::None)?;
+        let sheet = EquipSlotCategorySheet::read_from(&mut self.resource, Language::None).ok()?;
         let row = sheet.get_row(equipslot_id as u32)?;
 
         let main_hand = row.MainHand().into_i8()?;
@@ -484,7 +484,7 @@ impl GameData {
 
     /// Gets the job index for a given class.
     pub fn get_job_index(&mut self, classjob_id: u16) -> Option<u8> {
-        let sheet = ClassJobSheet::read_from(&mut self.resource, Language::English)?;
+        let sheet = ClassJobSheet::read_from(&mut self.resource, Language::English).ok()?;
         let row = sheet.get_row(classjob_id as u32)?;
 
         row.JobIndex().into_u8().cloned()
@@ -492,7 +492,7 @@ impl GameData {
 
     /// Gets the item and its cost from the specified shop.
     pub fn get_gilshop_item(&mut self, gilshop_id: u32, index: u16) -> Option<ItemInfo> {
-        let sheet = GilShopItemSheet::read_from(&mut self.resource, Language::None)?;
+        let sheet = GilShopItemSheet::read_from(&mut self.resource, Language::None).ok()?;
         let row = sheet.get_subrow(gilshop_id, index)?;
         let item_id = row.Item().into_i32()?;
 
@@ -501,7 +501,7 @@ impl GameData {
 
     /// Gets the item and its cost from the specified SpecialShop.
     pub fn get_specialshop_item(&mut self, gilshop_id: u32, index: u16) -> Option<ItemInfo> {
-        let sheet = SpecialShopSheet::read_from(&mut self.resource, Language::None)?;
+        let sheet = SpecialShopSheet::read_from(&mut self.resource, Language::None).ok()?;
         let row = sheet.get_row(gilshop_id)?;
         let item_id = row.Item()[index as usize].Item[0].into_i32()?; // TODO: why are there two items?
 
@@ -642,7 +642,8 @@ impl GameData {
         if let Some(row) = self.item_sheet.get_row(item_id) {
             let additional_data = row.AdditionalData().into_u32()?;
 
-            let item_action_sheet = ItemActionSheet::read_from(&mut self.resource, Language::None)?;
+            let item_action_sheet =
+                ItemActionSheet::read_from(&mut self.resource, Language::None).ok()?;
             let item_action_row =
                 item_action_sheet.get_row(row.ItemAction().into_u16().cloned()? as u32)?;
 
@@ -660,7 +661,7 @@ impl GameData {
 
     /// Returns the target event for a given PreHandler event.
     pub fn get_pre_handler_target(&mut self, pre_handler_id: u32) -> Option<u32> {
-        let sheet = PreHandlerSheet::read_from(&mut self.resource, Language::English)?;
+        let sheet = PreHandlerSheet::read_from(&mut self.resource, Language::English).ok()?;
         let row = sheet.get_row(pre_handler_id)?;
 
         Some(*row.Target().into_u32()?)
@@ -672,13 +673,14 @@ impl GameData {
         switch_talk_id: u32,
         subrow_id: u16,
     ) -> Option<SwitchTalkVariationRow> {
-        let sheet = SwitchTalkVariationSheet::read_from(&mut self.resource, Language::None)?;
+        let sheet = SwitchTalkVariationSheet::read_from(&mut self.resource, Language::None).ok()?;
         sheet.get_subrow(switch_talk_id, subrow_id)
     }
 
     /// Returns the target Transform Row ID for a given selected NPC. (Only applicable to the Halloween Transform NPC.)
     pub fn get_halloween_npc_transform(&mut self, npc_id: u32) -> Option<u16> {
-        let sheet = HalloweenNpcSelectSheet::read_from(&mut self.resource, Language::English)?;
+        let sheet =
+            HalloweenNpcSelectSheet::read_from(&mut self.resource, Language::English).ok()?;
         let row = sheet.get_row(npc_id)?;
 
         Some(*row.Transformation().into_u16()?)
@@ -697,7 +699,7 @@ impl GameData {
         topic_select_id: u32,
         selected_index: usize,
     ) -> Option<u32> {
-        let sheet = TopicSelectSheet::read_from(&mut self.resource, Language::English)?;
+        let sheet = TopicSelectSheet::read_from(&mut self.resource, Language::English).ok()?;
         let row = sheet.get_row(topic_select_id)?;
 
         Some(*row.Shop()[selected_index].into_u32()?)

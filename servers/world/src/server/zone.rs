@@ -7,7 +7,6 @@ use physis::{
         PopRangeInstanceObject, Transformation, TriggerBoxShape,
     },
     lvb::Lvb,
-    resource::Resource,
 };
 
 use crate::{
@@ -104,9 +103,7 @@ impl Zone {
 
         let path = format!("bg/{}.lvb", &bg_path);
         tracing::info!("Loading {}", path);
-        if let Some(lgb_file) = game_data.resource.read(&path) {
-            let lgb = Lvb::from_existing(&lgb_file).unwrap();
-
+        if let Ok(lvb) = game_data.resource.parsed::<Lvb>(&path) {
             let mut load_lgb = |path: &str| -> Option<LayerGroup> {
                 // Skip LGBs that aren't relevant for the server
                 if path.ends_with("bg.lgb")
@@ -116,26 +113,31 @@ impl Zone {
                     return None;
                 }
 
-                let lgb_file = game_data.resource.read(path)?;
+                let lgb = game_data.resource.parsed::<LayerGroup>(path);
+
                 tracing::info!("Loading {path}");
-                let lgb = LayerGroup::from_existing(&lgb_file);
-                if lgb.is_none() {
+                if let Err(e) = &lgb {
                     tracing::warn!(
-                        "Failed to parse {path}, this is most likely a bug in Physis and should be reported somewhere!"
+                        "Failed to parse {path}: {e}, this is most likely a bug in Physis and should be reported somewhere!"
                     )
                 }
-                lgb
+
+                lgb.ok()
             };
 
-            for path in &lgb.scns[0].header.path_layer_group_resources {
+            for path in &lvb.sections[0].lgb_paths {
                 if let Some(lgb) = load_lgb(path) {
                     zone.layer_groups.push(lgb);
                 }
             }
 
-            for layer_set in &lgb.scns[0].unk3.unk2 {
+            for layer_set in &lvb.sections[0].filters.filters {
                 // FIXME: this is wrong. I think there might be multiple, separate navimeshes in really big zones but I'm not sure yet.
-                zone.navimesh_path = layer_set.path_nvm.replace("/server/data/", "").to_string();
+                zone.navimesh_path = layer_set
+                    .nvm_path
+                    .value
+                    .replace("/server/data/", "")
+                    .to_string();
             }
         }
 

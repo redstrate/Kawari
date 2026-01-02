@@ -7,12 +7,12 @@ use icarus::TerritoryType::TerritoryTypeSheet;
 use kawari::config::get_config;
 use kawari_world::{Navmesh, NavmeshParams, NavmeshTile};
 use physis::{
-    common::{Language, Platform},
+    common::Language,
     layer::{LayerEntryData, LayerGroup, ModelCollisionType, Transformation},
     lvb::Lvb,
     model::MDL,
     pcb::{Pcb, ResourceNode},
-    resource::{Resource, SqPackResource},
+    resource::{ResourceResolver, SqPackResource},
     tera::{PlateModel, Terrain},
 };
 use recastnavigation_sys::{
@@ -35,9 +35,12 @@ fn main() {
 
     tracing::info!("Generating navmesh for zone {zone_id}, writing to {destination_path}!");
 
-    let mut sqpack_resource =
-        SqPackResource::from_existing(Platform::Win32, &config.filesystem.game_path);
-    let sheet = TerritoryTypeSheet::read_from(&mut sqpack_resource, Language::None).unwrap();
+    let mut resolver = ResourceResolver::new();
+    resolver.add_source(Box::new(SqPackResource::from_existing(
+        &config.filesystem.game_path,
+    )));
+
+    let sheet = TerritoryTypeSheet::read_from(&mut resolver, Language::None).unwrap();
     let Some(row) = sheet.get_row(zone_id as u32) else {
         tracing::error!("Invalid zone id {zone_id}!");
         return;
@@ -47,8 +50,7 @@ fn main() {
     let bg_path = row.Bg().into_string().unwrap();
 
     let path = format!("bg/{}.lvb", &bg_path);
-    let lvb_file = sqpack_resource.read(&path).unwrap();
-    let lvb = Lvb::from_existing(&lvb_file).unwrap();
+    let lvb = resolver.parsed::<Lvb>(&path).unwrap();
 
     let context;
     unsafe {
@@ -114,36 +116,37 @@ fn main() {
     // TODO: the tiles are incredibly inefficient, we loop through each tile and try to rasterize triangles even if they aren't even in said tile
     // while this is "fine" because recast will filter out useless triangles, it wastes so much time
 
-    let scene = &lvb.scns[0];
+    let scene = &lvb.sections[0];
 
-    let tera_bytes = sqpack_resource
-        .read(&format!(
+    let tera = resolver
+        .parsed::<Terrain>(&format!(
             "{}/bgplate/terrain.tera",
-            scene.general.path_terrain
+            scene.general.bg_path.value
         ))
         .unwrap();
-    let tera = Terrain::from_existing(&tera_bytes).unwrap();
     for plate in tera.plates {
         add_plate(
             &plate,
-            &scene.general.path_terrain,
-            &mut sqpack_resource,
+            &scene.general.bg_path.value,
+            &mut resolver,
             context,
             &tiles,
         );
     }
 
-    for path in &scene.header.path_layer_group_resources {
+    for path in &scene.lgb_paths {
         if path.contains("bg.lgb") {
             tracing::info!("Processing {path}...");
 
-            let lgb_file = sqpack_resource.read(path).unwrap();
-            let lgb = LayerGroup::from_existing(&lgb_file);
-            let Some(lgb) = lgb else {
-                tracing::error!(
-                    "Failed to parse {path}, this is most likely a bug in Physis and should be reported somewhere!"
-                );
-                return;
+            let lgb = resolver.parsed::<LayerGroup>(path);
+            let lgb = match lgb {
+                Ok(lgb) => lgb,
+                Err(e) => {
+                    tracing::error!(
+                        "Failed to parse {path}: {e}, this is most likely a bug in Physis and should be reported somewhere!"
+                    );
+                    continue;
+                }
             };
 
             // TODO: i think we know which layer is specifically used for navmesh gen, better check that LVB
@@ -156,10 +159,9 @@ fn main() {
                             // NOTE: assert is here to find out the unknown
                             assert!(bg.collision_type == ModelCollisionType::Replace);
 
-                            let pcb_file = sqpack_resource
-                                .read(&bg.collision_asset_path.value)
+                            let pcb = resolver
+                                .parsed::<Pcb>(&bg.collision_asset_path.value)
                                 .unwrap();
-                            let pcb = Pcb::from_existing(&pcb_file).unwrap();
 
                             walk_node(&pcb.root_node, &object.transform, context, &tiles);
                         }
@@ -410,13 +412,12 @@ fn walk_node(
 fn add_plate(
     plate: &PlateModel,
     tera_path: &str,
-    sqpack_resource: &mut SqPackResource,
+    sqpack_resource: &mut ResourceResolver,
     context: *mut rcContext,
     tiles: &[Tile],
 ) {
     let mdl_path = format!("{}/bgplate/{}", tera_path, plate.filename);
-    let mdl_bytes = sqpack_resource.read(&mdl_path).unwrap();
-    let mdl = MDL::from_existing(&mdl_bytes).unwrap();
+    let mdl = sqpack_resource.parsed::<MDL>(&mdl_path).unwrap();
 
     let lod = &mdl.lods[0];
     for part in &lod.parts {
