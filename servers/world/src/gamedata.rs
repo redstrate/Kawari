@@ -124,9 +124,9 @@ impl GameData {
         let mut resource_resolver = ResourceResolver::new();
         for path in config.filesystem.additional_search_paths {
             let unpacked_resource = UnpackedResource::from_existing(&path);
-            resource_resolver.add_source(Box::new(unpacked_resource));
+            resource_resolver.add_source(unpacked_resource);
         }
-        resource_resolver.add_source(Box::new(sqpack_resource));
+        resource_resolver.add_source(sqpack_resource);
 
         let mut classjob_exp_indexes = Vec::new();
 

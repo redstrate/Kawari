@@ -36,9 +36,7 @@ fn main() {
     tracing::info!("Generating navmesh for zone {zone_id}, writing to {destination_path}!");
 
     let mut resolver = ResourceResolver::new();
-    resolver.add_source(Box::new(SqPackResource::from_existing(
-        &config.filesystem.game_path,
-    )));
+    resolver.add_source(SqPackResource::from_existing(&config.filesystem.game_path));
 
     let sheet = TerritoryTypeSheet::read_from(&mut resolver, Language::None).unwrap();
     let Some(row) = sheet.get_row(zone_id as u32) else {
