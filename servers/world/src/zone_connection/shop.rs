@@ -255,7 +255,7 @@ impl ZoneConnection {
 
     pub async fn buy_special_shop(&mut self, event_id: u32, special_shop_id: u32, item_index: u32) {
         // TODO: decrease currency
-        // TODO: figure out why it freezes still
+        // TODO: support quantity
 
         let result;
         {
@@ -278,22 +278,19 @@ impl ZoneConnection {
                 item_info.id,
             )
             .await;
-            self.send_gilshop_ack(
-                special_shop_id,
-                item_info.id,
-                item_quantity,
-                item_info.price_mid,
-                LogMessageType::ItemBought,
-            )
-            .await;
+
+            // TODO: ACS 854 is sent
+            // TODO: itemobtainedlogmessage is sent
+
             let target_id = self.player_data.target_actorid;
+
             // See GenericShopkeeper.lua for information about this scene, the flags, and the params.
             self.event_scene(
                 &target_id,
                 event_id,
-                10,
-                SceneFlags::from_bits(8193).unwrap(),
-                vec![1, 100],
+                2,
+                SceneFlags::NO_DEFAULT_CAMERA | SceneFlags::HIDE_HOTBAR,
+                vec![],
             )
             .await;
         }

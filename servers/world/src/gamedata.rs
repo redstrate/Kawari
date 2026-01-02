@@ -62,7 +62,7 @@ impl Default for GameData {
 }
 
 /// Struct detailing various information about an item, pulled from the Items sheet.
-#[derive(Default, Clone)]
+#[derive(Debug, Default, Clone)]
 pub struct ItemInfo {
     /// The item's textual name.
     pub name: String,
@@ -501,7 +501,7 @@ impl GameData {
 
     /// Gets the item and its cost from the specified SpecialShop.
     pub fn get_specialshop_item(&mut self, gilshop_id: u32, index: u16) -> Option<ItemInfo> {
-        let sheet = SpecialShopSheet::read_from(&mut self.resource, Language::None).ok()?;
+        let sheet = SpecialShopSheet::read_from(&mut self.resource, Language::English).ok()?;
         let row = sheet.get_row(gilshop_id)?;
         let item_id = row.Item()[index as usize].Item[0].into_i32()?; // TODO: why are there two items?
 
