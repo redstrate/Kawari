@@ -1,8 +1,5 @@
 //! A server replacement for a certain MMO.
 
-/// The blowfish implementation used for packet encryption.
-pub mod blowfish;
-
 /// Common functions, structures used between all servers.
 pub mod common;
 

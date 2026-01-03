@@ -1,9 +1,9 @@
 use std::{cmp::min, fs, path::MAIN_SEPARATOR_STR, time::Instant};
 
+use physis::blowfish::LobbyBlowfish;
 use tokio::net::TcpStream;
 
 use kawari::{
-    blowfish::Blowfish,
     common::{GAME_SERVICE, WORLD_NAME},
     config::get_config,
     constants::SUPPORTED_EXPAC_VERSIONS,
@@ -227,7 +227,7 @@ impl LobbyConnection {
         let mut data = 0xE0003C2Au32.to_le_bytes().to_vec();
         data.resize(0x280, 0);
 
-        let blowfish = Blowfish::new(&client_key);
+        let blowfish = LobbyBlowfish::new(&client_key);
         blowfish.encrypt(&mut data);
 
         self.state = ConnectionState::Lobby { client_key };
