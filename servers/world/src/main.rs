@@ -49,7 +49,7 @@ use tokio::task::JoinHandle;
 
 use kawari::common::INVENTORY_ACTION_ACK_GENERAL;
 
-fn spawn_main_loop() -> (ServerHandle, JoinHandle<()>) {
+fn spawn_main_loop(game_data: Arc<Mutex<GameData>>) -> (ServerHandle, JoinHandle<()>) {
     let (send, recv) = channel(64);
 
     let handle = ServerHandle {
@@ -58,7 +58,13 @@ fn spawn_main_loop() -> (ServerHandle, JoinHandle<()>) {
     };
 
     let join = tokio::spawn(async move {
-        let res = server_main_loop(recv).await;
+        let game_data_new;
+        {
+            // We let it clone our GameData so it doesn't take 2x the time to load.
+            let game_data_mutex = game_data.lock();
+            game_data_new = game_data_mutex.clone();
+        }
+        let res = server_main_loop(game_data_new, recv).await;
         match res {
             Ok(()) => {}
             Err(err) => {
@@ -1484,7 +1490,7 @@ async fn main() {
         }
     }
 
-    let (handle, _) = spawn_main_loop();
+    let (handle, _) = spawn_main_loop(game_data.clone());
 
     loop {
         if let Ok((socket, _)) = listener.accept().await {

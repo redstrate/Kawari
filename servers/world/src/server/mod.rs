@@ -539,10 +539,13 @@ fn server_logic_tick(data: &mut WorldServer, network: &mut NetworkState) {
     }
 }
 
-pub async fn server_main_loop(mut recv: Receiver<ToServer>) -> Result<(), std::io::Error> {
+pub async fn server_main_loop(
+    game_data: GameData,
+    mut recv: Receiver<ToServer>,
+) -> Result<(), std::io::Error> {
     let data = Arc::new(Mutex::new(WorldServer::default()));
     let network = Arc::new(Mutex::new(NetworkState::default()));
-    let game_data = Arc::new(Mutex::new(GameData::new()));
+    let game_data = Arc::new(Mutex::new(game_data));
     let lua = Arc::new(Mutex::new(Lua::new()));
 
     // Run Init.lua and set up other Lua state

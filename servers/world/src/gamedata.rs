@@ -38,6 +38,7 @@ use kawari::common::{InstanceContentType, get_aether_current_comp_flg_set_to_scr
 use kawari::{common::Attributes, config::get_config};
 
 /// Convenient methods built on top of Physis to access data relevant to the server
+#[derive(Clone)]
 pub struct GameData {
     pub resource: ResourceResolver,
 
@@ -841,6 +842,7 @@ pub enum TerritoryNameKind {
 }
 
 /// Wrapper around SqPackResource to let us spy when it reads files
+#[derive(Clone)]
 struct SqPackResourceSpy {
     sqpack_resource: SqPackResource,
     output_directory: String,

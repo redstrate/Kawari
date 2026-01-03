@@ -718,7 +718,7 @@ dependencies = [
 [[package]]
 name = "icarus"
 version = "0.0.0"
-source = "git+https://github.com/redstrate/Icarus?branch=ver%2F2025.12.09.0000.0000#2ceed7dc1ad16479f38fd90d86fa50dcc3396602"
+source = "git+https://github.com/redstrate/Icarus?branch=ver%2F2025.12.09.0000.0000#38face2dba45b45c698e64300f3d284753fff84a"
 dependencies = [
  "physis",
 ]
@@ -1294,7 +1294,7 @@ checksum = "9b4f627cb1b25917193a259e49bdad08f671f8d9708acfd5fe0a8c1455d87220"
 [[package]]
 name = "physis"
 version = "0.6.0"
-source = "git+https://github.com/redstrate/physis#8f0b6d7ac7b116b2a8c9e2c3c4e7e502cb9ec5b1"
+source = "git+https://github.com/redstrate/physis#847b05e6c788b2082e88b8a680e959bb0acb3f68"
 dependencies = [
  "binrw",
  "bitflags",
@@ -2194,9 +2194,9 @@ checksum = "40990edd51aae2c2b6907af74ffb635029d5788228222c4bb811e9351c0caad3"
 
 [[package]]
 name = "zmij"
-version = "1.0.7"
+version = "1.0.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "de9211a9f64b825911bdf0240f58b7a8dac217fe260fc61f080a07f61372fbd5"
+checksum = "317f17ff091ac4515f17cc7a190d2769a8c9a96d227de5d64b500b01cda8f2cd"
 
 [[package]]
 name = "zopfli"
