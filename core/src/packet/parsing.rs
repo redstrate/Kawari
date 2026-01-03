@@ -1,6 +1,7 @@
 use std::io::Cursor;
 
 use binrw::{BinRead, binrw};
+use physis::blowfish::LobbyBlowfish;
 
 use crate::{
     common::{INVALID_OBJECT_ID, ObjectId, read_string, write_string},
@@ -193,7 +194,7 @@ pub enum ConnectionState {
     /// Used for stateless connections.
     None,
     /// Used for the Lobby connection.
-    Lobby { client_key: [u8; 16] },
+    Lobby { blowfish: LobbyBlowfish },
     /// Used for the Zone connection.
     Zone {
         serverbound_oodle: OodleNetwork,

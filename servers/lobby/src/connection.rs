@@ -230,7 +230,7 @@ impl LobbyConnection {
         let blowfish = LobbyBlowfish::new(&client_key);
         blowfish.encrypt(&mut data);
 
-        self.state = ConnectionState::Lobby { client_key };
+        self.state = ConnectionState::Lobby { blowfish };
 
         self.send_segment(PacketSegment {
             segment_type: SegmentType::SecurityInitialize,

@@ -3,7 +3,6 @@ use std::io::Cursor;
 use binrw::BinResult;
 
 use crate::constants::LOBBY_GAME_VERSION;
-use physis::blowfish::LobbyBlowfish;
 
 use super::{IPC_HEADER_SIZE, ReadWriteIpcSegment, parsing::ConnectionState};
 
@@ -18,13 +17,12 @@ pub fn generate_encryption_key(key: &[u8], phrase: &str) -> [u8; 16] {
 
 #[binrw::parser(reader, endian)]
 pub(crate) fn decrypt<T: ReadWriteIpcSegment>(size: u32, state: &ConnectionState) -> BinResult<T> {
-    if let ConnectionState::Lobby { client_key } = state {
+    if let ConnectionState::Lobby { blowfish } = state {
         let size = size - IPC_HEADER_SIZE;
 
         let mut data = vec![0; size as usize];
         reader.read_exact(&mut data)?;
 
-        let blowfish = LobbyBlowfish::new(client_key);
         blowfish.decrypt(&mut data);
 
         let mut cursor = Cursor::new(&data);
@@ -40,7 +38,7 @@ pub(crate) fn encrypt<T: ReadWriteIpcSegment>(
     size: u32,
     state: &ConnectionState,
 ) -> BinResult<()> {
-    if let ConnectionState::Lobby { client_key } = state {
+    if let ConnectionState::Lobby { blowfish } = state {
         let size = size - IPC_HEADER_SIZE;
 
         let mut cursor = Cursor::new(Vec::new());
@@ -49,7 +47,6 @@ pub(crate) fn encrypt<T: ReadWriteIpcSegment>(
         let mut buffer = cursor.into_inner();
         buffer.resize(size as usize, 0);
 
-        let blowfish = LobbyBlowfish::new(client_key);
         blowfish.encrypt(&mut buffer);
 
         writer.write_all(&buffer)?;
