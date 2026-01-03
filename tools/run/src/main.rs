@@ -34,7 +34,11 @@ async fn main() {
     // If being invoked by Cargo, build the workspace first.
     if let Ok(cargo) = std::env::var("CARGO") {
         let build_exit_status = Command::new(cargo)
-            .args(["build", "--features", "oodle"])
+            .args(if cfg!(debug_assertions) {
+                vec!["build", "--features", "oodle"]
+            } else {
+                vec!["build", "--release", "--features", "oodle"]
+            })
             .stdout(Stdio::inherit())
             .spawn()
             .expect("Failed to run Cargo build")
