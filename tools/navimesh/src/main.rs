@@ -13,7 +13,7 @@ use physis::{
     model::MDL,
     pcb::{Pcb, ResourceNode},
     resource::{ResourceResolver, SqPackResource},
-    tera::{PlateModel, Terrain},
+    tera::{Plate, Terrain},
 };
 use recastnavigation_sys::{
     CreateContext, dtCreateNavMeshData, dtNavMeshCreateParams, rcAllocCompactHeightfield,
@@ -122,9 +122,10 @@ fn main() {
             scene.general.bg_path.value
         ))
         .unwrap();
-    for plate in tera.plates {
+    for (i, plate) in tera.plates.iter().enumerate() {
         add_plate(
-            &plate,
+            &tera,
+            (i, plate),
             &scene.general.bg_path.value,
             &mut resolver,
             context,
@@ -408,13 +409,18 @@ fn walk_node(
 }
 
 fn add_plate(
-    plate: &PlateModel,
+    terrain: &Terrain,
+    (plate_index, plate): (usize, &Plate),
     tera_path: &str,
     sqpack_resource: &mut ResourceResolver,
     context: *mut rcContext,
     tiles: &[Tile],
 ) {
-    let mdl_path = format!("{}/bgplate/{}", tera_path, plate.filename);
+    let mdl_path = format!(
+        "{}/bgplate/{}",
+        tera_path,
+        Terrain::mdl_filename(plate_index)
+    );
     let mdl = sqpack_resource.parsed::<MDL>(&mdl_path).unwrap();
 
     let lod = &mdl.lods[0];
@@ -427,9 +433,9 @@ fn add_plate(
         let mut tile_vertices: Vec<[f32; 3]> = Vec::new();
         for vertex in &part.vertices {
             tile_vertices.push([
-                vertex.position[0] + plate.position.0,
+                vertex.position[0] + terrain.plate_position(plate)[0],
                 vertex.position[1],
-                vertex.position[2] + plate.position.1,
+                vertex.position[2] + terrain.plate_position(plate)[1],
             ]);
         }
 
