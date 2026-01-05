@@ -563,42 +563,42 @@ impl LuaPlayer {
         };
 
         let mut game_data = game_data.lock();
-        // TODO: iterate through the actual number of subrows
-        for subrow_id in (0..16).rev() {
-            if let Some(row) = game_data.get_switch_talk_row(switch_talk_id, subrow_id) {
-                let quest0 = row
-                    .Quest0()
-                    .into_u32()
-                    .copied()
-                    .map(adjust_quest_id)
-                    .unwrap_or_default();
-                let quest1 = row
-                    .Quest1()
-                    .into_u32()
-                    .copied()
-                    .map(adjust_quest_id)
-                    .unwrap_or_default();
 
-                let should_check_quest0 = quest0 != 0;
-                let should_check_quest1 = quest1 != 0;
+        let subrows = game_data.get_switch_talk_subrows(switch_talk_id);
+        // Higher subrows take precedence
+        for (_, row) in subrows.iter().rev() {
+            let quest0 = row
+                .Quest0()
+                .into_u32()
+                .copied()
+                .map(adjust_quest_id)
+                .unwrap_or_default();
+            let quest1 = row
+                .Quest1()
+                .into_u32()
+                .copied()
+                .map(adjust_quest_id)
+                .unwrap_or_default();
 
-                let quest0_completed = self.player_data.quest.completed.contains(quest0);
-                let quest1_completed = self.player_data.quest.completed.contains(quest1);
+            let should_check_quest0 = quest0 != 0;
+            let should_check_quest1 = quest1 != 0;
 
-                let quest0_passed = if should_check_quest0 {
-                    quest0_completed
-                } else {
-                    true
-                };
-                let quest1_passed = if should_check_quest1 {
-                    quest1_completed
-                } else {
-                    true
-                };
+            let quest0_completed = self.player_data.quest.completed.contains(quest0);
+            let quest1_completed = self.player_data.quest.completed.contains(quest1);
 
-                if quest0_passed && quest1_passed {
-                    return row.DefaultTalk().into_u32().copied();
-                }
+            let quest0_passed = if should_check_quest0 {
+                quest0_completed
+            } else {
+                true
+            };
+            let quest1_passed = if should_check_quest1 {
+                quest1_completed
+            } else {
+                true
+            };
+
+            if quest0_passed && quest1_passed {
+                return row.DefaultTalk().into_u32().copied();
             }
         }
 

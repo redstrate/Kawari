@@ -39,7 +39,7 @@ fn main() {
     resolver.add_source(SqPackResource::from_existing(&config.filesystem.game_path));
 
     let sheet = TerritoryTypeSheet::read_from(&mut resolver, Language::None).unwrap();
-    let Some(row) = sheet.get_row(zone_id as u32) else {
+    let Some(row) = sheet.row(zone_id as u32) else {
         tracing::error!("Invalid zone id {zone_id}!");
         return;
     };
