@@ -86,7 +86,7 @@ impl Zone {
             ..Default::default()
         };
 
-        let Some(row) = game_data.territory_type_sheet.get_row(id as u32) else {
+        let Some(row) = game_data.territory_type_sheet.row(id as u32) else {
             tracing::warn!("Invalid zone id {id}, allowing anyway...");
             return zone;
         };

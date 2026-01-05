@@ -102,7 +102,7 @@ impl Inventory {
     /// Equip the starting items for a given classjob
     pub fn equip_classjob_items(&mut self, classjob_id: u16, game_data: &mut GameData) {
         let sheet = ClassJobSheet::read_from(&mut game_data.resource, Language::English).unwrap();
-        let row = sheet.get_row(classjob_id as u32).unwrap();
+        let row = sheet.row(classjob_id as u32).unwrap();
 
         let main_hand_id = *row.ItemStartingWeaponMainHand().into_i32().unwrap() as u32;
         self.equipped.main_hand = Item::new(
@@ -149,7 +149,7 @@ impl Inventory {
     /// Equip the starting items for a given race
     pub fn equip_racial_items(&mut self, race_id: u8, gender: u8, game_data: &mut GameData) {
         let sheet = RaceSheet::read_from(&mut game_data.resource, Language::English).unwrap();
-        let row = sheet.get_row(race_id as u32).unwrap();
+        let row = sheet.row(race_id as u32).unwrap();
 
         let ids = if gender == 0 {
             [

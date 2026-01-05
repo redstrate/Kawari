@@ -133,9 +133,7 @@ impl GameData {
 
         let sheet = ClassJobSheet::read_from(&mut resource_resolver, Language::English)
             .expect("Failed to read ClassJobSheet, does the Excel files exist?");
-        for i in 0..sheet.row_count() {
-            let row = sheet.get_row(i).unwrap();
-
+        for (_, row) in sheet.into_iter().flatten_subrows() {
             classjob_exp_indexes.push(*row.ExpArrayIndex().into_i8().unwrap());
         }
 
@@ -191,7 +189,7 @@ impl GameData {
     /// Gets the starting city-state from a given class/job id.
     pub fn get_citystate(&mut self, classjob_id: u16) -> Option<u8> {
         let sheet = ClassJobSheet::read_from(&mut self.resource, Language::English).ok()?;
-        let row = sheet.get_row(classjob_id as u32)?;
+        let row = sheet.row(classjob_id as u32)?;
 
         row.StartingTown().into_u8().copied()
     }
@@ -200,7 +198,7 @@ impl GameData {
         // The Tribe Excel sheet only has deltas (e.g. 2 or -2) which are applied to a base 20 number... from somewhere
         let base_stat = 20;
 
-        let row = self.tribe_sheet.get_row(tribe_id as u32)?;
+        let row = self.tribe_sheet.row(tribe_id as u32)?;
 
         Some(Attributes {
             strength: (base_stat + row.STR().into_i8()?) as u32,
@@ -216,21 +214,19 @@ impl GameData {
         let mut result = None;
         match query {
             ItemInfoQuery::ById(ref query_item_id) => {
-                if let Some(row) = self.item_sheet.get_row(*query_item_id) {
+                if let Some(row) = self.item_sheet.row(*query_item_id) {
                     result = Some((row, *query_item_id));
                 }
             }
 
             ItemInfoQuery::ByName(ref query_item_name) => {
-                // FIXME: this seems... inefficent
-                for id in 0..self.item_sheet.row_count() {
-                    if let Some(row) = self.item_sheet.get_row(id)
-                        && let Some(name) = row.Name().into_string()
+                for (id, row) in self.item_sheet.into_iter().flatten_subrows() {
+                    if let Some(name) = row.Name().into_string()
                         && name
                             .to_lowercase()
                             .contains(&query_item_name.to_lowercase())
                     {
-                        result = Some((row, id));
+                        result = Some((row.clone(), id));
                         break;
                     }
                 }
@@ -279,7 +275,7 @@ impl GameData {
 
     /// Returns the pop range object id that's associated with the warp id
     pub fn get_warp(&mut self, warp_id: u32) -> Option<(u32, u16)> {
-        let row = self.warp_sheet.get_row(warp_id)?;
+        let row = self.warp_sheet.row(warp_id)?;
 
         let pop_range_id = row.PopRange().into_u32()?;
         let zone_id = row.TerritoryType().into_u16()?;
@@ -289,13 +285,13 @@ impl GameData {
 
     /// Returns the warp logic name (if any) for this Warp.
     pub fn get_warp_logic_name(&mut self, warp_id: u32) -> String {
-        let row = self.warp_sheet.get_row(warp_id).unwrap();
+        let row = self.warp_sheet.row(warp_id).unwrap();
 
         let warp_logic_id = row.WarpLogic().into_u16().unwrap();
 
         let warp_logic_sheet =
             WarpLogicSheet::read_from(&mut self.resource, Language::English).unwrap();
-        let warp_logic_row = warp_logic_sheet.get_row(*warp_logic_id as u32).unwrap();
+        let warp_logic_row = warp_logic_sheet.row(*warp_logic_id as u32).unwrap();
 
         warp_logic_row
             .WarpName()
@@ -306,7 +302,7 @@ impl GameData {
 
     pub fn get_aetheryte(&mut self, aetheryte_id: u32) -> Option<(u32, u16)> {
         let sheet = AetheryteSheet::read_from(&mut self.resource, Language::English).ok()?;
-        let row = sheet.get_row(aetheryte_id)?;
+        let row = sheet.row(aetheryte_id)?;
 
         // TODO: just look in the level sheet?
         let pop_range_id = row.Level()[0].into_u32()?;
@@ -318,14 +314,14 @@ impl GameData {
     /// Checks if it's a big Aetheryte (true) or just a shard (false.)
     pub fn is_aetheryte(&mut self, aetheryte_id: u32) -> bool {
         let sheet = AetheryteSheet::read_from(&mut self.resource, Language::English).unwrap();
-        let row = sheet.get_row(aetheryte_id).unwrap();
+        let row = sheet.row(aetheryte_id).unwrap();
 
         row.IsAetheryte().into_bool().cloned().unwrap_or_default()
     }
 
     /// Retrieves a zone's internal name, place name or parent region name.
     pub fn get_territory_name(&mut self, zone_id: u32, which: TerritoryNameKind) -> Option<String> {
-        let row = self.territory_type_sheet.get_row(zone_id)?;
+        let row = self.territory_type_sheet.row(zone_id)?;
 
         let offset = match which {
             TerritoryNameKind::Internal => {
@@ -335,7 +331,7 @@ impl GameData {
             TerritoryNameKind::Place => row.PlaceName().into_u16()?,
         };
 
-        let row = self.place_name_sheet.get_row(*offset as u32)?;
+        let row = self.place_name_sheet.row(*offset as u32)?;
         let value = row.Name().into_string()?;
 
         Some(value.clone())
@@ -344,7 +340,7 @@ impl GameData {
     /// Turn an equip slot category id into a slot for the equipped inventory
     pub fn get_equipslot_category(&mut self, equipslot_id: u8) -> Option<u16> {
         let sheet = EquipSlotCategorySheet::read_from(&mut self.resource, Language::None).ok()?;
-        let row = sheet.get_row(equipslot_id as u32)?;
+        let row = sheet.row(equipslot_id as u32)?;
 
         let main_hand = row.MainHand().into_i8()?;
         if *main_hand == 1 {
@@ -415,7 +411,7 @@ impl GameData {
     }
 
     pub fn get_casttime(&mut self, action_id: u32) -> Option<u16> {
-        let row = self.action_sheet.get_row(action_id)?;
+        let row = self.action_sheet.row(action_id)?;
 
         row.Cast100ms().into_u16().copied()
     }
@@ -423,7 +419,7 @@ impl GameData {
     /// Calculates the current weather at the current time
     // TODO: instead allow targetting a specific time to calculate forcecasts
     pub fn get_weather_rate(&mut self, weather_rate_id: u32) -> Option<i32> {
-        let row = self.weather_rate_sheet.get_row(weather_rate_id)?;
+        let row = self.weather_rate_sheet.row(weather_rate_id)?;
 
         // sum up the rates
         let mut rates = row.Rate().map(|x| *x.into_u8().unwrap());
@@ -472,7 +468,7 @@ impl GameData {
 
     /// Gets the current weather for the given zone id
     pub fn get_weather(&mut self, zone_id: u32) -> Option<i32> {
-        let row = self.territory_type_sheet.get_row(zone_id)?;
+        let row = self.territory_type_sheet.row(zone_id)?;
 
         let weather_rate_id = row.WeatherRate().into_u8()?;
         self.get_weather_rate(*weather_rate_id as u32)
@@ -486,7 +482,7 @@ impl GameData {
     /// Gets the job index for a given class.
     pub fn get_job_index(&mut self, classjob_id: u16) -> Option<u8> {
         let sheet = ClassJobSheet::read_from(&mut self.resource, Language::English).ok()?;
-        let row = sheet.get_row(classjob_id as u32)?;
+        let row = sheet.row(classjob_id as u32)?;
 
         row.JobIndex().into_u8().cloned()
     }
@@ -494,7 +490,7 @@ impl GameData {
     /// Gets the item and its cost from the specified shop.
     pub fn get_gilshop_item(&mut self, gilshop_id: u32, index: u16) -> Option<ItemInfo> {
         let sheet = GilShopItemSheet::read_from(&mut self.resource, Language::None).ok()?;
-        let row = sheet.get_subrow(gilshop_id, index)?;
+        let row = sheet.subrow(gilshop_id, index)?;
         let item_id = row.Item().into_i32()?;
 
         self.get_item_info(ItemInfoQuery::ById(*item_id as u32))
@@ -503,7 +499,7 @@ impl GameData {
     /// Gets the item and its cost from the specified SpecialShop.
     pub fn get_specialshop_item(&mut self, gilshop_id: u32, index: u16) -> Option<ItemInfo> {
         let sheet = SpecialShopSheet::read_from(&mut self.resource, Language::English).ok()?;
-        let row = sheet.get_row(gilshop_id)?;
+        let row = sheet.row(gilshop_id)?;
         let item_id = row.Item()[index as usize].Item[0].into_i32()?; // TODO: why are there two items?
 
         self.get_item_info(ItemInfoQuery::ById(*item_id as u32))
@@ -513,7 +509,7 @@ impl GameData {
     pub fn find_zone_for_content(&mut self, content_id: u16) -> Option<u16> {
         let content_finder_sheet =
             ContentFinderConditionSheet::read_from(&mut self.resource, Language::English).unwrap();
-        let content_finder_row = content_finder_sheet.get_row(content_id as u32)?;
+        let content_finder_row = content_finder_sheet.row(content_id as u32)?;
 
         content_finder_row.TerritoryType().into_u16().copied()
     }
@@ -521,11 +517,11 @@ impl GameData {
     /// Grabs needed BattleNPC information such as their name, model id and more.
     pub fn find_bnpc(&mut self, id: u32) -> Option<u16> {
         let bnpc_sheet = BNpcBaseSheet::read_from(&mut self.resource, Language::None).unwrap();
-        let bnpc_row = bnpc_sheet.get_row(id)?;
+        let bnpc_row = bnpc_sheet.row(id)?;
 
         let model_row_id = bnpc_row.ModelChara().into_u16()?;
         let model_sheet = ModelCharaSheet::read_from(&mut self.resource, Language::None).unwrap();
-        let model_row = model_sheet.get_row(*model_row_id as u32)?;
+        let model_row = model_sheet.row(*model_row_id as u32)?;
 
         model_row.Model().into_u16().copied()
     }
@@ -534,7 +530,7 @@ impl GameData {
     pub fn find_type_for_content(&mut self, content_id: u16) -> Option<InstanceContentType> {
         let instance_content_sheet =
             InstanceContentSheet::read_from(&mut self.resource, Language::None).unwrap();
-        let instance_content_row = instance_content_sheet.get_row(content_id as u32)?;
+        let instance_content_row = instance_content_sheet.row(content_id as u32)?;
 
         InstanceContentType::from_repr(
             instance_content_row
@@ -548,24 +544,21 @@ impl GameData {
     pub fn find_mount_order(&mut self, mount_id: u32) -> Option<i16> {
         let instance_content_sheet =
             MountSheet::read_from(&mut self.resource, Language::English).unwrap();
-        let mount_row = instance_content_sheet.get_row(mount_id)?;
+        let mount_row = instance_content_sheet.row(mount_id)?;
 
         mount_row.Order().into_i16().copied()
     }
 
     /// Gets the Item ID of the Orchestrion Roll.
     pub fn find_orchestrion_item_id(&mut self, orchestrion_id: u32) -> Option<u32> {
-        // FIXME: this seems... inefficient
-        for id in 0..self.item_sheet.row_count() {
-            if let Some(row) = self.item_sheet.get_row(id) {
-                // If filter_group is 32, then this item is an Orchestrion Roll...
-                if *row.FilterGroup().into_u8()? != 32 {
-                    continue;
-                }
+        for (id, row) in self.item_sheet.into_iter().flatten_subrows() {
+            // If filter_group is 32, then this item is an Orchestrion Roll...
+            if *row.FilterGroup().into_u8()? != 32 {
+                continue;
+            }
 
-                if *row.AdditionalData().into_u32()? == orchestrion_id {
-                    return Some(id);
-                }
+            if *row.AdditionalData().into_u32()? == orchestrion_id {
+                return Some(id);
             }
         }
 
@@ -578,16 +571,14 @@ impl GameData {
             AetherCurrentCompFlgSetSheet::read_from(&mut self.resource, Language::None).unwrap();
 
         // Start searching for Zone ID
-        for id in 0..sheet.row_count() {
-            if let Some(row) = sheet.get_row(id) {
-                let aether_currents: Vec<i32> = row
-                    .AetherCurrents()
-                    .iter()
-                    .filter_map(|x| x.into_i32().cloned())
-                    .collect();
-                if aether_currents.contains(&aether_current_id) {
-                    return Some(id);
-                }
+        for (id, row) in sheet.into_iter().flatten_subrows() {
+            let aether_currents: Vec<i32> = row
+                .AetherCurrents()
+                .iter()
+                .filter_map(|x| x.into_i32().cloned())
+                .collect();
+            if aether_currents.contains(&aether_current_id) {
+                return Some(id);
             }
         }
 
@@ -602,7 +593,7 @@ impl GameData {
         let aether_current_comp_flg_set_sheet =
             AetherCurrentCompFlgSetSheet::read_from(&mut self.resource, Language::None).unwrap();
 
-        let row = aether_current_comp_flg_set_sheet.get_row(aether_current_comp_flg_set_id)?;
+        let row = aether_current_comp_flg_set_sheet.row(aether_current_comp_flg_set_id)?;
 
         let aether_currents_from_zone = row
             .AetherCurrents()
@@ -625,7 +616,7 @@ impl GameData {
 
     /// Returns the internal script name for this CustomTalk event.
     pub fn get_custom_talk_name(&mut self, custom_talk_id: u32) -> String {
-        let row = self.custom_talk_sheet.get_row(custom_talk_id).unwrap();
+        let row = self.custom_talk_sheet.row(custom_talk_id).unwrap();
 
         row.Name().into_string().cloned().unwrap_or_default()
     }
@@ -633,20 +624,20 @@ impl GameData {
     /// Returns the internal script name for this Opening event.
     pub fn get_opening_name(&mut self, opening_id: u32) -> String {
         let sheet = OpeningSheet::read_from(&mut self.resource, Language::None).unwrap();
-        let row = sheet.get_row(opening_id).unwrap();
+        let row = sheet.row(opening_id).unwrap();
 
         row.Name().into_string().cloned().unwrap_or_default()
     }
 
     /// Returns data useful for performing item actions.
     pub fn lookup_item_action_data(&mut self, item_id: u32) -> Option<(u16, [u16; 9], u32)> {
-        if let Some(row) = self.item_sheet.get_row(item_id) {
+        if let Some(row) = self.item_sheet.row(item_id) {
             let additional_data = row.AdditionalData().into_u32()?;
 
             let item_action_sheet =
                 ItemActionSheet::read_from(&mut self.resource, Language::None).ok()?;
             let item_action_row =
-                item_action_sheet.get_row(row.ItemAction().into_u16().cloned()? as u32)?;
+                item_action_sheet.row(row.ItemAction().into_u16().cloned()? as u32)?;
 
             return Some((
                 item_action_row.Action().into_u16().cloned()?,
@@ -663,33 +654,38 @@ impl GameData {
     /// Returns the target event for a given PreHandler event.
     pub fn get_pre_handler_target(&mut self, pre_handler_id: u32) -> Option<u32> {
         let sheet = PreHandlerSheet::read_from(&mut self.resource, Language::English).ok()?;
-        let row = sheet.get_row(pre_handler_id)?;
+        let row = sheet.row(pre_handler_id)?;
 
         Some(*row.Target().into_u32()?)
     }
 
-    /// Returns the target DefaultTalk event for a given SwitchTalk event.
-    pub fn get_switch_talk_row(
+    /// Returns a list of SwitchTalkRows for a given id.
+    pub fn get_switch_talk_subrows(
         &mut self,
         switch_talk_id: u32,
-        subrow_id: u16,
-    ) -> Option<SwitchTalkVariationRow> {
-        let sheet = SwitchTalkVariationSheet::read_from(&mut self.resource, Language::None).ok()?;
-        sheet.get_subrow(switch_talk_id, subrow_id)
+    ) -> Vec<(u16, SwitchTalkVariationRow)> {
+        let sheet =
+            SwitchTalkVariationSheet::read_from(&mut self.resource, Language::None).unwrap();
+        let subrows = sheet
+            .into_iter()
+            .filter(|(row_id, _)| switch_talk_id == *row_id)
+            .take(1)
+            .next();
+        subrows.map(|(_, subrows)| subrows).unwrap_or_default()
     }
 
     /// Returns the target Transform Row ID for a given selected NPC. (Only applicable to the Halloween Transform NPC.)
     pub fn get_halloween_npc_transform(&mut self, npc_id: u32) -> Option<u16> {
         let sheet =
             HalloweenNpcSelectSheet::read_from(&mut self.resource, Language::English).ok()?;
-        let row = sheet.get_row(npc_id)?;
+        let row = sheet.row(npc_id)?;
 
         Some(*row.Transformation().into_u16()?)
     }
 
     /// Returns the internal script name for this Quest event.
     pub fn get_quest_name(&mut self, quest_id: u32) -> String {
-        let row = self.quest_sheet.get_row(quest_id).unwrap();
+        let row = self.quest_sheet.row(quest_id).unwrap();
 
         row.Id().into_string().cloned().unwrap_or_default()
     }
@@ -701,14 +697,14 @@ impl GameData {
         selected_index: usize,
     ) -> Option<u32> {
         let sheet = TopicSelectSheet::read_from(&mut self.resource, Language::English).ok()?;
-        let row = sheet.get_row(topic_select_id)?;
+        let row = sheet.row(topic_select_id)?;
 
         Some(*row.Shop()[selected_index].into_u32()?)
     }
 
     /// Returns the rewards for this Quest, EXP and Gil respectively.
     pub fn get_quest_rewards(&mut self, quest_id: u32) -> (u16, u32) {
-        let row = self.quest_sheet.get_row(quest_id).unwrap();
+        let row = self.quest_sheet.row(quest_id).unwrap();
 
         (
             row.ExpFactor().into_u16().cloned().unwrap_or_default(),
@@ -719,7 +715,7 @@ impl GameData {
     /// Returns the max EXP or the exp "needed to grow" for a given level.
     pub fn get_max_exp(&mut self, level: u32) -> i32 {
         let sheet = ParamGrowSheet::read_from(&mut self.resource, Language::None).unwrap();
-        let row = sheet.get_row(level).unwrap();
+        let row = sheet.row(level).unwrap();
 
         row.ExpToNext().into_i32().cloned().unwrap_or_default()
     }
@@ -728,7 +724,7 @@ impl GameData {
     pub fn get_content_short_name(&mut self, content_finder_row_id: u16) -> Option<String> {
         let content_finder_sheet =
             ContentFinderConditionSheet::read_from(&mut self.resource, Language::English).unwrap();
-        let content_finder_row = content_finder_sheet.get_row(content_finder_row_id as u32)?;
+        let content_finder_row = content_finder_sheet.row(content_finder_row_id as u32)?;
 
         content_finder_row.ShortCode().into_string().cloned()
     }
@@ -736,7 +732,7 @@ impl GameData {
     /// Returns the DefaultTalk for a given FateShop and rank.
     pub fn get_fate_default_talk(&mut self, fate_shop_id: u32, rank: u8) -> u32 {
         let sheet = FateShopSheet::read_from(&mut self.resource, Language::None).unwrap();
-        let row = sheet.get_row(fate_shop_id).unwrap();
+        let row = sheet.row(fate_shop_id).unwrap();
 
         row.DefaultTalk()[rank as usize]
             .into_u32()
@@ -746,7 +742,7 @@ impl GameData {
 
     /// Returns the pop type for this EObj.
     pub fn get_eobj_pop_type(&mut self, eobj_id: u32) -> u8 {
-        let row = self.eobj_sheet.get_row(eobj_id).unwrap();
+        let row = self.eobj_sheet.row(eobj_id).unwrap();
 
         row.PopType().into_u8().cloned().unwrap_or_default()
     }
@@ -758,7 +754,7 @@ impl GameData {
     ) -> Option<u16> {
         let content_finder_sheet =
             ContentFinderConditionSheet::read_from(&mut self.resource, Language::English).unwrap();
-        let content_finder_row = content_finder_sheet.get_row(content_finder_row_id as u32)?;
+        let content_finder_row = content_finder_sheet.row(content_finder_row_id as u32)?;
 
         content_finder_row.Content().into_u16().copied()
     }
@@ -766,7 +762,7 @@ impl GameData {
     /// Returns information about a specific GimmickRect.
     pub fn get_gimmick_rect_info(&mut self, gimmick_rect_id: u32) -> Option<GimmickRectInfo> {
         let sheet = GimmickRectSheet::read_from(&mut self.resource, Language::None).unwrap();
-        let row = sheet.get_row(gimmick_rect_id)?;
+        let row = sheet.row(gimmick_rect_id)?;
 
         Some(GimmickRectInfo {
             layout_id: row.LayoutID().into_u32().copied()?,
@@ -778,14 +774,14 @@ impl GameData {
 
     /// Returns the data associated with this EObj.
     pub fn get_eobj_data(&mut self, eobj_id: u32) -> u32 {
-        let row = self.eobj_sheet.get_row(eobj_id).unwrap();
+        let row = self.eobj_sheet.row(eobj_id).unwrap();
 
         row.Data().into_u32().cloned().unwrap_or_default()
     }
 
     /// Returns the Map column value on the TerritoryType sheet. Used for revealing portions of ingame maps.
     pub fn get_territory_info_map_data(&mut self, zone_id: u16) -> Option<u16> {
-        let row = self.territory_type_sheet.get_row(zone_id.into())?;
+        let row = self.territory_type_sheet.row(zone_id.into())?;
         row.Map().into_u16().copied()
     }
 }
