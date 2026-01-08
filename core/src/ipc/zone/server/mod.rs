@@ -121,7 +121,7 @@ use crate::ipc::{
     chat::ChatChannel,
     zone::{
         PartyMemberEntry, PartyMemberPositions, PartyUpdateStatus, StrategyBoard,
-        StrategyBoardUpdate,
+        StrategyBoardUpdate, WaymarkPlacementMode, WaymarkPreset,
     },
 };
 
@@ -615,9 +615,7 @@ pub enum ServerZoneIpcData {
     UnkDirector2 {
         unk: [u8; 184],
     },
-    FieldMarkerPreset {
-        unk: [u8; 104],
-    },
+    FieldMarkerPreset(WaymarkPreset),
     DeleteObject {
         #[brw(pad_after = 7)] // padding
         spawn_index: u8,
@@ -674,6 +672,16 @@ pub enum ServerZoneIpcData {
     StrategyBoardUpdate(StrategyBoardUpdate),
     EndStrategyBoardSession {
         unk: [u8; 16], // Always zeroes?
+    },
+    WaymarkUpdate {
+        /// The id number of this waymark. 0 = A, 1 = B, and so on.
+        id: u8,
+        #[brw(pad_after = 2)] // Empty/always zeroes?
+        /// The placement mode of this waymark. 1 = marker placed, 0 = marker removed.
+        placement_mode: WaymarkPlacementMode,
+        unk1: u32,
+        unk2: u32,
+        unk3: u32,
     },
     Unknown {
         #[br(count = size - 32)]
@@ -1019,7 +1027,7 @@ mod tests {
             },
             ServerZoneIpcData::UnkDirector1 { unk: [0; 32] },
             ServerZoneIpcData::UnkDirector2 { unk: [0; 184] },
-            ServerZoneIpcData::FieldMarkerPreset { unk: [0; 104] },
+            ServerZoneIpcData::FieldMarkerPreset(WaymarkPreset::default()),
             ServerZoneIpcData::DeleteObject { spawn_index: 0 },
             ServerZoneIpcData::GoldSaucerInformation { unk: [0; 40] },
             ServerZoneIpcData::UnkContentFinder { unk: [0; 16] },
@@ -1050,6 +1058,13 @@ mod tests {
             },
             ServerZoneIpcData::StrategyBoardUpdate(StrategyBoardUpdate::default()),
             ServerZoneIpcData::EndStrategyBoardSession { unk: [0; 16] },
+            ServerZoneIpcData::WaymarkUpdate {
+                id: 0,
+                placement_mode: WaymarkPlacementMode::Removed,
+                unk1: 0,
+                unk2: 0,
+                unk3: 0,
+            },
         ];
 
         for data in &ipc_types {

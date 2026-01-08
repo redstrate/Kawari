@@ -168,6 +168,18 @@ fn build_party_list(party: &Party, data: &WorldServer) -> Vec<PartyMemberEntry> 
     party_list
 }
 
+/// Helper function to retrieve an actor's party when given only an actor id.
+pub fn get_party_id_from_actor_id(network: &NetworkState, actor_id: ObjectId) -> Option<u64> {
+    for (id, my_party) in network.parties.iter() {
+        for member in &my_party.members {
+            if member.actor_id == actor_id {
+                return Some(*id);
+            }
+        }
+    }
+    None
+}
+
 /// Process social list and party-related messages.
 pub fn handle_social_messages(
     data: Arc<Mutex<WorldServer>>,

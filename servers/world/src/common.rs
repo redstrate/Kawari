@@ -16,7 +16,8 @@ use kawari::{
             ActionRequest, ActorControl, ActorControlSelf, ActorControlTarget, ClientTrigger,
             Conditions, Config, InviteReply, InviteType, NpcSpawn, ObjectSpawn, PartyMemberEntry,
             PartyUpdateStatus, PlayerEntry, PlayerSpawn, ServerZoneIpcSegment, SocialListRequest,
-            SocialListRequestType, StrategyBoard, StrategyBoardUpdate,
+            SocialListRequestType, StrategyBoard, StrategyBoardUpdate, WaymarkPlacementMode,
+            WaymarkPreset,
         },
     },
 };
@@ -161,6 +162,10 @@ pub enum FromServer {
     StrategyBoardRealtimeUpdate(StrategyBoardUpdate),
     /// Inform the client that the board sharer has ended their real-time sharing session.
     StrategyBoardRealtimeFinished(),
+    /// Inform the client that a waymarker was placed or updated.
+    WaymarkUpdated(u8, WaymarkPlacementMode, u32, u32, u32),
+    /// Inform the client that a waymarker preset was applied.
+    WaymarkPreset(WaymarkPreset),
 }
 
 #[derive(Debug, Clone)]
