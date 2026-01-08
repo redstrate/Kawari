@@ -3,6 +3,9 @@ pub use client::*;
 
 mod common_emote;
 
+mod common_strategy_board;
+pub use common_strategy_board::*;
+
 mod black_list;
 mod config;
 mod social_list;

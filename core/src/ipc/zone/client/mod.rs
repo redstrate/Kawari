@@ -19,7 +19,9 @@ pub use crate::ipc::zone::client::item_operation::ItemOperation;
 mod event_return_handler;
 pub use crate::ipc::zone::client::event_return_handler::EventReturnHandler;
 
-use crate::ipc::zone::{InviteReply, InviteType, SearchInfo, SocialListUILanguages};
+use crate::ipc::zone::{
+    InviteReply, InviteType, SearchInfo, SocialListUILanguages, StrategyBoard, StrategyBoardUpdate,
+};
 
 use crate::ipc::zone::black_list::RequestBlacklist;
 
@@ -360,6 +362,22 @@ pub enum ClientZoneIpcData {
         // Dunno.
         unk4: [u8; 40],
     },
+    ShareStrategyBoard {
+        /// When the content id is 0, the client is starting a non-real-time session, or is initiating one but isn't ready yet.
+        content_id: u64,
+        board_data: StrategyBoard,
+    },
+    StrategyBoardReceived {
+        content_id: u64,
+        #[brw(pad_after = 4)] // Seems to be empty/always zeroes
+        unk: u32,
+    },
+    StrategyBoardUpdate(StrategyBoardUpdate),
+    RealtimeStrategyBoardFinished {
+        /// Both unknowns have data, but it's unclear what they are. They don't appear to be party ids or content ids.
+        unk1: u32,
+        unk2: u32,
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -573,6 +591,15 @@ mod tests {
                 unk3: 0,
                 unk4: [0; 40],
             },
+            ClientZoneIpcData::ShareStrategyBoard {
+                content_id: 0,
+                board_data: StrategyBoard::default(),
+            },
+            ClientZoneIpcData::StrategyBoardReceived {
+                content_id: 0,
+                unk: 0,
+            },
+            ClientZoneIpcData::StrategyBoardUpdate(StrategyBoardUpdate::default()),
         ];
 
         for data in &ipc_types {

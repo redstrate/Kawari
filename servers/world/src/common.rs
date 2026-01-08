@@ -16,7 +16,7 @@ use kawari::{
             ActionRequest, ActorControl, ActorControlSelf, ActorControlTarget, ClientTrigger,
             Conditions, Config, InviteReply, InviteType, NpcSpawn, ObjectSpawn, PartyMemberEntry,
             PartyUpdateStatus, PlayerEntry, PlayerSpawn, ServerZoneIpcSegment, SocialListRequest,
-            SocialListRequestType,
+            SocialListRequestType, StrategyBoard, StrategyBoardUpdate,
         },
     },
 };
@@ -153,6 +153,14 @@ pub enum FromServer {
     ObjectSpawn(ObjectSpawn),
     /// Inform the client about the location they discovered, so their map can be revealed.
     LocationDiscovered(u32, u32),
+    /// Inform the client that a member of their party has shared a strategy board.
+    StrategyBoardShared(u64, StrategyBoard),
+    /// Inform the sending client that another client received their strategy board.
+    StrategyBoardSharedAck(u64),
+    /// Inform the client that the board sharer has made a real-time update.
+    StrategyBoardRealtimeUpdate(StrategyBoardUpdate),
+    /// Inform the client that the board sharer has ended their real-time sharing session.
+    StrategyBoardRealtimeFinished(),
 }
 
 #[derive(Debug, Clone)]
@@ -286,6 +294,14 @@ pub enum ToServer {
     SetMP(ClientId, ObjectId, u16),
     /// The client discovered a new location in this zone.
     NewLocationDiscovered(ClientId, u32, Position, u16),
+    /// The client is sharing a strategy board with their party.
+    ShareStrategyBoard(ObjectId, u64, u64, u64, StrategyBoard),
+    /// The client received a strategy board from another member in their party.
+    StrategyBoardReceived(u64, u64, u64),
+    /// The client is making edits to their strategy board via real-time sharing.
+    StrategyBoardRealtimeUpdate(ObjectId, u64, u64, StrategyBoardUpdate),
+    /// The client finished their real-time sharing session.
+    StrategyBoardRealtimeFinished(u64),
 }
 
 #[derive(Clone, Debug)]

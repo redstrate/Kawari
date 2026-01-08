@@ -1349,6 +1349,23 @@ async fn client_loop(
                                             ClientZoneIpcData::Unknown { unk } => {
                                                 tracing::warn!("Unknown Zone packet {:?} recieved ({} bytes), this should be handled!", data.header.op_code, unk.len());
                                             }
+                                            ClientZoneIpcData::ShareStrategyBoard { content_id, board_data } => {
+                                                tracing::info!("{} is sharing a strategy board with their party!", connection.player_data.actor_id);
+                                                connection.handle.send(ToServer::ShareStrategyBoard(connection.player_data.actor_id, connection.player_data.content_id, connection.player_data.party_id, *content_id,board_data.clone())).await;
+                                            }
+                                            ClientZoneIpcData::StrategyBoardReceived { content_id, .. } => {
+                                                tracing::info!("{} has received a strategy board from another player in their party!", connection.player_data.actor_id);
+                                                connection.handle.send(ToServer::StrategyBoardReceived(connection.player_data.party_id, connection.player_data.content_id, *content_id)).await;
+
+                                            }
+                                            ClientZoneIpcData::StrategyBoardUpdate(update_data) => {
+                                                // No logging here due to how spammy it is since it sends an update every frame or so while the object is moving.
+                                                connection.handle.send(ToServer::StrategyBoardRealtimeUpdate(connection.player_data.actor_id, connection.player_data.content_id, connection.player_data.party_id, update_data.clone())).await;
+                                            }
+                                            ClientZoneIpcData::RealtimeStrategyBoardFinished { .. } => {
+                                                tracing::info!("{} is finished sharing their strategy board in realtime!", connection.player_data.actor_id);
+                                                connection.handle.send(ToServer::StrategyBoardRealtimeFinished(connection.player_data.party_id)).await;
+                                            }
                                         }
                                     }
                                     SegmentData::KeepAliveRequest { id, timestamp } => connection.send_keep_alive(*id, *timestamp).await,
@@ -1428,6 +1445,10 @@ async fn client_loop(
                     FromServer::NewStatusEffects(status_effects) => lua_player.status_effects = status_effects,
                     FromServer::ObjectSpawn(object) => connection.spawn_object(object).await,
                     FromServer::LocationDiscovered(map_id, map_part_id) => connection.discover_location(map_id, map_part_id).await,
+                    FromServer::StrategyBoardShared(content_id, board_data) => connection.received_strategy_board(content_id, board_data).await,
+                    FromServer::StrategyBoardSharedAck(content_id) => connection.strategy_board_ack(content_id).await,
+                    FromServer::StrategyBoardRealtimeUpdate(update_data) => connection.strategy_board_updated(update_data).await,
+                    FromServer::StrategyBoardRealtimeFinished() => connection.strategy_board_realtime_finished().await,
                     _ => { tracing::error!("Zone connection {:#?} received a FromServer message we don't care about: {:#?}, ensure you're using the right client network or that you've implemented a handler for it if we actually care about it!", client_handle.id, msg); }
                 },
                 None => break,

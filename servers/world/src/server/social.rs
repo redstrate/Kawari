@@ -55,6 +55,7 @@ pub struct Party {
     pub members: [PartyMember; PartyMemberEntry::NUM_ENTRIES],
     leader_id: ObjectId,
     pub chatchannel_id: u32, // There's no reason to store a full u64/ChatChannel here, as it's created properly in the chat connection!
+    pub stratboard_realtime_host: Option<u64>, // Only one player can send a board or host real-time sharing at a time
 }
 
 impl Party {
@@ -941,6 +942,90 @@ pub fn handle_social_messages(
             );
 
             network.send_to_party(party_id, None, msg, DestinationNetwork::ZoneClients);
+        }
+
+        ToServer::ShareStrategyBoard(
+            from_actor_id,
+            from_content_id,
+            party_id,
+            client_content_id,
+            board_data,
+        ) => {
+            let mut network = network.lock();
+
+            // TODO: Once we understand the board data, should we perform validation/sanitization to ensure it's not malicious in some way?
+
+            // client_content_id is what the client passed to us. If it's 0, they're either starting a regular share, or beginning a real-time share, which is followed up by a second share moments later that has the content id set. If it's set, the board is not sent to the party again, and we should be expecting to see real-time update opcodes.
+            if *client_content_id == 0 {
+                // Inform the party about the board.
+                let msg = FromServer::StrategyBoardShared(*from_content_id, board_data.clone());
+                network.send_to_party(
+                    *party_id,
+                    Some(*from_actor_id),
+                    msg,
+                    DestinationNetwork::ZoneClients,
+                );
+            }
+        }
+
+        ToServer::StrategyBoardReceived(party_id, from_content_id, dest_content_id) => {
+            let mut network = network.lock();
+
+            // Only send the ack to the board sharer if we're doing the first board share in a sequence (in real-time sharing, the client sends two at the beginning for unknown reasons).
+            if let Some(party) = network.parties.get(party_id)
+                && let None = party.stratboard_realtime_host
+            {
+                let msg = FromServer::StrategyBoardSharedAck(*from_content_id);
+
+                // Tell the board sender a party member received it.
+                let mut dest_actor_id = INVALID_OBJECT_ID;
+                for my_member in &network.parties[party_id].members {
+                    if my_member.content_id == *dest_content_id {
+                        dest_actor_id = my_member.actor_id;
+                        break;
+                    }
+                }
+
+                network.send_to_by_actor_id(dest_actor_id, msg, DestinationNetwork::ZoneClients);
+            }
+        }
+
+        ToServer::StrategyBoardRealtimeUpdate(
+            from_actor_id,
+            from_content_id,
+            party_id,
+            board_update,
+        ) => {
+            let mut network = network.lock();
+            let msg = FromServer::StrategyBoardRealtimeUpdate(board_update.clone());
+
+            // Until we get realtime updates for the first time in a sharing session, it doesn't matter for our records who the sender is.
+            // TODO: We should probably make better use of the content id field in the initial share opcode, but this works just as well for now.
+            network.parties.entry(*party_id).and_modify(|v| {
+                if v.stratboard_realtime_host.is_none() {
+                    v.stratboard_realtime_host = Some(*from_content_id)
+                }
+            });
+
+            // Tell everyone except the board sharer about the updates.
+            network.send_to_party(
+                *party_id,
+                Some(*from_actor_id),
+                msg,
+                DestinationNetwork::ZoneClients,
+            );
+        }
+
+        ToServer::StrategyBoardRealtimeFinished(party_id) => {
+            let mut network = network.lock();
+            let msg = FromServer::StrategyBoardRealtimeFinished();
+
+            // Tell everyone about the session ending, and reset state so further real-time sessions can be initiated.
+            network.send_to_party(*party_id, None, msg, DestinationNetwork::ZoneClients);
+            network
+                .parties
+                .entry(*party_id)
+                .and_modify(|v| v.stratboard_realtime_host = None);
         }
         _ => {}
     }

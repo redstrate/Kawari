@@ -415,6 +415,26 @@ ServerZoneIpcType:
     comment: Initialize the packet obfuscation system.
     opcode: 792
     size: 16
+  - name: BeginStrategyBoardSession
+    comment: A client starts a strategy board sharing session with their party.
+    opcode: 687
+    size: 16
+  - name: StrategyBoard
+    comment: The content id of the real-time sharing host, and the actual strategy board data to be shared.
+    opcode: 483
+    size: 1184
+  - name: StrategyBoardReceivedAck
+    comment: The server informs the sharing client that a client in the party has received a strategy board.
+    opcode: 531
+    size: 16
+  - name: StrategyBoardUpdate
+    comment: The client updates their strategy board during real-time sharing, and other party members are informed.
+    opcode: 903
+    size: 64
+  - name: EndStrategyBoardSession
+    comment: The client stopped sharing their strategy board, or if it wasn't real-time, the transfer has completed.
+    opcode: 433
+    size: 16
 ClientZoneIpcType:
   - name: InitRequest
     comment: "Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)"
@@ -570,7 +590,7 @@ ClientZoneIpcType:
     size: 8
   - name: RequestCharaInfoFromContentIds
     comment: "Happens when the client requests more information about other characters, and only has their content id."
-    opcode: 707
+    opcode: 181
     size: 80
   - name: PartyLeave
     comment: Happens when the client leaves their party.
@@ -632,6 +652,22 @@ ClientZoneIpcType:
     comment: "Sent by the client while buying from an InclusionShop (usually called 'Item Exchange' in-game.)"
     opcode: 867
     size: 72
+  - name: ShareStrategyBoard
+    comment: The client wishes to share a strategy board with their party.
+    opcode: 330
+    size: 1184
+  - name: StrategyBoardReceived
+    comment: The client acknowledges receipt of a strategy board from another player.
+    opcode: 631
+    size: 16
+  - name: StrategyBoardUpdate
+    comment: The client updates their strategy board during real-time sharing.
+    opcode: 380
+    size: 64
+  - name: RealtimeStrategyBoardFinished
+    comment: The client finishes their real-time sharing session.
+    opcode: 749
+    size: 8
 ServerLobbyIpcType:
   - name: NackReply
     comment: Sent by the server to indicate an lobby error occured.
