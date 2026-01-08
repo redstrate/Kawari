@@ -677,7 +677,7 @@ pub enum ServerZoneIpcData {
         /// The id number of this waymark. 0 = A, 1 = B, and so on.
         id: u8,
         #[brw(pad_after = 2)] // Empty/always zeroes?
-        /// The placement mode of this waymark. 1 = marker placed, 0 = marker removed.
+        /// The placement mode of this waymark.
         placement_mode: WaymarkPlacementMode,
         unk1: u32,
         unk2: u32,
