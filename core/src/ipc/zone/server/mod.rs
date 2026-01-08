@@ -119,7 +119,10 @@ use crate::packet::ServerIpcSegmentHeader;
 
 use crate::ipc::{
     chat::ChatChannel,
-    zone::{PartyMemberEntry, PartyMemberPositions, PartyUpdateStatus},
+    zone::{
+        PartyMemberEntry, PartyMemberPositions, PartyUpdateStatus, StrategyBoard,
+        StrategyBoardUpdate,
+    },
 };
 
 use crate::ipc::zone::{InviteReply, InviteType, InviteUpdateType, SearchInfo};
@@ -648,6 +651,30 @@ pub enum ServerZoneIpcData {
         /// Third seed used in deobsfucation on the client side.
         seed3: u32,
     },
+    StrategyBoardReceivedAck {
+        /// The client ID of the player who received the board.
+        content_id: u64,
+        #[brw(pad_after = 4)] // Seems to be empty/always zeroes
+        /// Unknown, possibly a result value. Observed as 1.
+        unk1: u32,
+    },
+    BeginStrategyBoardSession {
+        /// All of these unknowns are possibly booleans or bitflags. See zone_connection/social.rs::received_strategy_board.
+        unk1: u32,
+        unk2: u32,
+        #[brw(pad_after = 4)] // Seems to be empty/always zeroes
+        unk3: u32,
+    },
+    StrategyBoard {
+        /// The content id of the sending player.
+        content_id: u64,
+        /// The strategy board data.
+        board_data: StrategyBoard,
+    },
+    StrategyBoardUpdate(StrategyBoardUpdate),
+    EndStrategyBoardSession {
+        unk: [u8; 16], // Always zeroes?
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -1008,6 +1035,21 @@ mod tests {
                 seed2: 0,
                 seed3: 0,
             },
+            ServerZoneIpcData::StrategyBoardReceivedAck {
+                content_id: 0,
+                unk1: 0,
+            },
+            ServerZoneIpcData::BeginStrategyBoardSession {
+                unk1: 0,
+                unk2: 0,
+                unk3: 0,
+            },
+            ServerZoneIpcData::StrategyBoard {
+                content_id: 0,
+                board_data: StrategyBoard::default(),
+            },
+            ServerZoneIpcData::StrategyBoardUpdate(StrategyBoardUpdate::default()),
+            ServerZoneIpcData::EndStrategyBoardSession { unk: [0; 16] },
         ];
 
         for data in &ipc_types {

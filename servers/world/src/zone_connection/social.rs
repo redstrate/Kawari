@@ -9,6 +9,7 @@ use kawari::{
             ActorControl, ActorControlCategory, InviteReply, InviteType, InviteUpdateType,
             OnlineStatus, OnlineStatusMask, PartyMemberEntry, PartyUpdateStatus, PlayerEntry,
             ServerZoneIpcData, ServerZoneIpcSegment, SocialList, SocialListRequestType,
+            StrategyBoard, StrategyBoardUpdate,
         },
     },
 };
@@ -270,5 +271,45 @@ impl ZoneConnection {
 
     pub fn is_in_party(&self) -> bool {
         self.player_data.party_id != 0
+    }
+
+    pub async fn received_strategy_board(&mut self, content_id: u64, board_data: StrategyBoard) {
+        // TODO: Figure out what all these mean!
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::BeginStrategyBoardSession {
+            unk1: 0x01010100,
+            unk2: 0x04010101,
+            unk3: 0x00010101,
+        });
+
+        self.send_ipc_self(ipc).await;
+
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::StrategyBoard {
+            content_id,
+            board_data,
+        });
+
+        self.send_ipc_self(ipc).await;
+    }
+
+    pub async fn strategy_board_ack(&mut self, content_id: u64) {
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::StrategyBoardReceivedAck {
+            content_id,
+            unk1: 1,
+        });
+
+        self.send_ipc_self(ipc).await;
+    }
+
+    pub async fn strategy_board_updated(&mut self, update_data: StrategyBoardUpdate) {
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::StrategyBoardUpdate(update_data));
+
+        self.send_ipc_self(ipc).await;
+    }
+
+    pub async fn strategy_board_realtime_finished(&mut self) {
+        let ipc =
+            ServerZoneIpcSegment::new(ServerZoneIpcData::EndStrategyBoardSession { unk: [0; 16] });
+
+        self.send_ipc_self(ipc).await;
     }
 }
