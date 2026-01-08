@@ -294,7 +294,7 @@ impl ZoneConnection {
     pub async fn strategy_board_ack(&mut self, content_id: u64) {
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::StrategyBoardReceivedAck {
             content_id,
-            unk1: 1,
+            unk: 1,
         });
 
         self.send_ipc_self(ipc).await;

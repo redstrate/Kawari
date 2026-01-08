@@ -656,7 +656,7 @@ pub enum ServerZoneIpcData {
         content_id: u64,
         #[brw(pad_after = 4)] // Seems to be empty/always zeroes
         /// Unknown, possibly a result value. Observed as 1.
-        unk1: u32,
+        unk: u32,
     },
     BeginStrategyBoardSession {
         /// All of these unknowns are possibly booleans or bitflags. See zone_connection/social.rs::received_strategy_board.
@@ -1037,7 +1037,7 @@ mod tests {
             },
             ServerZoneIpcData::StrategyBoardReceivedAck {
                 content_id: 0,
-                unk1: 0,
+                unk: 0,
             },
             ServerZoneIpcData::BeginStrategyBoardSession {
                 unk1: 0,

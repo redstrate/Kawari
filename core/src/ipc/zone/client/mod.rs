@@ -370,7 +370,7 @@ pub enum ClientZoneIpcData {
     StrategyBoardReceived {
         content_id: u64,
         #[brw(pad_after = 4)] // Seems to be empty/always zeroes
-        unk3: u32,
+        unk: u32,
     },
     StrategyBoardUpdate(StrategyBoardUpdate),
     RealtimeStrategyBoardFinished {
@@ -597,7 +597,7 @@ mod tests {
             },
             ClientZoneIpcData::StrategyBoardReceived {
                 content_id: 0,
-                unk3: 0,
+                unk: 0,
             },
             ClientZoneIpcData::StrategyBoardUpdate(StrategyBoardUpdate::default()),
         ];
