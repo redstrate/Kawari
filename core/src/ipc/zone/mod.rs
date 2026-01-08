@@ -6,6 +6,9 @@ mod common_emote;
 mod common_strategy_board;
 pub use common_strategy_board::*;
 
+mod common_waymark;
+pub use common_waymark::*;
+
 mod black_list;
 mod config;
 mod social_list;

@@ -1449,6 +1449,8 @@ async fn client_loop(
                     FromServer::StrategyBoardSharedAck(content_id) => connection.strategy_board_ack(content_id).await,
                     FromServer::StrategyBoardRealtimeUpdate(update_data) => connection.strategy_board_updated(update_data).await,
                     FromServer::StrategyBoardRealtimeFinished() => connection.strategy_board_realtime_finished().await,
+                    FromServer::WaymarkUpdated(id, placement_mode, unk1, unk2, unk3) => connection.waymark_updated(id, placement_mode, unk1, unk2, unk3).await,
+                    FromServer::WaymarkPreset(data) => connection.waymark_preset(data).await,
                     _ => { tracing::error!("Zone connection {:#?} received a FromServer message we don't care about: {:#?}, ensure you're using the right client network or that you've implemented a handler for it if we actually care about it!", client_handle.id, msg); }
                 },
                 None => break,

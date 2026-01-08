@@ -435,6 +435,10 @@ ServerZoneIpcType:
     comment: The client stopped sharing their strategy board, or if it wasn't real-time, the transfer has completed.
     opcode: 433
     size: 16
+  - name: WaymarkUpdate
+    comment: A client updated a waymark, and now their party needs to be informed.
+    opcode: 748
+    size: 16
 ClientZoneIpcType:
   - name: InitRequest
     comment: "Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)"

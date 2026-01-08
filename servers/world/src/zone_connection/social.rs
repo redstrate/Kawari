@@ -9,7 +9,7 @@ use kawari::{
             ActorControl, ActorControlCategory, InviteReply, InviteType, InviteUpdateType,
             OnlineStatus, OnlineStatusMask, PartyMemberEntry, PartyUpdateStatus, PlayerEntry,
             ServerZoneIpcData, ServerZoneIpcSegment, SocialList, SocialListRequestType,
-            StrategyBoard, StrategyBoardUpdate,
+            StrategyBoard, StrategyBoardUpdate, WaymarkPlacementMode, WaymarkPreset,
         },
     },
 };
@@ -310,6 +310,32 @@ impl ZoneConnection {
         let ipc =
             ServerZoneIpcSegment::new(ServerZoneIpcData::EndStrategyBoardSession { unk: [0; 16] });
 
+        self.send_ipc_self(ipc).await;
+    }
+
+    /// Someone in the party updated a single waymark.
+    pub async fn waymark_updated(
+        &mut self,
+        id: u8,
+        placement_mode: WaymarkPlacementMode,
+        unk1: u32,
+        unk2: u32,
+        unk3: u32,
+    ) {
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::WaymarkUpdate {
+            id,
+            placement_mode,
+            unk1,
+            unk2,
+            unk3,
+        });
+
+        self.send_ipc_self(ipc).await;
+    }
+
+    /// Someone in the party loaded a waymark preset, or cleared all waymarks.
+    pub async fn waymark_preset(&mut self, data: WaymarkPreset) {
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::FieldMarkerPreset(data));
         self.send_ipc_self(ipc).await;
     }
 }

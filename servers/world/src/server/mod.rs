@@ -19,7 +19,7 @@ use crate::{
         effect::{handle_effect_messages, remove_effect},
         instance::{Instance, NavmeshGenerationStep, QueuedTaskData},
         network::{DestinationNetwork, NetworkState},
-        social::handle_social_messages,
+        social::{get_party_id_from_actor_id, handle_social_messages},
         zone::{MapGimmick, change_zone_warp_to_entrance, handle_zone_messages},
     },
 };
@@ -32,6 +32,7 @@ use kawari::{
     ipc::zone::{
         ActorControl, ActorControlCategory, ActorControlSelf, ActorControlTarget, BattleNpcSubKind,
         ClientTriggerCommand, CommonSpawn, Condition, Conditions, NpcSpawn, ObjectKind,
+        WaymarkPlacementMode, WaymarkPreset,
     },
 };
 
@@ -162,6 +163,16 @@ fn set_player_minion(
         if handle.send(msg).is_err() {
             to_remove.push(id);
         }
+    }
+}
+
+/// Helper function to send a server message to a specific actor, or their entire party (including the specific actor).
+// TODO: Maybe move this elsewhere, but since only three client triggers use it, it should be okay here for now.
+fn send_to_party_or_self(network: &mut NetworkState, from_actor_id: ObjectId, msg: FromServer) {
+    if let Some(party_id) = get_party_id_from_actor_id(network, from_actor_id) {
+        network.send_to_party(party_id, None, msg, DestinationNetwork::ZoneClients);
+    } else {
+        network.send_to_by_actor_id(from_actor_id, msg, DestinationNetwork::ZoneClients);
     }
 }
 
@@ -1104,6 +1115,42 @@ pub async fn server_main_loop(
                             msg,
                             DestinationNetwork::ZoneClients,
                         );
+                    }
+                    ClientTriggerCommand::PlaceWaymark {
+                        id,
+                        unk1,
+                        unk2,
+                        unk3,
+                    } => {
+                        let mut network = network.lock();
+                        let msg = FromServer::WaymarkUpdated(
+                            *id as u8,
+                            WaymarkPlacementMode::Placed,
+                            *unk1,
+                            *unk2,
+                            *unk3,
+                        );
+
+                        send_to_party_or_self(&mut network, from_actor_id, msg);
+                    }
+                    ClientTriggerCommand::ClearWaymark { id } => {
+                        let mut network = network.lock();
+                        let msg = FromServer::WaymarkUpdated(
+                            *id as u8,
+                            WaymarkPlacementMode::Removed,
+                            0,
+                            0,
+                            0,
+                        );
+
+                        send_to_party_or_self(&mut network, from_actor_id, msg);
+                    }
+                    ClientTriggerCommand::ClearAllWaymarks {} => {
+                        let mut network = network.lock();
+                        // Clearing all waymarks is equivalent to sending a completely blank preset.
+                        let msg = FromServer::WaymarkPreset(WaymarkPreset::default());
+
+                        send_to_party_or_self(&mut network, from_actor_id, msg);
                     }
                     _ => tracing::warn!("Server doesn't know what to do with {:#?}", trigger),
                 }
