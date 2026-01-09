@@ -21,6 +21,7 @@ pub use crate::ipc::zone::client::event_return_handler::EventReturnHandler;
 
 use crate::ipc::zone::{
     InviteReply, InviteType, SearchInfo, SocialListUILanguages, StrategyBoard, StrategyBoardUpdate,
+    WaymarkPreset,
 };
 
 use crate::ipc::zone::black_list::RequestBlacklist;
@@ -378,6 +379,7 @@ pub enum ClientZoneIpcData {
         unk1: u32,
         unk2: u32,
     },
+    ApplyFieldMarkerPreset(WaymarkPreset),
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -600,6 +602,7 @@ mod tests {
                 unk: 0,
             },
             ClientZoneIpcData::StrategyBoardUpdate(StrategyBoardUpdate::default()),
+            ClientZoneIpcData::ApplyFieldMarkerPreset(WaymarkPreset::default()),
         ];
 
         for data in &ipc_types {

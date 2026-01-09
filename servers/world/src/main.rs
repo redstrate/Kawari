@@ -1366,6 +1366,9 @@ async fn client_loop(
                                                 tracing::info!("{} is finished sharing their strategy board in realtime!", connection.player_data.actor_id);
                                                 connection.handle.send(ToServer::StrategyBoardRealtimeFinished(connection.player_data.party_id)).await;
                                             }
+                                            ClientZoneIpcData::ApplyFieldMarkerPreset(waymark_preset) => {
+                                                connection.handle.send(ToServer::ApplyWaymarkPreset(connection.player_data.actor_id, connection.player_data.party_id, waymark_preset.clone())).await;
+                                            }
                                         }
                                     }
                                     SegmentData::KeepAliveRequest { id, timestamp } => connection.send_keep_alive(*id, *timestamp).await,

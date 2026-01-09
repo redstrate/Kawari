@@ -384,7 +384,7 @@ ServerZoneIpcType:
     opcode: 113
     size: 184
   - name: FieldMarkerPreset
-    comment: Unknown purpose.
+    comment: A player in the client's party has applied a waymark preset.
     opcode: 991
     size: 104
   - name: DeleteObject
@@ -672,6 +672,10 @@ ClientZoneIpcType:
     comment: The client finishes their real-time sharing session.
     opcode: 749
     size: 8
+  - name: ApplyFieldMarkerPreset
+    comment: The client wants to apply a waymarker preset for their party.
+    opcode: 265
+    size: 104
 ServerLobbyIpcType:
   - name: NackReply
     comment: Sent by the server to indicate an lobby error occured.

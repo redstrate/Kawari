@@ -1039,6 +1039,16 @@ pub fn handle_social_messages(
                 .entry(*party_id)
                 .and_modify(|v| v.stratboard_realtime_host = None);
         }
+        ToServer::ApplyWaymarkPreset(from_id, party_id, waymark_preset) => {
+            let mut network = network.lock();
+            let msg = FromServer::WaymarkPreset(waymark_preset.clone());
+
+            if *party_id != 0 {
+                network.send_to_party(*party_id, None, msg, DestinationNetwork::ZoneClients);
+            } else {
+                network.send_to_by_actor_id(*from_id, msg, DestinationNetwork::ZoneClients);
+            }
+        }
         _ => {}
     }
 }

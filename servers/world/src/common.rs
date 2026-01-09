@@ -307,6 +307,8 @@ pub enum ToServer {
     StrategyBoardRealtimeUpdate(ObjectId, u64, u64, StrategyBoardUpdate),
     /// The client finished their real-time sharing session.
     StrategyBoardRealtimeFinished(u64),
+    /// The client applied a waymark preset for their party.
+    ApplyWaymarkPreset(ObjectId, u64, WaymarkPreset),
 }
 
 #[derive(Clone, Debug)]
