@@ -9,7 +9,7 @@ use axum::{Router, routing::get};
 use kawari::config::get_config;
 use kawari::constants::{SUPPORTED_BOOT_VERSION, SUPPORTED_EXPAC_VERSIONS, SUPPORTED_GAME_VERSION};
 use kawari_patch::list_patch_files;
-use physis::common::Version;
+use physis::Version;
 use physis::patchlist::{PatchEntry, PatchList, PatchListType};
 
 const BOUNDARY_ID: &str = "477D80B1_38BC_41d4_8B48_5273ADB89CAC";

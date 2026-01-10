@@ -27,7 +27,7 @@ pub struct SocialListRequest {
 
 /// Which languages the client's player wishes to be grouped and/or interacted with.
 /// These are set by the client in the Edit Search Info menu (the Content Finder's seem to be used exclusively for grouping preferences?), but by default the primary language will be enabled.
-/// Not to be confused with physis::common::Language.
+/// Not to be confused with physis::Language.
 #[binrw]
 #[derive(Clone, Copy, Eq, PartialEq)]
 pub struct SocialListUILanguages(u8);

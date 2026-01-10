@@ -7,8 +7,9 @@ use icarus::TerritoryType::TerritoryTypeSheet;
 use kawari::config::get_config;
 use kawari_world::{Navmesh, NavmeshParams, NavmeshTile};
 use physis::{
-    common::Language,
-    layer::{LayerEntryData, LayerGroup, ModelCollisionType, Transformation},
+    Language,
+    layer::{LayerEntryData, ModelCollisionType, Transformation},
+    lgb::Lgb,
     lvb::Lvb,
     model::MDL,
     pcb::{Pcb, ResourceNode},
@@ -137,7 +138,7 @@ fn main() {
         if path.contains("bg.lgb") {
             tracing::info!("Processing {path}...");
 
-            let lgb = resolver.parsed::<LayerGroup>(path);
+            let lgb = resolver.parsed::<Lgb>(path);
             let lgb = match lgb {
                 Ok(lgb) => lgb,
                 Err(e) => {

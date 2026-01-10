@@ -30,7 +30,7 @@ use icarus::TopicSelect::TopicSelectSheet;
 use icarus::WarpLogic::WarpLogicSheet;
 use icarus::WeatherRate::WeatherRateSheet;
 use icarus::{Tribe::TribeSheet, Warp::WarpSheet};
-use physis::common::Language;
+use physis::Language;
 use physis::resource::{Resource, ResourceResolver, SqPackResource, UnpackedResource};
 
 use kawari::common::timestamp_secs;

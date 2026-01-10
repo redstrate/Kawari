@@ -1,6 +1,6 @@
 use icarus::{ClassJob::ClassJobSheet, Race::RaceSheet};
 use kawari::common::{ContainerType, ItemOperationKind};
-use physis::common::Language;
+use physis::Language;
 use serde::{Deserialize, Serialize};
 
 use kawari::ipc::zone::ItemOperation;

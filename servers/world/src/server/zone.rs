@@ -3,9 +3,10 @@ use std::{collections::HashMap, sync::Arc, time::Duration};
 use parking_lot::Mutex;
 use physis::{
     layer::{
-        ExitRangeInstanceObject, InstanceObject, LayerEntryData, LayerGroup,
-        PopRangeInstanceObject, Transformation, TriggerBoxShape,
+        ExitRangeInstanceObject, InstanceObject, LayerEntryData, PopRangeInstanceObject,
+        Transformation, TriggerBoxShape,
     },
+    lgb::Lgb,
     lvb::Lvb,
 };
 
@@ -72,7 +73,7 @@ pub struct Zone {
     pub region_name: String,
     pub place_name: String,
     pub intended_use: u8,
-    pub layer_groups: Vec<LayerGroup>,
+    pub layer_groups: Vec<Lgb>,
     pub navimesh_path: String,
     pub map_id: u16,
     cached_npc_base_ids: HashMap<u32, u32>,
@@ -104,7 +105,7 @@ impl Zone {
         let path = format!("bg/{}.lvb", &bg_path);
         tracing::info!("Loading {}", path);
         if let Ok(lvb) = game_data.resource.parsed::<Lvb>(&path) {
-            let mut load_lgb = |path: &str| -> Option<LayerGroup> {
+            let mut load_lgb = |path: &str| -> Option<Lgb> {
                 // Skip LGBs that aren't relevant for the server
                 if path.ends_with("bg.lgb")
                     || path.ends_with("vfx.lgb")
@@ -113,7 +114,7 @@ impl Zone {
                     return None;
                 }
 
-                let lgb = game_data.resource.parsed::<LayerGroup>(path);
+                let lgb = game_data.resource.parsed::<Lgb>(path);
 
                 tracing::info!("Loading {path}");
                 if let Err(e) = &lgb {
@@ -275,7 +276,7 @@ impl Zone {
                     if let LayerEntryData::ExitRange(exit_range) = &object.data
                         && object.instance_id == instance_id
                     {
-                        return Some((object, exit_range));
+                        return Some((object, &exit_range));
                     }
                 }
             }
@@ -295,7 +296,7 @@ impl Zone {
                     if let LayerEntryData::PopRange(pop_range) = &object.data
                         && object.instance_id == instance_id
                     {
-                        return Some((object, pop_range));
+                        return Some((object, &pop_range));
                     }
                 }
             }

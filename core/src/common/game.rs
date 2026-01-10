@@ -326,7 +326,7 @@ impl mlua::IntoLua for EventHandlerType {
 }
 
 /// Which language the client indicates as its primary language.
-/// Not to be confused with physis::common::Language.
+/// Not to be confused with physis::Language.
 #[binrw]
 #[brw(repr = u8)]
 #[derive(Clone, Copy, Debug, Default)]
