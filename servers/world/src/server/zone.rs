@@ -276,7 +276,7 @@ impl Zone {
                     if let LayerEntryData::ExitRange(exit_range) = &object.data
                         && object.instance_id == instance_id
                     {
-                        return Some((object, &exit_range));
+                        return Some((object, exit_range));
                     }
                 }
             }
@@ -296,7 +296,7 @@ impl Zone {
                     if let LayerEntryData::PopRange(pop_range) = &object.data
                         && object.instance_id == instance_id
                     {
-                        return Some((object, &pop_range));
+                        return Some((object, pop_range));
                     }
                 }
             }

@@ -1527,7 +1527,7 @@ async fn main() {
     // This is a static healthcheck meant for the Kawari Toolbox plugin.
     let app = Router::new().route("/healthcheck", get(root));
 
-    let mut healthcheck_addr = addr.clone();
+    let mut healthcheck_addr = addr;
     healthcheck_addr.set_port(5807); // TODO: make configurable
     let healthcheck_listener = tokio::net::TcpListener::bind(healthcheck_addr)
         .await
