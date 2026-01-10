@@ -16,6 +16,15 @@ admin.ffxiv.localhost:80 {
 
 ffxiv.localhost:80 {
     reverse_proxy :5801
+
+    handle /healthcheck {
+        header {
+            Cache-Control "max-age=0, no-cache, no-store, must-revalidate"
+            Pragma "no-cache"
+            Expires 0
+        }
+        reverse_proxy :5807
+    }
 }
 
 launcher.ffxiv.localhost:80 {

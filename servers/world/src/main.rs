@@ -1,6 +1,8 @@
 use std::sync::Arc;
 use std::time::Instant;
 
+use axum::Router;
+use axum::routing::get;
 use kawari::common::{
     ClientLanguage, ContainerType, DirectorEvent, DirectorTrigger, EventHandlerType,
     INVALID_OBJECT_ID, ItemOperationKind, ObjectId, ObjectTypeId, ObjectTypeKind,
@@ -1493,6 +1495,10 @@ async fn client_loop(
     }
 }
 
+async fn root() -> String {
+    "1".to_string()
+}
+
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
@@ -1517,6 +1523,19 @@ async fn main() {
     }
 
     let (handle, _) = spawn_main_loop(game_data.clone());
+
+    // This is a static healthcheck meant for the Kawari Toolbox plugin.
+    let app = Router::new().route("/healthcheck", get(root));
+
+    let mut healthcheck_addr = addr.clone();
+    healthcheck_addr.set_port(5807); // TODO: make configurable
+    let healthcheck_listener = tokio::net::TcpListener::bind(healthcheck_addr)
+        .await
+        .unwrap();
+
+    tokio::spawn(async move {
+        axum::serve(healthcheck_listener, app).await.unwrap();
+    });
 
     loop {
         if let Ok((socket, _)) = listener.accept().await {
