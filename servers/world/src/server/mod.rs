@@ -784,6 +784,7 @@ pub async fn server_main_loop(
                 let mut data = data.lock();
 
                 if let Some(instance) = data.find_actor_instance_mut(actor_id) {
+                    let mut moved = false;
                     if let Some((_, spawn)) = instance
                         .actors
                         .iter_mut()
@@ -794,6 +795,7 @@ pub async fn server_main_loop(
                             NetworkedActor::Npc { spawn, .. } => &mut spawn.common,
                             NetworkedActor::Object { .. } => unreachable!(),
                         };
+                        moved = common.pos != position;
                         common.pos = position;
                         common.rotation = rotation;
                     }
@@ -807,12 +809,14 @@ pub async fn server_main_loop(
                         network.send_to_all(Some(from_id), msg, DestinationNetwork::ZoneClients);
                     }
 
-                    // Check if the actor has any in-progress actions, and cancel them if so.
-                    for task in instance.find_tasks(actor_id) {
-                        if let QueuedTaskData::CastAction { interruptible, .. } = task.data
-                            && interruptible
-                        {
-                            instance.cancel_task(network.clone(), &task);
+                    if moved {
+                        // Check if the actor has any in-progress actions, and cancel them if so.
+                        for task in instance.find_tasks(actor_id) {
+                            if let QueuedTaskData::CastAction { interruptible, .. } = task.data
+                                && interruptible
+                            {
+                                instance.cancel_task(network.clone(), &task);
+                            }
                         }
                     }
                 }
