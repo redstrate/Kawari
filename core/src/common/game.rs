@@ -175,6 +175,10 @@ pub enum JumpState {
     /// The player is descending back to the ground, or isn't jumping at all.
     #[default]
     NoneOrFalling = 0,
+    /// The player begins a gimmick path. Observed during S9 teleportation pads.
+    GimmickPathMoveBegin = 1,
+    /// THe player finishes a gimmick path. Observed during S9 teleportation pads.
+    GimmickPathMoveFinish = 2,
     /// The player is ascending to the apex of the jump.
     Ascending = 16,
 }
