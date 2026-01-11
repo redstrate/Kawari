@@ -1212,7 +1212,7 @@ async fn client_loop(
                                                         unk_flag: 1,
                                                     }
                                                 }).await;
-                                                connection.conditions.set_condition(Condition::OccupiedInQuestEvent);
+                                                connection.conditions.set_condition(Condition::OccupiedInEvent);
                                                 connection.send_conditions().await;
 
                                                 let actor_id = ObjectTypeId { object_id: connection.player_data.actor_id, object_type: ObjectTypeKind::None };
