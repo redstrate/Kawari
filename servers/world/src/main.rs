@@ -645,6 +645,9 @@ async fn client_loop(
                                                     },
                                                     ClientTriggerCommand::FinishZoning {} => {
                                                         connection.handle.send(ToServer::ZoneIn(connection.id, connection.player_data.actor_id, connection.player_data.teleport_reason == TeleportReason::Aetheryte)).await;
+
+                                                        // Reset so it doesn't get stuck to Aetheryte:
+                                                        connection.player_data.teleport_reason = TeleportReason::NotSpecified;
                                                     },
                                                     ClientTriggerCommand::BeginContentsReplay {} => {
                                                         connection.conditions.set_condition(Condition::ExecutingGatheringAction);
