@@ -88,6 +88,9 @@ pub use condition::{Condition, Conditions};
 mod chat_message;
 pub use chat_message::ChatMessage;
 
+mod free_company;
+pub use free_company::FcHierarchy;
+
 mod actor_move;
 use crate::constants::{
     COMPLETED_LEVEQUEST_BITMASK_SIZE, COMPLETED_QUEST_BITMASK_SIZE, TITLE_UNLOCK_BITMASK_SIZE,
@@ -125,6 +128,7 @@ use crate::ipc::{
     },
 };
 
+use crate::ipc::zone::social_list::GrandCompany;
 use crate::ipc::zone::{InviteReply, InviteType, InviteUpdateType, SearchInfo};
 
 pub type ServerZoneIpcSegment =
@@ -683,6 +687,72 @@ pub enum ServerZoneIpcData {
         unk2: u32,
         unk3: u32,
     },
+    FreeCompanyHierarchy {
+        #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+        #[br(count = CHAR_NAME_MAX_LENGTH)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        leader_name: String,
+
+        #[br(count = 16)]
+        #[bw(pad_size_to = 16)]
+        hierarchy_list: Vec<FcHierarchy>,
+    },
+    FreeCompanyShortMessage {
+        /// The content id of the requested character.
+        content_id: u64,
+        /// A value the client sends, repeated back to the client.
+        sequence: u32,
+        /// A 32-bit Unix timestamp indicating when the message was last updated.
+        time_last_updated: u32,
+        #[brw(pad_size_to = 96)]
+        #[br(count = 96)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        #[brw(pad_after = 8)] // Empty/zeroes
+        /// The requested character's FC short message.
+        short_message: String,
+    },
+    FreeCompanyHeader {
+        /// The company's ID number. It can also be found in SocialList responses.
+        company_id: u64,
+        /// The company's crest ID number. Presumably used in places where the company logo is shown.
+        crest_id: u64,
+        /// Unknown purpose. Possibly for rankings on the Lodestone?
+        company_points: u64,
+        /// How many company credits the company has to spend on purchases (actions, misc. items, etc.).
+        company_credits: u64,
+        /// The company's standing with the Grand Company they're allied to.
+        reputation: u32,
+        /// The amount of points required to rank up.
+        next_point: u32,
+        /// How many points the company has towards their next rank up.
+        current_point: u32,
+        /// How many members the company has in total.
+        total_members: u16,
+        /// How many members in the company are currently online.
+        online_members: u16,
+        /// The Grand Company this fc is aligned with.
+        gc_id: GrandCompany,
+        /// The company's current rank (out of 30).
+        fc_rank: u8,
+        #[brw(pad_size_to = 22)]
+        #[br(count = 22)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        /// The company's full name.
+        company_name: String,
+        #[brw(pad_size_to = 6)]
+        #[br(count = 6)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        #[brw(pad_after = 2)] // Empty/zeroes
+        /// The company's short tag.
+        company_tag: String,
+    },
+    FreeCompanyActivityList {
+        unk: [u8; 528],
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -1065,6 +1135,32 @@ mod tests {
                 unk2: 0,
                 unk3: 0,
             },
+            ServerZoneIpcData::FreeCompanyHierarchy {
+                leader_name: String::default(),
+                hierarchy_list: vec![FcHierarchy::default(); 16],
+            },
+            ServerZoneIpcData::FreeCompanyShortMessage {
+                content_id: 0,
+                sequence: 0,
+                time_last_updated: 0,
+                short_message: String::default(),
+            },
+            ServerZoneIpcData::FreeCompanyHeader {
+                company_id: 0,
+                crest_id: 0,
+                company_points: 0,
+                company_credits: 0,
+                reputation: 0,
+                next_point: 0,
+                current_point: 0,
+                total_members: 0,
+                online_members: 0,
+                gc_id: GrandCompany::None,
+                fc_rank: 0,
+                company_name: String::default(),
+                company_tag: String::default(),
+            },
+            ServerZoneIpcData::FreeCompanyActivityList { unk: [0; 528] },
         ];
 
         for data in &ipc_types {

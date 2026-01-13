@@ -340,6 +340,8 @@ pub enum ClientLanguage {
     English = 1,
     German = 2,
     French = 3,
+    /// Seen when a player in the social list is offline (possibly uncached or on another world?).
+    OfflineInvalid = 255,
 }
 
 // When adding a new container type, make sure to add it to InventoryIterator

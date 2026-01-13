@@ -433,9 +433,10 @@ pub fn handle_social_messages(
                         }
                     }
                 }
-                SocialListRequestType::Friends => {
+                _ => {
                     tracing::warn!(
-                        "SocialListRequestType was Friends! This is not yet implemented!"
+                        "SocialListRequestType was {:#?}! This is not yet implemented!",
+                        &request.request_type
                     );
                 }
             }

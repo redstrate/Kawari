@@ -299,10 +299,26 @@ ServerZoneIpcType:
     comment: Sent by the server to update your online status.
     opcode: 394
     size: 8
-  - name: FreeCompanyGreeting
-    comment: Sent by the server to inform clients about their free company's message of the day. May have additional uses?
+  - name: FreeCompanyHierarchy
+    comment: Sent by the server to inform clients about their free company's hierarchy info.
     opcode: 326
+    size: 1440
+  - name: FreeCompanyGreeting
+    comment: Sent by the server to inform clients about their free company's message of the day.
+    opcode: 541
     size: 200
+  - name: FreeCompanyShortMessage
+    comment: Sent by the server to inform clients about a short message from a character (including their own) in their free company.
+    opcode: 785
+    size: 120
+  - name: FreeCompanyHeader
+    comment: Sent by the server to inform clients about the free company's header (top portion of the free company UI).
+    opcode: 261
+    size: 80
+  - name: FreeCompanyActivityList
+    comment: Sent by the server to inform clients about the free company's recent activity history.
+    opcode: 363
+    size: 528
   - name: CharaInfoFromContentIds
     comment: Sent by the server in response to RequestCharaInfoFromContentIds.
     opcode: 183
@@ -676,6 +692,10 @@ ClientZoneIpcType:
     comment: The client wants to apply a waymarker preset for their party.
     opcode: 265
     size: 104
+  - name: RequestFreeCompanyShortMessage
+    comment: The client requests a character's short message in their free company.
+    opcode: 224
+    size: 16
 ServerLobbyIpcType:
   - name: NackReply
     comment: Sent by the server to indicate an lobby error occured.

@@ -14,12 +14,16 @@ pub enum SocialListRequestType {
     #[default]
     Party = 0x1,
     Friends = 0x2,
+    SearchResults = 0x4,
+    FreeCompanyOnline = 0x5,
+    FreeCompanyOffline = 0x6,
 }
 
 #[binrw]
 #[derive(Debug, Clone, Default)]
 pub struct SocialListRequest {
-    #[brw(pad_before = 10)] // empty
+    pub community_id: u64, // Used for at least free companies, but probably also linkshells & fellowships too
+    pub next_index: u16,
     pub request_type: SocialListRequestType,
     #[brw(pad_after = 4)] // empty
     pub count: u8,
@@ -72,8 +76,12 @@ pub struct SocialListUIFlags(u16);
 
 bitflags! {
     impl SocialListUIFlags: u16 {
+        const NONE = 0;
         /// The player data was unable to be retrieved (deleted, on another datacenter (?), some other issue).
         const UNABLE_TO_RETRIEVE = 1;
+        const UNKNOWN_2 = 2;
+        const UNKNOWN_4 = 4;
+        const UNKNOWN_256 = 256;
         /// Enables the right-click context menu for this PlayerEntry.
         const ENABLE_CONTEXT_MENU = 4096;
     }
@@ -123,10 +131,12 @@ impl PlayerEntry {
 #[binrw]
 #[derive(Debug, Clone, Default)]
 pub struct SocialList {
-    #[brw(pad_before = 12)] // empty
+    pub community_id: u64, // Used for at least free companies, but probably also linkshells & fellowships too
+    pub next_index: u16,
+    pub current_index: u16,
     pub request_type: SocialListRequestType,
     pub sequence: u8,
-    #[brw(pad_before = 2)] // empty
+    #[brw(pad_before = 2)] // Empty? Still possible it might have data in other SocialList types
     #[br(count = 10)]
     #[bw(pad_size_to = 10 * PlayerEntry::SIZE)]
     pub entries: Vec<PlayerEntry>,

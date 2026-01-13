@@ -262,6 +262,10 @@ impl ZoneConnection {
         entries: Vec<PlayerEntry>,
     ) {
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::SocialList(SocialList {
+            // TODO: Fill these in once we support more social list types
+            community_id: 0,
+            current_index: 0,
+            next_index: 0,
             request_type,
             sequence,
             entries,
