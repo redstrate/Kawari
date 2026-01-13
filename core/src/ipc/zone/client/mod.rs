@@ -380,6 +380,13 @@ pub enum ClientZoneIpcData {
         unk2: u32,
     },
     ApplyFieldMarkerPreset(WaymarkPreset),
+    RequestFreeCompanyShortMessage {
+        /// The content id of the requested character.
+        content_id: u64,
+        #[brw(pad_after = 4)]
+        /// A sequence value that is repeated by the server later on in FreeCompanyShortMessage.
+        sequence: u32,
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -603,6 +610,10 @@ mod tests {
             },
             ClientZoneIpcData::StrategyBoardUpdate(StrategyBoardUpdate::default()),
             ClientZoneIpcData::ApplyFieldMarkerPreset(WaymarkPreset::default()),
+            ClientZoneIpcData::RequestFreeCompanyShortMessage {
+                content_id: 0,
+                sequence: 0,
+            },
         ];
 
         for data in &ipc_types {

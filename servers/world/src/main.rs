@@ -1374,6 +1374,9 @@ async fn client_loop(
                                             ClientZoneIpcData::ApplyFieldMarkerPreset(waymark_preset) => {
                                                 connection.handle.send(ToServer::ApplyWaymarkPreset(connection.player_data.actor_id, connection.player_data.party_id, waymark_preset.clone())).await;
                                             }
+                                            ClientZoneIpcData::RequestFreeCompanyShortMessage { .. } => {
+                                                tracing::warn!("Requesting a free company short message is unimplemented");
+                                            }
                                         }
                                     }
                                     SegmentData::KeepAliveRequest { id, timestamp } => connection.send_keep_alive(*id, *timestamp).await,
