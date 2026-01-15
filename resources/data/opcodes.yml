@@ -530,7 +530,7 @@ ClientZoneIpcType:
     size: 40
   - name: Config
     comment: Unknown purpose.
-    opcode: 176
+    opcode: 119
     size: 8
   - name: EventUnkRequest
     comment: Unknown purpose.
