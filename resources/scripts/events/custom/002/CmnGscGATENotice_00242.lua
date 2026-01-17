@@ -21,8 +21,8 @@
     Third is the location:
     1 is Wonder Square East
     2 is Event Square
-    3 is round square
-    4 is cactpot board (???)
+    3 is Round Square
+    4 is Cactpot Board (???)
     -Anything not in that range results in " " or a softlock
 
     The fourth is unknown, possibly flags or a destination id of some sort
