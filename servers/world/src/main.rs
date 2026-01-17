@@ -1017,7 +1017,7 @@ async fn client_loop(
                                                 if event_type == EventHandlerType::Shop {
                                                     connection.process_shop_event_return(handler).await;
                                                 } else {
-                                                    tracing::info!(message = "Event returned", handler_id = handler.handler_id.0, error_code = handler.error_code, scene = handler.scene, params = ?&handler.params[..handler.num_results as usize]);
+                                                    tracing::info!(message = "Event returned", handler_id = %handler.handler_id, error_code = handler.error_code, scene = handler.scene, params = ?&handler.params[..handler.num_results as usize]);
 
                                                     if let Some(event) = connection.events.last_mut() {
                                                         event.do_return(handler.scene, &handler.params[..handler.num_results as usize], &mut lua_player);
@@ -1045,7 +1045,7 @@ async fn client_loop(
                                                 }
                                             }
                                             ClientZoneIpcData::EventYieldHandler(handler) => {
-                                                tracing::info!(message = "Event yielded", handler_id = handler.handler_id.0, error_code = handler.error_code, scene = handler.scene, params = ?&handler.params[..handler.num_results as usize]);
+                                                tracing::info!(message = "Event yielded", handler_id = %handler.handler_id, error_code = handler.error_code, scene = handler.scene, params = ?&handler.params[..handler.num_results as usize]);
 
                                                 connection
                                                 .events
@@ -1054,7 +1054,7 @@ async fn client_loop(
                                                     .finish(handler.scene, &handler.params[..handler.num_results as usize], &mut lua_player);
                                             }
                                             ClientZoneIpcData::EventYieldHandler8(handler) => {
-                                                tracing::info!(message = "Event yielded", handler_id = handler.handler_id.0, error_code = handler.error_code, scene = handler.scene, params = ?&handler.params[..handler.num_results as usize]);
+                                                tracing::info!(message = "Event yielded", handler_id = %handler.handler_id, error_code = handler.error_code, scene = handler.scene, params = ?&handler.params[..handler.num_results as usize]);
 
                                                 connection
                                                     .events
