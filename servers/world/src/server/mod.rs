@@ -319,6 +319,8 @@ fn server_logic_tick(data: &mut WorldServer, network: &mut NetworkState) {
             }
 
             let mut actors_now_gimmick_jumping = Vec::new();
+            let mut actors_now_inside_instance_exits = Vec::new();
+            let mut actors_now_outside_instance_exits = Vec::new();
 
             // Recalculate distance ranges
             for (id, actor) in &instance.actors {
@@ -326,6 +328,7 @@ fn server_logic_tick(data: &mut WorldServer, network: &mut NetworkState) {
                 let NetworkedActor::Player {
                     conditions,
                     executing_gimmick_jump,
+                    inside_instance_exit,
                     ..
                 } = actor
                 else {
@@ -340,6 +343,8 @@ fn server_logic_tick(data: &mut WorldServer, network: &mut NetworkState) {
                 // Check for overlapping map ranges
                 let overlapping_ranges = instance.zone.get_overlapping_map_ranges(actor.position());
                 let _in_sanctuary = overlapping_ranges.iter().filter(|x| x.sanctuary).count() > 0;
+
+                let mut inside_any_instance_exits = false;
 
                 // Process gimmicks
                 if !executing_gimmick_jump {
@@ -387,7 +392,22 @@ fn server_logic_tick(data: &mut WorldServer, network: &mut NetworkState) {
                                 }
                             }
                         }
+                        if range.exit {
+                            inside_any_instance_exits = true;
+                            if !inside_instance_exit {
+                                let msg = FromServer::EnteredInstanceExitRange(range.instance_id);
+                                actors_now_inside_instance_exits.push(*id);
+                                if handle.send(msg).is_err() {
+                                    // TODO: remove as needed
+                                    //self.to_remove.push(id);
+                                }
+                            }
+                        }
                     }
+                }
+
+                if !inside_any_instance_exits {
+                    actors_now_outside_instance_exits.push(*id);
                 }
 
                 let is_in_duel_area = overlapping_ranges.iter().filter(|x| x.duel).count() > 0;
@@ -500,6 +520,31 @@ fn server_logic_tick(data: &mut WorldServer, network: &mut NetworkState) {
                 };
 
                 *executing_gimmick_jump = true;
+            }
+
+            // TODO: we probably need a better "we just entered this maprect" event instead of this
+            for actor in &actors_now_inside_instance_exits {
+                let Some(NetworkedActor::Player {
+                    inside_instance_exit,
+                    ..
+                }) = instance.find_actor_mut(*actor)
+                else {
+                    continue;
+                };
+
+                *inside_instance_exit = true;
+            }
+
+            for actor in &actors_now_outside_instance_exits {
+                let Some(NetworkedActor::Player {
+                    inside_instance_exit,
+                    ..
+                }) = instance.find_actor_mut(*actor)
+                else {
+                    continue;
+                };
+
+                *inside_instance_exit = false;
             }
         }
 

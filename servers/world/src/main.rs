@@ -4,7 +4,7 @@ use std::time::Instant;
 use axum::Router;
 use axum::routing::get;
 use kawari::common::{
-    ClientLanguage, ContainerType, DirectorEvent, DirectorTrigger, EventHandlerType,
+    ClientLanguage, ContainerType, DirectorEvent, DirectorTrigger, EventHandlerType, HandlerId,
     INVALID_OBJECT_ID, ItemOperationKind, ObjectId, ObjectTypeId, ObjectTypeKind, Position,
     calculate_max_level,
 };
@@ -15,8 +15,8 @@ use kawari::ipc::chat::{ChatChannel, ClientChatIpcData};
 
 use kawari::ipc::zone::{
     ActorControl, ActorControlCategory, ActorControlSelf, Condition, Conditions,
-    ContentFinderUserAction, EventType, InviteType, OnlineStatusMask, PlayerStatus, SearchInfo,
-    TrustContent, TrustInformation,
+    ContentFinderUserAction, EventType, InviteType, OnlineStatusMask, PlayerStatus, SceneFlags,
+    SearchInfo, TrustContent, TrustInformation,
 };
 
 use kawari::ipc::zone::{
@@ -1470,6 +1470,19 @@ async fn client_loop(
                     FromServer::StrategyBoardRealtimeFinished() => connection.strategy_board_realtime_finished().await,
                     FromServer::WaymarkUpdated(id, placement_mode, unk1, unk2, unk3) => connection.waymark_updated(id, placement_mode, unk1, unk2, unk3).await,
                     FromServer::WaymarkPreset(data) => connection.waymark_preset(data).await,
+                    FromServer::EnteredInstanceExitRange(arg) => {
+                        tracing::info!("Showing leave duty dialog...");
+
+                        let object = ObjectTypeId { object_id: connection.player_data.actor_id, object_type: ObjectTypeKind::None };
+                        let handler_id = HandlerId::new(EventHandlerType::GimmickRect, 1).0;
+
+                        connection.start_event(object, handler_id, EventType::WithinRange, arg, &mut lua_player).await;
+
+                        connection.conditions.set_condition(Condition::OccupiedInQuestEvent);
+                        connection.send_conditions().await;
+
+                        connection.event_scene(&object, handler_id, 2, SceneFlags::NO_DEFAULT_CAMERA | SceneFlags::HIDE_HOTBAR, Vec::new()).await;
+                    }
                     _ => { tracing::error!("Zone connection {:#?} received a FromServer message we don't care about: {:#?}, ensure you're using the right client network or that you've implemented a handler for it if we actually care about it!", client_handle.id, msg); }
                 },
                 None => break,

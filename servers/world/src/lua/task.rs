@@ -187,4 +187,5 @@ pub enum LuaTask {
         id: u32,
     },
     Kill {},
+    AbandonContent {},
 }

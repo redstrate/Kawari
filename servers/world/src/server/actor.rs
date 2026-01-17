@@ -18,6 +18,8 @@ pub enum NetworkedActor {
         conditions: Conditions,
         /// If this actor is currently executing a gimmick jump, and has yet to land.
         executing_gimmick_jump: bool,
+        // If this actor is currently inside of an instance exit range.
+        inside_instance_exit: bool,
     },
     Npc {
         current_path: VecDeque<[f32; 3]>,

@@ -157,6 +157,7 @@ impl Instance {
                 distance_range: DistanceRange::Normal,
                 conditions: Conditions::default(),
                 executing_gimmick_jump: false,
+                inside_instance_exit: false,
             },
         );
     }

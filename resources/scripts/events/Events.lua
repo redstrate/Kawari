@@ -74,6 +74,9 @@ function dispatchEvent(player, event_id)
         return runEvent(event_id, "events/generic/GimmickAccessor.lua")
     elseif event_type == HANDLER_TYPE_GIMMICK_BILL then
         return runEvent(event_id, "events/generic/GimmickBill.lua")
+    elseif event_type == HANDLER_TYPE_GIMMICK_RECT then
+        -- NOTE: This is only applicable to instance exits for now
+        return runEvent(event_id, "events/generic/InstanceExit.lua")
     elseif event_type == HANDLER_TYPE_CHOCOBO_TAXI_STAND then
         return runEvent(event_id, "events/generic/Chocobokeep.lua")
     elseif event_type == HANDLER_TYPE_OPENING then

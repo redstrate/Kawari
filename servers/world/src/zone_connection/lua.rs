@@ -560,6 +560,18 @@ impl ZoneConnection {
                         .send(ToServer::Kill(self.id, self.player_data.actor_id))
                         .await;
                 }
+                LuaTask::AbandonContent {} => {
+                    // Signal to the global server to leave this content.
+                    self.handle
+                        .send(ToServer::LeaveContent(
+                            self.id,
+                            self.player_data.actor_id,
+                            self.old_zone_id,
+                            self.old_position,
+                            self.old_rotation,
+                        ))
+                        .await;
+                }
             }
         }
         player.queued_tasks.clear();

@@ -639,6 +639,10 @@ impl LuaPlayer {
 
         create_ipc_self(self, ipc, self.player_data.actor_id);
     }
+
+    fn abandon_content(&mut self) {
+        self.queued_tasks.push(LuaTask::AbandonContent {});
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -1038,6 +1042,10 @@ impl UserData for LuaPlayer {
         });
         methods.add_method_mut("set_online_status", |_, this, online_status_id: u8| {
             this.set_online_status(online_status_id);
+            Ok(())
+        });
+        methods.add_method_mut("abandon_content", |_, this, _: ()| {
+            this.abandon_content();
             Ok(())
         });
     }

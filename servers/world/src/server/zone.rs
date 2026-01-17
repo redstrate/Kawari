@@ -63,6 +63,8 @@ pub struct MapRange {
     pub instance_id: u32,
     /// The MapRange's discovery index. Unclear if this is the same as DiscoveryIndex on the Map sheet.
     pub discovery_id: Option<u8>,
+    /// Whether this map range represents an instance exit.
+    pub exit: bool,
 }
 
 /// Represents a loaded zone
@@ -169,6 +171,7 @@ impl Zone {
                                 } else {
                                     None
                                 },
+                                exit: false,
                             });
                         }
                         if let LayerEntryData::EventRange(event_range) = &object.data {
@@ -189,6 +192,13 @@ impl Zone {
                                 gimmick: None,
                                 instance_id: object.instance_id,
                                 discovery_id: None,
+                                // also terrible
+                                exit: event_range.unk_flags[0] == 1
+                                    && event_range.unk_flags[1] == 0
+                                    && event_range.unk_flags[2] == 0
+                                    && event_range.unk_flags[3] == 1
+                                    && event_range.unk_flags[4] == 0
+                                    && event_range.unk_flags[5] == 0,
                             });
                         }
                     }
@@ -621,6 +631,7 @@ pub fn handle_zone_messages(
                 distance_range: DistanceRange::Normal,
                 conditions: Conditions::default(),
                 executing_gimmick_jump: false,
+                inside_instance_exit: false,
             };
         }
         ToServer::ChangeZone(from_id, actor_id, zone_id, new_position, new_rotation) => {
