@@ -446,7 +446,7 @@ pub enum ActorControlCategory {
     },
 
     /// Sets some variable in GoldSaucerManager, unsure which yet.
-    #[brw(magic = 907u32)]
+    #[brw(magic = 911u32)]
     UnkGoldSaucerManagerRelated {
         unk1: u32,
         unk2: u32,
