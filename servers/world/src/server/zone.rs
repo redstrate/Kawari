@@ -192,7 +192,7 @@ impl Zone {
                                 gimmick: None,
                                 instance_id: object.instance_id,
                                 discovery_id: None,
-                                // also terrible
+                                // also terrible, TODO: use LGBEventRange column to determine this instead?
                                 exit: event_range.unk_flags[0] == 1
                                     && event_range.unk_flags[1] == 0
                                     && event_range.unk_flags[2] == 0
