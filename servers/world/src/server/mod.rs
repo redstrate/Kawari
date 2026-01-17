@@ -1364,6 +1364,42 @@ pub async fn server_main_loop(
                     tracing::warn!("Failed to find zone id for content?!");
                 }
             }
+            ToServer::LeaveContent(
+                from_client_id,
+                from_actor_id,
+                old_zone_id,
+                old_position,
+                old_rotation,
+            ) => {
+                let mut data = data.lock();
+                let mut network = network.lock();
+
+                // Inform the players in this zone that this actor left
+                if let Some(current_instance) = data.find_actor_instance_mut(from_actor_id) {
+                    network.remove_actor(current_instance, from_actor_id);
+                }
+
+                // create a new instance if necessary
+                let mut game_data = game_data.lock();
+                data.ensure_exists(old_zone_id, &mut game_data);
+
+                // then find or create a new instance with the zone id
+                data.ensure_exists(old_zone_id, &mut game_data);
+                let target_instance = data.find_instance_mut(old_zone_id).unwrap();
+                target_instance.insert_empty_actor(from_actor_id);
+
+                // tell the client to load into the zone
+                let msg = FromServer::ChangeZone(
+                    old_zone_id,
+                    target_instance.content_finder_condition_id,
+                    target_instance.weather_id,
+                    old_position,
+                    old_rotation,
+                    target_instance.zone.to_lua_zone(target_instance.weather_id),
+                    false,
+                );
+                network.send_to(from_client_id, msg, DestinationNetwork::ZoneClients);
+            }
             ToServer::UpdateConditions(from_actor_id, new_conditions) => {
                 // update their stored state
                 let mut data = data.lock();

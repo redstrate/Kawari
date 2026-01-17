@@ -287,6 +287,8 @@ pub enum ToServer {
     PartyMemberReturned(ObjectId),
     /// The client is requesting to join the following content.
     JoinContent(ClientId, ObjectId, u16),
+    /// The c lient is requesting to leave their current content, the connection is in charge of keeping track of the old position.
+    LeaveContent(ClientId, ObjectId, u16, Position, f32),
     /// Update the global server state of the client's conditions.
     UpdateConditions(ObjectId, Conditions),
     /// (Temporary) Signal to the server to commence the duty.

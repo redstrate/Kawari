@@ -160,6 +160,11 @@ pub struct ZoneConnection {
 
     /// List of queued tasks from the server.
     pub queued_tasks: Vec<LuaTask>,
+
+    /// Information from before we entered the content.
+    pub old_zone_id: u16,
+    pub old_position: Position,
+    pub old_rotation: f32,
 }
 
 impl ZoneConnection {
@@ -239,6 +244,13 @@ impl ZoneConnection {
     }
 
     pub async fn begin_log_out(&mut self) {
+        // If we were last in an instance, tell the server we're outside of it so we don't get stuck/crash.
+        if self.conditions.has_condition(Condition::BoundByDuty) {
+            self.player_data.zone_id = self.old_zone_id;
+            self.player_data.position = self.old_position;
+            self.player_data.rotation = self.old_rotation;
+        }
+
         // Write the player back to the database
         {
             let mut database = self.database.lock();

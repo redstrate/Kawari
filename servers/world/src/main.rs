@@ -5,7 +5,7 @@ use axum::Router;
 use axum::routing::get;
 use kawari::common::{
     ClientLanguage, ContainerType, DirectorEvent, DirectorTrigger, EventHandlerType,
-    INVALID_OBJECT_ID, ItemOperationKind, ObjectId, ObjectTypeId, ObjectTypeKind,
+    INVALID_OBJECT_ID, ItemOperationKind, ObjectId, ObjectTypeId, ObjectTypeKind, Position,
     calculate_max_level,
 };
 use kawari::config::get_config;
@@ -147,6 +147,9 @@ async fn initial_setup(
                     conditions: Conditions::default(),
                     client_language: ClientLanguage::English,
                     queued_tasks: Vec::new(),
+                    old_zone_id: 0,
+                    old_position: Position::default(),
+                    old_rotation: 0.0,
                 };
 
                 // Handle setup before passing off control to the zone connection.
@@ -764,6 +767,10 @@ async fn client_loop(
                                                         // Inform the server, so it sends out the AC.
                                                         connection.handle.send(ToServer::ClientTrigger(connection.id, connection.player_data.actor_id, trigger.clone())).await;
                                                     }
+                                                    ClientTriggerCommand::AbandonContent { .. } => {
+                                                        // Remove ourselves from this instance.
+                                                        connection.handle.send(ToServer::LeaveContent(connection.id, connection.player_data.actor_id, connection.old_zone_id, connection.old_position, connection.old_rotation)).await;
+                                                    }
                                                     _ => {
                                                         // inform the server of our trigger, it will handle sending it to other clients
                                                         connection.handle.send(ToServer::ClientTrigger(connection.id, connection.player_data.actor_id, trigger.clone())).await;
@@ -1127,6 +1134,11 @@ async fn client_loop(
                                                     }
 
                                                     connection.handle.send(ToServer::JoinContent(connection.id, connection.player_data.actor_id, connection.queued_content.unwrap())).await;
+
+                                                    // Store our old information, for when we leave the instance
+                                                    connection.old_zone_id = connection.player_data.zone_id;
+                                                    connection.old_position = connection.player_data.position;
+                                                    connection.old_rotation = connection.player_data.rotation;
                                                 }
 
                                                 // If we don't send this, the content finder gets stuck.
