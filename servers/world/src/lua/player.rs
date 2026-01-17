@@ -643,6 +643,15 @@ impl LuaPlayer {
     fn abandon_content(&mut self) {
         self.queued_tasks.push(LuaTask::AbandonContent {});
     }
+
+    fn set_item_level(&mut self, item_level: u32) {
+        let ipc =
+            ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
+                category: ActorControlCategory::SetItemLevel { level: item_level },
+            }));
+
+        create_ipc_self(self, ipc, self.player_data.actor_id);
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -1046,6 +1055,10 @@ impl UserData for LuaPlayer {
         });
         methods.add_method_mut("abandon_content", |_, this, _: ()| {
             this.abandon_content();
+            Ok(())
+        });
+        methods.add_method_mut("set_item_level", |_, this, item_level: u32| {
+            this.set_item_level(item_level);
             Ok(())
         });
     }
