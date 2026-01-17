@@ -64,7 +64,7 @@ pub struct MapRange {
     /// The MapRange's discovery index. Unclear if this is the same as DiscoveryIndex on the Map sheet.
     pub discovery_id: Option<u8>,
     /// Whether this map range represents an instance exit.
-    pub exit: bool,
+    pub entrance: bool,
 }
 
 /// Represents a loaded zone
@@ -171,7 +171,7 @@ impl Zone {
                                 } else {
                                     None
                                 },
-                                exit: false,
+                                entrance: false,
                             });
                         }
                         if let LayerEntryData::EventRange(event_range) = &object.data {
@@ -193,7 +193,7 @@ impl Zone {
                                 instance_id: object.instance_id,
                                 discovery_id: None,
                                 // Set later!
-                                exit: false,
+                                entrance: false,
                             });
                         }
                     }

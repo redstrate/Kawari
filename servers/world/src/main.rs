@@ -1470,7 +1470,7 @@ async fn client_loop(
                     FromServer::StrategyBoardRealtimeFinished() => connection.strategy_board_realtime_finished().await,
                     FromServer::WaymarkUpdated(id, placement_mode, unk1, unk2, unk3) => connection.waymark_updated(id, placement_mode, unk1, unk2, unk3).await,
                     FromServer::WaymarkPreset(data) => connection.waymark_preset(data).await,
-                    FromServer::EnteredInstanceExitRange(arg) => {
+                    FromServer::EnteredInstanceEntranceRange(arg) => {
                         tracing::info!("Showing leave duty dialog...");
 
                         let object = ObjectTypeId { object_id: connection.player_data.actor_id, object_type: ObjectTypeKind::None };

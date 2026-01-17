@@ -167,7 +167,7 @@ pub enum FromServer {
     /// Inform the client that a waymarker preset was applied.
     WaymarkPreset(WaymarkPreset),
     /// Inform the client that they entered an instance exit range.
-    EnteredInstanceExitRange(u32),
+    EnteredInstanceEntranceRange(u32),
 }
 
 #[derive(Debug, Clone)]
