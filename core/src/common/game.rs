@@ -359,6 +359,7 @@ impl EventHandlerType {
             TerritoryIntendedUse::Trial => Some(Self::InstanceContent),
             TerritoryIntendedUse::AllianceRaid => Some(Self::InstanceContent),
             TerritoryIntendedUse::Raid2 => Some(Self::InstanceContent),
+            TerritoryIntendedUse::ChaoticRaid => Some(Self::InstanceContent),
             _ => None,
         }
     }

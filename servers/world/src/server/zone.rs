@@ -79,7 +79,7 @@ pub struct Zone {
     pub navimesh_path: String,
     pub map_id: u16,
     cached_npc_base_ids: HashMap<u32, u32>,
-    map_ranges: Vec<MapRange>,
+    pub map_ranges: Vec<MapRange>,
 }
 
 impl Zone {
@@ -192,13 +192,8 @@ impl Zone {
                                 gimmick: None,
                                 instance_id: object.instance_id,
                                 discovery_id: None,
-                                // also terrible, TODO: use LGBEventRange column to determine this instead?
-                                exit: event_range.unk_flags[0] == 1
-                                    && event_range.unk_flags[1] == 0
-                                    && event_range.unk_flags[2] == 0
-                                    && event_range.unk_flags[3] == 1
-                                    && event_range.unk_flags[4] == 0
-                                    && event_range.unk_flags[5] == 0,
+                                // Set later!
+                                exit: false,
                             });
                         }
                     }

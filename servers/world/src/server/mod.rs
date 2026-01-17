@@ -108,6 +108,17 @@ impl WorldServer {
         let mut instance = Instance::new(zone_id, game_data);
         instance.content_finder_condition_id = content_finder_condition;
 
+        // Ensure we have the entrance set correctly
+        let entrance_id = game_data
+            .get_content_entrance_id(content_finder_condition)
+            .expect("Failed to find entrance ID?");
+        for range in &mut instance.zone.map_ranges {
+            if range.instance_id == entrance_id {
+                range.exit = true;
+                break;
+            }
+        }
+
         self.instances.push(instance);
 
         self.instances.last_mut()

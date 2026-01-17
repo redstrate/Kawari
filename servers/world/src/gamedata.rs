@@ -784,6 +784,20 @@ impl GameData {
         let row = self.territory_type_sheet.row(zone_id.into())?;
         row.Map().into_u16().copied()
     }
+
+    /// Returns the entrance ID for this content finder condition.
+    pub fn get_content_entrance_id(&mut self, content_finder_id: u16) -> Option<u32> {
+        let content_finder_sheet =
+            ContentFinderConditionSheet::read_from(&mut self.resource, Language::English).unwrap();
+        let content_finder_row = content_finder_sheet.row(content_finder_id as u32)?;
+
+        let instance_content_sheet =
+            InstanceContentSheet::read_from(&mut self.resource, Language::None).unwrap();
+        let instance_content_row =
+            instance_content_sheet.row(content_finder_row.Content().into_u16().copied()? as u32)?;
+
+        instance_content_row.LGBEventRange().into_u32().copied()
+    }
 }
 
 impl mlua::UserData for GameData {
