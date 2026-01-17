@@ -211,15 +211,18 @@ impl ZoneConnection {
         self.send_conditions().await;
 
         // Initialize director as needed
-        if let Some(intended_use) = TerritoryIntendedUse::from_repr(lua_zone.intended_use)
-            && let Some(director_type) = EventHandlerType::from_intended_use(intended_use)
-        {
+        if let Some(intended_use) = TerritoryIntendedUse::from_repr(lua_zone.intended_use) {
+            let Some(director_type) = EventHandlerType::from_intended_use(intended_use) else {
+                tracing::warn!("{intended_use} does not have a known director type yet?");
+                return;
+            };
             let content_id = if bound_by_duty {
                 let mut game_data = self.gamedata.lock();
                 game_data
                     .find_content_for_content_finder_id(content_finder_condition_id)
                     .unwrap()
             } else {
+                tracing::warn!("Failed to find content ID for {content_finder_condition_id}?");
                 0xFFFF
             };
 

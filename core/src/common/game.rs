@@ -556,7 +556,7 @@ pub enum LogMessageType {
 /// Names for rows in the Excel sheet of the same name.
 /// See <https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Client/Enums/TerritoryIntendedUse.cs>.
 #[repr(u8)]
-#[derive(FromRepr)]
+#[derive(FromRepr, Display, Clone, Copy)]
 pub enum TerritoryIntendedUse {
     /// Towns such as Limsa Lominsa.
     Town = 0,
