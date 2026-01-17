@@ -358,6 +358,7 @@ impl EventHandlerType {
             TerritoryIntendedUse::DeepDungeon => Some(Self::InstanceContent),
             TerritoryIntendedUse::Trial => Some(Self::InstanceContent),
             TerritoryIntendedUse::AllianceRaid => Some(Self::InstanceContent),
+            TerritoryIntendedUse::Raid2 => Some(Self::InstanceContent),
             _ => None,
         }
     }
@@ -585,7 +586,7 @@ pub enum TerritoryIntendedUse {
     SoloOverworldInstance = 15,
     /// Fighting arenas for raids like.
     Raid1 = 16,
-    /// Ditto?
+    /// Seen in at least AAC Heavyweight M1 (Savage)
     Raid2 = 17,
     /// Zones used for Frontline PvP.
     Frontline = 18,
