@@ -106,16 +106,16 @@ function dispatchEvent(player, event_id)
     -- Directors
     -- TODO: support more than just dungeons
     if event_type == HANDLER_TYPE_INSTANCE_CONTENT then
-        local content_id = event_id & 0xFF
-        local short_name = GAME_DATA:get_content_short_name(content_id)
-        local script_path = "content/"..short_name..".lua"
-
-        local event = runEvent(event_id, script_path)
-        if event == nil then
-            player:send_message(script_path.." was not found!")
-        end
-
-        return event
+        -- NOTE: currently generic until we expand instance content scripting i guess
+--         local content_id = event_id & 0xFF
+--         local short_name = GAME_DATA:get_content_short_name(content_id)
+--         local script_path = "content/"..short_name..".lua"
+--
+--         local event = runEvent(event_id, script_path)
+--         if event == nil then
+--             player:send_message(script_path.." was not found!")
+--         end
+        return runEvent(event_id, "content/Generic.lua")
     end
 
     return nil

@@ -351,6 +351,8 @@ impl EventHandlerType {
             TerritoryIntendedUse::OpenWorld => Some(Self::Fate),
             TerritoryIntendedUse::Dungeon => Some(Self::InstanceContent),
             TerritoryIntendedUse::DeepDungeon => Some(Self::InstanceContent),
+            TerritoryIntendedUse::Trial => Some(Self::InstanceContent),
+            TerritoryIntendedUse::AllianceRaid => Some(Self::InstanceContent),
             _ => None,
         }
     }

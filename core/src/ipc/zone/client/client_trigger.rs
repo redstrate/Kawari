@@ -179,7 +179,7 @@ pub enum ClientTriggerCommand {
 
     /// When a player requests to abandon their instanced content.
     #[brw(magic = 819u32)]
-    AbandonContent {},
+    AbandonContent { unk1: u32 },
 
     /// Unknown purpose, but is seen during the crystal bell/aesthetician cutscenes.
     #[brw(magic = 830u32)]
