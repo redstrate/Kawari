@@ -617,7 +617,7 @@ pub enum ServerZoneIpcData {
     UnkDirector1 {
         unk: [u8; 32],
     },
-    UnkDirector2 {
+    PartyMemberPortraits {
         unk: [u8; 184],
     },
     FieldMarkerPreset(WaymarkPreset),
@@ -1097,7 +1097,7 @@ mod tests {
                 unk4: 0,
             },
             ServerZoneIpcData::UnkDirector1 { unk: [0; 32] },
-            ServerZoneIpcData::UnkDirector2 { unk: [0; 184] },
+            ServerZoneIpcData::PartyMemberPortraits { unk: [0; 184] },
             ServerZoneIpcData::FieldMarkerPreset(WaymarkPreset::default()),
             ServerZoneIpcData::DeleteObject { spawn_index: 0 },
             ServerZoneIpcData::GoldSaucerInformation { unk: [0; 40] },

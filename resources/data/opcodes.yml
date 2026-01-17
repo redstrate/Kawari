@@ -395,8 +395,8 @@ ServerZoneIpcType:
     comment: Unknown purpose.
     opcode: 267
     size: 32
-  - name: UnkDirector2
-    comment: Unknown purpose.
+  - name: PartyMemberPortraits
+    comment: Displays the party member portraits for this duty.
     opcode: 113
     size: 184
   - name: FieldMarkerPreset

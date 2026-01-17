@@ -114,7 +114,7 @@ pub enum OnlineStatus {
 /// Represents a 64-bit online status. For possible values, see common_spawn.rs's OnlineStatus enum.
 #[binrw]
 #[brw(little)]
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Default, PartialEq)]
 pub struct OnlineStatusMask {
     flags: [u8; 8],
 }

@@ -52,6 +52,7 @@ bitflags! {
         const SILENT_ENTER_TERRI_SE = 0x00020000;
         const SILENT_ENTER_TERRI_ALL = 0x00038000;
         const DISABLE_SKIP = 0x00080000;
+        const UNK1 = 0x00100000; // Seen in instanced content intro cutscenes
         const HIDE_FESTIVAL = 0x00200000;
         const DISABLE_STEALTH = 0x00400000;
         const ROLLBACK_HIDE_UI = 0x00800000;

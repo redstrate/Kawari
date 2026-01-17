@@ -110,6 +110,15 @@ pub enum ActorControlCategory {
         target: ObjectTypeId,
     },
 
+    // Calls into many inventory-related functions, haven't looked too far yet.
+    #[brw(magic = 84u32)]
+    UnkInventoryRelated {
+        unk1: u32,
+        unk2: u32,
+        unk3: u32,
+        unk4: u32,
+    },
+
     #[brw(magic = 100u32)]
     InitDirector {
         /// The director to intiailize.
@@ -139,6 +148,15 @@ pub enum ActorControlCategory {
         #[br(map = read_bool_from::<u32>)]
         #[bw(map = write_bool_as::<u32>)]
         unlocked: bool,
+    },
+
+    /// Calls into some GCSupply function, unsure what it does yet.
+    #[brw(magic = 137u32)]
+    UnkGCSupplyRelated {
+        unk1: u32,
+        unk2: u32,
+        unk3: u32,
+        unk4: u32,
     },
 
     /// Unknown purpose, maybe positioning related?
@@ -181,6 +199,15 @@ pub enum ActorControlCategory {
         #[br(map = read_bool_from::<u32>)]
         #[bw(map = write_bool_as::<u32>)]
         remove_aether_current: bool, // If true, attunement_complete, screen_image_id and show_flying_mounts_help will be ignored.
+    },
+
+    // Calls into some EventFramework function, haven't looked too far yet.
+    #[brw(magic = 199u32)]
+    UnkEventRelated {
+        unk1: u32,
+        unk2: u32,
+        unk3: u32,
+        unk4: u32,
     },
 
     #[brw(magic = 200u32)]
@@ -306,6 +333,15 @@ pub enum ActorControlCategory {
         limit_type: u32,
     },
 
+    /// Controls *something* about limit breaks.
+    #[brw(magic = 505u32)]
+    UnkLimitBreakController {
+        unk1: u32,
+        unk2: u32,
+        unk3: u32,
+        unk4: u32,
+    },
+
     #[brw(magic = 509u32)]
     LearnTeleport {
         id: u32,
@@ -342,12 +378,33 @@ pub enum ActorControlCategory {
         id: u32,          // Index to variable sheet, depending on LogMessage
     },
 
+    #[brw(magic = 519u32)]
+    SetPartyMemberCutsceneFlags { unk1: u32, unk2: u32 },
+
     #[brw(magic = 521u32)]
     SetItemLevel { level: u32 },
 
     #[brw(magic = 533u32)]
     LogMessage2 {
         log_message: u32, // Index to LogMessage sheet
+    },
+
+    /// Calls into some Achievement method, unsure what this does yet.
+    #[brw(magic = 538u32)]
+    UnkAchievementRelated {
+        unk1: u32,
+        unk2: u32,
+        unk3: u32,
+        unk4: u32,
+    },
+
+    /// Calls into some MobHunt method, not sure what it does yet.
+    #[brw(magic = 583u32)]
+    UnkMobHuntRelated {
+        unk1: u32,
+        unk2: u32,
+        unk3: u32,
+        unk4: u32,
     },
 
     #[brw(magic = 608u32)]
@@ -379,6 +436,24 @@ pub enum ActorControlCategory {
         id: u32,
     },
 
+    /// Sets some variable in QuestManager, unsure which yet.
+    #[brw(magic = 907u32)]
+    UnkQuestManagerRelated {
+        unk1: u32,
+        unk2: u32,
+        unk3: u32,
+        unk4: u32,
+    },
+
+    /// Sets some variable in GoldSaucerManager, unsure which yet.
+    #[brw(magic = 907u32)]
+    UnkGoldSaucerManagerRelated {
+        unk1: u32,
+        unk2: u32,
+        unk3: u32,
+        unk4: u32,
+    },
+
     /// Forces the player off their current mount.
     #[brw(magic = 915u32)]
     Dismount { sequence: u32 },
@@ -390,6 +465,15 @@ pub enum ActorControlCategory {
         #[bw(map = write_bool_as::<u32>)]
         unlocked: bool,
         item_id: u32, // Index to Item sheet
+    },
+
+    /// Calls some method in PlayerState, unsure what it does currently.
+    #[brw(magic = 924u32)]
+    UnkPlayerStateRelated {
+        unk1: u32,
+        unk2: u32,
+        unk3: u32,
+        unk4: u32,
     },
 
     /// Unknown purpose, seen during dismounting.
@@ -428,6 +512,15 @@ pub enum ActorControlCategory {
         #[br(map = read_bool_from::<u32>)]
         #[bw(map = write_bool_as::<u32>)]
         unlocked: bool,
+    },
+
+    /// Calls some method in PvPProfile, unsure what it does yet.
+    #[brw(magic = 1610u32)]
+    UnkPvPProfileRelated {
+        unk1: u32,
+        unk2: u32,
+        unk3: u32,
+        unk4: u32,
     },
 
     Unknown {

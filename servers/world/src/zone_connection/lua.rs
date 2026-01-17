@@ -527,6 +527,18 @@ impl ZoneConnection {
                     self.handle
                         .send(ToServer::CommenceDuty(self.id, self.player_data.actor_id))
                         .await;
+
+                    // shit
+                    let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlSelf(
+                        ActorControlSelf {
+                            category: ActorControlCategory::DirectorEvent {
+                                handler_id: HandlerId(*director_id),
+                                event: DirectorEvent::SetDutyTimeRemaining,
+                                arg: 5399,
+                            },
+                        },
+                    ));
+                    self.send_ipc_self(ipc).await;
                 }
                 LuaTask::QuestSequence { id, sequence } => {
                     self.set_quest_sequence(*id, *sequence).await;
