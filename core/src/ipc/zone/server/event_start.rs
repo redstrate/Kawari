@@ -1,7 +1,7 @@
 use binrw::binrw;
 use strum_macros::{Display, EnumIter, FromRepr};
 
-use crate::common::ObjectTypeId;
+use crate::common::{HandlerId, ObjectTypeId};
 
 #[binrw]
 #[brw(repr = u8)]
@@ -33,7 +33,7 @@ impl mlua::IntoLua for EventType {
 #[derive(Debug, Clone, Default)]
 pub struct EventStart {
     pub target_id: ObjectTypeId,
-    pub event_id: u32,
+    pub handler_id: HandlerId,
     pub event_type: EventType,
     pub flags: u8,
     #[brw(pad_before = 2)]
@@ -69,7 +69,7 @@ mod tests {
                 object_type: ObjectTypeKind::None,
             }
         );
-        assert_eq!(event_start.event_id, 0x130003); // aether intro
+        assert_eq!(event_start.handler_id, HandlerId(0x130003)); // aether intro
         assert_eq!(event_start.event_type, EventType::EnterTerritory);
         assert_eq!(event_start.flags, 0);
         assert_eq!(event_start.event_arg, 182);

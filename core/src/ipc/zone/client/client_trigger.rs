@@ -1,7 +1,9 @@
 use binrw::binrw;
 use strum_macros::IntoStaticStr;
 
-use crate::common::{DirectorTrigger, DistanceRange, ObjectId, read_bool_from, write_bool_as};
+use crate::common::{
+    DirectorTrigger, DistanceRange, HandlerId, ObjectId, read_bool_from, write_bool_as,
+};
 use crate::ipc::zone::common_emote::CommonEmoteInfo;
 
 #[binrw]
@@ -164,7 +166,7 @@ pub enum ClientTriggerCommand {
     /// Various triggers related to instanced content.
     #[brw(magic = 808u32)]
     DirectorTrigger {
-        director_id: u32,
+        handler_id: HandlerId,
         trigger: DirectorTrigger,
         arg: u32,
     },

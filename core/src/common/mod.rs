@@ -10,7 +10,7 @@ pub use position::Position;
 pub mod workdefinitions;
 
 mod director;
-pub use director::{DirectorEvent, DirectorTrigger, DirectorType};
+pub use director::*;
 
 mod game;
 pub use game::*;

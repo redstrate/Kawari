@@ -1,7 +1,7 @@
 use kawari::{
     common::{
-        ContainerType, ERR_INVENTORY_ADD_FAILED, INVALID_OBJECT_ID, INVENTORY_ACTION_ACK_SHOP,
-        ItemOperationKind, LogMessageType,
+        ContainerType, ERR_INVENTORY_ADD_FAILED, HandlerId, INVALID_OBJECT_ID,
+        INVENTORY_ACTION_ACK_SHOP, ItemOperationKind, LogMessageType,
     },
     ipc::zone::{
         EventReturnHandler, ItemOperation, SceneFlags, ServerZoneIpcData, ServerZoneIpcSegment,
@@ -31,7 +31,7 @@ impl ZoneConnection {
             let result;
             {
                 let mut game_data = self.gamedata.lock();
-                result = game_data.get_gilshop_item(event_id, item_index as u16);
+                result = game_data.get_gilshop_item(event_id.0, item_index as u16);
             }
 
             if let Some(item_info) = result {
@@ -64,7 +64,7 @@ impl ZoneConnection {
                         )
                         .await;
                         self.send_gilshop_ack(
-                            event_id,
+                            event_id.0,
                             item_info.id,
                             item_quantity,
                             item_info.price_mid,
@@ -76,7 +76,7 @@ impl ZoneConnection {
                         // See GenericShopkeeper.lua for information about this scene, the flags, and the params.
                         self.event_scene(
                             &target_id,
-                            event_id,
+                            event_id.0,
                             10,
                             SceneFlags::from_bits(8193).unwrap(),
                             vec![1, 100],
@@ -85,19 +85,19 @@ impl ZoneConnection {
                     } else {
                         tracing::error!(ERR_INVENTORY_ADD_FAILED);
                         self.send_notice(ERR_INVENTORY_ADD_FAILED).await;
-                        self.event_finish(event_id, EventFinishType::Normal).await;
+                        self.event_finish(event_id.0, EventFinishType::Normal).await;
                     }
                 } else {
                     self.send_notice(
                         "Insufficient gil to buy item. Nice try bypassing the client-side check!",
                     )
                     .await;
-                    self.event_finish(event_id, EventFinishType::Normal).await;
+                    self.event_finish(event_id.0, EventFinishType::Normal).await;
                 }
             } else {
                 self.send_notice("Unable to find shop item, this is a bug in Kawari!")
                     .await;
-                self.event_finish(event_id, EventFinishType::Normal).await;
+                self.event_finish(event_id.0, EventFinishType::Normal).await;
             }
         } else if buy_sell_mode == SELL {
             let storage = get_container_type(item_index as u32).unwrap();
@@ -119,7 +119,7 @@ impl ZoneConnection {
                     item_level: item_info.item_level,
                     stack_size: item_info.stack_size,
                 };
-                self.player_data.buyback_list.push_item(event_id, bb_item);
+                self.player_data.buyback_list.push_item(event_id.0, bb_item);
 
                 self.player_data.inventory.currency.gil.quantity += quantity * item_info.price_low;
                 self.send_gilshop_item_update(
@@ -179,7 +179,7 @@ impl ZoneConnection {
                 self.send_inventory_transaction_finish(0x100, 0x300).await;
 
                 self.send_gilshop_ack(
-                    event_id,
+                    event_id.0,
                     item_info.id,
                     quantity,
                     item_info.price_low,
@@ -192,12 +192,12 @@ impl ZoneConnection {
                 let mut params = self
                     .player_data
                     .buyback_list
-                    .as_scene_params(event_id, false);
+                    .as_scene_params(event_id.0, false);
                 params[0] = SELL as u32;
                 params[1] = 0; // The "terminator" is 0 for sell mode.
                 self.event_scene(
                     &target_id,
-                    event_id,
+                    event_id.0,
                     10,
                     SceneFlags::from_bits(8193).unwrap(),
                     params,
@@ -206,11 +206,11 @@ impl ZoneConnection {
             } else {
                 self.send_notice("Unable to find shop item, this is a bug in Kawari!")
                     .await;
-                self.event_finish(event_id, EventFinishType::Normal).await;
+                self.event_finish(event_id.0, EventFinishType::Normal).await;
             }
         } else {
             tracing::error!("Received unknown transaction mode {buy_sell_mode}!");
-            self.event_finish(event_id, EventFinishType::Normal).await;
+            self.event_finish(event_id.0, EventFinishType::Normal).await;
         }
     }
 
@@ -224,7 +224,7 @@ impl ZoneConnection {
         message_type: LogMessageType,
     ) {
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ShopLogMessage {
-            event_id,
+            handler_id: HandlerId(event_id),
             message_type: message_type as u32,
             params_count: 3,
             item_id,

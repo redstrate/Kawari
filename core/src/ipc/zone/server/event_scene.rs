@@ -3,7 +3,7 @@
 use binrw::binrw;
 use bitflags::bitflags;
 
-use crate::common::ObjectTypeId;
+use crate::common::{HandlerId, ObjectTypeId};
 use crate::ipc::zone::server::{ServerZoneIpcData, ServerZoneIpcSegment};
 
 #[binrw]
@@ -78,7 +78,7 @@ impl Default for SceneFlags {
 #[brw(assert(params.len() <= max_params, "Too many params! {} > {}", params.len(), max_params))]
 pub struct EventScene {
     pub actor_id: ObjectTypeId,
-    pub event_id: u32,
+    pub handler_id: HandlerId,
     pub scene: u16,
     #[brw(pad_before = 2)] // FIXME: um, i don't think this is empty!!
     pub scene_flags: SceneFlags,
@@ -153,7 +153,7 @@ mod tests {
                 object_type: ObjectTypeKind::None,
             }
         );
-        assert_eq!(event_play.event_id, 0x130003); // aether intro
+        assert_eq!(event_play.handler_id, HandlerId(0x130003)); // aether intro
         assert_eq!(event_play.scene, 0);
         assert_eq!(
             event_play.scene_flags,

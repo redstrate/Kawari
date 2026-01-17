@@ -9,8 +9,8 @@ use crate::{
 };
 use kawari::{
     common::{
-        ContainerType, INVENTORY_ACTION_ACK_SHOP, LogMessageType, ObjectTypeId, ObjectTypeKind,
-        Position, adjust_quest_id, workdefinitions::RemakeMode,
+        ContainerType, HandlerId, INVENTORY_ACTION_ACK_SHOP, LogMessageType, ObjectTypeId,
+        ObjectTypeKind, Position, adjust_quest_id, workdefinitions::RemakeMode,
     },
     ipc::zone::{
         ActorControlCategory, ActorControlSelf, EventScene, EventType, OnlineStatus, SceneFlags,
@@ -69,7 +69,7 @@ impl LuaPlayer {
     ) {
         let scene = EventScene {
             actor_id: target,
-            event_id,
+            handler_id: HandlerId(event_id),
             scene,
             scene_flags,
             params_count: params.len() as u8,
@@ -307,7 +307,7 @@ impl LuaPlayer {
                 unk1: 0x7530_0000,
             }),
             ServerZoneIpcSegment::new(ServerZoneIpcData::ShopLogMessage {
-                event_id: shop_id,
+                handler_id: HandlerId(shop_id),
                 message_type: LogMessageType::ItemBoughtBack as u32,
                 params_count: 3,
                 item_id: bb_item.id,
@@ -334,7 +334,9 @@ impl LuaPlayer {
     ) {
         let packets_to_send = [
             ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
-                category: ActorControlCategory::DisableEventPosRollback { event_id },
+                category: ActorControlCategory::DisableEventPosRollback {
+                    handler_id: HandlerId(event_id),
+                },
             })),
             ServerZoneIpcSegment::new(ServerZoneIpcData::WalkInEvent {
                 path_id,

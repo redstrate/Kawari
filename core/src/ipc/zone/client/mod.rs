@@ -30,8 +30,8 @@ pub use super::social_list::{PlayerEntry, SocialList, SocialListRequest, SocialL
 
 use super::config::Config;
 use crate::common::{
-    CHAR_NAME_MAX_LENGTH, ClientLanguage, JumpState, MoveAnimationState, MoveAnimationType,
-    Position, read_string, write_string,
+    CHAR_NAME_MAX_LENGTH, ClientLanguage, HandlerId, JumpState, MoveAnimationState,
+    MoveAnimationType, Position, read_string, write_string,
 };
 use crate::opcodes::ClientZoneIpcType;
 use crate::packet::ServerIpcSegmentHeader;
@@ -137,7 +137,7 @@ pub enum ClientZoneIpcData {
     StartTalkEvent {
         actor_id: ObjectTypeId,
         #[brw(pad_after = 4)] // padding
-        event_id: u32,
+        handler_id: HandlerId,
     },
     EventReturnHandler4(EventReturnHandler<4>),
     StandardControlsPivot {
@@ -150,7 +150,7 @@ pub enum ClientZoneIpcData {
     EventYieldHandler8(EventYieldHandler<8>),
     Config(Config),
     EventUnkRequest {
-        event_id: u32,
+        handler_id: HandlerId,
         unk1: u16,
         unk2: u8,
         #[brw(pad_after = 8)]
@@ -205,7 +205,7 @@ pub enum ClientZoneIpcData {
     },
     StartWalkInEvent {
         event_arg: u32,
-        event_id: u32,
+        handler_id: HandlerId,
         #[brw(pad_after = 4)]
         pos: Position,
     },
@@ -332,13 +332,13 @@ pub enum ClientZoneIpcData {
     },
     WalkOutsideEvent {
         event_arg: u32,
-        event_id: u32,
+        handler_id: HandlerId,
         #[brw(pad_after = 4)]
         pos: Position,
     },
     EnterTerritoryEvent {
         #[brw(pad_after = 4)] // empty
-        event_id: u32,
+        handler_id: HandlerId,
     },
     Trade {
         unk: [u8; 16],
@@ -462,7 +462,7 @@ mod tests {
             ClientZoneIpcData::ItemOperation(ItemOperation::default()),
             ClientZoneIpcData::StartTalkEvent {
                 actor_id: ObjectTypeId::default(),
-                event_id: 0,
+                handler_id: HandlerId::default(),
             },
             ClientZoneIpcData::EventReturnHandler4(EventReturnHandler::default()),
             ClientZoneIpcData::StandardControlsPivot { is_pivoting: 0 },
@@ -470,7 +470,7 @@ mod tests {
             ClientZoneIpcData::EventYieldHandler8(EventYieldHandler::<8>::default()),
             ClientZoneIpcData::Config(Config::default()),
             ClientZoneIpcData::EventUnkRequest {
-                event_id: 0,
+                handler_id: HandlerId::default(),
                 unk1: 0,
                 unk2: 0,
                 unk3: 0,
@@ -504,7 +504,7 @@ mod tests {
             },
             ClientZoneIpcData::StartWalkInEvent {
                 event_arg: 0,
-                event_id: 0,
+                handler_id: HandlerId::default(),
                 pos: Position {
                     x: 0.0,
                     y: 0.0,
@@ -584,10 +584,12 @@ mod tests {
             ClientZoneIpcData::RequestOwnSearchInfo { unk: [0; 8] },
             ClientZoneIpcData::WalkOutsideEvent {
                 event_arg: 0,
-                event_id: 0,
+                handler_id: HandlerId::default(),
                 pos: Position::default(),
             },
-            ClientZoneIpcData::EnterTerritoryEvent { event_id: 0 },
+            ClientZoneIpcData::EnterTerritoryEvent {
+                handler_id: HandlerId::default(),
+            },
             ClientZoneIpcData::Trade { unk: [0; 16] },
             ClientZoneIpcData::BuyInclusionShop {
                 shop_id: 0,

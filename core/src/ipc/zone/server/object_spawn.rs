@@ -2,7 +2,7 @@ use binrw::binrw;
 
 use crate::{
     common::{
-        InvisibilityFlags, ObjectId, Position, read_bool_from, read_quantized_rotation,
+        HandlerId, InvisibilityFlags, ObjectId, Position, read_bool_from, read_quantized_rotation,
         write_bool_as, write_quantized_rotation,
     },
     ipc::zone::ObjectKind,
@@ -28,7 +28,7 @@ pub struct ObjectSpawn {
     pub entity_id: ObjectId,
     /// Instance ID of the EventObject in the LGB.
     pub layout_id: u32,
-    pub event_id: u32,
+    pub handler_id: HandlerId,
     pub owner_id: ObjectId,
     /// Bound ID of the EventObject in the LGB, usually a SharedGroup.
     /// If set to 0, then `radius` is used.

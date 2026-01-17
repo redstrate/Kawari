@@ -4,7 +4,7 @@ use mlua::Function;
 
 use crate::{Event, EventFinishType, ZoneConnection, lua::LuaPlayer};
 use kawari::{
-    common::{EventHandlerType, ObjectTypeId},
+    common::{EventHandlerType, HandlerId, ObjectTypeId},
     ipc::zone::{
         ActorControlCategory, ActorControlSelf, Condition, EventScene, EventStart, EventType,
         SceneFlags, ServerZoneIpcData, ServerZoneIpcSegment,
@@ -23,7 +23,7 @@ impl ZoneConnection {
     ) {
         let scene = EventScene {
             actor_id: *target,
-            event_id,
+            handler_id: HandlerId(event_id),
             scene,
             scene_flags,
             params_count: params.len() as u8,
@@ -50,7 +50,7 @@ impl ZoneConnection {
         // sent event finish
         {
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::EventFinish {
-                handler_id,
+                handler_id: HandlerId(handler_id),
                 event_type,
                 result: 1,
                 arg: event_arg,
@@ -91,7 +91,7 @@ impl ZoneConnection {
         {
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::EventStart(EventStart {
                 target_id: actor_id,
-                event_id,
+                handler_id: HandlerId(event_id),
                 event_type,
                 event_arg,
                 ..Default::default()
@@ -99,7 +99,9 @@ impl ZoneConnection {
             self.send_ipc_self(ipc).await;
 
             self.actor_control_self(ActorControlSelf {
-                category: ActorControlCategory::DisableEventPosRollback { event_id },
+                category: ActorControlCategory::DisableEventPosRollback {
+                    handler_id: HandlerId(event_id),
+                },
             })
             .await;
         }
@@ -139,7 +141,7 @@ impl ZoneConnection {
             // give control back to the player so they aren't stuck
             {
                 let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::EventFinish {
-                    handler_id: event_id,
+                    handler_id: HandlerId(event_id),
                     event_type,
                     result: 1,
                     arg: event_arg,

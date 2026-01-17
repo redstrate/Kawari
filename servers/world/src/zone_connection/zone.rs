@@ -4,7 +4,7 @@ use crate::{
     ObsfucationData, TeleportReason, ToServer, ZoneConnection, inventory::BuyBackList, lua::LuaZone,
 };
 use kawari::{
-    common::{DirectorType, Position, TerritoryIntendedUse, timestamp_secs},
+    common::{EventHandlerType, HandlerId, Position, TerritoryIntendedUse, timestamp_secs},
     config::get_config,
     constants::OBFUSCATION_ENABLED_MODE,
     ipc::zone::{
@@ -212,7 +212,7 @@ impl ZoneConnection {
 
         // Initialize director as needed
         if let Some(intended_use) = TerritoryIntendedUse::from_repr(lua_zone.intended_use)
-            && let Some(director_type) = DirectorType::from_intended_use(intended_use)
+            && let Some(director_type) = EventHandlerType::from_intended_use(intended_use)
         {
             let content_id = if bound_by_duty {
                 let mut game_data = self.gamedata.lock();
@@ -223,7 +223,7 @@ impl ZoneConnection {
                 0xFFFF
             };
 
-            let director_id = ((director_type as u32) << 16) | content_id as u32;
+            let director_id = HandlerId::new(director_type, content_id);
             let sequence = 0;
 
             tracing::info!("Initializing director {director_id}...");
@@ -231,7 +231,7 @@ impl ZoneConnection {
             // Initialize the content director
             self.actor_control_self(ActorControlSelf {
                 category: ActorControlCategory::InitDirector {
-                    director_id,
+                    handler_id: director_id,
                     content_id,
                     sequence,
                 },
@@ -239,7 +239,7 @@ impl ZoneConnection {
             .await;
 
             self.send_ipc_self(ServerZoneIpcSegment::new(ServerZoneIpcData::DirectorVars {
-                director_id,
+                handler_id: director_id,
                 sequence: sequence as u8,
                 branch: 0,
                 data: [0; 10],

@@ -105,7 +105,7 @@ function dispatchEvent(player, event_id)
 
     -- Directors
     -- TODO: support more than just dungeons
-    if event_type == DIRECTOR_TYPE_INSTANCE_CONTENT then
+    if event_type == HANDLER_TYPE_INSTANCE_CONTENT then
         local content_id = event_id & 0xFF
         local short_name = GAME_DATA:get_content_short_name(content_id)
         local script_path = "content/"..short_name..".lua"

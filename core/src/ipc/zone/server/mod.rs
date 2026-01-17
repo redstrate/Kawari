@@ -92,6 +92,7 @@ mod free_company;
 pub use free_company::FcHierarchy;
 
 mod actor_move;
+use crate::common::HandlerId;
 use crate::constants::{
     COMPLETED_LEVEQUEST_BITMASK_SIZE, COMPLETED_QUEST_BITMASK_SIZE, TITLE_UNLOCK_BITMASK_SIZE,
 };
@@ -224,7 +225,7 @@ pub enum ServerZoneIpcData {
         actor_id: ObjectId,
     },
     EventFinish {
-        handler_id: u32,
+        handler_id: HandlerId,
         event_type: EventType,
         result: u8,
         #[brw(pad_before = 2)] // padding
@@ -236,7 +237,7 @@ pub enum ServerZoneIpcData {
     CurrencyCrystalInfo(CurrencyInfo),
     Config(Config),
     EventUnkReply {
-        event_id: u32,
+        handler_id: HandlerId,
         unk1: u16,
         unk2: u8,
         #[brw(pad_after = 8)]
@@ -357,7 +358,7 @@ pub enum ServerZoneIpcData {
         unk2: Vec<u8>,
     },
     ShopLogMessage {
-        event_id: u32,
+        handler_id: HandlerId,
         /// When buying: 0x697
         /// When selling: 0x698
         /// When buying back: 0x699
@@ -370,7 +371,7 @@ pub enum ServerZoneIpcData {
         total_sale_cost: u32,
     },
     ItemObtainedLogMessage {
-        event_id: u32,
+        handler_id: HandlerId,
         /// Non-stackable item or a single item: 750 / 0x2EE ("You obtained a .")
         /// Stackable item: 751 / 0x2EF ("You obtained .")
         message_type: u32,
@@ -573,7 +574,7 @@ pub enum ServerZoneIpcData {
         layout_ids: [u32; 2],
         /// The event ID to update for, usually a quest ID.
         #[brw(pad_after = 4)] // padding
-        handler_ids: [u32; 2],
+        handler_ids: [HandlerId; 2],
     },
     QuestTracker(QuestTracker),
     HouseList(HouseList),
@@ -604,7 +605,7 @@ pub enum ServerZoneIpcData {
         bitmask: [u8; 40],
     },
     DirectorVars {
-        director_id: u32,
+        handler_id: HandlerId,
         sequence: u8,
         branch: u8,
         data: [u8; 10],
@@ -856,7 +857,7 @@ mod tests {
                 actor_id: INVALID_OBJECT_ID,
             },
             ServerZoneIpcData::EventFinish {
-                handler_id: 0,
+                handler_id: HandlerId::default(),
                 event_type: EventType::Talk,
                 result: 0,
                 arg: 0,
@@ -865,7 +866,7 @@ mod tests {
             ServerZoneIpcData::ActorControlTarget(ActorControlTarget::default()),
             ServerZoneIpcData::CurrencyCrystalInfo(CurrencyInfo::default()),
             ServerZoneIpcData::EventUnkReply {
-                event_id: 0,
+                handler_id: HandlerId::default(),
                 unk1: 0,
                 unk2: 0,
                 unk3: 0,
@@ -938,7 +939,7 @@ mod tests {
                 unk2: Vec::default(),
             },
             ServerZoneIpcData::ShopLogMessage {
-                event_id: 0,
+                handler_id: HandlerId::default(),
                 message_type: 0,
                 params_count: 0,
                 item_id: 0,
@@ -946,7 +947,7 @@ mod tests {
                 total_sale_cost: 0,
             },
             ServerZoneIpcData::ItemObtainedLogMessage {
-                event_id: 0,
+                handler_id: HandlerId::default(),
                 message_type: 0,
                 params_count: 0,
                 item_id: 0,
@@ -1068,7 +1069,7 @@ mod tests {
                 marker_count: 0,
                 icon_ids: [0; 2],
                 layout_ids: [0; 2],
-                handler_ids: [0; 2],
+                handler_ids: [HandlerId::default(); 2],
             },
             ServerZoneIpcData::QuestTracker(QuestTracker::default()),
             ServerZoneIpcData::HouseList(HouseList::default()),
@@ -1086,7 +1087,7 @@ mod tests {
             },
             ServerZoneIpcData::LegacyQuestList { bitmask: [0; 40] },
             ServerZoneIpcData::DirectorVars {
-                director_id: 0,
+                handler_id: HandlerId::default(),
                 sequence: 0,
                 branch: 0,
                 data: [0; 10],

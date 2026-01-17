@@ -2,8 +2,9 @@ use binrw::binrw;
 use strum_macros::{Display, EnumIter, FromRepr};
 
 use crate::common::{
-    CHAR_NAME_MAX_LENGTH, CharacterMode, CustomizeData, EquipDisplayFlag, ObjectId, ObjectTypeId,
-    Position, read_quantized_rotation, read_string, write_quantized_rotation, write_string,
+    CHAR_NAME_MAX_LENGTH, CharacterMode, CustomizeData, EquipDisplayFlag, HandlerId, ObjectId,
+    ObjectTypeId, Position, read_quantized_rotation, read_string, write_quantized_rotation,
+    write_string,
 };
 use bitflags::bitflags;
 
@@ -173,7 +174,7 @@ pub struct CommonSpawn {
     pub bnpc_name: u32,
     pub layout_id: u32,
     pub companion_owner_id: u32,
-    pub event_id: u32,
+    pub handler_id: HandlerId,
     pub owner_id: ObjectId,
     pub tether_id: ObjectId,
     pub hp_max: u32,

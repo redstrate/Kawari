@@ -7,8 +7,8 @@ use crate::{
 };
 use kawari::{
     common::{
-        ContainerType, DirectorEvent, ERR_INVENTORY_ADD_FAILED, InstanceContentType, ObjectTypeId,
-        ObjectTypeKind,
+        ContainerType, DirectorEvent, ERR_INVENTORY_ADD_FAILED, HandlerId, InstanceContentType,
+        ObjectTypeId, ObjectTypeKind,
     },
     constants::{
         ADVENTURE_BITMASK_SIZE, AETHER_CURRENT_BITMASK_SIZE,
@@ -515,7 +515,7 @@ impl ZoneConnection {
                     let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlSelf(
                         ActorControlSelf {
                             category: ActorControlCategory::DirectorEvent {
-                                director_id: *director_id,
+                                handler_id: HandlerId(*director_id),
                                 event: DirectorEvent::DutyCommence,
                                 arg: 5400,
                             },

@@ -2,8 +2,8 @@ use binrw::binrw;
 use strum_macros::IntoStaticStr;
 
 use crate::common::{
-    CharacterMode, DirectorEvent, EquipDisplayFlag, InvisibilityFlags, ObjectId, ObjectTypeId,
-    read_bool_from, read_packed_float, write_bool_as, write_packed_float,
+    CharacterMode, DirectorEvent, EquipDisplayFlag, HandlerId, InvisibilityFlags, ObjectId,
+    ObjectTypeId, read_bool_from, read_packed_float, write_bool_as, write_packed_float,
 };
 use crate::ipc::zone::common_emote::CommonEmoteInfo;
 use crate::ipc::zone::online_status::OnlineStatus;
@@ -113,7 +113,7 @@ pub enum ActorControlCategory {
     #[brw(magic = 100u32)]
     InitDirector {
         /// The director to intiailize.
-        director_id: u32,
+        handler_id: HandlerId,
         /// Content ID for this director. Can be 0xFFFF to indicate there should be an associated content ID.
         #[brw(pad_after = 2)] // padding
         content_id: u16,
@@ -127,7 +127,7 @@ pub enum ActorControlCategory {
 
     #[brw(magic = 109u32)]
     DirectorEvent {
-        director_id: u32,
+        handler_id: HandlerId,
         event: DirectorEvent,
         arg: u32,
     },
@@ -143,7 +143,7 @@ pub enum ActorControlCategory {
 
     /// Unknown purpose, maybe positioning related?
     #[brw(magic = 138u32)]
-    DisableEventPosRollback { event_id: u32 },
+    DisableEventPosRollback { handler_id: HandlerId },
 
     #[brw(magic = 142u32)]
     SetPvpMoveMode { unk1: u32 },

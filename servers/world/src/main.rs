@@ -711,11 +711,11 @@ async fn client_loop(
                                                     ClientTriggerCommand::SeenCutscene { id } => {
                                                         connection.player_data.unlock.cutscene_seen.set(id);
                                                     }
-                                                    ClientTriggerCommand::DirectorTrigger { director_id, trigger, arg } => {
+                                                    ClientTriggerCommand::DirectorTrigger { handler_id, trigger, arg } => {
                                                         match trigger {
                                                             DirectorTrigger::Sync => {
                                                                 // Always send a sync response for now
-                                                                connection.actor_control_self(ActorControlSelf { category: ActorControlCategory::DirectorEvent { director_id, event: DirectorEvent::SyncResponse, arg: 1 } }).await;
+                                                                connection.actor_control_self(ActorControlSelf { category: ActorControlCategory::DirectorEvent { handler_id, event: DirectorEvent::SyncResponse, arg: 1 } }).await;
                                                             }
                                                             DirectorTrigger::SummonStrikingDummy => {
                                                                 connection
@@ -727,7 +727,7 @@ async fn client_loop(
                                                                 ))
                                                                 .await;
                                                             }
-                                                            _ => tracing::info!("DirectorTrigger: {director_id} {trigger:?} {arg}")
+                                                            _ => tracing::info!("DirectorTrigger: {handler_id} {trigger:?} {arg}")
                                                         }
 
                                                     }
@@ -1004,17 +1004,13 @@ async fn client_loop(
                                                 connection.player_data.item_sequence += 1;
                                             }
                                             ClientZoneIpcData::EventReturnHandler4(handler) => {
-                                                let event_type = handler.handler_id >> 16;
-                                                let Some(event_type) = EventHandlerType::from_repr(event_type) else {
-                                                    tracing::warn!("Unknown event type: {event_type}!");
-                                                    continue;
-                                                };
+                                                let event_type = handler.handler_id.handler_type();
 
                                                 // It always assumes a shop... for now
                                                 if event_type == EventHandlerType::Shop {
                                                     connection.process_shop_event_return(handler).await;
                                                 } else {
-                                                    tracing::info!(message = "Event returned", handler_id = handler.handler_id, error_code = handler.error_code, scene = handler.scene, params = ?&handler.params[..handler.num_results as usize]);
+                                                    tracing::info!(message = "Event returned", handler_id = handler.handler_id.0, error_code = handler.error_code, scene = handler.scene, params = ?&handler.params[..handler.num_results as usize]);
 
                                                     if let Some(event) = connection.events.last_mut() {
                                                         event.do_return(handler.scene, &handler.params[..handler.num_results as usize], &mut lua_player);
@@ -1023,8 +1019,8 @@ async fn client_loop(
                                                     }
                                                 }
                                             }
-                                            ClientZoneIpcData::StartTalkEvent { actor_id, event_id } => {
-                                                if connection.start_event(*actor_id, *event_id, EventType::Talk, 0, &mut lua_player).await {
+                                            ClientZoneIpcData::StartTalkEvent { actor_id, handler_id } => {
+                                                if connection.start_event(*actor_id, handler_id.0, EventType::Talk, 0, &mut lua_player).await {
                                                     connection.conditions.set_condition(Condition::OccupiedInQuestEvent);
                                                     connection.send_conditions().await;
 
@@ -1042,7 +1038,7 @@ async fn client_loop(
                                                 }
                                             }
                                             ClientZoneIpcData::EventYieldHandler(handler) => {
-                                                tracing::info!(message = "Event yielded", handler_id = handler.handler_id, error_code = handler.error_code, scene = handler.scene, params = ?&handler.params[..handler.num_results as usize]);
+                                                tracing::info!(message = "Event yielded", handler_id = handler.handler_id.0, error_code = handler.error_code, scene = handler.scene, params = ?&handler.params[..handler.num_results as usize]);
 
                                                 connection
                                                 .events
@@ -1051,7 +1047,7 @@ async fn client_loop(
                                                     .finish(handler.scene, &handler.params[..handler.num_results as usize], &mut lua_player);
                                             }
                                             ClientZoneIpcData::EventYieldHandler8(handler) => {
-                                                tracing::info!(message = "Event yielded", handler_id = handler.handler_id, error_code = handler.error_code, scene = handler.scene, params = ?&handler.params[..handler.num_results as usize]);
+                                                tracing::info!(message = "Event yielded", handler_id = handler.handler_id.0, error_code = handler.error_code, scene = handler.scene, params = ?&handler.params[..handler.num_results as usize]);
 
                                                 connection
                                                     .events
@@ -1075,9 +1071,9 @@ async fn client_loop(
                                                 /* No-op because we already seem to handle this, other nearby clients can see the sending player
                                                  * pivoting anyway. */
                                             }
-                                            ClientZoneIpcData::EventUnkRequest { event_id, unk1, unk2, unk3 } => {
+                                            ClientZoneIpcData::EventUnkRequest { handler_id, unk1, unk2, unk3 } => {
                                                  let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::EventUnkReply {
-                                                     event_id: *event_id,
+                                                     handler_id: *handler_id,
                                                      unk1: *unk1,
                                                      unk2: *unk2,
                                                      unk3: *unk3 + 1,
@@ -1204,7 +1200,7 @@ async fn client_loop(
                                             ClientZoneIpcData::EquipGearset2 { .. } => {
                                                 tracing::warn!("Bigger gearsets not supported yet!");
                                             }
-                                            ClientZoneIpcData::StartWalkInEvent { event_arg, event_id, .. } => {
+                                            ClientZoneIpcData::StartWalkInEvent { event_arg, handler_id, .. } => {
                                                 // Yes, an ActorControl is sent here, not an ActorControlSelf!
                                                 connection.actor_control(connection.player_data.actor_id, ActorControl {
                                                     category: ActorControlCategory::ToggleWeapon {
@@ -1216,14 +1212,14 @@ async fn client_loop(
                                                 connection.send_conditions().await;
 
                                                 let actor_id = ObjectTypeId { object_id: connection.player_data.actor_id, object_type: ObjectTypeKind::None };
-                                                connection.start_event(actor_id, *event_id, EventType::WithinRange, *event_arg, &mut lua_player).await;
+                                                connection.start_event(actor_id, handler_id.0, EventType::WithinRange, *event_arg, &mut lua_player).await;
 
                                                 // begin walk-in trigger function if it exists
                                                 if let Some(event) = connection.events.last_mut() {
                                                      event.enter_trigger(&mut lua_player, *event_arg);
                                                 }
                                             }
-                                            ClientZoneIpcData::WalkOutsideEvent { event_arg, event_id, .. } => {
+                                            ClientZoneIpcData::WalkOutsideEvent { event_arg, handler_id, .. } => {
                                                 // TODO: allow Lua scripts to handle these differently?
 
                                                 // Yes, an ActorControl is sent here, not an ActorControlSelf!
@@ -1237,7 +1233,7 @@ async fn client_loop(
                                                 connection.send_conditions().await;
 
                                                 let actor_id = ObjectTypeId { object_id: connection.player_data.actor_id, object_type: ObjectTypeKind::None };
-                                                connection.start_event(actor_id, *event_id, EventType::OutsideRange, *event_arg, &mut lua_player).await;
+                                                connection.start_event(actor_id, handler_id.0, EventType::OutsideRange, *event_arg, &mut lua_player).await;
 
                                                 // begin walk-in trigger function if it exists
                                                 if let Some(event) = connection.events.last_mut() {
@@ -1338,8 +1334,8 @@ async fn client_loop(
                                                 let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::SetSearchInfo(SearchInfo::default()));
                                                 connection.send_ipc_self(ipc).await;
                                             }
-                                            ClientZoneIpcData::EnterTerritoryEvent { event_id } => {
-                                                connection.start_event(ObjectTypeId { object_id: connection.player_data.actor_id, object_type: ObjectTypeKind::None }, *event_id, EventType::EnterTerritory, connection.player_data.zone_id as u32, &mut lua_player).await;
+                                            ClientZoneIpcData::EnterTerritoryEvent { handler_id } => {
+                                                connection.start_event(ObjectTypeId { object_id: connection.player_data.actor_id, object_type: ObjectTypeKind::None }, handler_id.0, EventType::EnterTerritory, connection.player_data.zone_id as u32, &mut lua_player).await;
                                                 if let Some(event) = connection.events.last_mut() {
                                                     event.enter_territory(&mut lua_player);
                                                 }
