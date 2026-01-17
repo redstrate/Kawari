@@ -224,7 +224,7 @@ impl ZoneConnection {
             };
 
             let director_id = HandlerId::new(director_type, content_id);
-            let sequence = 0;
+            let flags = 0;
 
             tracing::info!("Initializing director {director_id}...");
 
@@ -233,14 +233,14 @@ impl ZoneConnection {
                 category: ActorControlCategory::InitDirector {
                     handler_id: director_id,
                     content_id,
-                    sequence,
+                    flags,
                 },
             })
             .await;
 
             self.send_ipc_self(ServerZoneIpcSegment::new(ServerZoneIpcData::DirectorVars {
                 handler_id: director_id,
-                sequence: sequence as u8,
+                flags: flags as u8,
                 branch: 0,
                 data: [0; 10],
                 unk1: 0,

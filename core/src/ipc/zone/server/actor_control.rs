@@ -127,7 +127,7 @@ pub enum ActorControlCategory {
         #[brw(pad_after = 2)] // padding
         content_id: u16,
         /// If set to 1, enables explorer mode. Probably does a lot more too!
-        sequence: u32,
+        flags: u32,
     },
 
     /// Updates the invisibility flags for an actor.

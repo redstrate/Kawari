@@ -606,7 +606,8 @@ pub enum ServerZoneIpcData {
     },
     DirectorVars {
         handler_id: HandlerId,
-        sequence: u8,
+        /// Only known one is 1 for explorer mode.
+        flags: u8,
         branch: u8,
         data: [u8; 10],
         unk1: u16,
@@ -1088,7 +1089,7 @@ mod tests {
             ServerZoneIpcData::LegacyQuestList { bitmask: [0; 40] },
             ServerZoneIpcData::DirectorVars {
                 handler_id: HandlerId::default(),
-                sequence: 0,
+                flags: 0,
                 branch: 0,
                 data: [0; 10],
                 unk1: 0,
