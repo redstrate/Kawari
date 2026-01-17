@@ -43,7 +43,11 @@ impl<const N: usize> Bitmask<N> {
     /// Sets this specific `value`.
     pub fn set(&mut self, value: u32) {
         let (value, index) = value_to_flag_byte_index_value(value);
-        self.0[index as usize] |= value;
+        if (index as usize) < self.0.len() {
+            self.0[index as usize] |= value;
+        } else {
+            tracing::warn!("Failed to set bitmask: {index} despite {}?!", self.0.len());
+        }
     }
 
     /// Clears this specific `value`.

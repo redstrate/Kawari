@@ -22,7 +22,7 @@ use crate::{
 };
 use kawari::{
     common::{
-        DistanceRange, EOBJ_ENTRANCE_CIRCLE, EOBJ_SHORTCUT, EOBJ_SHORTCUT_EXPLORER_MODE,
+        DistanceRange, ENTRANCE_CIRCLE_IDS, EOBJ_SHORTCUT, EOBJ_SHORTCUT_EXPLORER_MODE,
         EventHandlerType, INVALID_OBJECT_ID, ObjectId, Position, euler_to_direction,
     },
     ipc::zone::{
@@ -329,18 +329,43 @@ impl Zone {
         }
     }
 
-    /// Tries to locate the dungeon entrance based on the game object ID.
-    pub fn find_entrance(&self) -> Option<&InstanceObject> {
-        // TODO: also check position!
+    fn find_entrance_from_base_id(&self, base_id: u32) -> Option<&InstanceObject> {
+        // First, we need to find the EventObject for the entrance:
+        let mut bound_id = None;
         for layer_group in &self.layer_groups {
             for layer in &layer_group.chunks[0].layers {
                 for object in &layer.objects {
                     if let LayerEntryData::EventObject(eobj) = &object.data
-                        && eobj.parent_data.base_id == EOBJ_ENTRANCE_CIRCLE
+                        && eobj.parent_data.base_id == base_id
                     {
+                        bound_id = Some(eobj.bound_instance_id);
+                        break;
+                    }
+                }
+            }
+        }
+
+        bound_id?;
+
+        // Then find the linked instance object, which is usually a SGB.
+        for layer_group in &self.layer_groups {
+            for layer in &layer_group.chunks[0].layers {
+                for object in &layer.objects {
+                    if object.instance_id == bound_id.unwrap() {
                         return Some(object);
                     }
                 }
+            }
+        }
+
+        None
+    }
+
+    /// Tries to locate the entrance circle used in instanced content.
+    pub fn find_entrance(&self) -> Option<&InstanceObject> {
+        for base_id in ENTRANCE_CIRCLE_IDS {
+            if let Some(object) = self.find_entrance_from_base_id(base_id) {
+                return Some(object);
             }
         }
 
@@ -566,6 +591,7 @@ pub fn change_zone_warp_to_entrance(
         });
         exit_rotation = Some(euler_to_direction(destination_object.transform.rotation));
     } else {
+        tracing::warn!("Failed to find instanced content entrance for {destination_zone_id}?!");
         exit_position = None;
         exit_rotation = None;
     }

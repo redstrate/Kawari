@@ -32,8 +32,13 @@ pub const INVENTORY_ACTION_ACK_SHOP: u8 = 6;
 /// <https://github.com/SapphireServer/Sapphire/blob/044bff026c01b4cc3a37cbc9b0881fadca3fc477/src/common/Common.h#L83>
 pub const INVENTORY_ACTION_ACK_GENERAL: u8 = 7;
 
-/// EObj ID for the "entrance circle" in instanced content.
-pub const EOBJ_ENTRANCE_CIRCLE: u32 = 2000182;
+/// EObj IDs for entrance circle event objects.
+pub const ENTRANCE_CIRCLE_IDS: [u32; 3] = [
+    // Seen in ARR instanced content.
+    2000182, // Seen in guildhests.
+    2001710, // Seen in at least Endwalker.
+    2007457,
+];
 
 /// EObj ID for the "shortcut" in instanced content.
 pub const EOBJ_SHORTCUT: u32 = 2000700;

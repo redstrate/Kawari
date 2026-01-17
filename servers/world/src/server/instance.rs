@@ -11,7 +11,7 @@ use crate::{
     zone_connection::TeleportQuery,
 };
 use kawari::{
-    common::{DistanceRange, ObjectId},
+    common::{DistanceRange, ENTRANCE_CIRCLE_IDS, ObjectId},
     config::get_config,
     ipc::zone::{ActionRequest, Conditions, NpcSpawn, ObjectSpawn, PlayerSpawn},
 };
@@ -224,6 +224,17 @@ impl Instance {
                 && object.base_id == eobj_id
             {
                 return Some(*id);
+            }
+        }
+
+        None
+    }
+
+    /// Returns the entrance circle event object (if found).
+    pub fn find_entrance_circle(&self) -> Option<ObjectId> {
+        for base_id in ENTRANCE_CIRCLE_IDS {
+            if let Some(id) = self.find_object_by_eobj_id(base_id) {
+                return Some(id);
             }
         }
 

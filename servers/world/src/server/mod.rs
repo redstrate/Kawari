@@ -25,9 +25,9 @@ use crate::{
 };
 use kawari::{
     common::{
-        DEAD_DESPAWN_TIME, EOBJ_ENTRANCE_CIRCLE, INVALID_OBJECT_ID, InvisibilityFlags, JumpState,
-        MAX_SPAWNED_ACTORS, MAX_SPAWNED_OBJECTS, MoveAnimationState, MoveAnimationType, ObjectId,
-        ObjectTypeId, ObjectTypeKind, Position,
+        DEAD_DESPAWN_TIME, INVALID_OBJECT_ID, InvisibilityFlags, JumpState, MAX_SPAWNED_ACTORS,
+        MAX_SPAWNED_OBJECTS, MoveAnimationState, MoveAnimationType, ObjectId, ObjectTypeId,
+        ObjectTypeKind, Position,
     },
     ipc::zone::{
         ActorControl, ActorControlCategory, ActorControlSelf, ActorControlTarget, BattleNpcSubKind,
@@ -1471,8 +1471,8 @@ pub async fn server_main_loop(
                 };
 
                 // Find the spawned entrance circle
-                let Some(entrance_actor_id) = instance.find_object_by_eobj_id(EOBJ_ENTRANCE_CIRCLE)
-                else {
+                let Some(entrance_actor_id) = instance.find_entrance_circle() else {
+                    tracing::warn!("Failed to find entrance circle, it won't despawn!");
                     continue;
                 };
 
