@@ -10,7 +10,10 @@ use crate::{
     lua::LuaTask,
 };
 use kawari::{
-    common::{ClientLanguage, EquipDisplayFlag, ObjectId, ObjectTypeId, Position, timestamp_secs},
+    common::{
+        ClientLanguage, EquipDisplayFlag, HandlerId, ObjectId, ObjectTypeId, Position,
+        timestamp_secs,
+    },
     config::WorldConfig,
     ipc::zone::{
         client::ClientZoneIpcSegment,
@@ -165,6 +168,9 @@ pub struct ZoneConnection {
     pub old_zone_id: u16,
     pub old_position: Position,
     pub old_rotation: f32,
+
+    /// Information about the current content.
+    pub content_handler_id: HandlerId,
 }
 
 impl ZoneConnection {

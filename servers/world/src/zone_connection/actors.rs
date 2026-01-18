@@ -291,6 +291,7 @@ impl ZoneConnection {
             rotation: exit_rotation.unwrap_or(0.0),
             voice: chara_make.voice_id as u8,
             active_minion: self.player_data.active_minion as u16,
+            handler_id: self.content_handler_id,
             ..Default::default()
         }
     }

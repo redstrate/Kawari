@@ -210,6 +210,8 @@ impl ZoneConnection {
 
         self.send_conditions().await;
 
+        self.content_handler_id = HandlerId::default();
+
         // Initialize director as needed
         if let Some(intended_use) = TerritoryIntendedUse::from_repr(lua_zone.intended_use) {
             let Some(director_type) = HandlerType::from_intended_use(intended_use) else {
@@ -260,6 +262,8 @@ impl ZoneConnection {
                 ],
             }))
             .await;
+
+            self.content_handler_id = director_id;
         }
     }
 

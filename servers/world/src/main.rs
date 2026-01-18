@@ -150,6 +150,7 @@ async fn initial_setup(
                     old_zone_id: 0,
                     old_position: Position::default(),
                     old_rotation: 0.0,
+                    content_handler_id: HandlerId::default(),
                 };
 
                 // Handle setup before passing off control to the zone connection.
