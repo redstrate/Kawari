@@ -806,12 +806,17 @@ pub enum CharacterMode {
 #[derive(Clone, Copy, Eq, PartialEq)]
 pub struct PlayerStateFlags1(u8);
 
+// TODO: upstream the flags that FFXIVClientStructs doesn't have
 bitflags! {
     impl PlayerStateFlags1: u8 {
         /// No flags set.
         const NONE = 0;
         /// If this player isn't a novice. If not set, considered a New Adventurer.
         const NOT_NOVICE = 1;
+        /// If the player has a security token registered.
+        const HAS_SECURITY_TOKEN = 2;
+        /// If your Chocobo is in the stable and can't be accessed.
+        const BUDDY_IN_STABLE = 4;
         /// If the player is a Battle mentor. This includes PvE and PvP.
         const BATTLE_MENTOR = 8;
     }
