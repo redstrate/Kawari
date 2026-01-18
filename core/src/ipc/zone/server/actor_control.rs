@@ -130,6 +130,12 @@ pub enum ActorControlCategory {
         flags: u32,
     },
 
+    #[brw(magic = 101u32)]
+    TerminateDirector {
+        /// The director to terminate.
+        handler_id: HandlerId,
+    },
+
     /// Updates the invisibility flags for an actor.
     #[brw(magic = 106u32)]
     SetInvisibilityFlags { flags: InvisibilityFlags },

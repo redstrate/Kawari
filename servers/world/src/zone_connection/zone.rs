@@ -210,7 +210,17 @@ impl ZoneConnection {
 
         self.send_conditions().await;
 
-        self.content_handler_id = HandlerId::default();
+        // Terminate the old director if we're exiting an instance
+        if self.content_handler_id.0 != 0 && content_finder_condition_id == 0 {
+            self.actor_control_self(ActorControlSelf {
+                category: ActorControlCategory::TerminateDirector {
+                    handler_id: self.content_handler_id,
+                },
+            })
+            .await;
+
+            self.content_handler_id = HandlerId::default();
+        }
 
         // Initialize director as needed
         if let Some(intended_use) = TerritoryIntendedUse::from_repr(lua_zone.intended_use) {
