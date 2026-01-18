@@ -1493,6 +1493,7 @@ async fn client_loop(
 
                         connection.event_scene(&object, handler_id, 2, SceneFlags::NO_DEFAULT_CAMERA | SceneFlags::HIDE_HOTBAR, Vec::new()).await;
                     }
+                    FromServer::IncrementRestedExp() => connection.add_rested_exp_seconds(10).await,
                     _ => { tracing::error!("Zone connection {:#?} received a FromServer message we don't care about: {:#?}, ensure you're using the right client network or that you've implemented a handler for it if we actually care about it!", client_handle.id, msg); }
                 },
                 None => break,

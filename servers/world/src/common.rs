@@ -168,6 +168,8 @@ pub enum FromServer {
     WaymarkPreset(WaymarkPreset),
     /// Inform the client that they entered an instance exit range.
     EnteredInstanceEntranceRange(u32),
+    /// Inform the client to increment the rested EXP by 10 seconds.
+    IncrementRestedExp(),
 }
 
 #[derive(Debug, Clone)]

@@ -63,6 +63,7 @@ impl ClientState {
 #[derive(Default, Debug)]
 struct WorldServer {
     instances: Vec<Instance>,
+    rested_exp_counter: i32,
 }
 
 impl WorldServer {
@@ -353,7 +354,17 @@ fn server_logic_tick(data: &mut WorldServer, network: &mut NetworkState) {
 
                 // Check for overlapping map ranges
                 let overlapping_ranges = instance.zone.get_overlapping_map_ranges(actor.position());
-                let _in_sanctuary = overlapping_ranges.iter().filter(|x| x.sanctuary).count() > 0;
+                let in_sanctuary = overlapping_ranges.iter().filter(|x| x.sanctuary).count() > 0;
+
+                // We're on the 10 second mark, and you're in a sanctuary...
+                if in_sanctuary && data.rested_exp_counter == 0 {
+                    // Update rested EXP! (This means it only has a ten second granularity, but who cares?)
+                    let msg = FromServer::IncrementRestedExp();
+                    if handle.send(msg).is_err() {
+                        // TODO: remove as needed
+                        //self.to_remove.push(id);
+                    }
+                }
 
                 let mut inside_any_instance_entrances = false;
 
@@ -605,6 +616,12 @@ fn server_logic_tick(data: &mut WorldServer, network: &mut NetworkState) {
             }
         }
     }
+
+    // Ensure the rested EXP counter only happens every 10 seconds.
+    data.rested_exp_counter += 1;
+    if data.rested_exp_counter == 11 {
+        data.rested_exp_counter = 0;
+    }
 }
 
 pub async fn server_main_loop(
@@ -630,7 +647,7 @@ pub async fn server_main_loop(
         let game_data = game_data.clone();
         let lua = lua.clone();
         tokio::task::spawn(async move {
-            let mut interval = tokio::time::interval(Duration::from_millis(500));
+            let mut interval = tokio::time::interval(Duration::from_secs(1)); // Be careful when changing this, as the rested EXP may become whacky.
             interval.tick().await;
             loop {
                 interval.tick().await;

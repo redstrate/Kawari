@@ -47,6 +47,7 @@ pub struct ClassJob {
     pub classjob_levels: String,
     pub classjob_exp: String,
     pub first_classjob: i32,
+    pub rested_exp: i32,
 }
 
 #[derive(

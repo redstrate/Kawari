@@ -130,6 +130,7 @@ impl WorldDatabase {
                 classjob_id: classjob.classjob_id as u8,
                 classjob_levels: json_unpack(&classjob.classjob_levels),
                 classjob_exp: json_unpack(&classjob.classjob_exp),
+                rested_exp: classjob.rested_exp,
                 unlock,
                 content,
                 companion,
@@ -184,11 +185,13 @@ impl WorldDatabase {
             content_id: i64,
             classjob_levels: String,
             classjob_exp: String,
+            rested_exp: i32,
         }
         let classjob = ClassJobChanges {
             content_id: data.content_id as i64,
             classjob_levels: serde_json::to_string(&data.classjob_levels).unwrap(),
             classjob_exp: serde_json::to_string(&data.classjob_exp).unwrap(),
+            rested_exp: data.rested_exp,
         };
         classjob
             .save_changes::<ClassJob>(&mut self.connection)
@@ -374,6 +377,7 @@ impl WorldDatabase {
             classjob_levels: serde_json::to_string(&classjob_levels).unwrap(),
             classjob_exp: serde_json::to_string(&vec![0u32; CLASSJOB_ARRAY_SIZE]).unwrap(),
             first_classjob: chara_make.classjob_id,
+            ..Default::default()
         };
         diesel::insert_into(schema::classjob::table)
             .values(classjob)

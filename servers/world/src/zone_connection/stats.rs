@@ -2,7 +2,7 @@
 
 use crate::{GameData, ZoneConnection};
 use kawari::{
-    common::{MAXIMUM_MP, ObjectId},
+    common::{MAXIMUM_MP, MAXIMUM_RESTED_EXP, ObjectId},
     ipc::zone::{
         ActorControlCategory, ActorControlSelf, PlayerStats, ServerZoneIpcData,
         ServerZoneIpcSegment, UpdateClassInfo,
@@ -153,5 +153,18 @@ impl ZoneConnection {
         // TODO: re-send stats like in retail
 
         self.update_class_info().await;
+    }
+
+    /// The number of seconds to add to the rested EXP bonus.
+    pub async fn add_rested_exp_seconds(&mut self, seconds: i32) {
+        self.player_data.rested_exp += seconds;
+        self.player_data.rested_exp = self.player_data.rested_exp.clamp(0, MAXIMUM_RESTED_EXP);
+
+        self.actor_control_self(ActorControlSelf {
+            category: ActorControlCategory::UpdateRestedExp {
+                exp: self.player_data.rested_exp as u32,
+            },
+        })
+        .await;
     }
 }

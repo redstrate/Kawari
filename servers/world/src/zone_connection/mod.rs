@@ -81,6 +81,7 @@ pub struct PlayerData {
     pub classjob_id: u8,
     pub classjob_levels: Vec<u16>,
     pub classjob_exp: Vec<i32>,
+    pub rested_exp: i32,
 
     // Dynamic data
     pub position: Position,

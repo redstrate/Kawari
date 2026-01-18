@@ -15,6 +15,7 @@ diesel::table! {
         classjob_levels -> Text,
         classjob_exp -> Text,
         first_classjob -> Integer,
+        rested_exp -> Integer,
     }
 }
 
