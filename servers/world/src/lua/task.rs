@@ -188,4 +188,8 @@ pub enum LuaTask {
     },
     Kill {},
     AbandonContent {},
+    SetHomepoint {
+        homepoint: u16,
+    },
+    ReturnToHomepoint {},
 }

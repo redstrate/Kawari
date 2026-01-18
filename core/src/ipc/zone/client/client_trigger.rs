@@ -96,6 +96,10 @@ pub enum ClientTriggerCommand {
     #[brw(magic = 314u32)]
     GroupPoseOrIdleCamera { unk1: u32, unk2: u32 },
 
+    /// The client opens the World Visit menu.
+    #[brw(magic = 316u32)]
+    OpenWorldVisit {},
+
     /// The client places a waymark.
     #[brw(magic = 317u32)]
     PlaceWaymark {

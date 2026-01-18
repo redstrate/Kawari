@@ -652,6 +652,14 @@ impl LuaPlayer {
 
         create_ipc_self(self, ipc, self.player_data.actor_id);
     }
+
+    fn set_homepoint(&mut self, homepoint: u16) {
+        self.queued_tasks.push(LuaTask::SetHomepoint { homepoint });
+    }
+
+    fn return_to_homepoint(&mut self) {
+        self.queued_tasks.push(LuaTask::ReturnToHomepoint {});
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -1059,6 +1067,14 @@ impl UserData for LuaPlayer {
         });
         methods.add_method_mut("set_item_level", |_, this, item_level: u32| {
             this.set_item_level(item_level);
+            Ok(())
+        });
+        methods.add_method_mut("set_homepoint", |_, this, homepoint: u16| {
+            this.set_homepoint(homepoint);
+            Ok(())
+        });
+        methods.add_method_mut("return_to_homepoint", |_, this, _: ()| {
+            this.return_to_homepoint();
             Ok(())
         });
     }

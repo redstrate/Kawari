@@ -349,6 +349,9 @@ pub enum ActorControlCategory {
         unk4: u32,
     },
 
+    #[brw(magic = 507u32)]
+    SetHomepoint { id: u32 },
+
     #[brw(magic = 509u32)]
     LearnTeleport {
         id: u32,

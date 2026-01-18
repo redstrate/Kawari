@@ -85,7 +85,7 @@ pub struct PlayerStatus {
     /// The character's initial city-state.
     pub city_state: u8,
     /// The Aetheryte used for the Return action. Indexed into the Aetheryte Excel sheet.
-    pub home_aetheryte_id: u16, // 0x8c
+    pub homepoint: u16,
     pub quest_special_flags: u8,
     pub pet_data: u8,
     pub companion_rank: u8,

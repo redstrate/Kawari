@@ -576,6 +576,21 @@ impl ZoneConnection {
                         ))
                         .await;
                 }
+                LuaTask::SetHomepoint { homepoint } => {
+                    self.player_data.aetheryte.homepoint = *homepoint as i32;
+
+                    // Also update the client live
+                    self.actor_control_self(ActorControlSelf {
+                        category: ActorControlCategory::SetHomepoint {
+                            id: *homepoint as u32,
+                        },
+                    })
+                    .await;
+                }
+                LuaTask::ReturnToHomepoint {} => {
+                    self.warp_aetheryte(self.player_data.aetheryte.homepoint as u32)
+                        .await;
+                }
             }
         }
         player.queued_tasks.clear();

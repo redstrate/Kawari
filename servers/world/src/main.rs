@@ -562,7 +562,7 @@ async fn client_loop(
                                                         aetherytes: connection.player_data.aetheryte.unlocked.0.clone(),
                                                         minions: connection.player_data.unlock.minions.0.clone(),
                                                         mount_guide_mask: connection.player_data.unlock.mounts.0.clone(),
-                                                        home_aetheryte_id: 8, // hardcoded to limsa for now
+                                                        homepoint: connection.player_data.aetheryte.homepoint as u16,
                                                         favourite_aetheryte_count: 1,
                                                         favorite_aetheryte_ids: [8, 0, 0, 0],
                                                         seen_active_help: connection.player_data.unlock.seen_active_help.0.clone(),
