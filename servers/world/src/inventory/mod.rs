@@ -59,40 +59,27 @@ pub struct Inventory {
 
 impl Default for Inventory {
     fn default() -> Self {
-        // TODO: Set the ContainerType for the others if needed?
         // Right now we only use this for adding items to the main inventory.
         Self {
             equipped: EquippedStorage::default(),
             pages: [
-                GenericStorage {
-                    kind: ContainerType::Inventory0,
-                    ..Default::default()
-                },
-                GenericStorage {
-                    kind: ContainerType::Inventory1,
-                    ..Default::default()
-                },
-                GenericStorage {
-                    kind: ContainerType::Inventory2,
-                    ..Default::default()
-                },
-                GenericStorage {
-                    kind: ContainerType::Inventory3,
-                    ..Default::default()
-                },
+                GenericStorage::new(ContainerType::Inventory0),
+                GenericStorage::new(ContainerType::Inventory1),
+                GenericStorage::new(ContainerType::Inventory2),
+                GenericStorage::new(ContainerType::Inventory3),
             ],
-            armoury_main_hand: GenericStorage::default(),
-            armoury_head: GenericStorage::default(),
-            armoury_body: GenericStorage::default(),
-            armoury_hands: GenericStorage::default(),
-            armoury_legs: GenericStorage::default(),
-            armoury_feet: GenericStorage::default(),
-            armoury_off_hand: GenericStorage::default(),
-            armoury_earring: GenericStorage::default(),
-            armoury_necklace: GenericStorage::default(),
-            armoury_bracelet: GenericStorage::default(),
-            armoury_rings: GenericStorage::default(),
-            armoury_soul_crystal: GenericStorage::default(),
+            armoury_main_hand: GenericStorage::new(ContainerType::ArmoryWeapon),
+            armoury_head: GenericStorage::new(ContainerType::ArmoryHead),
+            armoury_body: GenericStorage::new(ContainerType::ArmoryBody),
+            armoury_hands: GenericStorage::new(ContainerType::ArmoryHand),
+            armoury_legs: GenericStorage::new(ContainerType::ArmoryLeg),
+            armoury_feet: GenericStorage::new(ContainerType::ArmoryFoot),
+            armoury_off_hand: GenericStorage::new(ContainerType::ArmoryOffWeapon),
+            armoury_earring: GenericStorage::new(ContainerType::ArmoryEarring),
+            armoury_necklace: GenericStorage::new(ContainerType::ArmoryNeck),
+            armoury_bracelet: GenericStorage::new(ContainerType::ArmoryWrist),
+            armoury_rings: GenericStorage::new(ContainerType::ArmoryRing),
+            armoury_soul_crystal: GenericStorage::new(ContainerType::ArmorySoulCrystal),
             currency: CurrencyStorage::default(),
         }
     }
@@ -257,7 +244,15 @@ impl Inventory {
                 dst_slot.clone_from(&src_item);
 
                 // move dst item into src slot
-                let src_slot = self.get_item_mut(action.src_storage_id, action.src_container_index);
+                // *unless* it can come from Equipped, in that case the client actually moves it to the Armoury.
+                let src_slot = if action.dst_storage_id == ContainerType::Equipped {
+                    let destination_info = self
+                        .add_in_next_free_armory_slot(action.dst_container_index)
+                        .unwrap();
+                    self.get_item_mut(destination_info.container, destination_info.index)
+                } else {
+                    self.get_item_mut(action.src_storage_id, action.src_container_index)
+                };
                 src_slot.clone_from(&dst_item);
             }
             _ => todo!(),
@@ -298,6 +293,37 @@ impl Inventory {
 
         // If we didn't find any stacks, or the item isn't stackable, try again to find an empty inventory slot.
         self.add_in_empty_slot(item)
+    }
+
+    pub fn add_in_next_free_armory_slot(&self, equip_index: u16) -> Option<ItemDestinationInfo> {
+        let container_type = match equip_index {
+            0 => ContainerType::ArmoryWeapon,
+            1 => ContainerType::ArmoryOffWeapon,
+            2 => ContainerType::ArmoryHead,
+            3 => ContainerType::ArmoryBody,
+            4 => ContainerType::ArmoryHand,
+            6 => ContainerType::ArmoryLeg,
+            7 => ContainerType::ArmoryFoot,
+            8 => ContainerType::ArmoryEarring,
+            9 => ContainerType::ArmoryNeck,
+            10 => ContainerType::ArmoryRing,
+            11 => ContainerType::ArmoryRing,
+            12 => ContainerType::ArmorySoulCrystal,
+            _ => unimplemented!(),
+        };
+
+        let container = self.get_container(container_type);
+        for i in 0..container.max_slots() {
+            if container.get_slot(i as u16).quantity == 0 {
+                return Some(ItemDestinationInfo {
+                    container: container_type,
+                    index: i as u16,
+                    quantity: 0, // doesn't matter in our case'
+                });
+            }
+        }
+
+        None
     }
 
     pub fn add_in_slot(&mut self, item: Item, container_type: &ContainerType, index: u16) {

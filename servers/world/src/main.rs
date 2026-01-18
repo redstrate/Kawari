@@ -1017,6 +1017,10 @@ async fn client_loop(
                                                 }
 
                                                 connection.player_data.item_sequence += 1;
+
+                                                if action.dst_storage_id == ContainerType::Equipped {
+                                                    connection.change_class_based_on_weapon().await;
+                                                }
                                             }
                                             ClientZoneIpcData::EventReturnHandler4(handler) => {
                                                 let event_type = handler.handler_id.handler_type();

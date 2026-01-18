@@ -5,6 +5,7 @@ use icarus::AetherCurrentCompFlgSet::AetherCurrentCompFlgSetSheet;
 use icarus::Aetheryte::AetheryteSheet;
 use icarus::BNpcBase::BNpcBaseSheet;
 use icarus::ClassJob::ClassJobSheet;
+use icarus::ClassJobCategory::ClassJobCategorySheet;
 use icarus::ContentFinderCondition::ContentFinderConditionSheet;
 use icarus::CustomTalk::CustomTalkSheet;
 use icarus::EObj::EObjSheet;
@@ -83,6 +84,8 @@ pub struct ItemInfo {
     pub stack_size: u32,
     /// The item's item level.
     pub item_level: u16,
+    /// The item's ClassJobCategory.
+    pub classjob_category: u8,
 }
 
 #[derive(Debug)]
@@ -244,6 +247,7 @@ impl GameData {
                 sub_model_id: *matched_row.ModelSub().into_u64().unwrap(),
                 stack_size: *matched_row.StackSize().into_u32().unwrap(),
                 item_level: *matched_row.LevelItem().into_u16().unwrap(),
+                classjob_category: *matched_row.ClassJobCategory().into_u8().unwrap(),
             };
 
             return Some(item_info);
@@ -797,6 +801,147 @@ impl GameData {
             instance_content_sheet.row(content_finder_row.Content().into_u16().copied()? as u32)?;
 
         instance_content_row.LGBEventRange().into_u32().copied()
+    }
+
+    /// Returns the list of applicable classjob IDs based on the ClassJobCategory.
+    pub fn get_applicable_classjobs(&mut self, classjob_category_id: u16) -> Vec<u8> {
+        let sheet =
+            ClassJobCategorySheet::read_from(&mut self.resource, Language::English).unwrap();
+        let row = sheet.row(classjob_category_id as u32).unwrap();
+
+        // TODO: find a better way to write this
+        let mut classjobs = Vec::new();
+        if *row.ADV().into_bool().unwrap() {
+            classjobs.push(0);
+        }
+        if *row.GLA().into_bool().unwrap() {
+            classjobs.push(1);
+        }
+        if *row.PGL().into_bool().unwrap() {
+            classjobs.push(2);
+        }
+        if *row.MRD().into_bool().unwrap() {
+            classjobs.push(3);
+        }
+        if *row.LNC().into_bool().unwrap() {
+            classjobs.push(4);
+        }
+        if *row.ARC().into_bool().unwrap() {
+            classjobs.push(5);
+        }
+        if *row.CNJ().into_bool().unwrap() {
+            classjobs.push(6);
+        }
+        if *row.THM().into_bool().unwrap() {
+            classjobs.push(7);
+        }
+        if *row.CRP().into_bool().unwrap() {
+            classjobs.push(8);
+        }
+        if *row.BSM().into_bool().unwrap() {
+            classjobs.push(9);
+        }
+        if *row.ARM().into_bool().unwrap() {
+            classjobs.push(10);
+        }
+        if *row.GSM().into_bool().unwrap() {
+            classjobs.push(11);
+        }
+        if *row.LTW().into_bool().unwrap() {
+            classjobs.push(12);
+        }
+        if *row.WVR().into_bool().unwrap() {
+            classjobs.push(13);
+        }
+        if *row.ALC().into_bool().unwrap() {
+            classjobs.push(14);
+        }
+        if *row.CUL().into_bool().unwrap() {
+            classjobs.push(15);
+        }
+        if *row.MIN().into_bool().unwrap() {
+            classjobs.push(16);
+        }
+        if *row.BTN().into_bool().unwrap() {
+            classjobs.push(17);
+        }
+        if *row.FSH().into_bool().unwrap() {
+            classjobs.push(18);
+        }
+        if *row.PLD().into_bool().unwrap() {
+            classjobs.push(19);
+        }
+        if *row.MNK().into_bool().unwrap() {
+            classjobs.push(20);
+        }
+        if *row.WAR().into_bool().unwrap() {
+            classjobs.push(21);
+        }
+        if *row.DRG().into_bool().unwrap() {
+            classjobs.push(22);
+        }
+        if *row.BRD().into_bool().unwrap() {
+            classjobs.push(23);
+        }
+        if *row.WHM().into_bool().unwrap() {
+            classjobs.push(24);
+        }
+        if *row.BLM().into_bool().unwrap() {
+            classjobs.push(25);
+        }
+        if *row.ACN().into_bool().unwrap() {
+            classjobs.push(26);
+        }
+        if *row.SMN().into_bool().unwrap() {
+            classjobs.push(27);
+        }
+        if *row.SCH().into_bool().unwrap() {
+            classjobs.push(28);
+        }
+        if *row.ROG().into_bool().unwrap() {
+            classjobs.push(29);
+        }
+        if *row.NIN().into_bool().unwrap() {
+            classjobs.push(30);
+        }
+        if *row.MCH().into_bool().unwrap() {
+            classjobs.push(31);
+        }
+        if *row.DRK().into_bool().unwrap() {
+            classjobs.push(32);
+        }
+        if *row.AST().into_bool().unwrap() {
+            classjobs.push(33);
+        }
+        if *row.SAM().into_bool().unwrap() {
+            classjobs.push(34);
+        }
+        if *row.RDM().into_bool().unwrap() {
+            classjobs.push(35);
+        }
+        if *row.BLU().into_bool().unwrap() {
+            classjobs.push(36);
+        }
+        if *row.GNB().into_bool().unwrap() {
+            classjobs.push(37);
+        }
+        if *row.DNC().into_bool().unwrap() {
+            classjobs.push(38);
+        }
+        if *row.RPR().into_bool().unwrap() {
+            classjobs.push(39);
+        }
+        if *row.SGE().into_bool().unwrap() {
+            classjobs.push(40);
+        }
+        if *row.VPR().into_bool().unwrap() {
+            classjobs.push(41);
+        }
+        if *row.PCT().into_bool().unwrap() {
+            classjobs.push(42);
+        }
+
+        classjobs
     }
 }
 

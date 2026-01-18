@@ -6,7 +6,6 @@ use super::{Item, Storage};
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct GenericStorage<const N: usize> {
     pub slots: Vec<Item>,
-    #[serde(skip)]
     pub kind: ContainerType,
 }
 
@@ -30,5 +29,14 @@ impl<const N: usize> Storage for GenericStorage<N> {
 
     fn get_slot(&self, index: u16) -> &Item {
         self.slots.get(index as usize).unwrap()
+    }
+}
+
+impl<const N: usize> GenericStorage<N> {
+    pub fn new(kind: ContainerType) -> Self {
+        Self {
+            kind,
+            ..Default::default()
+        }
     }
 }

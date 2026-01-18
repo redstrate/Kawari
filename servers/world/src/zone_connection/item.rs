@@ -1,7 +1,7 @@
 //! Managing the inventory, equipped model IDs and shops.
 
 use crate::{
-    ToServer, ZoneConnection,
+    ItemInfoQuery, ToServer, ZoneConnection,
     inventory::{Item, Storage},
 };
 use kawari::{
@@ -331,5 +331,24 @@ impl ZoneConnection {
             dummy_container: ContainerType::Equipped,
         });
         self.send_ipc_self(ipc).await;
+    }
+
+    /// Changes the class based on the weapon equipped.
+    // TODO: support soul crystals
+    // TODO: remove incompatible armor
+    pub async fn change_class_based_on_weapon(&mut self) {
+        let classjobs;
+        {
+            let mut game_data = self.gamedata.lock();
+
+            let weapon = self.player_data.inventory.equipped.main_hand.id;
+            let item_info = game_data
+                .get_item_info(ItemInfoQuery::ById(weapon))
+                .unwrap();
+            classjobs = game_data.get_applicable_classjobs(item_info.classjob_category as u16);
+        }
+
+        self.player_data.classjob_id = classjobs.first().copied().unwrap();
+        self.update_class_info().await;
     }
 }

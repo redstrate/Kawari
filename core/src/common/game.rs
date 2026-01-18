@@ -4,6 +4,7 @@ use std::{collections::HashMap, time::Duration};
 
 use binrw::binrw;
 use bitflags::bitflags;
+use serde::{Deserialize, Serialize};
 use strum_macros::{Display, EnumIter, FromRepr};
 
 use crate::constants::BASE_INVENTORY_ACTION;
@@ -432,7 +433,7 @@ pub enum ClientLanguage {
 #[binrw]
 #[brw(little)]
 #[brw(repr = u16)]
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Display, Deserialize, Serialize)]
 pub enum ContainerType {
     #[default]
     Inventory0 = 0,
