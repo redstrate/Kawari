@@ -755,6 +755,9 @@ pub enum ServerZoneIpcData {
     FreeCompanyActivityList {
         unk: [u8; 528],
     },
+    UnkContentFinder2 {
+        unk: [u8; 16],
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -1163,6 +1166,7 @@ mod tests {
                 company_tag: String::default(),
             },
             ServerZoneIpcData::FreeCompanyActivityList { unk: [0; 528] },
+            ServerZoneIpcData::UnkContentFinder2 { unk: [0; 16] },
         ];
 
         for data in &ipc_types {

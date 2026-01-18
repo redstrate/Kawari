@@ -455,6 +455,10 @@ ServerZoneIpcType:
     comment: A client updated a waymark, and now their party needs to be informed.
     opcode: 748
     size: 16
+  - name: UnkContentFinder2
+    comment: "Unknown purpose, but it controls something like hiding the Join button."
+    opcode: 790
+    size: 16
 ClientZoneIpcType:
   - name: InitRequest
     comment: "Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)"
