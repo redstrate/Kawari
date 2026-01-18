@@ -989,11 +989,6 @@ async fn client_loop(
 
                                                 connection.player_data.inventory.process_action(action);
 
-                                                // If the client modified their equipped items, we have to process that
-                                                if action.src_storage_id == ContainerType::Equipped || action.dst_storage_id == ContainerType::Equipped {
-                                                    connection.inform_equip().await;
-                                                }
-
                                                 if action.operation_type == ItemOperationKind::Discard {
                                                     tracing::info!("Client is discarding from their inventory!");
 
@@ -1018,9 +1013,12 @@ async fn client_loop(
 
                                                 connection.player_data.item_sequence += 1;
 
-                                                if action.dst_storage_id == ContainerType::Equipped {
+                                                // If the client modified their equipped items, we have to process that
+                                                if action.src_storage_id == ContainerType::Equipped || action.dst_storage_id == ContainerType::Equipped {
                                                     connection.change_class_based_on_weapon().await;
+                                                    connection.inform_equip().await;
                                                 }
+
                                             }
                                             ClientZoneIpcData::EventReturnHandler4(handler) => {
                                                 let event_type = handler.handler_id.handler_type();

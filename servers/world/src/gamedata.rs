@@ -943,6 +943,14 @@ impl GameData {
 
         classjobs
     }
+
+    /// Gets the soul crystal item ID for the classjob, if applicable.
+    pub fn get_soul_crystal_item_id(&mut self, classjob_id: u16) -> Option<u32> {
+        let sheet = ClassJobSheet::read_from(&mut self.resource, Language::English).ok()?;
+        let row = sheet.row(classjob_id as u32)?;
+
+        row.ItemSoulCrystal().into_u32().copied()
+    }
 }
 
 impl mlua::UserData for GameData {

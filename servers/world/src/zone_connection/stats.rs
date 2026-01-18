@@ -58,11 +58,13 @@ impl ZoneConnection {
     }
 
     pub fn set_current_level(&mut self, level: u16) {
+        self.set_level_for(self.player_data.classjob_id, level);
+    }
+
+    pub fn set_level_for(&mut self, classjob_id: u8, level: u16) {
         let game_data = self.gamedata.lock();
 
-        let index = game_data
-            .get_exp_array_index(self.player_data.classjob_id as u16)
-            .unwrap();
+        let index = game_data.get_exp_array_index(classjob_id as u16).unwrap();
         self.player_data.classjob_levels[index as usize] = level;
     }
 

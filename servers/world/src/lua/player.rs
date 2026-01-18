@@ -169,8 +169,9 @@ impl LuaPlayer {
         self.queued_tasks.push(LuaTask::FinishEvent { handler_id });
     }
 
-    fn set_classjob(&mut self, classjob_id: u8) {
-        self.queued_tasks.push(LuaTask::SetClassJob { classjob_id });
+    fn unlock_classjob(&mut self, classjob_id: u8) {
+        self.queued_tasks
+            .push(LuaTask::UnlockClassJob { classjob_id });
     }
 
     fn warp_aetheryte(&mut self, aetheryte_id: u32) {
@@ -765,8 +766,8 @@ impl UserData for LuaPlayer {
             this.finish_event(handler_id);
             Ok(())
         });
-        methods.add_method_mut("set_classjob", |_, this, classjob_id: u8| {
-            this.set_classjob(classjob_id);
+        methods.add_method_mut("unlock_classjob", |_, this, classjob_id: u8| {
+            this.unlock_classjob(classjob_id);
             Ok(())
         });
         methods.add_method_mut("warp_aetheryte", |_, this, aetheryte_id: u32| {

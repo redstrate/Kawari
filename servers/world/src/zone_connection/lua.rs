@@ -57,9 +57,41 @@ impl ZoneConnection {
                     self.event_finish(*handler_id).await;
                     run_finish_event = true;
                 }
-                LuaTask::SetClassJob { classjob_id } => {
-                    self.player_data.classjob_id = *classjob_id;
-                    self.update_class_info().await;
+                LuaTask::UnlockClassJob { classjob_id } => {
+                    self.set_level_for(*classjob_id, 1);
+
+                    self.actor_control_self(ActorControlSelf {
+                        category: ActorControlCategory::UnlockClass {
+                            classjob_id: *classjob_id as u32,
+                        },
+                    })
+                    .await;
+
+                    let soul_crystal_id;
+                    {
+                        let mut gamedata = self.gamedata.lock();
+                        soul_crystal_id = gamedata.get_soul_crystal_item_id(*classjob_id as u16);
+                    }
+
+                    if let Some(id) = soul_crystal_id {
+                        let soul_crystal = Item {
+                            quantity: 1,
+                            id,
+                            ..Default::default()
+                        };
+
+                        let destination = self
+                            .player_data
+                            .inventory
+                            .add_in_next_free_armory_slot(12)
+                            .unwrap();
+                        self.player_data.inventory.add_in_slot(
+                            soul_crystal,
+                            &destination.container,
+                            destination.index,
+                        );
+                        self.send_inventory().await;
+                    }
                 }
                 LuaTask::WarpAetheryte { aetheryte_id } => {
                     self.warp_aetheryte(*aetheryte_id).await;

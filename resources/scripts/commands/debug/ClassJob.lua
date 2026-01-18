@@ -9,7 +9,7 @@ function onCommand(args, player)
 
     local id = args[1]
     if tonumber(id) then
-        player:set_classjob(tonumber(args[1]))
+        player:unlock_classjob(tonumber(args[1]))
     else
         printf(player, "Incorrect arguments given!")
         return

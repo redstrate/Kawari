@@ -20,7 +20,7 @@ pub enum LuaTask {
     FinishEvent {
         handler_id: u32,
     },
-    SetClassJob {
+    UnlockClassJob {
         classjob_id: u8,
     },
     WarpAetheryte {

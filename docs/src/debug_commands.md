@@ -6,7 +6,7 @@ These special debug commands start with `!` and are custom to Kawari.
 | --- | --- | --- |
 | `acs` | `!acs <category> <param1 (optional)> <param2 (optional)> <param3 (optional)> <param4 (optional)>` | Send an ActorControlSelf to the player. |
 | `condition` | `!condition <name>` | Forcefully sets a condition, see `condition.rs` for what is supported. |
-| `classjob` | `!classjob <id>` | Changes to another class/job. |
+| `classjob` | `!classjob <id>` | Unlocks said class/job at level 1, and gives you a job crystal (if applicable). |
 | `clearconditions` | `!clearconditions` | Forcefully clears all conditions set on your character. |
 | `equip` | `!equip <name>` | Forcefully equip an item, useful for bypassing class/job and other client restrictions. This will *overwrite* any item in that slot! |
 | `item` | `!item <name>` | Gives you an item matching by name. |
