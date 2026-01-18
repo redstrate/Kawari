@@ -49,7 +49,7 @@ mod tests {
 
     use binrw::BinRead;
 
-    use crate::common::{EventHandlerType, ObjectId, ObjectTypeKind};
+    use crate::common::{HandlerType, ObjectId, ObjectTypeKind};
 
     use crate::server_zone_tests_dir;
 
@@ -95,7 +95,7 @@ mod tests {
         );
         assert_eq!(
             event_start.handler_id,
-            HandlerId::new(EventHandlerType::InstanceContent, 26002)
+            HandlerId::new(HandlerType::InstanceContent, 26002)
         );
         assert_eq!(event_start.event_type, EventType::UnkGoldSaucerInvitational);
         assert_eq!(event_start.flags, 1);

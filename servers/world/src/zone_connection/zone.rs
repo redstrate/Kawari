@@ -4,7 +4,7 @@ use crate::{
     ObsfucationData, TeleportReason, ToServer, ZoneConnection, inventory::BuyBackList, lua::LuaZone,
 };
 use kawari::{
-    common::{EventHandlerType, HandlerId, Position, TerritoryIntendedUse, timestamp_secs},
+    common::{HandlerId, HandlerType, Position, TerritoryIntendedUse, timestamp_secs},
     config::get_config,
     constants::OBFUSCATION_ENABLED_MODE,
     ipc::zone::{
@@ -212,7 +212,7 @@ impl ZoneConnection {
 
         // Initialize director as needed
         if let Some(intended_use) = TerritoryIntendedUse::from_repr(lua_zone.intended_use) {
-            let Some(director_type) = EventHandlerType::from_intended_use(intended_use) else {
+            let Some(director_type) = HandlerType::from_intended_use(intended_use) else {
                 tracing::warn!("{intended_use} does not have a known director type yet?");
                 return;
             };

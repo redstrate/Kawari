@@ -7,7 +7,7 @@ use strum::IntoEnumIterator;
 
 use crate::{Event, GameData, inventory::CurrencyKind};
 use kawari::{
-    common::EventHandlerType,
+    common::HandlerType,
     config::get_config,
     ipc::zone::{EventType, GameMasterRank, SceneFlags, ServerNoticeFlags},
 };
@@ -31,7 +31,7 @@ pub fn initial_setup(lua: &mut Lua) {
     register_enum::<GameMasterRank>(lua, "GM_RANK");
     register_flags::<SceneFlags>(lua, ""); // TODO: might want to prefix these at some point
     register_enum::<EventType>(lua, "EVENT_TYPE");
-    register_enum::<EventHandlerType>(lua, "HANDLER_TYPE");
+    register_enum::<HandlerType>(lua, "HANDLER_TYPE");
     register_enum::<CurrencyKind>(lua, "CURRENCY");
 
     // Load globals

@@ -4,7 +4,7 @@ use mlua::Function;
 
 use crate::{Event, EventFinishType, ZoneConnection, lua::LuaPlayer};
 use kawari::{
-    common::{EventHandlerType, HandlerId, ObjectTypeId},
+    common::{HandlerId, HandlerType, ObjectTypeId},
     ipc::zone::{
         ActorControlCategory, ActorControlSelf, Condition, EventScene, EventStart, EventType,
         SceneFlags, ServerZoneIpcData, ServerZoneIpcSegment,
@@ -133,7 +133,7 @@ impl ZoneConnection {
 
             tracing::warn!(
                 "Event {event_id} ({}) isn't scripted yet! Ignoring...",
-                EventHandlerType::from_repr(event_handler_type)
+                HandlerType::from_repr(event_handler_type)
                     .map(|x| format!("{:?}", x))
                     .unwrap_or(format!("{event_handler_type}"))
             );

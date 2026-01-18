@@ -23,7 +23,7 @@ use crate::{
 use kawari::{
     common::{
         DistanceRange, ENTRANCE_CIRCLE_IDS, EOBJ_SHORTCUT, EOBJ_SHORTCUT_EXPLORER_MODE,
-        EventHandlerType, INVALID_OBJECT_ID, ObjectId, Position, euler_to_direction,
+        HandlerType, INVALID_OBJECT_ID, ObjectId, Position, euler_to_direction,
     },
     ipc::zone::{
         ActorControl, ActorControlCategory, ActorControlSelf, Conditions, ObjectKind, ObjectSpawn,
@@ -202,9 +202,9 @@ impl Zone {
                     for object in &layer.objects {
                         if let LayerEntryData::EventObject(eobj) = &object.data {
                             let eobj_data = game_data.get_eobj_data(eobj.parent_data.base_id);
-                            let event_type = EventHandlerType::from_repr(eobj_data >> 16);
+                            let event_type = HandlerType::from_repr(eobj_data >> 16);
 
-                            if let Some(EventHandlerType::GimmickRect) = event_type {
+                            if let Some(HandlerType::GimmickRect) = event_type {
                                 // GimmickRects are used for stuff like the Golden Saucer jumping pads, and is handled server-side.
                                 // Thus, we need to go through and mark these MapRanges to play said event.
                                 if let Some(gimmick_rect_info) =
@@ -386,11 +386,11 @@ impl Zone {
                             continue;
                         }
 
-                        let unselectable = if let Some(event_type) = EventHandlerType::from_repr(
+                        let unselectable = if let Some(event_type) = HandlerType::from_repr(
                             game_data.get_eobj_data(eobj.parent_data.base_id) >> 16,
                         ) {
                             // Unsure if excluding certain types is the way to go, but let's see.
-                            matches!(event_type, EventHandlerType::GimmickRect)
+                            matches!(event_type, HandlerType::GimmickRect)
                         } else {
                             false // don't make selectable to be on the safe side.
                         };

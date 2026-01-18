@@ -4,7 +4,7 @@ use std::time::Instant;
 use axum::Router;
 use axum::routing::get;
 use kawari::common::{
-    ClientLanguage, ContainerType, DirectorEvent, DirectorTrigger, EventHandlerType, HandlerId,
+    ClientLanguage, ContainerType, DirectorEvent, DirectorTrigger, HandlerId, HandlerType,
     INVALID_OBJECT_ID, ItemOperationKind, ObjectId, ObjectTypeId, ObjectTypeKind, Position,
     calculate_max_level,
 };
@@ -1014,7 +1014,7 @@ async fn client_loop(
                                                 let event_type = handler.handler_id.handler_type();
 
                                                 // It always assumes a shop... for now
-                                                if event_type == EventHandlerType::Shop {
+                                                if event_type == HandlerType::Shop {
                                                     connection.process_shop_event_return(handler).await;
                                                 } else {
                                                     tracing::info!(message = "Event returned", handler_id = %handler.handler_id, error_code = handler.error_code, scene = handler.scene, params = ?&handler.params[..handler.num_results as usize]);
@@ -1474,7 +1474,7 @@ async fn client_loop(
                         tracing::info!("Showing leave duty dialog...");
 
                         let object = ObjectTypeId { object_id: connection.player_data.actor_id, object_type: ObjectTypeKind::None };
-                        let handler_id = HandlerId::new(EventHandlerType::GimmickRect, 1).0;
+                        let handler_id = HandlerId::new(HandlerType::GimmickRect, 1).0;
 
                         connection.start_event(object, handler_id, EventType::WithinRange, arg, &mut lua_player).await;
 

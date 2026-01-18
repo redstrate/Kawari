@@ -200,12 +200,11 @@ pub enum MoveAnimationSpeed {
     Sprinting = 78,
 }
 
-// TODO: Remove "Event" from the name since this now includes directors
 /// This allows us (and probably the client as well) to determine which event belongs to each sheet, or type of NPC.
 #[repr(u32)]
 #[derive(Debug, Clone, Copy, PartialEq, Display, EnumIter, FromRepr)]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
-pub enum EventHandlerType {
+pub enum HandlerType {
     // Isn't a valid ID, it's just for our purposes.
     Invalid = 0,
 
@@ -349,7 +348,7 @@ pub enum EventHandlerType {
     Fate = 0x801A,
 }
 
-impl EventHandlerType {
+impl HandlerType {
     /// Determine the correct handler for use in this zone.
     pub fn from_intended_use(intended_use: TerritoryIntendedUse) -> Option<Self> {
         match intended_use {
@@ -369,7 +368,7 @@ impl EventHandlerType {
 }
 
 #[cfg(feature = "server")]
-impl mlua::IntoLua for EventHandlerType {
+impl mlua::IntoLua for HandlerType {
     fn into_lua(self, _: &mlua::Lua) -> mlua::Result<mlua::Value> {
         Ok(mlua::Value::Integer(self as i64))
     }
@@ -382,12 +381,12 @@ impl mlua::IntoLua for EventHandlerType {
 pub struct HandlerId(pub u32);
 
 impl HandlerId {
-    pub fn new(handler_type: EventHandlerType, event_id: u16) -> Self {
+    pub fn new(handler_type: HandlerType, event_id: u16) -> Self {
         Self(((handler_type as u32) << 16) | event_id as u32)
     }
 
-    pub fn handler_type(&self) -> EventHandlerType {
-        EventHandlerType::from_repr(self.0 >> 16).unwrap_or(EventHandlerType::Invalid)
+    pub fn handler_type(&self) -> HandlerType {
+        HandlerType::from_repr(self.0 >> 16).unwrap_or(HandlerType::Invalid)
     }
 
     pub fn event_id(&self) -> u32 {
@@ -398,7 +397,7 @@ impl HandlerId {
 impl std::fmt::Display for HandlerId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let handler_type = match self.handler_type() {
-            EventHandlerType::Invalid => format!("Invalid ({})", self.0 >> 16),
+            HandlerType::Invalid => format!("Invalid ({})", self.0 >> 16),
             _ => format!("{}", self.handler_type()),
         };
         write!(f, "type: {} id: {}", handler_type, self.event_id())
