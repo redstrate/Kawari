@@ -58,8 +58,8 @@ mod tests {
         assert_eq!(npc_spawn.common.pos.y, 40.04264);
         assert_eq!(npc_spawn.common.pos.z, 11.821917);
         assert_eq!(npc_spawn.common.model_chara, 411);
-        assert_eq!(npc_spawn.common.bnpc_base, 13498);
-        assert_eq!(npc_spawn.common.bnpc_name, 10261);
+        assert_eq!(npc_spawn.common.npc_base, 13498);
+        assert_eq!(npc_spawn.common.npc_name, 10261);
         assert_eq!(npc_spawn.common.spawn_index, 12);
         assert_eq!(npc_spawn.common.mode, CharacterMode::Normal);
         assert_eq!(npc_spawn.common.mode_arg, 0);
@@ -94,8 +94,8 @@ mod tests {
         assert_eq!(npc_spawn.common.pos.y, 64.56608);
         assert_eq!(npc_spawn.common.pos.z, -168.08115);
         assert_eq!(npc_spawn.common.model_chara, 297);
-        assert_eq!(npc_spawn.common.bnpc_base, 118);
-        assert_eq!(npc_spawn.common.bnpc_name, 405);
+        assert_eq!(npc_spawn.common.npc_base, 118);
+        assert_eq!(npc_spawn.common.npc_name, 405);
         assert_eq!(npc_spawn.common.spawn_index, 18);
         assert_eq!(npc_spawn.common.mode, CharacterMode::Normal);
         assert_eq!(npc_spawn.common.mode_arg, 0);

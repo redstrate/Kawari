@@ -168,10 +168,10 @@ pub struct CommonSpawn {
     pub craft_tool_model: u64,
 
     pub u14: u64,
-    /// See BNpcBase Excel sheet.
-    pub bnpc_base: u32,
-    /// See BNpcName Excel sheet.
-    pub bnpc_name: u32,
+    /// See BNpcBase/ENpcBase Excel sheet.
+    pub npc_base: u32,
+    /// See BNpcName/ENpcResident Excel sheet.
+    pub npc_name: u32,
     pub layout_id: u32,
     pub companion_owner_id: u32,
     pub handler_id: HandlerId,
