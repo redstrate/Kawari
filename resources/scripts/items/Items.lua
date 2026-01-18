@@ -1,9 +1,11 @@
 ITEM_ACTION_TYPE_MINION = 853
 ITEM_ACTION_TYPE_FANTASIA = 1326 -- this is also used elsewhere, not sure what
 ITEM_ACTION_TYPE_ORCHESTRION = 25183
+ITEM_ACTION_TYPE_FACEWEAR = 37312 -- TODO: implement
 
 -- This is called whenever the client tries to use an item
 function dispatchItem(player, id, action_type, action_data, additional_data)
+    print(action_type)
     if action_type == ITEM_ACTION_TYPE_MINION then
         return runAction("items/Minion.lua", action_data[1])
     elseif action_type == ITEM_ACTION_TYPE_FANTASIA then

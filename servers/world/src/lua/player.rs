@@ -209,6 +209,10 @@ impl LuaPlayer {
             .push(LuaTask::GmSetOrchestrion { value, id });
     }
 
+    fn toggle_orchestrion(&mut self, id: u32) {
+        self.queued_tasks.push(LuaTask::ToggleOrchestrion { id });
+    }
+
     fn add_item(&mut self, id: u32, quantity: u32, send_client_update: bool) {
         self.queued_tasks.push(LuaTask::AddItem {
             id,
@@ -790,6 +794,10 @@ impl UserData for LuaPlayer {
         );
         methods.add_method_mut("gm_set_orchestrion", |_, this, (value, id): (bool, u32)| {
             this.gm_set_orchestrion(value, id);
+            Ok(())
+        });
+        methods.add_method_mut("toggle_orchestrion", |_, this, id: u32| {
+            this.toggle_orchestrion(id);
             Ok(())
         });
         methods.add_method_mut("add_item", |_, this, (id, quantity): (u32, u32)| {

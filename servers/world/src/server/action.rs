@@ -335,7 +335,7 @@ pub fn execute_item_action(
                     Some(func.call::<EffectsBuilder>((connection_data, arg)).unwrap());
             }
             Err(err) => {
-                tracing::error!("{:?}", err);
+                tracing::error!("Error while calling dispatchItem: {:?}", err);
             }
         }
 

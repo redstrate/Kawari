@@ -153,6 +153,9 @@ impl ZoneConnection {
                 LuaTask::GmSetOrchestrion { value, id } => {
                     self.gm_set_orchestrion(*value, *id);
                 }
+                LuaTask::ToggleOrchestrion { id } => {
+                    self.toggle_orchestrion(*id).await;
+                }
                 LuaTask::AddItem {
                     id,
                     quantity,

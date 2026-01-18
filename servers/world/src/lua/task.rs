@@ -52,6 +52,9 @@ pub enum LuaTask {
         value: bool,
         id: u32,
     },
+    ToggleOrchestrion {
+        id: u32,
+    },
     AddItem {
         id: u32,
         quantity: u32,
