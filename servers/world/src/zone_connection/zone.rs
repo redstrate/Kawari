@@ -274,6 +274,8 @@ impl ZoneConnection {
             .await;
 
             self.content_handler_id = director_id;
+        } else {
+            tracing::warn!("Unknown TerritoryIntendedUse: {}!", lua_zone.intended_use);
         }
     }
 

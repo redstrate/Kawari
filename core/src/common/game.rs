@@ -354,6 +354,7 @@ impl HandlerType {
         match intended_use {
             TerritoryIntendedUse::OpenWorld => Some(Self::Fate),
             TerritoryIntendedUse::Dungeon => Some(Self::InstanceContent),
+            TerritoryIntendedUse::VariantDungeon => Some(Self::InstanceContent),
             TerritoryIntendedUse::DeepDungeon => Some(Self::InstanceContent),
             TerritoryIntendedUse::Trial => Some(Self::InstanceContent),
             TerritoryIntendedUse::AllianceRaid => Some(Self::InstanceContent),
@@ -362,6 +363,8 @@ impl HandlerType {
             TerritoryIntendedUse::CrystallineConflict => Some(Self::InstanceContent),
             TerritoryIntendedUse::Frontline => Some(Self::InstanceContent),
             TerritoryIntendedUse::TripleTriadInvitationalParlor => Some(Self::InstanceContent),
+            TerritoryIntendedUse::CriterionDungeon => Some(Self::InstanceContent),
+            TerritoryIntendedUse::SavageCriterionDungeon => Some(Self::InstanceContent),
             _ => None,
         }
     }
@@ -570,6 +573,8 @@ pub enum TerritoryIntendedUse {
     Inn = 2,
     /// Dungeon zones and other misc duties like Air Force One.
     Dungeon = 3,
+    /// Variant dungeons like The Sil'dihn Subterrane.
+    VariantDungeon = 4,
     /// Jail zones like Mordion Gaol.
     Jail = 5,
     /// Copies of Towns that are only during the opening.
