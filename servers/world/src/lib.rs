@@ -16,7 +16,6 @@ pub mod lua;
 
 mod event;
 pub use event::Event;
-pub use event::EventFinishType;
 
 mod status_effects;
 pub use status_effects::StatusEffects;

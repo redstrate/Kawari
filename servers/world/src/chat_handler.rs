@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use crate::{
-    EventFinishType, ItemInfoQuery, ToServer,
+    ItemInfoQuery, ToServer,
     inventory::{Item, Storage},
 };
 use kawari::{
@@ -115,9 +115,7 @@ impl ChatHandler {
             }
             "!finishevent" => {
                 if let Some(event) = connection.events.last() {
-                    connection
-                        .event_finish(event.id, EventFinishType::Normal)
-                        .await;
+                    connection.event_finish(event.id).await;
                     connection
                         .send_notice("Current event forcefully finished.")
                         .await;

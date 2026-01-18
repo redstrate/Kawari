@@ -3,7 +3,11 @@ use std::sync::Arc;
 use mlua::{Function, Lua};
 use parking_lot::Mutex;
 
-use kawari::{common::ObjectTypeId, config::get_config, ipc::zone::EventType};
+use kawari::{
+    common::ObjectTypeId,
+    config::get_config,
+    ipc::zone::{Condition, EventType},
+};
 
 use crate::GameData;
 
@@ -16,12 +20,8 @@ pub struct Event {
     pub id: u32,
     pub event_type: EventType,
     pub event_arg: u32,
-}
-
-#[derive(Copy, Clone, Debug)]
-pub enum EventFinishType {
-    Normal,
-    Jumping,
+    /// The condition set for this event.
+    pub condition: Option<Condition>,
 }
 
 impl Event {
@@ -61,6 +61,7 @@ impl Event {
             event_type: EventType::Talk,
             id,
             event_arg: 0,
+            condition: None,
         })
     }
 

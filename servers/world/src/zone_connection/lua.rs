@@ -1,7 +1,7 @@
 //! Translates tasks and handles other information from `LuaPlayer`.
 
 use crate::{
-    EventFinishType, ItemInfoQuery, ToServer, ZoneConnection,
+    ItemInfoQuery, ToServer, ZoneConnection,
     inventory::{CurrencyStorage, Item},
     lua::{LuaPlayer, LuaTask, load_init_script},
 };
@@ -53,11 +53,8 @@ impl ZoneConnection {
                     self.warp(*warp_id).await;
                 }
                 LuaTask::BeginLogOut => self.begin_log_out().await,
-                LuaTask::FinishEvent {
-                    handler_id,
-                    finish_type,
-                } => {
-                    self.event_finish(*handler_id, *finish_type).await;
+                LuaTask::FinishEvent { handler_id } => {
+                    self.event_finish(*handler_id).await;
                     run_finish_event = true;
                 }
                 LuaTask::SetClassJob { classjob_id } => {
@@ -259,7 +256,7 @@ impl ZoneConnection {
                     event_type,
                     event_arg,
                 } => {
-                    self.start_event(*actor_id, *event_id, *event_type, *event_arg, player)
+                    self.start_event(*actor_id, *event_id, *event_type, *event_arg, None, player)
                         .await;
                 }
                 LuaTask::SetInnWakeup { watched } => {
@@ -599,7 +596,7 @@ impl ZoneConnection {
             // Yield the last event again so it can pick up from nesting
             // TODO: this makes no sense, and probably needs to be re-worked
             if let Some(event) = self.events.last() {
-                self.event_finish(event.id, EventFinishType::Normal).await;
+                self.event_finish(event.id).await;
             }
         }
 

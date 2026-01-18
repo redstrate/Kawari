@@ -9,7 +9,7 @@ use kawari::{
 };
 
 use crate::{
-    EventFinishType, ItemInfoQuery, ZoneConnection,
+    ItemInfoQuery, ZoneConnection,
     inventory::{BuyBackItem, CurrencyKind, Item, get_container_type},
 };
 
@@ -85,19 +85,19 @@ impl ZoneConnection {
                     } else {
                         tracing::error!(ERR_INVENTORY_ADD_FAILED);
                         self.send_notice(ERR_INVENTORY_ADD_FAILED).await;
-                        self.event_finish(event_id.0, EventFinishType::Normal).await;
+                        self.event_finish(event_id.0).await;
                     }
                 } else {
                     self.send_notice(
                         "Insufficient gil to buy item. Nice try bypassing the client-side check!",
                     )
                     .await;
-                    self.event_finish(event_id.0, EventFinishType::Normal).await;
+                    self.event_finish(event_id.0).await;
                 }
             } else {
                 self.send_notice("Unable to find shop item, this is a bug in Kawari!")
                     .await;
-                self.event_finish(event_id.0, EventFinishType::Normal).await;
+                self.event_finish(event_id.0).await;
             }
         } else if buy_sell_mode == SELL {
             let storage = get_container_type(item_index as u32).unwrap();
@@ -206,11 +206,11 @@ impl ZoneConnection {
             } else {
                 self.send_notice("Unable to find shop item, this is a bug in Kawari!")
                     .await;
-                self.event_finish(event_id.0, EventFinishType::Normal).await;
+                self.event_finish(event_id.0).await;
             }
         } else {
             tracing::error!("Received unknown transaction mode {buy_sell_mode}!");
-            self.event_finish(event_id.0, EventFinishType::Normal).await;
+            self.event_finish(event_id.0).await;
         }
     }
 

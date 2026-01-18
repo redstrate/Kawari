@@ -13,7 +13,9 @@
 POS_START = 2213211
 
 -- When walking out of the city gates
-ERANGE_SEQ_1_CLOSED_1 = 2351919
+ERANGE_SEQ_1_CLOSED_1 = 2351918
+-- When walking past the quest giver
+ERANGE_SEQ_1_CLOSED_2 = 2351919
 
 function onEnterTerritory(player)
     if not player:has_seen_cutscene(OPENING_CUTSCENE) then
@@ -39,7 +41,7 @@ end
 
 function onEnterTrigger(player, arg)
     -- Play the "where are you going?!" text when entering any trigger
-    if arg == ERANGE_SEQ_1_CLOSED_1 then
+    if arg == ERANGE_SEQ_1_CLOSED_1 or arg == ERANGE_SEQ_1_CLOSED_2 then
         player:play_scene(player.id, EVENT_ID, 20, NO_DEFAULT_CAMERA | HIDE_HOTBAR, {})
     else
         -- Deciding the different messages and NPCs are actually handled client-side!

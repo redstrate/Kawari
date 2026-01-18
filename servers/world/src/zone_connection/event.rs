@@ -2,7 +2,7 @@
 
 use mlua::Function;
 
-use crate::{Event, EventFinishType, ZoneConnection, lua::LuaPlayer};
+use crate::{Event, ZoneConnection, lua::LuaPlayer};
 use kawari::{
     common::{HandlerId, HandlerType, ObjectTypeId},
     ipc::zone::{
@@ -37,12 +37,12 @@ impl ZoneConnection {
                 "Unable to play event {event_id}, scene {:?}, scene_flags {scene_flags}!",
                 scene
             );
-            self.event_finish(event_id, EventFinishType::Normal).await;
+            self.event_finish(event_id).await;
         }
     }
 
     /// Finishes the current event, including resetting any conditions set during the start of said event.
-    pub async fn event_finish(&mut self, handler_id: u32, finish_type: EventFinishType) {
+    pub async fn event_finish(&mut self, handler_id: u32) {
         let event_type = self.events.last().unwrap().event_type;
         let event_arg = self.events.last().unwrap().event_arg;
 
@@ -58,18 +58,12 @@ impl ZoneConnection {
             self.send_ipc_self(ipc).await;
         }
 
-        // give back control to the player, or mark them as busy for some events
-        match finish_type {
-            EventFinishType::Normal => {
-                self.conditions
-                    .remove_condition(Condition::OccupiedInQuestEvent);
-            }
-            EventFinishType::Jumping => {
-                // We want it set here, because when the client finishes the animation, they will send us a client trigger to tell us.
-                self.conditions.set_condition(Condition::OccupiedInEvent);
-            }
-        };
+        // Remove the condition given at the start of the event
+        if let Some(condition) = self.events.last().unwrap().condition {
+            self.conditions.remove_condition(condition);
+        }
 
+        // Despite that, we *always* have to send this otherwise the client gets stuck sometimes.
         self.send_conditions().await;
 
         // Pop off the event stack
@@ -83,6 +77,7 @@ impl ZoneConnection {
         event_id: u32,
         event_type: EventType,
         event_arg: u32,
+        condition: Option<Condition>,
         lua_player: &mut LuaPlayer,
     ) -> bool {
         self.player_data.target_actorid = actor_id;
@@ -125,6 +120,7 @@ impl ZoneConnection {
         if let Some(mut event) = event {
             event.event_type = event_type;
             event.event_arg = event_arg; // It turns out these same values HAVE to be sent in EventFinish, otherwise the game client crashes.
+            event.condition = condition;
             self.events.push(event);
 
             true

@@ -4,7 +4,7 @@ use mlua::{LuaSerdeExt, UserData, UserDataFields, UserDataMethods, Value};
 use parking_lot::Mutex;
 
 use crate::{
-    EventFinishType, GameData, PlayerData, StatusEffects,
+    GameData, PlayerData, StatusEffects,
     inventory::{CurrencyKind, Item},
 };
 use kawari::{
@@ -83,7 +83,7 @@ impl LuaPlayer {
             let error_message = "Unsupported amount of parameters in play_scene! This is likely a bug in your script! Cancelling event...".to_string();
             tracing::warn!(error_message);
             self.send_message(&error_message, 0);
-            self.finish_event(event_id, EventFinishType::Normal);
+            self.finish_event(event_id);
         }
     }
 
@@ -165,11 +165,8 @@ impl LuaPlayer {
         self.queued_tasks.push(LuaTask::BeginLogOut);
     }
 
-    fn finish_event(&mut self, handler_id: u32, finish_type: EventFinishType) {
-        self.queued_tasks.push(LuaTask::FinishEvent {
-            handler_id,
-            finish_type,
-        });
+    fn finish_event(&mut self, handler_id: u32) {
+        self.queued_tasks.push(LuaTask::FinishEvent { handler_id });
     }
 
     fn set_classjob(&mut self, classjob_id: u8) {
@@ -760,20 +757,10 @@ impl UserData for LuaPlayer {
             this.begin_log_out();
             Ok(())
         });
-        methods.add_method_mut(
-            "finish_event",
-            |lua, this, (handler_id, finish_type): (u32, Value)| {
-                // It's desirable for finish_type to be optional since we do normal finishes 99% of the time.
-                let finish_type: u32 = lua.from_value(finish_type).unwrap_or(0);
-                let finish_type = match finish_type {
-                    0 => EventFinishType::Normal,
-                    1 => EventFinishType::Jumping,
-                    _ => EventFinishType::Normal,
-                };
-                this.finish_event(handler_id, finish_type);
-                Ok(())
-            },
-        );
+        methods.add_method_mut("finish_event", |_, this, handler_id: u32| {
+            this.finish_event(handler_id);
+            Ok(())
+        });
         methods.add_method_mut("set_classjob", |_, this, classjob_id: u8| {
             this.set_classjob(classjob_id);
             Ok(())

@@ -1,7 +1,4 @@
-use crate::{
-    EventFinishType,
-    inventory::{BuyBackList, CurrencyKind},
-};
+use crate::inventory::{BuyBackList, CurrencyKind};
 use kawari::{
     common::{ObjectTypeId, Position, workdefinitions::RemakeMode},
     ipc::zone::{EventType, ServerZoneIpcSegment},
@@ -22,7 +19,6 @@ pub enum LuaTask {
     BeginLogOut,
     FinishEvent {
         handler_id: u32,
-        finish_type: EventFinishType,
     },
     SetClassJob {
         classjob_id: u8,

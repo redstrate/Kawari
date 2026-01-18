@@ -1035,7 +1035,7 @@ async fn client_loop(
                                                 }
                                             }
                                             ClientZoneIpcData::StartTalkEvent { actor_id, handler_id } => {
-                                                if connection.start_event(*actor_id, handler_id.0, EventType::Talk, 0, &mut lua_player).await {
+                                                if connection.start_event(*actor_id, handler_id.0, EventType::Talk, 0, Some(Condition::OccupiedInQuestEvent), &mut lua_player).await {
                                                     connection.conditions.set_condition(Condition::OccupiedInQuestEvent);
                                                     connection.send_conditions().await;
 
@@ -1232,7 +1232,7 @@ async fn client_loop(
                                                 connection.send_conditions().await;
 
                                                 let actor_id = ObjectTypeId { object_id: connection.player_data.actor_id, object_type: ObjectTypeKind::None };
-                                                connection.start_event(actor_id, handler_id.0, EventType::WithinRange, *event_arg, &mut lua_player).await;
+                                                connection.start_event(actor_id, handler_id.0, EventType::WithinRange, *event_arg, Some(Condition::OccupiedInEvent), &mut lua_player).await;
 
                                                 // begin walk-in trigger function if it exists
                                                 if let Some(event) = connection.events.last_mut() {
@@ -1249,11 +1249,11 @@ async fn client_loop(
                                                         unk_flag: 1,
                                                     }
                                                 }).await;
-                                                connection.conditions.set_condition(Condition::OccupiedInQuestEvent);
+                                                connection.conditions.set_condition(Condition::OccupiedInEvent);
                                                 connection.send_conditions().await;
 
                                                 let actor_id = ObjectTypeId { object_id: connection.player_data.actor_id, object_type: ObjectTypeKind::None };
-                                                connection.start_event(actor_id, handler_id.0, EventType::OutsideRange, *event_arg, &mut lua_player).await;
+                                                connection.start_event(actor_id, handler_id.0, EventType::OutsideRange, *event_arg, Some(Condition::OccupiedInEvent), &mut lua_player).await;
 
                                                 // begin walk-in trigger function if it exists
                                                 if let Some(event) = connection.events.last_mut() {
@@ -1355,7 +1355,7 @@ async fn client_loop(
                                                 connection.send_ipc_self(ipc).await;
                                             }
                                             ClientZoneIpcData::EnterTerritoryEvent { handler_id } => {
-                                                connection.start_event(ObjectTypeId { object_id: connection.player_data.actor_id, object_type: ObjectTypeKind::None }, handler_id.0, EventType::EnterTerritory, connection.player_data.zone_id as u32, &mut lua_player).await;
+                                                connection.start_event(ObjectTypeId { object_id: connection.player_data.actor_id, object_type: ObjectTypeKind::None }, handler_id.0, EventType::EnterTerritory, connection.player_data.zone_id as u32, None, &mut lua_player).await;
                                                 if let Some(event) = connection.events.last_mut() {
                                                     event.enter_territory(&mut lua_player);
                                                 }
@@ -1484,9 +1484,9 @@ async fn client_loop(
                         let object = ObjectTypeId { object_id: connection.player_data.actor_id, object_type: ObjectTypeKind::None };
                         let handler_id = HandlerId::new(HandlerType::GimmickRect, 1).0;
 
-                        connection.start_event(object, handler_id, EventType::WithinRange, arg, &mut lua_player).await;
+                        connection.start_event(object, handler_id, EventType::WithinRange, arg, Some(Condition::OccupiedInEvent), &mut lua_player).await;
 
-                        connection.conditions.set_condition(Condition::OccupiedInQuestEvent);
+                        connection.conditions.set_condition(Condition::OccupiedInEvent);
                         connection.send_conditions().await;
 
                         connection.event_scene(&object, handler_id, 2, SceneFlags::NO_DEFAULT_CAMERA | SceneFlags::HIDE_HOTBAR, Vec::new()).await;
