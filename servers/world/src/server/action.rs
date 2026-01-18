@@ -232,17 +232,6 @@ pub fn execute_action(
             let mut network = network.lock();
             network.send_ipc_to(from_id, ipc, from_actor_id);
         }
-
-        // TODO: re-implement despawning
-        /*if let Some(actor) = self.get_actor(request.target.object_id)
-        && actor.hp == 0
-        {
-            tracing::info!("Despawning {} because they died!", actor.id.0);
-            // if the actor died, despawn them
-            /*connection.handle
-                *                                       .send(ToServer::ActorDespawned(connection.id, actor.id.0))
-                *                                       .await;*/
-        }*/
     }
 
     let mut network = network.lock();
