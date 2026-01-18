@@ -209,9 +209,10 @@ impl WorldDatabase {
         data.companion
             .save_changes::<Companion>(&mut self.connection)
             .unwrap();
-        data.quest
-            .save_changes::<Quest>(&mut self.connection)
-            .unwrap();
+
+        let mut quest = data.quest.clone();
+        quest.active = serde_json::to_string(&data.active_quests).unwrap();
+        quest.save_changes::<Quest>(&mut self.connection).unwrap();
     }
 
     pub fn find_actor_id(&mut self, for_content_id: u64) -> u32 {
