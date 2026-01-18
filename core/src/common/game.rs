@@ -360,6 +360,9 @@ impl EventHandlerType {
             TerritoryIntendedUse::AllianceRaid => Some(Self::InstanceContent),
             TerritoryIntendedUse::Raid2 => Some(Self::InstanceContent),
             TerritoryIntendedUse::ChaoticRaid => Some(Self::InstanceContent),
+            TerritoryIntendedUse::CrystallineConflict => Some(Self::InstanceContent),
+            TerritoryIntendedUse::Frontline => Some(Self::InstanceContent),
+            TerritoryIntendedUse::TripleTriadInvitationalParlor => Some(Self::InstanceContent),
             _ => None,
         }
     }
@@ -388,7 +391,7 @@ impl HandlerId {
     }
 
     pub fn event_id(&self) -> u32 {
-        self.0 & 0xFF
+        self.0 & 0xFFFF
     }
 }
 
@@ -640,7 +643,8 @@ pub enum TerritoryIntendedUse {
     /// Island Sanctuary zones.
     IslandSanctuary = 49,
     Unk10 = 50,
-    Unk11 = 51,
+    /// Used in the Triple Triad Invitational Parlor duty.
+    TripleTriadInvitationalParlor = 51,
     Unk12 = 52,
     Unk13 = 53,
     Unk14 = 54,

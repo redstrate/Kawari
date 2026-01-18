@@ -17,6 +17,8 @@ pub enum EventType {
     /// Used for gimmick path events?
     WithinRange = 10,
     OutsideRange = 11,
+    /// Seen in Gold Saucer Invitational
+    UnkGoldSaucerInvitational = 13,
     /// Unknown?
     EnterTerritory = 15,
 }
@@ -47,7 +49,7 @@ mod tests {
 
     use binrw::BinRead;
 
-    use crate::common::{ObjectId, ObjectTypeKind};
+    use crate::common::{EventHandlerType, ObjectId, ObjectTypeKind};
 
     use crate::server_zone_tests_dir;
 
@@ -73,5 +75,30 @@ mod tests {
         assert_eq!(event_start.event_type, EventType::EnterTerritory);
         assert_eq!(event_start.flags, 0);
         assert_eq!(event_start.event_arg, 182);
+    }
+
+    #[test]
+    fn read_gold_saucer_invitational() {
+        let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        d.push(server_zone_tests_dir!("event_start_invitational.bin"));
+
+        let buffer = read(d).unwrap();
+        let mut buffer = Cursor::new(&buffer);
+
+        let event_start = EventStart::read_le(&mut buffer).unwrap();
+        assert_eq!(
+            event_start.target_id,
+            ObjectTypeId {
+                object_id: ObjectId(276833873),
+                object_type: ObjectTypeKind::None,
+            }
+        );
+        assert_eq!(
+            event_start.handler_id,
+            HandlerId::new(EventHandlerType::InstanceContent, 26002)
+        );
+        assert_eq!(event_start.event_type, EventType::UnkGoldSaucerInvitational);
+        assert_eq!(event_start.flags, 1);
+        assert_eq!(event_start.event_arg, 8);
     }
 }
