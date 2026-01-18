@@ -235,6 +235,7 @@ impl ZoneConnection {
                     .await;
                 }
                 LuaTask::UnlockAllContent {} => {
+                    self.player_data.content.unlocked_special_content.set_all();
                     self.player_data.content.unlocked_raids.set_all();
                     self.player_data.content.unlocked_dungeons.set_all();
                     self.player_data.content.unlocked_guildhests.set_all();
@@ -244,6 +245,7 @@ impl ZoneConnection {
                         .unlocked_crystalline_conflicts
                         .set_all();
                     self.player_data.content.unlocked_frontlines.set_all();
+                    self.player_data.content.unlocked_misc_content.set_all();
                 }
                 LuaTask::UpdateBuyBackList { list } => {
                     self.player_data.buyback_list = list.clone();

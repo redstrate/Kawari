@@ -341,7 +341,7 @@ pub struct PlayerStatus {
 
     #[br(count = MASKED_CARNIVALE_ARRAY_SIZE)]
     #[bw(pad_size_to = MASKED_CARNIVALE_ARRAY_SIZE)]
-    pub cleared_mask_carnivale: Vec<u8>,
+    pub cleared_masked_carnivale: Vec<u8>,
 
     pub unknown948: [u8; 7],
 

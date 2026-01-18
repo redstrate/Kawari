@@ -383,7 +383,7 @@ impl WorldDatabase {
             content_id: content_id as i64,
             chara_make: chara_make_str.to_string(),
             city_state: city_state as i32,
-            remake_mode: 0,
+            ..Default::default()
         };
         diesel::insert_into(schema::customize::table)
             .values(customize)
@@ -392,8 +392,7 @@ impl WorldDatabase {
 
         let quest = Quest {
             content_id: content_id as i64,
-            completed: Default::default(),
-            active: Default::default(),
+            ..Default::default()
         };
         diesel::insert_into(schema::quest::table)
             .values(quest)
@@ -402,10 +401,7 @@ impl WorldDatabase {
 
         let aetheryte = Aetheryte {
             content_id: content_id as i64,
-            unlocked: Default::default(),
-            homepoint: Default::default(),
-            favorite_aetherytes: Default::default(),
-            free_aetheryte: Default::default(),
+            ..Default::default()
         };
         diesel::insert_into(schema::aetheryte::table)
             .values(aetheryte)
@@ -414,13 +410,8 @@ impl WorldDatabase {
 
         let volatile = Volatile {
             content_id: content_id as i64,
-            pos_x: 0.0,
-            pos_y: 0.0,
-            pos_z: 0.0,
-            rotation: 0.0,
             zone_id: zone_id as i32,
-            display_flags: Default::default(),
-            title: 0,
+            ..Default::default()
         };
         diesel::insert_into(schema::volatile::table)
             .values(volatile)
@@ -438,8 +429,7 @@ impl WorldDatabase {
 
         let aether_current = AetherCurrent {
             content_id: content_id as i64,
-            comp_flg_set: Default::default(),
-            unlocked: Default::default(),
+            ..Default::default()
         };
         diesel::insert_into(schema::aether_current::table)
             .values(aether_current)
@@ -448,7 +438,7 @@ impl WorldDatabase {
 
         let companion = Companion {
             content_id: content_id as i64,
-            unlocked_equip: Default::default(),
+            ..Default::default()
         };
         diesel::insert_into(schema::companion::table)
             .values(companion)
@@ -457,18 +447,7 @@ impl WorldDatabase {
 
         let content = Content {
             content_id: content_id as i64,
-            unlocked_raids: Default::default(),
-            unlocked_dungeons: Default::default(),
-            unlocked_guildhests: Default::default(),
-            unlocked_trials: Default::default(),
-            unlocked_crystalline_conflicts: Default::default(),
-            unlocked_frontlines: Default::default(),
-            cleared_raids: Default::default(),
-            cleared_dungeons: Default::default(),
-            cleared_guildhests: Default::default(),
-            cleared_trials: Default::default(),
-            cleared_crystalline_conflicts: Default::default(),
-            cleared_frontlines: Default::default(),
+            ..Default::default()
         };
         diesel::insert_into(schema::content::table)
             .values(content)
@@ -477,20 +456,7 @@ impl WorldDatabase {
 
         let unlock = Unlock {
             content_id: content_id as i64,
-            unlocks: Default::default(),
-            seen_active_help: Default::default(),
-            minions: Default::default(),
-            mounts: Default::default(),
-            orchestrion_rolls: Default::default(),
-            cutscene_seen: Default::default(),
-            ornaments: Default::default(),
-            caught_fish: Default::default(),
-            caught_spearfish: Default::default(),
-            adventures: Default::default(),
-            triple_triad_cards: Default::default(),
-            glasses_styles: Default::default(),
-            chocobo_taxi_stands: Default::default(),
-            titles: Default::default(),
+            ..Default::default()
         };
         diesel::insert_into(schema::unlock::table)
             .values(unlock)

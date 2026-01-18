@@ -560,18 +560,6 @@ async fn client_loop(
                                                         levels: padded_levels,
                                                         unlocks: connection.player_data.unlock.unlocks.0.clone(),
                                                         aetherytes: connection.player_data.aetheryte.unlocked.0.clone(),
-                                                        unlocked_raids: connection.player_data.content.unlocked_raids.0.clone(),
-                                                        unlocked_dungeons: connection.player_data.content.unlocked_dungeons.0.clone(),
-                                                        unlocked_guildhests: connection.player_data.content.unlocked_guildhests.0.clone(),
-                                                        unlocked_trials: connection.player_data.content.unlocked_trials.0.clone(),
-                                                        unlocked_crystalline_conflict: connection.player_data.content.unlocked_crystalline_conflicts.0.clone(),
-                                                        unlocked_frontline: connection.player_data.content.unlocked_frontlines.0.clone(),
-                                                        cleared_raids: connection.player_data.content.cleared_raids.0.clone(),
-                                                        cleared_dungeons: connection.player_data.content.cleared_dungeons.0.clone(),
-                                                        cleared_guildhests: connection.player_data.content.cleared_guildhests.0.clone(),
-                                                        cleared_trials: connection.player_data.content.cleared_trials.0.clone(),
-                                                        cleared_crystalline_conflict: connection.player_data.content.cleared_crystalline_conflicts.0.clone(),
-                                                        cleared_frontline: connection.player_data.content.cleared_frontlines.0.clone(),
                                                         minions: connection.player_data.unlock.minions.0.clone(),
                                                         mount_guide_mask: connection.player_data.unlock.mounts.0.clone(),
                                                         home_aetheryte_id: 8, // hardcoded to limsa for now
@@ -591,6 +579,25 @@ async fn client_loop(
                                                         chocobo_taxi_stands_mask: connection.player_data.unlock.chocobo_taxi_stands.0.clone(),
                                                         aether_current_comp_flg_set_bitmask1: connection.player_data.aether_current.comp_flg_set.0[0],
                                                         aether_current_comp_flg_set_bitmask2: connection.player_data.aether_current.comp_flg_set.0[1..AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE].to_vec(),
+
+                                                        // content
+                                                        unlocked_special_content: connection.player_data.content.unlocked_special_content.0.clone(),
+                                                        unlocked_dungeons: connection.player_data.content.unlocked_dungeons.0.clone(),
+                                                        unlocked_raids: connection.player_data.content.unlocked_raids.0.clone(),
+                                                        unlocked_guildhests: connection.player_data.content.unlocked_guildhests.0.clone(),
+                                                        unlocked_trials: connection.player_data.content.unlocked_trials.0.clone(),
+                                                        unlocked_crystalline_conflict: connection.player_data.content.unlocked_crystalline_conflicts.0.clone(),
+                                                        unlocked_frontline: connection.player_data.content.unlocked_frontlines.0.clone(),
+                                                        cleared_raids: connection.player_data.content.cleared_raids.0.clone(),
+                                                        cleared_dungeons: connection.player_data.content.cleared_dungeons.0.clone(),
+                                                        cleared_guildhests: connection.player_data.content.cleared_guildhests.0.clone(),
+                                                        cleared_trials: connection.player_data.content.cleared_trials.0.clone(),
+                                                        cleared_crystalline_conflict: connection.player_data.content.cleared_crystalline_conflicts.0.clone(),
+                                                        cleared_frontline: connection.player_data.content.cleared_frontlines.0.clone(),
+                                                        cleared_masked_carnivale: connection.player_data.content.cleared_masked_carnivale.0.clone(),
+                                                        unlocked_misc_content: connection.player_data.content.unlocked_misc_content.0.clone(),
+                                                        cleared_misc_content: connection.player_data.content.cleared_misc_content.0.clone(),
+
                                                         ..Default::default()
                                                     }));
                                                     connection.send_ipc_self(ipc).await;

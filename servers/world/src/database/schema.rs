@@ -99,6 +99,7 @@ diesel::joinable!(companion -> character (content_id));
 diesel::table! {
     content (content_id) {
         content_id -> BigInt,
+        unlocked_special_content -> Text,
         unlocked_raids -> Text,
         unlocked_dungeons -> Text,
         unlocked_guildhests -> Text,
@@ -111,6 +112,9 @@ diesel::table! {
         cleared_trials -> Text,
         cleared_crystalline_conflicts -> Text,
         cleared_frontlines -> Text,
+        cleared_masked_carnivale -> Text,
+        unlocked_misc_content -> Text,
+        cleared_misc_content -> Text,
     }
 }
 
