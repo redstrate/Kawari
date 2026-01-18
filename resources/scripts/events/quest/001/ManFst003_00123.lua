@@ -1,13 +1,7 @@
--- Quest: Close to Home (Ul'dah)
+-- Quest: Close to Home (Gridania)
 -- NOTE: These quests are so similar, ensure changes are synced between all of them!
 
 -- scene 0: show quest prompt
--- scene 2: attunement complete cutscene
--- scene 3: welcome to the gladiators guild
--- scene 4: marketplace dialogue
--- scene 5: you stand in the sapphire avenue exchange cutscene
--- scene 8: quest completion prompt
--- scene 50: you need to do some basic tasks
 
 local originating_npc
 
@@ -27,7 +21,7 @@ function onYield(scene, results, player)
         local old_rotation = player.rotation
 
         -- Just like in retail, "seamlessly" transition them to the real zone:
-        player:change_territory(130, { x = old_position.x, y = old_position.y, z = old_position.z }, old_rotation)
+        player:change_territory(132, { x = old_position.x, y = old_position.y, z = old_position.z }, old_rotation)
     end
 
     player:finish_event(EVENT_ID)

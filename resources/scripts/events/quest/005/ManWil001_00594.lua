@@ -1,4 +1,4 @@
--- Quest: Coming to Ul'dah'
+-- Quest: Coming to Ul'dah
 -- NOTE: These openings are so similar, ensure changes are synced between all of them!
 
 -- scene 0: show quest prompt
