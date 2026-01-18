@@ -8,13 +8,15 @@ use crate::{
     constants::{
         ACTIVE_HELP_BITMASK_SIZE, ADVENTURE_BITMASK_SIZE, AETHER_CURRENT_BITMASK_SIZE,
         AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE, AETHERYTE_UNLOCK_BITMASK_SIZE,
-        BEAST_TRIBE_ARRAY_SIZE, BUDDY_EQUIP_BITMASK_SIZE, CAUGHT_FISH_BITMASK_SIZE,
-        CAUGHT_SPEARFISH_BITMASK_SIZE, CHOCOBO_TAXI_STANDS_BITMASK_SIZE, CLASSJOB_ARRAY_SIZE,
-        CRYSTALLINE_CONFLICT_ARRAY_SIZE, CUTSCENE_SEEN_BITMASK_SIZE, DUNGEON_ARRAY_SIZE,
-        FRAMERS_KIT_BITMASK_SIZE, FRONTLINE_ARRAY_SIZE, GLASSES_STYLES_BITMASK_SIZE,
-        GUILDHEST_ARRAY_SIZE, MINION_BITMASK_SIZE, MOUNT_BITMASK_SIZE,
-        ORCHESTRION_ROLL_BITMASK_SIZE, ORNAMENT_BITMASK_SIZE, RAID_ARRAY_SIZE, TRIAL_ARRAY_SIZE,
-        TRIPLE_TRIAD_CARDS_BITMASK_SIZE, UNLOCK_BITMASK_SIZE, UNLOCKED_FISHING_SPOTS_BITMASK_SIZE,
+        BEAST_TRIBE_ARRAY_SIZE, BEGINNER_TRAINING_ARRAY_SIZE, BUDDY_EQUIP_BITMASK_SIZE,
+        CAUGHT_FISH_BITMASK_SIZE, CAUGHT_SPEARFISH_BITMASK_SIZE, CHOCOBO_TAXI_STANDS_BITMASK_SIZE,
+        CLASSJOB_ARRAY_SIZE, CRYSTALLINE_CONFLICT_ARRAY_SIZE, CUTSCENE_SEEN_BITMASK_SIZE,
+        DUNGEON_ARRAY_SIZE, FRAMERS_KIT_BITMASK_SIZE, FRONTLINE_ARRAY_SIZE,
+        GLASSES_STYLES_BITMASK_SIZE, GUILDHEST_ARRAY_SIZE, MASKED_CARNIVALE_ARRAY_SIZE,
+        MINION_BITMASK_SIZE, MISC_CONTENT_ARRAY_SIZE, MOUNT_BITMASK_SIZE,
+        ORCHESTRION_ROLL_BITMASK_SIZE, ORNAMENT_BITMASK_SIZE, RAID_ARRAY_SIZE,
+        SPECIAL_CONTENT_ARRAY_SIZE, TRIAL_ARRAY_SIZE, TRIPLE_TRIAD_CARDS_BITMASK_SIZE,
+        UNLOCK_BITMASK_SIZE, UNLOCKED_FISHING_SPOTS_BITMASK_SIZE,
     },
 };
 
@@ -273,13 +275,19 @@ pub struct PlayerStatus {
     #[br(count = ORCHESTRION_ROLL_BITMASK_SIZE)]
     #[bw(pad_size_to = ORCHESTRION_ROLL_BITMASK_SIZE)]
     pub orchestrion_roll_mask: Vec<u8>,
-    pub unk_completion: [u8; 22],
+    pub unk_completion1: [u8; 7],
+    #[br(count = BEGINNER_TRAINING_ARRAY_SIZE)]
+    #[bw(pad_size_to = BEGINNER_TRAINING_ARRAY_SIZE)]
+    pub completed_beginner_training: Vec<u8>, // TODO: not confirmed because I can't access this menu right now
+    pub unk_completion2: [u8; 11],
     pub weekly_bingo_order_data: [u8; 16],
     pub weekly_bingo_reward_data: [u8; 4],
     pub supply_satisfaction_ranks: [u8; 12],
     pub used_supply_allowances: [u8; 12],
 
-    pub pad_before_unlocked_raids: u8,
+    #[br(count = SPECIAL_CONTENT_ARRAY_SIZE)]
+    #[bw(pad_size_to = SPECIAL_CONTENT_ARRAY_SIZE)]
+    pub unlocked_special_content: Vec<u8>,
 
     // unlocked status
     #[br(count = RAID_ARRAY_SIZE)]
@@ -331,8 +339,19 @@ pub struct PlayerStatus {
     #[bw(pad_size_to = FRONTLINE_ARRAY_SIZE)]
     pub cleared_frontline: Vec<u8>,
 
-    // FIXME: some of the following bytes might be beginner training/masked carnivale
-    #[br(count = 23)]
-    #[bw(pad_size_to = 23)]
-    pub unknown949: Vec<u8>,
+    #[br(count = MASKED_CARNIVALE_ARRAY_SIZE)]
+    #[bw(pad_size_to = MASKED_CARNIVALE_ARRAY_SIZE)]
+    pub cleared_mask_carnivale: Vec<u8>,
+
+    pub unknown948: [u8; 7],
+
+    #[br(count = MISC_CONTENT_ARRAY_SIZE)]
+    #[bw(pad_size_to = MISC_CONTENT_ARRAY_SIZE)]
+    pub unlocked_misc_content: Vec<u8>,
+
+    #[br(count = MISC_CONTENT_ARRAY_SIZE)]
+    #[bw(pad_size_to = MISC_CONTENT_ARRAY_SIZE)]
+    pub cleared_misc_content: Vec<u8>,
+
+    pub unknown949: [u8; 4],
 }
