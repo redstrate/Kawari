@@ -719,7 +719,7 @@ async fn client_loop(
                                                         match trigger {
                                                             DirectorTrigger::Sync => {
                                                                 // Always send a sync response for now
-                                                                connection.actor_control_self(ActorControlSelf { category: ActorControlCategory::DirectorEvent { handler_id, event: DirectorEvent::SyncResponse, arg: 1 } }).await;
+                                                                connection.actor_control_self(ActorControlSelf { category: ActorControlCategory::DirectorEvent { handler_id, event: DirectorEvent::SyncResponse, arg: 1, unk1: 0 } }).await;
                                                             }
                                                             DirectorTrigger::SummonStrikingDummy => {
                                                                 connection

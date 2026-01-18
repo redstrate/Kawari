@@ -518,6 +518,7 @@ impl ZoneConnection {
                                 handler_id: HandlerId(*director_id),
                                 event: DirectorEvent::DutyCommence,
                                 arg: 5400,
+                                unk1: 0,
                             },
                         },
                     ));
@@ -535,6 +536,7 @@ impl ZoneConnection {
                                 handler_id: HandlerId(*director_id),
                                 event: DirectorEvent::SetDutyTimeRemaining,
                                 arg: 5399,
+                                unk1: 0,
                             },
                         },
                     ));
