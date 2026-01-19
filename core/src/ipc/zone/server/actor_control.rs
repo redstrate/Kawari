@@ -28,10 +28,12 @@ pub enum ActorControlCategory {
     /// Only shows the floating message, it doesn't actually update your EXP!
     #[brw(magic = 7u32)]
     EXPFloatingMessage {
+        /// The classjob ID to gain experience for.
         classjob_id: u32,
+        /// The amount of EXP.
         amount: u32,
-        unk2: u32,
-        unk3: u32,
+        /// Percentage of bonus EXP to display. Note that this *doesn't* apply it client-side, this is simply an indicator.
+        bonus_percent: u32,
     },
 
     /// Only updates the UI, it's wiped on the next ClassInfo update.
