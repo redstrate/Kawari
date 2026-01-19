@@ -33,5 +33,10 @@ pub struct PlayerStats {
     pub control: u32,
     pub gathering: u32,
     pub perception: u32,
-    pub unk1: [u32; 6],
+    pub base_strength: u32,
+    pub base_dexterity: u32,
+    pub base_vitality: u32,
+    pub base_intelligence: u32,
+    pub base_mind: u32,
+    pub base_piety: u32,
 }

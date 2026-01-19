@@ -74,20 +74,17 @@ pub fn handle_effect_messages(
     }
 }
 
-/// Sends an updated status effects list, as needed.
-fn process_effects_list(
+pub fn send_effects_list(
     network: Arc<Mutex<NetworkState>>,
     data: Arc<Mutex<WorldServer>>,
-    from_id: ClientId,
     from_actor_id: ObjectId,
 ) {
-    let mut data = data.lock();
-
-    let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
+    let data = data.lock();
+    let Some(instance) = data.find_actor_instance(from_actor_id) else {
         return;
     };
 
-    let Some(actor) = instance.find_actor_mut(from_actor_id) else {
+    let Some(actor) = instance.find_actor(from_actor_id) else {
         return;
     };
 
@@ -100,44 +97,78 @@ fn process_effects_list(
         return;
     };
 
-    // Only update the client if absolutely necessary (e.g. an effect is added, removed or changed duration)
-    let ipc;
-    if status_effects.is_dirty() {
-        let mut list = [StatusEffect::default(); 30];
-        let status_data = status_effects.data();
-        list[..status_data.len()].copy_from_slice(status_data);
+    let mut list = [StatusEffect::default(); 30];
+    let status_data = status_effects.data();
+    list[..status_data.len()].copy_from_slice(status_data);
 
-        ipc = Some(ServerZoneIpcSegment::new(
-            ServerZoneIpcData::StatusEffectList(StatusEffectList {
-                statues: list,
-                classjob_id: spawn.common.class_job,
-                level: spawn.common.level,
-                curr_hp: spawn.common.hp_curr,
-                max_hp: spawn.common.hp_max,
-                curr_mp: spawn.common.mp_curr,
-                max_mp: spawn.common.mp_max,
-                ..Default::default()
-            }),
-        ));
+    let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::StatusEffectList(StatusEffectList {
+        statues: list,
+        classjob_id: spawn.common.class_job,
+        level: spawn.common.level,
+        curr_hp: spawn.common.hp_curr,
+        max_hp: spawn.common.hp_max,
+        curr_mp: spawn.common.mp_curr,
+        max_mp: spawn.common.mp_max,
+        ..Default::default()
+    }));
 
-        // Inform the player
-        let mut network = network.lock();
-        network.send_ipc_to(from_id, ipc.clone().unwrap(), from_actor_id);
+    // Inform the player
+    let mut network = network.lock();
+    network.send_to_by_actor_id(
+        from_actor_id,
+        FromServer::PacketSegment(ipc.clone(), from_actor_id),
+        DestinationNetwork::ZoneClients,
+    );
+    network.send_in_range(
+        from_actor_id,
+        &data,
+        FromServer::PacketSegment(ipc, from_actor_id),
+        DestinationNetwork::ZoneClients,
+    );
+}
 
-        status_effects.reset_dirty();
-    } else {
-        ipc = None;
+/// Sends an updated status effects list, as needed.
+fn process_effects_list(
+    network: Arc<Mutex<NetworkState>>,
+    data: Arc<Mutex<WorldServer>>,
+    from_actor_id: ObjectId,
+) {
+    let is_dirty;
+    {
+        let mut data = data.lock();
+        let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
+            return;
+        };
+
+        let Some(actor) = instance.find_actor_mut(from_actor_id) else {
+            return;
+        };
+
+        let NetworkedActor::Player { status_effects, .. } = actor else {
+            return;
+        };
+
+        is_dirty = status_effects.is_dirty();
     }
 
-    // Inform other players in range
-    if let Some(ipc) = ipc {
-        let mut network = network.lock();
-        network.send_in_range(
-            from_actor_id,
-            &data,
-            FromServer::PacketSegment(ipc, from_actor_id),
-            DestinationNetwork::ZoneClients,
-        );
+    // Only update the client if absolutely necessary (e.g. an effect is added, removed or changed duration)
+    if is_dirty {
+        send_effects_list(network, data.clone(), from_actor_id);
+
+        let mut data = data.lock();
+        let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
+            return;
+        };
+
+        let Some(actor) = instance.find_actor_mut(from_actor_id) else {
+            return;
+        };
+
+        let NetworkedActor::Player { status_effects, .. } = actor else {
+            return;
+        };
+
+        status_effects.reset_dirty();
     }
 }
 
@@ -188,7 +219,7 @@ pub fn gain_effect(
     }
 
     // We also need to send them an updated StatusEffectsList
-    process_effects_list(network.clone(), data.clone(), from_id, from_actor_id);
+    process_effects_list(network.clone(), data.clone(), from_actor_id);
 
     // Scheduling doesn't make sense when the effect never ends.
     if effect_duration == 0.0 {
@@ -264,7 +295,7 @@ pub fn remove_effect(
     }
 
     // Finally, inform the client of their new status effects list
-    process_effects_list(network.clone(), data.clone(), from_id, from_actor_id);
+    process_effects_list(network.clone(), data.clone(), from_actor_id);
 
     // Also run the effect's Lua script in case it wants to do something!
     {

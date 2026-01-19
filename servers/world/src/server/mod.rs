@@ -16,7 +16,7 @@ use crate::{
         action::{execute_action, handle_action_messages, kill_actor, update_actor_hp_mp},
         actor::NetworkedActor,
         chat::handle_chat_messages,
-        effect::{handle_effect_messages, remove_effect},
+        effect::{handle_effect_messages, remove_effect, send_effects_list},
         instance::{Instance, NavmeshGenerationStep, QueuedTaskData},
         network::{DestinationNetwork, NetworkState},
         social::{get_party_id_from_actor_id, handle_social_messages},
@@ -1557,6 +1557,26 @@ pub async fn server_main_loop(
                 actor.get_common_spawn_mut().mp_curr = mp;
 
                 update_actor_hp_mp(network.clone(), instance, from_actor_id);
+            }
+            ToServer::SetNewStatValues(from_actor_id, level, max_hp, max_mp) => {
+                // Update internal data model
+                {
+                    let mut data = data.lock();
+                    let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
+                        continue;
+                    };
+
+                    let Some(actor) = instance.find_actor_mut(from_actor_id) else {
+                        continue;
+                    };
+
+                    actor.get_common_spawn_mut().level = level;
+                    actor.get_common_spawn_mut().hp_max = max_hp;
+                    actor.get_common_spawn_mut().mp_max = max_mp;
+                }
+
+                // The only way the game can reliably set these stats is via StatusEffectList (REALLY)
+                send_effects_list(network.clone(), data.clone(), from_actor_id);
             }
             ToServer::FatalError(err) => return Err(err),
             _ => {}

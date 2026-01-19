@@ -1017,6 +1017,7 @@ async fn client_loop(
                                                 if action.src_storage_id == ContainerType::Equipped || action.dst_storage_id == ContainerType::Equipped {
                                                     connection.change_class_based_on_weapon().await;
                                                     connection.inform_equip().await;
+                                                    connection.update_server_stats().await;
                                                 }
 
                                             }

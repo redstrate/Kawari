@@ -56,8 +56,8 @@ pub const DEAD_DESPAWN_TIME: Duration = Duration::from_secs(2);
 /// Maximum number of seconds until rested EXP is full.
 pub const MAXIMUM_RESTED_EXP: i32 = 604800;
 
-/// Maximum MP.
-pub const MAXIMUM_MP: u16 = 10000;
+/// The base stat before racial modifiers and stuff.
+pub const BASE_STAT: i8 = 20;
 
 pub struct Attributes {
     pub strength: u32,
@@ -65,6 +65,7 @@ pub struct Attributes {
     pub vitality: u32,
     pub intelligence: u32,
     pub mind: u32,
+    pub piety: u32,
 }
 
 #[binrw]

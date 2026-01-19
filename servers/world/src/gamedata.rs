@@ -4,6 +4,7 @@ use icarus::Action::ActionSheet;
 use icarus::AetherCurrentCompFlgSet::AetherCurrentCompFlgSetSheet;
 use icarus::Aetheryte::AetheryteSheet;
 use icarus::BNpcBase::BNpcBaseSheet;
+use icarus::BaseParam::BaseParamSheet;
 use icarus::ClassJob::ClassJobSheet;
 use icarus::ClassJobCategory::ClassJobCategorySheet;
 use icarus::ContentFinderCondition::ContentFinderConditionSheet;
@@ -34,7 +35,7 @@ use icarus::{Tribe::TribeSheet, Warp::WarpSheet};
 use physis::Language;
 use physis::resource::{Resource, ResourceResolver, SqPackResource, UnpackedResource};
 
-use kawari::common::timestamp_secs;
+use kawari::common::{BASE_STAT, timestamp_secs};
 use kawari::common::{InstanceContentType, get_aether_current_comp_flg_set_to_screenimage};
 use kawari::{common::Attributes, config::get_config};
 
@@ -86,6 +87,10 @@ pub struct ItemInfo {
     pub item_level: u16,
     /// The item's ClassJobCategory.
     pub classjob_category: u8,
+
+    /// Stat modifier stuff
+    pub base_param_ids: [u8; 6],
+    pub base_param_values: [i16; 6],
 }
 
 #[derive(Debug)]
@@ -100,6 +105,31 @@ pub struct GimmickRectInfo {
     pub params: [u32; 8],
     pub trigger_in: u8,
     pub trigger_out: u8,
+}
+
+#[derive(Debug)]
+pub struct BaseParam {
+    pub meld_param: [u8; 13],
+    pub one_hand_weapon_percent: u16,
+    pub off_hand_percent: u16,
+    pub head_percent: u16,
+    pub chest_percent: u16,
+    pub hands_percent: u16,
+    pub waist_percent: u16,
+    pub legs_percent: u16,
+    pub feet_percent: u16,
+    pub earring_percent: u16,
+    pub necklace_percent: u16,
+    pub bracelet_percent: u16,
+    pub ring_percent: u16,
+    pub two_hand_weapon_percent: u16,
+    pub under_armor_percent: u16,
+}
+
+#[derive(Debug)]
+pub struct ParamGrow {
+    pub hp_modifier: u16,
+    pub mp_modifier: i32,
 }
 
 impl GameData {
@@ -198,17 +228,15 @@ impl GameData {
     }
 
     pub fn get_racial_base_attributes(&mut self, tribe_id: u8) -> Option<Attributes> {
-        // The Tribe Excel sheet only has deltas (e.g. 2 or -2) which are applied to a base 20 number... from somewhere
-        let base_stat = 20;
-
         let row = self.tribe_sheet.row(tribe_id as u32)?;
 
         Some(Attributes {
-            strength: (base_stat + row.STR().into_i8()?) as u32,
-            dexterity: (base_stat + row.DEX().into_i8()?) as u32,
-            vitality: (base_stat + row.VIT().into_i8()?) as u32,
-            intelligence: (base_stat + row.INT().into_i8()?) as u32,
-            mind: (base_stat + row.MND().into_i8()?) as u32,
+            strength: (BASE_STAT + row.STR().into_i8()?) as u32,
+            dexterity: (BASE_STAT + row.DEX().into_i8()?) as u32,
+            vitality: (BASE_STAT + row.VIT().into_i8()?) as u32,
+            intelligence: (BASE_STAT + row.INT().into_i8()?) as u32,
+            mind: (BASE_STAT + row.MND().into_i8()?) as u32,
+            piety: (BASE_STAT + row.PIE().into_i8()?) as u32,
         })
     }
 
@@ -248,6 +276,12 @@ impl GameData {
                 stack_size: *matched_row.StackSize().into_u32().unwrap(),
                 item_level: *matched_row.LevelItem().into_u16().unwrap(),
                 classjob_category: *matched_row.ClassJobCategory().into_u8().unwrap(),
+                base_param_ids: matched_row
+                    .BaseParam()
+                    .map(|x| x.into_u8().copied().unwrap()),
+                base_param_values: matched_row
+                    .BaseParamValue()
+                    .map(|x| x.into_i16().copied().unwrap()),
             };
 
             return Some(item_info);
@@ -950,6 +984,41 @@ impl GameData {
         let row = sheet.row(classjob_id as u32)?;
 
         row.ItemSoulCrystal().into_u32().copied()
+    }
+
+    /// Returns information about the BaseParam.
+    pub fn get_base_param(&mut self, base_param_id: u16) -> Option<BaseParam> {
+        let sheet = BaseParamSheet::read_from(&mut self.resource, Language::English).ok()?;
+        let row = sheet.row(base_param_id as u32)?;
+
+        Some(BaseParam {
+            meld_param: row.MeldParam().map(|x| x.into_u8().copied().unwrap()),
+            one_hand_weapon_percent: row.OneHandWeaponPercent().into_u16().copied()?,
+            off_hand_percent: row.OffHandPercent().into_u16().copied()?,
+            head_percent: row.HeadPercent().into_u16().copied()?,
+            chest_percent: row.ChestPercent().into_u16().copied()?,
+            hands_percent: row.HandsPercent().into_u16().copied()?,
+            waist_percent: row.WaistPercent().into_u16().copied()?,
+            legs_percent: row.LegsPercent().into_u16().copied()?,
+            feet_percent: row.FeetPercent().into_u16().copied()?,
+            earring_percent: row.EarringPercent().into_u16().copied()?,
+            necklace_percent: row.NecklacePercent().into_u16().copied()?,
+            bracelet_percent: row.BraceletPercent().into_u16().copied()?,
+            ring_percent: row.RingPercent().into_u16().copied()?,
+            two_hand_weapon_percent: row.TwoHandWeaponPercent().into_u16().copied()?,
+            under_armor_percent: row.UnderArmorPercent().into_u16().copied()?,
+        })
+    }
+
+    /// Returns the ParamGrow for this level.
+    pub fn get_param_grow(&mut self, level: u32) -> Option<ParamGrow> {
+        let sheet = ParamGrowSheet::read_from(&mut self.resource, Language::None).unwrap();
+        let row = sheet.row(level).unwrap();
+
+        Some(ParamGrow {
+            hp_modifier: row.HpModifier().into_u16().copied()?,
+            mp_modifier: row.MpModifier().into_i32().copied()?,
+        })
     }
 }
 

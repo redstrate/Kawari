@@ -315,6 +315,8 @@ pub enum ToServer {
     StrategyBoardRealtimeFinished(u64),
     /// The client applied a waymark preset for their party.
     ApplyWaymarkPreset(ObjectId, u64, WaymarkPreset),
+    /// Inform the server of our new basic stat values.
+    SetNewStatValues(ObjectId, u8, u32, u16),
 }
 
 #[derive(Clone, Debug)]

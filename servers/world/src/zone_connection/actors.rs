@@ -3,8 +3,8 @@
 use crate::{ToServer, ZoneConnection, common::SpawnKind};
 use kawari::{
     common::{
-        EquipDisplayFlag, JumpState, MAXIMUM_MP, MoveAnimationSpeed, MoveAnimationState,
-        MoveAnimationType, ObjectId, ObjectTypeId, ObjectTypeKind, Position,
+        EquipDisplayFlag, JumpState, MoveAnimationSpeed, MoveAnimationState, MoveAnimationType,
+        ObjectId, ObjectTypeId, ObjectTypeKind, Position,
     },
     config::get_config,
     ipc::zone::{
@@ -251,8 +251,6 @@ impl ZoneConnection {
         exit_rotation: Option<f32>,
         start_invisible: bool,
     ) -> CommonSpawn {
-        let mut game_data = self.gamedata.lock();
-
         let inventory = &self.player_data.inventory;
 
         let mut database = self.database.lock();
@@ -273,13 +271,16 @@ impl ZoneConnection {
             display_flags |= DisplayFlag::INVISIBLE;
         }
 
+        let base_parameters = self.base_parameters(); // TODO: maybe cache this?
+        let mut game_data = self.gamedata.lock();
+
         CommonSpawn {
             class_job: self.player_data.classjob_id,
             name: self.player_data.name.clone(),
-            hp_curr: 1000, // TODO: hardcoded
-            hp_max: 1000,
-            mp_curr: MAXIMUM_MP,
-            mp_max: MAXIMUM_MP,
+            hp_curr: base_parameters.hp,
+            hp_max: base_parameters.hp,
+            mp_curr: base_parameters.mp as u16,
+            mp_max: base_parameters.mp as u16,
             level: self.current_level(&game_data) as u8,
             object_kind: ObjectKind::Player(PlayerSubKind::Player),
             look,

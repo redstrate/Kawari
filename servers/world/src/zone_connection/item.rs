@@ -225,6 +225,7 @@ impl ZoneConnection {
             .await;
         }
 
+        self.send_stats().await;
         self.update_class_info().await;
     }
 
