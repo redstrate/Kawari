@@ -562,7 +562,7 @@ ClientZoneIpcType:
     size: 8
   - name: EquipGearset
     comment: Unknown purpose.
-    opcode: 628
+    opcode: 812
     size: 72
   - name: EquipGearset2
     comment: "Unknown purpose, and also unsure why it's different from EquipGearset."

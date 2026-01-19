@@ -183,12 +183,14 @@ impl WorldDatabase {
         #[diesel(primary_key(content_id))]
         struct ClassJobChanges {
             content_id: i64,
+            classjob_id: i32,
             classjob_levels: String,
             classjob_exp: String,
             rested_exp: i32,
         }
         let classjob = ClassJobChanges {
             content_id: data.content_id as i64,
+            classjob_id: data.classjob_id as i32,
             classjob_levels: serde_json::to_string(&data.classjob_levels).unwrap(),
             classjob_exp: serde_json::to_string(&data.classjob_exp).unwrap(),
             rested_exp: data.rested_exp,

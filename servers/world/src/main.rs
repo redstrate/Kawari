@@ -1019,7 +1019,6 @@ async fn client_loop(
                                                     connection.inform_equip().await;
                                                     connection.update_server_stats().await;
                                                 }
-
                                             }
                                             ClientZoneIpcData::EventReturnHandler4(handler) => {
                                                 let event_type = handler.handler_id.handler_type();
@@ -1219,6 +1218,13 @@ async fn client_loop(
 
                                                 // Retail also re-sends the equipped container
                                                 connection.send_equipped_inventory().await;
+                                                connection.inform_equip().await;
+
+                                                // Change class as needed.
+                                                connection.change_class_based_on_weapon().await;
+
+                                                // Then finally, resend stats.
+                                                connection.update_server_stats().await;
                                             }
                                             ClientZoneIpcData::EquipGearset2 { .. } => {
                                                 tracing::warn!("Bigger gearsets not supported yet!");
