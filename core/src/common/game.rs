@@ -221,7 +221,7 @@ pub enum HandlerType {
     GatheringPoint = 3,
     /// See GilShop Excel sheet.
     Shop = 4,
-    /// See Aetheryte Excel sheet (event_id & 0xFFF.)
+    /// See Aetheryte Excel sheet (event_id & 0xFFFF.)
     Aetheryte = 5,
     /// See GuildleveAssignment Excel sheet.
     GuildLeveAssignment = 6,
@@ -239,9 +239,9 @@ pub enum HandlerType {
     CraftLeveClient = 14,
     /// Unknown purpose.
     GimmickAccessor = 15,
-    /// See GimmickBill Excel sheet (event_id & 0xFFF.)
+    /// See GimmickBill Excel sheet (event_id & 0xFFFF.)
     GimmickBill = 16,
-    /// See GimmickRect Excel sheet (event_id & 0xFFF.)
+    /// See GimmickRect Excel sheet (event_id & 0xFFFF.)
     GimmickRect = 17,
     /// See ChocoboTaxiStand Excel sheet.
     ChocoboTaxiStand = 18,

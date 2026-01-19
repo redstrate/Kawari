@@ -10,7 +10,16 @@
 SCENE_SHOW_MENU = 00002
 SCENE_HAVE_AETHERNET_ACCESS = 00003
 
+function aetheryteId()
+    return EVENT_ID & 0xFFFF
+end
+
 function onTalk(target, player)
+    if not player:has_aetheryte(aetheryteId()) then
+        -- TODO: play attunement animation
+        player:unlock_aetheryte(1, aetheryteId())
+    end
+
     player:play_scene(target, EVENT_ID, SCENE_SHOW_MENU, HIDE_HOTBAR, {0})
 end
 

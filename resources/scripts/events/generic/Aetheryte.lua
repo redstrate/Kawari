@@ -10,7 +10,16 @@
 SCENE_SHOW_MENU = 00000
 SCENE_HAVE_AETHERNET_ACCESS = 00003
 
+function aetheryteId()
+    return EVENT_ID & 0xFFFF
+end
+
 function onTalk(target, player)
+    if not player:has_aetheryte(aetheryteId()) then
+        -- TODO: play attunement animation
+        player:unlock_aetheryte(1, aetheryteId())
+    end
+
     player:play_scene(target, EVENT_ID, SCENE_SHOW_MENU, HIDE_HOTBAR, {0})
 end
 
@@ -31,7 +40,7 @@ function onYield(scene, results, player)
 
     if scene == SCENE_SHOW_MENU then -- main aetheryte prompt scene
         if menu_option == SET_HOME_POINT then
-            player:set_homepoint(EVENT_ID & 0xFF) -- to get the aetheryte ID
+            player:set_homepoint(aetheryteId())
         elseif menu_option == AETHERNET_SUBMENU then
             if decision ~= AETHERNET_SUBMENU_CANCEL then
                 player:finish_event(EVENT_ID) -- Need to finish the event here, because warping does not return to this callback (the game will crash or softlock otherwise)

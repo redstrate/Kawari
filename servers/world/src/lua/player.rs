@@ -662,6 +662,10 @@ impl LuaPlayer {
     fn return_to_homepoint(&mut self) {
         self.queued_tasks.push(LuaTask::ReturnToHomepoint {});
     }
+
+    fn has_aetheryte(&self, aetheryte_id: u32) -> bool {
+        self.player_data.aetheryte.unlocked.contains(aetheryte_id)
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -1072,6 +1076,9 @@ impl UserData for LuaPlayer {
         methods.add_method_mut("return_to_homepoint", |_, this, _: ()| {
             this.return_to_homepoint();
             Ok(())
+        });
+        methods.add_method("has_aetheryte", |_, this, aetheryte_id: u32| {
+            Ok(this.has_aetheryte(aetheryte_id))
         });
     }
 

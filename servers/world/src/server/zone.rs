@@ -208,7 +208,7 @@ impl Zone {
                                 // GimmickRects are used for stuff like the Golden Saucer jumping pads, and is handled server-side.
                                 // Thus, we need to go through and mark these MapRanges to play said event.
                                 if let Some(gimmick_rect_info) =
-                                    game_data.get_gimmick_rect_info(eobj_data & 0xFFF)
+                                    game_data.get_gimmick_rect_info(eobj_data & 0xFFFF)
                                     && let Some(target_pop_range) =
                                         zone.find_pop_range(gimmick_rect_info.params[1])
                                 {
@@ -244,7 +244,7 @@ impl Zone {
                                 } else {
                                     tracing::warn!(
                                         "Failed to lookup Gimmick {}?!",
-                                        eobj_data & 0xFFF
+                                        eobj_data & 0xFFFF
                                     );
                                 }
                             }
