@@ -1172,6 +1172,7 @@ mod tests {
             },
             ServerZoneIpcData::FreeCompanyActivityList { unk: [0; 528] },
             ServerZoneIpcData::UnkContentFinder2 { unk: [0; 16] },
+            ServerZoneIpcData::Playtime { duration: 0 },
         ];
 
         for data in &ipc_types {
