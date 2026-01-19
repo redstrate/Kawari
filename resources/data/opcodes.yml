@@ -459,6 +459,10 @@ ServerZoneIpcType:
     comment: "Unknown purpose, but it controls something like hiding the Join button."
     opcode: 790
     size: 16
+  - name: Playtime
+    comment: A client requested their playtime, and now they need to be informed.
+    opcode: 674
+    size: 8
 ClientZoneIpcType:
   - name: InitRequest
     comment: "Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)"
