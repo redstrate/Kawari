@@ -345,6 +345,7 @@ impl ZoneConnection {
             .send(ToServer::SetNewStatValues(
                 self.player_data.actor_id,
                 current_level as u8,
+                self.player_data.classjob_id,
                 base_parameters.hp,
                 base_parameters.mp as u16,
             ))

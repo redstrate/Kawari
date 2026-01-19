@@ -316,7 +316,7 @@ pub enum ToServer {
     /// The client applied a waymark preset for their party.
     ApplyWaymarkPreset(ObjectId, u64, WaymarkPreset),
     /// Inform the server of our new basic stat values.
-    SetNewStatValues(ObjectId, u8, u32, u16),
+    SetNewStatValues(ObjectId, u8, u8, u32, u16),
 }
 
 #[derive(Clone, Debug)]

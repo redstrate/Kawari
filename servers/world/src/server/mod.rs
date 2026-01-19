@@ -1589,7 +1589,7 @@ pub async fn server_main_loop(
 
                 update_actor_hp_mp(network.clone(), instance, from_actor_id);
             }
-            ToServer::SetNewStatValues(from_actor_id, level, max_hp, max_mp) => {
+            ToServer::SetNewStatValues(from_actor_id, level, class_job, max_hp, max_mp) => {
                 // Update internal data model
                 {
                     let mut data = data.lock();
@@ -1604,6 +1604,7 @@ pub async fn server_main_loop(
                     actor.get_common_spawn_mut().level = level;
                     actor.get_common_spawn_mut().hp_max = max_hp;
                     actor.get_common_spawn_mut().mp_max = max_mp;
+                    actor.get_common_spawn_mut().class_job = class_job;
                 }
 
                 // The only way the game can reliably set these stats is via StatusEffectList (REALLY)

@@ -236,7 +236,15 @@ impl Inventory {
                 dst_item.clone_from(&src_item);
             }
             ItemOperationKind::Exchange | ItemOperationKind::Move => {
-                let src_item = self.get_item(action.src_storage_id, action.src_container_index);
+                let src_item;
+
+                // Clear existing item so add in next free slot checks work.
+                {
+                    let src_slot =
+                        self.get_item_mut(action.src_storage_id, action.src_container_index);
+                    src_item = *src_slot;
+                    src_slot.quantity = 0;
+                }
 
                 // move src item into dst slot
                 let dst_slot = self.get_item_mut(action.dst_storage_id, action.dst_container_index);
