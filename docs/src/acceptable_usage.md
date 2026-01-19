@@ -26,4 +26,12 @@ Additionally, here are some explicit limitations for contributions in our commun
   
 If you are unsure about anything in this document, you can [contact me](https://redstrate.com/contact) privately or ask in our chat room.
 
+## Enforcement
+
+If we find out that you're using Kawari in violation of the guidelines outlined above (intentional or not) we will do the following:
+
+1. Warn you about this, and point you to a copy of this policy. We may also end the discussion if needed.
+2. If the warning is not heeded or we find you're now intentionally circumventing us, further moderation may be imposed such as a temporary kick out of a chatroom.
+3. In the rare case of intentional maliciousness or carelessness, we ban you from the relevant community platforms.
+
 [^1]: This means running a publicly available instance on the Internet, advertising it and so on. Playing with friends you know is totally OK, of course.
