@@ -360,8 +360,7 @@ impl ZoneConnection {
                 }
                 Err(e) => {
                     tracing::error!(
-                        "Unable to determine the current session's playtime, due to an error: {}",
-                        e
+                        "Unable to determine the current session's playtime, due to an error: {e}",
                     );
                 }
             }

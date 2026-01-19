@@ -184,13 +184,11 @@ impl WorldDatabase {
         if let Some(login_time) = data.login_time {
             match SystemTime::now().duration_since(login_time) {
                 Ok(session_length) => {
-                    time_played_minutes = (session_length.as_secs() / 60) as i64
-                        + self.find_playtime(data.content_id);
+                    time_played_minutes += (session_length.as_secs() / 60) as i64;
                 }
                 Err(e) => {
                     tracing::error!(
-                        "Unable to update the session's playtime, due to the following error: {}",
-                        e
+                        "Unable to update the session's playtime, due to the following error: {e}",
                     );
                 }
             }
