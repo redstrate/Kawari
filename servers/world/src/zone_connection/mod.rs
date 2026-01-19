@@ -1,5 +1,6 @@
 use std::{sync::Arc, time::Instant};
 
+use chrono::{DateTime, Utc};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpStream;
@@ -119,6 +120,7 @@ pub struct PlayerData {
     pub rejoining_party: bool,
     /// The player's currently active quests.
     pub active_quests: Vec<PersistentQuest>,
+    pub login_time: DateTime<Utc>,
 }
 
 /// Various obsfucation-related bits like the seeds and keys for this connection.
@@ -326,5 +328,34 @@ impl ZoneConnection {
             });
             self.send_ipc_self(ipc).await;
         }
+    }
+
+    pub async fn send_playtime(&mut self) {
+        let time_played_minutes;
+        {
+            let mut database = self.database.lock();
+            time_played_minutes = database.find_playtime(self.player_data.content_id);
+        }
+
+        let session_length = Utc::now() - self.player_data.login_time;
+        let total_play_time = session_length.num_minutes() + time_played_minutes;
+
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Playtime {
+            duration: total_play_time as u32,
+        });
+
+        self.send_ipc_self(ipc).await;
+
+        // Retail doesn't do this, but it's a nice QoL thing to have.
+        self.send_notice(
+            &format!(
+                "Total Play Time this Session: {} hours, {} minutes, {} seconds",
+                session_length.num_hours(),
+                session_length.num_minutes() % 60,
+                session_length.num_seconds() % 60
+            )
+            .to_string(),
+        )
+        .await;
     }
 }

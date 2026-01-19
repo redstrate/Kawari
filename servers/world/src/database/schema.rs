@@ -5,6 +5,7 @@ diesel::table! {
         actor_id -> BigInt,
         gm_rank -> Integer,
         name -> Text,
+        time_played_minutes -> BigInt,
     }
 }
 

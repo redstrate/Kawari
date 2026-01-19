@@ -109,3 +109,4 @@ diesel_migrations = { version = "2.3", default-features = false }
 
 # For sqlite support (we specify * here because diesel selects the version for us)
 libsqlite3-sys = { version = "*", features = ["bundled"], default-features = false }
+chrono = { version = "0.4.43", features = ["now"], default-features = false }

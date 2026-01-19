@@ -154,6 +154,7 @@ impl WorldDatabase {
 
     /// Commit the dynamic player data back to the database
     pub fn commit_player_data(&mut self, data: &PlayerData) {
+        use chrono::Utc;
         use models::*;
 
         let volatile = Volatile {
@@ -176,6 +177,25 @@ impl WorldDatabase {
         };
         inventory
             .save_changes::<Inventory>(&mut self.connection)
+            .unwrap();
+
+        let time_played_minutes =
+            (Utc::now() - data.login_time).num_minutes() + self.find_playtime(data.content_id);
+
+        #[derive(AsChangeset, Identifiable)]
+        #[diesel(table_name = schema::character)]
+        #[diesel(primary_key(content_id))]
+        struct CharacterChanges {
+            pub content_id: i64,
+            pub time_played_minutes: i64,
+        }
+        let characterchanges = CharacterChanges {
+            content_id: data.content_id as i64,
+            time_played_minutes,
+        };
+
+        characterchanges
+            .save_changes::<Character>(&mut self.connection)
             .unwrap();
 
         #[derive(AsChangeset, Identifiable)]
@@ -367,6 +387,7 @@ impl WorldDatabase {
             actor_id: actor_id as i64,
             gm_rank: 90,
             name: name.to_string(),
+            time_played_minutes: 0,
         };
         diesel::insert_into(schema::character::table)
             .values(character)
@@ -653,5 +674,15 @@ impl WorldDatabase {
             .select(service_account_id)
             .first::<i64>(&mut self.connection)
             .unwrap_or_default() as u64
+    }
+
+    pub fn find_playtime(&mut self, for_content_id: u64) -> i64 {
+        use schema::character::dsl::*;
+
+        character
+            .filter(content_id.eq(for_content_id as i64))
+            .select(time_played_minutes)
+            .first::<i64>(&mut self.connection)
+            .unwrap_or_default()
     }
 }

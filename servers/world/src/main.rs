@@ -519,6 +519,9 @@ async fn client_loop(
                                                 })
                                                 .await;
 
+                                                // Store when we logged in, for various purposes.
+                                                connection.player_data.login_time = chrono::Utc::now();
+
                                                 // Stats
                                                 connection.send_stats().await;
 
@@ -1041,11 +1044,6 @@ async fn client_loop(
                                                     connection.conditions.set_condition(Condition::OccupiedInQuestEvent);
                                                     connection.send_conditions().await;
 
-                                                    /* TODO: ServerZoneIpcType::Unk18 with data [64,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-                                                        * was observed to always be sent by the server upon interacting with shops. They open and function fine without
-                                                        * it, but should we send it anyway, for the sake of accuracy? It's also still unclear if this
-                                                        * happens for -every- NPC/actor. */
-
                                                     // begin talk function if it exists
                                                     if let Some(event) = connection.events.last_mut() {
                                                         event.talk(*actor_id, &mut lua_player);
@@ -1296,7 +1294,7 @@ async fn client_loop(
                                                 tracing::info!("Countdowns is unimplemented");
                                             }
                                             ClientZoneIpcData::RequestPlaytime { .. } => {
-                                                tracing::info!("Playtime is unimplemented");
+                                                connection.send_playtime().await;
                                             }
                                             ClientZoneIpcData::SetFreeCompanyGreeting { .. } => {
                                                 tracing::info!("Setting the free company greeting is unimplemented");

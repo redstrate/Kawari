@@ -24,6 +24,7 @@ pub struct Character {
     pub actor_id: i64,
     pub gm_rank: i32,
     pub name: String,
+    pub time_played_minutes: i64,
 }
 
 #[derive(

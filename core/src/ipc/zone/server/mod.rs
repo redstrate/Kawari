@@ -758,6 +758,11 @@ pub enum ServerZoneIpcData {
     UnkContentFinder2 {
         unk: [u8; 16],
     },
+    Playtime {
+        #[brw(pad_after = 4)] // Empty/zeroes
+        /// The character's total cumulative playtime, measured in minutes.
+        duration: u32,
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
