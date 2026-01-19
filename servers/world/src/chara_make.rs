@@ -1,8 +1,16 @@
+use diesel::{
+    backend::Backend,
+    deserialize::{self, FromSqlRow},
+    expression::AsExpression,
+    serialize,
+    sql_types::Text,
+    sqlite::Sqlite,
+};
+use kawari::common::CustomizeData;
 use serde_json::{Value, json};
 
-use crate::common::CustomizeData;
-
-#[derive(Debug)]
+#[derive(Debug, Clone, AsExpression, FromSqlRow, Default)]
+#[diesel(sql_type = Text)]
 pub struct CharaMake {
     pub customize: CustomizeData,
     pub voice_id: i32,
@@ -47,6 +55,19 @@ impl CharaMake {
         });
 
         serde_json::to_string(&obj).unwrap()
+    }
+}
+
+impl serialize::ToSql<Text, Sqlite> for CharaMake {
+    fn to_sql<'b>(&'b self, out: &mut serialize::Output<'b, '_, Sqlite>) -> serialize::Result {
+        out.set_value(self.to_json());
+        Ok(serialize::IsNull::No)
+    }
+}
+
+impl deserialize::FromSql<Text, Sqlite> for CharaMake {
+    fn from_sql(mut bytes: <Sqlite as Backend>::RawValue<'_>) -> deserialize::Result<Self> {
+        Ok(CharaMake::from_json(bytes.read_text()))
     }
 }
 

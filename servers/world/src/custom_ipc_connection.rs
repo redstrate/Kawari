@@ -1,9 +1,6 @@
-use crate::{GameData, WorldDatabase, inventory::Inventory};
+use crate::{CharaMake, GameData, WorldDatabase, inventory::Inventory};
 use kawari::{
-    common::{
-        determine_initial_starting_zone,
-        workdefinitions::{CharaMake, RemakeMode},
-    },
+    common::{determine_initial_starting_zone, workdefinitions::RemakeMode},
     config::get_config,
     ipc::kawari::{CustomIpcData, CustomIpcSegment},
     packet::{

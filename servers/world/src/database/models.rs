@@ -12,9 +12,9 @@ use kawari::constants::{
     TRIPLE_TRIAD_CARDS_BITMASK_SIZE, UNLOCK_BITMASK_SIZE,
 };
 
-use crate::{Bitmask, QuestBitmask};
+use crate::{Bitmask, CharaMake, QuestBitmask};
 
-#[derive(Insertable, Identifiable, Queryable, Selectable)]
+#[derive(Insertable, Identifiable, Queryable, Selectable, Debug)]
 #[diesel(table_name = super::schema::character)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 #[diesel(primary_key(content_id))]
@@ -68,7 +68,7 @@ pub struct ClassJob {
 #[diesel(primary_key(content_id))]
 pub struct Customize {
     pub content_id: i64,
-    pub chara_make: String,
+    pub chara_make: CharaMake,
     pub city_state: i32,
     pub remake_mode: i32,
 }

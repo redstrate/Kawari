@@ -11,12 +11,12 @@ use kawari::common::{BasicCharacterData, WORLD_NAME};
 use kawari::ipc::zone::GameMasterRank;
 use serde::Deserialize;
 
-use crate::GameData;
+use crate::{CharaMake, GameData};
 use crate::{PlayerData, inventory::Inventory};
 use kawari::{
     common::{
         EquipDisplayFlag, ObjectId, Position,
-        workdefinitions::{CharaMake, ClientSelectData, RemakeMode},
+        workdefinitions::{ClientSelectData, RemakeMode},
     },
     constants::CLASSJOB_ARRAY_SIZE,
     ipc::lobby::{CharacterDetails, CharacterFlag},
@@ -110,11 +110,9 @@ impl WorldDatabase {
                 .first(&mut self.connection)
                 .unwrap();
 
-            let chara_make = CharaMake::from_json(&customize.chara_make);
-
             player_data = PlayerData {
                 name: found_character.name.clone(),
-                subrace: chara_make.customize.subrace,
+                subrace: customize.chara_make.customize.subrace,
                 actor_id: ObjectId(found_character.actor_id as u32),
                 content_id: found_character.content_id as u64,
                 account_id: found_character.service_account_id as u64,
@@ -302,7 +300,6 @@ impl WorldDatabase {
                 .first(&mut self.connection)
                 .unwrap();
 
-            let chara_make = CharaMake::from_json(&customize.chara_make);
             let inventory: crate::inventory::Inventory =
                 serde_json::from_str(&inventory.contents).unwrap();
 
@@ -310,17 +307,17 @@ impl WorldDatabase {
                 character_name: character.name.clone(),
                 current_class: classjob.classjob_id,
                 class_levels: json_unpack(&classjob.classjob_levels),
-                race: chara_make.customize.race as i32,
-                subrace: chara_make.customize.subrace as i32,
-                gender: chara_make.customize.gender as i32,
-                birth_month: chara_make.birth_month,
-                birth_day: chara_make.birth_day,
-                guardian: chara_make.guardian,
+                race: customize.chara_make.customize.race as i32,
+                subrace: customize.chara_make.customize.subrace as i32,
+                gender: customize.chara_make.customize.gender as i32,
+                birth_month: customize.chara_make.birth_month,
+                birth_day: customize.chara_make.birth_day,
+                guardian: customize.chara_make.guardian,
                 unk8: 0,
                 unk9: 0,
                 zone_id: volatile.zone_id,
                 content_finder_condition: 0,
-                customize: chara_make.customize,
+                customize: customize.chara_make.customize,
                 model_main_weapon: inventory.get_main_weapon_id(game_data),
                 model_sub_weapon: inventory.get_sub_weapon_id(game_data) as i32,
                 model_ids: inventory.get_model_ids(game_data).to_vec(),
@@ -328,7 +325,7 @@ impl WorldDatabase {
                 glasses: [0; 2].to_vec(),
                 remake_mode: RemakeMode::from_repr(customize.remake_mode).unwrap(),
                 remake_minutes_remaining: 0,
-                voice_id: chara_make.voice_id,
+                voice_id: customize.chara_make.voice_id,
                 display_flags: EquipDisplayFlag::from_bits(volatile.display_flags as u16)
                     .unwrap_or_default(),
                 unk21: 0,
@@ -421,7 +418,7 @@ impl WorldDatabase {
 
         let customize = Customize {
             content_id: content_id as i64,
-            chara_make: chara_make_str.to_string(),
+            chara_make,
             city_state: city_state as i32,
             ..Default::default()
         };
