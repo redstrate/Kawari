@@ -578,14 +578,14 @@ fn server_logic_tick(data: &mut WorldServer, network: Arc<Mutex<NetworkState>>) 
             for (id, actor) in &mut instance.actors {
                 if let NetworkedActor::Player { spawn, .. } = actor {
                     let mut updated = false;
-                    if spawn.common.hp_curr < spawn.common.hp_max {
+                    if spawn.common.hp_curr != spawn.common.hp_max {
                         let amount = (spawn.common.hp_max as f32 * 0.10).round() as u32;
                         spawn.common.hp_curr =
                             u32::clamp(spawn.common.hp_curr + amount, 0, spawn.common.hp_max);
                         updated = true;
                     }
 
-                    if spawn.common.mp_curr < spawn.common.mp_max {
+                    if spawn.common.mp_curr != spawn.common.mp_max {
                         let amount = (spawn.common.mp_max as f32 * 0.10).round() as u16;
                         spawn.common.mp_curr =
                             u16::clamp(spawn.common.mp_curr + amount, 0, spawn.common.mp_max);
