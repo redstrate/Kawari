@@ -150,6 +150,7 @@ impl ZoneConnection {
                 LuaTask::SetLevel { level } => {
                     self.set_current_level(*level);
                     self.update_class_info().await;
+                    self.update_server_stats().await; // Needed because stats change based on level.
                 }
                 LuaTask::ChangeWeather { id } => {
                     self.change_weather(*id).await;
