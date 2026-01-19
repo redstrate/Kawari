@@ -188,7 +188,7 @@ fn send_to_party_or_self(network: &mut NetworkState, from_actor_id: ObjectId, ms
     }
 }
 
-fn server_logic_tick(data: &mut WorldServer, network: &mut NetworkState) {
+fn server_logic_tick(data: &mut WorldServer, network: Arc<Mutex<NetworkState>>) {
     for instance in &mut data.instances {
         // Only pathfind if there's navmesh data available.
         if instance.navmesh.is_available() {
@@ -323,6 +323,7 @@ fn server_logic_tick(data: &mut WorldServer, network: &mut NetworkState) {
 
             // inform clients of the NPCs new positions
             for msg in actor_moves {
+                let mut network = network.lock();
                 for (handle, _) in network.clients.values_mut() {
                     if handle.send(msg.clone()).is_err() {
                         //to_remove.push(id);
@@ -348,6 +349,7 @@ fn server_logic_tick(data: &mut WorldServer, network: &mut NetworkState) {
                 };
 
                 // Find the ClientState for this player.
+                let mut network = network.lock();
                 let Some((handle, state)) = network.get_by_actor_mut(*id) else {
                     continue;
                 };
@@ -569,6 +571,36 @@ fn server_logic_tick(data: &mut WorldServer, network: &mut NetworkState) {
 
                 *inside_instance_exit = false;
             }
+
+            let mut actors_to_update_hp_mp = Vec::new();
+
+            // NOTE: I know this isn't retail accurate
+            for (id, actor) in &mut instance.actors {
+                if let NetworkedActor::Player { spawn, .. } = actor {
+                    let mut updated = false;
+                    if spawn.common.hp_curr < spawn.common.hp_max {
+                        let amount = (spawn.common.hp_max as f32 * 0.10).round() as u32;
+                        spawn.common.hp_curr =
+                            u32::clamp(spawn.common.hp_curr + amount, 0, spawn.common.hp_max);
+                        updated = true;
+                    }
+
+                    if spawn.common.mp_curr < spawn.common.mp_max {
+                        let amount = (spawn.common.mp_max as f32 * 0.10).round() as u16;
+                        spawn.common.mp_curr =
+                            u16::clamp(spawn.common.mp_curr + amount, 0, spawn.common.mp_max);
+                        updated = true;
+                    }
+
+                    if updated {
+                        actors_to_update_hp_mp.push(*id);
+                    }
+                }
+            }
+
+            for id in actors_to_update_hp_mp {
+                update_actor_hp_mp(network.clone(), instance, id);
+            }
         }
 
         // generate navmesh if necessary
@@ -655,8 +687,7 @@ pub async fn server_main_loop(
                 // Execute general server logic
                 {
                     let mut data = data.lock();
-                    let mut network = network.lock();
-                    server_logic_tick(&mut data, &mut network);
+                    server_logic_tick(&mut data, network.clone());
                 }
 
                 // Execute list of queued tasks
