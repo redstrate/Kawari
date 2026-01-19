@@ -217,7 +217,7 @@ fn server_logic_tick(data: &mut WorldServer, network: Arc<Mutex<NetworkState>>) 
                             y: current_path[0][1],
                             z: current_path[0][2],
                         };
-                        let current_position = last_position.unwrap_or(spawn.common.pos);
+                        let current_position = last_position.unwrap_or(spawn.common.position);
 
                         let dir_x = current_position.x - next_position.x;
                         let dir_z = current_position.z - next_position.z;
@@ -235,10 +235,10 @@ fn server_logic_tick(data: &mut WorldServer, network: Arc<Mutex<NetworkState>>) 
 
                     let target_pos;
                     if let Some(target_actor) = instance.find_actor(current_target) {
-                        target_pos = target_actor.get_common_spawn().pos;
+                        target_pos = target_actor.get_common_spawn().position;
                     } else {
                         // If we can't find the target actor for some reason (despawn, disconnect, left zone), fall back on a sane-ish destination
-                        target_pos = last_position.unwrap_or(spawn.common.pos);
+                        target_pos = last_position.unwrap_or(spawn.common.position);
                     }
 
                     target_actor_pos.insert(current_target, target_pos);
@@ -279,7 +279,7 @@ fn server_logic_tick(data: &mut WorldServer, network: Arc<Mutex<NetworkState>>) 
                             y: current_path[0][1],
                             z: current_path[0][2],
                         };
-                        let current_position = last_position.unwrap_or(spawn.common.pos);
+                        let current_position = last_position.unwrap_or(spawn.common.position);
                         let distance = Position::distance(current_position, next_position);
 
                         // TODO: this doesn't work like it should
@@ -288,10 +288,10 @@ fn server_logic_tick(data: &mut WorldServer, network: Arc<Mutex<NetworkState>>) 
 
                     if target_actor_pos.contains_key(&current_target.unwrap()) {
                         let target_pos = target_actor_pos[&current_target.unwrap()];
-                        let distance = Position::distance(spawn.common.pos, target_pos);
+                        let distance = Position::distance(spawn.common.position, target_pos);
                         let needs_repath = current_path.is_empty() && distance > 5.0; // TODO: confirm distance this in retail
                         if needs_repath && current_target.is_some() {
-                            let current_pos = spawn.common.pos;
+                            let current_pos = spawn.common.position;
                             *current_path = instance
                                 .navmesh
                                 .calculate_path(
@@ -314,7 +314,7 @@ fn server_logic_tick(data: &mut WorldServer, network: Arc<Mutex<NetworkState>>) 
                         ) = msg
                             && *id == *msg_id
                         {
-                            spawn.common.pos = *pos;
+                            spawn.common.position = *pos;
                             spawn.common.rotation = *rotation;
                         }
                     }
@@ -578,17 +578,17 @@ fn server_logic_tick(data: &mut WorldServer, network: Arc<Mutex<NetworkState>>) 
             for (id, actor) in &mut instance.actors {
                 if let NetworkedActor::Player { spawn, .. } = actor {
                     let mut updated = false;
-                    if spawn.common.hp_curr != spawn.common.hp_max {
-                        let amount = (spawn.common.hp_max as f32 * 0.10).round() as u32;
-                        spawn.common.hp_curr =
-                            u32::clamp(spawn.common.hp_curr + amount, 0, spawn.common.hp_max);
+                    if spawn.common.hp != spawn.common.max_hp {
+                        let amount = (spawn.common.max_hp as f32 * 0.10).round() as u32;
+                        spawn.common.hp =
+                            u32::clamp(spawn.common.hp + amount, 0, spawn.common.max_hp);
                         updated = true;
                     }
 
-                    if spawn.common.mp_curr != spawn.common.mp_max {
-                        let amount = (spawn.common.mp_max as f32 * 0.10).round() as u16;
-                        spawn.common.mp_curr =
-                            u16::clamp(spawn.common.mp_curr + amount, 0, spawn.common.mp_max);
+                    if spawn.common.mp != spawn.common.max_mp {
+                        let amount = (spawn.common.max_mp as f32 * 0.10).round() as u16;
+                        spawn.common.mp =
+                            u16::clamp(spawn.common.mp + amount, 0, spawn.common.max_mp);
                         updated = true;
                     }
 
@@ -900,8 +900,8 @@ pub async fn server_main_loop(
                             NetworkedActor::Npc { spawn, .. } => &mut spawn.common,
                             NetworkedActor::Object { .. } => unreachable!(),
                         };
-                        moved = common.pos != position;
-                        common.pos = position;
+                        moved = common.position != position;
+                        common.position = position;
                         common.rotation = rotation;
                     }
 
@@ -1291,17 +1291,17 @@ pub async fn server_main_loop(
                     npc_spawn = NpcSpawn {
                         aggression_mode: 1,
                         common: CommonSpawn {
-                            hp_curr: 91,
-                            hp_max: 91,
-                            mp_curr: 100,
-                            mp_max: 100,
+                            hp: 91,
+                            max_hp: 91,
+                            mp: 100,
+                            max_mp: 100,
                             npc_base: id,
                             npc_name: 405,
                             object_kind: ObjectKind::BattleNpc(BattleNpcSubKind::Enemy),
                             level: 1,
                             battalion: 4,
                             model_chara,
-                            pos: spawn.common.pos,
+                            position: spawn.common.position,
                             ..Default::default()
                         },
                         ..Default::default()
@@ -1571,7 +1571,7 @@ pub async fn server_main_loop(
                     continue;
                 };
 
-                actor.get_common_spawn_mut().hp_curr = hp;
+                actor.get_common_spawn_mut().hp = hp;
 
                 update_actor_hp_mp(network.clone(), instance, from_actor_id);
             }
@@ -1585,7 +1585,7 @@ pub async fn server_main_loop(
                     continue;
                 };
 
-                actor.get_common_spawn_mut().mp_curr = mp;
+                actor.get_common_spawn_mut().mp = mp;
 
                 update_actor_hp_mp(network.clone(), instance, from_actor_id);
             }
@@ -1602,8 +1602,8 @@ pub async fn server_main_loop(
                     };
 
                     actor.get_common_spawn_mut().level = level;
-                    actor.get_common_spawn_mut().hp_max = max_hp;
-                    actor.get_common_spawn_mut().mp_max = max_mp;
+                    actor.get_common_spawn_mut().max_hp = max_hp;
+                    actor.get_common_spawn_mut().max_mp = max_mp;
                     actor.get_common_spawn_mut().class_job = class_job;
                 }
 

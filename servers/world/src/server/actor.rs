@@ -60,8 +60,8 @@ impl NetworkedActor {
 
     pub fn position(&self) -> Position {
         match &self {
-            NetworkedActor::Player { spawn, .. } => spawn.common.pos,
-            NetworkedActor::Npc { spawn, .. } => spawn.common.pos,
+            NetworkedActor::Player { spawn, .. } => spawn.common.position,
+            NetworkedActor::Npc { spawn, .. } => spawn.common.position,
             NetworkedActor::Object { object } => object.position,
         }
     }

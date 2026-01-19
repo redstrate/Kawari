@@ -26,7 +26,8 @@ use kawari::{
         HandlerType, INVALID_OBJECT_ID, ObjectId, Position, euler_to_direction,
     },
     ipc::zone::{
-        ActorControl, ActorControlCategory, ActorControlSelf, Conditions, ObjectKind, ObjectSpawn,
+        ActorControl, ActorControlCategory, ActorControlSelf, BattleNpcSubKind, CommonSpawn,
+        Conditions, NpcSpawn, ObjectKind, ObjectSpawn,
     },
 };
 
@@ -425,6 +426,48 @@ impl Zone {
         }
 
         object_spawns
+    }
+
+    /// Returns a list of battle NPCs to spawn, right now it only returns striking dummies.
+    pub fn get_npcs(&self) -> Vec<NpcSpawn> {
+        let mut npc_spawns = Vec::new();
+
+        for layer_group in &self.layer_groups {
+            for layer in &layer_group.chunks[0].layers {
+                for object in &layer.objects {
+                    if let LayerEntryData::SharedGroup(sgb) = &object.data {
+                        // TODO: support other kinds of striking dummies
+                        if sgb.asset_path.value
+                            == "bgcommon/world/lvd/shared/for_bg/sgbg_w_lvd_005_01a.sgb"
+                        {
+                            let spawn = NpcSpawn {
+                                gimmick_id: object.instance_id,
+                                common: CommonSpawn {
+                                    npc_base: 8016,
+                                    npc_name: 541,
+                                    max_hp: 75000,
+                                    hp: 7500,
+                                    model_chara: 2449,
+                                    object_kind: ObjectKind::BattleNpc(BattleNpcSubKind::Enemy),
+                                    battalion: 4,
+                                    level: 1,
+                                    position: Position {
+                                        x: object.transform.translation[0],
+                                        y: object.transform.translation[1],
+                                        z: object.transform.translation[2],
+                                    },
+                                    ..Default::default()
+                                },
+                                ..Default::default()
+                            };
+                            npc_spawns.push(spawn);
+                        }
+                    }
+                }
+            }
+        }
+
+        npc_spawns
     }
 
     /// Returns a list of MapRanges that overlap this position.

@@ -14,6 +14,7 @@ use super::StatusEffect;
 #[brw(repr = u8)]
 #[derive(Clone, Copy, PartialEq, Debug, Default)]
 pub enum PlayerSubKind {
+    /// Used for players.
     #[default]
     Player = 4,
 }
@@ -28,6 +29,7 @@ pub enum BattleNpcSubKind {
     Part = 1,
     Pet = 2,
     Chocobo = 3,
+    /// Regular enemies.
     Enemy = 5,
     NpcPartyMember = 9,
 }
@@ -157,14 +159,15 @@ impl Default for DisplayFlag {
 #[brw(little)]
 #[derive(Debug, Clone, Default)]
 pub struct CommonSpawn {
+    /// Initial target for this character.
     pub target_id: ObjectTypeId,
     /// FC Crest data.
     pub fc_data: u64,
-    /// Model ID for a main weapon.
+    /// Model ID for their main weapon.
     pub main_weapon_model: u64,
-    /// Model ID for a secondary weapon.
+    /// Model ID for their secondary weapon.
     pub sec_weapon_model: u64,
-    /// Model ID for a craft weapon.
+    /// Model ID for their craft weapon.
     pub craft_tool_model: u64,
 
     pub u14: u64,
@@ -172,20 +175,27 @@ pub struct CommonSpawn {
     pub npc_base: u32,
     /// See BNpcName/ENpcResident Excel sheet.
     pub npc_name: u32,
+    /// Refers to the original game object ID associated with this character.
     pub layout_id: u32,
     pub companion_owner_id: u32,
     pub handler_id: HandlerId,
     pub owner_id: ObjectId,
     pub tether_id: ObjectId,
-    pub hp_max: u32,
-    pub hp_curr: u32,
+    /// Their maximum HP.
+    pub max_hp: u32,
+    /// Their current HP.
+    pub hp: u32,
+    /// Initial display flags for this character.
     pub display_flags: DisplayFlag,
     pub fate_id: u16, // assumed
-    pub mp_curr: u16,
-    pub mp_max: u16,
+    /// Their current MP.
+    pub mp: u16,
+    /// Their maximum MP.
+    pub max_mp: u16,
     pub unk: u16,
-    /// See ModelChara Excel sheet
+    /// See ModelChara Excel sheet.
     pub model_chara: u16,
+    /// Their initial rotation.
     #[br(map = read_quantized_rotation)]
     #[bw(map = write_quantized_rotation)]
     pub rotation: f32,
@@ -197,7 +207,7 @@ pub struct CommonSpawn {
     pub u26: u8,            // assumed
     pub u27: u8,            // assumed
     pub u28: u8,            // assumed
-    /// Must be unique for each actor.
+    /// Unique for each actor, and is used to eventually free them.
     pub spawn_index: u8,
     /// What mode this actor should initially be in.
     pub mode: CharacterMode,
@@ -205,10 +215,12 @@ pub struct CommonSpawn {
     pub mode_arg: u8,
     #[brw(pad_size_to = 2)] // for kinds that don't have a param
     pub object_kind: ObjectKind,
+    /// The character's voice.
     pub voice: u8,
     pub unk27: u8,
-    /// See Battalion Excel sheet. Used for determing whether it's friendy or an enemy.
+    /// See Battalion Excel sheet.
     pub battalion: u8,
+    /// The level of this character.
     pub level: u8,
     /// See ClassJob Excel sheet.
     pub class_job: u8,
@@ -221,17 +233,22 @@ pub struct CommonSpawn {
     pub scale: u8,
     pub element_data: [u8; 6],
     pub padding2: [u8; 3],
-    pub effect: [StatusEffect; 30],
-    pub pos: Position,
+    /// Their status effects.
+    pub status_effects: [StatusEffect; 30],
+    /// Their initial position.
+    pub position: Position,
+    /// Equipment model IDs if humanoid.
     pub models: [u32; 10],
-    pub unknown6_58: [u8; 10],
-    pub padding3: [u8; 4],
+    pub unknown6_58: [u8; 14],
+    /// Their name, for non-player characters this is the usually the original Japanese name.
     #[br(count = CHAR_NAME_MAX_LENGTH)]
     #[bw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
     #[br(map = read_string)]
     #[bw(map = write_string)]
     pub name: String,
+    /// Customization data for humanoid characters.
     pub look: CustomizeData,
+    /// Their short Free Company tag.
     #[br(count = 6)]
     #[bw(pad_size_to = 6)]
     #[br(map = read_string)]

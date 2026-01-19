@@ -130,7 +130,7 @@ pub fn execute_action(
 
             for effect in &effects_builder.effects {
                 if let EffectKind::Damage { amount, .. } = effect.kind {
-                    common_spawn.hp_curr = common_spawn.hp_curr.saturating_sub(amount as u32);
+                    common_spawn.hp = common_spawn.hp.saturating_sub(amount as u32);
                 }
             }
 
@@ -219,9 +219,9 @@ pub fn execute_action(
                 unk1: 1,
                 unk2: 776386,
                 target_id: request.target.object_id,
-                current_hp: common_spawn.hp_curr,
-                max_hp: common_spawn.hp_max,
-                current_mp: common_spawn.mp_curr,
+                current_hp: common_spawn.hp,
+                max_hp: common_spawn.max_hp,
+                current_mp: common_spawn.mp,
                 unk3: 0,
                 class_id: common_spawn.class_job,
                 shield: 0,
@@ -444,8 +444,8 @@ pub fn update_actor_hp_mp(
     {
         // TODO: send to all relevant players
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateHpMpTp {
-            hp: common_spawn.hp_curr,
-            mp: common_spawn.mp_curr,
+            hp: common_spawn.hp,
+            mp: common_spawn.max_mp,
             unk: 0,
         });
         let mut network = network.lock();
@@ -456,7 +456,7 @@ pub fn update_actor_hp_mp(
         );
     }
 
-    if common_spawn.hp_curr == 0 {
+    if common_spawn.hp == 0 {
         kill_actor(network.clone(), target_actor_id);
 
         // Queue up despawn if this is an NPC

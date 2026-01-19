@@ -110,6 +110,11 @@ impl Instance {
             instance.insert_object(object.entity_id, object);
         }
 
+        // Load initial NPCs into instance
+        for npc in instance.zone.get_npcs() {
+            instance.insert_npc(ObjectId(fastrand::u32(..)), npc);
+        }
+
         instance
     }
 

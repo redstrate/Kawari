@@ -105,10 +105,10 @@ pub fn send_effects_list(
         statues: list,
         classjob_id: spawn.common.class_job,
         level: spawn.common.level,
-        curr_hp: spawn.common.hp_curr,
-        max_hp: spawn.common.hp_max,
-        curr_mp: spawn.common.mp_curr,
-        max_mp: spawn.common.mp_max,
+        curr_hp: spawn.common.hp,
+        max_hp: spawn.common.max_hp,
+        curr_mp: spawn.common.mp,
+        max_mp: spawn.common.max_mp,
         ..Default::default()
     }));
 

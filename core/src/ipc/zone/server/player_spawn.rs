@@ -56,19 +56,19 @@ mod tests {
         let player_spawn = PlayerSpawn::read_le(&mut buffer).unwrap();
         assert_eq!(player_spawn.current_world_id, 0x4F);
         assert_eq!(player_spawn.home_world_id, 0x4F);
-        assert_eq!(player_spawn.common.hp_curr, 159);
-        assert_eq!(player_spawn.common.hp_max, 159);
-        assert_eq!(player_spawn.common.mp_curr, 10000);
-        assert_eq!(player_spawn.common.mp_max, 10000);
+        assert_eq!(player_spawn.common.hp, 159);
+        assert_eq!(player_spawn.common.max_hp, 159);
+        assert_eq!(player_spawn.common.mp, 10000);
+        assert_eq!(player_spawn.common.max_mp, 10000);
         assert_eq!(player_spawn.common.mode, CharacterMode::Normal);
         assert_eq!(player_spawn.common.mode_arg, 0);
         assert_eq!(player_spawn.common.spawn_index, 0);
         assert_eq!(player_spawn.common.level, 1);
         assert_eq!(player_spawn.common.class_job, 1); // adventurer
         assert_eq!(player_spawn.common.scale, 36);
-        assert_eq!(player_spawn.common.pos.x, 40.360653);
-        assert_eq!(player_spawn.common.pos.y, 4.0);
-        assert_eq!(player_spawn.common.pos.z, -152.85175);
+        assert_eq!(player_spawn.common.position.x, 40.360653);
+        assert_eq!(player_spawn.common.position.y, 4.0);
+        assert_eq!(player_spawn.common.position.z, -152.85175);
         assert_eq!(player_spawn.common.name, "Lavenaa Warren");
         assert_eq!(player_spawn.common.look.race, 1);
         assert_eq!(player_spawn.common.look.gender, 1);

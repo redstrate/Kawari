@@ -49,14 +49,14 @@ mod tests {
         let mut buffer = Cursor::new(&buffer);
 
         let npc_spawn = NpcSpawn::read_le(&mut buffer).unwrap();
-        assert_eq!(npc_spawn.common.hp_max, 973);
-        assert_eq!(npc_spawn.common.hp_curr, 973);
-        assert_eq!(npc_spawn.common.mp_curr, 10000);
-        assert_eq!(npc_spawn.common.mp_max, 10000);
+        assert_eq!(npc_spawn.common.max_hp, 973);
+        assert_eq!(npc_spawn.common.hp, 973);
+        assert_eq!(npc_spawn.common.mp, 10000);
+        assert_eq!(npc_spawn.common.max_mp, 10000);
         //assert_eq!(npc_spawn.common.display_flags, DisplayFlag::NONE);
-        assert_eq!(npc_spawn.common.pos.x, 4.883462);
-        assert_eq!(npc_spawn.common.pos.y, 40.04264);
-        assert_eq!(npc_spawn.common.pos.z, 11.821917);
+        assert_eq!(npc_spawn.common.position.x, 4.883462);
+        assert_eq!(npc_spawn.common.position.y, 40.04264);
+        assert_eq!(npc_spawn.common.position.z, 11.821917);
         assert_eq!(npc_spawn.common.model_chara, 411);
         assert_eq!(npc_spawn.common.npc_base, 13498);
         assert_eq!(npc_spawn.common.npc_name, 10261);
@@ -85,14 +85,14 @@ mod tests {
         let mut buffer = Cursor::new(&buffer);
 
         let npc_spawn = NpcSpawn::read_le(&mut buffer).unwrap();
-        assert_eq!(npc_spawn.common.hp_max, 91);
-        assert_eq!(npc_spawn.common.hp_curr, 91);
-        assert_eq!(npc_spawn.common.mp_curr, 0);
-        assert_eq!(npc_spawn.common.mp_max, 0);
+        assert_eq!(npc_spawn.common.max_hp, 91);
+        assert_eq!(npc_spawn.common.hp, 91);
+        assert_eq!(npc_spawn.common.mp, 0);
+        assert_eq!(npc_spawn.common.max_mp, 0);
         assert_eq!(npc_spawn.common.display_flags, DisplayFlag::NONE);
-        assert_eq!(npc_spawn.common.pos.x, 61.169727);
-        assert_eq!(npc_spawn.common.pos.y, 64.56608);
-        assert_eq!(npc_spawn.common.pos.z, -168.08115);
+        assert_eq!(npc_spawn.common.position.x, 61.169727);
+        assert_eq!(npc_spawn.common.position.y, 64.56608);
+        assert_eq!(npc_spawn.common.position.z, -168.08115);
         assert_eq!(npc_spawn.common.model_chara, 297);
         assert_eq!(npc_spawn.common.npc_base, 118);
         assert_eq!(npc_spawn.common.npc_name, 405);
