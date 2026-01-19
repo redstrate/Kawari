@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use std::time::Instant;
+use std::time::{Instant, SystemTime};
 
 use axum::Router;
 use axum::routing::get;
@@ -520,7 +520,7 @@ async fn client_loop(
                                                 .await;
 
                                                 // Store when we logged in, for various purposes.
-                                                connection.player_data.login_time = chrono::Utc::now();
+                                                connection.player_data.login_time = Some(SystemTime::now());
 
                                                 // Stats
                                                 connection.send_stats().await;

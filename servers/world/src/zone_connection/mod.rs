@@ -1,6 +1,8 @@
-use std::{sync::Arc, time::Instant};
+use std::{
+    sync::Arc,
+    time::{Instant, SystemTime},
+};
 
-use chrono::{DateTime, Utc};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpStream;
@@ -120,7 +122,7 @@ pub struct PlayerData {
     pub rejoining_party: bool,
     /// The player's currently active quests.
     pub active_quests: Vec<PersistentQuest>,
-    pub login_time: DateTime<Utc>,
+    pub login_time: Option<SystemTime>,
 }
 
 /// Various obsfucation-related bits like the seeds and keys for this connection.
@@ -331,31 +333,44 @@ impl ZoneConnection {
     }
 
     pub async fn send_playtime(&mut self) {
-        let time_played_minutes;
-        {
-            let mut database = self.database.lock();
-            time_played_minutes = database.find_playtime(self.player_data.content_id);
+        if let Some(login_time) = self.player_data.login_time {
+            let time_played_minutes;
+            {
+                let mut database = self.database.lock();
+                time_played_minutes = database.find_playtime(self.player_data.content_id);
+            }
+
+            // In case something goes wrong with calculating the current session's playtime, we'll send the old total by default.
+            let mut total_play_time = time_played_minutes;
+            match SystemTime::now().duration_since(login_time) {
+                Ok(session_length) => {
+                    total_play_time = (session_length.as_secs() / 60) as i64 + time_played_minutes;
+
+                    // Retail doesn't do this, but it's a nice QoL thing to have.
+                    self.send_notice(
+                        &format!(
+                            "Total Play Time this Session: {} hours, {} minutes, {} seconds",
+                            session_length.as_secs() / 3600,
+                            (session_length.as_secs() / 60) % 60,
+                            session_length.as_secs() % 60
+                        )
+                        .to_string(),
+                    )
+                    .await;
+                }
+                Err(e) => {
+                    tracing::error!(
+                        "Unable to determine the current session's playtime, due to an error: {}",
+                        e
+                    );
+                }
+            }
+
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Playtime {
+                duration: total_play_time as u32,
+            });
+
+            self.send_ipc_self(ipc).await;
         }
-
-        let session_length = Utc::now() - self.player_data.login_time;
-        let total_play_time = session_length.num_minutes() + time_played_minutes;
-
-        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Playtime {
-            duration: total_play_time as u32,
-        });
-
-        self.send_ipc_self(ipc).await;
-
-        // Retail doesn't do this, but it's a nice QoL thing to have.
-        self.send_notice(
-            &format!(
-                "Total Play Time this Session: {} hours, {} minutes, {} seconds",
-                session_length.num_hours(),
-                session_length.num_minutes() % 60,
-                session_length.num_seconds() % 60
-            )
-            .to_string(),
-        )
-        .await;
     }
 }

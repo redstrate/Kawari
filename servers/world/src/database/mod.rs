@@ -154,8 +154,8 @@ impl WorldDatabase {
 
     /// Commit the dynamic player data back to the database
     pub fn commit_player_data(&mut self, data: &PlayerData) {
-        use chrono::Utc;
         use models::*;
+        use std::time::SystemTime;
 
         let volatile = Volatile {
             content_id: data.content_id as i64,
@@ -179,8 +179,22 @@ impl WorldDatabase {
             .save_changes::<Inventory>(&mut self.connection)
             .unwrap();
 
-        let time_played_minutes =
-            (Utc::now() - data.login_time).num_minutes() + self.find_playtime(data.content_id);
+        // By default, just write back the original playtime if something goes wrong.
+        let mut time_played_minutes = self.find_playtime(data.content_id);
+        if let Some(login_time) = data.login_time {
+            match SystemTime::now().duration_since(login_time) {
+                Ok(session_length) => {
+                    time_played_minutes = (session_length.as_secs() / 60) as i64
+                        + self.find_playtime(data.content_id);
+                }
+                Err(e) => {
+                    tracing::error!(
+                        "Unable to update the session's playtime, due to the following error: {}",
+                        e
+                    );
+                }
+            }
+        }
 
         #[derive(AsChangeset, Identifiable)]
         #[diesel(table_name = schema::character)]
