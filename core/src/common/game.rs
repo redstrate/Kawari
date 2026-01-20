@@ -402,6 +402,7 @@ impl HandlerType {
             TerritoryIntendedUse::TripleTriadInvitationalParlor => Some(Self::InstanceContent),
             TerritoryIntendedUse::CriterionDungeon => Some(Self::InstanceContent),
             TerritoryIntendedUse::SavageCriterionDungeon => Some(Self::InstanceContent),
+            TerritoryIntendedUse::RivalWings => Some(Self::InstanceContent),
             _ => None,
         }
     }
@@ -667,6 +668,8 @@ pub enum TerritoryIntendedUse {
     ChaoticRaid = 36,
     /// ???
     CrystallineConflictCustomMatch = 37,
+    /// Used in Rival Wings content.
+    RivalWings = 39,
     /// Also used for Starlight Halls(?)
     PrivateEventArea = 40,
     /// Eureka zones.
