@@ -12,7 +12,6 @@ use kawari::{
         CommonSpawn, Config, DisplayFlag, GameMasterRank, ObjectKind, ObjectSpawn, OnlineStatus,
         PlayerSpawn, PlayerSubKind, ServerZoneIpcData, ServerZoneIpcSegment, Warp,
     },
-    packet::{PacketSegment, SegmentData, SegmentType},
 };
 
 impl ZoneConnection {
@@ -78,13 +77,7 @@ impl ZoneConnection {
             position,
         }));
 
-        self.send_segment(PacketSegment {
-            source_actor: actor_id,
-            target_actor: self.player_data.character.actor_id,
-            segment_type: SegmentType::Ipc,
-            data: SegmentData::Ipc(ipc),
-        })
-        .await;
+        self.send_ipc_from(actor_id, ipc).await;
     }
 
     pub async fn spawn_actor(&mut self, actor_id: ObjectId, spawn: SpawnKind) {
@@ -111,13 +104,7 @@ impl ZoneConnection {
             }
         }
 
-        self.send_segment(PacketSegment {
-            source_actor: actor_id,
-            target_actor: self.player_data.character.actor_id,
-            segment_type: SegmentType::Ipc,
-            data: SegmentData::Ipc(ipc),
-        })
-        .await;
+        self.send_ipc_from(actor_id, ipc).await;
 
         self.actor_control(
             actor_id,
@@ -138,25 +125,13 @@ impl ZoneConnection {
             actor_id,
         });
 
-        self.send_segment(PacketSegment {
-            source_actor: actor_id,
-            target_actor: self.player_data.character.actor_id,
-            segment_type: SegmentType::Ipc,
-            data: SegmentData::Ipc(ipc),
-        })
-        .await;
+        self.send_ipc_from(actor_id, ipc).await;
     }
 
     pub async fn delete_object(&mut self, spawn_index: u8) {
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::DeleteObject { spawn_index });
 
-        self.send_segment(PacketSegment {
-            source_actor: self.player_data.character.actor_id,
-            target_actor: self.player_data.character.actor_id,
-            segment_type: SegmentType::Ipc,
-            data: SegmentData::Ipc(ipc),
-        })
-        .await;
+        self.send_ipc_self(ipc).await;
     }
 
     pub async fn toggle_invisibility(&mut self, invisible: bool) {
@@ -175,13 +150,7 @@ impl ZoneConnection {
     pub async fn actor_control(&mut self, actor_id: ObjectId, actor_control: ActorControl) {
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControl(actor_control));
 
-        self.send_segment(PacketSegment {
-            source_actor: actor_id,
-            target_actor: self.player_data.character.actor_id,
-            segment_type: SegmentType::Ipc,
-            data: SegmentData::Ipc(ipc),
-        })
-        .await;
+        self.send_ipc_from(actor_id, ipc).await;
     }
 
     pub async fn actor_control_target(
@@ -191,13 +160,7 @@ impl ZoneConnection {
     ) {
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlTarget(actor_control));
 
-        self.send_segment(PacketSegment {
-            source_actor: actor_id,
-            target_actor: self.player_data.character.actor_id,
-            segment_type: SegmentType::Ipc,
-            data: SegmentData::Ipc(ipc),
-        })
-        .await;
+        self.send_ipc_from(actor_id, ipc).await;
     }
 
     /// Spawn the player actor. The client will handle replacing the existing one, if it exists.
@@ -236,13 +199,7 @@ impl ZoneConnection {
     pub async fn update_config(&mut self, actor_id: ObjectId, config: Config) {
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Config(config));
 
-        self.send_segment(PacketSegment {
-            source_actor: actor_id,
-            target_actor: self.player_data.character.actor_id,
-            segment_type: SegmentType::Ipc,
-            data: SegmentData::Ipc(ipc),
-        })
-        .await;
+        self.send_ipc_from(actor_id, ipc).await;
     }
 
     pub fn get_player_common_spawn(
@@ -314,12 +271,6 @@ impl ZoneConnection {
     pub async fn spawn_object(&mut self, spawn: ObjectSpawn) {
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ObjectSpawn(spawn));
 
-        self.send_segment(PacketSegment {
-            source_actor: spawn.entity_id,
-            target_actor: self.player_data.character.actor_id,
-            segment_type: SegmentType::Ipc,
-            data: SegmentData::Ipc(ipc),
-        })
-        .await;
+        self.send_ipc_from(spawn.entity_id, ipc).await;
     }
 }

@@ -10,7 +10,6 @@ use kawari::{
         ActorControlCategory, ActorControlSelf, ContainerInfo, CurrencyInfo, Equip, ItemInfo,
         ServerZoneIpcData, ServerZoneIpcSegment,
     },
-    packet::{PacketSegment, SegmentData, SegmentType},
 };
 
 impl ZoneConnection {
@@ -196,13 +195,7 @@ impl ZoneConnection {
             ..Default::default()
         }));
 
-        self.send_segment(PacketSegment {
-            source_actor: actor_id,
-            target_actor: self.player_data.character.actor_id,
-            segment_type: SegmentType::Ipc,
-            data: SegmentData::Ipc(ipc),
-        })
-        .await;
+        self.send_ipc_from(actor_id, ipc).await;
 
         // TODO: get a capture of another player equipping stuff to see if we get this as well, but it seems unlikely.
         if self.player_data.character.actor_id == actor_id {

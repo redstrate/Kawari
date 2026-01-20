@@ -13,7 +13,7 @@ use crate::{
     lua::LuaTask,
 };
 use kawari::{
-    common::{ClientLanguage, HandlerId, ObjectTypeId, Position, timestamp_secs},
+    common::{ClientLanguage, HandlerId, ObjectId, ObjectTypeId, Position, timestamp_secs},
     config::WorldConfig,
     ipc::zone::{
         client::ClientZoneIpcSegment,
@@ -167,14 +167,20 @@ impl ZoneConnection {
 
     /// Sends an IPC segment to the player, where the source actor is also the player.
     pub async fn send_ipc_self(&mut self, ipc: ServerZoneIpcSegment) {
+        // This is meant to protect against stack-smashing in nested futures
+        Box::pin(self.send_ipc_from(self.player_data.character.actor_id, ipc)).await;
+    }
+
+    /// Sends an IPC segment to the player, where the source actor can be specified.
+    pub async fn send_ipc_from(&mut self, source_actor: ObjectId, ipc: ServerZoneIpcSegment) {
         let segment = PacketSegment {
-            source_actor: self.player_data.character.actor_id,
+            source_actor,
             target_actor: self.player_data.character.actor_id,
             segment_type: SegmentType::Ipc,
             data: SegmentData::Ipc(ipc),
         };
 
-        // This is meant to protect against stack-smashing in nested futures
+        // Ditt from above
         Box::pin(send_packet(
             &mut self.socket,
             &mut self.state,
@@ -189,7 +195,6 @@ impl ZoneConnection {
         .await;
     }
 
-    // TODO: Get rid of this? Lua.rs doesn't really need it but we'll continue using it for now.
     pub async fn send_segment(&mut self, segment: PacketSegment<ServerZoneIpcSegment>) {
         // Ditto as above
         Box::pin(send_packet(

@@ -27,9 +27,7 @@ use kawari::ipc::zone::{
 use kawari::common::{NETWORK_TIMEOUT, RECEIVE_BUFFER_SIZE};
 use kawari::constants::{AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE, CLASSJOB_ARRAY_SIZE};
 use kawari::packet::oodle::OodleNetwork;
-use kawari::packet::{
-    ConnectionState, ConnectionType, PacketSegment, SegmentData, SegmentType, parse_packet_header,
-};
+use kawari::packet::{ConnectionState, ConnectionType, SegmentData, parse_packet_header};
 use kawari_world::lua::{ExtraLuaState, LuaPlayer, load_init_script};
 use kawari_world::{
     ChatConnection, ChatHandler, CustomIpcConnection, GameData, ObsfucationData, TeleportReason,
@@ -1474,13 +1472,7 @@ async fn client_loop(
                         connection.rejoining_party = true;
                     }
                     FromServer::PacketSegment(ipc, from_actor_id) => {
-                        let segment = PacketSegment {
-                            source_actor: from_actor_id,
-                            target_actor: connection.player_data.character.actor_id,
-                            segment_type: SegmentType::Ipc,
-                            data: SegmentData::Ipc(ipc),
-                        };
-                        connection.send_segment(segment).await;
+                        connection.send_ipc_from(from_actor_id, ipc).await;
                     }
                     FromServer::NewTasks(mut tasks) => connection.queued_tasks.append(&mut tasks),
                     FromServer::NewStatusEffects(status_effects) => lua_player.status_effects = status_effects,

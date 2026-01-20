@@ -11,7 +11,6 @@ use kawari::{
         ActorControlCategory, ActorControlSelf, PlayerStats, ServerZoneIpcData,
         ServerZoneIpcSegment, UpdateClassInfo,
     },
-    packet::{PacketSegment, SegmentData, SegmentType},
 };
 
 /// Every BaseParam row, some of them may be useless.
@@ -389,13 +388,7 @@ impl ZoneConnection {
     pub async fn update_hp_mp(&mut self, actor_id: ObjectId, hp: u32, mp: u16) {
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateHpMpTp { hp, mp, unk: 0 });
 
-        self.send_segment(PacketSegment {
-            source_actor: actor_id,
-            target_actor: self.player_data.character.actor_id,
-            segment_type: SegmentType::Ipc,
-            data: SegmentData::Ipc(ipc),
-        })
-        .await;
+        self.send_ipc_from(actor_id, ipc).await;
     }
 
     /// Adds EXP to the current classjob, handles level-up and so on.
