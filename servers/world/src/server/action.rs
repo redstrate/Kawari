@@ -20,9 +20,8 @@ use kawari::{
     common::{CharacterMode, DEAD_FADE_OUT_TIME, INVALID_OBJECT_ID, ObjectId},
     config::get_config,
     ipc::zone::{
-        ActionEffect, ActionKind, ActionRequest, ActionResult, ActorControl, ActorControlCategory,
-        ActorControlSelf, EffectEntry, EffectKind, EffectResult, ServerZoneIpcData,
-        ServerZoneIpcSegment,
+        ActionEffect, ActionKind, ActionRequest, ActionResult, ActorControlCategory, EffectEntry,
+        EffectKind, EffectResult, ServerZoneIpcData, ServerZoneIpcSegment,
     },
 };
 
@@ -240,9 +239,7 @@ pub fn execute_action(
 }
 
 pub fn cancel_action(network: Arc<Mutex<NetworkState>>, from_id: ClientId) {
-    let msg = FromServer::ActorControlSelf(ActorControlSelf {
-        category: ActorControlCategory::CancelCast {},
-    });
+    let msg = FromServer::ActorControlSelf(ActorControlCategory::CancelCast {});
 
     {
         let mut network = network.lock();
@@ -402,11 +399,9 @@ pub fn kill_actor(network: Arc<Mutex<NetworkState>>, from_actor_id: ObjectId) {
         // TODO: these should be ActorControlSelf if target_actor_id == from_actor_id
         let msg = FromServer::ActorControl(
             from_actor_id,
-            ActorControl {
-                category: ActorControlCategory::SetMode {
-                    mode: CharacterMode::Dead,
-                    mode_arg: 0,
-                },
+            ActorControlCategory::SetMode {
+                mode: CharacterMode::Dead,
+                mode_arg: 0,
             },
         );
 
@@ -418,9 +413,7 @@ pub fn kill_actor(network: Arc<Mutex<NetworkState>>, from_actor_id: ObjectId) {
     {
         let msg = FromServer::ActorControl(
             from_actor_id,
-            ActorControl {
-                category: ActorControlCategory::Kill { animation_id: 0 },
-            },
+            ActorControlCategory::Kill { animation_id: 0 },
         );
 
         let mut network = network.lock();

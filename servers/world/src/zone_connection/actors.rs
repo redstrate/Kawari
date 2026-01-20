@@ -108,12 +108,10 @@ impl ZoneConnection {
 
         self.actor_control(
             actor_id,
-            ActorControl {
-                category: ActorControlCategory::ZoneIn {
-                    warp_finish_anim: 1,
-                    raise_anim: 0,
-                    unk1: 0,
-                },
+            ActorControlCategory::ZoneIn {
+                warp_finish_anim: 1,
+                raise_anim: 0,
+                unk1: 0,
             },
         )
         .await;
@@ -136,19 +134,21 @@ impl ZoneConnection {
 
     pub async fn toggle_invisibility(&mut self, invisible: bool) {
         self.player_data.gm_invisible = invisible;
-        self.actor_control_self(ActorControlSelf {
-            category: ActorControlCategory::ToggleInvisibility { invisible },
-        })
-        .await;
+        self.actor_control_self(ActorControlCategory::ToggleInvisibility { invisible })
+            .await;
     }
 
-    pub async fn actor_control_self(&mut self, actor_control: ActorControlSelf) {
-        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlSelf(actor_control));
+    pub async fn actor_control_self(&mut self, category: ActorControlCategory) {
+        let ipc =
+            ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
+                category,
+            }));
         self.send_ipc_self(ipc).await;
     }
 
-    pub async fn actor_control(&mut self, actor_id: ObjectId, actor_control: ActorControl) {
-        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControl(actor_control));
+    pub async fn actor_control(&mut self, actor_id: ObjectId, category: ActorControlCategory) {
+        let ipc =
+            ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControl(ActorControl { category }));
 
         self.send_ipc_from(actor_id, ipc).await;
     }
@@ -156,9 +156,12 @@ impl ZoneConnection {
     pub async fn actor_control_target(
         &mut self,
         actor_id: ObjectId,
-        actor_control: ActorControlTarget,
+        category: ActorControlCategory,
     ) {
-        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlTarget(actor_control));
+        let ipc =
+            ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlTarget(ActorControlTarget {
+                category,
+            }));
 
         self.send_ipc_from(actor_id, ipc).await;
     }

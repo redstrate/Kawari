@@ -14,9 +14,8 @@ use kawari_world::inventory::{Item, Storage, get_next_free_slot};
 use kawari::ipc::chat::{ChatChannel, ClientChatIpcData};
 
 use kawari::ipc::zone::{
-    ActorControl, ActorControlCategory, ActorControlSelf, Condition, Conditions,
-    ContentFinderUserAction, EventType, InviteType, OnlineStatusMask, PlayerStatus, SceneFlags,
-    SearchInfo, TrustContent, TrustInformation,
+    ActorControlCategory, Condition, Conditions, ContentFinderUserAction, EventType, InviteType,
+    OnlineStatusMask, PlayerStatus, SceneFlags, SearchInfo, TrustContent, TrustInformation,
 };
 
 use kawari::ipc::zone::{
@@ -517,10 +516,8 @@ async fn client_loop(
 
                                                 // set equip display flags
                                                 connection
-                                                .actor_control_self(ActorControlSelf {
-                                                    category: ActorControlCategory::SetEquipDisplayFlags {
-                                                        display_flag: connection.player_data.volatile.display_flags
-                                                    },
+                                                .actor_control_self(ActorControlCategory::SetEquipDisplayFlags {
+                                                    display_flag: connection.player_data.volatile.display_flags
                                                 })
                                                 .await;
 
@@ -611,10 +608,8 @@ async fn client_loop(
                                                     connection.send_ipc_self(ipc).await;
                                                 }
 
-                                                connection.actor_control_self(ActorControlSelf {
-                                                    category: ActorControlCategory::SetItemLevel {
-                                                        level: connection.player_data.inventory.equipped.calculate_item_level() as u32,
-                                                    }
+                                                connection.actor_control_self(ActorControlCategory::SetItemLevel {
+                                                    level: connection.player_data.inventory.equipped.calculate_item_level() as u32,
                                                 }).await;
 
                                                 connection.handle.send(ToServer::ReadySpawnPlayer(connection.id, connection.player_data.character.actor_id, connection.player_data.volatile.zone_id as u16, connection.player_data.volatile.position, connection.player_data.volatile.rotation as f32)).await;
@@ -672,17 +667,13 @@ async fn client_loop(
                                                         connection.conditions.set_condition(Condition::ExecutingGatheringAction);
                                                         connection.send_conditions().await;
 
-                                                        connection.actor_control_self(ActorControlSelf {
-                                                            category: ActorControlCategory::BeginContentsReplay {
-                                                                unk1: 1
-                                                            }
+                                                        connection.actor_control_self(ActorControlCategory::BeginContentsReplay {
+                                                            unk1: 1
                                                         }).await;
                                                     },
                                                     ClientTriggerCommand::EndContentsReplay {} => {
-                                                        connection.actor_control_self(ActorControlSelf {
-                                                            category: ActorControlCategory::EndContentsReplay {
-                                                                unk1: 1
-                                                            }
+                                                        connection.actor_control_self(ActorControlCategory::EndContentsReplay {
+                                                            unk1: 1
                                                         }).await;
 
                                                         connection.respawn_player(false).await;
@@ -697,30 +688,20 @@ async fn client_loop(
                                                         // TODO: not sure if it's important, retail sends an AC 2 with a param of 1
 
                                                         // Retail indeed does send an AC, not an ACS for this.
-                                                        connection.actor_control(connection.player_data.character.actor_id, ActorControl {
-                                                            category: ActorControlCategory::UnkDismountRelated { unk1: 47494, unk2: 32711, unk3: 1510381914 }
-                                                        }).await;
+                                                        connection.actor_control(connection.player_data.character.actor_id, ActorControlCategory::UnkDismountRelated { unk1: 47494, unk2: 32711, unk3: 1510381914 }).await;
 
-                                                        connection.actor_control_self(ActorControlSelf {
-                                                            category: ActorControlCategory::Dismount { sequence }
-                                                        }).await;
+                                                        connection.actor_control_self(ActorControlCategory::Dismount { sequence }).await;
 
                                                         // Then these are also sent!
-                                                        connection.actor_control_self(ActorControlSelf {
-                                                            category: ActorControlCategory::SetPetEntityId { unk1: 0 }
-                                                        }).await;
+                                                        connection.actor_control_self(ActorControlCategory::SetPetEntityId { unk1: 0 }).await;
 
-                                                        connection.actor_control_self(ActorControlSelf {
-                                                            category: ActorControlCategory::CompanionUnlock { unk1: 0, unk2: 0 }
-                                                        }).await;
+                                                        connection.actor_control_self(ActorControlCategory::CompanionUnlock { unk1: 0, unk2: 0 }).await;
 
-                                                        connection.actor_control_self(ActorControlSelf {
-                                                            category: ActorControlCategory::SetPetParameters {
-                                                                pet_id: 0,
-                                                                unk2: 0,
-                                                                unk3: 0,
-                                                                unk4: 7,
-                                                            }
+                                                        connection.actor_control_self(ActorControlCategory::SetPetParameters {
+                                                            pet_id: 0,
+                                                            unk2: 0,
+                                                            unk3: 0,
+                                                            unk4: 7,
                                                         }).await;
                                                     },
                                                     ClientTriggerCommand::ShownActiveHelp { id } => {
@@ -734,7 +715,7 @@ async fn client_loop(
                                                         match trigger {
                                                             DirectorTrigger::Sync => {
                                                                 // Always send a sync response for now
-                                                                connection.actor_control_self(ActorControlSelf { category: ActorControlCategory::DirectorEvent { handler_id, event: DirectorEvent::SyncResponse, arg: 1, unk1: 0 } }).await;
+                                                                connection.actor_control_self(ActorControlCategory::DirectorEvent { handler_id, event: DirectorEvent::SyncResponse, arg: 1, unk1: 0 }).await;
                                                             }
                                                             DirectorTrigger::SummonStrikingDummy => {
                                                                 connection
@@ -1214,7 +1195,7 @@ async fn client_loop(
                                                 }
 
                                                 // Inform the client that the gearset was successfully equipped.
-                                                connection.actor_control_self(ActorControlSelf { category: ActorControlCategory::GearSetEquipped { gearset_index: *gearset_index } }).await;
+                                                connection.actor_control_self(ActorControlCategory::GearSetEquipped { gearset_index: *gearset_index }).await;
 
                                                 // And that we're done modifying the inventory.
                                                 connection.send_inventory_transaction_finish(567, 3584).await;
@@ -1234,11 +1215,9 @@ async fn client_loop(
                                             }
                                             ClientZoneIpcData::StartWalkInEvent { event_arg, handler_id, .. } => {
                                                 // Yes, an ActorControl is sent here, not an ActorControlSelf!
-                                                connection.actor_control(connection.player_data.character.actor_id, ActorControl {
-                                                    category: ActorControlCategory::ToggleWeapon {
-                                                        shown: false,
-                                                        unk_flag: 1,
-                                                    }
+                                                connection.actor_control(connection.player_data.character.actor_id, ActorControlCategory::ToggleWeapon {
+                                                    shown: false,
+                                                    unk_flag: 1,
                                                 }).await;
                                                 connection.conditions.set_condition(Condition::OccupiedInEvent);
                                                 connection.send_conditions().await;
@@ -1255,11 +1234,9 @@ async fn client_loop(
                                                 // TODO: allow Lua scripts to handle these differently?
 
                                                 // Yes, an ActorControl is sent here, not an ActorControlSelf!
-                                                connection.actor_control(connection.player_data.character.actor_id, ActorControl {
-                                                    category: ActorControlCategory::ToggleWeapon {
-                                                        shown: false,
-                                                        unk_flag: 1,
-                                                    }
+                                                connection.actor_control(connection.player_data.character.actor_id, ActorControlCategory::ToggleWeapon {
+                                                    shown: false,
+                                                    unk_flag: 1,
                                                 }).await;
                                                 connection.conditions.set_condition(Condition::OccupiedInEvent);
                                                 connection.send_conditions().await;

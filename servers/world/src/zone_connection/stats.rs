@@ -8,8 +8,7 @@ use crate::{
 use kawari::{
     common::{Attributes, BASE_STAT, MAXIMUM_RESTED_EXP, ObjectId},
     ipc::zone::{
-        ActorControlCategory, ActorControlSelf, PlayerStats, ServerZoneIpcData,
-        ServerZoneIpcSegment, UpdateClassInfo,
+        ActorControlCategory, PlayerStats, ServerZoneIpcData, ServerZoneIpcSegment, UpdateClassInfo,
     },
 };
 
@@ -206,10 +205,8 @@ impl ZoneConnection {
         self.send_ipc_self(ipc).await;
 
         // Update rested EXP so the bar doesn't reset.
-        self.actor_control_self(ActorControlSelf {
-            category: ActorControlCategory::UpdateRestedExp {
-                exp: self.player_data.classjob.rested_exp as u32,
-            },
+        self.actor_control_self(ActorControlCategory::UpdateRestedExp {
+            exp: self.player_data.classjob.rested_exp as u32,
         })
         .await;
     }
@@ -395,12 +392,10 @@ impl ZoneConnection {
     pub async fn add_exp(&mut self, exp: i32) {
         let (bonus_percent, exp) = self.use_exp_bonus(exp);
 
-        self.actor_control_self(ActorControlSelf {
-            category: ActorControlCategory::EXPFloatingMessage {
-                classjob_id: self.player_data.classjob.classjob_id as u32,
-                amount: exp as u32,
-                bonus_percent: bonus_percent as u32,
-            },
+        self.actor_control_self(ActorControlCategory::EXPFloatingMessage {
+            classjob_id: self.player_data.classjob.classjob_id as u32,
+            amount: exp as u32,
+            bonus_percent: bonus_percent as u32,
         })
         .await;
 
@@ -438,13 +433,11 @@ impl ZoneConnection {
             let new_level = curr_level + level_up;
             self.set_current_level(new_level);
 
-            self.actor_control_self(ActorControlSelf {
-                category: ActorControlCategory::LevelUpMessage {
-                    classjob_id: self.player_data.classjob.classjob_id as u32,
-                    level: new_level as u32,
-                    unk2: 0,
-                    unk3: 0,
-                },
+            self.actor_control_self(ActorControlCategory::LevelUpMessage {
+                classjob_id: self.player_data.classjob.classjob_id as u32,
+                level: new_level as u32,
+                unk2: 0,
+                unk3: 0,
             })
             .await;
         }
@@ -467,10 +460,8 @@ impl ZoneConnection {
 
     /// Sends the rested EXP bonus to the client.
     pub async fn send_rested_exp(&mut self) {
-        self.actor_control_self(ActorControlSelf {
-            category: ActorControlCategory::UpdateRestedExp {
-                exp: self.player_data.classjob.rested_exp as u32,
-            },
+        self.actor_control_self(ActorControlCategory::UpdateRestedExp {
+            exp: self.player_data.classjob.rested_exp as u32,
         })
         .await;
     }

@@ -6,10 +6,10 @@ use kawari::{
     ipc::{
         chat::{ChatChannel, ChatChannelType},
         zone::{
-            ActorControl, ActorControlCategory, InviteReply, InviteType, InviteUpdateType,
-            OnlineStatus, OnlineStatusMask, PartyMemberEntry, PartyUpdateStatus, PlayerEntry,
-            ServerZoneIpcData, ServerZoneIpcSegment, SocialList, SocialListRequestType,
-            StrategyBoard, StrategyBoardUpdate, WaymarkPlacementMode, WaymarkPreset,
+            ActorControlCategory, InviteReply, InviteType, InviteUpdateType, OnlineStatus,
+            OnlineStatusMask, PartyMemberEntry, PartyUpdateStatus, PlayerEntry, ServerZoneIpcData,
+            ServerZoneIpcSegment, SocialList, SocialListRequestType, StrategyBoard,
+            StrategyBoardUpdate, WaymarkPlacementMode, WaymarkPreset,
         },
     },
 };
@@ -152,9 +152,7 @@ impl ZoneConnection {
             }
             self.actor_control(
                 self.player_data.character.actor_id,
-                ActorControl {
-                    category: ActorControlCategory::SetStatusIcon { icon },
-                },
+                ActorControlCategory::SetStatusIcon { icon },
             )
             .await;
             let ipc =
@@ -218,9 +216,7 @@ impl ZoneConnection {
 
             self.actor_control(
                 self.player_data.character.actor_id,
-                ActorControl {
-                    category: ActorControlCategory::SetStatusIcon { icon },
-                },
+                ActorControlCategory::SetStatusIcon { icon },
             )
             .await;
 

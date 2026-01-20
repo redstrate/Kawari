@@ -30,9 +30,8 @@ use kawari::{
         ObjectTypeKind, Position,
     },
     ipc::zone::{
-        ActorControl, ActorControlCategory, ActorControlSelf, ActorControlTarget, BattleNpcSubKind,
-        ClientTriggerCommand, CommonSpawn, Condition, Conditions, NpcSpawn, ObjectKind,
-        WaymarkPlacementMode, WaymarkPreset,
+        ActorControlCategory, BattleNpcSubKind, ClientTriggerCommand, CommonSpawn, Condition,
+        Conditions, NpcSpawn, ObjectKind, WaymarkPlacementMode, WaymarkPreset,
     },
 };
 
@@ -153,8 +152,8 @@ fn set_player_minion(
 
             spawn.common.active_minion = minion_id as u16;
 
-            let msg = FromServer::ActorControlSelf(ActorControlSelf {
-                category: ActorControlCategory::MinionSpawnControl { minion_id },
+            let msg = FromServer::ActorControlSelf(ActorControlCategory::MinionSpawnControl {
+                minion_id,
             });
 
             if handle.send(msg).is_err() {
@@ -167,9 +166,7 @@ fn set_player_minion(
 
         let msg = FromServer::ActorControl(
             from_actor_id,
-            ActorControl {
-                category: ActorControlCategory::MinionSpawnControl { minion_id },
-            },
+            ActorControlCategory::MinionSpawnControl { minion_id },
         );
 
         if handle.send(msg).is_err() {
@@ -382,15 +379,15 @@ fn server_logic_tick(data: &mut WorldServer, network: Arc<Mutex<NetworkState>>) 
                                     eobj_instance_id,
                                 } => {
                                     // Tell the client to execute the gimmick jump
-                                    let msg = FromServer::ActorControlSelf(ActorControlSelf {
-                                        category: ActorControlCategory::ExecuteGimmickJump {
+                                    let msg = FromServer::ActorControlSelf(
+                                        ActorControlCategory::ExecuteGimmickJump {
                                             landing_position_x: to_position.x,
                                             landing_position_y: to_position.y,
                                             landing_position_z: to_position.z,
                                             gimmick_jump_type: *gimmick_jump_type,
                                             unk1: 0,
                                         },
-                                    });
+                                    );
                                     actors_now_gimmick_jumping.push(*id);
                                     if handle.send(msg).is_err() {
                                         // TODO: remove as needed
@@ -401,11 +398,8 @@ fn server_logic_tick(data: &mut WorldServer, network: Arc<Mutex<NetworkState>>) 
                                     if let Some(eobj) = instance.find_object(*eobj_instance_id) {
                                         let msg = FromServer::ActorControl(
                                             eobj,
-                                            ActorControl {
-                                                category:
-                                                    ActorControlCategory::PlaySharedGroupTimeline {
-                                                        timeline_id: *sgb_animation_id,
-                                                    },
+                                            ActorControlCategory::PlaySharedGroupTimeline {
+                                                timeline_id: *sgb_animation_id,
                                             },
                                         );
                                         if handle.send(msg).is_err() {
@@ -459,8 +453,9 @@ fn server_logic_tick(data: &mut WorldServer, network: Arc<Mutex<NetworkState>>) 
                             2693 // Duels not permitted in current area.
                         };
 
-                        let msg = FromServer::ActorControlSelf(ActorControlSelf {
-                            category: ActorControlCategory::LogMessage { log_message, id: 0 },
+                        let msg = FromServer::ActorControlSelf(ActorControlCategory::LogMessage {
+                            log_message,
+                            id: 0,
                         });
                         if handle.send(msg).is_err() {
                             // TODO: remove as needed
@@ -741,9 +736,7 @@ pub async fn server_main_loop(
                                 // fade out
                                 let msg = FromServer::ActorControl(
                                     *actor_id,
-                                    ActorControl {
-                                        category: ActorControlCategory::DeadFadeOut {},
-                                    },
+                                    ActorControlCategory::DeadFadeOut {},
                                 );
 
                                 let mut network = network.lock();
@@ -929,12 +922,11 @@ pub async fn server_main_loop(
             ToServer::ClientTrigger(from_id, from_actor_id, trigger) => {
                 match &trigger.trigger {
                     ClientTriggerCommand::TeleportQuery { aetheryte_id } => {
-                        let msg = FromServer::ActorControlSelf(ActorControlSelf {
-                            category: ActorControlCategory::TeleportStart {
+                        let msg =
+                            FromServer::ActorControlSelf(ActorControlCategory::TeleportStart {
                                 insufficient_gil: 0,
                                 aetheryte_id: *aetheryte_id,
-                            },
-                        });
+                            });
 
                         {
                             let mut network = network.lock();
@@ -954,16 +946,16 @@ pub async fn server_main_loop(
                         }
                     }
                     ClientTriggerCommand::EventRelatedUnk { .. } => {
-                        let msg = FromServer::ActorControlSelf(ActorControlSelf {
-                            category: ActorControlCategory::MapMarkerUpdateBegin { flags: 1 },
-                        });
+                        let msg = FromServer::ActorControlSelf(
+                            ActorControlCategory::MapMarkerUpdateBegin { flags: 1 },
+                        );
 
                         let mut network = network.lock();
                         network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
 
-                        let msg = FromServer::ActorControlSelf(ActorControlSelf {
-                            category: ActorControlCategory::MapMarkerUpdateEnd {},
-                        });
+                        let msg = FromServer::ActorControlSelf(
+                            ActorControlCategory::MapMarkerUpdateEnd {},
+                        );
                         network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
                     }
                     ClientTriggerCommand::WalkInTriggerFinished { .. } => {
@@ -973,27 +965,29 @@ pub async fn server_main_loop(
                         let mut network = network.lock();
                         network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
 
-                        let msg = FromServer::ActorControlSelf(ActorControlSelf {
-                            category: ActorControlCategory::SetPetEntityId { unk1: 0 },
-                        });
+                        let msg =
+                            FromServer::ActorControlSelf(ActorControlCategory::SetPetEntityId {
+                                unk1: 0,
+                            });
 
                         network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
 
                         // Yes, this is actually sent every time the trigger event finishes...
-                        let msg = FromServer::ActorControlSelf(ActorControlSelf {
-                            category: ActorControlCategory::CompanionUnlock { unk1: 0, unk2: 1 },
-                        });
+                        let msg =
+                            FromServer::ActorControlSelf(ActorControlCategory::CompanionUnlock {
+                                unk1: 0,
+                                unk2: 1,
+                            });
 
                         network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
 
-                        let msg = FromServer::ActorControlSelf(ActorControlSelf {
-                            category: ActorControlCategory::SetPetParameters {
+                        let msg =
+                            FromServer::ActorControlSelf(ActorControlCategory::SetPetParameters {
                                 pet_id: 0,
                                 unk2: 0,
                                 unk3: 0,
                                 unk4: 7,
-                            },
-                        });
+                            });
 
                         network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
                     }
@@ -1030,12 +1024,10 @@ pub async fn server_main_loop(
 
                         let msg = FromServer::ActorControlTarget(
                             from_actor_id,
-                            ActorControlTarget {
-                                category: ActorControlCategory::SetTarget {
-                                    target: ObjectTypeId {
-                                        object_id: *actor_id,
-                                        object_type: actor_type,
-                                    },
+                            ActorControlCategory::SetTarget {
+                                target: ObjectTypeId {
+                                    object_id: *actor_id,
+                                    object_type: actor_type,
                                 },
                             },
                         );
@@ -1052,11 +1044,9 @@ pub async fn server_main_loop(
                     ClientTriggerCommand::ChangePose { unk1, pose } => {
                         let msg = FromServer::ActorControl(
                             from_actor_id,
-                            ActorControl {
-                                category: ActorControlCategory::Pose {
-                                    unk1: *unk1,
-                                    pose: *pose,
-                                },
+                            ActorControlCategory::Pose {
+                                unk1: *unk1,
+                                pose: *pose,
                             },
                         );
 
@@ -1072,11 +1062,9 @@ pub async fn server_main_loop(
                     ClientTriggerCommand::ReapplyPose { unk1, pose } => {
                         let msg = FromServer::ActorControl(
                             from_actor_id,
-                            ActorControl {
-                                category: ActorControlCategory::Pose {
-                                    unk1: *unk1,
-                                    pose: *pose,
-                                },
+                            ActorControlCategory::Pose {
+                                unk1: *unk1,
+                                pose: *pose,
                             },
                         );
 
@@ -1092,9 +1080,7 @@ pub async fn server_main_loop(
                     ClientTriggerCommand::Emote(emote_info) => {
                         let msg = FromServer::ActorControlTarget(
                             from_actor_id,
-                            ActorControlTarget {
-                                category: ActorControlCategory::Emote(*emote_info),
-                            },
+                            ActorControlCategory::Emote(*emote_info),
                         );
 
                         let mut network = network.lock();
@@ -1109,11 +1095,9 @@ pub async fn server_main_loop(
                     ClientTriggerCommand::ToggleWeapon { shown, unk_flag } => {
                         let msg = FromServer::ActorControl(
                             from_actor_id,
-                            ActorControl {
-                                category: ActorControlCategory::ToggleWeapon {
-                                    shown: *shown,
-                                    unk_flag: *unk_flag,
-                                },
+                            ActorControlCategory::ToggleWeapon {
+                                shown: *shown,
+                                unk_flag: *unk_flag,
                             },
                         );
 
@@ -1210,10 +1194,8 @@ pub async fn server_main_loop(
                         // inform other players
                         let msg = FromServer::ActorControl(
                             from_actor_id,
-                            ActorControl {
-                                category: ActorControlCategory::SetTitle {
-                                    title_id: *title_id,
-                                },
+                            ActorControlCategory::SetTitle {
+                                title_id: *title_id,
                             },
                         );
 
@@ -1542,9 +1524,7 @@ pub async fn server_main_loop(
                 // Make the entrance circle invisible.
                 let msg = FromServer::ActorControl(
                     entrance_actor_id,
-                    ActorControl {
-                        category: ActorControlCategory::SetInvisibilityFlags { flags },
-                    },
+                    ActorControlCategory::SetInvisibilityFlags { flags },
                 );
 
                 let mut network = network.lock();

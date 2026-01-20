@@ -13,11 +13,10 @@ use kawari::{
             ChatChannelType, PartyMessage, SendPartyMessage, SendTellMessage, TellNotFoundError,
         },
         zone::{
-            ActionRequest, ActorControl, ActorControlSelf, ActorControlTarget, ClientTrigger,
-            Conditions, Config, InviteReply, InviteType, NpcSpawn, ObjectSpawn, PartyMemberEntry,
-            PartyUpdateStatus, PlayerEntry, PlayerSpawn, ServerZoneIpcSegment, SocialListRequest,
-            SocialListRequestType, StrategyBoard, StrategyBoardUpdate, WaymarkPlacementMode,
-            WaymarkPreset,
+            ActionRequest, ActorControlCategory, ClientTrigger, Conditions, Config, InviteReply,
+            InviteType, NpcSpawn, ObjectSpawn, PartyMemberEntry, PartyUpdateStatus, PlayerEntry,
+            PlayerSpawn, ServerZoneIpcSegment, SocialListRequest, SocialListRequestType,
+            StrategyBoard, StrategyBoardUpdate, WaymarkPlacementMode, WaymarkPreset,
         },
     },
 };
@@ -94,11 +93,11 @@ pub enum FromServer {
     // An object should be despawned.
     DeleteObject(u8),
     /// We need to update an actor
-    ActorControl(ObjectId, ActorControl),
+    ActorControl(ObjectId, ActorControlCategory),
     /// We need to update an actor's target
-    ActorControlTarget(ObjectId, ActorControlTarget),
+    ActorControlTarget(ObjectId, ActorControlCategory),
     /// We need to update the player actor
-    ActorControlSelf(ActorControlSelf),
+    ActorControlSelf(ActorControlCategory),
     /// Update an actor's equip display flags.
     UpdateConfig(ObjectId, Config),
     /// Update an actor's model IDs.

@@ -6,8 +6,8 @@ use crate::{Event, ZoneConnection, lua::LuaPlayer};
 use kawari::{
     common::{HandlerId, HandlerType, ObjectTypeId},
     ipc::zone::{
-        ActorControlCategory, ActorControlSelf, Condition, EventScene, EventStart, EventType,
-        SceneFlags, ServerZoneIpcData, ServerZoneIpcSegment,
+        ActorControlCategory, Condition, EventScene, EventStart, EventType, SceneFlags,
+        ServerZoneIpcData, ServerZoneIpcSegment,
     },
 };
 
@@ -93,10 +93,8 @@ impl ZoneConnection {
             }));
             self.send_ipc_self(ipc).await;
 
-            self.actor_control_self(ActorControlSelf {
-                category: ActorControlCategory::DisableEventPosRollback {
-                    handler_id: HandlerId(event_id),
-                },
+            self.actor_control_self(ActorControlCategory::DisableEventPosRollback {
+                handler_id: HandlerId(event_id),
             })
             .await;
         }

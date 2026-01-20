@@ -26,8 +26,8 @@ use kawari::{
         HandlerType, INVALID_OBJECT_ID, ObjectId, Position, euler_to_direction,
     },
     ipc::zone::{
-        ActorControl, ActorControlCategory, ActorControlSelf, BattleNpcSubKind, CommonSpawn,
-        Conditions, NpcSpawn, ObjectKind, ObjectSpawn,
+        ActorControlCategory, BattleNpcSubKind, CommonSpawn, Conditions, NpcSpawn, ObjectKind,
+        ObjectSpawn,
     },
 };
 
@@ -817,13 +817,13 @@ pub fn handle_zone_messages(
                 };
 
                 if id == *from_id {
-                    let msg = FromServer::ActorControlSelf(ActorControlSelf { category });
+                    let msg = FromServer::ActorControlSelf(category);
 
                     if handle.send(msg).is_err() {
                         to_remove.push(id);
                     }
                 } else {
-                    let msg = FromServer::ActorControl(*from_actor_id, ActorControl { category });
+                    let msg = FromServer::ActorControl(*from_actor_id, category);
 
                     if handle.send(msg).is_err() {
                         to_remove.push(id);

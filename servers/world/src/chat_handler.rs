@@ -7,7 +7,7 @@ use crate::{
 use kawari::{
     common::{ERR_INVENTORY_ADD_FAILED, ITEM_CONDITION_MAX},
     ipc::zone::{
-        ActorControlCategory, ActorControlSelf, ServerZoneIpcData, ServerZoneIpcSegment,
+        ActorControlCategory, ServerZoneIpcData, ServerZoneIpcSegment,
         client::SendChatMessage,
         server::{Condition, Conditions, GameMasterRank},
     },
@@ -150,34 +150,32 @@ impl ChatHandler {
                 let parts: Vec<&str> = chat_message.message.split(' ').collect();
 
                 connection
-                    .actor_control_self(ActorControlSelf {
-                        category: ActorControlCategory::Unknown {
-                            category: parts.get(1).cloned().unwrap().parse().unwrap(),
-                            param1: parts
-                                .get(2)
-                                .cloned()
-                                .unwrap_or_default()
-                                .parse()
-                                .unwrap_or_default(),
-                            param2: parts
-                                .get(3)
-                                .cloned()
-                                .unwrap_or_default()
-                                .parse()
-                                .unwrap_or_default(),
-                            param3: parts
-                                .get(4)
-                                .cloned()
-                                .unwrap_or_default()
-                                .parse()
-                                .unwrap_or_default(),
-                            param4: parts
-                                .get(5)
-                                .cloned()
-                                .unwrap_or_default()
-                                .parse()
-                                .unwrap_or_default(),
-                        },
+                    .actor_control_self(ActorControlCategory::Unknown {
+                        category: parts.get(1).cloned().unwrap().parse().unwrap(),
+                        param1: parts
+                            .get(2)
+                            .cloned()
+                            .unwrap_or_default()
+                            .parse()
+                            .unwrap_or_default(),
+                        param2: parts
+                            .get(3)
+                            .cloned()
+                            .unwrap_or_default()
+                            .parse()
+                            .unwrap_or_default(),
+                        param3: parts
+                            .get(4)
+                            .cloned()
+                            .unwrap_or_default()
+                            .parse()
+                            .unwrap_or_default(),
+                        param4: parts
+                            .get(5)
+                            .cloned()
+                            .unwrap_or_default()
+                            .parse()
+                            .unwrap_or_default(),
                     })
                     .await;
 

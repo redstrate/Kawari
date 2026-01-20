@@ -7,8 +7,8 @@ use crate::{
 use kawari::{
     common::{ContainerType, ItemOperationKind, ObjectId},
     ipc::zone::{
-        ActorControlCategory, ActorControlSelf, ContainerInfo, CurrencyInfo, Equip, ItemInfo,
-        ServerZoneIpcData, ServerZoneIpcSegment,
+        ActorControlCategory, ContainerInfo, CurrencyInfo, Equip, ItemInfo, ServerZoneIpcData,
+        ServerZoneIpcSegment,
     },
 };
 
@@ -199,21 +199,17 @@ impl ZoneConnection {
 
         // TODO: get a capture of another player equipping stuff to see if we get this as well, but it seems unlikely.
         if self.player_data.character.actor_id == actor_id {
-            self.actor_control_self(ActorControlSelf {
-                category: ActorControlCategory::SetItemLevel {
-                    level: self.player_data.inventory.equipped.calculate_item_level() as u32,
-                },
+            self.actor_control_self(ActorControlCategory::SetItemLevel {
+                level: self.player_data.inventory.equipped.calculate_item_level() as u32,
             })
             .await;
             // This seems to be pattern/crest related, it's seen when (un)equipping stuff.
-            self.actor_control_self(ActorControlSelf {
-                category: ActorControlCategory::Unknown {
-                    category: 57,
-                    param1: 0,
-                    param2: 0,
-                    param3: 0,
-                    param4: 0,
-                },
+            self.actor_control_self(ActorControlCategory::Unknown {
+                category: 57,
+                param1: 0,
+                param2: 0,
+                param3: 0,
+                param4: 0,
             })
             .await;
         }

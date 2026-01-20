@@ -63,10 +63,8 @@ impl ZoneConnection {
                 LuaTask::UnlockClassJob { classjob_id } => {
                     self.set_level_for(*classjob_id, 1);
 
-                    self.actor_control_self(ActorControlSelf {
-                        category: ActorControlCategory::UnlockClass {
-                            classjob_id: *classjob_id as u32,
-                        },
+                    self.actor_control_self(ActorControlCategory::UnlockClass {
+                        classjob_id: *classjob_id as u32,
                     })
                     .await;
 
@@ -108,11 +106,9 @@ impl ZoneConnection {
                 LuaTask::Unlock { id } => {
                     self.player_data.unlock.unlocks.set(*id);
 
-                    self.actor_control_self(ActorControlSelf {
-                        category: ActorControlCategory::ToggleUnlock {
-                            id: *id,
-                            unlocked: true,
-                        },
+                    self.actor_control_self(ActorControlCategory::ToggleUnlock {
+                        id: *id,
+                        unlocked: true,
                     })
                     .await;
                 }
@@ -126,11 +122,9 @@ impl ZoneConnection {
                                 self.player_data.aetheryte.unlocked.clear(i);
                             }
 
-                            self.actor_control_self(ActorControlSelf {
-                                category: ActorControlCategory::LearnTeleport {
-                                    id: i,
-                                    unlocked: *on,
-                                },
+                            self.actor_control_self(ActorControlCategory::LearnTeleport {
+                                id: i,
+                                unlocked: *on,
                             })
                             .await;
                         }
@@ -141,11 +135,9 @@ impl ZoneConnection {
                             self.player_data.aetheryte.unlocked.clear(*id);
                         }
 
-                        self.actor_control_self(ActorControlSelf {
-                            category: ActorControlCategory::LearnTeleport {
-                                id: *id,
-                                unlocked: *on,
-                            },
+                        self.actor_control_self(ActorControlCategory::LearnTeleport {
+                            id: *id,
+                            unlocked: *on,
                         })
                         .await;
                     }
@@ -262,11 +254,9 @@ impl ZoneConnection {
                         }
                     }
 
-                    self.actor_control_self(ActorControlSelf {
-                        category: ActorControlCategory::UnlockInstanceContent {
-                            id: *id as u32,
-                            unlocked: true,
-                        },
+                    self.actor_control_self(ActorControlCategory::UnlockInstanceContent {
+                        id: *id as u32,
+                        unlocked: true,
                     })
                     .await;
                 }
@@ -310,12 +300,10 @@ impl ZoneConnection {
 
                     let should_unlock = self.player_data.unlock.mounts.toggle(*id);
 
-                    self.actor_control_self(ActorControlSelf {
-                        category: ActorControlCategory::ToggleMountUnlock {
-                            order: order as u32,
-                            id: *id,
-                            unlocked: should_unlock,
-                        },
+                    self.actor_control_self(ActorControlCategory::ToggleMountUnlock {
+                        order: order as u32,
+                        id: *id,
+                        unlocked: should_unlock,
                     })
                     .await;
                 }
@@ -639,10 +627,8 @@ impl ZoneConnection {
                     self.player_data.aetheryte.homepoint = *homepoint as i32;
 
                     // Also update the client live
-                    self.actor_control_self(ActorControlSelf {
-                        category: ActorControlCategory::SetHomepoint {
-                            id: *homepoint as u32,
-                        },
+                    self.actor_control_self(ActorControlCategory::SetHomepoint {
+                        id: *homepoint as u32,
                     })
                     .await;
                 }

@@ -8,8 +8,8 @@ use kawari::{
     config::get_config,
     constants::OBFUSCATION_ENABLED_MODE,
     ipc::zone::{
-        ActorControlCategory, ActorControlSelf, Condition, House, HouseList, InitZone,
-        InitZoneFlags, ServerZoneIpcData, ServerZoneIpcSegment, Warp, WeatherChange,
+        ActorControlCategory, Condition, House, HouseList, InitZone, InitZoneFlags,
+        ServerZoneIpcData, ServerZoneIpcSegment, Warp, WeatherChange,
     },
     packet::{ConnectionState, PacketSegment, ScramblerKeyGenerator, SegmentData, SegmentType},
 };
@@ -163,10 +163,8 @@ impl ZoneConnection {
             self.send_ipc_self(ipc).await;
         }
 
-        self.actor_control_self(ActorControlSelf {
-            category: ActorControlCategory::SetItemLevel {
-                level: self.player_data.inventory.equipped.calculate_item_level() as u32,
-            },
+        self.actor_control_self(ActorControlCategory::SetItemLevel {
+            level: self.player_data.inventory.equipped.calculate_item_level() as u32,
         })
         .await;
 
@@ -212,10 +210,8 @@ impl ZoneConnection {
 
         // Terminate the old director if we're exiting an instance
         if self.content_handler_id.0 != 0 && content_finder_condition_id == 0 {
-            self.actor_control_self(ActorControlSelf {
-                category: ActorControlCategory::TerminateDirector {
-                    handler_id: self.content_handler_id,
-                },
+            self.actor_control_self(ActorControlCategory::TerminateDirector {
+                handler_id: self.content_handler_id,
             })
             .await;
 
@@ -244,12 +240,10 @@ impl ZoneConnection {
             tracing::info!("Initializing director {director_id}...");
 
             // Initialize the content director
-            self.actor_control_self(ActorControlSelf {
-                category: ActorControlCategory::InitDirector {
-                    handler_id: director_id,
-                    content_id,
-                    flags,
-                },
+            self.actor_control_self(ActorControlCategory::InitDirector {
+                handler_id: director_id,
+                content_id,
+                flags,
             })
             .await;
 

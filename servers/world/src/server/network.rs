@@ -7,7 +7,7 @@ use crate::{
 };
 use kawari::{
     common::{INVALID_OBJECT_ID, ObjectId},
-    ipc::zone::{ActorControl, ActorControlCategory, ActorControlSelf, ServerZoneIpcSegment},
+    ipc::zone::{ActorControlCategory, ServerZoneIpcSegment},
 };
 
 #[derive(Default, Debug)]
@@ -287,7 +287,7 @@ impl NetworkState {
         from_actor_id: ObjectId,
         category: ActorControlCategory,
     ) {
-        let msg = FromServer::ActorControl(from_actor_id, ActorControl { category });
+        let msg = FromServer::ActorControl(from_actor_id, category);
 
         self.send_in_range(from_actor_id, data, msg, DestinationNetwork::ZoneClients);
     }
@@ -302,9 +302,7 @@ impl NetworkState {
     ) {
         // First send to the actor itself:
         {
-            let msg = FromServer::ActorControlSelf(ActorControlSelf {
-                category: category.clone(),
-            });
+            let msg = FromServer::ActorControlSelf(category.clone());
 
             self.send_to(from_client_id, msg, DestinationNetwork::ZoneClients);
         }
