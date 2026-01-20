@@ -223,13 +223,8 @@ impl WorldDatabase {
 
             let select_data = ClientSelectData {
                 character_name: character.name.clone(),
-                current_class: classjob.classjob_id,
-                class_levels: classjob
-                    .classjob_levels
-                    .0
-                    .iter()
-                    .map(|x| *x as i32)
-                    .collect(),
+                current_class: classjob.current_class,
+                class_levels: classjob.levels.0.iter().map(|x| *x as i32).collect(),
                 race: customize.chara_make.customize.race as i32,
                 subrace: customize.chara_make.customize.subrace as i32,
                 gender: customize.chara_make.customize.gender as i32,
@@ -327,9 +322,9 @@ impl WorldDatabase {
 
         let classjob = ClassJob {
             content_id: content_id as i64,
-            classjob_id: chara_make.classjob_id,
-            classjob_levels: classjob_levels.clone(),
-            first_classjob: chara_make.classjob_id,
+            current_class: chara_make.classjob_id,
+            levels: classjob_levels.clone(),
+            first_class: chara_make.classjob_id,
             ..Default::default()
         };
         diesel::insert_into(schema::classjob::table)

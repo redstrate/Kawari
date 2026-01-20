@@ -12,10 +12,10 @@ diesel::table! {
 diesel::table! {
     classjob (content_id) {
         content_id -> BigInt,
-        classjob_id -> Integer,
-        classjob_levels -> Text,
-        classjob_exp -> Text,
-        first_classjob -> Integer,
+        current_class -> Integer,
+        levels -> Text,
+        exp -> Text,
+        first_class -> Integer,
         rested_exp -> Integer,
     }
 }

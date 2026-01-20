@@ -236,7 +236,7 @@ impl ZoneConnection {
         let mut game_data = self.gamedata.lock();
 
         CommonSpawn {
-            class_job: self.player_data.classjob.classjob_id as u8,
+            class_job: self.player_data.classjob.current_class as u8,
             name: self.player_data.character.name.clone(),
             hp: base_parameters.hp,
             max_hp: base_parameters.hp,

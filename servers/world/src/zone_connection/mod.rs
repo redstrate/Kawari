@@ -318,7 +318,7 @@ impl ZoneConnection {
         {
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ContentFinderUpdate {
                 state1: 1,
-                classjob_id: self.player_data.classjob.classjob_id as u8, // TODO: store what they registered with, because it can change
+                classjob_id: self.player_data.classjob.current_class as u8, // TODO: store what they registered with, because it can change
                 unk1: [0, 0, 0, 0, 0, 0, 96, 4, 2, 64, 1, 0, 0, 0, 0, 0, 1, 1],
                 content_ids,
                 unk2: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],

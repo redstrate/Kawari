@@ -51,10 +51,10 @@ pub struct Character {
 #[diesel(primary_key(content_id))]
 pub struct ClassJob {
     pub content_id: i64,
-    pub classjob_id: i32,
-    pub classjob_levels: ClassLevels,
-    pub classjob_exp: ClassExperience,
-    pub first_classjob: i32,
+    pub current_class: i32,
+    pub levels: ClassLevels,
+    pub exp: ClassExperience,
+    pub first_class: i32,
     pub rested_exp: i32,
 }
 

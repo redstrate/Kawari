@@ -528,11 +528,11 @@ async fn client_loop(
                                                 connection.send_stats().await;
 
                                                 // As seen in retail, they pad it with the first value
-                                                let mut padded_exp = connection.player_data.classjob.classjob_exp.0.clone();
+                                                let mut padded_exp = connection.player_data.classjob.exp.0.clone();
                                                 padded_exp.resize(CLASSJOB_ARRAY_SIZE, padded_exp[0]);
 
                                                 // Ditto for levels
-                                                let mut padded_levels: Vec<u16> = connection.player_data.classjob.classjob_levels.0.to_vec();
+                                                let mut padded_levels: Vec<u16> = connection.player_data.classjob.levels.0.to_vec();
                                                 padded_levels.resize(CLASSJOB_ARRAY_SIZE, padded_levels[0]);
 
                                                 let chara_make;
@@ -560,8 +560,8 @@ async fn client_loop(
                                                         as u8,
                                                         nameday_day: chara_make.birth_day as u8,
                                                         deity: chara_make.guardian as u8,
-                                                        current_class: connection.player_data.classjob.classjob_id as u8,
-                                                        first_class: connection.player_data.classjob.first_classjob as u8,
+                                                        current_class: connection.player_data.classjob.current_class as u8,
+                                                        first_class: connection.player_data.classjob.first_class as u8,
                                                         levels: padded_levels,
                                                         unlocks: connection.player_data.unlock.unlocks.0.clone(),
                                                         aetherytes: connection.player_data.aetheryte.unlocked.0.clone(),

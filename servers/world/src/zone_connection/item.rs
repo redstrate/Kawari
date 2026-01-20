@@ -190,7 +190,7 @@ impl ZoneConnection {
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Equip(Equip {
             main_weapon_id,
             sub_weapon_id,
-            classjob_id: self.player_data.classjob.classjob_id as u8,
+            classjob_id: self.player_data.classjob.current_class as u8,
             model_ids,
             ..Default::default()
         }));
@@ -338,7 +338,7 @@ impl ZoneConnection {
             classjobs = game_data.get_applicable_classjobs(item_info.classjob_category as u16);
         }
 
-        self.player_data.classjob.classjob_id = classjobs.first().copied().unwrap() as i32;
+        self.player_data.classjob.current_class = classjobs.first().copied().unwrap() as i32;
         self.update_class_info().await;
     }
 }
