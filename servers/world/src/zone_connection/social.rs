@@ -78,7 +78,7 @@ impl ZoneConnection {
         if response == InviteReply::Accepted {
             self.handle
                 .send(ToServer::AddPartyMember(
-                    self.player_data.party_id,
+                    self.party_id,
                     self.player_data.character.actor_id,
                     from_content_id,
                 ))
@@ -122,8 +122,8 @@ impl ZoneConnection {
         party_info: Option<(u64, u32, ObjectId, Vec<PartyMemberEntry>)>,
     ) {
         if let Some((party_id, chatchannel_id, leader_actor_id, mut party_list)) = party_info {
-            if self.player_data.party_id == 0 {
-                self.player_data.party_id = party_id;
+            if self.party_id == 0 {
+                self.party_id = party_id;
             }
 
             let member_count = party_list.len() as u8;
@@ -185,7 +185,7 @@ impl ZoneConnection {
                 members: party_list,
                 member_count,
                 leader_index: leader_index as u8,
-                party_id: self.player_data.party_id,
+                party_id: self.party_id,
                 party_chatchannel: ChatChannel {
                     channel_number: chatchannel_id,
                     channel_type: ChatChannelType::Party,
@@ -228,7 +228,7 @@ impl ZoneConnection {
                 ServerZoneIpcSegment::new(ServerZoneIpcData::SetOnlineStatus(new_status_mask));
             self.send_ipc_self(ipc).await;
 
-            self.player_data.party_id = 0;
+            self.party_id = 0;
         }
 
         // TODO:
@@ -274,7 +274,7 @@ impl ZoneConnection {
     }
 
     pub fn is_in_party(&self) -> bool {
-        self.player_data.party_id != 0
+        self.party_id != 0
     }
 
     pub async fn received_strategy_board(&mut self, content_id: u64, board_data: StrategyBoard) {

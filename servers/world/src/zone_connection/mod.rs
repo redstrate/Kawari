@@ -69,6 +69,8 @@ pub struct PersistentQuest {
     pub sequence: u8,
 }
 
+/// Persistent player data.
+/// Please try to keep fields in here to a minimum, specifically stuff that may be persistent and/or accessed from Lua.
 #[derive(Debug, Default, Clone)]
 pub struct PlayerData {
     pub character: Character,
@@ -83,9 +85,6 @@ pub struct PlayerData {
 
     pub item_sequence: u32,
     pub shop_sequence: u32,
-    pub transaction_sequence: u32,
-    /// Store the target actor id for the purpose of chaining cutscenes.
-    pub target_actorid: ObjectTypeId,
     /// The server-side copy of NPC shop buyback lists.
     pub buyback_list: BuyBackList,
     pub unlock: Unlock,
@@ -95,14 +94,6 @@ pub struct PlayerData {
     pub companion: Companion,
     pub quest: Quest,
     pub saw_inn_wakeup: bool,
-    pub teleport_reason: TeleportReason,
-    pub active_minion: u32,
-    /// The player's party id number, used for networking party-related events
-    pub party_id: u64,
-    /// The player's status when connecting/reconnecting. If true, they need to rejoin their party.
-    pub rejoining_party: bool,
-    /// The player's currently active quests.
-    pub login_time: Option<SystemTime>,
 }
 
 /// Various obsfucation-related bits like the seeds and keys for this connection.
@@ -132,6 +123,17 @@ pub struct ZoneConnection {
 
     pub exit_position: Option<Position>,
     pub exit_rotation: Option<f32>,
+    pub teleport_reason: TeleportReason,
+    pub active_minion: u32,
+    /// The player's party id number, used for networking party-related events
+    pub party_id: u64,
+    /// The player's status when connecting/reconnecting. If true, they need to rejoin their party.
+    pub rejoining_party: bool,
+    /// The player's currently active quests.
+    pub login_time: Option<SystemTime>,
+    /// Store the target actor id for the purpose of chaining cutscenes.
+    pub target_actorid: ObjectTypeId,
+    pub transaction_sequence: u32,
 
     pub last_keep_alive: Instant,
 
@@ -248,7 +250,7 @@ impl ZoneConnection {
             let mut database = self.database.lock();
             let mut time_played_minutes =
                 database.find_playtime(self.player_data.character.content_id as u64);
-            if let Some(login_time) = self.player_data.login_time {
+            if let Some(login_time) = self.login_time {
                 match SystemTime::now().duration_since(login_time) {
                     Ok(session_length) => {
                         time_played_minutes += (session_length.as_secs() / 60) as i64;
@@ -334,7 +336,7 @@ impl ZoneConnection {
     }
 
     pub async fn send_playtime(&mut self) {
-        if let Some(login_time) = self.player_data.login_time {
+        if let Some(login_time) = self.login_time {
             let time_played_minutes;
             {
                 let mut database = self.database.lock();

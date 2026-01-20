@@ -151,6 +151,13 @@ async fn initial_setup(
                     old_position: Position::default(),
                     old_rotation: 0.0,
                     content_handler_id: HandlerId::default(),
+                    teleport_reason: TeleportReason::NotSpecified,
+                    active_minion: 0,
+                    party_id: 0,
+                    rejoining_party: false,
+                    login_time: None,
+                    target_actorid: ObjectTypeId::default(),
+                    transaction_sequence: 0,
                 };
 
                 // Handle setup before passing off control to the zone connection.
@@ -520,7 +527,7 @@ async fn client_loop(
                                                 .await;
 
                                                 // Store when we logged in, for various purposes.
-                                                connection.player_data.login_time = Some(SystemTime::now());
+                                                connection.login_time = Some(SystemTime::now());
 
                                                 // Stats
                                                 connection.send_stats().await;
@@ -635,11 +642,11 @@ async fn client_loop(
 
                                                 // If we're in a party, we need to tell the other members we changed areas or reconnected.
                                                 if connection.is_in_party() {
-                                                    if !connection.player_data.rejoining_party {
-                                                    connection.handle.send(ToServer::PartyMemberChangedAreas(connection.player_data.party_id, connection.player_data.character.service_account_id as u64, connection.player_data.character.content_id as u64, connection.player_data.character.name.clone())).await;
+                                                    if !connection.rejoining_party {
+                                                    connection.handle.send(ToServer::PartyMemberChangedAreas(connection.party_id, connection.player_data.character.service_account_id as u64, connection.player_data.character.content_id as u64, connection.player_data.character.name.clone())).await;
                                                     } else {
                                                         connection.handle.send(ToServer::PartyMemberReturned(connection.player_data.character.actor_id)).await;
-                                                        connection.player_data.rejoining_party = false;
+                                                        connection.rejoining_party = false;
                                                     }
                                                 }
 
@@ -658,10 +665,10 @@ async fn client_loop(
                                                         connection.send_ipc_self(ipc).await;
                                                     },
                                                     ClientTriggerCommand::FinishZoning {} => {
-                                                        connection.handle.send(ToServer::ZoneIn(connection.id, connection.player_data.character.actor_id, connection.player_data.teleport_reason == TeleportReason::Aetheryte)).await;
+                                                        connection.handle.send(ToServer::ZoneIn(connection.id, connection.player_data.character.actor_id, connection.teleport_reason == TeleportReason::Aetheryte)).await;
 
                                                         // Reset so it doesn't get stuck to Aetheryte:
-                                                        connection.player_data.teleport_reason = TeleportReason::NotSpecified;
+                                                        connection.teleport_reason = TeleportReason::NotSpecified;
                                                     },
                                                     ClientTriggerCommand::BeginContentsReplay {} => {
                                                         connection.conditions.set_condition(Condition::ExecutingGatheringAction);
@@ -792,7 +799,7 @@ async fn client_loop(
                                                 tracing::info!("Recieved SetSearchInfoHandler!");
                                             }
                                             ClientZoneIpcData::SocialListRequest(request) => {
-                                                connection.handle.send(ToServer::RequestSocialList(connection.id, connection.player_data.character.actor_id, connection.player_data.party_id, request.clone())).await;
+                                                connection.handle.send(ToServer::RequestSocialList(connection.id, connection.player_data.character.actor_id, connection.party_id, request.clone())).await;
                                             }
                                             ClientZoneIpcData::UpdatePositionHandler { position, rotation, anim_type, anim_state, jump_state, } => {
                                                 connection.player_data.volatile.rotation = *rotation as f64;
@@ -1330,19 +1337,19 @@ async fn client_loop(
                                             }
                                             ClientZoneIpcData::PartyDisband { .. } => {
                                                 tracing::info!("Client is disbanding their party!");
-                                                connection.handle.send(ToServer::PartyDisband(connection.player_data.party_id, connection.player_data.character.service_account_id as u64, connection.player_data.character.content_id as u64, connection.player_data.character.name.clone())).await;
+                                                connection.handle.send(ToServer::PartyDisband(connection.party_id, connection.player_data.character.service_account_id as u64, connection.player_data.character.content_id as u64, connection.player_data.character.name.clone())).await;
                                             }
                                             ClientZoneIpcData::PartyMemberKick { content_id, character_name, .. } => {
                                                 tracing::info!("Player is kicking another player from their party! {} {}", content_id, character_name);
-                                                connection.handle.send(ToServer::PartyMemberKick(connection.player_data.party_id, connection.player_data.character.service_account_id as u64, connection.player_data.character.content_id as u64, connection.player_data.character.name.clone(), *content_id, character_name.clone())).await;
+                                                connection.handle.send(ToServer::PartyMemberKick(connection.party_id, connection.player_data.character.service_account_id as u64, connection.player_data.character.content_id as u64, connection.player_data.character.name.clone(), *content_id, character_name.clone())).await;
                                             }
                                             ClientZoneIpcData::PartyChangeLeader { content_id, character_name, .. } => {
                                                 tracing::info!("Player is promoting another player in their party to leader! {} {}", content_id, character_name);
-                                                connection.handle.send(ToServer::PartyChangeLeader(connection.player_data.party_id, connection.player_data.character.service_account_id as u64, connection.player_data.character.content_id as u64, connection.player_data.character.name.clone(), *content_id, character_name.clone())).await;
+                                                connection.handle.send(ToServer::PartyChangeLeader(connection.party_id, connection.player_data.character.service_account_id as u64, connection.player_data.character.content_id as u64, connection.player_data.character.name.clone(), *content_id, character_name.clone())).await;
                                             }
                                             ClientZoneIpcData::PartyLeave { .. } => {
                                                 tracing::info!("Client is leaving their party!");
-                                                connection.handle.send(ToServer::PartyMemberLeft(connection.player_data.party_id, connection.player_data.character.service_account_id as u64, connection.player_data.character.content_id as u64, connection.player_data.character.actor_id, connection.player_data.character.name.clone(),)).await;
+                                                connection.handle.send(ToServer::PartyMemberLeft(connection.party_id, connection.player_data.character.service_account_id as u64, connection.player_data.character.content_id as u64, connection.player_data.character.actor_id, connection.player_data.character.name.clone(),)).await;
                                             }
                                             ClientZoneIpcData::RequestSearchInfo { .. } => {
                                                 tracing::info!("Requesting search info is unimplemented");
@@ -1379,23 +1386,23 @@ async fn client_loop(
                                             }
                                             ClientZoneIpcData::ShareStrategyBoard { content_id, board_data } => {
                                                 tracing::info!("{} is sharing a strategy board with their party!", connection.player_data.character.actor_id);
-                                                connection.handle.send(ToServer::ShareStrategyBoard(connection.player_data.character.actor_id, connection.player_data.character.content_id as u64, connection.player_data.party_id, *content_id, board_data.clone())).await;
+                                                connection.handle.send(ToServer::ShareStrategyBoard(connection.player_data.character.actor_id, connection.player_data.character.content_id as u64, connection.party_id, *content_id, board_data.clone())).await;
                                             }
                                             ClientZoneIpcData::StrategyBoardReceived { content_id, .. } => {
                                                 tracing::info!("{} has received a strategy board from another player in their party!", connection.player_data.character.actor_id);
-                                                connection.handle.send(ToServer::StrategyBoardReceived(connection.player_data.party_id, connection.player_data.character.content_id as u64, *content_id)).await;
+                                                connection.handle.send(ToServer::StrategyBoardReceived(connection.party_id, connection.player_data.character.content_id as u64, *content_id)).await;
 
                                             }
                                             ClientZoneIpcData::StrategyBoardUpdate(update_data) => {
                                                 // No logging here due to how spammy it is since it sends an update every frame or so while the object is moving.
-                                                connection.handle.send(ToServer::StrategyBoardRealtimeUpdate(connection.player_data.character.actor_id, connection.player_data.character.content_id as u64, connection.player_data.party_id, update_data.clone())).await;
+                                                connection.handle.send(ToServer::StrategyBoardRealtimeUpdate(connection.player_data.character.actor_id, connection.player_data.character.content_id as u64, connection.party_id, update_data.clone())).await;
                                             }
                                             ClientZoneIpcData::RealtimeStrategyBoardFinished { .. } => {
                                                 tracing::info!("{} is finished sharing their strategy board in realtime!", connection.player_data.character.actor_id);
-                                                connection.handle.send(ToServer::StrategyBoardRealtimeFinished(connection.player_data.party_id)).await;
+                                                connection.handle.send(ToServer::StrategyBoardRealtimeFinished(connection.party_id)).await;
                                             }
                                             ClientZoneIpcData::ApplyFieldMarkerPreset(waymark_preset) => {
-                                                connection.handle.send(ToServer::ApplyWaymarkPreset(connection.player_data.character.actor_id, connection.player_data.party_id, waymark_preset.clone())).await;
+                                                connection.handle.send(ToServer::ApplyWaymarkPreset(connection.player_data.character.actor_id, connection.party_id, waymark_preset.clone())).await;
                                             }
                                             ClientZoneIpcData::RequestFreeCompanyShortMessage { .. } => {
                                                 tracing::warn!("Requesting a free company short message is unimplemented");
@@ -1438,11 +1445,11 @@ async fn client_loop(
                     FromServer::ActorControlSelf(actor_control) => connection.actor_control_self(actor_control).await,
                     FromServer::ActorSummonsMinion(minion_id) => {
                         connection.handle.send(ToServer::ActorSummonsMinion(connection.id, connection.player_data.character.actor_id, minion_id)).await;
-                        connection.player_data.active_minion = minion_id;
+                        connection.active_minion = minion_id;
                     }
                     FromServer::ActorDespawnsMinion() => {
                         connection.handle.send(ToServer::ActorDespawnsMinion(connection.id, connection.player_data.character.actor_id)).await;
-                        connection.player_data.active_minion = 0;
+                        connection.active_minion = 0;
                     }
                     FromServer::UpdateConfig(actor_id, config) => connection.update_config(actor_id, config).await,
                     FromServer::ActorEquip(actor_id, main_weapon_id, sub_weapon_id, model_ids) => connection.update_equip(actor_id, main_weapon_id, sub_weapon_id, model_ids).await,
@@ -1463,8 +1470,8 @@ async fn client_loop(
                     FromServer::PartyUpdate(targets, update_status, party_info) => connection.send_party_update(targets, update_status, party_info).await,
                     FromServer::CharacterAlreadyInParty() => connection.send_notice("That player is already in a party. You are seeing this message because Kawari doesn't yet send information correctly in a way that your game will display the error on its own.").await,
                     FromServer::RejoinPartyAfterDisconnect(party_id) => {
-                        connection.player_data.party_id = party_id;
-                        connection.player_data.rejoining_party = true;
+                        connection.party_id = party_id;
+                        connection.rejoining_party = true;
                     }
                     FromServer::PacketSegment(ipc, from_actor_id) => {
                         let segment = PacketSegment {
@@ -1527,7 +1534,7 @@ async fn client_loop(
             connection
                 .handle
                 .send(ToServer::PartyMemberOffline(
-                    connection.player_data.party_id,
+                    connection.party_id,
                     connection.player_data.character.service_account_id as u64,
                     connection.player_data.character.content_id as u64,
                     connection.player_data.character.actor_id,

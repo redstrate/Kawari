@@ -22,7 +22,7 @@ impl ZoneConnection {
         new_position: Option<Position>,
         new_rotation: Option<f32>,
     ) {
-        self.player_data.teleport_reason = TeleportReason::NotSpecified;
+        self.teleport_reason = TeleportReason::NotSpecified;
         self.handle
             .send(ToServer::ChangeZone(
                 self.id,
@@ -280,7 +280,7 @@ impl ZoneConnection {
     }
 
     pub async fn warp(&mut self, warp_id: u32) {
-        self.player_data.teleport_reason = TeleportReason::NotSpecified;
+        self.teleport_reason = TeleportReason::NotSpecified;
         self.handle
             .send(ToServer::Warp(
                 self.id,
@@ -291,7 +291,7 @@ impl ZoneConnection {
     }
 
     pub async fn warp_aetheryte(&mut self, aetheryte_id: u32) {
-        self.player_data.teleport_reason = TeleportReason::Aetheryte;
+        self.teleport_reason = TeleportReason::Aetheryte;
         self.handle
             .send(ToServer::WarpAetheryte(
                 self.id,

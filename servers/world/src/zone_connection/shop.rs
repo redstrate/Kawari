@@ -72,7 +72,7 @@ impl ZoneConnection {
                         )
                         .await;
 
-                        let target_id = self.player_data.target_actorid;
+                        let target_id = self.target_actorid;
                         // See GenericShopkeeper.lua for information about this scene, the flags, and the params.
                         self.event_scene(
                             &target_id,
@@ -187,7 +187,7 @@ impl ZoneConnection {
                 )
                 .await;
 
-                let target_id = self.player_data.target_actorid;
+                let target_id = self.target_actorid;
 
                 let mut params = self
                     .player_data
@@ -282,7 +282,7 @@ impl ZoneConnection {
             // TODO: ACS 854 is sent
             // TODO: itemobtainedlogmessage is sent
 
-            let target_id = self.player_data.target_actorid;
+            let target_id = self.target_actorid;
 
             // See GenericShopkeeper.lua for information about this scene, the flags, and the params.
             self.event_scene(

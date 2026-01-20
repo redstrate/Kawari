@@ -46,7 +46,7 @@ impl ZoneConnection {
         let event_type = self.events.last().unwrap().event_type;
         let event_arg = self.events.last().unwrap().event_arg;
 
-        self.player_data.target_actorid = ObjectTypeId::default();
+        self.target_actorid = ObjectTypeId::default();
         // sent event finish
         {
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::EventFinish {
@@ -80,7 +80,7 @@ impl ZoneConnection {
         condition: Option<Condition>,
         lua_player: &mut LuaPlayer,
     ) -> bool {
-        self.player_data.target_actorid = actor_id;
+        self.target_actorid = actor_id;
 
         // tell the client the event has started
         {

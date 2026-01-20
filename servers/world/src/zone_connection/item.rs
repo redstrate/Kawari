@@ -240,13 +240,13 @@ impl ZoneConnection {
 
     pub async fn send_inventory_transaction_finish(&mut self, unk1: u32, unk2: u32) {
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InventoryTransactionFinish {
-            sequence: self.player_data.transaction_sequence,
-            sequence_repeat: self.player_data.transaction_sequence,
+            sequence: self.transaction_sequence,
+            sequence_repeat: self.transaction_sequence,
             unk1,
             unk2,
         });
         self.send_ipc_self(ipc).await;
-        self.player_data.transaction_sequence += 1;
+        self.transaction_sequence += 1;
     }
 
     /// Swaps two items from two (possibly different) containers and informs the client of this change.
@@ -310,7 +310,7 @@ impl ZoneConnection {
 
         // And also update the current transaction
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InventoryTransaction {
-            sequence: self.player_data.transaction_sequence,
+            sequence: self.transaction_sequence,
             operation_type: if was_empty {
                 ItemOperationKind::Move
             } else {
