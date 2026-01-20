@@ -1219,11 +1219,18 @@ async fn client_loop(
                                                     shown: false,
                                                     unk_flag: 1,
                                                 }).await;
-                                                connection.conditions.set_condition(Condition::OccupiedInEvent);
+
+                                                let condition = if handler_id.handler_type() == HandlerType::Opening {
+                                                    Condition::Occupied33 // This stops you in your tracks
+                                                } else {
+                                                    Condition::OccupiedInEvent // S9 teleporters and stuff
+                                                };
+
+                                                connection.conditions.set_condition(condition);
                                                 connection.send_conditions().await;
 
                                                 let actor_id = ObjectTypeId { object_id: connection.player_data.character.actor_id, object_type: ObjectTypeKind::None };
-                                                connection.start_event(actor_id, handler_id.0, EventType::WithinRange, *event_arg, Some(Condition::OccupiedInEvent), &mut lua_player).await;
+                                                connection.start_event(actor_id, handler_id.0, EventType::WithinRange, *event_arg, Some(condition), &mut lua_player).await;
 
                                                 // begin walk-in trigger function if it exists
                                                 if let Some(event) = connection.events.last_mut() {
@@ -1238,11 +1245,19 @@ async fn client_loop(
                                                     shown: false,
                                                     unk_flag: 1,
                                                 }).await;
-                                                connection.conditions.set_condition(Condition::OccupiedInEvent);
+
+
+                                                let condition = if handler_id.handler_type() == HandlerType::Opening {
+                                                    Condition::Occupied33 // This stops you in your tracks
+                                                } else {
+                                                    Condition::OccupiedInEvent
+                                                };
+
+                                                connection.conditions.set_condition(condition);
                                                 connection.send_conditions().await;
 
                                                 let actor_id = ObjectTypeId { object_id: connection.player_data.character.actor_id, object_type: ObjectTypeKind::None };
-                                                connection.start_event(actor_id, handler_id.0, EventType::OutsideRange, *event_arg, Some(Condition::OccupiedInEvent), &mut lua_player).await;
+                                                connection.start_event(actor_id, handler_id.0, EventType::OutsideRange, *event_arg, Some(condition), &mut lua_player).await;
 
                                                 // begin walk-in trigger function if it exists
                                                 if let Some(event) = connection.events.last_mut() {
