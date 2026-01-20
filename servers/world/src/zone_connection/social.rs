@@ -79,7 +79,7 @@ impl ZoneConnection {
             self.handle
                 .send(ToServer::AddPartyMember(
                     self.player_data.party_id,
-                    self.player_data.actor_id,
+                    self.player_data.character.actor_id,
                     from_content_id,
                 ))
                 .await;
@@ -146,12 +146,12 @@ impl ZoneConnection {
             new_status_mask.set_status(OnlineStatus::Online);
             new_status_mask.set_status(OnlineStatus::PartyMember);
             let mut icon = OnlineStatus::PartyMember;
-            if self.player_data.actor_id == leader_actor_id {
+            if self.player_data.character.actor_id == leader_actor_id {
                 new_status_mask.set_status(OnlineStatus::PartyLeader);
                 icon = OnlineStatus::PartyLeader;
             }
             self.actor_control(
-                self.player_data.actor_id,
+                self.player_data.character.actor_id,
                 ActorControl {
                     category: ActorControlCategory::SetStatusIcon { icon },
                 },
@@ -163,8 +163,8 @@ impl ZoneConnection {
 
             // We edit the party list to hide information of players not in our zone.
             for member in party_list.iter_mut() {
-                if (member.actor_id != self.player_data.actor_id
-                    && member.current_zone_id != self.player_data.zone_id)
+                if (member.actor_id != self.player_data.character.actor_id
+                    && member.current_zone_id != self.player_data.volatile.zone_id as u16)
                     || (update_status == PartyUpdateStatus::MemberWentOffline
                         && member.content_id == targets.execute_content_id)
                 {
@@ -217,7 +217,7 @@ impl ZoneConnection {
             let icon = OnlineStatus::Offline;
 
             self.actor_control(
-                self.player_data.actor_id,
+                self.player_data.character.actor_id,
                 ActorControl {
                     category: ActorControlCategory::SetStatusIcon { icon },
                 },

@@ -31,7 +31,7 @@ impl ZoneConnection {
         self.handle
             .send(ToServer::Equip(
                 self.id,
-                self.player_data.actor_id,
+                self.player_data.character.actor_id,
                 main_weapon_id,
                 sub_weapon_id,
                 model_ids,
@@ -191,21 +191,21 @@ impl ZoneConnection {
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Equip(Equip {
             main_weapon_id,
             sub_weapon_id,
-            classjob_id: self.player_data.classjob_id,
+            classjob_id: self.player_data.classjob.classjob_id as u8,
             model_ids,
             ..Default::default()
         }));
 
         self.send_segment(PacketSegment {
             source_actor: actor_id,
-            target_actor: self.player_data.actor_id,
+            target_actor: self.player_data.character.actor_id,
             segment_type: SegmentType::Ipc,
             data: SegmentData::Ipc(ipc),
         })
         .await;
 
         // TODO: get a capture of another player equipping stuff to see if we get this as well, but it seems unlikely.
-        if self.player_data.actor_id == actor_id {
+        if self.player_data.character.actor_id == actor_id {
             self.actor_control_self(ActorControlSelf {
                 category: ActorControlCategory::SetItemLevel {
                     level: self.player_data.inventory.equipped.calculate_item_level() as u32,
@@ -317,13 +317,13 @@ impl ZoneConnection {
                 ItemOperationKind::Exchange
             },
 
-            src_actor_id: self.player_data.actor_id,
+            src_actor_id: self.player_data.character.actor_id,
             src_storage_id: src_container,
             src_container_index: src_index,
             src_stack: src_item.quantity,
             src_catalog_id: src_item.id,
 
-            dst_actor_id: self.player_data.actor_id,
+            dst_actor_id: self.player_data.character.actor_id,
             dst_storage_id: dst_container,
             dst_container_index: dst_index,
             dst_stack: dst_item.quantity,
@@ -349,7 +349,7 @@ impl ZoneConnection {
             classjobs = game_data.get_applicable_classjobs(item_info.classjob_category as u16);
         }
 
-        self.player_data.classjob_id = classjobs.first().copied().unwrap();
+        self.player_data.classjob.classjob_id = classjobs.first().copied().unwrap() as i32;
         self.update_class_info().await;
     }
 }

@@ -23,7 +23,7 @@ impl ChatHandler {
         connection: &mut ZoneConnection,
         chat_message: &SendChatMessage,
     ) -> bool {
-        if connection.player_data.gm_rank == GameMasterRank::NormalUser {
+        if connection.player_data.character.gm_rank == GameMasterRank::NormalUser {
             tracing::info!("Rejecting debug command because the user is not GM!");
             return true;
         }
@@ -38,7 +38,7 @@ impl ChatHandler {
                         .handle
                         .send(ToServer::DebugNewEnemy(
                             connection.id,
-                            connection.player_data.actor_id,
+                            connection.player_data.character.actor_id,
                             id,
                         ))
                         .await;
@@ -50,7 +50,7 @@ impl ChatHandler {
                     .handle
                     .send(ToServer::DebugSpawnClone(
                         connection.id,
-                        connection.player_data.actor_id,
+                        connection.player_data.character.actor_id,
                     ))
                     .await;
                 true

@@ -197,7 +197,7 @@ impl ZoneConnection {
             let game_data = self.gamedata.lock();
 
             ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateClassInfo(UpdateClassInfo {
-                class_id: self.player_data.classjob_id,
+                class_id: self.player_data.classjob.classjob_id as u8,
                 class_level: self.current_level(&game_data),
                 current_level: self.current_level(&game_data),
                 current_exp: self.current_exp(&game_data),
@@ -209,7 +209,7 @@ impl ZoneConnection {
         // Update rested EXP so the bar doesn't reset.
         self.actor_control_self(ActorControlSelf {
             category: ActorControlCategory::UpdateRestedExp {
-                exp: self.player_data.rested_exp as u32,
+                exp: self.player_data.classjob.rested_exp as u32,
             },
         })
         .await;
@@ -343,9 +343,9 @@ impl ZoneConnection {
 
         self.handle
             .send(ToServer::SetNewStatValues(
-                self.player_data.actor_id,
+                self.player_data.character.actor_id,
                 current_level as u8,
-                self.player_data.classjob_id,
+                self.player_data.classjob.classjob_id as u8,
                 base_parameters.hp,
                 base_parameters.mp as u16,
             ))
@@ -354,36 +354,36 @@ impl ZoneConnection {
 
     pub fn current_level(&self, game_data: &GameData) -> u16 {
         let index = game_data
-            .get_exp_array_index(self.player_data.classjob_id as u16)
+            .get_exp_array_index(self.player_data.classjob.classjob_id as u16)
             .unwrap();
-        self.player_data.classjob_levels.0[index as usize]
+        self.player_data.classjob.classjob_levels.0[index as usize]
     }
 
     pub fn set_current_level(&mut self, level: u16) {
-        self.set_level_for(self.player_data.classjob_id, level);
+        self.set_level_for(self.player_data.classjob.classjob_id as u8, level);
     }
 
     pub fn set_level_for(&mut self, classjob_id: u8, level: u16) {
         let game_data = self.gamedata.lock();
 
         let index = game_data.get_exp_array_index(classjob_id as u16).unwrap();
-        self.player_data.classjob_levels.0[index as usize] = level;
+        self.player_data.classjob.classjob_levels.0[index as usize] = level;
     }
 
     pub fn current_exp(&self, game_data: &GameData) -> i32 {
         let index = game_data
-            .get_exp_array_index(self.player_data.classjob_id as u16)
+            .get_exp_array_index(self.player_data.classjob.classjob_id as u16)
             .unwrap();
-        self.player_data.classjob_exp.0[index as usize]
+        self.player_data.classjob.classjob_exp.0[index as usize]
     }
 
     pub fn set_current_exp(&mut self, exp: i32) {
         let game_data = self.gamedata.lock();
 
         let index = game_data
-            .get_exp_array_index(self.player_data.classjob_id as u16)
+            .get_exp_array_index(self.player_data.classjob.classjob_id as u16)
             .unwrap();
-        self.player_data.classjob_exp.0[index as usize] = exp;
+        self.player_data.classjob.classjob_exp.0[index as usize] = exp;
     }
 
     pub async fn update_hp_mp(&mut self, actor_id: ObjectId, hp: u32, mp: u16) {
@@ -391,7 +391,7 @@ impl ZoneConnection {
 
         self.send_segment(PacketSegment {
             source_actor: actor_id,
-            target_actor: self.player_data.actor_id,
+            target_actor: self.player_data.character.actor_id,
             segment_type: SegmentType::Ipc,
             data: SegmentData::Ipc(ipc),
         })
@@ -404,7 +404,7 @@ impl ZoneConnection {
 
         self.actor_control_self(ActorControlSelf {
             category: ActorControlCategory::EXPFloatingMessage {
-                classjob_id: self.player_data.classjob_id as u32,
+                classjob_id: self.player_data.classjob.classjob_id as u32,
                 amount: exp as u32,
                 bonus_percent: bonus_percent as u32,
             },
@@ -419,20 +419,21 @@ impl ZoneConnection {
             let mut game_data = self.gamedata.lock();
 
             index = game_data
-                .get_exp_array_index(self.player_data.classjob_id as u16)
+                .get_exp_array_index(self.player_data.classjob.classjob_id as u16)
                 .unwrap();
 
-            self.player_data.classjob_exp.0[index as usize] += exp;
+            self.player_data.classjob.classjob_exp.0[index as usize] += exp;
 
             // Keep going until we have leftover EXP
             loop {
-                let curr_exp = self.player_data.classjob_exp.0[index as usize];
-                let max_exp = game_data
-                    .get_max_exp(self.player_data.classjob_levels.0[index as usize] as u32);
+                let curr_exp = self.player_data.classjob.classjob_exp.0[index as usize];
+                let max_exp = game_data.get_max_exp(
+                    self.player_data.classjob.classjob_levels.0[index as usize] as u32,
+                );
                 let difference = curr_exp - max_exp;
                 if difference >= 0 {
                     level_up += 1;
-                    self.player_data.classjob_exp.0[index as usize] = difference;
+                    self.player_data.classjob.classjob_exp.0[index as usize] = difference;
                 } else {
                     break;
                 }
@@ -440,13 +441,13 @@ impl ZoneConnection {
         }
 
         if level_up > 0 {
-            let curr_level = self.player_data.classjob_levels.0[index as usize];
+            let curr_level = self.player_data.classjob.classjob_levels.0[index as usize];
             let new_level = curr_level + level_up;
             self.set_current_level(new_level);
 
             self.actor_control_self(ActorControlSelf {
                 category: ActorControlCategory::LevelUpMessage {
-                    classjob_id: self.player_data.classjob_id as u32,
+                    classjob_id: self.player_data.classjob.classjob_id as u32,
                     level: new_level as u32,
                     unk2: 0,
                     unk3: 0,
@@ -461,8 +462,12 @@ impl ZoneConnection {
 
     /// The number of seconds to add to the rested EXP bonus.
     pub async fn add_rested_exp_seconds(&mut self, seconds: i32) {
-        self.player_data.rested_exp += seconds;
-        self.player_data.rested_exp = self.player_data.rested_exp.clamp(0, MAXIMUM_RESTED_EXP);
+        self.player_data.classjob.rested_exp += seconds;
+        self.player_data.classjob.rested_exp = self
+            .player_data
+            .classjob
+            .rested_exp
+            .clamp(0, MAXIMUM_RESTED_EXP);
 
         self.send_rested_exp().await;
     }
@@ -471,7 +476,7 @@ impl ZoneConnection {
     pub async fn send_rested_exp(&mut self) {
         self.actor_control_self(ActorControlSelf {
             category: ActorControlCategory::UpdateRestedExp {
-                exp: self.player_data.rested_exp as u32,
+                exp: self.player_data.classjob.rested_exp as u32,
             },
         })
         .await;
@@ -483,7 +488,7 @@ impl ZoneConnection {
         let mut bonus_percent = 0;
 
         // TODO: Please write a unit test for this
-        if self.player_data.rested_exp > 0 {
+        if self.player_data.classjob.rested_exp > 0 {
             // Here is where the fun calculations come in for rested EXP.
             // We need to basically convert EXP to "seconds" - which is what rested EXP is counted in.
 
@@ -502,7 +507,7 @@ impl ZoneConnection {
 
             // Get the amount of seconds to remove from the rested EXP bonus.
             let seconds_to_remove = new_exp_relative * max_seconds as f32;
-            self.player_data.rested_exp -= seconds_to_remove.round() as i32;
+            self.player_data.classjob.rested_exp -= seconds_to_remove.round() as i32;
 
             // Add that sweet EXP bonus.
             bonus_percent += 50;

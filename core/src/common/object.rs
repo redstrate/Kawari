@@ -6,6 +6,11 @@ use serde::Deserialize;
 #[binrw]
 #[brw(little)]
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Deserialize)]
+#[cfg_attr(
+    feature = "server",
+    derive(diesel::expression::AsExpression, diesel::deserialize::FromSqlRow)
+)]
+#[cfg_attr(feature = "server", diesel(sql_type = diesel::sql_types::BigInt))]
 pub struct ObjectId(pub u32);
 
 impl ObjectId {
@@ -34,6 +39,26 @@ impl std::fmt::Display for ObjectId {
 impl std::fmt::Debug for ObjectId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "ObjectId ({self})")
+    }
+}
+
+#[cfg(feature = "server")]
+impl diesel::serialize::ToSql<diesel::sql_types::BigInt, diesel::sqlite::Sqlite> for ObjectId {
+    fn to_sql<'b>(
+        &'b self,
+        out: &mut diesel::serialize::Output<'b, '_, diesel::sqlite::Sqlite>,
+    ) -> diesel::serialize::Result {
+        out.set_value(self.0 as i64);
+        Ok(diesel::serialize::IsNull::No)
+    }
+}
+
+#[cfg(feature = "server")]
+impl diesel::deserialize::FromSql<diesel::sql_types::BigInt, diesel::sqlite::Sqlite> for ObjectId {
+    fn from_sql(
+        mut integer: <diesel::sqlite::Sqlite as diesel::backend::Backend>::RawValue<'_>,
+    ) -> diesel::deserialize::Result<Self> {
+        Ok(ObjectId(integer.read_long() as u32))
     }
 }
 

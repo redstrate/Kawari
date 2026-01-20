@@ -162,7 +162,7 @@ async fn initial_setup(
                             let actor_id = actor_id.parse::<u32>().unwrap();
 
                             // initialize player data if it doesn't exist
-                            if !connection.player_data.actor_id.is_valid() {
+                            if !connection.player_data.character.actor_id.is_valid() {
                                 let player_data;
                                 {
                                     let mut game_data = connection.gamedata.lock();
@@ -378,7 +378,7 @@ fn spawn_client(connection: ZoneConnection) {
     let (send, recv) = channel(64);
 
     let id = &connection.id.clone();
-    let actor_id = &connection.player_data.actor_id.clone();
+    let actor_id = &connection.player_data.character.actor_id.clone();
 
     let data = ClientZoneData { recv, connection };
 
@@ -440,7 +440,7 @@ async fn client_loop(
 
     let mut buf = vec![0; RECEIVE_BUFFER_SIZE];
     let mut client_handle = client_handle.clone();
-    client_handle.actor_id = connection.player_data.actor_id;
+    client_handle.actor_id = connection.player_data.character.actor_id;
 
     // Do an initial update otherwise it may be uninitialized for the first packet that needs Lua
     lua_player.player_data = connection.player_data.clone();
@@ -484,7 +484,7 @@ async fn client_loop(
                                                 // IPC Init(?)
                                                 {
                                                     let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InitResponse {
-                                                        actor_id: connection.player_data.actor_id,
+                                                        actor_id: connection.player_data.character.actor_id,
                                                     });
                                                     connection.send_ipc_self(ipc).await;
                                                 }
@@ -492,7 +492,7 @@ async fn client_loop(
                                                 let service_account_id;
                                                 {
                                                     let mut database = database.lock();
-                                                    service_account_id = database.find_service_account(connection.player_data.content_id);
+                                                    service_account_id = database.find_service_account(connection.player_data.character.content_id as u64);
                                                 }
 
                                                 let Ok(mut login_reply) = ureq::get(format!(
@@ -514,7 +514,7 @@ async fn client_loop(
                                                 connection
                                                 .actor_control_self(ActorControlSelf {
                                                     category: ActorControlCategory::SetEquipDisplayFlags {
-                                                        display_flag: connection.player_data.display_flags
+                                                        display_flag: connection.player_data.volatile.display_flags
                                                     },
                                                 })
                                                 .await;
@@ -526,30 +526,30 @@ async fn client_loop(
                                                 connection.send_stats().await;
 
                                                 // As seen in retail, they pad it with the first value
-                                                let mut padded_exp = connection.player_data.classjob_exp.0.clone();
+                                                let mut padded_exp = connection.player_data.classjob.classjob_exp.0.clone();
                                                 padded_exp.resize(CLASSJOB_ARRAY_SIZE, padded_exp[0]);
 
                                                 // Ditto for levels
-                                                let mut padded_levels: Vec<u16> = connection.player_data.classjob_levels.0.to_vec();
+                                                let mut padded_levels: Vec<u16> = connection.player_data.classjob.classjob_levels.0.to_vec();
                                                 padded_levels.resize(CLASSJOB_ARRAY_SIZE, padded_levels[0]);
 
                                                 let chara_make;
                                                 let city_state;
                                                 {
                                                     let mut database = database.lock();
-                                                    chara_make = database.get_chara_make(connection.player_data.content_id);
-                                                    city_state = database.get_city_state(connection.player_data.content_id);
+                                                    chara_make = database.get_chara_make(connection.player_data.character.content_id as u64);
+                                                    city_state = database.get_city_state(connection.player_data.character.content_id as u64);
                                                 }
 
                                                 // Player Setup
                                                 {
                                                     let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PlayerStatus(PlayerStatus {
-                                                        content_id: connection.player_data.content_id,
+                                                        content_id: connection.player_data.character.content_id as u64,
                                                         exp: padded_exp,
                                                         max_level: calculate_max_level(expansion),
                                                         expansion,
-                                                        name: connection.player_data.name.clone(),
-                                                        actor_id: connection.player_data.actor_id,
+                                                        name: connection.player_data.character.name.clone(),
+                                                        actor_id: connection.player_data.character.actor_id,
                                                         race: chara_make.customize.race,
                                                         gender: chara_make.customize.gender,
                                                         tribe: chara_make.customize.subrace,
@@ -558,8 +558,8 @@ async fn client_loop(
                                                         as u8,
                                                         nameday_day: chara_make.birth_day as u8,
                                                         deity: chara_make.guardian as u8,
-                                                        current_class: connection.player_data.classjob_id,
-                                                        first_class: connection.player_data.classjob_id, // TODO: placeholder
+                                                        current_class: connection.player_data.classjob.classjob_id as u8,
+                                                        first_class: connection.player_data.classjob.first_classjob as u8,
                                                         levels: padded_levels,
                                                         unlocks: connection.player_data.unlock.unlocks.0.clone(),
                                                         aetherytes: connection.player_data.aetheryte.unlocked.0.clone(),
@@ -612,7 +612,7 @@ async fn client_loop(
                                                     }
                                                 }).await;
 
-                                                connection.handle.send(ToServer::ReadySpawnPlayer(connection.id, connection.player_data.actor_id, connection.player_data.zone_id, connection.player_data.position, connection.player_data.rotation)).await;
+                                                connection.handle.send(ToServer::ReadySpawnPlayer(connection.id, connection.player_data.character.actor_id, connection.player_data.volatile.zone_id as u16, connection.player_data.volatile.position, connection.player_data.volatile.rotation as f32)).await;
 
                                                 let lua = lua.lock();
                                                 lua.scope(|scope| {
@@ -631,14 +631,14 @@ async fn client_loop(
                                                 let spawn = connection.respawn_player(true).await;
 
                                                 // tell the server we loaded into the zone, so it can start sending us actors
-                                                connection.handle.send(ToServer::ZoneLoaded(connection.id, connection.player_data.actor_id, spawn.clone())).await;
+                                                connection.handle.send(ToServer::ZoneLoaded(connection.id, connection.player_data.character.actor_id, spawn.clone())).await;
 
                                                 // If we're in a party, we need to tell the other members we changed areas or reconnected.
                                                 if connection.is_in_party() {
                                                     if !connection.player_data.rejoining_party {
-                                                    connection.handle.send(ToServer::PartyMemberChangedAreas(connection.player_data.party_id, connection.player_data.account_id, connection.player_data.content_id, connection.player_data.name.clone())).await;
+                                                    connection.handle.send(ToServer::PartyMemberChangedAreas(connection.player_data.party_id, connection.player_data.character.service_account_id as u64, connection.player_data.character.content_id as u64, connection.player_data.character.name.clone())).await;
                                                     } else {
-                                                        connection.handle.send(ToServer::PartyMemberReturned(connection.player_data.actor_id)).await;
+                                                        connection.handle.send(ToServer::PartyMemberReturned(connection.player_data.character.actor_id)).await;
                                                         connection.player_data.rejoining_party = false;
                                                     }
                                                 }
@@ -658,7 +658,7 @@ async fn client_loop(
                                                         connection.send_ipc_self(ipc).await;
                                                     },
                                                     ClientTriggerCommand::FinishZoning {} => {
-                                                        connection.handle.send(ToServer::ZoneIn(connection.id, connection.player_data.actor_id, connection.player_data.teleport_reason == TeleportReason::Aetheryte)).await;
+                                                        connection.handle.send(ToServer::ZoneIn(connection.id, connection.player_data.character.actor_id, connection.player_data.teleport_reason == TeleportReason::Aetheryte)).await;
 
                                                         // Reset so it doesn't get stuck to Aetheryte:
                                                         connection.player_data.teleport_reason = TeleportReason::NotSpecified;
@@ -692,7 +692,7 @@ async fn client_loop(
                                                         // TODO: not sure if it's important, retail sends an AC 2 with a param of 1
 
                                                         // Retail indeed does send an AC, not an ACS for this.
-                                                        connection.actor_control(connection.player_data.actor_id, ActorControl {
+                                                        connection.actor_control(connection.player_data.character.actor_id, ActorControl {
                                                             category: ActorControlCategory::UnkDismountRelated { unk1: 47494, unk2: 32711, unk3: 1510381914 }
                                                         }).await;
 
@@ -736,7 +736,7 @@ async fn client_loop(
                                                                 .handle
                                                                 .send(ToServer::DebugNewEnemy(
                                                                     connection.id,
-                                                                    connection.player_data.actor_id,
+                                                                    connection.player_data.character.actor_id,
                                                                     11744, // TODO: this doesn't seem to be right?!
                                                                 ))
                                                                 .await;
@@ -773,18 +773,18 @@ async fn client_loop(
                                                         connection.send_ipc_self(ipc).await;
                                                     }
                                                     ClientTriggerCommand::SetTitle { title_id } => {
-                                                        connection.player_data.title = title_id as u16;
+                                                        connection.player_data.volatile.title = title_id as i32;
 
                                                         // Inform the server, so it sends out the AC.
-                                                        connection.handle.send(ToServer::ClientTrigger(connection.id, connection.player_data.actor_id, trigger.clone())).await;
+                                                        connection.handle.send(ToServer::ClientTrigger(connection.id, connection.player_data.character.actor_id, trigger.clone())).await;
                                                     }
                                                     ClientTriggerCommand::AbandonContent { .. } => {
                                                         // Remove ourselves from this instance.
-                                                        connection.handle.send(ToServer::LeaveContent(connection.id, connection.player_data.actor_id, connection.old_zone_id, connection.old_position, connection.old_rotation)).await;
+                                                        connection.handle.send(ToServer::LeaveContent(connection.id, connection.player_data.character.actor_id, connection.old_zone_id, connection.old_position, connection.old_rotation)).await;
                                                     }
                                                     _ => {
                                                         // inform the server of our trigger, it will handle sending it to other clients
-                                                        connection.handle.send(ToServer::ClientTrigger(connection.id, connection.player_data.actor_id, trigger.clone())).await;
+                                                        connection.handle.send(ToServer::ClientTrigger(connection.id, connection.player_data.character.actor_id, trigger.clone())).await;
                                                     }
                                                 }
                                             }
@@ -792,13 +792,13 @@ async fn client_loop(
                                                 tracing::info!("Recieved SetSearchInfoHandler!");
                                             }
                                             ClientZoneIpcData::SocialListRequest(request) => {
-                                                connection.handle.send(ToServer::RequestSocialList(connection.id, connection.player_data.actor_id, connection.player_data.party_id, request.clone())).await;
+                                                connection.handle.send(ToServer::RequestSocialList(connection.id, connection.player_data.character.actor_id, connection.player_data.party_id, request.clone())).await;
                                             }
                                             ClientZoneIpcData::UpdatePositionHandler { position, rotation, anim_type, anim_state, jump_state, } => {
-                                                connection.player_data.rotation = *rotation;
-                                                connection.player_data.position = *position;
+                                                connection.player_data.volatile.rotation = *rotation as f64;
+                                                connection.player_data.volatile.position = *position;
 
-                                                connection.handle.send(ToServer::ActorMoved(connection.id, connection.player_data.actor_id, *position, *rotation, *anim_type, *anim_state, *jump_state)).await;
+                                                connection.handle.send(ToServer::ActorMoved(connection.id, connection.player_data.character.actor_id, *position, *rotation, *anim_type, *anim_state, *jump_state)).await;
                                             }
                                             ClientZoneIpcData::LogOut { .. } => {
                                                 connection.gracefully_logged_out = true;
@@ -812,11 +812,11 @@ async fn client_loop(
                                             }
                                             ClientZoneIpcData::SendChatMessage(chat_message) => {
                                                 let info = MessageInfo {
-                                                    sender_actor_id: connection.player_data.actor_id,
-                                                    sender_account_id: connection.player_data.account_id,
+                                                    sender_actor_id: connection.player_data.character.actor_id,
+                                                    sender_account_id: connection.player_data.character.service_account_id as u64,
                                                     sender_world_id: config.world.world_id,
-                                                    sender_position: connection.player_data.position,
-                                                    sender_name: connection.player_data.name.clone(),
+                                                    sender_position: connection.player_data.volatile.position,
+                                                    sender_name: connection.player_data.character.name.clone(),
                                                     channel: chat_message.channel,
                                                     message: chat_message.message.clone(),
                                                 };
@@ -871,7 +871,7 @@ async fn client_loop(
                                                                     * and allow other commands that omit required_rank to run, which is undesirable. */
                                                                     lua.globals().set("required_rank", mlua::Value::Nil)?;
 
-                                                                    if connection.player_data.gm_rank as u8 >= required_rank? {
+                                                                    if connection.player_data.character.gm_rank as u8 >= required_rank? {
                                                                         let mut func_args = Vec::new();
                                                                         if parts.len() > 1 {
                                                                             func_args = (parts[1..]).to_vec();
@@ -894,7 +894,7 @@ async fn client_loop(
                                                                         Ok(())
                                                                     } else {
                                                                         tracing::info!("User with account_id {} tried to invoke GM command {} with insufficient privileges!",
-                                                                        connection.player_data.account_id, command_name);
+                                                                        connection.player_data.character.service_account_id, command_name);
                                                                         let func: Function =
                                                                             lua.globals().get("onCommandRequiredRankInsufficientError")?;
                                                                         func.call::<()>(connection_data)?;
@@ -956,14 +956,14 @@ async fn client_loop(
                                                     "Character entered {exit_box} with a position of {position:#?}!"
                                                 );
 
-                                                connection.handle.send(ToServer::EnterZoneJump(connection.id, connection.player_data.actor_id, *exit_box)).await;
+                                                connection.handle.send(ToServer::EnterZoneJump(connection.id, connection.player_data.character.actor_id, *exit_box)).await;
                                             }
                                             ClientZoneIpcData::ActionRequest(request) => {
                                                 connection
                                                     .handle
                                                     .send(ToServer::ActionRequest(
                                                         connection.id,
-                                                        connection.player_data.actor_id,
+                                                        connection.player_data.character.actor_id,
                                                         request.clone(),
                                                     ))
                                                     .await;
@@ -998,7 +998,7 @@ async fn client_loop(
                                                     let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InventoryTransaction {
                                                         sequence: connection.player_data.item_sequence,
                                                         operation_type: action.operation_type,
-                                                        src_actor_id: connection.player_data.actor_id,
+                                                        src_actor_id: connection.player_data.character.actor_id,
                                                         src_storage_id: action.src_storage_id,
                                                         src_container_index: action.src_container_index,
                                                         src_stack: action.src_stack,
@@ -1072,12 +1072,12 @@ async fn client_loop(
                                             }
                                             ClientZoneIpcData::Config(config) => {
                                                 // Update our own state so it's committed on log out
-                                                connection.player_data.display_flags = config.display_flag;
+                                                connection.player_data.volatile.display_flags = config.display_flag;
                                                 connection
                                                     .handle
                                                     .send(ToServer::Config(
                                                         connection.id,
-                                                        connection.player_data.actor_id,
+                                                        connection.player_data.character.actor_id,
                                                         config.clone(),
                                                     ))
                                                     .await;
@@ -1141,12 +1141,12 @@ async fn client_loop(
                                                         connection.send_ipc_self(ipc).await;
                                                     }
 
-                                                    connection.handle.send(ToServer::JoinContent(connection.id, connection.player_data.actor_id, connection.queued_content.unwrap())).await;
-
                                                     // Store our old information, for when we leave the instance
-                                                    connection.old_zone_id = connection.player_data.zone_id;
-                                                    connection.old_position = connection.player_data.position;
-                                                    connection.old_rotation = connection.player_data.rotation;
+                                                    connection.old_zone_id = connection.player_data.volatile.zone_id as u16;
+                                                    connection.old_position = connection.player_data.volatile.position;
+                                                    connection.old_rotation = connection.player_data.volatile.rotation as f32;
+
+                                                    connection.handle.send(ToServer::JoinContent(connection.id, connection.player_data.character.actor_id, connection.queued_content.unwrap())).await;
                                                 }
 
                                                 // If we don't send this, the content finder gets stuck.
@@ -1229,7 +1229,7 @@ async fn client_loop(
                                             }
                                             ClientZoneIpcData::StartWalkInEvent { event_arg, handler_id, .. } => {
                                                 // Yes, an ActorControl is sent here, not an ActorControlSelf!
-                                                connection.actor_control(connection.player_data.actor_id, ActorControl {
+                                                connection.actor_control(connection.player_data.character.actor_id, ActorControl {
                                                     category: ActorControlCategory::ToggleWeapon {
                                                         shown: false,
                                                         unk_flag: 1,
@@ -1238,7 +1238,7 @@ async fn client_loop(
                                                 connection.conditions.set_condition(Condition::OccupiedInEvent);
                                                 connection.send_conditions().await;
 
-                                                let actor_id = ObjectTypeId { object_id: connection.player_data.actor_id, object_type: ObjectTypeKind::None };
+                                                let actor_id = ObjectTypeId { object_id: connection.player_data.character.actor_id, object_type: ObjectTypeKind::None };
                                                 connection.start_event(actor_id, handler_id.0, EventType::WithinRange, *event_arg, Some(Condition::OccupiedInEvent), &mut lua_player).await;
 
                                                 // begin walk-in trigger function if it exists
@@ -1250,7 +1250,7 @@ async fn client_loop(
                                                 // TODO: allow Lua scripts to handle these differently?
 
                                                 // Yes, an ActorControl is sent here, not an ActorControlSelf!
-                                                connection.actor_control(connection.player_data.actor_id, ActorControl {
+                                                connection.actor_control(connection.player_data.character.actor_id, ActorControl {
                                                     category: ActorControlCategory::ToggleWeapon {
                                                         shown: false,
                                                         unk_flag: 1,
@@ -1259,7 +1259,7 @@ async fn client_loop(
                                                 connection.conditions.set_condition(Condition::OccupiedInEvent);
                                                 connection.send_conditions().await;
 
-                                                let actor_id = ObjectTypeId { object_id: connection.player_data.actor_id, object_type: ObjectTypeKind::None };
+                                                let actor_id = ObjectTypeId { object_id: connection.player_data.character.actor_id, object_type: ObjectTypeKind::None };
                                                 connection.start_event(actor_id, handler_id.0, EventType::OutsideRange, *event_arg, Some(Condition::OccupiedInEvent), &mut lua_player).await;
 
                                                 // begin walk-in trigger function if it exists
@@ -1270,7 +1270,7 @@ async fn client_loop(
                                             ClientZoneIpcData::NewDiscovery { layout_id, pos } => {
                                                 tracing::info!("Client discovered a new location on {:?} at {:?}!", layout_id, pos);
 
-                                                connection.handle.send(ToServer::NewLocationDiscovered(connection.id, *layout_id, *pos, connection.player_data.zone_id)).await;
+                                                connection.handle.send(ToServer::NewLocationDiscovered(connection.id, *layout_id, *pos, connection.player_data.volatile.zone_id as u16)).await;
                                             }
                                             ClientZoneIpcData::RequestBlacklist(request) => {
                                                 // TODO: Actually implement this beyond simply sending a blank list
@@ -1309,7 +1309,7 @@ async fn client_loop(
                                                 tracing::info!("Client invited a character! {:#?} {:#?} {:#?} {:#?} {:#?}", content_id, world_id, invite_type, character_name, data.data);
                                                 match invite_type {
                                                     InviteType::Party => {
-                                                        connection.handle.send(ToServer::InvitePlayerToParty(connection.player_data.actor_id, *content_id, character_name.clone())).await;
+                                                        connection.handle.send(ToServer::InvitePlayerToParty(connection.player_data.character.actor_id, *content_id, character_name.clone())).await;
                                                         // Inform the client about the invite they just sent.
                                                         // TODO: Is this static? unk1 and unk2 haven't been observed to have other values so far.
                                                         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InviteCharacterResult {
@@ -1326,23 +1326,23 @@ async fn client_loop(
                                             }
                                             ClientZoneIpcData::InviteReply { sender_content_id, sender_world_id, invite_type, response } => {
                                                 tracing::info!("Client replied to invite: {:#?} {:#?} {:#?} {:#?}", sender_content_id, sender_world_id, invite_type, response);
-                                                connection.handle.send(ToServer::InvitationResponse(connection.id, connection.player_data.account_id, connection.player_data.content_id, connection.player_data.name.clone(), *sender_content_id, *invite_type, *response)).await;
+                                                connection.handle.send(ToServer::InvitationResponse(connection.id, connection.player_data.character.service_account_id as u64, connection.player_data.character.content_id as u64, connection.player_data.character.name.clone(), *sender_content_id, *invite_type, *response)).await;
                                             }
                                             ClientZoneIpcData::PartyDisband { .. } => {
                                                 tracing::info!("Client is disbanding their party!");
-                                                connection.handle.send(ToServer::PartyDisband(connection.player_data.party_id, connection.player_data.account_id, connection.player_data.content_id, connection.player_data.name.clone())).await;
+                                                connection.handle.send(ToServer::PartyDisband(connection.player_data.party_id, connection.player_data.character.service_account_id as u64, connection.player_data.character.content_id as u64, connection.player_data.character.name.clone())).await;
                                             }
                                             ClientZoneIpcData::PartyMemberKick { content_id, character_name, .. } => {
                                                 tracing::info!("Player is kicking another player from their party! {} {}", content_id, character_name);
-                                                connection.handle.send(ToServer::PartyMemberKick(connection.player_data.party_id, connection.player_data.account_id, connection.player_data.content_id, connection.player_data.name.clone(), *content_id, character_name.clone())).await;
+                                                connection.handle.send(ToServer::PartyMemberKick(connection.player_data.party_id, connection.player_data.character.service_account_id as u64, connection.player_data.character.content_id as u64, connection.player_data.character.name.clone(), *content_id, character_name.clone())).await;
                                             }
                                             ClientZoneIpcData::PartyChangeLeader { content_id, character_name, .. } => {
                                                 tracing::info!("Player is promoting another player in their party to leader! {} {}", content_id, character_name);
-                                                connection.handle.send(ToServer::PartyChangeLeader(connection.player_data.party_id, connection.player_data.account_id, connection.player_data.content_id, connection.player_data.name.clone(), *content_id, character_name.clone())).await;
+                                                connection.handle.send(ToServer::PartyChangeLeader(connection.player_data.party_id, connection.player_data.character.service_account_id as u64, connection.player_data.character.content_id as u64, connection.player_data.character.name.clone(), *content_id, character_name.clone())).await;
                                             }
                                             ClientZoneIpcData::PartyLeave { .. } => {
                                                 tracing::info!("Client is leaving their party!");
-                                                connection.handle.send(ToServer::PartyMemberLeft(connection.player_data.party_id, connection.player_data.account_id, connection.player_data.content_id, connection.player_data.actor_id, connection.player_data.name.clone(),)).await;
+                                                connection.handle.send(ToServer::PartyMemberLeft(connection.player_data.party_id, connection.player_data.character.service_account_id as u64, connection.player_data.character.content_id as u64, connection.player_data.character.actor_id, connection.player_data.character.name.clone(),)).await;
                                             }
                                             ClientZoneIpcData::RequestSearchInfo { .. } => {
                                                 tracing::info!("Requesting search info is unimplemented");
@@ -1362,7 +1362,7 @@ async fn client_loop(
                                                 connection.send_ipc_self(ipc).await;
                                             }
                                             ClientZoneIpcData::EnterTerritoryEvent { handler_id } => {
-                                                connection.start_event(ObjectTypeId { object_id: connection.player_data.actor_id, object_type: ObjectTypeKind::None }, handler_id.0, EventType::EnterTerritory, connection.player_data.zone_id as u32, None, &mut lua_player).await;
+                                                connection.start_event(ObjectTypeId { object_id: connection.player_data.character.actor_id, object_type: ObjectTypeKind::None }, handler_id.0, EventType::EnterTerritory, connection.player_data.volatile.zone_id as u32, None, &mut lua_player).await;
                                                 if let Some(event) = connection.events.last_mut() {
                                                     event.enter_territory(&mut lua_player);
                                                 }
@@ -1378,24 +1378,24 @@ async fn client_loop(
                                                 tracing::warn!("Unknown Zone packet {:?} recieved ({} bytes), this should be handled!", data.header.op_code, unk.len());
                                             }
                                             ClientZoneIpcData::ShareStrategyBoard { content_id, board_data } => {
-                                                tracing::info!("{} is sharing a strategy board with their party!", connection.player_data.actor_id);
-                                                connection.handle.send(ToServer::ShareStrategyBoard(connection.player_data.actor_id, connection.player_data.content_id, connection.player_data.party_id, *content_id,board_data.clone())).await;
+                                                tracing::info!("{} is sharing a strategy board with their party!", connection.player_data.character.actor_id);
+                                                connection.handle.send(ToServer::ShareStrategyBoard(connection.player_data.character.actor_id, connection.player_data.character.content_id as u64, connection.player_data.party_id, *content_id, board_data.clone())).await;
                                             }
                                             ClientZoneIpcData::StrategyBoardReceived { content_id, .. } => {
-                                                tracing::info!("{} has received a strategy board from another player in their party!", connection.player_data.actor_id);
-                                                connection.handle.send(ToServer::StrategyBoardReceived(connection.player_data.party_id, connection.player_data.content_id, *content_id)).await;
+                                                tracing::info!("{} has received a strategy board from another player in their party!", connection.player_data.character.actor_id);
+                                                connection.handle.send(ToServer::StrategyBoardReceived(connection.player_data.party_id, connection.player_data.character.content_id as u64, *content_id)).await;
 
                                             }
                                             ClientZoneIpcData::StrategyBoardUpdate(update_data) => {
                                                 // No logging here due to how spammy it is since it sends an update every frame or so while the object is moving.
-                                                connection.handle.send(ToServer::StrategyBoardRealtimeUpdate(connection.player_data.actor_id, connection.player_data.content_id, connection.player_data.party_id, update_data.clone())).await;
+                                                connection.handle.send(ToServer::StrategyBoardRealtimeUpdate(connection.player_data.character.actor_id, connection.player_data.character.content_id as u64, connection.player_data.party_id, update_data.clone())).await;
                                             }
                                             ClientZoneIpcData::RealtimeStrategyBoardFinished { .. } => {
-                                                tracing::info!("{} is finished sharing their strategy board in realtime!", connection.player_data.actor_id);
+                                                tracing::info!("{} is finished sharing their strategy board in realtime!", connection.player_data.character.actor_id);
                                                 connection.handle.send(ToServer::StrategyBoardRealtimeFinished(connection.player_data.party_id)).await;
                                             }
                                             ClientZoneIpcData::ApplyFieldMarkerPreset(waymark_preset) => {
-                                                connection.handle.send(ToServer::ApplyWaymarkPreset(connection.player_data.actor_id, connection.player_data.party_id, waymark_preset.clone())).await;
+                                                connection.handle.send(ToServer::ApplyWaymarkPreset(connection.player_data.character.actor_id, connection.player_data.party_id, waymark_preset.clone())).await;
                                             }
                                             ClientZoneIpcData::RequestFreeCompanyShortMessage { .. } => {
                                                 tracing::warn!("Requesting a free company short message is unimplemented");
@@ -1437,11 +1437,11 @@ async fn client_loop(
                     FromServer::ActorControlTarget(actor_id, actor_control) => connection.actor_control_target(actor_id, actor_control).await,
                     FromServer::ActorControlSelf(actor_control) => connection.actor_control_self(actor_control).await,
                     FromServer::ActorSummonsMinion(minion_id) => {
-                        connection.handle.send(ToServer::ActorSummonsMinion(connection.id, connection.player_data.actor_id, minion_id)).await;
+                        connection.handle.send(ToServer::ActorSummonsMinion(connection.id, connection.player_data.character.actor_id, minion_id)).await;
                         connection.player_data.active_minion = minion_id;
                     }
                     FromServer::ActorDespawnsMinion() => {
-                        connection.handle.send(ToServer::ActorDespawnsMinion(connection.id, connection.player_data.actor_id)).await;
+                        connection.handle.send(ToServer::ActorDespawnsMinion(connection.id, connection.player_data.character.actor_id)).await;
                         connection.player_data.active_minion = 0;
                     }
                     FromServer::UpdateConfig(actor_id, config) => connection.update_config(actor_id, config).await,
@@ -1469,7 +1469,7 @@ async fn client_loop(
                     FromServer::PacketSegment(ipc, from_actor_id) => {
                         let segment = PacketSegment {
                             source_actor: from_actor_id,
-                            target_actor: connection.player_data.actor_id,
+                            target_actor: connection.player_data.character.actor_id,
                             segment_type: SegmentType::Ipc,
                             data: SegmentData::Ipc(ipc),
                         };
@@ -1488,7 +1488,7 @@ async fn client_loop(
                     FromServer::EnteredInstanceEntranceRange(arg) => {
                         tracing::info!("Showing leave duty dialog...");
 
-                        let object = ObjectTypeId { object_id: connection.player_data.actor_id, object_type: ObjectTypeKind::None };
+                        let object = ObjectTypeId { object_id: connection.player_data.character.actor_id, object_type: ObjectTypeKind::None };
                         let handler_id = HandlerId::new(HandlerType::GimmickRect, 1).0;
 
                         connection.start_event(object, handler_id, EventType::WithinRange, arg, Some(Condition::OccupiedInEvent), &mut lua_player).await;
@@ -1507,7 +1507,7 @@ async fn client_loop(
     }
 
     // forcefully log out the player if they weren't logging out but force D/C'd
-    if connection.player_data.actor_id != INVALID_OBJECT_ID {
+    if connection.player_data.character.actor_id != INVALID_OBJECT_ID {
         if !connection.gracefully_logged_out {
             tracing::info!(
                 "Forcefully logging out connection {:#?}...",
@@ -1519,7 +1519,7 @@ async fn client_loop(
             .handle
             .send(ToServer::Disconnected(
                 connection.id,
-                connection.player_data.actor_id,
+                connection.player_data.character.actor_id,
             ))
             .await;
 
@@ -1528,10 +1528,10 @@ async fn client_loop(
                 .handle
                 .send(ToServer::PartyMemberOffline(
                     connection.player_data.party_id,
-                    connection.player_data.account_id,
-                    connection.player_data.content_id,
-                    connection.player_data.actor_id,
-                    connection.player_data.name.clone(),
+                    connection.player_data.character.service_account_id as u64,
+                    connection.player_data.character.content_id as u64,
+                    connection.player_data.character.actor_id,
+                    connection.player_data.character.name.clone(),
                 ))
                 .await;
         }

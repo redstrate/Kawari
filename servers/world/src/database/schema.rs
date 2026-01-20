@@ -58,9 +58,7 @@ diesel::joinable!(aetheryte -> character (content_id));
 diesel::table! {
     volatile (content_id) {
         content_id -> BigInt,
-        pos_x -> Double,
-        pos_y -> Double,
-        pos_z -> Double,
+        position -> Text,
         rotation -> Double,
         zone_id -> Integer,
         display_flags -> Integer,

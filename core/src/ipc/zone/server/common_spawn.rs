@@ -87,6 +87,11 @@ pub enum ObjectKind {
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, Default, PartialEq, Display, EnumIter, FromRepr)]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
+#[cfg_attr(
+    feature = "server",
+    derive(diesel::expression::AsExpression, diesel::deserialize::FromSqlRow)
+)]
+#[cfg_attr(feature = "server", diesel(sql_type = diesel::sql_types::Integer))]
 pub enum GameMasterRank {
     #[default]
     NormalUser,
@@ -102,6 +107,30 @@ pub enum GameMasterRank {
 impl mlua::IntoLua for GameMasterRank {
     fn into_lua(self, _: &mlua::Lua) -> mlua::Result<mlua::Value> {
         Ok(mlua::Value::Integer(self as i64))
+    }
+}
+
+#[cfg(feature = "server")]
+impl diesel::serialize::ToSql<diesel::sql_types::Integer, diesel::sqlite::Sqlite>
+    for GameMasterRank
+{
+    fn to_sql<'b>(
+        &'b self,
+        out: &mut diesel::serialize::Output<'b, '_, diesel::sqlite::Sqlite>,
+    ) -> diesel::serialize::Result {
+        out.set_value(*self as i32);
+        Ok(diesel::serialize::IsNull::No)
+    }
+}
+
+#[cfg(feature = "server")]
+impl diesel::deserialize::FromSql<diesel::sql_types::Integer, diesel::sqlite::Sqlite>
+    for GameMasterRank
+{
+    fn from_sql(
+        mut integer: <diesel::sqlite::Sqlite as diesel::backend::Backend>::RawValue<'_>,
+    ) -> diesel::deserialize::Result<Self> {
+        Ok(GameMasterRank::from_repr(integer.read_integer() as u8).unwrap())
     }
 }
 

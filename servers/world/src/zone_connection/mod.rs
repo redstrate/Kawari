@@ -8,19 +8,16 @@ use serde::{Deserialize, Serialize};
 use tokio::net::TcpStream;
 
 use crate::{
-    ClassExperience, ClassLevels, Content, GameData, Unlock,
-    database::{AetherCurrent, Aetheryte, Companion, Quest},
+    Content, GameData, Unlock,
+    database::{AetherCurrent, Aetheryte, Character, ClassJob, Companion, Quest, Volatile},
     lua::LuaTask,
 };
 use kawari::{
-    common::{
-        ClientLanguage, EquipDisplayFlag, HandlerId, ObjectId, ObjectTypeId, Position,
-        timestamp_secs,
-    },
+    common::{ClientLanguage, HandlerId, ObjectTypeId, Position, timestamp_secs},
     config::WorldConfig,
     ipc::zone::{
         client::ClientZoneIpcSegment,
-        server::{Condition, Conditions, GameMasterRank, ServerZoneIpcData, ServerZoneIpcSegment},
+        server::{Condition, Conditions, ServerZoneIpcData, ServerZoneIpcSegment},
     },
     opcodes::ServerZoneIpcType,
     packet::{
@@ -74,29 +71,14 @@ pub struct PersistentQuest {
 
 #[derive(Debug, Default, Clone)]
 pub struct PlayerData {
-    // Static data
-    pub actor_id: ObjectId,
-    pub content_id: u64,
-    pub account_id: u64,
-    pub name: String,
+    pub character: Character,
+    pub classjob: ClassJob,
     pub subrace: u8,
-
-    pub classjob_id: u8,
-    pub classjob_levels: ClassLevels,
-    pub classjob_exp: ClassExperience,
-    pub rested_exp: i32,
-
-    // Dynamic data
-    pub position: Position,
-    /// In radians.
-    pub rotation: f32,
-    pub zone_id: u16,
+    pub volatile: Volatile,
     pub inventory: Inventory,
     pub city_state: u8,
-    pub title: u16,
 
     pub teleport_query: TeleportQuery,
-    pub gm_rank: GameMasterRank,
     pub gm_invisible: bool,
 
     pub item_sequence: u32,
@@ -113,7 +95,6 @@ pub struct PlayerData {
     pub companion: Companion,
     pub quest: Quest,
     pub saw_inn_wakeup: bool,
-    pub display_flags: EquipDisplayFlag,
     pub teleport_reason: TeleportReason,
     pub active_minion: u32,
     /// The player's party id number, used for networking party-related events
@@ -185,8 +166,8 @@ impl ZoneConnection {
     /// Sends an IPC segment to the player, where the source actor is also the player.
     pub async fn send_ipc_self(&mut self, ipc: ServerZoneIpcSegment) {
         let segment = PacketSegment {
-            source_actor: self.player_data.actor_id,
-            target_actor: self.player_data.actor_id,
+            source_actor: self.player_data.character.actor_id,
+            target_actor: self.player_data.character.actor_id,
             segment_type: SegmentType::Ipc,
             data: SegmentData::Ipc(ipc),
         };
@@ -245,7 +226,7 @@ impl ZoneConnection {
         self.send_segment(PacketSegment {
             segment_type: SegmentType::Initialize,
             data: SegmentData::Initialize {
-                actor_id: self.player_data.actor_id,
+                actor_id: self.player_data.character.actor_id,
                 timestamp: timestamp_secs(),
             },
             ..Default::default()
@@ -256,9 +237,30 @@ impl ZoneConnection {
     pub async fn begin_log_out(&mut self) {
         // If we were last in an instance, tell the server we're outside of it so we don't get stuck/crash.
         if self.conditions.has_condition(Condition::BoundByDuty) {
-            self.player_data.zone_id = self.old_zone_id;
-            self.player_data.position = self.old_position;
-            self.player_data.rotation = self.old_rotation;
+            self.player_data.volatile.zone_id = self.old_zone_id as i32;
+            self.player_data.volatile.position = self.old_position;
+            self.player_data.volatile.rotation = self.old_rotation as f64;
+        }
+
+        // Update playtime
+        {
+            // By default, just write back the original playtime if something goes wrong.
+            let mut database = self.database.lock();
+            let mut time_played_minutes =
+                database.find_playtime(self.player_data.character.content_id as u64);
+            if let Some(login_time) = self.player_data.login_time {
+                match SystemTime::now().duration_since(login_time) {
+                    Ok(session_length) => {
+                        time_played_minutes += (session_length.as_secs() / 60) as i64;
+                    }
+                    Err(e) => {
+                        tracing::error!(
+                            "Unable to update the session's playtime, due to the following error: {e}",
+                        );
+                    }
+                }
+            }
+            self.player_data.character.time_played_minutes = time_played_minutes;
         }
 
         // Write the player back to the database
@@ -309,7 +311,7 @@ impl ZoneConnection {
         {
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ContentFinderUpdate {
                 state1: 1,
-                classjob_id: self.player_data.classjob_id, // TODO: store what they registered with, because it can change
+                classjob_id: self.player_data.classjob.classjob_id as u8, // TODO: store what they registered with, because it can change
                 unk1: [0, 0, 0, 0, 0, 0, 96, 4, 2, 64, 1, 0, 0, 0, 0, 0, 1, 1],
                 content_ids,
                 unk2: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -336,7 +338,8 @@ impl ZoneConnection {
             let time_played_minutes;
             {
                 let mut database = self.database.lock();
-                time_played_minutes = database.find_playtime(self.player_data.content_id);
+                time_played_minutes =
+                    database.find_playtime(self.player_data.character.content_id as u64);
             }
 
             // In case something goes wrong with calculating the current session's playtime, we'll send the old total by default.

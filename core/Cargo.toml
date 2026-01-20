@@ -15,7 +15,7 @@ default = ["server"]
 oodle = []
 
 # Used while compiling with the server binaries
-server = ["dep:tokio", "dep:mlua"]
+server = ["dep:tokio", "dep:mlua", "dep:diesel"]
 
 [build-dependencies]
 serde = { workspace = true }
@@ -34,6 +34,7 @@ strum = { workspace = true }
 strum_macros = { workspace = true }
 tokio = { workspace = true, optional = true }
 mlua = { workspace = true, optional = true }
+diesel = { workspace = true, optional = true }
 
 # Used for simplifying some of the heavy opcode things
 kawari-core-macro = { path = "macro" }

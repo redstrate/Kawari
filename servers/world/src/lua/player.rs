@@ -48,7 +48,7 @@ impl LuaPlayer {
             },
         ));
 
-        create_ipc_self(self, ipc, self.player_data.actor_id);
+        create_ipc_self(self, ipc, self.player_data.character.actor_id);
     }
 
     fn give_status_effect(&mut self, effect_id: u16, effect_param: u16, duration: f32) {
@@ -78,7 +78,7 @@ impl LuaPlayer {
         };
 
         if let Some(ipc) = scene.package_scene() {
-            create_ipc_self(self, ipc, self.player_data.actor_id);
+            create_ipc_self(self, ipc, self.player_data.character.actor_id);
         } else {
             let error_message = "Unsupported amount of parameters in play_scene! This is likely a bug in your script! Cancelling event...".to_string();
             tracing::warn!(error_message);
@@ -94,7 +94,7 @@ impl LuaPlayer {
             ..Default::default()
         }));
 
-        create_ipc_self(self, ipc, self.player_data.actor_id);
+        create_ipc_self(self, ipc, self.player_data.character.actor_id);
     }
 
     fn set_festival(&mut self, festival1: u32, festival2: u32, festival3: u32, festival4: u32) {
@@ -108,7 +108,7 @@ impl LuaPlayer {
                 },
             }));
 
-        create_ipc_self(self, ipc, self.player_data.actor_id);
+        create_ipc_self(self, ipc, self.player_data.character.actor_id);
     }
 
     fn unlock(&mut self, id: u32) {
@@ -121,7 +121,7 @@ impl LuaPlayer {
                 category: ActorControlCategory::Flee { speed },
             }));
 
-        create_ipc_self(self, ipc, self.player_data.actor_id);
+        create_ipc_self(self, ipc, self.player_data.character.actor_id);
     }
 
     fn toggle_wireframe(&mut self) {
@@ -130,7 +130,7 @@ impl LuaPlayer {
                 category: ActorControlCategory::ToggleWireframeRendering(),
             }));
 
-        create_ipc_self(self, ipc, self.player_data.actor_id);
+        create_ipc_self(self, ipc, self.player_data.character.actor_id);
     }
 
     fn unlock_aetheryte(&mut self, unlocked: u32, id: u32) {
@@ -320,7 +320,7 @@ impl LuaPlayer {
 
         // Finally, queue up the packets required to make the magic happen.
         for ipc in shop_packets_to_send {
-            create_ipc_self(self, ipc, self.player_data.actor_id);
+            create_ipc_self(self, ipc, self.player_data.character.actor_id);
         }
     }
 
@@ -360,7 +360,7 @@ impl LuaPlayer {
         ];
 
         for ipc in packets_to_send {
-            create_ipc_self(self, ipc, self.player_data.actor_id);
+            create_ipc_self(self, ipc, self.player_data.character.actor_id);
         }
     }
 
@@ -545,7 +545,7 @@ impl LuaPlayer {
                 unk1: 0,
                 unk2: 0,
             }),
-            self.player_data.actor_id,
+            self.player_data.character.actor_id,
         );
     }
 
@@ -639,7 +639,7 @@ impl LuaPlayer {
                 },
             }));
 
-        create_ipc_self(self, ipc, self.player_data.actor_id);
+        create_ipc_self(self, ipc, self.player_data.character.actor_id);
     }
 
     fn abandon_content(&mut self) {
@@ -652,7 +652,7 @@ impl LuaPlayer {
                 category: ActorControlCategory::SetItemLevel { level: item_level },
             }));
 
-        create_ipc_self(self, ipc, self.player_data.actor_id);
+        create_ipc_self(self, ipc, self.player_data.character.actor_id);
     }
 
     fn set_homepoint(&mut self, homepoint: u16) {
@@ -1085,7 +1085,7 @@ impl UserData for LuaPlayer {
     fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
         fields.add_field_method_get("id", |_, this| {
             Ok(ObjectTypeId {
-                object_id: this.player_data.actor_id,
+                object_id: this.player_data.character.actor_id,
                 object_type: ObjectTypeKind::None,
             })
         });
@@ -1093,8 +1093,8 @@ impl UserData for LuaPlayer {
         fields.add_field_method_get("teleport_query", |_, this| {
             Ok(this.player_data.teleport_query.clone())
         });
-        fields.add_field_method_get("rotation", |_, this| Ok(this.player_data.rotation));
-        fields.add_field_method_get("position", |_, this| Ok(this.player_data.position));
+        fields.add_field_method_get("rotation", |_, this| Ok(this.player_data.volatile.rotation));
+        fields.add_field_method_get("position", |_, this| Ok(this.player_data.volatile.position));
         fields.add_field_method_get("inventory", |_, this| {
             Ok(this.player_data.inventory.clone())
         });

@@ -1,5 +1,8 @@
 mod models;
-pub use models::{AetherCurrent, Aetheryte, Companion, Content, Quest, Unlock};
+use kawari::ipc::zone::GameMasterRank;
+pub use models::{
+    AetherCurrent, Aetheryte, Character, ClassJob, Companion, Content, Quest, Unlock, Volatile,
+};
 
 mod schema;
 
@@ -8,12 +11,11 @@ use diesel::{Connection, QueryDsl, RunQueryDsl, SqliteConnection};
 
 use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
 use kawari::common::{BasicCharacterData, WORLD_NAME};
-use kawari::ipc::zone::GameMasterRank;
 
 use crate::{CharaMake, ClassLevels, ClientSelectData, GameData, RemakeMode};
 use crate::{PlayerData, inventory::Inventory};
 use kawari::{
-    common::{EquipDisplayFlag, ObjectId, Position},
+    common::ObjectId,
     ipc::lobby::{CharacterDetails, CharacterFlag},
 };
 
@@ -102,34 +104,18 @@ impl WorldDatabase {
                 .unwrap();
 
             player_data = PlayerData {
-                name: found_character.name.clone(),
+                character: found_character,
+                classjob,
                 subrace: customize.chara_make.customize.subrace,
-                actor_id: ObjectId(found_character.actor_id as u32),
-                content_id: found_character.content_id as u64,
-                account_id: found_character.service_account_id as u64,
-                position: Position {
-                    x: volatile.pos_x as f32,
-                    y: volatile.pos_y as f32,
-                    z: volatile.pos_z as f32,
-                },
-                rotation: volatile.rotation as f32,
-                zone_id: volatile.zone_id as u16,
+                volatile,
                 inventory: serde_json::from_str(&inventory.contents).unwrap(),
-                gm_rank: GameMasterRank::from_repr(found_character.gm_rank as u8).unwrap(),
-                classjob_id: classjob.classjob_id as u8,
-                classjob_levels: classjob.classjob_levels.clone(),
-                classjob_exp: classjob.classjob_exp.clone(),
-                rested_exp: classjob.rested_exp,
                 unlock,
                 content,
                 companion,
                 aether_current,
                 aetheryte,
-                display_flags: EquipDisplayFlag::from_bits(volatile.display_flags as u16)
-                    .unwrap_or_default(),
                 city_state: customize.city_state as u8,
                 quest,
-                title: volatile.title as u16,
                 ..Default::default()
             };
         }
@@ -143,82 +129,25 @@ impl WorldDatabase {
     /// Commit the dynamic player data back to the database
     pub fn commit_player_data(&mut self, data: &PlayerData) {
         use models::*;
-        use std::time::SystemTime;
 
-        let volatile = Volatile {
-            content_id: data.content_id as i64,
-            pos_x: data.position.x as f64,
-            pos_y: data.position.y as f64,
-            pos_z: data.position.z as f64,
-            rotation: data.rotation as f64,
-            zone_id: data.zone_id as i32,
-            display_flags: data.display_flags.bits() as i32,
-            title: data.title as i32,
-        };
-        volatile
+        data.volatile
             .save_changes::<Volatile>(&mut self.connection)
             .unwrap();
 
         let inventory = Inventory {
-            content_id: data.content_id as i64,
+            content_id: data.character.content_id,
             contents: serde_json::to_string(&data.inventory).unwrap(),
         };
         inventory
             .save_changes::<Inventory>(&mut self.connection)
             .unwrap();
 
-        // By default, just write back the original playtime if something goes wrong.
-        let mut time_played_minutes = self.find_playtime(data.content_id);
-        if let Some(login_time) = data.login_time {
-            match SystemTime::now().duration_since(login_time) {
-                Ok(session_length) => {
-                    time_played_minutes += (session_length.as_secs() / 60) as i64;
-                }
-                Err(e) => {
-                    tracing::error!(
-                        "Unable to update the session's playtime, due to the following error: {e}",
-                    );
-                }
-            }
-        }
-
-        #[derive(AsChangeset, Identifiable)]
-        #[diesel(table_name = schema::character)]
-        #[diesel(primary_key(content_id))]
-        struct CharacterChanges {
-            pub content_id: i64,
-            pub time_played_minutes: i64,
-        }
-        let characterchanges = CharacterChanges {
-            content_id: data.content_id as i64,
-            time_played_minutes,
-        };
-
-        characterchanges
+        data.character
             .save_changes::<Character>(&mut self.connection)
             .unwrap();
-
-        #[derive(AsChangeset, Identifiable)]
-        #[diesel(table_name = schema::classjob)]
-        #[diesel(primary_key(content_id))]
-        struct ClassJobChanges {
-            content_id: i64,
-            classjob_id: i32,
-            classjob_levels: String,
-            classjob_exp: String,
-            rested_exp: i32,
-        }
-        let classjob = ClassJobChanges {
-            content_id: data.content_id as i64,
-            classjob_id: data.classjob_id as i32,
-            classjob_levels: serde_json::to_string(&data.classjob_levels).unwrap(),
-            classjob_exp: serde_json::to_string(&data.classjob_exp).unwrap(),
-            rested_exp: data.rested_exp,
-        };
-        classjob
+        data.classjob
             .save_changes::<ClassJob>(&mut self.connection)
             .unwrap();
-
         data.unlock
             .save_changes::<Unlock>(&mut self.connection)
             .unwrap();
@@ -320,8 +249,7 @@ impl WorldDatabase {
                 remake_mode: RemakeMode::from_repr(customize.remake_mode).unwrap(),
                 remake_minutes_remaining: 0,
                 voice_id: customize.chara_make.voice_id,
-                display_flags: EquipDisplayFlag::from_bits(volatile.display_flags as u16)
-                    .unwrap_or_default(),
+                display_flags: volatile.display_flags,
                 unk21: 0,
                 world_name: String::new(),
                 unk22: 0,
@@ -329,7 +257,7 @@ impl WorldDatabase {
             };
 
             characters.push(CharacterDetails {
-                player_id: character.actor_id as u64, // TODO: not correct
+                player_id: character.actor_id.0 as u64, // TODO: not correct
                 content_id: character.content_id as u64,
                 index: index as u8,
                 flags: CharacterFlag::NONE,
@@ -387,8 +315,8 @@ impl WorldDatabase {
         let character = Character {
             content_id: content_id as i64,
             service_account_id: service_account_id as i64,
-            actor_id: actor_id as i64,
-            gm_rank: 90,
+            actor_id: ObjectId(actor_id),
+            gm_rank: GameMasterRank::Debug,
             name: name.to_string(),
             time_played_minutes: 0,
         };

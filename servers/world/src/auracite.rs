@@ -169,9 +169,9 @@ impl WorldDatabase {
                 .get_exp_array_index(classjob.value as u16)
                 .ok_or(ImportError::ParseError)?;
 
-            player_data.classjob_levels.0[index as usize] = classjob.level as u16;
+            player_data.classjob.classjob_levels.0[index as usize] = classjob.level as u16;
             if let Some(exp) = classjob.exp {
-                player_data.classjob_exp.0[index as usize] = exp as i32;
+                player_data.classjob.classjob_exp.0[index as usize] = exp as i32;
             }
         }
 

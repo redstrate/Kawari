@@ -135,7 +135,7 @@ impl ZoneConnection {
                 let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InventoryTransaction {
                     sequence: self.player_data.item_sequence,
                     operation_type: ItemOperationKind::Update,
-                    src_actor_id: self.player_data.actor_id,
+                    src_actor_id: self.player_data.character.actor_id,
                     src_storage_id: ContainerType::Currency,
                     src_container_index: 0,
                     src_stack: self.player_data.inventory.currency.gil.quantity,
@@ -162,7 +162,7 @@ impl ZoneConnection {
                 let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InventoryTransaction {
                     sequence: self.player_data.item_sequence,
                     operation_type: ItemOperationKind::Discard,
-                    src_actor_id: self.player_data.actor_id,
+                    src_actor_id: self.player_data.character.actor_id,
                     src_storage_id: storage,
                     src_container_index: index as u16,
                     src_stack: quantity,

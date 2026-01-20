@@ -25,7 +25,7 @@ impl ZoneConnection {
         // First, send zone-related segments
         for segment in &player.zone_data.queued_segments {
             let mut edited_segment = segment.clone();
-            edited_segment.target_actor = player.player_data.actor_id;
+            edited_segment.target_actor = player.player_data.character.actor_id;
             self.send_segment(edited_segment).await;
         }
         player.zone_data.queued_segments.clear();
@@ -47,7 +47,10 @@ impl ZoneConnection {
                 }
                 LuaTask::SetRemakeMode(remake_mode) => {
                     let mut database = self.database.lock();
-                    database.set_remake_mode(player.player_data.content_id, *remake_mode);
+                    database.set_remake_mode(
+                        player.player_data.character.content_id as u64,
+                        *remake_mode,
+                    );
                 }
                 LuaTask::Warp { warp_id } => {
                     self.warp(*warp_id).await;
@@ -321,7 +324,7 @@ impl ZoneConnection {
                     if *fade_out {
                         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PrepareZoning {
                             log_message: 0,
-                            target_zone: self.player_data.zone_id,
+                            target_zone: self.player_data.volatile.zone_id as u16,
                             animation: 0,
                             param4: 0,
                             hide_character: 0,
@@ -337,7 +340,7 @@ impl ZoneConnection {
                     self.handle
                         .send(ToServer::MoveToPopRange(
                             self.id,
-                            self.player_data.actor_id,
+                            self.player_data.character.actor_id,
                             *id,
                             *fade_out,
                         ))
@@ -345,12 +348,20 @@ impl ZoneConnection {
                 }
                 LuaTask::SetHP { hp } => {
                     self.handle
-                        .send(ToServer::SetHP(self.id, self.player_data.actor_id, *hp))
+                        .send(ToServer::SetHP(
+                            self.id,
+                            self.player_data.character.actor_id,
+                            *hp,
+                        ))
                         .await;
                 }
                 LuaTask::SetMP { mp } => {
                     self.handle
-                        .send(ToServer::SetMP(self.id, self.player_data.actor_id, *mp))
+                        .send(ToServer::SetMP(
+                            self.id,
+                            self.player_data.character.actor_id,
+                            *mp,
+                        ))
                         .await;
                 }
                 LuaTask::ToggleGlassesStyle { id } => {
@@ -483,30 +494,42 @@ impl ZoneConnection {
                 LuaTask::SetRace { race } => {
                     {
                         let mut database = self.database.lock();
-                        let mut chara_make = database.get_chara_make(self.player_data.content_id);
+                        let mut chara_make =
+                            database.get_chara_make(self.player_data.character.content_id as u64);
                         chara_make.customize.race = *race;
 
-                        database.set_chara_make(self.player_data.content_id, &chara_make.to_json());
+                        database.set_chara_make(
+                            self.player_data.character.content_id as u64,
+                            &chara_make.to_json(),
+                        );
                     }
                     self.respawn_player(false).await;
                 }
                 LuaTask::SetTribe { tribe } => {
                     {
                         let mut database = self.database.lock();
-                        let mut chara_make = database.get_chara_make(self.player_data.content_id);
+                        let mut chara_make =
+                            database.get_chara_make(self.player_data.character.content_id as u64);
                         chara_make.customize.subrace = *tribe;
 
-                        database.set_chara_make(self.player_data.content_id, &chara_make.to_json());
+                        database.set_chara_make(
+                            self.player_data.character.content_id as u64,
+                            &chara_make.to_json(),
+                        );
                     }
                     self.respawn_player(false).await;
                 }
                 LuaTask::SetSex { sex } => {
                     {
                         let mut database = self.database.lock();
-                        let mut chara_make = database.get_chara_make(self.player_data.content_id);
+                        let mut chara_make =
+                            database.get_chara_make(self.player_data.character.content_id as u64);
                         chara_make.customize.gender = *sex;
 
-                        database.set_chara_make(self.player_data.content_id, &chara_make.to_json());
+                        database.set_chara_make(
+                            self.player_data.character.content_id as u64,
+                            &chara_make.to_json(),
+                        );
                     }
                     self.respawn_player(false).await;
                 }
@@ -517,7 +540,7 @@ impl ZoneConnection {
                     if let Some(event) = self.events.last_mut() {
                         event.talk(
                             ObjectTypeId {
-                                object_id: self.player_data.actor_id,
+                                object_id: self.player_data.character.actor_id,
                                 object_type: ObjectTypeKind::None,
                             },
                             player,
@@ -561,7 +584,10 @@ impl ZoneConnection {
 
                     // Signal to the global server to commence the duty as well, since they need to update the entrance circle.
                     self.handle
-                        .send(ToServer::CommenceDuty(self.id, self.player_data.actor_id))
+                        .send(ToServer::CommenceDuty(
+                            self.id,
+                            self.player_data.character.actor_id,
+                        ))
                         .await;
 
                     // shit
@@ -594,7 +620,7 @@ impl ZoneConnection {
                 LuaTask::Kill {} => {
                     // Signal to the global server to kill us.
                     self.handle
-                        .send(ToServer::Kill(self.id, self.player_data.actor_id))
+                        .send(ToServer::Kill(self.id, self.player_data.character.actor_id))
                         .await;
                 }
                 LuaTask::AbandonContent {} => {
@@ -602,7 +628,7 @@ impl ZoneConnection {
                     self.handle
                         .send(ToServer::LeaveContent(
                             self.id,
-                            self.player_data.actor_id,
+                            self.player_data.character.actor_id,
                             self.old_zone_id,
                             self.old_position,
                             self.old_rotation,

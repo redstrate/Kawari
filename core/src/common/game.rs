@@ -94,11 +94,40 @@ pub fn get_distance_range(range: DistanceRange) -> f32 {
 
 #[binrw]
 #[derive(Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(
+    feature = "server",
+    derive(diesel::expression::AsExpression, diesel::deserialize::FromSqlRow)
+)]
+#[cfg_attr(feature = "server", diesel(sql_type = diesel::sql_types::Integer))]
 pub struct EquipDisplayFlag(pub u16);
 
 impl std::fmt::Debug for EquipDisplayFlag {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         bitflags::parser::to_writer(self, f)
+    }
+}
+
+#[cfg(feature = "server")]
+impl diesel::serialize::ToSql<diesel::sql_types::Integer, diesel::sqlite::Sqlite>
+    for EquipDisplayFlag
+{
+    fn to_sql<'b>(
+        &'b self,
+        out: &mut diesel::serialize::Output<'b, '_, diesel::sqlite::Sqlite>,
+    ) -> diesel::serialize::Result {
+        out.set_value(self.0 as i32);
+        Ok(diesel::serialize::IsNull::No)
+    }
+}
+
+#[cfg(feature = "server")]
+impl diesel::deserialize::FromSql<diesel::sql_types::Integer, diesel::sqlite::Sqlite>
+    for EquipDisplayFlag
+{
+    fn from_sql(
+        mut integer: <diesel::sqlite::Sqlite as diesel::backend::Backend>::RawValue<'_>,
+    ) -> diesel::deserialize::Result<Self> {
+        Ok(EquipDisplayFlag(integer.read_integer() as u16))
     }
 }
 

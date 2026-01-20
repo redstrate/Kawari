@@ -9,11 +9,11 @@ impl ZoneConnection {
         self.handle
             .send(ToServer::GainEffect(
                 self.id,
-                self.player_data.actor_id,
+                self.player_data.character.actor_id,
                 effect_id,
                 effect_param,
                 effect_duration,
-                self.player_data.actor_id,
+                self.player_data.character.actor_id,
             ))
             .await;
     }
@@ -28,7 +28,7 @@ impl ZoneConnection {
         self.handle
             .send(ToServer::LoseEffect(
                 self.id,
-                self.player_data.actor_id,
+                self.player_data.character.actor_id,
                 effect_id,
                 effect_param,
                 effect_source_actor_id,

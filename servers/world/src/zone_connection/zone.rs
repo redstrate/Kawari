@@ -26,7 +26,7 @@ impl ZoneConnection {
         self.handle
             .send(ToServer::ChangeZone(
                 self.id,
-                self.player_data.actor_id,
+                self.player_data.character.actor_id,
                 new_zone_id,
                 new_position,
                 new_rotation,
@@ -51,7 +51,7 @@ impl ZoneConnection {
         {
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PrepareZoning {
                 log_message: 0,
-                target_zone: self.player_data.zone_id,
+                target_zone: self.player_data.volatile.zone_id as u16,
                 animation: 0,
                 param4: 0,
                 hide_character: 0,
@@ -65,7 +65,7 @@ impl ZoneConnection {
         }
 
         // If we are already in the same zone, we can do a Warp instead!
-        if self.player_data.zone_id == new_zone_id && !initial_login {
+        if self.player_data.volatile.zone_id as u16 == new_zone_id && !initial_login {
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Warp(Warp {
                 dir: exit_rotation,
                 position: exit_position,
@@ -76,7 +76,7 @@ impl ZoneConnection {
             return;
         }
 
-        self.player_data.zone_id = new_zone_id;
+        self.player_data.volatile.zone_id = new_zone_id as i32;
         self.exit_position = Some(exit_position);
         self.exit_rotation = Some(exit_rotation);
 
@@ -112,7 +112,7 @@ impl ZoneConnection {
             self.send_segment(PacketSegment {
                 segment_type: SegmentType::Initialize,
                 data: SegmentData::Initialize {
-                    actor_id: self.player_data.actor_id,
+                    actor_id: self.player_data.character.actor_id,
                     timestamp: timestamp_secs(),
                 },
                 ..Default::default()
@@ -194,7 +194,7 @@ impl ZoneConnection {
                 HouseList {
                     land_id: 0,
                     ward: 0,
-                    territory_type_id: self.player_data.zone_id,
+                    territory_type_id: self.player_data.volatile.zone_id as u16,
                     world_id: config.world.world_id,
                     subdivision: 0,
                     houses: [House::default(); 30],
@@ -282,7 +282,11 @@ impl ZoneConnection {
     pub async fn warp(&mut self, warp_id: u32) {
         self.player_data.teleport_reason = TeleportReason::NotSpecified;
         self.handle
-            .send(ToServer::Warp(self.id, self.player_data.actor_id, warp_id))
+            .send(ToServer::Warp(
+                self.id,
+                self.player_data.character.actor_id,
+                warp_id,
+            ))
             .await;
     }
 
@@ -291,7 +295,7 @@ impl ZoneConnection {
         self.handle
             .send(ToServer::WarpAetheryte(
                 self.id,
-                self.player_data.actor_id,
+                self.player_data.character.actor_id,
                 aetheryte_id,
             ))
             .await;

@@ -4,10 +4,35 @@ use serde::{Deserialize, Serialize};
 /// Represents a point in space.
 #[binrw]
 #[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(
+    feature = "server",
+    derive(diesel::expression::AsExpression, diesel::deserialize::FromSqlRow)
+)]
+#[cfg_attr(feature = "server", diesel(sql_type = diesel::sql_types::Text))]
 pub struct Position {
     pub x: f32,
     pub y: f32,
     pub z: f32,
+}
+
+#[cfg(feature = "server")]
+impl diesel::serialize::ToSql<diesel::sql_types::Text, diesel::sqlite::Sqlite> for Position {
+    fn to_sql<'b>(
+        &'b self,
+        out: &mut diesel::serialize::Output<'b, '_, diesel::sqlite::Sqlite>,
+    ) -> diesel::serialize::Result {
+        out.set_value(serde_json::to_string(&self).unwrap());
+        Ok(diesel::serialize::IsNull::No)
+    }
+}
+
+#[cfg(feature = "server")]
+impl diesel::deserialize::FromSql<diesel::sql_types::Text, diesel::sqlite::Sqlite> for Position {
+    fn from_sql(
+        mut bytes: <diesel::sqlite::Sqlite as diesel::backend::Backend>::RawValue<'_>,
+    ) -> diesel::deserialize::Result<Self> {
+        Ok(serde_json::from_str(bytes.read_text()).ok().unwrap())
+    }
 }
 
 impl Position {

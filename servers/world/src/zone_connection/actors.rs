@@ -80,7 +80,7 @@ impl ZoneConnection {
 
         self.send_segment(PacketSegment {
             source_actor: actor_id,
-            target_actor: self.player_data.actor_id,
+            target_actor: self.player_data.character.actor_id,
             segment_type: SegmentType::Ipc,
             data: SegmentData::Ipc(ipc),
         })
@@ -89,7 +89,7 @@ impl ZoneConnection {
 
     pub async fn spawn_actor(&mut self, actor_id: ObjectId, spawn: SpawnKind) {
         // There is no reason for us to spawn our own player again. It's probably a bug!
-        assert!(actor_id != self.player_data.actor_id);
+        assert!(actor_id != self.player_data.character.actor_id);
 
         let ipc;
 
@@ -113,7 +113,7 @@ impl ZoneConnection {
 
         self.send_segment(PacketSegment {
             source_actor: actor_id,
-            target_actor: self.player_data.actor_id,
+            target_actor: self.player_data.character.actor_id,
             segment_type: SegmentType::Ipc,
             data: SegmentData::Ipc(ipc),
         })
@@ -140,7 +140,7 @@ impl ZoneConnection {
 
         self.send_segment(PacketSegment {
             source_actor: actor_id,
-            target_actor: self.player_data.actor_id,
+            target_actor: self.player_data.character.actor_id,
             segment_type: SegmentType::Ipc,
             data: SegmentData::Ipc(ipc),
         })
@@ -151,8 +151,8 @@ impl ZoneConnection {
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::DeleteObject { spawn_index });
 
         self.send_segment(PacketSegment {
-            source_actor: self.player_data.actor_id,
-            target_actor: self.player_data.actor_id,
+            source_actor: self.player_data.character.actor_id,
+            target_actor: self.player_data.character.actor_id,
             segment_type: SegmentType::Ipc,
             data: SegmentData::Ipc(ipc),
         })
@@ -177,7 +177,7 @@ impl ZoneConnection {
 
         self.send_segment(PacketSegment {
             source_actor: actor_id,
-            target_actor: self.player_data.actor_id,
+            target_actor: self.player_data.character.actor_id,
             segment_type: SegmentType::Ipc,
             data: SegmentData::Ipc(ipc),
         })
@@ -193,7 +193,7 @@ impl ZoneConnection {
 
         self.send_segment(PacketSegment {
             source_actor: actor_id,
-            target_actor: self.player_data.actor_id,
+            target_actor: self.player_data.character.actor_id,
             segment_type: SegmentType::Ipc,
             data: SegmentData::Ipc(ipc),
         })
@@ -206,21 +206,21 @@ impl ZoneConnection {
             self.get_player_common_spawn(self.exit_position, self.exit_rotation, start_invisible);
         let config = get_config();
 
-        let online_status = if self.player_data.gm_rank == GameMasterRank::NormalUser {
+        let online_status = if self.player_data.character.gm_rank == GameMasterRank::NormalUser {
             OnlineStatus::Online
         } else {
             OnlineStatus::GameMasterBlue
         };
 
         let spawn = PlayerSpawn {
-            account_id: self.player_data.account_id,
-            content_id: self.player_data.content_id,
+            account_id: self.player_data.character.service_account_id as u64,
+            content_id: self.player_data.character.content_id as u64,
             current_world_id: config.world.world_id,
             home_world_id: config.world.world_id,
-            gm_rank: self.player_data.gm_rank,
+            gm_rank: self.player_data.character.gm_rank,
             online_status,
             common: common.clone(),
-            title_id: self.player_data.title,
+            title_id: self.player_data.volatile.title as u16,
             ..Default::default()
         };
 
@@ -238,7 +238,7 @@ impl ZoneConnection {
 
         self.send_segment(PacketSegment {
             source_actor: actor_id,
-            target_actor: self.player_data.actor_id,
+            target_actor: self.player_data.character.actor_id,
             segment_type: SegmentType::Ipc,
             data: SegmentData::Ipc(ipc),
         })
@@ -254,19 +254,20 @@ impl ZoneConnection {
         let inventory = &self.player_data.inventory;
 
         let mut database = self.database.lock();
-        let chara_make = database.get_chara_make(self.player_data.content_id);
+        let chara_make = database.get_chara_make(self.player_data.character.content_id as u64);
         let mut look = chara_make.customize;
 
         // There seems to be no display flag for this, so clear the bit out
         if self
             .player_data
+            .volatile
             .display_flags
             .intersects(EquipDisplayFlag::HIDE_LEGACY_MARK)
         {
             look.facial_features &= !(1 << 7);
         }
 
-        let mut display_flags = self.player_data.display_flags.into();
+        let mut display_flags = self.player_data.volatile.display_flags.into();
         if start_invisible {
             display_flags |= DisplayFlag::INVISIBLE;
         }
@@ -275,8 +276,8 @@ impl ZoneConnection {
         let mut game_data = self.gamedata.lock();
 
         CommonSpawn {
-            class_job: self.player_data.classjob_id,
-            name: self.player_data.name.clone(),
+            class_job: self.player_data.classjob.classjob_id as u8,
+            name: self.player_data.character.name.clone(),
             hp: base_parameters.hp,
             max_hp: base_parameters.hp,
             mp: base_parameters.mp as u16,
@@ -304,7 +305,7 @@ impl ZoneConnection {
         // Inform the server state as well
         self.handle
             .send(ToServer::UpdateConditions(
-                self.player_data.actor_id,
+                self.player_data.character.actor_id,
                 self.conditions,
             ))
             .await;
@@ -315,7 +316,7 @@ impl ZoneConnection {
 
         self.send_segment(PacketSegment {
             source_actor: spawn.entity_id,
-            target_actor: self.player_data.actor_id,
+            target_actor: self.player_data.character.actor_id,
             segment_type: SegmentType::Ipc,
             data: SegmentData::Ipc(ipc),
         })

@@ -1,15 +1,19 @@
 use diesel::prelude::*;
-use kawari::constants::{
-    ACTIVE_HELP_BITMASK_SIZE, ADVENTURE_BITMASK_SIZE, AETHER_CURRENT_BITMASK_SIZE,
-    AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE, AETHERYTE_UNLOCK_BITMASK_SIZE,
-    BUDDY_EQUIP_BITMASK_SIZE, CAUGHT_FISH_BITMASK_SIZE, CAUGHT_SPEARFISH_BITMASK_SIZE,
-    CHOCOBO_TAXI_STANDS_BITMASK_SIZE, COMPLETED_QUEST_BITMASK_SIZE,
-    CRYSTALLINE_CONFLICT_ARRAY_SIZE, CUTSCENE_SEEN_BITMASK_SIZE, DUNGEON_ARRAY_SIZE,
-    FRONTLINE_ARRAY_SIZE, GLASSES_STYLES_BITMASK_SIZE, GUILDHEST_ARRAY_SIZE,
-    MASKED_CARNIVALE_ARRAY_SIZE, MINION_BITMASK_SIZE, MISC_CONTENT_ARRAY_SIZE, MOUNT_BITMASK_SIZE,
-    ORCHESTRION_ROLL_BITMASK_SIZE, ORNAMENT_BITMASK_SIZE, RAID_ARRAY_SIZE,
-    SPECIAL_CONTENT_ARRAY_SIZE, TITLE_UNLOCK_BITMASK_SIZE, TRIAL_ARRAY_SIZE,
-    TRIPLE_TRIAD_CARDS_BITMASK_SIZE, UNLOCK_BITMASK_SIZE,
+use kawari::{
+    common::{EquipDisplayFlag, ObjectId, Position},
+    constants::{
+        ACTIVE_HELP_BITMASK_SIZE, ADVENTURE_BITMASK_SIZE, AETHER_CURRENT_BITMASK_SIZE,
+        AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE, AETHERYTE_UNLOCK_BITMASK_SIZE,
+        BUDDY_EQUIP_BITMASK_SIZE, CAUGHT_FISH_BITMASK_SIZE, CAUGHT_SPEARFISH_BITMASK_SIZE,
+        CHOCOBO_TAXI_STANDS_BITMASK_SIZE, COMPLETED_QUEST_BITMASK_SIZE,
+        CRYSTALLINE_CONFLICT_ARRAY_SIZE, CUTSCENE_SEEN_BITMASK_SIZE, DUNGEON_ARRAY_SIZE,
+        FRONTLINE_ARRAY_SIZE, GLASSES_STYLES_BITMASK_SIZE, GUILDHEST_ARRAY_SIZE,
+        MASKED_CARNIVALE_ARRAY_SIZE, MINION_BITMASK_SIZE, MISC_CONTENT_ARRAY_SIZE,
+        MOUNT_BITMASK_SIZE, ORCHESTRION_ROLL_BITMASK_SIZE, ORNAMENT_BITMASK_SIZE, RAID_ARRAY_SIZE,
+        SPECIAL_CONTENT_ARRAY_SIZE, TITLE_UNLOCK_BITMASK_SIZE, TRIAL_ARRAY_SIZE,
+        TRIPLE_TRIAD_CARDS_BITMASK_SIZE, UNLOCK_BITMASK_SIZE,
+    },
+    ipc::zone::GameMasterRank,
 };
 
 use crate::{
@@ -17,15 +21,15 @@ use crate::{
     QuestBitmask,
 };
 
-#[derive(Insertable, Identifiable, Queryable, Selectable, Debug)]
+#[derive(Insertable, Identifiable, Queryable, Selectable, AsChangeset, Debug, Default, Clone)]
 #[diesel(table_name = super::schema::character)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 #[diesel(primary_key(content_id))]
 pub struct Character {
     pub content_id: i64,
     pub service_account_id: i64,
-    pub actor_id: i64,
-    pub gm_rank: i32,
+    pub actor_id: ObjectId,
+    pub gm_rank: GameMasterRank,
     pub name: String,
     pub time_played_minutes: i64,
 }
@@ -137,12 +141,10 @@ pub struct Aetheryte {
 #[diesel(primary_key(content_id))]
 pub struct Volatile {
     pub content_id: i64,
-    pub pos_x: f64,
-    pub pos_y: f64,
-    pub pos_z: f64,
+    pub position: Position,
     pub rotation: f64,
     pub zone_id: i32,
-    pub display_flags: i32,
+    pub display_flags: EquipDisplayFlag,
     pub title: i32,
 }
 

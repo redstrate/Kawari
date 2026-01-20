@@ -80,7 +80,7 @@ impl ZoneConnection {
                      * and allow other commands that omit required_rank to run, which is undesirable. */
                     lua.globals().set("required_rank", mlua::Value::Nil)?;
 
-                    if self.player_data.gm_rank as u8 >= required_rank? {
+                    if self.player_data.character.gm_rank as u8 >= required_rank? {
                         let func: Function =
                         lua.globals().get("onCommand")?;
                         func.call::<()>(([arg0, arg1, arg2, arg3], connection_data))?;
@@ -96,7 +96,7 @@ impl ZoneConnection {
                         Ok(())
                     } else {
                         tracing::info!("User with account_id {} tried to invoke GM command {} with insufficient privileges!",
-                                       self.player_data.account_id, command);
+                                       self.player_data.character.service_account_id, command);
                         let func: Function =
                         lua.globals().get("onCommandRequiredRankInsufficientError")?;
                         func.call::<()>(connection_data)?;
