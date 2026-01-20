@@ -356,7 +356,7 @@ impl ZoneConnection {
         let index = game_data
             .get_exp_array_index(self.player_data.classjob_id as u16)
             .unwrap();
-        self.player_data.classjob_levels[index as usize]
+        self.player_data.classjob_levels.0[index as usize]
     }
 
     pub fn set_current_level(&mut self, level: u16) {
@@ -367,14 +367,14 @@ impl ZoneConnection {
         let game_data = self.gamedata.lock();
 
         let index = game_data.get_exp_array_index(classjob_id as u16).unwrap();
-        self.player_data.classjob_levels[index as usize] = level;
+        self.player_data.classjob_levels.0[index as usize] = level;
     }
 
     pub fn current_exp(&self, game_data: &GameData) -> i32 {
         let index = game_data
             .get_exp_array_index(self.player_data.classjob_id as u16)
             .unwrap();
-        self.player_data.classjob_exp[index as usize]
+        self.player_data.classjob_exp.0[index as usize]
     }
 
     pub fn set_current_exp(&mut self, exp: i32) {
@@ -383,7 +383,7 @@ impl ZoneConnection {
         let index = game_data
             .get_exp_array_index(self.player_data.classjob_id as u16)
             .unwrap();
-        self.player_data.classjob_exp[index as usize] = exp;
+        self.player_data.classjob_exp.0[index as usize] = exp;
     }
 
     pub async fn update_hp_mp(&mut self, actor_id: ObjectId, hp: u32, mp: u16) {
@@ -422,17 +422,17 @@ impl ZoneConnection {
                 .get_exp_array_index(self.player_data.classjob_id as u16)
                 .unwrap();
 
-            self.player_data.classjob_exp[index as usize] += exp;
+            self.player_data.classjob_exp.0[index as usize] += exp;
 
             // Keep going until we have leftover EXP
             loop {
-                let curr_exp = self.player_data.classjob_exp[index as usize];
-                let max_exp =
-                    game_data.get_max_exp(self.player_data.classjob_levels[index as usize] as u32);
+                let curr_exp = self.player_data.classjob_exp.0[index as usize];
+                let max_exp = game_data
+                    .get_max_exp(self.player_data.classjob_levels.0[index as usize] as u32);
                 let difference = curr_exp - max_exp;
                 if difference >= 0 {
                     level_up += 1;
-                    self.player_data.classjob_exp[index as usize] = difference;
+                    self.player_data.classjob_exp.0[index as usize] = difference;
                 } else {
                     break;
                 }
@@ -440,7 +440,7 @@ impl ZoneConnection {
         }
 
         if level_up > 0 {
-            let curr_level = self.player_data.classjob_levels[index as usize];
+            let curr_level = self.player_data.classjob_levels.0[index as usize];
             let new_level = curr_level + level_up;
             self.set_current_level(new_level);
 

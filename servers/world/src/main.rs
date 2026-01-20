@@ -526,12 +526,12 @@ async fn client_loop(
                                                 connection.send_stats().await;
 
                                                 // As seen in retail, they pad it with the first value
-                                                let mut padded_exp = connection.player_data.classjob_exp.clone();
-                                                padded_exp.resize(CLASSJOB_ARRAY_SIZE, connection.player_data.classjob_exp[0]);
+                                                let mut padded_exp = connection.player_data.classjob_exp.0.clone();
+                                                padded_exp.resize(CLASSJOB_ARRAY_SIZE, padded_exp[0]);
 
                                                 // Ditto for levels
-                                                let mut padded_levels = connection.player_data.classjob_levels.clone();
-                                                padded_levels.resize(CLASSJOB_ARRAY_SIZE, connection.player_data.classjob_levels[0]);
+                                                let mut padded_levels: Vec<u16> = connection.player_data.classjob_levels.0.to_vec();
+                                                padded_levels.resize(CLASSJOB_ARRAY_SIZE, padded_levels[0]);
 
                                                 let chara_make;
                                                 let city_state;

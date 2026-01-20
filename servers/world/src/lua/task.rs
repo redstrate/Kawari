@@ -1,6 +1,9 @@
-use crate::inventory::{BuyBackList, CurrencyKind};
+use crate::{
+    RemakeMode,
+    inventory::{BuyBackList, CurrencyKind},
+};
 use kawari::{
-    common::{ObjectTypeId, Position, workdefinitions::RemakeMode},
+    common::{ObjectTypeId, Position},
     ipc::zone::{EventType, ServerZoneIpcSegment},
     packet::PacketSegment,
 };

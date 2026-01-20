@@ -9,16 +9,11 @@ use diesel::{Connection, QueryDsl, RunQueryDsl, SqliteConnection};
 use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
 use kawari::common::{BasicCharacterData, WORLD_NAME};
 use kawari::ipc::zone::GameMasterRank;
-use serde::Deserialize;
 
-use crate::{CharaMake, GameData};
+use crate::{CharaMake, ClassLevels, ClientSelectData, GameData, RemakeMode};
 use crate::{PlayerData, inventory::Inventory};
 use kawari::{
-    common::{
-        EquipDisplayFlag, ObjectId, Position,
-        workdefinitions::{ClientSelectData, RemakeMode},
-    },
-    constants::CLASSJOB_ARRAY_SIZE,
+    common::{EquipDisplayFlag, ObjectId, Position},
     ipc::lobby::{CharacterDetails, CharacterFlag},
 };
 
@@ -32,10 +27,6 @@ impl Default for WorldDatabase {
     fn default() -> Self {
         Self::new()
     }
-}
-
-fn json_unpack<T: for<'a> Deserialize<'a> + Default>(json_str: &str) -> T {
-    serde_json::from_str(json_str).unwrap_or_default()
 }
 
 impl WorldDatabase {
@@ -126,8 +117,8 @@ impl WorldDatabase {
                 inventory: serde_json::from_str(&inventory.contents).unwrap(),
                 gm_rank: GameMasterRank::from_repr(found_character.gm_rank as u8).unwrap(),
                 classjob_id: classjob.classjob_id as u8,
-                classjob_levels: json_unpack(&classjob.classjob_levels),
-                classjob_exp: json_unpack(&classjob.classjob_exp),
+                classjob_levels: classjob.classjob_levels.clone(),
+                classjob_exp: classjob.classjob_exp.clone(),
                 rested_exp: classjob.rested_exp,
                 unlock,
                 content,
@@ -137,7 +128,6 @@ impl WorldDatabase {
                 display_flags: EquipDisplayFlag::from_bits(volatile.display_flags as u16)
                     .unwrap_or_default(),
                 city_state: customize.city_state as u8,
-                active_quests: json_unpack(&quest.active),
                 quest,
                 title: volatile.title as u16,
                 ..Default::default()
@@ -244,10 +234,9 @@ impl WorldDatabase {
         data.companion
             .save_changes::<Companion>(&mut self.connection)
             .unwrap();
-
-        let mut quest = data.quest.clone();
-        quest.active = serde_json::to_string(&data.active_quests).unwrap();
-        quest.save_changes::<Quest>(&mut self.connection).unwrap();
+        data.quest
+            .save_changes::<Quest>(&mut self.connection)
+            .unwrap();
     }
 
     pub fn find_actor_id(&mut self, for_content_id: u64) -> u32 {
@@ -306,7 +295,12 @@ impl WorldDatabase {
             let select_data = ClientSelectData {
                 character_name: character.name.clone(),
                 current_class: classjob.classjob_id,
-                class_levels: json_unpack(&classjob.classjob_levels),
+                class_levels: classjob
+                    .classjob_levels
+                    .0
+                    .iter()
+                    .map(|x| *x as i32)
+                    .collect(),
                 race: customize.chara_make.customize.race as i32,
                 subrace: customize.chara_make.customize.subrace as i32,
                 gender: customize.chara_make.customize.gender as i32,
@@ -380,14 +374,14 @@ impl WorldDatabase {
 
         // fill out the initial classjob
         let chara_make = CharaMake::from_json(chara_make_str);
-        let mut classjob_levels = vec![0i32; CLASSJOB_ARRAY_SIZE];
+        let mut classjob_levels = ClassLevels::default();
 
         {
             let index = game_data
                 .get_exp_array_index(chara_make.classjob_id as u16)
                 .unwrap();
 
-            classjob_levels[index as usize] = 1; // inital level
+            classjob_levels.0[index as usize] = 1; // inital level
         }
 
         let character = Character {
@@ -406,8 +400,7 @@ impl WorldDatabase {
         let classjob = ClassJob {
             content_id: content_id as i64,
             classjob_id: chara_make.classjob_id,
-            classjob_levels: serde_json::to_string(&classjob_levels).unwrap(),
-            classjob_exp: serde_json::to_string(&vec![0u32; CLASSJOB_ARRAY_SIZE]).unwrap(),
+            classjob_levels: classjob_levels.clone(),
             first_classjob: chara_make.classjob_id,
             ..Default::default()
         };

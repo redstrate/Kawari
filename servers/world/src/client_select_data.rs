@@ -1,8 +1,7 @@
+use kawari::common::{CustomizeData, EquipDisplayFlag};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use strum_macros::FromRepr;
-
-use crate::common::{CustomizeData, EquipDisplayFlag};
 
 // TODO: this isn't really an enum in the game, nor is it a flag either. it's weird!
 #[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, FromRepr)]

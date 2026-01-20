@@ -13,7 +13,7 @@ use kawari::{
 impl ZoneConnection {
     pub async fn send_active_quests(&mut self) {
         let mut quests = Vec::new();
-        for quest in &self.player_data.active_quests {
+        for quest in &self.player_data.quest.active.0 {
             quests.push(ActiveQuest {
                 id: quest.id,
                 sequence: quest.sequence,
@@ -92,7 +92,7 @@ impl ZoneConnection {
         self.send_ipc_self(ipc).await;
 
         // Then add it to our own internal data model
-        self.player_data.active_quests.push(PersistentQuest {
+        self.player_data.quest.active.0.push(PersistentQuest {
             id: adjusted_id as u16,
             sequence: 0xFF,
         });
@@ -106,11 +106,13 @@ impl ZoneConnection {
         // Remove it from our internal data model
         if let Some(index) = self
             .player_data
-            .active_quests
+            .quest
+            .active
+            .0
             .iter()
             .position(|x| x.id == adjusted_id as u16)
         {
-            self.player_data.active_quests.remove(index);
+            self.player_data.quest.active.0.remove(index);
         }
 
         // Grant rewards
@@ -155,7 +157,7 @@ impl ZoneConnection {
     pub async fn send_quest_tracker(&mut self) {
         // Right now we don't support tracking, so just send the first five quests.
         let mut tracked_quests = [TrackedQuest::default(); 5];
-        for (i, _) in self.player_data.active_quests.iter().take(5).enumerate() {
+        for (i, _) in self.player_data.quest.active.0.iter().take(5).enumerate() {
             tracked_quests[i] = TrackedQuest {
                 active: true,
                 quest_index: i as u8,
@@ -174,11 +176,13 @@ impl ZoneConnection {
         // Remove it from our internal data model
         if let Some(index) = self
             .player_data
-            .active_quests
+            .quest
+            .active
+            .0
             .iter()
             .position(|x| x.id == adjusted_id as u16)
         {
-            self.player_data.active_quests.remove(index);
+            self.player_data.quest.active.0.remove(index);
         }
 
         // TODO: inform the player, im not sure what this looks like in retail

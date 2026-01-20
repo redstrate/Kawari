@@ -12,7 +12,10 @@ use kawari::constants::{
     TRIPLE_TRIAD_CARDS_BITMASK_SIZE, UNLOCK_BITMASK_SIZE,
 };
 
-use crate::{Bitmask, CharaMake, QuestBitmask};
+use crate::{
+    ActiveQuests, Bitmask, CharaMake, ClassExperience, ClassLevels, FavoriteAetherytes,
+    QuestBitmask,
+};
 
 #[derive(Insertable, Identifiable, Queryable, Selectable, Debug)]
 #[diesel(table_name = super::schema::character)]
@@ -45,8 +48,8 @@ pub struct Character {
 pub struct ClassJob {
     pub content_id: i64,
     pub classjob_id: i32,
-    pub classjob_levels: String,
-    pub classjob_exp: String,
+    pub classjob_levels: ClassLevels,
+    pub classjob_exp: ClassExperience,
     pub first_classjob: i32,
     pub rested_exp: i32,
 }
@@ -91,7 +94,7 @@ pub struct Customize {
 pub struct Quest {
     pub content_id: i64,
     pub completed: QuestBitmask<COMPLETED_QUEST_BITMASK_SIZE>,
-    pub active: String,
+    pub active: ActiveQuests,
 }
 
 #[derive(
@@ -113,7 +116,7 @@ pub struct Aetheryte {
     pub content_id: i64,
     pub unlocked: Bitmask<AETHERYTE_UNLOCK_BITMASK_SIZE>,
     pub homepoint: i32,
-    pub favorite_aetherytes: String,
+    pub favorite_aetherytes: FavoriteAetherytes,
     pub free_aetheryte: i32,
 }
 

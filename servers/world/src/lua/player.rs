@@ -4,13 +4,13 @@ use mlua::{LuaSerdeExt, UserData, UserDataFields, UserDataMethods, Value};
 use parking_lot::Mutex;
 
 use crate::{
-    GameData, PlayerData, StatusEffects,
+    GameData, PlayerData, RemakeMode, StatusEffects,
     inventory::{CurrencyKind, Item},
 };
 use kawari::{
     common::{
         ContainerType, HandlerId, INVENTORY_ACTION_ACK_SHOP, LogMessageType, ObjectTypeId,
-        ObjectTypeKind, Position, adjust_quest_id, workdefinitions::RemakeMode,
+        ObjectTypeKind, Position, adjust_quest_id,
     },
     ipc::zone::{
         ActorControlCategory, ActorControlSelf, EventScene, EventType, OnlineStatus, SceneFlags,

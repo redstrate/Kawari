@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use tokio::net::TcpStream;
 
 use crate::{
-    Content, GameData, Unlock,
+    ClassExperience, ClassLevels, Content, GameData, Unlock,
     database::{AetherCurrent, Aetheryte, Companion, Quest},
     lua::LuaTask,
 };
@@ -64,7 +64,7 @@ pub enum TeleportReason {
 }
 
 /// Quest information stored in the database.
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct PersistentQuest {
     /// ID of the quest.
     pub id: u16,
@@ -82,8 +82,8 @@ pub struct PlayerData {
     pub subrace: u8,
 
     pub classjob_id: u8,
-    pub classjob_levels: Vec<u16>,
-    pub classjob_exp: Vec<i32>,
+    pub classjob_levels: ClassLevels,
+    pub classjob_exp: ClassExperience,
     pub rested_exp: i32,
 
     // Dynamic data
@@ -121,7 +121,6 @@ pub struct PlayerData {
     /// The player's status when connecting/reconnecting. If true, they need to rejoin their party.
     pub rejoining_party: bool,
     /// The player's currently active quests.
-    pub active_quests: Vec<PersistentQuest>,
     pub login_time: Option<SystemTime>,
 }
 
