@@ -666,7 +666,7 @@ ClientZoneIpcType:
     size: 8
   - name: WalkOutsideEvent
     comment: Sent by the client when walking outside a trigger (e.g. exiting Ul'dah in the opening.)
-    opcode: 276
+    opcode: 930
     size: 24
   - name: EnterTerritoryEvent
     comment: Sent by the client when requesting to play an event (because we entered a territory.)
