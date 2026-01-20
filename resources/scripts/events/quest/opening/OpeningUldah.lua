@@ -23,6 +23,7 @@ function onEnterTerritory(player)
 end
 
 function onYield(scene, results, player)
+    -- Move into the controls text after initial cutscene
     if scene == 0 then
         player:play_scene(player.id, EVENT_ID, 1, NO_DEFAULT_CAMERA | HIDE_HOTBAR, {})
         return

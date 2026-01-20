@@ -11,7 +11,7 @@ use crate::{
     zone_connection::TeleportQuery,
 };
 use kawari::{
-    common::{DistanceRange, ENTRANCE_CIRCLE_IDS, ObjectId},
+    common::{DistanceRange, ENTRANCE_CIRCLE_IDS, ObjectId, TerritoryIntendedUse},
     config::get_config,
     ipc::zone::{ActionRequest, Conditions, NpcSpawn, ObjectSpawn, PlayerSpawn},
 };
@@ -105,14 +105,17 @@ impl Instance {
             }
         }
 
-        // Load initial event objects into instance
-        for object in instance.zone.get_event_objects(game_data, false) {
-            instance.insert_object(object.entity_id, object);
-        }
+        // TODO: Needs some more investigation, but at least in the Ul'dah opening a blocking door is spawned.
+        if instance.zone.intended_use != TerritoryIntendedUse::OpeningArea as u8 {
+            // Load initial event objects into instance
+            for object in instance.zone.get_event_objects(game_data, false) {
+                instance.insert_object(object.entity_id, object);
+            }
 
-        // Load initial NPCs into instance
-        for npc in instance.zone.get_npcs() {
-            instance.insert_npc(ObjectId(fastrand::u32(..)), npc);
+            // Load initial NPCs into instance
+            for npc in instance.zone.get_npcs() {
+                instance.insert_npc(ObjectId(fastrand::u32(..)), npc);
+            }
         }
 
         instance
