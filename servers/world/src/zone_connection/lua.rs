@@ -84,7 +84,7 @@ impl ZoneConnection {
                         let destination = self
                             .player_data
                             .inventory
-                            .add_in_next_free_armory_slot(12)
+                            .add_in_next_free_armory_slot(13)
                             .unwrap();
                         self.player_data.inventory.add_in_slot(
                             soul_crystal,

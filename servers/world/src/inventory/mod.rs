@@ -314,9 +314,10 @@ impl Inventory {
             7 => ContainerType::ArmoryFoot,
             8 => ContainerType::ArmoryEarring,
             9 => ContainerType::ArmoryNeck,
-            10 => ContainerType::ArmoryRing,
+            10 => ContainerType::ArmoryWrist,
             11 => ContainerType::ArmoryRing,
-            12 => ContainerType::ArmorySoulCrystal,
+            12 => ContainerType::ArmoryRing,
+            13 => ContainerType::ArmorySoulCrystal,
             _ => unimplemented!(),
         };
 

@@ -324,9 +324,9 @@ impl ZoneConnection {
     }
 
     /// Changes the class based on the weapon equipped.
-    // TODO: support soul crystals
     // TODO: remove incompatible armor
     pub async fn change_class_based_on_weapon(&mut self) {
+        // Check the weapon's compatible class jobs:
         let classjobs;
         {
             let mut game_data = self.gamedata.lock();
@@ -339,6 +339,17 @@ impl ZoneConnection {
         }
 
         self.player_data.classjob.current_class = classjobs.first().copied().unwrap() as i32;
+
+        // Then check the soul crystal:
+        let soul_crystal = self.player_data.inventory.equipped.soul_crystal;
+        if soul_crystal.quantity > 0 {
+            let mut game_data = self.gamedata.lock();
+
+            if let Some(classjob_id) = game_data.get_applicable_classjob(soul_crystal.id) {
+                self.player_data.classjob.current_class = classjob_id as i32;
+            }
+        }
+
         self.update_class_info().await;
     }
 }

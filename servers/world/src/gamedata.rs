@@ -1020,6 +1020,18 @@ impl GameData {
             mp_modifier: row.MpModifier().into_i32().copied()?,
         })
     }
+
+    /// Gets the classjob ID associated with this soul crystal item ID.
+    pub fn get_applicable_classjob(&mut self, soul_crystal_id: u32) -> Option<u32> {
+        let sheet = ClassJobSheet::read_from(&mut self.resource, Language::English).ok()?;
+        for (id, row) in sheet.into_iter().flatten_subrows() {
+            if row.ItemSoulCrystal().into_u32().copied()? == soul_crystal_id {
+                return Some(id);
+            }
+        }
+
+        None
+    }
 }
 
 impl mlua::UserData for GameData {
