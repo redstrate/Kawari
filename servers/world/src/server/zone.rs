@@ -22,7 +22,7 @@ use crate::{
 };
 use kawari::{
     common::{
-        DistanceRange, ENTRANCE_CIRCLE_IDS, EOBJ_SHORTCUT, EOBJ_SHORTCUT_EXPLORER_MODE,
+        DistanceRange, ENTRANCE_CIRCLE_IDS, EOBJ_DOOR, EOBJ_SHORTCUT, EOBJ_SHORTCUT_EXPLORER_MODE,
         HandlerType, INVALID_OBJECT_ID, ObjectId, Position, euler_to_direction,
     },
     ipc::zone::{
@@ -382,6 +382,11 @@ impl Zone {
             for layer in &layer_group.chunks[0].layers {
                 for object in &layer.objects {
                     if let LayerEntryData::EventObject(eobj) = &object.data {
+                        // Don't spawn blocking doors, e.g. the ones in the Ul'dah opening. Unsure if there are legitimate uses of this?
+                        if eobj.parent_data.base_id == EOBJ_DOOR {
+                            continue;
+                        }
+
                         // NOTE: this seems to keep the gold saucer machines, and not much else. needs more testing!
                         if game_data.get_eobj_pop_type(eobj.parent_data.base_id) != 1 {
                             continue;
