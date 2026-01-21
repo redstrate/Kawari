@@ -22,8 +22,8 @@ use crate::{
 };
 use kawari::{
     common::{
-        DistanceRange, ENTRANCE_CIRCLE_IDS, EOBJ_DOOR, EOBJ_SHORTCUT, EOBJ_SHORTCUT_EXPLORER_MODE,
-        HandlerType, INVALID_OBJECT_ID, ObjectId, Position, euler_to_direction,
+        BOSS_WALL_IDS, DistanceRange, ENTRANCE_CIRCLE_IDS, EOBJ_DOOR, EOBJ_SHORTCUT,
+        EOBJ_SHORTCUT_EXPLORER_MODE, HandlerType, ObjectId, Position, euler_to_direction,
     },
     ipc::zone::{
         ActorControlCategory, BattleNpcSubKind, CommonSpawn, Conditions, NpcSpawn, ObjectKind,
@@ -387,6 +387,13 @@ impl Zone {
                             continue;
                         }
 
+                        // Ensure boss walls are spawned in a non-blocking state.
+                        let event_state = if BOSS_WALL_IDS.contains(&eobj.parent_data.base_id) {
+                            7
+                        } else {
+                            0
+                        };
+
                         // NOTE: this seems to keep the gold saucer machines, and not much else. needs more testing!
                         if game_data.get_eobj_pop_type(eobj.parent_data.base_id) != 1 {
                             continue;
@@ -398,7 +405,7 @@ impl Zone {
                             // Unsure if excluding certain types is the way to go, but let's see.
                             matches!(event_type, HandlerType::GimmickRect)
                         } else {
-                            false // don't make selectable to be on the safe side.
+                            false // make it selectable to be on the safe side.
                         };
 
                         let base_id = if eobj.parent_data.base_id == EOBJ_SHORTCUT && explorer_mode
@@ -415,8 +422,8 @@ impl Zone {
                             entity_id: ObjectId(fastrand::u32(..)),
                             layout_id: object.instance_id,
                             bind_layout_id: eobj.bound_instance_id,
-                            owner_id: INVALID_OBJECT_ID,
                             radius: 1.0,
+                            event_state,
                             rotation: euler_to_direction(object.transform.rotation),
                             position: Position {
                                 x: object.transform.translation[0],

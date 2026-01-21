@@ -50,6 +50,14 @@ pub const EOBJ_SHORTCUT_EXPLORER_MODE: u32 = 2011343;
 /// EObj ID for doors, which doesn't need to be spawned usually.
 pub const EOBJ_DOOR: u32 = 2000608;
 
+/// EObj IDs for entrance circle event objects.
+pub const BOSS_WALL_IDS: [u32; 3] = [
+    // Seen in Sastasha
+    2001504, // Seen in Sastasha
+    2001508, // Seen in Aquapolis
+    2002872,
+];
+
 /// Time until a dead actor fades away. Estimated from retail.
 pub const DEAD_FADE_OUT_TIME: Duration = Duration::from_secs(8);
 
