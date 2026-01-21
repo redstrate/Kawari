@@ -67,6 +67,7 @@ registerGMCommand(GM_TERRITORY_INFO,    GM_DIR.."TerritoryInfo.lua")
 -- Debug commands
 -- Please keep these in alphabetical order!
 
+registerCommand("cf",                               DBG_DIR.."JoinContent.lua")
 registerCommand("classjob",                         DBG_DIR.."ClassJob.lua")
 registerCommand("festival",                         DBG_DIR.."Festival.lua")
 registerCommand("inspect",                          GM_DIR.."InspectPlayer.lua") -- TODO: remove this once we figure out the GMInspect IPC opcode

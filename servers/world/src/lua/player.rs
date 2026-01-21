@@ -666,6 +666,10 @@ impl LuaPlayer {
     fn has_aetheryte(&self, aetheryte_id: u32) -> bool {
         self.player_data.aetheryte.unlocked.contains(aetheryte_id)
     }
+
+    fn join_content(&mut self, id: u32) {
+        self.queued_tasks.push(LuaTask::JoinContent { id });
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -1079,6 +1083,10 @@ impl UserData for LuaPlayer {
         });
         methods.add_method("has_aetheryte", |_, this, aetheryte_id: u32| {
             Ok(this.has_aetheryte(aetheryte_id))
+        });
+        methods.add_method_mut("join_content", |_, this, id: u32| {
+            this.join_content(id);
+            Ok(())
         });
     }
 

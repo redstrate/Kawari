@@ -194,4 +194,7 @@ pub enum LuaTask {
         homepoint: u16,
     },
     ReturnToHomepoint {},
+    JoinContent {
+        id: u32,
+    },
 }

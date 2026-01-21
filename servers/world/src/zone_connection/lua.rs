@@ -636,6 +636,9 @@ impl ZoneConnection {
                     self.warp_aetheryte(self.player_data.aetheryte.homepoint as u32)
                         .await;
                 }
+                LuaTask::JoinContent { id } => {
+                    self.join_content(*id as u16).await;
+                }
             }
         }
         player.queued_tasks.clear();

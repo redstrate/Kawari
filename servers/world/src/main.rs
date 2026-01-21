@@ -1128,12 +1128,7 @@ async fn client_loop(
                                                         connection.send_ipc_self(ipc).await;
                                                     }
 
-                                                    // Store our old information, for when we leave the instance
-                                                    connection.old_zone_id = connection.player_data.volatile.zone_id as u16;
-                                                    connection.old_position = connection.player_data.volatile.position;
-                                                    connection.old_rotation = connection.player_data.volatile.rotation as f32;
-
-                                                    connection.handle.send(ToServer::JoinContent(connection.id, connection.player_data.character.actor_id, connection.queued_content.unwrap())).await;
+                                                    connection.join_content(connection.queued_content.unwrap()).await;
                                                 }
 
                                                 // If we don't send this, the content finder gets stuck.
