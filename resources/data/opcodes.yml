@@ -556,8 +556,8 @@ ClientZoneIpcType:
     comment: "This packet is sent by the client when they pivot left or right on standard controls. It is sent once when beginning to pivot, and once when pivoting ends."
     opcode: 737
     size: 8
-  - name: ContentFinderRegister
-    comment: Unknown purpose.
+  - name: QueueDuties
+    comment: Queue for the selected duties.
     opcode: 586
     size: 40
   - name: ContentFinderAction
@@ -704,6 +704,10 @@ ClientZoneIpcType:
     comment: The client requests a character's short message in their free company.
     opcode: 224
     size: 16
+  - name: QueueRoulette
+    comment: The client queues into a roulette.
+    opcode: 713
+    size: 24
 ServerLobbyIpcType:
   - name: NackReply
     comment: Sent by the server to indicate an lobby error occured.

@@ -19,6 +19,9 @@ pub use crate::ipc::zone::client::item_operation::ItemOperation;
 mod event_return_handler;
 pub use crate::ipc::zone::client::event_return_handler::EventReturnHandler;
 
+mod queue_duties;
+pub use queue_duties::{ContentRegistrationFlags, QueueDuties};
+
 use crate::ipc::zone::{
     InviteReply, InviteType, SearchInfo, SocialListUILanguages, StrategyBoard, StrategyBoardUpdate,
     WaymarkPreset,
@@ -159,19 +162,7 @@ pub enum ClientZoneIpcData {
     UnkCall2 {
         unk1: [u8; 8],
     },
-    ContentFinderRegister {
-        unk1: [u8; 8],
-        unk7: u32,
-        unk2: [u8; 4],
-        /// Selected languages to match with.
-        selected_languages: SocialListUILanguages,
-        unk3: u8,
-        unk6: u8,
-        unk4: [u8; 7],
-        /// List of Content Finder Condition IDs the player signed up for.
-        content_ids: [u16; 5],
-        unk5: [u8; 4],
-    },
+    QueueDuties(QueueDuties),
     EquipGearset {
         /// Index into the list of gearsets that the client keeps on its side.
         gearset_index: u32,
@@ -387,6 +378,14 @@ pub enum ClientZoneIpcData {
         /// A sequence value that is repeated by the server later on in FreeCompanyShortMessage.
         sequence: u32,
     },
+    QueueRoulette {
+        /// See the ContentRoulette Excel sheet.
+        roulette_id: u8,
+        unk1: [u8; 15],
+        /// The languages to match with.
+        languages: SocialListUILanguages,
+        unk2: [u8; 7],
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -476,17 +475,7 @@ mod tests {
                 unk3: 0,
             },
             ClientZoneIpcData::UnkCall2 { unk1: [0; 8] },
-            ClientZoneIpcData::ContentFinderRegister {
-                unk1: [0; 8],
-                unk7: 0,
-                unk2: [0; 4],
-                selected_languages: SocialListUILanguages::default(),
-                unk3: 0,
-                unk6: 0,
-                unk4: [0; 7],
-                content_ids: [0; 5],
-                unk5: [0; 4],
-            },
+            ClientZoneIpcData::QueueDuties(QueueDuties::default()),
             ClientZoneIpcData::EquipGearset {
                 gearset_index: 0,
                 containers: [ContainerType::Inventory0; 14],
@@ -615,6 +604,12 @@ mod tests {
             ClientZoneIpcData::RequestFreeCompanyShortMessage {
                 content_id: 0,
                 sequence: 0,
+            },
+            ClientZoneIpcData::QueueRoulette {
+                roulette_id: 0,
+                unk1: [0; 15],
+                languages: SocialListUILanguages::empty(),
+                unk2: [0; 7],
             },
         ];
 

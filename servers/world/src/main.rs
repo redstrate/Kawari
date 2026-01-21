@@ -1087,10 +1087,11 @@ async fn client_loop(
                                                 });
                                                 connection.send_ipc_self(ipc).await;
                                             }
-                                            ClientZoneIpcData::ContentFinderRegister { content_ids, .. } => {
-                                                tracing::info!("Searching for {content_ids:?}");
-
-                                                connection.register_for_content(*content_ids).await;
+                                            ClientZoneIpcData::QueueDuties(queue_duties) => {
+                                                connection.register_for_content(queue_duties.content_ids).await;
+                                            }
+                                            ClientZoneIpcData::QueueRoulette { .. } => {
+                                                tracing::warn!("Queueing for roulettes is not implemented!");
                                             }
                                             ClientZoneIpcData::ContentFinderAction { action, .. } => {
                                                 if *action == ContentFinderUserAction::Accepted {
