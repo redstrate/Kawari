@@ -986,6 +986,14 @@ impl GameData {
         row.ItemSoulCrystal().into_u32().copied()
     }
 
+    /// Gets the starting level for the classjob.
+    pub fn get_starting_level(&mut self, classjob_id: u16) -> Option<u8> {
+        let sheet = ClassJobSheet::read_from(&mut self.resource, Language::English).ok()?;
+        let row = sheet.row(classjob_id as u32)?;
+
+        row.StartingLevel().into_u8().copied()
+    }
+
     /// Returns information about the BaseParam.
     pub fn get_base_param(&mut self, base_param_id: u16) -> Option<BaseParam> {
         let sheet = BaseParamSheet::read_from(&mut self.resource, Language::English).ok()?;

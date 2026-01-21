@@ -61,18 +61,30 @@ impl ZoneConnection {
                     run_finish_event = true;
                 }
                 LuaTask::UnlockClassJob { classjob_id } => {
-                    self.set_level_for(*classjob_id, 1);
+                    let starting_level;
+                    let soul_crystal_id;
+                    {
+                        let mut gamedata = self.gamedata.lock();
+
+                        starting_level = gamedata
+                            .get_starting_level(*classjob_id as u16)
+                            .unwrap_or(1);
+                        soul_crystal_id = gamedata.get_soul_crystal_item_id(*classjob_id as u16);
+                    }
+
+                    self.set_level_for(*classjob_id, starting_level as u16);
 
                     self.actor_control_self(ActorControlCategory::UnlockClass {
                         classjob_id: *classjob_id as u32,
                     })
                     .await;
 
-                    let soul_crystal_id;
-                    {
-                        let mut gamedata = self.gamedata.lock();
-                        soul_crystal_id = gamedata.get_soul_crystal_item_id(*classjob_id as u16);
-                    }
+                    // UnlockClass only sets it to level 1, but we want to change the level.
+                    self.actor_control_self(ActorControlCategory::SetLevel {
+                        classjob_id: *classjob_id as u32,
+                        level: starting_level as u32,
+                    })
+                    .await;
 
                     if let Some(id) = soul_crystal_id {
                         let soul_crystal = Item {

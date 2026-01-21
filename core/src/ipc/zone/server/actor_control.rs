@@ -40,6 +40,10 @@ pub enum ActorControlCategory {
     #[brw(magic = 8u32)]
     UnlockClass { classjob_id: u32 },
 
+    /// Only updates the UI, it's wiped on the next ClassInfo update.
+    #[brw(magic = 9u32)]
+    SetLevel { classjob_id: u32, level: u32 },
+
     /// Shows the message and also updates some character data.
     /// It's also interesting in that it handles the in-between levels. So you can give it a level of 99 and it'll go through *each* level.
     #[brw(magic = 10u32)]
