@@ -403,6 +403,7 @@ impl HandlerType {
             TerritoryIntendedUse::CriterionDungeon => Some(Self::InstanceContent),
             TerritoryIntendedUse::SavageCriterionDungeon => Some(Self::InstanceContent),
             TerritoryIntendedUse::RivalWings => Some(Self::InstanceContent),
+            TerritoryIntendedUse::TreasureDungeon => Some(Self::InstanceContent),
             _ => None,
         }
     }
