@@ -169,6 +169,8 @@ pub enum FromServer {
     EnteredInstanceEntranceRange(u32),
     /// Inform the client to increment the rested EXP by 10 seconds.
     IncrementRestedExp(),
+    /// Inform the client about a countdown that was started in their party.
+    Countdown(u64, u64, String, u32, u16),
 }
 
 #[derive(Debug, Clone)]
@@ -316,6 +318,8 @@ pub enum ToServer {
     ApplyWaymarkPreset(ObjectId, u64, WaymarkPreset),
     /// Inform the server of our new basic stat values.
     SetNewStatValues(ObjectId, u8, u8, u32, u16),
+    /// The client started a countdown in their party.
+    StartCountdown(u64, ObjectId, u64, u64, String, u32, u16),
 }
 
 #[derive(Clone, Debug)]

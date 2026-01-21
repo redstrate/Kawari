@@ -338,4 +338,23 @@ impl ZoneConnection {
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::FieldMarkerPreset(data));
         self.send_ipc_self(ipc).await;
     }
+
+    pub async fn start_countdown(
+        &mut self,
+        account_id: u64,
+        content_id: u64,
+        starter_name: String,
+        unk: u32,
+        duration: u16,
+    ) {
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Countdown {
+            account_id,
+            content_id,
+            unk1: unk,
+            unk2: 0x5B,
+            duration,
+            starter_name,
+        });
+        self.send_ipc_self(ipc).await;
+    }
 }

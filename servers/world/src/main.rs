@@ -1313,8 +1313,8 @@ async fn client_loop(
                                             ClientZoneIpcData::SearchFellowships { .. } => {
                                                 tracing::info!("Fellowships is unimplemented");
                                             }
-                                            ClientZoneIpcData::StartCountdown { .. } => {
-                                                tracing::info!("Countdowns is unimplemented");
+                                            ClientZoneIpcData::StartCountdown { unk, duration, starter_name } => {
+                                                connection.handle.send(ToServer::StartCountdown(connection.party_id, connection.player_data.character.actor_id, connection.player_data.character.service_account_id as u64, connection.player_data.character.content_id as u64, starter_name.clone(), *unk, *duration)).await;
                                             }
                                             ClientZoneIpcData::RequestPlaytime { .. } => {
                                                 connection.send_playtime().await;
@@ -1516,6 +1516,7 @@ async fn client_loop(
                         connection.event_scene(&object, handler_id, 2, SceneFlags::NO_DEFAULT_CAMERA | SceneFlags::HIDE_HOTBAR, Vec::new()).await;
                     }
                     FromServer::IncrementRestedExp() => connection.add_rested_exp_seconds(10).await,
+                    FromServer::Countdown(account_id, content_id, name, unk, duration) => connection.start_countdown(account_id, content_id, name, unk, duration).await,
                     _ => { tracing::error!("Zone connection {:#?} received a FromServer message we don't care about: {:#?}, ensure you're using the right client network or that you've implemented a handler for it if we actually care about it!", client_handle.id, msg); }
                 },
                 None => break,

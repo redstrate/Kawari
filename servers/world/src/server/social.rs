@@ -1050,6 +1050,30 @@ pub fn handle_social_messages(
                 network.send_to_by_actor_id(*from_id, msg, DestinationNetwork::ZoneClients);
             }
         }
+        ToServer::StartCountdown(
+            party_id,
+            from_id,
+            account_id,
+            content_id,
+            starter_name,
+            unk,
+            duration,
+        ) => {
+            let mut network = network.lock();
+            let msg = FromServer::Countdown(
+                *account_id,
+                *content_id,
+                starter_name.clone(),
+                *unk,
+                *duration,
+            );
+
+            if *party_id != 0 {
+                network.send_to_party(*party_id, None, msg, DestinationNetwork::ZoneClients);
+            } else {
+                network.send_to_by_actor_id(*from_id, msg, DestinationNetwork::ZoneClients);
+            }
+        }
         _ => {}
     }
 }

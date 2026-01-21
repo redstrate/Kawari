@@ -233,9 +233,17 @@ pub enum ClientZoneIpcData {
         unk: Vec<u8>,
     },
     StartCountdown {
-        #[br(count = 40)]
-        #[bw(pad_size_to = 40)]
-        unk: Vec<u8>,
+        /// Unknown, but it's repeated in the server's reply.
+        unk: u32,
+        /// The duration of the countdown in seconds.
+        #[brw(pad_after = 2)]
+        duration: u16,
+        /// The name of the character who initiated the countdown.
+        #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+        #[br(count = CHAR_NAME_MAX_LENGTH)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        starter_name: String,
     },
     RequestPlaytime {
         unk: [u8; 8],
@@ -527,7 +535,9 @@ mod tests {
                 unk: Vec::default(),
             },
             ClientZoneIpcData::StartCountdown {
-                unk: Vec::default(),
+                unk: 0,
+                duration: 0,
+                starter_name: String::default(),
             },
             ClientZoneIpcData::RequestPlaytime { unk: [0; 8] },
             ClientZoneIpcData::SetFreeCompanyGreeting {

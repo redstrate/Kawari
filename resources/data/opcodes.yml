@@ -463,6 +463,10 @@ ServerZoneIpcType:
     comment: A client requested their playtime, and now they need to be informed.
     opcode: 674
     size: 8
+  - name: Countdown
+    comment: A client initiated a countdown from the Party menu, and now their party needs to be informed.
+    opcode: 943
+    size: 64
 ClientZoneIpcType:
   - name: InitRequest
     comment: "Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)"
