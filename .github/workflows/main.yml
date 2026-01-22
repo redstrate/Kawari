@@ -19,7 +19,7 @@ jobs:
     - name: Add WebAssembly Target
       run: |
         rustup target add wasm32-unknown-unknown
-    - uses: actions/cache@v4
+    - uses: actions/cache@v5
       id: cache-deps
       with:
         path: |
@@ -41,7 +41,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v6
-    - uses: actions/cache@v4
+    - uses: actions/cache@v5
       id: cache-deps
       with:
         path: |
@@ -131,7 +131,7 @@ jobs:
 
     steps:
     - name: Download artifacts
-      uses: actions/download-artifact@v6
+      uses: actions/download-artifact@v7
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
     - name: Set up SSH key
