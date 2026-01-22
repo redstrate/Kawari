@@ -535,7 +535,7 @@ mod tests {
                 unk: Vec::default(),
             },
             ClientZoneIpcData::StartCountdown {
-                unk: 0,
+                starter_actor_id: crate::common::INVALID_OBJECT_ID, // If we need this in other tests later, shorten as needed
                 duration: 0,
                 starter_name: String::default(),
             },
