@@ -330,6 +330,13 @@ pub enum ActorControlCategory {
         max_count: u32,
     },
 
+    /// Plays an animation for a NPC or player.
+    #[brw(magic = 407u32)]
+    PlayActionTimeline {
+        /// See the ActionTimeline Excel sheet.
+        timeline_id: u32,
+    },
+
     /// Plays an animation for a SharedGroup object.
     #[brw(magic = 410u32)]
     PlaySharedGroupTimeline { timeline_id: u32 },

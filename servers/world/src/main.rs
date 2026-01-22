@@ -1426,6 +1426,9 @@ async fn client_loop(
                                             ClientZoneIpcData::RequestFreeCompanyShortMessage { .. } => {
                                                 tracing::warn!("Requesting a free company short message is unimplemented");
                                             }
+                                            ClientZoneIpcData::PlayGoldSaucerMachine { handler_id, unk1, unk2, unk3 } => {
+                                                tracing::info!("Playing machine {handler_id} {unk1} {unk2} {unk3}");
+                                            }
                                         }
                                     }
                                     SegmentData::KeepAliveRequest { id, timestamp } => connection.send_keep_alive(*id, *timestamp).await,

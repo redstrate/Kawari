@@ -394,6 +394,12 @@ pub enum ClientZoneIpcData {
         languages: SocialListUILanguages,
         unk2: [u8; 7],
     },
+    PlayGoldSaucerMachine {
+        handler_id: HandlerId,
+        unk1: u32,
+        unk2: u32, // empty?
+        unk3: u32,
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -620,6 +626,12 @@ mod tests {
                 unk1: [0; 15],
                 languages: SocialListUILanguages::empty(),
                 unk2: [0; 7],
+            },
+            ClientZoneIpcData::PlayGoldSaucerMachine {
+                handler_id: HandlerId::default(),
+                unk1: 0,
+                unk2: 0,
+                unk3: 0,
             },
         ];
 

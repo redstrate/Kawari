@@ -712,6 +712,10 @@ ClientZoneIpcType:
     comment: The client queues into a roulette.
     opcode: 713
     size: 24
+  - name: PlayGoldSaucerMachine
+    comment: Unknown purpose, but seen when trying to play a Gold Saucer arcade machine.
+    opcode: 609
+    size: 16
 ServerLobbyIpcType:
   - name: NackReply
     comment: Sent by the server to indicate an lobby error occured.
