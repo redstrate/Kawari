@@ -236,7 +236,7 @@ pub enum ClientZoneIpcData {
         /// Unknown, but it's repeated in the server's reply.
         unk: u32,
         /// The duration of the countdown in seconds.
-        #[brw(pad_after = 2)]
+        #[brw(pad_after = 2)] // Empty/zeroes, doesn't appear to have anything?
         duration: u16,
         /// The name of the character who initiated the countdown.
         #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
