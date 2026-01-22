@@ -71,7 +71,7 @@ pub enum ClientTriggerCommand {
     /// The client toggles a sign for their current target.
     #[brw(magic = 301u32)]
     ToggleSign {
-        /// The id of the sign to apply.
+        /// The id of the sign to apply. See the Marker Excel sheet.
         sign_id: u32,
         #[brw(pad_after = 12)] // Empty/zeroes
         unk1: u32, // Observed as 1 or 2 depending on what's targeted, likely a target type similar to other CTs
