@@ -1243,6 +1243,22 @@ pub async fn server_main_loop(
 
                         send_to_party_or_self(&mut network, from_actor_id, msg);
                     }
+                    ClientTriggerCommand::ToggleSign {
+                        sign_id,
+                        target_actor_id,
+                        on,
+                        ..
+                    } => {
+                        let mut network = network.lock();
+                        let msg = FromServer::TargetSignToggled(
+                            *sign_id,
+                            from_actor_id,
+                            *target_actor_id,
+                            *on,
+                        );
+
+                        send_to_party_or_self(&mut network, from_actor_id, msg);
+                    }
                     _ => tracing::warn!("Server doesn't know what to do with {:#?}", trigger),
                 }
             }

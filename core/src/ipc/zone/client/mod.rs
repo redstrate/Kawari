@@ -34,7 +34,7 @@ pub use super::social_list::{PlayerEntry, SocialList, SocialListRequest, SocialL
 use super::config::Config;
 use crate::common::{
     CHAR_NAME_MAX_LENGTH, ClientLanguage, HandlerId, JumpState, MoveAnimationState,
-    MoveAnimationType, Position, read_string, write_string,
+    MoveAnimationType, ObjectId, Position, read_string, write_string,
 };
 use crate::opcodes::ClientZoneIpcType;
 use crate::packet::ServerIpcSegmentHeader;
@@ -233,8 +233,8 @@ pub enum ClientZoneIpcData {
         unk: Vec<u8>,
     },
     StartCountdown {
-        /// Unknown, but it's repeated in the server's reply.
-        unk: u32,
+        /// The actor id of the character who initiated the countdown.
+        starter_actor_id: ObjectId,
         /// The duration of the countdown in seconds.
         #[brw(pad_after = 2)] // Empty/zeroes, doesn't appear to have anything?
         duration: u16,

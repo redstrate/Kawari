@@ -339,22 +339,43 @@ impl ZoneConnection {
         self.send_ipc_self(ipc).await;
     }
 
+    /// Someone in the party started a countdown.
     pub async fn start_countdown(
         &mut self,
         account_id: u64,
         content_id: u64,
         starter_name: String,
-        unk: u32,
+        starter_actor_id: ObjectId,
         duration: u16,
     ) {
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Countdown {
             account_id,
             content_id,
-            unk1: unk,
-            unk2: 0x5B,
+            starter_actor_id,
+            unk: 0x5B,
             duration,
             starter_name,
         });
         self.send_ipc_self(ipc).await;
+    }
+
+    /// Someone in the party marked a target with a sign.
+    pub async fn target_sign_toggled(
+        &mut self,
+        sign_id: u32,
+        from_actor_id: ObjectId,
+        target_actor_id: ObjectId,
+        on: bool,
+    ) {
+        self.actor_control_target(
+            from_actor_id,
+            ActorControlCategory::ToggleSign {
+                sign_id,
+                from_actor_id,
+                target_actor_id,
+                on,
+            },
+        )
+        .await;
     }
 }
