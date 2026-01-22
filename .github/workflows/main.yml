@@ -54,7 +54,7 @@ jobs:
       if: runner.os == 'Linux'
       with:
         repository: 'WorkingRobot/OodleUE'
-        fileName: 'gcc-release.zip'
+        fileName: 'clang-release.zip'
         latest: true
         extract: true
     - if: runner.os == 'Linux'
