@@ -110,7 +110,6 @@ pub struct PartyMemberPositions {
     pub positions: [MemberPosition; PartyMemberEntry::NUM_ENTRIES],
 }
 
-
 #[binrw]
 #[brw(repr = u8)]
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
