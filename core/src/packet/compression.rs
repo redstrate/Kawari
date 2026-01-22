@@ -1,13 +1,11 @@
-use binrw::{BinWrite, binrw};
+use binrw::binrw;
 use std::io::Cursor;
 
 use binrw::{BinRead, BinResult};
 
 use crate::packet::{PacketHeader, PacketSegment};
 
-use super::{
-    IPC_HEADER_SIZE, ReadWriteIpcSegment, SegmentData, parsing::ConnectionState, scramble_packet,
-};
+use super::{ReadWriteIpcSegment, SegmentData, parsing::ConnectionState};
 
 #[binrw]
 #[brw(repr = u8)]
@@ -85,11 +83,15 @@ pub(crate) fn decompress<T: ReadWriteIpcSegment>(
     Ok(segments)
 }
 
+#[cfg(feature = "server")]
 pub(crate) fn compress<T: ReadWriteIpcSegment>(
     state: &mut ConnectionState,
     compression_type: &CompressionType,
     segments: &[PacketSegment<T>],
 ) -> (Vec<u8>, usize) {
+    use super::{IPC_HEADER_SIZE, scramble_packet};
+    use binrw::BinWrite;
+
     let mut segments_buffer = Vec::new();
     for segment in segments {
         let mut buffer = Vec::new();
