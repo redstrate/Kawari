@@ -401,6 +401,15 @@ pub enum ClientZoneIpcData {
         unk2: u32, // empty?
         unk3: u32,
     },
+    InitiateReadyCheck {
+        unk: [u8; 8], // Seems to always be zeroes/unused
+    },
+    ReadyCheckResponse {
+        /// The player's response to the ready check. 1 indicates yes, 0 indicates no.
+        /// If the player fails to respond before the vote ends, their vote is automatically cast as no.
+        #[brw(pad_before = 1, pad_after = 6)] // Seems to be empty/zeroes
+        response: u8,
+    },
 }
 
 impl Default for ClientZoneIpcData {

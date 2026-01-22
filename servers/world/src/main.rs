@@ -1427,9 +1427,6 @@ async fn client_loop(
                                                 tracing::info!("Buying item {item_index} from {special_shop_id}...");
                                                 connection.buy_special_shop(*shop_id, *special_shop_id, *item_index).await;
                                             }
-                                            ClientZoneIpcData::Unknown { unk } => {
-                                                tracing::warn!("Unknown Zone packet {:?} recieved ({} bytes), this should be handled!", data.header.op_code, unk.len());
-                                            }
                                             ClientZoneIpcData::ShareStrategyBoard { content_id, board_data } => {
                                                 tracing::info!("{} is sharing a strategy board with their party!", connection.player_data.character.actor_id);
                                                 connection.handle.send(ToServer::ShareStrategyBoard(connection.player_data.character.actor_id, connection.player_data.character.content_id as u64, connection.party_id, *content_id, board_data.clone())).await;
@@ -1455,6 +1452,15 @@ async fn client_loop(
                                             }
                                             ClientZoneIpcData::PlayGoldSaucerMachine { handler_id, unk1, unk2, unk3 } => {
                                                 tracing::info!("Playing machine {handler_id} {unk1} {unk2} {unk3}");
+                                            }
+                                            ClientZoneIpcData::InitiateReadyCheck { .. } => {
+                                                tracing::info!("Initiating ready checks is unimplemented");
+                                            }
+                                            ClientZoneIpcData::ReadyCheckResponse { response: _ } => {
+                                                tracing::info!("Replying to ready checks is unimplemented");
+                                            }
+                                            ClientZoneIpcData::Unknown { unk } => {
+                                                tracing::warn!("Unknown Zone packet {:?} recieved ({} bytes), this should be handled!", data.header.op_code, unk.len());
                                             }
                                         }
                                     }

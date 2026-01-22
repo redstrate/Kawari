@@ -728,6 +728,14 @@ ClientZoneIpcType:
     comment: Unknown purpose, but seen when trying to play a Gold Saucer arcade machine.
     opcode: 609
     size: 16
+  - name: InitiateReadyCheck
+    comment: The client initiates a ready check for their party.
+    opcode: 946
+    size: 8
+  - name: ReadyCheckResponse
+    comment: The client responds to an ongoing ready check from their party.
+    opcode: 105
+    size: 8
 ServerLobbyIpcType:
   - name: NackReply
     comment: Sent by the server to indicate an lobby error occured.
