@@ -514,7 +514,10 @@ impl GameData {
 
     /// Gets the array index used in EXP & levels.
     pub fn get_exp_array_index(&self, classjob_id: u16) -> Option<i8> {
-        self.classjob_exp_indexes.get(classjob_id as usize).copied()
+        self.classjob_exp_indexes
+            .get(classjob_id as usize)
+            .copied()
+            .filter(|x| *x != -1)
     }
 
     /// Gets the job index for a given class.

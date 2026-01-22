@@ -351,7 +351,7 @@ impl ZoneConnection {
     pub fn current_level(&self, game_data: &GameData) -> u16 {
         let index = game_data
             .get_exp_array_index(self.player_data.classjob.current_class as u16)
-            .unwrap();
+            .expect("Failed to find EXP array index?!");
         self.player_data.classjob.levels.0[index as usize]
     }
 
@@ -362,14 +362,16 @@ impl ZoneConnection {
     pub fn set_level_for(&mut self, classjob_id: u8, level: u16) {
         let game_data = self.gamedata.lock();
 
-        let index = game_data.get_exp_array_index(classjob_id as u16).unwrap();
+        let index = game_data
+            .get_exp_array_index(classjob_id as u16)
+            .expect("Failed to find EXP array index?!");
         self.player_data.classjob.levels.0[index as usize] = level;
     }
 
     pub fn current_exp(&self, game_data: &GameData) -> i32 {
         let index = game_data
             .get_exp_array_index(self.player_data.classjob.current_class as u16)
-            .unwrap();
+            .expect("Failed to find EXP array index?!");
         self.player_data.classjob.exp.0[index as usize]
     }
 
@@ -378,7 +380,7 @@ impl ZoneConnection {
 
         let index = game_data
             .get_exp_array_index(self.player_data.classjob.current_class as u16)
-            .unwrap();
+            .expect("Failed to find EXP array index?!");
         self.player_data.classjob.exp.0[index as usize] = exp;
     }
 
@@ -408,7 +410,7 @@ impl ZoneConnection {
 
             index = game_data
                 .get_exp_array_index(self.player_data.classjob.current_class as u16)
-                .unwrap();
+                .expect("Failed to find EXP array index?!");
 
             self.player_data.classjob.exp.0[index as usize] += exp;
 

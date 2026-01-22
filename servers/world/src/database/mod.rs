@@ -302,7 +302,7 @@ impl WorldDatabase {
         {
             let index = game_data
                 .get_exp_array_index(chara_make.classjob_id as u16)
-                .unwrap();
+                .expect("Failed to find EXP array index?!");
 
             classjob_levels.0[index as usize] = 1; // inital level
         }
