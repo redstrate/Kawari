@@ -697,7 +697,7 @@ pub enum ServerZoneIpcData {
         leader_name: String,
 
         #[br(count = 16)]
-        #[bw(pad_size_to = 16)]
+        #[bw(pad_size_to = 16 * FcHierarchy::SIZE)]
         hierarchy_list: Vec<FcHierarchy>,
     },
     FreeCompanyShortMessage {

@@ -22,3 +22,7 @@ pub struct FcHierarchy {
     /// Unknown purpose.
     unk: u16,
 }
+
+impl FcHierarchy {
+    pub const SIZE: usize = 88;
+}
