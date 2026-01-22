@@ -7,7 +7,7 @@ use bitflags::bitflags;
 use serde::{Deserialize, Serialize};
 use strum_macros::{Display, EnumIter, FromRepr};
 
-use crate::constants::BASE_INVENTORY_ACTION;
+use crate::{constants::BASE_INVENTORY_ACTION, ipc::zone::ContentRegistrationFlags};
 
 /// Maxmimum length of a character's name.
 pub const CHAR_NAME_MAX_LENGTH: usize = 32;
@@ -935,5 +935,111 @@ impl Default for PlayerStateFlags3 {
 impl std::fmt::Debug for PlayerStateFlags3 {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         bitflags::parser::to_writer(self, f)
+    }
+}
+
+#[binrw]
+#[derive(Clone, Copy, Eq, PartialEq)]
+pub struct DutyOption(u32);
+
+bitflags! {
+    impl DutyOption: u32 {
+        /// No options set.
+        const NONE = 0x0;
+        /// Unknown effect.
+        const SOLO = 0x1;
+        /// Unknown effect.
+        const UNK17 = 0x4;
+        /// Unknown effect.
+        const UNK1 = 0x8;
+        /// Unknown effect.
+        const UNK2 = 0x10;
+        /// Unknown effect.
+        const UNK3 = 0x20;
+        /// Unknown effect.
+        const UNK4 = 0x40;
+        /// Unknown effect.
+        const UNK5 = 0x80;
+        /// Unknown purpose, shows the "Waiting for return of party members eligible for duty rewards before calculating coffer number." message.
+        const WAITING_TO_CALCULATE_COFFER_NUMBER = 0x100;
+        /// Enables the unrestricted party option.
+        const UNRESTRICTED_PARTY = 0x200;
+        /// Enables the minimum item level option.
+        const MINIMUM_ITEM_LEVEL = 0x400;
+        /// Unknown effect.
+        const UNK9 = 0x800;
+        /// Possibly used for savage raids, makes the "In this duty, the number of coffers that appear is determined by the number of party members present at the time of reward issuance." message appear.
+        const LIMITED_COFFER_ISSUANCE = 0x1000;
+        /// Unknown purpose, makes the "If all party members are incapacitated, they will be revived automatically and granted a buff. This buff will expire when the boss is defeated." message appear.
+        const AUTO_REVIVE = 0x2000;
+        /// Counts towards blue mage log progress.
+        const BLUE_MAGE_LOG = 0x4000;
+        /// Enables the silence echo option.
+        const SILENCE_ECHO = 0x8000;
+        /// Unknown effect.
+        const UNK14 = 0x10000;
+        /// Shows the "A bonus will be awarded for first-time completion of this duty." message.
+        const FIRST_TIME_BONUS = 0x20000;
+        /// Unknown effect.
+        const UNK16 = 0x40000;
+    }
+}
+
+impl DutyOption {
+    pub fn from_content_flags(flags: ContentRegistrationFlags) -> Self {
+        let mut options = DutyOption::NONE;
+
+        if flags.contains(ContentRegistrationFlags::UNRESTRICTED_PARTY) {
+            options.insert(DutyOption::UNRESTRICTED_PARTY);
+        }
+
+        if flags.contains(ContentRegistrationFlags::MINIMUM_ITEM_LEVEL) {
+            options.insert(DutyOption::MINIMUM_ITEM_LEVEL);
+        }
+
+        // TODO: I don't know how level sync is enabled?
+        // if flags.contains(ContentRegistrationFlags::LEVEL_SYNC) {
+        //     options.insert(DutyOption::LEVEL_SYNC);
+        // }
+
+        if flags.contains(ContentRegistrationFlags::SILENCE_ECHO) {
+            options.insert(DutyOption::SILENCE_ECHO);
+        }
+
+        options
+    }
+}
+
+impl Default for DutyOption {
+    fn default() -> Self {
+        DutyOption::NONE
+    }
+}
+
+impl std::fmt::Debug for DutyOption {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        bitflags::parser::to_writer(self, f)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_duty_option() {
+        assert_eq!(DutyOption(262152), DutyOption::UNK1 | DutyOption::UNK16);
+        assert_eq!(
+            DutyOption(262664),
+            DutyOption::UNK1 | DutyOption::UNRESTRICTED_PARTY | DutyOption::UNK16
+        );
+        assert_eq!(
+            DutyOption(296456),
+            DutyOption::UNK1
+                | DutyOption::UNRESTRICTED_PARTY
+                | DutyOption::MINIMUM_ITEM_LEVEL
+                | DutyOption::SILENCE_ECHO
+                | DutyOption::UNK16
+        );
     }
 }

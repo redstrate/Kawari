@@ -7,7 +7,7 @@ use parking_lot::Mutex;
 
 use crate::{
     ClientId, FromServer, PlayerData, StatusEffects, ToServer,
-    lua::{ExtraLuaState, LuaPlayer, LuaZone},
+    lua::{ExtraLuaState, LuaContent, LuaPlayer, LuaZone},
     server::{
         WorldServer,
         actor::NetworkedActor,
@@ -307,6 +307,7 @@ pub fn remove_effect(
             status_effects: StatusEffects::default(),
             queued_tasks: Vec::new(),
             zone_data: LuaZone::default(),
+            content_data: LuaContent::default(),
         };
 
         let key = effect_id as u32;

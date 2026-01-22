@@ -7,7 +7,7 @@ use parking_lot::Mutex;
 
 use crate::{
     ClientId, FromServer, GameData, PlayerData, StatusEffects, ToServer,
-    lua::{EffectsBuilder, ExtraLuaState, LuaPlayer, LuaZone},
+    lua::{EffectsBuilder, ExtraLuaState, LuaContent, LuaPlayer, LuaZone},
     server::{
         WorldServer,
         actor::NetworkedActor,
@@ -77,6 +77,7 @@ pub fn execute_action(
         status_effects: StatusEffects::default(),
         queued_tasks: Vec::new(),
         zone_data: LuaZone::default(),
+        content_data: LuaContent::default(),
     };
 
     let effects_builder;

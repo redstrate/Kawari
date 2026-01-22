@@ -575,7 +575,7 @@ impl ZoneConnection {
                             category: ActorControlCategory::DirectorEvent {
                                 handler_id: HandlerId(*director_id),
                                 event: DirectorEvent::DutyCommence,
-                                arg: 5400,
+                                arg: player.content_data.duration as u32,
                                 unk1: 0,
                             },
                         },
@@ -596,7 +596,7 @@ impl ZoneConnection {
                             category: ActorControlCategory::DirectorEvent {
                                 handler_id: HandlerId(*director_id),
                                 event: DirectorEvent::SetDutyTimeRemaining,
-                                arg: 5399,
+                                arg: (player.content_data.duration - 1) as u32, // TODO: lol
                                 unk1: 0,
                             },
                         },

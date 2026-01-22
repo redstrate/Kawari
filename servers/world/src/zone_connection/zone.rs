@@ -1,15 +1,17 @@
 //! All things zone related, such as changing the weather or warping.
 
 use crate::{
-    ObsfucationData, TeleportReason, ToServer, ZoneConnection, inventory::BuyBackList, lua::LuaZone,
+    ObsfucationData, TeleportReason, ToServer, ZoneConnection,
+    inventory::BuyBackList,
+    lua::{LuaContent, LuaZone},
 };
 use kawari::{
     common::{HandlerId, HandlerType, Position, TerritoryIntendedUse, timestamp_secs},
     config::get_config,
     constants::OBFUSCATION_ENABLED_MODE,
     ipc::zone::{
-        ActorControlCategory, Condition, House, HouseList, InitZone, InitZoneFlags,
-        ServerZoneIpcData, ServerZoneIpcSegment, Warp, WeatherChange,
+        ActorControlCategory, Condition, ContentRegistrationFlags, House, HouseList, InitZone,
+        InitZoneFlags, ServerZoneIpcData, ServerZoneIpcSegment, Warp, WeatherChange,
     },
     packet::{ConnectionState, PacketSegment, ScramblerKeyGenerator, SegmentData, SegmentType},
 };
@@ -44,6 +46,7 @@ impl ZoneConnection {
         exit_rotation: f32,
         initial_login: bool,
         lua_zone: &LuaZone,
+        lua_content: &mut LuaContent,
     ) {
         let bound_by_duty = content_finder_condition_id != 0;
 
@@ -234,8 +237,24 @@ impl ZoneConnection {
                 0xFFFF
             };
 
+            {
+                let mut game_data = self.gamedata.lock();
+                lua_content.duration = game_data
+                    .find_content_time_limit(content_id)
+                    .expect("No time limit?!")
+                    * 60;
+            }
+
             let director_id = HandlerId::new(director_type, content_id);
-            let flags = 0;
+            let flags = if self
+                .content_settings
+                .unwrap()
+                .contains(ContentRegistrationFlags::EXPLORER_MODE)
+            {
+                1
+            } else {
+                0
+            };
 
             tracing::info!("Initializing director {director_id}...");
 
@@ -249,7 +268,7 @@ impl ZoneConnection {
 
             self.send_ipc_self(ServerZoneIpcSegment::new(ServerZoneIpcData::DirectorVars {
                 handler_id: director_id,
-                flags: flags as u8,
+                flags: 0,
                 branch: 0,
                 data: [0; 10],
                 unk1: 0,

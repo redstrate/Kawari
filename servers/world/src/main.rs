@@ -4,9 +4,9 @@ use std::time::{Instant, SystemTime};
 use axum::Router;
 use axum::routing::get;
 use kawari::common::{
-    ClientLanguage, ContainerType, DirectorEvent, DirectorTrigger, HandlerId, HandlerType,
-    INVALID_OBJECT_ID, ItemOperationKind, ObjectId, ObjectTypeId, ObjectTypeKind, Position,
-    calculate_max_level,
+    ClientLanguage, ContainerType, DirectorEvent, DirectorTrigger, DutyOption, HandlerId,
+    HandlerType, INVALID_OBJECT_ID, ItemOperationKind, ObjectId, ObjectTypeId, ObjectTypeKind,
+    Position, calculate_max_level,
 };
 use kawari::config::get_config;
 use kawari_world::inventory::{Item, Storage, get_next_free_slot};
@@ -155,6 +155,7 @@ async fn initial_setup(
                     login_time: None,
                     target_actorid: ObjectTypeId::default(),
                     transaction_sequence: 0,
+                    content_settings: None,
                 };
 
                 // Handle setup before passing off control to the zone connection.
@@ -1118,6 +1119,8 @@ async fn client_loop(
                                                 connection.send_ipc_self(ipc).await;
                                             }
                                             ClientZoneIpcData::QueueDuties(queue_duties) => {
+                                                connection.content_settings = Some(queue_duties.flags);
+                                                lua_player.content_data.settings = DutyOption::from_content_flags(queue_duties.flags).bits(); // TODO: is this the best place to update this?
                                                 connection.register_for_content(queue_duties.content_ids).await;
                                             }
                                             ClientZoneIpcData::QueueRoulette { .. } => {
@@ -1475,7 +1478,7 @@ async fn client_loop(
                         connection.send_conditions().await;
                     },
                     FromServer::ChangeZone(zone_id, content_finder_condition_id, weather_id, position, rotation, lua_zone, initial_login) => {
-                        connection.handle_zone_change(zone_id, content_finder_condition_id, weather_id, position, rotation, initial_login, &lua_zone).await;
+                        connection.handle_zone_change(zone_id, content_finder_condition_id, weather_id, position, rotation, initial_login, &lua_zone, &mut lua_player.content_data).await;
                         lua_player.zone_data = lua_zone;
                     },
                     FromServer::NewPosition(position, rotation, fade_out) => connection.set_player_position(position, rotation, fade_out).await,

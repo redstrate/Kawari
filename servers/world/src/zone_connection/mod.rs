@@ -16,6 +16,7 @@ use kawari::{
     common::{ClientLanguage, HandlerId, ObjectId, ObjectTypeId, Position, timestamp_secs},
     config::WorldConfig,
     ipc::zone::{
+        ContentRegistrationFlags,
         client::ClientZoneIpcSegment,
         server::{Condition, Conditions, ServerZoneIpcData, ServerZoneIpcSegment},
     },
@@ -144,6 +145,7 @@ pub struct ZoneConnection {
 
     // TODO: support more than one content in the queue
     pub queued_content: Option<u16>,
+    pub content_settings: Option<ContentRegistrationFlags>,
 
     pub conditions: Conditions,
     pub client_language: ClientLanguage,

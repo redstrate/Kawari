@@ -5,7 +5,7 @@ mod inventory;
 
 mod player;
 use mlua::{FromLua, Lua, UserData, UserDataFields, Value};
-pub use player::LuaPlayer;
+pub use player::{LuaContent, LuaPlayer};
 
 mod state;
 pub use state::{ExtraLuaState, initial_setup, load_init_script};

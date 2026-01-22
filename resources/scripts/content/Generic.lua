@@ -11,8 +11,8 @@ function onEnterTerritory(player)
         0,
         0,
         0,
-        5400, -- Duration?
-        262152,
+        player.content.duration,
+        player.content.settings,
         0,
         0,
         0,

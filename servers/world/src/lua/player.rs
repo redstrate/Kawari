@@ -21,12 +21,29 @@ use kawari::{
 
 use super::{LuaTask, LuaZone, QueueSegments, create_ipc_self};
 
+#[derive(Default, Clone, Copy)]
+pub struct LuaContent {
+    /// Duration in seconds.
+    pub duration: u16,
+    /// Duty finder settings. See ContentRegistrationFlags.
+    pub settings: u32,
+}
+
+impl UserData for LuaContent {
+    fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
+        fields.add_field_method_get("duration", |_, this| Ok(this.duration));
+
+        fields.add_field_method_get("settings", |_, this| Ok(this.settings));
+    }
+}
+
 #[derive(Default)]
 pub struct LuaPlayer {
     pub player_data: PlayerData,
     pub queued_tasks: Vec<LuaTask>,
     pub zone_data: LuaZone,
     pub status_effects: StatusEffects,
+    pub content_data: LuaContent,
 }
 
 impl QueueSegments for LuaPlayer {
@@ -1115,5 +1132,6 @@ impl UserData for LuaPlayer {
             Ok(this.player_data.saw_inn_wakeup)
         });
         fields.add_field_method_get("city_state", |_, this| Ok(this.player_data.city_state));
+        fields.add_field_method_get("content", |_, this| Ok(this.content_data));
     }
 }
