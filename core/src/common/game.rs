@@ -447,16 +447,16 @@ impl HandlerId {
 impl std::fmt::Display for HandlerId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let handler_type = match self.handler_type() {
-            HandlerType::Invalid => format!("Invalid ({})", self.0 >> 16),
+            HandlerType::Invalid => format!("Unknown ({})", self.0 >> 16),
             _ => format!("{}", self.handler_type()),
         };
-        write!(f, "type: {} id: {}", handler_type, self.event_id())
+        write!(f, "type: {}, id: {}", handler_type, self.event_id())
     }
 }
 
 impl std::fmt::Debug for HandlerId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "EventId ({self})")
+        write!(f, "HandlerId {{ {self} }}")
     }
 }
 
