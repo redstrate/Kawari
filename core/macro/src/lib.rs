@@ -87,6 +87,7 @@ pub fn opcode_data(_metadata: TokenStream, input: TokenStream) -> TokenStream {
 
     // Push the Unknown variant
     input.variants.push_value(::syn::parse::Parser::parse2(syn::Variant::parse, quote! {
+        #[doc(hidden)]
         Unknown {
             #[br(count = size - (crate::packet::IPC_HEADER_SIZE + crate::packet::PACKET_SEGMENT_HEADER_SIZE))]
             unk: Vec<u8>,
