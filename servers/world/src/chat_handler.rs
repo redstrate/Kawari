@@ -7,9 +7,8 @@ use crate::{
 use kawari::{
     common::{ERR_INVENTORY_ADD_FAILED, ITEM_CONDITION_MAX},
     ipc::zone::{
-        ActorControlCategory, ServerZoneIpcData, ServerZoneIpcSegment,
-        client::SendChatMessage,
-        server::{Condition, Conditions, GameMasterRank},
+        ActorControlCategory, Condition, Conditions, GameMasterRank, SendChatMessage,
+        ServerZoneIpcData, ServerZoneIpcSegment,
     },
 };
 

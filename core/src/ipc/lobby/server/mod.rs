@@ -73,10 +73,6 @@ pub enum ServerLobbyIpcData {
     XiCharacterInfo {
         unk: [u8; 496],
     },
-    Unknown {
-        #[br(count = size - 32)]
-        unk: Vec<u8>,
-    },
 }
 
 impl Default for ServerLobbyIpcData {
@@ -89,59 +85,13 @@ impl Default for ServerLobbyIpcData {
 
 #[cfg(test)]
 mod tests {
-    use std::io::Cursor;
-
-    use binrw::BinWrite;
-
-    use crate::packet::{IpcSegmentHeader, ReadWriteIpcOpcode, ReadWriteIpcSegment};
+    use crate::common::test_opcodes;
 
     use super::*;
 
     /// Ensure that the IPC data size as reported matches up with what we write
     #[test]
     fn server_lobby_ipc_sizes() {
-        let ipc_types = [
-            ServerLobbyIpcData::NackReply(NackReply::default()),
-            ServerLobbyIpcData::LoginReply(LoginReply::default()),
-            ServerLobbyIpcData::ServiceLoginReply(ServiceLoginReply::default()),
-            ServerLobbyIpcData::CharaMakeReply {
-                sequence: 0,
-                unk1: 0,
-                unk2: 0,
-                action: LobbyCharacterActionKind::ReserveName,
-                details: CharacterDetails::default(),
-            },
-            ServerLobbyIpcData::GameLoginReply {
-                sequence: 0,
-                actor_id: 0,
-                content_id: 0,
-                token: String::new(),
-                port: 0,
-                host: String::new(),
-            },
-            ServerLobbyIpcData::DistWorldInfo(DistWorldInfo::default()),
-            ServerLobbyIpcData::DistRetainerInfo(DistRetainerInfo::default()),
-            ServerLobbyIpcData::XiCharacterInfo { unk: [0; 496] },
-        ];
-
-        for data in &ipc_types {
-            let mut cursor = Cursor::new(Vec::new());
-
-            let opcode: ServerLobbyIpcType = ReadWriteIpcOpcode::from_data(data);
-            let ipc_segment = ServerLobbyIpcSegment {
-                header: IpcSegmentHeader::from_opcode(opcode.clone()),
-                data: data.clone(),
-                ..Default::default()
-            };
-            ipc_segment.write_le(&mut cursor).unwrap();
-
-            let buffer = cursor.into_inner();
-
-            assert_eq!(
-                buffer.len(),
-                ipc_segment.calc_size() as usize,
-                "{opcode:#?} did not match size!"
-            );
-        }
+        test_opcodes::<ServerLobbyIpcSegment>();
     }
 }

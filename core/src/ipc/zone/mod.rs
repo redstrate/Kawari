@@ -1,4 +1,9 @@
-pub mod client;
+//! ## Server Opcodes
+#![doc = include_str!("../../doc_serverzoneipctype.md")]
+//! ## Client Opcodes
+#![doc = include_str!("../../doc_clientzoneipctype.md")]
+
+mod client;
 pub use client::*;
 
 mod common_emote;
@@ -19,7 +24,7 @@ pub use online_status::*;
 mod party_misc;
 pub use party_misc::*;
 
-pub mod server;
+mod server;
 pub use server::*;
 
 mod search_info;

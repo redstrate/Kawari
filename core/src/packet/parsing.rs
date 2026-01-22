@@ -150,6 +150,8 @@ pub struct PacketSegment<T: ReadWriteIpcSegment> {
     pub data: SegmentData<T>,
 }
 
+pub const PACKET_SEGMENT_HEADER_SIZE: u32 = 16;
+
 impl<T: ReadWriteIpcSegment> Default for PacketSegment<T> {
     fn default() -> Self {
         Self {

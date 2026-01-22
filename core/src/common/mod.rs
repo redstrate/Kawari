@@ -151,6 +151,32 @@ macro_rules! web_static_dir {
     };
 }
 
+/// Helper to automatically test each opcode to ensure it matches the expected size.
+/// This only ensures we aren't buggy writing up to that size, if we were wrong about the size this will still pass.
+#[cfg(test)]
+pub fn test_opcodes<Segment: crate::packet::ReadWriteIpcSegment>() {
+    use crate::packet::{HasUnknownData, ReadWriteIpcOpcode};
+
+    let ipc_types = Segment::Data::create_default_variants();
+
+    for data in ipc_types {
+        let mut cursor = std::io::Cursor::new(Vec::new());
+
+        let opcode = Segment::OpCode::from_data(&data);
+        let ipc_segment = Segment::new(crate::packet::IpcSegmentHeader::from_opcode(opcode), data);
+        ipc_segment.write_le(&mut cursor).unwrap();
+
+        let buffer = cursor.into_inner();
+
+        let opcode_name = ipc_segment.get_name();
+        assert_eq!(
+            buffer.len(),
+            ipc_segment.calc_size() as usize,
+            "{opcode_name} did not match size!"
+        );
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

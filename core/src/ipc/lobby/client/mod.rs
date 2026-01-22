@@ -83,10 +83,6 @@ pub enum ClientLobbyIpcData {
         padding2: Vec<u8>, // all empty
     },
     CharaMake(CharaMake),
-    Unknown {
-        #[br(count = size - 32)]
-        unk: Vec<u8>,
-    },
 }
 
 impl Default for ClientLobbyIpcData {
@@ -99,72 +95,13 @@ impl Default for ClientLobbyIpcData {
 
 #[cfg(test)]
 mod tests {
-    use std::io::Cursor;
-
-    use binrw::BinWrite;
-
-    use crate::packet::{IpcSegmentHeader, ReadWriteIpcOpcode, ReadWriteIpcSegment};
+    use crate::common::test_opcodes;
 
     use super::*;
 
     /// Ensure that the IPC data size as reported matches up with what we write
     #[test]
     fn client_lobby_ipc_sizes() {
-        let ipc_types = [
-            ClientLobbyIpcData::ServiceLogin {
-                sequence: 0,
-                account_index: 0,
-                unk1: 0,
-                unk2: 0,
-                unk3: 0,
-                account_id: 0,
-            },
-            ClientLobbyIpcData::GameLogin {
-                sequence: 0,
-                content_id: 0,
-                unk1: 0,
-                unk2: 0,
-                unk3: 0,
-                unk4: 0,
-            },
-            ClientLobbyIpcData::LoginEx {
-                sequence: 0,
-                session_id: String::default(),
-                version_info: String::default(),
-                unk1: 0,
-                timestamp: 0,
-                unk2: 0,
-            },
-            ClientLobbyIpcData::ShandaLogin {
-                sequence: 0,
-                session_id: String::default(),
-                version_info: String::default(),
-                unk1: 0,
-                unk2: 0,
-                padding: Vec::new(),
-                padding2: Vec::new(),
-            },
-            ClientLobbyIpcData::CharaMake(CharaMake::default()),
-        ];
-
-        for data in &ipc_types {
-            let mut cursor = Cursor::new(Vec::new());
-
-            let opcode: ClientLobbyIpcType = ReadWriteIpcOpcode::from_data(data);
-            let ipc_segment = ClientLobbyIpcSegment {
-                header: IpcSegmentHeader::from_opcode(opcode.clone()),
-                data: data.clone(),
-                ..Default::default()
-            };
-            ipc_segment.write_le(&mut cursor).unwrap();
-
-            let buffer = cursor.into_inner();
-
-            assert_eq!(
-                buffer.len(),
-                ipc_segment.calc_size() as usize,
-                "{opcode:#?} did not match size!"
-            );
-        }
+        test_opcodes::<ClientLobbyIpcSegment>();
     }
 }

@@ -38,10 +38,6 @@ pub enum ServerChatIpcData {
     GetChannelListResponse {
         unk: [u8; 768],
     },
-    Unknown {
-        #[br(count = size - 32)]
-        unk: Vec<u8>,
-    },
 }
 
 impl Default for ServerChatIpcData {
@@ -54,48 +50,13 @@ impl Default for ServerChatIpcData {
 
 #[cfg(test)]
 mod tests {
-    use std::io::Cursor;
-
-    use binrw::BinWrite;
-
-    use crate::packet::{IpcSegmentHeader, ReadWriteIpcOpcode, ReadWriteIpcSegment};
+    use crate::common::test_opcodes;
 
     use super::*;
 
     /// Ensure that the IPC data size as reported matches up with what we write
     #[test]
     fn server_chat_ipc_sizes() {
-        let ipc_types = [
-            ServerChatIpcData::LoginReply {
-                timestamp: 0,
-                sid: 0,
-            },
-            ServerChatIpcData::TellMessage(TellMessage::default()),
-            ServerChatIpcData::PartyMessage(PartyMessage::default()),
-            ServerChatIpcData::TellNotFoundError(TellNotFoundError::default()),
-            ServerChatIpcData::FreeCompanyEvent { unk: [0; 104] },
-            ServerChatIpcData::JoinChannelResult { unk: [0; 32] },
-            ServerChatIpcData::GetChannelListResponse { unk: [0; 768] },
-        ];
-
-        for data in &ipc_types {
-            let mut cursor = Cursor::new(Vec::new());
-
-            let opcode: ServerChatIpcType = ReadWriteIpcOpcode::from_data(data);
-            let ipc_segment = ServerChatIpcSegment {
-                header: IpcSegmentHeader::from_opcode(opcode.clone()),
-                data: data.clone(),
-                ..Default::default()
-            };
-            ipc_segment.write_le(&mut cursor).unwrap();
-
-            let buffer = cursor.into_inner();
-
-            assert_eq!(
-                buffer.len(),
-                ipc_segment.calc_size() as usize,
-                "{opcode:#?} did not match size!"
-            );
-        }
+        test_opcodes::<ServerChatIpcSegment>();
     }
 }

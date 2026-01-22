@@ -44,9 +44,10 @@ use crate::packet::IpcSegment;
 
 #[binrw]
 #[brw(repr = u8)]
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub enum ContentFinderUserAction {
     /// Accepted the duty.
+    #[default]
     Accepted = 0,
     /// Withdrawn from the duty.
     Withdrawn = 1,
@@ -400,10 +401,6 @@ pub enum ClientZoneIpcData {
         unk2: u32, // empty?
         unk3: u32,
     },
-    Unknown {
-        #[br(count = size - 32)]
-        unk: Vec<u8>,
-    },
 }
 
 impl Default for ClientZoneIpcData {
@@ -416,243 +413,13 @@ impl Default for ClientZoneIpcData {
 
 #[cfg(test)]
 mod tests {
-    use std::io::Cursor;
-
-    use binrw::BinWrite;
-
-    use crate::packet::{IpcSegmentHeader, ReadWriteIpcOpcode, ReadWriteIpcSegment};
+    use crate::common::test_opcodes;
 
     use super::*;
 
     /// Ensure that the IPC data size as reported matches up with what we write
     #[test]
     fn client_zone_ipc_sizes() {
-        let ipc_types = [
-            ClientZoneIpcData::InitRequest {
-                unk1: String::default(),
-                unk2: String::default(),
-            },
-            ClientZoneIpcData::FinishLoading { unk: [0; 72] },
-            ClientZoneIpcData::ClientTrigger(ClientTrigger::default()),
-            ClientZoneIpcData::SetSearchInfoHandler { unk: [0; 8] },
-            ClientZoneIpcData::SocialListRequest(SocialListRequest::default()),
-            ClientZoneIpcData::UpdatePositionHandler {
-                rotation: 0.0,
-                position: Position::default(),
-                anim_type: MoveAnimationType::default(),
-                anim_state: MoveAnimationState::default(),
-                jump_state: JumpState::default(),
-            },
-            ClientZoneIpcData::LogOut { unk: [0; 8] },
-            ClientZoneIpcData::Disconnected { unk: [0; 8] },
-            ClientZoneIpcData::SendChatMessage(SendChatMessage::default()),
-            ClientZoneIpcData::GMCommand {
-                command: 0,
-                arg0: 0,
-                arg1: 0,
-                arg2: 0,
-                arg3: 0,
-                target: 0,
-            },
-            ClientZoneIpcData::ZoneJump {
-                exit_box: 0,
-                position: Position::default(),
-                landset_index: 0,
-            },
-            ClientZoneIpcData::ActionRequest(ActionRequest::default()),
-            ClientZoneIpcData::PingSync {
-                timestamp: 0,
-                origin_entity_id: 0,
-                position: Position::default(),
-                rotation: 0.0,
-            },
-            ClientZoneIpcData::EventRelatedUnk {
-                unk1: 0,
-                unk2: 0,
-                unk3: 0,
-                unk4: 0,
-            },
-            ClientZoneIpcData::ItemOperation(ItemOperation::default()),
-            ClientZoneIpcData::StartTalkEvent {
-                actor_id: ObjectTypeId::default(),
-                handler_id: HandlerId::default(),
-            },
-            ClientZoneIpcData::EventReturnHandler4(EventReturnHandler::default()),
-            ClientZoneIpcData::StandardControlsPivot { is_pivoting: 0 },
-            ClientZoneIpcData::EventYieldHandler(EventYieldHandler::<2>::default()),
-            ClientZoneIpcData::EventYieldHandler8(EventYieldHandler::<8>::default()),
-            ClientZoneIpcData::Config(Config::default()),
-            ClientZoneIpcData::EventUnkRequest {
-                handler_id: HandlerId::default(),
-                unk1: 0,
-                unk2: 0,
-                unk3: 0,
-            },
-            ClientZoneIpcData::UnkCall2 { unk1: [0; 8] },
-            ClientZoneIpcData::QueueDuties(QueueDuties::default()),
-            ClientZoneIpcData::EquipGearset {
-                gearset_index: 0,
-                containers: [ContainerType::Inventory0; 14],
-                indices: [0; 14],
-                unk1: 0,
-                unk2: 0,
-            },
-            ClientZoneIpcData::EquipGearset2 {
-                gearset_index: 0,
-                containers: [ContainerType::Inventory0; 14],
-                indices: [0; 14],
-                unk1: 0,
-                unk2: 0,
-                unk3: Vec::new(),
-            },
-            ClientZoneIpcData::StartWalkInEvent {
-                event_arg: 0,
-                handler_id: HandlerId::default(),
-                pos: Position {
-                    x: 0.0,
-                    y: 0.0,
-                    z: 0.0,
-                },
-            },
-            ClientZoneIpcData::ContentFinderAction {
-                action: ContentFinderUserAction::Accepted,
-                unk1: [0; 7],
-            },
-            ClientZoneIpcData::NewDiscovery {
-                layout_id: 0,
-                pos: Position {
-                    x: 0.0,
-                    y: 0.0,
-                    z: 0.0,
-                },
-            },
-            ClientZoneIpcData::GMCommandName {
-                command: 0,
-                arg0: 0,
-                arg1: 0,
-                arg2: 0,
-                arg3: 0,
-                unk1: String::default(),
-            },
-            ClientZoneIpcData::RequestBlacklist(RequestBlacklist::default()),
-            ClientZoneIpcData::RequestFellowships { unk: [0; 8] },
-            ClientZoneIpcData::RequestCrossworldLinkshells { unk: [0; 8] },
-            ClientZoneIpcData::SearchFellowships {
-                unk: Vec::default(),
-            },
-            ClientZoneIpcData::StartCountdown {
-                starter_actor_id: crate::common::INVALID_OBJECT_ID, // If we need this in other tests later, shorten as needed
-                duration: 0,
-                starter_name: String::default(),
-            },
-            ClientZoneIpcData::RequestPlaytime { unk: [0; 8] },
-            ClientZoneIpcData::SetFreeCompanyGreeting {
-                message: "".to_string(),
-            },
-            ClientZoneIpcData::SetClientLanguage {
-                language: ClientLanguage::Japanese,
-            },
-            ClientZoneIpcData::RequestCharaInfoFromContentIds {
-                content_ids: [0; 10],
-            },
-            ClientZoneIpcData::PartyLeave { unk: [0; 8] },
-            ClientZoneIpcData::PartyDisband { unk: [0; 8] },
-            ClientZoneIpcData::PartyMemberKick {
-                content_id: 0,
-                unk: 0,
-                character_name: "".to_string(),
-            },
-            ClientZoneIpcData::PartyChangeLeader {
-                content_id: 0,
-                unk: 0,
-                character_name: "".to_string(),
-            },
-            ClientZoneIpcData::InviteCharacter {
-                content_id: 0,
-                world_id: 0,
-                character_name: "".to_string(),
-                invite_type: InviteType::Party,
-            },
-            ClientZoneIpcData::InviteReply {
-                sender_content_id: 0,
-                sender_world_id: 0,
-                invite_type: InviteType::Party,
-                response: InviteReply::Declined,
-            },
-            ClientZoneIpcData::RequestSearchInfo {
-                content_id: 0,
-                unk: [0; 16],
-            },
-            ClientZoneIpcData::RequestAdventurerPlate { unk: [0; 16] },
-            ClientZoneIpcData::SearchPlayers { unk: Vec::new() },
-            ClientZoneIpcData::EditSearchInfo(SearchInfo::default()),
-            ClientZoneIpcData::RequestOwnSearchInfo { unk: [0; 8] },
-            ClientZoneIpcData::WalkOutsideEvent {
-                event_arg: 0,
-                handler_id: HandlerId::default(),
-                pos: Position::default(),
-            },
-            ClientZoneIpcData::EnterTerritoryEvent {
-                handler_id: HandlerId::default(),
-            },
-            ClientZoneIpcData::Trade { unk: [0; 16] },
-            ClientZoneIpcData::BuyInclusionShop {
-                shop_id: 0,
-                unk1: 0,
-                shop_id_again: 0,
-                category: 0,
-                special_shop_id: 0,
-                item_index: 0,
-                unk2: 0,
-                unk3: 0,
-                unk4: [0; 40],
-            },
-            ClientZoneIpcData::ShareStrategyBoard {
-                content_id: 0,
-                board_data: StrategyBoard::default(),
-            },
-            ClientZoneIpcData::StrategyBoardReceived {
-                content_id: 0,
-                unk: 0,
-            },
-            ClientZoneIpcData::StrategyBoardUpdate(StrategyBoardUpdate::default()),
-            ClientZoneIpcData::ApplyFieldMarkerPreset(WaymarkPreset::default()),
-            ClientZoneIpcData::RequestFreeCompanyShortMessage {
-                content_id: 0,
-                sequence: 0,
-            },
-            ClientZoneIpcData::QueueRoulette {
-                roulette_id: 0,
-                unk1: [0; 15],
-                languages: SocialListUILanguages::empty(),
-                unk2: [0; 7],
-            },
-            ClientZoneIpcData::PlayGoldSaucerMachine {
-                handler_id: HandlerId::default(),
-                unk1: 0,
-                unk2: 0,
-                unk3: 0,
-            },
-        ];
-
-        for data in &ipc_types {
-            let mut cursor = Cursor::new(Vec::new());
-
-            let opcode: ClientZoneIpcType = ReadWriteIpcOpcode::from_data(data);
-            let ipc_segment = ClientZoneIpcSegment {
-                header: IpcSegmentHeader::from_opcode(opcode.clone()),
-                data: data.clone(),
-                ..Default::default()
-            };
-            ipc_segment.write_le(&mut cursor).unwrap();
-
-            let buffer = cursor.into_inner();
-
-            assert_eq!(
-                buffer.len(),
-                ipc_segment.calc_size() as usize,
-                "{opcode:#?} did not match size!"
-            );
-        }
+        test_opcodes::<ClientZoneIpcSegment>();
     }
 }

@@ -3,8 +3,9 @@ use binrw::binrw;
 #[binrw]
 #[repr(u8)]
 #[brw(repr = u8)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Default)]
 pub enum WaymarkPlacementMode {
+    #[default]
     Removed = 0,
     Placed = 1,
 }

@@ -1,7 +1,7 @@
 mod parsing;
 pub use parsing::{
-    ConnectionState, ConnectionType, PacketHeader, PacketSegment, SegmentData, SegmentType,
-    parse_packet, parse_packet_header,
+    ConnectionState, ConnectionType, PACKET_SEGMENT_HEADER_SIZE, PacketHeader, PacketSegment,
+    SegmentData, SegmentType, parse_packet, parse_packet_header,
 };
 
 mod compression;
@@ -12,8 +12,8 @@ pub use encryption::generate_encryption_key;
 
 mod ipc;
 pub use ipc::{
-    IPC_HEADER_SIZE, IpcSegment, IpcSegmentHeader, PredefinedOpcode, ReadWriteIpcOpcode,
-    ReadWriteIpcSegment, ServerIpcSegmentHeader, ServerlessIpcSegmentHeader,
+    HasUnknownData, IPC_HEADER_SIZE, IpcSegment, IpcSegmentHeader, PredefinedOpcode,
+    ReadWriteIpcOpcode, ReadWriteIpcSegment, ServerIpcSegmentHeader, ServerlessIpcSegmentHeader,
 };
 
 /// Bindings for Oodle network compression.

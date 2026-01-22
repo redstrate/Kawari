@@ -10,8 +10,10 @@ pub mod config;
 pub mod packet;
 
 #[rustfmt::skip]
+#[doc(hidden)]
 pub mod constants;
 #[rustfmt::skip]
+#[doc(hidden)]
 pub mod opcodes;
 
 /// IPC

@@ -31,6 +31,10 @@ pub trait ReadWriteIpcSegment:
     + 'static
     + Default
 {
+    type Data: HasUnknownData;
+    type OpCode: ReadWriteIpcOpcode<Self::Data>;
+    type Header: IpcSegmentHeader<Self::OpCode>;
+
     /// Calculate the size of this Ipc segment *including* the 16 byte header.
     /// When implementing this, please use the size seen in retail instead of guessing.
     fn calc_size(&self) -> u32;
@@ -43,6 +47,10 @@ pub trait ReadWriteIpcSegment:
 
     /// Returns the comment for this opcode.
     fn get_comment(&self) -> Option<&'static str>;
+
+    /// Only used in automated opcode testing.
+    #[cfg(test)]
+    fn new(header: Self::Header, data: Self::Data) -> Self;
 }
 
 pub trait IpcSegmentHeader<T> {
@@ -51,6 +59,17 @@ pub trait IpcSegmentHeader<T> {
 
     /// Returns the opcode.
     fn opcode(&self) -> &T;
+}
+
+pub trait HasUnknownData {
+    /// Returns the size of the unknown variant, if any.
+    fn unknown_size(&self) -> Option<usize>;
+
+    /// Used only in automated opcode testing.
+    #[cfg(test)]
+    fn create_default_variants() -> Vec<Self>
+    where
+        Self: Sized;
 }
 
 /// Seen in Zone connections. Has an extra field containing server information.
@@ -224,11 +243,21 @@ where
         + Default
         + ReadWriteIpcOpcode<Data>
         + PredefinedOpcode,
-    for<'a> Data: BinRead<Args<'a> = (&'a OpCode, &'a u32)> + 'a + std::fmt::Debug + Default,
-    for<'a> Data: BinWrite<Args<'a> = ()> + 'a + std::fmt::Debug + Default,
+    for<'a> Data:
+        BinRead<Args<'a> = (&'a OpCode, &'a u32)> + 'a + std::fmt::Debug + Default + HasUnknownData,
+    for<'a> Data: BinWrite<Args<'a> = ()> + 'a + std::fmt::Debug + Default + HasUnknownData,
 {
+    type Data = Data;
+    type OpCode = OpCode;
+    type Header = Header;
+
     fn calc_size(&self) -> u32 {
-        IPC_HEADER_SIZE + self.header.opcode().calc_size()
+        IPC_HEADER_SIZE
+            + if self.get_name() == "Unknown" {
+                self.data.unknown_size().expect("Expected Unknown?") as u32
+            } else {
+                self.header.opcode().calc_size()
+            }
     }
 
     fn get_name(&self) -> &'static str {
@@ -241,6 +270,15 @@ where
 
     fn get_comment(&self) -> Option<&'static str> {
         self.header.opcode().get_comment()
+    }
+
+    #[cfg(test)]
+    fn new(header: Header, data: Data) -> Self {
+        Self {
+            header,
+            data,
+            ..Default::default()
+        }
     }
 }
 

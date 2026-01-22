@@ -1,6 +1,9 @@
+# Auto-generated stuff
 core/src/opcodes.rs
 core/src/constants.rs
+core/src/doc_*.md
 
+# Rust stuff
 **/target
 /oodle
 .idea/

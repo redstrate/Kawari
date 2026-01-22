@@ -785,6 +785,7 @@ dependencies = [
 name = "kawari-core-macro"
 version = "7.40.2"
 dependencies = [
+ "proc-macro2",
  "quote",
  "syn",
 ]
