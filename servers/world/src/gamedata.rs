@@ -983,7 +983,10 @@ impl GameData {
         let sheet = ClassJobSheet::read_from(&mut self.resource, Language::English).ok()?;
         let row = sheet.row(classjob_id as u32)?;
 
-        row.ItemSoulCrystal().into_u32().copied()
+        row.ItemSoulCrystal()
+            .into_u32()
+            .copied()
+            .filter(|x| *x != 0)
     }
 
     /// Gets the starting level for the classjob.

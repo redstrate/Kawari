@@ -477,4 +477,51 @@ impl Inventory {
         Self::prepare_items_in_container(&mut inventory.armoury_rings, data);
         // Skip soul crystals
     }
+
+    /// Equips the given soul crystal and places the old one (if any) back into the Armoury Chest.
+    pub fn equip_soul_crystal(&mut self, id: u32) {
+        // NOTE: This has to match client behavior exactly! See ItemOperation code for more details.
+
+        // If we already have it equipped, do nothing.
+        if self.equipped.soul_crystal.id == id && self.equipped.soul_crystal.quantity > 0 {
+            return;
+        }
+
+        for i in 0..self.armoury_soul_crystal.max_slots() as u16 {
+            // Find the soul crystal in the Armoury Chest.
+            let armoury_slot = self.armoury_soul_crystal.get_slot(i);
+            if armoury_slot.id == id && armoury_slot.quantity > 0 {
+                // Perform the swap.
+                let operation = ItemOperation {
+                    operation_type: ItemOperationKind::Exchange,
+                    src_storage_id: ContainerType::ArmorySoulCrystal,
+                    src_container_index: i,
+                    dst_storage_id: ContainerType::Equipped,
+                    dst_container_index: 13,
+                    ..Default::default()
+                };
+                self.process_action(&operation);
+
+                return;
+            }
+        }
+    }
+
+    /// Puts your equipped soul crystal back into the Armoury Chest.
+    pub fn unequip_soul_crystal(&mut self) {
+        // NOTE: This has to match client behavior exactly! See ItemOperation code for more details.
+
+        // If we already have nothing, do nothing.
+        if self.equipped.soul_crystal.quantity == 0 {
+            return;
+        }
+
+        let destination_info = self.add_in_next_free_armory_slot(13).unwrap();
+        self.add_in_slot(
+            self.equipped.soul_crystal,
+            &destination_info.container,
+            destination_info.index,
+        );
+        self.equipped.soul_crystal.quantity = 0;
+    }
 }

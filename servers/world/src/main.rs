@@ -1002,9 +1002,39 @@ async fn client_loop(
 
                                                 connection.player_data.item_sequence += 1;
 
+                                                // This is annoying, basically if we change weapons the client expects the *server* to also equip the relevant job crystal if available.
+                                                // The client DOES not send us an ItemOperation for this, but in turn we don't have to inform them about the update.
+                                                if (action.src_storage_id == ContainerType::Equipped && action.src_container_index == 0) || (action.dst_storage_id == ContainerType::Equipped && action.dst_container_index == 0) {
+                                                    // We need to update our current class based on the weapon...
+                                                    connection.change_class_based_on_weapon().await;
+
+                                                    let id;
+                                                    {
+                                                        let mut gamedata = connection.gamedata.lock();
+                                                        id = gamedata.get_soul_crystal_item_id(connection.player_data.classjob.current_class as u16);
+                                                    }
+                                                    if let Some(id) = id {
+                                                        connection.player_data.inventory.equip_soul_crystal(id);
+
+                                                        // Then re-check the soul crystal...
+                                                        connection.change_class_based_on_soul_crystal().await;
+                                                    } else {
+                                                        connection.player_data.inventory.unequip_soul_crystal();
+                                                    }
+                                                }
+
+                                                // If the soul crystal is changed, ensure we update accordingly.
+                                                if (action.src_storage_id == ContainerType::Equipped && action.src_container_index == 13) || (action.dst_storage_id == ContainerType::Equipped && action.dst_container_index == 13) {
+                                                    let soul_crystal = connection.player_data.inventory.equipped.soul_crystal;
+                                                    if soul_crystal.quantity > 0 {
+                                                        connection.change_class_based_on_soul_crystal().await;
+                                                    } else {
+                                                        connection.change_class_based_on_weapon().await;
+                                                    }
+                                                }
+
                                                 // If the client modified their equipped items, we have to process that
                                                 if action.src_storage_id == ContainerType::Equipped || action.dst_storage_id == ContainerType::Equipped {
-                                                    connection.change_class_based_on_weapon().await;
                                                     connection.inform_equip().await;
                                                     connection.update_server_stats().await;
                                                 }

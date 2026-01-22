@@ -339,17 +339,26 @@ impl ZoneConnection {
         }
 
         self.player_data.classjob.current_class = classjobs.first().copied().unwrap() as i32;
+        self.update_class_info().await;
+    }
 
+    /// Changes the class based on the soul crystal equipped.
+    // TODO: remove incompatible armor
+    pub async fn change_class_based_on_soul_crystal(&mut self) {
         // Then check the soul crystal:
         let soul_crystal = self.player_data.inventory.equipped.soul_crystal;
         if soul_crystal.quantity > 0 {
-            let mut game_data = self.gamedata.lock();
+            let classjob_id;
+            {
+                let mut game_data = self.gamedata.lock();
+                classjob_id = game_data.get_applicable_classjob(soul_crystal.id);
+            }
 
-            if let Some(classjob_id) = game_data.get_applicable_classjob(soul_crystal.id) {
+            if let Some(classjob_id) = classjob_id {
                 self.player_data.classjob.current_class = classjob_id as i32;
+
+                self.update_class_info().await;
             }
         }
-
-        self.update_class_info().await;
     }
 }

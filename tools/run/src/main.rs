@@ -64,6 +64,4 @@ async fn main() {
         start_server("kawari-web"),
         start_server("kawari-world"),
     );
-
-    println!("test");
 }
