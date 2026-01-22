@@ -9,7 +9,7 @@ This guide covers how to setup Kawari on macOS.
 
 * Legally obtained copy of the game that's updated to a supported version
 * Oodle Network Compression
-    * You can download the [latest release of Oodle from this repository](https://github.com/WorkingRobot/OodleUE/releases/latest). Click the "Official Binaries" link for "Oodle Network" in the README, and download the "liboo2netmac64.a" file from the "Mac" folder.
+    * You can download the [latest release of Oodle from this repository](https://github.com/WorkingRobot/OodleUE/blob/main/Engine/Plugins/Compression/OodleNetwork/Sdks/2.9.15/lib). Click the "Mac" folder, and download the "liboo2netmac64.a" file.
 
 ## Firewall
 

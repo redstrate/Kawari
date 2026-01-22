@@ -7,7 +7,7 @@ This guide covers how to setup Kawari on Windows, which also includes Wine.
 * Legally obtained copy of the game that's updated to a supported version
 * [Visual C++ Redistributable for Visual Studio 2015](https://www.microsoft.com/en-US/download/details.aspx?id=48145)
 * Oodle Network Compression
-    * You can download the [latest release of Oodle from this repository](https://github.com/WorkingRobot/OodleUE/releases/latest). Download the "msvc.zip" file.
+    * You can download the [latest release of Oodle from this repository](https://github.com/WorkingRobot/OodleUE/releases/latest). Download the "msvc-release.zip" file.
 
 ## Downloading Kawari
 
