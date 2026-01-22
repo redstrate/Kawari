@@ -566,6 +566,7 @@ pub enum ActorControlCategory {
         unk4: u32,
     },
 
+    #[doc(hidden)]
     Unknown {
         category: u32,
         param1: u32,
