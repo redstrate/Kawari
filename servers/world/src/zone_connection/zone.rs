@@ -172,7 +172,7 @@ impl ZoneConnection {
         .await;
 
         // send some weird thing to make the zone load correctly
-        {
+        if !bound_by_duty {
             self.send_ipc_self(ServerZoneIpcSegment::new(ServerZoneIpcData::UnkZoneLoad1 {
                 unk1: [0; 56],
             }))
@@ -219,6 +219,7 @@ impl ZoneConnection {
             .await;
 
             self.content_handler_id = HandlerId::default();
+            self.current_instance_id = None;
         }
 
         // Initialize director as needed
@@ -236,6 +237,8 @@ impl ZoneConnection {
                 tracing::warn!("Failed to find content ID for {content_finder_condition_id}?");
                 0xFFFF
             };
+
+            self.current_instance_id = Some(content_id);
 
             {
                 let mut game_data = self.gamedata.lock();

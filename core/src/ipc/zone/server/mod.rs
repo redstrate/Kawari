@@ -782,9 +782,37 @@ pub enum ServerZoneIpcData {
         #[brw(pad_after = 5)]
         starter_name: String,
     },
-    Unknown {
-        #[br(count = size - 32)]
-        unk: Vec<u8>,
+    DirectorPopupMessage {
+        unk1: u64, // Empty?
+        /// Should be the ID of the instance's director.
+        handler_id: HandlerId,
+        /// See the BNPCName Excel sheet.
+        npc_name: u32,
+        /// See the InstanceContentTextData Excel sheet.
+        text_data_id: u32,
+        unk4: u32,
+        unk5: u32,
+        unk6: u32,
+        unk7: u32,
+        unk8: u32,
+    },
+    DirectorSetupMapEffects {
+        /// Should be the ID of the instance's director.
+        handler_id: HandlerId,
+        /// Unsure of what these flags mean.
+        unk_flag: u16,
+        /// The initial states each map effect should be in.
+        states: [u16; 65],
+    },
+    DirectorMapEffect {
+        /// Should be the ID of the instance's director.
+        handler_id: HandlerId,
+        /// The new state of this map effect.
+        state: u16,
+        unk1: u16,
+        /// The index of the map effect to change.
+        index: u8,
+        unk2: [u8; 7], // all padding
     },
 }
 

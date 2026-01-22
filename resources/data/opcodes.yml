@@ -467,6 +467,18 @@ ServerZoneIpcType:
     comment: A client initiated a countdown from the Party menu, and now their party needs to be informed.
     opcode: 943
     size: 64
+  - name: DirectorPopupMessage
+    comment: Shows a popup message (usually reserved for NPCs and bosses.) Not sure if it's the only thing this does.
+    opcode: 230
+    size: 40
+  - name: DirectorSetupMapEffects
+    comment: Seems to animate stuff like the train moving in the Tower of Babil. Unsure of its purpose elsewhere.
+    opcode: 619
+    size: 136
+  - name: DirectorMapEffect
+    comment: Updates a map effect.
+    opcode: 547
+    size: 16
 ClientZoneIpcType:
   - name: InitRequest
     comment: "Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)"

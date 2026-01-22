@@ -7,6 +7,7 @@ use icarus::BNpcBase::BNpcBaseSheet;
 use icarus::BaseParam::BaseParamSheet;
 use icarus::ClassJob::ClassJobSheet;
 use icarus::ClassJobCategory::ClassJobCategorySheet;
+use icarus::ContentDirectorManagedSG::ContentDirectorManagedSGSheet;
 use icarus::ContentFinderCondition::ContentFinderConditionSheet;
 use icarus::CustomTalk::CustomTalkSheet;
 use icarus::EObj::EObjSheet;
@@ -1053,6 +1054,31 @@ impl GameData {
         }
 
         None
+    }
+
+    /// Returns the layout IDs for the map effects of this InstanceContent.
+    pub fn get_map_effects(&mut self, content_id: u32) -> Option<Vec<i32>> {
+        let instance_content_sheet =
+            InstanceContentSheet::read_from(&mut self.resource, Language::None).unwrap();
+        let instance_content_row = instance_content_sheet.row(content_id)?;
+        let content_id = instance_content_row
+            .ContentDirectorManagedSG()
+            .into_u16()
+            .copied()?;
+
+        let sheet =
+            ContentDirectorManagedSGSheet::read_from(&mut self.resource, Language::None).ok()?;
+        let subrows = sheet
+            .into_iter()
+            .find(|(row_id, _)| *row_id == content_id as u32)?;
+
+        Some(
+            subrows
+                .1
+                .iter()
+                .map(|(_, row)| row.Unknown0().into_i32().copied().unwrap())
+                .collect(),
+        )
     }
 }
 
