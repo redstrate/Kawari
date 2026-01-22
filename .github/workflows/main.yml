@@ -123,6 +123,22 @@ jobs:
           !docs/src/
           !docs/book.toml
 
+    - name: Set up SSH key
+      if: runner.os == 'Linux'
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.DEPLOY_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        printf "Host ryne.moe\nPort 38901\nStrictHostKeyChecking no" >> ~/.ssh/config
+        chmod 700 ~/.ssh
+        chmod 600 ~/.ssh/id_rsa
+        chmod 644 ~/.ssh/config
+
+    - name: Upload API documentation
+      if: runner.os == 'Linux'
+      run: |
+        cargo doc --release --no-deps --lib
+        rsync -e "ssh -p 38901 -o StrictHostKeyChecking=no" --recursive target/doc/ deploy@ryne.moe:/srv/http/kawari-api-docs
+
   deploy:
     name: "Deploy"
     runs-on: ubuntu-latest
