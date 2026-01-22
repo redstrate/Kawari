@@ -6,7 +6,7 @@ This guide covers how to setup Kawari on Linux.
 
 * Legally obtained copy of the game that's updated to a supported version
 * Oodle Network Compression
-    * You can download the [latest release of Oodle from this repository](https://github.com/WorkingRobot/OodleUE/releases/latest). Download the "gcc.zip" file.
+    * You can download the [latest release of Oodle from this repository](https://github.com/WorkingRobot/OodleUE/releases/latest). Download the "gcc-release.zip" file.
 
 ## Downloading Kawari
 
