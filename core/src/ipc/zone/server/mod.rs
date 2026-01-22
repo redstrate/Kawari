@@ -768,9 +768,9 @@ pub enum ServerZoneIpcData {
         account_id: u64,
         /// The content id of the character that started the countdown.
         content_id: u64,
-        /// Unknown, but this is repeated back to the client.
-        unk1: u32,
-        unk2: u16, // Could be a u8 with padding? Seems to always be 0x5B.
+        /// The actor id of the character that started the countdown.
+        starter_actor_id: ObjectId,
+        unk: u16, // Could be a u8 with padding? Seems to always be 0x5B.
         /// The duration of the countdown in seconds.
         #[brw(pad_after = 3)]
         duration: u16,
@@ -1195,8 +1195,8 @@ mod tests {
             ServerZoneIpcData::Countdown {
                 account_id: 0,
                 content_id: 0,
-                unk1: 0,
-                unk2: 0,
+                starter_actor_id: INVALID_OBJECT_ID,
+                unk: 0,
                 duration: 0,
                 starter_name: String::default(),
             },

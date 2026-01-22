@@ -1056,7 +1056,7 @@ pub fn handle_social_messages(
             account_id,
             content_id,
             starter_name,
-            unk,
+            starter_actor_id,
             duration,
         ) => {
             let mut network = network.lock();
@@ -1064,7 +1064,7 @@ pub fn handle_social_messages(
                 *account_id,
                 *content_id,
                 starter_name.clone(),
-                *unk,
+                *starter_actor_id,
                 *duration,
             );
 

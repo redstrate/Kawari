@@ -170,7 +170,9 @@ pub enum FromServer {
     /// Inform the client to increment the rested EXP by 10 seconds.
     IncrementRestedExp(),
     /// Inform the client about a countdown that was started in their party.
-    Countdown(u64, u64, String, u32, u16),
+    Countdown(u64, u64, String, ObjectId, u16),
+    /// Inform the client that a sign/marker was applied to a target by someone in their party.
+    TargetSignToggled(u32, ObjectId, ObjectId, bool),
 }
 
 #[derive(Debug, Clone)]
@@ -319,7 +321,7 @@ pub enum ToServer {
     /// Inform the server of our new basic stat values.
     SetNewStatValues(ObjectId, u8, u8, u32, u16),
     /// The client started a countdown in their party.
-    StartCountdown(u64, ObjectId, u64, u64, String, u32, u16),
+    StartCountdown(u64, ObjectId, u64, u64, String, ObjectId, u16),
 }
 
 #[derive(Clone, Debug)]

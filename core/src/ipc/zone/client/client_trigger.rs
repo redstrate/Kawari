@@ -70,7 +70,18 @@ pub enum ClientTriggerCommand {
 
     /// The client toggles a sign for their current target.
     #[brw(magic = 301u32)]
-    ToggleSign { id: u32 },
+    ToggleSign {
+        /// The id of the sign to apply. See the Marker Excel sheet.
+        sign_id: u32,
+        #[brw(pad_after = 12)] // Empty/zeroes
+        unk1: u32, // Observed as 1 or 2 depending on what's targeted, likely a target type similar to other CTs
+        /// The actor to apply the sign to.
+        target_actor_id: ObjectId,
+        /// Likely a boolean, that is repeated back to the client later on. Observed as 1 or 0 so far.
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        on: bool,
+    },
 
     /// The client sets a specific title.
     #[brw(magic = 302u32)]
