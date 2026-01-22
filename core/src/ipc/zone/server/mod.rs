@@ -763,6 +763,25 @@ pub enum ServerZoneIpcData {
         /// The character's total cumulative playtime, measured in minutes.
         duration: u32,
     },
+    Countdown {
+        /// The account id of the character that started the countdown.
+        account_id: u64,
+        /// The content id of the character that started the countdown.
+        content_id: u64,
+        /// Unknown, but this is repeated back to the client.
+        unk1: u32,
+        unk2: u16, // Could be a u8 with padding? Seems to always be 0x5B.
+        /// The duration of the countdown in seconds.
+        #[brw(pad_after = 3)]
+        duration: u16,
+        /// The name of the character that started the countdown.
+        #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+        #[br(count = CHAR_NAME_MAX_LENGTH)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        #[brw(pad_after = 5)]
+        starter_name: String,
+    },
     Unknown {
         #[br(count = size - 32)]
         unk: Vec<u8>,
@@ -1173,6 +1192,14 @@ mod tests {
             ServerZoneIpcData::FreeCompanyActivityList { unk: [0; 528] },
             ServerZoneIpcData::UnkContentFinder2 { unk: [0; 16] },
             ServerZoneIpcData::Playtime { duration: 0 },
+            ServerZoneIpcData::Countdown {
+                account_id: 0,
+                content_id: 0,
+                unk1: 0,
+                unk2: 0,
+                duration: 0,
+                starter_name: String::default(),
+            },
         ];
 
         for data in &ipc_types {
