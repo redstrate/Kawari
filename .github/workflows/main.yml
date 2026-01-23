@@ -134,7 +134,7 @@ jobs:
         chmod 644 ~/.ssh/config
 
     - name: Upload API documentation
-      if: runner.os == 'Linux' && github.event_name != 'pull_request' &&
+      if: runner.os == 'Linux' && github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
       run: |
         cargo doc --release --no-deps --lib
         rsync -e "ssh -p 38901 -o StrictHostKeyChecking=no" --recursive target/doc/ deploy@ryne.moe:/srv/http/kawari-api-docs
