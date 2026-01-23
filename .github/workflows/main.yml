@@ -124,7 +124,7 @@ jobs:
           !docs/book.toml
 
     - name: Set up SSH key
-      if: runner.os == 'Linux'
+      if: runner.os == 'Linux' && github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
       run: |
         mkdir -p ~/.ssh
         echo "${{ secrets.DEPLOY_PRIVATE_KEY }}" > ~/.ssh/id_rsa
@@ -134,7 +134,7 @@ jobs:
         chmod 644 ~/.ssh/config
 
     - name: Upload API documentation
-      if: runner.os == 'Linux'
+      if: runner.os == 'Linux' && github.event_name != 'pull_request' &&
       run: |
         cargo doc --release --no-deps --lib
         rsync -e "ssh -p 38901 -o StrictHostKeyChecking=no" --recursive target/doc/ deploy@ryne.moe:/srv/http/kawari-api-docs
