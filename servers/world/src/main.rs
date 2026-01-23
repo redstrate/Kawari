@@ -879,27 +879,28 @@ async fn process_packet(
                                         let map_effects;
                                         {
                                             let mut game_data = connection.gamedata.lock();
-                                            map_effects = game_data
-                                                .get_map_effects(instance_id as u32)
-                                                .expect("Failed to find map effects?!");
+                                            map_effects =
+                                                game_data.get_map_effects(instance_id as u32)
                                         }
 
-                                        let mut states = [0; 65];
-                                        for (i, layout_id) in map_effects.iter().enumerate() {
-                                            // A layout ID of zero means the effect should be skipped.
-                                            if *layout_id != 0 {
-                                                states[i] = 4; // 4 means to play it, I guess?
+                                        if let Some(map_effects) = map_effects {
+                                            let mut states = [0; 65];
+                                            for (i, layout_id) in map_effects.iter().enumerate() {
+                                                // A layout ID of zero means the effect should be skipped.
+                                                if *layout_id != 0 {
+                                                    states[i] = 4; // 4 means to play it, I guess?
+                                                }
                                             }
-                                        }
 
-                                        let ipc = ServerZoneIpcSegment::new(
-                                            ServerZoneIpcData::DirectorSetupMapEffects {
-                                                handler_id: connection.content_handler_id,
-                                                unk_flag: 5,
-                                                states,
-                                            },
-                                        );
-                                        connection.send_ipc_self(ipc).await;
+                                            let ipc = ServerZoneIpcSegment::new(
+                                                ServerZoneIpcData::DirectorSetupMapEffects {
+                                                    handler_id: connection.content_handler_id,
+                                                    unk_flag: 5,
+                                                    states,
+                                                },
+                                            );
+                                            connection.send_ipc_self(ipc).await;
+                                        }
                                     }
                                 }
                                 ClientTriggerCommand::BeginContentsReplay {} => {
