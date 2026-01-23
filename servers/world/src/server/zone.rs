@@ -23,7 +23,8 @@ use crate::{
 use kawari::{
     common::{
         BOSS_WALL_IDS, DistanceRange, ENTRANCE_CIRCLE_IDS, EOBJ_DOOR, EOBJ_SHORTCUT,
-        EOBJ_SHORTCUT_EXPLORER_MODE, HandlerType, ObjectId, Position, euler_to_direction,
+        EOBJ_SHORTCUT_EXPLORER_MODE, HandlerType, ObjectId, Position, STRIKING_DUMMY_SGBS,
+        euler_to_direction,
     },
     ipc::zone::{
         ActorControlCategory, BattleNpcSubKind, CommonSpawn, Conditions, NpcSpawn, ObjectKind,
@@ -448,10 +449,7 @@ impl Zone {
             for layer in &layer_group.chunks[0].layers {
                 for object in &layer.objects {
                     if let LayerEntryData::SharedGroup(sgb) = &object.data {
-                        // TODO: support other kinds of striking dummies
-                        if sgb.asset_path.value
-                            == "bgcommon/world/lvd/shared/for_bg/sgbg_w_lvd_005_01a.sgb"
-                        {
+                        if STRIKING_DUMMY_SGBS.contains(&sgb.asset_path.value.as_str()) {
                             let spawn = NpcSpawn {
                                 gimmick_id: object.instance_id,
                                 common: CommonSpawn {

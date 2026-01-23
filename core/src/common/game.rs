@@ -58,6 +58,12 @@ pub const BOSS_WALL_IDS: [u32; 3] = [
     2002872,
 ];
 
+pub const STRIKING_DUMMY_SGBS: [&str; 2] = [
+    // Seen in central shroud
+    "bgcommon/world/lvd/shared/for_bg/sgbg_w_lvd_003_01a.sgb", // Seen in Wolves Den Pier
+    "bgcommon/world/lvd/shared/for_bg/sgbg_w_lvd_005_01a.sgb",
+];
+
 /// Time until a dead actor fades away. Estimated from retail.
 pub const DEAD_FADE_OUT_TIME: Duration = Duration::from_secs(8);
 
