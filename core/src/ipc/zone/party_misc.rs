@@ -22,6 +22,8 @@ pub enum PartyUpdateStatus {
     Unknown = 9, // TODO: This hasn't been observed yet, but it's included for completeness in case it does exist.
     MemberWentOffline = 0xA,
     MemberReturned = 0xB,
+    ReadyCheckInitiated = 0x10,
+    ReadyCheckResponse = 0x11,
     PartyLeaderWentOffline = 0x12, // While this does get used on retail, we don't use it ourselves.
 }
 
@@ -106,4 +108,15 @@ pub struct MemberPosition {
 #[derive(Clone, Debug, Default)]
 pub struct PartyMemberPositions {
     pub positions: [MemberPosition; PartyMemberEntry::NUM_ENTRIES],
+}
+
+#[binrw]
+#[brw(repr = u8)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+/// Content ids (yes, really) used in the target content id field of a PartyUpdate packet, indicating the response to a ready check.
+// TODO: It's possible these may change based on the number of party members, or that this isn't entirely correct. This is currently still under research.
+pub enum ReadyCheckReply {
+    #[default]
+    Yes = 257,
+    No = 513,
 }
