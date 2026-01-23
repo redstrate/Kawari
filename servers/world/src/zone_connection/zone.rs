@@ -240,26 +240,26 @@ impl ZoneConnection {
 
             self.current_instance_id = Some(content_id);
 
+            let director_id = HandlerId::new(director_type, content_id);
+            tracing::info!("Initializing director {director_id}...");
+
             {
                 let mut game_data = self.gamedata.lock();
                 lua_content.duration = game_data
                     .find_content_time_limit(content_id)
-                    .expect("No time limit?!")
+                    .unwrap_or_default()
                     * 60;
             }
 
-            let director_id = HandlerId::new(director_type, content_id);
             let flags = if self
                 .content_settings
-                .unwrap()
+                .unwrap_or_default()
                 .contains(ContentRegistrationFlags::EXPLORER_MODE)
             {
                 1
             } else {
                 0
             };
-
-            tracing::info!("Initializing director {director_id}...");
 
             // Initialize the content director
             self.actor_control_self(ActorControlCategory::InitDirector {
