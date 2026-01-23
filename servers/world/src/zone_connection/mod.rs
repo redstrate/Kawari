@@ -16,8 +16,8 @@ use kawari::{
     common::{ClientLanguage, HandlerId, ObjectId, ObjectTypeId, Position, timestamp_secs},
     config::WorldConfig,
     ipc::zone::{
-        ClientZoneIpcSegment, Condition, Conditions, ContentRegistrationFlags, ServerZoneIpcData,
-        ServerZoneIpcSegment,
+        ClientTriggerCommand, ClientZoneIpcSegment, Condition, Conditions,
+        ContentRegistrationFlags, ServerZoneIpcData, ServerZoneIpcSegment,
     },
     opcodes::ServerZoneIpcType,
     packet::{
@@ -134,6 +134,7 @@ pub struct ZoneConnection {
     /// Store the target actor id for the purpose of chaining cutscenes.
     pub target_actorid: ObjectTypeId,
     pub transaction_sequence: u32,
+    pub glamour_information: Option<ClientTriggerCommand>,
 
     pub last_keep_alive: Instant,
 

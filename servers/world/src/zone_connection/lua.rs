@@ -17,7 +17,10 @@ use kawari::{
         CUTSCENE_SEEN_BITMASK_SIZE, GLASSES_STYLES_BITMASK_SIZE, MINION_BITMASK_SIZE,
         ORNAMENT_BITMASK_SIZE, TRIPLE_TRIAD_CARDS_BITMASK_SIZE,
     },
-    ipc::zone::{ActorControlCategory, ActorControlSelf, ServerZoneIpcData, ServerZoneIpcSegment},
+    ipc::zone::{
+        ActorControlCategory, ActorControlSelf, ClientTriggerCommand, ServerZoneIpcData,
+        ServerZoneIpcSegment,
+    },
 };
 
 impl ZoneConnection {
@@ -650,6 +653,55 @@ impl ZoneConnection {
                 }
                 LuaTask::JoinContent { id } => {
                     self.join_content(*id as u16).await;
+                }
+                LuaTask::FinishCastingGlamour {} => {
+                    // NOTE: Needs a replay from retail, I guessed here because TBH who manually casts glamours anymore
+
+                    if let Some(ClientTriggerCommand::PrepareCastGlamour {
+                        dst_container_type,
+                        dst_container_index,
+                        src_container_type,
+                        src_container_index,
+                    }) = self.glamour_information
+                    {
+                        let src_slot = self
+                            .player_data
+                            .inventory
+                            .get_item(src_container_type, src_container_index as u16);
+                        let dst_slot = self
+                            .player_data
+                            .inventory
+                            .get_item_mut(dst_container_type, dst_container_index as u16);
+
+                        dst_slot.glamour_catalog_id = src_slot.id;
+
+                        // The client needs to be informed about the new glamoured item, but this is extreme...
+                        self.send_inventory().await;
+                        self.inform_equip().await;
+
+                        self.send_conditions().await; // So the client gets unstuck.
+                    }
+                    if let Some(ClientTriggerCommand::PrepareRemoveGlamour {
+                        dst_container_type,
+                        dst_container_index,
+                    }) = self.glamour_information
+                    {
+                        let dst_slot = self
+                            .player_data
+                            .inventory
+                            .get_item_mut(dst_container_type, dst_container_index as u16);
+
+                        dst_slot.glamour_catalog_id = 0;
+
+                        // The client needs to be informed about the new glamoured item, but this is extreme...
+                        self.send_inventory().await;
+                        self.inform_equip().await;
+
+                        self.send_conditions().await; // So the client gets unstuck.
+                    }
+
+                    // Reset information so it's not accidentally reused.
+                    self.glamour_information = None;
                 }
             }
         }

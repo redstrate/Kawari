@@ -448,30 +448,30 @@ impl Zone {
         for layer_group in &self.layer_groups {
             for layer in &layer_group.chunks[0].layers {
                 for object in &layer.objects {
-                    if let LayerEntryData::SharedGroup(sgb) = &object.data {
-                        if STRIKING_DUMMY_SGBS.contains(&sgb.asset_path.value.as_str()) {
-                            let spawn = NpcSpawn {
-                                gimmick_id: object.instance_id,
-                                common: CommonSpawn {
-                                    npc_base: 8016,
-                                    npc_name: 541,
-                                    max_hp: 75000,
-                                    hp: 7500,
-                                    model_chara: 2449,
-                                    object_kind: ObjectKind::BattleNpc(BattleNpcSubKind::Enemy),
-                                    battalion: 4,
-                                    level: 1,
-                                    position: Position {
-                                        x: object.transform.translation[0],
-                                        y: object.transform.translation[1],
-                                        z: object.transform.translation[2],
-                                    },
-                                    ..Default::default()
+                    if let LayerEntryData::SharedGroup(sgb) = &object.data
+                        && STRIKING_DUMMY_SGBS.contains(&sgb.asset_path.value.as_str())
+                    {
+                        let spawn = NpcSpawn {
+                            gimmick_id: object.instance_id,
+                            common: CommonSpawn {
+                                npc_base: 8016,
+                                npc_name: 541,
+                                max_hp: 75000,
+                                hp: 7500,
+                                model_chara: 2449,
+                                object_kind: ObjectKind::BattleNpc(BattleNpcSubKind::Enemy),
+                                battalion: 4,
+                                level: 1,
+                                position: Position {
+                                    x: object.transform.translation[0],
+                                    y: object.transform.translation[1],
+                                    z: object.transform.translation[2],
                                 },
                                 ..Default::default()
-                            };
-                            npc_spawns.push(spawn);
-                        }
+                            },
+                            ..Default::default()
+                        };
+                        npc_spawns.push(spawn);
                     }
                 }
             }

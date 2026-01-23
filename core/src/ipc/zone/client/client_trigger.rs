@@ -2,7 +2,8 @@ use binrw::binrw;
 use strum_macros::IntoStaticStr;
 
 use crate::common::{
-    DirectorTrigger, DistanceRange, HandlerId, ObjectId, read_bool_from, write_bool_as,
+    ContainerType, DirectorTrigger, DistanceRange, HandlerId, ObjectId, read_bool_from,
+    write_bool_as,
 };
 use crate::ipc::zone::common_emote::CommonEmoteInfo;
 
@@ -132,6 +133,25 @@ pub enum ClientTriggerCommand {
 
     #[brw(magic = 444u32)]
     OpenChocoboSaddlebag {},
+
+    /// The player is preparing to cast a glamour.
+    #[brw(magic = 438u32)]
+    PrepareCastGlamour {
+        #[brw(pad_size_to = 4)] // ContainerType is u16
+        dst_container_type: ContainerType,
+        dst_container_index: u32,
+        #[brw(pad_size_to = 4)]
+        src_container_type: ContainerType,
+        src_container_index: u32,
+    },
+
+    /// The player is preparing to remove a glamour.
+    #[brw(magic = 439u32)]
+    PrepareRemoveGlamour {
+        #[brw(pad_size_to = 4)] // ContainerType is u16
+        dst_container_type: ContainerType,
+        dst_container_index: u32,
+    },
 
     /// The client requests repair from another player.
     #[brw(magic = 450u32)]

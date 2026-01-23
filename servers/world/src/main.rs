@@ -157,6 +157,7 @@ async fn initial_setup(
                     transaction_sequence: 0,
                     content_settings: None,
                     current_instance_id: None,
+                    glamour_information: None,
                 };
 
                 // Handle setup before passing off control to the zone connection.
@@ -1079,6 +1080,14 @@ async fn process_packet(
                                             connection.old_rotation,
                                         ))
                                         .await;
+                                }
+                                ClientTriggerCommand::PrepareCastGlamour { .. } => {
+                                    // The actual glamoruing happens later when the action is complete.
+                                    connection.glamour_information = Some(trigger.trigger.clone());
+                                }
+                                ClientTriggerCommand::PrepareRemoveGlamour { .. } => {
+                                    // Ditto.
+                                    connection.glamour_information = Some(trigger.trigger.clone());
                                 }
                                 _ => {
                                     // inform the server of our trigger, it will handle sending it to other clients

@@ -197,4 +197,5 @@ pub enum LuaTask {
     JoinContent {
         id: u32,
     },
+    FinishCastingGlamour {},
 }

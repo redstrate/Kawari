@@ -687,6 +687,10 @@ impl LuaPlayer {
     fn join_content(&mut self, id: u32) {
         self.queued_tasks.push(LuaTask::JoinContent { id });
     }
+
+    fn finish_casting_glamour(&mut self) {
+        self.queued_tasks.push(LuaTask::FinishCastingGlamour {});
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -1103,6 +1107,10 @@ impl UserData for LuaPlayer {
         });
         methods.add_method_mut("join_content", |_, this, id: u32| {
             this.join_content(id);
+            Ok(())
+        });
+        methods.add_method_mut("finish_casting_glamour", |_, this, _: ()| {
+            this.finish_casting_glamour();
             Ok(())
         });
     }
