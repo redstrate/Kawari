@@ -209,6 +209,13 @@ impl ZoneConnection {
             exp: self.player_data.classjob.rested_exp as u32,
         })
         .await;
+
+        // Send this too, otherwise actions dependent on the gauge won't function
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActorGauge {
+            classjob_id: self.player_data.classjob.current_class as u8,
+            data: [0; 15],
+        });
+        self.send_ipc_self(ipc).await;
     }
 
     fn calculate_stat_across_all_items(&self, base_params: &mut BaseParameters) {
