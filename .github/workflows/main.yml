@@ -54,24 +54,24 @@ jobs:
       if: runner.os == 'Linux'
       with:
         repository: 'WorkingRobot/OodleUE'
-        fileName: 'clang-release.zip'
+        fileName: 'clang-x64-release.zip'
         latest: true
         extract: true
     - if: runner.os == 'Linux'
       run: |
         mkdir oodle
-        cp lib/Release/liboodle-network-shared.so oodle/
+        cp lib/liboodle-network-shared.so oodle/
     - uses: robinraju/release-downloader@v1
       if: runner.os == 'Windows'
       with:
         repository: 'WorkingRobot/OodleUE'
-        fileName: 'clang-cl-release.zip'
+        fileName: 'clang-cl-x64-release.zip'
         latest: true
         extract: true
     - if: runner.os == 'Windows'
       run: |
         mkdir oodle
-        cp ar/Release/oodle-network-shared.lib oodle/
+        cp ar/oodle-network-shared.lib oodle/
     - name: Build
       run: cargo build --release --verbose --features oodle
     - name: Run Clippy
