@@ -14,7 +14,7 @@ ServerZoneIpcType:
   - name: PlayerStatus
     comment: Lots of useful and persistent information like which dungeons are unlocked.
     opcode: 215
-    size: 2912
+    size: 2918
   - name: UpdateClassInfo
     comment: "Updates class-specific information, like your currently synced level."
     opcode: 699
@@ -210,7 +210,7 @@ ServerZoneIpcType:
   - name: TitleList
     comment: Contains the acquired title list.
     opcode: 912
-    size: 112
+    size: 111
   - name: QuestActiveList
     comment: Contains the list of active (or in-progress quests.
     opcode: 153
