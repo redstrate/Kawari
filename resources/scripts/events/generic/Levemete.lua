@@ -1,11 +1,14 @@
+-- Generic handler for Levemete giver NPCs
+
 -- TODO: actually implement this menu
 
--- Scene 0: The usual Levemete menu
--- Scene 1: "quest of great import" quest, which maybe is used in the initial quests?
--- Scene 2: some version of "you cannot use the levemete at the moment"
+-- Scenes
+SCENE_00000 = 00000 -- The usual Levemete menu
+SCENE_00001 = 00001 -- "Quest of great import" quest, which maybe is used in the initial quests?
+SCENE_00002 = 00002 -- Some version of "you cannot use the levemete at the moment"
 
 function onTalk(target, player)
-    player:play_scene(target, 00002, HIDE_HOTBAR, {0})
+    player:play_scene(target, SCENE_00002, HIDE_HOTBAR, {0})
 end
 
 function onYield(scene, results, player)

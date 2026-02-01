@@ -1,11 +1,12 @@
 -- Drivingway at Bestways Burrow
 
--- Scene 0: Initial greeting
-
 -- TODO: script this menu
 
+-- Scenes
+SCENE_00000 = 00000 -- Initial greeting
+
 function onTalk(target, player)
-    player:play_scene(target, 0, 0, {0})
+    player:play_scene(target, SCENE_00000, 0, {0})
 end
 
 function onYield(scene, results, player)

@@ -1,13 +1,17 @@
--- Scene 0: Show menu, depends on quest completion
+-- Unknown object/NPC
 
-EFFECT_DURATION = 1800.0 -- as seen in retail
+-- Scenes
+SCENE_00000 -- Show menu, depends on quest completion
+
+-- How long Transfiguration lasts, as seen in retail
+EFFECT_DURATION = 1800.0
 
 function onTalk(target, player)
-    player:play_scene(target, 0, 0, {0})
+    player:play_scene(target, SCENE_00000, 0, {0})
 end
 
 function onYield(scene, results, player)
-    if scene == 0 and results[1] > 0 then
+    if scene == SCENE_00000 and results[1] > 0 then
        -- first param is your transformation selection
        local effect_param_id = GAME_DATA:get_halloween_npc_transform(results[1])
        player:gain_effect(EFFECT_TRANSFIGURATION, effect_param_id, EFFECT_DURATION)

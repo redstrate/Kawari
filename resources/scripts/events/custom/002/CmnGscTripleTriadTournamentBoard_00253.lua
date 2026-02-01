@@ -1,9 +1,10 @@
 -- (Triple Triad) Tournament Ranking Board in Gold Saucer
 
--- Scene 0: Show ranking
+-- Scenes
+SCENE_00000 = 00000 -- Show ranking
 
 function onTalk(target, player)
-    player:play_scene(target, 0, HIDE_HOTBAR, {})
+    player:play_scene(target, SCENE_00000, HIDE_HOTBAR, {})
 end
 
 function onYield(scene, results, player)

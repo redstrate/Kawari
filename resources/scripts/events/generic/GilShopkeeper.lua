@@ -1,10 +1,9 @@
--- Scene 00000: NPC greeting (usually an animation, sometimes text too?)
--- Scene 00010: Displays shop interface
--- Scene 00255: Seems to be an event termination scene? When used standalone without the proper event sequence, it softlocks.
+-- Generic handler for gil shop NPCs
 
-SCENE_GREETING  = 00000
-SCENE_SHOW_SHOP = 00010
-SCENE_SHOP_END  = 00255
+-- Scenes
+SCENE_GREETING  = 00000 -- NPC greeting (usually an animation, sometimes text too?)
+SCENE_SHOW_SHOP = 00010 -- Displays shop interface
+SCENE_SHOP_END  = 00255 -- Seems to be an event termination scene? When used standalone without the proper event sequence, it softlocks.
 
 function onTalk(target, player)
     --[[ Params observed for SCENE_GREETING:

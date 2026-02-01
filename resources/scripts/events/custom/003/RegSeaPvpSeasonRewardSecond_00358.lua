@@ -1,27 +1,28 @@
 -- Seasonal Quartermaster in Wolves Den Pier
 
--- Scene 0: Initial greeting
--- Scene 1: Open menu
--- Scene 2: Open Item Request menu
--- Scene 3: No reward message
--- Scene 5: Nested help menu
--- Scene 10: Previous season rewards have already been claimed
--- Scene 11: Inventory is full
--- Scene 12: Some congratulations message
--- Scene 13: No valid voucher
--- Scene 14: No rewards are available for preseason rankings
--- Scene 15: Unable to obtain trophy crystals
+-- Scenes
+SCENE_00000 = 00000 -- Initial greeting
+SCENE_00001 = 00001 -- Open menu
+SCENE_00002 = 00002 -- Open Item Request menu
+SCENE_00003 = 00003 -- No reward message
+SCENE_00005 = 00005 -- Nested help menu
+SCENE_00010 = 00010 -- Previous season rewards have already been claimed
+SCENE_00011 = 00011 -- Inventory is full
+SCENE_00012 = 00012 -- Some congratulations message
+SCENE_00013 = 00013 -- No valid voucher
+SCENE_00014 = 00014 -- No rewards are available for preseason rankings
+SCENE_00015 = 00015 -- Unable to obtain trophy crystals
 
 function onTalk(target, player)
-    player:play_scene(target, 0, HIDE_HOTBAR, {})
+    player:play_scene(target, SCENE_00000, HIDE_HOTBAR, {})
 end
 
 function onYield(scene, results, player)
-    if scene == 0 then
+    if scene == SCENE_00000 then
         -- Open menu
         player:play_scene(player.id, 1, HIDE_HOTBAR, {})
         return
-    elseif scene == 1 then
+    elseif scene == SCENE_00001 then
         if results[1] == 1 then
             -- No reward
             player:play_scene(player.id, 3, HIDE_HOTBAR, {})

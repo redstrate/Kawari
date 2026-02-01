@@ -1,8 +1,12 @@
+-- Minigame collection box in the inn
+
 -- TODO: actually implement this menu
 
+-- Scenes
+SCENE_00000 = 00000 -- Show UI
+
 function onTalk(target, player)
-    -- You have not yet unlocked any mini-games.
-    player:play_scene(target, 00000, HIDE_HOTBAR, {0})
+    player:play_scene(target, SCENE_00000, HIDE_HOTBAR, {0})
 end
 
 function onYield(scene, results, player)

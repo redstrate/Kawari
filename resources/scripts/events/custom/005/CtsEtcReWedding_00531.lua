@@ -1,14 +1,15 @@
 -- Hawu Bajihri in East Shroud
 
--- Scene 0: Greeting and explanation
--- Scene 100: Anniversary set screen message
--- Scene 101: Generic error message (arg is the message)
--- Scene 150: Revoked registration (?)
--- Scene 200: Wedding quest accepted
--- Scene 201: Another arg-based thing like 101
+-- Scenes
+SCENE_00000 = 00000 -- Greeting and explanation
+SCENE_00100 = 00100 -- Anniversary set screen message
+SCENE_00101 = 00101 -- Generic error message (arg is the message)
+SCENE_00150 = 00150 -- Revoked registration (?)
+SCENE_00200 = 00200 -- Wedding quest accepted
+SCENE_00201 = 00201 -- Another arg-based thing like 101
 
 function onTalk(target, player)
-    player:play_scene(target, 0, HIDE_HOTBAR, {})
+    player:play_scene(target, SCENE_00000, HIDE_HOTBAR, {})
 end
 
 function onYield(scene, results, player)

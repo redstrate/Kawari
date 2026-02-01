@@ -1,9 +1,10 @@
 -- Team Board in Wolves Den Pier
 
--- Scene 0: Open the UI
+-- Scenes
+SCENE_00000 = 00000 -- Open the UI
 
 function onTalk(target, player)
-    player:play_scene(target, 0, 0, {0})
+    player:play_scene(target, SCENE_00000, 0, {0})
 end
 
 function onYield(scene, results, player)

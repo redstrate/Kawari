@@ -1,8 +1,13 @@
+-- The NPCs that inform and teleport you to the current GATE
+
+-- Scenes
 --[[ Scene 0 informs the player that a GATE is currently active, where it's taking place, and has the following parameters:
     First is the GATE, second is the location. See scene 2 notes for GATE ids and location ids.
 ]]
+SCENE_00000 = 00000
 
 -- Scene 1 informs the player about an ongoing GATE that can't be participated in (Wind, Slice) but can still be observed and likely shares the same parameters as scene 0. No capture has been made yet, though.
+SCENE_00001 = 00001
 
 --[[ Scene 2 informs the player about when and where the next GATE will take place, and has the following parameters:
     First one is a Unix timestamp
@@ -27,10 +32,11 @@
 
     The fourth is unknown, possibly flags or a destination id of some sort
 ]]
+SCENE_00002 = 00002
 
 function onTalk(target, player)
     -- Currently using placeholders for now: Cliffhanger in Wonder Square East.
-    player:play_scene(target, 00000, HIDE_HOTBAR, {1, 1})
+    player:play_scene(target, SCENE_00000, HIDE_HOTBAR, {1, 1})
 end
 
 function onYield(scene, results, player)

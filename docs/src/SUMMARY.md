@@ -5,7 +5,8 @@
 - [Scripting](scripting/intro.md)
   - [Commands](scripting/commands.md)
   - [Using Scripter](scripting/scripter.md)
-
+  - [Style Guide](scripting/style_guide.md)
+  
 # Setup
 
 - [Overview](setup/overview.md)

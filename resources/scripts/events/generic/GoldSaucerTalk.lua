@@ -1,3 +1,8 @@
+-- Generic handler for GoldSaucerTalk events
+
+-- Scenes
+SCENE_TALK = 0 -- Begin talking
+
 -- Maps some kind of IDs to GoldSaucerTalk IDs
 -- TODO: Can this be extracted from the game data somehow?
 local gold_saucer_npcs = {
@@ -13,7 +18,7 @@ function onTalk(target, player)
         return
     end
 
-    player:play_scene(target, 0, HIDE_HOTBAR, {scene_id})
+    player:play_scene(target, SCENE_TALK, HIDE_HOTBAR, {scene_id})
 end
 
 function onYield(scene, results, player)

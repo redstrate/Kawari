@@ -1,3 +1,5 @@
+-- Generic handler for SwitchTalk events
+
 function onTalk(target, player)
     local target_event_id = player:get_switch_talk_target(EVENT_ID)
 

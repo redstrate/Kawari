@@ -1,8 +1,11 @@
--- scene 0: services unavailable
--- scene 1: services bestowed
+-- Unknown object/NPC
+
+-- Scenes
+SCENE_00000 = 00000 -- Services unavailable
+SCENE_00001 = 00001 -- Services bestowed
 
 function onTalk(target, player)
-    player:play_scene(target, 00000, HIDE_HOTBAR, {})
+    player:play_scene(target, SCENE_00000, HIDE_HOTBAR, {})
 end
 
 function onYield(scene, results, player)

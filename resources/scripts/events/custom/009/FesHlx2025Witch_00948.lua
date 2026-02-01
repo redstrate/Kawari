@@ -1,7 +1,10 @@
--- scene 0: basic greeting and help menu
+-- Unknown object/NPC
+
+-- Scenes
+SCENE_00000 = 00000 -- Basic greeting and help menu
 
 function onTalk(target, player)
-    player:play_scene(target, 0, 0, {0})
+    player:play_scene(target, SCENE_00000, 0, {0})
 end
 
 function onYield(scene, results, player)

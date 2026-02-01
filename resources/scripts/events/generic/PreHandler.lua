@@ -1,3 +1,5 @@
+-- Generic handler for PreHandler events
+
 -- TODO: check the quest requirement for these
 
 function onTalk(target, player)

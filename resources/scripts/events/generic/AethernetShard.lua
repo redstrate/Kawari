@@ -1,14 +1,12 @@
--- generic aetheryte, use this for all of the aethernet shards
+-- Generic aetheryte, use this for all of the aethernet shards
 
---- scene 00000 - does nothing
---- scene 00001 - does nothing
---- scene 00002 - aetheryte menu
---- scene 00003 - "you have aethernet access" message and vfx
---- scene 00100 - "According to the message engraved in the base, special permission is required to use this aetheryte." (Eulmore-specific)
---- scene 00200 - "The aetheryte has ceased functioning." (Eulmore-specific)
-
-SCENE_SHOW_MENU = 00002
-SCENE_HAVE_AETHERNET_ACCESS = 00003
+-- Scenes
+SCENE_00000                 = 00000 -- does nothing
+SCENE_00001                 = 00001 -- does nothing
+SCENE_SHOW_MENU             = 00002 -- aetheryte menu
+SCENE_HAVE_AETHERNET_ACCESS = 00003 -- "you have aethernet access" message and vfx
+SCENE_00100                 = 00000 -- "According to the message engraved in the base, special permission is required to use this aetheryte." (Eulmore-specific)
+SCENE_00200                 = 00200 -- "The aetheryte has ceased functioning." (Eulmore-specific)
 
 function aetheryteId()
     return EVENT_ID & 0xFFFF

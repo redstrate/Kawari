@@ -1,3 +1,5 @@
+-- Generic handler for TopicSelect events
+
 -- These are basically used for submenus.
 -- For example, the Battle Supplier in Limsa has a couple of events for DoW and DoM gear.
 -- Then, these events lead into a TopicSelect used for the various level categories.

@@ -1,16 +1,17 @@
 -- Triple Triad Master in Gold Saucer
 
--- Scene 0: Initial greeting
--- Scene 1: Help menu
+-- Scenes
+SCENE_00000 = 00000 -- Initial greeting
+SCENE_00001 = 00001 -- Help menu
 
 function onTalk(target, player)
-    player:play_scene(target, 0, HIDE_HOTBAR, {})
+    player:play_scene(target, SCENE_00000, HIDE_HOTBAR, {})
 end
 
 function onYield(scene, results, player)
-    if scene == 0 then
+    if scene == SCENE_00000 then
         -- Show help menu
-        player:play_scene(player.id, 1, HIDE_HOTBAR, {})
+        player:play_scene(player.id, SCENE_00001, HIDE_HOTBAR, {})
         return
     end
     player:finish_event()

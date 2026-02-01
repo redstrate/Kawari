@@ -1,3 +1,5 @@
+-- Generic handler for GimmickAccessor events
+
 -- TODO: figure out how shortcuts work
 
 function onTalk(target, player)

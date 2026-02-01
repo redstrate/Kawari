@@ -1,9 +1,10 @@
 -- Scrip Exchange NPCs, like the one in Mor Dhona
 
--- Scene 0: Select the script to exchange (unknown args)
+-- Scenes
+SCENE_00000 = 00000 -- Select the script to exchange (unknown args)
 
 function onTalk(target, player)
-    player:play_scene(target, 0, HIDE_HOTBAR, {})
+    player:play_scene(target, SCENE_00000, HIDE_HOTBAR, {})
 end
 
 function onYield(scene, results, player)

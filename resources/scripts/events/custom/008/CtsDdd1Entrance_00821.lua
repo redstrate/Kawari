@@ -1,9 +1,10 @@
 -- Wood Wailer Expeditionary Captain in South Shroud
 
--- Scene 0: Open menu
--- Scene 1: Non-unlocked greeting (?)
--- Scene 2: Submenu once you selected a save (?)
--- Scene 3: Some story-related message (?)
+-- Scenes
+SCENE_00000 = 00000 -- Open menu
+SCENE_00001 = 00001 -- Non-unlocked greeting (?)
+SCENE_00002 = 00002 -- Submenu once you selected a save (?)
+SCENE_00003 = 00003 -- Some story-related message (?)
 
 -- Description UI for Palace of the Dead
 DESCRIPTION_POD = 3604500
@@ -12,11 +13,11 @@ DESCRIPTION_POD = 3604500
 CONTENT_FINDER_POD_1_10 = 174
 
 function onTalk(target, player)
-    player:play_scene(target, 0, NO_DEFAULT_CAMERA | HIDE_HOTBAR, {})
+    player:play_scene(target, SCENE_00000, NO_DEFAULT_CAMERA | HIDE_HOTBAR, {})
 end
 
 function onYield(scene, results, player)
-    if scene == 0 then
+    if scene == SCENE_00000 then
         if results[1] == 1 then
             -- TODO: support the various options
 

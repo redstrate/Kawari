@@ -1,15 +1,16 @@
 -- Faux Commander in Idyllshire
 
--- Scene 0: Initial greeting
--- Scene 1: Menu
--- Scene 2: Unknown (doesn't play)
--- Scene 3: You must bring me a worthy tale
--- Scene 4: Faux Hollows access denied
--- Scene 6: Unknown (doesn't play)
--- Scene 1001: Unknown (doesn't play)
+-- Scenes
+SCENE_00000 = 00000 -- Initial greeting
+SCENE_00001 = 00001 -- Menu
+SCENE_00002 = 00002 -- Unknown (doesn't play)
+SCENE_00003 = 00003 -- You must bring me a worthy tale
+SCENE_00004 = 00004 -- Faux Hollows access denied
+SCENE_00006 = 00006 -- Unknown (doesn't play)
+SCENE_01001 = 01001 -- Unknown (doesn't play)
 
 function onTalk(target, player)
-    player:play_scene(target, 0, HIDE_HOTBAR, {})
+    player:play_scene(target, SCENE_00000, HIDE_HOTBAR, {})
 end
 
 function onYield(scene, results, player)

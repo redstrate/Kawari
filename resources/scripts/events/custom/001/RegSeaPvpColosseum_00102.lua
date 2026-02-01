@@ -1,8 +1,10 @@
 -- Berkoeya Loetahlsyn in Wolves Den Pier
--- Scene 0: Initial greeting
+
+-- Scenes
+SCENE_00001 = 00001 -- ???
 
 function onTalk(target, player)
-    player:play_scene(target, 1, HIDE_HOTBAR, {})
+    player:play_scene(target, SCENE_00001, HIDE_HOTBAR, {})
 end
 
 function onYield(scene, results, player)

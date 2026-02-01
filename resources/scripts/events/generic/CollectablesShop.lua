@@ -1,3 +1,5 @@
+-- Generic handler for CollectablesShop events
+
 -- TODO: actually implement currency and possible opcodes for doing the transactions
 
 function onYield(scene, results, player)

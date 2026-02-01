@@ -1,4 +1,7 @@
--- Scene 0: Show the menu, the rest is handled in client-side Lua
+-- Unknown object/NPC
+
+-- Scenes
+SCENE_00000 = 00000 -- Show the menu, the rest is handled in client-side Lua
 
 function onTalk(target, player)
     player:play_scene(target, 00000, HIDE_HOTBAR, {0})

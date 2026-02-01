@@ -1,8 +1,12 @@
+-- Generic Chocobokeep NPCs
+
 -- TODO: actually implement this menu
 
+-- Scene
+SCENE_00000 = 00000 -- Greeting, "unable to hire"?
+
 function onTalk(target, player)
-    -- unable to hire
-    player:play_scene(target, 00000, HIDE_HOTBAR, {0})
+    player:play_scene(target, SCENE_00000, HIDE_HOTBAR, {0})
 end
 
 function onYield(scene, results, player)

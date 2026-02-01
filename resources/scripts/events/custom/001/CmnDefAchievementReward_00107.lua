@@ -1,10 +1,13 @@
--- scene 0: basic greeting
--- scene 2: achievement certificate
+-- Jonathas which distributes achivement certificates
 
 -- TODO: how is his shop menu brought up?
 
+-- Scenes
+SCENE_00000 = 00000 -- Basic greeting
+SCENE_00002 = 00002 -- Achievement certificate
+
 function onTalk(target, player)
-    player:play_scene(target, 00000, HIDE_HOTBAR, {})
+    player:play_scene(target, SCENE_00000, HIDE_HOTBAR, {})
 end
 
 function onYield(scene, results, player)

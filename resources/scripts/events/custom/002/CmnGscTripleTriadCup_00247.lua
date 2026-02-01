@@ -1,13 +1,14 @@
 -- Tournament Recordkeeper in Gold Saucer
 
--- Scene 0: Tournament menu
--- Scene 1: Tournament has come to a close
--- Scene 2: Upcoming tournament
--- Scene 3: Hasn't completed the tutorial
--- Scene 4: Completed tournament, review final standings at card square
+-- Scenes
+SCENE_00000 = 00000 -- Tournament menu
+SCENE_00001 = 00001 -- Tournament has come to a close
+SCENE_00002 = 00002 -- Upcoming tournament
+SCENE_00003 = 00003 -- Hasn't completed the tutorial
+SCENE_00004 = 00004 -- Completed tournament, review final standings at card square
 
 function onTalk(target, player)
-    player:play_scene(target, 3, HIDE_HOTBAR, {})
+    player:play_scene(target, SCENE_00003, HIDE_HOTBAR, {})
 end
 
 function onYield(scene, results, player)

@@ -1,9 +1,10 @@
 -- Mahjong Tables in Gold Saucer
 
--- Scene 0: Start Mahjong Solo
+-- Scenes
+SCENE_00000 = 00000 -- Start Mahjong Solo
 
 function onTalk(target, player)
-    player:play_scene(target, 0, HIDE_HOTBAR, {0})
+    player:play_scene(target, SCENE_00000, HIDE_HOTBAR, {0})
 end
 
 function onYield(scene, results, player)

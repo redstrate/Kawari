@@ -1,7 +1,10 @@
--- scene 0: basic greeting
+-- Unknown object/NPC
+
+-- Scenes
+SCENE_00000 = 00000 -- Basic greeting
 
 function onTalk(target, player)
-    player:play_scene(target, 00000, HIDE_HOTBAR, {})
+    player:play_scene(target, SCENE_00000, HIDE_HOTBAR, {})
 end
 
 function onYield(scene, results, player)

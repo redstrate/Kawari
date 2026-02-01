@@ -1,15 +1,18 @@
+-- Unknown object/NPC
+
 -- TODO: open the shop menus when requested. this is a specialshop, but requires event nesting
 
--- scene 0: menu
--- scene 1: obtain the mogpendium
--- scene 2: open the mogpendium only
+-- Scenes
+SCENE_00000 = 00000 -- Menu
+SCENE_00001 = 00001 -- Obtain the mogpendium
+SCENE_00002 = 00002 -- Open the mogpendium only
 
 function onTalk(target, player)
-    player:play_scene(target, 0, 0, {0})
+    player:play_scene(target, SCENE_00000, 0, {0})
 end
 
 function onYield(scene, results, player)
-    if scene == 0 then
+    if scene == SCENE_00000 then
         -- request to open a tomestone shop menu
         if results[1] == 1 and #results > 1 then
             local target_shop_id = results[2]

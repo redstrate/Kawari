@@ -1,14 +1,12 @@
 -- generic aetheryte, use this for all of the big aetherytes
 
---- scene 00000 - display main menu ("Welcome to <location>.")
---- scene 00001 - softlocks, unknown purpose
---- scene 00002 - aethernet menu (used only by aethernet shards? scene 00 for big aetherytes display the aethernet submenu without needing an additional play_scene)
---- scene 00003 - "you have aethernet access" message and vfx
---- scene 00100 - "According to the message engraved in the base, special permission is required to use this aetheryte." (Eulmore-specific)
---- scene 00200 - "The aetheryte has ceased functioning." (Eulmore-specific)
-
-SCENE_SHOW_MENU = 00000
-SCENE_HAVE_AETHERNET_ACCESS = 00003
+-- Scenes
+SCENE_SHOW_MENU             = 00000 -- display main menu ("Welcome to <location>.")
+SCENE_00001                 = 00001 -- softlocks, unknown purpose
+SCENE_00002                 = 00002 -- aethernet menu (used only by aethernet shards? scene 00 for big aetherytes display the aethernet submenu without needing an additional play_scene)
+SCENE_HAVE_AETHERNET_ACCESS = 00003 -- "you have aethernet access" message and vfx
+SCENE_00100                 = 00100 -- "According to the message engraved in the base, special permission is required to use this aetheryte." (Eulmore-specific)
+SCENE_00200                 = 00200 -- "The aetheryte has ceased functioning." (Eulmore-specific)
 
 function aetheryteId()
     return EVENT_ID & 0xFFFF

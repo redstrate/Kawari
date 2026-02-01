@@ -1,3 +1,5 @@
+-- Generic handler for ExitRange events
+
 function onYield(scene, results, player)
     player:finish_event()
 end

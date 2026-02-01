@@ -1,13 +1,14 @@
 -- Disreputable Priest in Wolves Den Pier
 
--- Scene 0: Open shop menu
--- Scene 1: Acquired all titles
--- Scene 2: Some other title acquisition response
--- Scene 3: Acquiring a new title
--- Scene 100: "That's not what I'm looking for" message
+-- Scenes
+SCENE_00000 = 00000 -- Open shop menu
+SCENE_00001 = 00001 -- Acquired all titles
+SCENE_00002 = 00002 -- Some other title acquisition response
+SCENE_00003 = 00003 -- Acquiring a new title
+SCENE_00100 = 00100 -- "That's not what I'm looking for" message
 
 function onTalk(target, player)
-    player:play_scene(target, 0, HIDE_HOTBAR, {})
+    player:play_scene(target, SCENE_00000, HIDE_HOTBAR, {})
 end
 
 function onYield(scene, results, player)

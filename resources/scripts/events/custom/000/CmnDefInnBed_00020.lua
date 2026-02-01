@@ -1,4 +1,6 @@
--- Scene numbers
+-- All inn beds
+
+-- Scenes
 SCENE_SHOW_MENU    = 00000
 SCENE_SLEEP_ANIM   = 00001
 SCENE_LOG_OUT      = 00002
@@ -6,7 +8,6 @@ SCENE_DREAMFITTING = 00003
 SCENE_AWAKEN_ANIM  = 00100
 
 BED_CUTSCENE_FLAGS = 4165480179 -- TODO: remove this hardcode
-BED_SCENE_WAKEUP_ANIM = 00100
 
 -- if true, we are in the dreamfitting sequence
 local is_dreamfitting = false
@@ -14,7 +15,7 @@ local is_dreamfitting = false
 function onEnterTerritory(player)
     if not player.saw_inn_wakeup then
         -- play the wakeup animation
-        player:play_scene(player.id, BED_SCENE_WAKEUP_ANIM, BED_CUTSCENE_FLAGS, {})
+        player:play_scene(player.id, SCENE_AWAKEN_ANIM, BED_CUTSCENE_FLAGS, {})
 
         -- Need this first so if a player logs in from a non-inn zone, they won't get the bed scene when they enter. It should only play on login.
         player:set_inn_wakeup(true)

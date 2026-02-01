@@ -1,14 +1,15 @@
 -- Sanctum Acolyte in East Shroud
 
--- Scene 0: Greeting and wedding explanation
--- Scene 1: Wristlet discard selection
--- Scene 2: Wristlet discard message
--- Scene 3: Error occured while discarding wristlet
--- Scene 4: Ceremony preparation menu
--- Scene 5: Unknown (doesn't play)
+-- Scenes
+SCENE_00000 = 00000 -- Greeting and wedding explanation
+SCENE_00001 = 00001 -- Wristlet discard selection
+SCENE_00002 = 00002 -- Wristlet discard message
+SCENE_00003 = 00003 -- Error occured while discarding wristlet
+SCENE_00004 = 00004 -- Ceremony preparation menu
+SCENE_00005 = 00005 -- Unknown (doesn't play)
 
 function onTalk(target, player)
-    player:play_scene(target, 0, HIDE_HOTBAR, {})
+    player:play_scene(target, SCENE_00000, HIDE_HOTBAR, {})
 end
 
 function onYield(scene, results, player)

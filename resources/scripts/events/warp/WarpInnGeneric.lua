@@ -1,17 +1,18 @@
--- generic warp shared by all inn scripts
+-- Generic warp shared by all inn scripts
+
+-- Scenes
+SCENE_GREETING  = 00000 -- Initial greeting
+SCENE_MENU      = 00001 -- Menu
+SCENE_NO_ACCESS = 00002 -- Doesn't have inn access
 
 function onTalk(target, player)
-    -- greeting
-    player:play_scene(target, 00000, HIDE_HOTBAR, {0})
-
-    -- doesn't have inn access
-    --player:play_scene(actorId, 00002, HIDE_HOTBAR, 0)
+    player:play_scene(target, SCENE_GREETING, HIDE_HOTBAR, {0}))
 end
 
 function onYield(scene, results, player)
-    if scene == 0 then
+    if scene == SCENE_GREETING then
         -- has inn access
-        player:play_scene(player.id, 00001, HIDE_HOTBAR, {0})
+        player:play_scene(player.id, SCENE_MENU, HIDE_HOTBAR, {0})
     else
         player:finish_event()
 

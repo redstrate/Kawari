@@ -1,9 +1,14 @@
+-- MGP conversion NPC
+
+-- Scenes
+SCENE_00000 = 00000 -- Show UI
+
 function convertMGPToGil(mgp)
     return mgp * 10
 end
 
 function onTalk(target, player)
-    player:play_scene(target, 0, NO_DEFAULT_CAMERA | HIDE_HOTBAR, {})
+    player:play_scene(target, SCENE_00000, NO_DEFAULT_CAMERA | HIDE_HOTBAR, {})
 end
 
 function onYield(scene, results, player)

@@ -1,9 +1,10 @@
 -- Generic Materia Melders
 
--- Scene 0: Show menu
+-- Scenes
+SCENE_00000 = 00000 -- Show menu
 
 function onTalk(target, player)
-    player:play_scene(target, 0, HIDE_HOTBAR, {})
+    player:play_scene(target, SCENE_00000, HIDE_HOTBAR, {})
 end
 
 function onYield(scene, results, player)

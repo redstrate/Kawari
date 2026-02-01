@@ -1,3 +1,5 @@
+-- Generic handler for SpecialShop events
+
 -- TODO: actually implement hunt currency and possible opcodes for doing the transactions
 
 function onTalk(target, player)

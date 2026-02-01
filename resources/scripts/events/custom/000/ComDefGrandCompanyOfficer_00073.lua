@@ -1,9 +1,12 @@
--- scene 0: you have to progress further in MSQ
--- scene 1: regular menu
--- scene 2: your present rank is:
+-- Unknown object/NPC
+
+-- Scenes
+SCENE_00000 = 00000 -- You have to progress further in MSQ
+SCENE_00001 = 00001 -- Regular menu
+SCENE_00002 = 00002 -- Your present rank is:
 
 function onTalk(target, player)
-    player:play_scene(target, 00000, HIDE_HOTBAR, {})
+    player:play_scene(target, SCENE_00000, HIDE_HOTBAR, {})
 end
 
 function onYield(scene, results, player)

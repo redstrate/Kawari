@@ -1,3 +1,5 @@
+-- Generic handler for InclusionShop events
+
 -- TODO: actually implement currency and possible opcodes for doing the transactions
 
 function onTalk(target, player)
