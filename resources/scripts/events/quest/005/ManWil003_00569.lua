@@ -19,7 +19,6 @@ function onTalk(target, player)
 end
 
 function onYield(scene, results, player)
-    printf(player, "this was scene %d", scene)
     if scene == 50 then
         -- Accept the quest, this also matches up with the client-side UI
         player:accept_quest(EVENT_ID)
