@@ -355,7 +355,7 @@ impl LobbyConnection {
                         num_in_packet: characters_in_packet.len() as u8,
                         unk3: 0,
                         unk4: 0,
-                        unk6: 0,
+                        unk6: 64,
                         days_subscribed: 30,
                         remaining_days: 30,
                         days_to_next_rank: 0,
@@ -611,7 +611,7 @@ impl LobbyConnection {
                     // we intentionally don't care about the response right now, it's not expected to fail
                 }
 
-                // send a confirmation that the remakewas successful
+                // send a confirmation that the remake was successful
                 {
                     let ipc = ServerLobbyIpcSegment::new(ServerLobbyIpcData::CharaMakeReply {
                         sequence: character_action.sequence + 1,
@@ -636,12 +636,67 @@ impl LobbyConnection {
                     .await;
                 }
             }
-            LobbyCharacterActionKind::SettingsUploadBegin => todo!(),
+            LobbyCharacterActionKind::SettingsUploadBegin => {
+                // send a confirmation that the upload was successful
+                {
+                    let ipc = ServerLobbyIpcSegment::new(ServerLobbyIpcData::CharaMakeReply {
+                        sequence: character_action.sequence + 1,
+                        unk1: 0x1,
+                        unk2: 0x1,
+                        action: LobbyCharacterActionKind::SettingsUploadBegin,
+                        details: CharacterDetails::default(),
+                    });
+
+                    self.send_segment(PacketSegment {
+                        segment_type: SegmentType::Ipc,
+                        data: SegmentData::Ipc(ipc),
+                        ..Default::default()
+                    })
+                    .await;
+                }
+            }
             LobbyCharacterActionKind::SettingsUpload => todo!(),
             LobbyCharacterActionKind::WorldVisit => todo!(),
             LobbyCharacterActionKind::DataCenterToken => todo!(),
             LobbyCharacterActionKind::Request => todo!(),
-            LobbyCharacterActionKind::UploadData => todo!(),
+            LobbyCharacterActionKind::UploadData => {
+                // send a confirmation that the upload was successful
+                {
+                    let ipc = ServerLobbyIpcSegment::new(ServerLobbyIpcData::CharaMakeReply {
+                        sequence: character_action.sequence + 1,
+                        unk1: 0x1,
+                        unk2: 0x1,
+                        action: LobbyCharacterActionKind::UploadData,
+                        details: CharacterDetails::default(),
+                    });
+
+                    self.send_segment(PacketSegment {
+                        segment_type: SegmentType::Ipc,
+                        data: SegmentData::Ipc(ipc),
+                        ..Default::default()
+                    })
+                    .await;
+                }
+            }
+            LobbyCharacterActionKind::SettingsUploadCompleted => {
+                // send a confirmation that the upload was successful
+                {
+                    let ipc = ServerLobbyIpcSegment::new(ServerLobbyIpcData::CharaMakeReply {
+                        sequence: character_action.sequence + 1,
+                        unk1: 0x1,
+                        unk2: 0x1,
+                        action: LobbyCharacterActionKind::SettingsUploadCompleted,
+                        details: CharacterDetails::default(),
+                    });
+
+                    self.send_segment(PacketSegment {
+                        segment_type: SegmentType::Ipc,
+                        data: SegmentData::Ipc(ipc),
+                        ..Default::default()
+                    })
+                    .await;
+                }
+            }
         }
     }
 

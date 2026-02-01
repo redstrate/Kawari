@@ -20,10 +20,13 @@ pub enum LobbyCharacterActionKind {
     RemakeRetainer,
     #[brw(magic = 0x7u8)]
     RemakeChara,
+    /// Used when backing up character settings data.
     #[brw(magic = 0x8u8)]
     SettingsUploadBegin,
     #[brw(magic = 0xCu8)]
     SettingsUpload,
+    #[brw(magic = 0xDu8)]
+    SettingsUploadCompleted,
     /// Used when asking to visit another world.
     #[brw(magic = 0xEu8)]
     WorldVisit,
@@ -32,7 +35,7 @@ pub enum LobbyCharacterActionKind {
     DataCenterToken,
     #[brw(magic = 0x15u8)]
     Request,
-    /// When the client uploads data using the config backup system.
+    /// When the client uploads system configuration data.
     #[brw(magic = 0xAu8)]
     UploadData,
 }
