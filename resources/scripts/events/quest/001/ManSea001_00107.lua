@@ -67,8 +67,8 @@ function onReturn(scene, results, player)
         player:accept_quest(EVENT_ID)
 
         -- call back into the opening, presumably to update the borders of the play area
-        player:start_event(originating_npc, OPENING_LIMSA, EVENT_TYPE_NEST, 0)
-        player:play_scene(originating_npc, OPENING_LIMSA, 30, HIDE_HOTBAR | NO_DEFAULT_CAMERA, {2})
+        player:start_event(originating_npc, OPENING_EVENT_HANDLER, EVENT_TYPE_NEST, 0)
+        player:play_scene(originating_npc, OPENING_EVENT_HANDLER, 30, HIDE_HOTBAR | NO_DEFAULT_CAMERA, {2})
         return
     elseif scene == 5 then
         if results[1] == 1 then

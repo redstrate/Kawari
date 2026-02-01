@@ -28,7 +28,7 @@ function onYield(scene, results, player)
         local old_rotation = player.rotation
 
         -- Just like in retail, "seamlessly" transition them to the real zone:
-        player:change_territory(130, { x = old_position.x, y = old_position.y, z = old_position.z }, old_rotation)
+        player:change_territory(TERRITORYTYPE0, { x = old_position.x, y = old_position.y, z = old_position.z }, old_rotation)
     end
 
     player:finish_event(EVENT_ID)

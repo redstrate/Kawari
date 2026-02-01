@@ -72,13 +72,22 @@ impl Event {
 
     /// Injects any applicable Lua parameters from Excel, such as from `Opening`.
     fn inject_lua_parameters(id: HandlerId, lua: &mut Lua, gamedata: &mut GameData) {
-        if id.handler_type() == HandlerType::Opening {
-            let opening_id = id.0;
-
-            let variables = gamedata.get_opening_variables(opening_id);
-            for (name, value) in variables {
-                lua.globals().set(name, value).unwrap();
+        let variables = match id.handler_type() {
+            HandlerType::Opening => {
+                let opening_id = id.0;
+                gamedata.get_opening_variables(opening_id)
             }
+            HandlerType::Quest => {
+                let quest_id = id.0;
+                gamedata.get_quest_variables(quest_id)
+            }
+            _ => Vec::new(),
+        };
+
+        tracing::info!("Variables available in event {id}:");
+        for (name, value) in &variables {
+            lua.globals().set(&**name, *value).unwrap();
+            tracing::info!("- {name}: {value}");
         }
     }
 

@@ -1098,6 +1098,23 @@ impl GameData {
 
         translated_variables
     }
+
+    /// Returns a list of variable name and value pairs for this Quest.
+    pub fn get_quest_variables(&mut self, quest_id: u32) -> Vec<(String, u32)> {
+        let row = self.quest_sheet.row(quest_id).unwrap();
+
+        let mut translated_variables = Vec::new();
+        for variable in row.QuestParams() {
+            let name = variable.ScriptInstruction.into_string().unwrap();
+            let value = variable.ScriptArg.into_u32().unwrap();
+
+            if !name.is_empty() {
+                translated_variables.push((name.clone(), *value));
+            }
+        }
+
+        translated_variables
+    }
 }
 
 impl mlua::UserData for GameData {
