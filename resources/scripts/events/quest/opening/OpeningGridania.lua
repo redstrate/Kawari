@@ -1,8 +1,5 @@
 -- NOTE: These openings are so similar, ensure changes are synced between all of them!
 
--- TODO: when we get a new EXDSchema release, we can automatically pull in the client-side lua variables!
--- this could be useful for the trigger IDs, for example.
-
 -- Scene 0 is the actual cutscene
 -- Scene 1 is the starting text asking you which controls you want to use.
 -- Scene 20 is the "where are you going?!" message
@@ -11,11 +8,6 @@
 -- We have to hardcode the pop range, because SqEx no longer provides this is in the Opening sheet.
 -- For future reference, this is located in the QST_OP_ENPC_001 layer.
 POS_START = 2213211
-
--- When walking out of the city gates
-ERANGE_SEQ_1_CLOSED_1 = 2351918
--- When walking past the quest giver
-ERANGE_SEQ_1_CLOSED_2 = 2351919
 
 function onEnterTerritory(player)
     if not player:has_seen_cutscene(OPENING_CUTSCENE) then

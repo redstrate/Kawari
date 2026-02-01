@@ -10,9 +10,6 @@
 -- For future reference, this is located in the EVT_OP_ONLY_BOX layer.
 POS_START = 4101800
 
--- When walking out onto the plaza or Bulwark Hall when not accepting the initial quest.
-ERANGE_SEQ_1_CLOSED_1 = 4101785
-
 function onEnterTerritory(player)
     if not player:has_seen_cutscene(OPENING_CUTSCENE) then
         player:play_scene(player.id, EVENT_ID, 0, INITIAL_CUTSCENE_FLAGS, {0})

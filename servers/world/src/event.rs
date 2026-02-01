@@ -4,7 +4,7 @@ use mlua::{Function, Lua};
 use parking_lot::Mutex;
 
 use kawari::{
-    common::ObjectTypeId,
+    common::{HandlerId, HandlerType, ObjectTypeId},
     config::get_config,
     ipc::zone::{Condition, EventType},
 };
@@ -29,6 +29,18 @@ impl Event {
         let mut lua = Lua::new();
         initial_setup(&mut lua);
 
+        // "steal"" the game data global from the other lua state
+        let game_data = match game_data {
+            mlua::Value::UserData(ud) => ud.borrow::<Arc<Mutex<GameData>>>().unwrap().clone(),
+            _ => unreachable!(),
+        };
+
+        // inject parameters as necessary
+        {
+            let mut game_data = game_data.lock();
+            Self::inject_lua_parameters(HandlerId(id), &mut lua, &mut game_data);
+        }
+
         let config = get_config();
         let file_name = format!("{}/{}", &config.world.scripts_location, path);
 
@@ -45,13 +57,6 @@ impl Event {
         }
 
         lua.globals().set("EVENT_ID", id).unwrap();
-
-        // "steal"" the game data global from the other lua state
-        let game_data = match game_data {
-            mlua::Value::UserData(ud) => ud.borrow::<Arc<Mutex<GameData>>>().unwrap().clone(),
-            _ => unreachable!(),
-        };
-
         lua.globals().set("GAME_DATA", game_data).unwrap();
 
         // The event_type/event_arg is set later, so don't care about this value we set!
@@ -63,6 +68,18 @@ impl Event {
             event_arg: 0,
             condition: None,
         })
+    }
+
+    /// Injects any applicable Lua parameters from Excel, such as from `Opening`.
+    fn inject_lua_parameters(id: HandlerId, lua: &mut Lua, gamedata: &mut GameData) {
+        if id.handler_type() == HandlerType::Opening {
+            let opening_id = id.0;
+
+            let variables = gamedata.get_opening_variables(opening_id);
+            for (name, value) in variables {
+                lua.globals().set(name, value).unwrap();
+            }
+        }
     }
 
     // TODO: this is a terrible hold-over name. what it actually is an onStart function that's really only useful for cutscenes.

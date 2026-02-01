@@ -1080,6 +1080,24 @@ impl GameData {
                 .collect(),
         )
     }
+
+    /// Returns a list of variable name and value pairs for this Opening.
+    pub fn get_opening_variables(&mut self, opening_id: u32) -> Vec<(String, u32)> {
+        let sheet = OpeningSheet::read_from(&mut self.resource, Language::None).unwrap();
+        let row = sheet.row(opening_id).unwrap();
+
+        let mut translated_variables = Vec::new();
+        for variable in row.Variables() {
+            let name = variable.Name.into_string().unwrap();
+            let value = variable.Value.into_u32().unwrap();
+
+            if !name.is_empty() {
+                translated_variables.push((name.clone(), *value));
+            }
+        }
+
+        translated_variables
+    }
 }
 
 impl mlua::UserData for GameData {

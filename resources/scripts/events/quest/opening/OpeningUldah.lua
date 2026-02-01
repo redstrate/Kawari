@@ -7,9 +7,6 @@
 -- For future reference, this is from the EVT_OP_ONLY_BOX layer.
 POS_START = 4101669
 
--- When walking out of the city gates
-ERANGE_SEQ_1_CLOSED_1 = 4101587
-
 function onEnterTerritory(player)
     if not player:has_seen_cutscene(OPENING_CUTSCENE) then
         player:play_scene(player.id, EVENT_ID, 0, INITIAL_CUTSCENE_FLAGS, {0})
