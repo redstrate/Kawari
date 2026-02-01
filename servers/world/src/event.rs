@@ -81,6 +81,10 @@ impl Event {
                 let quest_id = id.0;
                 gamedata.get_quest_variables(quest_id)
             }
+            HandlerType::CustomTalk => {
+                let ct_id = id.0;
+                gamedata.get_custom_talk_variables(ct_id)
+            }
             _ => Vec::new(),
         };
 

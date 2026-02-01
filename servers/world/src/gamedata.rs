@@ -1115,6 +1115,23 @@ impl GameData {
 
         translated_variables
     }
+
+    /// Returns a list of variable name and value pairs for this CustomTalk.
+    pub fn get_custom_talk_variables(&mut self, custom_talk_id: u32) -> Vec<(String, u32)> {
+        let row = self.custom_talk_sheet.row(custom_talk_id).unwrap();
+
+        let mut translated_variables = Vec::new();
+        for variable in row.Script() {
+            let name = variable.ScriptInstruction.into_string().unwrap();
+            let value = variable.ScriptArg.into_u32().unwrap();
+
+            if !name.is_empty() {
+                translated_variables.push((name.clone(), *value));
+            }
+        }
+
+        translated_variables
+    }
 }
 
 impl mlua::UserData for GameData {
