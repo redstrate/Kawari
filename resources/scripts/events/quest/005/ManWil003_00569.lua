@@ -1,9 +1,9 @@
--- Quest: Close to Home (Ul'dah), for Gladiators
+-- Quest: Close to Home (Ul'dah), for Pugilists
 -- NOTE: These quests are so similar, ensure changes are synced between all of them!
 
 -- scene 0: show quest prompt
 -- scene 2: attunement complete cutscene
--- scene 3: welcome to the gladiators guild
+-- scene 3: welcome to the pugilists' guild
 -- scene 4: marketplace dialogue
 -- scene 5: you stand in the sapphire avenue exchange cutscene
 -- scene 8: quest completion prompt
@@ -19,6 +19,7 @@ function onTalk(target, player)
 end
 
 function onYield(scene, results, player)
+    printf(player, "this was scene %d", scene)
     if scene == 50 then
         -- Accept the quest, this also matches up with the client-side UI
         player:accept_quest(EVENT_ID)

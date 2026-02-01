@@ -1,4 +1,4 @@
--- Quest: Close to Home (Limsa Lominsa)
+-- Quest: Close to Home (Limsa Lominsa), for Arcanists
 -- NOTE: These quests are so similar, ensure changes are synced between all of them!
 
 -- scene 0: show quest prompt
