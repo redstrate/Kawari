@@ -20,6 +20,7 @@ impl ZoneConnection {
         scene: u16,
         scene_flags: SceneFlags,
         params: Vec<u32>,
+        lua_player: &mut LuaPlayer,
     ) {
         let scene = EventScene {
             actor_id: *target,
@@ -37,12 +38,12 @@ impl ZoneConnection {
                 "Unable to play event {event_id}, scene {:?}, scene_flags {scene_flags}!",
                 scene
             );
-            self.event_finish(event_id).await;
+            self.event_finish(event_id, lua_player).await;
         }
     }
 
     /// Finishes the current event, including resetting any conditions set during the start of said event.
-    pub async fn event_finish(&mut self, handler_id: u32) {
+    pub async fn event_finish(&mut self, handler_id: u32, lua_player: &mut LuaPlayer) {
         let event_type = self.events.last().unwrap().event_type;
         let event_arg = self.events.last().unwrap().event_arg;
 
@@ -68,6 +69,12 @@ impl ZoneConnection {
 
         // Pop off the event stack
         self.events.pop();
+
+        if let Some(event) = self.events.last() {
+            lua_player.event_handler_id = Some(HandlerId(event.id));
+        } else {
+            lua_player.event_handler_id = None;
+        }
     }
 
     /// Starts a new event. This can be nested, depending on the event type you chose. Returns true if the event was successfully found and scripted, otherwise flase.
@@ -81,6 +88,9 @@ impl ZoneConnection {
         lua_player: &mut LuaPlayer,
     ) -> bool {
         self.target_actorid = actor_id;
+
+        let old_event_handler_id = lua_player.event_handler_id;
+        lua_player.event_handler_id = Some(HandlerId(event_id));
 
         // tell the client the event has started
         {
@@ -147,6 +157,8 @@ impl ZoneConnection {
                 "Event {event_id} tried to start, but it doesn't have a script associated with it!"
             ))
             .await;
+
+            lua_player.event_handler_id = old_event_handler_id;
 
             false
         }

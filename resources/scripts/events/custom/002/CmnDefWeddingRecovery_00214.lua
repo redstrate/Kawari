@@ -8,9 +8,9 @@
 -- Scene 5: Unknown (doesn't play)
 
 function onTalk(target, player)
-    player:play_scene(target, EVENT_ID, 0, HIDE_HOTBAR, {})
+    player:play_scene(target, 0, HIDE_HOTBAR, {})
 end
 
 function onYield(scene, results, player)
-    player:finish_event(EVENT_ID)
+    player:finish_event()
 end

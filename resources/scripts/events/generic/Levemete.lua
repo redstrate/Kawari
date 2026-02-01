@@ -5,9 +5,9 @@
 -- Scene 2: some version of "you cannot use the levemete at the moment"
 
 function onTalk(target, player)
-    player:play_scene(target, EVENT_ID, 00002, HIDE_HOTBAR, {0})
+    player:play_scene(target, 00002, HIDE_HOTBAR, {0})
 end
 
 function onYield(scene, results, player)
-    player:finish_event(EVENT_ID)
+    player:finish_event()
 end

@@ -1,5 +1,5 @@
 function onYield(scene, results, player)
-    player:finish_event(EVENT_ID)
+    player:finish_event()
 end
 
 function onReturn(scene, results, player)
@@ -10,5 +10,5 @@ function onReturn(scene, results, player)
 
         player:change_territory(territory_id)
     end
-    player:finish_event(EVENT_ID)
+    player:finish_event()
 end

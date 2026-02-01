@@ -13,5 +13,5 @@ TELEPORTER_INFO = {
 
 function onEnterTrigger(player, arg)
     player:do_solnine_teleporter(EVENT_ID, table.unpack(TELEPORTER_INFO[EVENT_ID]))
-    player:finish_event(EVENT_ID)
+    player:finish_event()
 end

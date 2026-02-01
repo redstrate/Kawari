@@ -4,7 +4,7 @@ use crate::{
 };
 use kawari::{
     common::{ObjectTypeId, Position},
-    ipc::zone::{EventType, ServerZoneIpcSegment},
+    ipc::zone::{EventType, SceneFlags, ServerZoneIpcSegment},
     packet::PacketSegment,
 };
 
@@ -20,9 +20,7 @@ pub enum LuaTask {
         warp_id: u32,
     },
     BeginLogOut,
-    FinishEvent {
-        handler_id: u32,
-    },
+    FinishEvent {},
     UnlockClassJob {
         classjob_id: u8,
     },
@@ -198,4 +196,10 @@ pub enum LuaTask {
         id: u32,
     },
     FinishCastingGlamour {},
+    PlayScene {
+        target: ObjectTypeId,
+        scene: u16,
+        scene_flags: SceneFlags,
+        params: Vec<u32>,
+    },
 }

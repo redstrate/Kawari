@@ -11,10 +11,15 @@ use kawari::{
 use crate::{
     ItemInfoQuery, ZoneConnection,
     inventory::{BuyBackItem, CurrencyKind, Item, get_container_type},
+    lua::LuaPlayer,
 };
 
 impl ZoneConnection {
-    pub async fn process_shop_event_return(&mut self, handler: &EventReturnHandler<4>) {
+    pub async fn process_shop_event_return(
+        &mut self,
+        handler: &EventReturnHandler<4>,
+        lua_player: &mut LuaPlayer,
+    ) {
         let event_id = handler.handler_id;
         let buy_sell_mode = handler.params[0];
         let item_index = handler.params[1];
@@ -80,24 +85,25 @@ impl ZoneConnection {
                             10,
                             SceneFlags::from_bits(8193).unwrap(),
                             vec![1, 100],
+                            lua_player,
                         )
                         .await;
                     } else {
                         tracing::error!(ERR_INVENTORY_ADD_FAILED);
                         self.send_notice(ERR_INVENTORY_ADD_FAILED).await;
-                        self.event_finish(event_id.0).await;
+                        self.event_finish(event_id.0, lua_player).await;
                     }
                 } else {
                     self.send_notice(
                         "Insufficient gil to buy item. Nice try bypassing the client-side check!",
                     )
                     .await;
-                    self.event_finish(event_id.0).await;
+                    self.event_finish(event_id.0, lua_player).await;
                 }
             } else {
                 self.send_notice("Unable to find shop item, this is a bug in Kawari!")
                     .await;
-                self.event_finish(event_id.0).await;
+                self.event_finish(event_id.0, lua_player).await;
             }
         } else if buy_sell_mode == SELL {
             let storage = get_container_type(item_index as u32).unwrap();
@@ -201,16 +207,17 @@ impl ZoneConnection {
                     10,
                     SceneFlags::from_bits(8193).unwrap(),
                     params,
+                    lua_player,
                 )
                 .await;
             } else {
                 self.send_notice("Unable to find shop item, this is a bug in Kawari!")
                     .await;
-                self.event_finish(event_id.0).await;
+                self.event_finish(event_id.0, lua_player).await;
             }
         } else {
             tracing::error!("Received unknown transaction mode {buy_sell_mode}!");
-            self.event_finish(event_id.0).await;
+            self.event_finish(event_id.0, lua_player).await;
         }
     }
 
@@ -253,7 +260,13 @@ impl ZoneConnection {
         self.player_data.shop_sequence += 1;
     }
 
-    pub async fn buy_special_shop(&mut self, event_id: u32, special_shop_id: u32, item_index: u32) {
+    pub async fn buy_special_shop(
+        &mut self,
+        event_id: u32,
+        special_shop_id: u32,
+        item_index: u32,
+        lua_player: &mut LuaPlayer,
+    ) {
         // TODO: decrease currency
         // TODO: support quantity
 
@@ -291,6 +304,7 @@ impl ZoneConnection {
                 2,
                 SceneFlags::NO_DEFAULT_CAMERA | SceneFlags::HIDE_HOTBAR,
                 vec![],
+                lua_player,
             )
             .await;
         }

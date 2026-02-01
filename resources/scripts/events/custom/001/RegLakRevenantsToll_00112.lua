@@ -4,14 +4,14 @@
 -- Scene 1: Help menu
 
 function onTalk(target, player)
-    player:play_scene(target, EVENT_ID, 0, HIDE_HOTBAR, {})
+    player:play_scene(target, 0, HIDE_HOTBAR, {})
 end
 
 function onYield(scene, results, player)
     if scene == 0 then
         -- Show help menu
-        player:play_scene(player.id, EVENT_ID, 1, HIDE_HOTBAR, {})
+        player:play_scene(player.id, 1, HIDE_HOTBAR, {})
         return
     end
-    player:finish_event(EVENT_ID)
+    player:finish_event()
 end

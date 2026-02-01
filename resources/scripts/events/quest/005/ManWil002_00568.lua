@@ -15,7 +15,7 @@ function onTalk(target, player)
     originating_npc = target
 
     -- Show the quest prompt
-    player:play_scene(target, EVENT_ID, 0, HIDE_HOTBAR, {})
+    player:play_scene(target, 0, HIDE_HOTBAR, {})
 end
 
 function onYield(scene, results, player)
@@ -30,15 +30,15 @@ function onYield(scene, results, player)
         player:change_territory(TERRITORYTYPE0, { x = old_position.x, y = old_position.y, z = old_position.z }, old_rotation)
     end
 
-    player:finish_event(EVENT_ID)
+    player:finish_event()
 end
 
 function onReturn(scene, results, player)
     if scene == 0 and results[1] == 1 then
         -- Play the introductory text if accepted (this has to be played from Momodi)
-        player:play_scene(originating_npc, EVENT_ID, 50, HIDE_HOTBAR, {})
+        player:play_scene(originating_npc, 50, HIDE_HOTBAR, {})
         return
     end
 
-    player:finish_event(EVENT_ID)
+    player:finish_event()
 end

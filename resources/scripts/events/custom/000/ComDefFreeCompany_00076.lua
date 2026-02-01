@@ -8,7 +8,7 @@
 -- scene 8: change name
 
 function onTalk(target, player)
-    player:play_scene(target, EVENT_ID, 00000, HIDE_HOTBAR, {})
+    player:play_scene(target, 00000, HIDE_HOTBAR, {})
 end
 
 function onYield(scene, results, player)
@@ -16,16 +16,16 @@ function onYield(scene, results, player)
         -- 1 means you hit the "learn about free company" button
         if results[1] == 1 then
             -- explain menu
-            player:play_scene(player.id, EVENT_ID, 00001, HIDE_HOTBAR, {})
+            player:play_scene(player.id, 00001, HIDE_HOTBAR, {})
             return
         elseif results[1] == 5 then
             -- 5 means you hit the "found a free company" button
 
             -- reject
-            player:play_scene(player.id, EVENT_ID, 00003, HIDE_HOTBAR, {})
+            player:play_scene(player.id, 00003, HIDE_HOTBAR, {})
             return
         end
     end
 
-    player:finish_event(EVENT_ID)
+    player:finish_event()
 end

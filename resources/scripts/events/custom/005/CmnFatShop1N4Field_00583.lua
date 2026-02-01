@@ -8,9 +8,9 @@
 
 function onTalk(target, player)
     -- "You must progress further through the <expansion name> main scenario in order to access this vendor's wares."
-    player:play_scene(target, EVENT_ID, 00003, HIDE_HOTBAR, {0})
+    player:play_scene(target, 00003, HIDE_HOTBAR, {0})
 end
 
 function onYield(scene, results, player)
-    player:finish_event(EVENT_ID)
+    player:finish_event()
 end

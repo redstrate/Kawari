@@ -4,9 +4,9 @@
 -- Scene 1: Quest-dependent cutscne
 
 function onTalk(target, player)
-    player:play_scene(target, EVENT_ID, 1, HIDE_HOTBAR | SET_BASE, {})
+    player:play_scene(target, 1, HIDE_HOTBAR | SET_BASE, {})
 end
 
 function onYield(scene, results, player)
-    player:finish_event(EVENT_ID)
+    player:finish_event()
 end

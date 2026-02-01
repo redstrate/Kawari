@@ -59,8 +59,10 @@ impl ZoneConnection {
                     self.warp(*warp_id).await;
                 }
                 LuaTask::BeginLogOut => self.begin_log_out().await,
-                LuaTask::FinishEvent { handler_id } => {
-                    self.event_finish(*handler_id).await;
+                LuaTask::FinishEvent {} => {
+                    if let Some(event) = self.events.last() {
+                        self.event_finish(event.id, player).await;
+                    }
                     run_finish_event = true;
                 }
                 LuaTask::UnlockClassJob { classjob_id } => {
@@ -703,6 +705,22 @@ impl ZoneConnection {
                     // Reset information so it's not accidentally reused.
                     self.glamour_information = None;
                 }
+                LuaTask::PlayScene {
+                    target,
+                    scene,
+                    scene_flags,
+                    params,
+                } => {
+                    self.event_scene(
+                        target,
+                        player.event_handler_id.unwrap().0,
+                        *scene,
+                        *scene_flags,
+                        params.clone(),
+                        player,
+                    )
+                    .await;
+                }
             }
         }
         player.queued_tasks.clear();
@@ -711,7 +729,7 @@ impl ZoneConnection {
             // Yield the last event again so it can pick up from nesting
             // TODO: this makes no sense, and probably needs to be re-worked
             if let Some(event) = self.events.last() {
-                self.event_finish(event.id).await;
+                self.event_finish(event.id, player).await;
             }
         }
 

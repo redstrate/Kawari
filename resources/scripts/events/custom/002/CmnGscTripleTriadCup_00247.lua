@@ -7,9 +7,9 @@
 -- Scene 4: Completed tournament, review final standings at card square
 
 function onTalk(target, player)
-    player:play_scene(target, EVENT_ID, 3, HIDE_HOTBAR, {})
+    player:play_scene(target, 3, HIDE_HOTBAR, {})
 end
 
 function onYield(scene, results, player)
-    player:finish_event(EVENT_ID)
+    player:finish_event()
 end

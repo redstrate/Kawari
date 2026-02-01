@@ -13,7 +13,7 @@ use kawari::{
         ObjectTypeKind, Position, adjust_quest_id,
     },
     ipc::zone::{
-        ActorControlCategory, ActorControlSelf, EventScene, EventType, OnlineStatus, SceneFlags,
+        ActorControlCategory, ActorControlSelf, EventType, OnlineStatus, SceneFlags,
         ServerNoticeFlags, ServerNoticeMessage, ServerZoneIpcData, ServerZoneIpcSegment, Warp,
     },
     packet::PacketSegment,
@@ -44,6 +44,7 @@ pub struct LuaPlayer {
     pub zone_data: LuaZone,
     pub status_effects: StatusEffects,
     pub content_data: LuaContent,
+    pub event_handler_id: Option<HandlerId>,
 }
 
 impl QueueSegments for LuaPlayer {
@@ -79,29 +80,16 @@ impl LuaPlayer {
     fn play_scene(
         &mut self,
         target: ObjectTypeId,
-        event_id: u32,
         scene: u16,
         scene_flags: SceneFlags,
         params: Vec<u32>,
     ) {
-        let scene = EventScene {
-            actor_id: target,
-            handler_id: HandlerId(event_id),
+        self.queued_tasks.push(LuaTask::PlayScene {
+            target,
             scene,
             scene_flags,
-            params_count: params.len() as u8,
-            params: params.clone(),
-            ..Default::default()
-        };
-
-        if let Some(ipc) = scene.package_scene() {
-            create_ipc_self(self, ipc, self.player_data.character.actor_id);
-        } else {
-            let error_message = "Unsupported amount of parameters in play_scene! This is likely a bug in your script! Cancelling event...".to_string();
-            tracing::warn!(error_message);
-            self.send_message(&error_message, 0);
-            self.finish_event(event_id);
-        }
+            params,
+        });
     }
 
     fn set_position(&mut self, position: Position, rotation: f32) {
@@ -182,8 +170,8 @@ impl LuaPlayer {
         self.queued_tasks.push(LuaTask::BeginLogOut);
     }
 
-    fn finish_event(&mut self, handler_id: u32) {
-        self.queued_tasks.push(LuaTask::FinishEvent { handler_id });
+    fn finish_event(&mut self) {
+        self.queued_tasks.push(LuaTask::FinishEvent {});
     }
 
     fn unlock_classjob(&mut self, classjob_id: u8) {
@@ -712,18 +700,9 @@ impl UserData for LuaPlayer {
         );
         methods.add_method_mut(
             "play_scene",
-            |_,
-             this,
-             (target, event_id, scene, scene_flags, params): (
-                ObjectTypeId,
-                u32,
-                u16,
-                u32,
-                Vec<u32>,
-            )| {
+            |_, this, (target, scene, scene_flags, params): (ObjectTypeId, u16, u32, Vec<u32>)| {
                 this.play_scene(
                     target,
-                    event_id,
                     scene,
                     SceneFlags::from_bits(scene_flags).unwrap_or_default(),
                     params,
@@ -791,8 +770,8 @@ impl UserData for LuaPlayer {
             this.begin_log_out();
             Ok(())
         });
-        methods.add_method_mut("finish_event", |_, this, handler_id: u32| {
-            this.finish_event(handler_id);
+        methods.add_method_mut("finish_event", |_, this, _: ()| {
+            this.finish_event();
             Ok(())
         });
         methods.add_method_mut("unlock_classjob", |_, this, classjob_id: u8| {

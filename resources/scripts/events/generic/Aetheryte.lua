@@ -20,7 +20,7 @@ function onTalk(target, player)
         player:unlock_aetheryte(1, aetheryteId())
     end
 
-    player:play_scene(target, EVENT_ID, SCENE_SHOW_MENU, HIDE_HOTBAR, {0})
+    player:play_scene(target, SCENE_SHOW_MENU, HIDE_HOTBAR, {0})
 end
 
 function onYield(scene, results, player)
@@ -43,7 +43,7 @@ function onYield(scene, results, player)
             player:set_homepoint(aetheryteId())
         elseif menu_option == AETHERNET_SUBMENU then
             if decision ~= AETHERNET_SUBMENU_CANCEL then
-                player:finish_event(EVENT_ID) -- Need to finish the event here, because warping does not return to this callback (the game will crash or softlock otherwise)
+                player:finish_event() -- Need to finish the event here, because warping does not return to this callback (the game will crash or softlock otherwise)
                 player:warp_aetheryte(decision)
                 return
             end
@@ -54,10 +54,10 @@ function onYield(scene, results, player)
         elseif menu_option == ACCESS_RESIDENTAL_AREA then
             -- open the housing menu
             player:start_event(player.id, 1310721, EVENT_TYPE_NEST, 0)
-            player:play_scene(player.id, 1310721, 0, HIDE_HOTBAR | NO_DEFAULT_CAMERA, {340})
+            player:play_scene(player.id, 0, HIDE_HOTBAR | NO_DEFAULT_CAMERA, {340})
             return
         end
     end
 
-    player:finish_event(EVENT_ID)
+    player:finish_event()
 end

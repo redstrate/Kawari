@@ -12,7 +12,7 @@ DESCRIPTION_POD = 3604500
 CONTENT_FINDER_POD_1_10 = 174
 
 function onTalk(target, player)
-    player:play_scene(target, EVENT_ID, 0, NO_DEFAULT_CAMERA | HIDE_HOTBAR, {})
+    player:play_scene(target, 0, NO_DEFAULT_CAMERA | HIDE_HOTBAR, {})
 end
 
 function onYield(scene, results, player)
@@ -25,9 +25,9 @@ function onYield(scene, results, player)
         elseif results[1] == 5 then
             -- Open DD description menu
             player:start_event(player.id, DESCRIPTION_POD, EVENT_TYPE_NEST, 0)
-            player:play_scene(player.id, DESCRIPTION_POD, 0, HIDE_HOTBAR | NO_DEFAULT_CAMERA, {})
+            player:play_scene(player.id, 0, HIDE_HOTBAR | NO_DEFAULT_CAMERA, {})
             return
         end
     end
-    player:finish_event(EVENT_ID)
+    player:finish_event()
 end

@@ -20,7 +20,7 @@ function onTalk(target, player)
         player:unlock_aetheryte(1, aetheryteId())
     end
 
-    player:play_scene(target, EVENT_ID, SCENE_SHOW_MENU, HIDE_HOTBAR, {0})
+    player:play_scene(target, SCENE_SHOW_MENU, HIDE_HOTBAR, {0})
 end
 
 function onYield(scene, results, player)
@@ -29,7 +29,7 @@ function onYield(scene, results, player)
 
     if scene == SCENE_SHOW_MENU then
         if destination ~= AETHERNET_MENU_CANCEL then
-            player:finish_event(EVENT_ID) -- Need to finish the event here, because warping does not return to this callback (the game will crash or softlock otherwise)
+            player:finish_event() -- Need to finish the event here, because warping does not return to this callback (the game will crash or softlock otherwise)
             player:warp_aetheryte(destination)
             return
         end
@@ -37,5 +37,5 @@ function onYield(scene, results, player)
         -- TODO: attunement logic
     end
 
-    player:finish_event(EVENT_ID)
+    player:finish_event()
 end

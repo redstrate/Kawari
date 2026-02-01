@@ -17,19 +17,19 @@ function onTalk(target, player)
     originating_npc = target
 
     if target.object_id == ENPC_WYMOND then
-        player:play_scene(target, EVENT_ID, 00000, HIDE_HOTBAR, {})
+        player:play_scene(target, 00000, HIDE_HOTBAR, {})
     elseif target.object_id == ENPC_MOMODI then
-        player:play_scene(target, EVENT_ID, 00004, SET_BASE | HIDE_HOTBAR, {})
+        player:play_scene(target, 00004, SET_BASE | HIDE_HOTBAR, {})
     end
 end
 
 function onYield(scene, results, player)
     if scene == 4 then
-        player:play_scene(player.id, EVENT_ID, 00005, HIDE_HOTBAR, {})
+        player:play_scene(player.id, 00005, HIDE_HOTBAR, {})
         return
     end
 
-    player:finish_event(EVENT_ID)
+    player:finish_event()
 end
 
 function onReturn(scene, results, player)
@@ -37,26 +37,26 @@ function onReturn(scene, results, player)
         -- first param: whether the quest was accepted
         local accepted = results[1] == 1
         if accepted then
-            player:play_scene(originating_npc, EVENT_ID, 00001, SET_BASE | HIDE_HOTBAR | DISABLE_SKIP, {})
+            player:play_scene(originating_npc, 00001, SET_BASE | HIDE_HOTBAR | DISABLE_SKIP, {})
             return
         else
-            player:play_scene(player.id, EVENT_ID, 00003, HIDE_HOTBAR, {})
+            player:play_scene(player.id, 00003, HIDE_HOTBAR, {})
             return
         end
     elseif scene == 1 then
-        player:play_scene(player.id, EVENT_ID, 00002, HIDE_HOTBAR, {})
+        player:play_scene(player.id, 00002, HIDE_HOTBAR, {})
         return
     elseif scene == 2 then
         player:accept_quest(EVENT_ID)
 
         -- call back into the opening, presumably to update the borders of the play area
         player:start_event(originating_npc, OPENING_EVENT_HANDLER, EVENT_TYPE_NEST, 0)
-        player:play_scene(originating_npc, OPENING_EVENT_HANDLER, 30, HIDE_HOTBAR | NO_DEFAULT_CAMERA, {2})
+        player:play_scene(originating_npc, 30, HIDE_HOTBAR | NO_DEFAULT_CAMERA, {2})
         return
     elseif scene == 5 then
         local completed = results[1] == 1
         player:finish_quest(EVENT_ID)
     end
 
-    player:finish_event(EVENT_ID)
+    player:finish_event()
 end

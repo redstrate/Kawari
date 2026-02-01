@@ -11,9 +11,9 @@ function onTalk(target, player)
     -- TODO: show specialshop if rank is high enough
 
     player:start_event(target, target_event_id, EVENT_TYPE_NEST, 0)
-    player:play_scene(target, target_event_id, 0, HIDE_HOTBAR | NO_DEFAULT_CAMERA, {})
+    player:play_scene(target, 0, HIDE_HOTBAR | NO_DEFAULT_CAMERA, {})
 end
 
 function onYield(scene, results, player)
-    player:finish_event(EVENT_ID)
+    player:finish_event()
 end

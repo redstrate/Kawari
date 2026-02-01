@@ -14,7 +14,7 @@ local is_dreamfitting = false
 function onEnterTerritory(player)
     if not player.saw_inn_wakeup then
         -- play the wakeup animation
-        player:play_scene(player.id, EVENT_ID, BED_SCENE_WAKEUP_ANIM, BED_CUTSCENE_FLAGS, {})
+        player:play_scene(player.id, BED_SCENE_WAKEUP_ANIM, BED_CUTSCENE_FLAGS, {})
 
         -- Need this first so if a player logs in from a non-inn zone, they won't get the bed scene when they enter. It should only play on login.
         player:set_inn_wakeup(true)
@@ -22,7 +22,7 @@ function onEnterTerritory(player)
 end
 
 function onTalk(target, player)
-    player:play_scene(target, EVENT_ID, SCENE_SHOW_MENU, HIDE_HOTBAR, {0})
+    player:play_scene(target, SCENE_SHOW_MENU, HIDE_HOTBAR, {0})
 end
 
 function onYield(scene, results, player)
@@ -37,26 +37,26 @@ function onYield(scene, results, player)
 
     if scene == SCENE_SHOW_MENU then
         if decision == NOTHING or decision == CANCEL_SCENE then
-            player:finish_event(EVENT_ID)
+            player:finish_event()
         else
             if decision == LOG_OUT or decision == EXIT_GAME then
                 player:begin_log_out()
             end
-            player:play_scene(player.id, EVENT_ID, SCENE_SLEEP_ANIM, CUTSCENE_FLAGS, {decision})
+            player:play_scene(player.id, SCENE_SLEEP_ANIM, CUTSCENE_FLAGS, {decision})
         end
     elseif scene == SCENE_SLEEP_ANIM then
         if decision == DREAMFITTING then
-            player:play_scene(player.id, EVENT_ID, SCENE_DREAMFITTING, CUTSCENE_FLAGS, {0})
+            player:play_scene(player.id, SCENE_DREAMFITTING, CUTSCENE_FLAGS, {0})
         else
             -- The player decided to log out or exit the game. The server don't care which, as the client handles itself, so pass along the decision.
-            player:play_scene(player.id, EVENT_ID, SCENE_LOG_OUT, CUTSCENE_FLAGS, {decision})
+            player:play_scene(player.id, SCENE_LOG_OUT, CUTSCENE_FLAGS, {decision})
         end
     elseif scene == SCENE_DREAMFITTING then
         is_dreamfitting = true
-        player:play_scene(player.id, EVENT_ID, SCENE_AWAKEN_ANIM, CUTSCENE_FLAGS, {0})
+        player:play_scene(player.id, SCENE_AWAKEN_ANIM, CUTSCENE_FLAGS, {0})
     elseif scene == SCENE_AWAKEN_ANIM then
-        player:finish_event(EVENT_ID)
+        player:finish_event()
     else
-        player:finish_event(EVENT_ID)
+        player:finish_event()
     end
 end

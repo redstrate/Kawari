@@ -4,9 +4,9 @@
 -- scene 3: you cannot hire a retainer
 
 function onTalk(target, player)
-    player:play_scene(target, EVENT_ID, 00003, HIDE_HOTBAR, {})
+    player:play_scene(target, 00003, HIDE_HOTBAR, {})
 end
 
 function onYield(scene, results, player)
-    player:finish_event(EVENT_ID)
+    player:finish_event()
 end

@@ -3,14 +3,14 @@
 -- Then, these events lead into a TopicSelect used for the various level categories.
 
 function onTalk(target, player)
-    player:play_scene(target, EVENT_ID, 00000, HIDE_HOTBAR, {})
+    player:play_scene(target, 00000, HIDE_HOTBAR, {})
 end
 
 function onYield(scene, results, player)
     -- first result is the selected topic
     local selected_topic = results[1]
     if selected_topic == -1 then
-        player:finish_event(EVENT_ID)
+        player:finish_event()
         return
     end
 

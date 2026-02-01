@@ -1256,9 +1256,12 @@ async fn process_packet(
 
                                 // Fallback to Rust implemented commands
                                 if !handled {
-                                    handled =
-                                        ChatHandler::handle_chat_message(connection, chat_message)
-                                            .await;
+                                    handled = ChatHandler::handle_chat_message(
+                                        connection,
+                                        chat_message,
+                                        lua_player,
+                                    )
+                                    .await;
                                 }
 
                                 // If it's truly not existent:
@@ -1444,7 +1447,9 @@ async fn process_packet(
 
                             // It always assumes a shop... for now
                             if event_type == HandlerType::Shop {
-                                connection.process_shop_event_return(handler).await;
+                                connection
+                                    .process_shop_event_return(handler, lua_player)
+                                    .await;
                             } else {
                                 tracing::info!(message = "Event returned", handler_id = %handler.handler_id, error_code = handler.error_code, scene = handler.scene, params = ?&handler.params[..handler.num_results as usize]);
 
@@ -2059,7 +2064,12 @@ async fn process_packet(
                         } => {
                             tracing::info!("Buying item {item_index} from {special_shop_id}...");
                             connection
-                                .buy_special_shop(*shop_id, *special_shop_id, *item_index)
+                                .buy_special_shop(
+                                    *shop_id,
+                                    *special_shop_id,
+                                    *item_index,
+                                    lua_player,
+                                )
                                 .await;
                         }
                         ClientZoneIpcData::ShareStrategyBoard {
@@ -2251,7 +2261,7 @@ async fn process_server_msg(
             connection.conditions.set_condition(Condition::OccupiedInEvent);
             connection.send_conditions().await;
 
-            connection.event_scene(&object, handler_id, 2, SceneFlags::NO_DEFAULT_CAMERA | SceneFlags::HIDE_HOTBAR, Vec::new()).await;
+            connection.event_scene(&object, handler_id, 2, SceneFlags::NO_DEFAULT_CAMERA | SceneFlags::HIDE_HOTBAR, Vec::new(), lua_player).await;
         }
         FromServer::IncrementRestedExp() => connection.add_rested_exp_seconds(10).await,
         FromServer::Countdown(account_id, content_id, name, starter_actor_id, duration) => connection.start_countdown(account_id, content_id, name, starter_actor_id, duration).await,

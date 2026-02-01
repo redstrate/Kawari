@@ -3,5 +3,5 @@ function onYield(scene, results, player)
     if #results == 1 and results[1] == 0 then
         player:abandon_content()
     end
-    player:finish_event(EVENT_ID)
+    player:finish_event()
 end

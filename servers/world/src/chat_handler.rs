@@ -3,6 +3,7 @@ use std::str::FromStr;
 use crate::{
     ItemInfoQuery, ToServer,
     inventory::{Item, Storage},
+    lua::LuaPlayer,
 };
 use kawari::{
     common::{ERR_INVENTORY_ADD_FAILED, ITEM_CONDITION_MAX},
@@ -21,6 +22,7 @@ impl ChatHandler {
     pub async fn handle_chat_message(
         connection: &mut ZoneConnection,
         chat_message: &SendChatMessage,
+        lua_player: &mut LuaPlayer,
     ) -> bool {
         if connection.player_data.character.gm_rank == GameMasterRank::NormalUser {
             tracing::info!("Rejecting debug command because the user is not GM!");
@@ -114,7 +116,7 @@ impl ChatHandler {
             }
             "!finishevent" => {
                 if let Some(event) = connection.events.last() {
-                    connection.event_finish(event.id).await;
+                    connection.event_finish(event.id, lua_player).await;
                     connection
                         .send_notice("Current event forcefully finished.")
                         .await;

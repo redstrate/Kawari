@@ -30,10 +30,10 @@
 
 function onTalk(target, player)
     -- Currently using placeholders for now: Cliffhanger in Wonder Square East.
-    player:play_scene(target, EVENT_ID, 00000, HIDE_HOTBAR, {1, 1})
+    player:play_scene(target, 00000, HIDE_HOTBAR, {1, 1})
 end
 
 function onYield(scene, results, player)
     -- first result is 1 if requesting to warp, otherwise 0
-    player:finish_event(EVENT_ID)
+    player:finish_event()
 end
