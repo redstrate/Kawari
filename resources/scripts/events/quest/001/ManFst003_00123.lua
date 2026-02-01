@@ -1,4 +1,4 @@
--- Quest: Close to Home (Gridania)
+-- Quest: Close to Home (Gridania), for Archers
 -- NOTE: These quests are so similar, ensure changes are synced between all of them!
 
 -- scene 0: show quest prompt
