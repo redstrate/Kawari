@@ -173,14 +173,14 @@ impl ZoneConnection {
 
         // send some weird thing to make the zone load correctly
         if !bound_by_duty {
-            self.send_ipc_self(ServerZoneIpcSegment::new(ServerZoneIpcData::UnkZoneLoad1 {
+            self.send_ipc_self(ServerZoneIpcSegment::new(ServerZoneIpcData::DailyQuests {
                 unk1: [0; 56],
             }))
             .await;
 
-            self.send_ipc_self(ServerZoneIpcSegment::new(ServerZoneIpcData::UnkZoneLoad2 {
-                unk1: [0; 8],
-            }))
+            self.send_ipc_self(ServerZoneIpcSegment::new(
+                ServerZoneIpcData::DailyQuestRepeatFlags { unk1: [0; 8] },
+            ))
             .await;
         }
 

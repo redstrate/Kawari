@@ -271,11 +271,11 @@ ServerZoneIpcType:
     comment: The fellowships you have joined.
     opcode: 362
     size: 808
-  - name: UnkZoneLoad1
+  - name: DailyQuests
     comment: "Sent shortly after the server sends InitZone, this with UnkZoneLoad2 it makes everything load faster."
     opcode: 302
     size: 56
-  - name: UnkZoneLoad2
+  - name: DailyQuestRepeatFlags
     comment: "Sent shortly after the server sends InitZone, this with UnkZoneLoad1 it makes everything load faster."
     opcode: 719
     size: 8

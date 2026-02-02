@@ -434,10 +434,10 @@ pub enum ServerZoneIpcData {
     Fellowships {
         unk1: [u8; 808],
     },
-    UnkZoneLoad1 {
+    DailyQuests {
         unk1: [u8; 56],
     },
-    UnkZoneLoad2 {
+    DailyQuestRepeatFlags {
         unk1: [u8; 8],
     },
     Linkshells {
