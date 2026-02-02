@@ -77,10 +77,8 @@ impl ZoneConnection {
                         )
                         .await;
 
-                        let target_id = self.target_actorid;
                         // See GenericShopkeeper.lua for information about this scene, the flags, and the params.
                         self.event_scene(
-                            &target_id,
                             event_id.0,
                             10,
                             SceneFlags::from_bits(8193).unwrap(),
@@ -193,8 +191,6 @@ impl ZoneConnection {
                 )
                 .await;
 
-                let target_id = self.target_actorid;
-
                 let mut params = self
                     .player_data
                     .buyback_list
@@ -202,7 +198,6 @@ impl ZoneConnection {
                 params[0] = SELL as u32;
                 params[1] = 0; // The "terminator" is 0 for sell mode.
                 self.event_scene(
-                    &target_id,
                     event_id.0,
                     10,
                     SceneFlags::from_bits(8193).unwrap(),
@@ -295,11 +290,8 @@ impl ZoneConnection {
             // TODO: ACS 854 is sent
             // TODO: itemobtainedlogmessage is sent
 
-            let target_id = self.target_actorid;
-
             // See GenericShopkeeper.lua for information about this scene, the flags, and the params.
             self.event_scene(
-                &target_id,
                 event_id,
                 2,
                 SceneFlags::NO_DEFAULT_CAMERA | SceneFlags::HIDE_HOTBAR,

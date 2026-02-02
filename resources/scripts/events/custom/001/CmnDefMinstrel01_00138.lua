@@ -5,7 +5,7 @@ SCENE_00000 = 00000 -- Something festival related
 SCENE_00001 = 00001 -- Quest-dependent cutscene
 
 function onTalk(target, player)
-    player:play_scene(target, SCENE_00001, HIDE_HOTBAR | SET_BASE, {})
+    player:play_scene(SCENE_00001, HIDE_HOTBAR | SET_BASE, {})
 end
 
 function onYield(scene, results, player)

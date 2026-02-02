@@ -153,7 +153,6 @@ async fn initial_setup(
                     party_id: 0,
                     rejoining_party: false,
                     login_time: None,
-                    target_actorid: ObjectTypeId::default(),
                     transaction_sequence: 0,
                     content_settings: None,
                     current_instance_id: None,
@@ -2261,7 +2260,7 @@ async fn process_server_msg(
             connection.conditions.set_condition(Condition::OccupiedInEvent);
             connection.send_conditions().await;
 
-            connection.event_scene(&object, handler_id, 2, SceneFlags::NO_DEFAULT_CAMERA | SceneFlags::HIDE_HOTBAR, Vec::new(), lua_player).await;
+            connection.event_scene(handler_id, 2, SceneFlags::NO_DEFAULT_CAMERA | SceneFlags::HIDE_HOTBAR, Vec::new(), lua_player).await;
         }
         FromServer::IncrementRestedExp() => connection.add_rested_exp_seconds(10).await,
         FromServer::Countdown(account_id, content_id, name, starter_actor_id, duration) => connection.start_countdown(account_id, content_id, name, starter_actor_id, duration).await,

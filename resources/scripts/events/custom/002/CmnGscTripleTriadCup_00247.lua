@@ -8,7 +8,7 @@ SCENE_00003 = 00003 -- Hasn't completed the tutorial
 SCENE_00004 = 00004 -- Completed tournament, review final standings at card square
 
 function onTalk(target, player)
-    player:play_scene(target, SCENE_00003, HIDE_HOTBAR, {})
+    player:play_scene(SCENE_00003, HIDE_HOTBAR, {})
 end
 
 function onYield(scene, results, player)

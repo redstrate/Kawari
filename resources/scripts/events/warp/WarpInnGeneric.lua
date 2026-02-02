@@ -6,13 +6,13 @@ SCENE_MENU      = 00001 -- Menu
 SCENE_NO_ACCESS = 00002 -- Doesn't have inn access
 
 function onTalk(target, player)
-    player:play_scene(target, SCENE_GREETING, HIDE_HOTBAR, {0}))
+    player:play_scene(SCENE_GREETING, HIDE_HOTBAR, {0})
 end
 
 function onYield(scene, results, player)
     if scene == SCENE_GREETING then
         -- has inn access
-        player:play_scene(player.id, SCENE_MENU, HIDE_HOTBAR, {0})
+        player:play_scene(SCENE_MENU, HIDE_HOTBAR, {0})
     else
         player:finish_event()
 

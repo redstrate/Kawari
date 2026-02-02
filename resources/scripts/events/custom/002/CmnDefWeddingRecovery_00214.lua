@@ -9,7 +9,7 @@ SCENE_00004 = 00004 -- Ceremony preparation menu
 SCENE_00005 = 00005 -- Unknown (doesn't play)
 
 function onTalk(target, player)
-    player:play_scene(target, SCENE_00000, HIDE_HOTBAR, {})
+    player:play_scene(SCENE_00000, HIDE_HOTBAR, {})
 end
 
 function onYield(scene, results, player)

@@ -19,18 +19,18 @@ SCENE_00720 = 00720 -- Old rewards available
 SCENE_00730 = 00730 -- Offer to trade in, similar to scene 100
 
 function onTalk(target, player)
-    player:play_scene(target, SCENE_00000, HIDE_HOTBAR, {})
+    player:play_scene(SCENE_00000, HIDE_HOTBAR, {})
 end
 
 function onYield(scene, results, player)
     if scene == SCENE_00000 then
         -- Open menu
-        player:play_scene(player.id, SCENE_00001, HIDE_HOTBAR, {})
+        player:play_scene(SCENE_00001, HIDE_HOTBAR, {})
         return
     elseif scene == SCENE_00001 then
         if results[1] == 2 then
             -- Journals aren't implemented, so refuse to give one
-            player:play_scene(player.id, SCENE_00400, HIDE_HOTBAR, {})
+            player:play_scene(SCENE_00400, HIDE_HOTBAR, {})
             return
         end
     end

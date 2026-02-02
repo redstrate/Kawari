@@ -8,7 +8,7 @@ SCENE_00001 = 00001 -- Obtain the mogpendium
 SCENE_00002 = 00002 -- Open the mogpendium only
 
 function onTalk(target, player)
-    player:play_scene(target, SCENE_00000, 0, {0})
+    player:play_scene(SCENE_00000, 0, {0})
 end
 
 function onYield(scene, results, player)
@@ -18,7 +18,7 @@ function onYield(scene, results, player)
             local target_shop_id = results[2]
 
             player:start_event(player.id, target_shop_id, EVENT_TYPE_NEST, 5)
-            player:play_scene(player.id, 0, HIDE_HOTBAR | NO_DEFAULT_CAMERA, {})
+            player:play_scene(0, HIDE_HOTBAR | NO_DEFAULT_CAMERA, {})
             return
         end
     end

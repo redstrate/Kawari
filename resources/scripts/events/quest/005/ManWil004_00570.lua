@@ -9,13 +9,9 @@
 -- scene 8: quest completion prompt
 -- scene 50: you need to do some basic tasks
 
-local originating_npc
-
 function onTalk(target, player)
-    originating_npc = target
-
     -- Show the quest prompt
-    player:play_scene(target, 0, HIDE_HOTBAR, {})
+    player:play_scene(0, HIDE_HOTBAR, {})
 end
 
 function onYield(scene, results, player)
@@ -36,7 +32,7 @@ end
 function onReturn(scene, results, player)
     if scene == 0 and results[1] == 1 then
         -- Play the introductory text if accepted (this has to be played from Momodi)
-        player:play_scene(originating_npc, 50, HIDE_HOTBAR, {})
+        player:play_scene(50, HIDE_HOTBAR, {})
         return
     end
 

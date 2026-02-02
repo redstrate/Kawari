@@ -10,13 +10,13 @@ function onTalk(target, player)
     -- NOTE: not sure if this is 100% true
     local event_type = target_event_id >> 16
     if event_type == HANDLER_TYPE_GIL_SHOP then
-        player:play_scene(target, 0, HIDE_HOTBAR | NO_DEFAULT_CAMERA, {})
+        player:play_scene(0, HIDE_HOTBAR | NO_DEFAULT_CAMERA, {})
     elseif event_type == HANDLER_TYPE_INCLUSION_SHOP then
-        player:play_scene(target, 1, HIDE_HOTBAR | NO_DEFAULT_CAMERA, {})
+        player:play_scene(1, HIDE_HOTBAR | NO_DEFAULT_CAMERA, {})
     elseif event_type == HANDLER_TYPE_SPECIAL_SHOP then
-        player:play_scene(target, 0, HIDE_HOTBAR | NO_DEFAULT_CAMERA, {})
+        player:play_scene(0, HIDE_HOTBAR | NO_DEFAULT_CAMERA, {})
     elseif event_type == HANDLER_TYPE_DESCRIPTION then
-        player:play_scene(target, 0, HIDE_HOTBAR | NO_DEFAULT_CAMERA, {})
+        player:play_scene(0, HIDE_HOTBAR | NO_DEFAULT_CAMERA, {})
     else
         print("Unknown PreHandler target event type: "..event_type)
     end

@@ -13,7 +13,7 @@ use crate::{
     lua::LuaTask,
 };
 use kawari::{
-    common::{ClientLanguage, HandlerId, ObjectId, ObjectTypeId, Position, timestamp_secs},
+    common::{ClientLanguage, HandlerId, ObjectId, Position, timestamp_secs},
     config::WorldConfig,
     ipc::zone::{
         ClientTriggerCommand, ClientZoneIpcSegment, Condition, Conditions,
@@ -131,8 +131,6 @@ pub struct ZoneConnection {
     pub rejoining_party: bool,
     /// The player's currently active quests.
     pub login_time: Option<SystemTime>,
-    /// Store the target actor id for the purpose of chaining cutscenes.
-    pub target_actorid: ObjectTypeId,
     pub transaction_sequence: u32,
     pub glamour_information: Option<ClientTriggerCommand>,
 

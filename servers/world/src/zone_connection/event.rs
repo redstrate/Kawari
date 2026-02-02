@@ -15,15 +15,19 @@ impl ZoneConnection {
     /// Starts a scene for the current event.
     pub async fn event_scene(
         &mut self,
-        target: &ObjectTypeId,
         event_id: u32,
         scene: u16,
         scene_flags: SceneFlags,
         params: Vec<u32>,
         lua_player: &mut LuaPlayer,
     ) {
+        let Some(event) = self.events.last() else {
+            tracing::warn!("Tried to play scene with no event loaded?!");
+            return;
+        };
+
         let scene = EventScene {
-            actor_id: *target,
+            actor_id: event.actor_id,
             handler_id: HandlerId(event_id),
             scene,
             scene_flags,
@@ -47,7 +51,6 @@ impl ZoneConnection {
         let event_type = self.events.last().unwrap().event_type;
         let event_arg = self.events.last().unwrap().event_arg;
 
-        self.target_actorid = ObjectTypeId::default();
         // sent event finish
         {
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::EventFinish {
@@ -87,8 +90,6 @@ impl ZoneConnection {
         condition: Option<Condition>,
         lua_player: &mut LuaPlayer,
     ) -> bool {
-        self.target_actorid = actor_id;
-
         let old_event_handler_id = lua_player.event_handler_id;
         lua_player.event_handler_id = Some(HandlerId(event_id));
 
@@ -129,6 +130,7 @@ impl ZoneConnection {
             event.event_type = event_type;
             event.event_arg = event_arg; // It turns out these same values HAVE to be sent in EventFinish, otherwise the game client crashes.
             event.condition = condition;
+            event.actor_id = actor_id;
             self.events.push(event);
 
             true

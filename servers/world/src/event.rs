@@ -22,6 +22,8 @@ pub struct Event {
     pub event_arg: u32,
     /// The condition set for this event.
     pub condition: Option<Condition>,
+    /// The actor associated with this event. This is usually an NPC for Talk events, otherwise the player who initiated it.
+    pub actor_id: ObjectTypeId,
 }
 
 impl Event {
@@ -67,6 +69,7 @@ impl Event {
             id,
             event_arg: 0,
             condition: None,
+            actor_id: ObjectTypeId::default(),
         })
     }
 

@@ -10,7 +10,7 @@ as it possibly can be on our end. ]]
 UEJ_REPLAY_FLAGS = 0xf8c82efb
 
 function onTalk(target, player)
-    player:play_scene(target, SCENE_SHOW_MENU, HIDE_HOTBAR, {0})
+    player:play_scene(SCENE_SHOW_MENU, HIDE_HOTBAR, {0})
 end
 
 function onYield(scene, results, player)
@@ -19,9 +19,9 @@ function onYield(scene, results, player)
 
     if scene == SCENE_SHOW_MENU and decision ~= NO_SCENE then
         -- TODO: we need to switch the player into viewingcutscene online status (on the Rust side?)
-        player:play_scene(player.id, SCENE_PLAY_CUTSCENE, UEJ_REPLAY_FLAGS, results)
+        player:play_scene(SCENE_PLAY_CUTSCENE, UEJ_REPLAY_FLAGS, results)
     elseif scene == SCENE_PLAY_CUTSCENE then
-        player:play_scene(player.id, SCENE_SHOW_MENU, HIDE_HOTBAR, {1})
+        player:play_scene(SCENE_SHOW_MENU, HIDE_HOTBAR, {1})
     else
         player:finish_event()
     end

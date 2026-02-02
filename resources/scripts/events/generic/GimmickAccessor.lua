@@ -3,7 +3,7 @@
 -- TODO: figure out how shortcuts work
 
 function onTalk(target, player)
-    player:play_scene(target, 1, HIDE_HOTBAR, {})
+    player:play_scene(1, HIDE_HOTBAR, {})
 end
 
 function onYield(scene, results, player)

@@ -18,7 +18,7 @@ function onTalk(target, player)
         player:unlock_aetheryte(1, aetheryteId())
     end
 
-    player:play_scene(target, SCENE_SHOW_MENU, HIDE_HOTBAR, {0})
+    player:play_scene(SCENE_SHOW_MENU, HIDE_HOTBAR, {0})
 end
 
 function onYield(scene, results, player)

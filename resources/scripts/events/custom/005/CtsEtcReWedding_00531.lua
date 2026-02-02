@@ -9,7 +9,7 @@ SCENE_00200 = 00200 -- Wedding quest accepted
 SCENE_00201 = 00201 -- Another arg-based thing like 101
 
 function onTalk(target, player)
-    player:play_scene(target, SCENE_00000, HIDE_HOTBAR, {})
+    player:play_scene(SCENE_00000, HIDE_HOTBAR, {})
 end
 
 function onYield(scene, results, player)

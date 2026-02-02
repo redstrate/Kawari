@@ -11,7 +11,7 @@ SCENE_00007 = 00007 -- Choose company tag
 SCENE_00008 = 00008 -- Change name
 
 function onTalk(target, player)
-    player:play_scene(target, SCENE_00000, HIDE_HOTBAR, {})
+    player:play_scene(SCENE_00000, HIDE_HOTBAR, {})
 end
 
 function onYield(scene, results, player)
@@ -19,13 +19,13 @@ function onYield(scene, results, player)
         -- 1 means you hit the "learn about free company" button
         if results[1] == 1 then
             -- explain menu
-            player:play_scene(player.id, SCENE_00001, HIDE_HOTBAR, {})
+            player:play_scene(SCENE_00001, HIDE_HOTBAR, {})
             return
         elseif results[1] == 5 then
             -- 5 means you hit the "found a free company" button
 
             -- reject
-            player:play_scene(player.id, SCENE_00003, HIDE_HOTBAR, {})
+            player:play_scene(SCENE_00003, HIDE_HOTBAR, {})
             return
         end
     end

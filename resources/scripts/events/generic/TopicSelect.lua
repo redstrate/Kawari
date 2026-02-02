@@ -5,7 +5,7 @@
 -- Then, these events lead into a TopicSelect used for the various level categories.
 
 function onTalk(target, player)
-    player:play_scene(target, 00000, HIDE_HOTBAR, {})
+    player:play_scene(00000, HIDE_HOTBAR, {})
 end
 
 function onYield(scene, results, player)

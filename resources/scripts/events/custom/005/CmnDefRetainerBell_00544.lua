@@ -13,7 +13,7 @@ SCENE_01002 = 01002 -- Unknown, does nothing right now
 SCENE_01003 = 01003 -- Unknown, does nothing right now
 
 function onTalk(target, player)
-    player:play_scene(target, SCENE_01000, 0, {0})
+    player:play_scene(SCENE_01000, 0, {0})
 end
 
 function onYield(scene, results, player)

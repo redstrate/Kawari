@@ -9,21 +9,21 @@ SCENE_00002 = 00002 -- Softlocks and does nothing, seems to be where you'd be ta
 SCENE_00003 = 00003 -- End of using bell where aesthetician has rushed past the player with his scissors animation, then walks off
 
 function onTalk(target, player)
-    player:play_scene(target, SCENE_00000, HIDE_HOTBAR, {0})
+    player:play_scene(SCENE_00000, HIDE_HOTBAR, {0})
 end
 
 function onYield(scene, results, player)
     if scene == SCENE_00000 then
         -- results[1] is 1 if you want to summon, otherwise 0
         if results[1] == 1 then
-            player:play_scene(player.id, SCENE_00001, FADE_OUT | HIDE_UI | CONDITION_CUTSCENE, {0})
+            player:play_scene(SCENE_00001, FADE_OUT | HIDE_UI | CONDITION_CUTSCENE, {0})
             return
         end
     elseif scene == SCENE_00001 then
-        player:play_scene(player.id, SCENE_00002, FADE_OUT | HIDE_UI | CONDITION_CUTSCENE, {0})
+        player:play_scene(SCENE_00002, FADE_OUT | HIDE_UI | CONDITION_CUTSCENE, {0})
         return
     elseif scene == SCENE_00002 then
-        player:play_scene(player.id, SCENE_00003, FADE_OUT | HIDE_UI | CONDITION_CUTSCENE, {0})
+        player:play_scene(SCENE_00003, FADE_OUT | HIDE_UI | CONDITION_CUTSCENE, {0})
         return
     end
     player:finish_event()

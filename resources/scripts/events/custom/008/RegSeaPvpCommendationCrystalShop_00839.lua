@@ -6,7 +6,7 @@
 SCENE_00000 = 00000
 
 function onTalk(target, player)
-    player:play_scene(target, SCENE_00000, NO_DEFAULT_CAMERA | HIDE_HOTBAR, {})
+    player:play_scene(SCENE_00000, NO_DEFAULT_CAMERA | HIDE_HOTBAR, {})
 end
 
 function onYield(scene, results, player)

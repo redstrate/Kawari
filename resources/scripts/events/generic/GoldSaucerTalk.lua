@@ -18,7 +18,7 @@ function onTalk(target, player)
         return
     end
 
-    player:play_scene(target, SCENE_TALK, HIDE_HOTBAR, {scene_id})
+    player:play_scene(SCENE_TALK, HIDE_HOTBAR, {scene_id})
 end
 
 function onYield(scene, results, player)

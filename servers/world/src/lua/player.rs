@@ -77,15 +77,8 @@ impl LuaPlayer {
         });
     }
 
-    fn play_scene(
-        &mut self,
-        target: ObjectTypeId,
-        scene: u16,
-        scene_flags: SceneFlags,
-        params: Vec<u32>,
-    ) {
+    fn play_scene(&mut self, scene: u16, scene_flags: SceneFlags, params: Vec<u32>) {
         self.queued_tasks.push(LuaTask::PlayScene {
-            target,
             scene,
             scene_flags,
             params,
@@ -373,15 +366,8 @@ impl LuaPlayer {
         self.queued_tasks.push(LuaTask::AddExp { amount });
     }
 
-    fn start_event(
-        &mut self,
-        actor_id: ObjectTypeId,
-        event_id: u32,
-        event_type: EventType,
-        event_arg: u32,
-    ) {
+    fn start_event(&mut self, event_id: u32, event_type: EventType, event_arg: u32) {
         self.queued_tasks.push(LuaTask::StartEvent {
-            actor_id,
             event_id,
             event_type,
             event_arg,
@@ -700,9 +686,8 @@ impl UserData for LuaPlayer {
         );
         methods.add_method_mut(
             "play_scene",
-            |_, this, (target, scene, scene_flags, params): (ObjectTypeId, u16, u32, Vec<u32>)| {
+            |_, this, (scene, scene_flags, params): (u16, u32, Vec<u32>)| {
                 this.play_scene(
-                    target,
                     scene,
                     SceneFlags::from_bits(scene_flags).unwrap_or_default(),
                     params,
@@ -841,9 +826,8 @@ impl UserData for LuaPlayer {
         });
         methods.add_method_mut(
             "start_event",
-            |_, this, (target, event_id, event_type, event_arg): (ObjectTypeId, u32, u8, u32)| {
+            |_, this, (event_id, event_type, event_arg): (u32, u8, u32)| {
                 this.start_event(
-                    target,
                     event_id,
                     EventType::from_repr(event_type).unwrap(),
                     event_arg,

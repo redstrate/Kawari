@@ -8,7 +8,7 @@ SCENE_00001 = 00001 -- "Quest of great import" quest, which maybe is used in the
 SCENE_00002 = 00002 -- Some version of "you cannot use the levemete at the moment"
 
 function onTalk(target, player)
-    player:play_scene(target, SCENE_00002, HIDE_HOTBAR, {0})
+    player:play_scene(SCENE_00002, HIDE_HOTBAR, {0})
 end
 
 function onYield(scene, results, player)

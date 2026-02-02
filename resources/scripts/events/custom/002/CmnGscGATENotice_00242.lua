@@ -36,7 +36,7 @@ SCENE_00002 = 00002
 
 function onTalk(target, player)
     -- Currently using placeholders for now: Cliffhanger in Wonder Square East.
-    player:play_scene(target, SCENE_00000, HIDE_HOTBAR, {1, 1})
+    player:play_scene(SCENE_00000, HIDE_HOTBAR, {1, 1})
 end
 
 function onYield(scene, results, player)

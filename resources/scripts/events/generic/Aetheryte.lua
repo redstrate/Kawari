@@ -18,7 +18,7 @@ function onTalk(target, player)
         player:unlock_aetheryte(1, aetheryteId())
     end
 
-    player:play_scene(target, SCENE_SHOW_MENU, HIDE_HOTBAR, {0})
+    player:play_scene(SCENE_SHOW_MENU, HIDE_HOTBAR, {0})
 end
 
 function onYield(scene, results, player)
@@ -52,7 +52,7 @@ function onYield(scene, results, player)
         elseif menu_option == ACCESS_RESIDENTAL_AREA then
             -- open the housing menu
             player:start_event(player.id, 1310721, EVENT_TYPE_NEST, 0)
-            player:play_scene(player.id, 0, HIDE_HOTBAR | NO_DEFAULT_CAMERA, {340})
+            player:play_scene(0, HIDE_HOTBAR | NO_DEFAULT_CAMERA, {340})
             return
         end
     end

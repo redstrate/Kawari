@@ -14,26 +14,26 @@ SCENE_00014 = 00014 -- No rewards are available for preseason rankings
 SCENE_00015 = 00015 -- Unable to obtain trophy crystals
 
 function onTalk(target, player)
-    player:play_scene(target, SCENE_00000, HIDE_HOTBAR, {})
+    player:play_scene(SCENE_00000, HIDE_HOTBAR, {})
 end
 
 function onYield(scene, results, player)
     if scene == SCENE_00000 then
         -- Open menu
-        player:play_scene(player.id, 1, HIDE_HOTBAR, {})
+        player:play_scene(1, HIDE_HOTBAR, {})
         return
     elseif scene == SCENE_00001 then
         if results[1] == 1 then
             -- No reward
-            player:play_scene(player.id, 3, HIDE_HOTBAR, {})
+            player:play_scene(3, HIDE_HOTBAR, {})
             return
         elseif results[1] == 2 then
             -- No reward
-            player:play_scene(player.id, 3, HIDE_HOTBAR, {})
+            player:play_scene(3, HIDE_HOTBAR, {})
             return
         elseif results[1] == 3 then
             -- Open nested help menu
-            player:play_scene(player.id, 5, HIDE_HOTBAR, {})
+            player:play_scene(5, HIDE_HOTBAR, {})
             return
         end
     end

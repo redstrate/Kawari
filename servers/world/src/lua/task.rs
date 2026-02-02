@@ -3,7 +3,7 @@ use crate::{
     inventory::{BuyBackList, CurrencyKind},
 };
 use kawari::{
-    common::{ObjectTypeId, Position},
+    common::Position,
     ipc::zone::{EventType, SceneFlags, ServerZoneIpcSegment},
     packet::PacketSegment,
 };
@@ -72,7 +72,6 @@ pub enum LuaTask {
         amount: i32,
     },
     StartEvent {
-        actor_id: ObjectTypeId,
         event_id: u32,
         event_type: EventType,
         event_arg: u32,
@@ -197,7 +196,6 @@ pub enum LuaTask {
     },
     FinishCastingGlamour {},
     PlayScene {
-        target: ObjectTypeId,
         scene: u16,
         scene_flags: SceneFlags,
         params: Vec<u32>,

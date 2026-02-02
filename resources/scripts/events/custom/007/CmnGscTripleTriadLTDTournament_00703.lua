@@ -8,7 +8,7 @@ SCENE_00005 = 00005 -- Unknown (doesn't play)
 SCENE_00006 = 00006 -- Welcome message 2
 
 function onTalk(target, player)
-    player:play_scene(target, SCENE_00000, NO_DEFAULT_CAMERA | HIDE_HOTBAR, {})
+    player:play_scene(SCENE_00000, NO_DEFAULT_CAMERA | HIDE_HOTBAR, {})
 end
 
 function onYield(scene, results, player)

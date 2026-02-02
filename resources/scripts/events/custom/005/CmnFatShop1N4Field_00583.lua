@@ -11,7 +11,7 @@ SCENE_00003 = 00003 -- "You must progress further through the <expansion name> m
 
 function onTalk(target, player)
     -- "You must progress further through the <expansion name> main scenario in order to access this vendor's wares."
-    player:play_scene(target, SCENE_00003, HIDE_HOTBAR, {0})
+    player:play_scene(SCENE_00003, HIDE_HOTBAR, {0})
 end
 
 function onYield(scene, results, player)

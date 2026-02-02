@@ -297,13 +297,22 @@ impl ZoneConnection {
                     self.add_exp(*amount).await;
                 }
                 LuaTask::StartEvent {
-                    actor_id,
                     event_id,
                     event_type,
                     event_arg,
                 } => {
-                    self.start_event(*actor_id, *event_id, *event_type, *event_arg, None, player)
-                        .await;
+                    self.start_event(
+                        ObjectTypeId {
+                            object_id: self.player_data.character.actor_id,
+                            object_type: ObjectTypeKind::None,
+                        },
+                        *event_id,
+                        *event_type,
+                        *event_arg,
+                        None,
+                        player,
+                    )
+                    .await;
                 }
                 LuaTask::SetInnWakeup { watched } => {
                     self.player_data.saw_inn_wakeup = *watched;
@@ -706,13 +715,11 @@ impl ZoneConnection {
                     self.glamour_information = None;
                 }
                 LuaTask::PlayScene {
-                    target,
                     scene,
                     scene_flags,
                     params,
                 } => {
                     self.event_scene(
-                        target,
                         player.event_handler_id.unwrap().0,
                         *scene,
                         *scene_flags,

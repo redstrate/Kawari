@@ -11,20 +11,20 @@ POS_START = 2213211
 
 function onEnterTerritory(player)
     if not player:has_seen_cutscene(OPENING_CUTSCENE) then
-        player:play_scene(player.id, 0, INITIAL_CUTSCENE_FLAGS, {0})
+        player:play_scene(0, INITIAL_CUTSCENE_FLAGS, {0})
 
         -- Move the player into the starting position
         player:move_to_pop_range(POS_START)
     else
         -- We have to play *some* scene for it to load.
-        player:play_scene(player.id, 40, NO_DEFAULT_CAMERA | HIDE_HOTBAR, {2, 0})
+        player:play_scene(40, NO_DEFAULT_CAMERA | HIDE_HOTBAR, {2, 0})
     end
 end
 
 function onYield(scene, results, player)
     -- Move into the controls text after initial cutscene
     if scene == 0 then
-        player:play_scene(player.id, 1, NO_DEFAULT_CAMERA | HIDE_HOTBAR, {})
+        player:play_scene(1, NO_DEFAULT_CAMERA | HIDE_HOTBAR, {})
         return
     end
 
@@ -34,9 +34,9 @@ end
 function onEnterTrigger(player, arg)
     -- Play the "where are you going?!" text when entering any trigger
     if arg == ERANGE_SEQ_1_CLOSED_1 or arg == ERANGE_SEQ_1_CLOSED_2 then
-        player:play_scene(player.id, 20, NO_DEFAULT_CAMERA | HIDE_HOTBAR, {})
+        player:play_scene(20, NO_DEFAULT_CAMERA | HIDE_HOTBAR, {})
     else
         -- Deciding the different messages and NPCs are actually handled client-side!
-        player:play_scene(player.id, 10, NO_DEFAULT_CAMERA | HIDE_HOTBAR, {arg})
+        player:play_scene(10, NO_DEFAULT_CAMERA | HIDE_HOTBAR, {arg})
     end
 end
