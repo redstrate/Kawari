@@ -6,12 +6,6 @@ dofile(BASE_DIR.."effects/Effects.lua")
 dofile(BASE_DIR.."events/Events.lua")
 dofile(BASE_DIR.."items/Items.lua")
 
--- Lua error handlers, and other server events like player login
-function onBeginLogin(player)
-    -- send a welcome message
-    player:send_message(getLoginMessage())
-end
-
 function onCommandRequiredRankInsufficientError(player)
     player:send_message("You do not have permission to run this command.")
 end

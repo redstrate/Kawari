@@ -790,18 +790,8 @@ async fn process_packet(
                                 ))
                                 .await;
 
-                            let lua = connection.lua.lock();
-                            lua.scope(|scope| {
-                                let connection_data =
-                                    scope.create_userdata_ref_mut(lua_player).unwrap();
-
-                                let func: Function = lua.globals().get("onBeginLogin").unwrap();
-
-                                func.call::<()>(connection_data).unwrap();
-
-                                Ok(())
-                            })
-                            .unwrap();
+                            // Send login message
+                            connection.send_notice(&config.world.login_message).await;
                         }
                         ClientZoneIpcData::FinishLoading { .. } => {
                             let spawn = connection.respawn_player(true).await;
