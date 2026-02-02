@@ -92,7 +92,7 @@ fn main() {
                     "" // For the custom IPC I guess?
                 };
 
-                output_md.push_str(&format!("| {opcode} (0x{opcode:#}) | {size} | [{name}](self::{module}{data_type_name}::{name}) | {comment} |\n"));
+                output_md.push_str(&format!("| {opcode} (0x{opcode:X}) | {size} | [{name}](self::{module}{data_type_name}::{name}) | {comment} |\n"));
             }
 
             output_str.push_str("Unknown(u16),\n");
