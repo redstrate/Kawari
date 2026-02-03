@@ -1,6 +1,5 @@
 BASE_DIR = "resources/scripts/"
 
-dofile(BASE_DIR.."actions/Actions.lua")
 dofile(BASE_DIR.."commands/Commands.lua")
 dofile(BASE_DIR.."events/Events.lua")
 dofile(BASE_DIR.."items/Items.lua")

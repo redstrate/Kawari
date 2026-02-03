@@ -87,41 +87,47 @@ pub fn load_init_script(lua: &mut Lua, game_data: Arc<Mutex<GameData>>) -> mlua:
 
     let mut extra_lua_state = ExtraLuaState::default();
 
-    // Locate effects based on the ID in their filename
     let config = get_config();
-    let effects_dir = format!("{}/effects", &config.world.scripts_location);
-    for entry in std::fs::read_dir(effects_dir)
-        .expect("Didn't find effects directory?")
-        .flatten()
-    {
-        for entry in std::fs::read_dir(entry.path())
-            .expect("Failed to read into effects directory")
+
+    let load_based_on_filename = |name: &str, hash_map: &mut HashMap<u32, String>| {
+        let effects_dir = format!("{}/{name}", &config.world.scripts_location);
+        for entry in std::fs::read_dir(effects_dir)
+            .expect("Didn't find effects directory?")
             .flatten()
-        {
-            let path = entry.path();
-            if path.extension().and_then(|x| x.to_str()) == Some("lua") {
-                let stem = path
-                    .file_stem()
-                    .expect("No file name?!")
-                    .to_str()
-                    .expect("Failed to convert filename")
-                    .to_string();
-                let Some((_, num)) = stem.split_once('_') else {
-                    tracing::warn!("Invalid status effect file name: {stem}");
-                    continue;
-                };
-                let num = num.parse().expect("Failed to parse status effect ID");
-                extra_lua_state.effect_scripts.insert(
-                    num,
-                    path.strip_prefix(&config.world.scripts_location)
-                        .expect("Failed to express scripts location")
-                        .to_str()
-                        .expect("Failed to convert path")
-                        .to_string(),
-                );
+            {
+                for entry in std::fs::read_dir(entry.path())
+                    .expect("Failed to read into effects directory")
+                    .flatten()
+                    {
+                        let path = entry.path();
+                        if path.extension().and_then(|x| x.to_str()) == Some("lua") {
+                            let stem = path
+                            .file_stem()
+                            .expect("No file name?!")
+                            .to_str()
+                            .expect("Failed to convert filename")
+                            .to_string();
+                            let Some((_, num)) = stem.split_once('_') else {
+                                tracing::warn!("Invalid status effect file name: {stem}");
+                                continue;
+                            };
+                            let num = num.parse().expect("Failed to parse status effect ID");
+                            hash_map.insert(
+                                num,
+                                path.strip_prefix(&config.world.scripts_location)
+                                .expect("Failed to express scripts location")
+                                .to_str()
+                                .expect("Failed to convert path")
+                                .to_string(),
+                            );
+                        }
+                    }
             }
-        }
-    }
+    };
+
+    // Locate these based on the ID in their filename
+    load_based_on_filename("effects", &mut extra_lua_state.effect_scripts);
+    load_based_on_filename("actions", &mut extra_lua_state.action_scripts);
 
     lua.set_app_data(extra_lua_state);
     lua.globals().set("registerAction", register_action_func)?;
