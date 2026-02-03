@@ -69,13 +69,6 @@ pub fn load_init_script(lua: &mut Lua, game_data: Arc<Mutex<GameData>>) -> mlua:
             Ok(())
         })?;
 
-    let register_effects_func =
-        lua.create_function(|lua, (command_type, status_script): (u32, String)| {
-            let mut state = lua.app_data_mut::<ExtraLuaState>().unwrap();
-            let _ = state.effect_scripts.insert(command_type, status_script);
-            Ok(())
-        })?;
-
     let get_login_message_func = lua.create_function(|_, _: ()| {
         let config = get_config();
         Ok(config.world.login_message)
@@ -92,13 +85,50 @@ pub fn load_init_script(lua: &mut Lua, game_data: Arc<Mutex<GameData>>) -> mlua:
     let run_action_func =
         lua.create_function(|_, (action_script, arg): (String, u32)| Ok((action_script, arg)))?;
 
-    lua.set_app_data(ExtraLuaState::default());
+    let mut extra_lua_state = ExtraLuaState::default();
+
+    // Locate effects based on the ID in their filename
+    let config = get_config();
+    let effects_dir = format!("{}/effects", &config.world.scripts_location);
+    for entry in std::fs::read_dir(effects_dir)
+        .expect("Didn't find effects directory?")
+        .flatten()
+    {
+        for entry in std::fs::read_dir(entry.path())
+            .expect("Failed to read into effects directory")
+            .flatten()
+        {
+            let path = entry.path();
+            if path.extension().and_then(|x| x.to_str()) == Some("lua") {
+                let stem = path
+                    .file_stem()
+                    .expect("No file name?!")
+                    .to_str()
+                    .expect("Failed to convert filename")
+                    .to_string();
+                let Some((_, num)) = stem.split_once('_') else {
+                    tracing::warn!("Invalid status effect file name: {stem}");
+                    continue;
+                };
+                let num = num.parse().expect("Failed to parse status effect ID");
+                extra_lua_state.effect_scripts.insert(
+                    num,
+                    path.strip_prefix(&config.world.scripts_location)
+                        .expect("Failed to express scripts location")
+                        .to_str()
+                        .expect("Failed to convert path")
+                        .to_string(),
+                );
+            }
+        }
+    }
+
+    lua.set_app_data(extra_lua_state);
     lua.globals().set("registerAction", register_action_func)?;
     lua.globals()
         .set("registerCommand", register_command_func)?;
     lua.globals()
         .set("registerGMCommand", register_gm_command_func)?;
-    lua.globals().set("registerEffect", register_effects_func)?;
     lua.globals()
         .set("getLoginMessage", get_login_message_func)?;
     lua.globals().set("runEvent", run_event_func)?;
@@ -110,7 +140,6 @@ pub fn load_init_script(lua: &mut Lua, game_data: Arc<Mutex<GameData>>) -> mlua:
 
     lua.globals().set("GAME_DATA", game_data.clone())?;
 
-    let config = get_config();
     let file_name = format!("{}/Init.lua", &config.world.scripts_location);
     lua.load(std::fs::read(&file_name).expect("Failed to locate scripts directory!"))
         .set_name("@".to_string() + &file_name)
