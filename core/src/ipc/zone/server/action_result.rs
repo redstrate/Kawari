@@ -20,12 +20,14 @@ pub enum DamageKind {
     DirectHit = 0x2,
 }
 
+#[cfg(feature = "server")]
 impl mlua::IntoLua for DamageKind {
     fn into_lua(self, _: &mlua::Lua) -> mlua::Result<mlua::Value> {
         Ok(mlua::Value::Integer(self as i64))
     }
 }
 
+#[cfg(feature = "server")]
 impl mlua::FromLua for DamageKind {
     fn from_lua(value: mlua::Value, _: &mlua::Lua) -> mlua::Result<Self> {
         match value {
@@ -112,12 +114,14 @@ pub enum DamageType {
     LimitBreak,
 }
 
+#[cfg(feature = "server")]
 impl mlua::IntoLua for DamageType {
     fn into_lua(self, _: &mlua::Lua) -> mlua::Result<mlua::Value> {
         Ok(mlua::Value::Integer(self as i64))
     }
 }
 
+#[cfg(feature = "server")]
 impl mlua::FromLua for DamageType {
     fn from_lua(value: mlua::Value, _: &mlua::Lua) -> mlua::Result<Self> {
         match value {
@@ -144,12 +148,14 @@ pub enum DamageElement {
     Unaspected,
 }
 
+#[cfg(feature = "server")]
 impl mlua::IntoLua for DamageElement {
     fn into_lua(self, _: &mlua::Lua) -> mlua::Result<mlua::Value> {
         Ok(mlua::Value::Integer(self as i64))
     }
 }
 
+#[cfg(feature = "server")]
 impl mlua::FromLua for DamageElement {
     fn from_lua(value: mlua::Value, _: &mlua::Lua) -> mlua::Result<Self> {
         match value {
