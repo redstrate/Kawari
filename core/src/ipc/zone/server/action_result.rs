@@ -1,18 +1,37 @@
 use binrw::binrw;
 use serde::{Deserialize, Serialize};
-use strum_macros::FromRepr;
+use strum_macros::{Display, EnumIter, FromRepr};
 
 use crate::common::{ObjectId, ObjectTypeId, read_quantized_rotation, write_quantized_rotation};
 
 // TODO: this might be a flag?
 #[binrw]
-#[derive(Debug, Eq, PartialEq, Clone, Copy, Default, Deserialize, Serialize)]
+#[derive(
+    Debug, Eq, PartialEq, Clone, Copy, Default, Display, Deserialize, Serialize, EnumIter, FromRepr,
+)]
+#[repr(u8)]
 #[brw(repr = u8)]
+#[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 pub enum DamageKind {
     #[default]
     Normal = 0x0,
     Critical = 0x1,
     DirectHit = 0x2,
+}
+
+impl mlua::IntoLua for DamageKind {
+    fn into_lua(self, _: &mlua::Lua) -> mlua::Result<mlua::Value> {
+        Ok(mlua::Value::Integer(self as i64))
+    }
+}
+
+impl mlua::FromLua for DamageKind {
+    fn from_lua(value: mlua::Value, _: &mlua::Lua) -> mlua::Result<Self> {
+        match value {
+            mlua::Value::Integer(integer) => Ok(Self::from_repr(integer as u8).unwrap()),
+            _ => unreachable!(),
+        }
+    }
 }
 
 #[binrw]
@@ -69,7 +88,10 @@ pub enum EffectKind {
 }
 
 #[repr(u8)]
-#[derive(Debug, Eq, PartialEq, Clone, Copy, Default, Deserialize, Serialize, FromRepr)]
+#[derive(
+    Debug, Eq, PartialEq, Clone, Copy, Default, Display, Deserialize, Serialize, FromRepr, EnumIter,
+)]
+#[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 pub enum DamageType {
     Unknown,
     Slashing,
@@ -83,8 +105,26 @@ pub enum DamageType {
     LimitBreak,
 }
 
+impl mlua::IntoLua for DamageType {
+    fn into_lua(self, _: &mlua::Lua) -> mlua::Result<mlua::Value> {
+        Ok(mlua::Value::Integer(self as i64))
+    }
+}
+
+impl mlua::FromLua for DamageType {
+    fn from_lua(value: mlua::Value, _: &mlua::Lua) -> mlua::Result<Self> {
+        match value {
+            mlua::Value::Integer(integer) => Ok(Self::from_repr(integer as u8).unwrap()),
+            _ => unreachable!(),
+        }
+    }
+}
+
 #[repr(u8)]
-#[derive(Debug, Eq, PartialEq, Clone, Copy, Default, Deserialize, Serialize, FromRepr)]
+#[derive(
+    Debug, Eq, PartialEq, Clone, Copy, Default, Display, Deserialize, Serialize, FromRepr, EnumIter,
+)]
+#[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 pub enum DamageElement {
     Unknown,
     Fire,
@@ -95,6 +135,21 @@ pub enum DamageElement {
     Water,
     #[default]
     Unaspected,
+}
+
+impl mlua::IntoLua for DamageElement {
+    fn into_lua(self, _: &mlua::Lua) -> mlua::Result<mlua::Value> {
+        Ok(mlua::Value::Integer(self as i64))
+    }
+}
+
+impl mlua::FromLua for DamageElement {
+    fn from_lua(value: mlua::Value, _: &mlua::Lua) -> mlua::Result<Self> {
+        match value {
+            mlua::Value::Integer(integer) => Ok(Self::from_repr(integer as u8).unwrap()),
+            _ => unreachable!(),
+        }
+    }
 }
 
 #[binrw]

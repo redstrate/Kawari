@@ -9,7 +9,10 @@ use crate::{Event, GameData, inventory::CurrencyKind};
 use kawari::{
     common::HandlerType,
     config::get_config,
-    ipc::zone::{EventType, GameMasterRank, SceneFlags, ServerNoticeFlags},
+    ipc::zone::{
+        DamageElement, DamageKind, DamageType, EventType, GameMasterRank, SceneFlags,
+        ServerNoticeFlags,
+    },
 };
 
 use super::EffectsBuilder;
@@ -33,6 +36,9 @@ pub fn initial_setup(lua: &mut Lua) {
     register_enum::<EventType>(lua, "EVENT_TYPE");
     register_enum::<HandlerType>(lua, "HANDLER_TYPE");
     register_enum::<CurrencyKind>(lua, "CURRENCY");
+    register_enum::<DamageKind>(lua, "DAMAGE_KIND");
+    register_enum::<DamageType>(lua, "DAMAGE_TYPE");
+    register_enum::<DamageElement>(lua, "DAMAGE_ELEMENT");
 
     // Load globals
     let config = get_config();
