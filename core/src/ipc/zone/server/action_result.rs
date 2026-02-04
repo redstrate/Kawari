@@ -13,6 +13,7 @@ use crate::common::{ObjectId, ObjectTypeId, read_quantized_rotation, write_quant
 #[brw(repr = u8)]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 pub enum DamageKind {
+    // These are all "normal" attacks, not direct hits/criticals or anything special.
     #[default]
     Normal = 0x0,
     Critical = 0x1,
@@ -44,7 +45,7 @@ pub enum EffectKind {
     Damage {
         damage_kind: DamageKind,
         #[br(temp)]
-        #[bw(calc = 0)]
+        #[bw(ignore)]
         param1: u8,
         #[br(calc = DamageType::from_repr(param1 & 0x0F).unwrap())]
         #[bw(ignore)]
@@ -52,6 +53,9 @@ pub enum EffectKind {
         #[br(calc = DamageElement::from_repr(param1 >> 4).unwrap())]
         #[bw(ignore)]
         damage_element: DamageElement,
+        #[br(ignore)]
+        #[bw(calc = ((*damage_element as u8) << 4) | *damage_type as u8)]
+        actual_param1: u8,
         bonus_percent: u8,
         unk3: u8,
         unk4: u8,
@@ -93,13 +97,16 @@ pub enum EffectKind {
 )]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 pub enum DamageType {
-    Unknown,
+    /// Usually reserved for special enemy actions.
+    Unique,
     Slashing,
     Piercing,
     Blunt,
     Shot,
+    /// Magical damage makes up the breadth of most player spells.
     Magic,
     Breath,
+    /// Physical damage makes up the breadth of most player weaponskills.
     #[default]
     Physical,
     LimitBreak,
