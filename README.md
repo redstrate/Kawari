@@ -8,7 +8,7 @@ Updates for this project can be found [on my blog](https://redstrate.com/blog/se
 
 ## Supported Game Version
 
-Kawari currently supports patch **7.41** (2026.01.21.0000.0000). Previously supported patches are provided as tags (e.g. `2025.02.27.0000.0000`). These may not function or build correctly, these tags are more like historical markers.
+Kawari currently supports patch **7.41h** (2026.01.30.0000.0000). Previously supported patches are provided as tags (e.g. `2025.02.27.0000.0000`). These may not function or build correctly, these tags are more like historical markers.
 
 Only the Global region is supported. Only the Windows client is supported. Support for other regions and clients are out of scope of this project.
 
