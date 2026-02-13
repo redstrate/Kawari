@@ -831,6 +831,11 @@ pub enum ServerZoneIpcData {
         #[brw(pad_after = 8)]
         apartment: LandData,
     },
+    UpdateFittingShop {
+        /// Corresponds to the DisplayId column in the FittingShopCategoryItem Excel sheet.
+        #[brw(pad_after = 8)] // empty
+        display_ids: [u8; 8],
+    },
 }
 
 impl Default for ServerZoneIpcData {

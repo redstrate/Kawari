@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::path::PathBuf;
 
 use icarus::Action::ActionSheet;
@@ -13,6 +14,7 @@ use icarus::CustomTalk::CustomTalkSheet;
 use icarus::EObj::EObjSheet;
 use icarus::EquipSlotCategory::EquipSlotCategorySheet;
 use icarus::FateShop::FateShopSheet;
+use icarus::FittingShopCategoryItem::FittingShopCategoryItemSheet;
 use icarus::GilShopItem::GilShopItemSheet;
 use icarus::GimmickRect::GimmickRectSheet;
 use icarus::HalloweenNpcSelect::HalloweenNpcSelectSheet;
@@ -1157,6 +1159,55 @@ impl GameData {
         }
 
         translated_variables
+    }
+
+    /// Tries to guess the latest items for the Fitting Shop.
+    /// Since this is server-controlled, we will never know - but we can guess!
+    pub fn get_latest_fittingshop_display_ids(&mut self) -> [u8; 8] {
+        let sheet =
+            FittingShopCategoryItemSheet::read_from(&mut self.resource, Language::None).unwrap();
+
+        let mut display_id_set = HashSet::new();
+
+        // Assuming row 1 is "Latest Trends".
+        let subrows = sheet
+            .into_iter()
+            .filter(|(row_id, _)| 1 == *row_id)
+            .take(1)
+            .next()
+            .unwrap()
+            .1;
+        for (_, subrow) in subrows {
+            // This is needed to weed out certain items that are invalid, but still in the Excel sheet.
+            // FIXME: Name will change to Item in the future.
+            let item_id = subrow.Unknown0().into_i32().copied().unwrap();
+            if item_id == 0 || (item_id < 1000000 && !self.is_item_valid(item_id as u32)) {
+                continue;
+            }
+
+            // FIXME: Name will change to DisplayId in the future.
+            display_id_set.insert(subrow.Unknown1().into_u8().copied().unwrap());
+        }
+
+        // Sort so the highest display id is sent first.
+        let mut display_id_vec: Vec<u8> = display_id_set.into_iter().collect();
+        display_id_vec.resize(8, 0); // ensure we are at least eight items
+        display_id_vec.sort();
+        display_id_vec.reverse();
+
+        let mut display_id_arr = [0u8; 8];
+        display_id_arr.copy_from_slice(&display_id_vec);
+
+        display_id_arr
+    }
+
+    /// Simple heurestic to determine if the Item is actually filled with useful/valid data.
+    pub fn is_item_valid(&mut self, item_id: u32) -> bool {
+        let Some(row) = self.item_sheet.row(item_id) else {
+            return false;
+        };
+
+        !row.Singular().into_string().unwrap().is_empty()
     }
 }
 

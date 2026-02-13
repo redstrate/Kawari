@@ -153,6 +153,19 @@ impl ZoneConnection {
             self.send_ipc_self(ipc).await;
         }
 
+        // Send the list of available items if we're in an inn, since its only accessible via their beds.
+        if lua_zone.intended_use == TerritoryIntendedUse::Inn as u8 {
+            let display_ids;
+            {
+                let mut gamedata = self.gamedata.lock();
+                display_ids = gamedata.get_latest_fittingshop_display_ids();
+            }
+
+            let ipc =
+                ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateFittingShop { display_ids });
+            self.send_ipc_self(ipc).await;
+        }
+
         // Init Zone
         {
             let mut extra_flags = if initial_login {
@@ -201,8 +214,7 @@ impl ZoneConnection {
             self.send_quest_information().await;
         }
 
-        // 13 is housing area
-        if lua_zone.intended_use == 13 {
+        if lua_zone.intended_use == TerritoryIntendedUse::HousingOutdoor as u8 {
             let config = get_config();
             self.send_ipc_self(ServerZoneIpcSegment::new(ServerZoneIpcData::HouseList(
                 HouseList {

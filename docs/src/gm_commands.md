@@ -13,6 +13,9 @@ These are commands already built-in into the FFXIV client. Normally only availab
 | `collect` | `//gm collect <amount>` | Subtracts `amount` gil from the targeted player (yourself only for now). |
 | `dc_region` | `//gm dc_region` | Useless, but returns the DC for the World you set in the config. |
 | `exp` | `//gm exp <amount>` | Adds the specified amount of EXP to the current class/job. |
+| `fittingshop_ui displayid` | `//gm fittingshop_ui displayid` | Lists the listed available items under Latest Trends. |
+| `fittingshop_ui displayid set` | `//gm fittingshop_ui displayid set <list of ids>` | Sets which items are available under Latest Trends locally. Corresponds to the DisplayId column in the FittingShopCategoryItem Excel sheet. |
+| `fittingshop_ui displayid reset` | `//gm fittingshop_ui reset` | Resets the available items under Latest Trends back to the list sent by the server. |
 | `getpos` | `//gm getpos` | Returns your current position. |
 | `gil` | `//gm gil <amount>` | Adds the specified amount of gil to the player. |
 | `hp` | `//gm hp <amount>` | Sets your current HP to the amount specified. |

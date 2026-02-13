@@ -487,6 +487,10 @@ ServerZoneIpcType:
     comment: Sent to inform you of which housing you own/have access to.
     opcode: 910
     size: 136
+  - name: UpdateFittingShop
+    comment: Sent to inform the client which items are listed under Latest Trends in Dreamfitting.
+    opcode: 409
+    size: 16
 ClientZoneIpcType:
   - name: InitRequest
     comment: "Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)"
