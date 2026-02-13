@@ -89,7 +89,7 @@ mod free_company;
 pub use free_company::FcHierarchy;
 
 mod actor_move;
-use crate::common::HandlerId;
+use crate::common::{HandlerId, LandData};
 use crate::constants::{
     COMPLETED_LEVEQUEST_BITMASK_SIZE, COMPLETED_QUEST_BITMASK_SIZE, TITLE_UNLOCK_BITMASK_SIZE,
 };
@@ -810,6 +810,26 @@ pub enum ServerZoneIpcData {
         /// The index of the map effect to change.
         index: u8,
         unk2: [u8; 7], // all padding
+    },
+    UnkHousingRelated {
+        unk1: [u8; 9],
+        index: u8,
+        count: u8,
+        unk2: [u8; 2135],
+    },
+    OwnedHousing {
+        #[brw(pad_after = 8)] // believe these are always empty?
+        unk1: LandData,
+        #[brw(pad_after = 8)]
+        unk2: LandData,
+        #[brw(pad_after = 8)]
+        unk3: LandData,
+        unk4: LandData,
+        #[brw(pad_after = 8)]
+        unk5: LandData,
+        /// Your apartment unit.
+        #[brw(pad_after = 8)]
+        apartment: LandData,
     },
 }
 

@@ -1,4 +1,5 @@
 -- Generic handler for ExitRange events
+-- I think this is only used for housing right now?
 
 function onYield(scene, results, player)
     player:finish_event()

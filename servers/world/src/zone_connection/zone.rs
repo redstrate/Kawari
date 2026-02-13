@@ -140,6 +140,19 @@ impl ZoneConnection {
             self.send_ipc_self(ipc).await;
         }
 
+        // Send owned housing list (unsure where this fits in before InitZone?!)
+        {
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::OwnedHousing {
+                unk1: Default::default(),
+                unk2: Default::default(),
+                unk3: Default::default(),
+                unk4: Default::default(),
+                unk5: Default::default(),
+                apartment: Default::default(),
+            });
+            self.send_ipc_self(ipc).await;
+        }
+
         // Init Zone
         {
             let mut extra_flags = if initial_login {
@@ -202,6 +215,18 @@ impl ZoneConnection {
                 },
             )))
             .await;
+
+            for index in 0..8 {
+                self.send_ipc_self(ServerZoneIpcSegment::new(
+                    ServerZoneIpcData::UnkHousingRelated {
+                        unk1: [0xFF; 9],
+                        index,
+                        count: 8,
+                        unk2: [0; 2135],
+                    },
+                ))
+                .await;
+            }
         }
 
         self.conditions

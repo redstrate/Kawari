@@ -1029,6 +1029,34 @@ impl std::fmt::Debug for DutyOption {
     }
 }
 
+#[binrw]
+#[derive(Debug, Clone, Copy)]
+pub struct LandId {
+    pub id: u16,
+    pub ward: u16,
+    pub territory_type_id: u16,
+    pub world_id: u16,
+}
+
+impl Default for LandId {
+    fn default() -> Self {
+        Self {
+            id: 0xFFFF,
+            ward: 0xFFFF,
+            territory_type_id: 0xFFFF,
+            world_id: 0xFFFF,
+        }
+    }
+}
+
+#[binrw]
+#[derive(Debug, Clone, Copy, Default)]
+pub struct LandData {
+    pub id: LandId,
+    pub flags: u32,
+    pub unk1: u32,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

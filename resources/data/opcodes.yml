@@ -479,6 +479,14 @@ ServerZoneIpcType:
     comment: Updates a map effect.
     opcode: 796
     size: 16
+  - name: UnkHousingRelated
+    comment: Unknown purpose.
+    opcode: 857
+    size: 2146
+  - name: OwnedHousing
+    comment: Sent to inform you of which housing you own/have access to.
+    opcode: 910
+    size: 136
 ClientZoneIpcType:
   - name: InitRequest
     comment: "Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)"
