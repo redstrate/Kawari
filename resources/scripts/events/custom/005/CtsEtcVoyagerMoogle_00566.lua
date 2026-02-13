@@ -17,7 +17,7 @@ function onYield(scene, results, player)
         if results[1] == 1 and #results > 1 then
             local target_shop_id = results[2]
 
-            player:start_event(player.id, target_shop_id, EVENT_TYPE_NEST, 5)
+            player:start_event(target_shop_id, EVENT_TYPE_NEST, 5)
             player:play_scene(0, HIDE_HOTBAR | NO_DEFAULT_CAMERA, {})
             return
         end

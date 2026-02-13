@@ -25,7 +25,7 @@ function onYield(scene, results, player)
             player:register_for_content(CONTENT_FINDER_POD_1_10)
         elseif results[1] == 5 then
             -- Open DD description menu
-            player:start_event(player.id, DESCRIPTION_POD, EVENT_TYPE_NEST, 0)
+            player:start_event(DESCRIPTION_POD, EVENT_TYPE_NEST, 0)
             player:play_scene(0, HIDE_HOTBAR | NO_DEFAULT_CAMERA, {})
             return
         end

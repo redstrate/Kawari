@@ -18,7 +18,7 @@ function onYield(scene, results, player)
 
     local target_event_id = GAME_DATA:get_topic_select_target(EVENT_ID, selected_topic)
 
-    player:start_event(player.id, target_event_id, EVENT_TYPE_NEST, 0)
+    player:start_event(target_event_id, EVENT_TYPE_NEST, 0)
     -- this is just a limitation in the scripting API
     -- because prehandler only listens to onTalk, but that's obviously never called during nesting
     player:start_talk_event()

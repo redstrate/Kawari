@@ -5,7 +5,7 @@
 function onTalk(target, player)
     local target_event_id = GAME_DATA:get_pre_handler_target(EVENT_ID)
 
-    player:start_event(target, target_event_id, EVENT_TYPE_NEST, 0)
+    player:start_event(target_event_id, EVENT_TYPE_NEST, 0)
 
     -- NOTE: not sure if this is 100% true
     local event_type = target_event_id >> 16

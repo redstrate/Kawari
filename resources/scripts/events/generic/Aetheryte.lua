@@ -51,7 +51,7 @@ function onYield(scene, results, player)
             -- TODO: Security Token Free Destination logic ]]
         elseif menu_option == ACCESS_RESIDENTAL_AREA then
             -- open the housing menu
-            player:start_event(player.id, 1310721, EVENT_TYPE_NEST, 0)
+            player:start_event(1310721, EVENT_TYPE_NEST, 0)
             player:play_scene(0, HIDE_HOTBAR | NO_DEFAULT_CAMERA, {340})
             return
         end

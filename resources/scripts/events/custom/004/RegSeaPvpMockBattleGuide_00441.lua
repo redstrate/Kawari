@@ -10,6 +10,6 @@ end
 function onYield(scene, results, player)
     -- Opens help menu
     local target_event_id = results[2]
-    player:start_event(player.id, target_event_id, EVENT_TYPE_NEST, 0)
+    player:start_event(target_event_id, EVENT_TYPE_NEST, 0)
     player:play_scene(0, HIDE_HOTBAR | NO_DEFAULT_CAMERA, {})
 end
