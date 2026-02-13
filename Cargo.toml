@@ -62,16 +62,16 @@ tokio = { version = "1.49", features = ["macros", "rt", "rt-multi-thread", "io-u
 fastrand = { version = "2.3", features = ["std"], default-features = false }
 
 # HTML templates used in the web servers
-minijinja = { version = "2.14", features = ["serde", "loader", "multi_template"], default-features = false }
+minijinja = { version = "2.15", features = ["serde", "loader", "multi_template"], default-features = false }
 
 # For server-side scripting
 mlua = { version = "0.11", features = ["lua54", "vendored", "send", "async", "serialize", "userdata-wrappers"], default-features = false }
 
 # For character backup decompression
-zip = { version = "7.1", features = ["deflate", "lzma", "bzip2"], default-features = false }
+zip = { version = "7.4", features = ["deflate", "lzma", "bzip2"], default-features = false }
 
 # For inter-server HTTP communication
-ureq = { version = "3.1", default-features = false }
+ureq = { version = "3.2", default-features = false }
 
 # For serving static files on our websites
 tower-http = { version = "0.6", features = ["fs", "cors"], default-features = false }
