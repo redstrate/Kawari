@@ -142,6 +142,19 @@ diesel::table! {
 
 diesel::joinable!(unlock -> character (content_id));
 
+diesel::table! {
+    mentor (content_id) {
+        content_id -> BigInt,
+        version -> Integer,
+        is_battle -> Integer,
+        is_trade -> Integer,
+        is_novice -> Integer,
+        is_returner -> Integer,
+    }
+}
+
+diesel::joinable!(mentor -> character (content_id));
+
 diesel::allow_tables_to_appear_in_same_query!(
     character,
     classjob,
@@ -153,5 +166,6 @@ diesel::allow_tables_to_appear_in_same_query!(
     aether_current,
     companion,
     content,
-    unlock
+    unlock,
+    mentor
 );

@@ -9,7 +9,7 @@ use tokio::net::TcpStream;
 
 use crate::{
     Content, GameData, Unlock,
-    database::{AetherCurrent, Aetheryte, Character, ClassJob, Companion, Quest, Volatile},
+    database::{AetherCurrent, Aetheryte, Character, ClassJob, Companion, Mentor, Quest, Volatile},
     lua::LuaTask,
 };
 use kawari::{
@@ -79,6 +79,7 @@ pub struct PlayerData {
     pub volatile: Volatile,
     pub inventory: Inventory,
     pub city_state: u8,
+    pub mentor: Mentor,
 
     pub teleport_query: TeleportQuery,
     pub gm_invisible: bool,

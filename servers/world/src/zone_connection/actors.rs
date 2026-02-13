@@ -9,8 +9,8 @@ use kawari::{
     config::get_config,
     ipc::zone::{
         ActorControl, ActorControlCategory, ActorControlSelf, ActorControlTarget, ActorMove,
-        CommonSpawn, Config, DisplayFlag, GameMasterRank, ObjectKind, ObjectSpawn, OnlineStatus,
-        PlayerSpawn, PlayerSubKind, ServerZoneIpcData, ServerZoneIpcSegment, Warp,
+        CommonSpawn, Config, DisplayFlag, ObjectKind, ObjectSpawn, OnlineStatus, PlayerSpawn,
+        PlayerSubKind, ServerZoneIpcData, ServerZoneIpcSegment, Warp,
     },
 };
 
@@ -172,10 +172,12 @@ impl ZoneConnection {
             self.get_player_common_spawn(self.exit_position, self.exit_rotation, start_invisible);
         let config = get_config();
 
-        let online_status = if self.player_data.character.gm_rank == GameMasterRank::NormalUser {
-            OnlineStatus::Online
+        let online_status = if self.player_data.mentor.is_returner == 1 {
+            OnlineStatus::Returner
+        } else if self.player_data.mentor.is_novice == 1 {
+            OnlineStatus::NewAdventurer
         } else {
-            OnlineStatus::GameMasterBlue
+            OnlineStatus::Online
         };
 
         let spawn = PlayerSpawn {

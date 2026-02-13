@@ -1,7 +1,8 @@
 mod models;
 use kawari::ipc::zone::GameMasterRank;
 pub use models::{
-    AetherCurrent, Aetheryte, Character, ClassJob, Companion, Content, Quest, Unlock, Volatile,
+    AetherCurrent, Aetheryte, Character, ClassJob, Companion, Content, Mentor, Quest, Unlock,
+    Volatile,
 };
 
 mod schema;
@@ -102,6 +103,10 @@ impl WorldDatabase {
                 .select(Aetheryte::as_select())
                 .first(&mut self.connection)
                 .unwrap();
+            let mentor = Mentor::belonging_to(&found_character)
+                .select(Mentor::as_select())
+                .first(&mut self.connection)
+                .unwrap();
 
             player_data = PlayerData {
                 character: found_character,
@@ -116,6 +121,7 @@ impl WorldDatabase {
                 aetheryte,
                 city_state: customize.city_state as u8,
                 quest,
+                mentor,
                 ..Default::default()
             };
         }
@@ -165,6 +171,9 @@ impl WorldDatabase {
             .unwrap();
         data.quest
             .save_changes::<Quest>(&mut self.connection)
+            .unwrap();
+        data.mentor
+            .save_changes::<Mentor>(&mut self.connection)
             .unwrap();
     }
 
@@ -413,6 +422,16 @@ impl WorldDatabase {
         };
         diesel::insert_into(schema::unlock::table)
             .values(unlock)
+            .execute(&mut self.connection)
+            .unwrap();
+
+        let mentor = Mentor {
+            content_id: content_id as i64,
+            is_novice: 1, // All players are novice by default
+            ..Default::default()
+        };
+        diesel::insert_into(schema::mentor::table)
+            .values(mentor)
             .execute(&mut self.connection)
             .unwrap();
 

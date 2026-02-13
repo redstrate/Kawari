@@ -6,7 +6,7 @@ use axum::routing::get;
 use kawari::common::{
     ClientLanguage, ContainerType, DirectorEvent, DirectorTrigger, DutyOption, HandlerId,
     HandlerType, INVALID_OBJECT_ID, ItemOperationKind, ObjectId, ObjectTypeId, ObjectTypeKind,
-    Position, calculate_max_level,
+    PlayerStateFlags1, PlayerStateFlags2, PlayerStateFlags3, Position, calculate_max_level,
 };
 use kawari::config::get_config;
 use kawari_world::inventory::{Item, Storage, get_next_free_slot};
@@ -541,10 +541,31 @@ async fn process_packet(
 
                             // Player Setup
                             {
+                                let mut player_state_flags1 = PlayerStateFlags1::NONE;
+                                if connection.player_data.mentor.is_novice == 0 {
+                                    player_state_flags1.set(PlayerStateFlags1::NOT_NOVICE, true);
+                                }
+                                if connection.player_data.mentor.is_battle == 1 {
+                                    player_state_flags1.set(PlayerStateFlags1::BATTLE_MENTOR, true);
+                                }
+
+                                let mut player_state_flags2 = PlayerStateFlags2::NONE;
+                                if connection.player_data.mentor.is_returner == 1 {
+                                    player_state_flags2.set(PlayerStateFlags2::RETURNER, true);
+                                }
+
+                                let mut player_state_flags3 = PlayerStateFlags3::NONE;
+                                if connection.player_data.mentor.is_trade == 1 {
+                                    player_state_flags3.set(PlayerStateFlags3::TRADE_MENTOR, true);
+                                }
+
                                 let ipc = ServerZoneIpcSegment::new(
                                     ServerZoneIpcData::PlayerStatus(PlayerStatus {
                                         content_id: connection.player_data.character.content_id
                                             as u64,
+                                        player_state_flags1,
+                                        player_state_flags2,
+                                        player_state_flags3,
                                         exp: padded_exp,
                                         max_level: calculate_max_level(expansion),
                                         expansion,

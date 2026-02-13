@@ -276,3 +276,27 @@ pub struct Unlock {
     pub chocobo_taxi_stands: Bitmask<CHOCOBO_TAXI_STANDS_BITMASK_SIZE>,
     pub titles: Bitmask<TITLE_UNLOCK_BITMASK_SIZE>,
 }
+
+#[derive(
+    Insertable,
+    Identifiable,
+    Queryable,
+    Selectable,
+    Associations,
+    AsChangeset,
+    Debug,
+    Default,
+    Clone,
+)]
+#[diesel(table_name = super::schema::mentor)]
+#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+#[diesel(belongs_to(Character, foreign_key = content_id))]
+#[diesel(primary_key(content_id))]
+pub struct Mentor {
+    pub content_id: i64,
+    pub version: i32,
+    pub is_battle: i32,
+    pub is_trade: i32,
+    pub is_novice: i32,
+    pub is_returner: i32,
+}
