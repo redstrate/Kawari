@@ -165,40 +165,41 @@ impl GameData {
 
         let mut classjob_exp_indexes = Vec::new();
 
-        let sheet = ClassJobSheet::read_from(&mut resource_resolver, Language::English)
+        let sheet = ClassJobSheet::read_from(&mut resource_resolver, config.world.language())
             .expect("Failed to read ClassJobSheet, does the Excel files exist?");
         for (_, row) in sheet.into_iter().flatten_subrows() {
             classjob_exp_indexes.push(*row.ExpArrayIndex().into_i8().unwrap());
         }
 
-        let item_sheet = ItemSheet::read_from(&mut resource_resolver, Language::English)
+        let item_sheet = ItemSheet::read_from(&mut resource_resolver, config.world.language())
             .expect("Failed to read ItemSheet, does the Excel files exist?");
 
         let weather_rate_sheet =
             WeatherRateSheet::read_from(&mut resource_resolver, Language::None)
                 .expect("Failed to read WeatherRateSheet, does the Excel files exist?");
 
-        let quest_sheet = QuestSheet::read_from(&mut resource_resolver, Language::English)
+        let quest_sheet = QuestSheet::read_from(&mut resource_resolver, config.world.language())
             .expect("Failed to read Quest, does the Excel files exist?");
 
         let territory_type_sheet =
             TerritoryTypeSheet::read_from(&mut resource_resolver, Language::None)
                 .expect("Failed to read TerritoryTypeSheet, does the Excel files exist?");
 
-        let warp_sheet = WarpSheet::read_from(&mut resource_resolver, Language::English)
+        let warp_sheet = WarpSheet::read_from(&mut resource_resolver, config.world.language())
             .expect("Failed to read Warp, does the Excel files exist?");
 
-        let action_sheet = ActionSheet::read_from(&mut resource_resolver, Language::English)
+        let action_sheet = ActionSheet::read_from(&mut resource_resolver, config.world.language())
             .expect("Failed to read Action, does the Excel files exist?");
 
-        let place_name_sheet = PlaceNameSheet::read_from(&mut resource_resolver, Language::English)
-            .expect("Failed to read PlaceName, does the Excel files exist?");
+        let place_name_sheet =
+            PlaceNameSheet::read_from(&mut resource_resolver, config.world.language())
+                .expect("Failed to read PlaceName, does the Excel files exist?");
 
         let custom_talk_sheet =
-            CustomTalkSheet::read_from(&mut resource_resolver, Language::English)
+            CustomTalkSheet::read_from(&mut resource_resolver, config.world.language())
                 .expect("Failed to read CustomTalk, does the Excel files exist?");
 
-        let tribe_sheet = TribeSheet::read_from(&mut resource_resolver, Language::English)
+        let tribe_sheet = TribeSheet::read_from(&mut resource_resolver, config.world.language())
             .expect("Failed to read Tribe, does the Excel files exist?");
 
         let eobj_sheet = EObjSheet::read_from(&mut resource_resolver, Language::None)
@@ -222,7 +223,8 @@ impl GameData {
 
     /// Gets the starting city-state from a given class/job id.
     pub fn get_citystate(&mut self, classjob_id: u16) -> Option<u8> {
-        let sheet = ClassJobSheet::read_from(&mut self.resource, Language::English).ok()?;
+        let config = get_config();
+        let sheet = ClassJobSheet::read_from(&mut self.resource, config.world.language()).ok()?;
         let row = sheet.row(classjob_id as u32)?;
 
         row.StartingTown().into_u8().copied()
@@ -328,8 +330,9 @@ impl GameData {
 
         let warp_logic_id = row.WarpLogic().into_u16().unwrap();
 
+        let config = get_config();
         let warp_logic_sheet =
-            WarpLogicSheet::read_from(&mut self.resource, Language::English).unwrap();
+            WarpLogicSheet::read_from(&mut self.resource, config.world.language()).unwrap();
         let warp_logic_row = warp_logic_sheet.row(*warp_logic_id as u32).unwrap();
 
         warp_logic_row
@@ -340,7 +343,8 @@ impl GameData {
     }
 
     pub fn get_aetheryte(&mut self, aetheryte_id: u32) -> Option<(u32, u16)> {
-        let sheet = AetheryteSheet::read_from(&mut self.resource, Language::English).ok()?;
+        let config = get_config();
+        let sheet = AetheryteSheet::read_from(&mut self.resource, config.world.language()).ok()?;
         let row = sheet.row(aetheryte_id)?;
 
         // TODO: just look in the level sheet?
@@ -352,7 +356,8 @@ impl GameData {
 
     /// Checks if it's a big Aetheryte (true) or just a shard (false.)
     pub fn is_aetheryte(&mut self, aetheryte_id: u32) -> bool {
-        let sheet = AetheryteSheet::read_from(&mut self.resource, Language::English).unwrap();
+        let config = get_config();
+        let sheet = AetheryteSheet::read_from(&mut self.resource, config.world.language()).unwrap();
         let row = sheet.row(aetheryte_id).unwrap();
 
         row.IsAetheryte().into_bool().cloned().unwrap_or_default()
@@ -523,7 +528,8 @@ impl GameData {
 
     /// Gets the job index for a given class.
     pub fn get_job_index(&mut self, classjob_id: u16) -> Option<u8> {
-        let sheet = ClassJobSheet::read_from(&mut self.resource, Language::English).ok()?;
+        let config = get_config();
+        let sheet = ClassJobSheet::read_from(&mut self.resource, config.world.language()).ok()?;
         let row = sheet.row(classjob_id as u32)?;
 
         row.JobIndex().into_u8().cloned()
@@ -540,7 +546,9 @@ impl GameData {
 
     /// Gets the item and its cost from the specified SpecialShop.
     pub fn get_specialshop_item(&mut self, gilshop_id: u32, index: u16) -> Option<ItemInfo> {
-        let sheet = SpecialShopSheet::read_from(&mut self.resource, Language::English).ok()?;
+        let config = get_config();
+        let sheet =
+            SpecialShopSheet::read_from(&mut self.resource, config.world.language()).ok()?;
         let row = sheet.row(gilshop_id)?;
         let item_id = row.Item()[index as usize].Item[0].into_i32()?; // TODO: why are there two items?
 
@@ -549,8 +557,10 @@ impl GameData {
 
     /// Gets the zone id for the given ContentFinderCondition ID.
     pub fn find_zone_for_content(&mut self, content_id: u16) -> Option<u16> {
+        let config = get_config();
         let content_finder_sheet =
-            ContentFinderConditionSheet::read_from(&mut self.resource, Language::English).unwrap();
+            ContentFinderConditionSheet::read_from(&mut self.resource, config.world.language())
+                .unwrap();
         let content_finder_row = content_finder_sheet.row(content_id as u32)?;
 
         content_finder_row.TerritoryType().into_u16().copied()
@@ -584,8 +594,9 @@ impl GameData {
 
     /// Gets the order of the mount.
     pub fn find_mount_order(&mut self, mount_id: u32) -> Option<i16> {
+        let config = get_config();
         let instance_content_sheet =
-            MountSheet::read_from(&mut self.resource, Language::English).unwrap();
+            MountSheet::read_from(&mut self.resource, config.world.language()).unwrap();
         let mount_row = instance_content_sheet.row(mount_id)?;
 
         mount_row.Order().into_i16().copied()
@@ -695,7 +706,8 @@ impl GameData {
 
     /// Returns the target event for a given PreHandler event.
     pub fn get_pre_handler_target(&mut self, pre_handler_id: u32) -> Option<u32> {
-        let sheet = PreHandlerSheet::read_from(&mut self.resource, Language::English).ok()?;
+        let config = get_config();
+        let sheet = PreHandlerSheet::read_from(&mut self.resource, config.world.language()).ok()?;
         let row = sheet.row(pre_handler_id)?;
 
         Some(*row.Target().into_u32()?)
@@ -718,8 +730,9 @@ impl GameData {
 
     /// Returns the target Transform Row ID for a given selected NPC. (Only applicable to the Halloween Transform NPC.)
     pub fn get_halloween_npc_transform(&mut self, npc_id: u32) -> Option<u16> {
+        let config = get_config();
         let sheet =
-            HalloweenNpcSelectSheet::read_from(&mut self.resource, Language::English).ok()?;
+            HalloweenNpcSelectSheet::read_from(&mut self.resource, config.world.language()).ok()?;
         let row = sheet.row(npc_id)?;
 
         Some(*row.Transformation().into_u16()?)
@@ -738,7 +751,9 @@ impl GameData {
         topic_select_id: u32,
         selected_index: usize,
     ) -> Option<u32> {
-        let sheet = TopicSelectSheet::read_from(&mut self.resource, Language::English).ok()?;
+        let config = get_config();
+        let sheet =
+            TopicSelectSheet::read_from(&mut self.resource, config.world.language()).ok()?;
         let row = sheet.row(topic_select_id)?;
 
         Some(*row.Shop()[selected_index].into_u32()?)
@@ -764,8 +779,10 @@ impl GameData {
 
     /// Gets the short name for a given content finder condition.
     pub fn get_content_short_name(&mut self, content_finder_row_id: u16) -> Option<String> {
+        let config = get_config();
         let content_finder_sheet =
-            ContentFinderConditionSheet::read_from(&mut self.resource, Language::English).unwrap();
+            ContentFinderConditionSheet::read_from(&mut self.resource, config.world.language())
+                .unwrap();
         let content_finder_row = content_finder_sheet.row(content_finder_row_id as u32)?;
 
         content_finder_row.ShortCode().into_string().cloned()
@@ -794,8 +811,10 @@ impl GameData {
         &mut self,
         content_finder_row_id: u16,
     ) -> Option<u16> {
+        let config = get_config();
         let content_finder_sheet =
-            ContentFinderConditionSheet::read_from(&mut self.resource, Language::English).unwrap();
+            ContentFinderConditionSheet::read_from(&mut self.resource, config.world.language())
+                .unwrap();
         let content_finder_row = content_finder_sheet.row(content_finder_row_id as u32)?;
 
         content_finder_row.Content().into_u16().copied()
@@ -837,8 +856,10 @@ impl GameData {
 
     /// Returns the entrance ID for this content finder condition.
     pub fn get_content_entrance_id(&mut self, content_finder_id: u16) -> Option<u32> {
+        let config = get_config();
         let content_finder_sheet =
-            ContentFinderConditionSheet::read_from(&mut self.resource, Language::English).unwrap();
+            ContentFinderConditionSheet::read_from(&mut self.resource, config.world.language())
+                .unwrap();
         let content_finder_row = content_finder_sheet.row(content_finder_id as u32)?;
 
         let instance_content_sheet =
@@ -851,8 +872,9 @@ impl GameData {
 
     /// Returns the list of applicable classjob IDs based on the ClassJobCategory.
     pub fn get_applicable_classjobs(&mut self, classjob_category_id: u16) -> Vec<u8> {
+        let config = get_config();
         let sheet =
-            ClassJobCategorySheet::read_from(&mut self.resource, Language::English).unwrap();
+            ClassJobCategorySheet::read_from(&mut self.resource, config.world.language()).unwrap();
         let row = sheet.row(classjob_category_id as u32).unwrap();
 
         // TODO: find a better way to write this
@@ -992,7 +1014,8 @@ impl GameData {
 
     /// Gets the soul crystal item ID for the classjob, if applicable.
     pub fn get_soul_crystal_item_id(&mut self, classjob_id: u16) -> Option<u32> {
-        let sheet = ClassJobSheet::read_from(&mut self.resource, Language::English).ok()?;
+        let config = get_config();
+        let sheet = ClassJobSheet::read_from(&mut self.resource, config.world.language()).ok()?;
         let row = sheet.row(classjob_id as u32)?;
 
         row.ItemSoulCrystal()
@@ -1003,7 +1026,8 @@ impl GameData {
 
     /// Gets the starting level for the classjob.
     pub fn get_starting_level(&mut self, classjob_id: u16) -> Option<u8> {
-        let sheet = ClassJobSheet::read_from(&mut self.resource, Language::English).ok()?;
+        let config = get_config();
+        let sheet = ClassJobSheet::read_from(&mut self.resource, config.world.language()).ok()?;
         let row = sheet.row(classjob_id as u32)?;
 
         row.StartingLevel().into_u8().copied()
@@ -1011,7 +1035,8 @@ impl GameData {
 
     /// Returns information about the BaseParam.
     pub fn get_base_param(&mut self, base_param_id: u16) -> Option<BaseParam> {
-        let sheet = BaseParamSheet::read_from(&mut self.resource, Language::English).ok()?;
+        let config = get_config();
+        let sheet = BaseParamSheet::read_from(&mut self.resource, config.world.language()).ok()?;
         let row = sheet.row(base_param_id as u32)?;
 
         Some(BaseParam {
@@ -1046,7 +1071,8 @@ impl GameData {
 
     /// Gets the classjob ID associated with this soul crystal item ID.
     pub fn get_applicable_classjob(&mut self, soul_crystal_id: u32) -> Option<u32> {
-        let sheet = ClassJobSheet::read_from(&mut self.resource, Language::English).ok()?;
+        let config = get_config();
+        let sheet = ClassJobSheet::read_from(&mut self.resource, config.world.language()).ok()?;
         for (id, row) in sheet.into_iter().flatten_subrows() {
             if row.ItemSoulCrystal().into_u32().copied()? == soul_crystal_id {
                 return Some(id);

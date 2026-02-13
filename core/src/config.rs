@@ -3,6 +3,7 @@ use std::{
     str::FromStr,
 };
 
+use physis::Language;
 use serde::{Deserialize, Serialize};
 
 fn default_listen_address() -> String {
@@ -365,6 +366,10 @@ pub struct WorldConfig {
     /// Whether the World has the EXP bonus bonus.
     #[serde(default = "WorldConfig::default_exp_bonus")]
     pub exp_bonus: bool,
+
+    /// The language to read game data as, should have no effect on regular gameplay but definitely does affect a lot of debug/GM commands.
+    #[serde(default = "WorldConfig::default_language")]
+    pub language: String,
 }
 
 impl Default for WorldConfig {
@@ -382,6 +387,7 @@ impl Default for WorldConfig {
             active_festivals: Self::default_active_festivals(),
             accept_new_characters: Self::default_accept_new_characters(),
             exp_bonus: Self::default_exp_bonus(),
+            language: Self::default_language(),
         }
     }
 }
@@ -429,6 +435,21 @@ impl WorldConfig {
 
     fn default_exp_bonus() -> bool {
         false
+    }
+
+    fn default_language() -> String {
+        "en".to_string()
+    }
+
+    pub fn language(&self) -> Language {
+        // TODO: possibly de-duplicate this in Physis?
+        match self.language.as_str() {
+            "ja" => Language::Japanese,
+            "en" => Language::English,
+            "de" => Language::German,
+            "fr" => Language::French,
+            _ => panic!("Unsupported language code!"),
+        }
     }
 }
 
