@@ -199,10 +199,6 @@ ServerZoneIpcType:
     comment: Contains classjob-specific gauge information.
     opcode: 687
     size: 16
-  - name: UpdateSearchInfo
-    comment: Unknown purpose.
-    opcode: 596
-    size: 216
   - name: FreeCompanyInfo
     comment: Presumably contains information about the current free company.
     opcode: 113
@@ -491,6 +487,10 @@ ServerZoneIpcType:
     comment: Sent to inform the client which items are listed under Latest Trends in Dreamfitting.
     opcode: 409
     size: 16
+  - name: UnkSocialResponse
+    comment: Unknown purpose, but allows you to load in while sending the search info packet.
+    opcode: 854
+    size: 80
 ClientZoneIpcType:
   - name: InitRequest
     comment: "Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)"
@@ -540,9 +540,9 @@ ClientZoneIpcType:
     comment: "Occasionally sent by the client, purpose is unknown."
     opcode: 109
     size: 32
-  - name: SetSearchInfoHandler
+  - name: UnkSocialEvent
     comment: Unknown purpose.
-    opcode: 860
+    opcode: 604
     size: 8
   - name: EventRelatedUnk
     comment: Unknown purpose.
@@ -686,11 +686,11 @@ ClientZoneIpcType:
     size: 176
   - name: EditSearchInfo
     comment: Happens when the client wants to update the search info of the player.
-    opcode: 211
+    opcode: 860
     size: 216
   - name: RequestOwnSearchInfo
     comment: Seems to happen when the client wants to know its own search info.
-    opcode: 853
+    opcode: 929
     size: 8
   - name: WalkOutsideEvent
     comment: Sent by the client when walking outside a trigger (e.g. exiting Ul'dah in the opening.)

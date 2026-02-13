@@ -15,7 +15,8 @@ use kawari::ipc::chat::{ChatChannel, ClientChatIpcData};
 
 use kawari::ipc::zone::{
     ActorControlCategory, Condition, Conditions, ContentFinderUserAction, EventType, InviteType,
-    OnlineStatusMask, PlayerStatus, SceneFlags, SearchInfo, TrustContent, TrustInformation,
+    OnlineStatus, OnlineStatusMask, PlayerStatus, SceneFlags, SearchInfo, SocialListUILanguages,
+    TrustContent, TrustInformation,
 };
 
 use kawari::ipc::zone::{
@@ -1112,8 +1113,14 @@ async fn process_packet(
                                 }
                             }
                         }
-                        ClientZoneIpcData::SetSearchInfoHandler { .. } => {
-                            tracing::info!("Recieved SetSearchInfoHandler!");
+                        ClientZoneIpcData::UnkSocialEvent { .. } => {
+                            connection
+                                .send_ipc_self(ServerZoneIpcSegment::new(
+                                    ServerZoneIpcData::UnkSocialResponse {
+                                        unk: Default::default(),
+                                    },
+                                ))
+                                .await;
                         }
                         ClientZoneIpcData::SocialListRequest(request) => {
                             connection
@@ -2028,20 +2035,33 @@ async fn process_packet(
                         ClientZoneIpcData::SearchPlayers { .. } => {
                             tracing::info!("Searching for players is unimplemented");
                         }
-                        ClientZoneIpcData::EditSearchInfo { .. } => {
-                            let ipc =
-                                ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateSearchInfo {
-                                    online_status: OnlineStatusMask::default(),
-                                    unk1: 0,
-                                    unk2: 0,
-                                    region: 0,
-                                    message: String::default(),
-                                });
-                            connection.send_ipc_self(ipc).await;
+                        ClientZoneIpcData::EditSearchInfo(search_info) => {
+                            connection.player_data.search_info.online_status = search_info
+                                .online_status
+                                .mask()
+                                .last()
+                                .copied()
+                                .unwrap_or(OnlineStatus::Online); // TODO: unsure if this makes sense?
+                            connection.player_data.search_info.comment =
+                                search_info.comment.clone();
+
+                            // TODO: network to other players
+                            connection
+                                .actor_control_self(ActorControlCategory::SetStatusIcon {
+                                    icon: connection.player_data.search_info.online_status,
+                                })
+                                .await;
                         }
                         ClientZoneIpcData::RequestOwnSearchInfo { .. } => {
                             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::SetSearchInfo(
-                                SearchInfo::default(),
+                                SearchInfo {
+                                    online_status: OnlineStatusMask::from_online_status(
+                                        connection.player_data.search_info.online_status,
+                                    ),
+                                    comment: connection.player_data.search_info.comment.clone(),
+                                    selected_languages: SocialListUILanguages::ENGLISH,
+                                    ..Default::default()
+                                },
                             ));
                             connection.send_ipc_self(ipc).await;
                         }

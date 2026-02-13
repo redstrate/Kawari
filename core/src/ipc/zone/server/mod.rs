@@ -323,19 +323,6 @@ pub enum ServerZoneIpcData {
         classjob_id: u8,
         data: [u8; 15],
     },
-    UpdateSearchInfo {
-        online_status: OnlineStatusMask,
-        unk1: u64,
-        #[brw(pad_after = 1)] // padding
-        unk2: u32,
-        region: u8,
-        #[brw(pad_after = 1)] // padding
-        #[brw(pad_size_to = 193)]
-        #[br(count = 193)]
-        #[br(map = read_string)]
-        #[bw(map = write_string)]
-        message: String,
-    },
     FreeCompanyInfo {
         unk: [u8; 80],
     },
@@ -835,6 +822,12 @@ pub enum ServerZoneIpcData {
         /// Corresponds to the DisplayId column in the FittingShopCategoryItem Excel sheet.
         #[brw(pad_after = 8)] // empty
         display_ids: [u8; 8],
+    },
+    UnkSocialResponse {
+        // TODO: full of possibly interesting information
+        #[br(count = 80)]
+        #[bw(pad_size_to = 80)]
+        unk: Vec<u8>,
     },
 }
 

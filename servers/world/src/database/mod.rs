@@ -1,8 +1,8 @@
 mod models;
-use kawari::ipc::zone::GameMasterRank;
+use kawari::ipc::zone::{GameMasterRank, OnlineStatus};
 pub use models::{
-    AetherCurrent, Aetheryte, Character, ClassJob, Companion, Content, Mentor, Quest, Unlock,
-    Volatile,
+    AetherCurrent, Aetheryte, Character, ClassJob, Companion, Content, Mentor, Quest, SearchInfo,
+    Unlock, Volatile,
 };
 
 mod schema;
@@ -107,6 +107,10 @@ impl WorldDatabase {
                 .select(Mentor::as_select())
                 .first(&mut self.connection)
                 .unwrap();
+            let search_info = SearchInfo::belonging_to(&found_character)
+                .select(SearchInfo::as_select())
+                .first(&mut self.connection)
+                .unwrap();
 
             player_data = PlayerData {
                 character: found_character,
@@ -122,6 +126,7 @@ impl WorldDatabase {
                 city_state: customize.city_state as u8,
                 quest,
                 mentor,
+                search_info,
                 ..Default::default()
             };
         }
@@ -174,6 +179,9 @@ impl WorldDatabase {
             .unwrap();
         data.mentor
             .save_changes::<Mentor>(&mut self.connection)
+            .unwrap();
+        data.search_info
+            .save_changes::<SearchInfo>(&mut self.connection)
             .unwrap();
     }
 
@@ -435,6 +443,16 @@ impl WorldDatabase {
             .execute(&mut self.connection)
             .unwrap();
 
+        let search_info = SearchInfo {
+            content_id: content_id as i64,
+            online_status: OnlineStatus::NewAdventurer, // because you're a novice :-)
+            ..Default::default()
+        };
+        diesel::insert_into(schema::search_info::table)
+            .values(search_info)
+            .execute(&mut self.connection)
+            .unwrap();
+
         (content_id as u64, actor_id)
     }
 
@@ -522,6 +540,21 @@ impl WorldDatabase {
                 .unwrap();
         }
 
+        {
+            use schema::mentor::dsl::*;
+            diesel::delete(mentor.filter(content_id.eq(for_content_id as i64)))
+                .execute(&mut self.connection)
+                .unwrap();
+        }
+
+        {
+            use schema::search_info::dsl::*;
+            diesel::delete(search_info.filter(content_id.eq(for_content_id as i64)))
+                .execute(&mut self.connection)
+                .unwrap();
+        }
+
+        // NOTE: The character table should always be last!
         {
             use schema::character::dsl::*;
             diesel::delete(character.filter(content_id.eq(for_content_id as i64)))

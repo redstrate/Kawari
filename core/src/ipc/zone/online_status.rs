@@ -10,7 +10,12 @@ use crate::common::value_to_flag_byte_index_value;
 #[brw(little)]
 #[brw(repr = u8)]
 #[repr(u8)]
-#[derive(Clone, Debug, Default, EnumIter, Eq, PartialEq, FromRepr)]
+#[derive(Clone, Debug, Default, EnumIter, Eq, PartialEq, FromRepr, Copy)]
+#[cfg_attr(
+    feature = "server",
+    derive(diesel::expression::AsExpression, diesel::deserialize::FromSqlRow)
+)]
+#[cfg_attr(feature = "server", diesel(sql_type = diesel::sql_types::Integer))]
 pub enum OnlineStatus {
     /// No icon is shown at all.
     Offline = 0,
@@ -111,6 +116,28 @@ pub enum OnlineStatus {
     Online = 47,
 }
 
+#[cfg(feature = "server")]
+impl diesel::serialize::ToSql<diesel::sql_types::Integer, diesel::sqlite::Sqlite> for OnlineStatus {
+    fn to_sql<'b>(
+        &'b self,
+        out: &mut diesel::serialize::Output<'b, '_, diesel::sqlite::Sqlite>,
+    ) -> diesel::serialize::Result {
+        out.set_value(*self as i32);
+        Ok(diesel::serialize::IsNull::No)
+    }
+}
+
+#[cfg(feature = "server")]
+impl diesel::deserialize::FromSql<diesel::sql_types::Integer, diesel::sqlite::Sqlite>
+    for OnlineStatus
+{
+    fn from_sql(
+        mut integer: <diesel::sqlite::Sqlite as diesel::backend::Backend>::RawValue<'_>,
+    ) -> diesel::deserialize::Result<Self> {
+        Ok(OnlineStatus::from_repr(integer.read_integer() as u8).unwrap())
+    }
+}
+
 /// Represents a 64-bit online status. For possible values, see common_spawn.rs's OnlineStatus enum.
 #[binrw]
 #[brw(little)]
@@ -126,11 +153,18 @@ impl From<[u8; 8]> for OnlineStatusMask {
 }
 
 impl OnlineStatusMask {
+    pub fn from_online_status(status: OnlineStatus) -> Self {
+        let mut mask = Self::default();
+        mask.set_status(status);
+
+        mask
+    }
+
     pub fn mask(&self) -> Vec<OnlineStatus> {
         let mut statuses = Vec::new();
 
         for status in OnlineStatus::iter() {
-            let (value, index) = value_to_flag_byte_index_value(status.clone() as u32);
+            let (value, index) = value_to_flag_byte_index_value(status as u32);
             if self.flags[index as usize] & value == value {
                 statuses.push(status);
             }

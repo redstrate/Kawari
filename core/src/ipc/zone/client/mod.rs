@@ -81,7 +81,7 @@ pub enum ClientZoneIpcData {
         unk: [u8; 72],
     },
     ClientTrigger(ClientTrigger),
-    SetSearchInfoHandler {
+    UnkSocialEvent {
         // TODO: full of possibly interesting information
         unk: [u8; 8],
     },

@@ -155,6 +155,16 @@ diesel::table! {
 
 diesel::joinable!(mentor -> character (content_id));
 
+diesel::table! {
+    search_info (content_id) {
+        content_id -> BigInt,
+        online_status -> Integer,
+        comment -> Text,
+    }
+}
+
+diesel::joinable!(search_info -> character (content_id));
+
 diesel::allow_tables_to_appear_in_same_query!(
     character,
     classjob,

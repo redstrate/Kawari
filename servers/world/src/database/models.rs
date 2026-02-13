@@ -13,7 +13,7 @@ use kawari::{
         SPECIAL_CONTENT_ARRAY_SIZE, TITLE_UNLOCK_BITMASK_SIZE, TRIAL_ARRAY_SIZE,
         TRIPLE_TRIAD_CARDS_BITMASK_SIZE, UNLOCK_BITMASK_SIZE,
     },
-    ipc::zone::GameMasterRank,
+    ipc::zone::{GameMasterRank, OnlineStatus},
 };
 
 use crate::{
@@ -299,4 +299,25 @@ pub struct Mentor {
     pub is_trade: i32,
     pub is_novice: i32,
     pub is_returner: i32,
+}
+
+#[derive(
+    Insertable,
+    Identifiable,
+    Queryable,
+    Selectable,
+    Associations,
+    AsChangeset,
+    Debug,
+    Default,
+    Clone,
+)]
+#[diesel(table_name = super::schema::search_info)]
+#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+#[diesel(belongs_to(Character, foreign_key = content_id))]
+#[diesel(primary_key(content_id))]
+pub struct SearchInfo {
+    pub content_id: i64,
+    pub online_status: OnlineStatus,
+    pub comment: String,
 }
