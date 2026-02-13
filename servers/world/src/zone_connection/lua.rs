@@ -301,11 +301,19 @@ impl ZoneConnection {
                     event_type,
                     event_arg,
                 } => {
-                    self.start_event(
-                        ObjectTypeId {
+                    let target_object;
+                    if let Some(event) = self.events.last() {
+                        target_object = event.actor_id;
+                    } else {
+                        // Fall back to the player as a sensible default
+                        target_object = ObjectTypeId {
                             object_id: self.player_data.character.actor_id,
                             object_type: ObjectTypeKind::None,
-                        },
+                        };
+                    }
+
+                    self.start_event(
+                        target_object,
                         *event_id,
                         *event_type,
                         *event_arg,
