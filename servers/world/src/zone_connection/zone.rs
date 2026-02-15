@@ -168,7 +168,7 @@ impl ZoneConnection {
 
         // Init Zone
         {
-            let mut extra_flags = if initial_login {
+            let mut flags = if initial_login {
                 InitZoneFlags::INITIAL_LOGIN
             } else if bound_by_duty {
                 InitZoneFlags::UNK1 | InitZoneFlags::UNK3
@@ -177,13 +177,17 @@ impl ZoneConnection {
             };
 
             if !bound_by_duty {
-                extra_flags |= InitZoneFlags::ENABLE_FLYING;
+                flags |= InitZoneFlags::ENABLE_FLYING;
+            }
+
+            if config.tweaks.hide_world_name {
+                flags |= InitZoneFlags::HIDE_SERVER;
             }
 
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InitZone(InitZone {
                 territory_type: new_zone_id,
                 weather_id: weather_id as u8,
-                flags: InitZoneFlags::HIDE_SERVER | extra_flags,
+                flags,
                 content_finder_condition_id,
                 festivals_id1: config.world.active_festivals,
                 festivals_id2: config.world.active_festivals,

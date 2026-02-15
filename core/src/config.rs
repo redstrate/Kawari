@@ -608,6 +608,28 @@ impl FilesystemConfig {
     }
 }
 
+/// Configuration for various tweaks.
+#[derive(Serialize, Deserialize)]
+pub struct TweaksConfig {
+    /// Whether to hide the world name in-game, defaults to true to prevent confusion with retail.
+    #[serde(default = "TweaksConfig::default_hide_world_name")]
+    pub hide_world_name: bool,
+}
+
+impl Default for TweaksConfig {
+    fn default() -> Self {
+        Self {
+            hide_world_name: Self::default_hide_world_name(),
+        }
+    }
+}
+
+impl TweaksConfig {
+    fn default_hide_world_name() -> bool {
+        true
+    }
+}
+
 /// Global and all-encompassing config.
 /// Settings that affect all servers belong here.
 #[derive(Serialize, Deserialize)]
@@ -657,6 +679,9 @@ pub struct Config {
     /// The URL to the Sapphire API (e.g. 127.0.0.1:80)
     #[serde(default)]
     pub sapphire_api_server: String,
+
+    #[serde(default)]
+    pub tweaks: TweaksConfig,
 }
 
 impl Default for Config {
@@ -676,6 +701,7 @@ impl Default for Config {
             enforce_validity_checks: Self::default_enforce_validity_checks(),
             enable_sapphire_proxy: Self::default_enable_sapphire_proxy(),
             sapphire_api_server: String::default(),
+            tweaks: TweaksConfig::default(),
         }
     }
 }
