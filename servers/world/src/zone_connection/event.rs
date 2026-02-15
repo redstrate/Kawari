@@ -5,6 +5,7 @@ use mlua::Function;
 use crate::{Event, ZoneConnection, lua::LuaPlayer};
 use kawari::{
     common::{HandlerId, HandlerType, ObjectTypeId},
+    config::get_config,
     ipc::zone::{
         ActorControlCategory, Condition, EventScene, EventStart, EventType, SceneFlags,
         ServerZoneIpcData, ServerZoneIpcSegment,
@@ -17,7 +18,7 @@ impl ZoneConnection {
         &mut self,
         event_id: u32,
         scene: u16,
-        scene_flags: SceneFlags,
+        mut scene_flags: SceneFlags,
         params: Vec<u32>,
         lua_player: &mut LuaPlayer,
     ) {
@@ -25,6 +26,11 @@ impl ZoneConnection {
             tracing::warn!("Tried to play scene with no event loaded?!");
             return;
         };
+
+        let config = get_config();
+        if config.tweaks.always_allow_skipping {
+            scene_flags.set(SceneFlags::DISABLE_SKIP, false);
+        }
 
         let scene = EventScene {
             actor_id: event.actor_id,

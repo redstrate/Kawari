@@ -614,12 +614,17 @@ pub struct TweaksConfig {
     /// Whether to hide the world name in-game, defaults to true to prevent confusion with retail.
     #[serde(default = "TweaksConfig::default_hide_world_name")]
     pub hide_world_name: bool,
+
+    /// If true, always the player to skip cutscenes marked as unskippable.
+    #[serde(default)]
+    pub always_allow_skipping: bool,
 }
 
 impl Default for TweaksConfig {
     fn default() -> Self {
         Self {
             hide_world_name: Self::default_hide_world_name(),
+            always_allow_skipping: false,
         }
     }
 }
