@@ -706,7 +706,7 @@ impl LobbyConnection {
         let config = get_config();
 
         // The lobby server does its own version check as well, but it can be turned off if desired.
-        if config.enforce_validity_checks && !do_game_version_check(version_info) {
+        if config.tweaks.enforce_validity_checks && !do_game_version_check(version_info) {
             // "A version update is required."
             self.send_error(sequence, 1012, 13101).await;
             return;

@@ -57,7 +57,7 @@ async fn verify_session(
     headers.insert("X-Protocol", "http".parse().unwrap());
     headers.insert("X-Latest-Version", game_version.parse().unwrap());
 
-    if config.enforce_validity_checks {
+    if config.tweaks.enforce_validity_checks {
         tracing::info!(
             "Verifying game components for {platform} {channel} {game_version} {body}..."
         );
@@ -229,7 +229,7 @@ async fn verify_boot(
     headers.insert("X-Protocol", "http".parse().unwrap());
     headers.insert("X-Latest-Version", boot_version.parse().unwrap());
 
-    if config.enforce_validity_checks {
+    if config.tweaks.enforce_validity_checks {
         tracing::info!("Verifying boot components for {platform} {channel} {boot_version}...");
 
         let actual_boot_version = boot_version.split("?time").collect::<Vec<&str>>()[0];

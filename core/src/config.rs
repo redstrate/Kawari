@@ -618,6 +618,10 @@ pub struct TweaksConfig {
     /// If true, always the player to skip cutscenes marked as unskippable.
     #[serde(default)]
     pub always_allow_skipping: bool,
+
+    /// Enable various validity checks for version and file hashes that emulate retail.
+    #[serde(default = "TweaksConfig::default_enforce_validity_checks")]
+    pub enforce_validity_checks: bool,
 }
 
 impl Default for TweaksConfig {
@@ -625,6 +629,7 @@ impl Default for TweaksConfig {
         Self {
             hide_world_name: Self::default_hide_world_name(),
             always_allow_skipping: false,
+            enforce_validity_checks: Self::default_enforce_validity_checks(),
         }
     }
 }
@@ -633,11 +638,15 @@ impl TweaksConfig {
     fn default_hide_world_name() -> bool {
         true
     }
+
+    fn default_enforce_validity_checks() -> bool {
+        true
+    }
 }
 
 /// Global and all-encompassing config.
 /// Settings that affect all servers belong here.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Default)]
 pub struct Config {
     #[serde(default)]
     pub filesystem: FilesystemConfig,
@@ -672,38 +681,8 @@ pub struct Config {
     #[serde(default)]
     pub datacenter_travel: DataCenterTravelConfig,
 
-    /// Enable various validity checks for version and file hashes that emulate retail.
-    #[serde(default = "Config::default_enforce_validity_checks")]
-    pub enforce_validity_checks: bool,
-
     #[serde(default)]
     pub tweaks: TweaksConfig,
-}
-
-impl Default for Config {
-    fn default() -> Self {
-        Self {
-            filesystem: FilesystemConfig::default(),
-            admin: AdminConfig::default(),
-            frontier: FrontierConfig::default(),
-            lobby: LobbyConfig::default(),
-            login: LoginConfig::default(),
-            patch: PatchConfig::default(),
-            web: WebConfig::default(),
-            world: WorldConfig::default(),
-            launcher: LauncherConfig::default(),
-            save_data_bank: SaveDataBankConfig::default(),
-            datacenter_travel: DataCenterTravelConfig::default(),
-            enforce_validity_checks: Self::default_enforce_validity_checks(),
-            tweaks: TweaksConfig::default(),
-        }
-    }
-}
-
-impl Config {
-    fn default_enforce_validity_checks() -> bool {
-        true
-    }
 }
 
 pub fn get_config() -> Config {
