@@ -33,14 +33,6 @@ async fn verify_session(
 ) -> impl IntoResponse {
     let config = get_config();
 
-    // Always let clients through in proxy mode
-    if config.enable_sapphire_proxy {
-        let mut headers = HeaderMap::new();
-        headers.insert("X-Patch-Unique-Id", sid.parse().unwrap());
-
-        return (headers).into_response();
-    }
-
     if !check_valid_patch_client(&headers) {
         return StatusCode::INTERNAL_SERVER_ERROR.into_response();
     }
@@ -210,12 +202,6 @@ async fn verify_boot(
     Path((platform, channel, boot_version)): Path<(String, String, String)>,
 ) -> impl IntoResponse {
     let config = get_config();
-
-    // Always let clients through in proxy mode
-    if config.enable_sapphire_proxy {
-        let headers = HeaderMap::new();
-        return (headers).into_response();
-    }
 
     if !check_valid_patch_client(&headers) {
         tracing::warn!("Invalid patch client! {headers:#?}");

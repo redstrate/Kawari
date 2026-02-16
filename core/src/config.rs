@@ -676,15 +676,6 @@ pub struct Config {
     #[serde(default = "Config::default_enforce_validity_checks")]
     pub enforce_validity_checks: bool,
 
-    /// Enables running in front of Sapphire as a proxy. This only has an effect on some servers (e.g. login.)
-    /// This *DOES* affect whether how the server normally runs, so you can't use a Sapphire-proxy as a regular game server.
-    #[serde(default = "Config::default_enable_sapphire_proxy")]
-    pub enable_sapphire_proxy: bool,
-
-    /// The URL to the Sapphire API (e.g. 127.0.0.1:80)
-    #[serde(default)]
-    pub sapphire_api_server: String,
-
     #[serde(default)]
     pub tweaks: TweaksConfig,
 }
@@ -704,8 +695,6 @@ impl Default for Config {
             save_data_bank: SaveDataBankConfig::default(),
             datacenter_travel: DataCenterTravelConfig::default(),
             enforce_validity_checks: Self::default_enforce_validity_checks(),
-            enable_sapphire_proxy: Self::default_enable_sapphire_proxy(),
-            sapphire_api_server: String::default(),
             tweaks: TweaksConfig::default(),
         }
     }
@@ -714,10 +703,6 @@ impl Default for Config {
 impl Config {
     fn default_enforce_validity_checks() -> bool {
         true
-    }
-
-    fn default_enable_sapphire_proxy() -> bool {
-        false
     }
 }
 

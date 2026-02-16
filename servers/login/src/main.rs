@@ -82,69 +82,30 @@ async fn login_send(
     State(state): State<LoginServerState>,
     Form(input): Form<Input>,
 ) -> Html<String> {
-    let config = get_config();
-    if config.enable_sapphire_proxy {
-        let sapphire_login = SapphireLogin {
-            username: input.sqexid,
-            pass: input.password,
-        };
-        let body = serde_json::to_string(&sapphire_login).unwrap();
+    let mut database = state.database.lock();
+    let user = database.login_user(GAME_SERVICE, &input.sqexid, &input.password);
+    match user {
+        Ok(session_id) => {
+            let user_id = database.get_user_id(&session_id).unwrap();
+            let max_ex = database.get_user_max_expansion(user_id).unwrap();
 
-        let Ok(mut login_reply) = ureq::post(format!(
-            "http://{}/sapphire-api/lobby/login",
-            config.sapphire_api_server
-        ))
-        .send(body) else {
-            tracing::warn!("Failed to contact Sapphire API, is it running?");
-            return Html(
-                "window.external.user(\"login=auth,ng,err,Failed to contact Sapphire API\");"
-                    .to_string(),
-            );
-        };
-
-        let Ok(body) = login_reply.body_mut().read_to_string() else {
-            return Html(
-                "window.external.user(\"login=auth,ng,err,Failed to contact Sapphire API\");"
-                    .to_string(),
-            );
-        };
-
-        if body.is_empty() {
-            return Html("window.external.user(\"login=auth,ng,err,Login failed\");".to_string());
+            Html(format!(
+                "window.external.user(\"login=auth,ok,sid,{session_id},terms,1,region,2,etmadd,0,playable,1,ps3pkg,0,maxex,{max_ex},product,1\");"
+            ))
         }
-
-        let response: SapphireLoginResponse = serde_json::from_str(&body).unwrap();
-
-        Html(format!(
-            "window.external.user(\"login=auth,ok,sid,{},terms,1,region,2,etmadd,0,playable,1,ps3pkg,0,maxex,5,product,1\");",
-            response.sid,
-        ))
-    } else {
-        let mut database = state.database.lock();
-        let user = database.login_user(GAME_SERVICE, &input.sqexid, &input.password);
-        match user {
-            Ok(session_id) => {
-                let user_id = database.get_user_id(&session_id).unwrap();
-                let max_ex = database.get_user_max_expansion(user_id).unwrap();
-
-                Html(format!(
-                    "window.external.user(\"login=auth,ok,sid,{session_id},terms,1,region,2,etmadd,0,playable,1,ps3pkg,0,maxex,{max_ex},product,1\");"
-                ))
-            }
-            Err(err) => {
-                // TODO: see what the official error messages are
-                match err {
-                    LoginError::WrongUsername => Html(
-                        "window.external.user(\"login=auth,ng,err,Wrong Username\");".to_string(),
-                    ),
-                    LoginError::WrongPassword => Html(
-                        "window.external.user(\"login=auth,ng,err,Wrong Password\");".to_string(),
-                    ),
-                    LoginError::InternalError => Html(
-                        "window.external.user(\"login=auth,ng,err,Internal Server Error\");"
-                            .to_string(),
-                    ),
+        Err(err) => {
+            // TODO: see what the official error messages are
+            match err {
+                LoginError::WrongUsername => {
+                    Html("window.external.user(\"login=auth,ng,err,Wrong Username\");".to_string())
                 }
+                LoginError::WrongPassword => {
+                    Html("window.external.user(\"login=auth,ng,err,Wrong Password\");".to_string())
+                }
+                LoginError::InternalError => Html(
+                    "window.external.user(\"login=auth,ng,err,Internal Server Error\");"
+                        .to_string(),
+                ),
             }
         }
     }
@@ -185,37 +146,20 @@ async fn do_register(
         panic!("Expected password!");
     };
 
-    if config.enable_sapphire_proxy {
-        let sapphire_login = SapphireLogin {
-            username,
-            pass: password,
-        };
-        let body = serde_json::to_string(&sapphire_login).unwrap();
+    let mut database = state.database.lock();
+    database.add_user(&username, &password);
 
-        let _ = ureq::post(format!(
-            "http://{}/sapphire-api/lobby/createAccount",
-            config.sapphire_api_server
-        ))
-        .send(body);
+    // redirect to account management page
+    let sid = database
+        .login_user(ACCOUNT_MANAGEMENT_SERVICE, &username, &password)
+        .unwrap();
 
-        // TODO: don't redirect to account management page, we can't do that for sapphire
-        (jar, Redirect::to("/account/app/svc/manage"))
-    } else {
-        let mut database = state.database.lock();
-        database.add_user(&username, &password);
-
-        // redirect to account management page
-        let sid = database
-            .login_user(ACCOUNT_MANAGEMENT_SERVICE, &username, &password)
-            .unwrap();
-
-        let cookie = Cookie::build(("cis_sessid", sid))
-            .path("/")
-            .secure(false)
-            .expires(Expiration::Session)
-            .http_only(true);
-        (jar.add(cookie), Redirect::to("/account/app/svc/manage"))
-    }
+    let cookie = Cookie::build(("cis_sessid", sid))
+        .path("/")
+        .secure(false)
+        .expires(Expiration::Session)
+        .http_only(true);
+    (jar.add(cookie), Redirect::to("/account/app/svc/manage"))
 }
 
 #[derive(Deserialize)]
