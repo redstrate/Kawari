@@ -1104,7 +1104,7 @@ impl GameData {
             subrows
                 .1
                 .iter()
-                .map(|(_, row)| row.Unknown0().into_i32().copied().unwrap())
+                .map(|(_, row)| row.Unknown0().into_i32().copied().unwrap()) // FIXME: This will be renamed to LayoutId in the future.
                 .collect(),
         )
     }
