@@ -284,6 +284,9 @@ impl ZoneConnection {
             let director_id = HandlerId::new(director_type, content_id);
             tracing::info!("Initializing director {director_id}...");
 
+            self.director.id = director_id;
+            self.director.data = [0; 10];
+
             {
                 let mut game_data = self.gamedata.lock();
                 lua_content.duration = game_data
@@ -310,17 +313,7 @@ impl ZoneConnection {
             })
             .await;
 
-            self.send_ipc_self(ServerZoneIpcSegment::new(ServerZoneIpcData::DirectorVars {
-                handler_id: director_id,
-                flags: 0,
-                branch: 0,
-                data: [0; 10],
-                unk1: 0,
-                unk2: 0,
-                unk3: 0,
-                unk4: 0,
-            }))
-            .await;
+            self.send_director_vars().await;
 
             self.send_ipc_self(ServerZoneIpcSegment::new(ServerZoneIpcData::UnkDirector1 {
                 unk: [

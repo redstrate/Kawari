@@ -11,6 +11,9 @@ pub enum DirectorEvent {
     /// Seems to be in response to the Sync trigger. Arg seems to always be 1.
     #[brw(magic = 0x80000000u32)]
     SyncResponse,
+    /// Sets the BGM to what's specified in Arg. Index into the BGM Excel sheet.
+    #[brw(magic = 0x80000001u32)]
+    SetBGM,
     /// Sets the remaining time in the duty. `arg` is the number of seconds.
     #[brw(magic = 0x80000004u32)]
     SetDutyTimeRemaining,

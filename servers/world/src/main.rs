@@ -30,8 +30,8 @@ use kawari::packet::oodle::OodleNetwork;
 use kawari::packet::{ConnectionState, ConnectionType, SegmentData, parse_packet_header};
 use kawari_world::lua::{ExtraLuaState, LuaPlayer, load_init_script};
 use kawari_world::{
-    ChatConnection, ChatHandler, CustomIpcConnection, GameData, ObsfucationData, TeleportReason,
-    ZoneConnection,
+    ChatConnection, ChatHandler, CustomIpcConnection, DirectorData, GameData, ObsfucationData,
+    TeleportReason, ZoneConnection,
 };
 use kawari_world::{
     ClientHandle, ClientId, FromServer, MessageInfo, PlayerData, ServerHandle, ToServer,
@@ -158,6 +158,7 @@ async fn initial_setup(
                     content_settings: None,
                     current_instance_id: None,
                     glamour_information: None,
+                    director: DirectorData::default(),
                 };
 
                 // Handle setup before passing off control to the zone connection.

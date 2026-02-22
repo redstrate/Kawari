@@ -200,4 +200,7 @@ pub enum LuaTask {
         scene_flags: SceneFlags,
         params: Vec<u32>,
     },
+    SetDirectorData {
+        data: u8,
+    },
 }

@@ -736,6 +736,10 @@ impl ZoneConnection {
                     )
                     .await;
                 }
+                LuaTask::SetDirectorData { data } => {
+                    self.director.data[0] = *data;
+                    self.send_director_vars().await;
+                }
             }
         }
         player.queued_tasks.clear();
