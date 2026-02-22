@@ -666,8 +666,9 @@ impl LuaPlayer {
         self.queued_tasks.push(LuaTask::FinishCastingGlamour {});
     }
 
-    fn set_director_data(&mut self, data: u8) {
-        self.queued_tasks.push(LuaTask::SetDirectorData { data });
+    fn set_director_data(&mut self, index: u8, data: u8) {
+        self.queued_tasks
+            .push(LuaTask::SetDirectorData { index, data });
     }
 }
 
@@ -1080,8 +1081,8 @@ impl UserData for LuaPlayer {
             this.finish_casting_glamour();
             Ok(())
         });
-        methods.add_method_mut("set_director_data", |_, this, data: u8| {
-            this.set_director_data(data);
+        methods.add_method_mut("set_director_data", |_, this, (index, data): (u8, u8)| {
+            this.set_director_data(index, data);
             Ok(())
         });
     }

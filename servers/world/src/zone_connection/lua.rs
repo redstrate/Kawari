@@ -736,8 +736,8 @@ impl ZoneConnection {
                     )
                     .await;
                 }
-                LuaTask::SetDirectorData { data } => {
-                    self.director.data[0] = *data;
+                LuaTask::SetDirectorData { index, data } => {
+                    self.director.data[*index as usize] = *data;
                     self.send_director_vars().await;
                 }
             }

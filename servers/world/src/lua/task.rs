@@ -201,6 +201,7 @@ pub enum LuaTask {
         params: Vec<u32>,
     },
     SetDirectorData {
+        index: u8,
         data: u8,
     },
 }
