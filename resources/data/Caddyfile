@@ -1,87 +1,71 @@
 {
-  auto_https off
-  servers {
-    protocols h1
-  }
-  log default {
-    output stdout
-    format json
-    include http.log.access
-  }
+	auto_https off
+	servers {
+		protocols h1
+	}
+	log default {
+		output stdout
+		format json
+		include http.log.access
+	}
 }
 
 admin.ffxiv.localhost:80 {
-    reverse_proxy :5800
+	log
+	reverse_proxy :5800
 }
 
 ffxiv.localhost:80 {
-    reverse_proxy :5801
+	log
+	reverse_proxy :5801
 
-    handle /healthcheck {
-        header {
-            Cache-Control "max-age=0, no-cache, no-store, must-revalidate"
-            Pragma "no-cache"
-            Expires 0
-        }
-        reverse_proxy :5807
-    }
+	handle /healthcheck {
+		header {
+			Cache-Control "max-age=0, no-cache, no-store, must-revalidate"
+			Pragma "no-cache"
+			Expires 0
+		}
+		reverse_proxy :5807
+	}
 }
 
 launcher.ffxiv.localhost:80 {
-    reverse_proxy :5802
+	log
+	reverse_proxy :5802
 }
 
 config-dl.ffxiv.localhost:80 {
-    reverse_proxy :5803
+	log
+	reverse_proxy :5803
 }
 
 frontier.ffxiv.localhost:80 {
-    reverse_proxy :5857
-
-    # to match retail
-    header {
-        Server nginx
-        -Via
-        Connection keep-alive
-    }
+	log
+	reverse_proxy :5857
 }
 
 patch-bootver.ffxiv.localhost:80 {
-    log
-    reverse_proxy :6900
-
-    # to match retail
-    header {
-        Server nginx
-        -Via
-        Connection keep-alive
-        ETag f0ad4edf149fce33b842f1104bedfd22
-    }
+	log
+	reverse_proxy :6900
 }
 
 patch-gamever.ffxiv.localhost:80 {
-    log
-    reverse_proxy :6900
-
-    # to match retail
-    header {
-        Server nginx
-        -Via
-        Connection keep-alive
-        ETag f0ad4edf149fce33b842f1104bedfd22
-    }
+	log
+	reverse_proxy :6900
 }
 
 ffxiv-login.square.localhost:80 {
-    reverse_proxy :6700
+	log
+	reverse_proxy :6700
 }
 
 patch-dl.ffxiv.localhost:80 {
-    log
-    root * ./patches
-    file_server
+	log
+	root * ./patches
+	file_server
 }
 
 dctravel.ffxiv.localhost:80 {
-    reverse_proxy :5860
+	log
+	reverse_proxy :5860
 }
