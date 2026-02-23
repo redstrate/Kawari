@@ -1,7 +1,6 @@
 # General
 
 - [Contributing](contributing.md)
-- [Sapphire Proxy](sapphire.md)
 - [Scripting](scripting/intro.md)
   - [Commands](scripting/commands.md)
   - [Using Scripter](scripting/scripter.md)
