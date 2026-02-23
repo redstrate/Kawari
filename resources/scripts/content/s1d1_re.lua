@@ -1,3 +1,5 @@
+-- Sastasha
+
 EOBJ_BLOODY_MEMO_BLUE = 2000212
 EOBJ_BLOODY_MEMO_RED = 2001548
 EOBJ_BLOODY_MEMO_GREEN = 2001549
@@ -8,16 +10,10 @@ GIMMICK_RED_CORAL_FORMATION = 24
 GIMMICK_GREEN_CORAL_FORMATION = 25
 GIMMICK_INCONSPICUOUS_SWITCH = 26
 
--- Index to gimmick ID
-GIMMICK_CORAL_IDS = {
-    GIMMICK_BLUE_CORAL_FORMATION,
-    GIMMICK_RED_CORAL_FORMATION,
-    GIMMICK_GREEN_CORAL_FORMATION
-}
-
 SEQ0 = 0
 SEQ1 = 1
 
+-- Randomized coral color
 local coral_color
 
 function onSetup(director)
@@ -25,6 +21,13 @@ function onSetup(director)
 end
 
 function onGimmickAccessor(director, id)
+    -- Index to gimmick ID
+    GIMMICK_CORAL_IDS = {
+        GIMMICK_BLUE_CORAL_FORMATION,
+        GIMMICK_RED_CORAL_FORMATION,
+        GIMMICK_GREEN_CORAL_FORMATION
+    }
+
     local coral_gimmick_id = GIMMICK_CORAL_IDS[coral_color + 1]
 
     print("Expecting "..coral_gimmick_id.. " and got "..id)
