@@ -111,7 +111,16 @@ pub enum FromServer {
     // TODO: temporary
     Conditions(Conditions),
     /// To inform the connection of the zone they're loading into.
-    ChangeZone(u16, u16, u16, Position, f32, LuaZone, bool),
+    ChangeZone(
+        u16,
+        u16,
+        u16,
+        Position,
+        f32,
+        LuaZone,
+        bool,
+        Option<ServerZoneIpcSegment>,
+    ),
     /// The returned position and rotation from ToServer::MoveToPopRange.
     NewPosition(Position, f32, bool),
     /// We need to inform the recipent about the direct message they're receiving.
@@ -322,6 +331,8 @@ pub enum ToServer {
     SetNewStatValues(ObjectId, u8, u8, u32, u16),
     /// The client started a countdown in their party.
     StartCountdown(u64, ObjectId, u64, u64, String, ObjectId, u16),
+    /// The client yields from a GimmickAccessor.
+    GimmickAccessor(ObjectId, u32),
 }
 
 #[derive(Clone, Debug)]

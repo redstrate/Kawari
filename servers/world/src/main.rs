@@ -30,8 +30,8 @@ use kawari::packet::oodle::OodleNetwork;
 use kawari::packet::{ConnectionState, ConnectionType, SegmentData, parse_packet_header};
 use kawari_world::lua::{ExtraLuaState, LuaPlayer, load_init_script};
 use kawari_world::{
-    ChatConnection, ChatHandler, CustomIpcConnection, DirectorData, GameData, ObsfucationData,
-    TeleportReason, ZoneConnection,
+    ChatConnection, ChatHandler, CustomIpcConnection, GameData, ObsfucationData, TeleportReason,
+    ZoneConnection,
 };
 use kawari_world::{
     ClientHandle, ClientId, FromServer, MessageInfo, PlayerData, ServerHandle, ToServer,
@@ -158,7 +158,6 @@ async fn initial_setup(
                     content_settings: None,
                     current_instance_id: None,
                     glamour_information: None,
-                    director: DirectorData::default(),
                 };
 
                 // Handle setup before passing off control to the zone connection.
@@ -1520,6 +1519,16 @@ async fn process_packet(
                                 &handler.params[..handler.num_results as usize],
                                 lua_player,
                             );
+
+                            if handler.handler_id.handler_type() == HandlerType::GimmickAccessor {
+                                connection
+                                    .handle
+                                    .send(ToServer::GimmickAccessor(
+                                        connection.player_data.character.actor_id,
+                                        handler.handler_id.event_id(),
+                                    ))
+                                    .await;
+                            }
                         }
                         ClientZoneIpcData::EventYieldHandler8(handler) => {
                             tracing::info!(message = "Event yielded", handler_id = %handler.handler_id, error_code = handler.error_code, scene = handler.scene, params = ?&handler.params[..handler.num_results as usize]);
@@ -1529,6 +1538,16 @@ async fn process_packet(
                                 &handler.params[..handler.num_results as usize],
                                 lua_player,
                             );
+
+                            if handler.handler_id.handler_type() == HandlerType::GimmickAccessor {
+                                connection
+                                    .handle
+                                    .send(ToServer::GimmickAccessor(
+                                        connection.player_data.character.actor_id,
+                                        handler.handler_id.event_id(),
+                                    ))
+                                    .await;
+                            }
                         }
                         ClientZoneIpcData::Config(config) => {
                             // Update our own state so it's committed on log out
@@ -2253,8 +2272,8 @@ async fn process_server_msg(
             connection.conditions = conditions;
             connection.send_conditions().await;
         },
-        FromServer::ChangeZone(zone_id, content_finder_condition_id, weather_id, position, rotation, lua_zone, initial_login) => {
-            connection.handle_zone_change(zone_id, content_finder_condition_id, weather_id, position, rotation, initial_login, &lua_zone, &mut lua_player.content_data).await;
+        FromServer::ChangeZone(zone_id, content_finder_condition_id, weather_id, position, rotation, lua_zone, initial_login, director_vars) => {
+            connection.handle_zone_change(zone_id, content_finder_condition_id, weather_id, position, rotation, initial_login, director_vars, &lua_zone, &mut lua_player.content_data).await;
             lua_player.zone_data = lua_zone;
         },
         FromServer::NewPosition(position, rotation, fade_out) => connection.set_player_position(position, rotation, fade_out).await,

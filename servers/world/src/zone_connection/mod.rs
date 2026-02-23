@@ -109,13 +109,6 @@ pub struct ObsfucationData {
     pub seed3: u32,
 }
 
-// TODO: Move to the server so its shared between players
-#[derive(Default)]
-pub struct DirectorData {
-    pub id: HandlerId,
-    pub data: [u8; 10],
-}
-
 /// Represents a single connection between an instance of the client and the zone portion of the world server.
 pub struct ZoneConnection {
     pub config: WorldConfig,
@@ -171,7 +164,6 @@ pub struct ZoneConnection {
 
     /// Information about the current content.
     pub content_handler_id: HandlerId,
-    pub director: DirectorData,
 }
 
 impl ZoneConnection {
@@ -394,19 +386,5 @@ impl ZoneConnection {
 
             self.send_ipc_self(ipc).await;
         }
-    }
-
-    pub async fn send_director_vars(&mut self) {
-        self.send_ipc_self(ServerZoneIpcSegment::new(ServerZoneIpcData::DirectorVars {
-            handler_id: self.director.id,
-            flags: 0,
-            branch: 0,
-            data: self.director.data,
-            unk1: 0,
-            unk2: 0,
-            unk3: 0,
-            unk4: 0,
-        }))
-        .await;
     }
 }

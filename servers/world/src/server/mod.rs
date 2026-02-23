@@ -11,13 +11,15 @@ use tokio::sync::mpsc::Receiver;
 
 use crate::{
     GameData, Navmesh, SpawnAllocator,
-    lua::load_init_script,
+    lua::{initial_setup, load_init_script},
     server::{
         action::{execute_action, handle_action_messages, kill_actor, update_actor_hp_mp},
         actor::NetworkedActor,
         chat::handle_chat_messages,
         effect::{handle_effect_messages, remove_effect, send_effects_list},
-        instance::{Instance, NavmeshGenerationStep, QueuedTaskData},
+        instance::{
+            DirectorData, Instance, LuaDirectorTask, NavmeshGenerationStep, QueuedTaskData,
+        },
         network::{DestinationNetwork, NetworkState},
         social::{get_party_id_from_actor_id, handle_social_messages},
         zone::{MapGimmick, change_zone_warp_to_entrance, handle_zone_messages},
@@ -25,10 +27,11 @@ use crate::{
 };
 use kawari::{
     common::{
-        DEAD_DESPAWN_TIME, INVALID_OBJECT_ID, InvisibilityFlags, JumpState, MAX_SPAWNED_ACTORS,
-        MAX_SPAWNED_OBJECTS, MoveAnimationState, MoveAnimationType, ObjectId, ObjectTypeId,
-        ObjectTypeKind, Position,
+        DEAD_DESPAWN_TIME, HandlerId, HandlerType, INVALID_OBJECT_ID, InvisibilityFlags, JumpState,
+        MAX_SPAWNED_ACTORS, MAX_SPAWNED_OBJECTS, MoveAnimationState, MoveAnimationType, ObjectId,
+        ObjectTypeId, ObjectTypeKind, Position, TerritoryIntendedUse,
     },
+    config::get_config,
     ipc::zone::{
         ActorControlCategory, BattleNpcSubKind, ClientTriggerCommand, CommonSpawn, Condition,
         Conditions, NpcSpawn, ObjectKind, WaymarkPlacementMode, WaymarkPreset,
@@ -107,6 +110,63 @@ impl WorldServer {
     ) -> Option<&mut Instance> {
         let mut instance = Instance::new(zone_id, game_data);
         instance.content_finder_condition_id = content_finder_condition;
+
+        // TODO: This duplicates a lot of code with ZoneConnection::handle_zone_change :-(
+        let intended_use = TerritoryIntendedUse::from_repr(instance.zone.intended_use).unwrap();
+        let director_type = HandlerType::from_intended_use(intended_use).unwrap();
+        let content_id = game_data
+            .find_content_for_content_finder_id(content_finder_condition)
+            .unwrap();
+
+        let id = HandlerId::new(director_type, content_id);
+
+        // Setup Lua state for our director
+        let mut lua = Lua::new();
+        initial_setup(&mut lua);
+
+        // Find the script for this content
+        let content_short_name = game_data
+            .get_content_short_name(content_finder_condition)
+            .unwrap();
+        let config = get_config();
+        let file_name = format!(
+            "{}/content/{content_short_name}.lua",
+            &config.world.scripts_location
+        );
+
+        let result = std::fs::read(&file_name);
+        if let Err(err) = std::fs::read(&file_name) {
+            tracing::warn!(
+                "Failed to load {}: {:?} instance content won't be scripted!",
+                file_name,
+                err
+            );
+        } else {
+            let file = result.unwrap();
+
+            if let Err(err) = lua.load(file).set_name("@".to_string() + &file_name).exec() {
+                tracing::warn!(
+                    "Syntax error in {}: {:?} instance content won't be scripted!",
+                    file_name,
+                    err
+                );
+            } else {
+                let mut director = DirectorData {
+                    id,
+                    flag: 0,
+                    data: [0; 10],
+                    lua,
+                    tasks: Vec::new(),
+                };
+
+                // Call into the onSetup function before returning, as we need the flag to be initialized before any players change zones.
+                director.setup();
+
+                instance.director = Some(director);
+            }
+        }
+
+        // TODO: init director even if script isn't found
 
         // Ensure we have the entrance set correctly
         let entrance_id = game_data
@@ -642,6 +702,84 @@ fn server_logic_tick(data: &mut WorldServer, network: Arc<Mutex<NetworkState>>) 
                 }
             }
         }
+
+        // Perform any queued director tasks
+        let tasks = if let Some(director) = &instance.director {
+            director.tasks.clone()
+        } else {
+            Vec::new()
+        };
+
+        for task in &tasks {
+            match task {
+                LuaDirectorTask::HideEObj { base_id } => {
+                    let Some(actor_id) = instance.find_object_by_eobj_id(*base_id) else {
+                        tracing::warn!("Failed to find eobj for HideEObj, it won't despawn!");
+                        continue;
+                    };
+
+                    let flags =
+                        InvisibilityFlags::UNK1 | InvisibilityFlags::UNK2 | InvisibilityFlags::UNK3;
+
+                    let msg = FromServer::ActorControl(
+                        actor_id,
+                        ActorControlCategory::SetInvisibilityFlags { flags },
+                    );
+
+                    let mut network = network.lock();
+                    for id in instance.actors.keys() {
+                        let Some((handle, _)) = network.get_by_actor_mut(*id) else {
+                            continue;
+                        };
+
+                        let _ = handle.send(msg.clone()); // TODO: use result
+                    }
+
+                    // Update invisibility flags for next spawn
+                    if let Some(NetworkedActor::Object { object }) =
+                        instance.find_actor_mut(actor_id)
+                    {
+                        object.visibility = flags;
+                        object.unselectable = true;
+                    }
+                }
+                LuaDirectorTask::ShowEObj { base_id } => {
+                    let Some(actor_id) = instance.find_object_by_eobj_id(*base_id) else {
+                        tracing::warn!("Failed to find eobj for ShowEObj, it won't despawn!");
+                        continue;
+                    };
+
+                    // TODO: doesn't update live yet for some reason'
+                    let flags = InvisibilityFlags::VISIBLE;
+
+                    let msg = FromServer::ActorControl(
+                        actor_id,
+                        ActorControlCategory::SetInvisibilityFlags { flags },
+                    );
+
+                    let mut network = network.lock();
+                    for id in instance.actors.keys() {
+                        let Some((handle, _)) = network.get_by_actor_mut(*id) else {
+                            continue;
+                        };
+
+                        let _ = handle.send(msg.clone()); // TODO: use result
+                    }
+
+                    // Update invisibility flags for next spawn
+                    if let Some(NetworkedActor::Object { object }) =
+                        instance.find_actor_mut(actor_id)
+                    {
+                        object.visibility = flags;
+                        object.unselectable = false;
+                    }
+                }
+            }
+        }
+
+        if let Some(director) = &mut instance.director {
+            director.tasks.clear();
+        }
     }
 
     // Ensure the rested EXP counter only happens every 10 seconds.
@@ -854,6 +992,12 @@ pub async fn server_main_loop(
                 if let Some(target_instance) = data.find_instance_mut(zone_id) {
                     target_instance.insert_empty_actor(from_actor_id);
 
+                    // TODO: de-duplicate with other ChangeZone call-sites
+                    let director_vars = target_instance
+                        .director
+                        .as_ref()
+                        .map(|director| director.build_var_segment());
+
                     // tell the client to load into the zone
                     let msg = FromServer::ChangeZone(
                         zone_id,
@@ -863,6 +1007,7 @@ pub async fn server_main_loop(
                         rotation,
                         target_instance.zone.to_lua_zone(target_instance.weather_id),
                         true, // since this is initial login
+                        director_vars,
                     );
 
                     network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
@@ -1491,6 +1636,11 @@ pub async fn server_main_loop(
                 let target_instance = data.find_instance_mut(old_zone_id).unwrap();
                 target_instance.insert_empty_actor(from_actor_id);
 
+                let director_vars = target_instance
+                    .director
+                    .as_ref()
+                    .map(|director| director.build_var_segment());
+
                 // tell the client to load into the zone
                 let msg = FromServer::ChangeZone(
                     old_zone_id,
@@ -1500,6 +1650,7 @@ pub async fn server_main_loop(
                     old_rotation,
                     target_instance.zone.to_lua_zone(target_instance.weather_id),
                     false,
+                    director_vars,
                 );
                 network.send_to(from_client_id, msg, DestinationNetwork::ZoneClients);
             }
@@ -1605,6 +1756,19 @@ pub async fn server_main_loop(
 
                 // The only way the game can reliably set these stats is via StatusEffectList (REALLY)
                 send_effects_list(network.clone(), data.clone(), from_actor_id);
+            }
+            ToServer::GimmickAccessor(from_actor_id, id) => {
+                let mut data = data.lock();
+                let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
+                    tracing::warn!("Somehow failed to find an instance for actor?");
+                    continue;
+                };
+
+                if let Some(director) = &mut instance.director {
+                    director.gimmick_accessor(id);
+                } else {
+                    tracing::warn!("Expected a director when recieving a GimmickAccessor?");
+                }
             }
             ToServer::FatalError(err) => return Err(err),
             _ => {}

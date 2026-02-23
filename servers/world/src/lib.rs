@@ -14,8 +14,7 @@ use diesel::sqlite::Sqlite;
 use kawari::constants::CLASSJOB_ARRAY_SIZE;
 use serde::{Deserialize, Serialize};
 pub use zone_connection::{
-    DirectorData, ObsfucationData, PlayerData, TeleportReason, ZoneConnection,
-    spawn_allocator::SpawnAllocator,
+    ObsfucationData, PlayerData, TeleportReason, ZoneConnection, spawn_allocator::SpawnAllocator,
 };
 
 mod database;

@@ -590,8 +590,8 @@ pub enum ServerZoneIpcData {
     },
     DirectorVars {
         handler_id: HandlerId,
-        /// Only known one is 1 for explorer mode.
-        flags: u8,
+        /// Controls the coral color in Sastasha, and probably other things.
+        flag: u8,
         branch: u8,
         data: [u8; 10],
         unk1: u16,

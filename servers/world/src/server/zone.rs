@@ -668,6 +668,11 @@ fn do_change_zone(
     state.actor_allocator.clear();
     state.object_allocator.clear();
 
+    let director_vars = target_instance
+        .director
+        .as_ref()
+        .map(|director| director.build_var_segment());
+
     // now that we have all of the data needed, inform the connection of where they need to be
     let msg = FromServer::ChangeZone(
         destination_zone_id,
@@ -677,6 +682,7 @@ fn do_change_zone(
         exit_rotation.unwrap_or_default(),
         target_instance.zone.to_lua_zone(target_instance.weather_id),
         false,
+        director_vars,
     );
     network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
 }
@@ -728,6 +734,11 @@ pub fn handle_zone_messages(
             let target_instance = data.find_instance_mut(*zone_id).unwrap();
             target_instance.insert_empty_actor(*actor_id);
 
+            let director_vars = target_instance
+                .director
+                .as_ref()
+                .map(|director| director.build_var_segment());
+
             // tell the client to load into the zone
             let msg = FromServer::ChangeZone(
                 *zone_id,
@@ -737,6 +748,7 @@ pub fn handle_zone_messages(
                 new_rotation.unwrap_or_default(),
                 target_instance.zone.to_lua_zone(target_instance.weather_id),
                 false,
+                director_vars,
             );
             network.send_to(*from_id, msg, DestinationNetwork::ZoneClients);
         }

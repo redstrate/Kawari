@@ -11,10 +11,14 @@ use crate::{
     zone_connection::TeleportQuery,
 };
 use kawari::{
-    common::{DistanceRange, ENTRANCE_CIRCLE_IDS, ObjectId},
+    common::{DistanceRange, ENTRANCE_CIRCLE_IDS, HandlerId, ObjectId},
     config::get_config,
-    ipc::zone::{ActionRequest, Conditions, NpcSpawn, ObjectSpawn, PlayerSpawn},
+    ipc::zone::{
+        ActionRequest, Conditions, NpcSpawn, ObjectSpawn, PlayerSpawn, ServerZoneIpcData,
+        ServerZoneIpcSegment,
+    },
 };
+use mlua::{Function, Lua, UserData, UserDataMethods};
 use parking_lot::Mutex;
 
 #[derive(Default, Debug)]
@@ -54,6 +58,104 @@ pub struct QueuedTask {
     pub data: QueuedTaskData,
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum LuaDirectorTask {
+    HideEObj { base_id: u32 },
+    ShowEObj { base_id: u32 },
+}
+
+// TODO: Maybe collapse into DirectorData?
+#[derive(Default, Debug)]
+pub struct LuaDirector {
+    pub tasks: Vec<LuaDirectorTask>,
+}
+
+impl UserData for LuaDirector {
+    fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
+        methods.add_method_mut("hide_eobj", |_, this, base_id: u32| {
+            this.tasks.push(LuaDirectorTask::HideEObj { base_id });
+            Ok(())
+        });
+        methods.add_method_mut("show_eobj", |_, this, base_id: u32| {
+            this.tasks.push(LuaDirectorTask::ShowEObj { base_id });
+            Ok(())
+        });
+    }
+}
+
+#[derive(Debug)]
+pub struct DirectorData {
+    pub id: HandlerId,
+    pub flag: u8,
+    pub data: [u8; 10],
+    /// Lua state for this director.
+    pub lua: Lua,
+    pub tasks: Vec<LuaDirectorTask>,
+}
+
+impl DirectorData {
+    pub fn setup(&mut self) {
+        let mut run_script = || {
+            let mut lua_director = self.create_lua_director();
+            let err = self.lua.scope(|scope| {
+                let data = scope.create_userdata_ref_mut(&mut lua_director)?;
+
+                let func: Function = self.lua.globals().get("onSetup")?;
+
+                func.call::<()>(data)?;
+
+                Ok(())
+            });
+            self.apply_lua_director(lua_director);
+            err
+        };
+        if let Err(err) = run_script() {
+            tracing::warn!("Syntax error during onSetup: {err:?}");
+        }
+    }
+
+    pub fn gimmick_accessor(&mut self, id: u32) {
+        let mut run_script = || {
+            let mut lua_director = self.create_lua_director();
+            let err = self.lua.scope(|scope| {
+                let data = scope.create_userdata_ref_mut(&mut lua_director)?;
+
+                let func: Function = self.lua.globals().get("onGimmickAccessor")?;
+
+                func.call::<()>((data, id))?;
+
+                Ok(())
+            });
+            self.apply_lua_director(lua_director);
+            err
+        };
+        if let Err(err) = run_script() {
+            tracing::warn!("Syntax error during onGimmickAccessor: {err:?}");
+        }
+    }
+
+    pub fn build_var_segment(&self) -> ServerZoneIpcSegment {
+        ServerZoneIpcSegment::new(ServerZoneIpcData::DirectorVars {
+            handler_id: self.id,
+            flag: self.flag,
+            branch: 0,
+            data: self.data,
+            unk1: 0,
+            unk2: 0,
+            unk3: 0,
+            unk4: 0,
+        })
+    }
+
+    fn create_lua_director(&self) -> LuaDirector {
+        LuaDirector { tasks: Vec::new() }
+    }
+
+    fn apply_lua_director(&mut self, lua: LuaDirector) {
+        self.tasks.extend_from_slice(&lua.tasks);
+    }
+}
+
 // TODO: structure is temporary, of course
 #[derive(Default, Debug)]
 pub struct Instance {
@@ -66,6 +168,8 @@ pub struct Instance {
     pub generate_navmesh: NavmeshGenerationStep,
     /// List of tasks that has to be executed an arbitrary point in the future.
     pub queued_task: Vec<QueuedTask>,
+    /// Director for this instance.
+    pub director: Option<DirectorData>,
 }
 
 impl Instance {
