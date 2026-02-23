@@ -127,6 +127,10 @@
   Name: Korea New Year (2020)
 - Id: 100
   Name: Valentione's Day (2020)
+- Id: 101
+  Name: Ocean Fishing (?)
+- Id: 102
+  Name: Ocean Fishing (?)
 - Id: 103
   Name: Little Ladies' Day (2020)
 - Id: 104
@@ -255,3 +259,13 @@
   Name: Cosmic Exploration (Phaenna)
 - Id: 169
   Name: Little Ladies Day (2026)
+- Id: 170
+  Name: Cosmic Exploration (Oizys)
+- Id: 172
+  Name: Hatching Tide (2026)
+- Id: 173
+  Name: Make It Rain (2026)
+- Id: 174
+  Name: Moonfire Faire (2026)
+- Id: 175
+  Name: The Rising (2026)
