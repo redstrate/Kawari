@@ -41,3 +41,15 @@ pub struct DistRetainerInfo {
     #[brw(pad_size_to = (9 * RetainerInfo::SIZE))]
     pub characters: Vec<RetainerInfo>,
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::common::ensure_size;
+
+    use super::*;
+
+    #[test]
+    fn retainer_info_size() {
+        ensure_size::<RetainerInfo, { RetainerInfo::SIZE }>();
+    }
+}

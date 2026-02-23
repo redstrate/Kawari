@@ -32,7 +32,8 @@ pub struct NavmeshTile {
 }
 
 /// Represents a navmesh for a zone.
-/// NOTE: We reuse the .nvm file extension used by the retail server. These have no relations to ours.
+///
+/// We reuse the .nvm file extension used by the retail server but these have no relations to ours.
 #[binrw]
 #[brw(little)]
 #[derive(Default, Debug, Clone)]
@@ -131,6 +132,7 @@ impl Navmesh {
         self.tiles.clear();
     }
 
+    /// Calculates a path from `start_pos` to `end_pos`.
     pub fn calculate_path(&self, start_pos: [f32; 3], end_pos: [f32; 3]) -> Vec<[f32; 3]> {
         unsafe {
             let mut filter = dtQueryFilter {
@@ -211,8 +213,8 @@ impl Navmesh {
         }
     }
 
-    // TODO: There might be more checks desired here, but this suffices for now
     pub fn is_available(&self) -> bool {
+        // NOTE: There might be more checks desired here, but this suffices for now
         !self.navmesh.is_null()
     }
 }

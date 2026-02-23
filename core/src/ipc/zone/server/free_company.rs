@@ -26,3 +26,15 @@ pub struct FcHierarchy {
 impl FcHierarchy {
     pub const SIZE: usize = 88;
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::common::ensure_size;
+
+    use super::*;
+
+    #[test]
+    fn fc_hierarchy_size() {
+        ensure_size::<FcHierarchy, { FcHierarchy::SIZE }>();
+    }
+}

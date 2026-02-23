@@ -7,12 +7,17 @@ use crate::packet::{PacketHeader, PacketSegment};
 
 use super::{ReadWriteIpcSegment, SegmentData, parsing::ConnectionState};
 
+/// Various types of compression available for packets.
 #[binrw]
 #[brw(repr = u8)]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Default)]
 pub enum CompressionType {
+    /// The packet data is uncompressed.
+    #[default]
     Uncompressed = 0,
+    /// The packet data is compressed with ZLib.
     ZLib = 1,
+    /// The packet data is compressed with Oodle.
     Oodle = 2,
 }
 

@@ -7,14 +7,13 @@ version.workspace = true
 workspace = true
 
 [features]
-# Default featureset
+# Default featureset.
 default = ["server"]
 
-# Oodle compression, not needed unless you are connecting to the retail client.
-# This is especially useful for downstream projects, so they don't have to install Oodle but still want to reuse our packet parsing
+# Oodle compression, not needed unless you are connecting to a retail client.
 oodle = []
 
-# Used while compiling with the server binaries
+# Used while compiling with the server binaries.
 server = ["dep:tokio", "dep:mlua", "dep:diesel"]
 
 [build-dependencies]
@@ -36,5 +35,5 @@ tokio = { workspace = true, optional = true }
 mlua = { workspace = true, optional = true }
 diesel = { workspace = true, optional = true }
 
-# Used for simplifying some of the heavy opcode things
+# Used for managing our insane amount of opcodes.
 kawari-core-macro = { path = "macro" }

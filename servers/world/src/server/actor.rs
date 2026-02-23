@@ -2,7 +2,7 @@ use std::collections::VecDeque;
 
 use crate::{StatusEffects, zone_connection::TeleportQuery};
 use kawari::{
-    common::{DistanceRange, ObjectId, Position, get_distance_range},
+    common::{DistanceRange, ObjectId, Position},
     ipc::zone::{CommonSpawn, Conditions, NpcSpawn, ObjectSpawn, PlayerSpawn},
 };
 
@@ -83,7 +83,7 @@ impl NetworkedActor {
             };
 
             let distance = Position::distance(self_pos, other_pos);
-            distance < get_distance_range(*distance_range)
+            distance < distance_range.distance()
         } else {
             false
         }

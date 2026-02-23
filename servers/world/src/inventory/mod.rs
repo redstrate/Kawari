@@ -309,22 +309,7 @@ impl Inventory {
     }
 
     pub fn add_in_next_free_armory_slot(&self, equip_index: u16) -> Option<ItemDestinationInfo> {
-        let container_type = match equip_index {
-            0 => ContainerType::ArmoryWeapon,
-            1 => ContainerType::ArmoryOffWeapon,
-            2 => ContainerType::ArmoryHead,
-            3 => ContainerType::ArmoryBody,
-            4 => ContainerType::ArmoryHand,
-            6 => ContainerType::ArmoryLeg,
-            7 => ContainerType::ArmoryFoot,
-            8 => ContainerType::ArmoryEarring,
-            9 => ContainerType::ArmoryNeck,
-            10 => ContainerType::ArmoryWrist,
-            11 => ContainerType::ArmoryRing,
-            12 => ContainerType::ArmoryRing,
-            13 => ContainerType::ArmorySoulCrystal,
-            _ => unimplemented!(),
-        };
+        let container_type = ContainerType::from_equip_slot(equip_index as u8);
 
         let container = self.get_container(container_type);
         for i in 0..container.max_slots() {

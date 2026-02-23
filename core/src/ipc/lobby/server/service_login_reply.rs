@@ -68,7 +68,7 @@ pub struct CharacterDetails {
 }
 
 impl CharacterDetails {
-    pub const SIZE: usize = 1196;
+    pub const SIZE: usize = 1184;
 }
 
 #[binrw]
@@ -98,7 +98,20 @@ pub struct ServiceLoginReply {
     /// Seems to control which races are available.
     #[brw(pad_after = 12)]
     pub entitled_expansion: u32,
+    #[brw(pad_after = 24)]
     #[br(count = 2)]
     #[brw(pad_size_to = (CharacterDetails::SIZE * 2))]
     pub characters: Vec<CharacterDetails>,
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::common::ensure_size;
+
+    use super::*;
+
+    #[test]
+    fn character_details_size() {
+        ensure_size::<CharacterDetails, { CharacterDetails::SIZE }>();
+    }
 }

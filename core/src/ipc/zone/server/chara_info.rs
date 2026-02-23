@@ -20,3 +20,15 @@ pub struct CharaInfoFromContentIdsData {
 impl CharaInfoFromContentIdsData {
     pub const SIZE: usize = 56;
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::common::ensure_size;
+
+    use super::*;
+
+    #[test]
+    fn chara_info_size() {
+        ensure_size::<CharaInfoFromContentIdsData, { CharaInfoFromContentIdsData::SIZE }>();
+    }
+}

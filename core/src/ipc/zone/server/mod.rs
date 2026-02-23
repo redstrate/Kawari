@@ -539,7 +539,7 @@ pub enum ServerZoneIpcData {
         // TODO: index into what?
         #[brw(pad_after = 3)]
         index: u8,
-        #[brw(pad_after = 8)] // seems empty
+        #[brw(pad_after = 4)] // seems empty
         quest: ActiveQuest,
     },
     FinishQuest {
@@ -830,21 +830,13 @@ pub enum ServerZoneIpcData {
     },
 }
 
-impl Default for ServerZoneIpcData {
-    fn default() -> Self {
-        Self::Unknown {
-            unk: Vec::default(),
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use crate::common::test_opcodes;
 
     use super::*;
 
-    /// Ensure that the IPC data size as reported matches up with what we write
+    // Ensure that the IPC data size as reported matches up with what we write
     #[test]
     fn server_zone_ipc_sizes() {
         test_opcodes::<ServerZoneIpcSegment>();

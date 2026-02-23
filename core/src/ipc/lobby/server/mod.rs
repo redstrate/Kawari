@@ -75,21 +75,13 @@ pub enum ServerLobbyIpcData {
     },
 }
 
-impl Default for ServerLobbyIpcData {
-    fn default() -> Self {
-        Self::Unknown {
-            unk: Vec::default(),
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use crate::common::test_opcodes;
 
     use super::*;
 
-    /// Ensure that the IPC data size as reported matches up with what we write
+    // Ensure that the IPC data size as reported matches up with what we write
     #[test]
     fn server_lobby_ipc_sizes() {
         test_opcodes::<ServerLobbyIpcSegment>();

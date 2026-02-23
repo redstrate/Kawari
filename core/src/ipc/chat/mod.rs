@@ -9,5 +9,5 @@ pub use server::*;
 mod client;
 pub use client::*;
 
-mod chatchannel_common;
-pub use chatchannel_common::*;
+mod common;
+pub use common::*;

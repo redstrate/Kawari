@@ -13,7 +13,7 @@ use crate::{
         AetherCurrent, Aetheryte, Character, ClassJob, Companion, Mentor, Quest, SearchInfo,
         Volatile,
     },
-    lua::LuaTask,
+    lua::{KawariLua, LuaTask},
 };
 use kawari::{
     common::{ClientLanguage, HandlerId, ObjectId, Position, timestamp_secs},
@@ -123,7 +123,7 @@ pub struct ZoneConnection {
     pub handle: ServerHandle,
 
     pub database: Arc<Mutex<WorldDatabase>>,
-    pub lua: Arc<Mutex<mlua::Lua>>,
+    pub lua: Arc<Mutex<KawariLua>>,
     pub gamedata: Arc<Mutex<GameData>>,
 
     pub exit_position: Option<Position>,

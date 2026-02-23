@@ -1,3 +1,5 @@
+#[cfg(test)]
+use binrw::BinWrite;
 use serde::{Deserialize, Serialize};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
@@ -124,7 +126,7 @@ pub const GAME_SERVICE: &str = "Kawari: Game Client";
 /// Timeout in seconds before clients are disconnected because of idle network activity.
 pub const NETWORK_TIMEOUT: Duration = Duration::from_secs(5);
 
-/// Name of the World used in limited scenarios.
+/// Name of the World used in certain scenarios.
 pub const WORLD_NAME: &str = "Kawari";
 
 #[derive(Serialize, Deserialize)]
@@ -175,6 +177,21 @@ pub fn test_opcodes<Segment: crate::packet::ReadWriteIpcSegment>() {
             "{opcode_name} did not match size!"
         );
     }
+}
+
+/// Helper to ensure that type `T` is written to `EXPECTED_SIZE`.
+#[cfg(test)]
+pub fn ensure_size<T: BinWrite + Default, const EXPECTED_SIZE: usize>()
+where
+    for<'a> T: BinWrite<Args<'a> = ()> + 'a + Default,
+{
+    use std::io::Cursor;
+
+    let mut cursor = Cursor::new(Vec::new());
+    let instance = T::default();
+    instance.write_ne(&mut cursor).expect("Failed to write!");
+
+    assert_eq!(cursor.position() as usize, EXPECTED_SIZE);
 }
 
 #[cfg(test)]

@@ -185,7 +185,7 @@ pub fn handle_social_messages(
     data: Arc<Mutex<WorldServer>>,
     network: Arc<Mutex<NetworkState>>,
     msg: &ToServer,
-) {
+) -> bool {
     match msg {
         ToServer::InvitePlayerToParty(from_actor_id, content_id, character_name) => {
             // TODO: Return an error when the target player's already in a party or offline somehow
@@ -197,7 +197,7 @@ pub fn handle_social_messages(
                 tracing::error!(
                     "ToServer::InvitePlayerToParty: Unable to find the sender! What happened?"
                 );
-                return;
+                return true;
             };
 
             let mut sender_name = "".to_string();
@@ -275,6 +275,8 @@ pub fn handle_social_messages(
                 let msg = FromServer::CharacterAlreadyInParty();
                 network.send_to_by_actor_id(*from_actor_id, msg, DestinationNetwork::ZoneClients);
             }
+
+            true
         }
         ToServer::InvitationResponse(
             from_id,
@@ -337,6 +339,8 @@ pub fn handle_social_messages(
                 }
                 network.to_remove.append(&mut to_remove);
             }
+
+            true
         }
         ToServer::RequestSocialList(from_id, from_actor_id, from_party_id, request) => {
             let mut network = network.lock();
@@ -406,7 +410,7 @@ pub fn handle_social_messages(
                         }
                     } else {
                         let Some(instance) = data.find_actor_instance(*from_actor_id) else {
-                            return;
+                            return true;
                         };
 
                         for (id, actor) in &instance.actors {
@@ -443,6 +447,8 @@ pub fn handle_social_messages(
 
             let msg = FromServer::SocialListResponse(request.request_type, request.count, entries);
             network.send_to(*from_id, msg, DestinationNetwork::ZoneClients);
+
+            true
         }
         ToServer::AddPartyMember(party_id, leader_actor_id, new_member_content_id) => {
             let mut network = network.lock();
@@ -588,6 +594,8 @@ pub fn handle_social_messages(
             } else {
                 tracing::error!("AddPartyMember: Party id wasn't in the hashmap! What happened?");
             }
+
+            true
         }
         ToServer::PartyMemberChangedAreas(
             party_id,
@@ -614,6 +622,8 @@ pub fn handle_social_messages(
 
             // Finally, tell everyone in the party about the update.
             network.send_to_party(*party_id, None, msg, DestinationNetwork::ZoneClients);
+
+            true
         }
         ToServer::PartyChangeLeader(
             party_id,
@@ -634,7 +644,7 @@ pub fn handle_social_messages(
             {
                 let party = &mut network.parties.get_mut(party_id).unwrap();
                 let Some(member) = party.get_member_by_content_id(*target_content_id) else {
-                    return;
+                    return true;
                 };
                 party.leader_id = member.actor_id;
                 target_account_id = member.account_id;
@@ -659,6 +669,8 @@ pub fn handle_social_messages(
 
             // Finally, tell everyone in the party about the update.
             network.send_to_party(*party_id, None, msg, DestinationNetwork::ZoneClients);
+
+            true
         }
         ToServer::PartyMemberLeft(
             party_id,
@@ -677,7 +689,7 @@ pub fn handle_social_messages(
             let member_count;
             {
                 let Some(party) = network.parties.get_mut(party_id) else {
-                    return;
+                    return true;
                 };
                 chatchannel_id = party.chatchannel_id;
 
@@ -762,6 +774,8 @@ pub fn handle_social_messages(
                 );
                 network.parties.remove(party_id);
             }
+
+            true
         }
         ToServer::PartyDisband(party_id, execute_account_id, execute_content_id, execute_name) => {
             let mut network = network.lock();
@@ -790,6 +804,8 @@ pub fn handle_social_messages(
 
             // We don't need to keep track of this party anymore.
             network.parties.remove(party_id);
+
+            true
         }
         ToServer::PartyMemberKick(
             party_id,
@@ -804,7 +820,7 @@ pub fn handle_social_messages(
             let party = network.parties.get_mut(party_id).unwrap();
 
             let Some(member) = party.get_member_by_content_id(*target_content_id) else {
-                return;
+                return true;
             };
             party.remove_member(member.actor_id);
 
@@ -872,6 +888,8 @@ pub fn handle_social_messages(
                 );
                 network.parties.remove(party_id);
             }
+
+            true
         }
         ToServer::PartyMemberOffline(
             party_id,
@@ -888,7 +906,7 @@ pub fn handle_social_messages(
                     "PartyMemberOffline: We were given an invalid party id {}. What happened?",
                     party_id
                 );
-                return;
+                return true;
             }
 
             let party = &mut network.parties.get_mut(party_id).unwrap();
@@ -922,6 +940,8 @@ pub fn handle_social_messages(
                 // Retail keeps it around for ~2 hours or so if everyone is offline, but there's no point doing that.
                 network.parties.remove(party_id);
             }
+
+            true
         }
         ToServer::PartyMemberReturned(execute_actor_id) => {
             let mut network = network.lock();
@@ -955,8 +975,9 @@ pub fn handle_social_messages(
             );
 
             network.send_to_party(party_id, None, msg, DestinationNetwork::ZoneClients);
-        }
 
+            true
+        }
         ToServer::ShareStrategyBoard(
             from_actor_id,
             from_content_id,
@@ -979,8 +1000,9 @@ pub fn handle_social_messages(
                     DestinationNetwork::ZoneClients,
                 );
             }
-        }
 
+            true
+        }
         ToServer::StrategyBoardReceived(party_id, from_content_id, dest_content_id) => {
             let mut network = network.lock();
 
@@ -1001,8 +1023,9 @@ pub fn handle_social_messages(
 
                 network.send_to_by_actor_id(dest_actor_id, msg, DestinationNetwork::ZoneClients);
             }
-        }
 
+            true
+        }
         ToServer::StrategyBoardRealtimeUpdate(
             from_actor_id,
             from_content_id,
@@ -1027,8 +1050,9 @@ pub fn handle_social_messages(
                 msg,
                 DestinationNetwork::ZoneClients,
             );
-        }
 
+            true
+        }
         ToServer::StrategyBoardRealtimeFinished(party_id) => {
             let mut network = network.lock();
             let msg = FromServer::StrategyBoardRealtimeFinished();
@@ -1039,6 +1063,8 @@ pub fn handle_social_messages(
                 .parties
                 .entry(*party_id)
                 .and_modify(|v| v.stratboard_realtime_host = None);
+
+            true
         }
         ToServer::ApplyWaymarkPreset(from_id, party_id, waymark_preset) => {
             let mut network = network.lock();
@@ -1049,6 +1075,8 @@ pub fn handle_social_messages(
             } else {
                 network.send_to_by_actor_id(*from_id, msg, DestinationNetwork::ZoneClients);
             }
+
+            true
         }
         ToServer::StartCountdown(
             party_id,
@@ -1073,7 +1101,9 @@ pub fn handle_social_messages(
             } else {
                 network.send_to_by_actor_id(*from_id, msg, DestinationNetwork::ZoneClients);
             }
+
+            true
         }
-        _ => {}
+        _ => false,
     }
 }

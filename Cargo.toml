@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    # Core library
     "core",
 
     # Servers
@@ -62,7 +63,7 @@ tokio = { version = "1.49", features = ["macros", "rt", "rt-multi-thread", "io-u
 fastrand = { version = "2.3", features = ["std"], default-features = false }
 
 # HTML templates used in the web servers
-minijinja = { version = "2.15", features = ["serde", "loader", "multi_template"], default-features = false }
+minijinja = { version = "2.16", features = ["serde", "loader", "multi_template"], default-features = false }
 
 # For server-side scripting
 mlua = { version = "0.11", features = ["lua54", "vendored", "send", "async", "serialize", "userdata-wrappers"], default-features = false }
@@ -86,11 +87,11 @@ recastnavigation-sys = { git = "https://github.com/redstrate/recastnavigation-rs
 parking_lot = { version = "0.12", default-features = false }
 
 # For c-style bitflags
-bitflags = { version = "2.10", default-features = false }
+bitflags = { version = "2.11", default-features = false }
 
 # Doing cool stuff with enums Rust doesn't have built-in
-strum = { version = "0.27", default-features = false }
-strum_macros = { version = "0.27", default-features = false }
+strum = { version = "0.28", default-features = false }
+strum_macros = { version = "0.28", default-features = false }
 
 # Serialization of packets and other data
 binrw = { version = "0.15", features = ["std"], default-features = false }

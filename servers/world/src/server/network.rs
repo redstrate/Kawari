@@ -3,7 +3,12 @@ use std::collections::HashMap;
 use crate::{
     ClientHandle, ClientId, FromServer,
     common::SpawnKind,
-    server::{ClientState, WorldServer, actor::NetworkedActor, instance::Instance, social::Party},
+    server::{
+        ClientState, WorldServer,
+        actor::NetworkedActor,
+        instance::Instance,
+        social::{Party, get_party_id_from_actor_id},
+    },
 };
 use kawari::{
     common::{INVALID_OBJECT_ID, ObjectId},
@@ -26,7 +31,7 @@ pub enum DestinationNetwork {
 }
 
 impl NetworkState {
-    // TODO: replace following function with this?
+    /// Creates a `FromServer` message that will spawn `actor`.
     pub fn spawn_existing_actor_message(
         client_state: &mut ClientState,
         object_id: ObjectId,
@@ -89,6 +94,7 @@ impl NetworkState {
         }
     }
 
+    /// Sends the `message` to all clients at `destination`, except for those specified in `id_to_skip`.
     pub fn send_to_all(
         &mut self,
         id_to_skip: Option<ClientId>,
@@ -118,7 +124,7 @@ impl NetworkState {
         }
     }
 
-    /// Sends a message to every client in range of `actor_id` but not including it.
+    /// Sends the `message` to every client in range of `actor_id` but *not* including it.
     pub fn send_in_range(
         &mut self,
         actor_id: ObjectId,
@@ -163,6 +169,7 @@ impl NetworkState {
         }
     }
 
+    /// Sends the `message` to `client_id`.
     pub fn send_to(
         &mut self,
         client_id: ClientId,
@@ -190,6 +197,7 @@ impl NetworkState {
         }
     }
 
+    /// Sends the `message` to `actor_id`.
     pub fn send_to_by_actor_id(
         &mut self,
         actor_id: ObjectId,
@@ -217,6 +225,7 @@ impl NetworkState {
         }
     }
 
+    /// Sends the `message` to every member of `party_id`.
     pub fn send_to_party(
         &mut self,
         party_id: u64,
@@ -259,6 +268,16 @@ impl NetworkState {
         }
     }
 
+    /// Send a server message to a specific actor, or their entire party (including the specific actor).
+    pub fn send_to_party_or_self(&mut self, from_actor_id: ObjectId, msg: FromServer) {
+        if let Some(party_id) = get_party_id_from_actor_id(self, from_actor_id) {
+            self.send_to_party(party_id, None, msg, DestinationNetwork::ZoneClients);
+        } else {
+            self.send_to_by_actor_id(from_actor_id, msg, DestinationNetwork::ZoneClients);
+        }
+    }
+
+    /// Sends the `ipc` to `client_id`.
     pub fn send_ipc_to(
         &mut self,
         client_id: ClientId,
@@ -280,7 +299,7 @@ impl NetworkState {
         }
     }
 
-    /// Sends an ActorControl to in range actors, *excluding* the same actor.
+    /// Sends the ActorControl `category` to all in-range actors, *excluding* `from_actor_id`.
     pub fn send_ac_in_range(
         &mut self,
         data: &WorldServer,
@@ -292,7 +311,7 @@ impl NetworkState {
         self.send_in_range(from_actor_id, data, msg, DestinationNetwork::ZoneClients);
     }
 
-    /// Sends an ActorControl to in range actors, *including* the same actor but as an ACS.
+    /// Sends the ActorControl `category` to all in-range actors, *including* `from_actor_id` (but as an ActorControlSelf.)
     pub fn send_ac_in_range_inclusive(
         &mut self,
         data: &WorldServer,
@@ -311,10 +330,12 @@ impl NetworkState {
         self.send_ac_in_range(data, from_actor_id, category);
     }
 
+    /// Returns the `ClientState` for `client_id`.
     pub fn get_state_mut(&mut self, client_id: ClientId) -> Option<&mut ClientState> {
         self.clients.get_mut(&client_id).map(|x| &mut x.1)
     }
 
+    /// Returns the `ClientHandle` and `ClientState` for `actor_id`.
     pub fn get_by_actor_mut(
         &mut self,
         actor_id: ObjectId,

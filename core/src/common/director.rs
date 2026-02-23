@@ -2,6 +2,7 @@
 
 use binrw::binrw;
 
+/// Events are sent by the server (who is acting as the director) to change state.
 #[binrw]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum DirectorEvent {
@@ -20,6 +21,7 @@ pub enum DirectorEvent {
     Unknown(u32),
 }
 
+/// Triggers are sent by clients to inform the director of their actions.
 #[binrw]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum DirectorTrigger {

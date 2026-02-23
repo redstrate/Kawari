@@ -693,7 +693,7 @@ pub fn handle_zone_messages(
     network: Arc<Mutex<NetworkState>>,
     game_data: Arc<Mutex<GameData>>,
     msg: &ToServer,
-) {
+) -> bool {
     match msg {
         ToServer::ZoneLoaded(from_id, from_actor_id, player_spawn) => {
             tracing::info!(
@@ -713,6 +713,8 @@ pub fn handle_zone_messages(
                 executing_gimmick_jump: false,
                 inside_instance_exit: false,
             };
+
+            true
         }
         ToServer::ChangeZone(from_id, actor_id, zone_id, new_position, new_rotation) => {
             tracing::info!("{from_id:?} is requesting to go to zone {zone_id}");
@@ -751,6 +753,8 @@ pub fn handle_zone_messages(
                 director_vars,
             );
             network.send_to(*from_id, msg, DestinationNetwork::ZoneClients);
+
+            true
         }
         ToServer::EnterZoneJump(from_id, actor_id, exitbox_id) => {
             let mut data = data.lock();
@@ -764,13 +768,13 @@ pub fn handle_zone_messages(
                 let Some((_, new_exit_box)) = current_instance.zone.find_exit_box(*exitbox_id)
                 else {
                     tracing::warn!("Couldn't find exit box {exitbox_id}?!");
-                    return;
+                    return true;
                 };
                 destination_zone_id = new_exit_box.territory_type;
                 destination_instance_id = new_exit_box.destination_instance_id;
             } else {
                 tracing::warn!("Actor isn't in the instance it was expected in. This is a bug!");
-                return;
+                return true;
             }
 
             change_zone_warp_to_pop_range(
@@ -782,6 +786,8 @@ pub fn handle_zone_messages(
                 *actor_id,
                 *from_id,
             );
+
+            true
         }
         ToServer::Warp(from_id, actor_id, warp_id) => {
             let mut data = data.lock();
@@ -802,6 +808,8 @@ pub fn handle_zone_messages(
                 *actor_id,
                 *from_id,
             );
+
+            true
         }
         ToServer::WarpAetheryte(from_id, actor_id, aetheryte_id) => {
             let mut data = data.lock();
@@ -822,6 +830,8 @@ pub fn handle_zone_messages(
                 *actor_id,
                 *from_id,
             );
+
+            true
         }
         ToServer::ZoneIn(from_id, from_actor_id, is_teleport) => {
             tracing::info!("Player {from_id:?} has finally zoned in, informing other players...");
@@ -853,6 +863,8 @@ pub fn handle_zone_messages(
                 }
             }
             network.to_remove.append(&mut to_remove);
+
+            true
         }
         ToServer::MoveToPopRange(from_id, from_actor_id, id, fade_out) => {
             let send_new_position = |from_id: ClientId,
@@ -886,10 +898,10 @@ pub fn handle_zone_messages(
                         transform = pop_range.0.transform;
                     } else {
                         tracing::warn!("Failed to find pop range for {id}!");
-                        return;
+                        return true;
                     }
                 } else {
-                    return;
+                    return true;
                 }
             }
 
@@ -907,6 +919,8 @@ pub fn handle_zone_messages(
             } else {
                 send_new_position(*from_id, network, transform, *fade_out);
             }
+
+            true
         }
         ToServer::NewLocationDiscovered(from_id, layout_id, _pos, zone_id) => {
             let mut game_data = game_data.lock();
@@ -926,13 +940,13 @@ pub fn handle_zone_messages(
                                 tracing::error!(
                                     "Unable to get Map column data from TerritoryInfo sheet for zone id {zone_id}"
                                 );
-                                return;
+                                return true;
                             };
 
                             let msg =
                                 FromServer::LocationDiscovered(map_id.into(), discovery_id.into());
                             network.send_to(*from_id, msg, DestinationNetwork::ZoneClients);
-                            return;
+                            return true;
                         }
                     }
 
@@ -940,7 +954,9 @@ pub fn handle_zone_messages(
                     break;
                 }
             }
+
+            true
         }
-        _ => {}
+        _ => false,
     }
 }

@@ -130,6 +130,14 @@ pub fn opcode_data(_metadata: TokenStream, input: TokenStream) -> TokenStream {
                     ]
                 }
             }
+
+            impl Default for #data_ident {
+                fn default() -> Self {
+                    Self::Unknown {
+                        unk: Default::default(),
+                    }
+                }
+            }
         };
     }
 

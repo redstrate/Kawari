@@ -20,7 +20,7 @@ pub fn handle_chat_messages(
     data: Arc<Mutex<WorldServer>>,
     network: Arc<Mutex<NetworkState>>,
     msg: &ToServer,
-) {
+) -> bool {
     match msg {
         ToServer::Message(from_id, msg) => {
             let mut network = network.lock();
@@ -30,6 +30,8 @@ pub fn handle_chat_messages(
                 FromServer::Message(msg.clone()),
                 DestinationNetwork::ZoneClients,
             );
+
+            true
         }
         ToServer::TellMessageSent(from_id, from_actor_id, message_info) => {
             // TODO: Maybe this can be simplified with fewer loops?
@@ -110,6 +112,8 @@ pub fn handle_chat_messages(
                     DestinationNetwork::ChatClients,
                 );
             }
+
+            true
         }
         ToServer::PartyMessageSent(from_actor_id, message_info) => {
             let mut network = network.lock();
@@ -149,7 +153,9 @@ pub fn handle_chat_messages(
                 msg,
                 DestinationNetwork::ChatClients,
             );
+
+            true
         }
-        _ => {}
+        _ => false,
     }
 }

@@ -27,15 +27,13 @@ pub async fn send_packet<T: ReadWriteIpcSegment>(
     let size = std::mem::size_of::<PacketHeader>() + data.len();
 
     let header = PacketHeader {
-        prefix: [0; 16],
         timestamp: timestamp_msecs(),
         size: size as u32,
         connection_type,
         segment_count: segments.len() as u16,
-        version: 0,
         compression_type,
-        unk4: 0,
         uncompressed_size: uncompressed_size as u32,
+        ..Default::default()
     };
 
     let mut cursor = Cursor::new(Vec::new());

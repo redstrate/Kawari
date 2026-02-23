@@ -6,13 +6,8 @@
 mod client;
 pub use client::*;
 
-mod common_emote;
-
-mod common_strategy_board;
-pub use common_strategy_board::*;
-
-mod common_waymark;
-pub use common_waymark::*;
+mod common;
+pub use common::*;
 
 mod black_list;
 mod config;

@@ -122,10 +122,11 @@ impl ZoneConnection {
             let lua = self.lua.lock();
 
             event = lua
+                .0
                 .scope(|scope| {
                     let connection_data = scope.create_userdata_ref_mut(lua_player)?;
 
-                    let func: Function = lua.globals().get("dispatchEvent").unwrap();
+                    let func: Function = lua.0.globals().get("dispatchEvent").unwrap();
 
                     func.call::<Option<Event>>((connection_data, event_id))
                 })

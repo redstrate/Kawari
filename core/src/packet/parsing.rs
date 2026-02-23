@@ -16,9 +16,10 @@ use super::{
 
 #[binrw]
 #[brw(repr = u16)]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Default)]
 pub enum ConnectionType {
     /// An invalid connection.
+    #[default]
     None = 0x0,
     /// The zone connection.
     Zone = 0x1,
@@ -51,7 +52,8 @@ pub enum SegmentType {
     SecuritySetup = 0x9,
     /// Sent to the client to initialize and confirm the encryption key.
     SecurityInitialize = 0xA,
-    /// Segment used internally in Kawari for IPC.
+    /// Segment used internally in Kawari for IPC. This does *not* exist in retail.
+    #[doc(hidden)]
     KawariIpc = 0xAAAA,
 }
 
@@ -106,6 +108,7 @@ pub enum SegmentData<T: ReadWriteIpcSegment> {
     #[br(pre_assert(kind == SegmentType::KeepAliveResponse))]
     KeepAliveResponse { id: u32, timestamp: u32 },
 
+    #[doc(hidden)]
     #[br(pre_assert(kind == SegmentType::KawariIpc))]
     KawariIpc(
         #[br(args(&0))] // this being zero is okay, custom ipc segments don't use the size arg
@@ -120,9 +123,9 @@ impl<T: ReadWriteIpcSegment> Default for SegmentData<T> {
 }
 
 #[binrw]
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct PacketHeader {
-    // unknown purpose
+    /// Unknown purpose.
     pub prefix: [u8; 16],
     pub timestamp: u64,
     pub size: u32,
@@ -213,17 +216,7 @@ pub fn parse_packet_header(data: &[u8]) -> PacketHeader {
         Err(err) => {
             tracing::error!("{err}");
 
-            PacketHeader {
-                prefix: [0u8; 16],
-                timestamp: 0,
-                size: 0,
-                connection_type: ConnectionType::None,
-                segment_count: 0,
-                version: 0,
-                compression_type: CompressionType::Uncompressed,
-                unk4: 0,
-                uncompressed_size: 0,
-            }
+            PacketHeader::default()
         }
     }
 }

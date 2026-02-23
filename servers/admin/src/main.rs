@@ -19,8 +19,6 @@ fn setup_default_environment() -> Environment<'static> {
 }
 
 async fn root() -> Html<String> {
-    tracing::info!("Requesting gate status...");
-
     let config = get_config();
 
     let environment = setup_default_environment();
@@ -83,8 +81,6 @@ struct Input {
 }
 
 async fn apply(Form(input): Form<Input>) -> Redirect {
-    tracing::info!("Apply config changes...");
-
     let mut config = get_config();
 
     if let Some(gate_open) = input.worlds_open {

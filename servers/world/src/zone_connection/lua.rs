@@ -3,7 +3,7 @@
 use crate::{
     ItemInfoQuery, ToServer, ZoneConnection,
     inventory::{CurrencyStorage, Item},
-    lua::{LuaPlayer, LuaTask, load_init_script},
+    lua::{LuaPlayer, LuaTask},
 };
 use kawari::{
     common::{
@@ -758,7 +758,7 @@ impl ZoneConnection {
     /// Reloads Global.lua
     pub fn reload_scripts(&mut self) {
         let mut lua = self.lua.lock();
-        if let Err(err) = load_init_script(&mut lua, self.gamedata.clone()) {
+        if let Err(err) = lua.init(self.gamedata.clone()) {
             tracing::warn!("Failed to load Init.lua: {:?}", err);
         }
     }

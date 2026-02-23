@@ -18,3 +18,15 @@ pub struct HousingWardMenuSummaryItem {
 impl HousingWardMenuSummaryItem {
     pub const SIZE: usize = 40;
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::common::ensure_size;
+
+    use super::*;
+
+    #[test]
+    fn housing_ward_size() {
+        ensure_size::<HousingWardMenuSummaryItem, { HousingWardMenuSummaryItem::SIZE }>();
+    }
+}

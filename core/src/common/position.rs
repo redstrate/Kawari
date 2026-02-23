@@ -120,4 +120,38 @@ mod tests {
         assert_eq!(Position::distance(b, b), 0.0);
         assert_eq!(Position::distance(a, b), 10.0);
     }
+
+    #[test]
+    fn test_sqr_distance() {
+        let a = Position {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        };
+        let b = Position {
+            x: 10.0,
+            y: 0.0,
+            z: 0.0,
+        };
+        assert_eq!(Position::sqr_distance(a, a), 0.0);
+        assert_eq!(Position::sqr_distance(b, b), 0.0);
+        assert_eq!(Position::sqr_distance(a, b), 100.0);
+    }
+
+    #[test]
+    fn test_dot() {
+        let a = Position {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        };
+        let b = Position {
+            x: 10.0,
+            y: 0.0,
+            z: 0.0,
+        };
+        assert_eq!(Position::dot(a, a), 0.0);
+        assert_eq!(Position::dot(b, b), 100.0);
+        assert_eq!(Position::dot(a, b), 0.0);
+    }
 }

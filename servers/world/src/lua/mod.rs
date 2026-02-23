@@ -8,7 +8,7 @@ use mlua::{FromLua, Lua, UserData, UserDataFields, Value};
 pub use player::{LuaContent, LuaPlayer};
 
 mod state;
-pub use state::{ExtraLuaState, initial_setup, load_init_script};
+pub use state::{KawariLua, KawariLuaState};
 
 mod task;
 pub use task::LuaTask;

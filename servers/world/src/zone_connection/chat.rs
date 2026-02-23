@@ -4,7 +4,7 @@ use mlua::Function;
 
 use crate::{
     MessageInfo, ZoneConnection,
-    lua::{ExtraLuaState, LuaPlayer},
+    lua::{KawariLuaState, LuaPlayer},
 };
 use kawari::{
     config::get_config,
@@ -49,56 +49,56 @@ impl ZoneConnection {
         lua_player: &mut LuaPlayer,
     ) {
         let lua = self.lua.lock();
-        let state = lua.app_data_ref::<ExtraLuaState>().unwrap();
+        let state = lua.0.app_data_ref::<KawariLuaState>().unwrap();
         let config = get_config();
 
         if let Some(command_script) = state.gm_command_scripts.get(&command) {
             let file_name = format!("{}/{}", &config.world.scripts_location, command_script);
 
             let mut run_script = || -> mlua::Result<()> {
-                lua.scope(|scope| {
+                lua.0.scope(|scope| {
                     let connection_data = scope
                     .create_userdata_ref_mut(lua_player)?;
                     /* TODO: Instead of panicking we ought to send a message to the player
                      * and the console log, and abandon execution. */
-                    lua.load(
+                    lua.0.load(
                         std::fs::read(&file_name).unwrap_or_else(|_| panic!("Failed to load script file {}!", &file_name)),
                     )
                     .set_name("@".to_string() + &file_name)
                     .exec()?;
 
-                    let required_rank = lua.globals().get("required_rank");
+                    let required_rank = lua.0.globals().get("required_rank");
                     if let Err(error) = required_rank {
                         tracing::info!("Script is missing required_rank! Unable to run command, sending error to user. Additional information: {}", error);
                         let func: Function =
-                        lua.globals().get("onCommandRequiredRankMissingError")?;
+                        lua.0.globals().get("onCommandRequiredRankMissingError")?;
                         func.call::<()>((error.to_string(), connection_data))?;
                         return Ok(());
                     }
 
                     /* Reset state for future commands. Without this it'll stay set to the last value
                      * and allow other commands that omit required_rank to run, which is undesirable. */
-                    lua.globals().set("required_rank", mlua::Value::Nil)?;
+                    lua.0.globals().set("required_rank", mlua::Value::Nil)?;
 
                     if self.player_data.character.gm_rank as u8 >= required_rank? {
                         let func: Function =
-                        lua.globals().get("onCommand")?;
+                        lua.0.globals().get("onCommand")?;
                         func.call::<()>(([arg0, arg1, arg2, arg3], connection_data))?;
 
                         /* `command_sender` is an optional variable scripts can define to identify themselves in print messages.
                          * It's okay if this global isn't set. We also don't care what its value is, just that it exists.
                          * This is reset -after- running the command intentionally. Resetting beforehand will never display the command's identifier.
                          */
-                        let command_sender: Result<mlua::prelude::LuaValue, mlua::prelude::LuaError> = lua.globals().get("command_sender");
+                        let command_sender: Result<mlua::prelude::LuaValue, mlua::prelude::LuaError> = lua.0.globals().get("command_sender");
                         if command_sender.is_ok() {
-                            lua.globals().set("command_sender", mlua::Value::Nil)?;
+                            lua.0.globals().set("command_sender", mlua::Value::Nil)?;
                         }
                         Ok(())
                     } else {
                         tracing::info!("User with account_id {} tried to invoke GM command {} with insufficient privileges!",
                                        self.player_data.character.service_account_id, command);
                         let func: Function =
-                        lua.globals().get("onCommandRequiredRankInsufficientError")?;
+                        lua.0.globals().get("onCommandRequiredRankInsufficientError")?;
                         func.call::<()>(connection_data)?;
                         Ok(())
                     }

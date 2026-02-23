@@ -24,6 +24,7 @@ impl<const MAX_SIZE: usize, const START_INDEX: usize> Default
 impl<const MAX_SIZE: usize, const START_INDEX: usize>
     SpawnAllocator<{ MAX_SIZE }, { START_INDEX }>
 {
+    /// Create a new and empty allocator.
     pub fn new() -> Self {
         Self {
             pool: [None; MAX_SIZE],

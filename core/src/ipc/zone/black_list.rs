@@ -44,3 +44,15 @@ pub struct RequestBlacklist {
     #[brw(pad_after = 6)] // TODO: Empty? It's unclear if sequence is a larger integer type
     pub sequence: u16,
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::common::ensure_size;
+
+    use super::*;
+
+    #[test]
+    fn retainer_info_size() {
+        ensure_size::<BlacklistedCharacter, { BlacklistedCharacter::SIZE }>();
+    }
+}

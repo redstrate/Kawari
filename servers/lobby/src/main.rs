@@ -1,3 +1,4 @@
+use kawari::common::NETWORK_TIMEOUT;
 use kawari::common::RECEIVE_BUFFER_SIZE;
 use kawari::common::timestamp_secs;
 use kawari::config::get_config;
@@ -10,7 +11,6 @@ use kawari::packet::SegmentType;
 use kawari::packet::send_custom_world_packet;
 use kawari::packet::{ConnectionState, SegmentData, send_keep_alive};
 use kawari_lobby::LobbyConnection;
-use std::time::Duration;
 use std::time::Instant;
 use tokio::io::AsyncReadExt;
 use tokio::net::TcpListener;
@@ -62,9 +62,7 @@ async fn main() {
                         // if the last response was over >5 seconds, the client is probably gone
                         if n == 0 {
                             let now = Instant::now();
-                            if now.duration_since(connection.last_keep_alive)
-                                > Duration::from_secs(5)
-                            {
+                            if now.duration_since(connection.last_keep_alive) > NETWORK_TIMEOUT {
                                 tracing::info!("Connection was killed because of timeout");
                                 break;
                             }
@@ -183,7 +181,7 @@ async fn main() {
                                         .await
                                     }
                                     SegmentData::KeepAliveResponse { .. } => {
-                                        // we can throw this away
+                                        // Intentionally empty, we can throw this away.
                                     }
                                     _ => {
                                         panic!("The server is recieving a response packet!")

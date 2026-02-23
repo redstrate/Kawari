@@ -2,12 +2,12 @@
 
 use std::{sync::Arc, time::Duration};
 
-use mlua::{Function, Lua};
+use mlua::Function;
 use parking_lot::Mutex;
 
 use crate::{
     ClientId, FromServer, GameData, PlayerData, StatusEffects, ToServer,
-    lua::{EffectsBuilder, ExtraLuaState, LuaContent, LuaPlayer, LuaZone},
+    lua::{EffectsBuilder, KawariLua, KawariLuaState, LuaContent, LuaPlayer, LuaZone},
     server::{
         WorldServer,
         actor::NetworkedActor,
@@ -30,7 +30,7 @@ pub fn handle_action_messages(
     data: Arc<Mutex<WorldServer>>,
     game_data: Arc<Mutex<GameData>>,
     msg: &ToServer,
-) {
+) -> bool {
     if let ToServer::ActionRequest(from_id, from_actor_id, request) = msg {
         let cast_time;
         {
@@ -47,7 +47,7 @@ pub fn handle_action_messages(
 
         let mut data = data.lock();
         let Some(instance) = data.find_actor_instance_mut(*from_actor_id) else {
-            return;
+            return true;
         };
 
         instance.insert_task(
@@ -59,7 +59,11 @@ pub fn handle_action_messages(
                 interruptible: delay_milliseconds > 0,
             },
         );
+
+        return true;
     }
+
+    false
 }
 
 /// Executes an action, and returns a list of Tasks that must be executed by the client.
@@ -67,7 +71,7 @@ pub fn execute_action(
     network: Arc<Mutex<NetworkState>>,
     data: Arc<Mutex<WorldServer>>,
     game_data: Arc<Mutex<GameData>>,
-    lua: Arc<Mutex<Lua>>,
+    lua: Arc<Mutex<KawariLua>>,
     from_id: ClientId,
     from_actor_id: ObjectId,
     request: ActionRequest,
@@ -251,34 +255,36 @@ pub fn cancel_action(network: Arc<Mutex<NetworkState>>, from_id: ClientId) {
 
 /// Handles normal actions, powered by Lua.
 pub fn execute_normal_action(
-    lua: Arc<Mutex<Lua>>,
+    lua: Arc<Mutex<KawariLua>>,
     request: &ActionRequest,
     lua_player: &mut LuaPlayer,
 ) -> Option<EffectsBuilder> {
     let mut effects_builder = None;
     let lua = lua.lock();
-    let state = lua.app_data_ref::<ExtraLuaState>().unwrap();
+    let state = lua.0.app_data_ref::<KawariLuaState>().unwrap();
 
     let key = request.action_key;
     if let Some(action_script) = state.action_scripts.get(&key) {
-        lua.scope(|scope| {
-            let connection_data = scope.create_userdata_ref_mut(lua_player).unwrap();
+        lua.0
+            .scope(|scope| {
+                let connection_data = scope.create_userdata_ref_mut(lua_player).unwrap();
 
-            let config = get_config();
+                let config = get_config();
 
-            let file_name = format!("{}/{}", &config.world.scripts_location, action_script);
-            lua.load(std::fs::read(&file_name).expect("Failed to locate scripts directory!"))
-                .set_name("@".to_string() + &file_name)
-                .exec()
-                .unwrap();
+                let file_name = format!("{}/{}", &config.world.scripts_location, action_script);
+                lua.0
+                    .load(std::fs::read(&file_name).expect("Failed to locate scripts directory!"))
+                    .set_name("@".to_string() + &file_name)
+                    .exec()
+                    .unwrap();
 
-            let func: Function = lua.globals().get("doAction").unwrap();
+                let func: Function = lua.0.globals().get("doAction").unwrap();
 
-            effects_builder = Some(func.call::<EffectsBuilder>(connection_data).unwrap());
+                effects_builder = Some(func.call::<EffectsBuilder>(connection_data).unwrap());
 
-            Ok(())
-        })
-        .unwrap();
+                Ok(())
+            })
+            .unwrap();
     } else {
         tracing::warn!("Action {key} isn't scripted yet! Ignoring {:#?}", request);
     }
@@ -289,7 +295,7 @@ pub fn execute_normal_action(
 /// Handles item actions, powered by Lua.
 pub fn execute_item_action(
     game_data: Arc<Mutex<GameData>>,
-    lua: Arc<Mutex<Lua>>,
+    lua: Arc<Mutex<KawariLua>>,
     request: &ActionRequest,
     lua_player: &mut LuaPlayer,
 ) -> Option<EffectsBuilder> {
@@ -307,40 +313,44 @@ pub fn execute_item_action(
     // FIXME: we should check if this data is valid instead of silently returning zeroes
 
     let mut effects_builder = None;
-    lua.scope(|scope| {
-        let connection_data = scope.create_userdata_ref_mut(lua_player).unwrap();
+    lua.0
+        .scope(|scope| {
+            let connection_data = scope.create_userdata_ref_mut(lua_player).unwrap();
 
-        let func: Function = lua.globals().get("dispatchItem").unwrap();
+            let func: Function = lua.0.globals().get("dispatchItem").unwrap();
 
-        match func.call::<(String, u32)>((
-            &connection_data,
-            key,
-            action_type,
-            action_data,
-            additional_data,
-        )) {
-            Ok((action_script, arg)) => {
-                let config = get_config();
+            match func.call::<(String, u32)>((
+                &connection_data,
+                key,
+                action_type,
+                action_data,
+                additional_data,
+            )) {
+                Ok((action_script, arg)) => {
+                    let config = get_config();
 
-                let file_name = format!("{}/{}", &config.world.scripts_location, action_script);
-                lua.load(std::fs::read(&file_name).expect("Failed to locate scripts directory!"))
-                    .set_name("@".to_string() + &file_name)
-                    .exec()
-                    .unwrap();
+                    let file_name = format!("{}/{}", &config.world.scripts_location, action_script);
+                    lua.0
+                        .load(
+                            std::fs::read(&file_name).expect("Failed to locate scripts directory!"),
+                        )
+                        .set_name("@".to_string() + &file_name)
+                        .exec()
+                        .unwrap();
 
-                let func: Function = lua.globals().get("doAction").unwrap();
+                    let func: Function = lua.0.globals().get("doAction").unwrap();
 
-                effects_builder =
-                    Some(func.call::<EffectsBuilder>((connection_data, arg)).unwrap());
+                    effects_builder =
+                        Some(func.call::<EffectsBuilder>((connection_data, arg)).unwrap());
+                }
+                Err(err) => {
+                    tracing::error!("Error while calling dispatchItem: {:?}", err);
+                }
             }
-            Err(err) => {
-                tracing::error!("Error while calling dispatchItem: {:?}", err);
-            }
-        }
 
-        Ok(())
-    })
-    .unwrap();
+            Ok(())
+        })
+        .unwrap();
 
     effects_builder
 }

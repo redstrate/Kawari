@@ -120,3 +120,15 @@ pub enum ReadyCheckReply {
     Yes = 257,
     No = 513,
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::common::ensure_size;
+
+    use super::*;
+
+    #[test]
+    fn party_member_entry_size() {
+        ensure_size::<PartyMemberEntry, { PartyMemberEntry::SIZE }>();
+    }
+}

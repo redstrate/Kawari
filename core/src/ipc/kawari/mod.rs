@@ -58,7 +58,7 @@ pub enum CustomIpcData {
         #[bw(calc = characters.len() as u8)]
         num_characters: u8,
         #[br(count = num_characters)]
-        #[brw(pad_size_to = 1184 * 8)]
+        #[brw(pad_size_to = CharacterDetails::SIZE * 8)]
         characters: Vec<CharacterDetails>, // TODO: maybe chunk this into 4 parts ala the lobby server?
     },
     DeleteCharacter {
@@ -106,23 +106,13 @@ pub enum CustomIpcData {
     },
 }
 
-impl Default for CustomIpcData {
-    fn default() -> CustomIpcData {
-        CustomIpcData::RequestCreateCharacter {
-            service_account_id: 0,
-            chara_make_json: String::new(),
-            name: String::new(),
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use crate::common::test_opcodes;
 
     use super::*;
 
-    /// Ensure that the IPC data size as reported matches up with what we write
+    // Ensure that the IPC data size as reported matches up with what we write
     #[test]
     fn custom_ipc_sizes() {
         test_opcodes::<CustomIpcSegment>();

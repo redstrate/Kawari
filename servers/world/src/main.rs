@@ -28,7 +28,7 @@ use kawari::common::{NETWORK_TIMEOUT, RECEIVE_BUFFER_SIZE};
 use kawari::constants::{AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE, CLASSJOB_ARRAY_SIZE};
 use kawari::packet::oodle::OodleNetwork;
 use kawari::packet::{ConnectionState, ConnectionType, SegmentData, parse_packet_header};
-use kawari_world::lua::{ExtraLuaState, LuaPlayer, load_init_script};
+use kawari_world::lua::{KawariLua, KawariLuaState, LuaPlayer};
 use kawari_world::{
     ChatConnection, ChatHandler, CustomIpcConnection, GameData, ObsfucationData, TeleportReason,
     ZoneConnection,
@@ -38,7 +38,7 @@ use kawari_world::{
     WorldDatabase, server_main_loop,
 };
 
-use mlua::{Function, Lua};
+use mlua::Function;
 use parking_lot::Mutex;
 use tokio::io::AsyncReadExt;
 use tokio::join;
@@ -80,7 +80,7 @@ fn spawn_main_loop(game_data: Arc<Mutex<GameData>>) -> (ServerHandle, JoinHandle
 fn spawn_initial_setup(
     id: ClientId,
     socket: TcpStream,
-    lua: Arc<Mutex<Lua>>,
+    lua: Arc<Mutex<KawariLua>>,
     database: Arc<Mutex<WorldDatabase>>,
     gamedata: Arc<Mutex<GameData>>,
     handle: ServerHandle,
@@ -92,7 +92,7 @@ fn spawn_initial_setup(
 async fn initial_setup(
     id: ClientId,
     mut socket: TcpStream,
-    lua: Arc<Mutex<Lua>>,
+    lua: Arc<Mutex<KawariLua>>,
     database: Arc<Mutex<WorldDatabase>>,
     game_data: Arc<Mutex<GameData>>,
     handle: ServerHandle,
@@ -1194,7 +1194,7 @@ async fn process_packet(
 
                                 {
                                     let lua = connection.lua.lock();
-                                    let state = lua.app_data_ref::<ExtraLuaState>().unwrap();
+                                    let state = lua.0.app_data_ref::<KawariLuaState>().unwrap();
 
                                     // If a Lua command exists, try using that first
                                     if let Some(command_script) =
@@ -1208,30 +1208,30 @@ async fn process_packet(
                                         );
 
                                         let mut run_script = || -> mlua::Result<()> {
-                                            lua.scope(|scope| {
+                                            lua.0.scope(|scope| {
                                                     let connection_data = scope
                                                     .create_userdata_ref_mut(lua_player)?;
 
                                                     /* TODO: Instead of panicking we ought to send a message to the player
                                                      * and the console log, and abandon execution. */
-                                                    lua.load(
+                                                    lua.0.load(
                                                         std::fs::read(&file_name).unwrap_or_else(|_| panic!("Failed to load script file {}!", &file_name)),
                                                     )
                                                     .set_name("@".to_string() + &file_name)
                                                     .exec()?;
 
-                                                    let required_rank = lua.globals().get("required_rank");
+                                                    let required_rank = lua.0.globals().get("required_rank");
                                                     if let Err(error) = required_rank {
                                                         tracing::info!("Script is missing required_rank! Unable to run command, sending error to user. Additional information: {}", error);
                                                         let func: Function =
-                                                        lua.globals().get("onCommandRequiredRankMissingError")?;
+                                                        lua.0.globals().get("onCommandRequiredRankMissingError")?;
                                                         func.call::<()>((error.to_string(), connection_data))?;
                                                         return Ok(());
                                                     }
 
                                                     /* Reset state for future commands. Without this it'll stay set to the last value
                                                      * and allow other commands that omit required_rank to run, which is undesirable. */
-                                                    lua.globals().set("required_rank", mlua::Value::Nil)?;
+                                                    lua.0.globals().set("required_rank", mlua::Value::Nil)?;
 
                                                     if connection.player_data.character.gm_rank as u8 >= required_rank? {
                                                         let mut func_args = Vec::new();
@@ -1242,23 +1242,23 @@ async fn process_packet(
                                                             tracing::info!("No additional args passed to Lua command {}.", command_name);
                                                         }
                                                         let func: Function =
-                                                        lua.globals().get("onCommand")?;
+                                                        lua.0.globals().get("onCommand")?;
                                                         func.call::<()>((func_args, connection_data))?;
 
                                                         /* `command_sender` is an optional variable scripts can define to identify themselves in print messages.
                                                          * It's okay if this global isn't set. We also don't care what its value is, just that it exists.
                                                          * This is reset -after- running the command intentionally. Resetting beforehand will never display the command's identifier.
                                                          */
-                                                        let command_sender: Result<mlua::prelude::LuaValue, mlua::prelude::LuaError> = lua.globals().get("command_sender");
+                                                        let command_sender: Result<mlua::prelude::LuaValue, mlua::prelude::LuaError> = lua.0.globals().get("command_sender");
                                                         if command_sender.is_ok() {
-                                                            lua.globals().set("command_sender", mlua::Value::Nil)?;
+                                                            lua.0.globals().set("command_sender", mlua::Value::Nil)?;
                                                         }
                                                         Ok(())
                                                     } else {
                                                         tracing::info!("User with account_id {} tried to invoke GM command {} with insufficient privileges!",
                                                                        connection.player_data.character.service_account_id, command_name);
                                                         let func: Function =
-                                                        lua.globals().get("onCommandRequiredRankInsufficientError")?;
+                                                        lua.0.globals().get("onCommandRequiredRankInsufficientError")?;
                                                         func.call::<()>(connection_data)?;
                                                         Ok(())
                                                     }
@@ -1288,11 +1288,11 @@ async fn process_packet(
                                     let lua = connection.lua.lock();
 
                                     let mut call_func = || {
-                                        lua.scope(|scope| {
+                                        lua.0.scope(|scope| {
                                             let connection_data =
                                                 scope.create_userdata_ref_mut(lua_player)?;
                                             let func: Function =
-                                                lua.globals().get("onUnknownCommandError")?;
+                                                lua.0.globals().get("onUnknownCommandError")?;
                                             func.call::<()>((command_name, connection_data))?;
                                             Ok(())
                                         })
@@ -1682,24 +1682,8 @@ async fn process_packet(
                                     && !equipped_item.is_empty_slot()
                                 {
                                     // If there is something equipped but the slot is empty in the gearset, we have to move it somewhere.
-
-                                    let target_container_type = match slot {
-                                        0 => ContainerType::ArmoryWeapon,
-                                        1 => ContainerType::ArmoryOffWeapon,
-                                        2 => ContainerType::ArmoryHead,
-                                        3 => ContainerType::ArmoryBody,
-                                        4 => ContainerType::ArmoryHand,
-                                        5 => ContainerType::ArmoryWaist,
-                                        6 => ContainerType::ArmoryLeg,
-                                        7 => ContainerType::ArmoryFoot,
-                                        8 => ContainerType::ArmoryEarring,
-                                        9 => ContainerType::ArmoryNeck,
-                                        10 => ContainerType::ArmoryWrist,
-                                        11 => ContainerType::ArmoryRing,
-                                        12 => ContainerType::ArmoryRing,
-                                        13 => ContainerType::ArmorySoulCrystal,
-                                        _ => unreachable!(),
-                                    };
+                                    let target_container_type =
+                                        ContainerType::from_equip_slot(slot as u8);
 
                                     let target_container = connection
                                         .player_data
@@ -2408,14 +2392,14 @@ async fn main() {
     let listener = TcpListener::bind(addr).await.unwrap();
 
     let database = Arc::new(Mutex::new(WorldDatabase::new()));
-    let lua = Arc::new(Mutex::new(Lua::new()));
+    let lua = Arc::new(Mutex::new(KawariLua::new()));
     let game_data = Arc::new(Mutex::new(GameData::new()));
 
     tracing::info!("Server started on {addr}");
 
     {
         let mut lua = lua.lock();
-        if let Err(err) = load_init_script(&mut lua, game_data.clone()) {
+        if let Err(err) = lua.init(game_data.clone()) {
             tracing::warn!("Failed to load Init.lua: {:?}", err);
         }
     }

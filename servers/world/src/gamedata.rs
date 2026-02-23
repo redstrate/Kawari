@@ -139,7 +139,6 @@ impl GameData {
     pub fn new() -> Self {
         let config = get_config();
 
-        // setup resolvers
         let mut sqpack_resource = SqPackResourceSpy::from(
             SqPackResource::from_existing(&config.filesystem.game_path),
             &config.filesystem.unpack_path,
@@ -152,10 +151,9 @@ impl GameData {
             );
         }
 
-        // We want to preload all index files, because the cost for not doing this can be high.
-        // For example: someone travels to a new zone (that wasn't previously loaded), so the server has to basically halt to read the index file from disk.
-        // Index files are small and will take up very little memory once serialized, so this is an easy optimization.
-        // (We could move this to an option, if you prefer marginally faster loading times over I/O overhead.)
+        // We preload all index files, because the cost for not doing this can be high.
+        // For example: someone travels to a new zone (that wasn't previously loaded), so the server has to basically halt to read a bunch of index files from disk.
+        // Index files are small and will take up very little memory, so this is a no-brainer optimization.
         sqpack_resource.sqpack_resource.preload_index_files();
 
         let mut resource_resolver = ResourceResolver::new();

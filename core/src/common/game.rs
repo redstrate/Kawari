@@ -16,7 +16,7 @@ pub const CHAR_NAME_MAX_LENGTH: usize = 32;
 pub const MESSAGE_MAX_LENGTH: usize = 1024;
 
 /// Maximum spawnable amount of actors in the client. Going over this limit crashes the game.
-/// This is 99 - which is a weird number - except that the player always takes the first index.
+/// 99 may seem like a weird limit, but remember that the player is always the first in the list.
 pub const MAX_SPAWNED_ACTORS: usize = 99;
 
 /// Maximum spawnable amount of objects in the client. Going over this limit crashes the game.
@@ -58,6 +58,7 @@ pub const BOSS_WALL_IDS: [u32; 3] = [
     2002872,
 ];
 
+/// To build this list, I scientifically looked under the `bgcommon/world/lvd/shared/for_bg` folder for anything striking dummy-esque.
 pub const STRIKING_DUMMY_SGBS: [&str; 11] = [
     "bgcommon/world/lvd/shared/for_bg/sgbg_w_lvd_003_01a.sgb",
     "bgcommon/world/lvd/shared/for_bg/sgbg_w_lvd_004_01a.sgb",
@@ -75,13 +76,13 @@ pub const STRIKING_DUMMY_SGBS: [&str; 11] = [
 /// Time until a dead actor fades away. Estimated from retail.
 pub const DEAD_FADE_OUT_TIME: Duration = Duration::from_secs(8);
 
-/// Time until a dead actor despawns after fading away. Estimated from retail.
+/// Time until a dead actor despawns while faded away. Estimated from retail.
 pub const DEAD_DESPAWN_TIME: Duration = Duration::from_secs(2);
 
-/// Maximum number of seconds until rested EXP is full.
+/// Maximum number of seconds until rested EXP is full. This is 7 days.
 pub const MAXIMUM_RESTED_EXP: i32 = 604800;
 
-/// The base stat before racial modifiers and stuff.
+/// The base stat before racial and other modifiers.
 pub const BASE_STAT: i8 = 20;
 
 pub struct Attributes {
@@ -102,18 +103,20 @@ pub enum DistanceRange {
     Maximum = 0x2,
 }
 
-// TODO: it would be nice to figure out how these are actually calculated
-// From a quick inspection, these are based on zone and increase later the expansion. These are probably encoded in some data somewhere.
-pub const DISTANCE_NORMAL: f32 = 100.0;
-pub const DISTANCE_EXTENDED: f32 = 300.0;
-pub const DISTANCE_MAXIMUM: f32 = 500.0;
+impl DistanceRange {
+    // TODO: it would be nice to figure out how these are actually calculated.
+    // From a quick inspection, these are based on zone and increase later the expansion. These are probably encoded in data somewhere.
+    const DISTANCE_NORMAL: f32 = 100.0;
+    const DISTANCE_EXTENDED: f32 = 300.0;
+    const DISTANCE_MAXIMUM: f32 = 500.0;
 
-/// Gets the distance given a `DistanceRange`.
-pub fn get_distance_range(range: DistanceRange) -> f32 {
-    match range {
-        DistanceRange::Normal => DISTANCE_NORMAL,
-        DistanceRange::Extended => DISTANCE_EXTENDED,
-        DistanceRange::Maximum => DISTANCE_MAXIMUM,
+    /// Returns the estimated distance in world units.
+    pub fn distance(&self) -> f32 {
+        match self {
+            DistanceRange::Normal => Self::DISTANCE_NORMAL,
+            DistanceRange::Extended => Self::DISTANCE_EXTENDED,
+            DistanceRange::Maximum => Self::DISTANCE_MAXIMUM,
+        }
     }
 }
 
@@ -481,16 +484,21 @@ impl std::fmt::Debug for HandlerId {
 #[brw(repr = u8)]
 #[derive(Clone, Copy, Debug, Default)]
 pub enum ClientLanguage {
+    /// Japanese language.
     #[default]
     Japanese = 0,
+    /// English language.
     English = 1,
+    /// German language.
     German = 2,
+    /// French language.
     French = 3,
+    // TODO: what about client languages in other regions?
     /// Seen when a player in the social list is offline (possibly uncached or on another world?).
     OfflineInvalid = 255,
 }
 
-// When adding a new container type, make sure to add it to InventoryIterator
+// NOTE: When adding a new container type, make sure to add it to InventoryIterator!
 #[binrw]
 #[brw(little)]
 #[brw(repr = u16)]
@@ -586,6 +594,31 @@ pub enum ContainerType {
     HousingInteriorStoreroom8 = 27008,
 
     DiscardingItemSentinel = 65535,
+}
+
+impl ContainerType {
+    /// Returns the applicable `ContainerType` for a given equip slot.
+    ///
+    /// For example, weapons (slot 0) would be `ArmouryWeapon`.
+    pub fn from_equip_slot(slot: u8) -> Self {
+        match slot {
+            0 => Self::ArmoryWeapon,
+            1 => Self::ArmoryOffWeapon,
+            2 => Self::ArmoryHead,
+            3 => Self::ArmoryBody,
+            4 => Self::ArmoryHand,
+            5 => Self::ArmoryWaist,
+            6 => Self::ArmoryLeg,
+            7 => Self::ArmoryFoot,
+            8 => Self::ArmoryEarring,
+            9 => Self::ArmoryNeck,
+            10 => Self::ArmoryWrist,
+            11 => Self::ArmoryRing,
+            12 => Self::ArmoryRing,
+            13 => Self::ArmorySoulCrystal,
+            _ => unreachable!(),
+        }
+    }
 }
 
 #[binrw]
@@ -731,8 +764,8 @@ pub enum TerritoryIntendedUse {
     Unk22 = 62,
 }
 
-// From FFXIVClientStructs
-// This is actually indexes of InstanceContentType, but we want nice names.
+/// Names for rows in the Excel sheet of the same name.
+/// Also see this enum in FFXIVClientStructs.
 #[derive(Debug, FromRepr)]
 #[repr(u8)]
 pub enum InstanceContentType {
@@ -760,21 +793,21 @@ pub enum InstanceContentType {
 
 // TODO: see if this can be extrapolated from game data
 const AETHER_CURRENT_COMP_FLG_SET_TO_SCREENIMAGE: [(u32, u32); 31] = [
-    // HW
+    // Heavensward
     (1, 328), // Coerthas Western Highlands
     (2, 329), // The Dravanian Forelands
     (3, 330), // The Dravanian Hinterlands
     (4, 331), // The Churning Mists
     (5, 332), // The Sea of Clouds
     (6, 333), // Azys Lla
-    // StB
+    // Stormblood
     (7, 511),  // The Fringes
     (8, 514),  // The Ruby Sea
     (9, 512),  // The Peaks
     (10, 515), // Yanxia
     (11, 513), // The Lochs
     (12, 516), // The Azim Steppe
-    // ShB
+    // Shadowbringers
     (13, 762), // Lakeland
     (14, 763), // Amh Araeng
     (15, 764), // Il Mheg
@@ -783,14 +816,14 @@ const AETHER_CURRENT_COMP_FLG_SET_TO_SCREENIMAGE: [(u32, u32); 31] = [
     (18, 767), // The Tempest
     // TODO: maybe Mor Dhona's ScreenImage is the "Flying Unlocked" seen at the end of "The Ultimate Weapon" (end of ARR MSQ)? Need a confirmation.
     (19, 0), // Mor Dhona
-    // EW
+    // Endwalker
     (20, 1016), // Labyrinthos
     (21, 1017), // Thavnair
     (22, 1018), // Garlemald
     (23, 1019), // Mare Lamentorum
     (24, 1021), // Elpis
     (25, 1020), // Ultima Thule
-    // DT
+    // Dawntrail
     (26, 1269), // Urqopacha
     (27, 1270), // Kozama'uka
     (28, 1271), // Yak T'el
@@ -953,6 +986,7 @@ impl std::fmt::Debug for PlayerStateFlags3 {
     }
 }
 
+/// Duty options, these don't only include the selectables ones in the Duty Finder.
 #[binrw]
 #[derive(Clone, Copy, Eq, PartialEq)]
 pub struct DutyOption(u32);
@@ -1037,6 +1071,8 @@ impl std::fmt::Debug for DutyOption {
     }
 }
 
+/// Land ID used for housing.
+// TODO: bring in useful structure data from FFXIVClientStructs!
 #[binrw]
 #[derive(Debug, Clone, Copy)]
 pub struct LandId {
@@ -1057,6 +1093,7 @@ impl Default for LandId {
     }
 }
 
+/// Land data used for housing.
 #[binrw]
 #[derive(Debug, Clone, Copy, Default)]
 pub struct LandData {

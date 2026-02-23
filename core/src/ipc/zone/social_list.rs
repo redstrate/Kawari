@@ -141,3 +141,15 @@ pub struct SocialList {
     #[bw(pad_size_to = 10 * PlayerEntry::SIZE)]
     pub entries: Vec<PlayerEntry>,
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::common::ensure_size;
+
+    use super::*;
+
+    #[test]
+    fn player_entry_size() {
+        ensure_size::<PlayerEntry, { PlayerEntry::SIZE }>();
+    }
+}

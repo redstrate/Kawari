@@ -5,7 +5,7 @@ use crate::common::{
     ContainerType, DirectorTrigger, DistanceRange, HandlerId, ObjectId, read_bool_from,
     write_bool_as,
 };
-use crate::ipc::zone::common_emote::CommonEmoteInfo;
+use crate::ipc::zone::CommonEmoteInfo;
 
 #[binrw]
 #[derive(Debug, PartialEq, Clone, IntoStaticStr)]
@@ -303,6 +303,7 @@ pub enum ClientTriggerCommand {
     #[brw(magic = 9005u32)]
     SetDistanceRange { range: DistanceRange },
 
+    #[doc(hidden)]
     Unknown {
         category: u32,
         // seen in haircut event

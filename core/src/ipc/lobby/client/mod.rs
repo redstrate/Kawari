@@ -85,21 +85,13 @@ pub enum ClientLobbyIpcData {
     CharaMake(CharaMake),
 }
 
-impl Default for ClientLobbyIpcData {
-    fn default() -> Self {
-        Self::Unknown {
-            unk: Vec::default(),
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use crate::common::test_opcodes;
 
     use super::*;
 
-    /// Ensure that the IPC data size as reported matches up with what we write
+    // Ensure that the IPC data size as reported matches up with what we write
     #[test]
     fn client_lobby_ipc_sizes() {
         test_opcodes::<ClientLobbyIpcSegment>();

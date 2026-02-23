@@ -41,3 +41,15 @@ impl Default for TrustInformation {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::common::ensure_size;
+
+    use super::*;
+
+    #[test]
+    fn trust_content_size() {
+        ensure_size::<TrustContent, { TrustContent::SIZE }>();
+    }
+}

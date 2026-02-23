@@ -5,7 +5,7 @@ use crate::common::{
     CharacterMode, DirectorEvent, EquipDisplayFlag, HandlerId, InvisibilityFlags, ObjectId,
     ObjectTypeId, read_bool_from, read_packed_float, write_bool_as, write_packed_float,
 };
-use crate::ipc::zone::common_emote::CommonEmoteInfo;
+use crate::ipc::zone::CommonEmoteInfo;
 use crate::ipc::zone::online_status::OnlineStatus;
 
 // See https://github.com/awgil/ffxiv_reverse/blob/f35b6226c1478234ca2b7149f82d251cffca2f56/vnetlog/vnetlog/ServerIPC.cs#L266 for a REALLY useful list of known values

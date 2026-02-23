@@ -412,21 +412,13 @@ pub enum ClientZoneIpcData {
     },
 }
 
-impl Default for ClientZoneIpcData {
-    fn default() -> Self {
-        Self::Unknown {
-            unk: Vec::default(),
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use crate::common::test_opcodes;
 
     use super::*;
 
-    /// Ensure that the IPC data size as reported matches up with what we write
+    // Ensure that the IPC data size as reported matches up with what we write
     #[test]
     fn client_zone_ipc_sizes() {
         test_opcodes::<ClientZoneIpcSegment>();

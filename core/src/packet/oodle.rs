@@ -123,28 +123,28 @@ impl OodleNetwork {
         unsafe {
             let oodle_state_size: usize = OodleNetwork1TCP_State_Size().try_into().unwrap();
             let oodle_shared_size: usize = OodleNetwork1_Shared_Size(HT_BITS).try_into().unwrap();
-            let mut oodle_state = vec![0u8; oodle_state_size];
-            let mut oodle_shared = vec![0u8; oodle_shared_size];
-            let mut oodle_window = [0u8; WINDOW_SIZE].to_vec();
+            let mut state = vec![0u8; oodle_state_size];
+            let mut shared = vec![0u8; oodle_shared_size];
+            let mut window = vec![0u8; WINDOW_SIZE];
 
             OodleNetwork1_Shared_SetWindow(
-                oodle_shared.as_mut_ptr() as *mut c_void,
+                shared.as_mut_ptr() as *mut c_void,
                 HT_BITS,
-                oodle_window.as_mut_ptr() as *mut c_void,
+                window.as_mut_ptr() as *mut c_void,
                 WINDOW_SIZE.try_into().unwrap(),
             );
             OodleNetwork1TCP_Train(
-                oodle_state.as_mut_ptr() as *mut c_void,
-                oodle_shared.as_mut_ptr() as *mut c_void,
+                state.as_mut_ptr() as *mut c_void,
+                shared.as_mut_ptr() as *mut c_void,
                 null(),
                 0,
                 0,
             );
 
             OodleNetwork {
-                state: oodle_state,
-                shared: oodle_shared,
-                window: oodle_window,
+                state,
+                shared,
+                window,
             }
         }
     }
@@ -168,7 +168,7 @@ impl OodleNetwork {
             );
 
             if !success {
-                panic!("Failed to oodle decode for an unknown reason.");
+                panic!("Failed to oodle decode for some reason.");
             }
 
             out_buf

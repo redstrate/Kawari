@@ -2,12 +2,12 @@
 
 use std::{sync::Arc, time::Duration};
 
-use mlua::{Function, Lua};
+use mlua::Function;
 use parking_lot::Mutex;
 
 use crate::{
     ClientId, FromServer, PlayerData, StatusEffects, ToServer,
-    lua::{ExtraLuaState, LuaContent, LuaPlayer, LuaZone},
+    lua::{KawariLua, KawariLuaState, LuaContent, LuaPlayer, LuaZone},
     server::{
         WorldServer,
         actor::NetworkedActor,
@@ -28,9 +28,9 @@ use kawari::{
 pub fn handle_effect_messages(
     data: Arc<Mutex<WorldServer>>,
     network: Arc<Mutex<NetworkState>>,
-    lua: Arc<Mutex<Lua>>,
+    lua: Arc<Mutex<KawariLua>>,
     msg: &ToServer,
-) {
+) -> bool {
     match msg {
         ToServer::GainEffect(
             from_id,
@@ -51,6 +51,8 @@ pub fn handle_effect_messages(
                 *effect_source_actor_id,
                 true,
             );
+
+            true
         }
         ToServer::LoseEffect(
             from_id,
@@ -69,8 +71,10 @@ pub fn handle_effect_messages(
                 *effect_param,
                 *effect_source_actor_id,
             );
+
+            true
         }
-        _ => {}
+        _ => false,
     }
 }
 
@@ -250,7 +254,7 @@ pub fn gain_effect(
 pub fn remove_effect(
     network: Arc<Mutex<NetworkState>>,
     data: Arc<Mutex<WorldServer>>,
-    lua: Arc<Mutex<Lua>>,
+    lua: Arc<Mutex<KawariLua>>,
     from_id: ClientId,
     from_actor_id: ObjectId,
     effect_id: u16,
@@ -300,7 +304,7 @@ pub fn remove_effect(
     // Also run the effect's Lua script in case it wants to do something!
     {
         let lua = lua.lock();
-        let state = lua.app_data_ref::<ExtraLuaState>().unwrap();
+        let state = lua.0.app_data_ref::<KawariLuaState>().unwrap();
 
         let mut lua_player = LuaPlayer {
             player_data: PlayerData::default(),
@@ -313,24 +317,28 @@ pub fn remove_effect(
 
         let key = effect_id as u32;
         if let Some(effect_script) = state.effect_scripts.get(&key) {
-            lua.scope(|scope| {
-                let connection_data = scope.create_userdata_ref_mut(&mut lua_player).unwrap();
+            lua.0
+                .scope(|scope| {
+                    let connection_data = scope.create_userdata_ref_mut(&mut lua_player).unwrap();
 
-                let config = get_config();
+                    let config = get_config();
 
-                let file_name = format!("{}/{}", &config.world.scripts_location, effect_script);
-                lua.load(std::fs::read(&file_name).expect("Failed to locate scripts directory!"))
-                    .set_name("@".to_string() + &file_name)
-                    .exec()
-                    .unwrap();
+                    let file_name = format!("{}/{}", &config.world.scripts_location, effect_script);
+                    lua.0
+                        .load(
+                            std::fs::read(&file_name).expect("Failed to locate scripts directory!"),
+                        )
+                        .set_name("@".to_string() + &file_name)
+                        .exec()
+                        .unwrap();
 
-                let func: Function = lua.globals().get("onLose").unwrap();
+                    let func: Function = lua.0.globals().get("onLose").unwrap();
 
-                func.call::<()>(connection_data).unwrap();
+                    func.call::<()>(connection_data).unwrap();
 
-                Ok(())
-            })
-            .unwrap();
+                    Ok(())
+                })
+                .unwrap();
         } else {
             tracing::warn!("Effect {effect_id} isn't scripted yet! Ignoring...");
         }
