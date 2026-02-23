@@ -62,11 +62,13 @@ pub struct QueuedTask {
 pub enum LuaDirectorTask {
     HideEObj { base_id: u32 },
     ShowEObj { base_id: u32 },
+    SendVariables,
 }
 
 // TODO: Maybe collapse into DirectorData?
 #[derive(Default, Debug)]
 pub struct LuaDirector {
+    pub data: [u8; 10],
     pub tasks: Vec<LuaDirectorTask>,
 }
 
@@ -78,6 +80,10 @@ impl UserData for LuaDirector {
         });
         methods.add_method_mut("show_eobj", |_, this, base_id: u32| {
             this.tasks.push(LuaDirectorTask::ShowEObj { base_id });
+            Ok(())
+        });
+        methods.add_method_mut("set_data", |_, this, (index, data): (u8, u8)| {
+            this.data[index as usize] = data;
             Ok(())
         });
     }
@@ -148,10 +154,17 @@ impl DirectorData {
     }
 
     fn create_lua_director(&self) -> LuaDirector {
-        LuaDirector { tasks: Vec::new() }
+        LuaDirector {
+            data: self.data,
+            tasks: Vec::new(),
+        }
     }
 
     fn apply_lua_director(&mut self, lua: LuaDirector) {
+        if self.data != lua.data {
+            self.data = lua.data;
+            self.tasks.push(LuaDirectorTask::SendVariables {});
+        }
         self.tasks.extend_from_slice(&lua.tasks);
     }
 }

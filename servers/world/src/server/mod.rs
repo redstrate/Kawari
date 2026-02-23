@@ -774,6 +774,23 @@ fn server_logic_tick(data: &mut WorldServer, network: Arc<Mutex<NetworkState>>) 
                         object.unselectable = false;
                     }
                 }
+                LuaDirectorTask::SendVariables => {
+                    let vars = if let Some(director) = &instance.director {
+                        director.build_var_segment()
+                    } else {
+                        panic!("There's no way this could've happened!");
+                    };
+
+                    let mut network = network.lock();
+                    for id in instance.actors.keys() {
+                        let Some((handle, _)) = network.get_by_actor_mut(*id) else {
+                            continue;
+                        };
+
+                        let msg = FromServer::PacketSegment(vars.clone(), *id);
+                        let _ = handle.send(msg.clone()); // TODO: use result
+                    }
+                }
             }
         }
 

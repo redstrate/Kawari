@@ -15,14 +15,13 @@ GIMMICK_CORAL_IDS = {
     GIMMICK_GREEN_CORAL_FORMATION
 }
 
+SEQ0 = 0
+SEQ1 = 1
+
 local coral_color
 
 function onSetup(director)
-    coral_color = math.random(0, 2)
-    print("Coral color: "..coral_color)
-
-    hideBloodyMemos(director)
-    hideInconspicuousSwitch(director)
+    beginSequence0(director)
 end
 
 function onGimmickAccessor(director, id)
@@ -31,8 +30,18 @@ function onGimmickAccessor(director, id)
     print("Expecting "..coral_gimmick_id.. " and got "..id)
 
     if id == coral_gimmick_id then
-        showInconspicuousSwitch(director)
+        beginSequence1(director)
     end
+end
+
+function beginSequence0(director)
+    director:set_data(0, SEQ0)
+
+    coral_color = math.random(0, 2)
+    print("Coral color: "..coral_color)
+
+    hideBloodyMemos(director)
+    hideInconspicuousSwitch(director)
 end
 
 function hideBloodyMemos(director)
@@ -50,6 +59,12 @@ end
 
 function hideInconspicuousSwitch(director)
     director:hide_eobj(EOBJ_INCONSPICUOUS_SWITCH)
+end
+
+function beginSequence1(director)
+    director:set_data(0, SEQ1)
+
+    showInconspicuousSwitch(director)
 end
 
 function showInconspicuousSwitch(director)
