@@ -62,15 +62,13 @@ unsafe impl Sync for Navmesh {}
 impl Navmesh {
     /// Creates a new Navmesh.
     pub fn new(zone_id: u16, nav_mesh_params: NavmeshParams, tiles: Vec<NavmeshTile>) -> Self {
-        let mut navmesh = Navmesh {
+        Self {
             zone_id,
             nav_mesh_params,
             tiles,
             navmesh: null_mut(),
             navmesh_query: null_mut(),
-        };
-        navmesh.initialize();
-        navmesh
+        }
     }
 
     /// Reads an existing NVM file.
@@ -127,9 +125,6 @@ impl Navmesh {
             assert!(!self.navmesh_query.is_null());
             assert!(dtNavMeshQuery_init(self.navmesh_query, self.navmesh, 2048) == DT_SUCCESS);
         }
-
-        // We can clear the tiles, we don't need them anymore.
-        self.tiles.clear();
     }
 
     /// Calculates a path from `start_pos` to `end_pos`.

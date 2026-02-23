@@ -3,6 +3,7 @@ use std::{
     ptr::{null, null_mut},
 };
 
+use icarus::RecastNavimesh::RecastNavimeshSheet;
 use icarus::TerritoryType::TerritoryTypeSheet;
 use kawari::config::get_config;
 use kawari_world::{Navmesh, NavmeshParams, NavmeshTile};
@@ -47,23 +48,37 @@ fn main() {
 
     // e.g. ffxiv/fst_f1/fld/f1f3/level/f1f3
     let bg_path = row.Bg().into_string().unwrap();
+    let name = row.Name().into_string().unwrap();
 
     let path = format!("bg/{}.lvb", &bg_path);
     let lvb = resolver.parsed::<Lvb>(&path).unwrap();
+
+    let navimesh_sheet = RecastNavimeshSheet::read_from(&mut resolver, Language::None).unwrap();
+    // Use default settings unless overriden
+    let mut navimesh_row = navimesh_sheet
+        .row(0)
+        .expect("No default row in RecastNavimesh sheet?");
+    for (_, row) in navimesh_sheet.into_iter().flatten_subrows() {
+        // FIXME: Will be called Name in the future.
+        if row.Unknown0().into_string().unwrap() == name {
+            tracing::info!("Using navimesh settings override for this zone!");
+            navimesh_row = row;
+        }
+    }
 
     let context;
     unsafe {
         context = CreateContext(true);
     }
 
-    let cell_size = 0.25;
-    let cell_height = 0.25;
+    let cell_size = *navimesh_row.CellSize().into_f32().unwrap();
+    let cell_height = *navimesh_row.CellHeight().into_f32().unwrap();
 
-    let tile_origin_x = -512.0;
-    let tile_origin_y = -512.0;
+    let tile_width = *navimesh_row.TileSize().into_f32().unwrap();
+    let tile_height = tile_width;
 
-    let tile_width = 256.0;
-    let tile_height = 256.0;
+    let tile_origin_x = -(tile_width * 2.0);
+    let tile_origin_y = -(tile_height * 2.0);
 
     let mut tiles = Vec::new();
     for z in 0..4 {
@@ -123,6 +138,7 @@ fn main() {
             scene.general.bg_path.value
         ))
         .unwrap();
+    let max_slope = *navimesh_row.AgentMaxSlope().into_f32().unwrap();
     for (i, plate) in tera.plates.iter().enumerate() {
         add_plate(
             &tera,
@@ -131,6 +147,7 @@ fn main() {
             &mut resolver,
             context,
             &tiles,
+            max_slope,
         );
     }
 
@@ -163,7 +180,13 @@ fn main() {
                                 .parsed::<Pcb>(&bg.collision_asset_path.value)
                                 .unwrap();
 
-                            walk_node(&pcb.root_node, &object.transform, context, &tiles);
+                            walk_node(
+                                &pcb.root_node,
+                                &object.transform,
+                                context,
+                                &tiles,
+                                max_slope,
+                            );
                         }
                     }
                 }
@@ -178,13 +201,14 @@ fn main() {
         unsafe {
             // Step 3: Build a compact heightfield out of the normal heightfield
             let compact_heightfield = rcAllocCompactHeightfield();
-            let walkable_height = 2;
-            let walkable_climb = 1;
-            let walkable_radius = 0.5;
+            let walkable_height = *navimesh_row.AgentHeight().into_f32().unwrap();
+            let walkable_climb = *navimesh_row.AgentMaxClimb().into_f32().unwrap();
+            let walkable_radius = *navimesh_row.AgentRadius().into_f32().unwrap();
+            assert!(!tile.height_field.is_null());
             assert!(rcBuildCompactHeightfield(
                 context,
-                walkable_height,
-                walkable_climb,
+                (walkable_height * cell_size) as i32, // In VX units
+                (walkable_climb * cell_size) as i32,  // In VX units
                 tile.height_field,
                 compact_heightfield
             ));
@@ -195,27 +219,28 @@ fn main() {
 
             assert!(rcErodeWalkableArea(
                 context,
-                walkable_radius as i32,
+                (walkable_radius * cell_size) as i32, // In VX units
                 compact_heightfield
             ));
 
             assert!(rcBuildDistanceField(context, compact_heightfield));
 
             let border_size = 0;
-            let min_region_area = 1;
-            let merge_region_area = 0;
+            let min_region_area = *navimesh_row.RegionMinSize().into_f32().unwrap();
+            let merge_region_area = *navimesh_row.RegionMergedSize().into_f32().unwrap();
             assert!(rcBuildRegions(
                 context,
                 compact_heightfield,
                 border_size,
-                min_region_area,
-                merge_region_area
+                (min_region_area * cell_size) as i32, // In VX units
+                (merge_region_area * cell_size) as i32, // In VX units
             ));
 
             // Step 4: Build the contour set from the compact heightfield
             let contour_set = rcAllocContourSet();
-            let max_error = 1.5;
-            let max_edge_len = (12.0 / cell_size) as i32;
+            let max_error = *navimesh_row.MaxEdgeError().into_f32().unwrap();
+            let max_edge_len =
+                (*navimesh_row.MaxEdgeLength().into_f32().unwrap() / cell_size) as i32;
             let build_flags = rcBuildContoursFlags_RC_CONTOUR_TESS_WALL_EDGES as i32;
             assert!(rcBuildContours(
                 context,
@@ -233,7 +258,7 @@ fn main() {
 
             // Step 5: Build the polymesh out of the contour set
             let poly_mesh = rcAllocPolyMesh();
-            let nvp = 6;
+            let nvp = *navimesh_row.VertsPerPoly().into_f32().unwrap() as i32;
             assert!(rcBuildPolyMesh(context, contour_set, nvp, poly_mesh));
             assert!(!(*poly_mesh).verts.is_null());
             assert!((*poly_mesh).nverts > 0);
@@ -246,8 +271,8 @@ fn main() {
 
             // Step 6: Build the polymesh detail
             let poly_mesh_detail = rcAllocPolyMeshDetail();
-            let sample_dist = 1.0;
-            let sample_max_error = 0.1;
+            let sample_dist = *navimesh_row.DetailMeshSampleDistance().into_f32().unwrap();
+            let sample_max_error = *navimesh_row.DetailMeshMaxSampleError().into_f32().unwrap();
             assert!(rcBuildPolyMeshDetail(
                 context,
                 poly_mesh,
@@ -292,9 +317,9 @@ fn main() {
                 bmax: (*poly_mesh).bmax,
 
                 // General Configuration Attributes
-                walkableHeight: walkable_height as f32,
+                walkableHeight: walkable_height,
                 walkableRadius: walkable_radius,
-                walkableClimb: walkable_climb as f32,
+                walkableClimb: walkable_climb,
                 cs: cell_size,
                 ch: cell_height,
                 buildBvTree: true,
@@ -310,9 +335,11 @@ fn main() {
             assert!(!out_data.is_null());
             assert!(out_data_size > 0);
 
-            navmesh_tiles.push(NavmeshTile {
-                data: Vec::from_raw_parts(out_data, out_data_size as usize, out_data_size as usize),
-            });
+            let out_data = core::slice::from_raw_parts(out_data, out_data_size as usize);
+            let mut data = vec![0; out_data_size as usize];
+            data.copy_from_slice(out_data);
+
+            navmesh_tiles.push(NavmeshTile { data });
             max_polys = max_polys.max((*poly_mesh).npolys);
         }
     }
@@ -330,6 +357,7 @@ fn main() {
     );
 
     let serialized_navmesh = navmesh.write_to_buffer().unwrap();
+
     let path = PathBuf::from(&destination_path);
     std::fs::create_dir_all(path.parent().unwrap()).unwrap(); // create directory structure
     std::fs::write(destination_path, &serialized_navmesh).unwrap();
@@ -348,6 +376,7 @@ fn walk_node(
     transform: &Transformation,
     context: *mut rcContext,
     tiles: &[Tile],
+    max_slope: f32,
 ) {
     if !node.vertices.is_empty() {
         let mut indices = Vec::new();
@@ -362,7 +391,8 @@ fn walk_node(
 
         // Step 2: insert geoemtry into heightfield
         let tile_indices: Vec<i32> = indices.iter().map(|x| *x as i32).collect();
-        let mut tri_area_ids: Vec<u8> = vec![0; tile_indices.len() / 3];
+        let ntris = tile_indices.len() as i32 / 3;
+        let mut tri_area_ids: Vec<u8> = vec![0; ntris as usize];
 
         // transform the vertices on the CPU
         // TODO: compute an actual transformation matrix, we need rotation/scale since porting from Bevy
@@ -377,12 +407,10 @@ fn walk_node(
 
         for tile in tiles {
             unsafe {
-                let ntris = tile_indices.len() as i32 / 3;
-
                 // mark areas as walkable
                 rcMarkWalkableTriangles(
                     context,
-                    45.0,
+                    max_slope,
                     std::mem::transmute::<*const [f32; 3], *const f32>(tile_vertices.as_ptr()),
                     tile_vertices.len() as i32,
                     tile_indices.as_ptr(),
@@ -398,14 +426,14 @@ fn walk_node(
                     tri_area_ids.as_ptr(),
                     ntris,
                     tile.height_field,
-                    2
+                    1
                 ));
             }
         }
     }
 
     for child in &node.children {
-        walk_node(child, transform, context, tiles);
+        walk_node(child, transform, context, tiles, max_slope);
     }
 }
 
@@ -416,6 +444,7 @@ fn add_plate(
     sqpack_resource: &mut ResourceResolver,
     context: *mut rcContext,
     tiles: &[Tile],
+    max_slope: f32,
 ) {
     let mdl_path = format!(
         "{}/bgplate/{}",
@@ -447,7 +476,7 @@ fn add_plate(
                 // mark areas as walkable
                 rcMarkWalkableTriangles(
                     context,
-                    45.0,
+                    max_slope,
                     std::mem::transmute::<*const [f32; 3], *const f32>(tile_vertices.as_ptr()),
                     tile_vertices.len() as i32,
                     tile_indices.as_ptr(),
@@ -463,7 +492,7 @@ fn add_plate(
                     tri_area_ids.as_ptr(),
                     ntris,
                     tile.height_field,
-                    2
+                    1
                 ));
             }
         }
