@@ -156,7 +156,7 @@ impl ZoneConnection {
     pub async fn actor_control_target(
         &mut self,
         actor_id: ObjectId,
-        target: ObjectId,
+        target: ObjectTypeId,
         category: ActorControlCategory,
     ) {
         let ipc =

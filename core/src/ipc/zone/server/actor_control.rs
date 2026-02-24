@@ -124,10 +124,7 @@ pub enum ActorControlCategory {
     SetEXP { classjob_id: u32, amount: u32 },
 
     #[brw(magic = 50u32)]
-    SetTarget {
-        #[brw(pad_before = 20)] // Blank since there are no params in the ACT
-        target: ObjectTypeId,
-    },
+    SetTarget {},
 
     // Calls into many inventory-related functions, haven't looked too far yet.
     #[brw(magic = 84u32)]
@@ -623,17 +620,16 @@ impl Default for ActorControlSelf {
 #[derive(Debug, Clone)]
 pub struct ActorControlTarget {
     #[brw(pad_after = 4)]
-    #[brw(pad_size_to = 20)]
+    #[brw(pad_size_to = 20)] // take into account categories without params
     pub category: ActorControlCategory,
-    #[brw(pad_after = 4)]
-    pub target: ObjectId,
+    pub target: ObjectTypeId,
 }
 
 impl Default for ActorControlTarget {
     fn default() -> Self {
         Self {
             category: ActorControlCategory::ToggleInvisibility { invisible: false },
-            target: ObjectId::default(),
+            target: ObjectTypeId::default(),
         }
     }
 }

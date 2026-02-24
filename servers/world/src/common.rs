@@ -7,7 +7,7 @@ use tokio::sync::mpsc::Sender;
 
 use crate::{StatusEffects, lua::LuaTask};
 use kawari::{
-    common::{JumpState, MoveAnimationState, MoveAnimationType, ObjectId, Position},
+    common::{JumpState, MoveAnimationState, MoveAnimationType, ObjectId, ObjectTypeId, Position},
     ipc::{
         chat::{
             ChatChannelType, PartyMessage, SendPartyMessage, SendTellMessage, TellNotFoundError,
@@ -95,7 +95,7 @@ pub enum FromServer {
     /// We need to update an actor
     ActorControl(ObjectId, ActorControlCategory),
     /// We need to update an actor's target
-    ActorControlTarget(ObjectId, ObjectId, ActorControlCategory),
+    ActorControlTarget(ObjectId, ObjectTypeId, ActorControlCategory),
     /// We need to update the player actor
     ActorControlSelf(ActorControlCategory),
     /// Update an actor's equip display flags.

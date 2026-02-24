@@ -15,7 +15,7 @@ pub struct CommonEmoteInfo {
     hide_text: bool,
     /// The actor id of the target.
     #[brw(pad_before = 8)] // blank
-    target: ObjectTypeId,
+    pub target: ObjectTypeId,
 }
 
 #[binrw]

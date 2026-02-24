@@ -1095,13 +1095,11 @@ pub async fn server_main_loop(
 
                             let msg = FromServer::ActorControlTarget(
                                 from_actor_id,
-                                *actor_id, // TODO: unsure if this is correct, from refactoring
-                                ActorControlCategory::SetTarget {
-                                    target: ObjectTypeId {
-                                        object_id: *actor_id,
-                                        object_type: actor_type,
-                                    },
+                                ObjectTypeId {
+                                    object_id: *actor_id,
+                                    object_type: actor_type,
                                 },
+                                ActorControlCategory::SetTarget {},
                             );
 
                             let mut network = network.lock();
@@ -1152,7 +1150,7 @@ pub async fn server_main_loop(
                         ClientTriggerCommand::Emote(emote_info) => {
                             let msg = FromServer::ActorControlTarget(
                                 from_actor_id,
-                                from_actor_id, // TODO: unsure if correct, from refactoring
+                                emote_info.target,
                                 ActorControlCategory::Emote(*emote_info),
                             );
 

@@ -1,7 +1,7 @@
 use std::{sync::Arc, time::Duration};
 
 use kawari::{
-    common::{HandlerId, InvisibilityFlags, ObjectId},
+    common::{HandlerId, InvisibilityFlags, ObjectId, ObjectTypeId, ObjectTypeKind},
     ipc::zone::{ActorControlCategory, ServerZoneIpcData, ServerZoneIpcSegment},
 };
 use mlua::{Function, UserData, UserDataMethods};
@@ -330,7 +330,14 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                 let mut network = network.lock();
                 network.send_to_by_actor_id(
                     *actor_id,
-                    FromServer::ActorControlTarget(*actor_id, *target, act),
+                    FromServer::ActorControlTarget(
+                        *actor_id,
+                        ObjectTypeId {
+                            object_id: *target,
+                            object_type: ObjectTypeKind::None,
+                        },
+                        act,
+                    ),
                     DestinationNetwork::ZoneClients,
                 );
 
