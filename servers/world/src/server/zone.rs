@@ -403,10 +403,9 @@ impl Zone {
                         let unselectable = if let Some(event_type) = HandlerType::from_repr(
                             game_data.get_eobj_data(eobj.parent_data.base_id) >> 16,
                         ) {
-                            // Unsure if excluding certain types is the way to go, but let's see.
-                            matches!(event_type, HandlerType::GimmickRect)
+                            matches!(event_type, HandlerType::Invalid | HandlerType::GimmickRect)
                         } else {
-                            false // make it selectable to be on the safe side.
+                            true // make it unselectable to be on the safe side.
                         };
 
                         let base_id = if eobj.parent_data.base_id == EOBJ_SHORTCUT && explorer_mode
