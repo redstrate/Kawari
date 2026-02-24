@@ -8,6 +8,7 @@ use crate::common::HandlerId;
 pub struct EventYieldHandler<const MAX_PARAMS: usize> {
     pub handler_id: HandlerId,
     pub scene: u16,
+    /// Seems to be a custom ID (emitted internally by an EventHandler on the client.)
     pub yield_id: u8,
     pub num_results: u8,
     pub params: [i32; MAX_PARAMS],

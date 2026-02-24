@@ -13,6 +13,7 @@ use crate::ipc::zone::server::{ServerZoneIpcData, ServerZoneIpcSegment};
 pub struct EventResume {
     pub handler_id: HandlerId,
     pub scene: u16,
+    /// Seems to be a custom ID (handled internally by an EventHandler on the client.)
     pub resume_id: u8,
     pub params_count: u8,
     #[br(count = max_params)]
