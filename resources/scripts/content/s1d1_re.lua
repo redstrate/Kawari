@@ -32,9 +32,18 @@ function onGimmickAccessor(director, id)
         GIMMICK_GREEN_CORAL_FORMATION
     }
 
+    -- Index to EObj ID
+    EOBJ_CORAL_IDS = {
+        EOBJ_BLUE_CORAL_FORMATION,
+        EOBJ_RED_CORAL_FORMATION,
+        EOBJ_GREEN_CORAL_FORMATION
+    }
+
     local coral_gimmick_id = GIMMICK_CORAL_IDS[coral_color + 1]
 
     print("Expecting "..coral_gimmick_id.. " and got "..id)
+
+    director:hide_eobj(EOBJ_CORAL_IDS[id - 22])
 
     if id == coral_gimmick_id then
         beginSequence1(director)
@@ -71,9 +80,10 @@ end
 function beginSequence1(director)
     director:set_data(0, SEQ1)
 
-    director:delete_eobj(EOBJ_BLUE_CORAL_FORMATION)
-    director:delete_eobj(EOBJ_RED_CORAL_FORMATION)
-    director:delete_eobj(EOBJ_GREEN_CORAL_FORMATION)
+    -- Hide and deactivate all coral
+    director:hide_eobj(EOBJ_BLUE_CORAL_FORMATION)
+    director:hide_eobj(EOBJ_RED_CORAL_FORMATION)
+    director:hide_eobj(EOBJ_GREEN_CORAL_FORMATION)
 
     showInconspicuousSwitch(director)
 end

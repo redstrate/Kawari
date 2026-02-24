@@ -165,7 +165,6 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                 // Update invisibility flags for next spawn
                 if let Some(NetworkedActor::Object { object }) = instance.find_actor_mut(actor_id) {
                     object.visibility = flags;
-                    object.unselectable = true;
                 }
             }
             LuaDirectorTask::ShowEObj { base_id } => {
@@ -174,7 +173,6 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                     continue;
                 };
 
-                // TODO: doesn't update live yet for some reason'
                 let flags = InvisibilityFlags::VISIBLE;
 
                 let msg = FromServer::ActorControl(
@@ -194,7 +192,6 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                 // Update invisibility flags for next spawn
                 if let Some(NetworkedActor::Object { object }) = instance.find_actor_mut(actor_id) {
                     object.visibility = flags;
-                    object.unselectable = false;
                 }
             }
             LuaDirectorTask::DeleteEObj { base_id } => {

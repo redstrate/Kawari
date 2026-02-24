@@ -20,8 +20,7 @@ pub struct ObjectSpawn {
     #[br(map = read_bool_from::<u8>)]
     #[bw(map = write_bool_as::<u8>)]
     pub unselectable: bool,
-    /// Controls the visibility of the object.
-    pub visibility: InvisibilityFlags,
+    pub event_state: u8,
     /// If this is an ENPC, represents an index into the EObj Excel sheet.
     /// If this is an AreaObject, represents an index into the VFX Excel sheet.
     pub base_id: u32,
@@ -42,7 +41,8 @@ pub struct ObjectSpawn {
     pub rotation: f32,
     /// The FATE to associate with.
     pub fate_id: u16,
-    pub event_state: u8,
+    /// Controls the visibility of the object.
+    pub visibility: InvisibilityFlags,
     pub args1: u8,
     pub args2: u32,
     pub args3: u32,
