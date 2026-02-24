@@ -295,7 +295,7 @@ pub enum HandlerType {
     Array = 13,
     /// See CraftLeve Excel sheet.
     CraftLeveClient = 14,
-    /// Unknown purpose.
+    /// Used for interactable dungeon objects.
     GimmickAccessor = 15,
     /// See GimmickBill Excel sheet (event_id & 0xFFFF.)
     GimmickBill = 16,
