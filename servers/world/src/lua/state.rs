@@ -43,9 +43,8 @@ impl KawariLua {
         Self::register_enum::<DamageElement>(&mut lua, "DAMAGE_ELEMENT");
 
         // Load Global.lua
-        let config = get_config();
-        let file_name = format!("{}/Global.lua", &config.world.scripts_location);
-        lua.load(std::fs::read(&file_name).expect("Failed to locate scripts directory!"))
+        let file_name = "resources/scripts/Global.lua";
+        lua.load(std::fs::read(file_name).expect("Failed to locate scripts directory!"))
             .exec()
             .unwrap();
 
@@ -98,10 +97,10 @@ impl KawariLua {
 
         let mut extra_lua_state = KawariLuaState::default();
 
-        let config = get_config();
+        let _config = get_config();
 
         let load_based_on_filename = |name: &str, hash_map: &mut HashMap<u32, String>| {
-            let effects_dir = format!("{}/{name}", &config.world.scripts_location);
+            let effects_dir = format!("resources/scripts/{name}");
             for entry in std::fs::read_dir(effects_dir)
                 .expect("Didn't find effects directory?")
                 .flatten()
@@ -125,7 +124,7 @@ impl KawariLua {
                         let num = num.parse().expect("Failed to parse status effect ID");
                         hash_map.insert(
                             num,
-                            path.strip_prefix(&config.world.scripts_location)
+                            path.strip_prefix("resources/scripts")
                                 .expect("Failed to express scripts location")
                                 .to_str()
                                 .expect("Failed to convert path")
@@ -158,9 +157,9 @@ impl KawariLua {
 
         lua.globals().set("GAME_DATA", game_data.clone())?;
 
-        let file_name = format!("{}/Init.lua", &config.world.scripts_location);
-        lua.load(std::fs::read(&file_name).expect("Failed to locate scripts directory!"))
-            .set_name("@".to_string() + &file_name)
+        let file_name = "resources/scripts/Init.lua";
+        lua.load(std::fs::read(file_name).expect("Failed to locate scripts directory!"))
+            .set_name("@".to_string() + file_name)
             .exec()?;
 
         Ok(())

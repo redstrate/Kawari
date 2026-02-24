@@ -1202,10 +1202,8 @@ async fn process_packet(
                                     {
                                         handled = true;
 
-                                        let file_name = format!(
-                                            "{}/{}",
-                                            &config.world.scripts_location, command_script
-                                        );
+                                        let file_name =
+                                            format!("resources/scripts/{command_script}",);
 
                                         let mut run_script = || -> mlua::Result<()> {
                                             lua.0.scope(|scope| {

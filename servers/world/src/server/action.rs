@@ -18,7 +18,6 @@ use crate::{
 };
 use kawari::{
     common::{CharacterMode, DEAD_FADE_OUT_TIME, INVALID_OBJECT_ID, ObjectId},
-    config::get_config,
     ipc::zone::{
         ActionEffect, ActionKind, ActionRequest, ActionResult, ActorControlCategory, EffectEntry,
         EffectKind, EffectResult, ServerZoneIpcData, ServerZoneIpcSegment,
@@ -269,9 +268,7 @@ pub fn execute_normal_action(
             .scope(|scope| {
                 let connection_data = scope.create_userdata_ref_mut(lua_player).unwrap();
 
-                let config = get_config();
-
-                let file_name = format!("{}/{}", &config.world.scripts_location, action_script);
+                let file_name = format!("resources/scripts/{action_script}");
                 lua.0
                     .load(std::fs::read(&file_name).expect("Failed to locate scripts directory!"))
                     .set_name("@".to_string() + &file_name)
@@ -327,9 +324,7 @@ pub fn execute_item_action(
                 additional_data,
             )) {
                 Ok((action_script, arg)) => {
-                    let config = get_config();
-
-                    let file_name = format!("{}/{}", &config.world.scripts_location, action_script);
+                    let file_name = format!("resources/scripts/{action_script}");
                     lua.0
                         .load(
                             std::fs::read(&file_name).expect("Failed to locate scripts directory!"),

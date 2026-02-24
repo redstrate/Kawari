@@ -5,7 +5,6 @@ use parking_lot::Mutex;
 
 use kawari::{
     common::{HandlerId, HandlerType, ObjectTypeId},
-    config::get_config,
     ipc::zone::{Condition, EventType},
 };
 
@@ -42,8 +41,7 @@ impl Event {
             Self::inject_lua_parameters(HandlerId(id), &mut lua.0, &mut game_data);
         }
 
-        let config = get_config();
-        let file_name = format!("{}/{}", &config.world.scripts_location, path);
+        let file_name = format!("resources/scripts/{path}");
 
         let result = std::fs::read(&file_name);
         if let Err(err) = result {

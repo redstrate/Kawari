@@ -334,11 +334,6 @@ pub struct WorldConfig {
     #[serde(default = "WorldConfig::default_world_id")]
     pub world_id: u16,
 
-    /// Location of the scripts directory.
-    /// Defaults to a sensible value if the project is self-built.
-    #[serde(default = "WorldConfig::default_scripts_location")]
-    pub scripts_location: String,
-
     /// Enable packet obsfucation. There's literally no reason to do this!
     #[serde(default = "WorldConfig::default_packet_obsfucation")]
     pub enable_packet_obsfucation: bool,
@@ -379,7 +374,6 @@ impl Default for WorldConfig {
             listen_address: default_listen_address(),
             server_name: Self::default_server_name(),
             world_id: Self::default_world_id(),
-            scripts_location: Self::default_scripts_location(),
             enable_packet_obsfucation: Self::default_packet_obsfucation(),
             enable_packet_compression: Self::default_packet_compression(),
             login_message: Self::default_login_message(),
@@ -403,10 +397,6 @@ impl WorldConfig {
 
     fn default_world_id() -> u16 {
         63 // Gilgamesh
-    }
-
-    fn default_scripts_location() -> String {
-        "resources/scripts".to_string()
     }
 
     fn default_packet_obsfucation() -> bool {

@@ -29,7 +29,6 @@ use kawari::{
         MAX_SPAWNED_ACTORS, MAX_SPAWNED_OBJECTS, MoveAnimationState, MoveAnimationType, ObjectId,
         ObjectTypeId, ObjectTypeKind, Position, TerritoryIntendedUse,
     },
-    config::get_config,
     ipc::zone::{
         ActorControlCategory, BattleNpcSubKind, ClientTriggerCommand, CommonSpawn, Condition,
         Conditions, NpcSpawn, ObjectKind, WaymarkPlacementMode, WaymarkPreset,
@@ -126,11 +125,7 @@ impl WorldServer {
         let content_short_name = game_data
             .get_content_short_name(content_finder_condition)
             .unwrap();
-        let config = get_config();
-        let file_name = format!(
-            "{}/content/{content_short_name}.lua",
-            &config.world.scripts_location
-        );
+        let file_name = format!("resources/scripts/content/{content_short_name}.lua");
 
         let result = std::fs::read(&file_name);
         if let Err(err) = result {

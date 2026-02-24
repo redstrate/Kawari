@@ -17,7 +17,6 @@ use crate::{
 };
 use kawari::{
     common::ObjectId,
-    config::get_config,
     ipc::zone::{
         ActorControlCategory, ServerZoneIpcData, ServerZoneIpcSegment, StatusEffect,
         StatusEffectList,
@@ -321,9 +320,7 @@ pub fn remove_effect(
                 .scope(|scope| {
                     let connection_data = scope.create_userdata_ref_mut(&mut lua_player).unwrap();
 
-                    let config = get_config();
-
-                    let file_name = format!("{}/{}", &config.world.scripts_location, effect_script);
+                    let file_name = format!("resources/scripts/{effect_script}");
                     lua.0
                         .load(
                             std::fs::read(&file_name).expect("Failed to locate scripts directory!"),
