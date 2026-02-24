@@ -311,7 +311,9 @@ impl ZoneConnection {
             })
             .await;
 
-            self.send_ipc_self(director_vars.unwrap()).await;
+            if let Some(director_vars) = director_vars {
+                self.send_ipc_self(director_vars).await;
+            }
 
             self.send_ipc_self(ServerZoneIpcSegment::new(ServerZoneIpcData::UnkDirector1 {
                 unk: [
