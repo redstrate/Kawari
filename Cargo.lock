@@ -1322,7 +1322,7 @@ dependencies = [
 [[package]]
 name = "recastnavigation-sys"
 version = "1.0.3"
-source = "git+https://github.com/redstrate/recastnavigation-rs-sys#509a614bf7fc1fd84fce43b6dbe397bfa9f03b02"
+source = "git+https://github.com/redstrate/recastnavigation-rs-sys#7bfacd67226f47bb4f4125b0dfdde4d1b7a1a03d"
 dependencies = [
  "bindgen",
  "cc",
