@@ -109,6 +109,7 @@ impl Navmesh {
             assert!(dtNavMesh_init(self.navmesh, &navmesh_params) == DT_SUCCESS);
 
             for tile in &mut self.tiles {
+                // NOTE: At this point, Detour has a reference to our tile data! If it's moved or deleted, beware of confusing memory-related errors.
                 assert!(
                     dtNavMesh_addTile(
                         self.navmesh,
