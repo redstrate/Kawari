@@ -156,11 +156,13 @@ impl ZoneConnection {
     pub async fn actor_control_target(
         &mut self,
         actor_id: ObjectId,
+        target: ObjectId,
         category: ActorControlCategory,
     ) {
         let ipc =
             ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlTarget(ActorControlTarget {
                 category,
+                target,
             }));
 
         self.send_ipc_from(actor_id, ipc).await;

@@ -37,6 +37,16 @@ function printf(player, fmt_str, ...)
     end
 end
 
+function has_value(tab, val)
+    for index, value in ipairs(tab) do
+        if value == val then
+            return true
+        end
+    end
+
+    return false
+end
+
 -- Constants, if two or more scripts share the same global they should be placed here
 EFFECT_TRANSFIGURATION = 565
 

@@ -6,6 +6,4 @@ function onTalk(target, player)
     player:play_scene(1, HIDE_HOTBAR, {})
 end
 
-function onYield(scene, results, player)
-    player:finish_event()
-end
+-- Yielding/Finishing is handling on the Rust side

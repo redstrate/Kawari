@@ -33,6 +33,8 @@ GIMMICK_WAVERIDER_GATE_KEY = 39
 GIMMICK_KEY_TO_THE_HOLE = 40
 GIMMICK_SHORTCUT = 74
 
+EVENT_ACTION_INTERACT = 24
+
 SEQ0 = 0 -- Activate the coral trigger
 SEQ1 = 1 -- Open the hidden door
 SEQ2 = 2 -- Discover the pirate captain
@@ -60,7 +62,7 @@ function setSequence(director, sequence)
     director:set_data(0, sequence)
 end
 
-function onGimmickAccessor(director, actor_id, id)
+function onGimmickAccessor(director, actor_id, id, params)
     if sequence(director) == SEQ0 then
         -- Index to gimmick ID
         GIMMICK_CORAL_IDS = {
@@ -69,21 +71,20 @@ function onGimmickAccessor(director, actor_id, id)
             GIMMICK_GREEN_CORAL_FORMATION
         }
 
-        -- Index to EObj ID
-        EOBJ_CORAL_IDS = {
-            EOBJ_BLUE_CORAL_FORMATION,
-            EOBJ_RED_CORAL_FORMATION,
-            EOBJ_GREEN_CORAL_FORMATION
-        }
+        -- -1 = will not touch the coral
+        -- 0 = will touch the coral
+        if has_value(GIMMICK_CORAL_IDS, id) and params[1] == 0 then
+            -- Index to EObj ID
+            EOBJ_CORAL_IDS = {
+                EOBJ_BLUE_CORAL_FORMATION,
+                EOBJ_RED_CORAL_FORMATION,
+                EOBJ_GREEN_CORAL_FORMATION
+            }
 
-        local coral_gimmick_id = GIMMICK_CORAL_IDS[coral_color + 1]
+            -- TODO: handle the case where multiple players are interacting
+            director:event_action(EVENT_ACTION_INTERACT, actor_id, EOBJ_CORAL_IDS[id - 22])
 
-        print("Expecting "..coral_gimmick_id.. " and got "..id)
-
-        director:hide_eobj(EOBJ_CORAL_IDS[id - 22])
-
-        if id == coral_gimmick_id then
-            beginSequence1(director)
+            return
         end
     elseif sequence(director) == SEQ1 then
         beginSequence2(director)
@@ -111,6 +112,26 @@ function onGimmickAccessor(director, actor_id, id)
         beginSequence4(director)
     elseif id == GIMMICK_EXIT then
         director:abandon_duty(actor_id)
+    end
+
+    director:finish_gimmick(actor_id)
+end
+
+function onEventActionCast(director, actor_id, target)
+    director:finish_gimmick(actor_id)
+
+    director:hide_eobj(target)
+
+    -- Index to EObj ID
+    EOBJ_CORAL_IDS = {
+        EOBJ_BLUE_CORAL_FORMATION,
+        EOBJ_RED_CORAL_FORMATION,
+        EOBJ_GREEN_CORAL_FORMATION
+    }
+    local coral_gimmick_id = EOBJ_CORAL_IDS[coral_color + 1]
+
+    if target == coral_gimmick_id then
+        beginSequence1(director)
     end
 end
 

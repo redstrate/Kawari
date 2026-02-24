@@ -47,6 +47,8 @@ pub enum QueuedTaskData {
     DeadFadeOut { actor_id: ObjectId },
     /// Despawn a dead actor.
     DeadDespawn { actor_id: ObjectId },
+    /// Complete an EventAction
+    CastEventAction { target: ObjectId },
 }
 
 #[derive(Debug, Clone, PartialEq)]

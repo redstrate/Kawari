@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 
 use kawari::{
     common::{HandlerId, InvisibilityFlags, ObjectId},
@@ -8,24 +8,42 @@ use mlua::{Function, UserData, UserDataMethods};
 use parking_lot::Mutex;
 
 use crate::{
-    FromServer, ToServer,
+    ClientId, FromServer, ToServer,
     lua::KawariLua,
     server::{
         WorldServer,
         actor::NetworkedActor,
-        instance::Instance,
+        instance::{Instance, QueuedTaskData},
         network::{DestinationNetwork, NetworkState},
     },
 };
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum LuaDirectorTask {
-    HideEObj { base_id: u32 },
-    ShowEObj { base_id: u32 },
-    DeleteEObj { base_id: u32 },
-    SpawnEObj { base_id: u32 },
+    HideEObj {
+        base_id: u32,
+    },
+    ShowEObj {
+        base_id: u32,
+    },
+    DeleteEObj {
+        base_id: u32,
+    },
+    SpawnEObj {
+        base_id: u32,
+    },
     SendVariables,
-    AbandonDuty { actor_id: ObjectId },
+    AbandonDuty {
+        actor_id: ObjectId,
+    },
+    BeginEventAction {
+        actor_id: ObjectId,
+        target: ObjectId,
+        action_id: u32,
+    },
+    FinishGimmickEvent {
+        actor_id: ObjectId,
+    },
 }
 
 // TODO: Maybe collapse into DirectorData?
@@ -64,6 +82,23 @@ impl UserData for LuaDirector {
             });
             Ok(())
         });
+        methods.add_method_mut(
+            "event_action",
+            |_, this, (action_id, actor_id, target): (u32, u32, u32)| {
+                this.tasks.push(LuaDirectorTask::BeginEventAction {
+                    actor_id: ObjectId(actor_id),
+                    target: ObjectId(target),
+                    action_id,
+                });
+                Ok(())
+            },
+        );
+        methods.add_method_mut("finish_gimmick", |_, this, actor_id: u32| {
+            this.tasks.push(LuaDirectorTask::FinishGimmickEvent {
+                actor_id: ObjectId(actor_id),
+            });
+            Ok(())
+        });
     }
 }
 
@@ -98,7 +133,7 @@ impl DirectorData {
         }
     }
 
-    pub fn gimmick_accessor(&mut self, actor_id: ObjectId, id: u32) {
+    pub fn gimmick_accessor(&mut self, actor_id: ObjectId, id: u32, params: &[i32]) {
         let mut run_script = || {
             let mut lua_director = self.create_lua_director();
             let err = self.lua.0.scope(|scope| {
@@ -106,7 +141,7 @@ impl DirectorData {
 
                 let func: Function = self.lua.0.globals().get("onGimmickAccessor")?;
 
-                func.call::<()>((data, actor_id.0, id))?;
+                func.call::<()>((data, actor_id.0, id, params))?;
 
                 Ok(())
             });
@@ -115,6 +150,26 @@ impl DirectorData {
         };
         if let Err(err) = run_script() {
             tracing::warn!("Syntax error during onGimmickAccessor: {err:?}");
+        }
+    }
+
+    pub fn event_action_cast(&mut self, actor_id: ObjectId, target: ObjectId) {
+        let mut run_script = || {
+            let mut lua_director = self.create_lua_director();
+            let err = self.lua.0.scope(|scope| {
+                let data = scope.create_userdata_ref_mut(&mut lua_director)?;
+
+                let func: Function = self.lua.0.globals().get("onEventActionCast")?;
+
+                func.call::<()>((data, actor_id.0, target.0))?;
+
+                Ok(())
+            });
+            self.apply_lua_director(lua_director);
+            err
+        };
+        if let Err(err) = run_script() {
+            tracing::warn!("Syntax error during onEventActionCast: {err:?}");
         }
     }
 
@@ -253,6 +308,41 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                     DestinationNetwork::ZoneClients,
                 );
             }
+            LuaDirectorTask::BeginEventAction {
+                actor_id,
+                target,
+                action_id,
+            } => {
+                let act = ActorControlCategory::EventAction {
+                    unk1: 1,
+                    id: *action_id,
+                };
+
+                let mut network = network.lock();
+                network.send_to_by_actor_id(
+                    *actor_id,
+                    FromServer::ActorControlTarget(*actor_id, *target, act),
+                    DestinationNetwork::ZoneClients,
+                );
+
+                // TODO: set OccupiedInEvent?
+
+                // TODO: don't hardcode this duration, take it from the EventAction sheet!
+                instance.insert_task(
+                    ClientId::default(),
+                    *actor_id,
+                    Duration::from_secs(2),
+                    QueuedTaskData::CastEventAction { target: *target },
+                );
+            }
+            LuaDirectorTask::FinishGimmickEvent { actor_id } => {
+                let mut network = network.lock();
+                network.send_to_by_actor_id(
+                    *actor_id,
+                    FromServer::FinishEvent(),
+                    DestinationNetwork::ZoneClients,
+                );
+            }
         }
     }
 
@@ -264,7 +354,7 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
 /// Process status effect-related messages.
 pub fn handle_director_messages(data: Arc<Mutex<WorldServer>>, msg: &ToServer) -> bool {
     match msg {
-        ToServer::GimmickAccessor(from_actor_id, id) => {
+        ToServer::GimmickAccessor(from_actor_id, id, params) => {
             let mut data = data.lock();
             let Some(instance) = data.find_actor_instance_mut(*from_actor_id) else {
                 tracing::warn!("Somehow failed to find an instance for actor?");
@@ -272,7 +362,7 @@ pub fn handle_director_messages(data: Arc<Mutex<WorldServer>>, msg: &ToServer) -
             };
 
             if let Some(director) = &mut instance.director {
-                director.gimmick_accessor(*from_actor_id, *id);
+                director.gimmick_accessor(*from_actor_id, *id, params);
             } else {
                 tracing::warn!("Expected a director when recieving a GimmickAccessor?");
             }

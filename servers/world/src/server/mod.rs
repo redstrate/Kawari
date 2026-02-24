@@ -815,6 +815,15 @@ pub async fn server_main_loop(
                                     network.remove_actor(instance, *actor_id);
                                 }
                             }
+                            QueuedTaskData::CastEventAction { target } => {
+                                let mut data = data.lock();
+                                if let Some(instance) =
+                                    data.find_actor_instance_mut(task.from_actor_id)
+                                    && let Some(director) = &mut instance.director
+                                {
+                                    director.event_action_cast(task.from_actor_id, *target);
+                                }
+                            }
                         }
                     }
                 }
@@ -1086,6 +1095,7 @@ pub async fn server_main_loop(
 
                             let msg = FromServer::ActorControlTarget(
                                 from_actor_id,
+                                *actor_id, // TODO: unsure if this is correct, from refactoring
                                 ActorControlCategory::SetTarget {
                                     target: ObjectTypeId {
                                         object_id: *actor_id,
@@ -1142,6 +1152,7 @@ pub async fn server_main_loop(
                         ClientTriggerCommand::Emote(emote_info) => {
                             let msg = FromServer::ActorControlTarget(
                                 from_actor_id,
+                                from_actor_id, // TODO: unsure if correct, from refactoring
                                 ActorControlCategory::Emote(*emote_info),
                             );
 

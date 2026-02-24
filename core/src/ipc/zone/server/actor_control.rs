@@ -25,6 +25,15 @@ pub enum ActorControlCategory {
     #[brw(magic = 2u32)]
     SetMode { mode: CharacterMode, mode_arg: u32 },
 
+    /// Begins an event action.
+    #[brw(magic = 3u32)]
+    EventAction {
+        /// Seems to be 1 to start it?
+        unk1: u32,
+        /// Index into the EventAction Excel sheet.
+        id: u32,
+    },
+
     /// Only shows the floating message, it doesn't actually update your EXP!
     #[brw(magic = 7u32)]
     EXPFloatingMessage {
@@ -613,15 +622,18 @@ impl Default for ActorControlSelf {
 #[binrw]
 #[derive(Debug, Clone)]
 pub struct ActorControlTarget {
-    #[brw(pad_size_to = 32)]
-    // take into account categories without params, TODO: investigate if the last 4 bytes are padding or a possible 7th param
+    #[brw(pad_after = 4)]
+    #[brw(pad_size_to = 20)]
     pub category: ActorControlCategory,
+    #[brw(pad_after = 4)]
+    pub target: ObjectId,
 }
 
 impl Default for ActorControlTarget {
     fn default() -> Self {
         Self {
             category: ActorControlCategory::ToggleInvisibility { invisible: false },
+            target: ObjectId::default(),
         }
     }
 }

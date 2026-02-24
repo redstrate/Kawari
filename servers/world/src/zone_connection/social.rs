@@ -369,6 +369,7 @@ impl ZoneConnection {
     ) {
         self.actor_control_target(
             from_actor_id,
+            target_actor_id, // TODO: unsure if this is correct, from refactoring
             ActorControlCategory::ToggleSign {
                 sign_id,
                 from_actor_id,

@@ -1524,6 +1524,7 @@ async fn process_packet(
                                     .send(ToServer::GimmickAccessor(
                                         connection.player_data.character.actor_id,
                                         handler.handler_id.event_id(),
+                                        handler.params[..handler.num_results as usize].to_vec(),
                                     ))
                                     .await;
                             }
@@ -1543,6 +1544,7 @@ async fn process_packet(
                                     .send(ToServer::GimmickAccessor(
                                         connection.player_data.character.actor_id,
                                         handler.handler_id.event_id(),
+                                        handler.params[..handler.num_results as usize].to_vec(),
                                     ))
                                     .await;
                             }
@@ -2237,7 +2239,7 @@ async fn process_server_msg(
         FromServer::DeleteActor(object_id, spawn_index) => connection.delete_actor(object_id, spawn_index).await,
         FromServer::DeleteObject(spawn_index) => connection.delete_object(spawn_index).await,
         FromServer::ActorControl(actor_id, actor_control) => connection.actor_control(actor_id, actor_control).await,
-        FromServer::ActorControlTarget(actor_id, actor_control) => connection.actor_control_target(actor_id, actor_control).await,
+        FromServer::ActorControlTarget(actor_id, target, actor_control) => connection.actor_control_target(actor_id, target, actor_control).await,
         FromServer::ActorControlSelf(actor_control) => connection.actor_control_self(actor_control).await,
         FromServer::ActorSummonsMinion(minion_id) => {
             connection.handle.send(ToServer::ActorSummonsMinion(connection.id, connection.player_data.character.actor_id, minion_id)).await;
@@ -2309,6 +2311,11 @@ async fn process_server_msg(
                 connection.old_rotation,
             ))
             .await;
+        }
+        FromServer::FinishEvent() => {
+            if let Some(event) = connection.events.last() {
+                connection.event_finish(event.id, lua_player).await;
+            }
         }
         _ => { tracing::error!("Zone connection {:#?} received a FromServer message we don't care about: {:#?}, ensure you're using the right client network or that you've implemented a handler for it if we actually care about it!", client_handle.id, msg); }
     }

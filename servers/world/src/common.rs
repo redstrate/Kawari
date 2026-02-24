@@ -95,7 +95,7 @@ pub enum FromServer {
     /// We need to update an actor
     ActorControl(ObjectId, ActorControlCategory),
     /// We need to update an actor's target
-    ActorControlTarget(ObjectId, ActorControlCategory),
+    ActorControlTarget(ObjectId, ObjectId, ActorControlCategory),
     /// We need to update the player actor
     ActorControlSelf(ActorControlCategory),
     /// Update an actor's equip display flags.
@@ -182,8 +182,10 @@ pub enum FromServer {
     Countdown(u64, u64, String, ObjectId, u16),
     /// Inform the client that a sign/marker was applied to a target by someone in their party.
     TargetSignToggled(u32, ObjectId, ObjectId, bool),
-    /// Reuqest the client to begin preparing to leave this content.
+    /// Request the client to begin preparing to leave this content.
     LeaveContent(),
+    /// Request the client to finish their current event.
+    FinishEvent(),
 }
 
 #[derive(Debug, Clone)]
@@ -334,7 +336,7 @@ pub enum ToServer {
     /// The client started a countdown in their party.
     StartCountdown(u64, ObjectId, u64, u64, String, ObjectId, u16),
     /// The client yields from a GimmickAccessor.
-    GimmickAccessor(ObjectId, u32),
+    GimmickAccessor(ObjectId, u32, Vec<i32>),
 }
 
 #[derive(Clone, Debug)]
