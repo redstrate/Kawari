@@ -150,7 +150,6 @@ function beginSequence0(director)
 end
 
 function hideBloodyMemos(director)
-    -- TODO: actually delete these eobjs
     if coral_color ~= 0 then
         director:hide_eobj(EOBJ_BLOODY_MEMO_BLUE)
     end
