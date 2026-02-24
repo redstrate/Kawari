@@ -46,6 +46,7 @@ impl UserData for LuaDirector {
             this.data[index as usize] = data;
             Ok(())
         });
+        methods.add_method("data", |_, this, index: u8| Ok(this.data[index as usize]));
     }
 }
 
