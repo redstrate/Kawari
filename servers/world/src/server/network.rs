@@ -81,16 +81,21 @@ impl NetworkState {
                 continue;
             }
 
-            // If the actor wasn't spawned for this client, skip.
-            let Some(spawn_index) = state.actor_allocator.free(actor_id) else {
-                continue;
-            };
+            if let Some(spawn_index) = state.object_allocator.free(actor_id) {
+                let msg = FromServer::DeleteObject(spawn_index);
 
-            let msg = FromServer::DeleteActor(actor_id, spawn_index);
+                if handle.send(msg).is_err() {
+                    self.to_remove.push(id);
+                }
+            } else if let Some(spawn_index) = state.actor_allocator.free(actor_id) {
+                let msg = FromServer::DeleteActor(actor_id, spawn_index);
 
-            if handle.send(msg).is_err() {
-                self.to_remove.push(id);
+                if handle.send(msg).is_err() {
+                    self.to_remove.push(id);
+                }
             }
+
+            // If the actor wasn't spawned for this client, fail silently.
         }
     }
 

@@ -17,6 +17,7 @@ use crate::{
 pub enum LuaDirectorTask {
     HideEObj { base_id: u32 },
     ShowEObj { base_id: u32 },
+    DeleteEObj { base_id: u32 },
     SendVariables,
 }
 
@@ -35,6 +36,10 @@ impl UserData for LuaDirector {
         });
         methods.add_method_mut("show_eobj", |_, this, base_id: u32| {
             this.tasks.push(LuaDirectorTask::ShowEObj { base_id });
+            Ok(())
+        });
+        methods.add_method_mut("delete_eobj", |_, this, base_id: u32| {
+            this.tasks.push(LuaDirectorTask::DeleteEObj { base_id });
             Ok(())
         });
         methods.add_method_mut("set_data", |_, this, (index, data): (u8, u8)| {
@@ -191,6 +196,15 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                     object.visibility = flags;
                     object.unselectable = false;
                 }
+            }
+            LuaDirectorTask::DeleteEObj { base_id } => {
+                let Some(actor_id) = instance.find_object_by_eobj_id(*base_id) else {
+                    tracing::warn!("Failed to find eobj for DeleteEObj, it won't despawn!");
+                    continue;
+                };
+
+                let mut network = network.lock();
+                network.remove_actor(instance, actor_id);
             }
             LuaDirectorTask::SendVariables => {
                 let vars = if let Some(director) = &instance.director {

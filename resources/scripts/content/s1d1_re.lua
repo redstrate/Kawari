@@ -4,6 +4,10 @@ EOBJ_BLOODY_MEMO_BLUE = 2000212
 EOBJ_BLOODY_MEMO_RED = 2001548
 EOBJ_BLOODY_MEMO_GREEN = 2001549
 EOBJ_INCONSPICUOUS_SWITCH = 2000216
+-- TODO: these are *technically* duplicating the IDs below, and that should probably be fixed
+EOBJ_BLUE_CORAL_FORMATION = 2000213
+EOBJ_RED_CORAL_FORMATION = 2000214
+EOBJ_GREEN_CORAL_FORMATION = 2000215
 
 GIMMICK_BLUE_CORAL_FORMATION = 23
 GIMMICK_RED_CORAL_FORMATION = 24
@@ -66,6 +70,10 @@ end
 
 function beginSequence1(director)
     director:set_data(0, SEQ1)
+
+    director:delete_eobj(EOBJ_BLUE_CORAL_FORMATION)
+    director:delete_eobj(EOBJ_RED_CORAL_FORMATION)
+    director:delete_eobj(EOBJ_GREEN_CORAL_FORMATION)
 
     showInconspicuousSwitch(director)
 end
