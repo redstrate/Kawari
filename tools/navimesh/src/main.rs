@@ -207,8 +207,8 @@ fn main() {
             assert!(!tile.height_field.is_null());
             assert!(rcBuildCompactHeightfield(
                 context,
-                (walkable_height * cell_size) as i32, // In VX units
-                (walkable_climb * cell_size) as i32,  // In VX units
+                (walkable_height / cell_height).ceil() as i32, // In VX units
+                (walkable_climb / cell_size).floor() as i32,   // In VX units
                 tile.height_field,
                 compact_heightfield
             ));
@@ -219,7 +219,7 @@ fn main() {
 
             assert!(rcErodeWalkableArea(
                 context,
-                (walkable_radius * cell_size) as i32, // In VX units
+                (walkable_radius / cell_size).ceil() as i32, // In VX units
                 compact_heightfield
             ));
 
@@ -232,8 +232,8 @@ fn main() {
                 context,
                 compact_heightfield,
                 border_size,
-                (min_region_area * cell_size) as i32, // In VX units
-                (merge_region_area * cell_size) as i32, // In VX units
+                (min_region_area / cell_size).ceil() as i32, // In VX units
+                (merge_region_area / cell_size).ceil() as i32, // In VX units
             ));
 
             // Step 4: Build the contour set from the compact heightfield
