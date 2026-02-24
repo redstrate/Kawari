@@ -13,7 +13,7 @@ use crate::ipc::zone::server::{ServerZoneIpcData, ServerZoneIpcSegment};
 pub struct EventResume {
     pub handler_id: HandlerId,
     pub scene: u16,
-    pub unk2: u8,
+    pub resume_id: u8,
     pub params_count: u8,
     #[br(count = max_params)]
     #[bw(pad_size_to = 4 * max_params)]
@@ -28,6 +28,9 @@ impl EventResume {
                 data: self.clone(),
             })),
             3..=4 => Some(ServerZoneIpcSegment::new(ServerZoneIpcData::EventResume4 {
+                data: self.clone(),
+            })),
+            5..=8 => Some(ServerZoneIpcSegment::new(ServerZoneIpcData::EventResume8 {
                 data: self.clone(),
             })),
             _ => None,

@@ -1539,16 +1539,17 @@ async fn process_packet(
                             }
                         }
                         ClientZoneIpcData::EventYieldHandler2(handler) => {
-                            tracing::info!(message = "Event yielded", handler_id = %handler.handler_id, error_code = handler.error_code, scene = handler.scene, params = ?&handler.params[..handler.num_results as usize]);
+                            tracing::info!(message = "Event yielded", handler_id = %handler.handler_id, yield_id = handler.yield_id, scene = handler.scene, params = ?&handler.params[..handler.num_results as usize]);
 
                             connection.events.last_mut().unwrap().on_yield(
                                 handler.scene,
+                                handler.yield_id,
                                 &handler.params[..handler.num_results as usize],
                                 lua_player,
                             );
                         }
                         ClientZoneIpcData::EventYieldHandler4(handler) => {
-                            tracing::info!(message = "Event yielded", handler_id = %handler.handler_id, error_code = handler.error_code, scene = handler.scene, params = ?&handler.params[..handler.num_results as usize]);
+                            tracing::info!(message = "Event yielded", handler_id = %handler.handler_id, yield_id = handler.yield_id, scene = handler.scene, params = ?&handler.params[..handler.num_results as usize]);
 
                             // It always assumes a shop... for now
                             let event_type = handler.handler_id.handler_type();
@@ -1559,6 +1560,7 @@ async fn process_packet(
                             } else {
                                 connection.events.last_mut().unwrap().on_yield(
                                     handler.scene,
+                                    handler.yield_id,
                                     &handler.params[..handler.num_results as usize],
                                     lua_player,
                                 );

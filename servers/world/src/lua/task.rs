@@ -202,6 +202,7 @@ pub enum LuaTask {
     },
     ResumeEvent {
         scene: u16,
+        resume_id: u8,
         params: Vec<u32>,
     },
 }

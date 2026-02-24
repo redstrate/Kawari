@@ -25,7 +25,7 @@ function onReturn(scene, results, player)
     player:finish_event()
 end
 
-function onYield(scene, results, player)
+function onYield(scene, id, results, player)
     if scene == 0 and results[1] == 1 then
         -- Play the introductory text if accepted (this has to be played from Momodi)
         player:play_scene(50, HIDE_HOTBAR, {})

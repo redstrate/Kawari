@@ -91,6 +91,10 @@ ServerZoneIpcType:
     comment: "Unknown, seen in Out on a Limb."
     opcode: 763
     size: 24
+  - name: EventResume8
+    comment: "Unknown, seen in Out on a Limb."
+    opcode: 625
+    size: 40
   - name: EventScene2
     comment: Start a scene for the current event.
     opcode: 550

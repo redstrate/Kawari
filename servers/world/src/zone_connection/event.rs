@@ -174,13 +174,19 @@ impl ZoneConnection {
     }
 
     /// Resumes the current event.
-    pub async fn resume_event(&mut self, event_id: u32, scene: u16, params: Vec<u32>) {
+    pub async fn resume_event(
+        &mut self,
+        event_id: u32,
+        scene: u16,
+        resume_id: u8,
+        params: Vec<u32>,
+    ) {
         let scene = EventResume {
             handler_id: HandlerId(event_id),
             scene,
+            resume_id,
             params_count: params.len() as u8,
             params,
-            unk2: 21, // TODO: lol what does this mean
         };
         if let Some(ipc) = scene.package_resume() {
             self.send_ipc_self(ipc).await;

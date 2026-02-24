@@ -736,9 +736,18 @@ impl ZoneConnection {
                     )
                     .await;
                 }
-                LuaTask::ResumeEvent { scene, params } => {
-                    self.resume_event(player.event_handler_id.unwrap().0, *scene, params.clone())
-                        .await;
+                LuaTask::ResumeEvent {
+                    scene,
+                    resume_id,
+                    params,
+                } => {
+                    self.resume_event(
+                        player.event_handler_id.unwrap().0,
+                        *scene,
+                        *resume_id,
+                        params.clone(),
+                    )
+                    .await;
                 }
             }
         }

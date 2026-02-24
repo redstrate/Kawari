@@ -27,6 +27,6 @@ function onReturn(scene, results, player)
     player:finish_event()
 end
 
-function onYield(scene, results, player)
-    player:resume_event(scene, results)
+function onYield(scene, id, results, player)
+    player:resume_event(scene, id, results)
 end

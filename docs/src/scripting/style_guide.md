@@ -18,7 +18,7 @@ function onTalk(target, player)
     ...
 end
 
-function onYield(scene, results, player)
+function onYield(scene, id, results, player)
     ...
 end
 ```

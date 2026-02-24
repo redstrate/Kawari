@@ -165,14 +165,14 @@ impl Event {
         }
     }
 
-    pub fn on_yield(&mut self, scene: u16, results: &[i32], player: &mut LuaPlayer) {
+    pub fn on_yield(&mut self, scene: u16, yield_id: u8, results: &[i32], player: &mut LuaPlayer) {
         let mut run_script = || {
             self.lua.0.scope(|scope| {
                 let player = scope.create_userdata_ref_mut(player)?;
 
                 let func: Function = self.lua.0.globals().get("onYield")?;
 
-                func.call::<()>((scene, results, player))?;
+                func.call::<()>((scene, yield_id, results, player))?;
 
                 Ok(())
             })

@@ -8,7 +8,7 @@ use crate::common::HandlerId;
 pub struct EventYieldHandler<const MAX_PARAMS: usize> {
     pub handler_id: HandlerId,
     pub scene: u16,
-    pub error_code: u8,
+    pub yield_id: u8,
     pub num_results: u8,
     pub params: [i32; MAX_PARAMS],
 }
@@ -18,7 +18,7 @@ impl<const MAX_PARAMS: usize> Default for EventYieldHandler<{ MAX_PARAMS }> {
         Self {
             handler_id: HandlerId::default(),
             scene: 0,
-            error_code: 0,
+            yield_id: 0,
             num_results: 0,
             params: [0i32; MAX_PARAMS],
         }

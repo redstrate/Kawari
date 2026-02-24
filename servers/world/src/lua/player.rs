@@ -666,9 +666,12 @@ impl LuaPlayer {
         self.queued_tasks.push(LuaTask::FinishCastingGlamour {});
     }
 
-    fn resume_event(&mut self, scene: u16, params: Vec<u32>) {
-        self.queued_tasks
-            .push(LuaTask::ResumeEvent { scene, params });
+    fn resume_event(&mut self, scene: u16, resume_id: u8, params: Vec<u32>) {
+        self.queued_tasks.push(LuaTask::ResumeEvent {
+            scene,
+            resume_id,
+            params,
+        });
     }
 }
 
@@ -1083,8 +1086,8 @@ impl UserData for LuaPlayer {
         });
         methods.add_method_mut(
             "resume_event",
-            |_, this, (scene, params): (u16, Vec<u32>)| {
-                this.resume_event(scene, params);
+            |_, this, (scene, resume_id, params): (u16, u8, Vec<u32>)| {
+                this.resume_event(scene, resume_id, params);
                 Ok(())
             },
         );

@@ -5,7 +5,7 @@ function onReturn(scene, results, player)
     player:finish_event()
 end
 
-function onYield(scene, results, player)
+function onYield(scene, id, results, player)
     if results[1] == 1 then
         -- go to ward
         local ward_number = results[2]

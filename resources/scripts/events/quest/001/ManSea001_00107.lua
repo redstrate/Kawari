@@ -49,7 +49,7 @@ function onReturn(scene, results, player)
     player:finish_event()
 end
 
-function onYield(scene, results, player)
+function onYield(scene, id, results, player)
     if scene == 0 then
         -- first param: whether the quest was accepted
         local accepted = results[1] == 1

@@ -187,6 +187,10 @@ pub enum ServerZoneIpcData {
         #[brw(args { max_params: 4 } )]
         data: EventResume,
     },
+    EventResume8 {
+        #[brw(args { max_params: 8 } )]
+        data: EventResume,
+    },
     EventScene2 {
         #[brw(args { max_params: 2 } )]
         data: EventScene,
