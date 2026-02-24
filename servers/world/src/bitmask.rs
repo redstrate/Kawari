@@ -1,3 +1,5 @@
+use std::marker::PhantomData;
+
 use diesel::{
     backend::Backend,
     deserialize::{self, FromSqlRow},
@@ -10,133 +12,116 @@ use serde::{Deserialize, Serialize};
 
 use kawari::common::{value_to_flag_byte_index_value, value_to_flag_byte_index_value_quests};
 
+pub trait BitmaskTransformation {
+    fn transform_value(value: u32) -> (u8, u16);
+}
+
+#[derive(Debug, Clone)]
+pub struct NormalBitmaskTransformation {}
+
+impl BitmaskTransformation for NormalBitmaskTransformation {
+    fn transform_value(value: u32) -> (u8, u16) {
+        value_to_flag_byte_index_value(value)
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct QuestBitmaskTransformation {}
+
+impl BitmaskTransformation for QuestBitmaskTransformation {
+    fn transform_value(value: u32) -> (u8, u16) {
+        value_to_flag_byte_index_value_quests(value)
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, AsExpression, FromSqlRow)]
 #[diesel(sql_type = Text)]
-pub struct Bitmask<const N: usize>(pub Vec<u8>);
+pub struct GenericBitmask<const N: usize, T: BitmaskTransformation + std::fmt::Debug> {
+    pub data: Vec<u8>,
+    _phantom: PhantomData<T>,
+}
 
-impl<const N: usize> serialize::ToSql<Text, Sqlite> for Bitmask<N> {
+impl<const N: usize, T: BitmaskTransformation + std::fmt::Debug> serialize::ToSql<Text, Sqlite>
+    for GenericBitmask<N, T>
+{
     fn to_sql<'b>(&'b self, out: &mut serialize::Output<'b, '_, Sqlite>) -> serialize::Result {
         out.set_value(serde_json::to_string(&self).unwrap());
         Ok(serialize::IsNull::No)
     }
 }
 
-impl<const N: usize> deserialize::FromSql<Text, Sqlite> for Bitmask<N> {
+impl<const N: usize, T: BitmaskTransformation + std::fmt::Debug> deserialize::FromSql<Text, Sqlite>
+    for GenericBitmask<N, T>
+{
     fn from_sql(mut bytes: <Sqlite as Backend>::RawValue<'_>) -> deserialize::Result<Self> {
         Ok(serde_json::from_str(bytes.read_text()).ok().unwrap())
     }
 }
 
-impl<const N: usize> From<Vec<u8>> for Bitmask<N> {
+impl<const N: usize, T: BitmaskTransformation + std::fmt::Debug> From<Vec<u8>>
+    for GenericBitmask<N, T>
+{
     fn from(value: Vec<u8>) -> Self {
-        Self(value)
+        Self {
+            data: value,
+            _phantom: PhantomData,
+        }
     }
 }
 
-impl<const N: usize> Default for Bitmask<N> {
+impl<const N: usize, T: BitmaskTransformation + std::fmt::Debug> Default for GenericBitmask<N, T> {
     fn default() -> Self {
-        Self(vec![0; N])
+        Self {
+            data: vec![0; N],
+            _phantom: PhantomData,
+        }
     }
 }
 
-impl<const N: usize> Bitmask<N> {
+impl<const N: usize, T: BitmaskTransformation + std::fmt::Debug> GenericBitmask<N, T> {
     /// Sets this specific `value`.
     pub fn set(&mut self, value: u32) {
-        let (value, index) = value_to_flag_byte_index_value(value);
-        if (index as usize) < self.0.len() {
-            self.0[index as usize] |= value;
+        let (value, index) = T::transform_value(value);
+        if (index as usize) < self.data.len() {
+            self.data[index as usize] |= value;
         } else {
-            tracing::warn!("Failed to set bitmask: {index} despite {}?!", self.0.len());
+            tracing::warn!(
+                "Failed to set bitmask: {index} despite {}?!",
+                self.data.len()
+            );
         }
     }
 
     /// Clears this specific `value`.
     pub fn clear(&mut self, value: u32) {
-        let (value, index) = value_to_flag_byte_index_value(value);
-        self.0[index as usize] &= !value;
+        let (value, index) = T::transform_value(value);
+        self.data[index as usize] &= !value;
     }
 
     /// Toggles the `value`, and if wasn't previously set then this returns true. Otherwise false.
     pub fn toggle(&mut self, value: u32) -> bool {
         let previously_unset = !self.contains(value);
 
-        let (value, index) = value_to_flag_byte_index_value(value);
-        self.0[index as usize] ^= value;
+        let (value, index) = T::transform_value(value);
+        self.data[index as usize] ^= value;
 
         previously_unset
     }
 
     /// Checks if this `value` is set.
     pub fn contains(&self, value: u32) -> bool {
-        let (value, index) = value_to_flag_byte_index_value(value);
-        (self.0[index as usize] & value) == value
+        let (value, index) = T::transform_value(value);
+        (self.data[index as usize] & value) == value
     }
 
     /// Sets all bits of this mask to 0xFF (255)
     pub fn set_all(&mut self) {
-        self.0 = vec![0xFF; N];
+        self.data = vec![0xFF; N];
     }
 }
 
-// TODO: de-duplicate the two implementations, this is stupid
-#[derive(Debug, Clone, Serialize, Deserialize, AsExpression, FromSqlRow)]
-#[diesel(sql_type = Text)]
-pub struct QuestBitmask<const N: usize>(pub Vec<u8>);
-
-impl<const N: usize> serialize::ToSql<Text, Sqlite> for QuestBitmask<N> {
-    fn to_sql<'b>(&'b self, out: &mut serialize::Output<'b, '_, Sqlite>) -> serialize::Result {
-        out.set_value(serde_json::to_string(&self).unwrap());
-        Ok(serialize::IsNull::No)
-    }
-}
-
-impl<const N: usize> deserialize::FromSql<Text, Sqlite> for QuestBitmask<N> {
-    fn from_sql(mut bytes: <Sqlite as Backend>::RawValue<'_>) -> deserialize::Result<Self> {
-        Ok(serde_json::from_str(bytes.read_text()).ok().unwrap())
-    }
-}
-
-impl<const N: usize> From<Vec<u8>> for QuestBitmask<N> {
-    fn from(value: Vec<u8>) -> Self {
-        Self(value)
-    }
-}
-
-impl<const N: usize> Default for QuestBitmask<N> {
-    fn default() -> Self {
-        Self(vec![0; N])
-    }
-}
-
-impl<const N: usize> QuestBitmask<N> {
-    /// Sets this specific `value`.
-    pub fn set(&mut self, value: u32) {
-        let (value, index) = value_to_flag_byte_index_value_quests(value);
-        self.0[index as usize] |= value;
-    }
-
-    /// Clears this specific `value`.
-    pub fn clear(&mut self, value: u32) {
-        let (value, index) = value_to_flag_byte_index_value_quests(value);
-        self.0[index as usize] &= !value;
-    }
-
-    /// Toggles the `value`, and if wasn't previously set then this returns true. Otherwise false.
-    pub fn toggle(&mut self, value: u32) -> bool {
-        let previously_unset = !self.contains(value);
-
-        let (value, index) = value_to_flag_byte_index_value_quests(value);
-        self.0[index as usize] ^= value;
-
-        previously_unset
-    }
-
-    /// Checks if this `value` is set.
-    pub fn contains(&self, value: u32) -> bool {
-        let (value, index) = value_to_flag_byte_index_value_quests(value);
-        (self.0[index as usize] & value) == value
-    }
-}
+pub type Bitmask<const N: usize> = GenericBitmask<N, NormalBitmaskTransformation>;
+pub type QuestBitmask<const N: usize> = GenericBitmask<N, QuestBitmaskTransformation>;
 
 #[cfg(test)]
 mod tests {
@@ -147,10 +132,10 @@ mod tests {
         let mut bitmask: Bitmask<4> = Bitmask::default();
 
         bitmask.set(0);
-        assert_eq!(bitmask.0, vec![1, 0, 0, 0]);
+        assert_eq!(bitmask.data, vec![1, 0, 0, 0]);
 
         bitmask.set(1);
-        assert_eq!(bitmask.0, vec![3, 0, 0, 0]);
+        assert_eq!(bitmask.data, vec![3, 0, 0, 0]);
     }
 
     #[test]
@@ -158,10 +143,10 @@ mod tests {
         let mut bitmask: Bitmask<4> = Bitmask::default();
 
         assert_eq!(bitmask.toggle(0), true);
-        assert_eq!(bitmask.0, vec![1, 0, 0, 0]);
+        assert_eq!(bitmask.data, vec![1, 0, 0, 0]);
 
         assert_eq!(bitmask.toggle(0), false);
-        assert_eq!(bitmask.0, vec![0, 0, 0, 0]);
+        assert_eq!(bitmask.data, vec![0, 0, 0, 0]);
     }
 
     #[test]
@@ -170,12 +155,12 @@ mod tests {
 
         bitmask.set(0);
         bitmask.set(1);
-        assert_eq!(bitmask.0, vec![3, 0, 0, 0]);
+        assert_eq!(bitmask.data, vec![3, 0, 0, 0]);
 
         bitmask.clear(0);
-        assert_eq!(bitmask.0, vec![2, 0, 0, 0]);
+        assert_eq!(bitmask.data, vec![2, 0, 0, 0]);
         bitmask.clear(0); // Using clear again shouldn't do anything.
-        assert_eq!(bitmask.0, vec![2, 0, 0, 0]);
+        assert_eq!(bitmask.data, vec![2, 0, 0, 0]);
     }
 
     #[test]
@@ -183,12 +168,63 @@ mod tests {
         let mut bitmask: Bitmask<4> = Bitmask::default();
 
         bitmask.set(0);
-        assert_eq!(bitmask.0, vec![1, 0, 0, 0]);
+        assert_eq!(bitmask.data, vec![1, 0, 0, 0]);
         assert_eq!(bitmask.contains(0), true);
         assert_eq!(bitmask.contains(1), false);
 
         bitmask.set(1);
-        assert_eq!(bitmask.0, vec![3, 0, 0, 0]);
+        assert_eq!(bitmask.data, vec![3, 0, 0, 0]);
+        assert_eq!(bitmask.contains(0), true);
+        assert_eq!(bitmask.contains(1), true);
+    }
+
+    #[test]
+    fn set_quest_bitmask() {
+        let mut bitmask: QuestBitmask<4> = QuestBitmask::default();
+
+        bitmask.set(0);
+        assert_eq!(bitmask.data, vec![128, 0, 0, 0]);
+
+        bitmask.set(1);
+        assert_eq!(bitmask.data, vec![192, 0, 0, 0]);
+    }
+
+    #[test]
+    fn toggle_quest_bitmask() {
+        let mut bitmask: QuestBitmask<4> = QuestBitmask::default();
+
+        assert_eq!(bitmask.toggle(0), true);
+        assert_eq!(bitmask.data, vec![128, 0, 0, 0]);
+
+        assert_eq!(bitmask.toggle(0), false);
+        assert_eq!(bitmask.data, vec![0, 0, 0, 0]);
+    }
+
+    #[test]
+    fn clear_quest_bitmask() {
+        let mut bitmask: QuestBitmask<4> = QuestBitmask::default();
+
+        bitmask.set(0);
+        bitmask.set(1);
+        assert_eq!(bitmask.data, vec![192, 0, 0, 0]);
+
+        bitmask.clear(0);
+        assert_eq!(bitmask.data, vec![64, 0, 0, 0]);
+        bitmask.clear(0); // Using clear again shouldn't do anything.
+        assert_eq!(bitmask.data, vec![64, 0, 0, 0]);
+    }
+
+    #[test]
+    fn contains_quest_bitmask() {
+        let mut bitmask: QuestBitmask<4> = QuestBitmask::default();
+
+        bitmask.set(0);
+        assert_eq!(bitmask.data, vec![128, 0, 0, 0]);
+        assert_eq!(bitmask.contains(0), true);
+        assert_eq!(bitmask.contains(1), false);
+
+        bitmask.set(1);
+        assert_eq!(bitmask.data, vec![192, 0, 0, 0]);
         assert_eq!(bitmask.contains(0), true);
         assert_eq!(bitmask.contains(1), true);
     }

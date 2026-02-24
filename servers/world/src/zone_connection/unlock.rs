@@ -81,11 +81,11 @@ impl ZoneConnection {
     pub async fn toggle_caught_fish(&mut self, caught_fish_id: u32) {
         let (value, index) = value_to_flag_byte_index_value(caught_fish_id);
 
-        self.player_data.unlock.caught_fish.0[index as usize] ^= value;
+        self.player_data.unlock.caught_fish.data[index as usize] ^= value;
 
         self.actor_control_self(ActorControlCategory::SetCaughtFishBitmask {
             index: index as u32,
-            value: self.player_data.unlock.caught_fish.0[index as usize] as u32,
+            value: self.player_data.unlock.caught_fish.data[index as usize] as u32,
         })
         .await;
     }
@@ -93,11 +93,11 @@ impl ZoneConnection {
     pub async fn toggle_caught_spearfish(&mut self, caught_spearfish_id: u32) {
         let (value, index) = value_to_flag_byte_index_value(caught_spearfish_id);
 
-        self.player_data.unlock.caught_spearfish.0[index as usize] ^= value;
+        self.player_data.unlock.caught_spearfish.data[index as usize] ^= value;
 
         self.actor_control_self(ActorControlCategory::SetCaughtSpearfishBitmask {
             index: index as u32,
-            value: self.player_data.unlock.caught_spearfish.0[index as usize] as u32,
+            value: self.player_data.unlock.caught_spearfish.data[index as usize] as u32,
         })
         .await;
     }

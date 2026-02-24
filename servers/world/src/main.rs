@@ -584,19 +584,19 @@ async fn process_packet(
                                         first_class: connection.player_data.classjob.first_class
                                             as u8,
                                         levels: padded_levels,
-                                        unlocks: connection.player_data.unlock.unlocks.0.clone(),
+                                        unlocks: connection.player_data.unlock.unlocks.data.clone(),
                                         aetherytes: connection
                                             .player_data
                                             .aetheryte
                                             .unlocked
-                                            .0
+                                            .data
                                             .clone(),
-                                        minions: connection.player_data.unlock.minions.0.clone(),
+                                        minions: connection.player_data.unlock.minions.data.clone(),
                                         mount_guide_mask: connection
                                             .player_data
                                             .unlock
                                             .mounts
-                                            .0
+                                            .data
                                             .clone(),
                                         homepoint: connection.player_data.aetheryte.homepoint
                                             as u16,
@@ -606,84 +606,84 @@ async fn process_packet(
                                             .player_data
                                             .unlock
                                             .seen_active_help
-                                            .0
+                                            .data
                                             .clone(),
                                         aether_currents_mask: connection
                                             .player_data
                                             .aether_current
                                             .unlocked
-                                            .0
+                                            .data
                                             .clone(),
                                         orchestrion_roll_mask: connection
                                             .player_data
                                             .unlock
                                             .orchestrion_rolls
-                                            .0
+                                            .data
                                             .clone(),
                                         buddy_equip_mask: connection
                                             .player_data
                                             .companion
                                             .unlocked_equip
-                                            .0
+                                            .data
                                             .clone(),
                                         cutscene_seen_mask: connection
                                             .player_data
                                             .unlock
                                             .cutscene_seen
-                                            .0
+                                            .data
                                             .clone(),
                                         ornament_mask: connection
                                             .player_data
                                             .unlock
                                             .ornaments
-                                            .0
+                                            .data
                                             .clone(),
                                         caught_fish_mask: connection
                                             .player_data
                                             .unlock
                                             .caught_fish
-                                            .0
+                                            .data
                                             .clone(),
                                         caught_spearfish_mask: connection
                                             .player_data
                                             .unlock
                                             .caught_spearfish
-                                            .0
+                                            .data
                                             .clone(),
                                         adventure_mask: connection
                                             .player_data
                                             .unlock
                                             .adventures
-                                            .0
+                                            .data
                                             .clone(),
                                         triple_triad_cards: connection
                                             .player_data
                                             .unlock
                                             .triple_triad_cards
-                                            .0
+                                            .data
                                             .clone(),
                                         glasses_styles_mask: connection
                                             .player_data
                                             .unlock
                                             .glasses_styles
-                                            .0
+                                            .data
                                             .clone(),
                                         chocobo_taxi_stands_mask: connection
                                             .player_data
                                             .unlock
                                             .chocobo_taxi_stands
-                                            .0
+                                            .data
                                             .clone(),
                                         aether_current_comp_flg_set_bitmask1: connection
                                             .player_data
                                             .aether_current
                                             .comp_flg_set
-                                            .0[0],
+                                            .data[0],
                                         aether_current_comp_flg_set_bitmask2: connection
                                             .player_data
                                             .aether_current
                                             .comp_flg_set
-                                            .0[1..AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE]
+                                            .data[1..AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE]
                                             .to_vec(),
 
                                         // content
@@ -691,97 +691,97 @@ async fn process_packet(
                                             .player_data
                                             .content
                                             .unlocked_special_content
-                                            .0
+                                            .data
                                             .clone(),
                                         unlocked_dungeons: connection
                                             .player_data
                                             .content
                                             .unlocked_dungeons
-                                            .0
+                                            .data
                                             .clone(),
                                         unlocked_raids: connection
                                             .player_data
                                             .content
                                             .unlocked_raids
-                                            .0
+                                            .data
                                             .clone(),
                                         unlocked_guildhests: connection
                                             .player_data
                                             .content
                                             .unlocked_guildhests
-                                            .0
+                                            .data
                                             .clone(),
                                         unlocked_trials: connection
                                             .player_data
                                             .content
                                             .unlocked_trials
-                                            .0
+                                            .data
                                             .clone(),
                                         unlocked_crystalline_conflict: connection
                                             .player_data
                                             .content
                                             .unlocked_crystalline_conflicts
-                                            .0
+                                            .data
                                             .clone(),
                                         unlocked_frontline: connection
                                             .player_data
                                             .content
                                             .unlocked_frontlines
-                                            .0
+                                            .data
                                             .clone(),
                                         cleared_raids: connection
                                             .player_data
                                             .content
                                             .cleared_raids
-                                            .0
+                                            .data
                                             .clone(),
                                         cleared_dungeons: connection
                                             .player_data
                                             .content
                                             .cleared_dungeons
-                                            .0
+                                            .data
                                             .clone(),
                                         cleared_guildhests: connection
                                             .player_data
                                             .content
                                             .cleared_guildhests
-                                            .0
+                                            .data
                                             .clone(),
                                         cleared_trials: connection
                                             .player_data
                                             .content
                                             .cleared_trials
-                                            .0
+                                            .data
                                             .clone(),
                                         cleared_crystalline_conflict: connection
                                             .player_data
                                             .content
                                             .cleared_crystalline_conflicts
-                                            .0
+                                            .data
                                             .clone(),
                                         cleared_frontline: connection
                                             .player_data
                                             .content
                                             .cleared_frontlines
-                                            .0
+                                            .data
                                             .clone(),
                                         cleared_masked_carnivale: connection
                                             .player_data
                                             .content
                                             .cleared_masked_carnivale
-                                            .0
+                                            .data
                                             .clone(),
                                         unlocked_misc_content: connection
                                             .player_data
                                             .content
                                             .unlocked_misc_content
-                                            .0
+                                            .data
                                             .clone(),
                                         cleared_misc_content: connection
                                             .player_data
                                             .content
                                             .cleared_misc_content
-                                            .0
+                                            .data
                                             .clone(),
 
                                         ..Default::default()
@@ -867,7 +867,7 @@ async fn process_packet(
                                                 .player_data
                                                 .unlock
                                                 .titles
-                                                .0
+                                                .data
                                                 .clone(),
                                         });
                                     connection.send_ipc_self(ipc).await;

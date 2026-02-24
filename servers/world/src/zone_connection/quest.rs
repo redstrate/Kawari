@@ -44,7 +44,7 @@ impl ZoneConnection {
         // quest complete list
         {
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::QuestCompleteList {
-                completed_quests: self.player_data.quest.completed.0.clone(),
+                completed_quests: self.player_data.quest.completed.data.clone(),
                 unk2: vec![0xFF; 65],
             });
             self.send_ipc_self(ipc).await;
@@ -150,7 +150,7 @@ impl ZoneConnection {
     }
 
     pub async fn finish_all_quests(&mut self) {
-        self.player_data.quest.completed.0 = vec![0xFF; COMPLETED_QUEST_BITMASK_SIZE];
+        self.player_data.quest.completed.data = vec![0xFF; COMPLETED_QUEST_BITMASK_SIZE];
         self.send_quest_information().await;
     }
 
@@ -202,7 +202,7 @@ impl ZoneConnection {
     }
 
     pub async fn incomplete_all_quests(&mut self) {
-        self.player_data.quest.completed.0 = vec![0x0; COMPLETED_QUEST_BITMASK_SIZE];
+        self.player_data.quest.completed.data = vec![0x0; COMPLETED_QUEST_BITMASK_SIZE];
         self.send_quest_information().await;
     }
 }
