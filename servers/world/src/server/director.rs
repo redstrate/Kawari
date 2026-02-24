@@ -44,6 +44,9 @@ pub enum LuaDirectorTask {
     FinishGimmickEvent {
         actor_id: ObjectId,
     },
+    LogMessage {
+        id: u32,
+    },
 }
 
 // TODO: Maybe collapse into DirectorData?
@@ -96,6 +99,12 @@ impl UserData for LuaDirector {
         methods.add_method_mut("finish_gimmick", |_, this, actor_id: u32| {
             this.tasks.push(LuaDirectorTask::FinishGimmickEvent {
                 actor_id: ObjectId(actor_id),
+            });
+            Ok(())
+        });
+        methods.add_method_mut("log_message", |_, this, id: u32| {
+            this.tasks.push(LuaDirectorTask::LogMessage {
+                id
             });
             Ok(())
         });
@@ -207,8 +216,10 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
     let tasks = if let Some(director) = &instance.director {
         director.tasks.clone()
     } else {
-        Vec::new()
+        return;
     };
+
+    let director_id = instance.director.as_ref().unwrap().id;
 
     for task in &tasks {
         match task {
@@ -340,6 +351,17 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                 network.send_to_by_actor_id(
                     *actor_id,
                     FromServer::FinishEvent(),
+                    DestinationNetwork::ZoneClients,
+                );
+            }
+            LuaDirectorTask::LogMessage { id } => {
+                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ItemObtainedLogMessage { handler_id: director_id, message_type: *id, params_count: 0, item_id: 0, item_quantity: 0 });
+
+                let mut network = network.lock();
+                // TODO: lol, don't send it to *every player on the server*.
+                network.send_to_all(
+                    None,
+                    FromServer::PacketSegment(ipc, ObjectId::default()), // TODO: how do we just send it from the player?
                     DestinationNetwork::ZoneClients,
                 );
             }

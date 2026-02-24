@@ -35,6 +35,8 @@ GIMMICK_SHORTCUT = 74
 
 EVENT_ACTION_INTERACT = 24
 
+LOG_MESSAGE_SEQ0 = 2034 -- You hear something move in the distance
+
 SEQ0 = 0 -- Activate the coral trigger
 SEQ1 = 1 -- Open the hidden door
 SEQ2 = 2 -- Discover the pirate captain
@@ -121,6 +123,8 @@ function onEventActionCast(director, actor_id, target)
     director:finish_gimmick(actor_id)
 
     director:hide_eobj(target)
+
+    director:log_message(LOG_MESSAGE_SEQ0)
 
     -- Index to EObj ID
     EOBJ_CORAL_IDS = {
