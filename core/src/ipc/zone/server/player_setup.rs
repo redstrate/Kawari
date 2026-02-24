@@ -283,7 +283,7 @@ pub struct PlayerStatus {
     pub weekly_bingo_order_data: [u8; 16],
     pub weekly_bingo_reward_data: [u8; 4],
     pub supply_satisfaction_ranks: [u8; 12],
-    pub used_supply_allowances: [u8; 12],
+    pub used_supply_allowances: [u8; 7],
 
     #[br(count = SPECIAL_CONTENT_ARRAY_SIZE)]
     #[bw(pad_size_to = SPECIAL_CONTENT_ARRAY_SIZE)]
@@ -353,5 +353,5 @@ pub struct PlayerStatus {
     #[bw(pad_size_to = MISC_CONTENT_ARRAY_SIZE)]
     pub cleared_misc_content: Vec<u8>,
 
-    pub unknown949: [u8; 4],
+    pub unknown949: [u8; 9],
 }
