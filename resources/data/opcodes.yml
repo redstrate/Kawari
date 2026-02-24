@@ -227,8 +227,8 @@ ServerZoneIpcType:
     comment: Unknown purpose.
     opcode: 244
     size: 96
-  - name: ItemObtainedLogMessage
-    comment: Sent by the server when an item is obtained in ways other than gil shops (e.g. Poetics shops.)
+  - name: LogMessage
+    comment: Sent by the server to send a predefined log message in chat.
     opcode: 614
     size: 24
   - name: ContentFinderCommencing

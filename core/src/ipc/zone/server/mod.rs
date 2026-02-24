@@ -354,7 +354,7 @@ pub enum ServerZoneIpcData {
         #[brw(pad_after = 8)]
         total_sale_cost: u32,
     },
-    ItemObtainedLogMessage {
+    LogMessage {
         handler_id: HandlerId,
         /// Non-stackable item or a single item: 750 / 0x2EE ("You obtained a .")
         /// Stackable item: 751 / 0x2EF ("You obtained .")

@@ -103,9 +103,7 @@ impl UserData for LuaDirector {
             Ok(())
         });
         methods.add_method_mut("log_message", |_, this, id: u32| {
-            this.tasks.push(LuaDirectorTask::LogMessage {
-                id
-            });
+            this.tasks.push(LuaDirectorTask::LogMessage { id });
             Ok(())
         });
     }
@@ -355,7 +353,13 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                 );
             }
             LuaDirectorTask::LogMessage { id } => {
-                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ItemObtainedLogMessage { handler_id: director_id, message_type: *id, params_count: 0, item_id: 0, item_quantity: 0 });
+                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::LogMessage {
+                    handler_id: director_id,
+                    message_type: *id,
+                    params_count: 0,
+                    item_id: 0,
+                    item_quantity: 0,
+                });
 
                 let mut network = network.lock();
                 // TODO: lol, don't send it to *every player on the server*.
