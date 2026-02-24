@@ -101,7 +101,7 @@ impl Event {
     }
 
     // TODO: this is a terrible hold-over name. what it actually is an onStart function that's really only useful for cutscenes.
-    pub fn enter_territory(&mut self, player: &mut LuaPlayer) {
+    pub fn on_enter_territory(&mut self, player: &mut LuaPlayer) {
         let mut run_script = || {
             self.lua.0.scope(|scope| {
                 let player_data = scope.create_userdata_ref_mut(player)?;
@@ -115,14 +115,14 @@ impl Event {
         };
         if let Err(err) = run_script() {
             tracing::warn!(
-                "Syntax error during enter_territory in {}: {:?}",
+                "Syntax error while calling onEnterTerritory in {}: {:?}",
                 self.file_name,
                 err
             );
         }
     }
 
-    pub fn enter_trigger(&mut self, player: &mut LuaPlayer, arg: u32) {
+    pub fn on_enter_trigger(&mut self, player: &mut LuaPlayer, arg: u32) {
         let mut run_script = || {
             self.lua.0.scope(|scope| {
                 let player = scope.create_userdata_ref_mut(player)?;
@@ -137,14 +137,14 @@ impl Event {
 
         if let Err(err) = run_script() {
             tracing::warn!(
-                "Syntax error during enter_trigger in {}: {:?}",
+                "Syntax error while calling onEnterTrigger in {}: {:?}",
                 self.file_name,
                 err
             );
         }
     }
 
-    pub fn talk(&mut self, target_id: ObjectTypeId, player: &mut LuaPlayer) {
+    pub fn on_talk(&mut self, target_id: ObjectTypeId, player: &mut LuaPlayer) {
         let mut run_script = || {
             self.lua.0.scope(|scope| {
                 let player = scope.create_userdata_ref_mut(player)?;
@@ -157,11 +157,15 @@ impl Event {
             })
         };
         if let Err(err) = run_script() {
-            tracing::warn!("Syntax error during talk in {}: {:?}", self.file_name, err);
+            tracing::warn!(
+                "Syntax error while calling onTalk in {}: {:?}",
+                self.file_name,
+                err
+            );
         }
     }
 
-    pub fn finish(&mut self, scene: u16, results: &[i32], player: &mut LuaPlayer) {
+    pub fn on_yield(&mut self, scene: u16, results: &[i32], player: &mut LuaPlayer) {
         let mut run_script = || {
             self.lua.0.scope(|scope| {
                 let player = scope.create_userdata_ref_mut(player)?;
@@ -175,14 +179,14 @@ impl Event {
         };
         if let Err(err) = run_script() {
             tracing::warn!(
-                "Syntax error during finish in {}: {:?}",
+                "Syntax error while calling onYield in {}: {:?}",
                 self.file_name,
                 err
             );
         }
     }
 
-    pub fn do_return(&mut self, scene: u16, results: &[i32], player: &mut LuaPlayer) {
+    pub fn on_return(&mut self, scene: u16, results: &[i32], player: &mut LuaPlayer) {
         let mut run_script = || {
             self.lua.0.scope(|scope| {
                 let player = scope.create_userdata_ref_mut(player)?;
@@ -196,7 +200,7 @@ impl Event {
         };
         if let Err(err) = run_script() {
             tracing::warn!(
-                "Syntax error during return in {}: {:?}",
+                "Syntax error while calling onReturn in {}: {:?}",
                 self.file_name,
                 err
             );

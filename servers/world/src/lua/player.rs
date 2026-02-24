@@ -665,6 +665,11 @@ impl LuaPlayer {
     fn finish_casting_glamour(&mut self) {
         self.queued_tasks.push(LuaTask::FinishCastingGlamour {});
     }
+
+    fn resume_event(&mut self, scene: u16, params: Vec<u32>) {
+        self.queued_tasks
+            .push(LuaTask::ResumeEvent { scene, params });
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -1076,6 +1081,13 @@ impl UserData for LuaPlayer {
             this.finish_casting_glamour();
             Ok(())
         });
+        methods.add_method_mut(
+            "resume_event",
+            |_, this, (scene, params): (u16, Vec<u32>)| {
+                this.resume_event(scene, params);
+                Ok(())
+            },
+        );
     }
 
     fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {

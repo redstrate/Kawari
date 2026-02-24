@@ -110,6 +110,9 @@ pub use housing_ward::HousingWardMenuSummaryItem;
 mod trust_information;
 pub use trust_information::{TrustContent, TrustInformation};
 
+mod event_resume;
+pub use event_resume::EventResume;
+
 use crate::common::{
     CHAR_NAME_MAX_LENGTH, ContainerType, ItemOperationKind, ObjectId, read_string, write_string,
 };
@@ -176,7 +179,15 @@ pub enum ServerZoneIpcData {
     WeatherId(WeatherChange),
     UpdateItem(ItemInfo),
     ContainerInfo(ContainerInfo),
-    EventScene {
+    EventResume2 {
+        #[brw(args { max_params: 2 } )]
+        data: EventResume,
+    },
+    EventResume4 {
+        #[brw(args { max_params: 4 } )]
+        data: EventResume,
+    },
+    EventScene2 {
         #[brw(args { max_params: 2 } )]
         data: EventScene,
     },
@@ -233,13 +244,6 @@ pub enum ServerZoneIpcData {
     ActorControlTarget(ActorControlTarget),
     CurrencyCrystalInfo(CurrencyInfo),
     Config(Config),
-    EventUnkReply {
-        handler_id: HandlerId,
-        unk1: u16,
-        unk2: u8,
-        #[brw(pad_after = 8)]
-        unk3: u8,
-    },
     InventoryActionAck {
         sequence: u32,
         #[brw(pad_after = 10)]

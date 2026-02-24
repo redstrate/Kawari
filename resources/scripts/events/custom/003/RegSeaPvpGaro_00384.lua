@@ -11,7 +11,7 @@ function onTalk(target, player)
     player:play_scene(SCENE_00000, HIDE_HOTBAR, {})
 end
 
-function onYield(scene, results, player)
+function onReturn(scene, results, player)
     -- TODO: implement the shop
 
     player:finish_event()

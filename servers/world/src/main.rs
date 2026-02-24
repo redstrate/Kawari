@@ -1457,30 +1457,6 @@ async fn process_packet(
                                 connection.update_server_stats().await;
                             }
                         }
-                        ClientZoneIpcData::EventReturnHandler4(handler) => {
-                            let event_type = handler.handler_id.handler_type();
-
-                            // It always assumes a shop... for now
-                            if event_type == HandlerType::Shop {
-                                connection
-                                    .process_shop_event_return(handler, lua_player)
-                                    .await;
-                            } else {
-                                tracing::info!(message = "Event returned", handler_id = %handler.handler_id, error_code = handler.error_code, scene = handler.scene, params = ?&handler.params[..handler.num_results as usize]);
-
-                                if let Some(event) = connection.events.last_mut() {
-                                    event.do_return(
-                                        handler.scene,
-                                        &handler.params[..handler.num_results as usize],
-                                        lua_player,
-                                    );
-                                } else {
-                                    tracing::warn!(
-                                        "Don't know how to return in {event_type} and there's no current event!"
-                                    );
-                                }
-                            }
-                        }
                         ClientZoneIpcData::StartTalkEvent {
                             actor_id,
                             handler_id,
@@ -1503,20 +1479,18 @@ async fn process_packet(
 
                                 // begin talk function if it exists
                                 if let Some(event) = connection.events.last_mut() {
-                                    event.talk(*actor_id, lua_player);
+                                    event.on_talk(*actor_id, lua_player);
                                 }
                             } else {
                                 connection.send_conditions().await;
                             }
                         }
-                        ClientZoneIpcData::EventYieldHandler(handler) => {
-                            tracing::info!(message = "Event yielded", handler_id = %handler.handler_id, error_code = handler.error_code, scene = handler.scene, params = ?&handler.params[..handler.num_results as usize]);
+                        ClientZoneIpcData::EventReturnHandler2(handler) => {
+                            let event_type = handler.handler_id.handler_type();
 
-                            connection.events.last_mut().unwrap().finish(
-                                handler.scene,
-                                &handler.params[..handler.num_results as usize],
-                                lua_player,
-                            );
+                            // It always assumes a shop... for now
+                            // TODO: merge all implementations
+                            tracing::info!(message = "Event returned", handler_id = %handler.handler_id, error_code = handler.error_code, scene = handler.scene, params = ?&handler.params[..handler.num_results as usize]);
 
                             if handler.handler_id.handler_type() == HandlerType::GimmickAccessor {
                                 connection
@@ -1527,18 +1501,23 @@ async fn process_packet(
                                         handler.params[..handler.num_results as usize].to_vec(),
                                     ))
                                     .await;
+                            } else if let Some(event) = connection.events.last_mut() {
+                                event.on_return(
+                                    handler.scene,
+                                    &handler.params[..handler.num_results as usize],
+                                    lua_player,
+                                );
+                            } else {
+                                tracing::warn!(
+                                    "Don't know how to return in {event_type} and there's no current event!"
+                                );
                             }
                         }
-                        ClientZoneIpcData::EventYieldHandler8(handler) => {
-                            tracing::info!(message = "Event yielded", handler_id = %handler.handler_id, error_code = handler.error_code, scene = handler.scene, params = ?&handler.params[..handler.num_results as usize]);
+                        ClientZoneIpcData::EventReturnHandler8(handler) => {
+                            tracing::info!(message = "Event returned", handler_id = %handler.handler_id, error_code = handler.error_code, scene = handler.scene, params = ?&handler.params[..handler.num_results as usize]);
 
-                            connection.events.last_mut().unwrap().finish(
-                                handler.scene,
-                                &handler.params[..handler.num_results as usize],
-                                lua_player,
-                            );
-
-                            if handler.handler_id.handler_type() == HandlerType::GimmickAccessor {
+                            let event_type = handler.handler_id.handler_type();
+                            if event_type == HandlerType::GimmickAccessor {
                                 connection
                                     .handle
                                     .send(ToServer::GimmickAccessor(
@@ -1547,6 +1526,42 @@ async fn process_packet(
                                         handler.params[..handler.num_results as usize].to_vec(),
                                     ))
                                     .await;
+                            } else if let Some(event) = connection.events.last_mut() {
+                                event.on_return(
+                                    handler.scene,
+                                    &handler.params[..handler.num_results as usize],
+                                    lua_player,
+                                );
+                            } else {
+                                tracing::warn!(
+                                    "Don't know how to return in {event_type} and there's no current event!"
+                                );
+                            }
+                        }
+                        ClientZoneIpcData::EventYieldHandler2(handler) => {
+                            tracing::info!(message = "Event yielded", handler_id = %handler.handler_id, error_code = handler.error_code, scene = handler.scene, params = ?&handler.params[..handler.num_results as usize]);
+
+                            connection.events.last_mut().unwrap().on_yield(
+                                handler.scene,
+                                &handler.params[..handler.num_results as usize],
+                                lua_player,
+                            );
+                        }
+                        ClientZoneIpcData::EventYieldHandler4(handler) => {
+                            tracing::info!(message = "Event yielded", handler_id = %handler.handler_id, error_code = handler.error_code, scene = handler.scene, params = ?&handler.params[..handler.num_results as usize]);
+
+                            // It always assumes a shop... for now
+                            let event_type = handler.handler_id.handler_type();
+                            if event_type == HandlerType::Shop {
+                                connection
+                                    .process_shop_event_yield(handler, lua_player)
+                                    .await;
+                            } else {
+                                connection.events.last_mut().unwrap().on_yield(
+                                    handler.scene,
+                                    &handler.params[..handler.num_results as usize],
+                                    lua_player,
+                                );
                             }
                         }
                         ClientZoneIpcData::Config(config) => {
@@ -1564,20 +1579,6 @@ async fn process_packet(
                         ClientZoneIpcData::StandardControlsPivot { .. } => {
                             /* No-op because we already seem to handle this, other nearby clients can see the sending player
                              * pivoting anyway. */
-                        }
-                        ClientZoneIpcData::EventUnkRequest {
-                            handler_id,
-                            unk1,
-                            unk2,
-                            unk3,
-                        } => {
-                            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::EventUnkReply {
-                                handler_id: *handler_id,
-                                unk1: *unk1,
-                                unk2: *unk2,
-                                unk3: *unk3 + 1,
-                            });
-                            connection.send_ipc_self(ipc).await;
                         }
                         ClientZoneIpcData::UnkCall2 { .. } => {
                             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UnkResponse2 {
@@ -1769,7 +1770,7 @@ async fn process_packet(
 
                             // begin walk-in trigger function if it exists
                             if let Some(event) = connection.events.last_mut() {
-                                event.enter_trigger(lua_player, *event_arg);
+                                event.on_enter_trigger(lua_player, *event_arg);
                             }
                         }
                         ClientZoneIpcData::WalkOutsideEvent {
@@ -1816,7 +1817,7 @@ async fn process_packet(
 
                             // begin walk-in trigger function if it exists
                             if let Some(event) = connection.events.last_mut() {
-                                event.enter_trigger(lua_player, *event_arg);
+                                event.on_enter_trigger(lua_player, *event_arg);
                             }
                         }
                         ClientZoneIpcData::NewDiscovery { layout_id, pos } => {
@@ -2084,7 +2085,7 @@ async fn process_packet(
                                 )
                                 .await;
                             if let Some(event) = connection.events.last_mut() {
-                                event.enter_territory(lua_player);
+                                event.on_enter_territory(lua_player);
                             }
                         }
                         ClientZoneIpcData::Trade { .. } => {
@@ -2175,14 +2176,6 @@ async fn process_packet(
                             tracing::warn!(
                                 "Requesting a free company short message is unimplemented"
                             );
-                        }
-                        ClientZoneIpcData::PlayGoldSaucerMachine {
-                            handler_id,
-                            unk1,
-                            unk2,
-                            unk3,
-                        } => {
-                            tracing::info!("Playing machine {handler_id} {unk1} {unk2} {unk3}");
                         }
                         ClientZoneIpcData::InitiateReadyCheck { .. } => {
                             tracing::info!("Initiating ready checks is unimplemented");

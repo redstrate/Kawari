@@ -16,7 +16,7 @@ function onEnterTerritory(player)
     })
 end
 
-function onYield(scene, results, player)
+function onReturn(scene, results, player)
     player:commence_duty(EVENT_ID)
     player:finish_event()
 end

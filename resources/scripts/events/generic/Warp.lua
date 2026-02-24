@@ -5,7 +5,7 @@ function onTalk(target, player)
     player:play_scene(00000, HIDE_HOTBAR, {0})
 end
 
-function onYield(scene, results, player)
+function onReturn(scene, results, player)
     player:finish_event()
 
     if results[1] == 1 then

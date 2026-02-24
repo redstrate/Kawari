@@ -143,23 +143,17 @@ pub enum ClientZoneIpcData {
         #[brw(pad_after = 4)] // padding
         handler_id: HandlerId,
     },
-    EventReturnHandler4(EventReturnHandler<4>),
+    EventYieldHandler2(EventYieldHandler<2>),
+    EventYieldHandler4(EventYieldHandler<4>),
     StandardControlsPivot {
         /// Set to 4 when beginning to pivot.
         /// Set to 0 when pivoting ends.
         #[brw(pad_after = 4)]
         is_pivoting: u32,
     },
-    EventYieldHandler(EventYieldHandler<2>),
-    EventYieldHandler8(EventYieldHandler<8>),
+    EventReturnHandler2(EventReturnHandler<2>),
+    EventReturnHandler8(EventReturnHandler<8>),
     Config(Config),
-    EventUnkRequest {
-        handler_id: HandlerId,
-        unk1: u16,
-        unk2: u8,
-        #[brw(pad_after = 8)]
-        unk3: u8,
-    },
     UnkCall2 {
         unk1: [u8; 8],
     },
@@ -394,12 +388,6 @@ pub enum ClientZoneIpcData {
         /// The languages to match with.
         languages: SocialListUILanguages,
         unk2: [u8; 7],
-    },
-    PlayGoldSaucerMachine {
-        handler_id: HandlerId,
-        unk1: u32,
-        unk2: u32, // empty?
-        unk3: u32,
     },
     InitiateReadyCheck {
         unk: [u8; 8], // Seems to always be zeroes/unused

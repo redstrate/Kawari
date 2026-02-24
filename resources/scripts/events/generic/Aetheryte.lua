@@ -21,7 +21,7 @@ function onTalk(target, player)
     player:play_scene(SCENE_SHOW_MENU, HIDE_HOTBAR, {0})
 end
 
-function onYield(scene, results, player)
+function onReturn(scene, results, player)
     local AETHERNET_SUBMENU = 4
     local AETHERNET_SUBMENU_CANCEL = 0
     local SET_HOME_POINT = 1

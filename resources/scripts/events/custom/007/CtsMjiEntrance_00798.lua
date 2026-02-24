@@ -10,7 +10,7 @@ function onTalk(target, player)
     player:play_scene(SCENE_00000, 0, {0})
 end
 
-function onYield(scene, results, player)
+function onReturn(scene, results, player)
     if scene == SCENE_00000 then
         if results[1] == 2 then
             player:change_territory(1055)

@@ -4,7 +4,7 @@ use kawari::{
         INVENTORY_ACTION_ACK_SHOP, ItemOperationKind, LogMessageType,
     },
     ipc::zone::{
-        EventReturnHandler, ItemOperation, SceneFlags, ServerZoneIpcData, ServerZoneIpcSegment,
+        EventYieldHandler, ItemOperation, SceneFlags, ServerZoneIpcData, ServerZoneIpcSegment,
     },
 };
 
@@ -15,9 +15,9 @@ use crate::{
 };
 
 impl ZoneConnection {
-    pub async fn process_shop_event_return(
+    pub async fn process_shop_event_yield(
         &mut self,
-        handler: &EventReturnHandler<4>,
+        handler: &EventYieldHandler<4>,
         lua_player: &mut LuaPlayer,
     ) {
         let event_id = handler.handler_id;

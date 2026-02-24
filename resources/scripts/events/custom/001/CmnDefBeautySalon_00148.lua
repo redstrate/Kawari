@@ -1,7 +1,5 @@
 -- Crystal bell object
 
--- TODO: actually implement this menu
-
 -- Scenes
 SCENE_00000 = 00000 -- "You are not authorized to summon the aesthetician.", also seems to be the prompt cutscene, but still unsure how to get the prompt to appear
 SCENE_00001 = 00001 -- Aesthetician appears and speaks, then scene 2 would begin to play, but it probably needs server-side help?
@@ -12,7 +10,7 @@ function onTalk(target, player)
     player:play_scene(SCENE_00000, HIDE_HOTBAR, {0})
 end
 
-function onYield(scene, results, player)
+function onReturn(scene, results, player)
     if scene == SCENE_00000 then
         -- results[1] is 1 if you want to summon, otherwise 0
         if results[1] == 1 then
@@ -27,4 +25,8 @@ function onYield(scene, results, player)
         return
     end
     player:finish_event()
+end
+
+function onYield(scene, results, player)
+    player:resume_event(scene, results)
 end

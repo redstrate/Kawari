@@ -9,6 +9,6 @@ function onTalk(target, player)
     player:play_scene(SCENE_00000, NO_DEFAULT_CAMERA | HIDE_HOTBAR, {})
 end
 
-function onYield(scene, results, player)
+function onReturn(scene, results, player)
     player:finish_event()
 end

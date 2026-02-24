@@ -7,7 +7,7 @@ function onTalk(target, player)
     player:play_scene(SCENE_00000, HIDE_HOTBAR, {})
 end
 
-function onYield(scene, results, player)
+function onReturn(scene, results, player)
     if scene == SCENE_00000 and results[1] == 1 then
         -- They give us the ID of the nested event (a CollectablesShop event, of course!)
         local target_event_id = results[2]

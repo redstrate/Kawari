@@ -83,7 +83,15 @@ ServerZoneIpcType:
     comment: "Update the status of one container, for example the amount of items contained within."
     opcode: 126
     size: 16
-  - name: EventScene
+  - name: EventResume2
+    comment: Start a scene for the current event.
+    opcode: 350
+    size: 16
+  - name: EventResume4
+    comment: "Unknown, seen in Out on a Limb."
+    opcode: 763
+    size: 24
+  - name: EventScene2
     comment: Start a scene for the current event.
     opcode: 550
     size: 40
@@ -155,10 +163,6 @@ ServerZoneIpcType:
     comment: Update an actor's equip display flags.
     opcode: 364
     size: 8
-  - name: EventUnkReply
-    comment: "Unknown, seen in haircut event."
-    opcode: 350
-    size: 16
   - name: PingSyncReply
     comment: Sent by the server in response to PingReply.
     opcode: 569
@@ -556,11 +560,11 @@ ClientZoneIpcType:
     comment: Unknown purpose.
     opcode: 313
     size: 16
-  - name: EventYieldHandler
+  - name: EventReturnHandler2
     comment: Unknown purpose.
     opcode: 492
     size: 16
-  - name: EventYieldHandler8
+  - name: EventReturnHandler8
     comment: Unknown purpose.
     opcode: 547
     size: 40
@@ -568,11 +572,11 @@ ClientZoneIpcType:
     comment: Unknown purpose.
     opcode: 544
     size: 8
-  - name: EventUnkRequest
-    comment: Unknown purpose.
-    opcode: 987
+  - name: EventYieldHandler2
+    comment: "Unknown purpose, but seen when trying to play a Gold Saucer arcade machine."
+    opcode: 766
     size: 16
-  - name: EventReturnHandler4
+  - name: EventYieldHandler4
     comment: Unknown purpose.
     opcode: 354
     size: 24
@@ -736,10 +740,6 @@ ClientZoneIpcType:
     comment: The client queues into a roulette.
     opcode: 164
     size: 24
-  - name: PlayGoldSaucerMachine
-    comment: "Unknown purpose, but seen when trying to play a Gold Saucer arcade machine."
-    opcode: 766
-    size: 16
   - name: InitiateReadyCheck
     comment: The client initiates a ready check for their party.
     opcode: 245

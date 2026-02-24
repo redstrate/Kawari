@@ -1,11 +1,11 @@
 -- Generic handler for ExitRange events
 -- I think this is only used for housing right now?
 
-function onYield(scene, results, player)
+function onReturn(scene, results, player)
     player:finish_event()
 end
 
-function onReturn(scene, results, player)
+function onYield(scene, results, player)
     if results[1] == 1 then
         -- go to ward
         local ward_number = results[2]

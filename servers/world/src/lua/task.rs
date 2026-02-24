@@ -200,4 +200,8 @@ pub enum LuaTask {
         scene_flags: SceneFlags,
         params: Vec<u32>,
     },
+    ResumeEvent {
+        scene: u16,
+        params: Vec<u32>,
+    },
 }

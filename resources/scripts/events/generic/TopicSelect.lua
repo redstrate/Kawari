@@ -8,7 +8,7 @@ function onTalk(target, player)
     player:play_scene(00000, HIDE_HOTBAR, {})
 end
 
-function onYield(scene, results, player)
+function onReturn(scene, results, player)
     -- first result is the selected topic
     local selected_topic = results[1]
     if selected_topic == -1 then

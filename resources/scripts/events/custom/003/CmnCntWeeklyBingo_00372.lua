@@ -22,7 +22,7 @@ function onTalk(target, player)
     player:play_scene(SCENE_00000, HIDE_HOTBAR, {})
 end
 
-function onYield(scene, results, player)
+function onReturn(scene, results, player)
     if scene == SCENE_00000 then
         -- Open menu
         player:play_scene(SCENE_00001, HIDE_HOTBAR, {})

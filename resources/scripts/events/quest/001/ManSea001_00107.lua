@@ -30,7 +30,7 @@ function onTalk(target, player)
     end
 end
 
-function onYield(scene, results, player)
+function onReturn(scene, results, player)
     -- Note that the scene yields, not returns - unlike the other openings.
     if scene == 1 then
         player:play_scene(00002, HIDE_HOTBAR, {})
@@ -49,7 +49,7 @@ function onYield(scene, results, player)
     player:finish_event()
 end
 
-function onReturn(scene, results, player)
+function onYield(scene, results, player)
     if scene == 0 then
         -- first param: whether the quest was accepted
         local accepted = results[1] == 1

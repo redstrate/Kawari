@@ -7,8 +7,8 @@ use kawari::{
     common::{HandlerId, HandlerType, ObjectTypeId},
     config::get_config,
     ipc::zone::{
-        ActorControlCategory, Condition, EventScene, EventStart, EventType, SceneFlags,
-        ServerZoneIpcData, ServerZoneIpcSegment,
+        ActorControlCategory, Condition, EventResume, EventScene, EventStart, EventType,
+        SceneFlags, ServerZoneIpcData, ServerZoneIpcSegment,
     },
 };
 
@@ -170,6 +170,22 @@ impl ZoneConnection {
             lua_player.event_handler_id = old_event_handler_id;
 
             false
+        }
+    }
+
+    /// Resumes the current event.
+    pub async fn resume_event(&mut self, event_id: u32, scene: u16, params: Vec<u32>) {
+        let scene = EventResume {
+            handler_id: HandlerId(event_id),
+            scene,
+            params_count: params.len() as u8,
+            params,
+            unk2: 21, // TODO: lol what does this mean
+        };
+        if let Some(ipc) = scene.package_resume() {
+            self.send_ipc_self(ipc).await;
+        } else {
+            tracing::error!("Unable to resume event {event_id}, scene {:?}!", scene);
         }
     }
 }

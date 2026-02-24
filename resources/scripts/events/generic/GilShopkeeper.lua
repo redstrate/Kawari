@@ -15,7 +15,7 @@ function onTalk(target, player)
     player:play_scene(SCENE_GREETING, HIDE_HOTBAR, {0, 1})
 end
 
-function onYield(scene, results, player)
+function onReturn(scene, results, player)
     --[[ Retail uses 221 or 222 u32s as the params to the shop cutscene, representing the buyback list and 1 or 2 additional parameters,
         but it opens fine with a single zero u32 when the buyback list is empty.
         22 u32s are used to represent the ten buyback items. Most of these values are still unknown in meaning, but they likely relate to melds, crafting signature, durability, and more.

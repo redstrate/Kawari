@@ -11,7 +11,7 @@ function onTalk(target, player)
     player:play_scene(SCENE_00000, 0, {0})
 end
 
-function onYield(scene, results, player)
+function onReturn(scene, results, player)
     if scene == SCENE_00000 then
         -- request to open a tomestone shop menu
         if results[1] == 1 and #results > 1 then

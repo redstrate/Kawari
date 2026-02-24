@@ -16,6 +16,6 @@ function onTalk(target, player)
     player:play_scene(SCENE_01000, 0, {0})
 end
 
-function onYield(scene, results, player)
+function onReturn(scene, results, player)
     player:finish_event()
 end

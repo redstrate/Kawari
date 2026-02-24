@@ -560,7 +560,7 @@ impl ZoneConnection {
                 }
                 LuaTask::StartTalkEvent {} => {
                     if let Some(event) = self.events.last_mut() {
-                        event.talk(
+                        event.on_talk(
                             ObjectTypeId {
                                 object_id: self.player_data.character.actor_id,
                                 object_type: ObjectTypeKind::None,
@@ -735,6 +735,10 @@ impl ZoneConnection {
                         player,
                     )
                     .await;
+                }
+                LuaTask::ResumeEvent { scene, params } => {
+                    self.resume_event(player.event_handler_id.unwrap().0, *scene, params.clone())
+                        .await;
                 }
             }
         }

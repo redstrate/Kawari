@@ -9,7 +9,7 @@ function onTalk(target, player)
     player:play_scene(SCENE_GREETING, HIDE_HOTBAR, {0})
 end
 
-function onYield(scene, results, player)
+function onReturn(scene, results, player)
     if scene == SCENE_GREETING then
         -- has inn access
         player:play_scene(SCENE_MENU, HIDE_HOTBAR, {0})

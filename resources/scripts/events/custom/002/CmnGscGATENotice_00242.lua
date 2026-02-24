@@ -39,7 +39,7 @@ function onTalk(target, player)
     player:play_scene(SCENE_00000, HIDE_HOTBAR, {1, 1})
 end
 
-function onYield(scene, results, player)
+function onReturn(scene, results, player)
     -- first result is 1 if requesting to warp, otherwise 0
     player:finish_event()
 end
