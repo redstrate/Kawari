@@ -8,7 +8,6 @@ use diesel::{
     sql_types::Text,
     sqlite::Sqlite,
 };
-use serde::{Deserialize, Serialize};
 
 use kawari::common::{value_to_flag_byte_index_value, value_to_flag_byte_index_value_quests};
 
@@ -34,7 +33,7 @@ impl BitmaskTransformation for QuestBitmaskTransformation {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, AsExpression, FromSqlRow)]
+#[derive(Debug, Clone, AsExpression, FromSqlRow)]
 #[diesel(sql_type = Text)]
 pub struct GenericBitmask<const N: usize, T: BitmaskTransformation + std::fmt::Debug> {
     pub data: Vec<u8>,
@@ -45,7 +44,7 @@ impl<const N: usize, T: BitmaskTransformation + std::fmt::Debug> serialize::ToSq
     for GenericBitmask<N, T>
 {
     fn to_sql<'b>(&'b self, out: &mut serialize::Output<'b, '_, Sqlite>) -> serialize::Result {
-        out.set_value(serde_json::to_string(&self).unwrap());
+        out.set_value(serde_json::to_string(&self.data).unwrap());
         Ok(serialize::IsNull::No)
     }
 }
@@ -54,7 +53,11 @@ impl<const N: usize, T: BitmaskTransformation + std::fmt::Debug> deserialize::Fr
     for GenericBitmask<N, T>
 {
     fn from_sql(mut bytes: <Sqlite as Backend>::RawValue<'_>) -> deserialize::Result<Self> {
-        Ok(serde_json::from_str(bytes.read_text()).ok().unwrap())
+        Ok(Self::from(
+            serde_json::from_str::<Vec<u8>>(bytes.read_text())
+                .ok()
+                .unwrap(),
+        ))
     }
 }
 
