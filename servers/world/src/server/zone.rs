@@ -441,6 +441,37 @@ impl Zone {
         object_spawns
     }
 
+    /// Returns an ObjectSpawn for the given base ID.
+    pub fn get_event_object(&self, base_id: u32) -> Option<ObjectSpawn> {
+        for layer_group in &self.layer_groups {
+            for layer in &layer_group.chunks[0].layers {
+                for object in &layer.objects {
+                    if let LayerEntryData::EventObject(eobj) = &object.data
+                        && eobj.parent_data.base_id == base_id
+                    {
+                        return Some(ObjectSpawn {
+                            kind: ObjectKind::EventObj,
+                            base_id,
+                            entity_id: ObjectId(fastrand::u32(..)),
+                            layout_id: object.instance_id,
+                            bind_layout_id: eobj.bound_instance_id,
+                            radius: 1.0,
+                            rotation: euler_to_direction(object.transform.rotation),
+                            position: Position {
+                                x: object.transform.translation[0],
+                                y: object.transform.translation[1],
+                                z: object.transform.translation[2],
+                            },
+                            ..Default::default()
+                        });
+                    }
+                }
+            }
+        }
+
+        None
+    }
+
     /// Returns a list of battle NPCs to spawn, right now it only returns striking dummies.
     pub fn get_npcs(&self) -> Vec<NpcSpawn> {
         let mut npc_spawns = Vec::new();

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use kawari::{
-    common::{HandlerId, InvisibilityFlags},
+    common::{HandlerId, InvisibilityFlags, ObjectId},
     ipc::zone::{ActorControlCategory, ServerZoneIpcData, ServerZoneIpcSegment},
 };
 use mlua::{Function, UserData, UserDataMethods};
@@ -10,7 +10,12 @@ use parking_lot::Mutex;
 use crate::{
     FromServer, ToServer,
     lua::KawariLua,
-    server::{WorldServer, actor::NetworkedActor, instance::Instance, network::NetworkState},
+    server::{
+        WorldServer,
+        actor::NetworkedActor,
+        instance::Instance,
+        network::{DestinationNetwork, NetworkState},
+    },
 };
 
 #[derive(Debug, Clone, PartialEq)]
@@ -18,7 +23,9 @@ pub enum LuaDirectorTask {
     HideEObj { base_id: u32 },
     ShowEObj { base_id: u32 },
     DeleteEObj { base_id: u32 },
+    SpawnEObj { base_id: u32 },
     SendVariables,
+    AbandonDuty { actor_id: ObjectId },
 }
 
 // TODO: Maybe collapse into DirectorData?
@@ -42,11 +49,21 @@ impl UserData for LuaDirector {
             this.tasks.push(LuaDirectorTask::DeleteEObj { base_id });
             Ok(())
         });
+        methods.add_method_mut("spawn_eobj", |_, this, base_id: u32| {
+            this.tasks.push(LuaDirectorTask::SpawnEObj { base_id });
+            Ok(())
+        });
         methods.add_method_mut("set_data", |_, this, (index, data): (u8, u8)| {
             this.data[index as usize] = data;
             Ok(())
         });
         methods.add_method("data", |_, this, index: u8| Ok(this.data[index as usize]));
+        methods.add_method_mut("abandon_duty", |_, this, actor_id: u32| {
+            this.tasks.push(LuaDirectorTask::AbandonDuty {
+                actor_id: ObjectId(actor_id),
+            });
+            Ok(())
+        });
     }
 }
 
@@ -81,7 +98,7 @@ impl DirectorData {
         }
     }
 
-    pub fn gimmick_accessor(&mut self, id: u32) {
+    pub fn gimmick_accessor(&mut self, actor_id: ObjectId, id: u32) {
         let mut run_script = || {
             let mut lua_director = self.create_lua_director();
             let err = self.lua.0.scope(|scope| {
@@ -89,7 +106,7 @@ impl DirectorData {
 
                 let func: Function = self.lua.0.globals().get("onGimmickAccessor")?;
 
-                func.call::<()>((data, id))?;
+                func.call::<()>((data, actor_id.0, id))?;
 
                 Ok(())
             });
@@ -204,6 +221,13 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                 let mut network = network.lock();
                 network.remove_actor(instance, actor_id);
             }
+            LuaDirectorTask::SpawnEObj { base_id } => {
+                if let Some(object) = instance.zone.get_event_object(*base_id) {
+                    instance.insert_object(object.entity_id, object);
+                } else {
+                    tracing::warn!("Failed to find eobj for SpawnEObj, it won't spawn!");
+                }
+            }
             LuaDirectorTask::SendVariables => {
                 let vars = if let Some(director) = &instance.director {
                     director.build_var_segment()
@@ -220,6 +244,14 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                     let msg = FromServer::PacketSegment(vars.clone(), *id);
                     let _ = handle.send(msg.clone()); // TODO: use result
                 }
+            }
+            LuaDirectorTask::AbandonDuty { actor_id } => {
+                let mut network = network.lock();
+                network.send_to_by_actor_id(
+                    *actor_id,
+                    FromServer::LeaveContent(),
+                    DestinationNetwork::ZoneClients,
+                );
             }
         }
     }
@@ -240,7 +272,7 @@ pub fn handle_director_messages(data: Arc<Mutex<WorldServer>>, msg: &ToServer) -
             };
 
             if let Some(director) = &mut instance.director {
-                director.gimmick_accessor(*id);
+                director.gimmick_accessor(*from_actor_id, *id);
             } else {
                 tracing::warn!("Expected a director when recieving a GimmickAccessor?");
             }

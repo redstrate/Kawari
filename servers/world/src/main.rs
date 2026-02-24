@@ -2300,6 +2300,18 @@ async fn process_server_msg(
         FromServer::IncrementRestedExp() => connection.add_rested_exp_seconds(10).await,
         FromServer::Countdown(account_id, content_id, name, starter_actor_id, duration) => connection.start_countdown(account_id, content_id, name, starter_actor_id, duration).await,
         FromServer::TargetSignToggled(sign_id, from_actor_id, target_actor_id, on) => connection.target_sign_toggled(sign_id, from_actor_id, target_actor_id, on).await,
+        FromServer::LeaveContent() => {
+            connection
+            .handle
+            .send(ToServer::LeaveContent(
+                connection.id,
+                connection.player_data.character.actor_id,
+                connection.old_zone_id,
+                connection.old_position,
+                connection.old_rotation,
+            ))
+            .await;
+        }
         _ => { tracing::error!("Zone connection {:#?} received a FromServer message we don't care about: {:#?}, ensure you're using the right client network or that you've implemented a handler for it if we actually care about it!", client_handle.id, msg); }
     }
     }

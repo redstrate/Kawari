@@ -9,13 +9,18 @@ EOBJ_BLUE_CORAL_FORMATION = 2000213
 EOBJ_RED_CORAL_FORMATION = 2000214
 EOBJ_GREEN_CORAL_FORMATION = 2000215
 EOBJ_HIDDEN_DOOR = 2000217
-EOBJ_NEXT_DOOR = 2001506 -- TODO: what is a better name for this?
+EOBJ_NEXT_DOOR1 = 2001506 -- TODO: what is a better name for this?
 EOBJ_RAMBADE_DOOR1 = 2000225
 EOBJ_CAPTAINS_QUARTERS_DOOR = 2000227
 EOBJ_WAVERIDER_GATE = 2000231
 EOBJ_THE_HOLE_DOOR = 2000232
+EOBJ_CAPTAINS_QUARTERS_KEY = 2000250
+EOBJ_WAVERIDER_GATE_KEY = 2000255
 EOBJ_KEY_TO_THE_HOLE = 2000256
+EOBJ_NEXT_DOOR2 = 2001539
+EOBJ_RAMBADE_DOOR2 = 2000236
 
+GIMMICK_EXIT = 5
 GIMMICK_BLUE_CORAL_FORMATION = 23
 GIMMICK_RED_CORAL_FORMATION = 24
 GIMMICK_GREEN_CORAL_FORMATION = 25
@@ -23,7 +28,10 @@ GIMMICK_INCONSPICUOUS_SWITCH = 26
 GIMMICK_CAPTAINS_QUARTERS_DOOR = 28
 GIMMICK_WAVERIDER_GATE = 32
 GIMMICK_THE_HOLE = 33
+GIMMICK_CAPTAINS_QUARTERS_KEY = 34
+GIMMICK_WAVERIDER_GATE_KEY = 39
 GIMMICK_KEY_TO_THE_HOLE = 40
+GIMMICK_SHORTCUT = 74
 
 SEQ0 = 0 -- Activate the coral trigger
 SEQ1 = 1 -- Open the hidden door
@@ -52,7 +60,7 @@ function setSequence(director, sequence)
     director:set_data(0, sequence)
 end
 
-function onGimmickAccessor(director, id)
+function onGimmickAccessor(director, actor_id, id)
     if sequence(director) == SEQ0 then
         -- Index to gimmick ID
         GIMMICK_CORAL_IDS = {
@@ -90,8 +98,19 @@ function onGimmickAccessor(director, id)
         director:hide_eobj(EOBJ_THE_HOLE_DOOR)
     elseif id == GIMMICK_CAPTAINS_QUARTERS_DOOR and has_captains_quarters then
         director:hide_eobj(EOBJ_CAPTAINS_QUARTERS_DOOR)
+        -- TODO: does the EObj get deleted?
     elseif id == GIMMICK_WAVERIDER_GATE and has_waverider_gate then
         director:hide_eobj(EOBJ_WAVERIDER_GATE)
+    elseif id == GIMMICK_CAPTAINS_QUARTERS_KEY then
+        director:hide_eobj(EOBJ_CAPTAINS_QUARTERS_KEY)
+        has_captains_quarters = true
+    elseif id == GIMMICK_WAVERIDER_GATE_KEY then
+        director:hide_eobj(EOBJ_WAVERIDER_GATE_KEY)
+        has_waverider_gate = true
+
+        beginSequence4(director)
+    elseif id == GIMMICK_EXIT then
+        director:abandon_duty(actor_id)
     end
 end
 
@@ -142,6 +161,19 @@ end
 function beginSequence3(director)
     setSequence(director, SEQ1 | SEQ2 | SEQ3)
 
-    director:hide_eobj(EOBJ_NEXT_DOOR)
+    director:hide_eobj(EOBJ_NEXT_DOOR1)
     director:hide_eobj(EOBJ_RAMBADE_DOOR1)
+
+    -- FIXME: Spawn keys automatically for now
+    director:spawn_eobj(EOBJ_WAVERIDER_GATE_KEY)
+    director:spawn_eobj(EOBJ_CAPTAINS_QUARTERS_KEY)
+end
+
+function beginSequence4(director)
+    setSequence(director, SEQ1 | SEQ2 | SEQ3 | SEQ4)
+
+    -- FIXME: yet again force these doors open
+
+    director:hide_eobj(EOBJ_NEXT_DOOR2)
+    director:hide_eobj(EOBJ_RAMBADE_DOOR2)
 end
