@@ -1026,19 +1026,6 @@ pub async fn server_main_loop(
                                 }
                             }
                         }
-                        ClientTriggerCommand::EventRelatedUnk { .. } => {
-                            let msg = FromServer::ActorControlSelf(
-                                ActorControlCategory::MapMarkerUpdateBegin { flags: 1 },
-                            );
-
-                            let mut network = network.lock();
-                            network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
-
-                            let msg = FromServer::ActorControlSelf(
-                                ActorControlCategory::MapMarkerUpdateEnd {},
-                            );
-                            network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
-                        }
                         ClientTriggerCommand::WalkInTriggerFinished { .. } => {
                             // This is where we finally release the client after the walk-in trigger.
                             let msg = FromServer::Conditions(Conditions::default());

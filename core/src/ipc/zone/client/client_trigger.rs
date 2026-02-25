@@ -227,15 +227,6 @@ pub enum ClientTriggerCommand {
         unk1: u32,
     },
 
-    /// Unknown purpose, but is seen during the crystal bell/aesthetician cutscenes.
-    #[brw(magic = 830u32)]
-    EventRelatedUnk {
-        unk1: u32,
-        unk2: u32,
-        unk3: u32,
-        unk4: u32,
-    },
-
     #[brw(magic = 1107u32)]
     RequestHousingWardInfo {
         /// The zone id of the housing ward.
