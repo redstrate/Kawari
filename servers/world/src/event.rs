@@ -90,6 +90,8 @@ impl Event {
                 let ct_id = id.0;
                 gamedata.get_custom_talk_variables(ct_id)
             }
+            // NOTE: ExitRange Lua script uses AetheryteSystemDefine variables, that's why it's here...
+            HandlerType::Aetheryte | HandlerType::ExitRange => gamedata.get_aetheryte_variables(),
             _ => Vec::new(),
         };
 

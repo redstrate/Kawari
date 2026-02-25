@@ -340,6 +340,8 @@ pub enum ToServer {
     GimmickAccessor(ObjectId, u32, Vec<i32>),
     /// The client begins fishing.
     Fish(ClientId, ObjectId),
+    /// Warp to a specified pop range in a new territory.
+    WarpPopRange(ClientId, ObjectId, u16, u32),
 }
 
 #[derive(Clone, Debug)]

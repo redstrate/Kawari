@@ -673,6 +673,13 @@ impl LuaPlayer {
             params,
         });
     }
+
+    fn change_territory_pop_range(&mut self, territory_id: u16, pop_range_id: u32) {
+        self.queued_tasks.push(LuaTask::WarpPopRange {
+            territory_id,
+            pop_range_id,
+        });
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -1088,6 +1095,13 @@ impl UserData for LuaPlayer {
             "resume_event",
             |_, this, (scene, resume_id, params): (u16, u8, Vec<u32>)| {
                 this.resume_event(scene, resume_id, params);
+                Ok(())
+            },
+        );
+        methods.add_method_mut(
+            "change_territory_pop_range",
+            |_, this, (territory_id, pop_range_id): (u16, u32)| {
+                this.change_territory_pop_range(territory_id, pop_range_id);
                 Ok(())
             },
         );

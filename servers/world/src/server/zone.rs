@@ -863,6 +863,23 @@ pub fn handle_zone_messages(
 
             true
         }
+        ToServer::WarpPopRange(from_id, from_actor_id, territory_id, pop_range_id) => {
+            let mut data = data.lock();
+            let mut network = network.lock();
+            let mut game_data = game_data.lock();
+
+            change_zone_warp_to_pop_range(
+                &mut data,
+                &mut network,
+                &mut game_data,
+                *territory_id,
+                *pop_range_id,
+                *from_actor_id,
+                *from_id,
+            );
+
+            true
+        }
         ToServer::ZoneIn(from_id, from_actor_id, is_teleport) => {
             tracing::info!("Player {from_id:?} has finally zoned in, informing other players...");
 
@@ -931,6 +948,7 @@ pub fn handle_zone_messages(
                         return true;
                     }
                 } else {
+                    tracing::warn!("Failed to find instance for actor?!");
                     return true;
                 }
             }

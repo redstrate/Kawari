@@ -205,4 +205,8 @@ pub enum LuaTask {
         resume_id: u8,
         params: Vec<u32>,
     },
+    WarpPopRange {
+        territory_id: u16,
+        pop_range_id: u32,
+    },
 }

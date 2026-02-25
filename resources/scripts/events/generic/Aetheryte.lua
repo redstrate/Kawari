@@ -50,9 +50,26 @@ function onReturn(scene, results, player)
         else -- REGISTER_SECURITY_TOKEN_DSTN
             -- TODO: Security Token Free Destination logic ]]
         elseif menu_option == ACCESS_RESIDENTAL_AREA then
+            -- determine the target residental area (they don't maintain a mapping, so we do)
+            local territory_id = player.zone.id
+            local housing_id
+            if territory_id == TERRITORY_S1T2 then
+                housing_id = TERRITORY_S1H1
+            elseif territory_id == TERRITORY_F1T1 then
+                housing_id = TERRITORY_F1H1
+            elseif territory_id == TERRITORY_W1T1 then
+                housing_id = TERRITORY_W1H1
+            elseif territory_id == TERRITORY_E3T1 then
+                housing_id = TERRITORY_E1H1
+            elseif territory_id == TERRITORY_R2T1 then
+                housing_id = TERRITORY_R1H1
+            else
+                print("Unknown housing territory for: "..territory_id)
+            end
+
             -- open the housing menu
             player:start_event(1310721, EVENT_TYPE_NEST, 0)
-            player:play_scene(0, HIDE_HOTBAR | NO_DEFAULT_CAMERA, {340})
+            player:play_scene(0, HIDE_HOTBAR | NO_DEFAULT_CAMERA, {housing_id})
             return
         end
     end

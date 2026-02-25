@@ -746,6 +746,19 @@ impl ZoneConnection {
                     )
                     .await;
                 }
+                LuaTask::WarpPopRange {
+                    territory_id,
+                    pop_range_id,
+                } => {
+                    self.handle
+                        .send(ToServer::WarpPopRange(
+                            self.id,
+                            self.player_data.character.actor_id,
+                            *territory_id,
+                            *pop_range_id,
+                        ))
+                        .await;
+                }
             }
         }
         player.queued_tasks.clear();

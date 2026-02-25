@@ -4,6 +4,7 @@ use std::path::PathBuf;
 use icarus::Action::ActionSheet;
 use icarus::AetherCurrentCompFlgSet::AetherCurrentCompFlgSetSheet;
 use icarus::Aetheryte::AetheryteSheet;
+use icarus::AetheryteSystemDefine::AetheryteSystemDefineSheet;
 use icarus::BNpcBase::BNpcBaseSheet;
 use icarus::BaseParam::BaseParamSheet;
 use icarus::ClassJob::ClassJobSheet;
@@ -1206,6 +1207,24 @@ impl GameData {
         };
 
         !row.Singular().into_string().unwrap().is_empty()
+    }
+
+    /// Returns a list of variable name and value pairs for all Aetherytes.
+    pub fn get_aetheryte_variables(&mut self) -> Vec<(String, u32)> {
+        let sheet =
+            AetheryteSystemDefineSheet::read_from(&mut self.resource, Language::None).unwrap();
+
+        let mut variables = Vec::new();
+        for (_, row) in sheet.into_iter().flatten_subrows() {
+            let name = row.Text().into_string().unwrap();
+            let value = row.DefineValue().into_u32().unwrap();
+
+            if !name.is_empty() {
+                variables.push((name.clone(), *value));
+            }
+        }
+
+        variables
     }
 }
 
