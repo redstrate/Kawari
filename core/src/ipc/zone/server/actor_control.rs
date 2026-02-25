@@ -336,6 +336,18 @@ pub enum ActorControlCategory {
         max_count: u32,
     },
 
+    #[brw(magic = 384u32)]
+    SetupGatheringPoint {
+        /// Index into the GatheringPoint Excel sheet.
+        id: u32,
+        /// Index into the GatheringPointBase Excel sheet.
+        base_id: u32,
+        /// The level of this gathering node. This can be read from the GatheringPointBase Excel sheet.
+        level: u32,
+        /// Count column from the GatheringPoint Excel sheet.
+        count: u32,
+    },
+
     /// Plays an animation for a NPC or player.
     #[brw(magic = 407u32)]
     PlayActionTimeline {

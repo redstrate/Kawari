@@ -1173,6 +1173,26 @@ async fn process_packet(
                                             .await;
                                     }
                                 }
+                                ClientTriggerCommand::RequestGatheringPoint { id } => {
+                                    let base_id;
+                                    let level;
+                                    let count;
+                                    {
+                                        let mut gamedata = connection.gamedata.lock();
+                                        (base_id, level, count) = gamedata.get_gathering_point(id);
+                                    }
+
+                                    connection
+                                        .actor_control_self(
+                                            ActorControlCategory::SetupGatheringPoint {
+                                                id,
+                                                base_id: base_id as u32,
+                                                level: level as u32,
+                                                count: count as u32,
+                                            },
+                                        )
+                                        .await;
+                                }
                                 _ => {
                                     // inform the server of our trigger, it will handle sending it to other clients
                                     connection

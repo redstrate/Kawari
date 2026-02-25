@@ -206,6 +206,13 @@ pub enum ClientTriggerCommand {
         end: bool,
     },
 
+    /// When the client requests information about a GatheringPoint node that was spawned.
+    #[brw(magic = 706u32)]
+    RequestGatheringPoint {
+        /// Index into the GatheringPoint Excel sheet.
+        id: u32,
+    },
+
     /// Various triggers related to instanced content.
     #[brw(magic = 808u32)]
     DirectorTrigger {

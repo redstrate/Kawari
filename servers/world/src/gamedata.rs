@@ -16,6 +16,8 @@ use icarus::EObj::EObjSheet;
 use icarus::EquipSlotCategory::EquipSlotCategorySheet;
 use icarus::FateShop::FateShopSheet;
 use icarus::FittingShopCategoryItem::FittingShopCategoryItemSheet;
+use icarus::GatheringPoint::GatheringPointSheet;
+use icarus::GatheringPointBase::GatheringPointBaseSheet;
 use icarus::GilShopItem::GilShopItemSheet;
 use icarus::GimmickRect::GimmickRectSheet;
 use icarus::HalloweenNpcSelect::HalloweenNpcSelectSheet;
@@ -1225,6 +1227,23 @@ impl GameData {
         }
 
         variables
+    }
+
+    /// Returns the base id, level and count for this GatheringPoint.
+    pub fn get_gathering_point(&mut self, id: u32) -> (i32, u8, u8) {
+        let sheet = GatheringPointSheet::read_from(&mut self.resource, Language::None).unwrap();
+        let row = sheet.row(id).unwrap();
+
+        let base_id = row.GatheringPointBase().into_i32().copied().unwrap();
+        let base_sheet =
+            GatheringPointBaseSheet::read_from(&mut self.resource, Language::None).unwrap();
+        let base_row = base_sheet.row(base_id as u32).unwrap();
+
+        (
+            base_id,
+            base_row.GatheringLevel().into_u8().copied().unwrap(),
+            row.Count().into_u8().copied().unwrap(),
+        )
     }
 }
 
