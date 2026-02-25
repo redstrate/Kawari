@@ -205,479 +205,489 @@ fn set_player_minion(
 
     spawn.common.active_minion = minion_id as u16;
 
-    network.send_ac_in_range(
+    network.send_ac_in_range_inclusive(
         data,
         from_actor_id,
         ActorControlCategory::MinionSpawnControl { minion_id },
     );
 }
 
-fn server_logic_tick(data: &mut WorldServer, network: Arc<Mutex<NetworkState>>) {
-    for instance in &mut data.instances {
-        // Only pathfind if there's navmesh data available.
-        if instance.navmesh.is_available() {
-            let mut actor_moves = Vec::new();
-            let players = instance.find_all_players();
+fn server_logic_tick(data: Arc<Mutex<WorldServer>>, network: Arc<Mutex<NetworkState>>) {
+    let mut actors_to_update_hp_mp = Vec::new();
 
-            let mut target_actor_pos = HashMap::new();
+    {
+        let mut data = data.lock();
+        let rested_exp_counter = data.rested_exp_counter;
 
-            // const pass
-            for (id, actor) in &instance.actors {
-                if let NetworkedActor::Npc {
-                    current_path,
-                    current_path_lerp,
-                    current_target,
-                    spawn,
-                    last_position,
-                } = actor
-                    && current_target.is_some()
-                {
-                    let current_target = current_target.unwrap();
-                    let needs_repath = current_path.is_empty();
-                    if !needs_repath {
-                        // follow current path
-                        let next_position = Position {
-                            x: current_path[0][0],
-                            y: current_path[0][1],
-                            z: current_path[0][2],
-                        };
-                        let current_position = last_position.unwrap_or(spawn.common.position);
+        for instance in &mut data.instances {
+            // Only pathfind if there's navmesh data available.
+            if instance.navmesh.is_available() {
+                let mut actor_moves = Vec::new();
+                let players = instance.find_all_players();
 
-                        let dir_x = current_position.x - next_position.x;
-                        let dir_z = current_position.z - next_position.z;
-                        let rotation = f32::atan2(-dir_z, dir_x).to_degrees();
+                let mut target_actor_pos = HashMap::new();
 
-                        actor_moves.push(FromServer::ActorMove(
-                            *id,
-                            Position::lerp(current_position, next_position, *current_path_lerp),
-                            rotation,
-                            MoveAnimationType::RUNNING,
-                            MoveAnimationState::None,
-                            JumpState::NoneOrFalling,
-                        ));
-                    }
-
-                    let target_pos;
-                    if let Some(target_actor) = instance.find_actor(current_target) {
-                        target_pos = target_actor.get_common_spawn().position;
-                    } else {
-                        // If we can't find the target actor for some reason (despawn, disconnect, left zone), fall back on a sane-ish destination
-                        target_pos = last_position.unwrap_or(spawn.common.position);
-                    }
-
-                    target_actor_pos.insert(current_target, target_pos);
-                }
-            }
-
-            // mut pass
-            for (id, actor) in &mut instance.actors {
-                if let NetworkedActor::Npc {
-                    current_path,
-                    current_path_lerp,
-                    current_target,
-                    spawn,
-                    last_position,
-                } = actor
-                {
-                    // switch to the next node if we passed this one
-                    if *current_path_lerp >= 1.0 {
-                        *current_path_lerp = 0.0;
-                        if !current_path.is_empty() {
-                            *last_position = Some(Position {
+                // const pass
+                for (id, actor) in &instance.actors {
+                    if let NetworkedActor::Npc {
+                        current_path,
+                        current_path_lerp,
+                        current_target,
+                        spawn,
+                        last_position,
+                    } = actor
+                        && current_target.is_some()
+                    {
+                        let current_target = current_target.unwrap();
+                        let needs_repath = current_path.is_empty();
+                        if !needs_repath {
+                            // follow current path
+                            let next_position = Position {
                                 x: current_path[0][0],
                                 y: current_path[0][1],
                                 z: current_path[0][2],
-                            });
-                            current_path.pop_front();
+                            };
+                            let current_position = last_position.unwrap_or(spawn.common.position);
+
+                            let dir_x = current_position.x - next_position.x;
+                            let dir_z = current_position.z - next_position.z;
+                            let rotation = f32::atan2(-dir_z, dir_x).to_degrees();
+
+                            actor_moves.push(FromServer::ActorMove(
+                                *id,
+                                Position::lerp(current_position, next_position, *current_path_lerp),
+                                rotation,
+                                MoveAnimationType::RUNNING,
+                                MoveAnimationState::None,
+                                JumpState::NoneOrFalling,
+                            ));
                         }
-                    }
 
-                    if current_target.is_none() {
-                        // find a player
-                        if !players.is_empty() {
-                            *current_target = Some(players[0]);
+                        let target_pos;
+                        if let Some(target_actor) = instance.find_actor(current_target) {
+                            target_pos = target_actor.get_common_spawn().position;
+                        } else {
+                            // If we can't find the target actor for some reason (despawn, disconnect, left zone), fall back on a sane-ish destination
+                            target_pos = last_position.unwrap_or(spawn.common.position);
                         }
-                    } else if !current_path.is_empty() {
-                        let next_position = Position {
-                            x: current_path[0][0],
-                            y: current_path[0][1],
-                            z: current_path[0][2],
-                        };
-                        let current_position = last_position.unwrap_or(spawn.common.position);
-                        let distance = Position::distance(current_position, next_position);
 
-                        // TODO: this doesn't work like it should
-                        *current_path_lerp += (10.0 / distance).clamp(0.0, 1.0);
-                    }
-
-                    if target_actor_pos.contains_key(&current_target.unwrap()) {
-                        let target_pos = target_actor_pos[&current_target.unwrap()];
-                        let distance = Position::distance(spawn.common.position, target_pos);
-                        let needs_repath = current_path.is_empty() && distance > 5.0; // TODO: confirm distance this in retail
-                        if needs_repath && current_target.is_some() {
-                            let current_pos = spawn.common.position;
-                            *current_path = instance
-                                .navmesh
-                                .calculate_path(
-                                    [current_pos.x, current_pos.y, current_pos.z],
-                                    [target_pos.x, target_pos.y, target_pos.z],
-                                )
-                                .into();
-                        }
-                    }
-
-                    // update common spawn
-                    for msg in &actor_moves {
-                        if let FromServer::ActorMove(
-                            msg_id,
-                            pos,
-                            rotation,
-                            MoveAnimationType::RUNNING,
-                            MoveAnimationState::None,
-                            JumpState::NoneOrFalling,
-                        ) = msg
-                            && *id == *msg_id
-                        {
-                            spawn.common.position = *pos;
-                            spawn.common.rotation = *rotation;
-                        }
-                    }
-                }
-            }
-
-            // inform clients of the NPCs new positions
-            for msg in actor_moves {
-                let mut network = network.lock();
-                for (handle, _) in network.clients.values_mut() {
-                    if handle.send(msg.clone()).is_err() {
-                        //to_remove.push(id);
-                    }
-                }
-            }
-
-            let mut actors_now_gimmick_jumping = Vec::new();
-            let mut actors_now_inside_instance_exits = Vec::new();
-            let mut actors_now_outside_instance_entrances = Vec::new();
-
-            // Recalculate distance ranges
-            for (id, actor) in &instance.actors {
-                // Only check players
-                let NetworkedActor::Player {
-                    conditions,
-                    executing_gimmick_jump,
-                    inside_instance_exit: inside_instance_entrance,
-                    ..
-                } = actor
-                else {
-                    continue;
-                };
-
-                // Find the ClientState for this player.
-                let mut network = network.lock();
-                let Some((handle, state)) = network.get_by_actor_mut(*id) else {
-                    continue;
-                };
-
-                // Check for overlapping map ranges
-                let overlapping_ranges = instance.zone.get_overlapping_map_ranges(actor.position());
-                let in_sanctuary = overlapping_ranges.iter().filter(|x| x.sanctuary).count() > 0;
-
-                // We're on the 10 second mark, and you're in a sanctuary...
-                if in_sanctuary && data.rested_exp_counter == 0 {
-                    // Update rested EXP! (This means it only has a ten second granularity, but who cares?)
-                    let msg = FromServer::IncrementRestedExp();
-                    if handle.send(msg).is_err() {
-                        // TODO: remove as needed
-                        //self.to_remove.push(id);
+                        target_actor_pos.insert(current_target, target_pos);
                     }
                 }
 
-                let mut inside_any_instance_entrances = false;
+                // mut pass
+                for (id, actor) in &mut instance.actors {
+                    if let NetworkedActor::Npc {
+                        current_path,
+                        current_path_lerp,
+                        current_target,
+                        spawn,
+                        last_position,
+                    } = actor
+                    {
+                        // switch to the next node if we passed this one
+                        if *current_path_lerp >= 1.0 {
+                            *current_path_lerp = 0.0;
+                            if !current_path.is_empty() {
+                                *last_position = Some(Position {
+                                    x: current_path[0][0],
+                                    y: current_path[0][1],
+                                    z: current_path[0][2],
+                                });
+                                current_path.pop_front();
+                            }
+                        }
 
-                // Process gimmicks
-                if !executing_gimmick_jump {
-                    for range in &overlapping_ranges {
-                        if let Some(gimmick) = &range.gimmick {
-                            match gimmick {
-                                MapGimmick::Jump {
-                                    to_position,
-                                    gimmick_jump_type,
-                                    sgb_animation_id,
-                                    eobj_instance_id,
-                                } => {
-                                    // Tell the client to execute the gimmick jump
-                                    let msg = FromServer::ActorControlSelf(
-                                        ActorControlCategory::ExecuteGimmickJump {
-                                            landing_position_x: to_position.x,
-                                            landing_position_y: to_position.y,
-                                            landing_position_z: to_position.z,
-                                            gimmick_jump_type: *gimmick_jump_type,
-                                            unk1: 0,
-                                        },
-                                    );
-                                    actors_now_gimmick_jumping.push(*id);
-                                    if handle.send(msg).is_err() {
-                                        // TODO: remove as needed
-                                        //self.to_remove.push(id);
-                                    }
+                        if current_target.is_none() {
+                            // find a player
+                            if !players.is_empty() {
+                                *current_target = Some(players[0]);
+                            }
+                        } else if !current_path.is_empty() {
+                            let next_position = Position {
+                                x: current_path[0][0],
+                                y: current_path[0][1],
+                                z: current_path[0][2],
+                            };
+                            let current_position = last_position.unwrap_or(spawn.common.position);
+                            let distance = Position::distance(current_position, next_position);
 
-                                    // Play the corresponding animation for the EObj
-                                    if let Some(eobj) = instance.find_object(*eobj_instance_id) {
-                                        let msg = FromServer::ActorControl(
-                                            eobj,
-                                            ActorControlCategory::PlaySharedGroupTimeline {
-                                                timeline_id: *sgb_animation_id,
+                            // TODO: this doesn't work like it should
+                            *current_path_lerp += (10.0 / distance).clamp(0.0, 1.0);
+                        }
+
+                        if target_actor_pos.contains_key(&current_target.unwrap()) {
+                            let target_pos = target_actor_pos[&current_target.unwrap()];
+                            let distance = Position::distance(spawn.common.position, target_pos);
+                            let needs_repath = current_path.is_empty() && distance > 5.0; // TODO: confirm distance this in retail
+                            if needs_repath && current_target.is_some() {
+                                let current_pos = spawn.common.position;
+                                *current_path = instance
+                                    .navmesh
+                                    .calculate_path(
+                                        [current_pos.x, current_pos.y, current_pos.z],
+                                        [target_pos.x, target_pos.y, target_pos.z],
+                                    )
+                                    .into();
+                            }
+                        }
+
+                        // update common spawn
+                        for msg in &actor_moves {
+                            if let FromServer::ActorMove(
+                                msg_id,
+                                pos,
+                                rotation,
+                                MoveAnimationType::RUNNING,
+                                MoveAnimationState::None,
+                                JumpState::NoneOrFalling,
+                            ) = msg
+                                && *id == *msg_id
+                            {
+                                spawn.common.position = *pos;
+                                spawn.common.rotation = *rotation;
+                            }
+                        }
+                    }
+                }
+
+                // inform clients of the NPCs new positions
+                for msg in actor_moves {
+                    let mut network = network.lock();
+                    for (handle, _) in network.clients.values_mut() {
+                        if handle.send(msg.clone()).is_err() {
+                            //to_remove.push(id);
+                        }
+                    }
+                }
+
+                let mut actors_now_gimmick_jumping = Vec::new();
+                let mut actors_now_inside_instance_exits = Vec::new();
+                let mut actors_now_outside_instance_entrances = Vec::new();
+
+                // Recalculate distance ranges
+                for (id, actor) in &instance.actors {
+                    // Only check players
+                    let NetworkedActor::Player {
+                        conditions,
+                        executing_gimmick_jump,
+                        inside_instance_exit: inside_instance_entrance,
+                        ..
+                    } = actor
+                    else {
+                        continue;
+                    };
+
+                    // Find the ClientState for this player.
+                    let mut network = network.lock();
+                    let Some((handle, state)) = network.get_by_actor_mut(*id) else {
+                        continue;
+                    };
+
+                    // Check for overlapping map ranges
+                    let overlapping_ranges =
+                        instance.zone.get_overlapping_map_ranges(actor.position());
+                    let in_sanctuary =
+                        overlapping_ranges.iter().filter(|x| x.sanctuary).count() > 0;
+
+                    // We're on the 10 second mark, and you're in a sanctuary...
+                    if in_sanctuary && rested_exp_counter == 0 {
+                        // Update rested EXP! (This means it only has a ten second granularity, but who cares?)
+                        let msg = FromServer::IncrementRestedExp();
+                        if handle.send(msg).is_err() {
+                            // TODO: remove as needed
+                            //self.to_remove.push(id);
+                        }
+                    }
+
+                    let mut inside_any_instance_entrances = false;
+
+                    // Process gimmicks
+                    if !executing_gimmick_jump {
+                        for range in &overlapping_ranges {
+                            if let Some(gimmick) = &range.gimmick {
+                                match gimmick {
+                                    MapGimmick::Jump {
+                                        to_position,
+                                        gimmick_jump_type,
+                                        sgb_animation_id,
+                                        eobj_instance_id,
+                                    } => {
+                                        // Tell the client to execute the gimmick jump
+                                        let msg = FromServer::ActorControlSelf(
+                                            ActorControlCategory::ExecuteGimmickJump {
+                                                landing_position_x: to_position.x,
+                                                landing_position_y: to_position.y,
+                                                landing_position_z: to_position.z,
+                                                gimmick_jump_type: *gimmick_jump_type,
+                                                unk1: 0,
                                             },
                                         );
+                                        actors_now_gimmick_jumping.push(*id);
                                         if handle.send(msg).is_err() {
                                             // TODO: remove as needed
                                             //self.to_remove.push(id);
                                         }
+
+                                        // Play the corresponding animation for the EObj
+                                        if let Some(eobj) = instance.find_object(*eobj_instance_id)
+                                        {
+                                            let msg = FromServer::ActorControl(
+                                                eobj,
+                                                ActorControlCategory::PlaySharedGroupTimeline {
+                                                    timeline_id: *sgb_animation_id,
+                                                },
+                                            );
+                                            if handle.send(msg).is_err() {
+                                                // TODO: remove as needed
+                                                //self.to_remove.push(id);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            if range.entrance {
+                                inside_any_instance_entrances = true;
+                                if !inside_instance_entrance {
+                                    let msg =
+                                        FromServer::EnteredInstanceEntranceRange(range.instance_id);
+                                    actors_now_inside_instance_exits.push(*id);
+                                    if handle.send(msg).is_err() {
+                                        // TODO: remove as needed
+                                        //self.to_remove.push(id);
                                     }
                                 }
                             }
                         }
-                        if range.entrance {
-                            inside_any_instance_entrances = true;
-                            if !inside_instance_entrance {
-                                let msg =
-                                    FromServer::EnteredInstanceEntranceRange(range.instance_id);
-                                actors_now_inside_instance_exits.push(*id);
+                    }
+
+                    if !inside_any_instance_entrances {
+                        actors_now_outside_instance_entrances.push(*id);
+                    }
+
+                    let is_in_duel_area = overlapping_ranges.iter().filter(|x| x.duel).count() > 0;
+                    let has_duel_condition = conditions.has_condition(Condition::InDuelingArea);
+
+                    if is_in_duel_area != has_duel_condition {
+                        // Update conditions
+                        {
+                            let mut conditions = *conditions;
+                            conditions.toggle_condition(Condition::InDuelingArea, is_in_duel_area);
+
+                            let msg = FromServer::Conditions(conditions);
+                            if handle.send(msg).is_err() {
+                                // TODO: remove as needed
+                                //self.to_remove.push(id);
+                            }
+                        }
+
+                        // Send log message
+                        {
+                            let log_message = if is_in_duel_area {
+                                2692 // Duels permitted in current area.
+                            } else {
+                                2693 // Duels not permitted in current area.
+                            };
+
+                            let msg =
+                                FromServer::ActorControlSelf(ActorControlCategory::LogMessage {
+                                    log_message,
+                                    id: 0,
+                                });
+                            if handle.send(msg).is_err() {
+                                // TODO: remove as needed
+                                //self.to_remove.push(id);
+                            }
+                        }
+                    }
+
+                    for (other_id, other_actor) in &instance.actors {
+                        // We're always in our own view
+                        if *id == *other_id {
+                            continue;
+                        }
+
+                        // If the actor isn't valid, don't bother spawning yet.
+                        if !other_actor.is_valid() {
+                            continue;
+                        }
+
+                        // If the actor _should_ be in the view of the other.
+                        let in_range = actor.in_range_of(other_actor);
+                        let has_been_spawned = state.has_spawned(*other_id);
+
+                        // There are four states:
+                        // Walked out = (Has been spawned, no longer in range)
+                        // Walked in = (Hasn't been spawned, in range)
+                        // Still in = (Has been spawned, in range)
+                        // Still out = (Hasn't been spawned, not in range)
+
+                        let walked_out = has_been_spawned && !in_range;
+                        let walked_in = !has_been_spawned && in_range;
+                        let still_in = has_been_spawned && in_range;
+                        let still_out = !has_been_spawned && !in_range;
+
+                        if walked_out {
+                            if let Some(spawn_index) = state.actor_allocator.free(*other_id) {
+                                let msg = FromServer::DeleteActor(*other_id, spawn_index);
+
+                                if handle.send(msg).is_err() {
+                                    // TODO: remove as needed
+                                    //self.to_remove.push(id);
+                                }
+                            } else if let Some(spawn_index) = state.object_allocator.free(*other_id)
+                            {
+                                let msg = FromServer::DeleteObject(spawn_index);
+
                                 if handle.send(msg).is_err() {
                                     // TODO: remove as needed
                                     //self.to_remove.push(id);
                                 }
                             }
-                        }
-                    }
-                }
-
-                if !inside_any_instance_entrances {
-                    actors_now_outside_instance_entrances.push(*id);
-                }
-
-                let is_in_duel_area = overlapping_ranges.iter().filter(|x| x.duel).count() > 0;
-                let has_duel_condition = conditions.has_condition(Condition::InDuelingArea);
-
-                if is_in_duel_area != has_duel_condition {
-                    // Update conditions
-                    {
-                        let mut conditions = *conditions;
-                        conditions.toggle_condition(Condition::InDuelingArea, is_in_duel_area);
-
-                        let msg = FromServer::Conditions(conditions);
-                        if handle.send(msg).is_err() {
-                            // TODO: remove as needed
-                            //self.to_remove.push(id);
-                        }
-                    }
-
-                    // Send log message
-                    {
-                        let log_message = if is_in_duel_area {
-                            2692 // Duels permitted in current area.
+                        } else if walked_in {
+                            // Spawn this actor
+                            if let Some(msg) = NetworkState::spawn_existing_actor_message(
+                                state,
+                                *other_id,
+                                other_actor,
+                            ) {
+                                if handle.send(msg).is_err() {
+                                    // TODO: remove as needed
+                                    //self.to_remove.push(id);
+                                }
+                            } else {
+                                // Early exit if the client refuses to spawn any more actors
+                                continue;
+                            }
+                        } else if still_in || still_out {
+                            // Do nothing
                         } else {
-                            2693 // Duels not permitted in current area.
-                        };
-
-                        let msg = FromServer::ActorControlSelf(ActorControlCategory::LogMessage {
-                            log_message,
-                            id: 0,
-                        });
-                        if handle.send(msg).is_err() {
-                            // TODO: remove as needed
-                            //self.to_remove.push(id);
+                            unreachable!();
                         }
                     }
                 }
 
-                for (other_id, other_actor) in &instance.actors {
-                    // We're always in our own view
-                    if *id == *other_id {
+                // Set players as gimmick jumping, as the client does *not* send position updates during it.
+                for actor in &actors_now_gimmick_jumping {
+                    let Some(NetworkedActor::Player {
+                        executing_gimmick_jump,
+                        ..
+                    }) = instance.find_actor_mut(*actor)
+                    else {
                         continue;
-                    }
+                    };
 
-                    // If the actor isn't valid, don't bother spawning yet.
-                    if !other_actor.is_valid() {
+                    *executing_gimmick_jump = true;
+                }
+
+                // TODO: we probably need a better "we just entered this maprect" event instead of this
+                for actor in &actors_now_inside_instance_exits {
+                    let Some(NetworkedActor::Player {
+                        inside_instance_exit,
+                        ..
+                    }) = instance.find_actor_mut(*actor)
+                    else {
                         continue;
-                    }
+                    };
 
-                    // If the actor _should_ be in the view of the other.
-                    let in_range = actor.in_range_of(other_actor);
-                    let has_been_spawned = state.has_spawned(*other_id);
+                    *inside_instance_exit = true;
+                }
 
-                    // There are four states:
-                    // Walked out = (Has been spawned, no longer in range)
-                    // Walked in = (Hasn't been spawned, in range)
-                    // Still in = (Has been spawned, in range)
-                    // Still out = (Hasn't been spawned, not in range)
+                for actor in &actors_now_outside_instance_entrances {
+                    let Some(NetworkedActor::Player {
+                        inside_instance_exit,
+                        ..
+                    }) = instance.find_actor_mut(*actor)
+                    else {
+                        continue;
+                    };
 
-                    let walked_out = has_been_spawned && !in_range;
-                    let walked_in = !has_been_spawned && in_range;
-                    let still_in = has_been_spawned && in_range;
-                    let still_out = !has_been_spawned && !in_range;
+                    *inside_instance_exit = false;
+                }
 
-                    if walked_out {
-                        if let Some(spawn_index) = state.actor_allocator.free(*other_id) {
-                            let msg = FromServer::DeleteActor(*other_id, spawn_index);
-
-                            if handle.send(msg).is_err() {
-                                // TODO: remove as needed
-                                //self.to_remove.push(id);
-                            }
-                        } else if let Some(spawn_index) = state.object_allocator.free(*other_id) {
-                            let msg = FromServer::DeleteObject(spawn_index);
-
-                            if handle.send(msg).is_err() {
-                                // TODO: remove as needed
-                                //self.to_remove.push(id);
-                            }
+                // NOTE: I know this isn't retail accurate
+                for (id, actor) in &mut instance.actors {
+                    if let NetworkedActor::Player { spawn, .. } = actor {
+                        let mut updated = false;
+                        if spawn.common.hp != spawn.common.max_hp {
+                            let amount = (spawn.common.max_hp as f32 * 0.10).round() as u32;
+                            spawn.common.hp =
+                                u32::clamp(spawn.common.hp + amount, 0, spawn.common.max_hp);
+                            updated = true;
                         }
-                    } else if walked_in {
-                        // Spawn this actor
-                        if let Some(msg) = NetworkState::spawn_existing_actor_message(
-                            state,
-                            *other_id,
-                            other_actor,
-                        ) {
-                            if handle.send(msg).is_err() {
-                                // TODO: remove as needed
-                                //self.to_remove.push(id);
-                            }
+
+                        if spawn.common.mp != spawn.common.max_mp {
+                            let amount = (spawn.common.max_mp as f32 * 0.10).round() as u16;
+                            spawn.common.mp =
+                                u16::clamp(spawn.common.mp + amount, 0, spawn.common.max_mp);
+                            updated = true;
+                        }
+
+                        if updated {
+                            actors_to_update_hp_mp.push(*id);
+                        }
+                    }
+                }
+            }
+
+            // generate navmesh if necessary
+            match &instance.generate_navmesh {
+                NavmeshGenerationStep::None => {}
+                NavmeshGenerationStep::Needed(nvm_path) => {
+                    tracing::info!(
+                        "Missing navmesh {nvm_path:?}, we are going to generate it in the background now..."
+                    );
+
+                    let mut dir = std::env::current_exe().unwrap();
+                    dir.pop();
+                    dir.push(format!("kawari-navimesh{EXE_SUFFIX}"));
+
+                    // start navimesh generator
+                    match Command::new(dir)
+                        .arg(instance.zone.id.to_string())
+                        .arg(nvm_path)
+                        .spawn()
+                    {
+                        Ok(_) => {
+                            instance.generate_navmesh =
+                                NavmeshGenerationStep::Started(nvm_path.clone())
+                        }
+                        Err(err) => {
+                            tracing::error!(
+                                "Unable to run kawari-navimesh due to the following error: {err}"
+                            );
+                            instance.generate_navmesh = NavmeshGenerationStep::None;
+                        }
+                    }
+                }
+                NavmeshGenerationStep::Started(nvm_path) => {
+                    if let Ok(nvm_bytes) = std::fs::read(nvm_path) {
+                        if let Some(navmesh) = Navmesh::from_existing(&nvm_bytes) {
+                            instance.navmesh = navmesh;
+
+                            tracing::info!("Successfully loaded navimesh from {nvm_path:?}");
                         } else {
-                            // Early exit if the client refuses to spawn any more actors
-                            continue;
+                            tracing::warn!(
+                                "Failed to read {nvm_path:?}, monsters will not function correctly!"
+                            );
                         }
-                    } else if still_in || still_out {
-                        // Do nothing
-                    } else {
-                        unreachable!();
-                    }
-                }
-            }
-
-            // Set players as gimmick jumping, as the client does *not* send position updates during it.
-            for actor in &actors_now_gimmick_jumping {
-                let Some(NetworkedActor::Player {
-                    executing_gimmick_jump,
-                    ..
-                }) = instance.find_actor_mut(*actor)
-                else {
-                    continue;
-                };
-
-                *executing_gimmick_jump = true;
-            }
-
-            // TODO: we probably need a better "we just entered this maprect" event instead of this
-            for actor in &actors_now_inside_instance_exits {
-                let Some(NetworkedActor::Player {
-                    inside_instance_exit,
-                    ..
-                }) = instance.find_actor_mut(*actor)
-                else {
-                    continue;
-                };
-
-                *inside_instance_exit = true;
-            }
-
-            for actor in &actors_now_outside_instance_entrances {
-                let Some(NetworkedActor::Player {
-                    inside_instance_exit,
-                    ..
-                }) = instance.find_actor_mut(*actor)
-                else {
-                    continue;
-                };
-
-                *inside_instance_exit = false;
-            }
-
-            let mut actors_to_update_hp_mp = Vec::new();
-
-            // NOTE: I know this isn't retail accurate
-            for (id, actor) in &mut instance.actors {
-                if let NetworkedActor::Player { spawn, .. } = actor {
-                    let mut updated = false;
-                    if spawn.common.hp != spawn.common.max_hp {
-                        let amount = (spawn.common.max_hp as f32 * 0.10).round() as u32;
-                        spawn.common.hp =
-                            u32::clamp(spawn.common.hp + amount, 0, spawn.common.max_hp);
-                        updated = true;
-                    }
-
-                    if spawn.common.mp != spawn.common.max_mp {
-                        let amount = (spawn.common.max_mp as f32 * 0.10).round() as u16;
-                        spawn.common.mp =
-                            u16::clamp(spawn.common.mp + amount, 0, spawn.common.max_mp);
-                        updated = true;
-                    }
-
-                    if updated {
-                        actors_to_update_hp_mp.push(*id);
-                    }
-                }
-            }
-
-            for id in actors_to_update_hp_mp {
-                update_actor_hp_mp(network.clone(), instance, id);
-            }
-        }
-
-        // generate navmesh if necessary
-        match &instance.generate_navmesh {
-            NavmeshGenerationStep::None => {}
-            NavmeshGenerationStep::Needed(nvm_path) => {
-                tracing::info!(
-                    "Missing navmesh {nvm_path:?}, we are going to generate it in the background now..."
-                );
-
-                let mut dir = std::env::current_exe().unwrap();
-                dir.pop();
-                dir.push(format!("kawari-navimesh{EXE_SUFFIX}"));
-
-                // start navimesh generator
-                match Command::new(dir)
-                    .arg(instance.zone.id.to_string())
-                    .arg(nvm_path)
-                    .spawn()
-                {
-                    Ok(_) => {
-                        instance.generate_navmesh = NavmeshGenerationStep::Started(nvm_path.clone())
-                    }
-                    Err(err) => {
-                        tracing::error!(
-                            "Unable to run kawari-navimesh due to the following error: {err}"
-                        );
                         instance.generate_navmesh = NavmeshGenerationStep::None;
                     }
                 }
             }
-            NavmeshGenerationStep::Started(nvm_path) => {
-                if let Ok(nvm_bytes) = std::fs::read(nvm_path) {
-                    if let Some(navmesh) = Navmesh::from_existing(&nvm_bytes) {
-                        instance.navmesh = navmesh;
 
-                        tracing::info!("Successfully loaded navimesh from {nvm_path:?}");
-                    } else {
-                        tracing::warn!(
-                            "Failed to read {nvm_path:?}, monsters will not function correctly!"
-                        );
-                    }
-                    instance.generate_navmesh = NavmeshGenerationStep::None;
-                }
-            }
+            // Process any director tasks for this instance.
+            director_tick(network.clone(), instance);
         }
-
-        // Process any director tasks for this instance.
-        director_tick(network.clone(), instance);
+        // Ensure the rested EXP counter only happens every 10 seconds.
+        data.rested_exp_counter += 1;
+        if data.rested_exp_counter == 11 {
+            data.rested_exp_counter = 0;
+        }
     }
 
-    // Ensure the rested EXP counter only happens every 10 seconds.
-    data.rested_exp_counter += 1;
-    if data.rested_exp_counter == 11 {
-        data.rested_exp_counter = 0;
+    for id in actors_to_update_hp_mp {
+        update_actor_hp_mp(network.clone(), data.clone(), id);
     }
 }
 
@@ -710,10 +720,7 @@ pub async fn server_main_loop(
                 interval.tick().await;
 
                 // Execute general server logic
-                {
-                    let mut data = data.lock();
-                    server_logic_tick(&mut data, network.clone());
-                }
+                server_logic_tick(data.clone(), network.clone());
 
                 // Execute list of queued tasks
                 {
@@ -763,18 +770,16 @@ pub async fn server_main_loop(
                                 );
                             }
                             QueuedTaskData::DeadFadeOut { actor_id } => {
-                                // fade out
-                                let msg = FromServer::ActorControl(
-                                    *actor_id,
-                                    ActorControlCategory::DeadFadeOut {},
-                                );
-
                                 let mut network = network.lock();
-                                network.send_to_all(None, msg, DestinationNetwork::ZoneClients);
 
-                                // Then queue up a despawn
                                 let mut data = data.lock();
                                 if let Some(instance) = data.instances.get_mut(*instance_index) {
+                                    network.send_ac_in_range_instance(
+                                        instance,
+                                        *actor_id,
+                                        ActorControlCategory::DeadFadeOut {},
+                                    );
+
                                     instance.insert_task(
                                         ClientId::default(),
                                         INVALID_OBJECT_ID,
@@ -926,7 +931,6 @@ pub async fn server_main_loop(
                     }
                 }
                 ToServer::ActorMoved(
-                    from_id,
                     actor_id,
                     position,
                     rotation,
@@ -959,8 +963,9 @@ pub async fn server_main_loop(
                             let msg = FromServer::ActorMove(
                                 actor_id, position, rotation, anim_type, anim_state, jump_state,
                             );
-                            network.send_to_all(
-                                Some(from_id),
+                            network.send_in_range_instance(
+                                actor_id,
+                                instance,
                                 msg,
                                 DestinationNetwork::ZoneClients,
                             );
@@ -1009,30 +1014,6 @@ pub async fn server_main_loop(
                             let msg = FromServer::Conditions(Conditions::default());
 
                             let mut network = network.lock();
-                            network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
-
-                            let msg = FromServer::ActorControlSelf(
-                                ActorControlCategory::SetPetEntityId { unk1: 0 },
-                            );
-
-                            network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
-
-                            // Yes, this is actually sent every time the trigger event finishes...
-                            let msg = FromServer::ActorControlSelf(
-                                ActorControlCategory::CompanionUnlock { unk1: 0, unk2: 1 },
-                            );
-
-                            network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
-
-                            let msg = FromServer::ActorControlSelf(
-                                ActorControlCategory::SetPetParameters {
-                                    pet_id: 0,
-                                    unk2: 0,
-                                    unk3: 0,
-                                    unk4: 7,
-                                },
-                            );
-
                             network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
                         }
                         ClientTriggerCommand::SummonMinion { minion_id } => {
@@ -1381,29 +1362,32 @@ pub async fn server_main_loop(
                     }
                 }
                 ToServer::Config(_from_id, from_actor_id, config) => {
+                    let mut data = data.lock();
+
+                    let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
+                        continue;
+                    };
+
+                    let Some(actor) = instance.find_actor_mut(from_actor_id) else {
+                        continue;
+                    };
+
+                    let NetworkedActor::Player { spawn, .. } = actor else {
+                        continue;
+                    };
+
                     // update their stored state so it's correctly sent on new spawns
-                    {
-                        let mut data = data.lock();
-
-                        let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
-                            continue;
-                        };
-
-                        let Some(actor) = instance.find_actor_mut(from_actor_id) else {
-                            continue;
-                        };
-
-                        let NetworkedActor::Player { spawn, .. } = actor else {
-                            continue;
-                        };
-
-                        spawn.common.display_flags = config.display_flag.into();
-                    }
+                    spawn.common.display_flags = config.display_flag.into();
 
                     let mut network = network.lock();
                     let msg = FromServer::UpdateConfig(from_actor_id, config.clone());
 
-                    network.send_to_all(None, msg, DestinationNetwork::ZoneClients);
+                    network.send_in_range_inclusive_instance(
+                        from_actor_id,
+                        instance,
+                        msg,
+                        DestinationNetwork::ZoneClients,
+                    );
                 }
                 ToServer::Equip(
                     _from_id,
@@ -1412,26 +1396,24 @@ pub async fn server_main_loop(
                     sub_weapon_id,
                     model_ids,
                 ) => {
+                    let mut data = data.lock();
+
+                    let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
+                        continue;
+                    };
+
+                    let Some(actor) = instance.find_actor_mut(from_actor_id) else {
+                        continue;
+                    };
+
+                    let NetworkedActor::Player { spawn, .. } = actor else {
+                        continue;
+                    };
+
                     // update their stored state so it's correctly sent on new spawns
-                    {
-                        let mut data = data.lock();
-
-                        let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
-                            continue;
-                        };
-
-                        let Some(actor) = instance.find_actor_mut(from_actor_id) else {
-                            continue;
-                        };
-
-                        let NetworkedActor::Player { spawn, .. } = actor else {
-                            continue;
-                        };
-
-                        spawn.common.main_weapon_model = main_weapon_id;
-                        spawn.common.sec_weapon_model = sub_weapon_id;
-                        spawn.common.models = model_ids;
-                    }
+                    spawn.common.main_weapon_model = main_weapon_id;
+                    spawn.common.sec_weapon_model = sub_weapon_id;
+                    spawn.common.models = model_ids;
 
                     // Inform all clients about their new equipped model ids
                     let msg = FromServer::ActorEquip(
@@ -1442,7 +1424,12 @@ pub async fn server_main_loop(
                     );
 
                     let mut network = network.lock();
-                    network.send_to_all(None, msg, DestinationNetwork::ZoneClients);
+                    network.send_in_range_inclusive_instance(
+                        from_actor_id,
+                        instance,
+                        msg,
+                        DestinationNetwork::ZoneClients,
+                    );
                 }
                 ToServer::Disconnected(from_id, from_actor_id) => {
                     let mut network = network.lock();
@@ -1569,21 +1556,32 @@ pub async fn server_main_loop(
 
                     *conditions = new_conditions;
                 }
-                ToServer::CommenceDuty(from_id, from_actor_id) => {
+                ToServer::CommenceDuty(from_actor_id) => {
                     let mut data = data.lock();
-
-                    let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
-                        continue;
-                    };
-
-                    // Find the spawned entrance circle
-                    let Some(entrance_actor_id) = instance.find_entrance_circle() else {
-                        tracing::warn!("Failed to find entrance circle, it won't despawn!");
-                        continue;
-                    };
-
+                    let entrance_actor_id;
                     let flags =
                         InvisibilityFlags::UNK1 | InvisibilityFlags::UNK2 | InvisibilityFlags::UNK3;
+
+                    {
+                        let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
+                            continue;
+                        };
+
+                        // Find the spawned entrance circle
+                        let Some(actor_id) = instance.find_entrance_circle() else {
+                            tracing::warn!("Failed to find entrance circle, it won't despawn!");
+                            continue;
+                        };
+                        entrance_actor_id = actor_id;
+
+                        // Update invisibility flags for next spawn
+                        if let Some(NetworkedActor::Object { object }) =
+                            instance.find_actor_mut(entrance_actor_id)
+                        {
+                            object.visibility = flags;
+                            object.unselectable = true;
+                        }
+                    }
 
                     // Make the entrance circle invisible.
                     let msg = FromServer::ActorControl(
@@ -1592,46 +1590,47 @@ pub async fn server_main_loop(
                     );
 
                     let mut network = network.lock();
-                    network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
-
-                    // Update invisibility flags for next spawn
-                    if let Some(NetworkedActor::Object { object }) =
-                        instance.find_actor_mut(entrance_actor_id)
-                    {
-                        object.visibility = flags;
-                        object.unselectable = true;
-                    }
+                    network.send_in_range(
+                        entrance_actor_id,
+                        &data,
+                        msg,
+                        DestinationNetwork::ZoneClients,
+                    );
                 }
                 ToServer::Kill(_from_id, from_actor_id) => {
-                    kill_actor(network.clone(), from_actor_id);
+                    kill_actor(network.clone(), data.clone(), from_actor_id)
                 }
                 ToServer::SetHP(_from_id, from_actor_id, hp) => {
-                    let mut data = data.lock();
-                    let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
-                        continue;
-                    };
+                    {
+                        let mut data = data.lock();
+                        let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
+                            continue;
+                        };
 
-                    let Some(actor) = instance.find_actor_mut(from_actor_id) else {
-                        continue;
-                    };
+                        let Some(actor) = instance.find_actor_mut(from_actor_id) else {
+                            continue;
+                        };
 
-                    actor.get_common_spawn_mut().hp = hp;
+                        actor.get_common_spawn_mut().hp = hp;
+                    }
 
-                    update_actor_hp_mp(network.clone(), instance, from_actor_id);
+                    update_actor_hp_mp(network.clone(), data.clone(), from_actor_id);
                 }
                 ToServer::SetMP(_from_id, from_actor_id, mp) => {
-                    let mut data = data.lock();
-                    let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
-                        continue;
-                    };
+                    {
+                        let mut data = data.lock();
+                        let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
+                            continue;
+                        };
 
-                    let Some(actor) = instance.find_actor_mut(from_actor_id) else {
-                        continue;
-                    };
+                        let Some(actor) = instance.find_actor_mut(from_actor_id) else {
+                            continue;
+                        };
 
-                    actor.get_common_spawn_mut().mp = mp;
+                        actor.get_common_spawn_mut().mp = mp;
+                    }
 
-                    update_actor_hp_mp(network.clone(), instance, from_actor_id);
+                    update_actor_hp_mp(network.clone(), data.clone(), from_actor_id);
                 }
                 ToServer::SetNewStatValues(from_actor_id, level, class_job, max_hp, max_mp) => {
                     // Update internal data model

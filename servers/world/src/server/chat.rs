@@ -22,11 +22,18 @@ pub fn handle_chat_messages(
     msg: &ToServer,
 ) -> bool {
     match msg {
-        ToServer::Message(from_id, msg) => {
+        ToServer::Message(from_actor_id, msg) => {
             let mut network = network.lock();
 
-            network.send_to_all(
-                Some(*from_id),
+            let data = data.lock();
+
+            // First pull up some info about the sender, as tell packets require it
+            let Some(sender_instance) = data.find_actor_instance(*from_actor_id) else {
+                panic!("Client is somehow not an instance yet?!");
+            };
+
+            network.send_to_instance(
+                sender_instance,
                 FromServer::Message(msg.clone()),
                 DestinationNetwork::ZoneClients,
             );

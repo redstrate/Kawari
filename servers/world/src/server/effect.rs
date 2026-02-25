@@ -115,16 +115,10 @@ pub fn send_effects_list(
         ..Default::default()
     }));
 
-    // Inform the player
     let mut network = network.lock();
-    network.send_to_by_actor_id(
+    network.send_in_range_inclusive_instance(
         from_actor_id,
-        FromServer::PacketSegment(ipc.clone(), from_actor_id),
-        DestinationNetwork::ZoneClients,
-    );
-    network.send_in_range(
-        from_actor_id,
-        &data,
+        instance,
         FromServer::PacketSegment(ipc, from_actor_id),
         DestinationNetwork::ZoneClients,
     );
@@ -215,7 +209,7 @@ pub fn gain_effect(
 
         // Then, Send an actor control to inform the client if needed
         if send_acs {
-            network.send_ac_in_range_inclusive(&data, from_id, from_actor_id, ipc);
+            network.send_ac_in_range_inclusive(&data, from_actor_id, ipc);
         } else {
             network.send_ac_in_range(&data, from_actor_id, ipc);
         }
@@ -294,7 +288,7 @@ pub fn remove_effect(
             unk2: effect_param as u32,
             source_actor_id: effect_source_actor_id,
         };
-        network.send_ac_in_range_inclusive(&data, from_id, from_actor_id, ipc);
+        network.send_ac_in_range_inclusive(&data, from_actor_id, ipc);
     }
 
     // Finally, inform the client of their new status effects list

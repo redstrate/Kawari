@@ -99,37 +99,23 @@ impl NetworkState {
         }
     }
 
-    /// Sends the `message` to all clients at `destination`, except for those specified in `id_to_skip`.
-    pub fn send_to_all(
+    /// Sends a `message` to every client in this instance but *not* including it.
+    pub fn send_to_instance(
         &mut self,
-        id_to_skip: Option<ClientId>,
+        instance: &Instance,
         message: FromServer,
         destination: DestinationNetwork,
     ) {
-        let clients = match destination {
-            DestinationNetwork::ZoneClients => &mut self.clients,
-            DestinationNetwork::ChatClients => &mut self.chat_clients,
-        };
-
-        for (id, (handle, _)) in clients {
-            let id = *id;
-            if let Some(id_to_skip) = id_to_skip
-                && id == id_to_skip
-            {
-                continue;
-            }
-
-            if handle.send(message.clone()).is_err() {
-                if destination == DestinationNetwork::ZoneClients {
-                    self.to_remove.push(id);
-                } else {
-                    self.to_remove_chat.push(id);
-                }
-            }
-        }
+        self.send_in_range_implementation(
+            ObjectId::default(),
+            instance,
+            message,
+            destination,
+            false,
+            false,
+        );
     }
 
-    /// Sends the `message` to every client in range of `actor_id` but *not* including it.
     pub fn send_in_range(
         &mut self,
         actor_id: ObjectId,
@@ -141,6 +127,40 @@ impl NetworkState {
             return;
         };
 
+        self.send_in_range_instance(actor_id, instance, message, destination);
+    }
+
+    /// Sends the `message` to every client in range of `actor_id` but *not* including it.
+    pub fn send_in_range_instance(
+        &mut self,
+        actor_id: ObjectId,
+        instance: &Instance,
+        message: FromServer,
+        destination: DestinationNetwork,
+    ) {
+        self.send_in_range_implementation(actor_id, instance, message, destination, false, true);
+    }
+
+    /// Sends the `message` to every client in range of `actor_id` *and* including it.
+    pub fn send_in_range_inclusive_instance(
+        &mut self,
+        actor_id: ObjectId,
+        instance: &Instance,
+        message: FromServer,
+        destination: DestinationNetwork,
+    ) {
+        self.send_in_range_implementation(actor_id, instance, message, destination, true, true);
+    }
+
+    fn send_in_range_implementation(
+        &mut self,
+        actor_id: ObjectId,
+        instance: &Instance,
+        message: FromServer,
+        destination: DestinationNetwork,
+        inclusive: bool,
+        only_spawned: bool,
+    ) {
         let clients = match destination {
             DestinationNetwork::ZoneClients => &mut self.clients,
             DestinationNetwork::ChatClients => &mut self.chat_clients,
@@ -149,9 +169,11 @@ impl NetworkState {
         for (id, (handle, state)) in clients {
             let id = *id;
 
-            // Don't include the actor itself
-            if actor_id == handle.actor_id {
-                continue;
+            if !inclusive {
+                // Don't include the actor itself
+                if actor_id == handle.actor_id {
+                    continue;
+                }
             }
 
             // Skip any clients not in our instance
@@ -159,9 +181,11 @@ impl NetworkState {
                 continue;
             }
 
-            // Skip anything that hasn't spawned us
-            if !state.has_spawned(actor_id) {
-                continue;
+            if only_spawned {
+                // Skip anything that hasn't spawned us
+                if !state.has_spawned(actor_id) {
+                    continue;
+                }
             }
 
             if handle.send(message.clone()).is_err() {
@@ -311,16 +335,29 @@ impl NetworkState {
         from_actor_id: ObjectId,
         category: ActorControlCategory,
     ) {
+        let Some(instance) = data.find_actor_instance(from_actor_id) else {
+            return;
+        };
+
+        self.send_ac_in_range_instance(instance, from_actor_id, category);
+    }
+
+    /// Sends the ActorControl `category` to all in-range actors, *excluding* `from_actor_id`.
+    pub fn send_ac_in_range_instance(
+        &mut self,
+        data: &Instance,
+        from_actor_id: ObjectId,
+        category: ActorControlCategory,
+    ) {
         let msg = FromServer::ActorControl(from_actor_id, category);
 
-        self.send_in_range(from_actor_id, data, msg, DestinationNetwork::ZoneClients);
+        self.send_in_range_instance(from_actor_id, data, msg, DestinationNetwork::ZoneClients);
     }
 
     /// Sends the ActorControl `category` to all in-range actors, *including* `from_actor_id` (but as an ActorControlSelf.)
     pub fn send_ac_in_range_inclusive(
         &mut self,
         data: &WorldServer,
-        from_client_id: ClientId,
         from_actor_id: ObjectId,
         category: ActorControlCategory,
     ) {
@@ -328,7 +365,7 @@ impl NetworkState {
         {
             let msg = FromServer::ActorControlSelf(category.clone());
 
-            self.send_to(from_client_id, msg, DestinationNetwork::ZoneClients);
+            self.send_to_by_actor_id(from_actor_id, msg, DestinationNetwork::ZoneClients);
         }
 
         // Then to the other acotrs in range:

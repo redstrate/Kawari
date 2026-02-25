@@ -230,19 +230,12 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                 let flags =
                     InvisibilityFlags::UNK1 | InvisibilityFlags::UNK2 | InvisibilityFlags::UNK3;
 
-                let msg = FromServer::ActorControl(
+                let mut network = network.lock();
+                network.send_ac_in_range_instance(
+                    instance,
                     actor_id,
                     ActorControlCategory::SetInvisibilityFlags { flags },
                 );
-
-                let mut network = network.lock();
-                for id in instance.actors.keys() {
-                    let Some((handle, _)) = network.get_by_actor_mut(*id) else {
-                        continue;
-                    };
-
-                    let _ = handle.send(msg.clone()); // TODO: use result
-                }
 
                 // Update invisibility flags for next spawn
                 if let Some(NetworkedActor::Object { object }) = instance.find_actor_mut(actor_id) {
@@ -257,19 +250,12 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
 
                 let flags = InvisibilityFlags::VISIBLE;
 
-                let msg = FromServer::ActorControl(
+                let mut network = network.lock();
+                network.send_ac_in_range_instance(
+                    instance,
                     actor_id,
                     ActorControlCategory::SetInvisibilityFlags { flags },
                 );
-
-                let mut network = network.lock();
-                for id in instance.actors.keys() {
-                    let Some((handle, _)) = network.get_by_actor_mut(*id) else {
-                        continue;
-                    };
-
-                    let _ = handle.send(msg.clone()); // TODO: use result
-                }
 
                 // Update invisibility flags for next spawn
                 if let Some(NetworkedActor::Object { object }) = instance.find_actor_mut(actor_id) {
@@ -369,9 +355,8 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                 });
 
                 let mut network = network.lock();
-                // TODO: lol, don't send it to *every player on the server*.
-                network.send_to_all(
-                    None,
+                network.send_to_instance(
+                    instance,
                     FromServer::PacketSegment(ipc, ObjectId::default()), // TODO: how do we just send it from the player?
                     DestinationNetwork::ZoneClients,
                 );

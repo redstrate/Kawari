@@ -12,7 +12,7 @@ use crate::{
         WorldServer,
         actor::NetworkedActor,
         effect::gain_effect,
-        instance::{Instance, QueuedTaskData},
+        instance::QueuedTaskData,
         network::{DestinationNetwork, NetworkState},
     },
 };
@@ -137,9 +137,9 @@ pub fn execute_action(
                     common_spawn.hp = common_spawn.hp.saturating_sub(amount as u32);
                 }
             }
-
-            update_actor_hp_mp(network.clone(), instance, request.target.object_id);
         }
+
+        update_actor_hp_mp(network.clone(), data.clone(), request.target.object_id);
 
         // TODO: send Cooldown ActorControlSelf
 
@@ -246,10 +246,8 @@ pub fn execute_action(
 pub fn cancel_action(network: Arc<Mutex<NetworkState>>, from_id: ClientId) {
     let msg = FromServer::ActorControlSelf(ActorControlCategory::CancelCast {});
 
-    {
-        let mut network = network.lock();
-        network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
-    }
+    let mut network = network.lock();
+    network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
 }
 
 /// Handles normal actions, powered by Lua.
@@ -398,77 +396,88 @@ pub fn execute_mount_action(
 }
 
 // Sends the ActorControls to inform the actor that they're dead.
-pub fn kill_actor(network: Arc<Mutex<NetworkState>>, from_actor_id: ObjectId) {
+pub fn kill_actor(
+    network: Arc<Mutex<NetworkState>>,
+    data: Arc<Mutex<WorldServer>>,
+    from_actor_id: ObjectId,
+) {
     // TODO: set HP/MP to zero here
+
+    let mut network = network.lock();
+    let data = data.lock();
 
     // First, set their state (otherwise they can still walk)
     {
-        // TODO: these should be ActorControlSelf if target_actor_id == from_actor_id
-        let msg = FromServer::ActorControl(
-            from_actor_id,
-            ActorControlCategory::SetMode {
-                mode: CharacterMode::Dead,
-                mode_arg: 0,
-            },
-        );
+        let ac = ActorControlCategory::SetMode {
+            mode: CharacterMode::Dead,
+            mode_arg: 0,
+        };
 
-        let mut network = network.lock();
-        network.send_to_all(None, msg, DestinationNetwork::ZoneClients);
+        network.send_ac_in_range_inclusive(&data, from_actor_id, ac);
     }
 
     // Then, play the death animation.
     {
-        let msg = FromServer::ActorControl(
-            from_actor_id,
-            ActorControlCategory::Kill { animation_id: 0 },
-        );
+        let ac = ActorControlCategory::Kill { animation_id: 0 };
 
-        let mut network = network.lock();
-        network.send_to_all(None, msg, DestinationNetwork::ZoneClients);
+        network.send_ac_in_range_inclusive(&data, from_actor_id, ac);
     }
 }
 
 /// Updates other actors about this actor's HP and MP.
 pub fn update_actor_hp_mp(
     network: Arc<Mutex<NetworkState>>,
-    instance: &mut Instance,
+    data: Arc<Mutex<WorldServer>>,
     target_actor_id: ObjectId,
 ) {
-    let Some(actor) = instance.find_actor_mut(target_actor_id) else {
-        return;
-    };
-
-    let common_spawn = actor.get_common_spawn();
-
+    let mut send_kill_actor = false;
     // Inform the client of the new actor's HP/MP
     {
-        // TODO: send to all relevant players
-        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateHpMpTp {
-            hp: common_spawn.hp,
-            mp: common_spawn.max_mp,
-            unk: 0,
-        });
-        let mut network = network.lock();
-        network.send_to_all(
-            None,
-            FromServer::PacketSegment(ipc, target_actor_id),
-            DestinationNetwork::ZoneClients,
-        );
-    }
+        let mut data = data.lock();
 
-    if common_spawn.hp == 0 {
-        kill_actor(network.clone(), target_actor_id);
+        let Some(instance) = data.find_actor_instance_mut(target_actor_id) else {
+            return;
+        };
 
-        // Queue up despawn if this is an NPC
-        if !matches!(actor, NetworkedActor::Player { .. }) {
-            instance.insert_task(
-                ClientId::default(),
+        let Some(actor) = instance.find_actor(target_actor_id) else {
+            return;
+        };
+
+        let common_spawn = actor.get_common_spawn();
+
+        {
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateHpMpTp {
+                hp: common_spawn.hp,
+                mp: common_spawn.max_mp,
+                unk: 0,
+            });
+            let mut network = network.lock();
+            network.send_in_range_inclusive_instance(
                 target_actor_id,
-                DEAD_FADE_OUT_TIME,
-                QueuedTaskData::DeadFadeOut {
-                    actor_id: target_actor_id,
-                },
+                instance,
+                FromServer::PacketSegment(ipc, target_actor_id),
+                DestinationNetwork::ZoneClients,
             );
         }
+
+        if common_spawn.hp == 0 {
+            // Queue up despawn if this is an NPC
+            if !matches!(actor, NetworkedActor::Player { .. }) {
+                instance.insert_task(
+                    ClientId::default(),
+                    target_actor_id,
+                    DEAD_FADE_OUT_TIME,
+                    QueuedTaskData::DeadFadeOut {
+                        actor_id: target_actor_id,
+                    },
+                );
+            }
+
+            send_kill_actor = true;
+        }
+    }
+
+    if send_kill_actor {
+        kill_actor(network.clone(), data.clone(), target_actor_id);
     }
 }

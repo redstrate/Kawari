@@ -1217,7 +1217,6 @@ async fn process_packet(
                             connection
                                 .handle
                                 .send(ToServer::ActorMoved(
-                                    connection.id,
                                     connection.player_data.character.actor_id,
                                     *position,
                                     *rotation,
@@ -1254,7 +1253,10 @@ async fn process_packet(
 
                             connection
                                 .handle
-                                .send(ToServer::Message(connection.id, info))
+                                .send(ToServer::Message(
+                                    connection.player_data.character.actor_id,
+                                    info,
+                                ))
                                 .await;
 
                             let mut handled = false;

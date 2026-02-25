@@ -606,10 +606,7 @@ impl ZoneConnection {
 
                     // Signal to the global server to commence the duty as well, since they need to update the entrance circle.
                     self.handle
-                        .send(ToServer::CommenceDuty(
-                            self.id,
-                            self.player_data.character.actor_id,
-                        ))
+                        .send(ToServer::CommenceDuty(self.player_data.character.actor_id))
                         .await;
 
                     // shit

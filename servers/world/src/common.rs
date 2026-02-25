@@ -226,10 +226,9 @@ pub enum ToServer {
     /// A new chat connection has started.
     NewChatClient(ClientHandle),
     /// The connection sent a message.
-    Message(ClientId, MessageInfo),
+    Message(ObjectId, MessageInfo),
     /// The connection's player moved.
     ActorMoved(
-        ClientId,
         ObjectId,
         Position,
         f32,
@@ -314,7 +313,7 @@ pub enum ToServer {
     /// Update the global server state of the client's conditions.
     UpdateConditions(ObjectId, Conditions),
     /// (Temporary) Signal to the server to commence the duty.
-    CommenceDuty(ClientId, ObjectId),
+    CommenceDuty(ObjectId),
     /// (Temporary) Signal to the server to kill this actor.
     Kill(ClientId, ObjectId),
     /// Inform the server to update our HP to this value.
