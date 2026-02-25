@@ -113,6 +113,9 @@ pub use trust_information::{TrustContent, TrustInformation};
 mod event_resume;
 pub use event_resume::EventResume;
 
+mod map_markers;
+pub use map_markers::MapMarkers;
+
 use crate::common::{
     CHAR_NAME_MAX_LENGTH, ContainerType, ItemOperationKind, ObjectId, read_string, write_string,
 };
@@ -557,16 +560,17 @@ pub enum ServerZoneIpcData {
         #[brw(pad_after = 4)]
         flag2: u8,
     },
-    UpdateMapMarkers2 {
-        /// How many markers to update.
-        marker_count: u32,
-        /// Icons to set.
-        icon_ids: [u32; 2],
-        /// The instance ID in the level.
-        layout_ids: [u32; 2],
-        /// The event ID to update for, usually a quest ID.
-        #[brw(pad_after = 4)] // padding
-        handler_ids: [HandlerId; 2],
+    UpdateMapMarkers8 {
+        #[brw(args { max_params: 8 } )]
+        data: MapMarkers,
+    },
+    UpdateMapMarkers16 {
+        #[brw(args { max_params: 16 } )]
+        data: MapMarkers,
+    },
+    UpdateMapMarkers32 {
+        #[brw(args { max_params: 32 } )]
+        data: MapMarkers,
     },
     QuestTracker(QuestTracker),
     HouseList(HouseList),

@@ -363,10 +363,18 @@ ServerZoneIpcType:
     comment: Sent by the server when finshing a quest.
     opcode: 200
     size: 8
-  - name: UpdateMapMarkers2
+  - name: UpdateMapMarkers8
     comment: Unknown purpose.
-    opcode: 259
-    size: 32
+    opcode: 810
+    size: 112
+  - name: UpdateMapMarkers16
+    comment: Unknown purpose.
+    opcode: 885
+    size: 216
+  - name: UpdateMapMarkers32
+    comment: Unknown purpose.
+    opcode: 326
+    size: 424
   - name: QuestTracker
     comment: "A list of active or pinned quests, shows up under the duty list."
     opcode: 456
