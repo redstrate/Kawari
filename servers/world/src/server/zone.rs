@@ -11,7 +11,8 @@ use physis::{
 };
 
 use crate::{
-    ClientId, FromServer, GameData, StatusEffects, TerritoryNameKind, ToServer,
+    ClientId, DropIn, DropInLayer, DropInObjectData, FromServer, GameData, StatusEffects,
+    TerritoryNameKind, ToServer,
     lua::LuaZone,
     server::{
         NetworkedActor, WorldServer,
@@ -82,6 +83,7 @@ pub struct Zone {
     pub map_id: u16,
     cached_npc_base_ids: HashMap<u32, u32>,
     pub map_ranges: Vec<MapRange>,
+    dropin_layers: Vec<DropInLayer>,
 }
 
 impl Zone {
@@ -143,6 +145,20 @@ impl Zone {
                     .value
                     .replace("/server/data/", "")
                     .to_string();
+            }
+
+            // Load drop-ins
+            for entry in std::fs::read_dir("resources/dropins")
+                .expect("Didn't find dropins directory?")
+                .flatten()
+            {
+                if let Ok(contents) = std::fs::read_to_string(entry.path())
+                    && let Ok(mut dropin) = serde_json::from_str::<DropIn>(&contents)
+                    && lvb.sections[0].lgb_paths.contains(&dropin.appends)
+                {
+                    tracing::info!("Loaded dropin from {:?}", entry.path());
+                    zone.dropin_layers.append(&mut dropin.layers);
+                }
             }
         }
 
@@ -430,6 +446,25 @@ impl Zone {
                                 y: object.transform.translation[1],
                                 z: object.transform.translation[2],
                             },
+                            ..Default::default()
+                        });
+                    }
+                }
+            }
+        }
+
+        // Only dropins are checked for gathering points, because they strip that from retail LGBs.
+        for layer in &self.dropin_layers {
+            for object in &layer.objects {
+                match object.data {
+                    DropInObjectData::GatheringPoint { base_id } => {
+                        object_spawns.push(ObjectSpawn {
+                            kind: ObjectKind::GatheringPoint,
+                            base_id,
+                            entity_id: ObjectId(fastrand::u32(..)),
+                            layout_id: object.instance_id,
+                            radius: 1.0,
+                            position: object.position,
                             ..Default::default()
                         });
                     }

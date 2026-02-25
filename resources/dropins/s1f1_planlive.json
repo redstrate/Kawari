@@ -1,0 +1,22 @@
+{
+    "appends": "bg/ffxiv/sea_s1/fld/s1f1/level/planlive.lgb",
+    "layers": [
+        {
+            "name": "CRF_MINING_LV20",
+            "objects": [
+                {
+                    "instance_id": 4001271,
+                    "position": {
+                        "x": -266.0561,
+                        "y": 29.50931,
+                        "z": -562.5141
+                    },
+                    "data": {
+                        "type": "gathering_point",
+                        "base_id": 30001
+                    }
+                }
+            ]
+        }
+    ]
+}
