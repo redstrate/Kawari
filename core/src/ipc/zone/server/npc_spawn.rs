@@ -33,7 +33,7 @@ mod tests {
     use binrw::BinRead;
 
     use crate::{
-        common::{CharacterMode, HandlerId, INVALID_OBJECT_ID},
+        common::{CharacterMode, HandlerId},
         ipc::zone::{BattleNpcSubKind, DisplayFlag, ObjectKind},
         server_zone_tests_dir,
     };
@@ -69,7 +69,7 @@ mod tests {
         );
         assert_eq!(npc_spawn.common.battalion, 0);
         assert_eq!(npc_spawn.aggression_mode, 1); // passive
-        assert_eq!(npc_spawn.common.tether_id, INVALID_OBJECT_ID);
+        assert!(!npc_spawn.common.tether_id.is_valid());
         assert_eq!(npc_spawn.common.handler_id, HandlerId(0));
         assert_eq!(npc_spawn.common.layout_id, 0);
         assert_eq!(npc_spawn.online_status, OnlineStatus::Offline);
@@ -104,9 +104,9 @@ mod tests {
             ObjectKind::BattleNpc(BattleNpcSubKind::Enemy)
         );
         assert_eq!(npc_spawn.common.battalion, 4);
-        assert_eq!(npc_spawn.common.owner_id, INVALID_OBJECT_ID);
+        assert!(!npc_spawn.common.owner_id.is_valid());
         assert_eq!(npc_spawn.common.handler_id, HandlerId(0));
-        assert_eq!(npc_spawn.common.tether_id, INVALID_OBJECT_ID);
+        assert!(!npc_spawn.common.tether_id.is_valid());
         assert_eq!(npc_spawn.common.layout_id, 3929856);
         assert_eq!(npc_spawn.aggression_mode, 1); // passive
         assert_eq!(npc_spawn.online_status, OnlineStatus::Offline);

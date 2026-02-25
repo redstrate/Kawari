@@ -1,7 +1,7 @@
 use kawari::{
     common::{
-        ContainerType, ERR_INVENTORY_ADD_FAILED, HandlerId, INVALID_OBJECT_ID,
-        INVENTORY_ACTION_ACK_SHOP, ItemOperationKind, LogMessageType,
+        ContainerType, ERR_INVENTORY_ADD_FAILED, HandlerId, INVENTORY_ACTION_ACK_SHOP,
+        ItemOperationKind, LogMessageType,
     },
     ipc::zone::{
         EventYieldHandler, ItemOperation, SceneFlags, ServerZoneIpcData, ServerZoneIpcSegment,
@@ -144,7 +144,7 @@ impl ZoneConnection {
                     src_container_index: 0,
                     src_stack: self.player_data.inventory.currency.gil.quantity,
                     src_catalog_id: CurrencyKind::Gil as u32,
-                    dst_actor_id: INVALID_OBJECT_ID,
+                    dst_actor_id: Default::default(),
                     dummy_container: ContainerType::DiscardingItemSentinel,
                     dst_storage_id: ContainerType::DiscardingItemSentinel,
                     dst_container_index: u16::MAX,
@@ -171,7 +171,7 @@ impl ZoneConnection {
                     src_container_index: index as u16,
                     src_stack: quantity,
                     src_catalog_id: item_info.id,
-                    dst_actor_id: INVALID_OBJECT_ID,
+                    dst_actor_id: Default::default(),
                     dummy_container: ContainerType::DiscardingItemSentinel,
                     dst_storage_id: ContainerType::DiscardingItemSentinel,
                     dst_container_index: u16::MAX,

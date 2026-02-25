@@ -5,9 +5,8 @@ use axum::Router;
 use axum::routing::get;
 use kawari::common::{
     CharacterMode, ClientLanguage, ContainerType, DirectorEvent, DirectorTrigger, DutyOption,
-    HandlerId, HandlerType, INVALID_OBJECT_ID, ItemOperationKind, ObjectId, ObjectTypeId,
-    ObjectTypeKind, PlayerStateFlags1, PlayerStateFlags2, PlayerStateFlags3, Position,
-    calculate_max_level,
+    HandlerId, HandlerType, ItemOperationKind, ObjectId, ObjectTypeId, ObjectTypeKind,
+    PlayerStateFlags1, PlayerStateFlags2, PlayerStateFlags3, Position, calculate_max_level,
 };
 use kawari::config::get_config;
 use kawari_world::inventory::{Item, Storage, get_next_free_slot};
@@ -200,7 +199,7 @@ async fn initial_setup(
                 let mut connection = ChatConnection {
                     config: get_config().world,
                     id,
-                    actor_id: INVALID_OBJECT_ID,
+                    actor_id: ObjectId::default(),
                     state,
                     last_keep_alive: Instant::now(),
                     socket,
@@ -1464,7 +1463,7 @@ async fn process_packet(
                                         src_container_index: action.src_container_index,
                                         src_stack: action.src_stack,
                                         src_catalog_id: action.src_catalog_id,
-                                        dst_actor_id: INVALID_OBJECT_ID,
+                                        dst_actor_id: Default::default(),
                                         dummy_container: ContainerType::DiscardingItemSentinel,
                                         dst_storage_id: ContainerType::DiscardingItemSentinel,
                                         dst_container_index: u16::MAX,
@@ -2445,7 +2444,7 @@ async fn client_loop(
     }
 
     // forcefully log out the player if they weren't logging out but force D/C'd
-    if connection.player_data.character.actor_id != INVALID_OBJECT_ID {
+    if connection.player_data.character.actor_id.is_valid() {
         if !connection.gracefully_logged_out {
             tracing::info!(
                 "Forcefully logging out connection {:#?}...",

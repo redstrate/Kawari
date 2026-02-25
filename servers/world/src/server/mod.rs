@@ -25,7 +25,7 @@ use crate::{
 };
 use kawari::{
     common::{
-        DEAD_DESPAWN_TIME, HandlerId, HandlerType, INVALID_OBJECT_ID, InvisibilityFlags, JumpState,
+        DEAD_DESPAWN_TIME, HandlerId, HandlerType, InvisibilityFlags, JumpState,
         MAX_SPAWNED_ACTORS, MAX_SPAWNED_OBJECTS, MoveAnimationState, MoveAnimationType, ObjectId,
         ObjectTypeId, ObjectTypeKind, Position, TerritoryIntendedUse,
     },
@@ -782,7 +782,7 @@ pub async fn server_main_loop(
 
                                     instance.insert_task(
                                         ClientId::default(),
-                                        INVALID_OBJECT_ID,
+                                        ObjectId::default(),
                                         DEAD_DESPAWN_TIME,
                                         QueuedTaskData::DeadDespawn {
                                             actor_id: *actor_id,

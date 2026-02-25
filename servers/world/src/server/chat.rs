@@ -11,7 +11,7 @@ use crate::{
     },
 };
 use kawari::{
-    common::INVALID_OBJECT_ID,
+    common::ObjectId,
     ipc::chat::{PartyMessage, TellNotFoundError},
 };
 
@@ -71,7 +71,7 @@ pub fn handle_chat_messages(
             // If the sender wasn't found in the instance we already found them to be in, reality has apparently broken
             assert!(sender_world_id != 0);
 
-            let mut recipient_actor_id = INVALID_OBJECT_ID;
+            let mut recipient_actor_id = ObjectId::default();
 
             // Second, look up the recipient by name, since that and their world id are all we're given by the sending client.
             // Since we don't implement multiple worlds, the world id isn't useful for anything here.
@@ -89,7 +89,7 @@ pub fn handle_chat_messages(
             }
 
             // Next, if the recipient is online, fetch their handle from the network and send them the message!
-            if recipient_actor_id != INVALID_OBJECT_ID {
+            if recipient_actor_id.is_valid() {
                 let message_info = MessageInfo {
                     sender_actor_id: *from_actor_id,
                     sender_account_id,
@@ -140,7 +140,7 @@ pub fn handle_chat_messages(
                 }
             }
 
-            assert!(party_id != 0 && sender.actor_id != INVALID_OBJECT_ID);
+            assert!(party_id != 0 && sender.actor_id.is_valid());
 
             let party_message = PartyMessage {
                 party_chatchannel: message_info.chatchannel,

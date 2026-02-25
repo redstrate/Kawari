@@ -68,8 +68,6 @@ impl StatusEffects {
 
 #[cfg(test)]
 mod tests {
-    use kawari::common::INVALID_OBJECT_ID;
-
     use super::*;
 
     #[test]
@@ -87,7 +85,7 @@ mod tests {
                 effect_id: 0,
                 param: 0,
                 duration: 0.0,
-                source_actor_id: INVALID_OBJECT_ID
+                source_actor_id: Default::default()
             })
         );
         assert_eq!(status_effects.is_dirty(), true);

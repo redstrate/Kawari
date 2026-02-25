@@ -206,7 +206,7 @@ mod tests {
 
     use binrw::BinRead;
 
-    use crate::common::{INVALID_OBJECT_ID, ObjectId};
+    use crate::common::ObjectId;
 
     use crate::server_zone_tests_dir;
 
@@ -291,7 +291,7 @@ mod tests {
                 effect_id: 50,
                 duration: 0.0,
                 param: 0,
-                source_actor_id: INVALID_OBJECT_ID
+                source_actor_id: Default::default()
             }
         );
 

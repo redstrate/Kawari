@@ -17,7 +17,7 @@ use crate::{
     },
 };
 use kawari::{
-    common::{CharacterMode, DEAD_FADE_OUT_TIME, INVALID_OBJECT_ID, ObjectId},
+    common::{CharacterMode, DEAD_FADE_OUT_TIME, ObjectId},
     ipc::zone::{
         ActionEffect, ActionKind, ActionRequest, ActionResult, ActorControlCategory, EffectEntry,
         EffectKind, EffectResult, ServerZoneIpcData, ServerZoneIpcSegment,
@@ -193,7 +193,7 @@ pub fn execute_action(
                         param,
                         unk2: 0,
                         duration,
-                        source_actor_id: INVALID_OBJECT_ID,
+                        source_actor_id: Default::default(),
                     };
                     num_entries += 1;
 

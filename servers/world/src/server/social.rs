@@ -8,14 +8,14 @@ use crate::{
     server::{DestinationNetwork, WorldServer, actor::NetworkedActor, network::NetworkState},
 };
 use kawari::{
-    common::{INVALID_OBJECT_ID, ObjectId},
+    common::ObjectId,
     ipc::zone::{
         OnlineStatus, OnlineStatusMask, PartyMemberEntry, PartyUpdateStatus, PlayerEntry,
         SocialListRequestType, SocialListUIFlags,
     },
 };
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct PartyMember {
     pub actor_id: ObjectId,
     pub zone_client_id: ClientId,
@@ -26,23 +26,9 @@ pub struct PartyMember {
     pub name: String,
 }
 
-impl Default for PartyMember {
-    fn default() -> Self {
-        Self {
-            actor_id: INVALID_OBJECT_ID,
-            zone_client_id: ClientId::default(),
-            chat_client_id: ClientId::default(),
-            content_id: 0,
-            account_id: 0,
-            world_id: 0,
-            name: String::default(),
-        }
-    }
-}
-
 impl PartyMember {
     pub fn is_valid(&self) -> bool {
-        self.actor_id != INVALID_OBJECT_ID
+        self.actor_id.is_valid()
     }
 
     pub fn is_online(&self) -> bool {
@@ -220,7 +206,7 @@ pub fn handle_social_messages(
             // If the sender wasn't found in the instance we already found them to be in, reality has apparently broken
             assert!(sender_content_id != 0);
 
-            let mut recipient_actor_id = INVALID_OBJECT_ID;
+            let mut recipient_actor_id = ObjectId::default();
 
             // Second, look up the recipient by name, since that and their content id are all we're given by the sending client.
             // Since we don't implement multiple worlds, the world id isn't useful for anything here.
@@ -249,7 +235,7 @@ pub fn handle_social_messages(
 
             if !already_in_party {
                 // Finally, if the recipient is online, fetch their handle from the network and send them the message!
-                if recipient_actor_id != INVALID_OBJECT_ID {
+                if recipient_actor_id.is_valid() {
                     let mut to_remove = Vec::new();
                     for (id, (handle, _)) in &mut network.clients {
                         if handle.actor_id == recipient_actor_id {
@@ -291,7 +277,7 @@ pub fn handle_social_messages(
             let data = data.lock();
 
             // Look up the invite sender and tell them the response.
-            let mut recipient_actor_id = INVALID_OBJECT_ID;
+            let mut recipient_actor_id = ObjectId::default();
 
             // Second, look up the recipient (the original invite sender) by content id, since that is all we're given by the sending client.
             'outer: for instance in &data.instances {
@@ -306,13 +292,11 @@ pub fn handle_social_messages(
                 }
             }
 
-            if recipient_actor_id != INVALID_OBJECT_ID {
+            if recipient_actor_id.is_valid() {
                 let mut to_remove = Vec::new();
                 for (id, (handle, _)) in &mut network.clients {
                     // Tell the invite sender about the invite result
-                    if handle.actor_id == recipient_actor_id
-                        && recipient_actor_id != INVALID_OBJECT_ID
-                    {
+                    if handle.actor_id == recipient_actor_id && recipient_actor_id.is_valid() {
                         let msg = FromServer::InvitationResult(
                             *from_account_id,
                             *from_content_id,
@@ -489,7 +473,7 @@ pub fn handle_social_messages(
                         if spawn.content_id == *new_member_content_id {
                             // Find the first open member slot.
                             let Some(free_index) =
-                                party.iter().position(|x| x.actor_id == INVALID_OBJECT_ID)
+                                party.iter().position(|x| !x.actor_id.is_valid())
                             else {
                                 // TODO: See if we can gracefully exit from here without a panic
                                 panic!(
@@ -1013,7 +997,7 @@ pub fn handle_social_messages(
                 let msg = FromServer::StrategyBoardSharedAck(*from_content_id);
 
                 // Tell the board sender a party member received it.
-                let mut dest_actor_id = INVALID_OBJECT_ID;
+                let mut dest_actor_id = ObjectId::default();
                 for my_member in &network.parties[party_id].members {
                     if my_member.content_id == *dest_content_id {
                         dest_actor_id = my_member.actor_id;

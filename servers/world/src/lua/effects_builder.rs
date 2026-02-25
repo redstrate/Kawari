@@ -1,9 +1,6 @@
 use mlua::{FromLua, Lua, UserData, UserDataMethods, Value};
 
-use kawari::{
-    common::INVALID_OBJECT_ID,
-    ipc::zone::{ActionEffect, DamageElement, DamageKind, DamageType, EffectKind},
-};
+use kawari::ipc::zone::{ActionEffect, DamageElement, DamageKind, DamageType, EffectKind};
 
 #[derive(Clone, Debug, Default)]
 pub struct EffectsBuilder {
@@ -46,7 +43,7 @@ impl UserData for EffectsBuilder {
                         effect_id,
                         duration,
                         param,
-                        source_actor_id: INVALID_OBJECT_ID,
+                        source_actor_id: Default::default(),
                     },
                 });
                 Ok(())

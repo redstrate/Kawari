@@ -122,4 +122,4 @@ impl mlua::FromLua for ObjectTypeId {
 }
 
 /// An invalid actor/object id.
-pub const INVALID_OBJECT_ID: ObjectId = ObjectId(0xE0000000);
+const INVALID_OBJECT_ID: ObjectId = ObjectId(0xE0000000);

@@ -11,7 +11,7 @@ use crate::{
     },
 };
 use kawari::{
-    common::{INVALID_OBJECT_ID, ObjectId},
+    common::ObjectId,
     ipc::zone::{ActorControlCategory, ServerZoneIpcSegment},
 };
 
@@ -268,8 +268,7 @@ impl NetworkState {
 
         for member in &party.members {
             // Skip offline or otherwise non-existent members
-            if member.actor_id == INVALID_OBJECT_ID || member.zone_client_id == ClientId::default()
-            {
+            if !member.actor_id.is_valid() || member.zone_client_id == ClientId::default() {
                 continue;
             }
 

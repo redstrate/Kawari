@@ -4,7 +4,7 @@ use binrw::{BinRead, binrw};
 use physis::blowfish::LobbyBlowfish;
 
 use crate::{
-    common::{INVALID_OBJECT_ID, ObjectId, read_string, write_string},
+    common::{ObjectId, read_string, write_string},
     ipc::kawari::CustomIpcSegment,
     packet::encryption::decrypt,
 };
@@ -139,7 +139,7 @@ pub struct PacketHeader {
 
 #[binrw]
 #[brw(import(state: &ConnectionState))]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct PacketSegment<T: ReadWriteIpcSegment> {
     #[bw(calc = self.calc_size())]
     pub size: u32,
@@ -154,17 +154,6 @@ pub struct PacketSegment<T: ReadWriteIpcSegment> {
 }
 
 pub const PACKET_SEGMENT_HEADER_SIZE: u32 = 16;
-
-impl<T: ReadWriteIpcSegment> Default for PacketSegment<T> {
-    fn default() -> Self {
-        Self {
-            source_actor: INVALID_OBJECT_ID,
-            target_actor: INVALID_OBJECT_ID,
-            segment_type: SegmentType::default(),
-            data: SegmentData::default(),
-        }
-    }
-}
 
 impl<T: ReadWriteIpcSegment> PacketSegment<T> {
     pub fn calc_size(&self) -> u32 {
