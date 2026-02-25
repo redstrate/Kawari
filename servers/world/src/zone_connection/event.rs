@@ -41,7 +41,7 @@ impl ZoneConnection {
             params,
             ..Default::default()
         };
-        if let Some(ipc) = scene.package_scene() {
+        if let Some(ipc) = scene.package() {
             self.send_ipc_self(ipc).await;
         } else {
             tracing::error!(
@@ -188,7 +188,7 @@ impl ZoneConnection {
             params_count: params.len() as u8,
             params,
         };
-        if let Some(ipc) = scene.package_resume() {
+        if let Some(ipc) = scene.package() {
             self.send_ipc_self(ipc).await;
         } else {
             tracing::error!("Unable to resume event {event_id}, scene {:?}!", scene);

@@ -93,9 +93,8 @@ pub struct EventScene {
 }
 
 impl EventScene {
-    pub fn package_scene(&self) -> Option<ServerZoneIpcSegment> {
+    pub fn package(&self) -> Option<ServerZoneIpcSegment> {
         match self.params.len() {
-            // TODO: it would be nice to avoid cloning if possible
             0..=2 => Some(ServerZoneIpcSegment::new(ServerZoneIpcData::EventScene2 {
                 data: self.clone(),
             })),

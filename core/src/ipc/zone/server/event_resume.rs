@@ -22,9 +22,8 @@ pub struct EventResume {
 }
 
 impl EventResume {
-    pub fn package_resume(&self) -> Option<ServerZoneIpcSegment> {
+    pub fn package(&self) -> Option<ServerZoneIpcSegment> {
         match self.params.len() {
-            // TODO: it would be nice to avoid cloning if possible
             0..=2 => Some(ServerZoneIpcSegment::new(ServerZoneIpcData::EventResume2 {
                 data: self.clone(),
             })),
