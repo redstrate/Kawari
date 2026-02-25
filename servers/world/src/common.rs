@@ -274,9 +274,9 @@ pub enum ToServer {
     /// Ready to send the ZoneIn ACS
     ZoneIn(ClientId, ObjectId, bool),
     /// We need to summon a player's minion, and tell other clients
-    ActorSummonsMinion(ClientId, ObjectId, u32),
+    ActorSummonsMinion(ObjectId, u32),
     /// We need to despawn a player's minion, and tell other clients
-    ActorDespawnsMinion(ClientId, ObjectId),
+    ActorDespawnsMinion(ObjectId),
     /// Move the player's actor to the specified pop range.
     MoveToPopRange(ClientId, ObjectId, u32, bool),
     /// The connection sent a direct message to another client.

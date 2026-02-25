@@ -2308,11 +2308,11 @@ async fn process_server_msg(
         FromServer::ActorControlTarget(actor_id, target, actor_control) => connection.actor_control_target(actor_id, target, actor_control).await,
         FromServer::ActorControlSelf(actor_control) => connection.actor_control_self(actor_control).await,
         FromServer::ActorSummonsMinion(minion_id) => {
-            connection.handle.send(ToServer::ActorSummonsMinion(connection.id, connection.player_data.character.actor_id, minion_id)).await;
+            connection.handle.send(ToServer::ActorSummonsMinion(connection.player_data.character.actor_id, minion_id)).await;
             connection.active_minion = minion_id;
         }
         FromServer::ActorDespawnsMinion() => {
-            connection.handle.send(ToServer::ActorDespawnsMinion(connection.id, connection.player_data.character.actor_id)).await;
+            connection.handle.send(ToServer::ActorDespawnsMinion(connection.player_data.character.actor_id)).await;
             connection.active_minion = 0;
         }
         FromServer::UpdateConfig(actor_id, config) => connection.update_config(actor_id, config).await,

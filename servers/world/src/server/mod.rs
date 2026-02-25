@@ -187,51 +187,29 @@ impl WorldServer {
 fn set_player_minion(
     data: &mut WorldServer,
     network: &mut NetworkState,
-    to_remove: &mut Vec<ClientId>,
     minion_id: u32,
-    from_id: ClientId,
     from_actor_id: ObjectId,
 ) {
-    for (id, (handle, _)) in &mut network.clients {
-        let id = *id;
+    // Update our common spawn to reflect the new minion
+    let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
+        return;
+    };
 
-        // Update our common spawn to reflect the new minion
-        if id == from_id {
-            let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
-                break;
-            };
+    let Some(actor) = instance.find_actor_mut(from_actor_id) else {
+        return;
+    };
 
-            let Some(actor) = instance.find_actor_mut(from_actor_id) else {
-                break;
-            };
+    let NetworkedActor::Player { spawn, .. } = actor else {
+        return;
+    };
 
-            let NetworkedActor::Player { spawn, .. } = actor else {
-                break;
-            };
+    spawn.common.active_minion = minion_id as u16;
 
-            spawn.common.active_minion = minion_id as u16;
-
-            let msg = FromServer::ActorControlSelf(ActorControlCategory::MinionSpawnControl {
-                minion_id,
-            });
-
-            if handle.send(msg).is_err() {
-                to_remove.push(id);
-            }
-
-            // Skip sending the regular ActorControl to ourselves
-            continue;
-        }
-
-        let msg = FromServer::ActorControl(
-            from_actor_id,
-            ActorControlCategory::MinionSpawnControl { minion_id },
-        );
-
-        if handle.send(msg).is_err() {
-            to_remove.push(id);
-        }
-    }
+    network.send_ac_in_range(
+        data,
+        from_actor_id,
+        ActorControlCategory::MinionSpawnControl { minion_id },
+    );
 }
 
 fn server_logic_tick(data: &mut WorldServer, network: Arc<Mutex<NetworkState>>) {
@@ -1477,31 +1455,17 @@ pub async fn server_main_loop(
                         DestinationNetwork::ChatClients,
                     );
                 }
-                ToServer::ActorSummonsMinion(from_id, from_actor_id, minion_id) => {
+                ToServer::ActorSummonsMinion(from_actor_id, minion_id) => {
                     let mut network = network.lock();
                     let mut data = data.lock();
 
-                    set_player_minion(
-                        &mut data,
-                        &mut network,
-                        &mut to_remove,
-                        minion_id,
-                        from_id,
-                        from_actor_id,
-                    );
+                    set_player_minion(&mut data, &mut network, minion_id, from_actor_id);
                 }
-                ToServer::ActorDespawnsMinion(from_id, from_actor_id) => {
+                ToServer::ActorDespawnsMinion(from_actor_id) => {
                     let mut network = network.lock();
                     let mut data = data.lock();
 
-                    set_player_minion(
-                        &mut data,
-                        &mut network,
-                        &mut to_remove,
-                        0,
-                        from_id,
-                        from_actor_id,
-                    );
+                    set_player_minion(&mut data, &mut network, 0, from_actor_id);
                 }
                 ToServer::ChatDisconnected(from_id) => {
                     let mut network = network.lock();
