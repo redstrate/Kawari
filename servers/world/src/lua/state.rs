@@ -5,7 +5,7 @@ use mlua::{IntoLua, Lua};
 use parking_lot::Mutex;
 use strum::IntoEnumIterator;
 
-use crate::{Event, GameData, inventory::CurrencyKind};
+use crate::{GameData, inventory::CurrencyKind};
 use kawari::{
     common::HandlerType,
     config::get_config,
@@ -83,15 +83,6 @@ impl KawariLua {
             Ok(config.world.login_message)
         })?;
 
-        let run_event_func =
-            lua.create_function(|lua, (event_id, event_script): (u32, String)| {
-                Ok(Event::new(
-                    event_id,
-                    &event_script,
-                    lua.globals().get("GAME_DATA")?,
-                ))
-            })?;
-
         let run_action_func =
             lua.create_function(|_, (action_script, arg): (String, u32)| Ok((action_script, arg)))?;
 
@@ -147,7 +138,6 @@ impl KawariLua {
             .set("registerGMCommand", register_gm_command_func)?;
         lua.globals()
             .set("getLoginMessage", get_login_message_func)?;
-        lua.globals().set("runEvent", run_event_func)?;
         lua.globals().set("runAction", run_action_func)?;
 
         let effectsbuilder_constructor =

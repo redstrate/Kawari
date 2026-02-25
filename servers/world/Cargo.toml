@@ -29,3 +29,4 @@ ureq = { workspace = true }
 diesel = { workspace = true }
 diesel_migrations = { workspace = true }
 libsqlite3-sys = { workspace = true }
+async-trait = { workspace = true }

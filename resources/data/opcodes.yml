@@ -584,6 +584,10 @@ ClientZoneIpcType:
     comment: Unknown purpose.
     opcode: 354
     size: 24
+  - name: EventYieldHandler16
+    comment: Unknown purpose.
+    opcode: 349
+    size: 72
   - name: UnkCall2
     comment: "Unsure the true purpose of this, but it's needed for the Unending Journey to function."
     opcode: 148
@@ -712,10 +716,6 @@ ClientZoneIpcType:
     comment: Sent by the client while trading.
     opcode: 312
     size: 16
-  - name: BuyInclusionShop
-    comment: Sent by the client while buying from an InclusionShop (usually called 'Item Exchange' in-game.)
-    opcode: 1234
-    size: 72
   - name: ShareStrategyBoard
     comment: The client wishes to share a strategy board with their party.
     opcode: 821

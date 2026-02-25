@@ -1,7 +1,8 @@
 //! Translates tasks and handles other information from `LuaPlayer`.
 
 use crate::{
-    ItemInfoQuery, ToServer, ZoneConnection,
+    Event, ItemInfoQuery, ToServer, ZoneConnection,
+    event::EventHandler,
     inventory::{CurrencyStorage, Item},
     lua::{LuaPlayer, LuaTask},
 };
@@ -24,7 +25,11 @@ use kawari::{
 };
 
 impl ZoneConnection {
-    pub async fn process_lua_player(&mut self, player: &mut LuaPlayer) {
+    pub async fn process_lua_player(
+        &mut self,
+        player: &mut LuaPlayer,
+        events: &mut Vec<(Box<dyn EventHandler>, Event)>,
+    ) {
         // First, send zone-related segments
         for segment in &player.zone_data.queued_segments {
             let mut edited_segment = segment.clone();
@@ -60,9 +65,7 @@ impl ZoneConnection {
                 }
                 LuaTask::BeginLogOut => self.begin_log_out().await,
                 LuaTask::FinishEvent {} => {
-                    if let Some(event) = self.events.last() {
-                        self.event_finish(event.id, player).await;
-                    }
+                    self.event_finish(events).await;
                     run_finish_event = true;
                 }
                 LuaTask::UnlockClassJob { classjob_id } => {
@@ -290,9 +293,6 @@ impl ZoneConnection {
                     self.player_data.content.unlocked_frontlines.set_all();
                     self.player_data.content.unlocked_misc_content.set_all();
                 }
-                LuaTask::UpdateBuyBackList { list } => {
-                    self.player_data.buyback_list = list.clone();
-                }
                 LuaTask::AddExp { amount } => {
                     self.add_exp(*amount).await;
                 }
@@ -302,8 +302,8 @@ impl ZoneConnection {
                     event_arg,
                 } => {
                     let target_object;
-                    if let Some(event) = self.events.last() {
-                        target_object = event.actor_id;
+                    if let Some(event) = events.last() {
+                        target_object = event.1.actor_id;
                     } else {
                         // Fall back to the player as a sensible default
                         target_object = ObjectTypeId {
@@ -318,7 +318,7 @@ impl ZoneConnection {
                         *event_type,
                         *event_arg,
                         None,
-                        player,
+                        events,
                     )
                     .await;
                 }
@@ -559,14 +559,18 @@ impl ZoneConnection {
                     self.send_segment(segment.clone()).await;
                 }
                 LuaTask::StartTalkEvent {} => {
-                    if let Some(event) = self.events.last_mut() {
-                        event.on_talk(
-                            ObjectTypeId {
-                                object_id: self.player_data.character.actor_id,
-                                object_type: ObjectTypeKind::None,
-                            },
-                            player,
-                        );
+                    if let Some(event) = events.last_mut() {
+                        event
+                            .0
+                            .on_talk(
+                                &event.1,
+                                ObjectTypeId {
+                                    object_id: self.player_data.character.actor_id,
+                                    object_type: ObjectTypeKind::None,
+                                },
+                                player,
+                            )
+                            .await;
                     }
                 }
                 LuaTask::AcceptQuest { id } => {
@@ -725,11 +729,10 @@ impl ZoneConnection {
                     params,
                 } => {
                     self.event_scene(
-                        player.event_handler_id.unwrap().0,
+                        &events.last().unwrap().1,
                         *scene,
                         *scene_flags,
                         params.clone(),
-                        player,
                     )
                     .await;
                 }
@@ -739,7 +742,7 @@ impl ZoneConnection {
                     params,
                 } => {
                     self.resume_event(
-                        player.event_handler_id.unwrap().0,
+                        self.event_handler_id.unwrap().0,
                         *scene,
                         *resume_id,
                         params.clone(),
@@ -763,18 +766,13 @@ impl ZoneConnection {
         }
         player.queued_tasks.clear();
 
-        if run_finish_event {
-            // Yield the last event again so it can pick up from nesting
-            // TODO: this makes no sense, and probably needs to be re-worked
-            if let Some(event) = self.events.last() {
-                self.event_finish(event.id, player).await;
-            }
-        }
-
         // We want to process again, since we probably added more tasks.
         // If we *don't* do this there is a pretty big delay before this can happen again.
         if run_finish_event {
-            Box::pin(self.process_lua_player(player)).await;
+            // To handle PreHandler's & others nesting, which is probably not going to scale.
+            self.event_finish(events).await;
+
+            Box::pin(self.process_lua_player(player, events)).await;
         }
     }
 

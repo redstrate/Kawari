@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use mlua::{Function, Lua};
+use async_trait::async_trait;
 use parking_lot::Mutex;
 
 use kawari::{
@@ -8,14 +8,15 @@ use kawari::{
     ipc::zone::{Condition, EventType},
 };
 
-use crate::{GameData, lua::KawariLua};
+use crate::{
+    FishingEventHandler, GameData, GimmickAccessorEventHandler, InclusionShopEventHandler,
+    LuaEventHandler, ShopEventHandler, ZoneConnection,
+};
 
 use super::lua::LuaPlayer;
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Event {
-    pub file_name: String,
-    lua: KawariLua,
     pub id: u32,
     pub event_type: EventType,
     pub event_arg: u32,
@@ -25,187 +26,143 @@ pub struct Event {
     pub actor_id: ObjectTypeId,
 }
 
-impl Event {
-    pub fn new(id: u32, path: &str, game_data: mlua::Value) -> Option<Self> {
-        let mut lua = KawariLua::new();
+/// Abstract event handler that can be implemented in Lua or Rust.
+#[allow(unused)]
+#[async_trait]
+pub trait EventHandler: std::fmt::Debug + Send + Sync {
+    async fn on_enter_territory(&self, event: &Event, player: &mut LuaPlayer) {}
 
-        // "steal"" the game data global from the other lua state
-        let game_data = match game_data {
-            mlua::Value::UserData(ud) => ud.borrow::<Arc<Mutex<GameData>>>().unwrap().clone(),
-            _ => unreachable!(),
-        };
+    async fn on_enter_trigger(&self, event: &Event, player: &mut LuaPlayer, arg: u32) {}
 
-        // inject parameters as necessary
-        {
+    async fn on_talk(&self, event: &Event, target_id: ObjectTypeId, player: &mut LuaPlayer) {}
+
+    async fn on_yield(
+        &self,
+        event: &Event,
+        connection: &mut ZoneConnection,
+        scene: u16,
+        yield_id: u8,
+        results: &[i32],
+        player: &mut LuaPlayer,
+    ) {
+    }
+
+    async fn on_return(
+        &self,
+        event: &Event,
+        connection: &mut ZoneConnection,
+        scene: u16,
+        results: &[i32],
+        player: &mut LuaPlayer,
+    ) {
+    }
+}
+
+/// Finds and creates the relevant `EventHandler` for this event.
+pub fn dispatch_event(
+    handler_id: HandlerId,
+    game_data: Arc<Mutex<GameData>>,
+) -> Option<Box<dyn EventHandler>> {
+    let generic_lua_event = |path: &str| -> Option<Box<dyn EventHandler>> {
+        if let Some(event) = LuaEventHandler::new(handler_id, path, game_data.clone()) {
+            Some(Box::new(event))
+        } else {
+            tracing::warn!("{path} was not found!");
+            None
+        }
+    };
+
+    // Extracts the script id from a given CustomTalk name. For example, "CmnDefBeginnerGuide_00327" will return 327.
+    let extract_script_id = |name: &str| -> u32 { name[..5].parse().unwrap_or_default() };
+
+    // Creates the proper folder name from a given script id. For example, 327 will return 003.
+    let folder_from_script_id = |id: u32| format!("{:03}", (id / 100));
+
+    match handler_id.handler_type() {
+        HandlerType::Quest => {
             let mut game_data = game_data.lock();
-            Self::inject_lua_parameters(HandlerId(id), &mut lua.0, &mut game_data);
+            let script_name = game_data.get_quest_name(handler_id.0);
+            let script_id = extract_script_id(&script_name);
+            let script_folder = folder_from_script_id(script_id);
+            let script_path = format!("events/quest/{script_folder}/{script_name}.lua");
+
+            generic_lua_event(&script_path)
         }
-
-        let file_name = format!("resources/scripts/{path}");
-
-        let result = std::fs::read(&file_name);
-        if let Err(err) = result {
-            tracing::warn!("Failed to load {}: {:?}", file_name, err);
-            return None;
-        }
-        let file = result.unwrap();
-
-        if let Err(err) = lua
-            .0
-            .load(file)
-            .set_name("@".to_string() + &file_name)
-            .exec()
-        {
-            tracing::warn!("Syntax error in {}: {:?}", file_name, err);
-            return None;
-        }
-
-        lua.0.globals().set("EVENT_ID", id).unwrap();
-        lua.0.globals().set("GAME_DATA", game_data).unwrap();
-
-        // The event_type/event_arg is set later, so don't care about this value we set!
-        Some(Self {
-            file_name,
-            lua,
-            event_type: EventType::Talk,
-            id,
-            event_arg: 0,
-            condition: None,
-            actor_id: ObjectTypeId::default(),
-        })
-    }
-
-    /// Injects any applicable Lua parameters from Excel, such as from `Opening`.
-    fn inject_lua_parameters(id: HandlerId, lua: &mut Lua, gamedata: &mut GameData) {
-        let variables = match id.handler_type() {
-            HandlerType::Opening => {
-                let opening_id = id.0;
-                gamedata.get_opening_variables(opening_id)
+        HandlerType::Shop => Some(Box::new(ShopEventHandler::new())),
+        HandlerType::Warp => {
+            let warp_name;
+            {
+                let mut game_data = game_data.lock();
+                warp_name = game_data.get_warp_logic_name(handler_id.0);
             }
-            HandlerType::Quest => {
-                let quest_id = id.0;
-                gamedata.get_quest_variables(quest_id)
+
+            if warp_name.is_empty() {
+                generic_lua_event("events/generic/Warp.lua")
+            } else {
+                let script_path = format!("events/warp/{warp_name}.lua");
+                generic_lua_event(&script_path)
             }
-            HandlerType::CustomTalk => {
-                let ct_id = id.0;
-                gamedata.get_custom_talk_variables(ct_id)
+        }
+        HandlerType::Aetheryte => {
+            // The Aetheryte sheet actually begins at 0, not 327680
+            let aetheryte_id = handler_id.0 & 0xFFF;
+
+            // Aetherytes and Aethernet shards are handled by different event scripts
+            let is_aetheryte;
+            {
+                let mut game_data = game_data.lock();
+                is_aetheryte = game_data.is_aetheryte(aetheryte_id);
             }
-            // NOTE: ExitRange Lua script uses AetheryteSystemDefine variables, that's why it's here...
-            HandlerType::Aetheryte | HandlerType::ExitRange => gamedata.get_aetheryte_variables(),
-            _ => Vec::new(),
-        };
 
-        tracing::info!("Variables available in event {id}:");
-        for (name, value) in &variables {
-            lua.globals().set(&**name, *value).unwrap();
-            tracing::info!("- {name}: {value}");
+            if is_aetheryte {
+                generic_lua_event("events/generic/Aetheryte.lua")
+            } else {
+                generic_lua_event("events/generic/AethernetShard.lua")
+            }
         }
-    }
+        HandlerType::GuildLeveAssignment => generic_lua_event("events/generic/Levemete.lua"),
+        HandlerType::CustomTalk => {
+            let script_name;
+            {
+                let mut game_data = game_data.lock();
+                script_name = game_data.get_custom_talk_name(handler_id.0);
+            }
+            let script_id = extract_script_id(&script_name);
+            let script_folder = folder_from_script_id(script_id);
+            let script_path = format!("events/custom/{script_folder}/{script_name}.lua");
 
-    // TODO: this is a terrible hold-over name. what it actually is an onStart function that's really only useful for cutscenes.
-    pub fn on_enter_territory(&mut self, player: &mut LuaPlayer) {
-        let mut run_script = || {
-            self.lua.0.scope(|scope| {
-                let player_data = scope.create_userdata_ref_mut(player)?;
-
-                let func: Function = self.lua.0.globals().get("onEnterTerritory")?;
-
-                func.call::<()>(player_data)?;
-
-                Ok(())
-            })
-        };
-        if let Err(err) = run_script() {
-            tracing::warn!(
-                "Syntax error while calling onEnterTerritory in {}: {:?}",
-                self.file_name,
-                err
-            );
+            generic_lua_event(&script_path)
         }
-    }
+        HandlerType::GimmickAccessor => Some(Box::new(GimmickAccessorEventHandler::new())),
+        HandlerType::GimmickBill => generic_lua_event("events/generic/GimmickBill.lua"),
+        // NOTE: This is only applicable to instance exits for now.
+        HandlerType::GimmickRect => generic_lua_event("events/generic/InstanceExit.lua"),
+        HandlerType::ChocoboTaxiStand => generic_lua_event("events/generic/Chocobokeep.lua"),
+        HandlerType::Opening => {
+            let script_name;
+            {
+                let mut game_data = game_data.lock();
+                script_name = game_data.get_opening_name(handler_id.0);
+            }
 
-    pub fn on_enter_trigger(&mut self, player: &mut LuaPlayer, arg: u32) {
-        let mut run_script = || {
-            self.lua.0.scope(|scope| {
-                let player = scope.create_userdata_ref_mut(player)?;
-
-                let func: Function = self.lua.0.globals().get("onEnterTrigger")?;
-
-                func.call::<()>((player, arg))?;
-
-                Ok(())
-            })
-        };
-
-        if let Err(err) = run_script() {
-            tracing::warn!(
-                "Syntax error while calling onEnterTrigger in {}: {:?}",
-                self.file_name,
-                err
-            );
+            generic_lua_event(&format!("events/quest/opening/{script_name}.lua"))
         }
-    }
-
-    pub fn on_talk(&mut self, target_id: ObjectTypeId, player: &mut LuaPlayer) {
-        let mut run_script = || {
-            self.lua.0.scope(|scope| {
-                let player = scope.create_userdata_ref_mut(player)?;
-
-                let func: Function = self.lua.0.globals().get("onTalk")?;
-
-                func.call::<()>((target_id, player))?;
-
-                Ok(())
-            })
-        };
-        if let Err(err) = run_script() {
-            tracing::warn!(
-                "Syntax error while calling onTalk in {}: {:?}",
-                self.file_name,
-                err
-            );
+        HandlerType::ExitRange => generic_lua_event("events/generic/ExitRange.lua"),
+        HandlerType::Fishing => Some(Box::new(FishingEventHandler::new())),
+        HandlerType::SwitchTalk => generic_lua_event("events/generic/SwitchTalk.lua"),
+        HandlerType::GoldSaucerArcadeMachine => {
+            generic_lua_event("events/generic/GoldSaucerArcadeMachine.lua")
         }
-    }
-
-    pub fn on_yield(&mut self, scene: u16, yield_id: u8, results: &[i32], player: &mut LuaPlayer) {
-        let mut run_script = || {
-            self.lua.0.scope(|scope| {
-                let player = scope.create_userdata_ref_mut(player)?;
-
-                let func: Function = self.lua.0.globals().get("onYield")?;
-
-                func.call::<()>((scene, yield_id, results, player))?;
-
-                Ok(())
-            })
-        };
-        if let Err(err) = run_script() {
-            tracing::warn!(
-                "Syntax error while calling onYield in {}: {:?}",
-                self.file_name,
-                err
-            );
+        HandlerType::GoldSaucerTalk => generic_lua_event("events/generic/GoldSaucerTalk.lua"),
+        HandlerType::TopicSelect => generic_lua_event("events/generic/TopicSelect.lua"),
+        HandlerType::PreHandler => generic_lua_event("events/generic/PreHandler.lua"),
+        HandlerType::Description => generic_lua_event("events/generic/Description.lua"),
+        HandlerType::InclusionShop => Some(Box::new(InclusionShopEventHandler::new())),
+        HandlerType::EventGimmickPathMove => {
+            generic_lua_event("events/generic/GimmickPathMove.lua")
         }
-    }
-
-    pub fn on_return(&mut self, scene: u16, results: &[i32], player: &mut LuaPlayer) {
-        let mut run_script = || {
-            self.lua.0.scope(|scope| {
-                let player = scope.create_userdata_ref_mut(player)?;
-
-                let func: Function = self.lua.0.globals().get("onReturn")?;
-
-                func.call::<()>((scene, results, player))?;
-
-                Ok(())
-            })
-        };
-        if let Err(err) = run_script() {
-            tracing::warn!(
-                "Syntax error while calling onReturn in {}: {:?}",
-                self.file_name,
-                err
-            );
-        }
+        // TODO: do we need Generic here?
+        HandlerType::InstanceContent => generic_lua_event("content/Generic.lua"),
+        _ => None,
     }
 }

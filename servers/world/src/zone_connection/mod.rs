@@ -31,7 +31,7 @@ use kawari::{
 };
 
 use super::{
-    Event, WorldDatabase,
+    WorldDatabase,
     common::{ClientId, ServerHandle},
     inventory::{BuyBackList, Inventory},
 };
@@ -43,7 +43,6 @@ mod event;
 mod item;
 mod lua;
 mod quest;
-mod shop;
 mod social;
 pub mod spawn_allocator;
 mod stats;
@@ -117,8 +116,6 @@ pub struct ZoneConnection {
     pub state: ConnectionState,
     pub player_data: PlayerData,
 
-    pub events: Vec<Event>,
-
     pub id: ClientId,
     pub handle: ServerHandle,
 
@@ -164,6 +161,7 @@ pub struct ZoneConnection {
 
     /// Information about the current content.
     pub content_handler_id: HandlerId,
+    pub event_handler_id: Option<HandlerId>,
 }
 
 impl ZoneConnection {

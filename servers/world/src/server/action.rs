@@ -81,7 +81,6 @@ pub fn execute_action(
         queued_tasks: Vec::new(),
         zone_data: LuaZone::default(),
         content_data: LuaContent::default(),
-        event_handler_id: None,
     };
 
     let effects_builder;

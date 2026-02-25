@@ -305,7 +305,6 @@ pub fn remove_effect(
             queued_tasks: Vec::new(),
             zone_data: LuaZone::default(),
             content_data: LuaContent::default(),
-            event_handler_id: None,
         };
 
         let key = effect_id as u32;

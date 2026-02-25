@@ -4,7 +4,7 @@ pub use effects_builder::EffectsBuilder;
 mod inventory;
 
 mod player;
-use mlua::{FromLua, Lua, UserData, UserDataFields, Value};
+use mlua::{UserData, UserDataFields};
 pub use player::{LuaContent, LuaPlayer};
 
 mod state;
@@ -22,7 +22,7 @@ use kawari::{
     packet::{PacketSegment, SegmentData, SegmentType},
 };
 
-use super::{Event, zone_connection::TeleportQuery};
+use super::zone_connection::TeleportQuery;
 
 trait QueueSegments {
     fn queue_segment(&mut self, ipc: PacketSegment<ServerZoneIpcSegment>);
@@ -57,14 +57,3 @@ impl UserData for TeleportQuery {
         fields.add_field_method_get("aetheryte_id", |_, this| Ok(this.aetheryte_id));
     }
 }
-
-impl FromLua for Event {
-    fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
-        match value {
-            Value::UserData(ud) => Ok(ud.borrow::<Self>()?.to_owned()),
-            _ => unreachable!(),
-        }
-    }
-}
-
-impl UserData for Event {}

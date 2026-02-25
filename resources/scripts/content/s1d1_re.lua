@@ -65,6 +65,7 @@ function setSequence(director, sequence)
 end
 
 function onGimmickAccessor(director, actor_id, id, params)
+    print(id)
     if sequence(director) == SEQ0 then
         -- Index to gimmick ID
         GIMMICK_CORAL_IDS = {

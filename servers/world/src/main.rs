@@ -30,8 +30,8 @@ use kawari::packet::oodle::OodleNetwork;
 use kawari::packet::{ConnectionState, ConnectionType, SegmentData, parse_packet_header};
 use kawari_world::lua::{KawariLua, KawariLuaState, LuaPlayer};
 use kawari_world::{
-    ChatConnection, ChatHandler, CustomIpcConnection, GameData, ObsfucationData, TeleportReason,
-    ZoneConnection,
+    ChatConnection, ChatHandler, CustomIpcConnection, Event, EventHandler, GameData,
+    ObsfucationData, TeleportReason, ZoneConnection,
 };
 use kawari_world::{
     ClientHandle, ClientId, FromServer, MessageInfo, PlayerData, ServerHandle, ToServer,
@@ -130,7 +130,6 @@ async fn initial_setup(
                     socket,
                     state,
                     player_data: PlayerData::default(),
-                    events: Vec::new(),
                     id,
                     handle: handle.clone(),
                     database: database.clone(),
@@ -158,6 +157,7 @@ async fn initial_setup(
                     content_settings: None,
                     current_instance_id: None,
                     glamour_information: None,
+                    event_handler_id: None,
                 };
 
                 // Handle setup before passing off control to the zone connection.
@@ -438,6 +438,7 @@ async fn client_server_loop(
 async fn process_packet(
     connection: &mut ZoneConnection,
     lua_player: &mut LuaPlayer,
+    events: &mut Vec<(Box<dyn EventHandler>, Event)>,
     client_handle: ClientHandle,
     n: usize,
     buf: &[u8],
@@ -1116,11 +1117,13 @@ async fn process_packet(
                                                 EventType::Fishing,
                                                 0,
                                                 Some(Condition::Fishing),
-                                                lua_player,
+                                                events,
                                             )
                                             .await;
 
                                         // TODO: Condition
+
+                                        let event = &events.last().unwrap().1;
 
                                         connection
                                             .actor_control_self(ActorControlCategory::SetMode {
@@ -1132,11 +1135,10 @@ async fn process_packet(
                                         // TODO: wrong scene flags
                                         connection
                                             .event_scene(
-                                                handler_id,
+                                                event,
                                                 1,
                                                 SceneFlags::NO_DEFAULT_CAMERA,
                                                 vec![274, 277, 0],
-                                                lua_player,
                                             )
                                             .await;
 
@@ -1159,13 +1161,14 @@ async fn process_packet(
                                             ))
                                             .await;
                                     } else {
+                                        let event = &events.last().unwrap().1;
+
                                         connection
                                             .event_scene(
-                                                handler_id,
+                                                event,
                                                 3,
                                                 SceneFlags::NO_DEFAULT_CAMERA,
                                                 vec![273],
-                                                lua_player,
                                             )
                                             .await;
                                     }
@@ -1346,7 +1349,7 @@ async fn process_packet(
                                     handled = ChatHandler::handle_chat_message(
                                         connection,
                                         chat_message,
-                                        lua_player,
+                                        events,
                                     )
                                     .await;
                                 }
@@ -1540,7 +1543,7 @@ async fn process_packet(
                                     EventType::Talk,
                                     0,
                                     Some(Condition::OccupiedInQuestEvent),
-                                    lua_player,
+                                    events,
                                 )
                                 .await
                             {
@@ -1550,92 +1553,105 @@ async fn process_packet(
                                 connection.send_conditions().await;
 
                                 // begin talk function if it exists
-                                if let Some(event) = connection.events.last_mut() {
-                                    event.on_talk(*actor_id, lua_player);
+                                if let Some(event) = events.last_mut() {
+                                    event.0.on_talk(&event.1, *actor_id, lua_player).await;
                                 }
                             } else {
                                 connection.send_conditions().await;
                             }
                         }
                         ClientZoneIpcData::EventReturnHandler2(handler) => {
-                            let event_type = handler.handler_id.handler_type();
-
-                            // It always assumes a shop... for now
                             // TODO: merge all implementations
                             tracing::info!(message = "Event returned", handler_id = %handler.handler_id, error_code = handler.error_code, scene = handler.scene, params = ?&handler.params[..handler.num_results as usize]);
 
-                            if handler.handler_id.handler_type() == HandlerType::GimmickAccessor {
-                                connection
-                                    .handle
-                                    .send(ToServer::GimmickAccessor(
-                                        connection.player_data.character.actor_id,
-                                        handler.handler_id.event_id(),
-                                        handler.params[..handler.num_results as usize].to_vec(),
-                                    ))
+                            if let Some(event) = events.last() {
+                                event
+                                    .0
+                                    .on_return(
+                                        &event.1,
+                                        connection,
+                                        handler.scene,
+                                        &handler.params[..handler.num_results as usize],
+                                        lua_player,
+                                    )
                                     .await;
-                            } else if let Some(event) = connection.events.last_mut() {
-                                event.on_return(
-                                    handler.scene,
-                                    &handler.params[..handler.num_results as usize],
-                                    lua_player,
-                                );
                             } else {
-                                tracing::warn!(
-                                    "Don't know how to return in {event_type} and there's no current event!"
-                                );
+                                tracing::warn!("There's no current event to return from!");
                             }
                         }
                         ClientZoneIpcData::EventReturnHandler8(handler) => {
                             tracing::info!(message = "Event returned", handler_id = %handler.handler_id, error_code = handler.error_code, scene = handler.scene, params = ?&handler.params[..handler.num_results as usize]);
 
-                            let event_type = handler.handler_id.handler_type();
-                            if event_type == HandlerType::GimmickAccessor {
-                                connection
-                                    .handle
-                                    .send(ToServer::GimmickAccessor(
-                                        connection.player_data.character.actor_id,
-                                        handler.handler_id.event_id(),
-                                        handler.params[..handler.num_results as usize].to_vec(),
-                                    ))
+                            if let Some(event) = events.last() {
+                                event
+                                    .0
+                                    .on_return(
+                                        &event.1,
+                                        connection,
+                                        handler.scene,
+                                        &handler.params[..handler.num_results as usize],
+                                        lua_player,
+                                    )
                                     .await;
-                            } else if let Some(event) = connection.events.last_mut() {
-                                event.on_return(
-                                    handler.scene,
-                                    &handler.params[..handler.num_results as usize],
-                                    lua_player,
-                                );
                             } else {
-                                tracing::warn!(
-                                    "Don't know how to return in {event_type} and there's no current event!"
-                                );
+                                tracing::warn!("There's no current event to return from!");
                             }
                         }
                         ClientZoneIpcData::EventYieldHandler2(handler) => {
                             tracing::info!(message = "Event yielded", handler_id = %handler.handler_id, yield_id = handler.yield_id, scene = handler.scene, params = ?&handler.params[..handler.num_results as usize]);
 
-                            connection.events.last_mut().unwrap().on_yield(
-                                handler.scene,
-                                handler.yield_id,
-                                &handler.params[..handler.num_results as usize],
-                                lua_player,
-                            );
+                            if let Some(event) = events.last() {
+                                event
+                                    .0
+                                    .on_yield(
+                                        &event.1,
+                                        connection,
+                                        handler.scene,
+                                        handler.yield_id,
+                                        &handler.params[..handler.num_results as usize],
+                                        lua_player,
+                                    )
+                                    .await;
+                            } else {
+                                tracing::warn!("There's no current event to yield from!");
+                            }
                         }
                         ClientZoneIpcData::EventYieldHandler4(handler) => {
                             tracing::info!(message = "Event yielded", handler_id = %handler.handler_id, yield_id = handler.yield_id, scene = handler.scene, params = ?&handler.params[..handler.num_results as usize]);
 
-                            // It always assumes a shop... for now
-                            let event_type = handler.handler_id.handler_type();
-                            if event_type == HandlerType::Shop {
-                                connection
-                                    .process_shop_event_yield(handler, lua_player)
+                            if let Some(event) = events.last() {
+                                event
+                                    .0
+                                    .on_yield(
+                                        &event.1,
+                                        connection,
+                                        handler.scene,
+                                        handler.yield_id,
+                                        &handler.params[..handler.num_results as usize],
+                                        lua_player,
+                                    )
                                     .await;
                             } else {
-                                connection.events.last_mut().unwrap().on_yield(
-                                    handler.scene,
-                                    handler.yield_id,
-                                    &handler.params[..handler.num_results as usize],
-                                    lua_player,
-                                );
+                                tracing::warn!("There's no current event to yield from!");
+                            }
+                        }
+                        ClientZoneIpcData::EventYieldHandler16(handler) => {
+                            tracing::info!(message = "Event yielded", handler_id = %handler.handler_id, yield_id = handler.yield_id, scene = handler.scene, params = ?&handler.params[..handler.num_results as usize]);
+
+                            if let Some(event) = events.last() {
+                                event
+                                    .0
+                                    .on_yield(
+                                        &event.1,
+                                        connection,
+                                        handler.scene,
+                                        handler.yield_id,
+                                        &handler.params[..handler.num_results as usize],
+                                        lua_player,
+                                    )
+                                    .await;
+                            } else {
+                                tracing::warn!("There's no current event to yield from!");
                             }
                         }
                         ClientZoneIpcData::Config(config) => {
@@ -1838,13 +1854,16 @@ async fn process_packet(
                                     EventType::WithinRange,
                                     *event_arg,
                                     Some(condition),
-                                    lua_player,
+                                    events,
                                 )
                                 .await;
 
                             // begin walk-in trigger function if it exists
-                            if let Some(event) = connection.events.last_mut() {
-                                event.on_enter_trigger(lua_player, *event_arg);
+                            if let Some(event) = events.last_mut() {
+                                event
+                                    .0
+                                    .on_enter_trigger(&event.1, lua_player, *event_arg)
+                                    .await;
                             }
                         }
                         ClientZoneIpcData::WalkOutsideEvent {
@@ -1885,13 +1904,16 @@ async fn process_packet(
                                     EventType::OutsideRange,
                                     *event_arg,
                                     Some(condition),
-                                    lua_player,
+                                    events,
                                 )
                                 .await;
 
                             // begin walk-in trigger function if it exists
-                            if let Some(event) = connection.events.last_mut() {
-                                event.on_enter_trigger(lua_player, *event_arg);
+                            if let Some(event) = events.last_mut() {
+                                event
+                                    .0
+                                    .on_enter_trigger(&event.1, lua_player, *event_arg)
+                                    .await;
                             }
                         }
                         ClientZoneIpcData::NewDiscovery { layout_id, pos } => {
@@ -2155,31 +2177,15 @@ async fn process_packet(
                                     EventType::EnterTerritory,
                                     connection.player_data.volatile.zone_id as u32,
                                     None,
-                                    lua_player,
+                                    events,
                                 )
                                 .await;
-                            if let Some(event) = connection.events.last_mut() {
-                                event.on_enter_territory(lua_player);
+                            if let Some(event) = events.last_mut() {
+                                event.0.on_enter_territory(&event.1, lua_player).await;
                             }
                         }
                         ClientZoneIpcData::Trade { .. } => {
                             tracing::info!("Trading is unimplemented");
-                        }
-                        ClientZoneIpcData::BuyInclusionShop {
-                            shop_id,
-                            special_shop_id,
-                            item_index,
-                            ..
-                        } => {
-                            tracing::info!("Buying item {item_index} from {special_shop_id}...");
-                            connection
-                                .buy_special_shop(
-                                    *shop_id,
-                                    *special_shop_id,
-                                    *item_index,
-                                    lua_player,
-                                )
-                                .await;
                         }
                         ClientZoneIpcData::ShareStrategyBoard {
                             content_id,
@@ -2282,7 +2288,7 @@ async fn process_packet(
 
         // Process any queued packets from scripts and whatnot
         lua_player.queued_tasks.append(&mut connection.queued_tasks);
-        connection.process_lua_player(lua_player).await;
+        connection.process_lua_player(lua_player, events).await;
 
         // update lua player
         lua_player.player_data = connection.player_data.clone();
@@ -2295,6 +2301,7 @@ async fn process_packet(
 async fn process_server_msg(
     connection: &mut ZoneConnection,
     lua_player: &mut LuaPlayer,
+    events: &mut Vec<(Box<dyn EventHandler>, Event)>,
     client_handle: ClientHandle,
     msg: Option<FromServer>,
 ) {
@@ -2357,12 +2364,12 @@ async fn process_server_msg(
             let object = ObjectTypeId { object_id: connection.player_data.character.actor_id, object_type: ObjectTypeKind::None };
             let handler_id = HandlerId::new(HandlerType::GimmickRect, 1).0;
 
-            connection.start_event(object, handler_id, EventType::WithinRange, arg, Some(Condition::OccupiedInEvent), lua_player).await;
+            connection.start_event(object, handler_id, EventType::WithinRange, arg, Some(Condition::OccupiedInEvent), events).await;
 
             connection.conditions.set_condition(Condition::OccupiedInEvent);
             connection.send_conditions().await;
 
-            connection.event_scene(handler_id, 2, SceneFlags::NO_DEFAULT_CAMERA | SceneFlags::HIDE_HOTBAR, Vec::new(), lua_player).await;
+            connection.event_scene(&events.last().unwrap().1, 2, SceneFlags::NO_DEFAULT_CAMERA | SceneFlags::HIDE_HOTBAR, Vec::new()).await;
         }
         FromServer::IncrementRestedExp() => connection.add_rested_exp_seconds(10).await,
         FromServer::Countdown(account_id, content_id, name, starter_actor_id, duration) => connection.start_countdown(account_id, content_id, name, starter_actor_id, duration).await,
@@ -2380,9 +2387,7 @@ async fn process_server_msg(
             .await;
         }
         FromServer::FinishEvent() => {
-            if let Some(event) = connection.events.last() {
-                connection.event_finish(event.id, lua_player).await;
-            }
+            connection.event_finish(events).await;
         }
         FromServer::FishBite() => {
             let handler_id = HandlerId::new(HandlerType::Fishing, 1).0;
@@ -2396,7 +2401,7 @@ async fn process_server_msg(
             });
             connection.send_ipc_self(ipc).await;
 
-            connection.event_scene(handler_id, 4, SceneFlags::NO_DEFAULT_CAMERA, vec![271, 0, 0], lua_player).await;
+            connection.event_scene(&events.last().unwrap().1, 4, SceneFlags::NO_DEFAULT_CAMERA, vec![271, 0, 0]).await;
         }
         _ => { tracing::error!("Zone connection {:#?} received a FromServer message we don't care about: {:#?}, ensure you're using the right client network or that you've implemented a handler for it if we actually care about it!", client_handle.id, msg); }
     }
@@ -2423,13 +2428,18 @@ async fn client_loop(
         .send(ToServer::NewClient(client_handle.clone()))
         .await;
 
+    // This is living outside of ZoneConnetion (which is weird)
+    // because we need the functions in EventHandler to mutate it.
+    // Of course, Rust's mutability rules disallow that.
+    let mut events: Vec<(Box<dyn EventHandler>, Event)> = Vec::new();
+
     loop {
         tokio::select! {
             biased; // client data should always be prioritized
             n = connection.socket.read(&mut buf) => {
                 match n {
                     Ok(n) => {
-                        if !process_packet(&mut connection, &mut lua_player, client_handle.clone(), n, &buf).await {
+                        if !process_packet(&mut connection, &mut lua_player, &mut events, client_handle.clone(), n, &buf).await {
                             break;
                         }
                     },
@@ -2439,7 +2449,7 @@ async fn client_loop(
                     },
                 }
             }
-            msg = internal_recv.recv() => process_server_msg(&mut connection, &mut lua_player, client_handle.clone(), msg).await,
+            msg = internal_recv.recv() => process_server_msg(&mut connection, &mut lua_player, &mut events, client_handle.clone(), msg).await,
         }
     }
 

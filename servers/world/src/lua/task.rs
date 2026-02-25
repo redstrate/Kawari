@@ -1,7 +1,4 @@
-use crate::{
-    RemakeMode,
-    inventory::{BuyBackList, CurrencyKind},
-};
+use crate::{RemakeMode, inventory::CurrencyKind};
 use kawari::{
     common::Position,
     ipc::zone::{EventType, SceneFlags, ServerZoneIpcSegment},
@@ -65,9 +62,6 @@ pub enum LuaTask {
         id: u16,
     },
     UnlockAllContent {},
-    UpdateBuyBackList {
-        list: BuyBackList,
-    },
     AddExp {
         amount: i32,
     },

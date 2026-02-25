@@ -145,6 +145,7 @@ pub enum ClientZoneIpcData {
     },
     EventYieldHandler2(EventYieldHandler<2>),
     EventYieldHandler4(EventYieldHandler<4>),
+    EventYieldHandler16(EventYieldHandler<16>),
     StandardControlsPivot {
         /// Set to 4 when beginning to pivot.
         /// Set to 0 when pivoting ends.
@@ -336,26 +337,6 @@ pub enum ClientZoneIpcData {
     },
     Trade {
         unk: [u8; 16],
-    },
-    BuyInclusionShop {
-        /// ID of a row in the InclusionShop Excel sheet.
-        shop_id: u32,
-        /// Unknown purpose, I see 1?
-        unk1: u32,
-        /// The `shop_id` again.
-        shop_id_again: u32,
-        /// The category as seen in the InclusionShop Excel sheet.
-        category: u32,
-        /// ID of a row in the SpecialShop Excel sheet.
-        special_shop_id: u32,
-        /// Which item from the SpecialShop is selected.
-        item_index: u32,
-        /// Quantity? I see 1.
-        unk2: u32,
-        /// Unknown purpose, I see 9999?
-        unk3: u32,
-        // Dunno.
-        unk4: [u8; 40],
     },
     ShareStrategyBoard {
         /// When the content id is 0, the client is starting a non-real-time session, or is initiating one but isn't ready yet.

@@ -23,7 +23,7 @@ pub use database::{Content, Unlock, WorldDatabase};
 pub mod lua;
 
 mod event;
-pub use event::Event;
+pub use event::{Event, EventHandler};
 
 mod status_effects;
 pub use status_effects::StatusEffects;
@@ -57,6 +57,9 @@ pub use chara_make::CharaMake;
 
 mod client_select_data;
 pub use client_select_data::{ClientSelectData, RemakeMode};
+
+mod events;
+pub use events::*;
 
 use crate::zone_connection::PersistentQuest;
 

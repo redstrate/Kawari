@@ -110,3 +110,6 @@ diesel_migrations = { version = "2.3", default-features = false }
 
 # For sqlite support (we specify * here because diesel selects the version for us)
 libsqlite3-sys = { version = "*", features = ["bundled"], default-features = false }
+
+# Used for EventHandlers since stable Rust doesn't have this yet
+async-trait = { version = "0.1", default-features = false }
