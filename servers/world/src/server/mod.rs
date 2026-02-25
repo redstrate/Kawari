@@ -824,6 +824,14 @@ pub async fn server_main_loop(
                                     director.event_action_cast(task.from_actor_id, *target);
                                 }
                             }
+                            QueuedTaskData::FishBite {} => {
+                                let mut network = network.lock();
+                                network.send_to(
+                                    task.from_id,
+                                    FromServer::FishBite(),
+                                    DestinationNetwork::ZoneClients,
+                                );
+                            }
                         }
                     }
                 }
@@ -1694,6 +1702,19 @@ pub async fn server_main_loop(
 
                     // The only way the game can reliably set these stats is via StatusEffectList (REALLY)
                     send_effects_list(network.clone(), data.clone(), from_actor_id);
+                }
+                ToServer::Fish(from_client_id, from_actor_id) => {
+                    let mut data = data.lock();
+                    let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
+                        continue;
+                    };
+
+                    instance.insert_task(
+                        from_client_id,
+                        from_actor_id,
+                        Duration::from_secs(2),
+                        QueuedTaskData::FishBite {},
+                    );
                 }
                 ToServer::FatalError(err) => return Err(err),
                 _ => {}

@@ -101,6 +101,8 @@ function dispatchEvent(player, event_id)
         return runEvent(event_id, "events/quest/opening/"..script_name..".lua")
     elseif event_type == HANDLER_TYPE_EXIT_RANGE then
         return runEvent(event_id, "events/generic/ExitRange.lua")
+    elseif event_type == HANDLER_TYPE_FISHING then
+        return runEvent(event_id, "events/generic/Fishing.lua")
     elseif event_type == HANDLER_TYPE_SPECIAL_SHOP then
         return runEvent(event_id, "events/generic/SpecialShop.lua")
     elseif event_type == HANDLER_TYPE_SWITCH_TALK then

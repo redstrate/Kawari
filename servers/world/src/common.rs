@@ -186,6 +186,8 @@ pub enum FromServer {
     LeaveContent(),
     /// Request the client to finish their current event.
     FinishEvent(),
+    /// When a fish bites.
+    FishBite(),
 }
 
 #[derive(Debug, Clone)]
@@ -337,6 +339,8 @@ pub enum ToServer {
     StartCountdown(u64, ObjectId, u64, u64, String, ObjectId, u16),
     /// The client yields from a GimmickAccessor.
     GimmickAccessor(ObjectId, u32, Vec<i32>),
+    /// The client begins fishing.
+    Fish(ClientId, ObjectId),
 }
 
 #[derive(Clone, Debug)]

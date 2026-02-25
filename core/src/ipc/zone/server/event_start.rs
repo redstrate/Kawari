@@ -21,6 +21,8 @@ pub enum EventType {
     UnkGoldSaucerInvitational = 13,
     /// Unknown?
     EnterTerritory = 15,
+    /// Seen while fishing.
+    Fishing = 20,
 }
 
 #[cfg(feature = "server")]
@@ -100,5 +102,30 @@ mod tests {
         assert_eq!(event_start.event_type, EventType::UnkGoldSaucerInvitational);
         assert_eq!(event_start.flags, 1);
         assert_eq!(event_start.event_arg, 8);
+    }
+
+    #[test]
+    fn read_fishing() {
+        let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        d.push(server_zone_tests_dir!("event_start_fishing.bin"));
+
+        let buffer = read(d).unwrap();
+        let mut buffer = Cursor::new(&buffer);
+
+        let event_start = EventStart::read_le(&mut buffer).unwrap();
+        assert_eq!(
+            event_start.target_id,
+            ObjectTypeId {
+                object_id: ObjectId(277869081),
+                object_type: ObjectTypeKind::None,
+            }
+        );
+        assert_eq!(
+            event_start.handler_id,
+            HandlerId::new(HandlerType::Fishing, 1)
+        );
+        assert_eq!(event_start.event_type, EventType::Fishing);
+        assert_eq!(event_start.flags, 0);
+        assert_eq!(event_start.event_arg, 0);
     }
 }

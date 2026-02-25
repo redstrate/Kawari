@@ -4,9 +4,10 @@ use std::time::{Instant, SystemTime};
 use axum::Router;
 use axum::routing::get;
 use kawari::common::{
-    ClientLanguage, ContainerType, DirectorEvent, DirectorTrigger, DutyOption, HandlerId,
-    HandlerType, INVALID_OBJECT_ID, ItemOperationKind, ObjectId, ObjectTypeId, ObjectTypeKind,
-    PlayerStateFlags1, PlayerStateFlags2, PlayerStateFlags3, Position, calculate_max_level,
+    CharacterMode, ClientLanguage, ContainerType, DirectorEvent, DirectorTrigger, DutyOption,
+    HandlerId, HandlerType, INVALID_OBJECT_ID, ItemOperationKind, ObjectId, ObjectTypeId,
+    ObjectTypeKind, PlayerStateFlags1, PlayerStateFlags2, PlayerStateFlags3, Position,
+    calculate_max_level,
 };
 use kawari::config::get_config;
 use kawari_world::inventory::{Item, Storage, get_next_free_slot};
@@ -1099,6 +1100,76 @@ async fn process_packet(
                                 ClientTriggerCommand::PrepareRemoveGlamour { .. } => {
                                     // Ditto.
                                     connection.glamour_information = Some(trigger.trigger.clone());
+                                }
+                                ClientTriggerCommand::BeginOrEndFishing { end } => {
+                                    let handler_id = HandlerId::new(HandlerType::Fishing, 1).0;
+                                    if !end {
+                                        connection
+                                            .start_event(
+                                                ObjectTypeId {
+                                                    object_id: connection
+                                                        .player_data
+                                                        .character
+                                                        .actor_id,
+                                                    object_type: ObjectTypeKind::None,
+                                                },
+                                                handler_id,
+                                                EventType::Fishing,
+                                                0,
+                                                Some(Condition::Fishing),
+                                                lua_player,
+                                            )
+                                            .await;
+
+                                        // TODO: Condition
+
+                                        connection
+                                            .actor_control_self(ActorControlCategory::SetMode {
+                                                mode: CharacterMode::Gathering,
+                                                mode_arg: 0,
+                                            })
+                                            .await;
+
+                                        // TODO: wrong scene flags
+                                        connection
+                                            .event_scene(
+                                                handler_id,
+                                                1,
+                                                SceneFlags::NO_DEFAULT_CAMERA,
+                                                vec![274, 277, 0],
+                                                lua_player,
+                                            )
+                                            .await;
+
+                                        let ipc = ServerZoneIpcSegment::new(
+                                            ServerZoneIpcData::LogMessage {
+                                                handler_id: HandlerId(handler_id),
+                                                message_type: 1110,
+                                                params_count: 1,
+                                                item_id: 28,
+                                                item_quantity: 0,
+                                            },
+                                        );
+                                        connection.send_ipc_self(ipc).await;
+
+                                        connection
+                                            .handle
+                                            .send(ToServer::Fish(
+                                                connection.id,
+                                                connection.player_data.character.actor_id,
+                                            ))
+                                            .await;
+                                    } else {
+                                        connection
+                                            .event_scene(
+                                                handler_id,
+                                                3,
+                                                SceneFlags::NO_DEFAULT_CAMERA,
+                                                vec![273],
+                                                lua_player,
+                                            )
+                                            .await;
+                                    }
                                 }
                                 _ => {
                                     // inform the server of our trigger, it will handle sending it to other clients
@@ -2311,6 +2382,20 @@ async fn process_server_msg(
             if let Some(event) = connection.events.last() {
                 connection.event_finish(event.id, lua_player).await;
             }
+        }
+        FromServer::FishBite() => {
+            let handler_id = HandlerId::new(HandlerType::Fishing, 1).0;
+
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::LogMessage {
+                handler_id: HandlerId(handler_id),
+                                                message_type: 1127,
+                                                params_count: 0,
+                                                item_id: 0,
+                                                item_quantity: 0,
+            });
+            connection.send_ipc_self(ipc).await;
+
+            connection.event_scene(handler_id, 4, SceneFlags::NO_DEFAULT_CAMERA, vec![271, 0, 0], lua_player).await;
         }
         _ => { tracing::error!("Zone connection {:#?} received a FromServer message we don't care about: {:#?}, ensure you're using the right client network or that you've implemented a handler for it if we actually care about it!", client_handle.id, msg); }
     }

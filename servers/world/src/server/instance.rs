@@ -49,6 +49,8 @@ pub enum QueuedTaskData {
     DeadDespawn { actor_id: ObjectId },
     /// Complete an EventAction
     CastEventAction { target: ObjectId },
+    /// Make a fish bite.
+    FishBite {},
 }
 
 #[derive(Debug, Clone, PartialEq)]

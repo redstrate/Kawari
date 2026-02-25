@@ -91,6 +91,8 @@ pub enum EffectKind {
         unk: [u8; 3], // empty?
         effect_id: u16,
     },
+    /// Unknown effect (that should be added!)
+    Unknown { magic: u8, unk: [u8; 7] },
 }
 
 #[repr(u8)]
@@ -281,7 +283,6 @@ mod tests {
         assert_eq!(action_result.unk4, 0);
         assert_eq!(action_result.unk5, [0; 6]);
 
-        // effect 0: unk
         assert_eq!(
             action_result.effects[0].kind,
             EffectKind::GainEffect {
@@ -321,7 +322,6 @@ mod tests {
         assert_eq!(action_result.unk4, 0);
         assert_eq!(action_result.unk5, [0; 6]);
 
-        // effect 0: unk2
         assert_eq!(
             action_result.effects[0].kind,
             EffectKind::Mount {
@@ -358,7 +358,6 @@ mod tests {
         assert_eq!(action_result.unk4, 0);
         assert_eq!(action_result.unk5, [0; 6]);
 
-        // effect 0: unk2
         assert_eq!(
             action_result.effects[0].kind,
             EffectKind::LoseEffect {
