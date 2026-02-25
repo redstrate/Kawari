@@ -3,6 +3,7 @@ use strum_macros::{Display, EnumIter, FromRepr};
 
 use crate::common::{HandlerId, ObjectTypeId};
 
+/// See the EventSystemDefine Excel Sheet.
 #[binrw]
 #[brw(repr = u8)]
 #[repr(u8)]
@@ -12,17 +13,32 @@ pub enum EventType {
     /// Used when talking to NPCs.
     #[default]
     Talk = 1,
+    Emote = 2,
+    DistanceBelow = 3,
+    DistanceOver = 4,
+    BattleReward = 5,
+    Craft = 6,
     /// Used when events want to nest another event.
     Nest = 7,
+    EventItem = 8,
+    Drop = 9,
     /// Used for gimmick path events?
     WithinRange = 10,
     OutsideRange = 11,
+    GameStart = 12,
     /// Seen in Gold Saucer Invitational
-    UnkGoldSaucerInvitational = 13,
+    GameProgress = 13,
     /// Unknown?
     EnterTerritory = 15,
+    GameComeBack = 17,
+    ActionResult = 18,
+    MateriaCraft = 19,
     /// Seen while fishing.
     Fishing = 20,
+    UI = 21,
+    Housing = 22,
+    Say = 23,
+    TableGame = 24,
 }
 
 #[cfg(feature = "server")]
@@ -99,7 +115,7 @@ mod tests {
             event_start.handler_id,
             HandlerId::new(HandlerType::InstanceContent, 26002)
         );
-        assert_eq!(event_start.event_type, EventType::UnkGoldSaucerInvitational);
+        assert_eq!(event_start.event_type, EventType::GameProgress);
         assert_eq!(event_start.flags, 1);
         assert_eq!(event_start.event_arg, 8);
     }
