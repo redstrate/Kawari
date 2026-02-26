@@ -28,8 +28,8 @@ use kawari::{
         euler_to_direction,
     },
     ipc::zone::{
-        ActorControlCategory, BattleNpcSubKind, CommonSpawn, Conditions, NpcSpawn, ObjectKind,
-        ObjectSpawn,
+        ActorControlCategory, BattleNpcSubKind, CommonSpawn, Conditions, DisplayFlag, NpcSpawn,
+        ObjectKind, ObjectSpawn,
     },
 };
 
@@ -456,19 +456,17 @@ impl Zone {
         // Only dropins are checked for gathering points, because they strip that from retail LGBs.
         for layer in &self.dropin_layers {
             for object in &layer.objects {
-                match object.data {
-                    DropInObjectData::GatheringPoint { base_id } => {
-                        object_spawns.push(ObjectSpawn {
-                            kind: ObjectKind::GatheringPoint,
-                            base_id,
-                            entity_id: ObjectId(fastrand::u32(..)),
-                            layout_id: object.instance_id,
-                            radius: 1.0,
-                            args3: 50334724, // TODO: what is this value? it varies between nodes, and I *believe* it has to be about grouping.
-                            position: object.position,
-                            ..Default::default()
-                        });
-                    }
+                if let DropInObjectData::GatheringPoint { base_id } = object.data {
+                    object_spawns.push(ObjectSpawn {
+                        kind: ObjectKind::GatheringPoint,
+                        base_id,
+                        entity_id: ObjectId(fastrand::u32(..)),
+                        layout_id: object.instance_id,
+                        radius: 1.0,
+                        args3: 50334724, // TODO: what is this value? it varies between nodes, and I *believe* it has to be about grouping.
+                        position: object.position,
+                        ..Default::default()
+                    });
                 }
             }
         }
@@ -507,8 +505,8 @@ impl Zone {
         None
     }
 
-    /// Returns a list of battle NPCs to spawn, right now it only returns striking dummies.
-    pub fn get_npcs(&self) -> Vec<NpcSpawn> {
+    /// Returns a list of battle NPCs to spawn.
+    pub fn get_npcs(&self, game_data: &mut GameData) -> Vec<NpcSpawn> {
         let mut npc_spawns = Vec::new();
 
         for layer_group in &self.layer_groups {
@@ -517,28 +515,68 @@ impl Zone {
                     if let LayerEntryData::SharedGroup(sgb) = &object.data
                         && STRIKING_DUMMY_SGBS.contains(&sgb.asset_path.value.as_str())
                     {
+                        let (model_chara, battalion, customize) =
+                            game_data.find_bnpc(8016).unwrap();
+
                         let spawn = NpcSpawn {
                             gimmick_id: object.instance_id,
                             common: CommonSpawn {
                                 npc_base: 8016,
                                 npc_name: 541,
-                                max_hp: 75000,
+                                max_hp: 7500,
                                 hp: 7500,
-                                model_chara: 2449,
+                                model_chara,
                                 object_kind: ObjectKind::BattleNpc(BattleNpcSubKind::Enemy),
-                                battalion: 4,
+                                battalion,
                                 level: 1,
                                 position: Position {
                                     x: object.transform.translation[0],
                                     y: object.transform.translation[1],
                                     z: object.transform.translation[2],
                                 },
+                                look: customize,
                                 ..Default::default()
                             },
                             ..Default::default()
                         };
                         npc_spawns.push(spawn);
                     }
+                }
+            }
+        }
+
+        // Only dropins are checked for battle npcs, because they strip that from retail LGBs.
+        for layer in &self.dropin_layers {
+            for object in &layer.objects {
+                if let DropInObjectData::BattleNpc {
+                    base_id,
+                    name_id,
+                    hp,
+                    level,
+                } = object.data
+                {
+                    let (model_chara, battalion, customize) = game_data.find_bnpc(base_id).unwrap();
+
+                    let spawn = NpcSpawn {
+                        common: CommonSpawn {
+                            npc_base: base_id,
+                            npc_name: name_id,
+                            max_hp: hp,
+                            hp,
+                            model_chara,
+                            object_kind: ObjectKind::BattleNpc(BattleNpcSubKind::Enemy),
+                            battalion,
+                            level: level as u8,
+                            position: object.position,
+                            rotation: object.rotation,
+                            look: customize,
+                            layout_id: object.instance_id,
+                            display_flags: DisplayFlag::UNK1,
+                            ..Default::default()
+                        },
+                        ..Default::default()
+                    };
+                    npc_spawns.push(spawn);
                 }
             }
         }

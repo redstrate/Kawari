@@ -11,6 +11,7 @@
                         "y": 36.6149,
                         "z": -592.8052
                     },
+                    "rotation": 0.0,
                     "data": {
                         "type": "gathering_point",
                         "base_id": 30454
@@ -23,6 +24,7 @@
                         "y": 40.75901,
                         "z": -609.9573
                     },
+                    "rotation": 0.0,
                     "data": {
                         "type": "gathering_point",
                         "base_id": 30454
@@ -35,6 +37,7 @@
                         "y": 38.9954,
                         "z": -604.1542
                     },
+                    "rotation": 0.0,
                     "data": {
                         "type": "gathering_point",
                         "base_id": 30454

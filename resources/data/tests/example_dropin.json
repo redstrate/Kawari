@@ -11,6 +11,7 @@
                         "y": 29.50931,
                         "z": -562.5141
                     },
+                    "rotation": 0.0,
                     "data": {
                         "type": "gathering_point",
                         "base_id": 30001

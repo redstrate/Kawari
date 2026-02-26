@@ -120,7 +120,7 @@ impl Instance {
         }
 
         // Load initial NPCs into instance
-        for npc in instance.zone.get_npcs() {
+        for npc in instance.zone.get_npcs(game_data) {
             instance.insert_npc(ObjectId(fastrand::u32(..)), npc);
         }
 

@@ -24,6 +24,7 @@ pub struct DropInLayer {
 pub struct DropInObject {
     pub instance_id: u32,
     pub position: Position,
+    pub rotation: f32,
     pub data: DropInObjectData,
 }
 
@@ -35,6 +36,18 @@ pub enum DropInObjectData {
     GatheringPoint {
         /// Index into the GatheringPoint Excel sheet.
         base_id: u32,
+    },
+    /// Represents a battle NPC.
+    #[serde(rename = "battle_npc")]
+    BattleNpc {
+        /// Index into the BNpcBase sheet.
+        base_id: u32,
+        /// Index into the BNpcName sheet.
+        name_id: u32,
+        /// HP of this NPC.
+        hp: u32,
+        /// Level of this NPC.
+        level: u32,
     },
 }
 
@@ -61,6 +74,7 @@ mod tests {
                             y: 29.50931,
                             z: -562.5141
                         },
+                        rotation: 0.0,
                         data: DropInObjectData::GatheringPoint { base_id: 30001 }
                     }]
                 }]

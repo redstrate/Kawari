@@ -6,6 +6,7 @@ use icarus::AetherCurrentCompFlgSet::AetherCurrentCompFlgSetSheet;
 use icarus::Aetheryte::AetheryteSheet;
 use icarus::AetheryteSystemDefine::AetheryteSystemDefineSheet;
 use icarus::BNpcBase::BNpcBaseSheet;
+use icarus::BNpcCustomize::BNpcCustomizeSheet;
 use icarus::BaseParam::BaseParamSheet;
 use icarus::ClassJob::ClassJobSheet;
 use icarus::ClassJobCategory::ClassJobCategorySheet;
@@ -41,7 +42,7 @@ use icarus::{Tribe::TribeSheet, Warp::WarpSheet};
 use physis::Language;
 use physis::resource::{Resource, ResourceResolver, SqPackResource, UnpackedResource};
 
-use kawari::common::{BASE_STAT, timestamp_secs};
+use kawari::common::{BASE_STAT, CustomizeData, timestamp_secs};
 use kawari::common::{InstanceContentType, get_aether_current_comp_flg_set_to_screenimage};
 use kawari::{common::Attributes, config::get_config};
 
@@ -570,15 +571,53 @@ impl GameData {
     }
 
     /// Grabs needed BattleNPC information such as their name, model id and more.
-    pub fn find_bnpc(&mut self, id: u32) -> Option<u16> {
+    pub fn find_bnpc(&mut self, id: u32) -> Option<(u16, u8, CustomizeData)> {
         let bnpc_sheet = BNpcBaseSheet::read_from(&mut self.resource, Language::None).unwrap();
         let bnpc_row = bnpc_sheet.row(id)?;
 
         let model_row_id = bnpc_row.ModelChara().into_u16()?;
         let model_sheet = ModelCharaSheet::read_from(&mut self.resource, Language::None).unwrap();
-        let model_row = model_sheet.row(*model_row_id as u32)?;
+        let _model_row = model_sheet.row(*model_row_id as u32)?;
 
-        model_row.Model().into_u16().copied()
+        let customize_row_id = bnpc_row.BNpcCustomize().into_u16()?;
+        let customize_sheet =
+            BNpcCustomizeSheet::read_from(&mut self.resource, Language::None).unwrap();
+        let customize_row = customize_sheet.row(*customize_row_id as u32)?;
+
+        let customize = CustomizeData {
+            race: customize_row.Race().into_u8().copied()?,
+            gender: customize_row.Gender().into_u8().copied()?,
+            age: customize_row.BodyType().into_u8().copied()?,
+            height: customize_row.Height().into_u8().copied()?,
+            subrace: customize_row.Tribe().into_u8().copied()?,
+            face: customize_row.Face().into_u8().copied()?,
+            hair: customize_row.HairStyle().into_u8().copied()?,
+            enable_highlights: customize_row.HairHighlight().into_u8().copied()?,
+            skin_tone: customize_row.SkinColor().into_u8().copied()?,
+            right_eye_color: customize_row.EyeColor().into_u8().copied()?,
+            hair_tone: customize_row.HairColor().into_u8().copied()?,
+            highlights: customize_row.HairHighlightColor().into_u8().copied()?,
+            facial_features: customize_row.FacialFeature().into_u8().copied()?,
+            facial_feature_color: customize_row.FacialFeatureColor().into_u8().copied()?,
+            eyebrows: customize_row.Eyebrows().into_u8().copied()?,
+            left_eye_color: customize_row.EyeHeterochromia().into_u8().copied()?,
+            eyes: customize_row.EyeShape().into_u8().copied()?,
+            nose: customize_row.Nose().into_u8().copied()?,
+            jaw: customize_row.Jaw().into_u8().copied()?,
+            mouth: customize_row.Mouth().into_u8().copied()?,
+            lips_tone_fur_pattern: customize_row.LipColor().into_u8().copied()?,
+            race_feature_size: customize_row.BustOrTone1().into_u8().copied()?,
+            race_feature_type: customize_row.ExtraFeature1().into_u8().copied()?,
+            bust: customize_row.ExtraFeature2OrBust().into_u8().copied()?,
+            face_paint: customize_row.FacePaint().into_u8().copied()?,
+            face_paint_color: customize_row.FacePaintColor().into_u8().copied()?,
+        };
+
+        Some((
+            *model_row_id,
+            bnpc_row.Battalion().into_u8().copied()?,
+            customize,
+        ))
     }
 
     /// Gets the content type for the given InstanceContent.

@@ -1,0 +1,26 @@
+{
+    "appends": "bg/ffxiv/wil_w1/fld/w1fa/level/planmap.lgb",
+    "layers": [
+        {
+            "name": "LVD_bnpc_01",
+            "objects": [
+                {
+                    "instance_id": 4126276,
+                    "position": {
+                        "x": 15.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "rotation": -1.5708683,
+                    "data": {
+                        "type": "battle_npc",
+                        "base_id": 207,
+                        "name_id": 1185,
+                        "hp": 12885,
+                        "level": 20
+                    }
+                }
+            ]
+        }
+    ]
+}
