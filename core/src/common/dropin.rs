@@ -1,4 +1,4 @@
-use kawari::common::Position;
+use crate::common::Position;
 use serde::Deserialize;
 
 /// A JSON file that appends an existing (and usually empty) LGB.
@@ -58,7 +58,7 @@ mod tests {
     #[test]
     fn test_simple_example() {
         let json =
-            std::fs::read_to_string("../../resources/data/tests/example_dropin.json").unwrap();
+            std::fs::read_to_string("../resources/data/tests/example_dropin.json").unwrap();
         let dropin: DropIn = serde_json::from_str(&json).unwrap();
 
         assert_eq!(

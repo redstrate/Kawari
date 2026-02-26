@@ -61,9 +61,6 @@ pub use client_select_data::{ClientSelectData, RemakeMode};
 mod events;
 pub use events::*;
 
-mod dropin;
-pub use dropin::*;
-
 use crate::zone_connection::PersistentQuest;
 
 /// Define a new SQL-compatible array with an optional initial size.
