@@ -198,6 +198,16 @@ pub enum ClientTriggerCommand {
     #[brw(magic = 616u32)]
     StartFlying {},
 
+    /// When the player starts crafting.
+    #[brw(magic = 700u32)]
+    BeginCraft {
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        end: bool,
+        /// Index into Recipe Excel sheet.
+        id: u32,
+    },
+
     /// When the player starts fishing.
     #[brw(magic = 701u32)]
     BeginOrEndFishing {
