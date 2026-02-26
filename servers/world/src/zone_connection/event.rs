@@ -5,7 +5,7 @@ use crate::{
     event::{EventHandler, dispatch_event},
 };
 use kawari::{
-    common::{HandlerId, HandlerType, ObjectTypeId},
+    common::{CharacterMode, HandlerId, HandlerType, ObjectTypeId},
     config::get_config,
     ipc::zone::{
         ActorControlCategory, Condition, EventResume, EventScene, EventStart, EventType,
@@ -54,6 +54,23 @@ impl ZoneConnection {
             let event_arg = event.1.event_arg;
             let event_id = event.1.id;
 
+            // TODO: find somewhere else to put this
+            if HandlerId(event.1.id).handler_type() == HandlerType::GatheringPoint {
+                self.actor_control_self(ActorControlCategory::SetMode {
+                    mode: CharacterMode::Normal,
+                    mode_arg: 0,
+                })
+                .await;
+            }
+
+            // Remove the condition given at the start of the event
+            if let Some(condition) = event.1.condition {
+                self.conditions.remove_condition(condition);
+            }
+
+            // Despite that, we *always* have to send this otherwise the client gets stuck sometimes.
+            self.send_conditions().await;
+
             // sent event finish
             {
                 let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::EventFinish {
@@ -64,14 +81,6 @@ impl ZoneConnection {
                 });
                 self.send_ipc_self(ipc).await;
             }
-
-            // Remove the condition given at the start of the event
-            if let Some(condition) = event.1.condition {
-                self.conditions.remove_condition(condition);
-            }
-
-            // Despite that, we *always* have to send this otherwise the client gets stuck sometimes.
-            self.send_conditions().await;
         }
 
         if let Some(event) = events.last() {

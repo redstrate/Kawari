@@ -12,3 +12,6 @@ pub use shop::*;
 
 mod inclusion_shop;
 pub use inclusion_shop::*;
+
+mod gathering;
+pub use gathering::*;

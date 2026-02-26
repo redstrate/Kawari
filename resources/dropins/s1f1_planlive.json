@@ -5,15 +5,39 @@
             "name": "CRF_MINING_LV20",
             "objects": [
                 {
-                    "instance_id": 4001271,
+                    "instance_id": 4102496,
                     "position": {
-                        "x": -266.0561,
-                        "y": 29.50931,
-                        "z": -562.5141
+                        "x": -325.8382,
+                        "y": 36.6149,
+                        "z": -592.8052
                     },
                     "data": {
                         "type": "gathering_point",
-                        "base_id": 30455
+                        "base_id": 30454
+                    }
+                },
+                {
+                    "instance_id": 4102495,
+                    "position": {
+                        "x": -328.5706,
+                        "y": 40.75901,
+                        "z": -609.9573
+                    },
+                    "data": {
+                        "type": "gathering_point",
+                        "base_id": 30454
+                    }
+                },
+                {
+                    "instance_id": 4001269,
+                    "position": {
+                        "x": -335.0318,
+                        "y": 38.9954,
+                        "z": -604.1542
+                    },
+                    "data": {
+                        "type": "gathering_point",
+                        "base_id": 30454
                     }
                 }
             ]

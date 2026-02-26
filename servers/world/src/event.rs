@@ -9,8 +9,8 @@ use kawari::{
 };
 
 use crate::{
-    FishingEventHandler, GameData, GimmickAccessorEventHandler, InclusionShopEventHandler,
-    LuaEventHandler, ShopEventHandler, ZoneConnection,
+    FishingEventHandler, GameData, GatheringEventHandler, GimmickAccessorEventHandler,
+    InclusionShopEventHandler, LuaEventHandler, ShopEventHandler, ZoneConnection,
 };
 
 use super::lua::LuaPlayer;
@@ -103,6 +103,7 @@ pub fn dispatch_event(
                 generic_lua_event(&script_path)
             }
         }
+        HandlerType::GatheringPoint => Some(Box::new(GatheringEventHandler::new())),
         HandlerType::Aetheryte => {
             // The Aetheryte sheet actually begins at 0, not 327680
             let aetheryte_id = handler_id.0 & 0xFFF;

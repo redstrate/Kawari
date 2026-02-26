@@ -108,6 +108,7 @@ pub fn send_effects_list(
         statues: list,
         classjob_id: spawn.common.class_job,
         level: spawn.common.level,
+        unk1: spawn.common.level,
         curr_hp: spawn.common.hp,
         max_hp: spawn.common.max_hp,
         curr_mp: spawn.common.mp,

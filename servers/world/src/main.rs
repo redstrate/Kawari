@@ -1556,21 +1556,37 @@ async fn process_packet(
                             actor_id,
                             handler_id,
                         } => {
+                            // TODO: is this the best way to define this?
+                            let intended_condition =
+                                if handler_id.handler_type() == HandlerType::GatheringPoint {
+                                    Condition::ExecutingGatheringAction
+                                } else {
+                                    Condition::OccupiedInQuestEvent
+                                };
+
                             if connection
                                 .start_event(
                                     *actor_id,
                                     handler_id.0,
                                     EventType::Talk,
                                     0,
-                                    Some(Condition::OccupiedInQuestEvent),
+                                    Some(intended_condition),
                                     events,
                                 )
                                 .await
                             {
-                                connection
-                                    .conditions
-                                    .set_condition(Condition::OccupiedInQuestEvent);
+                                connection.conditions.set_condition(intended_condition);
                                 connection.send_conditions().await;
+
+                                // TODO: please define this in a better way
+                                if handler_id.handler_type() == HandlerType::GatheringPoint {
+                                    connection
+                                        .actor_control_self(ActorControlCategory::SetMode {
+                                            mode: CharacterMode::Gathering,
+                                            mode_arg: 0,
+                                        })
+                                        .await;
+                                }
 
                                 // begin talk function if it exists
                                 if let Some(event) = events.last_mut() {
