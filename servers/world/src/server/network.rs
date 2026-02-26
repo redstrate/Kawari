@@ -183,7 +183,7 @@ impl NetworkState {
 
             if only_spawned {
                 // Skip anything that hasn't spawned us
-                if !state.has_spawned(actor_id) {
+                if !state.has_spawned(actor_id) && actor_id != handle.actor_id {
                     continue;
                 }
             }
