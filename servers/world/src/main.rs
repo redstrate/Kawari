@@ -4,9 +4,9 @@ use std::time::{Instant, SystemTime};
 use axum::Router;
 use axum::routing::get;
 use kawari::common::{
-    CharacterMode, ClientLanguage, ContainerType, DirectorEvent, DirectorTrigger, DutyOption,
-    HandlerId, HandlerType, ItemOperationKind, ObjectId, ObjectTypeId, ObjectTypeKind,
-    PlayerStateFlags1, PlayerStateFlags2, PlayerStateFlags3, Position, calculate_max_level,
+    ClientLanguage, ContainerType, DirectorEvent, DirectorTrigger, DutyOption, HandlerId,
+    HandlerType, ItemOperationKind, ObjectId, ObjectTypeId, ObjectTypeKind, PlayerStateFlags1,
+    PlayerStateFlags2, PlayerStateFlags3, Position, calculate_max_level,
 };
 use kawari::config::get_config;
 use kawari_world::inventory::{Item, Storage, get_next_free_slot};
@@ -14,9 +14,9 @@ use kawari_world::inventory::{Item, Storage, get_next_free_slot};
 use kawari::ipc::chat::{ChatChannel, ClientChatIpcData};
 
 use kawari::ipc::zone::{
-    ActorControlCategory, Condition, Conditions, ContentFinderUserAction, EventType, InviteType,
-    OnlineStatus, OnlineStatusMask, PlayerStatus, SceneFlags, SearchInfo, SocialListUILanguages,
-    TrustContent, TrustInformation,
+    ActorControlCategory, Conditions, ContentFinderUserAction, EventType, InviteType, OnlineStatus,
+    OnlineStatusMask, PlayerStatus, SceneFlags, SearchInfo, SocialListUILanguages, TrustContent,
+    TrustInformation,
 };
 
 use kawari::ipc::zone::{
@@ -918,11 +918,6 @@ async fn process_packet(
                                 }
                                 ClientTriggerCommand::BeginContentsReplay {} => {
                                     connection
-                                        .conditions
-                                        .set_condition(Condition::ExecutingGatheringAction);
-                                    connection.send_conditions().await;
-
-                                    connection
                                         .actor_control_self(
                                             ActorControlCategory::BeginContentsReplay { unk1: 1 },
                                         )
@@ -936,11 +931,6 @@ async fn process_packet(
                                         .await;
 
                                     connection.respawn_player(false).await;
-
-                                    connection
-                                        .conditions
-                                        .remove_condition(Condition::ExecutingGatheringAction);
-                                    connection.send_conditions().await;
                                 }
                                 ClientTriggerCommand::Dismount { sequence } => {
                                     connection.conditions = Conditions::default();
@@ -1116,21 +1106,11 @@ async fn process_packet(
                                                 handler_id,
                                                 EventType::Fishing,
                                                 0,
-                                                Some(Condition::Fishing),
                                                 events,
                                             )
                                             .await;
 
-                                        // TODO: Condition
-
                                         let event = &events.last().unwrap().1;
-
-                                        connection
-                                            .actor_control_self(ActorControlCategory::SetMode {
-                                                mode: CharacterMode::Gathering,
-                                                mode_arg: 0,
-                                            })
-                                            .await;
 
                                         // TODO: wrong scene flags
                                         connection
@@ -1556,44 +1536,14 @@ async fn process_packet(
                             actor_id,
                             handler_id,
                         } => {
-                            // TODO: is this the best way to define this?
-                            let intended_condition =
-                                if handler_id.handler_type() == HandlerType::GatheringPoint {
-                                    Condition::ExecutingGatheringAction
-                                } else {
-                                    Condition::OccupiedInQuestEvent
-                                };
-
                             if connection
-                                .start_event(
-                                    *actor_id,
-                                    handler_id.0,
-                                    EventType::Talk,
-                                    0,
-                                    Some(intended_condition),
-                                    events,
-                                )
+                                .start_event(*actor_id, handler_id.0, EventType::Talk, 0, events)
                                 .await
                             {
-                                connection.conditions.set_condition(intended_condition);
-                                connection.send_conditions().await;
-
-                                // TODO: please define this in a better way
-                                if handler_id.handler_type() == HandlerType::GatheringPoint {
-                                    connection
-                                        .actor_control_self(ActorControlCategory::SetMode {
-                                            mode: CharacterMode::Gathering,
-                                            mode_arg: 0,
-                                        })
-                                        .await;
-                                }
-
                                 // begin talk function if it exists
                                 if let Some(event) = events.last_mut() {
                                     event.0.on_talk(&event.1, *actor_id, lua_player).await;
                                 }
-                            } else {
-                                connection.send_conditions().await;
                             }
                         }
                         ClientZoneIpcData::EventReturnHandler2(handler) => {
@@ -1870,15 +1820,6 @@ async fn process_packet(
                                 )
                                 .await;
 
-                            let condition = if handler_id.handler_type() == HandlerType::Opening {
-                                Condition::Occupied33 // This stops you in your tracks
-                            } else {
-                                Condition::OccupiedInEvent // S9 teleporters and stuff
-                            };
-
-                            connection.conditions.set_condition(condition);
-                            connection.send_conditions().await;
-
                             let actor_id = ObjectTypeId {
                                 object_id: connection.player_data.character.actor_id,
                                 object_type: ObjectTypeKind::None,
@@ -1889,7 +1830,6 @@ async fn process_packet(
                                     handler_id.0,
                                     EventType::WithinRange,
                                     *event_arg,
-                                    Some(condition),
                                     events,
                                 )
                                 .await;
@@ -1920,15 +1860,6 @@ async fn process_packet(
                                 )
                                 .await;
 
-                            let condition = if handler_id.handler_type() == HandlerType::Opening {
-                                Condition::Occupied33 // This stops you in your tracks
-                            } else {
-                                Condition::OccupiedInEvent
-                            };
-
-                            connection.conditions.set_condition(condition);
-                            connection.send_conditions().await;
-
                             let actor_id = ObjectTypeId {
                                 object_id: connection.player_data.character.actor_id,
                                 object_type: ObjectTypeKind::None,
@@ -1939,7 +1870,6 @@ async fn process_packet(
                                     handler_id.0,
                                     EventType::OutsideRange,
                                     *event_arg,
-                                    Some(condition),
                                     events,
                                 )
                                 .await;
@@ -2212,7 +2142,6 @@ async fn process_packet(
                                     handler_id.0,
                                     EventType::EnterTerritory,
                                     connection.player_data.volatile.zone_id as u32,
-                                    None,
                                     events,
                                 )
                                 .await;
@@ -2400,10 +2329,7 @@ async fn process_server_msg(
             let object = ObjectTypeId { object_id: connection.player_data.character.actor_id, object_type: ObjectTypeKind::None };
             let handler_id = HandlerId::new(HandlerType::GimmickRect, 1).0;
 
-            connection.start_event(object, handler_id, EventType::WithinRange, arg, Some(Condition::OccupiedInEvent), events).await;
-
-            connection.conditions.set_condition(Condition::OccupiedInEvent);
-            connection.send_conditions().await;
+            connection.start_event(object, handler_id, EventType::WithinRange, arg, events).await;
 
             connection.event_scene(&events.last().unwrap().1, 2, SceneFlags::NO_DEFAULT_CAMERA | SceneFlags::HIDE_HOTBAR, Vec::new()).await;
         }

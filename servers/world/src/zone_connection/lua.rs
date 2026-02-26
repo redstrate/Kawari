@@ -312,15 +312,8 @@ impl ZoneConnection {
                         };
                     }
 
-                    self.start_event(
-                        target_object,
-                        *event_id,
-                        *event_type,
-                        *event_arg,
-                        None,
-                        events,
-                    )
-                    .await;
+                    self.start_event(target_object, *event_id, *event_type, *event_arg, events)
+                        .await;
                 }
                 LuaTask::SetInnWakeup { watched } => {
                     self.player_data.saw_inn_wakeup = *watched;

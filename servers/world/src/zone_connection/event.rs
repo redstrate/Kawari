@@ -8,8 +8,8 @@ use kawari::{
     common::{CharacterMode, HandlerId, HandlerType, ObjectTypeId},
     config::get_config,
     ipc::zone::{
-        ActorControlCategory, Condition, EventResume, EventScene, EventStart, EventType,
-        SceneFlags, ServerZoneIpcData, ServerZoneIpcSegment,
+        ActorControlCategory, EventResume, EventScene, EventStart, EventType, SceneFlags,
+        ServerZoneIpcData, ServerZoneIpcSegment,
     },
 };
 
@@ -54,21 +54,14 @@ impl ZoneConnection {
             let event_arg = event.1.event_arg;
             let event_id = event.1.id;
 
-            // TODO: find somewhere else to put this
-            if HandlerId(event.1.id).handler_type() == HandlerType::GatheringPoint {
-                self.actor_control_self(ActorControlCategory::SetMode {
-                    mode: CharacterMode::Normal,
-                    mode_arg: 0,
-                })
-                .await;
-            }
+            self.actor_control_self(ActorControlCategory::SetMode {
+                mode: CharacterMode::Normal,
+                mode_arg: 0,
+            })
+            .await;
 
             // Remove the condition given at the start of the event
-            if let Some(condition) = event.1.condition {
-                self.conditions.remove_condition(condition);
-            }
-
-            // Despite that, we *always* have to send this otherwise the client gets stuck sometimes.
+            self.conditions.remove_condition(event.1.condition);
             self.send_conditions().await;
 
             // sent event finish
@@ -97,7 +90,6 @@ impl ZoneConnection {
         event_id: u32,
         event_type: EventType,
         event_arg: u32,
-        condition: Option<Condition>,
         events: &mut Vec<(Box<dyn EventHandler>, Event)>,
     ) -> bool {
         let old_event_handler_id = self.event_handler_id;
@@ -119,6 +111,19 @@ impl ZoneConnection {
             })
             .await;
         }
+
+        let condition = HandlerId(event_id).handler_type().condition();
+        let character_mode = HandlerId(event_id).handler_type().character_mode();
+
+        // TODO: be smarter about setting character modes
+        self.conditions.toggle_condition(condition, true);
+        self.send_conditions().await;
+
+        self.actor_control_self(ActorControlCategory::SetMode {
+            mode: character_mode,
+            mode_arg: 0,
+        })
+        .await;
 
         // call into the event dispatcher, get the event
         let handler = dispatch_event(HandlerId(event_id), self.gamedata.clone());

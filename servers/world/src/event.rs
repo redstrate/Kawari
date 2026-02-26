@@ -21,7 +21,7 @@ pub struct Event {
     pub event_type: EventType,
     pub event_arg: u32,
     /// The condition set for this event.
-    pub condition: Option<Condition>,
+    pub condition: Condition,
     /// The actor associated with this event. This is usually an NPC for Talk events, otherwise the player who initiated it.
     pub actor_id: ObjectTypeId,
 }
