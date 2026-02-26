@@ -15,3 +15,6 @@ pub use inclusion_shop::*;
 
 mod gathering;
 pub use gathering::*;
+
+mod crafting;
+pub use crafting::*;

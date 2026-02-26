@@ -1173,6 +1173,38 @@ async fn process_packet(
                                         )
                                         .await;
                                 }
+                                ClientTriggerCommand::BeginCraft { end, .. } => {
+                                    let handler_id = HandlerId::new(HandlerType::Craft, 1).0;
+                                    if !end {
+                                        connection
+                                            .start_event(
+                                                ObjectTypeId {
+                                                    object_id: connection
+                                                        .player_data
+                                                        .character
+                                                        .actor_id,
+                                                    object_type: ObjectTypeKind::None,
+                                                },
+                                                handler_id,
+                                                EventType::Craft,
+                                                0,
+                                                events,
+                                            )
+                                            .await;
+
+                                        let event = &events.last().unwrap().1;
+
+                                        // TODO: wrong scene flags
+                                        connection
+                                            .event_scene(
+                                                event,
+                                                0,
+                                                SceneFlags::NO_DEFAULT_CAMERA,
+                                                vec![1, 0, 2631, 0],
+                                            )
+                                            .await;
+                                    }
+                                }
                                 _ => {
                                     // inform the server of our trigger, it will handle sending it to other clients
                                     connection
@@ -1622,6 +1654,25 @@ async fn process_packet(
                             }
                         }
                         ClientZoneIpcData::EventYieldHandler16(handler) => {
+                            tracing::info!(message = "Event yielded", handler_id = %handler.handler_id, yield_id = handler.yield_id, scene = handler.scene, params = ?&handler.params[..handler.num_results as usize]);
+
+                            if let Some(event) = events.last() {
+                                event
+                                    .0
+                                    .on_yield(
+                                        &event.1,
+                                        connection,
+                                        handler.scene,
+                                        handler.yield_id,
+                                        &handler.params[..handler.num_results as usize],
+                                        lua_player,
+                                    )
+                                    .await;
+                            } else {
+                                tracing::warn!("There's no current event to yield from!");
+                            }
+                        }
+                        ClientZoneIpcData::EventYieldHandler128(handler) => {
                             tracing::info!(message = "Event yielded", handler_id = %handler.handler_id, yield_id = handler.yield_id, scene = handler.scene, params = ?&handler.params[..handler.num_results as usize]);
 
                             if let Some(event) = events.last() {

@@ -9,8 +9,9 @@ use kawari::{
 };
 
 use crate::{
-    FishingEventHandler, GameData, GatheringEventHandler, GimmickAccessorEventHandler,
-    InclusionShopEventHandler, LuaEventHandler, ShopEventHandler, ZoneConnection,
+    CraftingEventHandler, FishingEventHandler, GameData, GatheringEventHandler,
+    GimmickAccessorEventHandler, InclusionShopEventHandler, LuaEventHandler, ShopEventHandler,
+    ZoneConnection,
 };
 
 use super::lua::LuaPlayer;
@@ -121,6 +122,7 @@ pub fn dispatch_event(
                 generic_lua_event("events/generic/AethernetShard.lua")
             }
         }
+        HandlerType::Craft => Some(Box::new(CraftingEventHandler::new())),
         HandlerType::GuildLeveAssignment => generic_lua_event("events/generic/Levemete.lua"),
         HandlerType::CustomTalk => {
             let script_name;

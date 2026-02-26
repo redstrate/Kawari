@@ -146,6 +146,7 @@ pub enum ClientZoneIpcData {
     EventYieldHandler2(EventYieldHandler<2>),
     EventYieldHandler4(EventYieldHandler<4>),
     EventYieldHandler16(EventYieldHandler<16>),
+    EventYieldHandler128(EventYieldHandler<128>),
     StandardControlsPivot {
         /// Set to 4 when beginning to pivot.
         /// Set to 0 when pivoting ends.

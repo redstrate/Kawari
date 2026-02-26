@@ -596,6 +596,10 @@ ClientZoneIpcType:
     comment: Unknown purpose.
     opcode: 349
     size: 72
+  - name: EventYieldHandler128
+    comment: Unknown purpose.
+    opcode: 987
+    size: 520
   - name: UnkCall2
     comment: "Unsure the true purpose of this, but it's needed for the Unending Journey to function."
     opcode: 148

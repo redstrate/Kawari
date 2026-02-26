@@ -445,6 +445,7 @@ impl HandlerType {
             Self::Fishing => Condition::Fishing,
             Self::EventGimmickPathMove => Condition::OccupiedInEvent,
             Self::GimmickRect => Condition::OccupiedInEvent,
+            Self::Craft => Condition::ExecutingCraftingAction,
             _ => Condition::OccupiedInQuestEvent,
         }
     }
@@ -453,6 +454,7 @@ impl HandlerType {
     pub fn character_mode(&self) -> CharacterMode {
         match self {
             Self::GatheringPoint | Self::Fishing => CharacterMode::Gathering,
+            Self::Craft => CharacterMode::Crafting,
             _ => CharacterMode::None,
         }
     }
