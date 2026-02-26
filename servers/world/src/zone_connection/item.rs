@@ -66,7 +66,6 @@ impl ZoneConnection {
                             ..Default::default()
                         },
                     ));
-                    dbg!(&ipc);
                     self.send_ipc_self(ipc).await;
 
                     num_items += 1;

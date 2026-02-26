@@ -521,4 +521,19 @@ impl Inventory {
         );
         self.equipped.soul_crystal.quantity = 0;
     }
+
+    /// Checks if the soul crystal exists in your inventory.
+    pub fn has_soul_crystal(&mut self, id: u32) -> bool {
+        // TODO: can you move the soul crystal somewhere else?
+
+        for i in 0..self.armoury_soul_crystal.max_slots() as u16 {
+            // Find the soul crystal in the Armoury Chest.
+            let armoury_slot = self.armoury_soul_crystal.get_slot(i);
+            if armoury_slot.id == id && armoury_slot.quantity > 0 {
+                return true;
+            }
+        }
+
+        false
+    }
 }

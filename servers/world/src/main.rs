@@ -1521,6 +1521,8 @@ async fn process_packet(
                                 || (action.dst_storage_id == ContainerType::Equipped
                                     && action.dst_container_index == 0)
                             {
+                                tracing::info!("Changing class based on weapon...");
+
                                 // We need to update our current class based on the weapon...
                                 connection.change_class_based_on_weapon().await;
 
@@ -1531,12 +1533,20 @@ async fn process_packet(
                                         connection.player_data.classjob.current_class as u16,
                                     );
                                 }
-                                if let Some(id) = id {
+                                if let Some(id) = id
+                                    && connection.player_data.inventory.has_soul_crystal(id)
+                                {
+                                    tracing::info!(
+                                        "*We* are equipping soul crystal {id} based on client behavior..."
+                                    );
                                     connection.player_data.inventory.equip_soul_crystal(id);
 
                                     // Then re-check the soul crystal...
                                     connection.change_class_based_on_soul_crystal().await;
                                 } else {
+                                    tracing::info!(
+                                        "*We* are unequipping the soul crystal based on client behavior..."
+                                    );
                                     connection.player_data.inventory.unequip_soul_crystal();
                                 }
                             }
@@ -1550,8 +1560,14 @@ async fn process_packet(
                                 let soul_crystal =
                                     connection.player_data.inventory.equipped.soul_crystal;
                                 if soul_crystal.quantity > 0 {
+                                    tracing::info!(
+                                        "We are re-checking class based on the soul crystal..."
+                                    );
                                     connection.change_class_based_on_soul_crystal().await;
                                 } else {
+                                    tracing::info!(
+                                        "We are re-checking class based on the weapon..."
+                                    );
                                     connection.change_class_based_on_weapon().await;
                                 }
                             }
