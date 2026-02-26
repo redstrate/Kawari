@@ -1,10 +1,10 @@
 use crate::common::Position;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 /// A JSON file that appends an existing (and usually empty) LGB.
 ///
 /// These can only add gathering points for now.
-#[derive(Deserialize, PartialEq, Debug)]
+#[derive(Deserialize, Serialize, PartialEq, Debug)]
 pub struct DropIn {
     /// The path to the LGB this is appending.
     pub appends: String,
@@ -13,14 +13,14 @@ pub struct DropIn {
 }
 
 /// Drop-in layer that appends one of `name`.
-#[derive(Deserialize, PartialEq, Debug, Clone)]
+#[derive(Deserialize, Serialize, PartialEq, Debug, Clone)]
 pub struct DropInLayer {
     name: String,
     pub objects: Vec<DropInObject>,
 }
 
 /// Drop-in object that can add new objects to a zone.
-#[derive(Deserialize, PartialEq, Debug, Clone)]
+#[derive(Deserialize, Serialize, PartialEq, Debug, Clone)]
 pub struct DropInObject {
     pub instance_id: u32,
     pub position: Position,
@@ -28,7 +28,7 @@ pub struct DropInObject {
     pub data: DropInObjectData,
 }
 
-#[derive(Deserialize, PartialEq, Debug, Clone)]
+#[derive(Deserialize, Serialize, PartialEq, Debug, Clone)]
 #[serde(tag = "type")]
 pub enum DropInObjectData {
     /// Represents a single gathering point.
@@ -57,8 +57,7 @@ mod tests {
 
     #[test]
     fn test_simple_example() {
-        let json =
-            std::fs::read_to_string("../resources/data/tests/example_dropin.json").unwrap();
+        let json = std::fs::read_to_string("../resources/data/tests/example_dropin.json").unwrap();
         let dropin: DropIn = serde_json::from_str(&json).unwrap();
 
         assert_eq!(
