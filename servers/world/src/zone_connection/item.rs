@@ -46,7 +46,9 @@ impl ZoneConnection {
         {
             let mut num_items = 0;
 
-            if container_type == ContainerType::Currency {
+            if container_type == ContainerType::Currency
+                || container_type == ContainerType::Crystals
+            {
                 // currencies
                 let mut send_currency = async |slot: u16, item: &Item| {
                     // skip telling the client what they don't have
@@ -64,6 +66,7 @@ impl ZoneConnection {
                             ..Default::default()
                         },
                     ));
+                    dbg!(&ipc);
                     self.send_ipc_self(ipc).await;
 
                     num_items += 1;
@@ -120,7 +123,6 @@ impl ZoneConnection {
         // dummy container states that are not implemented
         // inform the client of container state
         for container_type in [
-            ContainerType::Crystals,
             ContainerType::Mail,
             ContainerType::Unk2,
             ContainerType::ArmoryWaist,

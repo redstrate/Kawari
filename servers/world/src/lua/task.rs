@@ -1,4 +1,7 @@
-use crate::{RemakeMode, inventory::CurrencyKind};
+use crate::{
+    RemakeMode,
+    inventory::{CrystalKind, CurrencyKind},
+};
 use kawari::{
     common::Position,
     ipc::zone::{EventType, SceneFlags, ServerZoneIpcSegment},
@@ -43,6 +46,11 @@ pub enum LuaTask {
     },
     ModifyCurrency {
         id: CurrencyKind,
+        amount: i32,
+        send_client_update: bool,
+    },
+    ModifyCrystal {
+        id: CrystalKind,
         amount: i32,
         send_client_update: bool,
     },

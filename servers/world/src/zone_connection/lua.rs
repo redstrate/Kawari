@@ -3,7 +3,7 @@
 use crate::{
     Event, ItemInfoQuery, ToServer, ZoneConnection,
     event::EventHandler,
-    inventory::{CurrencyStorage, Item},
+    inventory::{CrystalsStorage, CurrencyStorage, Item},
     lua::{LuaPlayer, LuaTask},
 };
 use kawari::{
@@ -191,6 +191,34 @@ impl ZoneConnection {
                                 sequence: self.player_data.item_sequence,
                                 dst_storage_id: ContainerType::Currency,
                                 dst_container_index: CurrencyStorage::get_slot_for_id(*id),
+                                dst_stack: slot.quantity,
+                                dst_catalog_id: slot.id,
+                                unk1: 1966080000,
+                            });
+                        self.send_ipc_self(ipc).await;
+                    }
+                }
+                LuaTask::ModifyCrystal {
+                    id,
+                    amount,
+                    send_client_update,
+                } => {
+                    let slot = self.player_data.inventory.crystals.get_item_for_id(*id);
+
+                    if *amount > 0 {
+                        slot.quantity = slot.quantity.saturating_add(*amount as u32);
+                    } else {
+                        slot.quantity = slot.quantity.saturating_sub(-(*amount) as u32);
+                    }
+
+                    if *send_client_update {
+                        let slot = *slot;
+
+                        let ipc =
+                            ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateInventorySlot {
+                                sequence: self.player_data.item_sequence,
+                                dst_storage_id: ContainerType::Currency,
+                                dst_container_index: CrystalsStorage::get_slot_for_id(*id),
                                 dst_stack: slot.quantity,
                                 dst_catalog_id: slot.id,
                                 unk1: 1966080000,

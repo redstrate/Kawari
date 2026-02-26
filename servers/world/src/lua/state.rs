@@ -5,7 +5,10 @@ use mlua::{IntoLua, Lua};
 use parking_lot::Mutex;
 use strum::IntoEnumIterator;
 
-use crate::{GameData, inventory::CurrencyKind};
+use crate::{
+    GameData,
+    inventory::{CrystalKind, CurrencyKind},
+};
 use kawari::{
     common::HandlerType,
     config::get_config,
@@ -38,6 +41,7 @@ impl KawariLua {
         Self::register_enum::<EventType>(&mut lua, "EVENT_TYPE");
         Self::register_enum::<HandlerType>(&mut lua, "HANDLER_TYPE");
         Self::register_enum::<CurrencyKind>(&mut lua, "CURRENCY");
+        Self::register_enum::<CrystalKind>(&mut lua, "CRYSTAL");
         Self::register_enum::<DamageKind>(&mut lua, "DAMAGE_KIND");
         Self::register_enum::<DamageType>(&mut lua, "DAMAGE_TYPE");
         Self::register_enum::<DamageElement>(&mut lua, "DAMAGE_ELEMENT");

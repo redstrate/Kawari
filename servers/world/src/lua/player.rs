@@ -3,7 +3,10 @@ use std::sync::Arc;
 use mlua::{LuaSerdeExt, UserData, UserDataFields, UserDataMethods, Value};
 use parking_lot::Mutex;
 
-use crate::{GameData, PlayerData, RemakeMode, StatusEffects, inventory::CurrencyKind};
+use crate::{
+    GameData, PlayerData, RemakeMode, StatusEffects,
+    inventory::{CrystalKind, CurrencyKind},
+};
 use kawari::{
     common::{HandlerId, ObjectTypeId, ObjectTypeKind, Position, adjust_quest_id},
     ipc::zone::{
@@ -190,6 +193,14 @@ impl LuaPlayer {
 
     pub fn modify_currency(&mut self, id: CurrencyKind, amount: i32, send_client_update: bool) {
         self.queued_tasks.push(LuaTask::ModifyCurrency {
+            id,
+            amount,
+            send_client_update,
+        });
+    }
+
+    pub fn modify_crystal(&mut self, id: CrystalKind, amount: i32, send_client_update: bool) {
+        self.queued_tasks.push(LuaTask::ModifyCrystal {
             id,
             amount,
             send_client_update,
@@ -697,6 +708,13 @@ impl UserData for LuaPlayer {
             "modify_currency",
             |_, this, (id, amount): (CurrencyKind, i32)| {
                 this.modify_currency(id, amount, true);
+                Ok(())
+            },
+        );
+        methods.add_method_mut(
+            "modify_crystals",
+            |_, this, (id, amount): (CrystalKind, i32)| {
+                this.modify_crystal(id, amount, true);
                 Ok(())
             },
         );

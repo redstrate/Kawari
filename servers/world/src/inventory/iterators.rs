@@ -44,6 +44,8 @@ pub fn get_container_type(container_index: u32) -> Option<ContainerType> {
 
         // currency
         17 => Some(ContainerType::Currency),
+        // crystals
+        18 => Some(ContainerType::Crystals),
         _ => panic!(
             "Inventory iterator invalid or the client sent a very weird packet! {container_index}"
         ),
@@ -57,7 +59,7 @@ impl<'a> Iterator for InventoryIterator<'a> {
         let curr = self.curr;
         self.curr += 1;
 
-        if curr >= 18 {
+        if curr >= 19 {
             return None;
         }
 

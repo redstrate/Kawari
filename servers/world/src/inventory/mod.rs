@@ -28,6 +28,9 @@ pub use currency::{CurrencyKind, CurrencyStorage};
 mod iterators;
 pub use iterators::{InventoryIterator, get_container_type};
 
+mod crystals;
+pub use crystals::{CrystalKind, CrystalsStorage};
+
 use crate::{GameData, ItemInfoQuery};
 
 const MAX_NORMAL_STORAGE: usize = 35;
@@ -57,6 +60,7 @@ pub struct Inventory {
     pub armoury_rings: GenericStorage<MAX_LARGE_STORAGE>,
     pub armoury_soul_crystal: GenericStorage<MAX_NORMAL_STORAGE>,
     pub currency: CurrencyStorage,
+    pub crystals: CrystalsStorage,
 }
 
 impl Default for Inventory {
@@ -83,6 +87,7 @@ impl Default for Inventory {
             armoury_rings: GenericStorage::new(ContainerType::ArmoryRing),
             armoury_soul_crystal: GenericStorage::new(ContainerType::ArmorySoulCrystal),
             currency: CurrencyStorage::default(),
+            crystals: CrystalsStorage::default(),
         }
     }
 }
@@ -339,6 +344,7 @@ impl Inventory {
             ContainerType::Inventory3 => &mut self.pages[3],
             ContainerType::Equipped => &mut self.equipped,
             ContainerType::Currency => &mut self.currency,
+            ContainerType::Crystals => &mut self.crystals,
             ContainerType::ArmoryOffWeapon => &mut self.armoury_off_hand,
             ContainerType::ArmoryHead => &mut self.armoury_head,
             ContainerType::ArmoryBody => &mut self.armoury_body,
@@ -363,6 +369,7 @@ impl Inventory {
             ContainerType::Inventory3 => &self.pages[3],
             ContainerType::Equipped => &self.equipped,
             ContainerType::Currency => &self.currency,
+            ContainerType::Crystals => &self.crystals,
             ContainerType::ArmoryOffWeapon => &self.armoury_off_hand,
             ContainerType::ArmoryHead => &self.armoury_head,
             ContainerType::ArmoryBody => &self.armoury_body,

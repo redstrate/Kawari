@@ -8,5 +8,7 @@ function onCommand(args, player)
     player:modify_currency(CURRENCY_WOLF_MARK, amount)
     player:modify_currency(CURRENCY_MGP, amount)
 
+    player:modify_crystals(CRYSTAL_ICE_SHARD, amount)
+
     printf(player, "Monies given!", amount)
 end
