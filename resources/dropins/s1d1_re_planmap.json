@@ -1,0 +1,122 @@
+{
+    "appends": "bg/ffxiv/sea_s1/dun/s1d1/level/planmap.lgb",
+    "layers": [
+        {
+            "name": "LVD_bnpc_00",
+            "objects": [
+                {
+                    "data": {
+                        "base_id": 1038,
+                        "hp": 905,
+                        "level": 15,
+                        "name_id": 1210,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3725818,
+                    "position": {
+                        "x": 271.45361328125,
+                        "y": 45.50471115112305,
+                        "z": -200.0756072998047
+                    },
+                    "rotation": 0.8628294467926025
+                },
+                {
+                    "data": {
+                        "base_id": 1037,
+                        "hp": 905,
+                        "level": 15,
+                        "name_id": 38,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3725425,
+                    "position": {
+                        "x": 263.5542907714844,
+                        "y": 46.45505905151367,
+                        "z": -196.80780029296875
+                    },
+                    "rotation": 1.7195708751678467
+                },
+                {
+                    "data": {
+                        "base_id": 1037,
+                        "hp": 905,
+                        "level": 15,
+                        "name_id": 38,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3725423,
+                    "position": {
+                        "x": 267.4219970703125,
+                        "y": 45.72602844238281,
+                        "z": -206.63690185546875
+                    },
+                    "rotation": 0.2494194507598877
+                },
+                {
+                    "data": {
+                        "base_id": 1037,
+                        "hp": 905,
+                        "level": 15,
+                        "name_id": 38,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3725392,
+                    "position": {
+                        "x": 302.0082092285156,
+                        "y": 47.155479431152344,
+                        "z": -168.97059631347656
+                    },
+                    "rotation": 1.310950517654419
+                },
+                {
+                    "data": {
+                        "base_id": 1037,
+                        "hp": 905,
+                        "level": 15,
+                        "name_id": 38,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3726787,
+                    "position": {
+                        "x": 310.2760925292969,
+                        "y": 46.441951751708984,
+                        "z": -163.62159729003906
+                    },
+                    "rotation": 0.594857931137085
+                },
+                {
+                    "data": {
+                        "base_id": 1037,
+                        "hp": 905,
+                        "level": 15,
+                        "name_id": 38,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3725390,
+                    "position": {
+                        "x": 329.48260498046875,
+                        "y": 44.4528694152832,
+                        "z": -210.4228973388672
+                    },
+                    "rotation": -2.994232416152954
+                },
+                {
+                    "data": {
+                        "base_id": 1037,
+                        "hp": 905,
+                        "level": 15,
+                        "name_id": 38,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3725388,
+                    "position": {
+                        "x": 324.3785095214844,
+                        "y": 43.693790435791016,
+                        "z": -222.83790588378906
+                    },
+                    "rotation": 1.1299378871917725
+                }
+            ]
+        }
+    ]
+}
