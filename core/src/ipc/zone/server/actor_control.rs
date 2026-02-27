@@ -8,6 +8,38 @@ use crate::common::{
 use crate::ipc::zone::CommonEmoteInfo;
 use crate::ipc::zone::online_status::OnlineStatus;
 
+#[binrw]
+#[derive(Debug, PartialEq, Clone)]
+pub enum LiveEventType {
+    /// Begins a new crafting session.
+    #[brw(magic = 8u32)]
+    StartCraft {
+        /// 0, 1, 2 plays an ActionTimeline (???) and 3, 4, 5 does something else?
+        unk1: u32,
+        unk2: u32,
+        unk3: u32,
+    },
+
+    /// Ends the current crafting session.
+    #[brw(magic = 15u32)]
+    EndCraft {},
+
+    /// Sets the main hand weapon model.
+    #[brw(magic = 38u32)]
+    SetMainHand { model_id: u32, unk1: u32, unk2: u32 },
+
+    /// Sets the off hand weapon model.
+    #[brw(magic = 39u32)]
+    SetOffHand { model_id: u32, unk1: u32, unk2: u32 },
+
+    Unknown {
+        event: u32,
+        param1: u32,
+        param2: u32,
+        param3: u32,
+    },
+}
+
 // See https://github.com/awgil/ffxiv_reverse/blob/f35b6226c1478234ca2b7149f82d251cffca2f56/vnetlog/vnetlog/ServerIPC.cs#L266 for a REALLY useful list of known values
 #[binrw]
 #[derive(Debug, PartialEq, Clone, IntoStaticStr)]
@@ -327,6 +359,13 @@ pub enum ActorControlCategory {
 
     #[brw(magic = 290u32)]
     Emote(CommonEmoteInfo),
+
+    /// Generic catch-all for crafting/gathering actions.
+    #[brw(magic = 300u32)]
+    LiveEvent {
+        #[brw(pad_size_to = 16)] // pad for LiveEvents that don't use all params
+        event: LiveEventType,
+    },
 
     #[brw(magic = 324u32)]
     SetCaughtFishBitmask { index: u32, value: u32 },

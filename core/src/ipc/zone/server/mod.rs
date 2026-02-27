@@ -23,7 +23,9 @@ mod player_stats;
 pub use player_stats::PlayerStats;
 
 mod actor_control;
-pub use actor_control::{ActorControl, ActorControlCategory, ActorControlSelf, ActorControlTarget};
+pub use actor_control::{
+    ActorControl, ActorControlCategory, ActorControlSelf, ActorControlTarget, LiveEventType,
+};
 
 mod init_zone;
 pub use init_zone::{InitZone, InitZoneFlags};
