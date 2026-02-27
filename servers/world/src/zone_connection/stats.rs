@@ -217,6 +217,24 @@ impl ZoneConnection {
             data: [0; 15],
         });
         self.send_ipc_self(ipc).await;
+
+        // Play the VFX!
+        self.actor_control_self(ActorControlCategory::ClassJobChangeVFX {
+            classjob_id: self.player_data.classjob.current_class as u32,
+        })
+        .await;
+
+        let ipc;
+        {
+            let game_data = self.gamedata.lock();
+
+            ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UnkClassRelated {
+                classjob_id: self.player_data.classjob.current_class as u8,
+                class_level: self.current_level(&game_data),
+                current_level: self.current_level(&game_data),
+            });
+        }
+        self.send_ipc_self(ipc).await;
     }
 
     fn calculate_stat_across_all_items(&self, base_params: &mut BaseParameters) {

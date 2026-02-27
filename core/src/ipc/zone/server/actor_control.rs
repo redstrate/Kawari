@@ -34,6 +34,13 @@ pub enum ActorControlCategory {
         id: u32,
     },
 
+    /// Only plays the VFX and nothing else.
+    #[brw(magic = 5u32)]
+    ClassJobChangeVFX {
+        /// Index into the ClassJob Excel sheet.
+        classjob_id: u32,
+    },
+
     /// Only shows the floating message, it doesn't actually update your EXP!
     #[brw(magic = 7u32)]
     EXPFloatingMessage {

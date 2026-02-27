@@ -507,6 +507,10 @@ ServerZoneIpcType:
     comment: Unknown purpose, but allows you to load in while sending the search info packet.
     opcode: 854
     size: 80
+  - name: UnkClassRelated
+    comment: Seems to control the client's hotbars.
+    opcode: 640
+    size: 8
 ClientZoneIpcType:
   - name: InitRequest
     comment: "Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)"

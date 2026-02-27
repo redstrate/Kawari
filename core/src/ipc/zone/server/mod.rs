@@ -840,6 +840,12 @@ pub enum ServerZoneIpcData {
         #[bw(pad_size_to = 80)]
         unk: Vec<u8>,
     },
+    UnkClassRelated {
+        #[brw(pad_after = 3)]
+        classjob_id: u8,
+        class_level: u16,
+        current_level: u16,
+    },
 }
 
 #[cfg(test)]
