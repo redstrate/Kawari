@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use kawari::ipc::zone::{ActorControlCategory, LiveEventType, SceneFlags};
 
-use crate::{Event, EventHandler, ZoneConnection, lua::LuaPlayer};
+use crate::{Event, EventHandler, ItemInfoQuery, ZoneConnection, inventory::Item, lua::LuaPlayer};
 
 /// For crafting events.
 #[derive(Debug)]
@@ -79,6 +79,22 @@ impl EventHandler for CraftingEventHandler {
         } else if results[0] == 1 {
             player.play_scene(0, SceneFlags::NO_DEFAULT_CAMERA, vec![3, 0, 0, 0]);
         } else if results[0] == 11 {
+            // Add item to their inventory
+            {
+                let mut gamedata = connection.gamedata.lock();
+
+                if let Some(item_info) = gamedata.get_item_info(ItemInfoQuery::ById(
+                    connection.recipe.unwrap().item_id as u32,
+                )) {
+                    connection
+                        .player_data
+                        .inventory
+                        .add_in_next_free_slot(Item::new(item_info, 1));
+                }
+            }
+
+            connection.send_inventory().await;
+
             // The item was added to your inventory.
             connection
                 .actor_control_self(ActorControlCategory::LogMessage {
