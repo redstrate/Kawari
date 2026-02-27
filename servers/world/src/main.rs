@@ -158,6 +158,7 @@ async fn initial_setup(
                     current_instance_id: None,
                     glamour_information: None,
                     event_handler_id: None,
+                    recipe: None,
                 };
 
                 // Handle setup before passing off control to the zone connection.
@@ -1173,7 +1174,7 @@ async fn process_packet(
                                         )
                                         .await;
                                 }
-                                ClientTriggerCommand::BeginCraft { end, .. } => {
+                                ClientTriggerCommand::BeginCraft { end, id } => {
                                     let handler_id = HandlerId::new(HandlerType::Craft, 1).0;
                                     if !end {
                                         connection
@@ -1194,15 +1195,23 @@ async fn process_packet(
 
                                         let event = &events.last().unwrap().1;
 
+                                        let recipe;
+                                        {
+                                            let mut gamedata = connection.gamedata.lock();
+                                            recipe = gamedata.get_recipe(id);
+                                        }
+
                                         // TODO: wrong scene flags
                                         connection
                                             .event_scene(
                                                 event,
                                                 0,
                                                 SceneFlags::NO_DEFAULT_CAMERA,
-                                                vec![1, 0, 2631, 0],
+                                                vec![1, 0, recipe.item_id as u32, 0],
                                             )
                                             .await;
+
+                                        connection.recipe = Some(recipe);
                                     }
                                 }
                                 _ => {

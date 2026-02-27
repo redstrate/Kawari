@@ -32,6 +32,7 @@ use icarus::ParamGrow::ParamGrowSheet;
 use icarus::PlaceName::PlaceNameSheet;
 use icarus::PreHandler::PreHandlerSheet;
 use icarus::Quest::QuestSheet;
+use icarus::Recipe::RecipeSheet;
 use icarus::SpecialShop::SpecialShopSheet;
 use icarus::SwitchTalkVariation::{SwitchTalkVariationRow, SwitchTalkVariationSheet};
 use icarus::TerritoryType::TerritoryTypeSheet;
@@ -137,6 +138,12 @@ pub struct BaseParam {
 pub struct ParamGrow {
     pub hp_modifier: u16,
     pub mp_modifier: i32,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct Recipe {
+    pub id: u32,
+    pub item_id: i32,
 }
 
 impl GameData {
@@ -1289,6 +1296,17 @@ impl GameData {
     pub fn get_item_classjobcategory(&mut self, item_id: u32) -> u8 {
         let row = self.item_sheet.row(item_id).unwrap();
         row.ClassJobCategory().into_u8().copied().unwrap()
+    }
+
+    /// Returns a Recipe.
+    pub fn get_recipe(&mut self, id: u32) -> Recipe {
+        let sheet = RecipeSheet::read_from(&mut self.resource, Language::None).unwrap();
+        let row = sheet.row(id).unwrap();
+
+        Recipe {
+            id,
+            item_id: row.ItemResult().into_i32().copied().unwrap(),
+        }
     }
 }
 

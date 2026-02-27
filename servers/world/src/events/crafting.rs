@@ -41,8 +41,14 @@ impl EventHandler for CraftingEventHandler {
                 })
                 .await;
 
-            player.play_scene(0, SceneFlags::NO_DEFAULT_CAMERA, vec![2, 303, 0, 1]);
+            player.play_scene(
+                0,
+                SceneFlags::NO_DEFAULT_CAMERA,
+                vec![2, connection.recipe.unwrap().id, 0, 1],
+            );
         } else if results[0] == 10 {
+            // results[1] is the CraftAction ID
+
             // Play the basic touch animation and VFX:
             connection
                 .actor_control_self(ActorControlCategory::LiveEvent {
@@ -71,7 +77,7 @@ impl EventHandler for CraftingEventHandler {
             connection
                 .actor_control_self(ActorControlCategory::LogMessage {
                     log_message: 789,
-                    id: 2631,
+                    id: connection.recipe.unwrap().item_id as u32,
                 })
                 .await;
 

@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use tokio::net::TcpStream;
 
 use crate::{
-    Content, GameData, Unlock,
+    Content, GameData, Recipe, Unlock,
     database::{
         AetherCurrent, Aetheryte, Character, ClassJob, Companion, Mentor, Quest, SearchInfo,
         Volatile,
@@ -162,6 +162,7 @@ pub struct ZoneConnection {
     /// Information about the current content.
     pub content_handler_id: HandlerId,
     pub event_handler_id: Option<HandlerId>,
+    pub recipe: Option<Recipe>,
 }
 
 impl ZoneConnection {
