@@ -262,15 +262,7 @@ impl Inventory {
                 dst_slot.clone_from(&src_item);
 
                 // move dst item into src slot
-                // *unless* it can come from Equipped, in that case the client actually moves it to the Armoury.
-                let src_slot = if action.dst_storage_id == ContainerType::Equipped {
-                    let destination_info = self
-                        .add_in_next_free_armory_slot(action.dst_container_index)
-                        .unwrap();
-                    self.get_item_mut(destination_info.container, destination_info.index)
-                } else {
-                    self.get_item_mut(action.src_storage_id, action.src_container_index)
-                };
+                let src_slot = self.get_item_mut(action.src_storage_id, action.src_container_index);
                 src_slot.clone_from(&dst_item);
             }
             _ => todo!(),
@@ -504,24 +496,6 @@ impl Inventory {
         }
     }
 
-    /// Puts your equipped soul crystal back into the Armoury Chest.
-    pub fn unequip_soul_crystal(&mut self) {
-        // NOTE: This has to match client behavior exactly! See ItemOperation code for more details.
-
-        // If we already have nothing, do nothing.
-        if self.equipped.soul_crystal.quantity == 0 {
-            return;
-        }
-
-        let destination_info = self.add_in_next_free_armory_slot(13).unwrap();
-        self.add_in_slot(
-            self.equipped.soul_crystal,
-            &destination_info.container,
-            destination_info.index,
-        );
-        self.equipped.soul_crystal.quantity = 0;
-    }
-
     /// Checks if the soul crystal exists in your inventory.
     pub fn has_soul_crystal(&mut self, id: u32) -> bool {
         // TODO: can you move the soul crystal somewhere else?
@@ -535,5 +509,23 @@ impl Inventory {
         }
 
         false
+    }
+
+    /// Puts the equipment in `slot` back into the Armoury Chest.
+    pub fn unequip_equipment(&mut self, slot: u16) {
+        // NOTE: This has to match client behavior exactly! See ItemOperation code for more details.
+
+        // If we already have nothing, do nothing.
+        if self.equipped.get_slot(slot).quantity == 0 {
+            return;
+        }
+
+        let destination_info = self.add_in_next_free_armory_slot(slot).unwrap();
+        self.add_in_slot(
+            *self.equipped.get_slot(slot),
+            &destination_info.container,
+            destination_info.index,
+        );
+        self.equipped.get_slot_mut(slot).quantity = 0;
     }
 }

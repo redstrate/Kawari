@@ -1526,6 +1526,11 @@ async fn process_packet(
                                 // We need to update our current class based on the weapon...
                                 connection.change_class_based_on_weapon().await;
 
+                                tracing::info!(
+                                    "- Result: {}",
+                                    connection.player_data.classjob.current_class
+                                );
+
                                 let id;
                                 {
                                     let mut gamedata = connection.gamedata.lock();
@@ -1547,7 +1552,7 @@ async fn process_packet(
                                     tracing::info!(
                                         "*We* are unequipping the soul crystal based on client behavior..."
                                     );
-                                    connection.player_data.inventory.unequip_soul_crystal();
+                                    connection.player_data.inventory.unequip_equipment(13);
                                 }
                             }
 
@@ -1571,6 +1576,9 @@ async fn process_packet(
                                     connection.change_class_based_on_weapon().await;
                                 }
                             }
+
+                            // This is also something done client-side.
+                            connection.remove_incompatible_armor().await;
 
                             // If the client modified their equipped items, we have to process that
                             if action.src_storage_id == ContainerType::Equipped

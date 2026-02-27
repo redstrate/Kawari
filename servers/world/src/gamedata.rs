@@ -1284,6 +1284,12 @@ impl GameData {
             row.Count().into_u8().copied().unwrap(),
         )
     }
+
+    /// Returns the ClassJobCategory for this item.
+    pub fn get_item_classjobcategory(&mut self, item_id: u32) -> u8 {
+        let row = self.item_sheet.row(item_id).unwrap();
+        row.ClassJobCategory().into_u8().copied().unwrap()
+    }
 }
 
 impl mlua::UserData for GameData {

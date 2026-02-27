@@ -34,6 +34,9 @@ impl Item {
 
     /// Returns the catalog ID of the glamour, if applicable.
     pub fn apparent_id(&self) -> u32 {
+        if self.quantity == 0 {
+            return 0;
+        }
         if self.glamour_catalog_id > 0 {
             return self.glamour_catalog_id;
         }

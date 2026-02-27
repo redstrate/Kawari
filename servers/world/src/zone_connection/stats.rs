@@ -182,8 +182,9 @@ impl BaseParameters {
     }
 
     pub fn calculate_hp_mp(&mut self, param_grow: &ParamGrow) {
-        self.hp = param_grow.hp_modifier as u32
-            + ((self.vitality - BASE_STAT as u32) as f32 * 20.25).round() as u32;
+        self.hp = (param_grow.hp_modifier as u32).wrapping_add(
+            ((self.vitality.wrapping_sub(BASE_STAT as u32)) as f32 * 20.25).round() as u32,
+        );
         self.mp = param_grow.mp_modifier as u32;
     }
 }

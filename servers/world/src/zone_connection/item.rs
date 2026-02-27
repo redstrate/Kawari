@@ -325,7 +325,6 @@ impl ZoneConnection {
     }
 
     /// Changes the class based on the weapon equipped.
-    // TODO: remove incompatible armor
     pub async fn change_class_based_on_weapon(&mut self) {
         // Check the weapon's compatible class jobs:
         let classjobs;
@@ -345,7 +344,6 @@ impl ZoneConnection {
     }
 
     /// Changes the class based on the soul crystal equipped.
-    // TODO: remove incompatible armor
     pub async fn change_class_based_on_soul_crystal(&mut self) {
         // Then check the soul crystal:
         let soul_crystal = self.player_data.inventory.equipped.soul_crystal;
@@ -361,6 +359,27 @@ impl ZoneConnection {
                 assert!(self.player_data.classjob.current_class != 0); // If this is 0, then something went seriously wrong.
 
                 self.update_class_info().await;
+            }
+        }
+    }
+
+    /// Removes armor that's incompatible with your current class.
+    pub async fn remove_incompatible_armor(&mut self) {
+        // NOTE: This has to match client behavior exactly! As this happens client-side.
+
+        let mut game_data = self.gamedata.lock();
+
+        for slot in 0..self.player_data.inventory.equipped.max_slots() as u16 {
+            let item = self.player_data.inventory.equipped.get_slot(slot);
+            if item.quantity > 0 {
+                let classjob_category = game_data.get_item_classjobcategory(item.id);
+                let classjobs = game_data.get_applicable_classjobs(classjob_category as u16);
+                if !classjobs.contains(&(self.player_data.classjob.current_class as u8)) {
+                    tracing::info!(
+                        "Unequipping item in slot {slot} because its incompatible with the current class."
+                    );
+                    self.player_data.inventory.unequip_equipment(slot);
+                }
             }
         }
     }
