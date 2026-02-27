@@ -18,6 +18,7 @@ use icarus::EObj::EObjSheet;
 use icarus::EquipSlotCategory::EquipSlotCategorySheet;
 use icarus::FateShop::FateShopSheet;
 use icarus::FittingShopCategoryItem::FittingShopCategoryItemSheet;
+use icarus::GatheringItem::GatheringItemSheet;
 use icarus::GatheringPoint::GatheringPointSheet;
 use icarus::GatheringPointBase::GatheringPointBaseSheet;
 use icarus::GilShopItem::GilShopItemSheet;
@@ -1276,7 +1277,7 @@ impl GameData {
         variables
     }
 
-    /// Returns the base id, level and count for this GatheringPoint.
+    /// Returns the base id, level and count for a GatheringPoint.
     pub fn get_gathering_point(&mut self, id: u32) -> (i32, u8, u8) {
         let sheet = GatheringPointSheet::read_from(&mut self.resource, Language::None).unwrap();
         let row = sheet.row(id).unwrap();
@@ -1291,6 +1292,27 @@ impl GameData {
             base_row.GatheringLevel().into_u8().copied().unwrap(),
             row.Count().into_u8().copied().unwrap(),
         )
+    }
+
+    /// Returns the item list for a gathering point.
+    pub fn get_gathering_point_items(&mut self, id: u32) -> [i32; 8] {
+        let sheet = GatheringPointSheet::read_from(&mut self.resource, Language::None).unwrap();
+        let row = sheet.row(id).unwrap();
+
+        let base_id = row.GatheringPointBase().into_i32().copied().unwrap();
+        let base_sheet =
+            GatheringPointBaseSheet::read_from(&mut self.resource, Language::None).unwrap();
+        let base_row = base_sheet.row(base_id as u32).unwrap();
+
+        base_row.Item().map(|x| x.into_i32().copied().unwrap())
+    }
+
+    /// Converts from a GatheringItem to a regular Item.
+    pub fn convert_gathering_point_item(&mut self, id: u32) -> i32 {
+        let sheet = GatheringItemSheet::read_from(&mut self.resource, Language::None).unwrap();
+        let row = sheet.row(id).unwrap();
+
+        row.Item().into_i32().copied().unwrap()
     }
 
     /// Returns the ClassJobCategory for this item.
