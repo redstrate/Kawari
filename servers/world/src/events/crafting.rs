@@ -47,16 +47,22 @@ impl EventHandler for CraftingEventHandler {
                 vec![2, connection.recipe.unwrap().id, 0, 1],
             );
         } else if results[0] == 10 {
-            // results[1] is the CraftAction ID
+            let craft_action_id = results[1];
+
+            let animation_start;
+            let animation_end;
+            {
+                let mut gamedata = connection.gamedata.lock();
+                (animation_start, animation_end) =
+                    gamedata.get_craft_action_animations(craft_action_id as u32);
+            }
 
             // Play the basic touch animation and VFX:
             connection
                 .actor_control_self(ActorControlCategory::LiveEvent {
-                    event: LiveEventType::Unknown {
-                        event: 12,
-                        param1: 239,
-                        param2: 246,
-                        param3: 0,
+                    event: LiveEventType::PlayAnimation {
+                        animation_start: animation_start as u32,
+                        animation_end: animation_end as u32,
                     },
                 })
                 .await;

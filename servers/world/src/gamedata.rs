@@ -12,6 +12,7 @@ use icarus::ClassJob::ClassJobSheet;
 use icarus::ClassJobCategory::ClassJobCategorySheet;
 use icarus::ContentDirectorManagedSG::ContentDirectorManagedSGSheet;
 use icarus::ContentFinderCondition::ContentFinderConditionSheet;
+use icarus::CraftAction::CraftActionSheet;
 use icarus::CustomTalk::CustomTalkSheet;
 use icarus::EObj::EObjSheet;
 use icarus::EquipSlotCategory::EquipSlotCategorySheet;
@@ -1307,6 +1308,17 @@ impl GameData {
             id,
             item_id: row.ItemResult().into_i32().copied().unwrap(),
         }
+    }
+
+    /// Returns a CraftAction's animation start/end.
+    pub fn get_craft_action_animations(&mut self, id: u32) -> (u16, u16) {
+        let sheet = CraftActionSheet::read_from(&mut self.resource, Language::English).unwrap();
+        let row = sheet.row(id).unwrap();
+
+        (
+            row.AnimationStart().into_u16().copied().unwrap(),
+            row.AnimationEnd().into_u16().copied().unwrap(),
+        )
     }
 }
 

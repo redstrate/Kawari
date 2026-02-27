@@ -21,6 +21,15 @@ pub enum LiveEventType {
     },
 
     /// Ends the current crafting session.
+    #[brw(magic = 12u32)]
+    PlayAnimation {
+        /// Index into the ActionTimeline Excel sheet.
+        animation_start: u32,
+        /// Index into the ActionTimeline Excel sheet.
+        animation_end: u32,
+    },
+
+    /// Ends the current crafting session.
     #[brw(magic = 15u32)]
     EndCraft {},
 
