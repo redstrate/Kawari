@@ -4,7 +4,7 @@ use crate::{ToServer, ZoneConnection, common::SpawnKind};
 use kawari::{
     common::{
         EquipDisplayFlag, JumpState, MoveAnimationSpeed, MoveAnimationState, MoveAnimationType,
-        ObjectId, ObjectTypeId, ObjectTypeKind, Position,
+        ObjectId, ObjectTypeId, Position,
     },
     config::get_config,
     ipc::zone::{
@@ -84,26 +84,12 @@ impl ZoneConnection {
         // There is no reason for us to spawn our own player again. It's probably a bug!
         assert!(actor_id != self.player_data.character.actor_id);
 
-        let ipc;
-
-        // TODO: Can this be deduplicated somehow?
-        match spawn {
-            SpawnKind::Player(mut spawn) => {
-                spawn.common.target_id = ObjectTypeId {
-                    object_id: actor_id,
-                    object_type: ObjectTypeKind::None,
-                };
-                ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PlayerSpawn(spawn));
+        let ipc = match spawn {
+            SpawnKind::Player(spawn) => {
+                ServerZoneIpcSegment::new(ServerZoneIpcData::PlayerSpawn(spawn))
             }
-            SpawnKind::Npc(mut spawn) => {
-                spawn.common.target_id = ObjectTypeId {
-                    object_id: actor_id,
-                    object_type: ObjectTypeKind::None,
-                };
-                ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::NpcSpawn(spawn));
-            }
-        }
-
+            SpawnKind::Npc(spawn) => ServerZoneIpcSegment::new(ServerZoneIpcData::NpcSpawn(spawn)),
+        };
         self.send_ipc_from(actor_id, ipc).await;
 
         self.actor_control(

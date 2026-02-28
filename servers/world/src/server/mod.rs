@@ -277,6 +277,8 @@ fn server_logic_tick(data: Arc<Mutex<WorldServer>>, network: Arc<Mutex<NetworkSt
                     }
                 }
 
+                let mut newly_acquired_targets = Vec::new();
+
                 // mut pass
                 for (id, actor) in &mut instance.actors {
                     if let NetworkedActor::Npc {
@@ -303,10 +305,13 @@ fn server_logic_tick(data: Arc<Mutex<WorldServer>>, network: Arc<Mutex<NetworkSt
 
                         if current_target.is_none() && *state == NpcState::Wander {
                             // find a player if in range
-                            for (id, position) in &players {
+                            for (target_id, position) in &players {
                                 if Position::distance(*position, spawn.common.position) < 15.0 {
                                     *state = NpcState::Hate;
-                                    *current_target = Some(*id);
+                                    *current_target = Some(*target_id);
+
+                                    spawn.common.target_id.object_id = *target_id;
+                                    newly_acquired_targets.push(*id);
                                 }
                             }
                         } else if !current_path.is_empty() {
@@ -382,9 +387,34 @@ fn server_logic_tick(data: Arc<Mutex<WorldServer>>, network: Arc<Mutex<NetworkSt
                             continue;
                         }
 
+                        if newly_acquired_targets.contains(id) {
+                            // Send an ACT for a visual indicator, and stuff.
+                            let mut network = network.lock();
+                            let target = ObjectTypeId {
+                                object_id: current_target.unwrap(),
+                                object_type: ObjectTypeKind::None,
+                            };
+                            network.send_in_range_instance(
+                                *id,
+                                instance,
+                                FromServer::ActorControlTarget(
+                                    *id,
+                                    target,
+                                    ActorControlCategory::SetTarget {},
+                                ),
+                                DestinationNetwork::ZoneClients,
+                            );
+
+                            // TODO: does this need to be set somewhere in CommonSpawn too?
+                            network.send_ac_in_range_instance(
+                                instance,
+                                *id,
+                                ActorControlCategory::SetBattle { battle: true },
+                            );
+                        }
+
                         if let Some(current_target) = current_target {
                             haters.entry(current_target).or_insert_with(Vec::new);
-
                             haters.get_mut(current_target).unwrap().push(*id);
                         }
                     }

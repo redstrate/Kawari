@@ -75,6 +75,14 @@ pub enum ActorControlCategory {
         id: u32,
     },
 
+    /// Toggles whether an enemy has a red nameplate or not.
+    #[brw(magic = 4u32)]
+    SetBattle {
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        battle: bool,
+    },
+
     /// Only plays the VFX and nothing else.
     #[brw(magic = 5u32)]
     ClassJobChangeVFX {
