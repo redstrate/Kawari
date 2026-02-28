@@ -173,6 +173,295 @@
                         "z": -44.23646926879883
                     },
                     "rotation": -0.29735708236694336
+                },
+                {
+                    "data": {
+                        "base_id": 1038,
+                        "hp": 905,
+                        "level": 15,
+                        "name_id": 1210,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3725822,
+                    "position": {
+                        "x": 225.78619384765625,
+                        "y": 42.22518539428711,
+                        "z": -182.14263916015625
+                    },
+                    "rotation": -2.824629068374634
+                },
+                {
+                    "data": {
+                        "base_id": 1038,
+                        "hp": 905,
+                        "level": 15,
+                        "name_id": 1210,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3725820,
+                    "position": {
+                        "x": 226.48248291015625,
+                        "y": 44.00062942504883,
+                        "z": -188.87351989746094
+                    },
+                    "rotation": -2.4705617427825928
+                },
+                {
+                    "data": {
+                        "base_id": 1038,
+                        "hp": 905,
+                        "level": 15,
+                        "name_id": 1210,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3796129,
+                    "position": {
+                        "x": 199.30450439453125,
+                        "y": 27.29939079284668,
+                        "z": -96.72659301757812
+                    },
+                    "rotation": 2.2074801921844482
+                },
+                {
+                    "data": {
+                        "base_id": 1039,
+                        "hp": 905,
+                        "level": 15,
+                        "name_id": 1211,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3725935,
+                    "position": {
+                        "x": 180.3721923828125,
+                        "y": 26.274250030517578,
+                        "z": -103.6990966796875
+                    },
+                    "rotation": 1.3389461040496826
+                },
+                {
+                    "data": {
+                        "base_id": 1039,
+                        "hp": 905,
+                        "level": 15,
+                        "name_id": 1211,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3796133,
+                    "position": {
+                        "x": 152.88949584960938,
+                        "y": 28.398469924926758,
+                        "z": -99.5809326171875
+                    },
+                    "rotation": 2.5958707332611084
+                },
+                {
+                    "data": {
+                        "base_id": 1039,
+                        "hp": 905,
+                        "level": 15,
+                        "name_id": 1211,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3796131,
+                    "position": {
+                        "x": 152.8636016845703,
+                        "y": 28.5598201751709,
+                        "z": -97.14627838134766
+                    },
+                    "rotation": -0.00004792213439941406
+                },
+                {
+                    "data": {
+                        "base_id": 1038,
+                        "hp": 905,
+                        "level": 15,
+                        "name_id": 1210,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3796117,
+                    "position": {
+                        "x": 123.78459930419922,
+                        "y": 26.88142967224121,
+                        "z": -91.99786376953125
+                    },
+                    "rotation": -0.06524300575256348
+                },
+                {
+                    "data": {
+                        "base_id": 942,
+                        "hp": 24,
+                        "level": 12,
+                        "name_id": 1209,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 4191890,
+                    "position": {
+                        "x": 154.84536743164062,
+                        "y": 29.55311393737793,
+                        "z": -72.61605834960938
+                    },
+                    "rotation": -0.0031158924102783203
+                },
+                {
+                    "data": {
+                        "base_id": 1039,
+                        "hp": 905,
+                        "level": 15,
+                        "name_id": 1211,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3796115,
+                    "position": {
+                        "x": 141.1123046875,
+                        "y": 26.274770736694336,
+                        "z": -68.93395233154297
+                    },
+                    "rotation": 1.319387674331665
+                },
+                {
+                    "data": {
+                        "base_id": 1040,
+                        "hp": 905,
+                        "level": 15,
+                        "name_id": 1212,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3796116,
+                    "position": {
+                        "x": 127.51360321044922,
+                        "y": 26.274770736694336,
+                        "z": -68.29548645019531
+                    },
+                    "rotation": 2.684938669204712
+                },
+                {
+                    "data": {
+                        "base_id": 942,
+                        "hp": 24,
+                        "level": 12,
+                        "name_id": 1209,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 4191892,
+                    "position": {
+                        "x": 123.99447631835938,
+                        "y": 27.998926162719727,
+                        "z": -56.14239501953125
+                    },
+                    "rotation": 0.23666810989379883
+                },
+                {
+                    "data": {
+                        "base_id": 942,
+                        "hp": 24,
+                        "level": 12,
+                        "name_id": 1209,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 4191893,
+                    "position": {
+                        "x": 122.70991516113281,
+                        "y": 27.714609146118164,
+                        "z": -58.79776382446289
+                    },
+                    "rotation": -1.8836133480072021
+                },
+                {
+                    "data": {
+                        "base_id": 942,
+                        "hp": 24,
+                        "level": 12,
+                        "name_id": 1209,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 4191894,
+                    "position": {
+                        "x": 99.7283935546875,
+                        "y": 26.3901424407959,
+                        "z": -61.629356384277344
+                    },
+                    "rotation": -1.8169801235198975
+                },
+                {
+                    "data": {
+                        "base_id": 942,
+                        "hp": 24,
+                        "level": 12,
+                        "name_id": 1209,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 4191897,
+                    "position": {
+                        "x": 101.25474548339844,
+                        "y": 27.067365646362305,
+                        "z": -66.86424255371094
+                    },
+                    "rotation": -1.1749035120010376
+                },
+                {
+                    "data": {
+                        "base_id": 942,
+                        "hp": 24,
+                        "level": 12,
+                        "name_id": 1209,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 4191896,
+                    "position": {
+                        "x": 97.65873718261719,
+                        "y": 26.58903694152832,
+                        "z": -66.00894927978516
+                    },
+                    "rotation": -2.980905771255493
+                },
+                {
+                    "data": {
+                        "base_id": 982,
+                        "hp": 905,
+                        "level": 15,
+                        "name_id": 344,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3981889,
+                    "position": {
+                        "x": 22.569692611694336,
+                        "y": 24.916963577270508,
+                        "z": -2.67830491065979
+                    },
+                    "rotation": 1.880066156387329
+                },
+                {
+                    "data": {
+                        "base_id": 1065,
+                        "hp": 905,
+                        "level": 15,
+                        "name_id": 1205,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3982023,
+                    "position": {
+                        "x": 17.70464324951172,
+                        "y": 25.03543472290039,
+                        "z": -0.8693382740020752
+                    },
+                    "rotation": 1.880066156387329
                 }
             ]
         }
