@@ -511,6 +511,14 @@ ServerZoneIpcType:
     comment: Seems to control the client's hotbars.
     opcode: 640
     size: 8
+  - name: EnmityList
+    comment: Sent to update the enemity of the party.
+    opcode: 905
+    size: 72
+  - name: HaterList
+    comment: Sent to update the people who hate you.
+    opcode: 923
+    size: 264
 ClientZoneIpcType:
   - name: InitRequest
     comment: "Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)"

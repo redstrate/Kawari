@@ -118,6 +118,12 @@ pub use event_resume::EventResume;
 mod map_markers;
 pub use map_markers::MapMarkers;
 
+mod enmity_list;
+pub use enmity_list::{EnmityList, PlayerEnmity};
+
+mod hater_list;
+pub use hater_list::HaterList;
+
 use crate::common::{
     CHAR_NAME_MAX_LENGTH, ContainerType, ItemOperationKind, ObjectId, read_string, write_string,
 };
@@ -848,6 +854,8 @@ pub enum ServerZoneIpcData {
         class_level: u16,
         current_level: u16,
     },
+    EnmityList(EnmityList),
+    HaterList(HaterList),
 }
 
 #[cfg(test)]
