@@ -137,7 +137,7 @@ impl Zone {
                 }
             }
 
-            for layer_set in &lvb.sections[0].filters.filters {
+            for layer_set in &lvb.sections[0].layer_sets.layer_sets {
                 // FIXME: this is wrong. I think there might be multiple, separate navimeshes in really big zones but I'm not sure yet.
                 zone.navimesh_path = layer_set
                     .nvm_path
