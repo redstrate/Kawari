@@ -122,7 +122,7 @@ mod enmity_list;
 pub use enmity_list::{EnmityList, PlayerEnmity};
 
 mod hater_list;
-pub use hater_list::HaterList;
+pub use hater_list::{Hater, HaterList};
 
 use crate::common::{
     CHAR_NAME_MAX_LENGTH, ContainerType, ItemOperationKind, ObjectId, read_string, write_string,

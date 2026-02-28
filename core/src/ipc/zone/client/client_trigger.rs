@@ -25,7 +25,7 @@ pub enum ClientTriggerCommand {
         #[br(map = read_bool_from::<u32>)]
         #[bw(map = write_bool_as::<u32>)]
         on: bool,
-        unk1: u32,
+        target: ObjectId,
         unk3: u32,
     },
 

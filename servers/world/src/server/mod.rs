@@ -31,7 +31,8 @@ use kawari::{
     },
     ipc::zone::{
         ActorControlCategory, BattleNpcSubKind, ClientTriggerCommand, CommonSpawn, Condition,
-        Conditions, NpcSpawn, ObjectKind, WaymarkPlacementMode, WaymarkPreset,
+        Conditions, EnmityList, Hater, HaterList, NpcSpawn, ObjectKind, PlayerEnmity,
+        ServerZoneIpcData, ServerZoneIpcSegment, WaymarkPlacementMode, WaymarkPreset,
     },
 };
 
@@ -366,6 +367,65 @@ fn server_logic_tick(data: Arc<Mutex<WorldServer>>, network: Arc<Mutex<NetworkSt
                             //to_remove.push(id);
                         }
                     }
+                }
+
+                // create hate list
+                let mut haters = HashMap::new();
+                for (id, actor) in &instance.actors {
+                    if let NetworkedActor::Npc {
+                        state,
+                        current_target,
+                        ..
+                    } = actor
+                    {
+                        if *state == NpcState::Dead {
+                            continue;
+                        }
+
+                        if let Some(current_target) = current_target {
+                            haters.entry(current_target).or_insert_with(Vec::new);
+
+                            haters.get_mut(current_target).unwrap().push(*id);
+                        }
+                    }
+                }
+
+                // TODO: limit to players only eventually
+                for (target_id, haters) in haters {
+                    let mut network = network.lock();
+
+                    let list = haters
+                        .iter()
+                        .map(|actor_id| Hater {
+                            actor_id: *actor_id,
+                            enmity: 100,
+                        })
+                        .collect();
+                    // TODO: limit to 32
+                    let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::HaterList(HaterList {
+                        count: haters.len() as u32,
+                        list,
+                    }));
+                    network.send_to_by_actor_id(
+                        *target_id,
+                        FromServer::PacketSegment(ipc, *target_id),
+                        DestinationNetwork::ZoneClients,
+                    );
+
+                    // TODO: send info for party
+                    let ipc =
+                        ServerZoneIpcSegment::new(ServerZoneIpcData::EnmityList(EnmityList {
+                            count: 1,
+                            list: vec![PlayerEnmity {
+                                actor_id: *target_id,
+                                enmity: 100,
+                            }],
+                        }));
+                    network.send_to_by_actor_id(
+                        *target_id,
+                        FromServer::PacketSegment(ipc, *target_id),
+                        DestinationNetwork::ZoneClients,
+                    );
                 }
 
                 let mut actors_now_gimmick_jumping = Vec::new();
