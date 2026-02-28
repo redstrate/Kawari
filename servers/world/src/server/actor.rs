@@ -53,8 +53,14 @@ impl NetworkedActor {
     pub fn get_player_spawn(&self) -> Option<&PlayerSpawn> {
         match &self {
             NetworkedActor::Player { spawn, .. } => Some(spawn),
-            NetworkedActor::Npc { .. } => None,
-            NetworkedActor::Object { .. } => None,
+            _ => None,
+        }
+    }
+
+    pub fn get_npc_spawn(&self) -> Option<&NpcSpawn> {
+        match &self {
+            NetworkedActor::Npc { spawn, .. } => Some(spawn),
+            _ => None,
         }
     }
 

@@ -10,6 +10,7 @@
                         "hp": 905,
                         "level": 15,
                         "name_id": 1210,
+                        "nonpop": false,
                         "type": "battle_npc"
                     },
                     "instance_id": 3725818,
@@ -26,6 +27,7 @@
                         "hp": 905,
                         "level": 15,
                         "name_id": 38,
+                        "nonpop": false,
                         "type": "battle_npc"
                     },
                     "instance_id": 3725425,
@@ -42,6 +44,7 @@
                         "hp": 905,
                         "level": 15,
                         "name_id": 38,
+                        "nonpop": false,
                         "type": "battle_npc"
                     },
                     "instance_id": 3725423,
@@ -58,6 +61,7 @@
                         "hp": 905,
                         "level": 15,
                         "name_id": 38,
+                        "nonpop": false,
                         "type": "battle_npc"
                     },
                     "instance_id": 3725392,
@@ -74,6 +78,7 @@
                         "hp": 905,
                         "level": 15,
                         "name_id": 38,
+                        "nonpop": false,
                         "type": "battle_npc"
                     },
                     "instance_id": 3726787,
@@ -90,6 +95,7 @@
                         "hp": 905,
                         "level": 15,
                         "name_id": 38,
+                        "nonpop": false,
                         "type": "battle_npc"
                     },
                     "instance_id": 3725390,
@@ -106,6 +112,7 @@
                         "hp": 905,
                         "level": 15,
                         "name_id": 38,
+                        "nonpop": false,
                         "type": "battle_npc"
                     },
                     "instance_id": 3725388,
@@ -115,6 +122,57 @@
                         "z": -222.83790588378906
                     },
                     "rotation": 1.1299378871917725
+                },
+                {
+                    "data": {
+                        "base_id": 1038,
+                        "hp": 905,
+                        "level": 15,
+                        "name_id": 1210,
+                        "nonpop": true,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 4217967,
+                    "position": {
+                        "x": 76.8208999633789,
+                        "y": 29.097620010375977,
+                        "z": -51.588470458984375
+                    },
+                    "rotation": -0.15009260177612305
+                },
+                {
+                    "data": {
+                        "base_id": 1038,
+                        "hp": 905,
+                        "level": 15,
+                        "name_id": 1210,
+                        "nonpop": true,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 4217968,
+                    "position": {
+                        "x": 76.8208999633789,
+                        "y": 29.097620010375977,
+                        "z": -51.588470458984375
+                    },
+                    "rotation": -0.15009260177612305
+                },
+                {
+                    "data": {
+                        "base_id": 411,
+                        "hp": 3828,
+                        "level": 15,
+                        "name_id": 1204,
+                        "nonpop": true,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 4035011,
+                    "position": {
+                        "x": 68.71401977539062,
+                        "y": 31.262910842895508,
+                        "z": -44.23646926879883
+                    },
+                    "rotation": -0.29735708236694336
                 }
             ]
         }

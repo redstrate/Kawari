@@ -1648,10 +1648,10 @@ pub async fn server_main_loop(
                         actor.get_common_spawn_mut().max_hp = max_hp;
                         actor.get_common_spawn_mut().max_mp = max_mp;
                         actor.get_common_spawn_mut().class_job = class_job;
-                    }
 
-                    // The only way the game can reliably set these stats is via StatusEffectList (REALLY)
-                    send_effects_list(network.clone(), data.clone(), from_actor_id);
+                        // The only way the game can reliably set these stats is via StatusEffectList (REALLY)
+                        send_effects_list(network.clone(), instance, from_actor_id);
+                    }
                 }
                 ToServer::Fish(from_client_id, from_actor_id) => {
                     let mut data = data.lock();

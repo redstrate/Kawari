@@ -48,6 +48,8 @@ pub enum DropInObjectData {
         hp: u32,
         /// Level of this NPC.
         level: u32,
+        /// If true, this NPC does not spawn automatically.
+        nonpop: bool,
     },
 }
 

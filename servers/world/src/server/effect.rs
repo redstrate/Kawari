@@ -11,7 +11,7 @@ use crate::{
     server::{
         WorldServer,
         actor::NetworkedActor,
-        instance::QueuedTaskData,
+        instance::{Instance, QueuedTaskData},
         network::{DestinationNetwork, NetworkState},
     },
 };
@@ -79,14 +79,9 @@ pub fn handle_effect_messages(
 
 pub fn send_effects_list(
     network: Arc<Mutex<NetworkState>>,
-    data: Arc<Mutex<WorldServer>>,
+    instance: &Instance,
     from_actor_id: ObjectId,
 ) {
-    let data = data.lock();
-    let Some(instance) = data.find_actor_instance(from_actor_id) else {
-        return;
-    };
-
     let Some(actor) = instance.find_actor(from_actor_id) else {
         return;
     };
@@ -128,16 +123,11 @@ pub fn send_effects_list(
 /// Sends an updated status effects list, as needed.
 fn process_effects_list(
     network: Arc<Mutex<NetworkState>>,
-    data: Arc<Mutex<WorldServer>>,
+    instance: &mut Instance,
     from_actor_id: ObjectId,
 ) {
     let is_dirty;
     {
-        let mut data = data.lock();
-        let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
-            return;
-        };
-
         let Some(actor) = instance.find_actor_mut(from_actor_id) else {
             return;
         };
@@ -151,12 +141,7 @@ fn process_effects_list(
 
     // Only update the client if absolutely necessary (e.g. an effect is added, removed or changed duration)
     if is_dirty {
-        send_effects_list(network, data.clone(), from_actor_id);
-
-        let mut data = data.lock();
-        let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
-            return;
-        };
+        send_effects_list(network, instance, from_actor_id);
 
         let Some(actor) = instance.find_actor_mut(from_actor_id) else {
             return;
@@ -182,14 +167,37 @@ pub fn gain_effect(
     effect_source_actor_id: ObjectId,
     send_acs: bool,
 ) {
+    let mut data = data.lock();
+    let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
+        return;
+    };
+
+    gain_effect_instance(
+        network,
+        from_id,
+        instance,
+        from_actor_id,
+        effect_id,
+        effect_param,
+        effect_duration,
+        effect_source_actor_id,
+        send_acs,
+    );
+}
+
+/// Gives the actor a new effect. You can also optionally send an ACS, if needed.
+pub fn gain_effect_instance(
+    network: Arc<Mutex<NetworkState>>,
+    from_id: ClientId,
+    instance: &mut Instance,
+    from_actor_id: ObjectId,
+    effect_id: u16,
+    effect_param: u16,
+    effect_duration: f32,
+    effect_source_actor_id: ObjectId,
+    send_acs: bool,
+) {
     {
-        // First, add it to the actor's effect's list
-        let mut data = data.lock();
-
-        let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
-            return;
-        };
-
         let Some(actor) = instance.find_actor_mut(from_actor_id) else {
             return;
         };
@@ -210,14 +218,14 @@ pub fn gain_effect(
 
         // Then, Send an actor control to inform the client if needed
         if send_acs {
-            network.send_ac_in_range_inclusive(&data, from_actor_id, ipc);
+            network.send_ac_in_range_inclusive_instance(instance, from_actor_id, ipc);
         } else {
-            network.send_ac_in_range(&data, from_actor_id, ipc);
+            network.send_ac_in_range_instance(instance, from_actor_id, ipc);
         }
     }
 
     // We also need to send them an updated StatusEffectsList
-    process_effects_list(network.clone(), data.clone(), from_actor_id);
+    process_effects_list(network.clone(), instance, from_actor_id);
 
     // Scheduling doesn't make sense when the effect never ends.
     if effect_duration == 0.0 {
@@ -226,11 +234,6 @@ pub fn gain_effect(
 
     // Eventually tell the player they lost this effect
     tracing::info!("Effect {effect_id} lasts for {effect_duration} seconds");
-
-    let mut data = data.lock();
-    let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
-        return;
-    };
 
     instance.insert_task(
         from_id,
@@ -293,7 +296,14 @@ pub fn remove_effect(
     }
 
     // Finally, inform the client of their new status effects list
-    process_effects_list(network.clone(), data.clone(), from_actor_id);
+    {
+        let mut data = data.lock();
+
+        let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
+            return;
+        };
+        process_effects_list(network.clone(), instance, from_actor_id);
+    }
 
     // Also run the effect's Lua script in case it wants to do something!
     {

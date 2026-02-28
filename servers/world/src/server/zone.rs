@@ -23,8 +23,8 @@ use crate::{
 use kawari::{
     common::{
         BOSS_WALL_IDS, DistanceRange, DropIn, DropInLayer, DropInObjectData, ENTRANCE_CIRCLE_IDS,
-        EOBJ_DOOR, EOBJ_SHORTCUT, EOBJ_SHORTCUT_EXPLORER_MODE, HandlerType, ObjectId, Position,
-        STRIKING_DUMMY_SGBS, euler_to_direction,
+        EOBJ_DOOR, EOBJ_SHORTCUT, EOBJ_SHORTCUT_EXPLORER_MODE, HandlerType, InvisibilityFlags,
+        ObjectId, Position, STRIKING_DUMMY_SGBS, euler_to_direction,
     },
     ipc::zone::{
         ActorControlCategory, BattleNpcSubKind, CommonSpawn, Conditions, DisplayFlag, NpcSpawn,
@@ -83,6 +83,8 @@ pub struct Zone {
     cached_npc_base_ids: HashMap<u32, u32>,
     pub map_ranges: Vec<MapRange>,
     dropin_layers: Vec<DropInLayer>,
+    cached_objects: HashMap<u32, ObjectSpawn>,
+    cached_npcs: HashMap<u32, NpcSpawn>,
 }
 
 impl Zone {
@@ -388,7 +390,7 @@ impl Zone {
     ///
     /// For example, the Gold Saucer arcade machines or shortcuts in dungeons.
     pub fn get_event_objects(
-        &self,
+        &mut self,
         game_data: &mut GameData,
         explorer_mode: bool,
     ) -> Vec<ObjectSpawn> {
@@ -404,10 +406,13 @@ impl Zone {
                         }
 
                         // Ensure boss walls are spawned in a non-blocking state.
-                        let event_state = if BOSS_WALL_IDS.contains(&eobj.parent_data.base_id) {
-                            7
+                        // TODO: maybe this should be handled by the director?
+                        let visibility = if BOSS_WALL_IDS.contains(&eobj.parent_data.base_id) {
+                            InvisibilityFlags::UNK1
+                                | InvisibilityFlags::UNK2
+                                | InvisibilityFlags::UNK3
                         } else {
-                            0
+                            InvisibilityFlags::VISIBLE
                         };
 
                         // NOTE: this seems to keep the gold saucer machines, and not much else. needs more testing!
@@ -438,7 +443,7 @@ impl Zone {
                             layout_id: object.instance_id,
                             bind_layout_id: eobj.bound_instance_id,
                             radius: 1.0,
-                            event_state,
+                            visibility,
                             rotation: euler_to_direction(object.transform.rotation),
                             position: Position {
                                 x: object.transform.translation[0],
@@ -456,7 +461,7 @@ impl Zone {
         for layer in &self.dropin_layers {
             for object in &layer.objects {
                 if let DropInObjectData::GatheringPoint { base_id } = object.data {
-                    object_spawns.push(ObjectSpawn {
+                    let spawn = ObjectSpawn {
                         kind: ObjectKind::GatheringPoint,
                         base_id,
                         entity_id: ObjectId(fastrand::u32(..)),
@@ -465,7 +470,9 @@ impl Zone {
                         args3: 50334724, // TODO: what is this value? it varies between nodes, and I *believe* it has to be about grouping.
                         position: object.position,
                         ..Default::default()
-                    });
+                    };
+                    self.cached_objects.insert(base_id, spawn);
+                    object_spawns.push(spawn);
                 }
             }
         }
@@ -475,37 +482,16 @@ impl Zone {
 
     /// Returns an ObjectSpawn for the given base ID.
     pub fn get_event_object(&self, base_id: u32) -> Option<ObjectSpawn> {
-        for layer_group in &self.layer_groups {
-            for layer in &layer_group.chunks[0].layers {
-                for object in &layer.objects {
-                    if let LayerEntryData::EventObject(eobj) = &object.data
-                        && eobj.parent_data.base_id == base_id
-                    {
-                        return Some(ObjectSpawn {
-                            kind: ObjectKind::EventObj,
-                            base_id,
-                            entity_id: ObjectId(fastrand::u32(..)),
-                            layout_id: object.instance_id,
-                            bind_layout_id: eobj.bound_instance_id,
-                            radius: 1.0,
-                            rotation: euler_to_direction(object.transform.rotation),
-                            position: Position {
-                                x: object.transform.translation[0],
-                                y: object.transform.translation[1],
-                                z: object.transform.translation[2],
-                            },
-                            ..Default::default()
-                        });
-                    }
-                }
-            }
-        }
+        self.cached_objects.get(&base_id).cloned()
+    }
 
-        None
+    /// Returns an NpcSpawn for the given instance ID.
+    pub fn get_battle_npc(&self, instance_id: u32) -> Option<NpcSpawn> {
+        self.cached_npcs.get(&instance_id).cloned()
     }
 
     /// Returns a list of battle NPCs to spawn.
-    pub fn get_npcs(&self, game_data: &mut GameData) -> Vec<NpcSpawn> {
+    pub fn get_npcs(&mut self, game_data: &mut GameData) -> Vec<NpcSpawn> {
         let mut npc_spawns = Vec::new();
 
         for layer_group in &self.layer_groups {
@@ -538,6 +524,7 @@ impl Zone {
                             },
                             ..Default::default()
                         };
+                        self.cached_npcs.insert(object.instance_id, spawn.clone());
                         npc_spawns.push(spawn);
                     }
                 }
@@ -552,6 +539,7 @@ impl Zone {
                     name_id,
                     hp,
                     level,
+                    nonpop,
                 } = object.data
                 {
                     let (model_chara, battalion, customize) = game_data.find_bnpc(base_id).unwrap();
@@ -575,7 +563,11 @@ impl Zone {
                         },
                         ..Default::default()
                     };
-                    npc_spawns.push(spawn);
+
+                    self.cached_npcs.insert(object.instance_id, spawn.clone());
+                    if !nonpop {
+                        npc_spawns.push(spawn);
+                    }
                 }
             }
         }

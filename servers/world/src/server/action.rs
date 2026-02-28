@@ -403,7 +403,7 @@ pub fn kill_actor(
     // TODO: set HP/MP to zero here
 
     let mut network = network.lock();
-    let data = data.lock();
+    let mut data = data.lock();
 
     // First, set their state (otherwise they can still walk)
     {
@@ -420,6 +420,22 @@ pub fn kill_actor(
         let ac = ActorControlCategory::Kill { animation_id: 0 };
 
         network.send_ac_in_range_inclusive(&data, from_actor_id, ac);
+    }
+
+    // Inform the director that their actor died
+    if let Some(instance) = data.find_actor_instance_mut(from_actor_id) {
+        let mut npc_id = None;
+        if let Some(actor) = instance.find_actor(from_actor_id)
+            && let Some(npc) = actor.get_npc_spawn()
+        {
+            npc_id = Some(npc.common.layout_id);
+        }
+
+        if let Some(npc_id) = npc_id
+            && let Some(director) = &mut instance.director
+        {
+            director.on_actor_death(npc_id);
+        }
     }
 }
 

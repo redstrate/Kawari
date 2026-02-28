@@ -16,6 +16,7 @@
                         "type": "battle_npc",
                         "base_id": 207,
                         "name_id": 1185,
+                        "nonpop": false,
                         "hp": 12885,
                         "level": 20
                     }

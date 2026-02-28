@@ -1,8 +1,8 @@
 use std::{sync::Arc, time::Duration};
 
 use kawari::{
-    common::{HandlerId, InvisibilityFlags, ObjectId, ObjectTypeId, ObjectTypeKind},
-    ipc::zone::{ActorControlCategory, ServerZoneIpcData, ServerZoneIpcSegment},
+    common::{DirectorEvent, HandlerId, InvisibilityFlags, ObjectId, ObjectTypeId, ObjectTypeKind},
+    ipc::zone::{ActorControlCategory, ActorControlSelf, ServerZoneIpcData, ServerZoneIpcSegment},
 };
 use mlua::{Function, UserData, UserDataMethods};
 use parking_lot::Mutex;
@@ -13,6 +13,7 @@ use crate::{
     server::{
         WorldServer,
         actor::NetworkedActor,
+        effect::gain_effect_instance,
         instance::{Instance, QueuedTaskData},
         network::{DestinationNetwork, NetworkState},
     },
@@ -45,6 +46,19 @@ pub enum LuaDirectorTask {
         actor_id: ObjectId,
     },
     LogMessage {
+        id: u32,
+        params: Vec<u32>,
+    },
+    SpawnBattleNpc {
+        id: u32,
+    },
+    GainEffect {
+        actor_id: ObjectId,
+        id: u16,
+        param: u16,
+        duration: f32,
+    },
+    SetBGM {
         id: u32,
     },
 }
@@ -102,8 +116,28 @@ impl UserData for LuaDirector {
             });
             Ok(())
         });
-        methods.add_method_mut("log_message", |_, this, id: u32| {
-            this.tasks.push(LuaDirectorTask::LogMessage { id });
+        methods.add_method_mut("log_message", |_, this, (id, params): (u32, Vec<u32>)| {
+            this.tasks.push(LuaDirectorTask::LogMessage { id, params });
+            Ok(())
+        });
+        methods.add_method_mut("spawn_bnpc", |_, this, id: u32| {
+            this.tasks.push(LuaDirectorTask::SpawnBattleNpc { id });
+            Ok(())
+        });
+        methods.add_method_mut(
+            "gain_effect",
+            |_, this, (actor_id, id, param, duration): (u32, u16, u16, f32)| {
+                this.tasks.push(LuaDirectorTask::GainEffect {
+                    actor_id: ObjectId(actor_id),
+                    id,
+                    param,
+                    duration,
+                });
+                Ok(())
+            },
+        );
+        methods.add_method_mut("set_bgm", |_, this, id: u32| {
+            this.tasks.push(LuaDirectorTask::SetBGM { id });
             Ok(())
         });
     }
@@ -180,6 +214,26 @@ impl DirectorData {
         }
     }
 
+    pub fn on_actor_death(&mut self, bnpc_id: u32) {
+        let mut run_script = || {
+            let mut lua_director = self.create_lua_director();
+            let err = self.lua.0.scope(|scope| {
+                let data = scope.create_userdata_ref_mut(&mut lua_director)?;
+
+                let func: Function = self.lua.0.globals().get("onActorDeath")?;
+
+                func.call::<()>((data, bnpc_id))?;
+
+                Ok(())
+            });
+            self.apply_lua_director(lua_director);
+            err
+        };
+        if let Err(err) = run_script() {
+            tracing::warn!("Syntax error during onEventActionCast: {err:?}");
+        }
+    }
+
     pub fn build_var_segment(&self) -> ServerZoneIpcSegment {
         ServerZoneIpcSegment::new(ServerZoneIpcData::DirectorVars {
             handler_id: self.id,
@@ -209,8 +263,8 @@ impl DirectorData {
     }
 }
 
+/// Perform any queued director tasks
 pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance) {
-    // Perform any queued director tasks
     let tasks = if let Some(director) = &instance.director {
         director.tasks.clone()
     } else {
@@ -345,14 +399,58 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                     DestinationNetwork::ZoneClients,
                 );
             }
-            LuaDirectorTask::LogMessage { id } => {
+            LuaDirectorTask::LogMessage { id, params } => {
                 let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::LogMessage {
                     handler_id: director_id,
                     message_type: *id,
-                    params_count: 0,
-                    item_id: 0,
-                    item_quantity: 0,
+                    params_count: params.len() as u32,
+                    item_id: params.first().copied().unwrap_or_default(),
+                    item_quantity: params.get(1).copied().unwrap_or_default(),
                 });
+
+                let mut network = network.lock();
+                network.send_to_instance(
+                    instance,
+                    FromServer::PacketSegment(ipc, ObjectId::default()), // TODO: how do we just send it from the player?
+                    DestinationNetwork::ZoneClients,
+                );
+            }
+            LuaDirectorTask::SpawnBattleNpc { id } => {
+                if let Some(npc) = instance.zone.get_battle_npc(*id) {
+                    instance.insert_npc(ObjectId(fastrand::u32(..)), npc);
+                } else {
+                    tracing::warn!("Failed to find bnpc for SpawnBattleNpc, it won't spawn!");
+                }
+            }
+            LuaDirectorTask::GainEffect {
+                actor_id,
+                id,
+                param,
+                duration,
+            } => {
+                gain_effect_instance(
+                    network.clone(),
+                    ClientId::default(),
+                    instance,
+                    *actor_id,
+                    *id,
+                    *param,
+                    *duration,
+                    ObjectId::default(),
+                    false,
+                );
+            }
+            LuaDirectorTask::SetBGM { id } => {
+                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlSelf(
+                    ActorControlSelf {
+                        category: ActorControlCategory::DirectorEvent {
+                            handler_id: director_id,
+                            event: DirectorEvent::SetBGM,
+                            arg: *id,
+                            unk1: 0,
+                        },
+                    },
+                ));
 
                 let mut network = network.lock();
                 network.send_to_instance(
@@ -369,7 +467,7 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
     }
 }
 
-/// Process status effect-related messages.
+/// Process director-related messages.
 pub fn handle_director_messages(data: Arc<Mutex<WorldServer>>, msg: &ToServer) -> bool {
     match msg {
         ToServer::GimmickAccessor(from_actor_id, id, params) => {

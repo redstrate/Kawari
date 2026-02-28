@@ -367,8 +367,26 @@ impl NetworkState {
             self.send_to_by_actor_id(from_actor_id, msg, DestinationNetwork::ZoneClients);
         }
 
-        // Then to the other acotrs in range:
+        // Then to the other actors in range:
         self.send_ac_in_range(data, from_actor_id, category);
+    }
+
+    /// Sends the ActorControl `category` to all in-range actors, *including* `from_actor_id` (but as an ActorControlSelf.)
+    pub fn send_ac_in_range_inclusive_instance(
+        &mut self,
+        instance: &Instance,
+        from_actor_id: ObjectId,
+        category: ActorControlCategory,
+    ) {
+        // First send to the actor itself:
+        {
+            let msg = FromServer::ActorControlSelf(category.clone());
+
+            self.send_to_by_actor_id(from_actor_id, msg, DestinationNetwork::ZoneClients);
+        }
+
+        // Then to the other actors in range:
+        self.send_ac_in_range_instance(instance, from_actor_id, category);
     }
 
     /// Returns the `ClientState` for `client_id`.

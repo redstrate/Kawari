@@ -19,6 +19,14 @@ EOBJ_WAVERIDER_GATE_KEY = 2000255
 EOBJ_KEY_TO_THE_HOLE = 2000256
 EOBJ_NEXT_DOOR2 = 2001539
 EOBJ_RAMBADE_DOOR2 = 2000236
+EOBJ_SHORTCUT = 2000700
+
+EOBJ_CATTERY_BOSS_WALL = 2001504
+
+BNPC_RED_CORAL = 4217967
+BNPC_BLUE_CORAL = 4217968
+BNPC_GREEN_CORAL = 0 -- TODO: figure out layout id
+BNPC_CHOPPER = 4035011
 
 GIMMICK_EXIT = 5
 GIMMICK_BLUE_CORAL_FORMATION = 23
@@ -36,6 +44,11 @@ GIMMICK_SHORTCUT = 74
 EVENT_ACTION_INTERACT = 24
 
 LOG_MESSAGE_SEQ0 = 2034 -- You hear something move in the distance
+LOG_MESSAGE_SEAL = 2012 -- X will be sealed off in Y seconds!
+LOG_MESSAGE_SEALED = 2013 -- X is sealed!
+LOG_MESSAGE_UNSEALED = 2014 -- X is no longer sealed.
+
+EFFECT_POSION = 18
 
 SEQ0 = 0 -- Activate the coral trigger
 SEQ1 = 1 -- Open the hidden door
@@ -51,6 +64,8 @@ local has_hole
 local has_captains_quarters
 -- Whether the party has the key to Waverider Gate
 local has_waverider_gate
+-- Whether the Chopper boss was defeated
+local chopper_defeated
 
 function onSetup(director)
     beginSequence0(director)
@@ -66,6 +81,7 @@ end
 
 function onGimmickAccessor(director, actor_id, id, params)
     print(id)
+
     if sequence(director) == SEQ0 then
         -- Index to gimmick ID
         GIMMICK_CORAL_IDS = {
@@ -90,7 +106,11 @@ function onGimmickAccessor(director, actor_id, id, params)
             return
         end
     elseif sequence(director) == SEQ1 then
-        beginSequence2(director)
+        if not chopper_defeated then
+            spawnChopper(director)
+        else
+            beginSequence2(director)
+        end
     end
 
     if id == GIMMICK_KEY_TO_THE_HOLE then
@@ -121,11 +141,9 @@ function onGimmickAccessor(director, actor_id, id, params)
 end
 
 function onEventActionCast(director, actor_id, target)
+    -- Finish up and hide the event object
     director:finish_gimmick(actor_id)
-
     director:hide_eobj(target)
-
-    director:log_message(LOG_MESSAGE_SEQ0)
 
     -- Index to EObj ID
     EOBJ_CORAL_IDS = {
@@ -137,11 +155,55 @@ function onEventActionCast(director, actor_id, target)
 
     if target == coral_gimmick_id then
         beginSequence1(director)
+    else
+        spawnCoralEnemy(director, actor_id, target)
     end
+end
+
+function onActorDeath(director, bnpc_id)
+    print("Actor died: "..bnpc_id)
+
+    if bnpc_id == BNPC_CHOPPER then
+        -- unseal boss arena
+        director:log_message(LOG_MESSAGE_UNSEALED, {662})
+        director:hide_eobj(EOBJ_CATTERY_BOSS_WALL)
+
+        chopper_defeated = true
+    end
+end
+
+-- Spawns an enemy for getting the coral selection wrong, and douse the player in posion.
+function spawnCoralEnemy(director, actor_id, target)
+    -- TODO: Show message "you were doused with posion"
+
+    director:gain_effect(actor_id, EFFECT_POSION, 0, 120.0)
+
+    if target == EOBJ_BLUE_CORAL_FORMATION then
+        director:spawn_bnpc(BNPC_BLUE_CORAL)
+    elseif target == EOBJ_RED_CORAL_FORMATION then
+        director:spawn_bnpc(BNPC_RED_CORAL)
+    elseif target == EOBJ_GREEN_CORAL_FORMATION then
+        director:spawn_bnpc(BNPC_GREEN_CORAL)
+    end
+end
+
+function spawnChopper(director)
+    -- Show log message about boss seal
+    director:log_message(LOG_MESSAGE_SEAL, {662, 15})
+
+    director:set_bgm(37)
+
+    director:spawn_bnpc(BNPC_CHOPPER)
+
+    -- seal for now
+    director:log_message(LOG_MESSAGE_SEALED, {662})
+    director:show_eobj(EOBJ_CATTERY_BOSS_WALL)
 end
 
 function beginSequence0(director)
     setSequence(director, SEQ0)
+
+    director:hide_eobj(EOBJ_SHORTCUT)
 
     coral_color = math.random(0, 2)
     print("Coral color: "..coral_color)
@@ -164,6 +226,9 @@ end
 
 function beginSequence1(director)
     setSequence(director, SEQ1)
+
+    -- Show log message to help indicate to the player
+    director:log_message(LOG_MESSAGE_SEQ0, {})
 
     -- Hide and deactivate all coral
     director:hide_eobj(EOBJ_BLUE_CORAL_FORMATION)
