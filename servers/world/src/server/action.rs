@@ -10,7 +10,7 @@ use crate::{
     lua::{EffectsBuilder, KawariLua, KawariLuaState, LuaContent, LuaPlayer, LuaZone},
     server::{
         WorldServer,
-        actor::NetworkedActor,
+        actor::{NetworkedActor, NpcState},
         effect::gain_effect,
         instance::QueuedTaskData,
         network::{DestinationNetwork, NetworkState},
@@ -429,6 +429,13 @@ pub fn kill_actor(
             && let Some(npc) = actor.get_npc_spawn()
         {
             npc_id = Some(npc.common.layout_id);
+        }
+
+        // Transistion into the dead state so they stop moving.
+        if let Some(actor) = instance.find_actor_mut(from_actor_id)
+            && let NetworkedActor::Npc { state, .. } = actor
+        {
+            *state = NpcState::Dead;
         }
 
         if let Some(npc_id) = npc_id

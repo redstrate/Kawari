@@ -6,6 +6,16 @@ use kawari::{
     ipc::zone::{CommonSpawn, Conditions, NpcSpawn, ObjectSpawn, PlayerSpawn},
 };
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum NpcState {
+    /// Wanders in random directions.
+    Wander,
+    /// Actively targetting another actor.
+    Hate,
+    /// DEAD!
+    Dead,
+}
+
 #[derive(Debug, Clone)]
 pub enum NetworkedActor {
     Player {
@@ -22,6 +32,7 @@ pub enum NetworkedActor {
         inside_instance_exit: bool,
     },
     Npc {
+        state: NpcState,
         current_path: VecDeque<[f32; 3]>,
         current_path_lerp: f32,
         current_target: Option<ObjectId>,

@@ -8,13 +8,16 @@ use std::{
 use crate::{
     ClientId, GameData, Navmesh, StatusEffects,
     server::{
-        action::cancel_action, actor::NetworkedActor, director::DirectorData,
-        network::NetworkState, zone::Zone,
+        action::cancel_action,
+        actor::{NetworkedActor, NpcState},
+        director::DirectorData,
+        network::NetworkState,
+        zone::Zone,
     },
     zone_connection::TeleportQuery,
 };
 use kawari::{
-    common::{DistanceRange, ENTRANCE_CIRCLE_IDS, ObjectId},
+    common::{DistanceRange, ENTRANCE_CIRCLE_IDS, ObjectId, Position},
     config::get_config,
     ipc::zone::{ActionRequest, Conditions, NpcSpawn, ObjectSpawn, PlayerSpawn},
 };
@@ -139,6 +142,7 @@ impl Instance {
         self.actors.insert(
             id,
             NetworkedActor::Npc {
+                state: NpcState::Wander,
                 current_path: VecDeque::default(),
                 current_path_lerp: 0.0,
                 current_target: None,
@@ -153,11 +157,11 @@ impl Instance {
         ObjectId(fastrand::u32(..))
     }
 
-    pub fn find_all_players(&self) -> Vec<ObjectId> {
+    pub fn find_all_players(&self) -> Vec<(ObjectId, Position)> {
         self.actors
             .iter()
             .filter(|(_, y)| matches!(y, NetworkedActor::Player { .. }))
-            .map(|(x, _)| *x)
+            .map(|(x, y)| (*x, y.get_common_spawn().position))
             .collect()
     }
 

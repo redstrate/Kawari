@@ -13,7 +13,7 @@ use crate::{
     lua::KawariLua,
     server::{
         action::{execute_action, handle_action_messages, kill_actor, update_actor_hp_mp},
-        actor::NetworkedActor,
+        actor::{NetworkedActor, NpcState},
         chat::handle_chat_messages,
         director::{DirectorData, director_tick, handle_director_messages},
         effect::{handle_effect_messages, remove_effect, send_effects_list},
@@ -230,13 +230,14 @@ fn server_logic_tick(data: Arc<Mutex<WorldServer>>, network: Arc<Mutex<NetworkSt
                 // const pass
                 for (id, actor) in &instance.actors {
                     if let NetworkedActor::Npc {
+                        state,
                         current_path,
                         current_path_lerp,
                         current_target,
                         spawn,
                         last_position,
                     } = actor
-                        && current_target.is_some()
+                        && (current_target.is_some() && *state == NpcState::Hate)
                     {
                         let current_target = current_target.unwrap();
                         let needs_repath = current_path.is_empty();
@@ -278,6 +279,7 @@ fn server_logic_tick(data: Arc<Mutex<WorldServer>>, network: Arc<Mutex<NetworkSt
                 // mut pass
                 for (id, actor) in &mut instance.actors {
                     if let NetworkedActor::Npc {
+                        state,
                         current_path,
                         current_path_lerp,
                         current_target,
@@ -298,10 +300,13 @@ fn server_logic_tick(data: Arc<Mutex<WorldServer>>, network: Arc<Mutex<NetworkSt
                             }
                         }
 
-                        if current_target.is_none() {
-                            // find a player
-                            if !players.is_empty() {
-                                *current_target = Some(players[0]);
+                        if current_target.is_none() && *state == NpcState::Wander {
+                            // find a player if in range
+                            for (id, position) in &players {
+                                if Position::distance(*position, spawn.common.position) < 15.0 {
+                                    *state = NpcState::Hate;
+                                    *current_target = Some(*id);
+                                }
                             }
                         } else if !current_path.is_empty() {
                             let next_position = Position {
@@ -316,11 +321,13 @@ fn server_logic_tick(data: Arc<Mutex<WorldServer>>, network: Arc<Mutex<NetworkSt
                             *current_path_lerp += (10.0 / distance).clamp(0.0, 1.0);
                         }
 
-                        if target_actor_pos.contains_key(&current_target.unwrap()) {
-                            let target_pos = target_actor_pos[&current_target.unwrap()];
+                        if let Some(current_target) = current_target
+                            && target_actor_pos.contains_key(current_target)
+                        {
+                            let target_pos = target_actor_pos[current_target];
                             let distance = Position::distance(spawn.common.position, target_pos);
-                            let needs_repath = current_path.is_empty() && distance > 5.0; // TODO: confirm distance this in retail
-                            if needs_repath && current_target.is_some() {
+                            let needs_repath = current_path.is_empty() && distance > 10.0; // TODO: confirm distance this in retail
+                            if needs_repath {
                                 let current_pos = spawn.common.position;
                                 *current_path = instance
                                     .navmesh
@@ -681,7 +688,7 @@ fn server_logic_tick(data: Arc<Mutex<WorldServer>>, network: Arc<Mutex<NetworkSt
         }
         // Ensure the rested EXP counter only happens every 10 seconds.
         data.rested_exp_counter += 1;
-        if data.rested_exp_counter == 11 {
+        if data.rested_exp_counter == 21 {
             data.rested_exp_counter = 0;
         }
     }
@@ -714,7 +721,7 @@ pub async fn server_main_loop(
         let game_data = game_data.clone();
         let lua = lua.clone();
         tokio::task::spawn(async move {
-            let mut interval = tokio::time::interval(Duration::from_secs(1)); // Be careful when changing this, as the rested EXP may become whacky.
+            let mut interval = tokio::time::interval(Duration::from_millis(500)); // Be careful when changing this, as the rested EXP may become whacky.
             interval.tick().await;
             loop {
                 interval.tick().await;
