@@ -10,7 +10,9 @@ use kawari::packet::PacketSegment;
 use kawari::packet::SegmentType;
 use kawari::packet::send_custom_world_packet;
 use kawari::packet::{ConnectionState, SegmentData, send_keep_alive};
+use kawari_lobby::GAME_EXE_NAME;
 use kawari_lobby::LobbyConnection;
+use std::path::MAIN_SEPARATOR_STR;
 use std::time::Instant;
 use tokio::io::AsyncReadExt;
 use tokio::net::TcpListener;
@@ -25,6 +27,37 @@ async fn main() {
 
     let listener = TcpListener::bind(addr).await.unwrap();
 
+    let config = get_config();
+
+    let game_exe_path = &format!(
+        "{}{}{}",
+        config.filesystem.game_path, MAIN_SEPARATOR_STR, GAME_EXE_NAME
+    );
+
+    let expected_exe_len;
+    let expected_exe_hash;
+
+    if let Ok(game_md) = std::fs::metadata(game_exe_path) {
+        match std::fs::read(game_exe_path) {
+            Ok(game_exe_filebuffer) => {
+                expected_exe_hash = sha1_smol::Sha1::from(game_exe_filebuffer)
+                    .digest()
+                    .to_string();
+            }
+            Err(err) => {
+                panic!(
+                    "Unable to read our game executable file! Stopping lobby server! Further information: {err}",
+                );
+            }
+        }
+
+        expected_exe_len = game_md.len() as usize;
+    } else {
+        panic!(
+            "Our game executable doesn't exist! We can't do version checks! Stopping lobby server!"
+        );
+    }
+
     tracing::info!("Server started on {addr}");
 
     loop {
@@ -38,6 +71,8 @@ async fn main() {
             service_accounts: Vec::new(),
             selected_service_account: None,
             last_keep_alive: Instant::now(),
+            expected_exe_len,
+            expected_exe_hash: expected_exe_hash.clone(),
         };
 
         // as seen in retail, the server sends a KeepAliveRequest before doing *anything*

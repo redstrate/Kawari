@@ -691,7 +691,7 @@ dependencies = [
 [[package]]
 name = "icarus"
 version = "0.0.0"
-source = "git+https://github.com/redstrate/Icarus?branch=ver%2F2025.12.09.0000.0000#8cde5e964d2783db580db75a76c334c88e781714"
+source = "git+https://github.com/redstrate/Icarus?branch=ver%2F2025.12.09.0000.0000#ab78cfff94458f84e34746403155a3e8c9a09432"
 dependencies = [
  "physis",
 ]
@@ -1271,7 +1271,7 @@ checksum = "9b4f627cb1b25917193a259e49bdad08f671f8d9708acfd5fe0a8c1455d87220"
 [[package]]
 name = "physis"
 version = "0.6.0"
-source = "git+https://github.com/redstrate/physis#ccb38ccbe58d48aa1a235fc9dab4b0ef61b153fb"
+source = "git+https://github.com/redstrate/physis#add0b957640f8c82699e46b9f4e6d46b7f033289"
 dependencies = [
  "binrw",
  "bitflags",

@@ -66,6 +66,8 @@ pub struct GameData {
     pub custom_talk_sheet: CustomTalkSheet,
     pub tribe_sheet: TribeSheet,
     pub eobj_sheet: EObjSheet,
+    pub switch_talk_sheet: SwitchTalkVariationSheet,
+    pub param_grow_sheet: ParamGrowSheet,
 }
 
 impl Default for GameData {
@@ -218,6 +220,12 @@ impl GameData {
         let eobj_sheet = EObjSheet::read_from(&mut resource_resolver, Language::None)
             .expect("Failed to read EObj, does the Excel files exist?");
 
+        let switch_talk_sheet =
+            SwitchTalkVariationSheet::read_from(&mut resource_resolver, Language::None).unwrap();
+
+        let param_grow_sheet =
+            ParamGrowSheet::read_from(&mut resource_resolver, Language::None).unwrap();
+
         Self {
             resource: resource_resolver,
             item_sheet,
@@ -231,6 +239,8 @@ impl GameData {
             custom_talk_sheet,
             tribe_sheet,
             eobj_sheet,
+            switch_talk_sheet,
+            param_grow_sheet,
         }
     }
 
@@ -768,10 +778,9 @@ impl GameData {
     pub fn get_switch_talk_subrows(
         &mut self,
         switch_talk_id: u32,
-    ) -> Vec<(u16, SwitchTalkVariationRow)> {
-        let sheet =
-            SwitchTalkVariationSheet::read_from(&mut self.resource, Language::None).unwrap();
-        let subrows = sheet
+    ) -> Vec<(u16, SwitchTalkVariationRow<'_>)> {
+        let subrows = self
+            .switch_talk_sheet
             .into_iter()
             .filter(|(row_id, _)| switch_talk_id == *row_id)
             .take(1)
@@ -822,8 +831,7 @@ impl GameData {
 
     /// Returns the max EXP or the exp "needed to grow" for a given level.
     pub fn get_max_exp(&mut self, level: u32) -> i32 {
-        let sheet = ParamGrowSheet::read_from(&mut self.resource, Language::None).unwrap();
-        let row = sheet.row(level).unwrap();
+        let row = self.param_grow_sheet.row(level).unwrap();
 
         row.ExpToNext().into_i32().cloned().unwrap_or_default()
     }
@@ -1111,8 +1119,7 @@ impl GameData {
 
     /// Returns the ParamGrow for this level.
     pub fn get_param_grow(&mut self, level: u32) -> Option<ParamGrow> {
-        let sheet = ParamGrowSheet::read_from(&mut self.resource, Language::None).unwrap();
-        let row = sheet.row(level).unwrap();
+        let row = self.param_grow_sheet.row(level).unwrap();
 
         Some(ParamGrow {
             hp_modifier: row.HpModifier().into_u16().copied()?,

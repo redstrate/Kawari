@@ -1,4 +1,4 @@
-use std::{cmp::min, fs, path::MAIN_SEPARATOR_STR, time::Instant};
+use std::{cmp::min, time::Instant};
 
 use physis::blowfish::LobbyBlowfish;
 use tokio::net::TcpStream;
@@ -21,7 +21,7 @@ use kawari::ipc::lobby::{
     ServiceLoginReply,
 };
 
-const GAME_EXE_NAME: &str = "ffxiv_dx11.exe";
+use crate::GAME_EXE_NAME;
 
 #[derive(Debug)]
 struct VersionCheckData {
@@ -35,76 +35,56 @@ struct VersionCheckData {
 /// Second, it calculates a SHA1 hash against the locally stored game executable and compares it to the client-specified hash.
 /// Finally, it compares expansion pack version strings provided by the client against locally stored information.
 /// If, and only if, all of these checks pass, is the client permitted to continue.
-fn do_game_version_check(client_version_str: &str) -> bool {
-    let config = get_config();
+fn do_game_version_check(
+    expected_exe_len: usize,
+    expected_exe_hash: &str,
+    client_version_str: &str,
+) -> bool {
+    let Some(client_version_data) = validate_client_version_string(client_version_str) else {
+        return false;
+    };
 
-    let game_exe_path = &format!(
-        "{}{}{}",
-        config.filesystem.game_path, MAIN_SEPARATOR_STR, GAME_EXE_NAME
-    );
+    if client_version_data.game_exe_len != expected_exe_len {
+        tracing::error!(
+            "Client's game executable length is incorrect! Rejecting session! Got {}, expected {}",
+            client_version_data.game_exe_len,
+            expected_exe_len
+        );
+        return false;
+    } else {
+        tracing::info!("Client's game executable length is OK.")
+    }
 
-    if let Ok(game_md) = fs::metadata(game_exe_path) {
-        let Some(client_version_data) = validate_client_version_string(client_version_str) else {
-            return false;
-        };
+    if client_version_data.game_exe_sha1_hash != expected_exe_hash {
+        tracing::error!(
+            "Client's game executable is corrupted! Rejecting session! Got {}, expected {}",
+            client_version_data.game_exe_sha1_hash,
+            expected_exe_hash
+        );
+        return false;
+    } else {
+        tracing::info!("Client's game executable hash is OK.");
+    }
 
-        let expected_exe_len = game_md.len() as usize;
-
-        if client_version_data.game_exe_len != expected_exe_len {
+    for (client_version, expected_version) in client_version_data
+        .expansion_pack_versions
+        .iter()
+        .zip(SUPPORTED_EXPAC_VERSIONS.iter())
+    {
+        // The client doesn't send a patch2 value in its expansion version strings, so we just pretend it doesn't exist on our side.
+        let expected_version = &expected_version[..expected_version.len() - 5].to_string();
+        if client_version != expected_version {
             tracing::error!(
-                "Client's game executable length is incorrect! Rejecting session! Got {}, expected {}",
-                client_version_data.game_exe_len,
-                expected_exe_len
+                "One of the client's expansion versions does not match! Rejecting session! Got {}, expected {}",
+                client_version,
+                expected_version
             );
             return false;
-        } else {
-            tracing::info!("Client's game executable length is OK.")
         }
-
-        match std::fs::read(game_exe_path) {
-            Ok(game_exe_filebuffer) => {
-                let expected_exe_hash = sha1_smol::Sha1::from(game_exe_filebuffer)
-                    .digest()
-                    .to_string();
-                if client_version_data.game_exe_sha1_hash != expected_exe_hash {
-                    tracing::error!(
-                        "Client's game executable is corrupted! Rejecting session! Got {}, expected {}",
-                        client_version_data.game_exe_sha1_hash,
-                        expected_exe_hash
-                    );
-                    return false;
-                } else {
-                    tracing::info!("Client's game executable hash is OK.");
-                }
-            }
-            Err(err) => {
-                panic!(
-                    "Unable to read our game executable file! Stopping lobby server! Further information: {err}",
-                );
-            }
-        }
-
-        for (client_version, expected_version) in client_version_data
-            .expansion_pack_versions
-            .iter()
-            .zip(SUPPORTED_EXPAC_VERSIONS.iter())
-        {
-            // The client doesn't send a patch2 value in its expansion version strings, so we just pretend it doesn't exist on our side.
-            let expected_version = &expected_version[..expected_version.len() - 5].to_string();
-            if client_version != expected_version {
-                tracing::error!(
-                    "One of the client's expansion versions does not match! Rejecting session! Got {}, expected {}",
-                    client_version,
-                    expected_version
-                );
-                return false;
-            }
-        }
-
-        tracing::info!("All client version checks succeeded! Allowing session!");
-        return true;
     }
-    panic!("Our game executable doesn't exist! We can't do version checks! Stopping lobby server!");
+
+    tracing::info!("All client version checks succeeded! Allowing session!");
+    true
 }
 
 /// Validates most of the information sent by the client before doing the actual versioning and sizing checks.
@@ -201,6 +181,8 @@ pub struct LobbyConnection {
     pub service_accounts: Vec<ServiceAccount>,
     pub selected_service_account: Option<u64>,
     pub last_keep_alive: Instant,
+    pub expected_exe_len: usize,
+    pub expected_exe_hash: String,
 }
 
 impl LobbyConnection {
@@ -706,7 +688,9 @@ impl LobbyConnection {
         let config = get_config();
 
         // The lobby server does its own version check as well, but it can be turned off if desired.
-        if config.tweaks.enforce_validity_checks && !do_game_version_check(version_info) {
+        if config.tweaks.enforce_validity_checks
+            && !do_game_version_check(self.expected_exe_len, &self.expected_exe_hash, version_info)
+        {
             // "A version update is required."
             self.send_error(sequence, 1012, 13101).await;
             return;
