@@ -41,6 +41,7 @@ pub enum LiveEventType {
     #[brw(magic = 39u32)]
     SetOffHand { model_id: u32, unk1: u32, unk2: u32 },
 
+    #[doc(hidden)]
     Unknown {
         event: u32,
         param1: u32,
@@ -49,7 +50,6 @@ pub enum LiveEventType {
     },
 }
 
-// See https://github.com/awgil/ffxiv_reverse/blob/f35b6226c1478234ca2b7149f82d251cffca2f56/vnetlog/vnetlog/ServerIPC.cs#L266 for a REALLY useful list of known values
 #[binrw]
 #[derive(Debug, PartialEq, Clone, IntoStaticStr)]
 pub enum ActorControlCategory {
