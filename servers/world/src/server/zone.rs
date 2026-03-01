@@ -818,8 +818,10 @@ pub fn handle_zone_messages(
             let mut network = network.lock();
 
             // create a new instance if necessary
-            let mut game_data = game_data.lock();
-            data.ensure_exists(*zone_id, &mut game_data);
+            {
+                let mut game_data = game_data.lock();
+                data.ensure_exists(*zone_id, &mut game_data);
+            }
 
             // inform the players in this zone that this actor left
             if let Some(current_instance) = data.find_actor_instance_mut(*actor_id) {
@@ -827,7 +829,10 @@ pub fn handle_zone_messages(
             }
 
             // then find or create a new instance with the zone id
-            data.ensure_exists(*zone_id, &mut game_data);
+            {
+                let mut game_data = game_data.lock();
+                data.ensure_exists(*zone_id, &mut game_data);
+            }
             let target_instance = data.find_instance_mut(*zone_id).unwrap();
             target_instance.insert_empty_actor(*actor_id);
 
@@ -854,7 +859,6 @@ pub fn handle_zone_messages(
         ToServer::EnterZoneJump(from_id, actor_id, exitbox_id) => {
             let mut data = data.lock();
             let mut network = network.lock();
-            let mut game_data = game_data.lock();
 
             // first, find the zone jump in the current zone
             let destination_zone_id;
@@ -872,6 +876,7 @@ pub fn handle_zone_messages(
                 return true;
             }
 
+            let mut game_data = game_data.lock();
             change_zone_warp_to_pop_range(
                 &mut data,
                 &mut network,
@@ -1036,7 +1041,6 @@ pub fn handle_zone_messages(
             true
         }
         ToServer::NewLocationDiscovered(from_id, layout_id, _pos, zone_id) => {
-            let mut game_data = game_data.lock();
             let data = data.lock();
             let mut network = network.lock();
 
@@ -1048,6 +1052,7 @@ pub fn handle_zone_messages(
                         {
                             // TODO: Check if the player is actually in this range?
                             // TODO: This is the "old" style of map discovery where every chunk is revealed one by one as the player runs into them. It's currently unclear how retail reveals the entire map at once. As an example, for North Shroud, retail sends map_part_id 164, which reveals its entire map. When we enter North Shroud from Old Gridania, Kawari currently sends 1.
+                            let mut game_data = game_data.lock();
                             let Some(map_id) = game_data.get_territory_info_map_data(*zone_id)
                             else {
                                 tracing::error!(

@@ -81,8 +81,11 @@ pub fn dispatch_event(
 
     match handler_id.handler_type() {
         HandlerType::Quest => {
-            let mut game_data = game_data.lock();
-            let script_name = game_data.get_quest_name(handler_id.0);
+            let script_name;
+            {
+                let mut game_data = game_data.lock();
+                script_name = game_data.get_quest_name(handler_id.0);
+            }
             let script_id = extract_script_id(&script_name);
             let script_folder = folder_from_script_id(script_id);
             let script_path = format!("events/quest/{script_folder}/{script_name}.lua");

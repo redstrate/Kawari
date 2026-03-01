@@ -998,8 +998,10 @@ pub async fn server_main_loop(
                     let mut data = data.lock();
 
                     // create a new instance if necessary
-                    let mut game_data = game_data.lock();
-                    data.ensure_exists(zone_id, &mut game_data);
+                    {
+                        let mut game_data = game_data.lock();
+                        data.ensure_exists(zone_id, &mut game_data);
+                    }
 
                     if let Some(target_instance) = data.find_instance_mut(zone_id) {
                         target_instance.insert_empty_actor(from_actor_id);
@@ -1566,7 +1568,6 @@ pub async fn server_main_loop(
                     if let Some(zone_id) = zone_id {
                         let mut data = data.lock();
                         let mut network = network.lock();
-                        let mut game_data = game_data.lock();
 
                         // inform the players in this zone that this actor left
                         if let Some(current_instance) = data.find_actor_instance_mut(from_actor_id)
@@ -1575,6 +1576,7 @@ pub async fn server_main_loop(
                         }
 
                         // then find or create a new instance with the zone id and content finder condition
+                        let mut game_data = game_data.lock();
                         if let Some(target_instance) =
                             data.create_new_instance(zone_id, content_id, &mut game_data)
                         {
@@ -1609,11 +1611,11 @@ pub async fn server_main_loop(
                     }
 
                     // create a new instance if necessary
-                    let mut game_data = game_data.lock();
-                    data.ensure_exists(old_zone_id, &mut game_data);
+                    {
+                        let mut game_data = game_data.lock();
+                        data.ensure_exists(old_zone_id, &mut game_data);
+                    }
 
-                    // then find or create a new instance with the zone id
-                    data.ensure_exists(old_zone_id, &mut game_data);
                     let target_instance = data.find_instance_mut(old_zone_id).unwrap();
                     target_instance.insert_empty_actor(from_actor_id);
 
