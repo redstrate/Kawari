@@ -27,7 +27,6 @@ use icarus::HalloweenNpcSelect::HalloweenNpcSelectSheet;
 use icarus::InstanceContent::InstanceContentSheet;
 use icarus::Item::ItemSheet;
 use icarus::ItemAction::ItemActionSheet;
-use icarus::ModelChara::ModelCharaSheet;
 use icarus::Mount::MountSheet;
 use icarus::Opening::OpeningSheet;
 use icarus::ParamGrow::ParamGrowSheet;
@@ -68,6 +67,8 @@ pub struct GameData {
     pub eobj_sheet: EObjSheet,
     pub switch_talk_sheet: SwitchTalkVariationSheet,
     pub param_grow_sheet: ParamGrowSheet,
+    pub bnpc_base_sheet: BNpcBaseSheet,
+    pub bnpc_customize_sheet: BNpcCustomizeSheet,
 }
 
 impl Default for GameData {
@@ -226,6 +227,12 @@ impl GameData {
         let param_grow_sheet =
             ParamGrowSheet::read_from(&mut resource_resolver, Language::None).unwrap();
 
+        let bnpc_base_sheet =
+            BNpcBaseSheet::read_from(&mut resource_resolver, Language::None).unwrap();
+
+        let bnpc_customize_sheet =
+            BNpcCustomizeSheet::read_from(&mut resource_resolver, Language::None).unwrap();
+
         Self {
             resource: resource_resolver,
             item_sheet,
@@ -241,6 +248,8 @@ impl GameData {
             eobj_sheet,
             switch_talk_sheet,
             param_grow_sheet,
+            bnpc_base_sheet,
+            bnpc_customize_sheet,
         }
     }
 
@@ -591,17 +600,10 @@ impl GameData {
 
     /// Grabs needed BattleNPC information such as their name, model id and more.
     pub fn find_bnpc(&mut self, id: u32) -> Option<(u16, u8, CustomizeData)> {
-        let bnpc_sheet = BNpcBaseSheet::read_from(&mut self.resource, Language::None).unwrap();
-        let bnpc_row = bnpc_sheet.row(id)?;
-
+        let bnpc_row = self.bnpc_base_sheet.row(id)?;
         let model_row_id = bnpc_row.ModelChara().into_u16()?;
-        let model_sheet = ModelCharaSheet::read_from(&mut self.resource, Language::None).unwrap();
-        let _model_row = model_sheet.row(*model_row_id as u32)?;
-
         let customize_row_id = bnpc_row.BNpcCustomize().into_u16()?;
-        let customize_sheet =
-            BNpcCustomizeSheet::read_from(&mut self.resource, Language::None).unwrap();
-        let customize_row = customize_sheet.row(*customize_row_id as u32)?;
+        let customize_row = self.bnpc_customize_sheet.row(*customize_row_id as u32)?;
 
         let customize = CustomizeData {
             race: customize_row.Race().into_u8().copied()?,
