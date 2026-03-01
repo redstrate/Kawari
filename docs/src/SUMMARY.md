@@ -24,6 +24,7 @@
   - [Setting up TemporalStasis](packets/temporalstasis.md)
   - [Dissection](packets/dissection.md)
   - [Tips](packets/tips.md)
+  - [Sending captures](packets/sending_captures.md)
 
 # Resources
 - [Tips](tips.md)
