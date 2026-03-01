@@ -30,7 +30,7 @@ mod tests {
 
     use binrw::BinRead;
 
-    use crate::common::ObjectId;
+    use crate::common::{ObjectId, ensure_size};
 
     use crate::server_zone_tests_dir;
 
@@ -55,5 +55,10 @@ mod tests {
                 }]
             }
         );
+    }
+
+    #[test]
+    fn hater_size() {
+        ensure_size::<PlayerEnmity, { PlayerEnmity::SIZE }>();
     }
 }
