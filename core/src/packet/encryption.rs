@@ -41,7 +41,7 @@ pub(crate) fn encrypt<T: ReadWriteIpcSegment>(
     if let ConnectionState::Lobby { blowfish } = state {
         let size = size - IPC_HEADER_SIZE;
 
-        let mut cursor = Cursor::new(Vec::new());
+        let mut cursor = Cursor::new(Vec::with_capacity(size as usize));
         value.write_options(&mut cursor, endian, ())?;
 
         let mut buffer = cursor.into_inner();

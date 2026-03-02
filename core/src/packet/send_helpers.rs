@@ -36,7 +36,7 @@ pub async fn send_packet<T: ReadWriteIpcSegment>(
         ..Default::default()
     };
 
-    let mut cursor = Cursor::new(Vec::new());
+    let mut cursor = Cursor::new(Vec::with_capacity(size));
     header.write_le(&mut cursor).unwrap();
     std::io::Write::write_all(&mut cursor, &data).unwrap();
 
