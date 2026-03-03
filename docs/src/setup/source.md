@@ -10,6 +10,7 @@ This guide covers how to set up a local development environment.
 * Git
 * Rust toolchain
 * C/C++ development tools such as CMake (for the few C/C++ libraries we use)
+* Clang
 
 Clone the Kawari repository:
 
