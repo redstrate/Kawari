@@ -156,6 +156,7 @@ impl WorldServer {
                     data: [0; 10],
                     lua,
                     tasks: Vec::new(),
+                    bosses: HashMap::new(),
                 };
 
                 // Call into the onSetup function before returning, as we need the flag to be initialized before any players change zones.
@@ -394,6 +395,7 @@ fn server_logic_tick(data: Arc<Mutex<WorldServer>>, network: Arc<Mutex<NetworkSt
                     if let NetworkedActor::Npc {
                         state,
                         current_target,
+                        spawn,
                         ..
                     } = actor
                     {
@@ -426,6 +428,10 @@ fn server_logic_tick(data: Arc<Mutex<WorldServer>>, network: Arc<Mutex<NetworkSt
                                     *id,
                                     ActorControlCategory::SetBattle { battle: true },
                                 );
+
+                                if let Some(director) = &mut instance.director {
+                                    director.on_actor_aggro(spawn.common.layout_id);
+                                }
                             }
 
                             haters.entry(current_target).or_insert_with(Vec::new);
@@ -933,6 +939,15 @@ pub async fn server_main_loop(
                                     FromServer::FishBite(),
                                     DestinationNetwork::ZoneClients,
                                 );
+                            }
+                            QueuedTaskData::SealBossWall { id, place_name } => {
+                                let mut data = data.lock();
+                                if let Some(instance) =
+                                    data.find_actor_instance_mut(task.from_actor_id)
+                                    && let Some(director) = &mut instance.director
+                                {
+                                    director.seal_boss_wall(*id, *place_name);
+                                }
                             }
                         }
                     }

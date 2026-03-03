@@ -445,6 +445,8 @@ pub fn kill_actor(
         {
             director.on_actor_death(npc_id, position.unwrap());
         }
+
+        instance.cancel_actor_tasks(from_actor_id);
     }
 }
 

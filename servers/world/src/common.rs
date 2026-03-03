@@ -337,7 +337,7 @@ pub enum ToServer {
     /// The client started a countdown in their party.
     StartCountdown(u64, ObjectId, u64, u64, String, ObjectId, u16),
     /// The client yields from a GimmickAccessor.
-    GimmickAccessor(ObjectId, u32, Vec<i32>),
+    GimmickAccessor(ObjectId, ObjectId, Vec<i32>),
     /// The client begins fishing.
     Fish(ClientId, ObjectId),
     /// Warp to a specified pop range in a new territory.

@@ -54,6 +54,8 @@ pub enum QueuedTaskData {
     CastEventAction { target: ObjectId },
     /// Make a fish bite.
     FishBite {},
+    /// Seal a boss wall.
+    SealBossWall { id: u32, place_name: u32 },
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -222,6 +224,14 @@ impl Instance {
         }
     }
 
+    /// Cancels all queued actions for this actor.
+    pub fn cancel_actor_tasks(&mut self, actor_id: ObjectId) {
+        tracing::info!("Removing tasks for {actor_id} from the schedule!");
+
+        // Delete the selected task:
+        self.queued_task.retain(|x| x.from_actor_id != actor_id);
+    }
+
     /// Returns the actor ID (if any) of the spawned EObj by it's instance ID in the layout.
     pub fn find_object(&self, layout_id: u32) -> Option<ObjectId> {
         for (id, actor) in &self.actors {
@@ -253,6 +263,19 @@ impl Instance {
         for base_id in ENTRANCE_CIRCLE_IDS {
             if let Some(id) = self.find_object_by_eobj_id(base_id) {
                 return Some(id);
+            }
+        }
+
+        None
+    }
+
+    /// Returns the base ID of the spawned EObj by it's actor ID.
+    pub fn find_base_id_by_actor_id(&self, actor_id: ObjectId) -> Option<u32> {
+        for (id, actor) in &self.actors {
+            if *id == actor_id
+                && let NetworkedActor::Object { object } = actor
+            {
+                return Some(object.base_id);
             }
         }
 

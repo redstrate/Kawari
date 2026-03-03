@@ -1,4 +1,4 @@
-use std::{sync::Arc, time::Duration};
+use std::{collections::HashMap, sync::Arc, time::Duration};
 
 use kawari::{
     common::{
@@ -65,6 +65,18 @@ pub enum LuaDirectorTask {
     SetBGM {
         id: u32,
     },
+    SealBossWall {
+        actor_id: ObjectId,
+        id: u32,
+        place_name: u32,
+        time_until: u32,
+    },
+    SpawnBoss {
+        bnpc_id: u32,
+        wall_id: u32,
+        line_id: u32,
+        place_name: u32,
+    },
 }
 
 // TODO: Maybe collapse into DirectorData?
@@ -72,6 +84,7 @@ pub enum LuaDirectorTask {
 pub struct LuaDirector {
     pub data: [u8; 10],
     pub tasks: Vec<LuaDirectorTask>,
+    pub bosses: HashMap<u32, DirectorBoss>,
 }
 
 impl UserData for LuaDirector {
@@ -149,7 +162,27 @@ impl UserData for LuaDirector {
             this.tasks.push(LuaDirectorTask::SetBGM { id });
             Ok(())
         });
+        methods.add_method_mut(
+            "spawn_boss",
+            |_, this, (bnpc_id, wall_id, line_id, place_name): (u32, u32, u32, u32)| {
+                this.tasks.push(LuaDirectorTask::SpawnBoss {
+                    bnpc_id,
+                    wall_id,
+                    line_id,
+                    place_name,
+                });
+                Ok(())
+            },
+        );
     }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct DirectorBoss {
+    actor_id: ObjectId,
+    wall_id: u32,
+    line_id: u32,
+    place_name: u32,
 }
 
 #[derive(Debug)]
@@ -160,6 +193,8 @@ pub struct DirectorData {
     /// Lua state for this director.
     pub lua: KawariLua,
     pub tasks: Vec<LuaDirectorTask>,
+    /// List of alive bosses and their data.
+    pub bosses: HashMap<u32, DirectorBoss>,
 }
 
 impl DirectorData {
@@ -224,6 +259,10 @@ impl DirectorData {
     }
 
     pub fn on_actor_death(&mut self, bnpc_id: u32, position: Position) {
+        if let Some(boss) = self.bosses.get(&bnpc_id) {
+            self.unseal_boss_wall(boss.wall_id, boss.line_id, boss.place_name);
+        }
+
         let mut run_script = || {
             let mut lua_director = self.create_lua_director();
             let err = self.lua.0.scope(|scope| {
@@ -260,6 +299,7 @@ impl DirectorData {
         LuaDirector {
             data: self.data,
             tasks: Vec::new(),
+            bosses: self.bosses.clone(),
         }
     }
 
@@ -268,7 +308,47 @@ impl DirectorData {
             self.data = lua.data;
             self.tasks.push(LuaDirectorTask::SendVariables {});
         }
+        if self.bosses != lua.bosses {
+            self.bosses = lua.bosses;
+        }
         self.tasks.extend_from_slice(&lua.tasks);
+    }
+
+    /// Actually insert tasks to seal the boss wall.
+    pub fn seal_boss_wall(&mut self, id: u32, place_name: u32) {
+        self.tasks.push(LuaDirectorTask::LogMessage {
+            id: 2013,
+            params: vec![place_name],
+        });
+        self.tasks.push(LuaDirectorTask::ShowEObj { base_id: id });
+    }
+
+    /// Actually insert tasks to unseal the boss wall.
+    pub fn unseal_boss_wall(&mut self, wall_id: u32, line_id: u32, place_name: u32) {
+        self.tasks
+            .push(LuaDirectorTask::HideEObj { base_id: wall_id });
+        self.tasks
+            .push(LuaDirectorTask::HideEObj { base_id: line_id });
+        self.tasks.push(LuaDirectorTask::LogMessage {
+            id: 2014,
+            params: vec![place_name],
+        });
+    }
+
+    pub fn on_actor_aggro(&mut self, id: u32) {
+        if let Some(boss) = self.bosses.get(&id) {
+            // TODO: is there times that are longer than 15 secs?
+            self.tasks.push(LuaDirectorTask::LogMessage {
+                id: 2012,
+                params: vec![boss.place_name, 15],
+            });
+            self.tasks.push(LuaDirectorTask::SealBossWall {
+                actor_id: boss.actor_id,
+                id: boss.wall_id,
+                place_name: boss.place_name,
+                time_until: 15,
+            });
+        }
     }
 }
 
@@ -276,6 +356,12 @@ impl DirectorData {
 pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance) {
     let tasks = if let Some(director) = &instance.director {
         director.tasks.clone()
+    } else {
+        return;
+    };
+
+    let mut bosses = if let Some(director) = &instance.director {
+        director.bosses.clone()
     } else {
         return;
     };
@@ -474,26 +560,69 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                     DestinationNetwork::ZoneClients,
                 );
             }
+            LuaDirectorTask::SealBossWall {
+                actor_id,
+                id,
+                place_name,
+                time_until,
+            } => {
+                instance.insert_task(
+                    ClientId::default(),
+                    *actor_id,
+                    Duration::from_secs(*time_until as u64),
+                    QueuedTaskData::SealBossWall {
+                        id: *id,
+                        place_name: *place_name,
+                    },
+                );
+            }
+            LuaDirectorTask::SpawnBoss {
+                bnpc_id,
+                wall_id,
+                line_id,
+                place_name,
+            } => {
+                if let Some(mut npc) = instance.zone.get_battle_npc(*bnpc_id) {
+                    npc.common.handler_id = director_id;
+
+                    let actor_id = ObjectId(fastrand::u32(..));
+                    instance.insert_npc(actor_id, npc);
+                    bosses.insert(
+                        *bnpc_id,
+                        DirectorBoss {
+                            actor_id,
+                            wall_id: *wall_id,
+                            line_id: *line_id,
+                            place_name: *place_name,
+                        },
+                    );
+                } else {
+                    tracing::warn!("Failed to find bnpc {bnpc_id} for SpawnBoss, it won't spawn!");
+                }
+            }
         }
     }
 
     if let Some(director) = &mut instance.director {
         director.tasks.clear();
+        director.bosses = bosses;
     }
 }
 
 /// Process director-related messages.
 pub fn handle_director_messages(data: Arc<Mutex<WorldServer>>, msg: &ToServer) -> bool {
     match msg {
-        ToServer::GimmickAccessor(from_actor_id, id, params) => {
+        ToServer::GimmickAccessor(from_actor_id, from_object_id, params) => {
             let mut data = data.lock();
             let Some(instance) = data.find_actor_instance_mut(*from_actor_id) else {
                 tracing::warn!("Somehow failed to find an instance for actor?");
                 return true;
             };
 
+            let id = instance.find_base_id_by_actor_id(*from_object_id).unwrap();
+
             if let Some(director) = &mut instance.director {
-                director.gimmick_accessor(*from_actor_id, *id, params);
+                director.gimmick_accessor(*from_actor_id, id, params);
             } else {
                 tracing::warn!("Expected a director when recieving a GimmickAccessor?");
             }

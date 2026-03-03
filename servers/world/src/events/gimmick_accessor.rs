@@ -39,7 +39,7 @@ impl EventHandler for GimmickAccessorEventHandler {
             .handle
             .send(ToServer::GimmickAccessor(
                 connection.player_data.character.actor_id,
-                event.id & 0xFFF,
+                event.actor_id.object_id,
                 results.to_vec(),
             ))
             .await;
