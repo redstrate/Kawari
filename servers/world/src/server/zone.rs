@@ -34,6 +34,8 @@ use kawari::{
 
 #[derive(Debug)]
 pub enum MapGimmick {
+    /// Seen for final boss triggers in Sastasha
+    Generic {},
     Jump {
         /// The position to land on.
         to_position: Position,
@@ -265,6 +267,19 @@ impl Zone {
                                         "Failed to lookup Gimmick {}?!",
                                         eobj_data & 0xFFFF
                                     );
+                                }
+                            }
+                        } else if let LayerEntryData::EventRange(_) = &object.data
+                            && let Some(gimmick_rect_info) =
+                                game_data.lookup_gimmick_rect(object.instance_id)
+                            && gimmick_rect_info.trigger_in == 1
+                        {
+                            let map_gimmick = MapGimmick::Generic {};
+
+                            for map_range in &mut zone.map_ranges {
+                                if map_range.instance_id == object.instance_id {
+                                    map_range.gimmick = Some(map_gimmick);
+                                    break;
                                 }
                             }
                         }

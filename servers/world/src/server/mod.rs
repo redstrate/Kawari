@@ -532,6 +532,11 @@ fn server_logic_tick(data: Arc<Mutex<WorldServer>>, network: Arc<Mutex<NetworkSt
                         for range in &overlapping_ranges {
                             if let Some(gimmick) = &range.gimmick {
                                 match gimmick {
+                                    MapGimmick::Generic {} => {
+                                        if let Some(director) = &mut instance.director {
+                                            director.on_gimmick_rect(range.instance_id);
+                                        }
+                                    }
                                     MapGimmick::Jump {
                                         to_position,
                                         gimmick_jump_type,

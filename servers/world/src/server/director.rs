@@ -278,7 +278,7 @@ impl DirectorData {
             err
         };
         if let Err(err) = run_script() {
-            tracing::warn!("Syntax error during onEventActionCast: {err:?}");
+            tracing::warn!("Syntax error during onActorDeath: {err:?}");
         }
     }
 
@@ -348,6 +348,26 @@ impl DirectorData {
                 place_name: boss.place_name,
                 time_until: 15,
             });
+        }
+    }
+
+    pub fn on_gimmick_rect(&mut self, id: u32) {
+        let mut run_script = || {
+            let mut lua_director = self.create_lua_director();
+            let err = self.lua.0.scope(|scope| {
+                let data = scope.create_userdata_ref_mut(&mut lua_director)?;
+
+                let func: Function = self.lua.0.globals().get("onGimmickRect")?;
+
+                func.call::<()>((data, id))?;
+
+                Ok(())
+            });
+            self.apply_lua_director(lua_director);
+            err
+        };
+        if let Err(err) = run_script() {
+            tracing::warn!("Syntax error during onGimmickRect: {err:?}");
         }
     }
 }

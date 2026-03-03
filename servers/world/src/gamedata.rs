@@ -902,6 +902,23 @@ impl GameData {
         })
     }
 
+    /// Returns information about a specific GimmickRect based on the layout id.
+    pub fn lookup_gimmick_rect(&mut self, layout_id: u32) -> Option<GimmickRectInfo> {
+        let sheet = GimmickRectSheet::read_from(&mut self.resource, Language::None).unwrap();
+        for (_, row) in sheet.into_iter().flatten_subrows() {
+            if row.LayoutID().into_u32().copied().unwrap() == layout_id {
+                return Some(GimmickRectInfo {
+                    layout_id: row.LayoutID().into_u32().copied()?,
+                    params: row.Params().map(|x| x.into_u32().copied().unwrap()),
+                    trigger_in: row.TriggerIn().into_u8().copied()?,
+                    trigger_out: row.TriggerOut().into_u8().copied()?,
+                });
+            }
+        }
+
+        None
+    }
+
     /// Returns the data associated with this EObj.
     pub fn get_eobj_data(&mut self, eobj_id: u32) -> u32 {
         let row = self.eobj_sheet.row(eobj_id).unwrap();

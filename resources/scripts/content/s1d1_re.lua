@@ -41,6 +41,8 @@ PLACE_SECOND_RAMBADE = 670
 EOBJ_SECOND_RAMBADE_BOSS_WALL = 2001539
 EOBJ_SECOND_RAMBADE_BOSS_LINE = 2001540
 
+EVENT_RANGE_BOSS = 4069552
+
 -- Sequence 0
 BNPC_GIANT_CLAM1 = 3637470
 BNPC_GIANT_CLAM2 = 3637472
@@ -140,6 +142,12 @@ function onGimmickAccessor(director, actor_id, id, params)
     end
 
     director:finish_gimmick(actor_id)
+end
+
+function onGimmickRect(director, target)
+    if target == EVENT_RANGE_BOSS then
+        print("TODO cutscene")
+    end
 end
 
 function onEventActionCast(director, actor_id, target)
