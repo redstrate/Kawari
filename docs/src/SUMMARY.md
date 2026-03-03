@@ -6,14 +6,15 @@
   - [Using Scripter](scripting/scripter.md)
   - [Style Guide](scripting/style_guide.md)
 - [Profiling](profiling.md)
+- [Ecosystem Contributions](ecosystem_work.md)
 
 # Setup
 
 - [Overview](setup/overview.md)
-- [Windows](setup/windows.md)
-- [macOS](setup/macos.md)
-- [Linux](setup/linux.md)
-- [Local development](setup/source.md)
+  - [Windows](setup/windows.md)
+  - [macOS](setup/macos.md)
+  - [Linux](setup/linux.md)
+  - [Local development](setup/source.md)
   
 # Commands
 - [GM Commands](gm_commands.md)

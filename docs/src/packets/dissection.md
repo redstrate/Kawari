@@ -8,7 +8,7 @@ The first tool in our repertoire is visually easy to understand. It's available 
 
 Each capture is simply a collection of "frames" (bundles of packets, sent together) over several "connections" (e.g. the Zone connection) and inside are the packets themselves. (The vocabulary used by the community isn't standardized, I apologize for any confusion.)
 
-In comparison to other dissection tools, Packet Analyzer can also "parse" packets - where supported. For example, if you take a look at a chat message you can see the string contents:
+Packet Analyzer can also "parse" packets - where supported. For example, if you take a look at a chat message you can see its contents:
 
 ```rust
 Ipc(
@@ -35,6 +35,6 @@ Ipc(
 )
 ```
 
-This is reuses the same packet definitions in Kawari, so when you contribute to Kawari you're also making packets easier to read for everyone. On the other hand, the parsed view can't be fully trusted because there could be mistakes with our parsing.
+This is reuses the same packet definitions from Kawari, so when you [contribute](../contributing.md) to Kawari you're also making packets easier to read for everyone. On the other hand, the parsed view can't be fully trusted because there could be mistakes with our parsing.
 
 Now that you know how to dissect packets, we suggest [reading potentially useful tips on reverse engineering them](tips.md).
