@@ -337,7 +337,6 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                 network.remove_actor(instance, actor_id);
             }
             LuaDirectorTask::SpawnEObj { base_id, position } => {
-                dbg!(position);
                 if let Some(mut object) = instance.zone.get_event_object(*base_id) {
                     if let Some(position) = position {
                         object.position = *position;

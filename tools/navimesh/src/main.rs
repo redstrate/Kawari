@@ -9,13 +9,13 @@ use kawari::config::get_config;
 use kawari_world::{Navmesh, NavmeshParams, NavmeshTile};
 use physis::{
     Language,
-    layer::{LayerEntryData, ModelCollisionType, Transformation},
+    layer::{Layer, LayerEntryData, ModelCollisionType, Transformation},
     lgb::Lgb,
     lvb::Lvb,
-    model::MDL,
     pcb::{Pcb, ResourceNode},
+    pcblist::{PcbList, PcbListEntry},
     resource::{ResourceResolver, SqPackResource},
-    tera::{Plate, Terrain},
+    sgb::Sgb,
 };
 use recastnavigation_sys::{
     CreateContext, dtCreateNavMeshData, dtNavMeshCreateParams, rcAllocCompactHeightfield,
@@ -80,6 +80,9 @@ fn main() {
     let tile_origin_x = -(tile_width * 2.0);
     let tile_origin_y = -(tile_height * 2.0);
 
+    let twcs = tile_width / cell_size;
+    let thcs = tile_width / cell_size;
+
     let mut tiles = Vec::new();
     for z in 0..4 {
         for x in 0..4 {
@@ -89,14 +92,14 @@ fn main() {
                 let mut size_z: i32 = 0;
 
                 let min_bounds = [
-                    tile_origin_x + (x as f32 * tile_width),
+                    tile_origin_x + ((x as f32) * twcs),
                     -100.0,
-                    tile_origin_y + (z as f32 * tile_height),
+                    tile_origin_y + ((z as f32) * thcs),
                 ];
                 let max_bounds = [
-                    tile_origin_x + ((x as f32 + 1.0) * tile_width),
+                    tile_origin_x + ((x as f32 + 1.0) * twcs),
                     100.0,
-                    tile_origin_y + ((z as f32 + 1.0) * tile_height),
+                    tile_origin_y + ((z as f32 + 1.0) * thcs),
                 ];
 
                 rcCalcGridSize(
@@ -120,8 +123,11 @@ fn main() {
                 ));
 
                 tiles.push(Tile {
-                    min_bounds,
+                    x,
+                    z,
                     height_field,
+                    min_bounds,
+                    max_bounds,
                 });
             }
         }
@@ -132,64 +138,57 @@ fn main() {
 
     let scene = &lvb.sections[0];
 
-    let tera = resolver
-        .parsed::<Terrain>(&format!(
-            "{}/bgplate/terrain.tera",
+    let pcblist = resolver
+        .parsed::<PcbList>(&format!(
+            "{}/collision/list.pcb",
             scene.general.bg_path.value
         ))
         .unwrap();
     let max_slope = *navimesh_row.AgentMaxSlope().into_f32().unwrap();
-    for (i, plate) in tera.plates.iter().enumerate() {
+    let walkable_climb = *navimesh_row.AgentMaxClimb().into_f32().unwrap();
+    for entry in pcblist.entries {
         add_plate(
-            &tera,
-            (i, plate),
+            &entry,
             &scene.general.bg_path.value,
             &mut resolver,
             context,
             &tiles,
             max_slope,
+            (walkable_climb / cell_size).floor() as i32, // In VX units
         );
     }
 
     for path in &scene.lgb_paths {
-        if path.contains("bg.lgb") {
-            tracing::info!("Processing {path}...");
+        tracing::info!("Processing {path}...");
 
-            let lgb = resolver.parsed::<Lgb>(path);
-            let lgb = match lgb {
-                Ok(lgb) => lgb,
-                Err(e) => {
-                    tracing::error!(
-                        "Failed to parse {path}: {e}, this is most likely a bug in Physis and should be reported somewhere!"
-                    );
-                    continue;
-                }
-            };
+        let lgb = resolver.parsed::<Lgb>(path);
+        let lgb = match lgb {
+            Ok(lgb) => lgb,
+            Err(e) => {
+                tracing::error!(
+                    "Failed to parse {path}: {e}, this is most likely a bug in Physis and should be reported somewhere!"
+                );
+                continue;
+            }
+        };
 
-            // TODO: i think we know which layer is specifically used for navmesh gen, better check that LVB
-            for chunk in &lgb.chunks {
-                for layer in &chunk.layers {
-                    for object in &layer.objects {
-                        if let LayerEntryData::BG(bg) = &object.data
-                            && !bg.collision_asset_path.value.is_empty()
-                        {
-                            // NOTE: assert is here to find out the unknown
-                            assert!(bg.collision_type == ModelCollisionType::Replace);
-
-                            let pcb = resolver
-                                .parsed::<Pcb>(&bg.collision_asset_path.value)
-                                .unwrap();
-
-                            walk_node(
-                                &pcb.root_node,
-                                &object.transform,
-                                context,
-                                &tiles,
-                                max_slope,
-                            );
-                        }
-                    }
-                }
+        // TODO: i think we know which layer is specifically used for navmesh gen, better check that LVB
+        for chunk in &lgb.chunks {
+            for layer in &chunk.layers {
+                let transform = Transformation {
+                    translation: [0.0; 3],
+                    rotation: [0.0; 3],
+                    scale: [1.0; 3],
+                };
+                walk_layer(
+                    &mut resolver,
+                    layer,
+                    &transform,
+                    context,
+                    &tiles,
+                    max_slope,
+                    (walkable_climb / cell_size).floor() as i32, // In VX units
+                );
             }
         }
     }
@@ -202,7 +201,6 @@ fn main() {
             // Step 3: Build a compact heightfield out of the normal heightfield
             let compact_heightfield = rcAllocCompactHeightfield();
             let walkable_height = *navimesh_row.AgentHeight().into_f32().unwrap();
-            let walkable_climb = *navimesh_row.AgentMaxClimb().into_f32().unwrap();
             let walkable_radius = *navimesh_row.AgentRadius().into_f32().unwrap();
             assert!(!tile.height_field.is_null());
             assert!(rcBuildCompactHeightfield(
@@ -240,7 +238,7 @@ fn main() {
             let contour_set = rcAllocContourSet();
             let max_error = *navimesh_row.MaxEdgeError().into_f32().unwrap();
             let max_edge_len =
-                (*navimesh_row.MaxEdgeLength().into_f32().unwrap() / cell_size) as i32;
+                (*navimesh_row.MaxEdgeLength().into_f32().unwrap() / cell_size) as i32; // in VX units
             let build_flags = rcBuildContoursFlags_RC_CONTOUR_TESS_WALL_EDGES as i32;
             assert!(rcBuildContours(
                 context,
@@ -310,11 +308,11 @@ fn main() {
 
                 // Tile Attributes
                 userId: 0,
-                tileX: ((tile_origin_x - tile.min_bounds[0]) / tile_width).abs() as i32,
-                tileY: ((tile_origin_y - tile.min_bounds[2]) / tile_height).abs() as i32,
+                tileX: tile.x,
+                tileY: tile.z,
                 tileLayer: 0,
-                bmin: (*poly_mesh).bmin,
-                bmax: (*poly_mesh).bmax,
+                bmin: tile.min_bounds,
+                bmax: tile.max_bounds,
 
                 // General Configuration Attributes
                 walkableHeight: walkable_height,
@@ -348,8 +346,8 @@ fn main() {
         zone_id,
         NavmeshParams {
             orig: [tile_origin_x, 0.0, tile_origin_y],
-            tile_width,
-            tile_height,
+            tile_width: tile_width / cell_size,
+            tile_height: tile_height / cell_height,
             max_tiles: navmesh_tiles.len() as i32,
             max_polys,
         },
@@ -366,8 +364,11 @@ fn main() {
 /// Represents the heightfield of a tile.
 #[derive(Debug)]
 struct Tile {
-    min_bounds: [f32; 3],
+    x: i32,
+    z: i32,
     height_field: *mut rcHeightfield,
+    min_bounds: [f32; 3],
+    max_bounds: [f32; 3],
 }
 
 /// Walk each node, add it's collision model to the scene.
@@ -377,6 +378,7 @@ fn walk_node(
     context: *mut rcContext,
     tiles: &[Tile],
     max_slope: f32,
+    walkable_climb: i32,
 ) {
     if !node.vertices.is_empty() {
         let mut indices = Vec::new();
@@ -426,74 +428,99 @@ fn walk_node(
                     tri_area_ids.as_ptr(),
                     ntris,
                     tile.height_field,
-                    1
+                    walkable_climb,
                 ));
             }
         }
     }
 
     for child in &node.children {
-        walk_node(child, transform, context, tiles, max_slope);
+        walk_node(child, transform, context, tiles, max_slope, walkable_climb);
     }
 }
 
 fn add_plate(
-    terrain: &Terrain,
-    (plate_index, plate): (usize, &Plate),
+    entry: &PcbListEntry,
     tera_path: &str,
     sqpack_resource: &mut ResourceResolver,
     context: *mut rcContext,
     tiles: &[Tile],
     max_slope: f32,
+    walkable_climb: i32,
 ) {
-    let mdl_path = format!(
-        "{}/bgplate/{}",
-        tera_path,
-        Terrain::mdl_filename(plate_index)
+    let pcb_path = format!("{}/collision/tr{:04}.pcb", tera_path, entry.mesh_id,);
+    let mdl = sqpack_resource.parsed::<Pcb>(&pcb_path).unwrap();
+    let transform = Transformation {
+        translation: [0.0; 3],
+        rotation: [0.0; 3],
+        scale: [1.0; 3],
+    };
+    walk_node(
+        &mdl.root_node,
+        &transform,
+        context,
+        tiles,
+        max_slope,
+        walkable_climb,
     );
-    let mdl = sqpack_resource.parsed::<MDL>(&mdl_path).unwrap();
+}
 
-    let lod = &mdl.lods[0];
-    for part in &lod.parts {
-        // Step 2: insert geoemtry into heightfield
-        let tile_indices: Vec<i32> = part.indices.iter().map(|x| *x as i32).collect();
-        let mut tri_area_ids: Vec<u8> = vec![0; tile_indices.len() / 3];
+/// Walk each layer, add it's collision model to the scene.
+fn walk_layer(
+    resolver: &mut ResourceResolver,
+    layer: &Layer,
+    transform: &Transformation,
+    context: *mut rcContext,
+    tiles: &[Tile],
+    max_slope: f32,
+    walkable_climb: i32,
+) {
+    for object in &layer.objects {
+        // FIXME: WRONG WRONG WRONG
+        let child_transform = Transformation {
+            translation: [
+                transform.translation[0] + object.transform.translation[0],
+                transform.translation[1] + object.transform.translation[1],
+                transform.translation[2] + object.transform.translation[2],
+            ],
+            rotation: object.transform.rotation,
+            scale: object.transform.scale,
+        };
 
-        // transform the vertices on the CPU
-        let mut tile_vertices: Vec<[f32; 3]> = Vec::new();
-        for vertex in &part.vertices {
-            tile_vertices.push([
-                vertex.position[0] + terrain.plate_position(plate)[0],
-                vertex.position[1],
-                vertex.position[2] + terrain.plate_position(plate)[1],
-            ]);
+        if let LayerEntryData::BG(bg) = &object.data
+            && !bg.collision_asset_path.value.is_empty()
+        {
+            // NOTE: assert is here to find out the unknown
+            assert!(bg.collision_type == ModelCollisionType::Replace);
+
+            let pcb = resolver
+                .parsed::<Pcb>(&bg.collision_asset_path.value)
+                .unwrap();
+
+            walk_node(
+                &pcb.root_node,
+                &child_transform,
+                context,
+                tiles,
+                max_slope,
+                walkable_climb,
+            );
         }
 
-        for tile in tiles {
-            unsafe {
-                let ntris = tile_indices.len() as i32 / 3;
-
-                // mark areas as walkable
-                rcMarkWalkableTriangles(
-                    context,
-                    max_slope,
-                    std::mem::transmute::<*const [f32; 3], *const f32>(tile_vertices.as_ptr()),
-                    tile_vertices.len() as i32,
-                    tile_indices.as_ptr(),
-                    ntris,
-                    tri_area_ids.as_mut_ptr(),
-                );
-
-                assert!(rcRasterizeTriangles(
-                    context,
-                    std::mem::transmute::<*const [f32; 3], *const f32>(tile_vertices.as_ptr()),
-                    tile_vertices.len() as i32,
-                    tile_indices.as_ptr(),
-                    tri_area_ids.as_ptr(),
-                    ntris,
-                    tile.height_field,
-                    1
-                ));
+        if let LayerEntryData::SharedGroup(sgb) = &object.data {
+            let sgb = resolver.parsed::<Sgb>(&sgb.asset_path.value).unwrap();
+            for group in &sgb.sections[0].layer_groups {
+                for layer in &group.layers {
+                    walk_layer(
+                        resolver,
+                        layer,
+                        &child_transform,
+                        context,
+                        tiles,
+                        max_slope,
+                        walkable_climb,
+                    );
+                }
             }
         }
     }
