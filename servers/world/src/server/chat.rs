@@ -33,6 +33,7 @@ pub fn handle_chat_messages(
             };
 
             network.send_to_instance(
+                *from_actor_id,
                 sender_instance,
                 FromServer::Message(msg.clone()),
                 DestinationNetwork::ZoneClients,
