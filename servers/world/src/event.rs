@@ -59,6 +59,16 @@ pub trait EventHandler: std::fmt::Debug + Send + Sync {
     }
 }
 
+/// Extracts the script id from a given CustomTalk `name`. For example, "CmnDefBeginnerGuide_00327" will return 327.
+fn extract_script_id(name: &str) -> u32 {
+    name[name.len() - 5..].parse().unwrap_or_default()
+}
+
+/// Creates the proper folder name from a given script id. For example, 327 will return 003.
+fn folder_from_script_id(id: u32) -> String {
+    format!("{:03}", (id / 100))
+}
+
 /// Finds and creates the relevant `EventHandler` for this event.
 pub fn dispatch_event(
     handler_id: HandlerId,
@@ -72,12 +82,6 @@ pub fn dispatch_event(
             None
         }
     };
-
-    // Extracts the script id from a given CustomTalk name. For example, "CmnDefBeginnerGuide_00327" will return 327.
-    let extract_script_id = |name: &str| -> u32 { name[..5].parse().unwrap_or_default() };
-
-    // Creates the proper folder name from a given script id. For example, 327 will return 003.
-    let folder_from_script_id = |id: u32| format!("{:03}", (id / 100));
 
     match handler_id.handler_type() {
         HandlerType::Quest => {
@@ -170,5 +174,23 @@ pub fn dispatch_event(
         // TODO: do we need Generic here?
         HandlerType::InstanceContent => generic_lua_event("content/Generic.lua"),
         _ => None,
+    }
+}
+
+// Ensure that the script names we retrieve can be turned into sensible ids and folders.
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_extract_script_id() {
+        // First ensure it succeeds, then ensure it fails intentionally.
+        assert_eq!(extract_script_id("CmnDefBeginnerGuide_00327"), 327);
+        assert_eq!(extract_script_id("CmnDefBeginnerGuide_XYZAB"), 0);
+    }
+
+    #[test]
+    fn test_folder_from_script_id() {
+        assert_eq!(folder_from_script_id(327), "003");
     }
 }
