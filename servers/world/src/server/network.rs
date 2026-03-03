@@ -102,18 +102,12 @@ impl NetworkState {
     /// Sends a `message` to every client in this instance but *not* including it.
     pub fn send_to_instance(
         &mut self,
+        actor_id: ObjectId,
         instance: &Instance,
         message: FromServer,
         destination: DestinationNetwork,
     ) {
-        self.send_in_range_implementation(
-            ObjectId::default(),
-            instance,
-            message,
-            destination,
-            false,
-            false,
-        );
+        self.send_in_range_implementation(actor_id, instance, message, destination, false, false);
     }
 
     pub fn send_in_range(

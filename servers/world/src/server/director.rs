@@ -530,6 +530,7 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
 
                 let mut network = network.lock();
                 network.send_to_instance(
+                    ObjectId::default(),
                     instance,
                     FromServer::PacketSegment(ipc, ObjectId::default()), // TODO: how do we just send it from the player?
                     DestinationNetwork::ZoneClients,
@@ -575,6 +576,7 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
 
                 let mut network = network.lock();
                 network.send_to_instance(
+                    ObjectId::default(),
                     instance,
                     FromServer::PacketSegment(ipc, ObjectId::default()), // TODO: how do we just send it from the player?
                     DestinationNetwork::ZoneClients,
