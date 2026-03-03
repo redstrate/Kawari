@@ -8,7 +8,7 @@ use super::{CommonSpawn, GameMasterRank};
 #[brw(little)]
 #[derive(Debug, Clone, Default)]
 pub struct NpcSpawn {
-    /// Purpose mostly unknown, but refers to a Game Object ID in the zone.
+    /// Refers to a Game Object ID in the zone, usually an LGB that this enemy is "attached" to.
     pub gimmick_id: u32,
     pub u1b: u8,
     pub u2b: u8,
@@ -18,9 +18,14 @@ pub struct NpcSpawn {
     pub aggression_mode: u8,
     pub online_status: OnlineStatus,
     pub u5a: u8,
-    pub pose: u8,
-
-    pub u5b: u32,
+    /// How many other BNpcs can be linked in this family.
+    pub max_links: u8,
+    /// If not zero, specifies which family this BNpc is linked to.
+    pub link_family: u8,
+    /// How far the link family can be apart.
+    pub link_range: u8,
+    pub u5d: u8,
+    pub u5e: u8,
 
     pub common: CommonSpawn,
     pub padding: [u8; 14],

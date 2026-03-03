@@ -3,8 +3,8 @@
 use crate::{ToServer, ZoneConnection, common::SpawnKind};
 use kawari::{
     common::{
-        EquipDisplayFlag, JumpState, MoveAnimationSpeed, MoveAnimationState, MoveAnimationType,
-        ObjectId, ObjectTypeId, Position,
+        EquipDisplayFlag, JumpState, MoveAnimationState, MoveAnimationType, ObjectId, ObjectTypeId,
+        Position,
     },
     config::get_config,
     ipc::zone::{
@@ -39,8 +39,11 @@ impl ZoneConnection {
         anim_state: MoveAnimationState,
         jump_state: JumpState,
     ) {
+        const SPEED_WALKING: u8 = 20;
+        const SPEED_RUNNING: u8 = 60;
+
         let mut anim_type = anim_type;
-        let mut anim_speed = MoveAnimationSpeed::Running; // TODO: sprint is 78, jog is 72, but falling and normal running are always 60
+        let mut anim_speed = SPEED_RUNNING; // TODO: sprint is 78, jog is 72, but falling and normal running are always 60
 
         // We're purely walking or strafing while walking. No jumping or falling.
         if anim_type & MoveAnimationType::WALKING_OR_LANDING
@@ -48,7 +51,7 @@ impl ZoneConnection {
             && anim_state == MoveAnimationState::None
             && jump_state == JumpState::NoneOrFalling
         {
-            anim_speed = MoveAnimationSpeed::Walking;
+            anim_speed = SPEED_WALKING;
         }
 
         if anim_state == MoveAnimationState::LeavingCollision {

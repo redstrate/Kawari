@@ -253,18 +253,6 @@ pub enum JumpState {
     Ascending = 16,
 }
 
-/// The server responds with these values to set the correct speed when informing other clients about how quickly to animate the movements.
-#[binrw]
-#[brw(repr = u8)]
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub enum MoveAnimationSpeed {
-    Walking = 20,
-    #[default]
-    Running = 60,
-    Jogging = 72,
-    Sprinting = 78,
-}
-
 /// This allows us (and probably the client as well) to determine which event belongs to each sheet, or type of NPC.
 #[repr(u32)]
 #[derive(Debug, Clone, Copy, PartialEq, Display, EnumIter, FromRepr)]

@@ -23,10 +23,27 @@ EOBJ_SHORTCUT = 2000700
 
 EOBJ_CATTERY_BOSS_WALL = 2001504
 
+-- Sequence 0
+BNPC_GIANT_CLAM1 = 3637470
+BNPC_GIANT_CLAM2 = 3637472
+BNPC_GIANT_CLAM3 = 3637475
+BNPC_GIANT_CLAM4 = 3637473
+BNPC_GIANT_CLAM5 = 3637474
+BNPC_GIANT_CLAM6 = 3637476
+
 BNPC_RED_CORAL = 4217967
 BNPC_BLUE_CORAL = 4217968
 BNPC_GREEN_CORAL = 0 -- TODO: figure out layout id
 BNPC_CHOPPER = 4035011
+
+-- Sequence 2
+BNPC_REAVER1 = 3981887
+BNPC_REAVER2 = 3981888
+BNPC_CAPTAIN1 = 3988325
+
+-- Sequence 3
+BNPC_KEY_HOLDER_REAVER = 3981878
+BNPC_CAPTAINS_QUARTERS_REAVER = 3282344
 
 GIMMICK_EXIT = 5
 GIMMICK_BLUE_CORAL_FORMATION = 23
@@ -123,6 +140,9 @@ function onGimmickAccessor(director, actor_id, id, params)
     elseif id == GIMMICK_CAPTAINS_QUARTERS_DOOR and has_captains_quarters then
         director:hide_eobj(EOBJ_CAPTAINS_QUARTERS_DOOR)
         -- TODO: does the EObj get deleted?
+
+        -- TODO: when does this guy spawn? when you open the door?
+        director:spawn_bnpc(BNPC_CAPTAINS_QUARTERS_REAVER)
     elseif id == GIMMICK_WAVERIDER_GATE and has_waverider_gate then
         director:hide_eobj(EOBJ_WAVERIDER_GATE)
     elseif id == GIMMICK_CAPTAINS_QUARTERS_KEY then
@@ -160,7 +180,7 @@ function onEventActionCast(director, actor_id, target)
     end
 end
 
-function onActorDeath(director, bnpc_id)
+function onActorDeath(director, bnpc_id, position)
     print("Actor died: "..bnpc_id)
 
     if bnpc_id == BNPC_CHOPPER then
@@ -169,6 +189,12 @@ function onActorDeath(director, bnpc_id)
         director:hide_eobj(EOBJ_CATTERY_BOSS_WALL)
 
         chopper_defeated = true
+    elseif bnpc_id == BNPC_CAPTAIN1 then
+        beginSequence3(director)
+    elseif bnpc_id == BNPC_KEY_HOLDER_REAVER then
+        director:spawn_eobj(EOBJ_CAPTAINS_QUARTERS_KEY, { x = position.x, y = position.y, z = position.z })
+    elseif bnpc_id == BNPC_CAPTAINS_QUARTERS_REAVER then
+        director:spawn_eobj(EOBJ_WAVERIDER_GATE_KEY, { x = position.x, y = position.y, z = position.z })
     end
 end
 
@@ -210,6 +236,14 @@ function beginSequence0(director)
 
     hideBloodyMemos(director)
     director:hide_eobj(EOBJ_INCONSPICUOUS_SWITCH)
+
+    -- spawn them clams
+    director:spawn_bnpc(BNPC_GIANT_CLAM1)
+    director:spawn_bnpc(BNPC_GIANT_CLAM2)
+    director:spawn_bnpc(BNPC_GIANT_CLAM3)
+    director:spawn_bnpc(BNPC_GIANT_CLAM4)
+    director:spawn_bnpc(BNPC_GIANT_CLAM5)
+    director:spawn_bnpc(BNPC_GIANT_CLAM6)
 end
 
 function hideBloodyMemos(director)
@@ -244,19 +278,21 @@ function beginSequence2(director)
     director:hide_eobj(EOBJ_INCONSPICUOUS_SWITCH)
     director:hide_eobj(EOBJ_HIDDEN_DOOR)
 
-    -- NOTE: Immediately beginning because there's a gatekeeper for this which we don't spawn yet
-    beginSequence3(director)
+    director:hide_eobj(EOBJ_NEXT_DOOR1)
+
+    -- Spawn captain and his goons
+    director:spawn_bnpc(BNPC_REAVER1)
+    director:spawn_bnpc(BNPC_REAVER2)
+    director:spawn_bnpc(BNPC_CAPTAIN1)
 end
 
 function beginSequence3(director)
     setSequence(director, SEQ1 | SEQ2 | SEQ3)
 
-    director:hide_eobj(EOBJ_NEXT_DOOR1)
     director:hide_eobj(EOBJ_RAMBADE_DOOR1)
 
-    -- FIXME: Spawn keys automatically for now
-    director:spawn_eobj(EOBJ_WAVERIDER_GATE_KEY)
-    director:spawn_eobj(EOBJ_CAPTAINS_QUARTERS_KEY)
+    -- TODO: is this the same BNPC every playthrough?
+    director:spawn_bnpc(BNPC_KEY_HOLDER_REAVER)
 end
 
 function beginSequence4(director)

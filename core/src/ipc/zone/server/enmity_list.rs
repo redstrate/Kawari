@@ -20,7 +20,7 @@ pub struct EnmityList {
     pub count: u32,
     #[brw(pad_after = 4)] // empty
     #[br(count = count)]
-    #[bw(pad_size_to = PlayerEnmity::SIZE * 8)]
+    #[brw(pad_size_to = PlayerEnmity::SIZE * 8)]
     pub list: Vec<PlayerEnmity>,
 }
 

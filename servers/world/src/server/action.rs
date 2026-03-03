@@ -425,6 +425,7 @@ pub fn kill_actor(
     // Inform the director that their actor died
     if let Some(instance) = data.find_actor_instance_mut(from_actor_id) {
         let mut npc_id = None;
+        let mut position = None;
         if let Some(actor) = instance.find_actor(from_actor_id)
             && let Some(npc) = actor.get_npc_spawn()
         {
@@ -433,15 +434,16 @@ pub fn kill_actor(
 
         // Transistion into the dead state so they stop moving.
         if let Some(actor) = instance.find_actor_mut(from_actor_id)
-            && let NetworkedActor::Npc { state, .. } = actor
+            && let NetworkedActor::Npc { state, spawn, .. } = actor
         {
             *state = NpcState::Dead;
+            position = Some(spawn.common.position);
         }
 
         if let Some(npc_id) = npc_id
             && let Some(director) = &mut instance.director
         {
-            director.on_actor_death(npc_id);
+            director.on_actor_death(npc_id, position.unwrap());
         }
     }
 }

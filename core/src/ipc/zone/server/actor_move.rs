@@ -1,8 +1,8 @@
 use binrw::binrw;
 
 use crate::common::{
-    MoveAnimationSpeed, MoveAnimationState, MoveAnimationType, Position, read_packed_position,
-    read_quantized_rotation, write_packed_position, write_quantized_rotation,
+    MoveAnimationState, MoveAnimationType, Position, read_packed_position, read_quantized_rotation,
+    write_packed_position, write_quantized_rotation,
 };
 
 #[binrw]
@@ -14,7 +14,7 @@ pub struct ActorMove {
     pub anim_type: MoveAnimationType,
     pub anim_state: MoveAnimationState,
     #[brw(pad_after = 1)] // empty
-    pub anim_speed: MoveAnimationSpeed,
+    pub anim_speed: u8,
     #[brw(pad_after = 4)] // empty
     #[br(map = read_packed_position)]
     #[bw(map = write_packed_position)]

@@ -1,6 +1,6 @@
 use parking_lot::Mutex;
 use std::{
-    collections::HashMap,
+    collections::{HashMap, VecDeque},
     env::consts::EXE_SUFFIX,
     process::Command,
     sync::Arc,
@@ -327,22 +327,36 @@ fn server_logic_tick(data: Arc<Mutex<WorldServer>>, network: Arc<Mutex<NetworkSt
                             *current_path_lerp += (10.0 / distance).clamp(0.0, 1.0);
                         }
 
+                        let mut reset_target = false;
                         if let Some(current_target) = current_target
                             && target_actor_pos.contains_key(current_target)
                         {
                             let target_pos = target_actor_pos[current_target];
                             let distance = Position::distance(spawn.common.position, target_pos);
                             let needs_repath = current_path.is_empty() && distance > 10.0; // TODO: confirm distance this in retail
+
+                            let current_pos = spawn.common.position;
+                            let path: VecDeque<[f32; 3]> = instance
+                                .navmesh
+                                .calculate_path(
+                                    [current_pos.x, current_pos.y, current_pos.z],
+                                    [target_pos.x, target_pos.y, target_pos.z],
+                                )
+                                .into();
+
                             if needs_repath {
-                                let current_pos = spawn.common.position;
-                                *current_path = instance
-                                    .navmesh
-                                    .calculate_path(
-                                        [current_pos.x, current_pos.y, current_pos.z],
-                                        [target_pos.x, target_pos.y, target_pos.z],
-                                    )
-                                    .into();
+                                *current_path = path.clone();
                             }
+
+                            // Drop the current target if we can't path to them
+                            if path.is_empty() {
+                                reset_target = true;
+                            }
+                        }
+
+                        if reset_target {
+                            *current_target = None;
+                            *state = NpcState::Wander;
                         }
 
                         // update common spawn
@@ -387,75 +401,37 @@ fn server_logic_tick(data: Arc<Mutex<WorldServer>>, network: Arc<Mutex<NetworkSt
                             continue;
                         }
 
-                        if newly_acquired_targets.contains(id) {
-                            // Send an ACT for a visual indicator, and stuff.
-                            let mut network = network.lock();
-                            let target = ObjectTypeId {
-                                object_id: current_target.unwrap(),
-                                object_type: ObjectTypeKind::None,
-                            };
-                            network.send_in_range_instance(
-                                *id,
-                                instance,
-                                FromServer::ActorControlTarget(
-                                    *id,
-                                    target,
-                                    ActorControlCategory::SetTarget {},
-                                ),
-                                DestinationNetwork::ZoneClients,
-                            );
-
-                            // TODO: does this need to be set somewhere in CommonSpawn too?
-                            network.send_ac_in_range_instance(
-                                instance,
-                                *id,
-                                ActorControlCategory::SetBattle { battle: true },
-                            );
-                        }
-
                         if let Some(current_target) = current_target {
+                            if newly_acquired_targets.contains(id) {
+                                // Send an ACT for a visual indicator, and stuff.
+                                let mut network = network.lock();
+                                let target = ObjectTypeId {
+                                    object_id: *current_target,
+                                    object_type: ObjectTypeKind::None,
+                                };
+                                network.send_in_range_instance(
+                                    *id,
+                                    instance,
+                                    FromServer::ActorControlTarget(
+                                        *id,
+                                        target,
+                                        ActorControlCategory::SetTarget {},
+                                    ),
+                                    DestinationNetwork::ZoneClients,
+                                );
+
+                                // TODO: does this need to be set somewhere in CommonSpawn too?
+                                network.send_ac_in_range_instance(
+                                    instance,
+                                    *id,
+                                    ActorControlCategory::SetBattle { battle: true },
+                                );
+                            }
+
                             haters.entry(current_target).or_insert_with(Vec::new);
                             haters.get_mut(current_target).unwrap().push(*id);
                         }
                     }
-                }
-
-                // TODO: limit to players only eventually
-                for (target_id, haters) in haters {
-                    let mut network = network.lock();
-
-                    let list = haters
-                        .iter()
-                        .map(|actor_id| Hater {
-                            actor_id: *actor_id,
-                            enmity: 100,
-                        })
-                        .collect();
-                    // TODO: limit to 32
-                    let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::HaterList(HaterList {
-                        count: haters.len() as u32,
-                        list,
-                    }));
-                    network.send_to_by_actor_id(
-                        *target_id,
-                        FromServer::PacketSegment(ipc, *target_id),
-                        DestinationNetwork::ZoneClients,
-                    );
-
-                    // TODO: send info for party
-                    let ipc =
-                        ServerZoneIpcSegment::new(ServerZoneIpcData::EnmityList(EnmityList {
-                            count: 1,
-                            list: vec![PlayerEnmity {
-                                actor_id: *target_id,
-                                enmity: 100,
-                            }],
-                        }));
-                    network.send_to_by_actor_id(
-                        *target_id,
-                        FromServer::PacketSegment(ipc, *target_id),
-                        DestinationNetwork::ZoneClients,
-                    );
                 }
 
                 let mut actors_now_gimmick_jumping = Vec::new();
@@ -477,6 +453,52 @@ fn server_logic_tick(data: Arc<Mutex<WorldServer>>, network: Arc<Mutex<NetworkSt
 
                     // Find the ClientState for this player.
                     let mut network = network.lock();
+
+                    if let Some(haters) = haters.get(id) {
+                        let mut list: Vec<Hater> = haters
+                            .iter()
+                            .map(|actor_id| Hater {
+                                actor_id: *actor_id,
+                                enmity: 100,
+                            })
+                            .collect();
+                        list.truncate(32);
+                        let ipc =
+                            ServerZoneIpcSegment::new(ServerZoneIpcData::HaterList(HaterList {
+                                count: haters.len() as u32,
+                                list,
+                            }));
+                        network.send_to_by_actor_id(
+                            *id,
+                            FromServer::PacketSegment(ipc, *id),
+                            DestinationNetwork::ZoneClients,
+                        );
+                    } else {
+                        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::HaterList(
+                            HaterList::default(),
+                        ));
+                        network.send_to_by_actor_id(
+                            *id,
+                            FromServer::PacketSegment(ipc, *id),
+                            DestinationNetwork::ZoneClients,
+                        );
+                    }
+
+                    // TODO: send info for party
+                    let ipc =
+                        ServerZoneIpcSegment::new(ServerZoneIpcData::EnmityList(EnmityList {
+                            count: 1,
+                            list: vec![PlayerEnmity {
+                                actor_id: *id,
+                                enmity: 100,
+                            }],
+                        }));
+                    network.send_to_by_actor_id(
+                        *id,
+                        FromServer::PacketSegment(ipc, *id),
+                        DestinationNetwork::ZoneClients,
+                    );
+
                     let Some((handle, state)) = network.get_by_actor_mut(*id) else {
                         continue;
                     };

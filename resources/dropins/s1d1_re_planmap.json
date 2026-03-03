@@ -6,128 +6,14 @@
             "objects": [
                 {
                     "data": {
+                        "aggression_mode": 3,
                         "base_id": 1038,
+                        "gimmick_id": 0,
                         "hp": 905,
                         "level": 15,
-                        "name_id": 1210,
-                        "nonpop": false,
-                        "type": "battle_npc"
-                    },
-                    "instance_id": 3725818,
-                    "position": {
-                        "x": 271.45361328125,
-                        "y": 45.50471115112305,
-                        "z": -200.0756072998047
-                    },
-                    "rotation": 0.8628294467926025
-                },
-                {
-                    "data": {
-                        "base_id": 1037,
-                        "hp": 905,
-                        "level": 15,
-                        "name_id": 38,
-                        "nonpop": false,
-                        "type": "battle_npc"
-                    },
-                    "instance_id": 3725425,
-                    "position": {
-                        "x": 263.5542907714844,
-                        "y": 46.45505905151367,
-                        "z": -196.80780029296875
-                    },
-                    "rotation": 1.7195708751678467
-                },
-                {
-                    "data": {
-                        "base_id": 1037,
-                        "hp": 905,
-                        "level": 15,
-                        "name_id": 38,
-                        "nonpop": false,
-                        "type": "battle_npc"
-                    },
-                    "instance_id": 3725423,
-                    "position": {
-                        "x": 267.4219970703125,
-                        "y": 45.72602844238281,
-                        "z": -206.63690185546875
-                    },
-                    "rotation": 0.2494194507598877
-                },
-                {
-                    "data": {
-                        "base_id": 1037,
-                        "hp": 905,
-                        "level": 15,
-                        "name_id": 38,
-                        "nonpop": false,
-                        "type": "battle_npc"
-                    },
-                    "instance_id": 3725392,
-                    "position": {
-                        "x": 302.0082092285156,
-                        "y": 47.155479431152344,
-                        "z": -168.97059631347656
-                    },
-                    "rotation": 1.310950517654419
-                },
-                {
-                    "data": {
-                        "base_id": 1037,
-                        "hp": 905,
-                        "level": 15,
-                        "name_id": 38,
-                        "nonpop": false,
-                        "type": "battle_npc"
-                    },
-                    "instance_id": 3726787,
-                    "position": {
-                        "x": 310.2760925292969,
-                        "y": 46.441951751708984,
-                        "z": -163.62159729003906
-                    },
-                    "rotation": 0.594857931137085
-                },
-                {
-                    "data": {
-                        "base_id": 1037,
-                        "hp": 905,
-                        "level": 15,
-                        "name_id": 38,
-                        "nonpop": false,
-                        "type": "battle_npc"
-                    },
-                    "instance_id": 3725390,
-                    "position": {
-                        "x": 329.48260498046875,
-                        "y": 44.4528694152832,
-                        "z": -210.4228973388672
-                    },
-                    "rotation": -2.994232416152954
-                },
-                {
-                    "data": {
-                        "base_id": 1037,
-                        "hp": 905,
-                        "level": 15,
-                        "name_id": 38,
-                        "nonpop": false,
-                        "type": "battle_npc"
-                    },
-                    "instance_id": 3725388,
-                    "position": {
-                        "x": 324.3785095214844,
-                        "y": 43.693790435791016,
-                        "z": -222.83790588378906
-                    },
-                    "rotation": 1.1299378871917725
-                },
-                {
-                    "data": {
-                        "base_id": 1038,
-                        "hp": 905,
-                        "level": 15,
+                        "link_family": 0,
+                        "link_range": 50,
+                        "max_links": 0,
                         "name_id": 1210,
                         "nonpop": true,
                         "type": "battle_npc"
@@ -142,9 +28,14 @@
                 },
                 {
                     "data": {
+                        "aggression_mode": 3,
                         "base_id": 1038,
+                        "gimmick_id": 0,
                         "hp": 905,
                         "level": 15,
+                        "link_family": 0,
+                        "link_range": 50,
+                        "max_links": 0,
                         "name_id": 1210,
                         "nonpop": true,
                         "type": "battle_npc"
@@ -159,60 +50,212 @@
                 },
                 {
                     "data": {
-                        "base_id": 411,
-                        "hp": 3828,
+                        "aggression_mode": 3,
+                        "base_id": 1038,
+                        "gimmick_id": 0,
+                        "hp": 905,
                         "level": 15,
-                        "name_id": 1204,
-                        "nonpop": true,
+                        "link_family": 102,
+                        "link_range": 50,
+                        "max_links": 2,
+                        "name_id": 1210,
+                        "nonpop": false,
                         "type": "battle_npc"
                     },
-                    "instance_id": 4035011,
+                    "instance_id": 3725818,
                     "position": {
-                        "x": 68.71401977539062,
-                        "y": 31.262910842895508,
-                        "z": -44.23646926879883
+                        "x": 271.45361328125,
+                        "y": 45.50471115112305,
+                        "z": -200.0756072998047
                     },
-                    "rotation": -0.29735708236694336
+                    "rotation": 0.8628294467926025
                 },
                 {
                     "data": {
-                        "base_id": 1038,
+                        "aggression_mode": 3,
+                        "base_id": 1037,
+                        "gimmick_id": 0,
                         "hp": 905,
                         "level": 15,
+                        "link_family": 102,
+                        "link_range": 50,
+                        "max_links": 2,
+                        "name_id": 38,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3725425,
+                    "position": {
+                        "x": 263.5542907714844,
+                        "y": 46.45505905151367,
+                        "z": -196.80780029296875
+                    },
+                    "rotation": 1.7195708751678467
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 1037,
+                        "gimmick_id": 0,
+                        "hp": 905,
+                        "level": 15,
+                        "link_family": 102,
+                        "link_range": 50,
+                        "max_links": 2,
+                        "name_id": 38,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3725423,
+                    "position": {
+                        "x": 267.4219970703125,
+                        "y": 45.72602844238281,
+                        "z": -206.63690185546875
+                    },
+                    "rotation": 0.2494194507598877
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 1037,
+                        "gimmick_id": 0,
+                        "hp": 905,
+                        "level": 15,
+                        "link_family": 101,
+                        "link_range": 50,
+                        "max_links": 2,
+                        "name_id": 38,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3725392,
+                    "position": {
+                        "x": 302.0082092285156,
+                        "y": 47.155479431152344,
+                        "z": -168.97059631347656
+                    },
+                    "rotation": 1.310950517654419
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 1037,
+                        "gimmick_id": 0,
+                        "hp": 905,
+                        "level": 15,
+                        "link_family": 101,
+                        "link_range": 50,
+                        "max_links": 2,
+                        "name_id": 38,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3726787,
+                    "position": {
+                        "x": 310.2760925292969,
+                        "y": 46.441951751708984,
+                        "z": -163.62159729003906
+                    },
+                    "rotation": 0.594857931137085
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 1037,
+                        "gimmick_id": 0,
+                        "hp": 905,
+                        "level": 15,
+                        "link_family": 100,
+                        "link_range": 50,
+                        "max_links": 1,
+                        "name_id": 38,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3725390,
+                    "position": {
+                        "x": 329.48260498046875,
+                        "y": 44.4528694152832,
+                        "z": -210.4228973388672
+                    },
+                    "rotation": -2.994232416152954
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 1037,
+                        "gimmick_id": 0,
+                        "hp": 905,
+                        "level": 15,
+                        "link_family": 100,
+                        "link_range": 50,
+                        "max_links": 1,
+                        "name_id": 38,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3725388,
+                    "position": {
+                        "x": 324.3785095214844,
+                        "y": 43.693790435791016,
+                        "z": -222.83790588378906
+                    },
+                    "rotation": 1.1299378871917725
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 1038,
+                        "gimmick_id": 0,
+                        "hp": 905,
+                        "level": 15,
+                        "link_family": 103,
+                        "link_range": 50,
+                        "max_links": 1,
                         "name_id": 1210,
                         "nonpop": false,
                         "type": "battle_npc"
                     },
                     "instance_id": 3725822,
                     "position": {
-                        "x": 225.78619384765625,
-                        "y": 42.22518539428711,
-                        "z": -182.14263916015625
+                        "x": 230.15501403808594,
+                        "y": 40.99500274658203,
+                        "z": -171.9149627685547
                     },
-                    "rotation": -2.824629068374634
+                    "rotation": -2.6223323345184326
                 },
                 {
                     "data": {
+                        "aggression_mode": 3,
                         "base_id": 1038,
+                        "gimmick_id": 0,
                         "hp": 905,
                         "level": 15,
+                        "link_family": 103,
+                        "link_range": 50,
+                        "max_links": 1,
                         "name_id": 1210,
                         "nonpop": false,
                         "type": "battle_npc"
                     },
                     "instance_id": 3725820,
                     "position": {
-                        "x": 226.48248291015625,
-                        "y": 44.00062942504883,
-                        "z": -188.87351989746094
+                        "x": 228.89842224121094,
+                        "y": 44.726070404052734,
+                        "z": -192
                     },
-                    "rotation": -2.4705617427825928
+                    "rotation": -1.5561994314193726
                 },
                 {
                     "data": {
+                        "aggression_mode": 3,
                         "base_id": 1038,
+                        "gimmick_id": 0,
                         "hp": 905,
                         "level": 15,
+                        "link_family": 104,
+                        "link_range": 50,
+                        "max_links": 1,
                         "name_id": 1210,
                         "nonpop": false,
                         "type": "battle_npc"
@@ -227,9 +270,58 @@
                 },
                 {
                     "data": {
+                        "aggression_mode": 3,
+                        "base_id": 942,
+                        "gimmick_id": 0,
+                        "hp": 80,
+                        "level": 12,
+                        "link_family": 0,
+                        "link_range": 20,
+                        "max_links": 4,
+                        "name_id": 1209,
+                        "nonpop": true,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3281765,
+                    "position": {
+                        "x": 194.30589294433594,
+                        "y": 32.337589263916016,
+                        "z": -123.58749389648438
+                    },
+                    "rotation": 0.9574582576751709
+                },
+                {
+                    "data": {
+                        "aggression_mode": 1,
+                        "base_id": 269,
+                        "gimmick_id": 4208408,
+                        "hp": 319,
+                        "level": 15,
+                        "link_family": 0,
+                        "link_range": 20,
+                        "max_links": 0,
+                        "name_id": 1208,
+                        "nonpop": true,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3637470,
+                    "position": {
+                        "x": 181.6708984375,
+                        "y": 32.81264114379883,
+                        "z": -127.66549682617188
+                    },
+                    "rotation": -4.792213439941406e-05
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
                         "base_id": 1039,
+                        "gimmick_id": 0,
                         "hp": 905,
                         "level": 15,
+                        "link_family": 104,
+                        "link_range": 50,
+                        "max_links": 1,
                         "name_id": 1211,
                         "nonpop": false,
                         "type": "battle_npc"
@@ -244,9 +336,36 @@
                 },
                 {
                     "data": {
+                        "aggression_mode": 1,
+                        "base_id": 269,
+                        "gimmick_id": 4208409,
+                        "hp": 319,
+                        "level": 15,
+                        "link_family": 0,
+                        "link_range": 20,
+                        "max_links": 0,
+                        "name_id": 1208,
+                        "nonpop": true,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3637472,
+                    "position": {
+                        "x": 166.0590057373047,
+                        "y": 31.40196990966797,
+                        "z": -127.81410217285156
+                    },
+                    "rotation": -4.792213439941406e-05
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
                         "base_id": 1039,
+                        "gimmick_id": 0,
                         "hp": 905,
                         "level": 15,
+                        "link_family": 105,
+                        "link_range": 50,
+                        "max_links": 2,
                         "name_id": 1211,
                         "nonpop": false,
                         "type": "battle_npc"
@@ -261,9 +380,14 @@
                 },
                 {
                     "data": {
+                        "aggression_mode": 3,
                         "base_id": 1039,
+                        "gimmick_id": 0,
                         "hp": 905,
                         "level": 15,
+                        "link_family": 105,
+                        "link_range": 50,
+                        "max_links": 2,
                         "name_id": 1211,
                         "nonpop": false,
                         "type": "battle_npc"
@@ -274,13 +398,40 @@
                         "y": 28.5598201751709,
                         "z": -97.14627838134766
                     },
-                    "rotation": -0.00004792213439941406
+                    "rotation": -4.792213439941406e-05
                 },
                 {
                     "data": {
+                        "aggression_mode": 1,
+                        "base_id": 269,
+                        "gimmick_id": 4208412,
+                        "hp": 319,
+                        "level": 15,
+                        "link_family": 0,
+                        "link_range": 20,
+                        "max_links": 0,
+                        "name_id": 1208,
+                        "nonpop": true,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3637475,
+                    "position": {
+                        "x": 126.05709838867188,
+                        "y": 29.60158920288086,
+                        "z": -99.21478271484375
+                    },
+                    "rotation": -4.792213439941406e-05
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
                         "base_id": 1038,
+                        "gimmick_id": 0,
                         "hp": 905,
                         "level": 15,
+                        "link_family": 106,
+                        "link_range": 50,
+                        "max_links": 2,
                         "name_id": 1210,
                         "nonpop": false,
                         "type": "battle_npc"
@@ -295,26 +446,58 @@
                 },
                 {
                     "data": {
+                        "aggression_mode": 3,
                         "base_id": 942,
+                        "gimmick_id": 0,
                         "hp": 24,
                         "level": 12,
+                        "link_family": 0,
+                        "link_range": 20,
+                        "max_links": 4,
                         "name_id": 1209,
                         "nonpop": false,
                         "type": "battle_npc"
                     },
                     "instance_id": 4191890,
                     "position": {
-                        "x": 154.84536743164062,
-                        "y": 29.55311393737793,
-                        "z": -72.61605834960938
+                        "x": 156.2510223388672,
+                        "y": 28.540929794311523,
+                        "z": -78.02235412597656
                     },
-                    "rotation": -0.0031158924102783203
+                    "rotation": 1.7337605953216553
                 },
                 {
                     "data": {
+                        "aggression_mode": 1,
+                        "base_id": 269,
+                        "gimmick_id": 4208410,
+                        "hp": 319,
+                        "level": 15,
+                        "link_family": 0,
+                        "link_range": 20,
+                        "max_links": 0,
+                        "name_id": 1208,
+                        "nonpop": true,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3637473,
+                    "position": {
+                        "x": 158.23849487304688,
+                        "y": 29.259870529174805,
+                        "z": -76.40255737304688
+                    },
+                    "rotation": -4.792213439941406e-05
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
                         "base_id": 1039,
+                        "gimmick_id": 0,
                         "hp": 905,
                         "level": 15,
+                        "link_family": 106,
+                        "link_range": 50,
+                        "max_links": 2,
                         "name_id": 1211,
                         "nonpop": false,
                         "type": "battle_npc"
@@ -329,9 +512,14 @@
                 },
                 {
                     "data": {
+                        "aggression_mode": 3,
                         "base_id": 1040,
+                        "gimmick_id": 0,
                         "hp": 905,
                         "level": 15,
+                        "link_family": 106,
+                        "link_range": 50,
+                        "max_links": 2,
                         "name_id": 1212,
                         "nonpop": false,
                         "type": "battle_npc"
@@ -346,122 +534,1565 @@
                 },
                 {
                     "data": {
-                        "base_id": 942,
-                        "hp": 24,
-                        "level": 12,
-                        "name_id": 1209,
-                        "nonpop": false,
+                        "aggression_mode": 1,
+                        "base_id": 269,
+                        "gimmick_id": 4208411,
+                        "hp": 319,
+                        "level": 15,
+                        "link_family": 0,
+                        "link_range": 20,
+                        "max_links": 0,
+                        "name_id": 1208,
+                        "nonpop": true,
                         "type": "battle_npc"
                     },
-                    "instance_id": 4191892,
+                    "instance_id": 3637474,
                     "position": {
-                        "x": 123.99447631835938,
-                        "y": 27.998926162719727,
-                        "z": -56.14239501953125
+                        "x": 125.69229888916016,
+                        "y": 29.951129913330078,
+                        "z": -52.476829528808594
                     },
-                    "rotation": 0.23666810989379883
+                    "rotation": -4.792213439941406e-05
                 },
                 {
                     "data": {
+                        "aggression_mode": 3,
                         "base_id": 942,
+                        "gimmick_id": 0,
                         "hp": 24,
                         "level": 12,
+                        "link_family": 0,
+                        "link_range": 20,
+                        "max_links": 4,
                         "name_id": 1209,
                         "nonpop": false,
                         "type": "battle_npc"
                     },
                     "instance_id": 4191893,
                     "position": {
-                        "x": 122.70991516113281,
-                        "y": 27.714609146118164,
-                        "z": -58.79776382446289
+                        "x": 130.800537109375,
+                        "y": 27.813199996948242,
+                        "z": -57.84995651245117
                     },
-                    "rotation": -1.8836133480072021
+                    "rotation": 2.3003833293914795
                 },
                 {
                     "data": {
+                        "aggression_mode": 3,
                         "base_id": 942,
+                        "gimmick_id": 0,
                         "hp": 24,
                         "level": 12,
+                        "link_family": 0,
+                        "link_range": 20,
+                        "max_links": 4,
+                        "name_id": 1209,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 4191892,
+                    "position": {
+                        "x": 128.79022216796875,
+                        "y": 27.95753288269043,
+                        "z": -56.581024169921875
+                    },
+                    "rotation": 1.557445764541626
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 942,
+                        "gimmick_id": 0,
+                        "hp": 24,
+                        "level": 12,
+                        "link_family": 0,
+                        "link_range": 20,
+                        "max_links": 4,
                         "name_id": 1209,
                         "nonpop": false,
                         "type": "battle_npc"
                     },
                     "instance_id": 4191894,
                     "position": {
-                        "x": 99.7283935546875,
-                        "y": 26.3901424407959,
-                        "z": -61.629356384277344
+                        "x": 103.73246002197266,
+                        "y": 26.17500114440918,
+                        "z": -59.472660064697266
                     },
-                    "rotation": -1.8169801235198975
+                    "rotation": -1.4748971462249756
                 },
                 {
                     "data": {
+                        "aggression_mode": 1,
+                        "base_id": 269,
+                        "gimmick_id": 4208413,
+                        "hp": 319,
+                        "level": 15,
+                        "link_family": 0,
+                        "link_range": 20,
+                        "max_links": 0,
+                        "name_id": 1208,
+                        "nonpop": true,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3637476,
+                    "position": {
+                        "x": 97.4191665649414,
+                        "y": 27.753549575805664,
+                        "z": -69.75306701660156
+                    },
+                    "rotation": -4.792213439941406e-05
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
                         "base_id": 942,
+                        "gimmick_id": 0,
                         "hp": 24,
                         "level": 12,
+                        "link_family": 0,
+                        "link_range": 20,
+                        "max_links": 4,
+                        "name_id": 1209,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 4191895,
+                    "position": {
+                        "x": 102.48922729492188,
+                        "y": 26.174999237060547,
+                        "z": -57.2286491394043
+                    },
+                    "rotation": -0.5280330181121826
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 942,
+                        "gimmick_id": 0,
+                        "hp": 24,
+                        "level": 12,
+                        "link_family": 0,
+                        "link_range": 20,
+                        "max_links": 4,
                         "name_id": 1209,
                         "nonpop": false,
                         "type": "battle_npc"
                     },
                     "instance_id": 4191897,
                     "position": {
-                        "x": 101.25474548339844,
-                        "y": 27.067365646362305,
-                        "z": -66.86424255371094
+                        "x": 101.83419799804688,
+                        "y": 27.118663787841797,
+                        "z": -65.27217864990234
                     },
-                    "rotation": -1.1749035120010376
+                    "rotation": -0.9051105976104736
                 },
                 {
                     "data": {
+                        "aggression_mode": 3,
                         "base_id": 942,
+                        "gimmick_id": 0,
                         "hp": 24,
                         "level": 12,
+                        "link_family": 0,
+                        "link_range": 20,
+                        "max_links": 4,
                         "name_id": 1209,
                         "nonpop": false,
                         "type": "battle_npc"
                     },
                     "instance_id": 4191896,
                     "position": {
-                        "x": 97.65873718261719,
-                        "y": 26.58903694152832,
-                        "z": -66.00894927978516
+                        "x": 98.25074005126953,
+                        "y": 26.713207244873047,
+                        "z": -66.71434783935547
                     },
-                    "rotation": -2.980905771255493
+                    "rotation": -1.6297357082366943
                 },
                 {
                     "data": {
+                        "aggression_mode": 3,
                         "base_id": 982,
+                        "gimmick_id": 0,
                         "hp": 905,
                         "level": 15,
+                        "link_family": 150,
+                        "link_range": 50,
+                        "max_links": 2,
                         "name_id": 344,
                         "nonpop": false,
                         "type": "battle_npc"
                     },
                     "instance_id": 3981889,
                     "position": {
-                        "x": 22.569692611694336,
-                        "y": 24.916963577270508,
-                        "z": -2.67830491065979
+                        "x": 26.148460388183594,
+                        "y": 25.214324951171875,
+                        "z": -4.231415271759033
+                    },
+                    "rotation": 2.0223448276519775
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 1065,
+                        "gimmick_id": 0,
+                        "hp": 905,
+                        "level": 15,
+                        "link_family": 150,
+                        "link_range": 50,
+                        "max_links": 2,
+                        "name_id": 1205,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3982024,
+                    "position": {
+                        "x": 22.790733337402344,
+                        "y": 25.141122817993164,
+                        "z": -1.763131856918335
                     },
                     "rotation": 1.880066156387329
                 },
                 {
                     "data": {
+                        "aggression_mode": 3,
                         "base_id": 1065,
+                        "gimmick_id": 0,
                         "hp": 905,
                         "level": 15,
+                        "link_family": 150,
+                        "link_range": 50,
+                        "max_links": 2,
                         "name_id": 1205,
                         "nonpop": false,
                         "type": "battle_npc"
                     },
                     "instance_id": 3982023,
                     "position": {
-                        "x": 17.70464324951172,
-                        "y": 25.03543472290039,
-                        "z": -0.8693382740020752
+                        "x": 18.074222564697266,
+                        "y": 25.032024383544922,
+                        "z": -0.987441897392273
                     },
                     "rotation": 1.880066156387329
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 411,
+                        "gimmick_id": 0,
+                        "hp": 3828,
+                        "level": 15,
+                        "link_family": 0,
+                        "link_range": 20,
+                        "max_links": 4,
+                        "name_id": 1204,
+                        "nonpop": true,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 4035011,
+                    "position": {
+                        "x": 68.71401977539062,
+                        "y": 31.262910842895508,
+                        "z": -44.23646926879883
+                    },
+                    "rotation": -0.29735708236694336
+                },
+                {
+                    "data": {
+                        "aggression_mode": 1,
+                        "base_id": 1436,
+                        "gimmick_id": 0,
+                        "hp": 1320,
+                        "level": 1,
+                        "link_family": 0,
+                        "link_range": 20,
+                        "max_links": 0,
+                        "name_id": 108,
+                        "nonpop": true,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 4192074,
+                    "position": {
+                        "x": -33.69226837158203,
+                        "y": 24.716360092163086,
+                        "z": 59.03998947143555
+                    },
+                    "rotation": 1.104243516921997
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 1006,
+                        "gimmick_id": 0,
+                        "hp": 905,
+                        "level": 15,
+                        "link_family": 151,
+                        "link_range": 50,
+                        "max_links": 2,
+                        "name_id": 342,
+                        "nonpop": true,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3981887,
+                    "position": {
+                        "x": -30.289249420166016,
+                        "y": 23.421920776367188,
+                        "z": 55.7105712890625
+                    },
+                    "rotation": 1.9149644374847412
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 1006,
+                        "gimmick_id": 0,
+                        "hp": 905,
+                        "level": 15,
+                        "link_family": 151,
+                        "link_range": 50,
+                        "max_links": 2,
+                        "name_id": 342,
+                        "nonpop": true,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3981888,
+                    "position": {
+                        "x": -27.81719970703125,
+                        "y": 23.24888038635254,
+                        "z": 60.746089935302734
+                    },
+                    "rotation": 2.1220548152923584
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 413,
+                        "gimmick_id": 0,
+                        "hp": 4785,
+                        "level": 15,
+                        "link_family": 151,
+                        "link_range": 50,
+                        "max_links": 2,
+                        "name_id": 1382,
+                        "nonpop": true,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3988325,
+                    "position": {
+                        "x": -31.510839462280273,
+                        "y": 23.739280700683594,
+                        "z": 58.97142028808594
+                    },
+                    "rotation": 2.017359495162964
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 1319,
+                        "gimmick_id": 0,
+                        "hp": 905,
+                        "level": 15,
+                        "link_family": 170,
+                        "link_range": 50,
+                        "max_links": 2,
+                        "name_id": 344,
+                        "nonpop": true,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 4142091,
+                    "position": {
+                        "x": -8.59088134765625,
+                        "y": 20.0960693359375,
+                        "z": 111.34510040283203
+                    },
+                    "rotation": -2.8944263458251953
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 1323,
+                        "gimmick_id": 0,
+                        "hp": 905,
+                        "level": 15,
+                        "link_family": 171,
+                        "link_range": 50,
+                        "max_links": 2,
+                        "name_id": 344,
+                        "nonpop": true,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 4142096,
+                    "position": {
+                        "x": -16.006710052490234,
+                        "y": 20.0960693359375,
+                        "z": 107.25559997558594
+                    },
+                    "rotation": 1.7167904376983643
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 1321,
+                        "gimmick_id": 0,
+                        "hp": 905,
+                        "level": 15,
+                        "link_family": 171,
+                        "link_range": 50,
+                        "max_links": 2,
+                        "name_id": 344,
+                        "nonpop": true,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 4142095,
+                    "position": {
+                        "x": -7.339661121368408,
+                        "y": 20.0960693359375,
+                        "z": 106.64530181884766
+                    },
+                    "rotation": -1.1620562076568604
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 1320,
+                        "gimmick_id": 0,
+                        "hp": 994,
+                        "level": 15,
+                        "link_family": 171,
+                        "link_range": 50,
+                        "max_links": 2,
+                        "name_id": 346,
+                        "nonpop": true,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 4142094,
+                    "position": {
+                        "x": -14.908140182495117,
+                        "y": 20.0960693359375,
+                        "z": 105.82129669189453
+                    },
+                    "rotation": 1.3587920665740967
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 1034,
+                        "gimmick_id": 0,
+                        "hp": 905,
+                        "level": 15,
+                        "link_family": 159,
+                        "link_range": 50,
+                        "max_links": 1,
+                        "name_id": 344,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3981884,
+                    "position": {
+                        "x": -97.96421813964844,
+                        "y": 19.5772705078125,
+                        "z": 65.21286010742188
+                    },
+                    "rotation": -1.3333853483200073
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 1066,
+                        "gimmick_id": 0,
+                        "hp": 905,
+                        "level": 15,
+                        "link_family": 156,
+                        "link_range": 50,
+                        "max_links": 1,
+                        "name_id": 1205,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 4106641,
+                    "position": {
+                        "x": -101.7822036743164,
+                        "y": 13.900010108947754,
+                        "z": 110.39730072021484
+                    },
+                    "rotation": 0.05862760543823242
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 1036,
+                        "gimmick_id": 0,
+                        "hp": 905,
+                        "level": 15,
+                        "link_family": 159,
+                        "link_range": 50,
+                        "max_links": 1,
+                        "name_id": 348,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 4056179,
+                    "position": {
+                        "x": -101.0770034790039,
+                        "y": 19.5772705078125,
+                        "z": 66.32250213623047
+                    },
+                    "rotation": 1.9485208988189697
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 1322,
+                        "gimmick_id": 0,
+                        "hp": 905,
+                        "level": 15,
+                        "link_family": 170,
+                        "link_range": 50,
+                        "max_links": 2,
+                        "name_id": 344,
+                        "nonpop": true,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 4142092,
+                    "position": {
+                        "x": -9.72003173828125,
+                        "y": 20.0960693359375,
+                        "z": 119.40170288085938
+                    },
+                    "rotation": 1.3075945377349854
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 981,
+                        "gimmick_id": 0,
+                        "hp": 994,
+                        "level": 15,
+                        "link_family": 153,
+                        "link_range": 50,
+                        "max_links": 2,
+                        "name_id": 346,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3981862,
+                    "position": {
+                        "x": -89.21954345703125,
+                        "y": 15.548890113830566,
+                        "z": 119.127197265625
+                    },
+                    "rotation": 0.6363720893859863
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 1036,
+                        "gimmick_id": 0,
+                        "hp": 905,
+                        "level": 15,
+                        "link_family": 156,
+                        "link_range": 50,
+                        "max_links": 1,
+                        "name_id": 348,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 4106354,
+                    "position": {
+                        "x": -101.85970306396484,
+                        "y": 13.900010108947754,
+                        "z": 112.15619659423828
+                    },
+                    "rotation": 2.898740530014038
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 1318,
+                        "gimmick_id": 0,
+                        "hp": 994,
+                        "level": 15,
+                        "link_family": 170,
+                        "link_range": 50,
+                        "max_links": 2,
+                        "name_id": 346,
+                        "nonpop": true,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 4138739,
+                    "position": {
+                        "x": -7.217589855194092,
+                        "y": 20.0960693359375,
+                        "z": 120.74459838867188
+                    },
+                    "rotation": -1.2232246398925781
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 1036,
+                        "gimmick_id": 0,
+                        "hp": 905,
+                        "level": 15,
+                        "link_family": 153,
+                        "link_range": 50,
+                        "max_links": 2,
+                        "name_id": 348,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3981860,
+                    "position": {
+                        "x": -89.86041259765625,
+                        "y": 15.548890113830566,
+                        "z": 122.20950317382812
+                    },
+                    "rotation": 2.854158639907837
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 1035,
+                        "gimmick_id": 0,
+                        "hp": 905,
+                        "level": 15,
+                        "link_family": 153,
+                        "link_range": 50,
+                        "max_links": 2,
+                        "name_id": 342,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3981865,
+                    "position": {
+                        "x": -89.23751831054688,
+                        "y": 15.60000991821289,
+                        "z": 128.54559326171875
+                    },
+                    "rotation": 0.40531277656555176
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 1069,
+                        "gimmick_id": 0,
+                        "hp": 994,
+                        "level": 15,
+                        "link_family": 160,
+                        "link_range": 50,
+                        "max_links": 1,
+                        "name_id": 346,
+                        "nonpop": true,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3981878,
+                    "position": {
+                        "x": -95.56173706054688,
+                        "y": 13.870360374450684,
+                        "z": 147.65029907226562
+                    },
+                    "rotation": 2.9233806133270264
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 983,
+                        "gimmick_id": 0,
+                        "hp": 905,
+                        "level": 15,
+                        "link_family": 161,
+                        "link_range": 50,
+                        "max_links": 1,
+                        "name_id": 342,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3981843,
+                    "position": {
+                        "x": -128.58779907226562,
+                        "y": 15.79302978515625,
+                        "z": 152.78860473632812
+                    },
+                    "rotation": 1.8707659244537354
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 1066,
+                        "gimmick_id": 0,
+                        "hp": 905,
+                        "level": 15,
+                        "link_family": 160,
+                        "link_range": 50,
+                        "max_links": 1,
+                        "name_id": 1205,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 4106638,
+                    "position": {
+                        "x": -117.68610382080078,
+                        "y": 15.69677734375,
+                        "z": 154.5141143798828
+                    },
+                    "rotation": -1.8352922201156616
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 984,
+                        "gimmick_id": 0,
+                        "hp": 905,
+                        "level": 15,
+                        "link_family": 158,
+                        "link_range": 50,
+                        "max_links": 1,
+                        "name_id": 348,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 4056165,
+                    "position": {
+                        "x": -37.895259857177734,
+                        "y": 15.988619804382324,
+                        "z": 160.0561981201172
+                    },
+                    "rotation": -1.3300294876098633
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 985,
+                        "gimmick_id": 0,
+                        "hp": 994,
+                        "level": 15,
+                        "link_family": 158,
+                        "link_range": 50,
+                        "max_links": 1,
+                        "name_id": 346,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 4056166,
+                    "position": {
+                        "x": -40.062068939208984,
+                        "y": 16.03782081604004,
+                        "z": 160.88009643554688
+                    },
+                    "rotation": 2.94245982170105
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 983,
+                        "gimmick_id": 0,
+                        "hp": 905,
+                        "level": 15,
+                        "link_family": 161,
+                        "link_range": 50,
+                        "max_links": 1,
+                        "name_id": 342,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3981864,
+                    "position": {
+                        "x": -128.3437042236328,
+                        "y": 16.03717041015625,
+                        "z": 157.9156036376953
+                    },
+                    "rotation": 2.3878214359283447
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 983,
+                        "gimmick_id": 0,
+                        "hp": 905,
+                        "level": 15,
+                        "link_family": 162,
+                        "link_range": 50,
+                        "max_links": 1,
+                        "name_id": 342,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3981886,
+                    "position": {
+                        "x": -93.1868896484375,
+                        "y": 19.302610397338867,
+                        "z": 168.38330078125
+                    },
+                    "rotation": -3.0502235889434814
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 983,
+                        "gimmick_id": 0,
+                        "hp": 905,
+                        "level": 15,
+                        "link_family": 162,
+                        "link_range": 50,
+                        "max_links": 1,
+                        "name_id": 342,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3981883,
+                    "position": {
+                        "x": -97.48992919921875,
+                        "y": 19.668819427490234,
+                        "z": 170.00070190429688
+                    },
+                    "rotation": 2.7898266315460205
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 987,
+                        "gimmick_id": 0,
+                        "hp": 905,
+                        "level": 15,
+                        "link_family": 164,
+                        "link_range": 50,
+                        "max_links": 1,
+                        "name_id": 342,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 4056170,
+                    "position": {
+                        "x": -157.3968048095703,
+                        "y": 19.5772705078125,
+                        "z": 129.89999389648438
+                    },
+                    "rotation": -2.6320157051086426
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 988,
+                        "gimmick_id": 0,
+                        "hp": 905,
+                        "level": 15,
+                        "link_family": 164,
+                        "link_range": 50,
+                        "max_links": 1,
+                        "name_id": 348,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 4056171,
+                    "position": {
+                        "x": -158.58700561523438,
+                        "y": 19.302610397338867,
+                        "z": 126.4208984375
+                    },
+                    "rotation": 1.210664987564087
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 982,
+                        "gimmick_id": 0,
+                        "hp": 905,
+                        "level": 15,
+                        "link_family": 163,
+                        "link_range": 50,
+                        "max_links": 1,
+                        "name_id": 344,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 4056186,
+                    "position": {
+                        "x": -157.9156036376953,
+                        "y": 16.128719329833984,
+                        "z": 92.85106658935547
+                    },
+                    "rotation": -2.9832067489624023
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 1036,
+                        "gimmick_id": 0,
+                        "hp": 905,
+                        "level": 15,
+                        "link_family": 163,
+                        "link_range": 50,
+                        "max_links": 1,
+                        "name_id": 348,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 4056188,
+                    "position": {
+                        "x": -163.9582977294922,
+                        "y": 16.03717041015625,
+                        "z": 96.51331329345703
+                    },
+                    "rotation": 1.1922571659088135
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 412,
+                        "gimmick_id": 0,
+                        "hp": 1811,
+                        "level": 15,
+                        "link_family": 0,
+                        "link_range": 20,
+                        "max_links": 4,
+                        "name_id": 342,
+                        "nonpop": true,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3282344,
+                    "position": {
+                        "x": -95.02752685546875,
+                        "y": 19.999879837036133,
+                        "z": 194.59230041503906
+                    },
+                    "rotation": -3.1021881103515625
+                },
+                {
+                    "data": {
+                        "aggression_mode": 1,
+                        "base_id": 1436,
+                        "gimmick_id": 0,
+                        "hp": 1320,
+                        "level": 1,
+                        "link_family": 0,
+                        "link_range": 20,
+                        "max_links": 0,
+                        "name_id": 108,
+                        "nonpop": true,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 4192083,
+                    "position": {
+                        "x": -186.88909912109375,
+                        "y": 8.390894889831543,
+                        "z": 248.1304931640625
+                    },
+                    "rotation": 1.880737066268921
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 1006,
+                        "gimmick_id": 0,
+                        "hp": 905,
+                        "level": 15,
+                        "link_family": 180,
+                        "link_range": 50,
+                        "max_links": 2,
+                        "name_id": 342,
+                        "nonpop": true,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3978797,
+                    "position": {
+                        "x": -180.102294921875,
+                        "y": 6.118834972381592,
+                        "z": 246.29580688476562
+                    },
+                    "rotation": 2.5582873821258545
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 1006,
+                        "gimmick_id": 0,
+                        "hp": 905,
+                        "level": 15,
+                        "link_family": 180,
+                        "link_range": 50,
+                        "max_links": 2,
+                        "name_id": 342,
+                        "nonpop": true,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3988324,
+                    "position": {
+                        "x": -185.13780212402344,
+                        "y": 6.5155029296875,
+                        "z": 242.0843963623047
+                    },
+                    "rotation": 2.5582873821258545
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 416,
+                        "gimmick_id": 0,
+                        "hp": 4785,
+                        "level": 15,
+                        "link_family": 180,
+                        "link_range": 50,
+                        "max_links": 2,
+                        "name_id": 1382,
+                        "nonpop": true,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 4035056,
+                    "position": {
+                        "x": -185.75790405273438,
+                        "y": 6.681275844573975,
+                        "z": 247.76820373535156
+                    },
+                    "rotation": 2.841407537460327
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 415,
+                        "gimmick_id": 0,
+                        "hp": 269,
+                        "level": 15,
+                        "link_family": 181,
+                        "link_range": 20,
+                        "max_links": 4,
+                        "name_id": 1205,
+                        "nonpop": true,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3988323,
+                    "position": {
+                        "x": -128.04852294921875,
+                        "y": 8.163444519042969,
+                        "z": 248.61131286621094
+                    },
+                    "rotation": -2.890974760055542
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 414,
+                        "gimmick_id": 0,
+                        "hp": 269,
+                        "level": 15,
+                        "link_family": 181,
+                        "link_range": 20,
+                        "max_links": 4,
+                        "name_id": 1205,
+                        "nonpop": true,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3988322,
+                    "position": {
+                        "x": -140.1145782470703,
+                        "y": 8.070845603942871,
+                        "z": 256.49224853515625
+                    },
+                    "rotation": -2.4436206817626953
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 414,
+                        "gimmick_id": 0,
+                        "hp": 269,
+                        "level": 15,
+                        "link_family": 181,
+                        "link_range": 20,
+                        "max_links": 4,
+                        "name_id": 1205,
+                        "nonpop": true,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 4087815,
+                    "position": {
+                        "x": -150.04652404785156,
+                        "y": 8.765693664550781,
+                        "z": 258.3813781738281
+                    },
+                    "rotation": 1.570197343826294
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 414,
+                        "gimmick_id": 0,
+                        "hp": 269,
+                        "level": 15,
+                        "link_family": 181,
+                        "link_range": 20,
+                        "max_links": 4,
+                        "name_id": 1205,
+                        "nonpop": true,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 4087814,
+                    "position": {
+                        "x": -128.9696807861328,
+                        "y": 8.805152893066406,
+                        "z": 262.43157958984375
+                    },
+                    "rotation": 0.42180323600769043
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 1036,
+                        "gimmick_id": 0,
+                        "hp": 905,
+                        "level": 15,
+                        "link_family": 200,
+                        "link_range": 50,
+                        "max_links": 2,
+                        "name_id": 348,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3978779,
+                    "position": {
+                        "x": -233.3867950439453,
+                        "y": 5.691527843475342,
+                        "z": 262.10418701171875
+                    },
+                    "rotation": 0.9621560573577881
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 1065,
+                        "gimmick_id": 0,
+                        "hp": 905,
+                        "level": 15,
+                        "link_family": 200,
+                        "link_range": 50,
+                        "max_links": 2,
+                        "name_id": 1205,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 4125433,
+                    "position": {
+                        "x": -240.2700653076172,
+                        "y": 5.811217308044434,
+                        "z": 254.17886352539062
+                    },
+                    "rotation": 1.0373222827911377
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 983,
+                        "gimmick_id": 0,
+                        "hp": 905,
+                        "level": 15,
+                        "link_family": 200,
+                        "link_range": 50,
+                        "max_links": 2,
+                        "name_id": 342,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3978776,
+                    "position": {
+                        "x": -244.79469299316406,
+                        "y": 5.599947929382324,
+                        "z": 254.4102020263672
+                    },
+                    "rotation": 2.495776891708374
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 982,
+                        "gimmick_id": 0,
+                        "hp": 905,
+                        "level": 15,
+                        "link_family": 201,
+                        "link_range": 50,
+                        "max_links": 2,
+                        "name_id": 344,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3978784,
+                    "position": {
+                        "x": -250.59060668945312,
+                        "y": 7.624406814575195,
+                        "z": 273.8326110839844
+                    },
+                    "rotation": 1.9221551418304443
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 1035,
+                        "gimmick_id": 0,
+                        "hp": 905,
+                        "level": 15,
+                        "link_family": 203,
+                        "link_range": 50,
+                        "max_links": 2,
+                        "name_id": 342,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3978791,
+                    "position": {
+                        "x": -272.79168701171875,
+                        "y": 5.642195224761963,
+                        "z": 243.106201171875
+                    },
+                    "rotation": 1.17317795753479
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 1036,
+                        "gimmick_id": 0,
+                        "hp": 905,
+                        "level": 15,
+                        "link_family": 201,
+                        "link_range": 50,
+                        "max_links": 2,
+                        "name_id": 348,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3978783,
+                    "position": {
+                        "x": -272.77978515625,
+                        "y": 5.813663005828857,
+                        "z": 265.8398132324219
+                    },
+                    "rotation": -2.9439938068389893
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 985,
+                        "gimmick_id": 0,
+                        "hp": 994,
+                        "level": 15,
+                        "link_family": 201,
+                        "link_range": 50,
+                        "max_links": 2,
+                        "name_id": 346,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3978786,
+                    "position": {
+                        "x": -277.4242858886719,
+                        "y": 5.813660144805908,
+                        "z": 257.1601867675781
+                    },
+                    "rotation": -1.788313388824463
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 987,
+                        "gimmick_id": 0,
+                        "hp": 905,
+                        "level": 15,
+                        "link_family": 203,
+                        "link_range": 50,
+                        "max_links": 2,
+                        "name_id": 342,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3978792,
+                    "position": {
+                        "x": -284.4435119628906,
+                        "y": 5.813660144805908,
+                        "z": 244.3426971435547
+                    },
+                    "rotation": -0.49016237258911133
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 1065,
+                        "gimmick_id": 0,
+                        "hp": 319,
+                        "level": 15,
+                        "link_family": 203,
+                        "link_range": 50,
+                        "max_links": 2,
+                        "name_id": 1205,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 4125434,
+                    "position": {
+                        "x": -288.162109375,
+                        "y": 5.813660144805908,
+                        "z": 235.37030029296875
+                    },
+                    "rotation": 0.9828650951385498
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 981,
+                        "gimmick_id": 0,
+                        "hp": 994,
+                        "level": 15,
+                        "link_family": 202,
+                        "link_range": 50,
+                        "max_links": 2,
+                        "name_id": 346,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3978790,
+                    "position": {
+                        "x": -289.2355041503906,
+                        "y": 5.576686859130859,
+                        "z": 267.3503112792969
+                    },
+                    "rotation": -2.9698801040649414
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 1033,
+                        "gimmick_id": 0,
+                        "hp": 994,
+                        "level": 15,
+                        "link_family": 202,
+                        "link_range": 50,
+                        "max_links": 2,
+                        "name_id": 346,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3978789,
+                    "position": {
+                        "x": -290.8059997558594,
+                        "y": 5.576686859130859,
+                        "z": 266.75518798828125
+                    },
+                    "rotation": 2.1098792552948
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 985,
+                        "gimmick_id": 0,
+                        "hp": 994,
+                        "level": 15,
+                        "link_family": 202,
+                        "link_range": 50,
+                        "max_links": 2,
+                        "name_id": 346,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3978788,
+                    "position": {
+                        "x": -289.27520751953125,
+                        "y": 5.576686859130859,
+                        "z": 265.5060119628906
+                    },
+                    "rotation": -0.32746195793151855
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 981,
+                        "gimmick_id": 0,
+                        "hp": 994,
+                        "level": 15,
+                        "link_family": 204,
+                        "link_range": 50,
+                        "max_links": 2,
+                        "name_id": 346,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3978794,
+                    "position": {
+                        "x": -308.43359375,
+                        "y": 5.243465900421143,
+                        "z": 250.73899841308594
+                    },
+                    "rotation": -2.0804452896118164
+                },
+                {
+                    "data": {
+                        "aggression_mode": 1,
+                        "base_id": 1436,
+                        "gimmick_id": 0,
+                        "hp": 1320,
+                        "level": 1,
+                        "link_family": 0,
+                        "link_range": 20,
+                        "max_links": 0,
+                        "name_id": 108,
+                        "nonpop": true,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 4334190,
+                    "position": {
+                        "x": -317.3207092285156,
+                        "y": 5.576686859130859,
+                        "z": 307.1029968261719
+                    },
+                    "rotation": -1.954656958580017
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 1033,
+                        "gimmick_id": 0,
+                        "hp": 994,
+                        "level": 15,
+                        "link_family": 204,
+                        "link_range": 50,
+                        "max_links": 2,
+                        "name_id": 346,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3978793,
+                    "position": {
+                        "x": -311.8855895996094,
+                        "y": 6.057799816131592,
+                        "z": 247.42990112304688
+                    },
+                    "rotation": 0.43781447410583496
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 1034,
+                        "gimmick_id": 0,
+                        "hp": 905,
+                        "level": 15,
+                        "link_family": 204,
+                        "link_range": 50,
+                        "max_links": 2,
+                        "name_id": 344,
+                        "nonpop": false,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3978795,
+                    "position": {
+                        "x": -310.7369079589844,
+                        "y": 4.794249057769775,
+                        "z": 252.1414031982422
+                    },
+                    "rotation": 2.898740530014038
+                },
+                {
+                    "data": {
+                        "aggression_mode": 1,
+                        "base_id": 2281,
+                        "gimmick_id": 0,
+                        "hp": 4785,
+                        "level": 15,
+                        "link_family": 0,
+                        "link_range": 0,
+                        "max_links": 0,
+                        "name_id": 1382,
+                        "nonpop": true,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 4334189,
+                    "position": {
+                        "x": -318.37078857421875,
+                        "y": 5.576686859130859,
+                        "z": 306.6487121582031
+                    },
+                    "rotation": -1.4172760248184204
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 417,
+                        "gimmick_id": 0,
+                        "hp": 5869,
+                        "level": 15,
+                        "link_family": 210,
+                        "link_range": 20,
+                        "max_links": 4,
+                        "name_id": 1206,
+                        "nonpop": true,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3978771,
+                    "position": {
+                        "x": -334.28741455078125,
+                        "y": 5.576682090759277,
+                        "z": 318.5690002441406
+                    },
+                    "rotation": 1.7030799388885498
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 418,
+                        "gimmick_id": 0,
+                        "hp": 315,
+                        "level": 15,
+                        "link_family": 210,
+                        "link_range": 20,
+                        "max_links": 4,
+                        "name_id": 1207,
+                        "nonpop": true,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 4064938,
+                    "position": {
+                        "x": -335.0711975097656,
+                        "y": 5.82998514175415,
+                        "z": 336.0138854980469
+                    },
+                    "rotation": 1.5703890323638916
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 418,
+                        "gimmick_id": 0,
+                        "hp": 315,
+                        "level": 15,
+                        "link_family": 210,
+                        "link_range": 20,
+                        "max_links": 4,
+                        "name_id": 1207,
+                        "nonpop": true,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3978770,
+                    "position": {
+                        "x": -305.1129150390625,
+                        "y": 5.82998514175415,
+                        "z": 336.0038146972656
+                    },
+                    "rotation": -1.5704847574234009
+                },
+                {
+                    "data": {
+                        "aggression_mode": 3,
+                        "base_id": 418,
+                        "gimmick_id": 0,
+                        "hp": 315,
+                        "level": 15,
+                        "link_family": 210,
+                        "link_range": 20,
+                        "max_links": 4,
+                        "name_id": 1207,
+                        "nonpop": true,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 3978761,
+                    "position": {
+                        "x": -305.14788818359375,
+                        "y": 5.82998514175415,
+                        "z": 299.997802734375
+                    },
+                    "rotation": -1.5704847574234009
                 }
             ]
         }

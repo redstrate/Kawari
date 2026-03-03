@@ -1,10 +1,13 @@
 use std::{sync::Arc, time::Duration};
 
 use kawari::{
-    common::{DirectorEvent, HandlerId, InvisibilityFlags, ObjectId, ObjectTypeId, ObjectTypeKind},
+    common::{
+        DirectorEvent, HandlerId, InvisibilityFlags, ObjectId, ObjectTypeId, ObjectTypeKind,
+        Position,
+    },
     ipc::zone::{ActorControlCategory, ActorControlSelf, ServerZoneIpcData, ServerZoneIpcSegment},
 };
-use mlua::{Function, UserData, UserDataMethods};
+use mlua::{Function, LuaSerdeExt, UserData, UserDataMethods, Value};
 use parking_lot::Mutex;
 
 use crate::{
@@ -32,6 +35,7 @@ pub enum LuaDirectorTask {
     },
     SpawnEObj {
         base_id: u32,
+        position: Option<Position>,
     },
     SendVariables,
     AbandonDuty {
@@ -84,10 +88,15 @@ impl UserData for LuaDirector {
             this.tasks.push(LuaDirectorTask::DeleteEObj { base_id });
             Ok(())
         });
-        methods.add_method_mut("spawn_eobj", |_, this, base_id: u32| {
-            this.tasks.push(LuaDirectorTask::SpawnEObj { base_id });
-            Ok(())
-        });
+        methods.add_method_mut(
+            "spawn_eobj",
+            |lua, this, (base_id, position): (u32, Value)| {
+                let position: Option<Position> = lua.from_value(position).ok();
+                this.tasks
+                    .push(LuaDirectorTask::SpawnEObj { base_id, position });
+                Ok(())
+            },
+        );
         methods.add_method_mut("set_data", |_, this, (index, data): (u8, u8)| {
             this.data[index as usize] = data;
             Ok(())
@@ -214,7 +223,7 @@ impl DirectorData {
         }
     }
 
-    pub fn on_actor_death(&mut self, bnpc_id: u32) {
+    pub fn on_actor_death(&mut self, bnpc_id: u32, position: Position) {
         let mut run_script = || {
             let mut lua_director = self.create_lua_director();
             let err = self.lua.0.scope(|scope| {
@@ -222,7 +231,7 @@ impl DirectorData {
 
                 let func: Function = self.lua.0.globals().get("onActorDeath")?;
 
-                func.call::<()>((data, bnpc_id))?;
+                func.call::<()>((data, bnpc_id, position))?;
 
                 Ok(())
             });
@@ -277,7 +286,7 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
         match task {
             LuaDirectorTask::HideEObj { base_id } => {
                 let Some(actor_id) = instance.find_object_by_eobj_id(*base_id) else {
-                    tracing::warn!("Failed to find eobj for HideEObj, it won't despawn!");
+                    tracing::warn!("Failed to find eobj {base_id} for HideEObj, it won't despawn!");
                     continue;
                 };
 
@@ -298,7 +307,7 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
             }
             LuaDirectorTask::ShowEObj { base_id } => {
                 let Some(actor_id) = instance.find_object_by_eobj_id(*base_id) else {
-                    tracing::warn!("Failed to find eobj for ShowEObj, it won't despawn!");
+                    tracing::warn!("Failed to find eobj {base_id} for ShowEObj, it won't despawn!");
                     continue;
                 };
 
@@ -318,18 +327,24 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
             }
             LuaDirectorTask::DeleteEObj { base_id } => {
                 let Some(actor_id) = instance.find_object_by_eobj_id(*base_id) else {
-                    tracing::warn!("Failed to find eobj for DeleteEObj, it won't despawn!");
+                    tracing::warn!(
+                        "Failed to find eobj {base_id} for DeleteEObj, it won't despawn!"
+                    );
                     continue;
                 };
 
                 let mut network = network.lock();
                 network.remove_actor(instance, actor_id);
             }
-            LuaDirectorTask::SpawnEObj { base_id } => {
-                if let Some(object) = instance.zone.get_event_object(*base_id) {
+            LuaDirectorTask::SpawnEObj { base_id, position } => {
+                dbg!(position);
+                if let Some(mut object) = instance.zone.get_event_object(*base_id) {
+                    if let Some(position) = position {
+                        object.position = *position;
+                    }
                     instance.insert_object(object.entity_id, object);
                 } else {
-                    tracing::warn!("Failed to find eobj for SpawnEObj, it won't spawn!");
+                    tracing::warn!("Failed to find eobj {base_id} for SpawnEObj, it won't spawn!");
                 }
             }
             LuaDirectorTask::SendVariables => {
@@ -416,10 +431,11 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                 );
             }
             LuaDirectorTask::SpawnBattleNpc { id } => {
-                if let Some(npc) = instance.zone.get_battle_npc(*id) {
+                if let Some(mut npc) = instance.zone.get_battle_npc(*id) {
+                    npc.common.handler_id = director_id;
                     instance.insert_npc(ObjectId(fastrand::u32(..)), npc);
                 } else {
-                    tracing::warn!("Failed to find bnpc for SpawnBattleNpc, it won't spawn!");
+                    tracing::warn!("Failed to find bnpc {id} for SpawnBattleNpc, it won't spawn!");
                 }
             }
             LuaDirectorTask::GainEffect {

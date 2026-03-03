@@ -415,11 +415,6 @@ impl Zone {
                             InvisibilityFlags::VISIBLE
                         };
 
-                        // NOTE: this seems to keep the gold saucer machines, and not much else. needs more testing!
-                        if game_data.get_eobj_pop_type(eobj.parent_data.base_id) != 1 {
-                            continue;
-                        }
-
                         let unselectable = if let Some(event_type) = HandlerType::from_repr(
                             game_data.get_eobj_data(eobj.parent_data.base_id) >> 16,
                         ) {
@@ -435,7 +430,7 @@ impl Zone {
                             eobj.parent_data.base_id
                         };
 
-                        object_spawns.push(ObjectSpawn {
+                        let spawn = ObjectSpawn {
                             kind: ObjectKind::EventObj,
                             base_id,
                             unselectable,
@@ -451,7 +446,12 @@ impl Zone {
                                 z: object.transform.translation[2],
                             },
                             ..Default::default()
-                        });
+                        };
+                        self.cached_objects.insert(eobj.parent_data.base_id, spawn);
+
+                        if game_data.get_eobj_pop_type(eobj.parent_data.base_id) == 1 {
+                            object_spawns.push(spawn);
+                        }
                     }
                 }
             }
@@ -540,11 +540,21 @@ impl Zone {
                     hp,
                     level,
                     nonpop,
+                    aggression_mode,
+                    gimmick_id,
+                    max_links,
+                    link_family,
+                    link_range,
                 } = object.data
                 {
                     let (model_chara, battalion, customize) = game_data.find_bnpc(base_id).unwrap();
 
                     let spawn = NpcSpawn {
+                        gimmick_id,
+                        aggression_mode,
+                        max_links,
+                        link_family,
+                        link_range,
                         common: CommonSpawn {
                             npc_base: base_id,
                             npc_name: name_id,
