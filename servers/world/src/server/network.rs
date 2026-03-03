@@ -107,14 +107,7 @@ impl NetworkState {
         message: FromServer,
         destination: DestinationNetwork,
     ) {
-        self.send_in_range_implementation(
-            actor_id,
-            instance,
-            message,
-            destination,
-            false,
-            false,
-        );
+        self.send_in_range_implementation(actor_id, instance, message, destination, false, false);
     }
 
     pub fn send_in_range(
