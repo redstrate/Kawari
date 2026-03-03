@@ -60,8 +60,8 @@ pub trait EventHandler: std::fmt::Debug + Send + Sync {
 }
 
 /// Extracts the script id from a given CustomTalk `name`. For example, "CmnDefBeginnerGuide_00327" will return 327.
-fn extract_script_id(name: &str) -> u32 {
-    name[name.len() - 5..].parse().unwrap_or_default()
+fn extract_script_id(name: &str) -> Result<u32, std::num::ParseIntError> {
+    name[name.len() - 5..].parse()
 }
 
 /// Creates the proper folder name from a given script id. For example, 327 will return 003.
@@ -90,7 +90,13 @@ pub fn dispatch_event(
                 let mut game_data = game_data.lock();
                 script_name = game_data.get_quest_name(handler_id.0);
             }
-            let script_id = extract_script_id(&script_name);
+            let Ok(script_id) = extract_script_id(&script_name) else {
+                tracing::error!(
+                    "Unable to obtain script id from script {script_name}, the event cannot continue!"
+                );
+                return None;
+            };
+
             let script_folder = folder_from_script_id(script_id);
             let script_path = format!("events/quest/{script_folder}/{script_name}.lua");
 
@@ -137,7 +143,13 @@ pub fn dispatch_event(
                 let mut game_data = game_data.lock();
                 script_name = game_data.get_custom_talk_name(handler_id.0);
             }
-            let script_id = extract_script_id(&script_name);
+            let Ok(script_id) = extract_script_id(&script_name) else {
+                tracing::error!(
+                    "Unable to obtain script id from script {script_name}, the event cannot continue!"
+                );
+                return None;
+            };
+
             let script_folder = folder_from_script_id(script_id);
             let script_path = format!("events/custom/{script_folder}/{script_name}.lua");
 
@@ -184,9 +196,15 @@ mod tests {
 
     #[test]
     fn test_extract_script_id() {
-        // First ensure it succeeds, then ensure it fails intentionally.
-        assert_eq!(extract_script_id("CmnDefBeginnerGuide_00327"), 327);
-        assert_eq!(extract_script_id("CmnDefBeginnerGuide_XYZAB"), 0);
+        // First ensure it succeeded.
+        match extract_script_id("CmnDefBeginnerGuide_00327") {
+            Ok(id) => assert_eq!(id, 327),
+            Err(_) => assert!(false), // We don't care about the error, anything going wrong is an automatic test failure
+        }
+
+        // Next, fail intentionally with a bogus string and ensure it indeed failed.
+        let fail_case = extract_script_id("CmnDefBeginnerGuide_XYZAB");
+        assert!(fail_case.is_err());
     }
 
     #[test]
