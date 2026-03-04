@@ -434,14 +434,7 @@ pub enum ActorControlCategory {
         /// The ID of the sign to apply.
         sign_id: u32,
         /// The actor id of the player who marked the target.
-        #[brw(pad_after = 12)] // Empty/zeroes
         from_actor_id: ObjectId,
-        /// The actor to apply the sign to.
-        target_actor_id: ObjectId,
-        /// Repeated back to the client. See the corresponding ClientTrigger for more info.
-        #[br(map = read_bool_from::<u32>)]
-        #[bw(map = write_bool_as::<u32>)]
-        on: bool,
     },
 
     #[brw(magic = 504u32)]

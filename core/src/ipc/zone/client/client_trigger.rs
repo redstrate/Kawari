@@ -2,8 +2,8 @@ use binrw::binrw;
 use strum_macros::IntoStaticStr;
 
 use crate::common::{
-    ContainerType, DirectorTrigger, DistanceRange, HandlerId, ObjectId, read_bool_from,
-    write_bool_as,
+    ContainerType, DirectorTrigger, DistanceRange, HandlerId, ObjectId, ObjectTypeId,
+    read_bool_from, write_bool_as,
 };
 use crate::ipc::zone::CommonEmoteInfo;
 
@@ -72,16 +72,14 @@ pub enum ClientTriggerCommand {
     /// The client toggles a sign for their current target.
     #[brw(magic = 301u32)]
     ToggleSign {
+        #[brw(pad_after = 12)] // Empty/zeroes
         /// The id of the sign to apply. See the Marker Excel sheet.
         sign_id: u32,
-        #[brw(pad_after = 12)] // Empty/zeroes
-        unk1: u32, // Observed as 1 or 2 depending on what's targeted, likely a target type similar to other CTs
+        /// These two unknowns contain data but seemingly don't matter to the server. The server response doesn't repeat these at all.
+        unk1: u16,
+        unk2: u16,
         /// The actor to apply the sign to.
-        target_actor_id: ObjectId,
-        /// Likely a boolean, that is repeated back to the client later on. Observed as 1 or 0 so far.
-        #[br(map = read_bool_from::<u32>)]
-        #[bw(map = write_bool_as::<u32>)]
-        on: bool,
+        target_actor: ObjectTypeId,
     },
 
     /// The client sets a specific title.

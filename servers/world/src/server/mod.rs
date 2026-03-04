@@ -1412,16 +1412,14 @@ pub async fn server_main_loop(
                         }
                         ClientTriggerCommand::ToggleSign {
                             sign_id,
-                            target_actor_id,
-                            on,
+                            target_actor,
                             ..
                         } => {
                             let mut network = network.lock();
                             let msg = FromServer::TargetSignToggled(
                                 *sign_id,
                                 from_actor_id,
-                                *target_actor_id,
-                                *on,
+                                *target_actor,
                             );
 
                             network.send_to_party_or_self(from_actor_id, msg);

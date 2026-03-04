@@ -2,7 +2,7 @@
 
 use crate::{ToServer, ZoneConnection, common::PartyUpdateTargets};
 use kawari::{
-    common::{ObjectId, ObjectTypeId, ObjectTypeKind, timestamp_secs},
+    common::{ObjectId, ObjectTypeId, timestamp_secs},
     ipc::{
         chat::{ChatChannel, ChatChannelType},
         zone::{
@@ -364,20 +364,14 @@ impl ZoneConnection {
         &mut self,
         sign_id: u32,
         from_actor_id: ObjectId,
-        target_actor_id: ObjectId,
-        on: bool,
+        target_actor: ObjectTypeId,
     ) {
         self.actor_control_target(
             from_actor_id,
-            ObjectTypeId {
-                object_id: target_actor_id,
-                object_type: ObjectTypeKind::None,
-            }, // TODO: unsure if this is correct, from refactoring
+            target_actor,
             ActorControlCategory::ToggleSign {
                 sign_id,
                 from_actor_id,
-                target_actor_id,
-                on,
             },
         )
         .await;
