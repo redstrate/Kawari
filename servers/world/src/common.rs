@@ -181,7 +181,7 @@ pub enum FromServer {
     /// Inform the client about a countdown that was started in their party.
     Countdown(u64, u64, String, ObjectId, u16),
     /// Inform the client that a sign/marker was applied to a target by someone in their party.
-    TargetSignToggled(u32, ObjectId, ObjectId, bool),
+    TargetSignToggled(u32, ObjectId, ObjectTypeId),
     /// Request the client to begin preparing to leave this content.
     LeaveContent(),
     /// Request the client to finish their current event.

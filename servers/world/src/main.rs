@@ -2419,7 +2419,7 @@ async fn process_server_msg(
         }
         FromServer::IncrementRestedExp() => connection.add_rested_exp_seconds(10).await,
         FromServer::Countdown(account_id, content_id, name, starter_actor_id, duration) => connection.start_countdown(account_id, content_id, name, starter_actor_id, duration).await,
-        FromServer::TargetSignToggled(sign_id, from_actor_id, target_actor_id, on) => connection.target_sign_toggled(sign_id, from_actor_id, target_actor_id, on).await,
+        FromServer::TargetSignToggled(sign_id, from_actor_id, target_actor) => connection.target_sign_toggled(sign_id, from_actor_id, target_actor).await,
         FromServer::LeaveContent() => {
             connection
             .handle
