@@ -650,54 +650,39 @@ pub enum ActorControlCategory {
     },
 }
 
+impl Default for ActorControlCategory {
+    fn default() -> Self {
+        Self::Unknown {
+            category: 0,
+            param1: 0,
+            param2: 0,
+            param3: 0,
+            param4: 0,
+        }
+    }
+}
+
 #[binrw]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ActorControl {
     #[brw(pad_after = 4)]
     #[brw(pad_size_to = 20)] // take into account categories without params
     pub category: ActorControlCategory,
 }
 
-impl Default for ActorControl {
-    fn default() -> Self {
-        Self {
-            category: ActorControlCategory::ToggleInvisibility { invisible: false },
-        }
-    }
-}
-
-// Has more padding than ActorControl?
 #[binrw]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ActorControlSelf {
     #[brw(pad_after = 12)]
     #[brw(pad_size_to = 20)] // take into account categories without params
     pub category: ActorControlCategory,
 }
 
-impl Default for ActorControlSelf {
-    fn default() -> Self {
-        Self {
-            category: ActorControlCategory::ToggleInvisibility { invisible: false },
-        }
-    }
-}
-
-// Has more padding than ActorControl?
 #[binrw]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ActorControlTarget {
     #[brw(pad_after = 4)]
     #[brw(pad_size_to = 20)] // take into account categories without params
     pub category: ActorControlCategory,
     pub target: ObjectTypeId,
-}
-
-impl Default for ActorControlTarget {
-    fn default() -> Self {
-        Self {
-            category: ActorControlCategory::ToggleInvisibility { invisible: false },
-            target: ObjectTypeId::default(),
-        }
-    }
 }
