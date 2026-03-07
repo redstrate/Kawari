@@ -177,10 +177,6 @@ impl LuaPlayer {
             .push(LuaTask::WarpAetheryte { aetheryte_id });
     }
 
-    fn reload_scripts(&mut self) {
-        self.queued_tasks.push(LuaTask::ReloadScripts);
-    }
-
     fn toggle_invisiblity(&mut self) {
         self.queued_tasks.push(LuaTask::ToggleInvisibility {
             invisible: !self.player_data.gm_invisible,
@@ -435,25 +431,6 @@ impl LuaPlayer {
         self.queued_tasks.push(LuaTask::FinishQuest { id });
     }
 
-    fn prepare_zoning(&mut self, timeout: u8) {
-        create_ipc_self(
-            self,
-            ServerZoneIpcSegment::new(ServerZoneIpcData::PrepareZoning {
-                log_message: 0,
-                target_zone: self.zone_data.zone_id,
-                animation: 0,
-                param4: 0,
-                hide_character: 0,
-                fade_out: 1,
-                param_7: 1,
-                fade_out_time: timeout,
-                unk1: 0,
-                unk2: 0,
-            }),
-            self.player_data.character.actor_id,
-        );
-    }
-
     fn commence_duty(&mut self, director_id: u32) {
         self.queued_tasks
             .push(LuaTask::CommenceDuty { director_id });
@@ -700,10 +677,6 @@ impl UserData for LuaPlayer {
             this.warp_aetheryte(aetheryte_id);
             Ok(())
         });
-        methods.add_method_mut("reload_scripts", |_, this, _: ()| {
-            this.reload_scripts();
-            Ok(())
-        });
         methods.add_method_mut("set_level", |_, this, level: u16| {
             this.set_level(level);
             Ok(())
@@ -929,10 +902,6 @@ impl UserData for LuaPlayer {
             this.finish_quest(quest_id);
             Ok(())
         });
-        methods.add_method_mut("prepare_zoning", |_, this, timeout: u8| {
-            this.prepare_zoning(timeout);
-            Ok(())
-        });
         methods.add_method_mut("has_seen_cutscene", |_, this, cutscene_id: u32| {
             Ok(this.player_data.unlock.cutscene_seen.contains(cutscene_id))
         });
@@ -1043,7 +1012,6 @@ impl UserData for LuaPlayer {
         fields.add_field_method_get("saw_inn_wakeup", |_, this| {
             Ok(this.player_data.saw_inn_wakeup)
         });
-        fields.add_field_method_get("city_state", |_, this| Ok(this.player_data.city_state));
         fields.add_field_method_get("content", |_, this| Ok(this.content_data));
     }
 }

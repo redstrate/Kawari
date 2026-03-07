@@ -27,7 +27,6 @@ pub enum LuaTask {
     WarpAetheryte {
         aetheryte_id: u32,
     },
-    ReloadScripts,
     ToggleInvisibility {
         invisible: bool,
     },

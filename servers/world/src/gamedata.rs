@@ -1372,37 +1372,16 @@ impl GameData {
 
 impl mlua::UserData for GameData {
     fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
-        methods.add_method_mut("is_aetheryte", |_, this, aetheryte_id: u32| {
-            Ok(this.is_aetheryte(aetheryte_id))
-        });
-        methods.add_method_mut("get_warp_logic_name", |_, this, warp_id: u32| {
-            Ok(this.get_warp_logic_name(warp_id))
-        });
-        methods.add_method_mut("get_custom_talk_name", |_, this, custom_talk_id: u32| {
-            Ok(this.get_custom_talk_name(custom_talk_id))
-        });
-        methods.add_method_mut("get_opening_name", |_, this, opening_id: u32| {
-            Ok(this.get_opening_name(opening_id))
-        });
         methods.add_method_mut("get_pre_handler_target", |_, this, pre_handler_id: u32| {
             Ok(this.get_pre_handler_target(pre_handler_id))
         });
         methods.add_method_mut("get_halloween_npc_transform", |_, this, npc_id: u32| {
             Ok(this.get_halloween_npc_transform(npc_id))
         });
-        methods.add_method_mut("get_quest_name", |_, this, quest_id: u32| {
-            Ok(this.get_quest_name(quest_id))
-        });
         methods.add_method_mut(
             "get_topic_select_target",
             |_, this, (topic_select_id, selected_topic): (u32, usize)| {
                 Ok(this.get_topic_select_target(topic_select_id, selected_topic))
-            },
-        );
-        methods.add_method_mut(
-            "get_content_short_name",
-            |_, this, content_finder_row_id: u16| {
-                Ok(this.get_content_short_name(content_finder_row_id))
             },
         );
         methods.add_method_mut(

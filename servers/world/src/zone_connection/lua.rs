@@ -117,9 +117,6 @@ impl ZoneConnection {
                 LuaTask::WarpAetheryte { aetheryte_id } => {
                     self.warp_aetheryte(*aetheryte_id).await;
                 }
-                LuaTask::ReloadScripts => {
-                    self.reload_scripts();
-                }
                 LuaTask::ToggleInvisibility { invisible } => {
                     self.toggle_invisibility(*invisible).await;
                 }
