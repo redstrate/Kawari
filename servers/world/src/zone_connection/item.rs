@@ -341,6 +341,7 @@ impl ZoneConnection {
         self.player_data.classjob.current_class = classjobs.first().copied().unwrap() as i32;
         assert!(self.player_data.classjob.current_class != 0); // If this is 0, then something went seriously wrong.
         self.update_class_info().await;
+        self.finish_changing_class().await;
     }
 
     /// Changes the class based on the soul crystal equipped.
@@ -359,6 +360,7 @@ impl ZoneConnection {
                 assert!(self.player_data.classjob.current_class != 0); // If this is 0, then something went seriously wrong.
 
                 self.update_class_info().await;
+                self.finish_changing_class().await;
             }
         }
     }
