@@ -1832,7 +1832,6 @@ pub async fn server_main_loop(
         // Remove any clients that errored out
         {
             let mut network = network.lock();
-            let mut data = data.lock();
 
             network.to_remove.append(&mut to_remove);
 
@@ -1846,6 +1845,7 @@ pub async fn server_main_loop(
                 }
 
                 if let Some(actor_id) = actor_id {
+                    let mut data = data.lock();
                     // remove them from the instance
                     if let Some(current_instance) = data.find_actor_instance_mut(actor_id) {
                         network.remove_actor(current_instance, actor_id);
