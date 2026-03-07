@@ -5,7 +5,6 @@ use crate::common::{
     ContainerType, DirectorTrigger, DistanceRange, HandlerId, ObjectId, ObjectTypeId,
     read_bool_from, write_bool_as,
 };
-use crate::ipc::zone::CommonEmoteInfo;
 
 #[binrw]
 #[derive(Debug, PartialEq, Clone, IntoStaticStr)]
@@ -157,7 +156,18 @@ pub enum ClientTriggerCommand {
 
     /// The player begins an emote.
     #[brw(magic = 500u32)]
-    Emote(CommonEmoteInfo),
+    Emote {
+        /// The id of the emote.
+        emote: u32,
+        /// 0/false = text shown, 1/true = text hidden
+        #[brw(pad_before = 4)] // blank
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        hide_text: bool,
+        /// The actor id of the target.
+        #[brw(pad_before = 8)] // blank
+        target: ObjectTypeId,
+    },
 
     /// The player interrupts their emote.
     #[brw(magic = 503u32)]

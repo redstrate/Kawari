@@ -5,7 +5,6 @@ use crate::common::{
     CharacterMode, DirectorEvent, EquipDisplayFlag, HandlerId, InvisibilityFlags, ObjectId,
     ObjectTypeId, read_bool_from, read_packed_float, write_bool_as, write_packed_float,
 };
-use crate::ipc::zone::CommonEmoteInfo;
 use crate::ipc::zone::online_status::OnlineStatus;
 
 #[binrw]
@@ -375,7 +374,15 @@ pub enum ActorControlCategory {
     SetPetEntityId { unk1: u32 },
 
     #[brw(magic = 290u32)]
-    Emote(CommonEmoteInfo),
+    Emote {
+        /// The id of the emote.
+        emote: u32,
+        /// 0/false = text shown, 1/true = text hidden
+        #[brw(pad_before = 4)] // blank
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        hide_text: bool,
+    },
 
     /// Generic catch-all for crafting/gathering actions.
     #[brw(magic = 300u32)]

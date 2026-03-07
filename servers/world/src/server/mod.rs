@@ -1235,11 +1235,18 @@ pub async fn server_main_loop(
                                 DestinationNetwork::ZoneClients,
                             );
                         }
-                        ClientTriggerCommand::Emote(emote_info) => {
+                        ClientTriggerCommand::Emote {
+                            emote,
+                            hide_text,
+                            target,
+                        } => {
                             let msg = FromServer::ActorControlTarget(
                                 from_actor_id,
-                                emote_info.target,
-                                ActorControlCategory::Emote(*emote_info),
+                                *target,
+                                ActorControlCategory::Emote {
+                                    emote: *emote,
+                                    hide_text: *hide_text,
+                                },
                             );
 
                             let mut network = network.lock();
