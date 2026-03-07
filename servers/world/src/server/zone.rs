@@ -696,7 +696,10 @@ fn begin_change_zone<'a>(
 ) -> Option<&'a mut Instance> {
     // inform the players in this zone that this actor left
     if let Some(current_instance) = data.find_actor_instance_mut(actor_id) {
-        network.remove_actor(current_instance, actor_id);
+        // HACK: This is to prevent actors from disappearing when warping within the same zone.
+        if current_instance.zone.id != destination_zone_id {
+            network.remove_actor(current_instance, actor_id);
+        }
     }
 
     // then find or create a new instance with the zone id

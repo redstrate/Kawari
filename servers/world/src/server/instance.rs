@@ -167,6 +167,10 @@ impl Instance {
     }
 
     pub fn insert_empty_actor(&mut self, actor_id: ObjectId) {
+        if self.actors.contains_key(&actor_id) {
+            return;
+        }
+
         self.actors.insert(
             actor_id,
             NetworkedActor::Player {
