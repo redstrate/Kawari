@@ -650,7 +650,10 @@ impl Zone {
                         overlapping.push(map_range);
                     }
                 }
-                _ => {} // TODO
+                _ => tracing::warn!(
+                    "{:?} trigger box shape is unsupported, some features may not work.",
+                    map_range.trigger_box_shape
+                ),
             }
         }
 
