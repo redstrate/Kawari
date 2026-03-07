@@ -11,10 +11,10 @@ ServerZoneIpcType:
     comment: Contains various character statistics like Strength and HP.
     opcode: 688
     size: 144
-  - name: PlayerStatus
+  - name: PlayerSetup
     comment: Lots of useful and persistent information like which dungeons are unlocked.
     opcode: 229
-    size: 2918
+    size: 2912
   - name: UpdateClassInfo
     comment: "Updates class-specific information, like your currently synced level."
     opcode: 559

@@ -15,7 +15,7 @@ use kawari::ipc::chat::{ChatChannel, ClientChatIpcData};
 
 use kawari::ipc::zone::{
     ActorControlCategory, Conditions, ContentFinderUserAction, EventType, InviteType, OnlineStatus,
-    OnlineStatusMask, PlayerStatus, SceneFlags, SearchInfo, SocialListUILanguages, TrustContent,
+    OnlineStatusMask, PlayerSetup, SceneFlags, SearchInfo, SocialListUILanguages, TrustContent,
     TrustInformation,
 };
 
@@ -563,7 +563,7 @@ async fn process_packet(
                                 }
 
                                 let ipc = ServerZoneIpcSegment::new(
-                                    ServerZoneIpcData::PlayerStatus(PlayerStatus {
+                                    ServerZoneIpcData::PlayerSetup(PlayerSetup {
                                         content_id: connection.player_data.character.content_id
                                             as u64,
                                         player_state_flags1,
@@ -594,12 +594,7 @@ async fn process_packet(
                                             .data
                                             .clone(),
                                         minions: connection.player_data.unlock.minions.data.clone(),
-                                        mount_guide_mask: connection
-                                            .player_data
-                                            .unlock
-                                            .mounts
-                                            .data
-                                            .clone(),
+                                        mounts: connection.player_data.unlock.mounts.data.clone(),
                                         homepoint: connection.player_data.aetheryte.homepoint
                                             as u16,
                                         favourite_aetheryte_count: 1,

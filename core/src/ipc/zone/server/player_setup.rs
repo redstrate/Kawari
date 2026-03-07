@@ -2,8 +2,8 @@ use binrw::binrw;
 
 use crate::{
     common::{
-        CHAR_NAME_MAX_LENGTH, ObjectId, PlayerStateFlags1, PlayerStateFlags2, PlayerStateFlags3,
-        read_bool_from, read_string, write_bool_as, write_string,
+        ObjectId, PlayerStateFlags1, PlayerStateFlags2, PlayerStateFlags3, read_bool_from,
+        read_string, write_bool_as, write_string,
     },
     constants::{
         ACTIVE_HELP_BITMASK_SIZE, ADVENTURE_BITMASK_SIZE, AETHER_CURRENT_BITMASK_SIZE,
@@ -22,7 +22,7 @@ use crate::{
 
 #[binrw]
 #[derive(Debug, Clone, Default)]
-pub struct PlayerStatus {
+pub struct PlayerSetup {
     /// The content ID of the player.
     pub content_id: u64,
     /// This seems to be unused by the client.
@@ -95,7 +95,7 @@ pub struct PlayerStatus {
     pub companion_color: u8,
     pub companion_favorite_feed: u8,
     pub favourite_aetheryte_count: u8,
-    pub daily_quest_seed: u8,
+    pub unknown98: u8,
     pub unknown97: u8,
     pub weekly_lockout_info: u8,
     pub relic_id: u8,
@@ -111,12 +111,13 @@ pub struct PlayerStatus {
     #[br(map = read_bool_from::<u8>)]
     #[bw(map = write_bool_as::<u8>)]
     pub has_new_gc_army_candidate: bool,
-    pub unknownauahab: u16,
+    pub completed_lovm_stages: u8,
+    pub unk111: u8,
     pub supply_seed: u8,
-    pub unk5: u8,
+    pub gold_saucer_content_status: u8,
     /// Last expansion mentorship was held. Starts at 1 with Shadowbringers.
     pub mentor_version: u8,
-    pub unk6: u8,
+    pub unk_hwd: u8,
     pub weekly_bingo_exp_multiplier: u8,
     pub weekly_bingo_unk63: u8,
     pub series_current_rank: u8,
@@ -139,15 +140,12 @@ pub struct PlayerStatus {
     #[br(count = CLASSJOB_ARRAY_SIZE)]
     #[bw(pad_size_to = CLASSJOB_ARRAY_SIZE * 2)]
     pub levels: Vec<u16>,
-    pub festivals_id1: [u16; 4],
-    pub festivals_phase1: [u16; 4],
-    pub festivals_unk1: [u16; 4],
-    #[br(count = 240)]
-    #[bw(pad_size_to = 240)]
+    pub active_festivals: [u16; 8],
+    pub active_festival_phases: [u16; 8],
+    #[br(count = 232)]
+    #[bw(pad_size_to = 232)]
     pub unknown194: Vec<u8>,
-    #[br(count = 12)]
-    #[bw(pad_size_to = 12 * 2)]
-    pub supply_satisfcation: Vec<u16>,
+    pub supply_satisfcation: [u16; 12],
     #[br(count = 21)]
     #[bw(pad_size_to = 21)]
     #[br(map = read_string)]
@@ -158,7 +156,7 @@ pub struct PlayerStatus {
     pub companion_heal_rank: u8,
     #[br(count = MOUNT_BITMASK_SIZE)]
     #[bw(pad_size_to = MOUNT_BITMASK_SIZE)]
-    pub mount_guide_mask: Vec<u8>,
+    pub mounts: Vec<u8>,
     #[br(count = ORNAMENT_BITMASK_SIZE)]
     #[bw(pad_size_to = ORNAMENT_BITMASK_SIZE)]
     pub ornament_mask: Vec<u8>,
@@ -170,17 +168,12 @@ pub struct PlayerStatus {
     #[bw(pad_size_to = FRAMERS_KIT_BITMASK_SIZE)]
     pub framers_kits_mask: Vec<u8>,
     pub padding_probably_after_framers_kit: [u8; 5],
-    #[br(count = CHAR_NAME_MAX_LENGTH)]
-    #[bw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+    // NOTE: It seems this name is bigger than normal, but bytes >=40 may contain the online ID...?
+    #[br(count = 64)]
+    #[bw(pad_size_to = 64)]
     #[br(map = read_string)]
     #[bw(map = write_string)]
     pub name: String,
-    // Size is a guesswork, but it fits! This is used on the PSN and Xbox for their online usernames.
-    #[br(count = 32)]
-    #[bw(pad_size_to = 32)]
-    #[br(map = read_string)]
-    #[bw(map = write_string)]
-    pub online_id: String,
     /// Unlock bitmask for everything else, mostly for game features.
     /// This might also be referred to as "rewards".
     #[br(count = UNLOCK_BITMASK_SIZE)]
@@ -193,9 +186,12 @@ pub struct PlayerStatus {
     pub favorite_aetheryte_ids: [u16; 4],
     pub free_aetheryte_id: u16,
     pub ps_plus_free_aetheryte_id: u16,
-    #[br(count = 516)]
-    #[bw(pad_size_to = 516)]
-    pub unk516: Vec<u8>,
+    #[br(count = 162)]
+    #[bw(pad_size_to = 162 * 2)]
+    pub discovery_related_unk1: Vec<u16>,
+    #[br(count = 48)]
+    #[bw(pad_size_to = 48 * 4)]
+    pub discovery_related_unk2: Vec<u32>,
     /// Which Active Help guides the player has seen.
     #[br(count = ACTIVE_HELP_BITMASK_SIZE)]
     #[bw(pad_size_to = ACTIVE_HELP_BITMASK_SIZE)]
@@ -275,16 +271,17 @@ pub struct PlayerStatus {
     #[br(count = ORCHESTRION_ROLL_BITMASK_SIZE)]
     #[bw(pad_size_to = ORCHESTRION_ROLL_BITMASK_SIZE)]
     pub orchestrion_roll_mask: Vec<u8>,
-    pub unk_completion1: [u8; 7],
+    pub orchestrion_padding: u8,
     #[br(count = BEGINNER_TRAINING_ARRAY_SIZE)]
     #[bw(pad_size_to = BEGINNER_TRAINING_ARRAY_SIZE)]
     pub completed_beginner_training: Vec<u8>, // TODO: not confirmed because I can't access this menu right now
     pub unk_completion2: [u8; 11],
+
     pub weekly_bingo_order_data: [u8; 16],
     pub weekly_bingo_reward_data: [u8; 4],
+
     pub supply_satisfaction_ranks: [u8; 12],
-    pub used_supply_allowances: [u8; 7],
-    pub unk77: [u8; 5],
+    pub used_supply_allowances: [u8; 12],
 
     #[br(count = SPECIAL_CONTENT_ARRAY_SIZE)]
     #[bw(pad_size_to = SPECIAL_CONTENT_ARRAY_SIZE)]
@@ -344,7 +341,7 @@ pub struct PlayerStatus {
     #[bw(pad_size_to = MASKED_CARNIVALE_ARRAY_SIZE)]
     pub cleared_masked_carnivale: Vec<u8>,
 
-    pub unknown948: [u8; 7],
+    pub completed_vvd_notebook_contents: [u8; 7],
 
     #[br(count = MISC_CONTENT_ARRAY_SIZE)]
     #[bw(pad_size_to = MISC_CONTENT_ARRAY_SIZE)]

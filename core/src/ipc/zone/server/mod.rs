@@ -17,7 +17,7 @@ mod update_class_info;
 pub use update_class_info::UpdateClassInfo;
 
 mod player_setup;
-pub use player_setup::PlayerStatus;
+pub use player_setup::PlayerSetup;
 
 mod player_stats;
 pub use player_stats::PlayerStats;
@@ -158,7 +158,7 @@ pub enum ServerZoneIpcData {
     InitZone(InitZone),
     ActorControlSelf(ActorControlSelf),
     PlayerStats(PlayerStats),
-    PlayerStatus(PlayerStatus),
+    PlayerSetup(PlayerSetup),
     UpdateClassInfo(UpdateClassInfo),
     PlayerSpawn(PlayerSpawn),
     LogOutComplete {
