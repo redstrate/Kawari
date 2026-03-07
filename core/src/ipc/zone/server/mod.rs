@@ -124,6 +124,9 @@ pub use enmity_list::{EnmityList, PlayerEnmity};
 mod hater_list;
 pub use hater_list::{Hater, HaterList};
 
+mod map_effects;
+pub use map_effects::MapEffects;
+
 use crate::common::{
     CHAR_NAME_MAX_LENGTH, ContainerType, ItemOperationKind, ObjectId, read_string, write_string,
 };
@@ -799,13 +802,13 @@ pub enum ServerZoneIpcData {
         unk7: u32,
         unk8: u32,
     },
-    DirectorSetupMapEffects {
-        /// Should be the ID of the instance's director.
-        handler_id: HandlerId,
-        /// Unsure of what these flags mean.
-        unk_flag: u16,
-        /// The initial states each map effect should be in.
-        states: [u16; 65],
+    DirectorSetupMapEffects64 {
+        #[brw(args { max_params: 64 } )]
+        data: MapEffects,
+    },
+    DirectorSetupMapEffects128 {
+        #[brw(args { max_params: 128 } )]
+        data: MapEffects,
     },
     DirectorMapEffect {
         /// Should be the ID of the instance's director.

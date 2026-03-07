@@ -14,9 +14,9 @@ use kawari_world::inventory::{Item, Storage, get_next_free_slot};
 use kawari::ipc::chat::{ChatChannel, ClientChatIpcData};
 
 use kawari::ipc::zone::{
-    ActorControlCategory, Conditions, ContentFinderUserAction, EventType, InviteType, OnlineStatus,
-    OnlineStatusMask, PlayerSetup, SceneFlags, SearchInfo, SocialListUILanguages, TrustContent,
-    TrustInformation,
+    ActorControlCategory, Conditions, ContentFinderUserAction, EventType, InviteType, MapEffects,
+    OnlineStatus, OnlineStatusMask, PlayerSetup, SceneFlags, SearchInfo, SocialListUILanguages,
+    TrustContent, TrustInformation,
 };
 
 use kawari::ipc::zone::{
@@ -893,21 +893,23 @@ async fn process_packet(
                                         }
 
                                         if let Some(map_effects) = map_effects {
-                                            let mut states = [0; 65];
+                                            let mut states = Vec::new();
                                             for (i, layout_id) in map_effects.iter().enumerate() {
                                                 // A layout ID of zero means the effect should be skipped.
                                                 if *layout_id != 0 {
+                                                    states.resize(i + 1, 0);
                                                     states[i] = 4; // 4 means to play it, I guess?
                                                 }
                                             }
 
-                                            let ipc = ServerZoneIpcSegment::new(
-                                                ServerZoneIpcData::DirectorSetupMapEffects {
-                                                    handler_id: connection.content_handler_id,
-                                                    unk_flag: 5,
-                                                    states,
-                                                },
-                                            );
+                                            let ipc = MapEffects {
+                                                handler_id: connection.content_handler_id,
+                                                unk_flag: 5,
+                                                states,
+                                                ..Default::default()
+                                            }
+                                            .package()
+                                            .unwrap();
                                             connection.send_ipc_self(ipc).await;
                                         }
                                     }

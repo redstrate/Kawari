@@ -276,7 +276,7 @@ pub enum HandlerType {
     GuildLeveAssignment = 6,
     /// See DefaultTalk Excel sheet.
     DefaultTalk = 9,
-    /// Unknown purpose.
+    /// Used for crafting actions.
     Craft = 10,
     /// See CustomTalk Excel sheet.
     CustomTalk = 11,
@@ -298,7 +298,7 @@ pub enum HandlerType {
     Opening = 19,
     /// Used for housing?
     ExitRange = 20,
-    /// Unknown purpose.
+    /// Used for fishing actions.
     Fishing = 21,
     /// See GCShop Excel sheet.
     GrandCompanyShop = 22,
@@ -336,7 +336,7 @@ pub enum HandlerType {
     LotteryWeekly = 38,
     /// Unknown purpose.
     RaceChocoboRegistrar = 39,
-    /// Unknown purpose.
+    /// Used for certain Gold Saucer NPCs.
     GoldSaucerTalk = 41,
     /// See FccShop Excel sheet.
     FreeCompanyCreditShop = 42,
@@ -392,10 +392,13 @@ pub enum HandlerType {
     QuestBattle = 0x8006,
     CompanyLeve = 0x8007,
     TreasureHunt = 0x8009,
+    /// Used for the explorable Gold Saucer zones.
     GoldSaucer = 0x800A,
     CompanyCraft = 0x800B,
     SkyIsland = 0x800C,
+    /// Used for Stone, Sky, Sea challenges.
     DpsChallenge = 0x800D,
+    /// Used for content like Cosmisc Exploration.
     MassivePcContent = 0x800E,
     /// Used in open world zones that have FATEs.
     Fate = 0x801A,
@@ -405,7 +408,7 @@ impl HandlerType {
     /// Determine the correct handler for use in this zone.
     pub fn from_intended_use(intended_use: TerritoryIntendedUse) -> Option<Self> {
         match intended_use {
-            // TODO: Restore once we know more about FATEs
+            // TODO: needs proper handling
             //TerritoryIntendedUse::OpenWorld => Some(Self::Fate),
             TerritoryIntendedUse::Dungeon => Some(Self::InstanceContent),
             TerritoryIntendedUse::VariantDungeon => Some(Self::InstanceContent),
@@ -421,6 +424,9 @@ impl HandlerType {
             TerritoryIntendedUse::SavageCriterionDungeon => Some(Self::InstanceContent),
             TerritoryIntendedUse::RivalWings => Some(Self::InstanceContent),
             TerritoryIntendedUse::TreasureDungeon => Some(Self::InstanceContent),
+            TerritoryIntendedUse::CosmicExploration => Some(Self::MassivePcContent),
+            // TODO: needs proper handling
+            //TerritoryIntendedUse::GoldSaucer => Some(Self::GoldSaucer),
             _ => None,
         }
     }

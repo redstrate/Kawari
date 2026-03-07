@@ -483,10 +483,14 @@ ServerZoneIpcType:
     comment: Shows a popup message (usually reserved for NPCs and bosses.) Not sure if it's the only thing this does.
     opcode: 351
     size: 40
-  - name: DirectorSetupMapEffects
+  - name: DirectorSetupMapEffects64
     comment: Seems to animate stuff like the train moving in the Tower of Babil. Unsure of its purpose elsewhere.
     opcode: 330
     size: 136
+  - name: DirectorSetupMapEffects128
+    comment: Seems to animate stuff like the train moving in the Tower of Babil. Unsure of its purpose elsewhere.
+    opcode: 865
+    size: 264
   - name: DirectorMapEffect
     comment: Updates a map effect.
     opcode: 472
