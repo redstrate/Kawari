@@ -342,6 +342,8 @@ pub enum ToServer {
     Fish(ClientId, ObjectId),
     /// Warp to a specified pop range in a new territory.
     WarpPopRange(ClientId, ObjectId, u16, u32),
+    /// Simulate mounting.
+    DebugMount(ClientId, ObjectId, u16),
 }
 
 #[derive(Clone, Debug)]

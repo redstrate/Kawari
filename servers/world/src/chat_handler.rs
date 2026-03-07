@@ -7,10 +7,7 @@ use crate::{
 };
 use kawari::{
     common::{ERR_INVENTORY_ADD_FAILED, ITEM_CONDITION_MAX},
-    ipc::zone::{
-        ActorControlCategory, Condition, Conditions, GameMasterRank, SendChatMessage,
-        ServerZoneIpcData, ServerZoneIpcSegment,
-    },
+    ipc::zone::{ActorControlCategory, Condition, Conditions, GameMasterRank, SendChatMessage},
 };
 
 use super::ZoneConnection;
@@ -183,11 +180,14 @@ impl ChatHandler {
             "!mount" => {
                 if let Some((_, mount)) = chat_message.message.split_once(' ') {
                     let mount_id = mount.parse::<u16>().unwrap();
-                    let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Mount {
-                        id: mount_id,
-                        unk1: [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                    });
-                    connection.send_ipc_self(ipc).await;
+                    connection
+                        .handle
+                        .send(ToServer::DebugMount(
+                            connection.id,
+                            connection.player_data.character.actor_id,
+                            mount_id,
+                        ))
+                        .await;
                 }
 
                 true

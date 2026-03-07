@@ -30,9 +30,9 @@ use kawari::{
         ObjectTypeId, ObjectTypeKind, Position, TerritoryIntendedUse,
     },
     ipc::zone::{
-        ActorControlCategory, BattleNpcSubKind, ClientTriggerCommand, CommonSpawn, Condition,
-        Conditions, EnmityList, Hater, HaterList, NpcSpawn, ObjectKind, PlayerEnmity,
-        ServerZoneIpcData, ServerZoneIpcSegment, WaymarkPlacementMode, WaymarkPreset,
+        ActionKind, ActionRequest, ActorControlCategory, BattleNpcSubKind, ClientTriggerCommand,
+        CommonSpawn, Condition, Conditions, EnmityList, Hater, HaterList, NpcSpawn, ObjectKind,
+        PlayerEnmity, ServerZoneIpcData, ServerZoneIpcSegment, WaymarkPlacementMode, WaymarkPreset,
     },
 };
 
@@ -1822,6 +1822,22 @@ pub async fn server_main_loop(
                         from_actor_id,
                         Duration::from_secs(2),
                         QueuedTaskData::FishBite {},
+                    );
+                }
+                ToServer::DebugMount(from_id, from_actor_id, mount_id) => {
+                    execute_action(
+                        network.clone(),
+                        data.clone(),
+                        game_data.clone(),
+                        lua.clone(),
+                        from_id,
+                        from_actor_id,
+                        ActionRequest {
+                            action_key: mount_id as u32,
+                            exec_proc: 0,
+                            action_kind: ActionKind::Mount,
+                            ..Default::default()
+                        },
                     );
                 }
                 ToServer::FatalError(err) => return Err(err),
