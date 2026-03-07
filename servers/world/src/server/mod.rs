@@ -1179,7 +1179,6 @@ pub async fn server_main_loop(
                                 1 => ObjectTypeKind::EObjOrNpc,
                                 2 => ObjectTypeKind::Minion,
                                 _ => {
-                                    // TODO: Are there other types?
                                     tracing::warn!(
                                         "SetTarget: Unknown actor target type {}! Defaulting to None!",
                                         *actor_type
