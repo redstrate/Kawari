@@ -446,7 +446,22 @@ pub fn kill_actor(
             director.on_actor_death(npc_id, position.unwrap());
         }
 
+        // Cancel existing tasks
         instance.cancel_actor_tasks(from_actor_id);
+
+        // Queue up despawn if this is an NPC
+        if let Some(actor) = instance.find_actor_mut(from_actor_id)
+            && !matches!(actor, NetworkedActor::Player { .. })
+        {
+            instance.insert_task(
+                ClientId::default(),
+                from_actor_id,
+                DEAD_FADE_OUT_TIME,
+                QueuedTaskData::DeadFadeOut {
+                    actor_id: from_actor_id,
+                },
+            );
+        }
     }
 }
 
@@ -487,18 +502,6 @@ pub fn update_actor_hp_mp(
         }
 
         if common_spawn.hp == 0 {
-            // Queue up despawn if this is an NPC
-            if !matches!(actor, NetworkedActor::Player { .. }) {
-                instance.insert_task(
-                    ClientId::default(),
-                    target_actor_id,
-                    DEAD_FADE_OUT_TIME,
-                    QueuedTaskData::DeadFadeOut {
-                        actor_id: target_actor_id,
-                    },
-                );
-            }
-
             send_kill_actor = true;
         }
     }
