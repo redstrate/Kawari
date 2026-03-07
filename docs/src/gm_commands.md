@@ -5,38 +5,38 @@ These are commands already built-in into the FFXIV client. Normally only availab
 > [!NOTE]
 > We obviously lack the original documentation for these commands, so the names and functionality are left up to our interpretation.
 
-| Name | Usage | Details |
-| --- | --- | --- |
-| `aetheryte` | `//gm aetheryte <on/off> <id/all>` | Unlock an Aetheryte. |
-| `blacklist` | `//gm blacklist status` | Unknown purpose, looks like it just prints out your blacklist. |
-| `chr_info` | `//gm chr_info <pc/bnpc/enpc/enpc_lively>` | Returns the internal entity IDs for your player character. |
-| `collect` | `//gm collect <amount>` | Subtracts `amount` gil from the targeted player (yourself only for now). |
-| `dc_region` | `//gm dc_region` | Useless, but returns the DC for the World you set in the config. |
-| `exp` | `//gm exp <amount>` | Adds the specified amount of EXP to the current class/job. |
-| `fittingshop_ui displayid` | `//gm fittingshop_ui displayid` | Lists the listed available items under Latest Trends. |
-| `fittingshop_ui displayid set` | `//gm fittingshop_ui displayid set <list of ids>` | Sets which items are available under Latest Trends locally. Corresponds to the DisplayId column in the FittingShopCategoryItem Excel sheet. |
-| `fittingshop_ui displayid reset` | `//gm fittingshop_ui reset` | Resets the available items under Latest Trends back to the list sent by the server. |
-| `getpos` | `//gm getpos` | Returns your current position. |
-| `gil` | `//gm gil <amount>` | Adds the specified amount of gil to the player. |
-| `hp` | `//gm hp <amount>` | Sets your current HP to the amount specified. |
-| `icon` | `//gm icon <id>` | Sets your online status to the given ID. |
-| `item` | `//gm item <id>` | Gives yourself an item. This can only place a single item in the first page of your inventory currently. |
-| `kill` | `//gm kill` | Kills the selected player, but only affects you for now. |
-| `lv` | `//gm lv <level>` | Sets your current level. |
-| `mp` | `//gm mp <amount>` | Sets your current MP to the amount specified. |
-| `quest accept` | `//gm quest accept <id>` | Adds the quest to your active quest list. |
-| `quest cancel` | `//gm quest cancel <id>` | Removes the quest from your active quest list. |
-| `quest incomplete` | `//gm quest incomplete <id>` | Removes the quest from the completed quest list. |
-| `quest complete` | `//gm quest complete <id/all>` | Adds the quest to the completed quest list. |
-| `quest sequence`  | `//gm quest sequence <id> <sequence>` | Sets the sequence for this quest. |
-| `quest inspect` | `//gm quest inspect <id> ` | Print information about this quest. |
-| `orchestrion` | `//gm orchestrion <on/off> <id>` | Unlock an Orchestrion song. |
-| `pos` | `//gm pos <x> <y> <z>` | Teleport to the specified location. |
-| `race` | `//gm race <id>` | Sets your player's race. |
-| `sex` | `//gm sex <id>` | Sets your player's sex (0 is male, 1 is female.) |
-| `speed` | `//gm speed <multiplier>` | Increases your movement speed by `multiplier`. |
-| `teri` | `//gm teri <id>` | Changes to the specified territory. |
-| `teri_info` | `//gm teri_info` | Displays information about the current zone. Currently displays zone id, weather, internal zone name, parent region name, and place/display name. |
-| `tribe` | `//gm tribe <id>` | Sets your player's tribe. |
-| `weather` | `//gm weather <id>` | Changes the weather. |
-| `wireframe` | `//gm wireframe` | Toggle wireframe rendering for the environment. |
+| Usage | Details |
+| --- | --- |
+| `//gm aetheryte <on/off> <id/all>` | Unlock an Aetheryte. |
+| `//gm blacklist status` | Unknown purpose, looks like it just prints out your blacklist. |
+| `//gm chr_info <pc/bnpc/enpc/enpc_lively>` | Returns the internal entity IDs for your player character. |
+| `//gm collect <amount>` | Subtracts `amount` gil from the targeted player (yourself only for now). |
+| `//gm dc_region` | Useless, but returns the DC for the World you set in the config. |
+| `//gm exp <amount>` | Adds the specified amount of EXP to the current class/job. |
+| `//gm fittingshop_ui displayid` | Lists the listed available items under Latest Trends. |
+| `//gm fittingshop_ui displayid set <list of ids>` | Sets which items are available under Latest Trends locally. Corresponds to the DisplayId column in the FittingShopCategoryItem Excel sheet. |
+| `//gm fittingshop_ui reset` | Resets the available items under Latest Trends back to the list sent by the server. |
+| `//gm getpos` | Returns your current position. |
+| `//gm gil <amount>` | Adds the specified amount of gil to the player. |
+| `//gm hp <amount>` | Sets your current HP to the amount specified. |
+| `//gm icon <id>` | Sets your online status to the given ID. |
+| `//gm item <id>` | Gives yourself an item. This can only place a single item in the first page of your inventory currently. |
+| `//gm kill` | Kills the selected player, but only affects you for now. |
+| `//gm lv <level>` | Sets your current level. |
+| `//gm mp <amount>` | Sets your current MP to the amount specified. |
+| `//gm quest accept <id>` | Adds the quest to your active quest list. |
+| `//gm quest cancel <id>` | Removes the quest from your active quest list. |
+| `//gm quest incomplete <id>` | Removes the quest from the completed quest list. |
+| `//gm quest complete <id/all>` | Adds the quest to the completed quest list. |
+| `//gm quest sequence <id> <sequence>` | Sets the sequence for this quest. |
+| `//gm quest inspect <id> ` | Print information about this quest. |
+| `//gm orchestrion <on/off> <id>` | Unlock an Orchestrion song. |
+| `//gm pos <x> <y> <z>` | Teleport to the specified location. |
+| `//gm race <id>` | Sets your player's race. |
+| `//gm sex <id>` | Sets your player's sex (0 is male, 1 is female.) |
+| `//gm speed <multiplier>` | Increases your movement speed by `multiplier`. |
+| `//gm teri <id>` | Changes to the specified territory. |
+| `//gm teri_info` | Displays information about the current zone. Currently displays zone id, weather, internal zone name, parent region name, and place/display name. |
+| `//gm tribe <id>` | Sets your player's tribe. |
+| `//gm weather <id>` | Changes the weather. |
+| `//gm wireframe` | Toggle wireframe rendering for the environment. |
