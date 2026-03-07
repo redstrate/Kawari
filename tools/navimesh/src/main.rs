@@ -508,19 +508,22 @@ fn walk_layer(
         }
 
         if let LayerEntryData::SharedGroup(sgb) = &object.data {
-            let sgb = resolver.parsed::<Sgb>(&sgb.asset_path.value).unwrap();
-            for group in &sgb.sections[0].layer_groups {
-                for layer in &group.layers {
-                    walk_layer(
-                        resolver,
-                        layer,
-                        &child_transform,
-                        context,
-                        tiles,
-                        max_slope,
-                        walkable_climb,
-                    );
+            if let Ok(sgb) = resolver.parsed::<Sgb>(&sgb.asset_path.value) {
+                for group in &sgb.sections[0].layer_groups {
+                    for layer in &group.layers {
+                        walk_layer(
+                            resolver,
+                            layer,
+                            &child_transform,
+                            context,
+                            tiles,
+                            max_slope,
+                            walkable_climb,
+                        );
+                    }
                 }
+            } else {
+                tracing::warn!("Failed to load sgb: {}", sgb.asset_path.value);
             }
         }
     }
