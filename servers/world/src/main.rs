@@ -1471,14 +1471,6 @@ async fn process_packet(
                             });
                             connection.send_ipc_self(ipc).await;
                         }
-                        ClientZoneIpcData::EventRelatedUnk {
-                            unk1,
-                            unk2,
-                            unk3,
-                            unk4,
-                        } => {
-                            tracing::info!("Recieved EventRelatedUnk! {unk1} {unk2} {unk3} {unk4}");
-                        }
                         ClientZoneIpcData::ItemOperation(action) => {
                             tracing::info!("Client is modifying inventory! {action:#?}");
                             connection

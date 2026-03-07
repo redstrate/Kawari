@@ -130,13 +130,6 @@ pub enum ClientZoneIpcData {
         #[brw(pad_after = 4)]
         rotation: f32,
     },
-    EventRelatedUnk {
-        unk1: u32,
-        unk2: u16,
-        #[brw(pad_before = 2)]
-        unk3: u32,
-        unk4: u32,
-    },
     ItemOperation(ItemOperation),
     StartTalkEvent {
         actor_id: ObjectTypeId,
