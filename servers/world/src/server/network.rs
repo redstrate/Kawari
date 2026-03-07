@@ -299,28 +299,6 @@ impl NetworkState {
         }
     }
 
-    /// Sends the `ipc` to `client_id`.
-    pub fn send_ipc_to(
-        &mut self,
-        client_id: ClientId,
-        ipc: ServerZoneIpcSegment,
-        from_actor_id: ObjectId,
-    ) {
-        let clients = &mut self.clients;
-        let message = FromServer::PacketSegment(ipc, from_actor_id);
-
-        for (id, (handle, _)) in clients {
-            let id = *id;
-
-            if id == client_id {
-                if handle.send(message).is_err() {
-                    self.to_remove.push(id);
-                }
-                break;
-            }
-        }
-    }
-
     /// Sends the ActorControl `category` to all in-range actors, *excluding* `from_actor_id`.
     pub fn send_ac_in_range(
         &mut self,

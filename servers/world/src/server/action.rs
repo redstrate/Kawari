@@ -12,7 +12,7 @@ use crate::{
         WorldServer,
         actor::{NetworkedActor, NpcState},
         effect::gain_effect,
-        instance::QueuedTaskData,
+        instance::{Instance, QueuedTaskData},
         network::{DestinationNetwork, NetworkState},
     },
 };
@@ -110,7 +110,7 @@ pub fn execute_action(
                 execute_item_action(game_data.clone(), lua.clone(), &request, &mut lua_player)
             }
             ActionKind::Mount => {
-                execute_mount_action(network.clone(), from_id, from_actor_id, &request, actor)
+                execute_mount_action(network.clone(), from_actor_id, &request, actor, instance)
             }
         };
     }
@@ -166,7 +166,18 @@ pub fn execute_action(
                         hidden_animation: 1,
                         ..Default::default()
                     }));
-                network.send_ipc_to(from_id, ipc, from_actor_id);
+
+                let mut data = data.lock();
+
+                let Some(instance) = data.find_actor_instance_mut(request.target.object_id) else {
+                    return;
+                };
+                network.send_in_range_inclusive_instance(
+                    from_actor_id,
+                    instance,
+                    FromServer::PacketSegment(ipc, from_actor_id),
+                    DestinationNetwork::ZoneClients,
+                );
             }
         }
 
@@ -233,7 +244,16 @@ pub fn execute_action(
                 statuses: entries,
             }));
             let mut network = network.lock();
-            network.send_ipc_to(from_id, ipc, from_actor_id);
+            let mut data = data.lock();
+            let Some(instance) = data.find_actor_instance_mut(request.target.object_id) else {
+                return;
+            };
+            network.send_in_range_inclusive_instance(
+                from_actor_id,
+                instance,
+                FromServer::PacketSegment(ipc, from_actor_id),
+                DestinationNetwork::ZoneClients,
+            );
         }
     }
 
@@ -350,10 +370,10 @@ pub fn execute_item_action(
 /// Handles mount-related actions.
 pub fn execute_mount_action(
     network: Arc<Mutex<NetworkState>>,
-    from_id: ClientId,
     from_actor_id: ObjectId,
     request: &ActionRequest,
     actor: &NetworkedActor,
+    instance: &Instance,
 ) -> Option<EffectsBuilder> {
     let mut network = network.lock();
 
@@ -383,13 +403,23 @@ pub fn execute_mount_action(
         hidden_animation: 4,
         ..Default::default()
     }));
-    network.send_ipc_to(from_id, ipc, from_actor_id);
+    network.send_in_range_inclusive_instance(
+        from_actor_id,
+        instance,
+        FromServer::PacketSegment(ipc, from_actor_id),
+        DestinationNetwork::ZoneClients,
+    );
 
     let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Mount {
         id: request.action_key as u16,
         unk1: [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     });
-    network.send_ipc_to(from_id, ipc, from_actor_id);
+    network.send_in_range_inclusive_instance(
+        from_actor_id,
+        instance,
+        FromServer::PacketSegment(ipc, from_actor_id),
+        DestinationNetwork::ZoneClients,
+    );
 
     None
 }
