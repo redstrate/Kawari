@@ -701,7 +701,14 @@ fn begin_change_zone<'a>(
 
     // then find or create a new instance with the zone id
     data.ensure_exists(destination_zone_id, game_data);
-    data.find_instance_mut(destination_zone_id)
+    if let Some(target_instance) = data.find_instance_mut(destination_zone_id) {
+        // Insert an empty actor that will be filled later
+        target_instance.insert_empty_actor(actor_id);
+
+        return Some(target_instance);
+    }
+
+    None
 }
 
 /// Sends the needed information to ZoneConnection for a zone change.
@@ -716,8 +723,6 @@ fn change_zone_warp_to_pop_range(
 ) {
     let target_instance =
         begin_change_zone(data, network, game_data, destination_zone_id, actor_id).unwrap();
-
-    target_instance.insert_empty_actor(actor_id);
 
     let exit_position;
     let exit_rotation;
@@ -844,43 +849,19 @@ pub fn handle_zone_messages(
 
             let mut data = data.lock();
             let mut network = network.lock();
+            let mut game_data = game_data.lock();
 
-            // create a new instance if necessary
-            {
-                let mut game_data = game_data.lock();
-                data.ensure_exists(*zone_id, &mut game_data);
-            }
-
-            // inform the players in this zone that this actor left
-            if let Some(current_instance) = data.find_actor_instance_mut(*actor_id) {
-                network.remove_actor(current_instance, *actor_id);
-            }
-
-            // then find or create a new instance with the zone id
-            {
-                let mut game_data = game_data.lock();
-                data.ensure_exists(*zone_id, &mut game_data);
-            }
-            let target_instance = data.find_instance_mut(*zone_id).unwrap();
-            target_instance.insert_empty_actor(*actor_id);
-
-            let director_vars = target_instance
-                .director
-                .as_ref()
-                .map(|director| director.build_var_segment());
-
-            // tell the client to load into the zone
-            let msg = FromServer::ChangeZone(
+            let target_instance =
+                begin_change_zone(&mut data, &mut network, &mut game_data, *zone_id, *actor_id)
+                    .unwrap();
+            do_change_zone(
+                &mut network,
+                target_instance,
                 *zone_id,
-                target_instance.content_finder_condition_id,
-                target_instance.weather_id,
-                new_position.unwrap_or_default(),
-                new_rotation.unwrap_or_default(),
-                target_instance.zone.to_lua_zone(target_instance.weather_id),
-                false,
-                director_vars,
+                *new_position,
+                *new_rotation,
+                *from_id,
             );
-            network.send_to(*from_id, msg, DestinationNetwork::ZoneClients);
 
             true
         }
