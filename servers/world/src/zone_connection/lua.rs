@@ -132,6 +132,9 @@ impl ZoneConnection {
                     })
                     .await;
                 }
+                LuaTask::UnlockAll {} => {
+                    self.player_data.unlock.unlocks.set_all();
+                }
                 LuaTask::UnlockAetheryte { id, on } => {
                     let unlock_all = *id == 0;
                     if unlock_all {

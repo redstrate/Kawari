@@ -34,6 +34,7 @@ pub enum LuaTask {
     Unlock {
         id: u32,
     },
+    UnlockAll {},
     UnlockAetheryte {
         id: u32,
         on: bool,

@@ -12,10 +12,8 @@ function onCommand(args, player)
     end
 
     if args[1] == "all" then
-        for i = 0, 511, 1 do
-            player:unlock(i)
-        end
-        printf(player, "Everything is unlocked!", id)
+        player:unlock_all()
+        printf(player, "Everything is unlocked, please log in again!")
     else
         local id = tonumber(args[1])
 
