@@ -66,7 +66,6 @@ pub struct QueuedTask {
     pub data: QueuedTaskData,
 }
 
-// TODO: structure is temporary, of course
 #[derive(Default, Debug)]
 pub struct Instance {
     pub actors: HashMap<ObjectId, NetworkedActor>,
