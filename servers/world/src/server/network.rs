@@ -10,10 +10,7 @@ use crate::{
         social::{Party, get_party_id_from_actor_id},
     },
 };
-use kawari::{
-    common::ObjectId,
-    ipc::zone::{ActorControlCategory, ServerZoneIpcSegment},
-};
+use kawari::{common::ObjectId, ipc::zone::ActorControlCategory};
 
 #[derive(Default, Debug)]
 pub struct NetworkState {
