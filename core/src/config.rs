@@ -324,6 +324,9 @@ pub struct WorldConfig {
     #[serde(default = "WorldConfig::default_port")]
     pub port: u16,
 
+    #[serde(default = "WorldConfig::default_healthcheck_port")]
+    pub healthcheck_port: u16,
+
     #[serde(default = "default_listen_address")]
     pub listen_address: String,
 
@@ -371,6 +374,7 @@ impl Default for WorldConfig {
     fn default() -> Self {
         Self {
             port: Self::default_port(),
+            healthcheck_port: Self::default_healthcheck_port(),
             listen_address: default_listen_address(),
             server_name: Self::default_server_name(),
             world_id: Self::default_world_id(),
@@ -389,6 +393,10 @@ impl Default for WorldConfig {
 impl WorldConfig {
     fn default_port() -> u16 {
         7100
+    }
+
+    fn default_healthcheck_port() -> u16 {
+        5807
     }
 
     fn default_server_name() -> String {

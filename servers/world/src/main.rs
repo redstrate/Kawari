@@ -2551,7 +2551,7 @@ async fn main() {
     let app = Router::new().route("/healthcheck", get(root));
 
     let mut healthcheck_addr = addr;
-    healthcheck_addr.set_port(5807); // TODO: make configurable
+    healthcheck_addr.set_port(config.world.healthcheck_port);
     let healthcheck_listener = tokio::net::TcpListener::bind(healthcheck_addr)
         .await
         .unwrap();
