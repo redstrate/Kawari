@@ -19,7 +19,7 @@ use crate::{
         effect::{handle_effect_messages, remove_effect, send_effects_list},
         instance::{Instance, NavmeshGenerationStep, QueuedTaskData},
         network::{DestinationNetwork, NetworkState},
-        social::handle_social_messages,
+        social::{get_party_id_from_actor_id, handle_social_messages},
         zone::{MapGimmick, change_zone_warp_to_entrance, handle_zone_messages},
     },
 };
@@ -1598,14 +1598,31 @@ pub async fn server_main_loop(
                         zone_id = game_data.find_zone_for_content(content_id);
                     }
 
+                    let mut actor_ids = Vec::new();
+
+                    // Send all party members to this instanced content
+                    let mut network = network.lock();
+                    if let Some(party_id) = get_party_id_from_actor_id(&network, from_actor_id) {
+                        if let Some(party) = network.parties.get(&party_id) {
+                            for member in &party.members {
+                                if member.is_valid() && member.is_online() {
+                                    actor_ids.push((member.zone_client_id, member.actor_id));
+                                }
+                            }
+                        }
+                    } else {
+                        actor_ids.push((from_id, from_actor_id));
+                    }
+
                     if let Some(zone_id) = zone_id {
                         let mut data = data.lock();
-                        let mut network = network.lock();
 
-                        // inform the players in this zone that this actor left
-                        if let Some(current_instance) = data.find_actor_instance_mut(from_actor_id)
-                        {
-                            network.remove_actor(current_instance, from_actor_id);
+                        for (_, actor_id) in &actor_ids {
+                            // inform the players in this zone that this actor left
+                            if let Some(current_instance) = data.find_actor_instance_mut(*actor_id)
+                            {
+                                network.remove_actor(current_instance, *actor_id);
+                            }
                         }
 
                         // then find or create a new instance with the zone id and content finder condition
@@ -1613,14 +1630,16 @@ pub async fn server_main_loop(
                         if let Some(target_instance) =
                             data.create_new_instance(zone_id, content_id, &mut game_data)
                         {
-                            target_instance.insert_empty_actor(from_actor_id);
+                            for (client_id, actor_id) in &actor_ids {
+                                target_instance.insert_empty_actor(*actor_id);
 
-                            change_zone_warp_to_entrance(
-                                &mut network,
-                                target_instance,
-                                zone_id,
-                                from_id,
-                            );
+                                change_zone_warp_to_entrance(
+                                    &mut network,
+                                    target_instance,
+                                    zone_id,
+                                    *client_id,
+                                );
+                            }
                         } else {
                             tracing::warn!("Failed to create a new instance for content?!");
                         }
