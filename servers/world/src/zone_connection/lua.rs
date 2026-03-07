@@ -518,7 +518,6 @@ impl ZoneConnection {
                     self.toggle_aether_current(*id).await;
                 }
                 LuaTask::ToggleAetherCurrentAll {} => {
-                    // TODO: seems like server has issues after executing it, but when you login back after being disconnected, seems to be alright?
                     let max_aether_current_id = AETHER_CURRENT_BITMASK_SIZE as u32 * 8;
 
                     for i in 2818048..(2818048 + max_aether_current_id) {
