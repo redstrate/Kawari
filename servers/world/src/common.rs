@@ -195,6 +195,8 @@ pub struct ClientHandle {
     pub id: ClientId,
     pub channel: Sender<FromServer>,
     pub actor_id: ObjectId,
+    pub content_id: u64,
+    pub account_id: u64,
 }
 
 impl ClientHandle {

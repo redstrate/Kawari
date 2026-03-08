@@ -859,6 +859,19 @@ pub enum ServerZoneIpcData {
     },
     EnmityList(EnmityList),
     HaterList(HaterList),
+    DuelInformation {
+        account_id: u64,
+        opponent_content_id: u64,
+        opponent_object_id: ObjectId,
+        world_id: u16,
+        unk1: u16,
+        #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+        #[br(count = CHAR_NAME_MAX_LENGTH)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        #[brw(pad_after = 7, pad_before = 1)] // empty
+        opponent_name: String,
+    },
 }
 
 #[cfg(test)]

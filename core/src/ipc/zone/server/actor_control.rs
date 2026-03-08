@@ -638,6 +638,12 @@ pub enum ActorControlCategory {
         unlocked: bool,
     },
 
+    /// Called during dueling.
+    #[brw(magic = 1504u32)]
+    SetPvPState {
+        state: u32, // TODO: turn into enum
+    },
+
     /// Calls some method in PvPProfile, unsure what it does yet.
     #[brw(magic = 1610u32)]
     UnkPvPProfileRelated {

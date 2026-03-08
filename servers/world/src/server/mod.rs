@@ -29,6 +29,7 @@ use kawari::{
         MAX_SPAWNED_ACTORS, MAX_SPAWNED_OBJECTS, MoveAnimationState, MoveAnimationType, ObjectId,
         ObjectTypeId, ObjectTypeKind, Position, TerritoryIntendedUse,
     },
+    config::get_config,
     ipc::zone::{
         ActionKind, ActionRequest, ActorControlCategory, BattleNpcSubKind, ClientTriggerCommand,
         CommonSpawn, Condition, Conditions, EnmityList, Hater, HaterList, NpcSpawn, ObjectKind,
@@ -1438,6 +1439,63 @@ pub async fn server_main_loop(
                                     );
                                 }
                             }
+                        }
+                        ClientTriggerCommand::RequestDuel { actor_id } => {
+                            let mut network = network.lock();
+                            network.send_to_by_actor_id(
+                                from_actor_id,
+                                FromServer::ActorControlSelf(ActorControlCategory::SetPvPState {
+                                    state: 2,
+                                }),
+                                DestinationNetwork::ZoneClients,
+                            );
+
+                            let account_id;
+                            {
+                                let Some((handle, _)) = network.get_by_actor_mut(from_actor_id)
+                                else {
+                                    continue;
+                                };
+                                account_id = handle.account_id;
+                            }
+
+                            let opponent_content_id;
+                            let opponent_object_id;
+                            let opponent_name;
+                            {
+                                let Some((handle, _)) = network.get_by_actor_mut(*actor_id) else {
+                                    continue;
+                                };
+                                opponent_content_id = handle.content_id;
+                                opponent_object_id = *actor_id;
+
+                                let data = data.lock();
+                                let Some(instance) = data.find_actor_instance(*actor_id) else {
+                                    continue;
+                                };
+
+                                let Some(actor) = instance.find_actor(*actor_id) else {
+                                    continue;
+                                };
+
+                                opponent_name = actor.get_common_spawn().name.clone();
+                            }
+
+                            let config = get_config();
+                            let ipc =
+                                ServerZoneIpcSegment::new(ServerZoneIpcData::DuelInformation {
+                                    account_id,
+                                    opponent_content_id,
+                                    opponent_object_id,
+                                    world_id: config.world.world_id,
+                                    unk1: 7957,
+                                    opponent_name,
+                                });
+                            network.send_to_by_actor_id(
+                                from_actor_id,
+                                FromServer::PacketSegment(ipc, from_actor_id),
+                                DestinationNetwork::ZoneClients,
+                            );
                         }
                         _ => tracing::warn!("Server doesn't know what to do with {:#?}", trigger),
                     }

@@ -523,6 +523,10 @@ ServerZoneIpcType:
     comment: Sent to update the people who hate you.
     opcode: 744
     size: 264
+  - name: DuelInformation
+    comment: Information about an upcoming duel.
+    opcode: 599
+    size: 64
 ClientZoneIpcType:
   - name: InitRequest
     comment: "Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)"

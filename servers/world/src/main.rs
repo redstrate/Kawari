@@ -259,6 +259,8 @@ fn spawn_chat_connection(connection: ChatConnection) {
         id: *id,
         channel: send,
         actor_id: *actor_id, // We have the actor id by this point, since Setup is done earlier
+        account_id: 0,       // TODO: fill as we need it
+        content_id: 0,
     };
     let _ = my_send.send(handle);
 }
@@ -387,6 +389,8 @@ fn spawn_client(connection: ZoneConnection) {
 
     let id = &connection.id.clone();
     let actor_id = &connection.player_data.character.actor_id.clone();
+    let content_id = &connection.player_data.character.content_id.clone();
+    let account_id = &connection.player_data.character.service_account_id.clone();
 
     let data = ClientZoneData { recv, connection };
 
@@ -399,6 +403,8 @@ fn spawn_client(connection: ZoneConnection) {
         id: *id,
         channel: send,
         actor_id: *actor_id, // We have the actor id by this point, since Setup is done earlier
+        content_id: *content_id as u64,
+        account_id: *account_id as u64,
     };
     let _ = my_send.send(handle);
 }
