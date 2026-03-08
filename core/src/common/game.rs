@@ -425,6 +425,7 @@ impl HandlerType {
             TerritoryIntendedUse::RivalWings => Some(Self::InstanceContent),
             TerritoryIntendedUse::TreasureDungeon => Some(Self::InstanceContent),
             TerritoryIntendedUse::CosmicExploration => Some(Self::MassivePcContent),
+            TerritoryIntendedUse::OpenWorldInstanceBattle => Some(Self::QuestBattle),
             // TODO: needs proper handling
             //TerritoryIntendedUse::GoldSaucer => Some(Self::GoldSaucer),
             _ => None,
