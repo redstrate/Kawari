@@ -19,7 +19,7 @@ use crate::{
         effect::{handle_effect_messages, remove_effect, send_effects_list},
         instance::{Instance, NavmeshGenerationStep, QueuedTaskData},
         network::{DestinationNetwork, NetworkState},
-        social::{get_party_id_from_actor_id, handle_social_messages},
+        social::{NUM_TARGET_SIGNS, get_party_id_from_actor_id, handle_social_messages},
         zone::{MapGimmick, change_zone_warp_to_entrance, handle_zone_messages},
     },
 };
@@ -1423,6 +1423,21 @@ pub async fn server_main_loop(
                             );
 
                             network.send_to_party_or_self(from_actor_id, msg);
+
+                            // If we're in a party, keep track of the actor that was just marked.
+                            if let Some(party_id) =
+                                get_party_id_from_actor_id(&network, from_actor_id)
+                            {
+                                let party = network.parties.get_mut(&party_id).unwrap();
+                                let sign_id = *sign_id as usize;
+                                if sign_id < NUM_TARGET_SIGNS {
+                                    party.target_signs[sign_id] = *target_actor;
+                                } else {
+                                    tracing::error!(
+                                        "Client tried to assign target sign id {sign_id}, but there are only {NUM_TARGET_SIGNS} currently known. Update the constant if necessary!"
+                                    );
+                                }
+                            }
                         }
                         _ => tracing::warn!("Server doesn't know what to do with {:#?}", trigger),
                     }

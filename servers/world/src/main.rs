@@ -835,6 +835,7 @@ async fn process_packet(
                                             connection.player_data.character.service_account_id
                                                 as u64,
                                             connection.player_data.character.content_id as u64,
+                                            connection.player_data.character.actor_id,
                                             connection.player_data.character.name.clone(),
                                         ))
                                         .await;
