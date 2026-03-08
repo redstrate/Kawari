@@ -344,6 +344,8 @@ pub enum ToServer {
     WarpPopRange(ClientId, ObjectId, u16, u32),
     /// Simulate mounting.
     DebugMount(ClientId, ObjectId, u16),
+    /// Request the global server state to reload its Lua state.
+    ReloadScripts,
 }
 
 #[derive(Clone, Debug)]

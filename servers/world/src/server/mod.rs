@@ -1840,6 +1840,12 @@ pub async fn server_main_loop(
                         },
                     );
                 }
+                ToServer::ReloadScripts => {
+                    let mut lua = lua.lock();
+                    if let Err(err) = lua.init(game_data.clone()) {
+                        tracing::warn!("Failed to load Init.lua: {:?}", err);
+                    }
+                }
                 ToServer::FatalError(err) => return Err(err),
                 _ => {}
             }

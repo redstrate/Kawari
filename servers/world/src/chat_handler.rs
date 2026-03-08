@@ -107,7 +107,7 @@ impl ChatHandler {
                 true
             }
             "!reload" => {
-                connection.reload_scripts();
+                connection.reload_scripts().await;
                 connection.send_notice("Scripts reloaded!").await;
                 true
             }

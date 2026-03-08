@@ -92,8 +92,6 @@ impl KawariLua {
 
         let mut extra_lua_state = KawariLuaState::default();
 
-        let _config = get_config();
-
         let load_based_on_filename = |name: &str, hash_map: &mut HashMap<u32, String>| {
             let effects_dir = format!("resources/scripts/{name}");
             for entry in std::fs::read_dir(effects_dir)

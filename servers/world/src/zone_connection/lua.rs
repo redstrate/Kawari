@@ -797,10 +797,15 @@ impl ZoneConnection {
     }
 
     /// Reloads Global.lua
-    pub fn reload_scripts(&mut self) {
-        let mut lua = self.lua.lock();
-        if let Err(err) = lua.init(self.gamedata.clone()) {
-            tracing::warn!("Failed to load Init.lua: {:?}", err);
+    pub async fn reload_scripts(&mut self) {
+        {
+            let mut lua = self.lua.lock();
+            if let Err(err) = lua.init(self.gamedata.clone()) {
+                tracing::warn!("Failed to load Init.lua: {:?}", err);
+            }
         }
+
+        // Then inform the server state to reload its own state as well
+        self.handle.send(ToServer::ReloadScripts).await;
     }
 }
