@@ -6,6 +6,7 @@ use parking_lot::Mutex;
 use crate::{
     GameData, PlayerData, RemakeMode, StatusEffects,
     inventory::{CrystalKind, CurrencyKind},
+    zone_connection::BaseParameters,
 };
 use kawari::{
     common::{HandlerId, ObjectTypeId, ObjectTypeKind, Position, adjust_quest_id},
@@ -41,6 +42,8 @@ pub struct LuaPlayer {
     pub zone_data: LuaZone,
     pub status_effects: StatusEffects,
     pub content_data: LuaContent,
+    // TODO: move this into PlayerData
+    pub base_parameters: BaseParameters,
 }
 
 impl QueueSegments for LuaPlayer {
@@ -1013,5 +1016,6 @@ impl UserData for LuaPlayer {
             Ok(this.player_data.saw_inn_wakeup)
         });
         fields.add_field_method_get("content", |_, this| Ok(this.content_data));
+        fields.add_field_method_get("parameters", |_, this| Ok(this.base_parameters.clone()));
     }
 }

@@ -850,6 +850,7 @@ async fn process_packet(
                             }
 
                             connection.send_stats().await;
+                            connection.update_server_stats().await;
 
                             // wipe any exit position so it isn't accidentally reused
                             connection.exit_position = None;

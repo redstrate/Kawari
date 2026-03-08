@@ -14,7 +14,7 @@ use crate::{
         network::NetworkState,
         zone::Zone,
     },
-    zone_connection::TeleportQuery,
+    zone_connection::{BaseParameters, TeleportQuery},
 };
 use kawari::{
     common::{DistanceRange, ENTRANCE_CIRCLE_IDS, ObjectId, Position},
@@ -181,6 +181,7 @@ impl Instance {
                 conditions: Conditions::default(),
                 executing_gimmick_jump: false,
                 inside_instance_exit: false,
+                parameters: BaseParameters::default(),
             },
         );
     }

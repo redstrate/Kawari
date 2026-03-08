@@ -11,9 +11,10 @@ use kawari::{
         ActorControlCategory, PlayerStats, ServerZoneIpcData, ServerZoneIpcSegment, UpdateClassInfo,
     },
 };
+use mlua::{UserData, UserDataMethods};
 
 /// Every BaseParam row, some of them may be useless.
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub struct BaseParameters {
     pub strength: u32,
     pub dexterity: u32,
@@ -187,6 +188,33 @@ impl BaseParameters {
         );
         self.mp = param_grow.mp_modifier as u32;
     }
+
+    pub fn calculate_damages(&mut self) {
+        // TODO: wrong but we need some scaling
+        self.physical_damage = self.strength * 100;
+        self.magic_damage = self.intelligence * 100;
+    }
+
+    fn calc_physical_damage(&self, potency: u32) -> u16 {
+        let normalized_potency = potency as f32 / 100.0;
+        (normalized_potency * self.physical_damage as f32).floor() as u16
+    }
+
+    fn calc_magical_damage(&self, potency: u32) -> u16 {
+        let normalized_potency = potency as f32 / 100.0;
+        (normalized_potency * self.magic_damage as f32).floor() as u16
+    }
+}
+
+impl UserData for BaseParameters {
+    fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
+        methods.add_method("calc_physical_damage", |_, this, potency: u32| {
+            Ok(this.calc_physical_damage(potency))
+        });
+        methods.add_method("calc_magical_damage", |_, this, potency: u32| {
+            Ok(this.calc_magical_damage(potency))
+        });
+    }
 }
 
 impl ZoneConnection {
@@ -299,6 +327,7 @@ impl ZoneConnection {
         let mut base_parameters = BaseParameters::from_attributes(&attributes);
         self.calculate_stat_across_all_items(&mut base_parameters);
         base_parameters.calculate_hp_mp(&param_grow);
+        base_parameters.calculate_damages();
 
         base_parameters
     }
@@ -370,8 +399,7 @@ impl ZoneConnection {
                 self.player_data.character.actor_id,
                 current_level as u8,
                 self.player_data.classjob.current_class as u8,
-                base_parameters.hp,
-                base_parameters.mp as u16,
+                base_parameters,
             ))
             .await;
     }

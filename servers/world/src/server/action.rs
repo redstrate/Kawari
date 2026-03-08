@@ -15,6 +15,7 @@ use crate::{
         instance::{Instance, QueuedTaskData},
         network::{DestinationNetwork, NetworkState},
     },
+    zone_connection::BaseParameters,
 };
 use kawari::{
     common::{CharacterMode, DEAD_FADE_OUT_TIME, ObjectId},
@@ -81,6 +82,7 @@ pub fn execute_action(
         queued_tasks: Vec::new(),
         zone_data: LuaZone::default(),
         content_data: LuaContent::default(),
+        base_parameters: BaseParameters::default(),
     };
 
     let effects_builder;
@@ -98,6 +100,10 @@ pub fn execute_action(
 
         lua_player.player_data.teleport_query = match actor {
             NetworkedActor::Player { teleport_query, .. } => teleport_query.clone(),
+            _ => unreachable!(),
+        };
+        lua_player.base_parameters = match actor {
+            NetworkedActor::Player { parameters, .. } => parameters.clone(),
             _ => unreachable!(),
         };
 

@@ -14,6 +14,7 @@ use crate::{
         instance::{Instance, QueuedTaskData},
         network::{DestinationNetwork, NetworkState},
     },
+    zone_connection::BaseParameters,
 };
 use kawari::{
     common::ObjectId,
@@ -316,6 +317,7 @@ pub fn remove_effect(
             queued_tasks: Vec::new(),
             zone_data: LuaZone::default(),
             content_data: LuaContent::default(),
+            base_parameters: BaseParameters::default(),
         };
 
         let key = effect_id as u32;

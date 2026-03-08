@@ -5,7 +5,7 @@ use std::sync::{
 
 use tokio::sync::mpsc::Sender;
 
-use crate::{StatusEffects, lua::LuaTask};
+use crate::{StatusEffects, lua::LuaTask, zone_connection::BaseParameters};
 use kawari::{
     common::{JumpState, MoveAnimationState, MoveAnimationType, ObjectId, ObjectTypeId, Position},
     ipc::{
@@ -333,7 +333,7 @@ pub enum ToServer {
     /// The client applied a waymark preset for their party.
     ApplyWaymarkPreset(ObjectId, u64, WaymarkPreset),
     /// Inform the server of our new basic stat values.
-    SetNewStatValues(ObjectId, u8, u8, u32, u16),
+    SetNewStatValues(ObjectId, u8, u8, BaseParameters),
     /// The client started a countdown in their party.
     StartCountdown(u64, ObjectId, u64, u64, String, ObjectId, u16),
     /// The client yields from a GimmickAccessor.

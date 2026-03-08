@@ -18,7 +18,7 @@ use crate::{
         instance::Instance,
         network::{DestinationNetwork, NetworkState},
     },
-    zone_connection::TeleportQuery,
+    zone_connection::{BaseParameters, TeleportQuery},
 };
 use kawari::{
     common::{
@@ -840,6 +840,7 @@ pub fn handle_zone_messages(
                 conditions: Conditions::default(),
                 executing_gimmick_jump: false,
                 inside_instance_exit: false,
+                parameters: BaseParameters::default(),
             };
 
             true

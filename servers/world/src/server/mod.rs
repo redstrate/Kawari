@@ -1790,7 +1790,7 @@ pub async fn server_main_loop(
 
                     update_actor_hp_mp(network.clone(), data.clone(), from_actor_id);
                 }
-                ToServer::SetNewStatValues(from_actor_id, level, class_job, max_hp, max_mp) => {
+                ToServer::SetNewStatValues(from_actor_id, level, class_job, new_parameters) => {
                     // Update internal data model
                     {
                         let mut data = data.lock();
@@ -1803,9 +1803,13 @@ pub async fn server_main_loop(
                         };
 
                         actor.get_common_spawn_mut().level = level;
-                        actor.get_common_spawn_mut().max_hp = max_hp;
-                        actor.get_common_spawn_mut().max_mp = max_mp;
+                        actor.get_common_spawn_mut().max_hp = new_parameters.hp;
+                        actor.get_common_spawn_mut().max_mp = new_parameters.mp as u16;
                         actor.get_common_spawn_mut().class_job = class_job;
+
+                        if let NetworkedActor::Player { parameters, .. } = actor {
+                            *parameters = new_parameters.clone();
+                        }
 
                         // The only way the game can reliably set these stats is via StatusEffectList (REALLY)
                         send_effects_list(network.clone(), instance, from_actor_id);

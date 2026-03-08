@@ -1,6 +1,9 @@
 use std::collections::VecDeque;
 
-use crate::{StatusEffects, zone_connection::TeleportQuery};
+use crate::{
+    StatusEffects,
+    zone_connection::{BaseParameters, TeleportQuery},
+};
 use kawari::{
     common::{DistanceRange, ObjectId, Position},
     ipc::zone::{CommonSpawn, Conditions, NpcSpawn, ObjectSpawn, PlayerSpawn},
@@ -30,6 +33,7 @@ pub enum NetworkedActor {
         executing_gimmick_jump: bool,
         // If this actor is currently inside of an instance exit range.
         inside_instance_exit: bool,
+        parameters: BaseParameters,
     },
     Npc {
         state: NpcState,
