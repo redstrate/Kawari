@@ -8,7 +8,7 @@ use crate::{
     server::{DestinationNetwork, WorldServer, actor::NetworkedActor, network::NetworkState},
 };
 use kawari::{
-    common::ObjectId,
+    common::{ObjectId, ObjectTypeId},
     ipc::zone::{
         OnlineStatus, OnlineStatusMask, PartyMemberEntry, PartyUpdateStatus, PlayerEntry,
         SocialListRequestType, SocialListUIFlags,
@@ -36,12 +36,16 @@ impl PartyMember {
     }
 }
 
+// The current amount of target signs available for the player's party to use.
+pub const NUM_TARGET_SIGNS: usize = 17;
+
 #[derive(Clone, Debug, Default)]
 pub struct Party {
     pub members: [PartyMember; PartyMemberEntry::NUM_ENTRIES],
     leader_id: ObjectId,
     pub chatchannel_id: u32, // There's no reason to store a full u64/ChatChannel here, as it's created properly in the chat connection!
     pub stratboard_realtime_host: Option<u64>, // Only one player can send a board or host real-time sharing at a time
+    pub target_signs: [ObjectTypeId; NUM_TARGET_SIGNS], // NOTE: We deviate from retail here, which seems to have per-instance lists of marked targets, and instead just have one per party for simplicity.
 }
 
 impl Party {
@@ -164,6 +168,29 @@ pub fn get_party_id_from_actor_id(network: &NetworkState, actor_id: ObjectId) ->
         }
     }
     None
+}
+
+/// Helper function to send the party's currently marked targets to a specific actor that changed areas or returned from being offline.
+fn send_party_target_signs(network: &mut NetworkState, party_id: u64, execute_actor_id: ObjectId) {
+    let target_signs = match network.parties.get(&party_id) {
+        Some(p) => p.target_signs,
+        None => {
+            tracing::error!(
+                "send_party_target_signs was called with an invalid party id {party_id}! What happened? We won't be sending the markers for this player."
+            );
+            return;
+        }
+    };
+
+    for (sign_id, target_to_mark) in target_signs.iter().enumerate() {
+        // Don't need to send info for signs that don't have a valid target.
+        if target_to_mark.object_id != ObjectId::default() {
+            // When informing a client about existing markers, the server sets the sender as the blank actor id instead of the original player that marked the target.
+            let msg =
+                FromServer::TargetSignToggled(sign_id as u32, ObjectId::default(), *target_to_mark);
+            network.send_to_by_actor_id(execute_actor_id, msg, DestinationNetwork::ZoneClients);
+        }
+    }
 }
 
 /// Process social list and party-related messages.
@@ -585,11 +612,12 @@ pub fn handle_social_messages(
             party_id,
             execute_account_id,
             execute_content_id,
+            execute_actor_id,
             execute_name,
         ) => {
             let mut network = network.lock();
             let data = data.lock();
-            let party = network.parties.get_mut(party_id).unwrap();
+            let party = network.parties.get(party_id).unwrap();
 
             let party_list = build_party_list(party, &data);
 
@@ -606,6 +634,9 @@ pub fn handle_social_messages(
 
             // Finally, tell everyone in the party about the update.
             network.send_to_party(*party_id, None, msg, DestinationNetwork::ZoneClients);
+
+            // Next, inform the player about the party's target markers/signs.
+            send_party_target_signs(&mut network, *party_id, *execute_actor_id);
 
             true
         }
@@ -959,6 +990,9 @@ pub fn handle_social_messages(
             );
 
             network.send_to_party(party_id, None, msg, DestinationNetwork::ZoneClients);
+
+            // Next, inform the player about the party's target markers/signs.
+            send_party_target_signs(&mut network, party_id, *execute_actor_id);
 
             true
         }

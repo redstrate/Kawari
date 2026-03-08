@@ -295,7 +295,7 @@ pub enum ToServer {
     /// The client is removing another player from the party.
     PartyMemberKick(u64, u64, u64, String, u64, String),
     /// The client changed areas.
-    PartyMemberChangedAreas(u64, u64, u64, String),
+    PartyMemberChangedAreas(u64, u64, u64, ObjectId, String),
     /// The client left their party.
     PartyMemberLeft(u64, u64, u64, ObjectId, String),
     /// The client disbands their party.
