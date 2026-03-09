@@ -841,6 +841,7 @@ pub fn handle_zone_messages(
                 executing_gimmick_jump: false,
                 inside_instance_exit: false,
                 parameters: BaseParameters::default(),
+                dueling_opponent_id: ObjectId::default(),
             };
 
             true

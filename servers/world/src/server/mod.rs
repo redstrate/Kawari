@@ -1482,6 +1482,7 @@ pub async fn server_main_loop(
                             }
 
                             let config = get_config();
+
                             let ipc =
                                 ServerZoneIpcSegment::new(ServerZoneIpcData::DuelInformation {
                                     account_id,
@@ -1489,6 +1490,7 @@ pub async fn server_main_loop(
                                     opponent_object_id,
                                     world_id: config.world.world_id,
                                     unk1: 7957,
+                                    unk2: 1,
                                     opponent_name,
                                 });
                             network.send_to_by_actor_id(
@@ -1496,6 +1498,248 @@ pub async fn server_main_loop(
                                 FromServer::PacketSegment(ipc, from_actor_id),
                                 DestinationNetwork::ZoneClients,
                             );
+
+                            let mut data = data.lock();
+                            let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
+                                continue;
+                            };
+
+                            // Update our player
+                            {
+                                let Some(actor) = instance.find_actor_mut(from_actor_id) else {
+                                    continue;
+                                };
+
+                                match actor {
+                                    NetworkedActor::Player {
+                                        dueling_opponent_id,
+                                        ..
+                                    } => *dueling_opponent_id = *actor_id,
+                                    _ => unreachable!(),
+                                };
+                            }
+
+                            // Update the opponent
+                            {
+                                let Some(actor) = instance.find_actor_mut(*actor_id) else {
+                                    continue;
+                                };
+
+                                match actor {
+                                    NetworkedActor::Player {
+                                        dueling_opponent_id,
+                                        ..
+                                    } => *dueling_opponent_id = from_actor_id,
+                                    _ => unreachable!(),
+                                };
+                            }
+                        }
+                        ClientTriggerCommand::RequestDuelResponse { cancel } => {
+                            if *cancel {
+                                let mut data = data.lock();
+                                let Some(instance) = data.find_actor_instance_mut(from_actor_id)
+                                else {
+                                    continue;
+                                };
+
+                                let other_actor_id;
+
+                                // Update our player
+                                {
+                                    let Some(actor) = instance.find_actor_mut(from_actor_id) else {
+                                        continue;
+                                    };
+
+                                    match actor {
+                                        NetworkedActor::Player {
+                                            dueling_opponent_id,
+                                            ..
+                                        } => {
+                                            other_actor_id = *dueling_opponent_id;
+                                            *dueling_opponent_id = ObjectId::default();
+                                        }
+                                        _ => unreachable!(),
+                                    };
+                                }
+
+                                // Update the opponent
+                                {
+                                    let Some(actor) = instance.find_actor_mut(other_actor_id)
+                                    else {
+                                        continue;
+                                    };
+
+                                    match actor {
+                                        NetworkedActor::Player {
+                                            dueling_opponent_id,
+                                            ..
+                                        } => *dueling_opponent_id = ObjectId::default(),
+                                        _ => unreachable!(),
+                                    };
+                                }
+                            } else {
+                                // If not cancelling, then we need to send a confirmation to the opponent...
+                                let mut network = network.lock();
+
+                                let data = data.lock();
+                                let Some(instance) = data.find_actor_instance(from_actor_id) else {
+                                    continue;
+                                };
+
+                                let Some(actor) = instance.find_actor(from_actor_id) else {
+                                    continue;
+                                };
+
+                                let dueling_opponent_id = match actor {
+                                    NetworkedActor::Player {
+                                        dueling_opponent_id,
+                                        ..
+                                    } => dueling_opponent_id,
+                                    _ => unreachable!(),
+                                };
+
+                                let account_id;
+                                {
+                                    let Some((handle, _)) =
+                                        network.get_by_actor_mut(*dueling_opponent_id)
+                                    else {
+                                        continue;
+                                    };
+                                    account_id = handle.account_id;
+                                }
+
+                                let opponent_content_id;
+                                let opponent_object_id;
+                                let opponent_name;
+                                {
+                                    let Some((handle, _)) = network.get_by_actor_mut(from_actor_id)
+                                    else {
+                                        continue;
+                                    };
+                                    opponent_content_id = handle.content_id;
+                                    opponent_object_id = from_actor_id;
+
+                                    opponent_name = actor.get_common_spawn().name.clone();
+                                }
+
+                                let config = get_config();
+
+                                let ipc =
+                                    ServerZoneIpcSegment::new(ServerZoneIpcData::DuelInformation {
+                                        account_id,
+                                        opponent_content_id,
+                                        opponent_object_id,
+                                        world_id: config.world.world_id,
+                                        unk1: 7957,
+                                        unk2: 0,
+                                        opponent_name,
+                                    });
+                                network.send_to_by_actor_id(
+                                    *dueling_opponent_id,
+                                    FromServer::ActorControlSelf(
+                                        ActorControlCategory::SetPvPState { state: 3 },
+                                    ),
+                                    DestinationNetwork::ZoneClients,
+                                );
+                                network.send_to_by_actor_id(
+                                    *dueling_opponent_id,
+                                    FromServer::ActorControlSelf(
+                                        ActorControlCategory::SetPvPState { state: 4 },
+                                    ),
+                                    DestinationNetwork::ZoneClients,
+                                );
+                                network.send_to_by_actor_id(
+                                    *dueling_opponent_id,
+                                    FromServer::PacketSegment(ipc, *dueling_opponent_id),
+                                    DestinationNetwork::ZoneClients,
+                                );
+                            }
+                        }
+                        ClientTriggerCommand::DuelDecision { decline } => {
+                            // TODO: what happens if they do decline?
+                            if !*decline {
+                                let data = data.lock();
+                                let Some(instance) = data.find_actor_instance(from_actor_id) else {
+                                    continue;
+                                };
+
+                                let Some(actor) = instance.find_actor(from_actor_id) else {
+                                    continue;
+                                };
+
+                                let dueling_opponent_id = match actor {
+                                    NetworkedActor::Player {
+                                        dueling_opponent_id,
+                                        ..
+                                    } => dueling_opponent_id,
+                                    _ => unreachable!(),
+                                };
+
+                                tracing::info!(
+                                    "Duel has begun between {from_actor_id} and {dueling_opponent_id}!"
+                                );
+
+                                let mut network = network.lock();
+                                // unknown
+                                network.send_ac_in_range_inclusive(
+                                    &data,
+                                    *dueling_opponent_id,
+                                    ActorControlCategory::SetPvPState { state: 5 },
+                                );
+                                network.send_ac_in_range_inclusive(
+                                    &data,
+                                    from_actor_id,
+                                    ActorControlCategory::SetPvPState { state: 5 },
+                                );
+
+                                // unknown ver. 2
+                                network.send_ac_in_range_inclusive(
+                                    &data,
+                                    *dueling_opponent_id,
+                                    ActorControlCategory::SetPvPState { state: 6 },
+                                );
+                                network.send_ac_in_range_inclusive(
+                                    &data,
+                                    from_actor_id,
+                                    ActorControlCategory::SetPvPState { state: 6 },
+                                );
+
+                                // begin countdown
+                                network.send_to_by_actor_id(
+                                    *dueling_opponent_id,
+                                    FromServer::ActorControlSelf(
+                                        ActorControlCategory::StartDuelCountdown {
+                                            opponent_id: from_actor_id,
+                                        },
+                                    ),
+                                    DestinationNetwork::ZoneClients,
+                                );
+                                network.send_to_by_actor_id(
+                                    from_actor_id,
+                                    FromServer::ActorControlSelf(
+                                        ActorControlCategory::StartDuelCountdown {
+                                            opponent_id: *dueling_opponent_id,
+                                        },
+                                    ),
+                                    DestinationNetwork::ZoneClients,
+                                );
+
+                                // BATTLE
+                                network.send_to_by_actor_id(
+                                    *dueling_opponent_id,
+                                    FromServer::ActorControlSelf(ActorControlCategory::SetBattle {
+                                        battle: true,
+                                    }),
+                                    DestinationNetwork::ZoneClients,
+                                );
+                                network.send_to_by_actor_id(
+                                    from_actor_id,
+                                    FromServer::ActorControlSelf(ActorControlCategory::SetBattle {
+                                        battle: true,
+                                    }),
+                                    DestinationNetwork::ZoneClients,
+                                );
+                            }
                         }
                         _ => tracing::warn!("Server doesn't know what to do with {:#?}", trigger),
                     }

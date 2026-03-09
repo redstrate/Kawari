@@ -865,11 +865,12 @@ pub enum ServerZoneIpcData {
         opponent_object_id: ObjectId,
         world_id: u16,
         unk1: u16,
+        unk2: u8,
         #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
         #[br(count = CHAR_NAME_MAX_LENGTH)]
         #[br(map = read_string)]
         #[bw(map = write_string)]
-        #[brw(pad_after = 7, pad_before = 1)] // empty
+        #[brw(pad_after = 7)] // empty
         opponent_name: String,
     },
 }

@@ -644,6 +644,10 @@ pub enum ActorControlCategory {
         state: u32, // TODO: turn into enum
     },
 
+    /// Called during dueling.
+    #[brw(magic = 1506u32)]
+    StartDuelCountdown { opponent_id: ObjectId },
+
     /// Calls some method in PvPProfile, unsure what it does yet.
     #[brw(magic = 1610u32)]
     UnkPvPProfileRelated {

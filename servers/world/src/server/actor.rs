@@ -34,6 +34,7 @@ pub enum NetworkedActor {
         // If this actor is currently inside of an instance exit range.
         inside_instance_exit: bool,
         parameters: BaseParameters,
+        dueling_opponent_id: ObjectId,
     },
     Npc {
         state: NpcState,

@@ -295,6 +295,22 @@ pub enum ClientTriggerCommand {
         actor_id: ObjectId,
     },
 
+    /// Sent whenever the client presses the buttons on the duel dialog.
+    #[brw(magic = 2201u32)]
+    RequestDuelResponse {
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        cancel: bool,
+    },
+
+    /// Sent when the duel opponent accepts or rejects the challenge.
+    #[brw(magic = 2202u32)]
+    DuelDecision {
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        decline: bool,
+    },
+
     /// Sent whenever the Glamour Plates window is opened or closed.
     #[brw(magic = 2356u32)]
     ToggleGlamourPlatesWindow {
