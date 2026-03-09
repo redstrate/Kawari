@@ -843,6 +843,7 @@ async fn process_packet(
                                             connection.player_data.character.content_id as u64,
                                             connection.player_data.character.actor_id,
                                             connection.player_data.character.name.clone(),
+                                            connection.player_data.volatile.zone_id,
                                         ))
                                         .await;
                                 } else {
@@ -850,6 +851,7 @@ async fn process_packet(
                                         .handle
                                         .send(ToServer::PartyMemberReturned(
                                             connection.player_data.character.actor_id,
+                                            connection.player_data.volatile.zone_id,
                                         ))
                                         .await;
                                     connection.rejoining_party = false;
@@ -2294,7 +2296,8 @@ async fn process_packet(
                                 .send(ToServer::ApplyWaymarkPreset(
                                     connection.player_data.character.actor_id,
                                     connection.party_id,
-                                    waymark_preset.clone(),
+                                    *waymark_preset,
+                                    connection.player_data.volatile.zone_id,
                                 ))
                                 .await;
                         }
@@ -2496,8 +2499,8 @@ async fn process_server_msg(
             FromServer::StrategyBoardSharedAck(content_id) => connection.strategy_board_ack(content_id).await,
             FromServer::StrategyBoardRealtimeUpdate(update_data) => connection.strategy_board_updated(update_data).await,
             FromServer::StrategyBoardRealtimeFinished() => connection.strategy_board_realtime_finished().await,
-            FromServer::WaymarkUpdated(id, placement_mode, unk1, unk2, unk3) => connection.waymark_updated(id, placement_mode, unk1, unk2, unk3).await,
-            FromServer::WaymarkPreset(data) => connection.waymark_preset(data).await,
+            FromServer::WaymarkUpdated(id, placement_mode, position, zone_id) => connection.waymark_updated(id, placement_mode, position, zone_id).await,
+            FromServer::WaymarkPreset(data, zone_id) => connection.waymark_preset(data, zone_id).await,
             FromServer::EnteredInstanceEntranceRange(arg) => {
                 tracing::info!("Showing leave duty dialog...");
 
