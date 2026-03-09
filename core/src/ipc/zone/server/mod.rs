@@ -127,6 +127,9 @@ pub use hater_list::{Hater, HaterList};
 mod map_effects;
 pub use map_effects::MapEffects;
 
+mod marketboard;
+pub use marketboard::MarketBoardItem;
+
 use crate::common::{
     CHAR_NAME_MAX_LENGTH, ContainerType, ItemOperationKind, ObjectId, read_string, write_string,
 };
@@ -872,6 +875,13 @@ pub enum ServerZoneIpcData {
         #[bw(map = write_string)]
         #[brw(pad_after = 7)] // empty
         opponent_name: String,
+    },
+    MarketBoardItems {
+        #[br(count = 21)]
+        #[bw(pad_size_to = 21 * MarketBoardItem::SIZE)]
+        items: Vec<MarketBoardItem>,
+        #[brw(pad_before = 4, pad_after = 2)] // empty
+        sequence: u16,
     },
 }
 

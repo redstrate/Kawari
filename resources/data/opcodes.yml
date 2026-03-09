@@ -527,6 +527,10 @@ ServerZoneIpcType:
     comment: Information about an upcoming duel.
     opcode: 599
     size: 64
+  - name: MarketBoardItems
+    comment: Sent to fill out the list of items on the Market Board.
+    opcode: 697
+    size: 176
 ClientZoneIpcType:
   - name: InitRequest
     comment: "Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)"
@@ -784,6 +788,10 @@ ClientZoneIpcType:
     comment: The client responds to an ongoing ready check from their party.
     opcode: 953
     size: 8
+  - name: RequestMarketBoardItems
+    comment: When the client requests a list of specific items on the Market Board.
+    opcode: 814
+    size: 136
 ServerLobbyIpcType:
   - name: NackReply
     comment: Sent by the server to indicate an lobby error occured.

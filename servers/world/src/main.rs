@@ -15,8 +15,8 @@ use kawari::ipc::chat::{ChatChannel, ClientChatIpcData};
 
 use kawari::ipc::zone::{
     ActorControlCategory, Conditions, ContentFinderUserAction, EventType, InviteType, MapEffects,
-    OnlineStatus, OnlineStatusMask, PlayerSetup, SceneFlags, SearchInfo, SocialListUILanguages,
-    TrustContent, TrustInformation,
+    MarketBoardItem, OnlineStatus, OnlineStatusMask, PlayerSetup, SceneFlags, SearchInfo,
+    SocialListUILanguages, TrustContent, TrustInformation,
 };
 
 use kawari::ipc::zone::{
@@ -2308,6 +2308,100 @@ async fn process_packet(
                         }
                         ClientZoneIpcData::ReadyCheckResponse { response: _ } => {
                             tracing::info!("Replying to ready checks is unimplemented");
+                        }
+                        ClientZoneIpcData::RequestMarketBoardItems { sequence, .. } => {
+                            // TODO: placeholder, of course
+                            let ipc =
+                                ServerZoneIpcSegment::new(ServerZoneIpcData::MarketBoardItems {
+                                    sequence: *sequence,
+                                    items: vec![
+                                        MarketBoardItem {
+                                            item_id: 1659,
+                                            count: 3,
+                                        },
+                                        MarketBoardItem {
+                                            item_id: 1649,
+                                            count: 0,
+                                        },
+                                        MarketBoardItem {
+                                            item_id: 1621,
+                                            count: 0,
+                                        },
+                                        MarketBoardItem {
+                                            item_id: 31542,
+                                            count: 3,
+                                        },
+                                        MarketBoardItem {
+                                            item_id: 1657,
+                                            count: 3,
+                                        },
+                                        MarketBoardItem {
+                                            item_id: 1642,
+                                            count: 0,
+                                        },
+                                        MarketBoardItem {
+                                            item_id: 1613,
+                                            count: 0,
+                                        },
+                                        MarketBoardItem {
+                                            item_id: 1650,
+                                            count: 2,
+                                        },
+                                        MarketBoardItem {
+                                            item_id: 1648,
+                                            count: 1,
+                                        },
+                                        MarketBoardItem {
+                                            item_id: 1643,
+                                            count: 0,
+                                        },
+                                        MarketBoardItem {
+                                            item_id: 1616,
+                                            count: 0,
+                                        },
+                                        MarketBoardItem {
+                                            item_id: 1639,
+                                            count: 0,
+                                        },
+                                        MarketBoardItem {
+                                            item_id: 1635,
+                                            count: 1,
+                                        },
+                                        MarketBoardItem {
+                                            item_id: 1606,
+                                            count: 0,
+                                        },
+                                        MarketBoardItem {
+                                            item_id: 1637,
+                                            count: 0,
+                                        },
+                                        MarketBoardItem {
+                                            item_id: 1633,
+                                            count: 1,
+                                        },
+                                        MarketBoardItem {
+                                            item_id: 1627,
+                                            count: 2,
+                                        },
+                                        MarketBoardItem {
+                                            item_id: 1625,
+                                            count: 0,
+                                        },
+                                        MarketBoardItem {
+                                            item_id: 1622,
+                                            count: 0,
+                                        },
+                                        MarketBoardItem {
+                                            item_id: 1614,
+                                            count: 1,
+                                        },
+                                        MarketBoardItem {
+                                            item_id: 92,
+                                            count: 0,
+                                        },
+                                    ],
+                                });
+                            connection.send_ipc_self(ipc).await;
                         }
                         ClientZoneIpcData::Unknown { unk } => {
                             tracing::warn!(

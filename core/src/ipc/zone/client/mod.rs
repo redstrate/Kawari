@@ -373,6 +373,13 @@ pub enum ClientZoneIpcData {
         #[brw(pad_before = 1, pad_after = 6)] // Seems to be empty/zeroes
         response: u8,
     },
+    RequestMarketBoardItems {
+        #[brw(pad_before = 4)] // empty
+        sequence: u16, // probably
+        #[br(count = 130)]
+        #[bw(pad_size_to = 130)]
+        unk: Vec<u8>,
+    },
 }
 
 #[cfg(test)]
