@@ -5,6 +5,7 @@ use crate::common::{
     ContainerType, DirectorTrigger, DistanceRange, HandlerId, ObjectId, ObjectTypeId,
     read_bool_from, write_bool_as,
 };
+use crate::ipc::zone::WaymarkPosition;
 
 #[binrw]
 #[derive(Debug, PartialEq, Clone, IntoStaticStr)]
@@ -112,17 +113,18 @@ pub enum ClientTriggerCommand {
     /// The client places a waymark.
     #[brw(magic = 317u32)]
     PlaceWaymark {
+        /// The waymark's id.
         id: u32,
-
-        // probably coordinates?
-        unk1: u32,
-        unk2: u32,
-        unk3: u32,
+        /// The waymark's position in the world.
+        pos: WaymarkPosition,
     },
 
     /// The client clears a waymark.
     #[brw(magic = 318u32)]
-    ClearWaymark { id: u32 },
+    ClearWaymark {
+        /// The waymark's id.
+        id: u32,
+    },
 
     /// The client requests materia melding from another player.
     #[brw(magic = 413u32)]

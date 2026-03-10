@@ -144,7 +144,7 @@ use crate::ipc::{
     chat::ChatChannel,
     zone::{
         PartyMemberEntry, PartyMemberPositions, PartyUpdateStatus, StrategyBoard,
-        StrategyBoardUpdate, WaymarkPlacementMode, WaymarkPreset,
+        StrategyBoardUpdate, WaymarkPlacementMode, WaymarkPosition, WaymarkPreset,
     },
 };
 
@@ -696,9 +696,8 @@ pub enum ServerZoneIpcData {
         #[brw(pad_after = 2)] // Empty/always zeroes?
         /// The placement mode of this waymark.
         placement_mode: WaymarkPlacementMode,
-        unk1: u32,
-        unk2: u32,
-        unk3: u32,
+        /// The waymark's position in the world.
+        pos: WaymarkPosition,
     },
     FreeCompanyHierarchy {
         #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]

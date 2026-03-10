@@ -24,3 +24,6 @@ pub use server::*;
 
 mod search_info;
 pub use search_info::*;
+
+mod waymark;
+pub use waymark::*;

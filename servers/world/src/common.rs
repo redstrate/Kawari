@@ -16,7 +16,8 @@ use kawari::{
             ActionRequest, ActorControlCategory, ClientTrigger, Conditions, Config, InviteReply,
             InviteType, NpcSpawn, ObjectSpawn, PartyMemberEntry, PartyUpdateStatus, PlayerEntry,
             PlayerSpawn, ServerZoneIpcSegment, SocialListRequest, SocialListRequestType,
-            StrategyBoard, StrategyBoardUpdate, WaymarkPlacementMode, WaymarkPreset,
+            StrategyBoard, StrategyBoardUpdate, WaymarkPlacementMode, WaymarkPosition,
+            WaymarkPreset,
         },
     },
 };
@@ -170,10 +171,10 @@ pub enum FromServer {
     StrategyBoardRealtimeUpdate(StrategyBoardUpdate),
     /// Inform the client that the board sharer has ended their real-time sharing session.
     StrategyBoardRealtimeFinished(),
-    /// Inform the client that a waymarker was placed or updated.
-    WaymarkUpdated(u8, WaymarkPlacementMode, u32, u32, u32),
-    /// Inform the client that a waymarker preset was applied.
-    WaymarkPreset(WaymarkPreset),
+    /// Inform the client that a waymark was placed or updated.
+    WaymarkUpdated(u8, WaymarkPlacementMode, WaymarkPosition, i32),
+    /// Inform the client that a waymark preset was applied.
+    WaymarkPreset(WaymarkPreset, i32),
     /// Inform the client that they entered an instance exit range.
     EnteredInstanceEntranceRange(u32),
     /// Inform the client to increment the rested EXP by 10 seconds.
@@ -297,7 +298,7 @@ pub enum ToServer {
     /// The client is removing another player from the party.
     PartyMemberKick(u64, u64, u64, String, u64, String),
     /// The client changed areas.
-    PartyMemberChangedAreas(u64, u64, u64, ObjectId, String),
+    PartyMemberChangedAreas(u64, u64, u64, ObjectId, String, i32),
     /// The client left their party.
     PartyMemberLeft(u64, u64, u64, ObjectId, String),
     /// The client disbands their party.
@@ -307,7 +308,7 @@ pub enum ToServer {
     /// The client went offline and we need to inform other party members.
     PartyMemberOffline(u64, u64, u64, ObjectId, String),
     /// The client returned online and we need to inform other party members.
-    PartyMemberReturned(ObjectId),
+    PartyMemberReturned(ObjectId, i32),
     /// The client is requesting to join the following content.
     JoinContent(ClientId, ObjectId, u16),
     /// The c lient is requesting to leave their current content, the connection is in charge of keeping track of the old position.
@@ -333,7 +334,7 @@ pub enum ToServer {
     /// The client finished their real-time sharing session.
     StrategyBoardRealtimeFinished(u64),
     /// The client applied a waymark preset for their party.
-    ApplyWaymarkPreset(ObjectId, u64, WaymarkPreset),
+    ApplyWaymarkPreset(ObjectId, u64, WaymarkPreset, i32),
     /// Inform the server of our new basic stat values.
     SetNewStatValues(ObjectId, u8, u8, BaseParameters),
     /// The client started a countdown in their party.

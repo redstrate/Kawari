@@ -9,7 +9,7 @@ use kawari::{
             ActorControlCategory, InviteReply, InviteType, InviteUpdateType, OnlineStatus,
             OnlineStatusMask, PartyMemberEntry, PartyUpdateStatus, PlayerEntry, ServerZoneIpcData,
             ServerZoneIpcSegment, SocialList, SocialListRequestType, StrategyBoard,
-            StrategyBoardUpdate, WaymarkPlacementMode, WaymarkPreset,
+            StrategyBoardUpdate, WaymarkPlacementMode, WaymarkPosition, WaymarkPreset,
         },
     },
 };
@@ -318,25 +318,28 @@ impl ZoneConnection {
         &mut self,
         id: u8,
         placement_mode: WaymarkPlacementMode,
-        unk1: u32,
-        unk2: u32,
-        unk3: u32,
+        pos: WaymarkPosition,
+        zone_id: i32,
     ) {
-        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::WaymarkUpdate {
-            id,
-            placement_mode,
-            unk1,
-            unk2,
-            unk3,
-        });
+        // Ignore updates that aren't relevant to us, so that people in different zones can have their own waymarks going on.
+        if zone_id == self.player_data.volatile.zone_id {
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::WaymarkUpdate {
+                id,
+                placement_mode,
+                pos,
+            });
 
-        self.send_ipc_self(ipc).await;
+            self.send_ipc_self(ipc).await;
+        }
     }
 
     /// Someone in the party loaded a waymark preset, or cleared all waymarks.
-    pub async fn waymark_preset(&mut self, data: WaymarkPreset) {
-        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::FieldMarkerPreset(data));
-        self.send_ipc_self(ipc).await;
+    pub async fn waymark_preset(&mut self, data: WaymarkPreset, zone_id: i32) {
+        // Ignore updates that aren't relevant to us, so that people in different zones can have their own waymark presets going on.
+        if zone_id == self.player_data.volatile.zone_id {
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::FieldMarkerPreset(data));
+            self.send_ipc_self(ipc).await;
+        }
     }
 
     /// Someone in the party started a countdown.

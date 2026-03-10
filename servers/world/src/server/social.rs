@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use parking_lot::Mutex;
@@ -11,7 +12,8 @@ use kawari::{
     common::{ObjectId, ObjectTypeId},
     ipc::zone::{
         OnlineStatus, OnlineStatusMask, PartyMemberEntry, PartyUpdateStatus, PlayerEntry,
-        SocialListRequestType, SocialListUIFlags,
+        SocialListRequestType, SocialListUIFlags, WaymarkPlacementMode, WaymarkPosition,
+        WaymarkPositions, WaymarkPreset,
     },
 };
 
@@ -46,6 +48,7 @@ pub struct Party {
     pub chatchannel_id: u32, // There's no reason to store a full u64/ChatChannel here, as it's created properly in the chat connection!
     pub stratboard_realtime_host: Option<u64>, // Only one player can send a board or host real-time sharing at a time
     pub target_signs: [ObjectTypeId; NUM_TARGET_SIGNS], // NOTE: We deviate from retail here, which seems to have per-instance lists of marked targets, and instead just have one per party for simplicity.
+    pub waymarks: HashMap<i32, WaymarkPositions>, // TODO: If/when we ever get unique instance identifiers, use those instead of the zone id.
 }
 
 impl Party {
@@ -191,6 +194,99 @@ fn send_party_target_signs(network: &mut NetworkState, party_id: u64, execute_ac
             network.send_to_by_actor_id(execute_actor_id, msg, DestinationNetwork::ZoneClients);
         }
     }
+}
+
+/// Helper function to send existing waymarks to party members who changed areas or returned from being offline.
+fn send_party_waymarks(
+    network: &mut NetworkState,
+    party_id: u64,
+    execute_actor_id: ObjectId,
+    zone_id: i32,
+) {
+    let position_data = network
+        .parties
+        .get_mut(&party_id)
+        .unwrap()
+        .waymarks
+        .entry(zone_id)
+        .or_default();
+    let preset = WaymarkPreset::from(*position_data);
+    let msg = FromServer::WaymarkPreset(preset, zone_id);
+    network.send_to_by_actor_id(execute_actor_id, msg, DestinationNetwork::ZoneClients);
+}
+
+/// Helper function to update a party's zone's entire waymarks list.
+pub fn update_party_waymarks(
+    network: &mut NetworkState,
+    data: &WorldServer,
+    execute_actor_id: ObjectId,
+    waymark_preset: WaymarkPreset,
+) {
+    // While we could easily pass in the zone id and party id via parameters for function calls in this same source file, client triggers also call into this function, so for the sake of simplicity, we just do the lookups here instead.
+    if let Some(instance) = data.find_actor_instance(execute_actor_id) {
+        let zone_id = instance.zone.id as i32;
+        let msg = FromServer::WaymarkPreset(waymark_preset, zone_id);
+        if let Some(party_id) = get_party_id_from_actor_id(network, execute_actor_id) {
+            network.send_to_party(party_id, None, msg, DestinationNetwork::ZoneClients);
+
+            let party = network.parties.get_mut(&party_id).unwrap();
+            party
+                .waymarks
+                .entry(zone_id)
+                .and_modify(|p| *p = waymark_preset.into())
+                .or_insert(waymark_preset.into());
+        } else {
+            network.send_to_by_actor_id(execute_actor_id, msg, DestinationNetwork::ZoneClients);
+        }
+    } else {
+        tracing::error!(
+            "update_party_waymark: Unable to find {}'s instance, what happened?",
+            execute_actor_id
+        );
+    }
+}
+
+/// Helper function for CTs ClearWaymark and PlaceWaymark.
+pub fn update_party_waymark(
+    network: &mut NetworkState,
+    data: &WorldServer,
+    from_actor_id: ObjectId,
+    waymark_id: u32,
+    waymark: Option<WaymarkPosition>,
+) {
+    let zone_id;
+    if let Some(instance) = data.find_actor_instance(from_actor_id) {
+        zone_id = instance.zone.id as i32;
+    } else {
+        tracing::error!(
+            "update_party_waymark: Unable to find {}'s instance, what happened?",
+            from_actor_id
+        );
+        return;
+    }
+
+    // Next, update the party's waymark data, if relevant.
+    if let Some(party_id) = get_party_id_from_actor_id(network, from_actor_id) {
+        let party = network.parties.get_mut(&party_id).unwrap();
+        let waymarks = party.waymarks.entry(zone_id).or_default();
+        waymarks[waymark_id as usize] = waymark;
+    }
+
+    let placement_mode;
+    let position_data;
+    match waymark {
+        Some(pos_data) => {
+            placement_mode = WaymarkPlacementMode::Placed;
+            position_data = pos_data;
+        }
+        None => {
+            placement_mode = WaymarkPlacementMode::Removed;
+            position_data = WaymarkPosition::default();
+        }
+    }
+
+    let msg = FromServer::WaymarkUpdated(waymark_id as u8, placement_mode, position_data, zone_id);
+    network.send_to_party_or_self(from_actor_id, msg);
 }
 
 /// Process social list and party-related messages.
@@ -614,6 +710,7 @@ pub fn handle_social_messages(
             execute_content_id,
             execute_actor_id,
             execute_name,
+            zone_id,
         ) => {
             let mut network = network.lock();
             let data = data.lock();
@@ -635,8 +732,9 @@ pub fn handle_social_messages(
             // Finally, tell everyone in the party about the update.
             network.send_to_party(*party_id, None, msg, DestinationNetwork::ZoneClients);
 
-            // Next, inform the player about the party's target markers/signs.
+            // Next, inform the player about the party's target markers/signs, and waymarks.
             send_party_target_signs(&mut network, *party_id, *execute_actor_id);
+            send_party_waymarks(&mut network, *party_id, *execute_actor_id, *zone_id);
 
             true
         }
@@ -958,7 +1056,7 @@ pub fn handle_social_messages(
 
             true
         }
-        ToServer::PartyMemberReturned(execute_actor_id) => {
+        ToServer::PartyMemberReturned(execute_actor_id, zone_id) => {
             let mut network = network.lock();
             let data = data.lock();
 
@@ -991,8 +1089,9 @@ pub fn handle_social_messages(
 
             network.send_to_party(party_id, None, msg, DestinationNetwork::ZoneClients);
 
-            // Next, inform the player about the party's target markers/signs.
+            // Next, inform the player about the party's target markers/signs, and waymarks.
             send_party_target_signs(&mut network, party_id, *execute_actor_id);
+            send_party_waymarks(&mut network, party_id, *execute_actor_id, *zone_id);
 
             true
         }
@@ -1084,12 +1183,14 @@ pub fn handle_social_messages(
 
             true
         }
-        ToServer::ApplyWaymarkPreset(from_id, party_id, waymark_preset) => {
+        ToServer::ApplyWaymarkPreset(from_id, party_id, waymark_preset, zone_id) => {
             let mut network = network.lock();
-            let msg = FromServer::WaymarkPreset(waymark_preset.clone());
+            let msg = FromServer::WaymarkPreset(*waymark_preset, *zone_id);
 
             if *party_id != 0 {
                 network.send_to_party(*party_id, None, msg, DestinationNetwork::ZoneClients);
+                let data = data.lock();
+                update_party_waymarks(&mut network, &data, *from_id, *waymark_preset);
             } else {
                 network.send_to_by_actor_id(*from_id, msg, DestinationNetwork::ZoneClients);
             }
