@@ -41,8 +41,12 @@ impl mlua::FromLua for DamageKind {
 #[derive(Debug, PartialEq, Clone, Copy, Default)]
 pub enum EffectKind {
     #[default]
+    /// There's no effect entry.
     #[brw(magic = 0u8)]
-    Miss, // FIXME: is this correct?
+    None,
+    /// The attack missed.
+    #[brw(magic = 1u8)]
+    Miss,
     #[brw(magic = 3u8)]
     Damage {
         damage_kind: DamageKind,

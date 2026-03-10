@@ -12,7 +12,10 @@ use crate::{
     GameData, Navmesh, SpawnAllocator,
     lua::KawariLua,
     server::{
-        action::{execute_action, handle_action_messages, kill_actor, update_actor_hp_mp},
+        action::{
+            execute_action, execute_enemy_action, handle_action_messages, kill_actor,
+            update_actor_hp_mp,
+        },
         actor::{NetworkedActor, NpcState},
         chat::handle_chat_messages,
         director::{DirectorData, director_tick, handle_director_messages},
@@ -25,9 +28,9 @@ use crate::{
 };
 use kawari::{
     common::{
-        DEAD_DESPAWN_TIME, HandlerId, HandlerType, InvisibilityFlags, JumpState,
-        MAX_SPAWNED_ACTORS, MAX_SPAWNED_OBJECTS, MoveAnimationState, MoveAnimationType, ObjectId,
-        ObjectTypeId, ObjectTypeKind, Position, TerritoryIntendedUse,
+        DEAD_DESPAWN_TIME, ENEMY_AUTO_ATTACK_RATE, HandlerId, HandlerType, InvisibilityFlags,
+        JumpState, MAX_SPAWNED_ACTORS, MAX_SPAWNED_OBJECTS, MoveAnimationState, MoveAnimationType,
+        ObjectId, ObjectTypeId, ObjectTypeKind, Position, TerritoryIntendedUse, TimepointData,
     },
     config::get_config,
     ipc::zone::{
@@ -215,7 +218,11 @@ fn set_player_minion(
     );
 }
 
-fn server_logic_tick(data: Arc<Mutex<WorldServer>>, network: Arc<Mutex<NetworkState>>) {
+fn server_logic_tick(
+    data: Arc<Mutex<WorldServer>>,
+    network: Arc<Mutex<NetworkState>>,
+    lua: Arc<Mutex<KawariLua>>,
+) {
     let mut actors_to_update_hp_mp = Vec::new();
 
     {
@@ -241,6 +248,7 @@ fn server_logic_tick(data: Arc<Mutex<WorldServer>>, network: Arc<Mutex<NetworkSt
                         current_target,
                         spawn,
                         last_position,
+                        ..
                     } = actor
                         && (current_target.is_some() && *state == NpcState::Hate)
                     {
@@ -282,6 +290,7 @@ fn server_logic_tick(data: Arc<Mutex<WorldServer>>, network: Arc<Mutex<NetworkSt
                 }
 
                 let mut newly_acquired_targets = Vec::new();
+                let mut new_action_requests = Vec::new();
 
                 // mut pass
                 for (id, actor) in &mut instance.actors {
@@ -292,8 +301,15 @@ fn server_logic_tick(data: Arc<Mutex<WorldServer>>, network: Arc<Mutex<NetworkSt
                         current_target,
                         spawn,
                         last_position,
+                        timeline_position,
+                        timeline,
+                        ..
                     } = actor
                     {
+                        // NOTE: this is *intentional* as I believe in retail the timing of actions are dependent on when the actor spawned
+                        // This doesn't have an effect if you re-aggro them or whatever.
+                        *timeline_position += 0.5; // NOTE: change if the length of a server tick changes
+
                         // switch to the next node if we passed this one
                         if *current_path_lerp >= 1.0 {
                             *current_path_lerp = 0.0;
@@ -356,6 +372,61 @@ fn server_logic_tick(data: Arc<Mutex<WorldServer>>, network: Arc<Mutex<NetworkSt
                             if path.is_empty() {
                                 reset_target = true;
                             }
+
+                            if !reset_target {
+                                // TODO: don't make this complex, instead count by milliseconds to avoid f32 elison. this works as prototype though.
+                                // NOTE: the "+ 1" is a hack to ensure the last timepoint is always counted
+                                let real_timeline_position =
+                                    *timeline_position % (timeline.duration() as f32 + 0.5);
+                                if let Some(timepoint) =
+                                    timeline.point_at(real_timeline_position as i32)
+                                {
+                                    match &timepoint.data {
+                                        TimepointData::Action { action_id, .. } => {
+                                            let cast_time = 2.7; // TODO: grab from excel data
+                                            let request = ActionRequest {
+                                                action_key: *action_id,
+                                                exec_proc: 0,
+                                                action_kind: ActionKind::Normal,
+                                                request_id: 0,
+                                                rotation: spawn.common.rotation,
+                                                dir: 0,
+                                                dir_target: 0,
+                                                target: ObjectTypeId {
+                                                    object_id: *current_target,
+                                                    object_type: ObjectTypeKind::None,
+                                                },
+                                                arg: 0,
+                                                padding_prob: 0,
+                                            };
+                                            new_action_requests.push((*id, request, cast_time));
+                                        }
+                                    }
+                                }
+
+                                // Schedule any pending auto-attacks:
+                                let should_auto_attack = ((*timeline_position as i32)
+                                    % (ENEMY_AUTO_ATTACK_RATE + 1))
+                                    == ENEMY_AUTO_ATTACK_RATE;
+                                if should_auto_attack {
+                                    let request = ActionRequest {
+                                        action_key: timeline.autoattack_action_id,
+                                        exec_proc: 0,
+                                        action_kind: ActionKind::Normal,
+                                        request_id: 0,
+                                        rotation: spawn.common.rotation,
+                                        dir: 0,
+                                        dir_target: 0,
+                                        target: ObjectTypeId {
+                                            object_id: *current_target,
+                                            object_type: ObjectTypeKind::None,
+                                        },
+                                        arg: 0,
+                                        padding_prob: 0,
+                                    };
+                                    new_action_requests.push((*id, request, 0.0));
+                                }
+                            }
                         }
 
                         if reset_target {
@@ -389,6 +460,47 @@ fn server_logic_tick(data: Arc<Mutex<WorldServer>>, network: Arc<Mutex<NetworkSt
                         if handle.send(msg.clone()).is_err() {
                             //to_remove.push(id);
                         }
+                    }
+                }
+
+                for (id, request, cast_time) in new_action_requests {
+                    if cast_time == 0.0 {
+                        execute_enemy_action(network.clone(), instance, lua.clone(), id, request);
+                    } else {
+                        let position;
+                        {
+                            let actor = instance.find_actor(id).unwrap();
+                            position = actor.position();
+                        }
+
+                        // inform players that this enemy is casting
+                        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActorCast {
+                            action: request.action_key as u16,
+                            action_kind: request.action_kind,
+                            action_key: request.action_key,
+                            cast_time,
+                            dir: request.rotation,
+                            unk1: 1436,
+                            target: ObjectId::default(),
+                            position,
+                        });
+
+                        let mut network = network.lock();
+                        network.send_in_range_instance(
+                            id,
+                            instance,
+                            FromServer::PacketSegment(ipc, id),
+                            DestinationNetwork::ZoneClients,
+                        );
+
+                        instance.insert_task(
+                            ClientId::default(),
+                            id,
+                            Duration::from_secs_f32(cast_time),
+                            QueuedTaskData::CastEnemyAction {
+                                request: request.clone(),
+                            },
+                        );
                     }
                 }
 
@@ -447,7 +559,7 @@ fn server_logic_tick(data: Arc<Mutex<WorldServer>>, network: Arc<Mutex<NetworkSt
             let mut actors_now_inside_instance_exits = Vec::new();
             let mut actors_now_outside_instance_entrances = Vec::new();
 
-            // Recalculate distance ranges
+            // Player area stuffs
             for (id, actor) in &instance.actors {
                 // Only check players
                 let NetworkedActor::Player {
@@ -812,7 +924,9 @@ fn server_logic_tick(data: Arc<Mutex<WorldServer>>, network: Arc<Mutex<NetworkSt
     }
 
     for id in actors_to_update_hp_mp {
-        update_actor_hp_mp(network.clone(), data.clone(), id);
+        let mut data = data.lock();
+        let instance = data.find_actor_instance_mut(id).unwrap();
+        update_actor_hp_mp(network.clone(), instance, id);
     }
 }
 
@@ -845,7 +959,7 @@ pub async fn server_main_loop(
                 interval.tick().await;
 
                 // Execute general server logic
-                server_logic_tick(data.clone(), network.clone());
+                server_logic_tick(data.clone(), network.clone(), lua.clone());
 
                 // Execute list of queued tasks
                 {
@@ -877,6 +991,18 @@ pub async fn server_main_loop(
                                     task.from_actor_id,
                                     request.clone(),
                                 );
+                            }
+                            QueuedTaskData::CastEnemyAction { request, .. } => {
+                                let mut data = data.lock();
+                                if let Some(instance) = data.instances.get_mut(*instance_index) {
+                                    execute_enemy_action(
+                                        network.clone(),
+                                        instance,
+                                        lua.clone(),
+                                        task.from_actor_id,
+                                        request.clone(),
+                                    );
+                                }
                             }
                             QueuedTaskData::LoseStatusEffect {
                                 effect_id,
@@ -2073,39 +2199,39 @@ pub async fn server_main_loop(
                     );
                 }
                 ToServer::Kill(_from_id, from_actor_id) => {
-                    kill_actor(network.clone(), data.clone(), from_actor_id)
+                    let mut data = data.lock();
+                    let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
+                        continue;
+                    };
+                    kill_actor(network.clone(), instance, from_actor_id)
                 }
                 ToServer::SetHP(_from_id, from_actor_id, hp) => {
-                    {
-                        let mut data = data.lock();
-                        let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
-                            continue;
-                        };
+                    let mut data = data.lock();
+                    let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
+                        continue;
+                    };
 
-                        let Some(actor) = instance.find_actor_mut(from_actor_id) else {
-                            continue;
-                        };
+                    let Some(actor) = instance.find_actor_mut(from_actor_id) else {
+                        continue;
+                    };
 
-                        actor.get_common_spawn_mut().hp = hp;
-                    }
+                    actor.get_common_spawn_mut().hp = hp;
 
-                    update_actor_hp_mp(network.clone(), data.clone(), from_actor_id);
+                    update_actor_hp_mp(network.clone(), instance, from_actor_id);
                 }
                 ToServer::SetMP(_from_id, from_actor_id, mp) => {
-                    {
-                        let mut data = data.lock();
-                        let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
-                            continue;
-                        };
+                    let mut data = data.lock();
+                    let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
+                        continue;
+                    };
 
-                        let Some(actor) = instance.find_actor_mut(from_actor_id) else {
-                            continue;
-                        };
+                    let Some(actor) = instance.find_actor_mut(from_actor_id) else {
+                        continue;
+                    };
 
-                        actor.get_common_spawn_mut().mp = mp;
-                    }
+                    actor.get_common_spawn_mut().mp = mp;
 
-                    update_actor_hp_mp(network.clone(), data.clone(), from_actor_id);
+                    update_actor_hp_mp(network.clone(), instance, from_actor_id);
                 }
                 ToServer::SetNewStatValues(from_actor_id, level, class_job, new_parameters) => {
                     // Update internal data model

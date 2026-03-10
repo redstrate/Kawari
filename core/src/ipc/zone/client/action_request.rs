@@ -3,7 +3,7 @@ use binrw::binrw;
 use crate::common::{ObjectTypeId, read_quantized_rotation, write_quantized_rotation};
 
 #[binrw]
-#[derive(Debug, Eq, PartialEq, Clone, Default)]
+#[derive(Debug, Eq, PartialEq, Clone, Copy, Default)]
 #[brw(repr = u8)]
 pub enum ActionKind {
     #[default]

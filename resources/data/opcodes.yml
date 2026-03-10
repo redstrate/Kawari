@@ -531,6 +531,18 @@ ServerZoneIpcType:
     comment: Sent to fill out the list of items on the Market Board.
     opcode: 697
     size: 176
+  - name: EffectResultBasic
+    comment: Unknown purpose.
+    opcode: 148
+    size: 24
+  - name: AoeEffect8
+    comment: Unknown purpose.
+    opcode: 958
+    size: 636
+  - name: ActorCast
+    comment: Unknown purpose.
+    opcode: 992
+    size: 32
 ClientZoneIpcType:
   - name: InitRequest
     comment: "Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)"

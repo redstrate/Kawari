@@ -5,7 +5,7 @@ use crate::{
     zone_connection::{BaseParameters, TeleportQuery},
 };
 use kawari::{
-    common::{DistanceRange, ObjectId, Position},
+    common::{DistanceRange, ObjectId, Position, Timeline},
     ipc::zone::{CommonSpawn, Conditions, NpcSpawn, ObjectSpawn, PlayerSpawn},
 };
 
@@ -43,6 +43,9 @@ pub enum NetworkedActor {
         current_target: Option<ObjectId>,
         last_position: Option<Position>,
         spawn: NpcSpawn,
+        timeline: Timeline,
+        /// In seconds.
+        timeline_position: f32,
     },
     Object {
         object: ObjectSpawn,

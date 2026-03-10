@@ -24,6 +24,9 @@ pub(crate) use parsing::*;
 mod dropin;
 pub use dropin::*;
 
+mod timeline;
+pub use timeline::{Timeline, Timepoint, TimepointData};
+
 /// Get the number of seconds since UNIX epoch.
 pub fn timestamp_secs() -> u32 {
     SystemTime::now()

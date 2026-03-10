@@ -91,7 +91,9 @@ mod free_company;
 pub use free_company::FcHierarchy;
 
 mod actor_move;
-use crate::common::{HandlerId, LandData};
+use crate::common::{
+    HandlerId, LandData, ObjectTypeId, Position, read_packed_position, write_packed_position,
+};
 use crate::constants::{
     COMPLETED_LEVEQUEST_BITMASK_SIZE, COMPLETED_QUEST_BITMASK_SIZE, TITLE_UNLOCK_BITMASK_SIZE,
 };
@@ -147,7 +149,7 @@ use crate::ipc::{
 };
 
 use crate::ipc::zone::social_list::GrandCompany;
-use crate::ipc::zone::{InviteReply, InviteType, InviteUpdateType, SearchInfo};
+use crate::ipc::zone::{ActionKind, InviteReply, InviteType, InviteUpdateType, SearchInfo};
 
 pub type ServerZoneIpcSegment =
     IpcSegment<ServerIpcSegmentHeader<ServerZoneIpcType>, ServerZoneIpcType, ServerZoneIpcData>;
@@ -878,10 +880,55 @@ pub enum ServerZoneIpcData {
     },
     MarketBoardItems {
         #[br(count = 21)]
-        #[bw(pad_size_to = 21 * MarketBoardItem::SIZE)]
+        #[brw(pad_size_to = 21 * MarketBoardItem::SIZE)]
         items: Vec<MarketBoardItem>,
         #[brw(pad_before = 4, pad_after = 2)] // empty
         sequence: u16,
+    },
+    EffectResultBasic {
+        unk1: u32,
+        unk2: u32,
+        target_id: ObjectId,
+        current_hp: u32,
+        unk3: u32,
+        unk4: u32,
+    },
+    AoeEffect8 {
+        source_actor: ObjectId,
+        unk1: u32,
+        action_key: u32,
+        dir: u16,
+        duration: f32,
+        unk3: u32,
+        request_id: u16,
+        action_id: u16,
+        action_variant: u8,
+        action_kind: u8,
+        flag: u8,
+        unk10: [u8; 18],
+        target_count: u8,
+        #[br(count = 512)]
+        #[brw(pad_size_to = 512)]
+        effects: Vec<u8>,
+        target_ids: [ObjectTypeId; 8],
+        #[brw(pad_after = 6)] // empty
+        #[br(map = read_packed_position)]
+        #[bw(map = write_packed_position)]
+        position: Position,
+    },
+    ActorCast {
+        action: u16,
+        #[brw(pad_after = 1)] // empty
+        action_kind: ActionKind,
+        action_key: u32,
+        cast_time: f32,
+        dir: f32,
+        unk1: u32,
+        target: ObjectId,
+        #[brw(pad_after = 2)] // empty
+        #[br(map = read_packed_position)]
+        #[bw(map = write_packed_position)]
+        position: Position,
     },
 }
 

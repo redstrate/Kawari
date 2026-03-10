@@ -41,21 +41,33 @@ pub enum QueuedTaskData {
         /// Currently means if it has a cast bar.
         interruptible: bool,
     },
+    CastEnemyAction {
+        request: ActionRequest,
+    },
     LoseStatusEffect {
         effect_id: u16,
         effect_param: u16,
         effect_source_actor_id: ObjectId,
     },
     /// Fade out a dead actor.
-    DeadFadeOut { actor_id: ObjectId },
+    DeadFadeOut {
+        actor_id: ObjectId,
+    },
     /// Despawn a dead actor.
-    DeadDespawn { actor_id: ObjectId },
+    DeadDespawn {
+        actor_id: ObjectId,
+    },
     /// Complete an EventAction
-    CastEventAction { target: ObjectId },
+    CastEventAction {
+        target: ObjectId,
+    },
     /// Make a fish bite.
     FishBite {},
     /// Seal a boss wall.
-    SealBossWall { id: u32, place_name: u32 },
+    SealBossWall {
+        id: u32,
+        place_name: u32,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -149,6 +161,11 @@ impl Instance {
                 current_target: None,
                 last_position: None,
                 spawn,
+                timeline: serde_json::from_str(
+                    &std::fs::read_to_string("resources/timelines/timberman.json").unwrap(),
+                )
+                .unwrap(), // TODO: of course, make configurable at some point
+                timeline_position: 0.0,
             },
         );
     }

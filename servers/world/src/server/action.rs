@@ -142,9 +142,9 @@ pub fn execute_action(
                     common_spawn.hp = common_spawn.hp.saturating_sub(amount as u32);
                 }
             }
-        }
 
-        update_actor_hp_mp(network.clone(), data.clone(), request.target.object_id);
+            update_actor_hp_mp(network.clone(), instance, request.target.object_id);
+        }
 
         // TODO: send Cooldown ActorControlSelf
 
@@ -266,6 +266,168 @@ pub fn execute_action(
     let mut network = network.lock();
     let msg = FromServer::NewTasks(lua_player.queued_tasks);
     network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
+}
+
+/// Executes an action from an enemy.
+pub fn execute_enemy_action(
+    network: Arc<Mutex<NetworkState>>,
+    instance: &mut Instance,
+    lua: Arc<Mutex<KawariLua>>,
+    from_actor_id: ObjectId,
+    request: ActionRequest,
+) {
+    // TODO: de-duplicate with the function above
+
+    let mut lua_player = LuaPlayer {
+        player_data: PlayerData::default(),
+        status_effects: StatusEffects::default(),
+        queued_tasks: Vec::new(),
+        zone_data: LuaZone::default(),
+        content_data: LuaContent::default(),
+        base_parameters: BaseParameters::default(),
+    };
+
+    let effects_builder;
+    let common_spawn;
+    {
+        let Some(actor) = instance.find_actor(from_actor_id) else {
+            return;
+        };
+
+        common_spawn = actor.get_common_spawn().clone();
+
+        effects_builder = match &request.action_kind {
+            ActionKind::Normal => execute_normal_action(lua.clone(), &request, &mut lua_player),
+            _ => unreachable!(),
+        };
+    }
+
+    // tell them the action results
+    if let Some(effects_builder) = effects_builder {
+        // Update our internal data model to their new HP
+        {
+            let Some(actor) = instance.find_actor_mut(request.target.object_id) else {
+                return;
+            };
+
+            let common_spawn = actor.get_common_spawn_mut();
+
+            for effect in &effects_builder.effects {
+                if let EffectKind::Damage { amount, .. } = effect.kind {
+                    common_spawn.hp = common_spawn.hp.saturating_sub(amount as u32);
+                }
+            }
+        }
+
+        update_actor_hp_mp(network.clone(), instance, request.target.object_id);
+
+        // TODO: send Cooldown ActorControlSelf
+
+        {
+            let mut network = network.lock();
+
+            // ActionResult
+            {
+                let mut effects = [ActionEffect::default(); 8];
+                effects[..effects_builder.effects.len()].copy_from_slice(&effects_builder.effects);
+
+                let ipc =
+                    ServerZoneIpcSegment::new(ServerZoneIpcData::ActionResult(ActionResult {
+                        main_target: request.target,
+                        target_id_again: request.target,
+                        action_id: request.action_key,
+                        animation_lock_time: 0.6,
+                        rotation: common_spawn.rotation,
+                        action_animation_id: request.action_key as u16, // assuming action id == animation id
+                        flag: 1,
+                        effect_count: effects_builder.effects.len() as u8,
+                        effects,
+                        unk1: 2662353,
+                        unk2: 3758096384,
+                        hidden_animation: 1,
+                        ..Default::default()
+                    }));
+
+                network.send_in_range_inclusive_instance(
+                    from_actor_id,
+                    instance,
+                    FromServer::PacketSegment(ipc, from_actor_id),
+                    DestinationNetwork::ZoneClients,
+                );
+            }
+        }
+
+        // EffectResult
+        // TODO: is this always sent? needs investigation
+        {
+            let mut num_entries = 0u8;
+            let mut entries = [EffectEntry::default(); 4];
+
+            for effect in &effects_builder.effects {
+                if let EffectKind::GainEffect {
+                    effect_id,
+                    duration,
+                    param,
+                    ..
+                } = effect.kind
+                {
+                    entries[num_entries as usize] = EffectEntry {
+                        index: num_entries,
+                        unk1: 0,
+                        id: effect_id,
+                        param,
+                        unk2: 0,
+                        duration,
+                        source_actor_id: Default::default(),
+                    };
+                    num_entries += 1;
+
+                    // TODO: does this make sense for enemies...?
+                    // gain_effect_instance(
+                    //     network.clone(),
+                    //             from_id,
+                    //             instance,
+                    //             from_actor_id,
+                    //             effect_id,
+                    //             param,
+                    //             duration,
+                    //             source_actor_id,
+                    //             false,
+                    // ); // ACS isn't needed as EffectsResult will show it for us
+                }
+
+                // To lose effects, we just omit them from the list but increase the entry count!
+                if let EffectKind::LoseEffect { .. } = effect.kind {
+                    entries[num_entries as usize] = EffectEntry::default();
+                    num_entries += 1;
+
+                    //self.status_effects.remove(effect_id);
+                }
+            }
+
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::EffectResult(EffectResult {
+                unk1: 1,
+                unk2: 776386,
+                target_id: request.target.object_id,
+                current_hp: common_spawn.hp,
+                max_hp: common_spawn.max_hp,
+                current_mp: common_spawn.mp,
+                unk3: 0,
+                class_id: common_spawn.class_job,
+                shield: 0,
+                entry_count: num_entries,
+                unk4: 0,
+                statuses: entries,
+            }));
+            let mut network = network.lock();
+            network.send_in_range_inclusive_instance(
+                from_actor_id,
+                instance,
+                FromServer::PacketSegment(ipc, from_actor_id),
+                DestinationNetwork::ZoneClients,
+            );
+        }
+    }
 }
 
 pub fn cancel_action(network: Arc<Mutex<NetworkState>>, from_id: ClientId) {
@@ -433,13 +595,12 @@ pub fn execute_mount_action(
 // Sends the ActorControls to inform the actor that they're dead.
 pub fn kill_actor(
     network: Arc<Mutex<NetworkState>>,
-    data: Arc<Mutex<WorldServer>>,
+    instance: &mut Instance,
     from_actor_id: ObjectId,
 ) {
     // TODO: set HP/MP to zero here
 
     let mut network = network.lock();
-    let mut data = data.lock();
 
     // First, set their state (otherwise they can still walk)
     {
@@ -448,74 +609,66 @@ pub fn kill_actor(
             mode_arg: 0,
         };
 
-        network.send_ac_in_range_inclusive(&data, from_actor_id, ac);
+        network.send_ac_in_range_inclusive_instance(instance, from_actor_id, ac);
     }
 
     // Then, play the death animation.
     {
         let ac = ActorControlCategory::Kill { animation_id: 0 };
 
-        network.send_ac_in_range_inclusive(&data, from_actor_id, ac);
+        network.send_ac_in_range_inclusive_instance(instance, from_actor_id, ac);
     }
 
     // Inform the director that their actor died
-    if let Some(instance) = data.find_actor_instance_mut(from_actor_id) {
-        let mut npc_id = None;
-        let mut position = None;
-        if let Some(actor) = instance.find_actor(from_actor_id)
-            && let Some(npc) = actor.get_npc_spawn()
-        {
-            npc_id = Some(npc.common.layout_id);
-        }
+    let mut npc_id = None;
+    let mut position = None;
+    if let Some(actor) = instance.find_actor(from_actor_id)
+        && let Some(npc) = actor.get_npc_spawn()
+    {
+        npc_id = Some(npc.common.layout_id);
+    }
 
-        // Transistion into the dead state so they stop moving.
-        if let Some(actor) = instance.find_actor_mut(from_actor_id)
-            && let NetworkedActor::Npc { state, spawn, .. } = actor
-        {
-            *state = NpcState::Dead;
-            position = Some(spawn.common.position);
-        }
+    // Transistion into the dead state so they stop moving.
+    if let Some(actor) = instance.find_actor_mut(from_actor_id)
+        && let NetworkedActor::Npc { state, spawn, .. } = actor
+    {
+        *state = NpcState::Dead;
+        position = Some(spawn.common.position);
+    }
 
-        if let Some(npc_id) = npc_id
-            && let Some(director) = &mut instance.director
-        {
-            director.on_actor_death(npc_id, position.unwrap());
-        }
+    if let Some(npc_id) = npc_id
+        && let Some(director) = &mut instance.director
+    {
+        director.on_actor_death(npc_id, position.unwrap());
+    }
 
-        // Cancel existing tasks
-        instance.cancel_actor_tasks(from_actor_id);
+    // Cancel existing tasks
+    instance.cancel_actor_tasks(from_actor_id);
 
-        // Queue up despawn if this is an NPC
-        if let Some(actor) = instance.find_actor_mut(from_actor_id)
-            && !matches!(actor, NetworkedActor::Player { .. })
-        {
-            instance.insert_task(
-                ClientId::default(),
-                from_actor_id,
-                DEAD_FADE_OUT_TIME,
-                QueuedTaskData::DeadFadeOut {
-                    actor_id: from_actor_id,
-                },
-            );
-        }
+    // Queue up despawn if this is an NPC
+    if let Some(actor) = instance.find_actor_mut(from_actor_id)
+        && !matches!(actor, NetworkedActor::Player { .. })
+    {
+        instance.insert_task(
+            ClientId::default(),
+            from_actor_id,
+            DEAD_FADE_OUT_TIME,
+            QueuedTaskData::DeadFadeOut {
+                actor_id: from_actor_id,
+            },
+        );
     }
 }
 
 /// Updates other actors about this actor's HP and MP.
 pub fn update_actor_hp_mp(
     network: Arc<Mutex<NetworkState>>,
-    data: Arc<Mutex<WorldServer>>,
+    instance: &mut Instance,
     target_actor_id: ObjectId,
 ) {
     let mut send_kill_actor = false;
     // Inform the client of the new actor's HP/MP
     {
-        let mut data = data.lock();
-
-        let Some(instance) = data.find_actor_instance_mut(target_actor_id) else {
-            return;
-        };
-
         let Some(actor) = instance.find_actor(target_actor_id) else {
             return;
         };
@@ -543,6 +696,6 @@ pub fn update_actor_hp_mp(
     }
 
     if send_kill_actor {
-        kill_actor(network.clone(), data.clone(), target_actor_id);
+        kill_actor(network.clone(), instance, target_actor_id);
     }
 }
