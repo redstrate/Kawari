@@ -189,10 +189,11 @@ impl BaseParameters {
         self.mp = param_grow.mp_modifier as u32;
     }
 
-    pub fn calculate_damages(&mut self) {
+    pub fn calculate_potencies(&mut self) {
         // TODO: wrong but we need some scaling
         self.physical_damage = self.strength * 100;
         self.magic_damage = self.intelligence * 100;
+        self.healing_magic_potency = self.mind * 100;
     }
 
     fn calc_physical_damage(&self, potency: u32) -> u16 {
@@ -204,6 +205,11 @@ impl BaseParameters {
         let normalized_potency = potency as f32 / 100.0;
         (normalized_potency * self.magic_damage as f32).floor() as u16
     }
+
+    fn calc_heal_amount(&self, potency: u32) -> u16 {
+        let normalized_potency = potency as f32 / 100.0;
+        (normalized_potency * self.healing_magic_potency as f32).floor() as u16
+    }
 }
 
 impl UserData for BaseParameters {
@@ -213,6 +219,9 @@ impl UserData for BaseParameters {
         });
         methods.add_method("calc_magical_damage", |_, this, potency: u32| {
             Ok(this.calc_magical_damage(potency))
+        });
+        methods.add_method("calc_heal_amount", |_, this, potency: u32| {
+            Ok(this.calc_heal_amount(potency))
         });
     }
 }
@@ -327,7 +336,7 @@ impl ZoneConnection {
         let mut base_parameters = BaseParameters::from_attributes(&attributes);
         self.calculate_stat_across_all_items(&mut base_parameters);
         base_parameters.calculate_hp_mp(&param_grow);
-        base_parameters.calculate_damages();
+        base_parameters.calculate_potencies();
 
         base_parameters
     }

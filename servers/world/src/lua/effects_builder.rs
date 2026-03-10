@@ -64,6 +64,21 @@ impl UserData for EffectsBuilder {
                 Ok(())
             },
         );
+        methods.add_method_mut("heal", |_, this, amount: u16| {
+            this.effects.push(ActionEffect {
+                kind: EffectKind::Heal {
+                    unk1: [0; 5],
+                    amount,
+                },
+            });
+            Ok(())
+        });
+        methods.add_method_mut("interrupt", |_, this, _: ()| {
+            this.effects.push(ActionEffect {
+                kind: EffectKind::InterruptAction {},
+            });
+            Ok(())
+        });
     }
 }
 

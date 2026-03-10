@@ -63,6 +63,11 @@ pub enum EffectKind {
         unk4: u8,
         amount: u16,
     },
+    #[brw(magic = 4u8)]
+    Heal { unk1: [u8; 5], amount: u16 },
+    /// Seen during Head Graze.
+    #[brw(magic = 8u8)]
+    InterruptAction {},
     #[brw(magic = 27u8)]
     BeginCombo,
     /// Seen during sprint.
