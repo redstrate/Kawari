@@ -196,7 +196,7 @@ fn send_party_target_signs(network: &mut NetworkState, party_id: u64, execute_ac
     }
 }
 
-/// Helper function to send existing waymarks to party members who changed areas or returned from being ofline.
+/// Helper function to send existing waymarks to party members who changed areas or returned from being offline.
 fn send_party_waymarks(
     network: &mut NetworkState,
     party_id: u64,

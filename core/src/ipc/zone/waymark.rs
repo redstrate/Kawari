@@ -16,6 +16,9 @@ pub enum WaymarkPlacementMode {
     Placed = 1,
 }
 
+/// A factor used for `WaymarkCoordinate`s in the conversion to and from f32 & i32.
+const COORDINATE_FACTOR: f32 = 1000.0;
+
 /// A special type specific to waymarks that converts 32-bit floats to 32-bit signed integers.
 /// The game client sends i32s to the server and expects them back in this same format.
 /// We also implement Debug and Display so that PacketAnalyzer can view them correctly.
@@ -26,7 +29,7 @@ pub struct WaymarkCoordinate(pub i32);
 
 impl From<f32> for WaymarkCoordinate {
     fn from(value: f32) -> Self {
-        WaymarkCoordinate((value * 1000.0) as i32)
+        Self((value * COORDINATE_FACTOR) as i32)
     }
 }
 
@@ -38,7 +41,7 @@ impl fmt::Debug for WaymarkCoordinate {
 
 impl fmt::Display for WaymarkCoordinate {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:.3}", (self.0 as f32 / 1000.0))
+        write!(f, "{:.3}", (self.0 as f32 / COORDINATE_FACTOR))
     }
 }
 
