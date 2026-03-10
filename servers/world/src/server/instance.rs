@@ -152,6 +152,30 @@ impl Instance {
     }
 
     pub fn insert_npc(&mut self, id: ObjectId, spawn: NpcSpawn) {
+        // Load drop-ins
+        let mut timeline = serde_json::from_str(
+            &std::fs::read_to_string("resources/timelines/Default.json").unwrap(),
+        )
+        .unwrap();
+        for entry in std::fs::read_dir("resources/timelines")
+            .expect("Didn't find timelines directory?")
+            .flatten()
+        {
+            if !entry
+                .file_name()
+                .to_str()
+                .unwrap_or_default()
+                .ends_with(&format!("_{}.json", spawn.common.npc_base))
+            {
+                continue;
+            }
+
+            if let Ok(contents) = std::fs::read_to_string(entry.path()) {
+                timeline = serde_json::from_str(&contents).unwrap();
+                break;
+            }
+        }
+
         self.actors.insert(
             id,
             NetworkedActor::Npc {
@@ -161,10 +185,7 @@ impl Instance {
                 current_target: None,
                 last_position: None,
                 spawn,
-                timeline: serde_json::from_str(
-                    &std::fs::read_to_string("resources/timelines/timberman.json").unwrap(),
-                )
-                .unwrap(), // TODO: of course, make configurable at some point
+                timeline,
                 timeline_position: 0.0,
             },
         );
