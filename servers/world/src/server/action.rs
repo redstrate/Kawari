@@ -131,15 +131,22 @@ pub fn execute_action(
                 return;
             };
 
-            let Some(actor) = instance.find_actor_mut(request.target.object_id) else {
-                return;
-            };
-
-            let common_spawn = actor.get_common_spawn_mut();
-
             for effect in &effects_builder.effects {
-                if let EffectKind::Damage { amount, .. } = effect.kind {
-                    common_spawn.hp = common_spawn.hp.saturating_sub(amount as u32);
+                match &effect.kind {
+                    EffectKind::Damage { amount, .. } => {
+                        let Some(actor) = instance.find_actor_mut(request.target.object_id) else {
+                            return;
+                        };
+                        let common_spawn = actor.get_common_spawn_mut();
+
+                        common_spawn.hp = common_spawn.hp.saturating_sub(*amount as u32);
+                    }
+                    EffectKind::InterruptAction {} => {
+                        // TODO: this could cancel more than just casting, so we need to be more specific eventually
+                        // TODO: also cancel the cast visually
+                        instance.cancel_actor_tasks(request.target.object_id);
+                    }
+                    _ => {}
                 }
             }
 
