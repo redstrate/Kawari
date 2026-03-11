@@ -596,10 +596,6 @@ ClientZoneIpcType:
     comment: Unknown purpose.
     opcode: 588
     size: 8
-  - name: EventRelatedUnk
-    comment: Unknown purpose.
-    opcode: 1611
-    size: 16
   - name: ItemOperation
     comment: Unknown purpose.
     opcode: 969
