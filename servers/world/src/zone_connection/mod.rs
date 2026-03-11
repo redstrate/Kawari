@@ -134,7 +134,6 @@ pub struct ZoneConnection {
     pub rejoining_party: bool,
     /// The player's currently active quests.
     pub login_time: Option<SystemTime>,
-    pub transaction_sequence: u32,
     pub glamour_information: Option<ClientTriggerCommand>,
 
     pub last_keep_alive: Instant,
