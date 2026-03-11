@@ -187,6 +187,7 @@ impl Instance {
                 spawn,
                 timeline,
                 timeline_position: 0,
+                newly_hated_actor: None,
             },
         );
     }

@@ -306,6 +306,7 @@ fn server_logic_tick(
                         last_position,
                         timeline_position,
                         timeline,
+                        newly_hated_actor,
                         ..
                     } = actor
                         && *state != NpcState::Dead
@@ -327,7 +328,20 @@ fn server_logic_tick(
                             }
                         }
 
-                        if current_target.is_none() && *state == NpcState::Wander {
+                        // Pick up any newly hated actors first.
+                        if let Some(actor) = newly_hated_actor.take() {
+                            *state = NpcState::Hate;
+                            *current_target = Some(actor);
+
+                            spawn.common.target_id.object_id = actor;
+                            newly_acquired_targets.push(*id);
+                        }
+
+                        // 1 means passive
+                        if current_target.is_none()
+                            && *state == NpcState::Wander
+                            && spawn.aggression_mode != 1
+                        {
                             // find a player if in range
                             for (target_id, position) in &players {
                                 if Position::distance(*position, spawn.common.position) < 15.0 {
@@ -1865,6 +1879,36 @@ pub async fn server_main_loop(
                                     DestinationNetwork::ZoneClients,
                                 );
                             }
+                        }
+                        ClientTriggerCommand::ResetStrikingDummy { id } => {
+                            let mut data = data.lock();
+                            let Some(instance) = data.find_actor_instance_mut(*id) else {
+                                continue;
+                            };
+
+                            let Some(actor) = instance.find_actor_mut(*id) else {
+                                continue;
+                            };
+
+                            let NetworkedActor::Npc {
+                                state,
+                                current_target,
+                                ..
+                            } = actor
+                            else {
+                                continue;
+                            };
+
+                            *state = NpcState::Wander;
+                            *current_target = None;
+
+                            // TODO: throw this into a generic de-aggro thing eventually
+                            let mut network = network.lock();
+                            network.send_ac_in_range(
+                                &data,
+                                *id,
+                                ActorControlCategory::SetBattle { battle: false },
+                            );
                         }
                         _ => tracing::warn!("Server doesn't know what to do with {:#?}", trigger),
                     }

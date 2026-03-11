@@ -27,8 +27,8 @@ use kawari::{
         ObjectId, Position, euler_to_direction,
     },
     ipc::zone::{
-        ActorControlCategory, BattleNpcSubKind, CommonSpawn, Conditions, DisplayFlag, NpcSpawn,
-        ObjectKind, ObjectSpawn,
+        ActorControlCategory, BattleNpcSubKind, CommonSpawn, Conditions, NpcSpawn, ObjectKind,
+        ObjectSpawn,
     },
 };
 
@@ -546,7 +546,6 @@ impl Zone {
                             rotation: object.rotation,
                             look: customize,
                             layout_id: object.instance_id,
-                            display_flags: DisplayFlag::UNK1,
                             ..Default::default()
                         },
                         ..Default::default()

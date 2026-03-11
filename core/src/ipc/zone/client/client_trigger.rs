@@ -126,6 +126,13 @@ pub enum ClientTriggerCommand {
         id: u32,
     },
 
+    /// When the client requests to reset a striking dummy in the UI.
+    #[brw(magic = 319u32)]
+    ResetStrikingDummy {
+        /// The dummy's object id.
+        id: ObjectId,
+    },
+
     /// The client requests materia melding from another player.
     #[brw(magic = 413u32)]
     RequestMateriaMeld { actor_id: ObjectId },

@@ -46,6 +46,8 @@ pub enum NetworkedActor {
         timeline: Timeline,
         /// In half-seconds (the current server logic tick.)
         timeline_position: i64,
+        /// Used for aggros outside of the server logic loop (such as regular attacks.)
+        newly_hated_actor: Option<ObjectId>,
     },
     Object {
         object: ObjectSpawn,

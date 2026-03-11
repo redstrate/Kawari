@@ -15,6 +15,7 @@ pub struct NpcSpawn {
     pub gm_rank: GameMasterRank, // FIXME: lol really? what does an NPC need GM rank privileges for?
     pub u3b: u8,
 
+    // TODO: turn this into an enum at some point!
     pub aggression_mode: u8,
     pub online_status: OnlineStatus,
     pub u5a: u8,

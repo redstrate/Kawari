@@ -76,6 +76,9 @@ pub const BASE_STAT: i8 = 20;
 /// Number of seconds between an enemy's auto attacks. No idea how close this is to retail.
 pub const ENEMY_AUTO_ATTACK_RATE: i64 = 3;
 
+/// Used to check whether the striking dummy NPC should be invincible.
+pub const STRIKING_DUMMY_NAME_ID: u32 = 541;
+
 pub struct Attributes {
     pub strength: u32,
     pub dexterity: u32,

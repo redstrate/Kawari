@@ -18,7 +18,7 @@ use crate::{
     zone_connection::BaseParameters,
 };
 use kawari::{
-    common::{CharacterMode, DEAD_FADE_OUT_TIME, ObjectId},
+    common::{CharacterMode, DEAD_FADE_OUT_TIME, ObjectId, STRIKING_DUMMY_NAME_ID},
     ipc::zone::{
         ActionEffect, ActionKind, ActionRequest, ActionResult, ActorControlCategory, EffectEntry,
         EffectKind, EffectResult, ServerZoneIpcData, ServerZoneIpcSegment,
@@ -131,6 +131,20 @@ pub fn execute_action(
                 return;
             };
 
+            // aggro any NPCs
+            {
+                let Some(actor) = instance.find_actor_mut(request.target.object_id) else {
+                    return;
+                };
+
+                if let NetworkedActor::Npc {
+                    newly_hated_actor, ..
+                } = actor
+                {
+                    *newly_hated_actor = Some(from_actor_id);
+                }
+            }
+
             for effect in &effects_builder.effects {
                 match &effect.kind {
                     EffectKind::Damage { amount, .. } => {
@@ -138,8 +152,9 @@ pub fn execute_action(
                             return;
                         };
                         let common_spawn = actor.get_common_spawn_mut();
-
-                        common_spawn.hp = common_spawn.hp.saturating_sub(*amount as u32);
+                        if common_spawn.npc_name != STRIKING_DUMMY_NAME_ID {
+                            common_spawn.hp = common_spawn.hp.saturating_sub(*amount as u32);
+                        }
                     }
                     EffectKind::InterruptAction {} => {
                         // TODO: this could cancel more than just casting, so we need to be more specific eventually
