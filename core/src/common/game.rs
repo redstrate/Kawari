@@ -89,7 +89,7 @@ pub const MAXIMUM_RESTED_EXP: i32 = 604800;
 pub const BASE_STAT: i8 = 20;
 
 /// Number of seconds between an enemy's auto attacks. No idea how close this is to retail.
-pub const ENEMY_AUTO_ATTACK_RATE: i32 = 3;
+pub const ENEMY_AUTO_ATTACK_RATE: i64 = 3;
 
 pub struct Attributes {
     pub strength: u32,

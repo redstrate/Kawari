@@ -308,10 +308,11 @@ fn server_logic_tick(
                         timeline,
                         ..
                     } = actor
+                        && *state != NpcState::Dead
                     {
                         // NOTE: this is *intentional* as I believe in retail the timing of actions are dependent on when the actor spawned
                         // This doesn't have an effect if you re-aggro them or whatever.
-                        *timeline_position += 0.5; // NOTE: change if the length of a server tick changes
+                        *timeline_position += 1; // NOTE: change if the length of a server tick changes
 
                         // switch to the next node if we passed this one
                         if *current_path_lerp >= 1.0 {
@@ -376,11 +377,12 @@ fn server_logic_tick(
                                 reset_target = true;
                             }
 
-                            if !reset_target {
-                                // TODO: don't make this complex, instead count by milliseconds to avoid f32 elison. this works as prototype though.
+                            // Only update the timeline on exact second marks
+                            if !reset_target && (*timeline_position % 2) == 0 {
                                 // NOTE: the "+ 1" is a hack to ensure the last timepoint is always counted
-                                let real_timeline_position =
-                                    *timeline_position % (timeline.duration() as f32 + 0.5);
+                                let timeline_position_seconds = *timeline_position / 2;
+                                let real_timeline_position = timeline_position_seconds as f32
+                                    % (timeline.duration() as f32 + 0.5);
                                 if let Some(timepoint) =
                                     timeline.point_at(real_timeline_position as i32)
                                 {
@@ -408,7 +410,7 @@ fn server_logic_tick(
                                 }
 
                                 // Schedule any pending auto-attacks:
-                                let should_auto_attack = ((*timeline_position as i32)
+                                let should_auto_attack = (timeline_position_seconds
                                     % (ENEMY_AUTO_ATTACK_RATE + 1))
                                     == ENEMY_AUTO_ATTACK_RATE;
                                 if should_auto_attack {

@@ -44,8 +44,8 @@ pub enum NetworkedActor {
         last_position: Option<Position>,
         spawn: NpcSpawn,
         timeline: Timeline,
-        /// In seconds.
-        timeline_position: f32,
+        /// In half-seconds (the current server logic tick.)
+        timeline_position: i64,
     },
     Object {
         object: ObjectSpawn,

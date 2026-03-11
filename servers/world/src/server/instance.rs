@@ -186,7 +186,7 @@ impl Instance {
                 last_position: None,
                 spawn,
                 timeline,
-                timeline_position: 0.0,
+                timeline_position: 0,
             },
         );
     }
