@@ -10,7 +10,7 @@ Ensure you read our [Acceptable Usage policy](https://docs.xiv.zone/kawari/accep
 
 ## Scope
 
-Before spending time on a patch we may not accept, please familiarize yourself with [our Project Scope](scope.md).
+Before spending time on a patch we may not accept, please familiarize yourself with [our Project Scope](https://docs.xiv.zone/kawari/scope.md).
 
 ## Use of Generative AI
 
