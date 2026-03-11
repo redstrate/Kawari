@@ -21,10 +21,11 @@ In reality, _all_ packets in the game are fixed-size. Yes, this means for dynami
 
 There are a multitude of other projects that can be used for reference, inspiration or documentation:
 
-* [Sapphire Server](https://github.com/SapphireServer/Sapphire) - which has branches for both 3.x and 5.x eras.
+* [FFXIVClientStructs](https://github.com/aers/FFXIVClientStructs/) which is beginning to map out network packets.
 * [Maelstrom](https://github.com/Rawaho/Maelstrom) which is from the 4.x era.
 * [iolite](https://github.com/0xbbadbeef/iolite) which targets the modern era.
 * [FFXIVOpcodes](https://github.com/karashiiro/FFXIVOpcodes/) which has a limited selection of opcodes.
+* [Sapphire Server](https://github.com/SapphireServer/Sapphire) - which has branches for both 3.x and 5.x eras.
 
 ## Blocking opcodes in retail
 
