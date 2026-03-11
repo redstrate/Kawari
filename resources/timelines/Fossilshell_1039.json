@@ -4,8 +4,7 @@
         {
             "data": {
                 "type": "action",
-                "action_id": 907,
-                "damage": 50000
+                "action_id": 907
             },
             "time": 10
         }

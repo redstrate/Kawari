@@ -4,16 +4,14 @@
         {
             "data": {
                 "type": "action",
-                "action_id": 541,
-                "damage": 50000
+                "action_id": 541
             },
             "time": 7
         },
         {
             "data": {
                 "type": "action",
-                "action_id": 544,
-                "damage": 50000
+                "action_id": 544
             },
             "time": 17
         }

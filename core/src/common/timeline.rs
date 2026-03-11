@@ -44,9 +44,6 @@ pub enum TimepointData {
     Action {
         /// Index into the Action Excel sheet.
         action_id: u32,
-        /// How much damage this attack should do.
-        // TODO: temporary
-        damage: u32,
     },
 }
 
@@ -66,10 +63,7 @@ mod tests {
                 autoattack_action_id: 872,
                 timepoints: vec![Timepoint {
                     time: 20,
-                    data: TimepointData::Action {
-                        action_id: 872,
-                        damage: 50000
-                    }
+                    data: TimepointData::Action { action_id: 872 }
                 }]
             }
         );
