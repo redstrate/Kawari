@@ -427,7 +427,6 @@ impl HandlerType {
     pub fn condition(&self) -> Condition {
         match self {
             Self::GatheringPoint => Condition::ExecutingGatheringAction,
-            Self::Opening => Condition::Occupied33,
             Self::Fishing => Condition::Fishing,
             Self::EventGimmickPathMove => Condition::OccupiedInEvent,
             Self::GimmickRect => Condition::OccupiedInEvent,
@@ -441,7 +440,7 @@ impl HandlerType {
         match self {
             Self::GatheringPoint | Self::Fishing => CharacterMode::Gathering,
             Self::Craft => CharacterMode::Crafting,
-            _ => CharacterMode::None,
+            _ => CharacterMode::Normal,
         }
     }
 }

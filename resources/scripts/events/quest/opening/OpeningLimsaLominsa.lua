@@ -21,6 +21,7 @@ function onEnterTerritory(player)
         player:play_scene(40, NO_DEFAULT_CAMERA | HIDE_HOTBAR, {2, 0})
     end
 end
+
 function onReturn(scene, results, player)
     -- Move into the controls text after initial cutscene
     if scene == 0 then

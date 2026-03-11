@@ -187,18 +187,7 @@ impl ZoneConnection {
         };
 
         // Ditt from above
-        Box::pin(send_packet(
-            &mut self.socket,
-            &mut self.state,
-            ConnectionType::Zone,
-            if self.config.enable_packet_compression {
-                CompressionType::Oodle
-            } else {
-                CompressionType::Uncompressed
-            },
-            &[segment],
-        ))
-        .await;
+        Box::pin(self.send_segment(segment)).await;
     }
 
     pub async fn send_segment(&mut self, segment: PacketSegment<ServerZoneIpcSegment>) {

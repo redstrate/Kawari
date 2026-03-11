@@ -105,11 +105,6 @@ impl ZoneConnection {
                 ..Default::default()
             }));
             self.send_ipc_self(ipc).await;
-
-            self.actor_control_self(ActorControlCategory::DisableEventPosRollback {
-                handler_id: HandlerId(event_id),
-            })
-            .await;
         }
 
         let condition = HandlerId(event_id).handler_type().condition();
