@@ -1,7 +1,10 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use kawari::common::{HandlerId, HandlerType, ObjectTypeId};
+use kawari::{
+    common::{HandlerId, HandlerType, ObjectTypeId},
+    config::FilesystemConfig,
+};
 use mlua::{Function, Lua};
 use parking_lot::Mutex;
 
@@ -27,7 +30,7 @@ impl LuaEventHandler {
             Self::inject_lua_parameters(id, &mut lua.0, &mut game_data);
         }
 
-        let file_name = format!("resources/scripts/{path}");
+        let file_name = FilesystemConfig::locate_script_file(path);
 
         let result = std::fs::read(&file_name);
         if let Err(err) = result {

@@ -11,7 +11,7 @@ use crate::{
 };
 use kawari::{
     common::HandlerType,
-    config::get_config,
+    config::{FilesystemConfig, get_config},
     ipc::zone::{
         DamageElement, DamageKind, DamageType, EventType, GameMasterRank, SceneFlags,
         ServerNoticeFlags,
@@ -47,7 +47,7 @@ impl KawariLua {
         Self::register_enum::<DamageElement>(&mut lua, "DAMAGE_ELEMENT");
 
         // Load Global.lua
-        let file_name = "resources/scripts/Global.lua";
+        let file_name = FilesystemConfig::locate_script_file("Global.lua");
         lua.load(std::fs::read(file_name).expect("Failed to locate scripts directory!"))
             .exec()
             .unwrap();
@@ -93,36 +93,46 @@ impl KawariLua {
         let mut extra_lua_state = KawariLuaState::default();
 
         let load_based_on_filename = |name: &str, hash_map: &mut HashMap<u32, String>| {
-            let effects_dir = format!("resources/scripts/{name}");
-            for entry in std::fs::read_dir(effects_dir)
-                .expect("Didn't find effects directory?")
-                .flatten()
-            {
-                for entry in std::fs::read_dir(entry.path())
-                    .expect("Failed to read into effects directory")
+            let mut search_dirs: Vec<String> = get_config()
+                .filesystem
+                .additional_resource_paths
+                .iter()
+                .cloned()
+                .map(|mut x| {
+                    x.push_str("/scripts/");
+                    x
+                })
+                .collect();
+            search_dirs.push("resources/scripts/".to_string());
+
+            for search_dir in search_dirs {
+                let effects_dir = format!("{search_dir}/{name}");
+                for entry in std::fs::read_dir(&effects_dir)
+                    .expect("Didn't find effects directory?")
                     .flatten()
                 {
-                    let path = entry.path();
-                    if path.extension().and_then(|x| x.to_str()) == Some("lua") {
-                        let stem = path
-                            .file_stem()
-                            .expect("No file name?!")
-                            .to_str()
-                            .expect("Failed to convert filename")
-                            .to_string();
-                        let Some((_, num)) = stem.split_once('_') else {
-                            tracing::warn!("Invalid status effect file name: {stem}");
-                            continue;
-                        };
-                        let num = num.parse().expect("Failed to parse status effect ID");
-                        hash_map.insert(
-                            num,
-                            path.strip_prefix("resources/scripts")
-                                .expect("Failed to express scripts location")
+                    for entry in std::fs::read_dir(entry.path())
+                        .expect("Failed to read into effects directory")
+                        .flatten()
+                    {
+                        let path = entry.path();
+                        if path.extension().and_then(|x| x.to_str()) == Some("lua") {
+                            let stem = path
+                                .file_stem()
+                                .expect("No file name?!")
                                 .to_str()
-                                .expect("Failed to convert path")
-                                .to_string(),
-                        );
+                                .expect("Failed to convert filename")
+                                .to_string();
+                            let Some((_, num)) = stem.split_once('_') else {
+                                tracing::warn!("Invalid status effect file name: {stem}");
+                                continue;
+                            };
+                            let num = num.parse().expect("Failed to parse status effect ID");
+
+                            hash_map.entry(num).or_insert_with(|| {
+                                path.to_str().expect("Failed to convert path").to_string()
+                            });
+                        }
                     }
                 }
             }
@@ -149,9 +159,9 @@ impl KawariLua {
 
         lua.globals().set("GAME_DATA", game_data.clone())?;
 
-        let file_name = "resources/scripts/Init.lua";
-        lua.load(std::fs::read(file_name).expect("Failed to locate scripts directory!"))
-            .set_name("@".to_string() + file_name)
+        let file_name = FilesystemConfig::locate_script_file("Init.lua");
+        lua.load(std::fs::read(&file_name).expect("Failed to locate scripts directory!"))
+            .set_name("@".to_string() + &file_name)
             .exec()?;
 
         Ok(())

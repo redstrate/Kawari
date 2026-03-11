@@ -35,7 +35,7 @@ use kawari::{
         JumpState, MAX_SPAWNED_ACTORS, MAX_SPAWNED_OBJECTS, MoveAnimationState, MoveAnimationType,
         ObjectId, ObjectTypeId, ObjectTypeKind, Position, TerritoryIntendedUse, TimepointData,
     },
-    config::get_config,
+    config::{FilesystemConfig, get_config},
     ipc::zone::{
         ActionKind, ActionRequest, ActorControlCategory, BattleNpcSubKind, ClientTriggerCommand,
         CommonSpawn, Condition, Conditions, EnmityList, Hater, HaterList, NpcSpawn, ObjectKind,
@@ -133,7 +133,8 @@ impl WorldServer {
         let content_short_name = game_data
             .get_content_short_name(content_finder_condition)
             .unwrap();
-        let file_name = format!("resources/scripts/content/{content_short_name}.lua");
+        let file_name =
+            FilesystemConfig::locate_script_file(&format!("content/{content_short_name}.lua"));
 
         let result = std::fs::read(&file_name);
         if let Err(err) = result {

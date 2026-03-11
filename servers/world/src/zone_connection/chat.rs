@@ -6,8 +6,12 @@ use crate::{
     MessageInfo, ZoneConnection,
     lua::{KawariLuaState, LuaPlayer},
 };
-use kawari::ipc::zone::{
-    ChatMessage, ServerNoticeFlags, ServerNoticeMessage, ServerZoneIpcData, ServerZoneIpcSegment,
+use kawari::{
+    config::FilesystemConfig,
+    ipc::zone::{
+        ChatMessage, ServerNoticeFlags, ServerNoticeMessage, ServerZoneIpcData,
+        ServerZoneIpcSegment,
+    },
 };
 
 impl ZoneConnection {
@@ -48,7 +52,7 @@ impl ZoneConnection {
         let state = lua.0.app_data_ref::<KawariLuaState>().unwrap();
 
         if let Some(command_script) = state.gm_command_scripts.get(&command) {
-            let file_name = format!("resources/scripts/{command_script}");
+            let file_name = FilesystemConfig::locate_script_file(command_script);
 
             let mut run_script = || -> mlua::Result<()> {
                 lua.0.scope(|scope| {

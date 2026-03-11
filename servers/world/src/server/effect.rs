@@ -326,12 +326,12 @@ pub fn remove_effect(
                 .scope(|scope| {
                     let connection_data = scope.create_userdata_ref_mut(&mut lua_player).unwrap();
 
-                    let file_name = format!("resources/scripts/{effect_script}");
                     lua.0
                         .load(
-                            std::fs::read(&file_name).expect("Failed to locate scripts directory!"),
+                            std::fs::read(effect_script)
+                                .expect("Failed to locate scripts directory!"),
                         )
-                        .set_name("@".to_string() + &file_name)
+                        .set_name("@".to_string() + effect_script)
                         .exec()
                         .unwrap();
 

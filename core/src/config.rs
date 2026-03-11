@@ -15,6 +15,7 @@ fn default_listen_address() -> String {
 pub struct AdminConfig {
     #[serde(default = "AdminConfig::default_port")]
     pub port: u16,
+
     #[serde(default = "default_listen_address")]
     pub listen_address: String,
 }
@@ -47,12 +48,16 @@ impl AdminConfig {
 pub struct FrontierConfig {
     #[serde(default = "FrontierConfig::default_port")]
     pub port: u16,
+
     #[serde(default = "default_listen_address")]
     pub listen_address: String,
+
     #[serde(default = "FrontierConfig::default_server_name")]
     pub server_name: String,
+
     #[serde(default = "FrontierConfig::default_worlds_open")]
     pub worlds_open: bool,
+
     #[serde(default = "FrontierConfig::default_login_open")]
     pub login_open: bool,
 }
@@ -100,8 +105,10 @@ impl FrontierConfig {
 pub struct LobbyConfig {
     #[serde(default = "LobbyConfig::default_port")]
     pub port: u16,
+
     #[serde(default = "default_listen_address")]
     pub listen_address: String,
+
     #[serde(default = "LobbyConfig::default_server_name")]
     pub server_name: String,
 }
@@ -191,12 +198,14 @@ impl LoginConfig {
 pub struct PatchConfig {
     #[serde(default = "PatchConfig::default_port")]
     pub port: u16,
+
     #[serde(default = "default_listen_address")]
     pub listen_address: String,
     /// Publicly accessible URL to download patches from.
     /// For example, "patch-dl.ffxiv.localhost". Patch files must be served so they're accessible as: "http://patch-dl.ffxiv.localhost/game/ex4/somepatchfilename.patch"
     #[serde(default = "PatchConfig::default_patch_dl_url")]
     pub patch_dl_url: String,
+
     /// Location of the patches directory on disk. Must be setup like so:
     /// ```ignore
     /// <channel> (e.g. ffxivneo_release_game) /
@@ -206,10 +215,13 @@ pub struct PatchConfig {
     /// ```
     #[serde(default = "PatchConfig::default_patches_location")]
     pub patches_location: String,
+
     #[serde(default = "PatchConfig::default_game_server_name")]
     pub game_server_name: String,
+
     #[serde(default = "PatchConfig::default_boot_server_name")]
     pub boot_server_name: String,
+
     #[serde(default = "PatchConfig::default_supported_platforms")]
     pub supported_platforms: Vec<String>,
 }
@@ -473,8 +485,10 @@ impl WorldConfig {
 pub struct LauncherConfig {
     #[serde(default = "LauncherConfig::default_port")]
     pub port: u16,
+
     #[serde(default = "default_listen_address")]
     pub listen_address: String,
+
     #[serde(default = "LauncherConfig::default_server_name")]
     pub server_name: String,
 }
@@ -512,6 +526,7 @@ impl LauncherConfig {
 pub struct SaveDataBankConfig {
     #[serde(default = "SaveDataBankConfig::default_port")]
     pub port: u16,
+
     #[serde(default = "default_listen_address")]
     pub listen_address: String,
 }
@@ -544,8 +559,10 @@ impl SaveDataBankConfig {
 pub struct DataCenterTravelConfig {
     #[serde(default = "DataCenterTravelConfig::default_port")]
     pub port: u16,
+
     #[serde(default = "default_listen_address")]
     pub listen_address: String,
+
     #[serde(default = "DataCenterTravelConfig::default_server_name")]
     pub server_name: String,
 }
@@ -598,11 +615,49 @@ pub struct FilesystemConfig {
     /// Navimesh file directory.
     #[serde(default = "FilesystemConfig::default_navimesh_path")]
     pub navimesh_path: String,
+
+    /// Additional search paths for *resource files*. Needs to have the same folder structure as ours.
+    ///
+    /// These are ordered from highest-to-lowest, and these are always preferred over our own resource files.
+    ///
+    /// Note that drop-ins and timelines are *not* combined. Web templates do not respect this option.
+    #[serde(default)]
+    pub additional_resource_paths: Vec<String>,
 }
 
 impl FilesystemConfig {
     fn default_navimesh_path() -> String {
         "navimesh".to_string()
+    }
+
+    /// Locates a script file and returns its path, taking into account additional search paths.
+    ///
+    /// This is infallible as it will always return our built-in path.
+    pub fn locate_script_file(path: &str) -> String {
+        let config = get_config();
+        for search_path in config.filesystem.additional_resource_paths {
+            let file_name = format!("{search_path}/scripts/{path}");
+            if std::fs::exists(&file_name).unwrap_or_default() {
+                return file_name;
+            }
+        }
+
+        format!("resources/scripts/{path}")
+    }
+
+    /// Locates a timeline file and returns its path, taking into account additional search paths.
+    ///
+    /// This is infallible as it will always return our built-in path.
+    pub fn locate_timeline_file(path: &str) -> String {
+        let config = get_config();
+        for search_path in config.filesystem.additional_resource_paths {
+            let file_name = format!("{search_path}/timelines/{path}");
+            if std::fs::exists(&file_name).unwrap_or_default() {
+                return file_name;
+            }
+        }
+
+        format!("resources/timelines/{path}")
     }
 }
 

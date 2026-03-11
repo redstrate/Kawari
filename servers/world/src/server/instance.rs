@@ -18,7 +18,7 @@ use crate::{
 };
 use kawari::{
     common::{DistanceRange, ENTRANCE_CIRCLE_IDS, ObjectId, Position},
-    config::get_config,
+    config::{FilesystemConfig, get_config},
     ipc::zone::{ActionRequest, Conditions, NpcSpawn, ObjectSpawn, PlayerSpawn},
 };
 use parking_lot::Mutex;
@@ -154,25 +154,41 @@ impl Instance {
     pub fn insert_npc(&mut self, id: ObjectId, spawn: NpcSpawn) {
         // Load drop-ins
         let mut timeline = serde_json::from_str(
-            &std::fs::read_to_string("resources/timelines/Default.json").unwrap(),
+            &std::fs::read_to_string(FilesystemConfig::locate_timeline_file("Default.json"))
+                .unwrap(),
         )
         .unwrap();
-        for entry in std::fs::read_dir("resources/timelines")
-            .expect("Didn't find timelines directory?")
-            .flatten()
-        {
-            if !entry
-                .file_name()
-                .to_str()
-                .unwrap_or_default()
-                .ends_with(&format!("_{}.json", spawn.common.npc_base))
-            {
-                continue;
-            }
 
-            if let Ok(contents) = std::fs::read_to_string(entry.path()) {
-                timeline = serde_json::from_str(&contents).unwrap();
-                break;
+        let mut search_dirs: Vec<String> = get_config()
+            .filesystem
+            .additional_resource_paths
+            .iter()
+            .cloned()
+            .map(|mut x| {
+                x.push_str("/timelines/");
+                x
+            })
+            .collect();
+        search_dirs.push("resources/timelines/".to_string());
+
+        'outer: for search_dir in search_dirs {
+            for entry in std::fs::read_dir(search_dir)
+                .expect("Didn't find timelines directory?")
+                .flatten()
+            {
+                if !entry
+                    .file_name()
+                    .to_str()
+                    .unwrap_or_default()
+                    .ends_with(&format!("_{}.json", spawn.common.npc_base))
+                {
+                    continue;
+                }
+
+                if let Ok(contents) = std::fs::read_to_string(entry.path()) {
+                    timeline = serde_json::from_str(&contents).unwrap();
+                    break 'outer;
+                }
             }
         }
 

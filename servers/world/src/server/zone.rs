@@ -26,6 +26,7 @@ use kawari::{
         EOBJ_DOOR, EOBJ_SHORTCUT, EOBJ_SHORTCUT_EXPLORER_MODE, HandlerType, InvisibilityFlags,
         ObjectId, Position, euler_to_direction,
     },
+    config::get_config,
     ipc::zone::{
         ActorControlCategory, BattleNpcSubKind, CommonSpawn, Conditions, NpcSpawn, ObjectKind,
         ObjectSpawn,
@@ -150,17 +151,32 @@ impl Zone {
                     .to_string();
             }
 
-            // Load drop-ins
-            for entry in std::fs::read_dir("resources/dropins")
-                .expect("Didn't find dropins directory?")
-                .flatten()
-            {
-                if let Ok(contents) = std::fs::read_to_string(entry.path())
-                    && let Ok(mut dropin) = serde_json::from_str::<DropIn>(&contents)
-                    && lvb.sections[0].lgb_paths.contains(&dropin.appends)
+            let mut search_dirs: Vec<String> = get_config()
+                .filesystem
+                .additional_resource_paths
+                .iter()
+                .cloned()
+                .map(|mut x| {
+                    x.push_str("/dropins/");
+                    x
+                })
+                .collect();
+            search_dirs.push("resources/dropins/".to_string());
+
+            'outer: for search_dir in search_dirs {
+                // Load drop-ins
+                for entry in std::fs::read_dir(search_dir)
+                    .expect("Didn't find dropins directory?")
+                    .flatten()
                 {
-                    tracing::info!("Loaded dropin from {:?}", entry.path());
-                    zone.dropin_layers.append(&mut dropin.layers);
+                    if let Ok(contents) = std::fs::read_to_string(entry.path())
+                        && let Ok(mut dropin) = serde_json::from_str::<DropIn>(&contents)
+                        && lvb.sections[0].lgb_paths.contains(&dropin.appends)
+                    {
+                        tracing::info!("Loaded dropin from {:?}", entry.path());
+                        zone.dropin_layers.append(&mut dropin.layers);
+                        break 'outer;
+                    }
                 }
             }
         }

@@ -8,7 +8,7 @@ use kawari::common::{
     HandlerType, ItemOperationKind, ObjectId, ObjectTypeId, ObjectTypeKind, PlayerStateFlags1,
     PlayerStateFlags2, PlayerStateFlags3, Position, calculate_max_level,
 };
-use kawari::config::get_config;
+use kawari::config::{FilesystemConfig, get_config};
 use kawari_world::inventory::{Item, Storage, get_next_free_slot};
 
 use kawari::ipc::chat::{ChatChannel, ClientChatIpcData};
@@ -1341,7 +1341,7 @@ async fn process_packet(
                                         handled = true;
 
                                         let file_name =
-                                            format!("resources/scripts/{command_script}",);
+                                            FilesystemConfig::locate_script_file(command_script);
 
                                         let mut run_script = || -> mlua::Result<()> {
                                             lua.0.scope(|scope| {

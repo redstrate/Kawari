@@ -9,9 +9,9 @@
 - [Profiling](profiling.md)
 - [Ecosystem Contributions](ecosystem_work.md)
 - [Project Scope](scope.md)
+- [Extensibility](extensibility.md)
 
 # Setup
-
 - [Overview](setup/overview.md)
   - [Windows](setup/windows.md)
   - [macOS](setup/macos.md)
