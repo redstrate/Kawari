@@ -80,7 +80,7 @@ pub struct PartyMemberEntry {
     pub max_mp: u16,
     pub home_world_id: u16,
     pub current_zone_id: u16,
-    pub unk1: u8,
+    pub sync_positions: u8, // TODO: Probably make this a bool, but it's currently unknown if it uses anything other than 1 or 0.
     pub classjob_id: u8,
     pub unk2: u8,
     pub classjob_level: u8,

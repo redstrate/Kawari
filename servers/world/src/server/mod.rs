@@ -24,7 +24,8 @@ use crate::{
         network::{DestinationNetwork, NetworkState},
         social::{
             NUM_TARGET_SIGNS, get_party_id_from_actor_id, handle_social_messages,
-            update_party_waymark, update_party_waymarks,
+            send_party_positions, update_party_position, update_party_waymark,
+            update_party_waymarks,
         },
         zone::{MapGimmick, change_zone_warp_to_entrance, handle_zone_messages},
     },
@@ -232,6 +233,13 @@ fn server_logic_tick(
     {
         let mut data = data.lock();
         let rested_exp_counter = data.rested_exp_counter;
+
+        // Send a periodic update to all parties about where their members are in the world.
+        // TODO: On retail this is sent once every 5 seconds, so sending this at a slower interval would be more ideal.
+        {
+            let mut network = network.lock();
+            send_party_positions(&mut network);
+        }
 
         for instance in &mut data.instances {
             let mut haters = HashMap::new();
@@ -1219,6 +1227,7 @@ pub async fn server_main_loop(
                     anim_type,
                     anim_state,
                     jump_state,
+                    party_id,
                 ) => {
                     let mut data = data.lock();
 
@@ -1261,6 +1270,12 @@ pub async fn server_main_loop(
                                 {
                                     instance.cancel_task(network.clone(), &task);
                                 }
+                            }
+
+                            // If the actor moved, and they're in a party, we need to update our information.
+                            if let Some(party_id) = party_id {
+                                let mut network = network.lock();
+                                update_party_position(&mut network, party_id, actor_id, position);
                             }
                         }
                     }

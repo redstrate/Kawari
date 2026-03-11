@@ -1278,6 +1278,11 @@ async fn process_packet(
                             connection.player_data.volatile.rotation = *rotation as f64;
                             connection.player_data.volatile.position = *position;
 
+                            let party_id = if connection.party_id != 0 {
+                                Some(connection.party_id)
+                            } else {
+                                None
+                            };
                             connection
                                 .handle
                                 .send(ToServer::ActorMoved(
@@ -1287,6 +1292,7 @@ async fn process_packet(
                                     *anim_type,
                                     *anim_state,
                                     *jump_state,
+                                    party_id,
                                 ))
                                 .await;
                         }
@@ -2561,6 +2567,10 @@ async fn process_server_msg(
                 // SetMode seems unnecessary (the dismount sequence works without it) but it's included for accuracy.
                 connection.actor_control(from_actor_id, ActorControlCategory::SetMode { mode: CharacterMode::Normal, mode_arg: 0} ).await;
                 connection.actor_control(from_actor_id, ActorControlCategory::PlayDismountAnimation { unk1: 0, unk2: 0, unk3: 0 } ).await;
+            }
+            FromServer::PartyMemberPositionsUpdate(positions) => {
+                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PartyMemberPositions(positions));
+                connection.send_ipc_self(ipc).await;
             }
             _ => { tracing::error!("Zone connection {:#?} received a FromServer message we don't care about: {:#?}, ensure you're using the right client network or that you've implemented a handler for it if we actually care about it!", client_handle.id, msg); }
         }

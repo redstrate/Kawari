@@ -14,10 +14,10 @@ use kawari::{
         },
         zone::{
             ActionRequest, ActorControlCategory, ClientTrigger, Conditions, Config, InviteReply,
-            InviteType, NpcSpawn, ObjectSpawn, PartyMemberEntry, PartyUpdateStatus, PlayerEntry,
-            PlayerSpawn, ServerZoneIpcSegment, SocialListRequest, SocialListRequestType,
-            StrategyBoard, StrategyBoardUpdate, WaymarkPlacementMode, WaymarkPosition,
-            WaymarkPreset,
+            InviteType, NpcSpawn, ObjectSpawn, PartyMemberEntry, PartyMemberPositions,
+            PartyUpdateStatus, PlayerEntry, PlayerSpawn, ServerZoneIpcSegment, SocialListRequest,
+            SocialListRequestType, StrategyBoard, StrategyBoardUpdate, WaymarkPlacementMode,
+            WaymarkPosition, WaymarkPreset,
         },
     },
 };
@@ -191,6 +191,8 @@ pub enum FromServer {
     FishBite(),
     /// Inform the client that another player has dismounted.
     ActorDismounted(ObjectId),
+    /// Inform the client of the whereabouts of their party members.
+    PartyMemberPositionsUpdate(PartyMemberPositions),
 }
 
 #[derive(Debug, Clone)]
@@ -240,6 +242,7 @@ pub enum ToServer {
         MoveAnimationType,
         MoveAnimationState,
         JumpState,
+        Option<u64>,
     ),
     /// The connection has recieved a client trigger.
     ClientTrigger(ClientId, ObjectId, ClientTrigger),
