@@ -24,7 +24,7 @@ use kawari::ipc::zone::{
     ServerZoneIpcSegment,
 };
 
-use kawari::common::{NETWORK_TIMEOUT, RECEIVE_BUFFER_SIZE};
+use kawari::common::{CharacterMode, NETWORK_TIMEOUT, RECEIVE_BUFFER_SIZE};
 use kawari::constants::{AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE, CLASSJOB_ARRAY_SIZE};
 use kawari::packet::oodle::OodleNetwork;
 use kawari::packet::{ConnectionState, ConnectionType, SegmentData, parse_packet_header};
@@ -944,13 +944,22 @@ async fn process_packet(
                                     connection.conditions = Conditions::default();
                                     connection.send_conditions().await;
 
-                                    // TODO: not sure if it's important, retail sends an AC 2 with a param of 1
+                                    // SetMode isn't important, no, but it's included for accuracy.
+                                    connection
+                                        .actor_control(
+                                            connection.player_data.character.actor_id,
+                                            ActorControlCategory::SetMode {
+                                                mode: CharacterMode::Normal,
+                                                mode_arg: 0,
+                                            },
+                                        )
+                                        .await;
 
                                     // Retail indeed does send an AC, not an ACS for this.
                                     connection
                                         .actor_control(
                                             connection.player_data.character.actor_id,
-                                            ActorControlCategory::UnkDismountRelated {
+                                            ActorControlCategory::PlayDismountAnimation {
                                                 unk1: 47494,
                                                 unk2: 32711,
                                                 unk3: 1510381914,
@@ -987,6 +996,12 @@ async fn process_packet(
                                                 unk4: 7,
                                             },
                                         )
+                                        .await;
+                                    connection
+                                        .handle
+                                        .send(ToServer::Dismounted(
+                                            connection.player_data.character.actor_id,
+                                        ))
                                         .await;
                                 }
                                 ClientTriggerCommand::ShownActiveHelp { id } => {
@@ -2542,6 +2557,11 @@ async fn process_server_msg(
                 connection.send_ipc_self(ipc).await;
 
                 connection.event_scene(&events.last().unwrap().1, 4, SceneFlags::NO_DEFAULT_CAMERA, vec![271, 0, 0]).await;
+            }
+            FromServer::ActorDismounted(from_actor_id) => {
+                // SetMode seems unnecessary (the dismount sequence works without it) but it's included for accuracy.
+                connection.actor_control(from_actor_id, ActorControlCategory::SetMode { mode: CharacterMode::Normal, mode_arg: 0} ).await;
+                connection.actor_control(from_actor_id, ActorControlCategory::PlayDismountAnimation { unk1: 0, unk2: 0, unk3: 0 } ).await;
             }
             _ => { tracing::error!("Zone connection {:#?} received a FromServer message we don't care about: {:#?}, ensure you're using the right client network or that you've implemented a handler for it if we actually care about it!", client_handle.id, msg); }
         }
