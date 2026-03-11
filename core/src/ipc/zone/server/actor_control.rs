@@ -600,9 +600,10 @@ pub enum ActorControlCategory {
         unk4: u32,
     },
 
-    /// Unknown purpose, seen during dismounting.
+    // TODO: rename this again if it's apparent that it's not purely for the dismount animation, but it's what actually plays the animation when networked...
+    // TODO: What do those 3 unks represent? They don't seem to matter to the client (dismounting still works even if they're all zero).
     #[brw(magic = 930u32)]
-    UnkDismountRelated { unk1: u32, unk2: u32, unk3: u32 },
+    PlayDismountAnimation { unk1: u32, unk2: u32, unk3: u32 },
 
     #[brw(magic = 931u32)]
     BeginContentsReplay {

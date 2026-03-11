@@ -189,6 +189,8 @@ pub enum FromServer {
     FinishEvent(),
     /// When a fish bites.
     FishBite(),
+    /// Inform the client that another player has dismounted.
+    ActorDismounted(ObjectId),
 }
 
 #[derive(Debug, Clone)]
@@ -349,6 +351,8 @@ pub enum ToServer {
     DebugMount(ClientId, ObjectId, u16),
     /// Request the global server state to reload its Lua state.
     ReloadScripts,
+    /// The client dismounted.
+    Dismounted(ObjectId),
 }
 
 #[derive(Clone, Debug)]

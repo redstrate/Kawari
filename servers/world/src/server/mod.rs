@@ -2336,6 +2336,17 @@ pub async fn server_main_loop(
                         tracing::warn!("Failed to load Init.lua: {:?}", err);
                     }
                 }
+                ToServer::Dismounted(from_actor_id) => {
+                    let mut network = network.lock();
+                    let data = data.lock();
+                    let msg = FromServer::ActorDismounted(from_actor_id);
+                    network.send_in_range(
+                        from_actor_id,
+                        &data,
+                        msg,
+                        DestinationNetwork::ZoneClients,
+                    );
+                }
                 ToServer::FatalError(err) => return Err(err),
                 _ => {}
             }
