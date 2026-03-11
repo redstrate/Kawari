@@ -11,7 +11,7 @@ use diesel::prelude::*;
 use diesel::{Connection, QueryDsl, RunQueryDsl, SqliteConnection};
 
 use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
-use kawari::common::{BasicCharacterData, WORLD_NAME};
+use kawari::common::{BasicCharacterData, WORLD_NAME, determine_initial_homepoint};
 
 use crate::{CharaMake, ClassLevels, ClientSelectData, GameData, RemakeMode};
 use crate::{PlayerData, inventory::Inventory};
@@ -371,6 +371,7 @@ impl WorldDatabase {
 
         let aetheryte = Aetheryte {
             content_id: content_id as i64,
+            homepoint: determine_initial_homepoint(city_state) as i32,
             ..Default::default()
         };
         diesel::insert_into(schema::aetheryte::table)

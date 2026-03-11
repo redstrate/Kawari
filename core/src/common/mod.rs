@@ -47,7 +47,7 @@ pub fn timestamp_msecs() -> u64 {
         .unwrap()
 }
 
-/// Gets the initial zone for a given city-state id
+/// Gets the initial zone for a given city-state id.
 pub fn determine_initial_starting_zone(citystate_id: u8) -> u16 {
     match citystate_id {
         // Limsa
@@ -56,6 +56,19 @@ pub fn determine_initial_starting_zone(citystate_id: u8) -> u16 {
         2 => 183,
         // Ul'dah
         3 => 182,
+        _ => panic!("This is not a valid city-state id!"),
+    }
+}
+
+/// Gets the homepoint for a given city-state id.
+pub fn determine_initial_homepoint(citystate_id: u8) -> u8 {
+    match citystate_id {
+        // Limsa
+        1 => 8,
+        // Gridania
+        2 => 2,
+        // Ul'dah
+        3 => 9,
         _ => panic!("This is not a valid city-state id!"),
     }
 }
