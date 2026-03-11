@@ -4,7 +4,7 @@ Here are some tips about packet capture and reverse engineering.
 
 ## Capturing also works on Kawari
 
-Chronofoil - along with other tools - work with Kawari as well (and other servers.) This can be used to debug server-specific issues, and has been proven to be useful in fixing Kawari-specific issues.
+Chronofoil - along with other tools - work with Kawari as well (and other servers.) This can be used to debug server-specific issues, and has been proven to be useful many times.
 
 ## Packets are always fixed size
 

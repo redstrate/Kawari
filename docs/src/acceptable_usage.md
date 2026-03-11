@@ -24,8 +24,6 @@ Additionally, here are some explicit limitations for contributions in our commun
   * "Publicly available" means: The festival actually begun in-game.
   * The game may overwrite or change older festivals with newer NPCs or objects. To be safe, this rule will still apply - even if said things appear in an older event it wasn't designed originally for.
   
-If you are unsure about anything in this document, you can [contact me](https://redstrate.com/contact) privately or ask in our chat room.
-
 ## Enforcement
 
 If we find out that you're using Kawari in violation of the guidelines outlined above (intentional or not) we will do the following:
@@ -33,5 +31,7 @@ If we find out that you're using Kawari in violation of the guidelines outlined 
 1. Warn you about this, and point you to a copy of this policy. We may also end the discussion if needed.
 2. If the warning is not heeded or we find you're now intentionally circumventing us, further moderation may be imposed such as a temporary kick out of a chatroom.
 3. In the rare case of intentional maliciousness or carelessness, we ban you from the relevant community platforms.
+
+If you are unsure about anything in this document, you can [contact me](https://redstrate.com/contact) privately or ask in our chat room. Feel free to contact me if you believe someone is breaking or attempting to side-step our guidelines too.
 
 [^1]: This means running a publicly available instance on the Internet, advertising it and so on. Playing with friends you know is totally OK, of course.

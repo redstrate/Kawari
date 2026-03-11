@@ -1,5 +1,9 @@
 # Profiling
 
+Here's a jumble of random tips to help you profile Kawari.
+
+## Linux
+
 Install a better `addr2line` that doesn't take forever to load and works better:
 ```shell
 cargo install  addr2line --features="bin"

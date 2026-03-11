@@ -8,7 +8,7 @@ Chronofoil will save all captures to your hard drive, by default under `C:/Users
 
 ## Censoring the `.cfcap` file
 
-Do *not* send your capture as a `.cfcap` file to anybody, including us. This is because packets can contain sensitive information you probably do not want to share, and said fields [are enumerated by the Chronofoil Project here](https://github.com/ProjectChronofoil/Chronofoil.Plugin?tab=readme-ov-file#isnt-there-sensitive-stuff-in-those-packets).
+Do *not* send your capture as a `.cfcap` file to anybody, including us. This is because packets can contain sensitive information you probably do not want to share. The list of censored fields can be [found here](https://github.com/ProjectChronofoil/Chronofoil.Plugin?tab=readme-ov-file#isnt-there-sensitive-stuff-in-those-packets).
 
 Censoring a capture is easy, but first you need to [download Chronofoil.CLI for your platform](https://github.com/ProjectChronofoil/Chronofoil.CLI/releases/latest). Once downloaded, run the following command in your system's terminal. Of course, substitute the program to where it's actually located:
 

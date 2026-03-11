@@ -6,6 +6,7 @@ If you already know how to program in Lua, we use Lua 5.4. We won't give a baby-
 
 There are currently guides for scripting the following features:
 * [Commands](commands.md)
+* [Events](events.md)
 
 > [!NOTE]
 > If you don't see a feature listed here, it's either because it's unimplemented or its scripting API isn't stable yet.

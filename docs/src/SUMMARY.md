@@ -3,10 +3,12 @@
 - [Contributing](contributing.md)
 - [Scripting](scripting/intro.md)
   - [Commands](scripting/commands.md)
+  - [Events](scripting/events.md)
   - [Using Scripter](scripting/scripter.md)
   - [Style Guide](scripting/style_guide.md)
 - [Profiling](profiling.md)
 - [Ecosystem Contributions](ecosystem_work.md)
+- [Project Scope](scope.md)
 
 # Setup
 
