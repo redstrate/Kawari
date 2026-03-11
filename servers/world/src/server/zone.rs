@@ -24,7 +24,7 @@ use kawari::{
     common::{
         BOSS_WALL_IDS, DistanceRange, DropIn, DropInLayer, DropInObjectData, ENTRANCE_CIRCLE_IDS,
         EOBJ_DOOR, EOBJ_SHORTCUT, EOBJ_SHORTCUT_EXPLORER_MODE, HandlerType, InvisibilityFlags,
-        ObjectId, Position, STRIKING_DUMMY_SGBS, euler_to_direction,
+        ObjectId, Position, euler_to_direction,
     },
     ipc::zone::{
         ActorControlCategory, BattleNpcSubKind, CommonSpawn, Conditions, DisplayFlag, NpcSpawn,
@@ -508,43 +508,6 @@ impl Zone {
     /// Returns a list of battle NPCs to spawn.
     pub fn get_npcs(&mut self, game_data: &mut GameData) -> Vec<NpcSpawn> {
         let mut npc_spawns = Vec::new();
-
-        for layer_group in &self.layer_groups {
-            for layer in &layer_group.chunks[0].layers {
-                for object in &layer.objects {
-                    if let LayerEntryData::SharedGroup(sgb) = &object.data
-                        && STRIKING_DUMMY_SGBS.contains(&sgb.asset_path.value.as_str())
-                    {
-                        let (model_chara, battalion, customize) =
-                            game_data.find_bnpc(8016).unwrap();
-
-                        let spawn = NpcSpawn {
-                            gimmick_id: object.instance_id,
-                            common: CommonSpawn {
-                                npc_base: 8016,
-                                npc_name: 541,
-                                max_hp: 7500,
-                                hp: 7500,
-                                model_chara,
-                                object_kind: ObjectKind::BattleNpc(BattleNpcSubKind::Enemy),
-                                battalion,
-                                level: 1,
-                                position: Position {
-                                    x: object.transform.translation[0],
-                                    y: object.transform.translation[1],
-                                    z: object.transform.translation[2],
-                                },
-                                look: customize,
-                                ..Default::default()
-                            },
-                            ..Default::default()
-                        };
-                        self.cached_npcs.insert(object.instance_id, spawn.clone());
-                        npc_spawns.push(spawn);
-                    }
-                }
-            }
-        }
 
         // Only dropins are checked for battle npcs, because they strip that from retail LGBs.
         for layer in &self.dropin_layers {

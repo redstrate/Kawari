@@ -61,21 +61,6 @@ pub const BOSS_WALL_IDS: [u32; 3] = [
     2002872,
 ];
 
-/// To build this list, I scientifically looked under the `bgcommon/world/lvd/shared/for_bg` folder for anything striking dummy-esque.
-pub const STRIKING_DUMMY_SGBS: [&str; 11] = [
-    "bgcommon/world/lvd/shared/for_bg/sgbg_w_lvd_003_01a.sgb",
-    "bgcommon/world/lvd/shared/for_bg/sgbg_w_lvd_004_01a.sgb",
-    "bgcommon/world/lvd/shared/for_bg/sgbg_w_lvd_005_01a.sgb",
-    "bgcommon/world/lvd/shared/for_bg/sgbg_w_lvd_006_01a.sgb",
-    "bgcommon/world/lvd/shared/for_bg/sgbg_w_lvd_011_01a.sgb",
-    "bgcommon/world/lvd/shared/for_bg/sgbg_w_lvd_012_01a.sgb",
-    "bgcommon/world/lvd/shared/for_bg/sgbg_w_lvd_017_01a.sgb",
-    "bgcommon/world/lvd/shared/for_bg/sgbg_w_lvd_021_01a.sgb",
-    "bgcommon/world/lvd/shared/for_bg/sgbg_w_lvd_023_01a.sgb",
-    "bgcommon/world/lvd/shared/for_bg/sgbg_w_lvd_024_01a.sgb",
-    "bgcommon/world/lvd/shared/for_bg/sgbg_w_lvd_025_01a.sgb",
-];
-
 /// Time until a dead actor fades away. Estimated from retail.
 pub const DEAD_FADE_OUT_TIME: Duration = Duration::from_secs(8);
 
