@@ -141,6 +141,7 @@ impl ZoneConnection {
                 );
                 return;
             };
+
             // Set our OnlineStatusMask to reflect we're now in a party.
             let mut new_status_mask = OnlineStatusMask::default();
             new_status_mask.set_status(OnlineStatus::Online);
@@ -173,6 +174,9 @@ impl ZoneConnection {
                     member.max_hp = 0;
                     member.current_mp = 0;
                     member.max_mp = 0;
+                    // Don't want to sync positions of offline people.
+                    member.sync_positions = 0;
+                    member.unk2 = 0;
                 }
             }
 

@@ -9,11 +9,11 @@ use crate::{
     server::{DestinationNetwork, WorldServer, actor::NetworkedActor, network::NetworkState},
 };
 use kawari::{
-    common::{ObjectId, ObjectTypeId},
+    common::{ObjectId, ObjectTypeId, Position},
     ipc::zone::{
-        OnlineStatus, OnlineStatusMask, PartyMemberEntry, PartyUpdateStatus, PlayerEntry,
-        SocialListRequestType, SocialListUIFlags, WaymarkPlacementMode, WaymarkPosition,
-        WaymarkPositions, WaymarkPreset,
+        OnlineStatus, OnlineStatusMask, PartyMemberEntry, PartyMemberPositions, PartyUpdateStatus,
+        PlayerEntry, SocialListRequestType, SocialListUIFlags, WaymarkPlacementMode,
+        WaymarkPosition, WaymarkPositions, WaymarkPreset,
     },
 };
 
@@ -26,9 +26,11 @@ pub struct PartyMember {
     pub account_id: u64,
     pub world_id: u16,
     pub name: String,
+    pub position: Position,
 }
 
 impl PartyMember {
+    // TODO: See if this is still actually needed since we should only be storing active party members now, not any with INVALID_OBJECT_ID.
     pub fn is_valid(&self) -> bool {
         self.actor_id.is_valid()
     }
@@ -43,7 +45,7 @@ pub const NUM_TARGET_SIGNS: usize = 17;
 
 #[derive(Clone, Debug, Default)]
 pub struct Party {
-    pub members: [PartyMember; PartyMemberEntry::NUM_ENTRIES],
+    pub members: Vec<PartyMember>,
     leader_id: ObjectId,
     pub chatchannel_id: u32, // There's no reason to store a full u64/ChatChannel here, as it's created properly in the chat connection!
     pub stratboard_realtime_host: Option<u64>, // Only one player can send a board or host real-time sharing at a time
@@ -53,6 +55,7 @@ pub struct Party {
 
 impl Party {
     pub fn get_member_count(&self) -> usize {
+        // TODO: As noted above, we can probably just use .len() now, but in the interim I'll keep it as it was.
         self.members.iter().filter(|x| x.is_valid()).count()
     }
 
@@ -64,12 +67,7 @@ impl Party {
     }
 
     pub fn remove_member(&mut self, member_to_remove: ObjectId) {
-        for member in self.members.iter_mut() {
-            if member.actor_id == member_to_remove {
-                *member = PartyMember::default();
-                break;
-            }
-        }
+        self.members.retain(|x| x.actor_id != member_to_remove);
     }
 
     pub fn set_member_offline(&mut self, offline_member: ObjectId) {
@@ -109,52 +107,63 @@ impl Party {
         }
         None
     }
+    pub fn get_member_by_actor_id_mut(&mut self, actor_id: ObjectId) -> Option<&mut PartyMember> {
+        for (index, member) in self.members.iter().enumerate() {
+            if member.actor_id == actor_id {
+                return Some(&mut self.members[index]);
+            }
+        }
+        None
+    }
 }
 
 fn build_party_list(party: &Party, data: &WorldServer) -> Vec<PartyMemberEntry> {
     let mut party_list = Vec::<PartyMemberEntry>::new();
 
+    // NOTE: The client expects active party members to be at the beginning of the list, and for invalid party members (read: they have INVALID_OBJECT_ID as their actor id) to be at the end of the list! Failure to do this can cause very strange behaviour!
+
     // Online members
-    for instance in &data.instances {
-        for (id, actor) in &instance.actors {
-            let spawn = match actor {
-                NetworkedActor::Player { spawn, .. } => spawn,
-                _ => continue,
-            };
-            for member in &party.members {
-                if member.actor_id == *id {
-                    party_list.push(PartyMemberEntry {
-                        account_id: spawn.account_id,
-                        content_id: spawn.content_id,
-                        name: spawn.common.name.clone(),
-                        actor_id: *id,
-                        classjob_id: spawn.common.class_job,
-                        classjob_level: spawn.common.level,
-                        current_hp: spawn.common.hp,
-                        max_hp: spawn.common.max_hp,
-                        current_mp: spawn.common.mp,
-                        max_mp: spawn.common.max_mp,
-                        current_zone_id: instance.zone.id,
-                        home_world_id: spawn.home_world_id,
-                        ..Default::default()
-                    });
-                    break;
+    for member in &party.members {
+        if member.is_online() {
+            'instance: for instance in &data.instances {
+                for (id, actor) in &instance.actors {
+                    let spawn = match actor {
+                        NetworkedActor::Player { spawn, .. } => spawn,
+                        _ => continue,
+                    };
+
+                    if member.actor_id == *id {
+                        party_list.push(PartyMemberEntry {
+                            account_id: spawn.account_id,
+                            content_id: spawn.content_id,
+                            name: spawn.common.name.clone(),
+                            actor_id: *id,
+                            classjob_id: spawn.common.class_job,
+                            classjob_level: spawn.common.level,
+                            current_hp: spawn.common.hp,
+                            max_hp: spawn.common.max_hp,
+                            current_mp: spawn.common.mp,
+                            max_mp: spawn.common.max_mp,
+                            current_zone_id: instance.zone.id,
+                            home_world_id: spawn.home_world_id,
+                            sync_positions: 1,
+                            unk2: 1,
+                            ..Default::default()
+                        });
+                        break 'instance; // break out of the instance loop to move on to the next member
+                    }
                 }
             }
-        }
-    }
-
-    // Offline members
-    for member in &party.members {
-        if member.is_valid() && !member.is_online() {
+        } else {
+            // Offline members
             party_list.push(PartyMemberEntry {
                 account_id: member.account_id,
                 content_id: member.content_id,
                 name: member.name.clone(),
                 home_world_id: member.world_id,
-                actor_id: ObjectId(0), // It doesn't seem to matter, but retail sets offline members' actor ids to 0.
+                actor_id: ObjectId(0), // It doesn't seem to matter, but retail sets offline members' actor ids to 0. This is not the same as an invalid member with INVALID_OBJECT_ID!
                 ..Default::default()
-            })
+            });
         }
     }
 
@@ -287,6 +296,47 @@ pub fn update_party_waymark(
 
     let msg = FromServer::WaymarkUpdated(waymark_id as u8, placement_mode, position_data, zone_id);
     network.send_to_party_or_self(from_actor_id, msg);
+}
+
+/// Helper function used to send periodic updates for where party members are.
+/// NOTE: This affects things like player dots on the minimap, as well as riding pillion on mounts. Adjust at your own risk!
+pub fn send_party_positions(network: &mut NetworkState) {
+    // TODO: Can this outer loop be done without cloning?
+    for (party_id, party) in &network.parties.clone() {
+        if party.get_online_member_count() < 1 {
+            tracing::error!(
+                "Encountered a party with zero online members, id {party_id}. How did this happen, when we auto-disband such parties?"
+            );
+            continue;
+        }
+
+        let mut member_positions = PartyMemberPositions::default();
+
+        // TODO: Can this also be done without cloning?
+        for (index, member) in party.members.clone().iter().enumerate() {
+            if member.is_online() {
+                member_positions.positions[index].valid = 1;
+                member_positions.positions[index].pos = member.position;
+            }
+        }
+
+        let msg = FromServer::PartyMemberPositionsUpdate(member_positions);
+        network.send_to_party(*party_id, None, msg, DestinationNetwork::ZoneClients);
+    }
+}
+
+/// Helper function to update our copy of the party member's position.
+pub fn update_party_position(
+    network: &mut NetworkState,
+    party_id: u64,
+    actor_id: ObjectId,
+    position: Position,
+) {
+    if let Some(party) = network.parties.get_mut(&party_id)
+        && let Some(member) = party.get_member_by_actor_id_mut(actor_id)
+    {
+        member.position = position;
+    }
 }
 
 /// Process social list and party-related messages.
@@ -562,82 +612,120 @@ pub fn handle_social_messages(
             let data = data.lock();
             let mut party_id = *party_id;
 
+            // Grab the leader's info before doing anything else.
+            let Some(leader_instance) = data.find_actor_instance(*leader_actor_id) else {
+                return true;
+            };
+
+            let Some(leader_actor) = leader_instance.find_actor(*leader_actor_id) else {
+                return true;
+            };
+
+            let Some(leader_spawn) = leader_actor.get_player_spawn() else {
+                return true;
+            };
+
             // This client is creating a party.
             if party_id == 0 {
                 // TODO: We should probably generate these differently so there are no potential collisions.
                 party_id = fastrand::u64(..);
                 let chatchannel_id = fastrand::u32(..);
-                let party = network.parties.entry(party_id).or_default();
-                party.chatchannel_id = chatchannel_id;
-                party.leader_id = *leader_actor_id;
-                party.members[0].actor_id = *leader_actor_id;
+                let mut party = Party {
+                    chatchannel_id,
+                    leader_id: *leader_actor_id,
+                    ..Default::default()
+                };
+
+                // Add the initial leader as the first member
+                party.members.push(PartyMember {
+                    actor_id: *leader_actor_id,
+                    content_id: leader_spawn.content_id,
+                    account_id: leader_spawn.account_id,
+                    world_id: leader_spawn.home_world_id,
+                    name: leader_spawn.common.name.clone(),
+                    position: leader_spawn.common.position,
+                    ..Default::default()
+                });
+
+                // We have to cache the leader's stuff earlier than the others so build_party_list can function properly here, as it checks if people are online first. This results in a redundant re-caching for the leader, but for the time being it's harmless and a non-issue.
+                for (id, (handle, _)) in network.clients.clone() {
+                    if handle.actor_id == *leader_actor_id {
+                        party.members[0].zone_client_id = id;
+                        break;
+                    }
+                }
+
+                for (id, (handle, _)) in network.chat_clients.clone() {
+                    if handle.actor_id == *leader_actor_id {
+                        party.members[0].chat_client_id = id;
+                        break;
+                    }
+                }
+
+                network.parties.entry(party_id).or_insert(party);
             }
 
             if let Some(party) = network.parties.get(&party_id) {
+                if party.members.len() >= PartyMemberEntry::NUM_ENTRIES {
+                    tracing::error!(
+                        "Tried to add a party member to a full party! What happened? {party:#?}"
+                    );
+                    return true;
+                };
+
                 let chatchannel_id = network.parties[&party_id].chatchannel_id;
+
+                // Push existing party members into the list first.
+                let mut party_list = build_party_list(party, &data);
+
+                // Next, shadow for shorter typing, and take a clone of the party members, so we can edit them and give them back later.
                 let mut party = party.members.clone();
 
-                let mut party_list = Vec::<PartyMemberEntry>::new();
-
-                let mut execute_account_id = 0;
-                let mut execute_content_id = 0;
-                let mut execute_name = String::default();
-                let mut target_account_id = 0;
                 let mut target_content_id = 0;
+                let mut target_account_id = 0;
                 let mut target_name = String::default();
 
-                // TODO: This can probably be simplified/the logic can probably be adjusted, need to think more on this
-                for instance in &data.instances {
+                // Add the new member to the party, and put them into the PartyList.
+                'outer: for instance in &data.instances {
                     for (id, actor) in &instance.actors {
                         let Some(spawn) = actor.get_player_spawn() else {
                             continue;
                         };
 
                         if spawn.content_id == *new_member_content_id {
-                            // Find the first open member slot.
-                            let Some(free_index) =
-                                party.iter().position(|x| !x.actor_id.is_valid())
-                            else {
-                                // TODO: See if we can gracefully exit from here without a panic
-                                panic!(
-                                    "Tried to add a party member to a full party! What happened? {party:#?}"
-                                );
-                            };
-                            party[free_index].actor_id = *id;
-                            target_account_id = spawn.account_id;
+                            party.push(PartyMember {
+                                actor_id: *id,
+                                content_id: spawn.content_id,
+                                account_id: spawn.account_id,
+                                world_id: spawn.home_world_id,
+                                name: spawn.common.name.clone(),
+                                position: spawn.common.position,
+                                ..Default::default()
+                            });
+
+                            party_list.push(PartyMemberEntry {
+                                account_id: spawn.account_id,
+                                content_id: spawn.content_id,
+                                name: spawn.common.name.clone(),
+                                actor_id: *id,
+                                classjob_id: spawn.common.class_job,
+                                classjob_level: spawn.common.level,
+                                current_hp: spawn.common.hp,
+                                max_hp: spawn.common.max_hp,
+                                current_mp: spawn.common.mp,
+                                max_mp: spawn.common.max_mp,
+                                current_zone_id: instance.zone.id,
+                                home_world_id: spawn.home_world_id,
+                                sync_positions: 1,
+                                unk2: 1,
+                                ..Default::default()
+                            });
+
                             target_content_id = spawn.content_id;
+                            target_account_id = spawn.account_id;
                             target_name = spawn.common.name.clone();
-                        }
 
-                        if *id == *leader_actor_id {
-                            execute_account_id = spawn.account_id;
-                            execute_content_id = spawn.content_id;
-                            execute_name = spawn.common.name.clone();
-                        }
-
-                        for member in &mut party {
-                            if member.actor_id == *id {
-                                member.account_id = spawn.account_id;
-                                member.content_id = spawn.content_id;
-                                member.name = spawn.common.name.clone();
-
-                                party_list.push(PartyMemberEntry {
-                                    account_id: spawn.account_id,
-                                    content_id: spawn.content_id,
-                                    name: spawn.common.name.clone(),
-                                    actor_id: *id,
-                                    classjob_id: spawn.common.class_job,
-                                    classjob_level: spawn.common.level,
-                                    current_hp: spawn.common.hp,
-                                    max_hp: spawn.common.max_hp,
-                                    current_mp: spawn.common.mp,
-                                    max_mp: spawn.common.max_mp,
-                                    current_zone_id: instance.zone.id,
-                                    home_world_id: spawn.home_world_id,
-                                    ..Default::default()
-                                });
-                                break;
-                            }
+                            break 'outer;
                         }
                     }
                 }
@@ -646,16 +734,22 @@ pub fn handle_social_messages(
                     !party_list.is_empty() && party_list.len() <= PartyMemberEntry::NUM_ENTRIES
                 );
 
+                assert!(
+                    target_content_id != 0
+                        && target_account_id != 0
+                        && target_name != String::default()
+                );
+
                 let update_status = PartyUpdateStatus::JoinParty;
 
                 let msg = FromServer::PartyUpdate(
                     PartyUpdateTargets {
-                        execute_account_id,
-                        execute_content_id,
-                        execute_name: execute_name.clone(),
+                        execute_account_id: leader_spawn.account_id,
+                        execute_content_id: leader_spawn.content_id,
+                        execute_name: leader_spawn.common.name.clone(),
                         target_account_id,
                         target_content_id,
-                        target_name: target_name.clone(),
+                        target_name,
                     },
                     update_status,
                     Some((

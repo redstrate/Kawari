@@ -80,7 +80,7 @@ pub struct PartyMemberEntry {
     pub max_mp: u16,
     pub home_world_id: u16,
     pub current_zone_id: u16,
-    pub unk1: u8,
+    pub sync_positions: u8, // TODO: Probably make this a bool, but it's currently unknown if it uses anything other than 1 or 0.
     pub classjob_id: u8,
     pub unk2: u8,
     pub classjob_level: u8,
@@ -104,6 +104,8 @@ pub struct MemberPosition {
     pub pos: Position,
 }
 
+/// A packet used by both server and client to reflect party members' positions in the world. It's sent every 5 seconds.
+/// NOTE: This affects things like player dots on the minimap, as well as riding pillion on mounts. Getting these wrong can cause a number of issues such as despawning while riding pillion and causing the minimap dots to become "attached" to the wrong player.
 #[binrw]
 #[derive(Clone, Debug, Default)]
 pub struct PartyMemberPositions {
