@@ -79,15 +79,6 @@ pub const ENEMY_AUTO_ATTACK_RATE: i64 = 3;
 /// Used to check whether the striking dummy NPC should be invincible.
 pub const STRIKING_DUMMY_NAME_ID: u32 = 541;
 
-pub struct Attributes {
-    pub strength: u32,
-    pub dexterity: u32,
-    pub vitality: u32,
-    pub intelligence: u32,
-    pub mind: u32,
-    pub piety: u32,
-}
-
 #[binrw]
 #[brw(repr(u32))]
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]

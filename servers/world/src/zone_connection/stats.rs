@@ -2,11 +2,11 @@
 
 use crate::{
     GameData, ToServer, ZoneConnection,
-    gamedata::{BaseParam, ParamGrow},
+    gamedata::{Attributes, BaseParam, ParamGrow},
     inventory::Storage,
 };
 use kawari::{
-    common::{Attributes, BASE_STAT, MAXIMUM_RESTED_EXP, ObjectId},
+    common::{BASE_STAT, MAXIMUM_RESTED_EXP, ObjectId},
     ipc::zone::{
         ActorControlCategory, PlayerStats, ServerZoneIpcData, ServerZoneIpcSegment, UpdateClassInfo,
     },

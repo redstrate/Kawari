@@ -46,7 +46,7 @@ use physis::resource::{Resource, ResourceResolver, SqPackResource, UnpackedResou
 
 use kawari::common::{BASE_STAT, CustomizeData, timestamp_secs};
 use kawari::common::{InstanceContentType, get_aether_current_comp_flg_set_to_screenimage};
-use kawari::{common::Attributes, config::get_config};
+use kawari::config::get_config;
 
 /// Convenient methods built on top of Physis to access data relevant to the server
 #[derive(Clone)]
@@ -75,6 +75,15 @@ impl Default for GameData {
     fn default() -> Self {
         Self::new()
     }
+}
+
+pub struct Attributes {
+    pub strength: u32,
+    pub dexterity: u32,
+    pub vitality: u32,
+    pub intelligence: u32,
+    pub mind: u32,
+    pub piety: u32,
 }
 
 /// Struct detailing various information about an item, pulled from the Items sheet.
