@@ -104,6 +104,8 @@ pub struct MemberPosition {
     pub pos: Position,
 }
 
+/// A packet used by both server and client to reflect party members' positions in the world. It's sent every 5 seconds.
+/// NOTE: This affects things like player dots on the minimap, as well as riding pillion on mounts. Getting these wrong can cause a number of issues such as despawning while riding pillion and causing the minimap dots to become "attached" to the wrong player.
 #[binrw]
 #[derive(Clone, Debug, Default)]
 pub struct PartyMemberPositions {

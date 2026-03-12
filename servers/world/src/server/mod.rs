@@ -72,7 +72,9 @@ impl ClientState {
 #[derive(Default, Debug)]
 struct WorldServer {
     instances: Vec<Instance>,
+    // TODO: Eventually remove these once we can reliably and ergonomically run misc. tasks on slower intervals!
     rested_exp_counter: i32,
+    party_positions_counter: i32,
 }
 
 impl WorldServer {
@@ -233,10 +235,11 @@ fn server_logic_tick(
     {
         let mut data = data.lock();
         let rested_exp_counter = data.rested_exp_counter;
+        let party_positions_counter = data.party_positions_counter;
 
         // Send a periodic update to all parties about where their members are in the world.
         // TODO: On retail this is sent once every 5 seconds, so sending this at a slower interval would be more ideal.
-        {
+        if party_positions_counter == 0 {
             let mut network = network.lock();
             send_party_positions(&mut network);
         }
@@ -948,6 +951,12 @@ fn server_logic_tick(
         data.rested_exp_counter += 1;
         if data.rested_exp_counter == 21 {
             data.rested_exp_counter = 0;
+        }
+
+        // Ensure the party positions counter only happens approx. every 5 seconds.
+        data.party_positions_counter += 1;
+        if data.party_positions_counter == 11 {
+            data.party_positions_counter = 0;
         }
     }
 
