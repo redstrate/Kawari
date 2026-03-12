@@ -158,6 +158,7 @@ async fn initial_setup(
                     glamour_information: None,
                     event_handler_id: None,
                     recipe: None,
+                    is_party_leader: false,
                 };
 
                 // Handle setup before passing off control to the zone connection.
@@ -2214,13 +2215,7 @@ async fn process_packet(
                                 .unwrap_or(OnlineStatus::Online); // TODO: unsure if this makes sense?
                             connection.player_data.search_info.comment =
                                 search_info.comment.clone();
-
-                            // TODO: network to other players
-                            connection
-                                .actor_control_self(ActorControlCategory::SetStatusIcon {
-                                    icon: connection.player_data.search_info.online_status,
-                                })
-                                .await;
+                            connection.update_online_status().await;
                         }
                         ClientZoneIpcData::RequestOwnSearchInfo { .. } => {
                             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::SetSearchInfo(

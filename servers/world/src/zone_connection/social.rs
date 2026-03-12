@@ -118,7 +118,6 @@ impl ZoneConnection {
         &mut self,
         targets: PartyUpdateTargets,
         update_status: PartyUpdateStatus,
-
         party_info: Option<(u64, u32, ObjectId, Vec<PartyMemberEntry>)>,
     ) {
         if let Some((party_id, chatchannel_id, leader_actor_id, mut party_list)) = party_info {
@@ -141,24 +140,6 @@ impl ZoneConnection {
                 );
                 return;
             };
-
-            // Set our OnlineStatusMask to reflect we're now in a party.
-            let mut new_status_mask = OnlineStatusMask::default();
-            new_status_mask.set_status(OnlineStatus::Online);
-            new_status_mask.set_status(OnlineStatus::PartyMember);
-            let mut icon = OnlineStatus::PartyMember;
-            if self.player_data.character.actor_id == leader_actor_id {
-                new_status_mask.set_status(OnlineStatus::PartyLeader);
-                icon = OnlineStatus::PartyLeader;
-            }
-            self.actor_control(
-                self.player_data.character.actor_id,
-                ActorControlCategory::SetStatusIcon { icon },
-            )
-            .await;
-            let ipc =
-                ServerZoneIpcSegment::new(ServerZoneIpcData::SetOnlineStatus(new_status_mask));
-            self.send_ipc_self(ipc).await;
 
             // We edit the party list to hide information of players not in our zone.
             for member in party_list.iter_mut() {
@@ -196,6 +177,8 @@ impl ZoneConnection {
             });
 
             self.send_ipc_self(ipc).await;
+
+            self.is_party_leader = self.player_data.character.actor_id == leader_actor_id;
         } else {
             // If there's no data, then we're the one who left.
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PartyList {
@@ -211,24 +194,8 @@ impl ZoneConnection {
             });
             self.send_ipc_self(ipc).await;
 
-            // Set our OnlineStatusMask to reflect we're no longer in a party.
-            // TODO: Actually remove the party status once we're storing it in the zoneconnection...
-            let mut new_status_mask = OnlineStatusMask::default();
-            new_status_mask.set_status(OnlineStatus::Online);
-
-            let icon = OnlineStatus::Offline;
-
-            self.actor_control(
-                self.player_data.character.actor_id,
-                ActorControlCategory::SetStatusIcon { icon },
-            )
-            .await;
-
-            let ipc =
-                ServerZoneIpcSegment::new(ServerZoneIpcData::SetOnlineStatus(new_status_mask));
-            self.send_ipc_self(ipc).await;
-
             self.party_id = 0;
+            self.is_party_leader = false;
         }
 
         // TODO:
@@ -253,6 +220,9 @@ impl ZoneConnection {
         // TODO:
         // after party update they send the status effect list
         // after the status effect list they send updateclassinfo
+
+        // Ensure our online status is updated, since that is affected by whether we're in a party etc.
+        self.update_online_status().await;
     }
 
     pub async fn send_social_list(
@@ -382,5 +352,60 @@ impl ZoneConnection {
             },
         )
         .await;
+    }
+
+    /// Determine the online status mask, with party/novice/mentor status.
+    fn get_online_status_mask(&self) -> OnlineStatusMask {
+        let mut new_status_mask = OnlineStatusMask::default();
+        new_status_mask.set_status(OnlineStatus::Online);
+
+        if self.party_id != 0 {
+            if self.is_party_leader {
+                new_status_mask.set_status(OnlineStatus::PartyLeader);
+            }
+            new_status_mask.set_status(OnlineStatus::PartyMember);
+        }
+
+        new_status_mask.set_status(self.player_data.search_info.online_status);
+
+        new_status_mask
+    }
+
+    /// Grabs the correct online status, taking into account the priority of each icon.
+    pub fn get_actual_online_status(&self) -> OnlineStatus {
+        let mask = self.get_online_status_mask();
+        let priorities;
+        {
+            let mut gamedata = self.gamedata.lock();
+            priorities = gamedata.online_status_priorities();
+        }
+        let mut priorities: Vec<(usize, &u8)> = priorities.iter().enumerate().collect();
+        priorities.sort_by(|(_, a_priority), (_, b_priority)| {
+            a_priority.partial_cmp(b_priority).unwrap()
+        }); // So the highest priority (e.g. "AFK" is above "Online") are the first indices
+
+        for (i, _) in priorities {
+            let online_status = OnlineStatus::from_repr(i as u8).unwrap();
+            if mask.has_status(online_status) {
+                return online_status;
+            }
+        }
+
+        OnlineStatus::Offline
+    }
+
+    /// Updates the online status not just on yourself but also informing other players.
+    pub async fn update_online_status(&mut self) {
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::SetOnlineStatus(
+            self.get_online_status_mask(),
+        ));
+        self.send_ipc_self(ipc).await;
+
+        self.handle
+            .send(ToServer::SetOnlineStatus(
+                self.player_data.character.actor_id,
+                self.get_actual_online_status(),
+            ))
+            .await;
     }
 }

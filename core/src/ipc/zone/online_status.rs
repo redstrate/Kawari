@@ -181,6 +181,11 @@ impl OnlineStatusMask {
         let (value, index) = value_to_flag_byte_index_value(status as u32);
         self.flags[index as usize] ^= value;
     }
+
+    pub fn has_status(&self, status: OnlineStatus) -> bool {
+        let (value, index) = value_to_flag_byte_index_value(status as u32);
+        self.flags[index as usize] & value == value
+    }
 }
 
 impl std::fmt::Debug for OnlineStatusMask {

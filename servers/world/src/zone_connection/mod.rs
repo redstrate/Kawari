@@ -130,6 +130,7 @@ pub struct ZoneConnection {
     pub active_minion: u32,
     /// The player's party id number, used for networking party-related events
     pub party_id: u64,
+    pub is_party_leader: bool,
     /// The player's status when connecting/reconnecting. If true, they need to rejoin their party.
     pub rejoining_party: bool,
     /// The player's currently active quests.

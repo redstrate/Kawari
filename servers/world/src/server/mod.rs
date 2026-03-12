@@ -2372,6 +2372,17 @@ pub async fn server_main_loop(
                         DestinationNetwork::ZoneClients,
                     );
                 }
+                ToServer::SetOnlineStatus(from_actor_id, online_status) => {
+                    let mut network = network.lock();
+                    let data = data.lock();
+                    network.send_ac_in_range_inclusive(
+                        &data,
+                        from_actor_id,
+                        ActorControlCategory::SetStatusIcon {
+                            icon: online_status,
+                        },
+                    );
+                }
                 ToServer::FatalError(err) => return Err(err),
                 _ => {}
             }

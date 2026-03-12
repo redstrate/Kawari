@@ -14,10 +14,10 @@ use kawari::{
         },
         zone::{
             ActionRequest, ActorControlCategory, ClientTrigger, Conditions, Config, InviteReply,
-            InviteType, NpcSpawn, ObjectSpawn, PartyMemberEntry, PartyMemberPositions,
-            PartyUpdateStatus, PlayerEntry, PlayerSpawn, ServerZoneIpcSegment, SocialListRequest,
-            SocialListRequestType, StrategyBoard, StrategyBoardUpdate, WaymarkPlacementMode,
-            WaymarkPosition, WaymarkPreset,
+            InviteType, NpcSpawn, ObjectSpawn, OnlineStatus, PartyMemberEntry,
+            PartyMemberPositions, PartyUpdateStatus, PlayerEntry, PlayerSpawn,
+            ServerZoneIpcSegment, SocialListRequest, SocialListRequestType, StrategyBoard,
+            StrategyBoardUpdate, WaymarkPlacementMode, WaymarkPosition, WaymarkPreset,
         },
     },
 };
@@ -356,6 +356,8 @@ pub enum ToServer {
     ReloadScripts,
     /// The client dismounted.
     Dismounted(ObjectId),
+    /// Inform the server of this actor's new online status.
+    SetOnlineStatus(ObjectId, OnlineStatus),
 }
 
 #[derive(Clone, Debug)]

@@ -28,6 +28,7 @@ use icarus::InstanceContent::InstanceContentSheet;
 use icarus::Item::ItemSheet;
 use icarus::ItemAction::ItemActionSheet;
 use icarus::Mount::MountSheet;
+use icarus::OnlineStatus::OnlineStatusSheet;
 use icarus::Opening::OpeningSheet;
 use icarus::ParamGrow::ParamGrowSheet;
 use icarus::PlaceName::PlaceNameSheet;
@@ -1376,6 +1377,18 @@ impl GameData {
             row.AnimationStart().into_u16().copied().unwrap(),
             row.AnimationEnd().into_u16().copied().unwrap(),
         )
+    }
+
+    /// Returns a list of priorities for each online status.
+    pub fn online_status_priorities(&mut self) -> Vec<u8> {
+        let mut priorities = Vec::new();
+
+        let sheet = OnlineStatusSheet::read_from(&mut self.resource, Language::English).unwrap();
+        for (_, row) in sheet.into_iter().flatten_subrows() {
+            priorities.push(row.Priority().into_u8().copied().unwrap());
+        }
+
+        priorities
     }
 }
 
