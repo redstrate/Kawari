@@ -7,9 +7,10 @@ use kawari::{
         chat::{ChatChannel, ChatChannelType},
         zone::{
             ActorControlCategory, InviteReply, InviteType, InviteUpdateType, OnlineStatus,
-            OnlineStatusMask, PartyMemberEntry, PartyUpdateStatus, PlayerEntry, ServerZoneIpcData,
-            ServerZoneIpcSegment, SocialList, SocialListRequestType, StrategyBoard,
-            StrategyBoardUpdate, WaymarkPlacementMode, WaymarkPosition, WaymarkPreset,
+            OnlineStatusMask, PartyMemberEntry, PartyUpdateStatus, PlayerEntry,
+            SearchUIGrandCompanies, ServerZoneIpcData, ServerZoneIpcSegment, SocialList,
+            SocialListRequestType, SocialListUILanguages, StrategyBoard, StrategyBoardUpdate,
+            WaymarkPlacementMode, WaymarkPosition, WaymarkPreset,
         },
     },
 };
@@ -407,5 +408,23 @@ impl ZoneConnection {
                 self.get_actual_online_status(),
             ))
             .await;
+    }
+
+    /// Searches for online players.
+    pub async fn search_players(
+        &mut self,
+        _classjobs: u64,
+        _minimum_level: u16,
+        _maximum_level: u16,
+        _grand_company: SearchUIGrandCompanies,
+        _languages: SocialListUILanguages,
+        _online_status: OnlineStatusMask,
+        _areas: [u16; 50],
+        _name: String,
+    ) {
+        // For now, no results were found until we implement it properly.
+        let ipc =
+            ServerZoneIpcSegment::new(ServerZoneIpcData::SearchPlayersResult { num_results: 0 });
+        self.send_ipc_self(ipc).await;
     }
 }

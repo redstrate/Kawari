@@ -2203,8 +2203,29 @@ async fn process_packet(
                         ClientZoneIpcData::RequestAdventurerPlate { .. } => {
                             tracing::info!("Requesting adventurer plates is unimplemented");
                         }
-                        ClientZoneIpcData::SearchPlayers { .. } => {
-                            tracing::info!("Searching for players is unimplemented");
+                        ClientZoneIpcData::SearchPlayers {
+                            classjobs,
+                            minimum_level,
+                            maximum_level,
+                            grand_company,
+                            languages,
+                            online_status,
+                            areas,
+                            name,
+                            ..
+                        } => {
+                            connection
+                                .search_players(
+                                    *classjobs,
+                                    *minimum_level,
+                                    *maximum_level,
+                                    *grand_company,
+                                    *languages,
+                                    *online_status,
+                                    *areas,
+                                    name.clone(),
+                                )
+                                .await;
                         }
                         ClientZoneIpcData::EditSearchInfo(search_info) => {
                             connection.player_data.search_info.online_status = search_info
@@ -2427,6 +2448,9 @@ async fn process_packet(
                                 data.header.op_code,
                                 unk.len()
                             );
+                        }
+                        ClientZoneIpcData::SetFriendGroupIcon { .. } => {
+                            tracing::warn!("Setting friend group icons is unimplemented");
                         }
                     }
                 }

@@ -148,7 +148,7 @@ use crate::ipc::{
     },
 };
 
-use crate::ipc::zone::social_list::GrandCompany;
+use crate::ipc::zone::social_list::{FriendGroupIconInfo, GrandCompany};
 use crate::ipc::zone::{ActionKind, InviteReply, InviteType, InviteUpdateType, SearchInfo};
 
 pub type ServerZoneIpcSegment =
@@ -929,6 +929,12 @@ pub enum ServerZoneIpcData {
         #[bw(map = write_packed_position)]
         position: Position,
     },
+    SearchPlayersResult {
+        /// The number of results found after a player search.
+        #[brw(pad_after = 4)]
+        num_results: u32, // TODO: this might be only an u16 or an u8, since the search results window only shows up to 200 players.
+    },
+    FriendGroupIcon(FriendGroupIconInfo),
 }
 
 #[cfg(test)]

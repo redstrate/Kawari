@@ -69,6 +69,7 @@ pub enum GrandCompany {
     Flames = 3,
 }
 
+// TODO: This seems to actually be entirely wrong, or at least reused for friend group icons in the context of the friend list, we need to rethink this eventully
 /// Flags to enable or disable various things in the Social Menu UI.
 #[binrw]
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
@@ -140,6 +141,18 @@ pub struct SocialList {
     #[br(count = 10)]
     #[bw(pad_size_to = 10 * PlayerEntry::SIZE)]
     pub entries: Vec<PlayerEntry>,
+}
+
+/// This struct represents information sent when the client adjusts the friend group icon of a friend with SetFriendGroupIcon. The server echoes it back as an acknowledgement in FriendGroupIcon.
+#[binrw]
+#[brw(little)]
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
+pub struct FriendGroupIconInfo {
+    /// The friend's content id.
+    content_id: u64,
+    /// The desired group icon. 0 is no icon, and 1-7 correspond to the desired symbols.
+    #[brw(pad_after = 4)] // empty
+    icon: u32, // TODO: This is actually SocialListUIFlags, but we need to rework that first
 }
 
 #[cfg(test)]

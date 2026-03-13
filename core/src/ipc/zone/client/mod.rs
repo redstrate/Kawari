@@ -23,13 +23,15 @@ mod queue_duties;
 pub use queue_duties::{ContentRegistrationFlags, QueueDuties};
 
 use crate::ipc::zone::{
-    InviteReply, InviteType, SearchInfo, SocialListUILanguages, StrategyBoard, StrategyBoardUpdate,
-    WaymarkPreset,
+    InviteReply, InviteType, OnlineStatusMask, SearchInfo, SearchUIGrandCompanies,
+    SocialListUILanguages, StrategyBoard, StrategyBoardUpdate, WaymarkPreset,
 };
 
 use crate::ipc::zone::black_list::RequestBlacklist;
 
-pub use super::social_list::{PlayerEntry, SocialList, SocialListRequest, SocialListRequestType};
+pub use super::social_list::{
+    FriendGroupIconInfo, PlayerEntry, SocialList, SocialListRequest, SocialListRequestType,
+};
 
 use super::config::Config;
 use crate::common::{
@@ -311,9 +313,31 @@ pub enum ClientZoneIpcData {
         unk: [u8; 16],
     },
     SearchPlayers {
-        #[br(count = 176)]
-        #[bw(pad_size_to = 176)]
-        unk: Vec<u8>,
+        /// The classjobs to filter by.
+        classjobs: u64,
+        /// The minimum level to filter by.
+        minimum_level: u16,
+        /// The maximum level to filter by.
+        maximum_level: u16,
+        /// The grand companies to filter by, if any. If *none* are searched for, it will be 255.
+        #[brw(pad_before = 4)] // empty
+        #[brw(pad_after = 7)] // empty
+        grand_company: SearchUIGrandCompanies,
+        /// The languages to filter by. At least one is always selected.
+        #[brw(pad_after = 7)] //empty
+        languages: SocialListUILanguages,
+        /// The online statuses to filter by.
+        online_status: OnlineStatusMask,
+        /// The areas to filter by. These are row indices into the PlaceName sheet. If an entry is non-zero, it's actively being searched for.
+        areas: [u16; 50],
+        /// The name of the character to search for. This is optional, and can be blank. If searching for a last name, the first character of the string will be a space (0x20).
+        #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+        #[br(count = CHAR_NAME_MAX_LENGTH)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        name: String,
+        /// Unknown, but has data in it on retail. Doesn't appear to be a timestamp, sequence value, or ObjectId.
+        unk3: u32,
     },
     EditSearchInfo(SearchInfo),
     RequestOwnSearchInfo {
@@ -380,6 +404,7 @@ pub enum ClientZoneIpcData {
         #[bw(pad_size_to = 130)]
         unk: Vec<u8>,
     },
+    SetFriendGroupIcon(FriendGroupIconInfo),
 }
 
 #[cfg(test)]
