@@ -276,19 +276,20 @@ impl ZoneConnection {
                     0xFFFF
                 };
 
+                // TODO: this needs to be networked
                 let needs_sync = {
                     if self
                         .content_settings
-                        .unwrap()
+                        .unwrap_or_default()
                         .contains(ContentRegistrationFlags::UNRESTRICTED_PARTY)
                     {
                         self.content_settings
-                            .unwrap()
+                            .unwrap_or_default()
                             .contains(ContentRegistrationFlags::LEVEL_SYNC)
                     } else {
                         !self
                             .content_settings
-                            .unwrap()
+                            .unwrap_or_default()
                             .contains(ContentRegistrationFlags::EXPLORER_MODE)
                     }
                 };
