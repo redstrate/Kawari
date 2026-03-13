@@ -137,6 +137,14 @@ impl WorldDatabase {
         player_data
     }
 
+    pub fn commit_volatile(&mut self, data: &PlayerData) {
+        use models::*;
+
+        data.volatile
+            .save_changes::<Volatile>(&mut self.connection)
+            .unwrap();
+    }
+
     /// Commit the dynamic player data back to the database
     pub fn commit_player_data(&mut self, data: &PlayerData) {
         use models::*;
@@ -660,6 +668,16 @@ impl WorldDatabase {
         character
             .filter(content_id.eq(for_content_id as i64))
             .select(time_played_minutes)
+            .first::<i64>(&mut self.connection)
+            .unwrap_or_default()
+    }
+
+    pub fn get_online_player_count(&mut self) -> i64 {
+        use schema::volatile::dsl::*;
+        volatile
+            .select(is_online)
+            .filter(is_online.eq(true))
+            .count()
             .first::<i64>(&mut self.connection)
             .unwrap_or_default()
     }

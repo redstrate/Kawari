@@ -237,6 +237,9 @@ impl ZoneConnection {
     }
 
     pub async fn begin_log_out(&mut self) {
+        // Mark the player as offline in the db.
+        self.player_data.volatile.is_online = false;
+
         // If we were last in an instance, tell the server we're outside of it so we don't get stuck/crash.
         if self.conditions.has_condition(Condition::BoundByDuty) {
             self.player_data.volatile.zone_id = self.old_zone_id as i32;

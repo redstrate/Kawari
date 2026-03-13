@@ -146,6 +146,7 @@ pub struct Volatile {
     pub zone_id: i32,
     pub display_flags: EquipDisplayFlag,
     pub title: i32,
+    pub is_online: bool,
 }
 
 #[derive(

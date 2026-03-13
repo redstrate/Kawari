@@ -524,6 +524,13 @@ async fn process_packet(
                             // Store when we logged in, for various purposes.
                             connection.login_time = Some(SystemTime::now());
 
+                            // Mark the player as online for total player counts, player searches, etc.
+                            {
+                                connection.player_data.volatile.is_online = true;
+                                let mut database = connection.database.lock();
+                                database.commit_volatile(&connection.player_data);
+                            }
+
                             // Stats
                             connection.send_stats().await;
 
@@ -817,6 +824,19 @@ async fn process_packet(
 
                             // Send login message
                             connection.send_notice(&config.world.login_message).await;
+
+                            let online_player_count;
+                            {
+                                let mut db = connection.database.lock();
+                                online_player_count = db.get_online_player_count();
+                            }
+
+                            connection
+                                .send_notice(&format!(
+                                    "There are currently {} players online.",
+                                    online_player_count
+                                ))
+                                .await;
                         }
                         ClientZoneIpcData::FinishLoading { .. } => {
                             let spawn = connection.respawn_player(true).await;
