@@ -63,6 +63,7 @@ diesel::table! {
         zone_id -> Integer,
         display_flags -> Integer,
         title -> Integer,
+        is_online -> Bool,
     }
 }
 
