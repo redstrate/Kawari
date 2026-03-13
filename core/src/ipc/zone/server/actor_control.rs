@@ -569,14 +569,17 @@ pub enum ActorControlCategory {
         unk4: u32,
     },
 
-    /// Sets some variable in GoldSaucerManager, unsure which yet.
+    /// For the Gold Saucer.
     #[brw(magic = 911u32)]
-    UnkGoldSaucerManagerRelated {
-        unk1: u32,
-        unk2: u32,
-        unk3: u32,
-        unk4: u32,
-    },
+    UnkGoldSaucerRelated { unk1: u32 },
+
+    /// For the Gold Saucer.
+    #[brw(magic = 912u32)]
+    SetWeeklyLotOffsetTime { offset_time: u32 },
+
+    /// For the Gold Saucer.
+    #[brw(magic = 914u32)]
+    SetGoldSaucerFlags { flags: u32 },
 
     /// Forces the player off their current mount.
     #[brw(magic = 915u32)]
