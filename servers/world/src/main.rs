@@ -793,7 +793,7 @@ async fn process_packet(
                                             .cleared_misc_content
                                             .data
                                             .clone(),
-
+                                        can_do_triple_triad_matches: true,
                                         ..Default::default()
                                     }),
                                 );

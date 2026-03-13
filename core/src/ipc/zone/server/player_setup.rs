@@ -105,7 +105,10 @@ pub struct PlayerSetup {
     pub unknown9e: u8,
     pub unknown9e1: u8,
     pub meister_flag: u8,
-    pub unknown10e: u8,
+    /// Controls whether or not you can challenge other players.
+    #[br(map = read_bool_from::<u8>)]
+    #[bw(map = write_bool_as::<u8>)]
+    pub can_do_triple_triad_matches: bool,
     pub aether_current_comp_flg_set_bitmask1: u8, // This is the first byte of the full bitmask. It contains the HW zones, The Fringes and The Ruby Sea. Why this one is here and the rest far down, no idea.
     pub unknown_after_aether: u8,
     #[br(map = read_bool_from::<u8>)]

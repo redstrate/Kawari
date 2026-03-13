@@ -277,13 +277,9 @@ pub enum ClientTriggerCommand {
     #[brw(magic = 1850u32)]
     OpenGoldSaucerGeneralTab {},
 
-    /// The client opens the Chocobo tab in the Gold Saucer window.
-    #[brw(magic = 1850u32)]
-    OpenGoldSaucerChocoboTab {},
-
-    /// The client is ready to begin loading a zone.
-    #[brw(magic = 3201u32)]
-    BeginLoading {},
+    /// The client challengers another player to a normal match.
+    #[brw(magic = 1950u32)]
+    ChallengeNormalMatch { unk1: u32, unk2: u32 },
 
     #[brw(magic = 1980u32)]
     BeginContentsReplay {},
@@ -343,6 +339,10 @@ pub enum ClientTriggerCommand {
     /// The client opens the Portrait window.
     #[brw(magic = 3200u32)]
     OpenPortraitsWindow {},
+
+    /// The client is ready to begin loading a zone.
+    #[brw(magic = 3201u32)]
+    BeginLoading {},
 
     /// The client opens the Mogpendium.
     #[brw(magic = 9003u32)]
