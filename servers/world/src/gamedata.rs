@@ -156,6 +156,7 @@ pub struct ParamGrow {
     pub hp_modifier: u16,
     pub mp_modifier: i32,
     pub item_level_sync: u16,
+    pub level_modifier: i32,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -1161,6 +1162,7 @@ impl GameData {
             hp_modifier: row.HpModifier().into_u16().copied()?,
             mp_modifier: row.MpModifier().into_i32().copied()?,
             item_level_sync: row.ItemLevelSync().into_u16().copied()?,
+            level_modifier: row.LevelModifier().into_i32().copied()?,
         })
     }
 

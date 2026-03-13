@@ -182,7 +182,14 @@ impl BaseParameters {
         }
     }
 
-    pub fn calculate_hp_mp(&mut self, param_grow: &ParamGrow) {
+    pub fn calculate_based_on_level(&mut self, param_grow: &ParamGrow) {
+        self.strength += param_grow.level_modifier as u32;
+        self.dexterity += param_grow.level_modifier as u32;
+        self.vitality += param_grow.level_modifier as u32;
+        self.intelligence += param_grow.level_modifier as u32;
+        self.mind += param_grow.level_modifier as u32;
+        self.piety += param_grow.level_modifier as u32;
+
         self.hp = (param_grow.hp_modifier as u32).wrapping_add(
             ((self.vitality.wrapping_sub(BASE_STAT as u32)) as f32 * 20.25).round() as u32,
         );
@@ -191,9 +198,9 @@ impl BaseParameters {
 
     pub fn calculate_potencies(&mut self) {
         // TODO: wrong but we need some scaling
-        self.physical_damage = self.strength * 5;
-        self.magic_damage = self.intelligence * 5;
-        self.healing_magic_potency = self.mind * 5;
+        self.physical_damage = self.strength;
+        self.magic_damage = self.intelligence;
+        self.healing_magic_potency = self.mind;
     }
 
     fn calc_physical_damage(&self, potency: u32) -> u16 {
@@ -355,7 +362,7 @@ impl ZoneConnection {
 
         let mut base_parameters = BaseParameters::from_attributes(&attributes);
         self.calculate_stat_across_all_items(&mut base_parameters, item_level_sync);
-        base_parameters.calculate_hp_mp(&param_grow);
+        base_parameters.calculate_based_on_level(&param_grow);
         base_parameters.calculate_potencies();
 
         base_parameters
