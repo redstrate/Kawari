@@ -1,4 +1,6 @@
-# Events
+# Lua Style Guide
+
+## Events
 
 Events should follow this general structure:
 

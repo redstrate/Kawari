@@ -1,4 +1,4 @@
-# Project Scope
+# Scope
 
 This is a rough outline of what we currently don't support or accept contributions for. Please contact us before investing time into these!
 

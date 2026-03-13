@@ -1,4 +1,4 @@
-# Using Scripter
+# Events
 
 The client has it's own Lua state that it uses to play cutscenes, manage event NPCs and more. We can peek into this opaque system with tools like [HaselDebug](https://github.com/Haselnussbomber/HaselDebug/) or [Scripter](https://codeberg.org/redstrate/Scripter/).
 

@@ -1,4 +1,4 @@
-# Contributing and working on Kawari
+# Contributing
 
 Pull requests for new scripts, features, patch updates, or fixes to documentation are welcome. You can do so through [GitHub](https://github.com/redstrate/Kawari).
 

@@ -1,4 +1,4 @@
-# Overview
+# Setup
 
 Kawari is easily accessible to anyone who wants to run a local server for themselves. It's self-contained and doesn't require running a database server or anything complex. All you need is a legitimate copy of the game, and a few minutes of your time.
 
