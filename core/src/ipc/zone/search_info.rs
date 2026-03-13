@@ -3,6 +3,7 @@ use crate::{
     ipc::zone::{OnlineStatusMask, SocialListUILanguages},
 };
 use binrw::binrw;
+use bitflags::bitflags;
 
 #[binrw]
 #[brw(little)]
@@ -19,4 +20,34 @@ pub struct SearchInfo {
     #[br(count = 138)]
     #[bw(pad_size_to = 138)]
     pub unk: Vec<u8>,
+}
+
+#[binrw]
+#[derive(Clone, Copy, Eq, PartialEq)]
+pub struct SearchUIGrandCompanies(u8);
+
+bitflags! {
+    impl SearchUIGrandCompanies: u8 {
+        const MAELSTROM = 2;
+        const ADDERS = 4;
+        const FLAMES = 8;
+        const NONE = 255;
+    }
+}
+
+impl Default for SearchUIGrandCompanies {
+    fn default() -> Self {
+        SearchUIGrandCompanies::NONE
+    }
+}
+
+impl std::fmt::Debug for SearchUIGrandCompanies {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        // Special-case NONE because it isn't all enabled at once, it's the *absence* of all at once.
+        if *self == SearchUIGrandCompanies::NONE {
+            return write!(f, "NONE");
+        }
+
+        bitflags::parser::to_writer(self, f)
+    }
 }

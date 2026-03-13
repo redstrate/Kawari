@@ -543,6 +543,14 @@ ServerZoneIpcType:
     comment: Unknown purpose.
     opcode: 608
     size: 32
+  - name: SearchPlayersResult
+    comment: Sent to inform the client about how many search results were found.
+    opcode: 858
+    size: 8
+  - name: FriendGroupIcon
+    comment: Sent to inform the client that SetFriendGroupIcon request has been acknowledged.
+    opcode: 381
+    size: 16
 ClientZoneIpcType:
   - name: InitRequest
     comment: Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)
@@ -702,7 +710,7 @@ ClientZoneIpcType:
     size: 8
   - name: RequestCharaInfoFromContentIds
     comment: Happens when the client requests more information about other characters, and only has their content id.
-    opcode: 499
+    opcode: 622
     size: 80
   - name: PartyLeave
     comment: Happens when the client leaves their party.
@@ -800,6 +808,10 @@ ClientZoneIpcType:
     comment: When the client requests a list of specific items on the Market Board.
     opcode: 839
     size: 136
+  - name: SetFriendGroupIcon
+    comment: When the client assigns a friend group icon to someone on their friend list.
+    opcode: 872
+    size: 16
 ServerLobbyIpcType:
   - name: NackReply
     comment: Sent by the server to indicate an lobby error occured.
