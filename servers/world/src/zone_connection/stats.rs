@@ -191,9 +191,9 @@ impl BaseParameters {
 
     pub fn calculate_potencies(&mut self) {
         // TODO: wrong but we need some scaling
-        self.physical_damage = self.strength * 100;
-        self.magic_damage = self.intelligence * 100;
-        self.healing_magic_potency = self.mind * 100;
+        self.physical_damage = self.strength * 5;
+        self.magic_damage = self.intelligence * 5;
+        self.healing_magic_potency = self.mind * 5;
     }
 
     fn calc_physical_damage(&self, potency: u32) -> u16 {
@@ -236,6 +236,7 @@ impl ZoneConnection {
                 class_id: self.player_data.classjob.current_class as u8,
                 class_level: self.current_level(&game_data),
                 current_level: self.current_level(&game_data),
+                synced_level: self.synced_level.unwrap_or_default() as u16,
                 current_exp: self.current_exp(&game_data),
                 ..Default::default()
             }));
@@ -276,18 +277,27 @@ impl ZoneConnection {
         self.send_ipc_self(ipc).await;
     }
 
-    fn calculate_stat_across_all_items(&self, base_params: &mut BaseParameters) {
-        let mut gamedata = self.gamedata.lock();
-
+    fn calculate_stat_across_all_items(
+        &self,
+        base_params: &mut BaseParameters,
+        item_level_sync: Option<u16>,
+    ) {
         for i in 0..self.player_data.inventory.equipped.max_slots() {
             let slot = self.player_data.inventory.equipped.get_slot(i as u16);
             if slot.quantity > 0 {
-                let item_info = gamedata
-                    .get_item_info(crate::ItemInfoQuery::ById(slot.id))
-                    .unwrap();
-                for (i, param_id) in item_info.base_param_ids.iter().enumerate() {
+                let mut gamedata = self.gamedata.lock();
+                let item_level_attributes =
+                    gamedata.get_item_level_attributes(item_level_sync.unwrap_or_default());
+                for (i, param_id) in slot.base_param_ids.iter().enumerate() {
                     if *param_id != 0 {
-                        *base_params.get_mut(*param_id) += item_info.base_param_values[i] as u32; // TODO: is there ever negative values?
+                        // Make sure to cap attributes when ilvl syncing:
+                        if item_level_sync.is_some() {
+                            let attribute_cap = item_level_attributes[i];
+                            *base_params.get_mut(*param_id) +=
+                                (slot.base_param_values[i].min(attribute_cap as i16)) as u32; // TODO: is there ever negative values?
+                        } else {
+                            *base_params.get_mut(*param_id) += slot.base_param_values[i] as u32; // TODO: is there ever negative values?
+                        }
                     }
                 }
             }
@@ -318,6 +328,7 @@ impl ZoneConnection {
     pub fn base_parameters(&self) -> BaseParameters {
         let attributes;
         let param_grow;
+        let item_level_sync;
 
         {
             let mut game_data = self.gamedata.lock();
@@ -326,15 +337,24 @@ impl ZoneConnection {
                 .get_racial_base_attributes(self.player_data.subrace)
                 .expect("Failed to read racial attributes");
 
-            let level = self.current_level(&game_data);
+            let level = self
+                .synced_level
+                .map(|x| x as u16)
+                .unwrap_or(self.current_level(&game_data));
 
             param_grow = game_data
                 .get_param_grow(level as u32)
                 .expect("Failed to read param grow");
+
+            if self.synced_level.is_some() {
+                item_level_sync = Some(param_grow.item_level_sync);
+            } else {
+                item_level_sync = None;
+            }
         }
 
         let mut base_parameters = BaseParameters::from_attributes(&attributes);
-        self.calculate_stat_across_all_items(&mut base_parameters);
+        self.calculate_stat_across_all_items(&mut base_parameters, item_level_sync);
         base_parameters.calculate_hp_mp(&param_grow);
         base_parameters.calculate_potencies();
 
@@ -391,10 +411,12 @@ impl ZoneConnection {
             base_piety: attributes.piety,
         }));
         self.send_ipc_self(ipc).await;
+
+        self.update_server_stats().await;
     }
 
     /// Inform the server of new updated level/HP/MP stats.
-    pub async fn update_server_stats(&mut self) {
+    async fn update_server_stats(&mut self) {
         let current_level;
         {
             let gamedata = self.gamedata.lock();

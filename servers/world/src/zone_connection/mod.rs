@@ -164,6 +164,7 @@ pub struct ZoneConnection {
     pub content_handler_id: HandlerId,
     pub event_handler_id: Option<HandlerId>,
     pub recipe: Option<Recipe>,
+    pub synced_level: Option<u8>,
 }
 
 impl ZoneConnection {

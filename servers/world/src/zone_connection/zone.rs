@@ -84,9 +84,6 @@ impl ZoneConnection {
         self.exit_position = Some(exit_position);
         self.exit_rotation = Some(exit_rotation);
 
-        // Player Class Info
-        self.update_class_info().await;
-
         // Generate obsfucation-related keys if needed.
         if self.config.enable_packet_obsfucation {
             let seed1 = fastrand::u8(..);
@@ -264,69 +261,110 @@ impl ZoneConnection {
             self.current_instance_id = None;
         }
 
+        self.synced_level = None;
+
         // Initialize director as needed
         if let Some(intended_use) = TerritoryIntendedUse::from_repr(lua_zone.intended_use) {
-            let Some(director_type) = HandlerType::from_intended_use(intended_use) else {
-                tracing::warn!("{intended_use} does not have a known director type yet?");
-                return;
-            };
-            let content_id = if bound_by_duty {
-                let mut game_data = self.gamedata.lock();
-                game_data
-                    .find_content_for_content_finder_id(content_finder_condition_id)
-                    .unwrap()
-            } else {
-                tracing::warn!("Failed to find content ID for {content_finder_condition_id}?");
-                0xFFFF
-            };
+            if let Some(director_type) = HandlerType::from_intended_use(intended_use) {
+                let content_id = if bound_by_duty {
+                    let mut game_data = self.gamedata.lock();
+                    game_data
+                        .find_content_for_content_finder_id(content_finder_condition_id)
+                        .unwrap()
+                } else {
+                    tracing::warn!("Failed to find content ID for {content_finder_condition_id}?");
+                    0xFFFF
+                };
 
-            self.current_instance_id = Some(content_id);
+                let needs_sync = {
+                    if self
+                        .content_settings
+                        .unwrap()
+                        .contains(ContentRegistrationFlags::UNRESTRICTED_PARTY)
+                    {
+                        self.content_settings
+                            .unwrap()
+                            .contains(ContentRegistrationFlags::LEVEL_SYNC)
+                    } else {
+                        !self
+                            .content_settings
+                            .unwrap()
+                            .contains(ContentRegistrationFlags::EXPLORER_MODE)
+                    }
+                };
 
-            let director_id = HandlerId::new(director_type, content_id);
-            tracing::info!("Initializing director {director_id}...");
+                if needs_sync {
+                    let synced_level;
+                    let current_level;
+                    {
+                        let mut game_data = self.gamedata.lock();
+                        synced_level = game_data
+                            .find_content_synced_level(content_finder_condition_id)
+                            .unwrap() as u16;
+                        current_level = self.current_level(&game_data);
+                    }
 
-            {
-                let mut game_data = self.gamedata.lock();
-                lua_content.duration = game_data
-                    .find_content_time_limit(content_id)
+                    if current_level > synced_level {
+                        self.synced_level = Some(synced_level as u8);
+                        tracing::warn!("SET SYNCED LEVEL TO {synced_level}");
+                    }
+                }
+
+                self.current_instance_id = Some(content_id);
+
+                let director_id = HandlerId::new(director_type, content_id);
+                tracing::info!("Initializing director {director_id}...");
+
+                {
+                    let mut game_data = self.gamedata.lock();
+                    lua_content.duration = game_data
+                        .find_content_time_limit(content_id)
+                        .unwrap_or_default()
+                        * 60;
+                }
+
+                let flags = if self
+                    .content_settings
                     .unwrap_or_default()
-                    * 60;
-            }
+                    .contains(ContentRegistrationFlags::EXPLORER_MODE)
+                {
+                    1
+                } else {
+                    0
+                };
 
-            let flags = if self
-                .content_settings
-                .unwrap_or_default()
-                .contains(ContentRegistrationFlags::EXPLORER_MODE)
-            {
-                1
+                // Initialize the content director
+                self.actor_control_self(ActorControlCategory::InitDirector {
+                    handler_id: director_id,
+                    content_id,
+                    flags,
+                })
+                .await;
+
+                if let Some(director_vars) = director_vars {
+                    self.send_ipc_self(director_vars).await;
+                }
+
+                self.send_ipc_self(ServerZoneIpcSegment::new(ServerZoneIpcData::UnkDirector1 {
+                    unk: [
+                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 0, 0, 0,
+                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                    ],
+                }))
+                .await;
+
+                self.content_handler_id = director_id;
             } else {
-                0
-            };
-
-            // Initialize the content director
-            self.actor_control_self(ActorControlCategory::InitDirector {
-                handler_id: director_id,
-                content_id,
-                flags,
-            })
-            .await;
-
-            if let Some(director_vars) = director_vars {
-                self.send_ipc_self(director_vars).await;
+                tracing::warn!("{intended_use} does not have a known director type yet?");
             }
-
-            self.send_ipc_self(ServerZoneIpcSegment::new(ServerZoneIpcData::UnkDirector1 {
-                unk: [
-                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                ],
-            }))
-            .await;
-
-            self.content_handler_id = director_id;
         } else {
             tracing::warn!("Unknown TerritoryIntendedUse: {}!", lua_zone.intended_use);
         }
+
+        // Player Class Info
+        // NOTE: It's important it happens after we set our synced level!
+        self.update_class_info().await;
+        self.send_stats().await;
     }
 
     pub async fn warp(&mut self, warp_id: u32) {

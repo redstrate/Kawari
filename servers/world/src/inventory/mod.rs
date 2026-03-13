@@ -442,6 +442,8 @@ impl Inventory {
                 item.item_level = info.item_level;
                 item.stack_size = info.stack_size;
                 item.price_low = info.price_low;
+                item.base_param_ids = info.base_param_ids;
+                item.base_param_values = info.base_param_values;
                 // TODO: There will be much more in the future.
             }
         }

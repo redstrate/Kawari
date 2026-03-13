@@ -159,6 +159,7 @@ async fn initial_setup(
                     event_handler_id: None,
                     recipe: None,
                     is_party_leader: false,
+                    synced_level: None,
                 };
 
                 // Handle setup before passing off control to the zone connection.
@@ -879,7 +880,6 @@ async fn process_packet(
                             }
 
                             connection.send_stats().await;
-                            connection.update_server_stats().await;
 
                             // wipe any exit position so it isn't accidentally reused
                             connection.exit_position = None;
@@ -1634,7 +1634,7 @@ async fn process_packet(
                                 || action.dst_storage_id == ContainerType::Equipped
                             {
                                 connection.inform_equip().await;
-                                connection.update_server_stats().await;
+                                connection.send_stats().await; // Because stats changed based on equipped items
                             }
                         }
                         ClientZoneIpcData::StartTalkEvent {
@@ -1923,7 +1923,7 @@ async fn process_packet(
                             connection.change_class_based_on_weapon().await;
 
                             // Then finally, resend stats.
-                            connection.update_server_stats().await;
+                            connection.send_stats().await;
                         }
                         ClientZoneIpcData::EquipGearset2 { .. } => {
                             tracing::warn!("Bigger gearsets not supported yet!");

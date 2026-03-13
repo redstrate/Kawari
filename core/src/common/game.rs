@@ -1047,11 +1047,6 @@ impl DutyOption {
             options.insert(DutyOption::MINIMUM_ITEM_LEVEL);
         }
 
-        // TODO: I don't know how level sync is enabled?
-        // if flags.contains(ContentRegistrationFlags::LEVEL_SYNC) {
-        //     options.insert(DutyOption::LEVEL_SYNC);
-        // }
-
         if flags.contains(ContentRegistrationFlags::SILENCE_ECHO) {
             options.insert(DutyOption::SILENCE_ECHO);
         }

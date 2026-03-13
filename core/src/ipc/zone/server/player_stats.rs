@@ -33,6 +33,7 @@ pub struct PlayerStats {
     pub control: u32,
     pub gathering: u32,
     pub perception: u32,
+    // These are your unscaled attributes, without level sync.
     pub base_strength: u32,
     pub base_dexterity: u32,
     pub base_vitality: u32,

@@ -27,6 +27,7 @@ use icarus::HalloweenNpcSelect::HalloweenNpcSelectSheet;
 use icarus::InstanceContent::InstanceContentSheet;
 use icarus::Item::ItemSheet;
 use icarus::ItemAction::ItemActionSheet;
+use icarus::ItemLevel::ItemLevelSheet;
 use icarus::Mount::MountSheet;
 use icarus::OnlineStatus::OnlineStatusSheet;
 use icarus::Opening::OpeningSheet;
@@ -70,6 +71,7 @@ pub struct GameData {
     pub param_grow_sheet: ParamGrowSheet,
     pub bnpc_base_sheet: BNpcBaseSheet,
     pub bnpc_customize_sheet: BNpcCustomizeSheet,
+    pub item_level_sheet: ItemLevelSheet,
 }
 
 impl Default for GameData {
@@ -153,6 +155,7 @@ pub struct BaseParam {
 pub struct ParamGrow {
     pub hp_modifier: u16,
     pub mp_modifier: i32,
+    pub item_level_sync: u16,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -243,6 +246,9 @@ impl GameData {
         let bnpc_customize_sheet =
             BNpcCustomizeSheet::read_from(&mut resource_resolver, Language::None).unwrap();
 
+        let item_level_sheet =
+            ItemLevelSheet::read_from(&mut resource_resolver, Language::None).unwrap();
+
         Self {
             resource: resource_resolver,
             item_sheet,
@@ -260,6 +266,7 @@ impl GameData {
             param_grow_sheet,
             bnpc_base_sheet,
             bnpc_customize_sheet,
+            item_level_sheet,
         }
     }
 
@@ -1153,6 +1160,7 @@ impl GameData {
         Some(ParamGrow {
             hp_modifier: row.HpModifier().into_u16().copied()?,
             mp_modifier: row.MpModifier().into_i32().copied()?,
+            item_level_sync: row.ItemLevelSync().into_u16().copied()?,
         })
     }
 
@@ -1389,6 +1397,31 @@ impl GameData {
         }
 
         priorities
+    }
+
+    /// Returns the synced level for this content.
+    pub fn find_content_synced_level(&mut self, content_finder_row_id: u16) -> Option<u8> {
+        let config = get_config();
+        let content_finder_sheet =
+            ContentFinderConditionSheet::read_from(&mut self.resource, config.world.language())
+                .unwrap();
+        let content_finder_row = content_finder_sheet.row(content_finder_row_id as u32)?;
+
+        content_finder_row.ClassJobLevelSync().into_u8().copied()
+    }
+
+    /// Returns the attributes for a given item level;
+    pub fn get_item_level_attributes(&mut self, item_level: u16) -> [u16; 6] {
+        let row = self.item_level_sheet.row(item_level as u32).unwrap();
+
+        [
+            row.Strength().into_u16().copied().unwrap(),
+            row.Dexterity().into_u16().copied().unwrap(),
+            row.Vitality().into_u16().copied().unwrap(),
+            row.Intelligence().into_u16().copied().unwrap(),
+            row.Mind().into_u16().copied().unwrap(),
+            row.Piety().into_u16().copied().unwrap(),
+        ]
     }
 }
 
