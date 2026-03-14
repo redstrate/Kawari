@@ -551,6 +551,22 @@ ServerZoneIpcType:
     comment: Sent to inform the client that SetFriendGroupIcon request has been acknowledged.
     opcode: 381
     size: 16
+  - name: DeepDungeonParty
+    comment: Unknown purpose.
+    opcode: 938
+    size: 20
+  - name: DeepDungeonChests
+    comment: Unknown purpose.
+    opcode: 470
+    size: 32
+  - name: DeepDungeonSetup
+    comment: Unknown purpose.
+    opcode: 695
+    size: 24
+  - name: DeepDungeonMap
+    comment: Unknown purpose.
+    opcode: 411
+    size: 56
 ClientZoneIpcType:
   - name: InitRequest
     comment: Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)

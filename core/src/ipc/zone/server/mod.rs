@@ -92,7 +92,8 @@ pub use free_company::FcHierarchy;
 
 mod actor_move;
 use crate::common::{
-    HandlerId, LandData, ObjectTypeId, Position, read_packed_position, write_packed_position,
+    DeepDungeonRoomFlag, HandlerId, LandData, ObjectTypeId, Position, read_packed_position,
+    write_packed_position,
 };
 use crate::constants::{
     COMPLETED_LEVEQUEST_BITMASK_SIZE, COMPLETED_QUEST_BITMASK_SIZE, TITLE_UNLOCK_BITMASK_SIZE,
@@ -935,6 +936,39 @@ pub enum ServerZoneIpcData {
         num_results: u32, // TODO: this might be only an u16 or an u8, since the search results window only shows up to 200 players.
     },
     FriendGroupIcon(FriendGroupIconInfo),
+    DeepDungeonParty {
+        entity_ids: [ObjectId; 4],
+        room_indices: [u8; 4],
+    },
+    DeepDungeonChests {
+        types: [u8; 16],
+        room_indices: [u8; 16],
+    },
+    DeepDungeonSetup {
+        bonus_loot_item_id: u32,
+        unk1: u8,
+        unk2: u8,
+        weapon_level: u8,
+        armor_level: u8,
+        return_progress: u8,
+        passage_progress: u8,
+        synced_gear_level: u8,
+        hoard_count: u8,
+        unk3: u8,
+        unk4: u8,
+        gimmick_effect_id_current: u8,
+        gimmick_effect_id_next: u8,
+        unk5: [u8; 8],
+    },
+    DeepDungeonMap {
+        layout_initialization_type: u8,
+        deep_dungeon_status_id: u8,
+        deep_dungeon_ban_id: u8,
+        deep_dungeon_danger_id: u8,
+        unk1: u8,
+        unk2: u8,
+        map_data: [DeepDungeonRoomFlag; 25],
+    },
 }
 
 #[cfg(test)]

@@ -1098,6 +1098,37 @@ pub struct LandData {
     pub unk1: u32,
 }
 
+/// For deep dungeon map layouts.
+#[binrw]
+#[derive(Clone, Copy, Eq, PartialEq)]
+pub struct DeepDungeonRoomFlag(u16);
+
+bitflags! {
+    impl DeepDungeonRoomFlag: u16 {
+        const NONE = 0x0;
+        const CONNECTION_NORTH = 0x1;
+        const CONNECTION_SOUTH = 0x2;
+        const CONNECTION_WEST = 0x4;
+        const CONNECTION_EAST = 0x8;
+        const RETURN = 0x10;
+        const PASSAGE = 0x20;
+        const HOME = 0x40;
+        const REVEALED = 0x80;
+    }
+}
+
+impl Default for DeepDungeonRoomFlag {
+    fn default() -> Self {
+        Self::NONE
+    }
+}
+
+impl std::fmt::Debug for DeepDungeonRoomFlag {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        bitflags::parser::to_writer(self, f)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
