@@ -37,6 +37,7 @@ use kawari::{
 pub enum MapGimmick {
     /// Seen for final boss triggers in Sastasha
     Generic {},
+    /// Jump pads like the ones in Gold Saucer.
     Jump {
         /// The position to land on.
         to_position: Position,
