@@ -94,16 +94,6 @@ impl ZoneConnection {
             SpawnKind::Npc(spawn) => ServerZoneIpcSegment::new(ServerZoneIpcData::NpcSpawn(spawn)),
         };
         self.send_ipc_from(actor_id, ipc).await;
-
-        self.actor_control(
-            actor_id,
-            ActorControlCategory::ZoneIn {
-                warp_finish_anim: 1,
-                raise_anim: 0,
-                unk1: 0,
-            },
-        )
-        .await;
     }
 
     pub async fn delete_actor(&mut self, actor_id: ObjectId, spawn_index: u8) {

@@ -28,8 +28,8 @@ use kawari::{
     },
     config::get_config,
     ipc::zone::{
-        ActorControlCategory, BattleNpcSubKind, CommonSpawn, Conditions, NpcSpawn, ObjectKind,
-        ObjectSpawn,
+        ActorControlCategory, BattleNpcSubKind, CommonSpawn, Conditions, DisplayFlag, NpcSpawn,
+        ObjectKind, ObjectSpawn,
     },
 };
 
@@ -970,6 +970,17 @@ pub fn handle_zone_messages(
                 }
             }
             network.to_remove.append(&mut to_remove);
+
+            // Then update the PlayerSpawn so respawning this player doesn't appear invisible again
+            let mut data = data.lock();
+            if let Some(instance) = data.find_actor_instance_mut(*from_actor_id)
+                && let Some(actor) = instance.find_actor_mut(*from_actor_id)
+            {
+                actor
+                    .get_common_spawn_mut()
+                    .display_flags
+                    .remove(DisplayFlag::INVISIBLE);
+            }
 
             true
         }
