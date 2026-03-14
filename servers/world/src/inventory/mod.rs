@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use kawari::ipc::zone::ItemOperation;
 
 mod buyback;
-pub use buyback::{BuyBackItem, BuyBackList};
+pub use buyback::BuyBackList;
 
 mod equipped;
 pub use equipped::EquippedStorage;
@@ -102,7 +102,7 @@ impl Inventory {
 
         let main_hand_id = *row.ItemStartingWeaponMainHand().into_i32().unwrap() as u32;
         self.equipped.main_hand = Item::new(
-            game_data
+            &game_data
                 .get_item_info(ItemInfoQuery::ById(main_hand_id))
                 .unwrap(),
             1,
@@ -110,32 +110,32 @@ impl Inventory {
 
         // TODO: don't hardcode
         self.equipped.ears = Item::new(
-            game_data
+            &game_data
                 .get_item_info(ItemInfoQuery::ById(0x3b1b))
                 .unwrap(),
             1,
         );
         self.equipped.neck = Item::new(
-            game_data
+            &game_data
                 .get_item_info(ItemInfoQuery::ById(0x3b1a))
                 .unwrap(),
             1,
         );
         self.equipped.wrists = Item::new(
-            game_data
+            &game_data
                 .get_item_info(ItemInfoQuery::ById(0x3b1c))
                 .unwrap(),
             1,
         );
         // FIXME: I think this is actually based on a choice in the opening, and also defined in OpeningSystemDefine Excel sheet:
         self.equipped.right_ring = Item::new(
-            game_data
+            &game_data
                 .get_item_info(ItemInfoQuery::ById(0x114a))
                 .unwrap(),
             1,
         );
         self.equipped.left_ring = Item::new(
-            game_data
+            &game_data
                 .get_item_info(ItemInfoQuery::ById(0x3b1d))
                 .unwrap(),
             1,
@@ -165,25 +165,25 @@ impl Inventory {
         };
 
         self.equipped.body = Item::new(
-            game_data
+            &game_data
                 .get_item_info(ItemInfoQuery::ById(ids[0]))
                 .unwrap(),
             1,
         );
         self.equipped.hands = Item::new(
-            game_data
+            &game_data
                 .get_item_info(ItemInfoQuery::ById(ids[1]))
                 .unwrap(),
             1,
         );
         self.equipped.legs = Item::new(
-            game_data
+            &game_data
                 .get_item_info(ItemInfoQuery::ById(ids[2]))
                 .unwrap(),
             1,
         );
         self.equipped.feet = Item::new(
-            game_data
+            &game_data
                 .get_item_info(ItemInfoQuery::ById(ids[3]))
                 .unwrap(),
             1,

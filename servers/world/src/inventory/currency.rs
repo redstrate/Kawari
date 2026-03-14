@@ -75,56 +75,56 @@ impl Default for CurrencyStorage {
     fn default() -> Self {
         Self {
             gil: Item::new(
-                ItemInfo {
+                &ItemInfo {
                     id: CurrencyKind::Gil as u32,
                     ..Default::default()
                 },
                 0,
             ),
             flame_seal: Item::new(
-                ItemInfo {
+                &ItemInfo {
                     id: CurrencyKind::FlameSeal as u32,
                     ..Default::default()
                 },
                 0,
             ),
             wolf_mark: Item::new(
-                ItemInfo {
+                &ItemInfo {
                     id: CurrencyKind::WolfMark as u32,
                     ..Default::default()
                 },
                 0,
             ),
             tomestone_poetics: Item::new(
-                ItemInfo {
+                &ItemInfo {
                     id: CurrencyKind::TomestonePoetics as u32,
                     ..Default::default()
                 },
                 0,
             ),
             tomestone_mathematics: Item::new(
-                ItemInfo {
+                &ItemInfo {
                     id: CurrencyKind::TomestoneMaths as u32,
                     ..Default::default()
                 },
                 0,
             ),
             allied_seal: Item::new(
-                ItemInfo {
+                &ItemInfo {
                     id: CurrencyKind::AlliedSeal as u32,
                     ..Default::default()
                 },
                 0,
             ),
             mgp: Item::new(
-                ItemInfo {
+                &ItemInfo {
                     id: CurrencyKind::MGP as u32,
                     ..Default::default()
                 },
                 0,
             ),
             tomestone_heliometry: Item::new(
-                ItemInfo {
+                &ItemInfo {
                     id: CurrencyKind::TomestoneHelio as u32,
                     ..Default::default()
                 },

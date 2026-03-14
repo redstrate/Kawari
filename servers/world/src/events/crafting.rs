@@ -89,7 +89,7 @@ impl EventHandler for CraftingEventHandler {
                     connection
                         .player_data
                         .inventory
-                        .add_in_next_free_slot(Item::new(item_info, 1));
+                        .add_in_next_free_slot(Item::new(&item_info, 1));
                 }
             }
 

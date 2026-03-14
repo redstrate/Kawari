@@ -84,42 +84,42 @@ impl Default for CrystalsStorage {
     fn default() -> Self {
         Self {
             fire_shard: Item::new(
-                ItemInfo {
+                &ItemInfo {
                     id: CrystalKind::FireShard as u32,
                     ..Default::default()
                 },
                 0,
             ),
             ice_shard: Item::new(
-                ItemInfo {
+                &ItemInfo {
                     id: CrystalKind::IceShard as u32,
                     ..Default::default()
                 },
                 0,
             ),
             wind_shard: Item::new(
-                ItemInfo {
+                &ItemInfo {
                     id: CrystalKind::WindShard as u32,
                     ..Default::default()
                 },
                 0,
             ),
             earth_shard: Item::new(
-                ItemInfo {
+                &ItemInfo {
                     id: CrystalKind::EarthShard as u32,
                     ..Default::default()
                 },
                 0,
             ),
             lightning_shard: Item::new(
-                ItemInfo {
+                &ItemInfo {
                     id: CrystalKind::LightningShard as u32,
                     ..Default::default()
                 },
                 0,
             ),
             water_shard: Item::new(
-                ItemInfo {
+                &ItemInfo {
                     id: CrystalKind::WaterShard as u32,
                     ..Default::default()
                 },
@@ -127,42 +127,42 @@ impl Default for CrystalsStorage {
             ),
 
             fire_crystal: Item::new(
-                ItemInfo {
+                &ItemInfo {
                     id: CrystalKind::FireCrystal as u32,
                     ..Default::default()
                 },
                 0,
             ),
             ice_crystal: Item::new(
-                ItemInfo {
+                &ItemInfo {
                     id: CrystalKind::IceCrystal as u32,
                     ..Default::default()
                 },
                 0,
             ),
             wind_crystal: Item::new(
-                ItemInfo {
+                &ItemInfo {
                     id: CrystalKind::WindCrystal as u32,
                     ..Default::default()
                 },
                 0,
             ),
             earth_crystal: Item::new(
-                ItemInfo {
+                &ItemInfo {
                     id: CrystalKind::EarthCrystal as u32,
                     ..Default::default()
                 },
                 0,
             ),
             lightning_crystal: Item::new(
-                ItemInfo {
+                &ItemInfo {
                     id: CrystalKind::LightningCrystal as u32,
                     ..Default::default()
                 },
                 0,
             ),
             water_crystal: Item::new(
-                ItemInfo {
+                &ItemInfo {
                     id: CrystalKind::WaterCrystal as u32,
                     ..Default::default()
                 },
@@ -170,42 +170,42 @@ impl Default for CrystalsStorage {
             ),
 
             fire_cluster: Item::new(
-                ItemInfo {
+                &ItemInfo {
                     id: CrystalKind::FireCluster as u32,
                     ..Default::default()
                 },
                 0,
             ),
             ice_cluster: Item::new(
-                ItemInfo {
+                &ItemInfo {
                     id: CrystalKind::IceCluster as u32,
                     ..Default::default()
                 },
                 0,
             ),
             wind_cluster: Item::new(
-                ItemInfo {
+                &ItemInfo {
                     id: CrystalKind::WindCluster as u32,
                     ..Default::default()
                 },
                 0,
             ),
             earth_cluster: Item::new(
-                ItemInfo {
+                &ItemInfo {
                     id: CrystalKind::EarthCluster as u32,
                     ..Default::default()
                 },
                 0,
             ),
             lightning_cluster: Item::new(
-                ItemInfo {
+                &ItemInfo {
                     id: CrystalKind::LightningCluster as u32,
                     ..Default::default()
                 },
                 0,
             ),
             water_cluster: Item::new(
-                ItemInfo {
+                &ItemInfo {
                     id: CrystalKind::WaterCluster as u32,
                     ..Default::default()
                 },

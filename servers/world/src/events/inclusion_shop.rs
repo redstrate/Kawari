@@ -57,7 +57,7 @@ impl EventHandler for InclusionShopEventHandler {
             && let Some(add_result) = connection
                 .player_data
                 .inventory
-                .add_in_next_free_slot(Item::new(item_info.clone(), item_quantity))
+                .add_in_next_free_slot(Item::new(&item_info, item_quantity))
         {
             ShopEventHandler::send_gilshop_item_update(
                 connection,

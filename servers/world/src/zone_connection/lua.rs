@@ -246,7 +246,7 @@ impl ZoneConnection {
                         if self
                             .player_data
                             .inventory
-                            .add_in_next_free_slot(Item::new(item_info, *quantity))
+                            .add_in_next_free_slot(Item::new(&item_info, *quantity))
                             .is_some()
                         {
                             if *send_client_update {

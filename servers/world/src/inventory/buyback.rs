@@ -1,30 +1,17 @@
 use std::collections::{HashMap, VecDeque};
 
-use crate::ItemInfo;
+use crate::inventory::Item;
 
 const BUYBACK_LIST_SIZE: usize = 10;
 const BUYBACK_PARAM_COUNT: usize = 22;
 
-// TODO: Deprecate this type, Item can now be expanded to support everything we'll need
-#[derive(Clone, Debug, Default)]
-pub struct BuyBackItem {
-    pub id: u32,
-    pub quantity: u32,
-    pub price_low: u32,
-    // TODO: there are 22 total things the server keeps track of and sends back to the client, we should implement these!
-    // Not every value is not fully understood but they appeared to be related to item quality, materia melds, the crafter's name (if applicable), spiritbond/durability, and maybe more.
-    /// Fields beyond this comment are not part of the 22 datapoints the server sends to the client, but we need them for later item restoration.
-    pub item_level: u16,
-    pub stack_size: u32,
-}
-
 #[derive(Clone, Debug, Default)]
 pub struct BuyBackList {
-    list: HashMap<u32, VecDeque<BuyBackItem>>,
+    list: HashMap<u32, VecDeque<Item>>,
 }
 
 impl BuyBackList {
-    pub fn push_item(&mut self, shop_id: u32, item: BuyBackItem) {
+    pub fn push_item(&mut self, shop_id: u32, item: Item) {
         let vec = self.list.entry(shop_id).or_default();
         vec.push_front(item);
         vec.truncate(BUYBACK_LIST_SIZE);
@@ -41,7 +28,7 @@ impl BuyBackList {
         vec.remove(index as usize);
     }
 
-    pub fn get_buyback_item(&self, shop_id: u32, index: u32) -> Option<&BuyBackItem> {
+    pub fn get_buyback_item(&self, shop_id: u32, index: u32) -> Option<&Item> {
         let vec = self.list.get(&shop_id)?;
 
         vec.get(index as usize)
@@ -78,18 +65,5 @@ impl BuyBackList {
         }
 
         params
-    }
-}
-
-// TODO: Once BBItem is deprecated, remove this. This is a transitional impl as we migrate to using Item.
-impl BuyBackItem {
-    pub fn as_item_info(&self) -> ItemInfo {
-        ItemInfo {
-            id: self.id,
-            item_level: self.item_level,
-            stack_size: self.stack_size,
-            price_low: self.price_low,
-            ..Default::default()
-        }
     }
 }

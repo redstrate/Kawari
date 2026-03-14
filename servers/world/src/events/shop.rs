@@ -9,7 +9,7 @@ use kawari::{
 
 use crate::{
     Event, EventHandler, ItemInfoQuery, ZoneConnection,
-    inventory::{BuyBackItem, CurrencyKind, Item, get_container_type},
+    inventory::{CurrencyKind, Item, get_container_type},
     lua::LuaPlayer,
 };
 
@@ -66,16 +66,15 @@ impl ShopEventHandler {
                 tracing::warn!(error);
                 return;
             };
-            bb_item = tmp_bb_item.clone();
+            bb_item = *tmp_bb_item;
         }
 
         // This is a no-op since we can't edit PlayerData from the Lua side, but we can queue it up afterward.
         // We *need* this information, though.
-        let item_to_restore = Item::new(bb_item.as_item_info(), bb_item.quantity);
         let Some(item_dst_info) = connection
             .player_data
             .inventory
-            .add_in_next_free_slot(item_to_restore)
+            .add_in_next_free_slot(bb_item)
         else {
             let error = "Your inventory is full. Unable to restore item.";
             connection.send_notice(error).await;
@@ -167,7 +166,7 @@ impl ShopEventHandler {
                     if let Some(add_result) = connection
                         .player_data
                         .inventory
-                        .add_in_next_free_slot(Item::new(item_info.clone(), item_quantity))
+                        .add_in_next_free_slot(Item::new(&item_info, item_quantity))
                     {
                         connection.player_data.inventory.currency.gil.quantity -=
                             item_quantity * item_info.price_mid;
@@ -242,13 +241,7 @@ impl ShopEventHandler {
             }
 
             if let Some(item_info) = result {
-                let bb_item = BuyBackItem {
-                    id: item_info.id,
-                    quantity,
-                    price_low: item_info.price_low,
-                    item_level: item_info.item_level,
-                    stack_size: item_info.stack_size,
-                };
+                let bb_item = Item::new(&item_info, quantity);
                 connection
                     .player_data
                     .buyback_list

@@ -24,7 +24,7 @@ pub struct Item {
 }
 
 impl Item {
-    pub fn new(item_info: ItemInfo, quantity: u32) -> Self {
+    pub fn new(item_info: &ItemInfo, quantity: u32) -> Self {
         Self {
             quantity,
             id: item_info.id,
