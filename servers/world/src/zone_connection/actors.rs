@@ -190,7 +190,7 @@ impl ZoneConnection {
         self.send_ipc_from(actor_id, ipc).await;
     }
 
-    pub fn get_player_common_spawn(
+    fn get_player_common_spawn(
         &self,
         exit_position: Option<Position>,
         exit_rotation: Option<f32>,
