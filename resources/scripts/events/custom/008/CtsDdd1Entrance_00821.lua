@@ -16,6 +16,12 @@ function onTalk(target, player)
     player:play_scene(SCENE_00000, NO_DEFAULT_CAMERA | HIDE_HOTBAR, {})
 end
 
+function onYield(scene, yield_id, results, player)
+    if scene == SCENE_00000 then
+        player:resume_event(SCENE_00000, yield_id, {})
+    end
+end
+
 function onReturn(scene, results, player)
     if scene == SCENE_00000 then
         if results[1] == 1 then
