@@ -57,13 +57,7 @@ impl<const MAX_SIZE: usize, const START_INDEX: usize>
 
     /// Checks if the object exists in the pool.
     pub fn contains(&self, object_id: ObjectId) -> bool {
-        for space in &self.pool {
-            if *space == Some(object_id) {
-                return true;
-            }
-        }
-
-        false
+        self.pool.contains(&Some(object_id))
     }
 
     /// Frees all objects from the pool.
