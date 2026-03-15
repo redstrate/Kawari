@@ -147,6 +147,7 @@ pub struct Volatile {
     pub display_flags: EquipDisplayFlag,
     pub title: i32,
     pub is_online: bool,
+    pub online_status_mask: i64,
 }
 
 #[derive(
@@ -321,4 +322,27 @@ pub struct SearchInfo {
     pub content_id: i64,
     pub online_status: OnlineStatus,
     pub comment: String,
+}
+
+#[derive(
+    Insertable,
+    Identifiable,
+    Queryable,
+    Selectable,
+    Associations,
+    AsChangeset,
+    Debug,
+    Default,
+    Clone,
+)]
+#[diesel(table_name = super::schema::friends)]
+#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+#[diesel(belongs_to(Character, foreign_key = content_id))]
+#[diesel(primary_key(content_id))]
+pub struct Friends {
+    pub content_id: i64,
+    pub friend_content_id: i64,
+    pub group_icon: i32,
+    pub invite_time: String,
+    pub is_pending: bool,
 }

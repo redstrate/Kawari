@@ -81,6 +81,13 @@ impl ZoneConnection {
         }
 
         self.player_data.volatile.zone_id = new_zone_id as i32;
+
+        // Commit back our zone id and other volatile info on zone change.
+        {
+            let mut db = self.database.lock();
+            db.commit_volatile(&self.player_data);
+        }
+
         self.exit_position = Some(exit_position);
         self.exit_rotation = Some(exit_rotation);
 

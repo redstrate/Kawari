@@ -27,7 +27,7 @@ pub struct SocialListRequest {
     pub next_index: u16,
     pub request_type: SocialListRequestType,
     #[brw(pad_after = 4)] // empty
-    pub count: u8,
+    pub sequence: u8,
 }
 
 /// Which languages the client's player wishes to be grouped and/or interacted with.
@@ -127,6 +127,7 @@ pub struct PlayerEntry {
 }
 
 impl PlayerEntry {
+    pub const COUNT: usize = 10;
     pub const SIZE: usize = 112;
 }
 
@@ -139,8 +140,8 @@ pub struct SocialList {
     pub request_type: SocialListRequestType,
     pub sequence: u8,
     #[brw(pad_before = 2)] // Empty? Still possible it might have data in other SocialList types
-    #[br(count = 10)]
-    #[bw(pad_size_to = 10 * PlayerEntry::SIZE)]
+    #[br(count = PlayerEntry::COUNT)]
+    #[bw(pad_size_to = PlayerEntry::COUNT * PlayerEntry::SIZE)]
     pub entries: Vec<PlayerEntry>,
 }
 

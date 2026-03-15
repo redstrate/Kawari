@@ -16,7 +16,7 @@ use kawari::ipc::chat::{ChatChannel, ClientChatIpcData};
 use kawari::ipc::zone::{
     ActorControlCategory, Conditions, ContentFinderUserAction, EventType, InviteType, MapEffects,
     MarketBoardItem, OnlineStatus, OnlineStatusMask, PlayerSetup, SceneFlags, SearchInfo,
-    SocialListUILanguages, TrustContent, TrustInformation,
+    SocialListRequestType, SocialListUILanguages, TrustContent, TrustInformation,
 };
 
 use kawari::ipc::zone::{
@@ -160,6 +160,10 @@ async fn initial_setup(
                     recipe: None,
                     is_party_leader: false,
                     synced_level: None,
+                    search_results: Vec::new(),
+                    search_index: 0,
+                    friend_results: Vec::new(),
+                    friend_index: 0,
                 };
 
                 // Handle setup before passing off control to the zone connection.
@@ -528,6 +532,11 @@ async fn process_packet(
                             // Mark the player as online for total player counts, player searches, etc.
                             {
                                 connection.player_data.volatile.is_online = true;
+                                // Set the database's copy of the online status mask to a sane default.
+                                let mut new_status_mask = OnlineStatusMask::default();
+                                new_status_mask.set_status(OnlineStatus::Online);
+                                connection.player_data.volatile.online_status_mask =
+                                    i64::from(new_status_mask);
                                 let mut database = connection.database.lock();
                                 database.commit_volatile(&connection.player_data);
                             }
@@ -822,6 +831,8 @@ async fn process_packet(
                                     connection.player_data.volatile.rotation as f32,
                                 ))
                                 .await;
+
+                            //connection.remind_pending_invites().await;
 
                             // Send login message
                             connection.send_notice(&config.world.login_message).await;
@@ -1314,15 +1325,48 @@ async fn process_packet(
                                 .await;
                         }
                         ClientZoneIpcData::SocialListRequest(request) => {
-                            connection
-                                .handle
-                                .send(ToServer::RequestSocialList(
-                                    connection.id,
-                                    connection.player_data.character.actor_id,
-                                    connection.party_id,
-                                    request.clone(),
-                                ))
-                                .await;
+                            match request.request_type {
+                                // That's the global server's department.
+                                SocialListRequestType::Party => {
+                                    connection
+                                        .handle
+                                        .send(ToServer::RequestSocialList(
+                                            connection.id,
+                                            connection.player_data.character.actor_id,
+                                            connection.party_id,
+                                            request.clone(),
+                                        ))
+                                        .await;
+                                }
+                                SocialListRequestType::Friends => {
+                                    // We have to refresh manually here as the friend list doesn't have a convenient search & result opcode pair like searching does.
+                                    connection.refresh_friend_list().await;
+                                    connection
+                                        .send_social_list(
+                                            request.request_type,
+                                            request.sequence,
+                                            None,
+                                            None,
+                                        )
+                                        .await;
+                                }
+                                SocialListRequestType::SearchResults => {
+                                    connection
+                                        .send_social_list(
+                                            request.request_type,
+                                            request.sequence,
+                                            None,
+                                            None,
+                                        )
+                                        .await;
+                                }
+                                _ => {
+                                    tracing::warn!(
+                                        "SocialListRequestType was {:#?}! This is not yet implemented!",
+                                        &request.request_type
+                                    );
+                                }
+                            }
                         }
                         ClientZoneIpcData::UpdatePositionHandler {
                             position,
@@ -2138,25 +2182,28 @@ async fn process_packet(
                                             character_name.clone(),
                                         ))
                                         .await;
-                                    // Inform the client about the invite they just sent.
-                                    // TODO: Is this static? unk1 and unk2 haven't been observed to have other values so far.
-                                    let ipc = ServerZoneIpcSegment::new(
-                                        ServerZoneIpcData::InviteCharacterResult {
-                                            content_id: *content_id,
-                                            world_id: *world_id,
-                                            unk1: 1,
-                                            unk2: 1,
-                                            character_name: character_name.clone(),
-                                        },
-                                    );
-                                    connection.send_ipc_self(ipc).await;
                                 }
                                 InviteType::FriendList => {
                                     connection
-                                        .send_notice("The friend list is not yet implemented.")
+                                        .handle
+                                        .send(ToServer::InvitePlayerToFriendList(
+                                            connection.player_data.character.actor_id,
+                                            *content_id,
+                                            character_name.clone(),
+                                        ))
                                         .await
                                 }
                             }
+
+                            // Inform the client about the invite they just sent.
+                            connection
+                                .invite_character_result(
+                                    *invite_type,
+                                    *content_id,
+                                    *world_id,
+                                    character_name.clone(),
+                                )
+                                .await;
                         }
                         ClientZoneIpcData::InviteReply {
                             sender_content_id,
@@ -2576,7 +2623,7 @@ async fn process_server_msg(
             FromServer::PartyInvite(sender_account_id, sender_content_id, sender_name) => connection.received_party_invite(sender_account_id, sender_content_id, sender_name).await,
             FromServer::InvitationResult(sender_account_id, sender_content_id, sender_name, invite_type, invite_reply) => connection.received_invitation_response(sender_account_id, sender_content_id, sender_name, invite_type, invite_reply).await,
             FromServer::InvitationReplyResult(sender_account_id, sender_name, invite_type, invite_reply) => connection.send_invite_reply_result(sender_account_id, sender_name, invite_type, invite_reply).await,
-            FromServer::SocialListResponse(request_type, sequence, entries) => connection.send_social_list(request_type, sequence, entries).await,
+            FromServer::SocialListResponse(request_type, sequence, entries) => connection.send_social_list(request_type, sequence, Some(entries), None).await,
             FromServer::PartyUpdate(targets, update_status, party_info) => connection.send_party_update(targets, update_status, party_info).await,
             FromServer::CharacterAlreadyInParty() => connection.send_notice("That player is already in a party. You are seeing this message because Kawari doesn't yet send information correctly in a way that your game will display the error on its own.").await,
             FromServer::RejoinPartyAfterDisconnect(party_id) => {
@@ -2649,6 +2696,7 @@ async fn process_server_msg(
                 let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PartyMemberPositions(positions));
                 connection.send_ipc_self(ipc).await;
             }
+            FromServer::FriendInvite(sender_account_id, sender_content_id, sender_name) => connection.received_friend_invite(sender_account_id, sender_content_id, sender_name).await,
             _ => { tracing::error!("Zone connection {:#?} received a FromServer message we don't care about: {:#?}, ensure you're using the right client network or that you've implemented a handler for it if we actually care about it!", client_handle.id, msg); }
         }
     }
@@ -2756,6 +2804,11 @@ async fn main() {
         if let Err(err) = lua.init(game_data.clone()) {
             tracing::warn!("Failed to load Init.lua: {:?}", err);
         }
+    }
+
+    {
+        let mut database = database.lock();
+        database.do_cleanup_tasks();
     }
 
     let (handle, _) = spawn_main_loop(game_data.clone());

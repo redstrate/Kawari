@@ -9,8 +9,8 @@ use kawari::{
             ActorControlCategory, InviteReply, InviteType, InviteUpdateType, OnlineStatus,
             OnlineStatusMask, PartyMemberEntry, PartyUpdateStatus, PlayerEntry,
             SearchUIGrandCompanies, ServerZoneIpcData, ServerZoneIpcSegment, SocialList,
-            SocialListRequestType, SocialListUILanguages, StrategyBoard, StrategyBoardUpdate,
-            WaymarkPlacementMode, WaymarkPosition, WaymarkPreset,
+            SocialListRequest, SocialListRequestType, SocialListUILanguages, StrategyBoard,
+            StrategyBoardUpdate, WaymarkPlacementMode, WaymarkPosition, WaymarkPreset,
         },
     },
 };
@@ -71,19 +71,21 @@ impl ZoneConnection {
         invite_type: InviteType,
         response: InviteReply,
     ) {
-        // only party supported for now
-        if invite_type != InviteType::Party {
-            return;
-        }
-
         if response == InviteReply::Accepted {
-            self.handle
-                .send(ToServer::AddPartyMember(
-                    self.party_id,
-                    self.player_data.character.actor_id,
-                    from_content_id,
-                ))
-                .await;
+            match invite_type {
+                InviteType::Party => {
+                    self.handle
+                        .send(ToServer::AddPartyMember(
+                            self.party_id,
+                            self.player_data.character.actor_id,
+                            from_content_id,
+                        ))
+                        .await;
+                }
+                InviteType::FriendList => {
+                    self.add_to_friend_list(from_content_id).await;
+                } // _ => todo!(), // Linkshells, FCs, and everything else?
+            }
         }
 
         self.send_invite_update(
@@ -230,17 +232,67 @@ impl ZoneConnection {
         &mut self,
         request_type: SocialListRequestType,
         sequence: u8,
-        entries: Vec<PlayerEntry>,
+        entries: Option<Vec<PlayerEntry>>,
+        community_id: Option<u64>,
     ) {
+        let mut next_index;
+        let current_index;
+
+        let mut entries = entries.unwrap_or_default();
+
+        fn fetch_entries(next_index: &mut u16, data: &mut Vec<PlayerEntry>) -> Vec<PlayerEntry> {
+            if data.len() > PlayerEntry::COUNT {
+                *next_index += PlayerEntry::COUNT as u16;
+                data.drain(0..PlayerEntry::COUNT).collect()
+            } else {
+                *next_index = 0;
+                let mut ret: Vec<PlayerEntry> = std::mem::take(data);
+                ret.resize(PlayerEntry::COUNT, PlayerEntry::default());
+                ret
+            }
+        }
+
+        match request_type {
+            SocialListRequestType::Friends => {
+                current_index = self.friend_index as u16;
+                next_index = self.friend_index as u16;
+                entries = fetch_entries(&mut next_index, &mut self.friend_results);
+
+                if !self.friend_results.is_empty() {
+                    self.friend_index += PlayerEntry::COUNT;
+                } else {
+                    self.friend_index = 0;
+                }
+            }
+            SocialListRequestType::SearchResults => {
+                current_index = self.search_index as u16;
+                next_index = self.search_index as u16;
+                entries = fetch_entries(&mut next_index, &mut self.search_results);
+
+                if !self.search_results.is_empty() {
+                    self.search_index += PlayerEntry::COUNT;
+                } else {
+                    self.search_index = 0;
+                }
+            }
+            SocialListRequestType::Party => {
+                current_index = 0;
+                next_index = 0;
+            }
+            _ => todo!(),
+        }
+
+        let community_id = community_id.unwrap_or_default();
+
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::SocialList(SocialList {
-            // TODO: Fill these in once we support more social list types
-            community_id: 0,
-            current_index: 0,
-            next_index: 0,
+            community_id,
+            next_index,
+            current_index,
             request_type,
             sequence,
             entries,
         }));
+
         self.send_ipc_self(ipc).await;
     }
 
@@ -397,9 +449,10 @@ impl ZoneConnection {
 
     /// Updates the online status not just on yourself but also informing other players.
     pub async fn update_online_status(&mut self) {
-        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::SetOnlineStatus(
-            self.get_online_status_mask(),
-        ));
+        let online_status_mask = self.get_online_status_mask();
+        self.player_data.volatile.online_status_mask = i64::from(online_status_mask);
+
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::SetOnlineStatus(online_status_mask));
         self.send_ipc_self(ipc).await;
 
         self.handle
@@ -408,6 +461,12 @@ impl ZoneConnection {
                 self.get_actual_online_status(),
             ))
             .await;
+
+        // Commit the OnlineStatusMask back to the db so it can be used in SocialLists.
+        {
+            let mut db = self.database.lock();
+            db.commit_volatile(&self.player_data);
+        }
     }
 
     /// Searches for online players.
@@ -422,9 +481,135 @@ impl ZoneConnection {
         _areas: [u16; 50],
         _name: String,
     ) {
-        // For now, no results were found until we implement it properly.
-        let ipc =
-            ServerZoneIpcSegment::new(ServerZoneIpcData::SearchPlayersResult { num_results: 0 });
+        {
+            let mut db = self.database.lock();
+            self.search_results = db.find_online_players(self.player_data.character.content_id);
+            self.search_index = 0;
+        }
+
+        //tracing::info!("{:#?}", self.search_results);
+
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::SearchPlayersResult {
+            num_results: self.search_results.len() as u32,
+        });
         self.send_ipc_self(ipc).await;
+    }
+
+    pub async fn do_search_results(&mut self, request: SocialListRequest) {
+        //tracing::info!("{:#?}", request);
+        let mut to_send = Vec::<PlayerEntry>::new();
+        // If we have more than 10 results, take 10 and get ready to send them.
+        if self.search_results.len() > 10 {
+            for _ in 0..10 {
+                let item = self.search_results.pop().unwrap();
+                if item.content_id != self.player_data.character.content_id as u64 {
+                    to_send.push(item);
+                }
+            }
+        } else {
+            for _ in 0..self.search_results.len() {
+                let item = self.search_results.pop().unwrap();
+                if item.content_id != self.player_data.character.content_id as u64 {
+                    to_send.push(item);
+                }
+            }
+        }
+
+        let next_index = to_send.len();
+
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::SocialList(SocialList {
+            community_id: 0,
+            next_index: if self.search_results.len() >= 10 {
+                (self.search_index + 10) as u16
+            } else {
+                0
+            }, // TODO: this is probably wrong
+            current_index: self.search_index as u16,
+            request_type: SocialListRequestType::SearchResults,
+            sequence: request.sequence,
+            entries: to_send,
+        }));
+
+        self.send_ipc_self(ipc).await;
+
+        if !self.search_results.is_empty() {
+            self.search_index += next_index;
+        } else {
+            self.search_index = 0;
+        }
+    }
+
+    pub async fn invite_character_result(
+        &mut self,
+        invite_type: InviteType,
+        content_id: u64,
+        world_id: u16,
+        character_name: String,
+    ) {
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InviteCharacterResult {
+            content_id,
+            world_id,
+            invite_type,
+            unk2: 1,
+            character_name,
+        });
+
+        self.send_ipc_self(ipc).await;
+    }
+
+    pub async fn refresh_friend_list(&mut self) {
+        // This should always be the case when a pending friend list request has begun.
+        if !self.friend_results.is_empty() {
+            let mut db = self.database.lock();
+            self.friend_results = db.find_friend_list(self.player_data.character.content_id);
+            self.friend_index = 0;
+        }
+    }
+
+    pub async fn add_to_friend_list(&mut self, friend_content_id: u64) {
+        let mut db = self.database.lock();
+        db.add_to_friend_list(
+            friend_content_id as i64,
+            self.player_data.character.content_id,
+        );
+    }
+
+    pub async fn received_friend_invite(
+        &mut self,
+        sender_account_id: u64,
+        sender_content_id: u64,
+        sender_name: String,
+    ) {
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InviteUpdate {
+            sender_account_id,
+            sender_content_id,
+            expiration_timestamp: 0,
+            world_id: self.config.world_id,
+            invite_type: InviteType::FriendList,
+            update_type: InviteUpdateType::NewInvite,
+            unk1: 1,
+            sender_name,
+        });
+        self.send_ipc_self(ipc).await;
+
+        //let mut database = self.database.lock();
+        //database.add_to_friend_list(sender_content_id as i64, self.player_data.character.content_id as i64);
+    }
+
+    pub async fn remind_pending_invites(&mut self) {
+        let pending;
+        {
+            let mut db = self.database.lock();
+            pending = db
+                .get_pending_friend_invites(self.player_data.character.content_id)
+                .clone();
+        }
+
+        if let Some(pending) = pending {
+            for friend in pending {
+                self.received_friend_invite(friend.1 as u64, friend.0 as u64, friend.2)
+                    .await;
+            }
+        }
     }
 }

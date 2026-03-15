@@ -1,8 +1,8 @@
 mod models;
 use kawari::ipc::zone::{GameMasterRank, OnlineStatus};
 pub use models::{
-    AetherCurrent, Aetheryte, Character, ClassJob, Companion, Content, Mentor, Quest, SearchInfo,
-    Unlock, Volatile,
+    AetherCurrent, Aetheryte, Character, ClassJob, Companion, Content, Friends, Mentor, Quest,
+    SearchInfo, Unlock, Volatile,
 };
 
 mod schema;
@@ -18,6 +18,7 @@ use crate::{PlayerData, inventory::Inventory};
 use kawari::{
     common::ObjectId,
     ipc::lobby::{CharacterDetails, CharacterFlag},
+    ipc::zone::{OnlineStatusMask, PlayerEntry},
 };
 
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
@@ -135,6 +136,14 @@ impl WorldDatabase {
         Inventory::prepare_player_inventory(&mut player_data.inventory, game_data);
 
         player_data
+    }
+
+    pub fn commit_classjob(&mut self, data: &PlayerData) {
+        use models::*;
+
+        data.classjob
+            .save_changes::<ClassJob>(&mut self.connection)
+            .unwrap();
     }
 
     pub fn commit_volatile(&mut self, data: &PlayerData) {
@@ -563,6 +572,19 @@ impl WorldDatabase {
                 .unwrap();
         }
 
+        {
+            use schema::friends::dsl::*;
+            // Delete linked friends first.
+            diesel::delete(friends.filter(friend_content_id.eq(for_content_id as i64)))
+                .execute(&mut self.connection)
+                .unwrap();
+
+            // Next, delete the user's friend list.
+            diesel::delete(friends.filter(content_id.eq(for_content_id as i64)))
+                .execute(&mut self.connection)
+                .unwrap();
+        }
+
         // NOTE: The character table should always be last!
         {
             use schema::character::dsl::*;
@@ -681,4 +703,218 @@ impl WorldDatabase {
             .first::<i64>(&mut self.connection)
             .unwrap_or_default()
     }
+
+    pub fn find_online_players(&mut self, for_content_id: i64) -> Vec<PlayerEntry> {
+        let mut online_players = Vec::<PlayerEntry>::new();
+
+        use schema::volatile::dsl::*;
+        let online_content_ids: Vec<i64> = volatile
+            .filter(is_online.eq(true))
+            .select(schema::volatile::dsl::content_id)
+            .load(&mut self.connection)
+            .unwrap();
+
+        use schema::character::dsl::*;
+        //use schema::classjob::dsl::*;
+
+        for id in online_content_ids {
+            // Don't add ourselves to these results.
+            if id == for_content_id {
+                continue;
+            }
+
+            // Truncate to 200 users maximum, and stop afterward.
+            if online_players.len() > 200 {
+                online_players.truncate(200);
+                break;
+            }
+
+            online_players.push(PlayerEntry {
+                content_id: id as u64,
+                zone_id: volatile
+                    .select(zone_id)
+                    .filter(schema::volatile::dsl::content_id.eq(id))
+                    .first::<i32>(&mut self.connection)
+                    .unwrap_or_default() as u16,
+                name: character
+                    .select(name)
+                    .filter(schema::character::dsl::content_id.eq(id))
+                    .first::<String>(&mut self.connection)
+                    .unwrap(),
+                online_status_mask: OnlineStatusMask::from(
+                    volatile
+                        .select(online_status_mask)
+                        .filter(schema::volatile::dsl::content_id.eq(id))
+                        .first::<i64>(&mut self.connection)
+                        .unwrap_or_default(),
+                ),
+                ..Default::default()
+            });
+        }
+
+        online_players
+    }
+
+    fn get_friend_content_ids(&mut self, for_content_id: i64) -> Vec<i64> {
+        use schema::friends::dsl::*;
+        friends
+            .filter(schema::friends::dsl::content_id.eq(for_content_id))
+            .select(schema::friends::dsl::friend_content_id)
+            .load(&mut self.connection)
+            .unwrap_or_default()
+    }
+
+    pub fn find_friend_list(&mut self, for_content_id: i64) -> Vec<PlayerEntry> {
+        let mut friend_entries = Vec::<PlayerEntry>::new();
+
+        use schema::character::dsl::*;
+        //use schema::friends::dsl::*;
+        use schema::volatile::dsl::*;
+
+        let friend_content_ids = self.get_friend_content_ids(for_content_id);
+
+        // If they have no friends, just return an empty list that the zone connection can reuse.
+        if !friend_content_ids.is_empty() {
+            return vec![PlayerEntry::default(); 10];
+        }
+
+        for id in friend_content_ids {
+            let online = volatile
+                .select(is_online)
+                .filter(schema::volatile::dsl::content_id.eq(id))
+                .first::<bool>(&mut self.connection)
+                .unwrap();
+            let z_id = if online {
+                volatile
+                    .select(schema::volatile::dsl::zone_id)
+                    .filter(schema::volatile::dsl::content_id.eq(id))
+                    .first::<i32>(&mut self.connection)
+                    .unwrap_or_default() as u16
+            } else {
+                0
+            };
+
+            let osm = if online {
+                OnlineStatusMask::from(
+                    volatile
+                        .select(schema::volatile::dsl::online_status_mask)
+                        .filter(schema::volatile::dsl::content_id.eq(id))
+                        .first::<i64>(&mut self.connection)
+                        .unwrap_or_default(),
+                )
+            } else {
+                OnlineStatusMask::default()
+            };
+
+            friend_entries.push(PlayerEntry {
+                content_id: id as u64,
+                zone_id: z_id,
+                name: character
+                    .select(name)
+                    .filter(schema::character::dsl::content_id.eq(id))
+                    .first::<String>(&mut self.connection)
+                    .unwrap(),
+                online_status_mask: osm,
+                ..Default::default()
+            });
+        }
+        friend_entries
+    }
+
+    pub fn add_to_friend_list(&mut self, fwen_content_id: i64, my_content_id: i64) {
+        if my_content_id == fwen_content_id {
+            tracing::error!(
+                "Player with content id {my_content_id} attempted to add themselves to their friend list. Ignoring request."
+            );
+            return;
+        }
+
+        use schema::friends::dsl::*;
+        let time = diesel::select(datetime())
+            .get_result::<String>(&mut self.connection)
+            .unwrap();
+
+        let friend = Friends {
+            content_id: my_content_id,
+            friend_content_id: fwen_content_id,
+            group_icon: 0,
+            invite_time: time,
+            is_pending: true,
+        };
+
+        diesel::insert_into(friends)
+            .values(friend)
+            .execute(&mut self.connection)
+            .unwrap();
+    }
+
+    pub fn remove_from_friend_list(&mut self, fwen_content_id: i64, my_content_id: i64) {
+        use schema::friends::dsl::*;
+
+        diesel::delete(
+            friends
+                .filter(content_id.eq(my_content_id))
+                .filter(friend_content_id.eq(fwen_content_id)),
+        )
+        .execute(&mut self.connection)
+        .unwrap();
+    }
+
+    pub fn get_pending_friend_invites(
+        &mut self,
+        my_content_id: i64,
+    ) -> Option<Vec<(i64, i64, String)>> {
+        use schema::friends::dsl::*;
+        let pending_friends: Vec<i64> = friends
+            .filter(schema::friends::dsl::content_id.eq(my_content_id))
+            .filter(is_pending.eq(true))
+            .select(schema::friends::dsl::friend_content_id)
+            .load(&mut self.connection)
+            .unwrap_or_default();
+
+        if !pending_friends.is_empty() {
+            use schema::character::dsl::*;
+            let mut data = Vec::new();
+            for friend in pending_friends {
+                let friend_name = character
+                    .filter(schema::character::dsl::content_id.eq(friend))
+                    .select(schema::character::dsl::name)
+                    .first::<String>(&mut self.connection)
+                    .unwrap();
+                let account_id = character
+                    .filter(schema::character::dsl::content_id.eq(friend))
+                    .select(schema::character::dsl::service_account_id)
+                    .first::<i64>(&mut self.connection)
+                    .unwrap();
+
+                data.push((friend, account_id, friend_name));
+            }
+            if !data.is_empty() {
+                return Some(data);
+            }
+        }
+
+        None
+    }
+
+    pub fn do_cleanup_tasks(&mut self) {
+        use schema::volatile::dsl::*;
+
+        // Ensure the most volatile aspects of the db are reset to a clean state.
+        // We expect these to be "offline" as the initial state elsewhere for things like the online player count and friend lists to function correctly.
+        diesel::update(volatile)
+            .set(is_online.eq(false))
+            .execute(&mut self.connection)
+            .unwrap();
+
+        diesel::update(volatile)
+            .set(online_status_mask.eq(0))
+            .execute(&mut self.connection)
+            .unwrap();
+    }
+}
+
+#[declare_sql_function]
+extern "SQL" {
+    fn datetime() -> diesel::sql_types::Text;
 }

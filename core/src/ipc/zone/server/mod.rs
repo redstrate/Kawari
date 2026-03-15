@@ -492,8 +492,8 @@ pub enum ServerZoneIpcData {
         content_id: u64,
         #[brw(pad_before = 4)]
         world_id: u16,
-        unk1: u8, // TODO: One of these unks is likely the InviteType
-        unk2: u8,
+        invite_type: InviteType,
+        unk2: u8, // TODO: What is this?
         #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
         #[br(count = CHAR_NAME_MAX_LENGTH)]
         #[br(map = read_string)]
