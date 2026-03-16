@@ -17,4 +17,4 @@ or just bored, you could:
 * Fill out useful fields in EXDSchema
 
 Are you really proud of something you accomplished with Kawari? [Let us
-know](https://matrix.to/#/#kawari-welcome:pyra.sh)!
+know](community.md)!
