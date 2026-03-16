@@ -8,8 +8,8 @@ use kawari::{
     common::{CharacterMode, HandlerId, HandlerType, ObjectTypeId},
     config::get_config,
     ipc::zone::{
-        ActorControlCategory, EventResume, EventScene, EventStart, EventType, SceneFlags,
-        ServerZoneIpcData, ServerZoneIpcSegment,
+        EventResume, EventScene, EventStart, EventType, SceneFlags, ServerZoneIpcData,
+        ServerZoneIpcSegment,
     },
 };
 
@@ -54,11 +54,7 @@ impl ZoneConnection {
             let event_arg = event.1.event_arg;
             let event_id = event.1.id;
 
-            self.actor_control_self(ActorControlCategory::SetMode {
-                mode: CharacterMode::Normal,
-                mode_arg: 0,
-            })
-            .await;
+            self.set_character_mode(CharacterMode::Normal, 0).await;
 
             // Remove the condition given at the start of the event
             self.conditions.remove_condition(event.1.condition);
@@ -110,15 +106,10 @@ impl ZoneConnection {
         let condition = HandlerId(event_id).handler_type().condition();
         let character_mode = HandlerId(event_id).handler_type().character_mode();
 
-        // TODO: be smarter about setting character modes
         self.conditions.toggle_condition(condition, true);
         self.send_conditions().await;
 
-        self.actor_control_self(ActorControlCategory::SetMode {
-            mode: character_mode,
-            mode_arg: 0,
-        })
-        .await;
+        self.set_character_mode(character_mode, 0).await;
 
         // call into the event dispatcher, get the event
         let handler = dispatch_event(HandlerId(event_id), self.gamedata.clone());

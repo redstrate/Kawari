@@ -3,8 +3,8 @@
 use crate::{ToServer, ZoneConnection, common::SpawnKind};
 use kawari::{
     common::{
-        EquipDisplayFlag, JumpState, MoveAnimationState, MoveAnimationType, ObjectId, ObjectTypeId,
-        Position,
+        CharacterMode, EquipDisplayFlag, JumpState, MoveAnimationState, MoveAnimationType,
+        ObjectId, ObjectTypeId, Position,
     },
     config::get_config,
     ipc::zone::{
@@ -250,5 +250,23 @@ impl ZoneConnection {
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ObjectSpawn(spawn));
 
         self.send_ipc_from(spawn.entity_id, ipc).await;
+    }
+
+    /// Sets this actor's CharacterMode and informs other clients.
+    pub async fn set_character_mode(&mut self, mode: CharacterMode, arg: u8) {
+        // NOTE: It's extremely important we send this to the client as soon as possible, otherwise the weird out-of-order operations cause issues.
+        self.actor_control_self(ActorControlCategory::SetMode {
+            mode,
+            mode_arg: arg as u32,
+        })
+        .await;
+
+        self.handle
+            .send(ToServer::SetCharacterMode(
+                self.player_data.character.actor_id,
+                mode,
+                arg,
+            ))
+            .await;
     }
 }

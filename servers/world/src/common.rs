@@ -7,7 +7,10 @@ use tokio::sync::mpsc::Sender;
 
 use crate::{StatusEffects, lua::LuaTask, zone_connection::BaseParameters};
 use kawari::{
-    common::{JumpState, MoveAnimationState, MoveAnimationType, ObjectId, ObjectTypeId, Position},
+    common::{
+        CharacterMode, JumpState, MoveAnimationState, MoveAnimationType, ObjectId, ObjectTypeId,
+        Position,
+    },
     ipc::{
         chat::{
             ChatChannelType, PartyMessage, SendPartyMessage, SendTellMessage, TellNotFoundError,
@@ -362,6 +365,8 @@ pub enum ToServer {
     SetOnlineStatus(ObjectId, OnlineStatus),
     /// The client is requesting to ride pillion with a party member's mount.
     RidePillionRequest(ObjectId, Option<u64>, ObjectId, u32),
+    /// Inform the server of this actor's new CharacterMode.
+    SetCharacterMode(ObjectId, CharacterMode, u8),
 }
 
 #[derive(Clone, Debug)]

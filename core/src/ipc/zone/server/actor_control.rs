@@ -61,9 +61,13 @@ pub enum ActorControlCategory {
         unk_flag: u32,
     },
 
-    /// Unknown purpose, but seen while emoting.
+    /// Sets the character mode, such as for mounts.
     #[brw(magic = 2u32)]
-    SetMode { mode: CharacterMode, mode_arg: u32 },
+    SetMode {
+        #[brw(pad_size_to = 4)]
+        mode: CharacterMode,
+        mode_arg: u32,
+    },
 
     /// Begins an event action.
     #[brw(magic = 3u32)]

@@ -967,13 +967,7 @@ async fn process_packet(
 
                                     // SetMode isn't important, no, but it's included for accuracy.
                                     connection
-                                        .actor_control(
-                                            connection.player_data.character.actor_id,
-                                            ActorControlCategory::SetMode {
-                                                mode: CharacterMode::Normal,
-                                                mode_arg: 0,
-                                            },
-                                        )
+                                        .set_character_mode(CharacterMode::Normal, 0)
                                         .await;
 
                                     // Retail indeed does send an AC, not an ACS for this.
@@ -2646,7 +2640,7 @@ async fn process_server_msg(
             }
             FromServer::ActorDismounted(from_actor_id) => {
                 // SetMode seems unnecessary (the dismount sequence works without it) but it's included for accuracy.
-                connection.actor_control(from_actor_id, ActorControlCategory::SetMode { mode: CharacterMode::Normal, mode_arg: 0} ).await;
+                connection.set_character_mode(CharacterMode::Normal, 0).await;
                 connection.actor_control(from_actor_id, ActorControlCategory::PlayDismountAnimation { unk1: 0, unk2: 0, unk3: 0 } ).await;
 
                 connection.actor_control(from_actor_id, ActorControlCategory::RidePillion { target_actor_id: ObjectId::default(), target_seat_index: 0}).await;
@@ -2660,29 +2654,32 @@ async fn process_server_msg(
                 connection.actor_control(from_actor_id, ActorControlCategory::RidePillion { target_actor_id, target_seat_index }).await;
                 connection.actor_control(from_actor_id, ActorControlCategory::ToggleWeapon { shown: false, unk_flag: 1 }).await;
 
-                // Next, set the seat the player will be in. Yes, that 16 million thing really matters. If it's wrong, the client will board the wrong seat visually.
-                connection.actor_control(from_actor_id, ActorControlCategory::SetMode { mode: CharacterMode::RidingPillion, mode_arg: (1 + target_seat_index) * 16777216 }).await;
-
                 // Prepare the mount animation, but it has to be conditionally sent.
                 let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Mount {
                         id: mount_id,
                         unk1: [0; 14],
                 });
 
-                // If we're the passenger
                 if from_actor_id == connection.player_data.character.actor_id {
-                    connection.actor_control_self(ActorControlCategory::SetPetEntityId { unk1: 1 }).await;
+                    // If we're the passenger, set the seat the player will be in.
+                    connection.set_character_mode(CharacterMode::RidingPillion, 1 + target_seat_index as u8).await;
+
                     connection.actor_control_self(ActorControlCategory::PillionPassengerRelatedUnk { unk: 12 }).await;
                     connection.send_ipc_self(ipc).await;
+
                     // Not strictly necessary it seems, but retail does it.
                     connection.conditions = Conditions::default();
                     connection.send_conditions().await;
-                // If we're the driver
                 } else if target_actor_id == connection.player_data.character.actor_id {
+                    // If we're the driver
                     connection.actor_control_self(ActorControlCategory::PillionDriverRelatedUnk { target_seat_index, from_actor_id }).await;
+
+                    // NOTE: This should be handled by set_character_mode *however* the order of operations here is currently way too limiting to wait for the server to respond to us.
+                    connection.actor_control(from_actor_id, ActorControlCategory::SetMode { mode: CharacterMode::RidingPillion, mode_arg: 1 + target_seat_index}).await;
+
                     connection.send_ipc_from(from_actor_id, ipc).await;
-                // We're an observer of others
                 } else {
+                    // We're an observer of others
                     connection.send_ipc_from(from_actor_id, ipc).await;
                 }
             }

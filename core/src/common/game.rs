@@ -866,7 +866,7 @@ impl std::fmt::Debug for InvisibilityFlags {
 #[binrw]
 #[brw(little)]
 #[brw(repr = u8)]
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq)]
 pub enum CharacterMode {
     /// Has no effect, never used.
     None = 0,

@@ -2416,6 +2416,43 @@ pub async fn server_main_loop(
                         },
                     );
                 }
+                ToServer::SetCharacterMode(from_actor_id, mode, arg) => {
+                    // Update internal data model for new spawns
+                    {
+                        let mut data = data.lock();
+                        let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
+                            continue;
+                        };
+
+                        let Some(actor) = instance.find_actor_mut(from_actor_id) else {
+                            continue;
+                        };
+
+                        // Skip if this mode is already set.
+                        if actor.get_common_spawn().mode == mode
+                            && actor.get_common_spawn().mode_arg == arg
+                        {
+                            continue;
+                        }
+
+                        actor.get_common_spawn_mut().mode = mode;
+                        actor.get_common_spawn_mut().mode_arg = arg;
+                    }
+
+                    // Inform actors
+                    {
+                        let mut network = network.lock();
+                        let data = data.lock();
+                        network.send_ac_in_range(
+                            &data,
+                            from_actor_id,
+                            ActorControlCategory::SetMode {
+                                mode,
+                                mode_arg: arg as u32,
+                            },
+                        );
+                    }
+                }
                 ToServer::FatalError(err) => return Err(err),
                 _ => {}
             }
