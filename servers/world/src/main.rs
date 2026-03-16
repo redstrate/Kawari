@@ -2674,6 +2674,8 @@ async fn process_server_msg(
                     connection.actor_control_self(ActorControlCategory::SetPetEntityId { unk1: 1 }).await;
                     connection.actor_control_self(ActorControlCategory::PillionPassengerRelatedUnk { unk: 12 }).await;
                     connection.send_ipc_self(ipc).await;
+                    // Not strictly necessary it seems, but retail does it.
+                    connection.conditions = Conditions::default();
                     connection.send_conditions().await;
                 // If we're the driver
                 } else if target_actor_id == connection.player_data.character.actor_id {
