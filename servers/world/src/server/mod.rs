@@ -1284,7 +1284,13 @@ pub async fn server_main_loop(
                             // If the actor moved, and they're in a party, we need to update our information.
                             if let Some(party_id) = party_id {
                                 let mut network = network.lock();
-                                update_party_position(&mut network, party_id, actor_id, position);
+                                update_party_position(
+                                    &mut network,
+                                    &mut data,
+                                    party_id,
+                                    actor_id,
+                                    position,
+                                );
                             }
                         }
                     }
@@ -2361,16 +2367,43 @@ pub async fn server_main_loop(
                         tracing::warn!("Failed to load Init.lua: {:?}", err);
                     }
                 }
-                ToServer::Dismounted(from_actor_id) => {
+                ToServer::Dismounted(from_actor_id, party_id) => {
                     let mut network = network.lock();
                     let data = data.lock();
-                    let msg = FromServer::ActorDismounted(from_actor_id);
-                    network.send_in_range(
-                        from_actor_id,
-                        &data,
-                        msg,
-                        DestinationNetwork::ZoneClients,
-                    );
+
+                    let mut ids_to_dismount = Vec::new();
+                    ids_to_dismount.push(from_actor_id);
+
+                    if let Some(party_id) = party_id
+                        && let Some(party) = network.parties.get_mut(&party_id)
+                    {
+                        for member in &mut party.members {
+                            // If the dismounting player is this member's driver, this member needs to be dismounted too.
+                            if member.pillion_driver_id == from_actor_id {
+                                ids_to_dismount.push(member.actor_id);
+                            }
+                            // If this member is dismounting manually while riding pillion, there is no longer a driver for them.
+                            if member.actor_id == from_actor_id
+                                && member.pillion_driver_id != ObjectId::default()
+                            {
+                                member.pillion_driver_id = ObjectId::default();
+                            }
+                        }
+                    }
+
+                    for id in ids_to_dismount {
+                        let Some(instance) = data.find_actor_instance(id) else {
+                            continue;
+                        };
+
+                        let msg = FromServer::ActorDismounted(id);
+                        network.send_in_range_inclusive_instance(
+                            id,
+                            instance,
+                            msg,
+                            DestinationNetwork::ZoneClients,
+                        );
+                    }
                 }
                 ToServer::SetOnlineStatus(from_actor_id, online_status) => {
                     let mut network = network.lock();

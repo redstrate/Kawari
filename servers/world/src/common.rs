@@ -193,6 +193,8 @@ pub enum FromServer {
     ActorDismounted(ObjectId),
     /// Inform the client of the whereabouts of their party members.
     PartyMemberPositionsUpdate(PartyMemberPositions),
+    /// Inform the client that a player is now riding pillion with another player.
+    ActorRidesPillion(ObjectId, ObjectId, u16, u32),
 }
 
 #[derive(Debug, Clone)]
@@ -355,9 +357,11 @@ pub enum ToServer {
     /// Request the global server state to reload its Lua state.
     ReloadScripts,
     /// The client dismounted.
-    Dismounted(ObjectId),
+    Dismounted(ObjectId, Option<u64>),
     /// Inform the server of this actor's new online status.
     SetOnlineStatus(ObjectId, OnlineStatus),
+    /// The client is requesting to ride pillion with a party member's mount.
+    RidePillionRequest(ObjectId, Option<u64>, ObjectId, u32),
 }
 
 #[derive(Clone, Debug)]

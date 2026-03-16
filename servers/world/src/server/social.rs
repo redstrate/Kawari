@@ -27,6 +27,8 @@ pub struct PartyMember {
     pub world_id: u16,
     pub name: String,
     pub position: Position,
+    /// If this party member is riding pillion, we need to store who the driver is.
+    pub pillion_driver_id: ObjectId,
 }
 
 impl PartyMember {
@@ -298,6 +300,16 @@ pub fn update_party_waymark(
     network.send_to_party_or_self(from_actor_id, msg);
 }
 
+fn get_pillion_driver_position(party: &Party, index: usize) -> Option<Position> {
+    for member in &party.members {
+        if member.actor_id == party.members[index].pillion_driver_id {
+            return Some(member.position);
+        }
+    }
+
+    None
+}
+
 /// Helper function used to send periodic updates for where party members are.
 /// NOTE: This affects things like player dots on the minimap, as well as riding pillion on mounts. Adjust at your own risk!
 pub fn send_party_positions(network: &mut NetworkState) {
@@ -316,7 +328,12 @@ pub fn send_party_positions(network: &mut NetworkState) {
         for (index, member) in party.members.clone().iter().enumerate() {
             if member.is_online() {
                 member_positions.positions[index].valid = 1;
-                member_positions.positions[index].pos = member.position;
+                // If the party member is riding pillion, their position is broadcasted as the *driver*'s! Otherwise just use that member's current known position.
+                if let Some(driver_position) = get_pillion_driver_position(party, index) {
+                    member_positions.positions[index].pos = driver_position;
+                } else {
+                    member_positions.positions[index].pos = member.position;
+                }
             }
         }
 
@@ -328,14 +345,34 @@ pub fn send_party_positions(network: &mut NetworkState) {
 /// Helper function to update our copy of the party member's position.
 pub fn update_party_position(
     network: &mut NetworkState,
+    data: &mut WorldServer,
     party_id: u64,
     actor_id: ObjectId,
     position: Position,
 ) {
     if let Some(party) = network.parties.get_mut(&party_id)
-        && let Some(member) = party.get_member_by_actor_id_mut(actor_id)
+        && let Some(my_member) = party.get_member_by_actor_id_mut(actor_id)
     {
-        member.position = position;
+        my_member.position = position;
+
+        for member in &mut party.members {
+            // If this member is our passenger
+            if member.pillion_driver_id == actor_id {
+                let Some(instance) = data.find_actor_instance_mut(member.actor_id) else {
+                    return;
+                };
+
+                // Get their position and update it to ours.
+                let Some(NetworkedActor::Player { spawn, .. }) =
+                    instance.find_actor_mut(member.actor_id)
+                else {
+                    return;
+                };
+
+                member.position = position;
+                spawn.common.position = position;
+            }
+        }
     }
 }
 
@@ -1314,6 +1351,59 @@ pub fn handle_social_messages(
             } else {
                 network.send_to_by_actor_id(*from_id, msg, DestinationNetwork::ZoneClients);
             }
+
+            true
+        }
+        ToServer::RidePillionRequest(
+            from_actor_id,
+            party_id,
+            target_actor_id,
+            target_seat_index,
+        ) => {
+            let mut network = network.lock();
+            let data = data.lock();
+
+            let Some(party_id) = party_id else {
+                return true;
+            };
+
+            let Some(party) = network.parties.get_mut(party_id) else {
+                return true;
+            };
+
+            for member in &mut party.members {
+                // Store who the driver is so we later know how to update positions, etc.
+                if member.actor_id == *from_actor_id {
+                    member.pillion_driver_id = *target_actor_id;
+                    break;
+                }
+            }
+
+            let Some(instance) = data.find_actor_instance(*from_actor_id) else {
+                return true;
+            };
+
+            // For now, it should be safe to assume the driver is in the same instance if the sending client is requesting to ride pillion.
+            let Some(driver_actor) = instance.find_actor(*target_actor_id) else {
+                return true;
+            };
+
+            let common = driver_actor.get_common_spawn();
+
+            // TODO: Logic to move the player to an unoccupied seat when the desired seat is taken
+            let msg = FromServer::ActorRidesPillion(
+                *from_actor_id,
+                *target_actor_id,
+                common.current_mount,
+                *target_seat_index,
+            );
+
+            network.send_in_range_inclusive_instance(
+                *from_actor_id,
+                instance,
+                msg,
+                DestinationNetwork::ZoneClients,
+            );
 
             true
         }

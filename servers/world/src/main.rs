@@ -961,6 +961,7 @@ async fn process_packet(
                                     connection.respawn_player(false).await;
                                 }
                                 ClientTriggerCommand::Dismount { sequence } => {
+                                    // TODO: Move all this to FromServer::ActorDismounted so all of the logic can be consolidated
                                     connection.conditions = Conditions::default();
                                     connection.send_conditions().await;
 
@@ -983,6 +984,17 @@ async fn process_packet(
                                                 unk1: 47494,
                                                 unk2: 32711,
                                                 unk3: 1510381914,
+                                            },
+                                        )
+                                        .await;
+
+                                    // TODO: This should only be sent when the player is actually riding pillion, but for now, it doesn't seem to hurt sending it unconditionally.
+                                    connection
+                                        .actor_control(
+                                            connection.player_data.character.actor_id,
+                                            ActorControlCategory::RidePillion {
+                                                target_actor_id: ObjectId::default(),
+                                                target_seat_index: 0,
                                             },
                                         )
                                         .await;
@@ -1017,10 +1029,18 @@ async fn process_packet(
                                             },
                                         )
                                         .await;
+
+                                    // TODO: Remove this `let party_id` in an upcoming party refactor, this is temporary
+                                    let party_id = if connection.party_id != 0 {
+                                        Some(connection.party_id)
+                                    } else {
+                                        None
+                                    };
                                     connection
                                         .handle
                                         .send(ToServer::Dismounted(
                                             connection.player_data.character.actor_id,
+                                            party_id,
                                         ))
                                         .await;
                                 }
@@ -1256,6 +1276,27 @@ async fn process_packet(
                                         connection.recipe = Some(recipe);
                                     }
                                 }
+                                ClientTriggerCommand::RidePillionRequest {
+                                    target_actor_id,
+                                    target_seat_index,
+                                } => {
+                                    // TODO: Remove this `let party_id` in an upcoming party refactor, this is temporary
+                                    let party_id = if connection.party_id != 0 {
+                                        Some(connection.party_id)
+                                    } else {
+                                        None
+                                    };
+
+                                    connection
+                                        .handle
+                                        .send(ToServer::RidePillionRequest(
+                                            connection.player_data.character.actor_id,
+                                            party_id,
+                                            target_actor_id,
+                                            target_seat_index,
+                                        ))
+                                        .await;
+                                }
                                 _ => {
                                     // inform the server of our trigger, it will handle sending it to other clients
                                     connection
@@ -1304,6 +1345,7 @@ async fn process_packet(
                             } else {
                                 None
                             };
+
                             connection
                                 .handle
                                 .send(ToServer::ActorMoved(
@@ -2606,10 +2648,43 @@ async fn process_server_msg(
                 // SetMode seems unnecessary (the dismount sequence works without it) but it's included for accuracy.
                 connection.actor_control(from_actor_id, ActorControlCategory::SetMode { mode: CharacterMode::Normal, mode_arg: 0} ).await;
                 connection.actor_control(from_actor_id, ActorControlCategory::PlayDismountAnimation { unk1: 0, unk2: 0, unk3: 0 } ).await;
+
+                connection.actor_control(from_actor_id, ActorControlCategory::RidePillion { target_actor_id: ObjectId::default(), target_seat_index: 0}).await;
             }
             FromServer::PartyMemberPositionsUpdate(positions) => {
                 let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PartyMemberPositions(positions));
                 connection.send_ipc_self(ipc).await;
+            }
+            FromServer::ActorRidesPillion(from_actor_id, target_actor_id, mount_id, target_seat_index) => {
+                // TODO: Move all this to its own function in the zone connection?
+                connection.actor_control(from_actor_id, ActorControlCategory::RidePillion { target_actor_id, target_seat_index }).await;
+                connection.actor_control(from_actor_id, ActorControlCategory::ToggleWeapon { shown: false, unk_flag: 1 }).await;
+
+                // Next, set the seat the player will be in. Yes, that 16 million thing really matters. If it's wrong, the client will board the wrong seat visually.
+                connection.actor_control(from_actor_id, ActorControlCategory::SetMode { mode: CharacterMode::RidingPillion, mode_arg: (1 + target_seat_index) * 16777216 }).await;
+
+                // Prepare the mount animation, but it has to be conditionally sent.
+                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Mount {
+                        id: mount_id,
+                        unk1: [0; 14],
+                });
+
+                // If we're the passenger
+                if from_actor_id == connection.player_data.character.actor_id {
+                    connection.actor_control_self(ActorControlCategory::SetPetEntityId { unk1: 1 }).await;
+                    connection.actor_control_self(ActorControlCategory::PillionPassengerRelatedUnk { unk: 12 }).await;
+                    connection.send_ipc_self(ipc).await;
+                    // Not strictly necessary it seems, but retail does it.
+                    connection.conditions = Conditions::default();
+                    connection.send_conditions().await;
+                // If we're the driver
+                } else if target_actor_id == connection.player_data.character.actor_id {
+                    connection.actor_control_self(ActorControlCategory::PillionDriverRelatedUnk { target_seat_index, from_actor_id }).await;
+                    connection.send_ipc_from(from_actor_id, ipc).await;
+                // We're an observer of others
+                } else {
+                    connection.send_ipc_from(from_actor_id, ipc).await;
+                }
             }
             _ => { tracing::error!("Zone connection {:#?} received a FromServer message we don't care about: {:#?}, ensure you're using the right client network or that you've implemented a handler for it if we actually care about it!", client_handle.id, msg); }
         }

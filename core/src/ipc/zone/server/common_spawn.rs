@@ -228,7 +228,7 @@ pub struct CommonSpawn {
     #[br(map = read_quantized_rotation)]
     #[bw(map = write_quantized_rotation)]
     pub rotation: f32,
-    pub current_mount: u16, // assumed
+    pub current_mount: u16,
     pub active_minion: u16, // assumed
     pub u23: u8,            // assumed
     pub u24: u8,            // assumed
