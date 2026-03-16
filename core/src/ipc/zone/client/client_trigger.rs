@@ -58,6 +58,15 @@ pub enum ClientTriggerCommand {
         source_actor_id: ObjectId,
     },
 
+    /// The client requests to ride pillion with another player.
+    #[brw(magic = 106u32)]
+    RidePillionRequest {
+        /// The target actor to ride with.
+        target_actor_id: ObjectId,
+        /// The target seat to occupy.
+        target_seat_index: u32,
+    },
+
     /// The client is finished zoning.
     #[brw(magic = 201u32)]
     FinishZoning {},

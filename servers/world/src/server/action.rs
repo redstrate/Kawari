@@ -84,6 +84,22 @@ pub fn execute_action(
         content_data: LuaContent::default(),
         base_parameters: BaseParameters::default(),
     };
+    // TODO: Isn't there a better way to do this without a bunch of borrow checking issues involving data, actor, and instance below?
+    // Regardless, we need to set the player's mount id in their common spawn so both pillion works and also letting players see this existing actor's mount when they spawn.
+    if request.action_kind == ActionKind::Mount {
+        let mut data = data.lock();
+        let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
+            return;
+        };
+
+        let Some(actor) = instance.find_actor_mut(from_actor_id) else {
+            return;
+        };
+
+        let common = actor.get_common_spawn_mut();
+
+        common.current_mount = request.action_key as u16;
+    }
 
     let effects_builder;
     let common_spawn;

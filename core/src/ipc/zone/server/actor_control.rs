@@ -190,6 +190,15 @@ pub enum ActorControlCategory {
         unk4: u32,
     },
 
+    /// Set the actor into a state of riding pillion.
+    #[brw(magic = 89u32)]
+    RidePillion {
+        /// The target actor to bind to.
+        target_actor_id: ObjectId,
+        /// The target seat to ride on the mount.
+        target_seat_index: u32,
+    },
+
     #[brw(magic = 100u32)]
     InitDirector {
         /// The director to intiailize.
@@ -418,6 +427,13 @@ pub enum ActorControlCategory {
         count: u32,
     },
 
+    // Unsure what the purpose of this is, it's sent when someone else rides pillion on the player's mount
+    #[brw(magic = 400u32)]
+    PillionDriverRelatedUnk {
+        target_seat_index: u32,
+        from_actor_id: ObjectId,
+    },
+
     /// Plays an animation for a NPC or player.
     #[brw(magic = 407u32)]
     PlayActionTimeline {
@@ -602,6 +618,10 @@ pub enum ActorControlCategory {
         unk3: u32,
         unk4: u32,
     },
+
+    /// Unsure what this is for, but it's sent when riding as a passenger.
+    #[brw(magic = 928u32)]
+    PillionPassengerRelatedUnk { unk: u32 },
 
     // TODO: rename this again if it's apparent that it's not purely for the dismount animation, but it's what actually plays the animation when networked...
     // TODO: What do those 3 unks represent? They don't seem to matter to the client (dismounting still works even if they're all zero).
