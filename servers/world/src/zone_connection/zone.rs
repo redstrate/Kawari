@@ -379,13 +379,14 @@ impl ZoneConnection {
             .await;
     }
 
-    pub async fn warp_aetheryte(&mut self, aetheryte_id: u32) {
+    pub async fn warp_aetheryte(&mut self, aetheryte_id: u32, housing_aethernet: bool) {
         self.teleport_reason = TeleportReason::Aetheryte;
         self.handle
             .send(ToServer::WarpAetheryte(
                 self.id,
                 self.player_data.character.actor_id,
                 aetheryte_id,
+                housing_aethernet,
             ))
             .await;
     }

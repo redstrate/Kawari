@@ -901,14 +901,14 @@ pub fn handle_zone_messages(
 
             true
         }
-        ToServer::WarpAetheryte(from_id, actor_id, aetheryte_id) => {
+        ToServer::WarpAetheryte(from_id, actor_id, aetheryte_id, housing_aethernet) => {
             let mut data = data.lock();
             let mut network = network.lock();
             let mut game_data = game_data.lock();
 
             // first, find the warp and it's destination
             let (destination_instance_id, destination_zone_id) = game_data
-                .get_aetheryte(*aetheryte_id)
+                .get_aetheryte(*aetheryte_id, *housing_aethernet)
                 .expect("Failed to find the aetheryte!");
 
             change_zone_warp_to_pop_range(
