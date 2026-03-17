@@ -973,6 +973,15 @@ pub enum ServerZoneIpcData {
         unk2: u8,
         map_data: [DeepDungeonRoomFlag; 25],
     },
+    ExamineCharacterInformation {
+        unk1: [u8; 640],
+        #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+        #[br(count = CHAR_NAME_MAX_LENGTH)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        name: String,
+        unk2: [u8; 272],
+    },
 }
 
 #[cfg(test)]

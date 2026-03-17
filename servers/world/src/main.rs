@@ -1302,6 +1302,16 @@ async fn process_packet(
                                         ))
                                         .await;
                                 }
+                                ClientTriggerCommand::ExamineCharacter { .. } => {
+                                    let ipc = ServerZoneIpcSegment::new(
+                                        ServerZoneIpcData::ExamineCharacterInformation {
+                                            unk1: [0; 640],
+                                            name: "test".to_string(),
+                                            unk2: [0; 272],
+                                        },
+                                    );
+                                    connection.send_ipc_self(ipc).await;
+                                }
                                 _ => {
                                     // inform the server of our trigger, it will handle sending it to other clients
                                     connection

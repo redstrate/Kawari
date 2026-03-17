@@ -78,6 +78,10 @@ pub enum ClientTriggerCommand {
         // TODO: fill out the rest
     },
 
+    /// Examine menu option on characters.
+    #[brw(magic = 300u32)]
+    ExamineCharacter { target_actor_id: ObjectId },
+
     /// The client toggles a sign for their current target.
     #[brw(magic = 301u32)]
     ToggleSign {
