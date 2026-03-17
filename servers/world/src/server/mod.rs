@@ -2467,7 +2467,9 @@ pub async fn server_main_loop(
                     network.send_ac_in_range(&data, from_actor_id, actor_control);
                 }
                 ToServer::FatalError(err) => return Err(err),
-                _ => {}
+                _ => {
+                    tracing::error!("Received a ToServer message we don't handle yet: {msg:#?}");
+                }
             }
         }
 
