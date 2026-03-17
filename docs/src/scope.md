@@ -9,3 +9,5 @@ This is a rough outline of what we currently don't support or accept contributio
   * One exception to this rule is anything that could help forks of Kawari such as assumptions about language, lobby packet support, etc.
 * Non-Windows clients
   * We lack the adequate hardware setup to test these, and even if we did the support for these _will_ bit-rot without proper maintenance.
+* Cross-world/data center features
+  * Things like Data Center Travel, Cross-World linkshells and such make no sense to implement apart what's useful for parsing captures.
