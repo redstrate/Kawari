@@ -1,3 +1,8 @@
+-- Apartment Building Entrance, in front of the apartments of every housing ward
+
+-- TODO: Change param 0 in OnYield's resume_event as necessary once we support apartments.
+
+-- Scenes
 SCENE_SHOW_MENU = 00000 -- Shows the main menu, which offers to display the list of apartments, or to enter the lobby.
 
 function onTalk(target, player)
@@ -20,7 +25,6 @@ end
 
 function onYield(scene, yield_id, results, player)
     if results[1] == 1 then
-        -- TODO: Change param 0 as necessary once we support apartments.
         -- Param 0 to this scene indicates how many apartments are in this building, so the client knows which tabs to make available. We'll set it to 90 here as a sane default.
         -- Param 1 seems to always be 1
         player:resume_event(SCENE_SHOW_MENU, yield_id, {90, 1})

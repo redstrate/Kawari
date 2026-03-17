@@ -1,3 +1,5 @@
+-- Aethernet Shard, for housing wards, not the generic ones in cities
+
 SCENE_SHOW_MENU = 00000 -- Displays the housing aethernet menu
 
 function onTalk(target, player)
