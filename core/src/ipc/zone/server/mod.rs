@@ -133,6 +133,9 @@ pub use map_effects::MapEffects;
 mod marketboard;
 pub use marketboard::MarketBoardItem;
 
+mod linkshell;
+pub use linkshell::LinkshellEntry;
+
 use crate::common::{
     CHAR_NAME_MAX_LENGTH, ContainerType, ItemOperationKind, ObjectId, read_string, write_string,
 };
@@ -456,8 +459,9 @@ pub enum ServerZoneIpcData {
         unk1: [u8; 8],
     },
     Linkshells {
-        // TODO: fill this out, each entry appears to be 56 bytes long.
-        unk: [u8; 448],
+        #[br(count = LinkshellEntry::COUNT)]
+        #[bw(pad_size_to = LinkshellEntry::SIZE * LinkshellEntry::COUNT)]
+        shells: Vec<LinkshellEntry>,
     },
     ChatMessage(ChatMessage),
     LocationDiscovered {

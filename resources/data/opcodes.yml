@@ -285,7 +285,7 @@ ServerZoneIpcType:
     size: 8
   - name: Linkshells
     comment: Sent to inform the client about server-local Linkshells, not to be confused with cross-world ones.
-    opcode: 621
+    opcode: 673
     size: 448
   - name: ChatMessage
     comment: Sent to nearby clients when a client sends a chat message in the say, yell, or shout channels.
