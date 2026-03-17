@@ -305,6 +305,19 @@ pub enum ClientZoneIpcData {
         #[brw(pad_after = 4)] // empty
         response: InviteReply,
     },
+    InviteReply2 {
+        sender_content_id: u64, // The inviter's content_id
+        sender_world_id: u16,   // The current world id
+        unk1: u8,
+        invite_type: InviteType,
+        response: InviteReply,
+        #[brw(pad_after = 3)]
+        #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+        #[br(count = CHAR_NAME_MAX_LENGTH)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        character_name: String,
+    },
     RequestSearchInfo {
         content_id: u64,
         unk: [u8; 16], // unsure if this is always empty

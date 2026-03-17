@@ -744,6 +744,10 @@ ClientZoneIpcType:
     comment: Happens when the client responds to another player's party invitation.
     opcode: 655
     size: 16
+  - name: InviteReply2
+    comment: Happens when the client responds to another player's friend invitation.
+    opcode: 662
+    size: 48
   - name: PartyMemberKick
     comment: Sent by the client to remove another player from their party.
     opcode: 587

@@ -715,7 +715,6 @@ impl WorldDatabase {
             .unwrap();
 
         use schema::character::dsl::*;
-        //use schema::classjob::dsl::*;
 
         for id in online_content_ids {
             // Don't add ourselves to these results.
@@ -758,23 +757,43 @@ impl WorldDatabase {
     fn get_friend_content_ids(&mut self, for_content_id: i64) -> Vec<i64> {
         use schema::friends::dsl::*;
         friends
-            .filter(schema::friends::dsl::content_id.eq(for_content_id))
-            .select(schema::friends::dsl::friend_content_id)
+            .filter(content_id.eq(for_content_id))
+            .select(friend_content_id)
             .load(&mut self.connection)
             .unwrap_or_default()
+    }
+
+    fn friend_request_is_pending(&mut self, for_content_id: i64) -> bool {
+        use schema::friends::dsl::*;
+        friends
+            .filter(friend_content_id.eq(for_content_id))
+            .select(is_pending)
+            .first::<bool>(&mut self.connection)
+            .unwrap_or_default()
+    }
+
+    pub fn accept_friend(&mut self, for_content_id: i64, for_friend_content_id: i64) {
+        use schema::friends::dsl::*;
+
+        diesel::update(friends)
+            .filter(content_id.eq(for_content_id))
+            .filter(friend_content_id.eq(for_friend_content_id))
+            .set(is_pending.eq(false))
+            .execute(&mut self.connection)
+            .unwrap();
     }
 
     pub fn find_friend_list(&mut self, for_content_id: i64) -> Vec<PlayerEntry> {
         let mut friend_entries = Vec::<PlayerEntry>::new();
 
         use schema::character::dsl::*;
-        //use schema::friends::dsl::*;
         use schema::volatile::dsl::*;
 
         let friend_content_ids = self.get_friend_content_ids(for_content_id);
 
         // If they have no friends, just return an empty list that the zone connection can reuse.
-        if !friend_content_ids.is_empty() {
+        if friend_content_ids.is_empty() {
+            tracing::warn!("no friend content ids?!");
             return vec![PlayerEntry::default(); 10];
         }
 
@@ -815,6 +834,22 @@ impl WorldDatabase {
                     .first::<String>(&mut self.connection)
                     .unwrap(),
                 online_status_mask: osm,
+                unk2: [
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    if self.friend_request_is_pending(id) {
+                        48
+                    } else {
+                        0
+                    }, // TODO: this is a bitfield in CS we should support
+                    0,
+                ],
                 ..Default::default()
             });
         }
@@ -858,43 +893,6 @@ impl WorldDatabase {
         )
         .execute(&mut self.connection)
         .unwrap();
-    }
-
-    pub fn get_pending_friend_invites(
-        &mut self,
-        my_content_id: i64,
-    ) -> Option<Vec<(i64, i64, String)>> {
-        use schema::friends::dsl::*;
-        let pending_friends: Vec<i64> = friends
-            .filter(schema::friends::dsl::content_id.eq(my_content_id))
-            .filter(is_pending.eq(true))
-            .select(schema::friends::dsl::friend_content_id)
-            .load(&mut self.connection)
-            .unwrap_or_default();
-
-        if !pending_friends.is_empty() {
-            use schema::character::dsl::*;
-            let mut data = Vec::new();
-            for friend in pending_friends {
-                let friend_name = character
-                    .filter(schema::character::dsl::content_id.eq(friend))
-                    .select(schema::character::dsl::name)
-                    .first::<String>(&mut self.connection)
-                    .unwrap();
-                let account_id = character
-                    .filter(schema::character::dsl::content_id.eq(friend))
-                    .select(schema::character::dsl::service_account_id)
-                    .first::<i64>(&mut self.connection)
-                    .unwrap();
-
-                data.push((friend, account_id, friend_name));
-            }
-            if !data.is_empty() {
-                return Some(data);
-            }
-        }
-
-        None
     }
 
     pub fn do_cleanup_tasks(&mut self) {

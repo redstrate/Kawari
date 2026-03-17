@@ -2184,6 +2184,8 @@ async fn process_packet(
                                         .await;
                                 }
                                 InviteType::FriendList => {
+                                    connection.add_to_friend_list(*content_id);
+
                                     connection
                                         .handle
                                         .send(ToServer::InvitePlayerToFriendList(
@@ -2193,6 +2195,7 @@ async fn process_packet(
                                         ))
                                         .await
                                 }
+                                _ => todo!(),
                             }
 
                             // Inform the client about the invite they just sent.
@@ -2225,6 +2228,35 @@ async fn process_packet(
                                     connection.player_data.character.service_account_id as u64,
                                     connection.player_data.character.content_id as u64,
                                     connection.player_data.character.name.clone(),
+                                    *sender_content_id,
+                                    *invite_type,
+                                    *response,
+                                ))
+                                .await;
+                        }
+                        ClientZoneIpcData::InviteReply2 {
+                            sender_content_id,
+                            sender_world_id,
+                            response,
+                            invite_type,
+                            character_name,
+                            ..
+                        } => {
+                            tracing::info!(
+                                "Client replied to friend invite: {:#?} {:#?} {:#?} {:#?}",
+                                sender_content_id,
+                                sender_world_id,
+                                invite_type,
+                                response
+                            );
+                            // TODO: all of these are sort of wrong?
+                            connection
+                                .handle
+                                .send(ToServer::InvitationResponse(
+                                    connection.id,
+                                    connection.player_data.character.service_account_id as u64,
+                                    connection.player_data.character.content_id as u64,
+                                    character_name.clone(),
                                     *sender_content_id,
                                     *invite_type,
                                     *response,

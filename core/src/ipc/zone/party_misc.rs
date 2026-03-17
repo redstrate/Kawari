@@ -35,6 +35,8 @@ pub enum InviteType {
     #[default]
     Party = 1,
     FriendList = 2,
+    /// For some reason this is different for handling invitations.
+    PendingFriendList = 12,
     // TODO: This probably also includes linkshells/cwls, free companies, and maybe novice network, but more captures are needed
 }
 

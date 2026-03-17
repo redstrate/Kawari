@@ -82,9 +82,14 @@ impl ZoneConnection {
                         ))
                         .await;
                 }
-                InviteType::FriendList => {
-                    self.add_to_friend_list(from_content_id).await;
-                } // _ => todo!(), // Linkshells, FCs, and everything else?
+                InviteType::PendingFriendList => {
+                    let mut database = self.database.lock();
+                    database.accept_friend(
+                        self.player_data.character.content_id,
+                        from_content_id as i64,
+                    );
+                }
+                _ => todo!(), // Linkshells, FCs, and everything else?
             }
         }
 
@@ -559,14 +564,14 @@ impl ZoneConnection {
 
     pub async fn refresh_friend_list(&mut self) {
         // This should always be the case when a pending friend list request has begun.
-        if !self.friend_results.is_empty() {
-            let mut db = self.database.lock();
-            self.friend_results = db.find_friend_list(self.player_data.character.content_id);
-            self.friend_index = 0;
-        }
+        // if !self.friend_results.is_empty() {
+        let mut db = self.database.lock();
+        self.friend_results = db.find_friend_list(self.player_data.character.content_id);
+        self.friend_index = 0;
+        //}
     }
 
-    pub async fn add_to_friend_list(&mut self, friend_content_id: u64) {
+    pub fn add_to_friend_list(&mut self, friend_content_id: u64) {
         let mut db = self.database.lock();
         db.add_to_friend_list(
             friend_content_id as i64,
@@ -592,24 +597,6 @@ impl ZoneConnection {
         });
         self.send_ipc_self(ipc).await;
 
-        //let mut database = self.database.lock();
-        //database.add_to_friend_list(sender_content_id as i64, self.player_data.character.content_id as i64);
-    }
-
-    pub async fn remind_pending_invites(&mut self) {
-        let pending;
-        {
-            let mut db = self.database.lock();
-            pending = db
-                .get_pending_friend_invites(self.player_data.character.content_id)
-                .clone();
-        }
-
-        if let Some(pending) = pending {
-            for friend in pending {
-                self.received_friend_invite(friend.1 as u64, friend.0 as u64, friend.2)
-                    .await;
-            }
-        }
+        self.add_to_friend_list(sender_content_id);
     }
 }
