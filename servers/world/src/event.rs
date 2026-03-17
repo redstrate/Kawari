@@ -186,6 +186,7 @@ pub fn dispatch_event(
         HandlerType::EventGimmickPathMove => {
             generic_lua_event("events/generic/GimmickPathMove.lua")
         }
+        HandlerType::HousingAethernet => generic_lua_event("events/generic/HousingAethernet.lua"),
         // TODO: do we need Generic here?
         HandlerType::InstanceContent => generic_lua_event("content/Generic.lua"),
         _ => None,

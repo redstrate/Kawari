@@ -24,6 +24,7 @@ use icarus::GatheringPointBase::GatheringPointBaseSheet;
 use icarus::GilShopItem::GilShopItemSheet;
 use icarus::GimmickRect::GimmickRectSheet;
 use icarus::HalloweenNpcSelect::HalloweenNpcSelectSheet;
+use icarus::HousingAethernet::HousingAethernetSheet;
 use icarus::InstanceContent::InstanceContentSheet;
 use icarus::Item::ItemSheet;
 use icarus::ItemAction::ItemActionSheet;
@@ -392,16 +393,35 @@ impl GameData {
             .unwrap_or_default()
     }
 
-    pub fn get_aetheryte(&mut self, aetheryte_id: u32) -> Option<(u32, u16)> {
+    pub fn get_aetheryte(
+        &mut self,
+        aetheryte_id: u32,
+        housing_aethernet: bool,
+    ) -> Option<(u32, u16)> {
         let config = get_config();
-        let sheet = AetheryteSheet::read_from(&mut self.resource, config.world.language()).ok()?;
-        let row = sheet.row(aetheryte_id)?;
 
-        // TODO: just look in the level sheet?
-        let pop_range_id = row.Level()[0].into_u32()?;
-        let zone_id = row.Territory().into_u16()?;
+        if !housing_aethernet {
+            let sheet =
+                AetheryteSheet::read_from(&mut self.resource, config.world.language()).ok()?;
+            let row = sheet.row(aetheryte_id)?;
 
-        Some((*pop_range_id, *zone_id))
+            // TODO: just look in the level sheet?
+            let pop_range_id = row.Level()[0].into_u32()?;
+            let zone_id = row.Territory().into_u16()?;
+
+            Some((*pop_range_id, *zone_id))
+        } else {
+            let sheet =
+                HousingAethernetSheet::read_from(&mut self.resource, Language::None).ok()?;
+            let row = sheet.row(aetheryte_id)?;
+
+            // TODO: just look in the level sheet?
+            // Note that the HousingAethernet sheet's Level column isn't an array.
+            let pop_range_id = row.Level().into_u32()?;
+            let zone_id = row.TerritoryType().into_u16()?;
+
+            Some((*pop_range_id, *zone_id))
+        }
     }
 
     /// Checks if it's a big Aetheryte (true) or just a shard (false.)
