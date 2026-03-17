@@ -152,6 +152,20 @@ impl From<[u8; 8]> for OnlineStatusMask {
     }
 }
 
+impl From<OnlineStatusMask> for i64 {
+    fn from(flags: OnlineStatusMask) -> i64 {
+        i64::from_le_bytes(flags.flags)
+    }
+}
+
+impl From<i64> for OnlineStatusMask {
+    fn from(f: i64) -> Self {
+        Self {
+            flags: i64::to_le_bytes(f),
+        }
+    }
+}
+
 impl OnlineStatusMask {
     pub fn from_online_status(status: OnlineStatus) -> Self {
         let mut mask = Self::default();
@@ -220,6 +234,17 @@ mod tests {
         let mask: [u8; 8] = [0, 0, 0, 0, 0, 128, 0, 0];
         assert_eq!(
             OnlineStatusMask::from(mask).mask(),
+            vec![OnlineStatus::Online]
+        );
+    }
+
+    #[test]
+    fn read_onlinestatus_from_i64() {
+        let bytes: [u8; 8] = [0, 0, 0, 0, 0, 128, 0, 0];
+        let test = i64::from_le_bytes(bytes);
+
+        assert_eq!(
+            OnlineStatusMask::from(test).mask(),
             vec![OnlineStatus::Online]
         );
     }

@@ -64,6 +64,7 @@ diesel::table! {
         display_flags -> Integer,
         title -> Integer,
         is_online -> Bool,
+        online_status_mask -> BigInt,
     }
 }
 
@@ -166,6 +167,18 @@ diesel::table! {
 
 diesel::joinable!(search_info -> character (content_id));
 
+diesel::table! {
+    friends (content_id) {
+        content_id -> BigInt,
+        friend_content_id -> BigInt,
+        group_icon -> Integer,
+        invite_time -> Text,
+        is_pending -> Bool,
+    }
+}
+
+diesel::joinable!(friends -> character (content_id));
+
 diesel::allow_tables_to_appear_in_same_query!(
     character,
     classjob,
@@ -178,5 +191,5 @@ diesel::allow_tables_to_appear_in_same_query!(
     companion,
     content,
     unlock,
-    mentor
+    mentor,
 );

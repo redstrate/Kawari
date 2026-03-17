@@ -196,6 +196,8 @@ pub enum FromServer {
     ActorDismounted(ObjectId),
     /// Inform the client of the whereabouts of their party members.
     PartyMemberPositionsUpdate(PartyMemberPositions),
+    /// Inform the client that they've received a friend request.
+    FriendInvite(u64, u64, String),
 }
 
 #[derive(Debug, Clone)]
@@ -367,6 +369,8 @@ pub enum ToServer {
     SetCharacterMode(ObjectId, CharacterMode, u8),
     /// Broadcasts an actor control to other players.
     BroadcastActorControl(ObjectId, ActorControlCategory),
+    /// The client invited another player to be friends.
+    InvitePlayerToFriendList(ObjectId, u64, String),
 }
 
 #[derive(Clone, Debug)]

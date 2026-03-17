@@ -387,6 +387,61 @@ pub fn handle_social_messages(
     msg: &ToServer,
 ) -> bool {
     match msg {
+        ToServer::InvitePlayerToFriendList(from_actor_id, content_id, character_name) => {
+            // TODO: Return an error when the target player's already in a party or offline somehow
+            let mut network = network.lock();
+            let data = data.lock();
+
+            // First pull up some info about the sender, as invite packets require it
+            let Some(sender_instance) = data.find_actor_instance(*from_actor_id) else {
+                tracing::error!(
+                    "ToServer::InvitePlayerToParty: Unable to find the sender! What happened?"
+                );
+                return true;
+            };
+
+            let mut sender_name = "".to_string();
+            let mut sender_account_id = 0;
+            let mut sender_content_id = 0;
+
+            for (id, actor) in &sender_instance.actors {
+                if id == from_actor_id {
+                    let Some(spawn) = actor.get_player_spawn() else {
+                        panic!("Why are we trying to get the PlayerSpawn of an NPC?");
+                    };
+
+                    sender_name = spawn.common.name.clone();
+                    sender_account_id = spawn.account_id;
+                    sender_content_id = spawn.content_id;
+                    break;
+                }
+            }
+
+            // If the sender wasn't found in the instance we already found them to be in, reality has apparently broken
+            assert!(sender_content_id != 0);
+
+            let mut recipient_actor_id = ObjectId::default();
+
+            // Second, look up the recipient by name, since that and their content id are all we're given by the sending client.
+            // Since we don't implement multiple worlds, the world id isn't useful for anything here.
+            'outer: for instance in &data.instances {
+                for (id, actor) in &instance.actors {
+                    if let NetworkedActor::Player { spawn, .. } = actor
+                        && (spawn.content_id == *content_id || spawn.common.name == *character_name)
+                    {
+                        recipient_actor_id = *id;
+                        break 'outer;
+                    }
+                }
+            }
+
+            assert!(recipient_actor_id != ObjectId::default());
+
+            let msg = FromServer::FriendInvite(sender_account_id, sender_content_id, sender_name);
+            network.send_to_by_actor_id(recipient_actor_id, msg, DestinationNetwork::ZoneClients);
+
+            true
+        }
         ToServer::InvitePlayerToParty(from_actor_id, content_id, character_name) => {
             // TODO: Return an error when the target player's already in a party or offline somehow
             let mut network = network.lock();
@@ -643,7 +698,8 @@ pub fn handle_social_messages(
                 }
             }
 
-            let msg = FromServer::SocialListResponse(request.request_type, request.count, entries);
+            let msg =
+                FromServer::SocialListResponse(request.request_type, request.sequence, entries);
             network.send_to(*from_id, msg, DestinationNetwork::ZoneClients);
 
             true

@@ -282,6 +282,12 @@ impl ZoneConnection {
             });
         }
         self.send_ipc_self(ipc).await;
+
+        // Commit back our classjob data after changing. Done here so it gets picked up by any paths that change classjob.
+        {
+            let mut db = self.database.lock();
+            db.commit_classjob(&self.player_data);
+        }
     }
 
     fn calculate_stat_across_all_items(

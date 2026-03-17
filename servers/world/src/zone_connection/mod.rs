@@ -10,8 +10,8 @@ use tokio::net::TcpStream;
 use crate::{
     Content, GameData, Recipe, Unlock,
     database::{
-        AetherCurrent, Aetheryte, Character, ClassJob, Companion, Mentor, Quest, SearchInfo,
-        Volatile,
+        AetherCurrent, Aetheryte, Character, ClassJob, Companion, Friends, Mentor, Quest,
+        SearchInfo, Volatile,
     },
     lua::{KawariLua, LuaTask},
 };
@@ -20,7 +20,7 @@ use kawari::{
     config::WorldConfig,
     ipc::zone::{
         ClientTriggerCommand, ClientZoneIpcSegment, Condition, Conditions,
-        ContentRegistrationFlags, ServerZoneIpcData, ServerZoneIpcSegment,
+        ContentRegistrationFlags, PlayerEntry, ServerZoneIpcData, ServerZoneIpcSegment,
     },
     opcodes::ServerZoneIpcType,
     packet::{
@@ -99,6 +99,7 @@ pub struct PlayerData {
     pub companion: Companion,
     pub quest: Quest,
     pub saw_inn_wakeup: bool,
+    pub friends: Friends,
 }
 
 /// Various obsfucation-related bits like the seeds and keys for this connection.
@@ -165,6 +166,14 @@ pub struct ZoneConnection {
     pub event_handler_id: Option<HandlerId>,
     pub recipe: Option<Recipe>,
     pub synced_level: Option<u8>,
+    /// Player Search results.
+    pub search_results: Vec<PlayerEntry>,
+    /// The Player Search's current sequence value. Increases by 10 every time the client requests more results.
+    pub search_index: usize,
+    /// Friend list results.
+    pub friend_results: Vec<PlayerEntry>,
+    /// The friend list's current sequence value. Increases by 10 every time the client requests more results.
+    pub friend_index: usize,
 }
 
 impl ZoneConnection {
@@ -240,6 +249,7 @@ impl ZoneConnection {
     pub async fn begin_log_out(&mut self) {
         // Mark the player as offline in the db.
         self.player_data.volatile.is_online = false;
+        self.player_data.volatile.online_status_mask = 0;
 
         // If we were last in an instance, tell the server we're outside of it so we don't get stuck/crash.
         if self.conditions.has_condition(Condition::BoundByDuty) {
