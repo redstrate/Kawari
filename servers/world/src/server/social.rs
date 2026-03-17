@@ -6,13 +6,17 @@ use parking_lot::Mutex;
 use crate::{
     ClientId, FromServer, ToServer,
     common::PartyUpdateTargets,
-    server::{DestinationNetwork, WorldServer, actor::NetworkedActor, network::NetworkState},
+    server::{
+        DestinationNetwork, WorldServer, actor::NetworkedActor, network::NetworkState,
+        set_character_mode,
+    },
 };
 use kawari::{
-    common::{ObjectId, ObjectTypeId, Position},
+    common::{CharacterMode, ObjectId, ObjectTypeId, Position},
     ipc::zone::{
-        OnlineStatus, OnlineStatusMask, PartyMemberEntry, PartyMemberPositions, PartyUpdateStatus,
-        PlayerEntry, SocialListRequestType, SocialListUIFlags, WaymarkPlacementMode,
+        ActorControlCategory, OnlineStatus, OnlineStatusMask, PartyMemberEntry,
+        PartyMemberPositions, PartyUpdateStatus, PlayerEntry, ServerZoneIpcData,
+        ServerZoneIpcSegment, SocialListRequestType, SocialListUIFlags, WaymarkPlacementMode,
         WaymarkPosition, WaymarkPositions, WaymarkPreset,
     },
 };
@@ -1361,7 +1365,6 @@ pub fn handle_social_messages(
             target_seat_index,
         ) => {
             let mut network = network.lock();
-            let data = data.lock();
 
             let Some(party_id) = party_id else {
                 return true;
@@ -1379,29 +1382,78 @@ pub fn handle_social_messages(
                 }
             }
 
-            let Some(instance) = data.find_actor_instance(*from_actor_id) else {
+            let mut data = data.lock();
+            let Some(instance) = data.find_actor_instance_mut(*from_actor_id) else {
                 return true;
             };
 
-            // For now, it should be safe to assume the driver is in the same instance if the sending client is requesting to ride pillion.
-            let Some(driver_actor) = instance.find_actor(*target_actor_id) else {
-                return true;
-            };
+            let mount_id;
+            {
+                // For now, it should be safe to assume the driver is in the same instance if the sending client is requesting to ride pillion.
+                let Some(driver_actor) = instance.find_actor(*target_actor_id) else {
+                    return true;
+                };
 
-            let common = driver_actor.get_common_spawn();
+                let common = driver_actor.get_common_spawn();
+                mount_id = common.current_mount;
+            }
 
             // TODO: Logic to move the player to an unoccupied seat when the desired seat is taken
-            let msg = FromServer::ActorRidesPillion(
+
+            // Begin riding pillion
+            network.send_ac_in_range_inclusive_instance(
+                instance,
                 *from_actor_id,
-                *target_actor_id,
-                common.current_mount,
-                *target_seat_index,
+                ActorControlCategory::RidePillion {
+                    target_actor_id: *target_actor_id,
+                    target_seat_index: *target_seat_index,
+                },
+            );
+            // Also hide the weapon
+            network.send_ac_in_range_inclusive_instance(
+                instance,
+                *from_actor_id,
+                ActorControlCategory::ToggleWeapon {
+                    shown: false,
+                    unk_flag: 1,
+                },
             );
 
-            network.send_in_range_inclusive_instance(
-                *from_actor_id,
+            // Inform the driver that someone new is riding
+            network.send_to_by_actor_id(
+                *target_actor_id,
+                FromServer::ActorControlSelf(ActorControlCategory::PillionDriverRelatedUnk {
+                    target_seat_index: *target_seat_index,
+                    from_actor_id: *from_actor_id,
+                }),
+                DestinationNetwork::ZoneClients,
+            );
+
+            set_character_mode(
                 instance,
-                msg,
+                &mut network,
+                *from_actor_id,
+                CharacterMode::RidingPillion,
+                1 + *target_seat_index as u8,
+            );
+
+            // Inform the passenger that they are riding
+            network.send_to_by_actor_id(
+                *from_actor_id,
+                FromServer::ActorControlSelf(ActorControlCategory::PillionPassengerRelatedUnk {
+                    unk: 12,
+                }),
+                DestinationNetwork::ZoneClients,
+            );
+
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Mount {
+                id: mount_id,
+                unk1: [0; 14],
+            });
+            network.send_in_range_inclusive_instance(
+                *target_actor_id,
+                instance,
+                FromServer::PacketSegment(ipc, *from_actor_id),
                 DestinationNetwork::ZoneClients,
             );
 

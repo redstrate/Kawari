@@ -196,8 +196,6 @@ pub enum FromServer {
     ActorDismounted(ObjectId),
     /// Inform the client of the whereabouts of their party members.
     PartyMemberPositionsUpdate(PartyMemberPositions),
-    /// Inform the client that a player is now riding pillion with another player.
-    ActorRidesPillion(ObjectId, ObjectId, u16, u32),
 }
 
 #[derive(Debug, Clone)]

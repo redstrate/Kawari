@@ -14,6 +14,7 @@ use crate::{
         effect::gain_effect,
         instance::{Instance, QueuedTaskData},
         network::{DestinationNetwork, NetworkState},
+        set_character_mode,
     },
     zone_connection::BaseParameters,
 };
@@ -642,14 +643,13 @@ pub fn kill_actor(
     let mut network = network.lock();
 
     // First, set their state (otherwise they can still walk)
-    {
-        let ac = ActorControlCategory::SetMode {
-            mode: CharacterMode::Dead,
-            mode_arg: 0,
-        };
-
-        network.send_ac_in_range_inclusive_instance(instance, from_actor_id, ac);
-    }
+    set_character_mode(
+        instance,
+        &mut network,
+        from_actor_id,
+        CharacterMode::Dead,
+        0,
+    );
 
     // Then, play the death animation.
     {

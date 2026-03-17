@@ -2649,40 +2649,6 @@ async fn process_server_msg(
                 let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PartyMemberPositions(positions));
                 connection.send_ipc_self(ipc).await;
             }
-            FromServer::ActorRidesPillion(from_actor_id, target_actor_id, mount_id, target_seat_index) => {
-                // TODO: Move all this to its own function in the zone connection?
-                connection.actor_control(from_actor_id, ActorControlCategory::RidePillion { target_actor_id, target_seat_index }).await;
-                connection.actor_control(from_actor_id, ActorControlCategory::ToggleWeapon { shown: false, unk_flag: 1 }).await;
-
-                // Prepare the mount animation, but it has to be conditionally sent.
-                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Mount {
-                        id: mount_id,
-                        unk1: [0; 14],
-                });
-
-                if from_actor_id == connection.player_data.character.actor_id {
-                    // If we're the passenger, set the seat the player will be in.
-                    connection.set_character_mode(CharacterMode::RidingPillion, 1 + target_seat_index as u8).await;
-
-                    connection.actor_control_self(ActorControlCategory::PillionPassengerRelatedUnk { unk: 12 }).await;
-                    connection.send_ipc_self(ipc).await;
-
-                    // Not strictly necessary it seems, but retail does it.
-                    connection.conditions = Conditions::default();
-                    connection.send_conditions().await;
-                } else if target_actor_id == connection.player_data.character.actor_id {
-                    // If we're the driver
-                    connection.actor_control_self(ActorControlCategory::PillionDriverRelatedUnk { target_seat_index, from_actor_id }).await;
-
-                    // NOTE: This should be handled by set_character_mode *however* the order of operations here is currently way too limiting to wait for the server to respond to us.
-                    connection.actor_control(from_actor_id, ActorControlCategory::SetMode { mode: CharacterMode::RidingPillion, mode_arg: 1 + target_seat_index}).await;
-
-                    connection.send_ipc_from(from_actor_id, ipc).await;
-                } else {
-                    // We're an observer of others
-                    connection.send_ipc_from(from_actor_id, ipc).await;
-                }
-            }
             _ => { tracing::error!("Zone connection {:#?} received a FromServer message we don't care about: {:#?}, ensure you're using the right client network or that you've implemented a handler for it if we actually care about it!", client_handle.id, msg); }
         }
     }

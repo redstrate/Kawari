@@ -32,9 +32,10 @@ use crate::{
 };
 use kawari::{
     common::{
-        DEAD_DESPAWN_TIME, ENEMY_AUTO_ATTACK_RATE, HandlerId, HandlerType, InvisibilityFlags,
-        JumpState, MAX_SPAWNED_ACTORS, MAX_SPAWNED_OBJECTS, MoveAnimationState, MoveAnimationType,
-        ObjectId, ObjectTypeId, ObjectTypeKind, Position, TerritoryIntendedUse, TimepointData,
+        CharacterMode, DEAD_DESPAWN_TIME, ENEMY_AUTO_ATTACK_RATE, HandlerId, HandlerType,
+        InvisibilityFlags, JumpState, MAX_SPAWNED_ACTORS, MAX_SPAWNED_OBJECTS, MoveAnimationState,
+        MoveAnimationType, ObjectId, ObjectTypeId, ObjectTypeKind, Position, TerritoryIntendedUse,
+        TimepointData,
     },
     config::{FilesystemConfig, get_config},
     ipc::zone::{
@@ -222,6 +223,39 @@ fn set_player_minion(
         data,
         from_actor_id,
         ActorControlCategory::MinionSpawnControl { minion_id },
+    );
+}
+
+fn set_character_mode(
+    instance: &mut Instance,
+    network: &mut NetworkState,
+    from_actor_id: ObjectId,
+    mode: CharacterMode,
+    mode_arg: u8,
+) {
+    // Update internal data model for new spawns
+    {
+        let Some(actor) = instance.find_actor_mut(from_actor_id) else {
+            return;
+        };
+
+        // Skip if this mode is already set.
+        if actor.get_common_spawn().mode == mode && actor.get_common_spawn().mode_arg == mode_arg {
+            return;
+        }
+
+        actor.get_common_spawn_mut().mode = mode;
+        actor.get_common_spawn_mut().mode_arg = mode_arg;
+    }
+
+    // Inform actors
+    network.send_ac_in_range_inclusive_instance(
+        instance,
+        from_actor_id,
+        ActorControlCategory::SetMode {
+            mode,
+            mode_arg: mode_arg as u32,
+        },
     );
 }
 
@@ -2417,41 +2451,15 @@ pub async fn server_main_loop(
                     );
                 }
                 ToServer::SetCharacterMode(from_actor_id, mode, arg) => {
-                    // Update internal data model for new spawns
-                    {
-                        let mut data = data.lock();
-                        let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
-                            continue;
-                        };
+                    // ACS is sent by the ZoneConnection
+                    let mut data = data.lock();
+                    let mut network = network.lock();
 
-                        let Some(actor) = instance.find_actor_mut(from_actor_id) else {
-                            continue;
-                        };
+                    let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
+                        continue;
+                    };
 
-                        // Skip if this mode is already set.
-                        if actor.get_common_spawn().mode == mode
-                            && actor.get_common_spawn().mode_arg == arg
-                        {
-                            continue;
-                        }
-
-                        actor.get_common_spawn_mut().mode = mode;
-                        actor.get_common_spawn_mut().mode_arg = arg;
-                    }
-
-                    // Inform actors
-                    {
-                        let mut network = network.lock();
-                        let data = data.lock();
-                        network.send_ac_in_range(
-                            &data,
-                            from_actor_id,
-                            ActorControlCategory::SetMode {
-                                mode,
-                                mode_arg: arg as u32,
-                            },
-                        );
-                    }
+                    set_character_mode(instance, &mut network, from_actor_id, mode, arg);
                 }
                 ToServer::BroadcastActorControl(from_actor_id, actor_control) => {
                     let mut network = network.lock();
