@@ -32,7 +32,7 @@ impl EventHandler for CraftingEventHandler {
     ) {
         if results[0] == 0 {
             connection
-                .actor_control_self(ActorControlCategory::LiveEvent {
+                .broadcast_actor_control(ActorControlCategory::LiveEvent {
                     event: LiveEventType::StartCraft {
                         unk1: 0,
                         unk2: 0,
@@ -59,7 +59,7 @@ impl EventHandler for CraftingEventHandler {
 
             // Play the basic touch animation and VFX:
             connection
-                .actor_control_self(ActorControlCategory::LiveEvent {
+                .broadcast_actor_control(ActorControlCategory::LiveEvent {
                     event: LiveEventType::PlayAnimation {
                         animation_start: animation_start as u32,
                         animation_end: animation_end as u32,
@@ -104,7 +104,7 @@ impl EventHandler for CraftingEventHandler {
                 .await;
 
             connection
-                .actor_control_self(ActorControlCategory::LiveEvent {
+                .broadcast_actor_control(ActorControlCategory::LiveEvent {
                     event: LiveEventType::EndCraft {},
                 })
                 .await;

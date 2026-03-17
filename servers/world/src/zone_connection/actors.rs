@@ -125,6 +125,22 @@ impl ZoneConnection {
         self.send_ipc_self(ipc).await;
     }
 
+    /// Broadcasts an actor control to everyone around you, including yourself. Useful for stuff like crafting.
+    pub async fn broadcast_actor_control(&mut self, category: ActorControlCategory) {
+        let ipc =
+            ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
+                category: category.clone(),
+            }));
+        self.send_ipc_self(ipc).await;
+
+        self.handle
+            .send(ToServer::BroadcastActorControl(
+                self.player_data.character.actor_id,
+                category,
+            ))
+            .await;
+    }
+
     pub async fn actor_control(&mut self, actor_id: ObjectId, category: ActorControlCategory) {
         let ipc =
             ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControl(ActorControl { category }));

@@ -367,6 +367,8 @@ pub enum ToServer {
     RidePillionRequest(ObjectId, Option<u64>, ObjectId, u32),
     /// Inform the server of this actor's new CharacterMode.
     SetCharacterMode(ObjectId, CharacterMode, u8),
+    /// Broadcasts an actor control to other players.
+    BroadcastActorControl(ObjectId, ActorControlCategory),
 }
 
 #[derive(Clone, Debug)]

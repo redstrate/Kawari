@@ -2453,6 +2453,11 @@ pub async fn server_main_loop(
                         );
                     }
                 }
+                ToServer::BroadcastActorControl(from_actor_id, actor_control) => {
+                    let mut network = network.lock();
+                    let data = data.lock();
+                    network.send_ac_in_range(&data, from_actor_id, actor_control);
+                }
                 ToServer::FatalError(err) => return Err(err),
                 _ => {}
             }
