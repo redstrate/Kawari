@@ -14,6 +14,7 @@ pub enum SocialListRequestType {
     #[default]
     Party = 0x1,
     Friends = 0x2,
+    Linkshell = 0x3,
     SearchResults = 0x4,
     FreeCompanyOnline = 0x5,
     FreeCompanyOffline = 0x6,
