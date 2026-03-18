@@ -1,11 +1,10 @@
 use crate::{
     common::{read_string, value_to_flag_byte_index_value, write_string},
+    constants::AVAILABLE_CLASSJOBS,
     ipc::zone::{GrandCompany, OnlineStatusMask, SocialListUILanguages},
 };
 use binrw::binrw;
 use bitflags::bitflags;
-use strum::IntoEnumIterator;
-use strum_macros::{EnumIter, FromRepr};
 
 #[binrw]
 #[brw(little)]
@@ -70,56 +69,6 @@ impl From<&GrandCompany> for SearchUIGrandCompanies {
     }
 }
 
-// These are intentionally classjob_id - 1 since they're used as bitflags.
-#[binrw]
-#[brw(repr = u8)]
-#[derive(Clone, Copy, Debug, Default, EnumIter, Eq, FromRepr, Hash, PartialEq)]
-pub enum SearchUIClassJob {
-    #[default]
-    Gladiator = 0,
-    Pugilist = 1,
-    Marauder = 2,
-    Lancer = 3,
-    Archer = 4,
-    Conjurer = 5,
-    Thaumaturge = 6,
-    Carpenter = 7,
-    Blacksmith = 8,
-    Armorer = 9,
-    Goldsmith = 10,
-    Leatherworker = 11,
-    Weaver = 12,
-    Alchemist = 13,
-    Culinarian = 14,
-    Miner = 15,
-    Botanist = 16,
-    Fisher = 17,
-    Paladin = 18,
-    Monk = 19,
-    Warrior = 20,
-    Dragoon = 21,
-    Bard = 22,
-    WhiteMage = 23,
-    BlackMage = 24,
-    Arcanist = 25,
-    Summoner = 26,
-    Scholar = 27,
-    Rogue = 28,
-    Ninja = 29,
-    Machinist = 30,
-    DarkKnight = 31,
-    Astrologian = 32,
-    Samurai = 33,
-    RedMage = 34,
-    BlueMage = 35,
-    Gunbreaker = 36,
-    Dancer = 37,
-    Reaper = 38,
-    Sage = 39,
-    Viper = 40,
-    Pictomancer = 41,
-}
-
 #[binrw]
 #[brw(little)]
 #[derive(Clone, Copy, Default, Hash, PartialEq)]
@@ -134,37 +83,37 @@ impl From<[u8; 8]> for SearchUIClassJobMask {
 }
 
 impl SearchUIClassJobMask {
-    pub fn from_searchui_classjob(classjob: SearchUIClassJob) -> Self {
+    pub fn from_searchui_classjob(classjob: u8) -> Self {
         let mut classjobs = Self::default();
         classjobs.set_classjob(classjob);
 
         classjobs
     }
 
-    pub fn mask(&self) -> Vec<SearchUIClassJob> {
+    pub fn mask(&self) -> Vec<u8> {
         let mut classjobs = Vec::new();
 
-        for classjob in SearchUIClassJob::iter() {
+        for classjob in 0..AVAILABLE_CLASSJOBS {
             let (value, index) = value_to_flag_byte_index_value(classjob as u32);
             if self.flags[index as usize] & value == value {
-                classjobs.push(classjob);
+                classjobs.push(classjob as u8);
             }
         }
 
         classjobs
     }
 
-    pub fn set_classjob(&mut self, classjob: SearchUIClassJob) {
+    pub fn set_classjob(&mut self, classjob: u8) {
         let (value, index) = value_to_flag_byte_index_value(classjob as u32);
         self.flags[index as usize] |= value;
     }
 
-    pub fn remove_classjob(&mut self, classjob: SearchUIClassJob) {
+    pub fn remove_classjob(&mut self, classjob: u8) {
         let (value, index) = value_to_flag_byte_index_value(classjob as u32);
         self.flags[index as usize] ^= value;
     }
 
-    pub fn has_classjob(&self, classjob: SearchUIClassJob) -> bool {
+    pub fn has_classjob(&self, classjob: u8) -> bool {
         let (value, index) = value_to_flag_byte_index_value(classjob as u32);
         self.flags[index as usize] & value == value
     }
@@ -190,19 +139,15 @@ mod tests {
 
     #[test]
     fn read_searchui_classjob_lancer() {
+        // Lancer's classjob is is 3
         let mask: [u8; 8] = [8, 0, 0, 0, 0, 0, 0, 0];
-        assert_eq!(
-            SearchUIClassJobMask::from(mask).mask(),
-            vec![SearchUIClassJob::Lancer]
-        );
+        assert_eq!(SearchUIClassJobMask::from(mask).mask(), vec![3]);
     }
 
     #[test]
     fn read_searchui_classjob_archer() {
+        // Archer's classjob id is 4
         let mask: [u8; 8] = [16, 0, 0, 0, 0, 0, 0, 0];
-        assert_eq!(
-            SearchUIClassJobMask::from(mask).mask(),
-            vec![SearchUIClassJob::Archer]
-        );
+        assert_eq!(SearchUIClassJobMask::from(mask).mask(), vec![4]);
     }
 }

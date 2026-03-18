@@ -7,7 +7,7 @@ use kawari::{
         chat::{ChatChannel, ChatChannelType},
         zone::{
             ActorControlCategory, InviteReply, InviteType, InviteUpdateType, OnlineStatus,
-            OnlineStatusMask, PartyMemberEntry, PartyUpdateStatus, PlayerEntry, SearchUIClassJob,
+            OnlineStatusMask, PartyMemberEntry, PartyUpdateStatus, PlayerEntry,
             SearchUIClassJobMask, SearchUIGrandCompanies, ServerZoneIpcData, ServerZoneIpcSegment,
             SocialList, SocialListRequestType, SocialListUILanguages, StrategyBoard,
             StrategyBoardUpdate, WaymarkPlacementMode, WaymarkPosition, WaymarkPreset,
@@ -536,24 +536,13 @@ impl ZoneConnection {
 
             // Remove this player if they don't meet the classjob search criteria.
             if !search_classjobs.is_empty() {
-                let search_classjobs: HashSet<&SearchUIClassJob> =
-                    HashSet::from_iter(search_classjobs.iter());
+                let search_classjobs: HashSet<&u8> = HashSet::from_iter(search_classjobs.iter());
 
                 // Since this type is likely not used anywhere else, we have to convert the player's classjob_id to something we can work with, unlike OnlineStatusMask.
                 let mut player_classjobs = SearchUIClassJobMask::default();
-                let Some(player_classjob) =
-                    SearchUIClassJob::from_repr((player.classjob_id - 1) as usize)
-                // Minus one because classjob ids don't start at 0, so we need to account for that.
-                else {
-                    tracing::error!(
-                        "This player has an invalid or unknown classjob_id {}, skipping this player.",
-                        player.classjob_id
-                    );
-                    continue;
-                };
 
                 // Once we have their classjob_id as a SearchUIClassJob, set it in the imaginary mask and then make a `HashSet` out of it.
-                player_classjobs.set_classjob(player_classjob);
+                player_classjobs.set_classjob(player.classjob_id - 1); // The id minus 1 because classjob ids start at 1, not 0, so we need to account for this.
                 let player_classjobs = player_classjobs.mask();
                 let player_classjobs = HashSet::from_iter(player_classjobs.iter());
 
