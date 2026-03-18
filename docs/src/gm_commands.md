@@ -9,6 +9,7 @@ These are commands already built-in into the FFXIV client. Normally only availab
 | --- | --- |
 | `//gm aetheryte <on/off> <id/all>` | Unlock an Aetheryte. |
 | `//gm blacklist status` | Unknown purpose, looks like it just prints out your blacklist. |
+| `//gm charadir` | Opens Windows Explorer to your character user directory. |
 | `//gm chr_info <pc/bnpc/enpc/enpc_lively>` | Returns the internal entity IDs for your player character. |
 | `//gm collect <amount>` | Subtracts `amount` gil from the targeted player (yourself only for now). |
 | `//gm dc_region` | Useless, but returns the DC for the World you set in the config. |
