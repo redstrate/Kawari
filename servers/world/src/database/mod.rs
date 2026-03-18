@@ -23,6 +23,7 @@ use crate::{CharaMake, ClassLevels, ClientSelectData, GameData, PartyMembers, Re
 use crate::{PlayerData, inventory::Inventory};
 use kawari::{
     common::ObjectId,
+    constants::AVAILABLE_CLASSJOBS,
     ipc::lobby::{CharacterDetails, CharacterFlag},
     ipc::zone::{OnlineStatusMask, PlayerEntry},
 };
@@ -876,8 +877,7 @@ impl WorldDatabase {
             .first::<ClassLevels>(&mut self.connection)
             .unwrap();
 
-        // TODO: remove hardcoded 42 here please
-        let mut classjob_levels = [(0u16, 0u16); 42];
+        let mut classjob_levels = [(0u16, 0u16); AVAILABLE_CLASSJOBS];
         for (i, (index, level)) in classjob_levels.iter_mut().enumerate() {
             *index = i as u16 + 1;
 

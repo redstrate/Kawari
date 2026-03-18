@@ -96,7 +96,8 @@ use crate::common::{
     write_packed_position,
 };
 use crate::constants::{
-    COMPLETED_LEVEQUEST_BITMASK_SIZE, COMPLETED_QUEST_BITMASK_SIZE, TITLE_UNLOCK_BITMASK_SIZE,
+    AVAILABLE_CLASSJOBS, COMPLETED_LEVEQUEST_BITMASK_SIZE, COMPLETED_QUEST_BITMASK_SIZE,
+    TITLE_UNLOCK_BITMASK_SIZE,
 };
 pub use crate::ipc::zone::server::actor_move::ActorMove;
 
@@ -992,7 +993,7 @@ pub enum ServerZoneIpcData {
         #[bw(map = write_string)]
         comment: String,
         unk2: [u8; 160], // also seems empty
-        classjob_levels: [(u16, u16); 42],
+        classjob_levels: [(u16, u16); AVAILABLE_CLASSJOBS],
     },
 }
 
