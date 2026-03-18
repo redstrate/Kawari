@@ -808,7 +808,6 @@ impl WorldDatabase {
 
         // If they have no friends, just return an empty list that the zone connection can reuse.
         if friend_content_ids.is_empty() {
-            tracing::warn!("no friend content ids?!");
             return vec![PlayerEntry::default(); 10];
         }
 
