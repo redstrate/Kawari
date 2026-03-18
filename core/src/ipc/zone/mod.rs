@@ -12,6 +12,7 @@ pub use common::*;
 mod black_list;
 mod config;
 mod social_list;
+pub use social_list::GrandCompany;
 
 mod online_status;
 pub use online_status::*;

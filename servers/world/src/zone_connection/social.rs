@@ -9,8 +9,8 @@ use kawari::{
             ActorControlCategory, InviteReply, InviteType, InviteUpdateType, OnlineStatus,
             OnlineStatusMask, PartyMemberEntry, PartyUpdateStatus, PlayerEntry,
             SearchUIGrandCompanies, ServerZoneIpcData, ServerZoneIpcSegment, SocialList,
-            SocialListRequest, SocialListRequestType, SocialListUILanguages, StrategyBoard,
-            StrategyBoardUpdate, WaymarkPlacementMode, WaymarkPosition, WaymarkPreset,
+            SocialListRequestType, SocialListUILanguages, StrategyBoard, StrategyBoardUpdate,
+            WaymarkPlacementMode, WaymarkPosition, WaymarkPreset,
         },
     },
 };
@@ -478,14 +478,15 @@ impl ZoneConnection {
     pub async fn search_players(
         &mut self,
         _classjobs: u64,
-        _minimum_level: u16,
-        _maximum_level: u16,
-        _grand_company: SearchUIGrandCompanies,
-        _languages: SocialListUILanguages,
-        _online_status: OnlineStatusMask,
-        _areas: [u16; 50],
-        _name: String,
+        minimum_level: u16,
+        maximum_level: u16,
+        grand_companies: SearchUIGrandCompanies,
+        languages: SocialListUILanguages,
+        online_status: OnlineStatusMask,
+        areas: [u16; 50],
+        name: String,
     ) {
+        // First, grab up to 200 online players.
         {
             let mut db = self.database.lock();
             let mut game_data = self.gamedata.lock();
@@ -494,54 +495,115 @@ impl ZoneConnection {
             self.search_index = 0;
         }
 
+        // The Online Status portion of the client's search, broken into individual OnlineStatuses.
+        let search_onlinestatus_masks = online_status.mask();
+
+        // Reorganize the areas so that none are zeroes. Zero indicates this entry isn't being searched for.
+        let areas: Vec<_> = areas.iter().filter(|&zone| *zone != 0).collect();
+
+        // TODO: Classjob filtering, it's weird. Need to look at it closer
+        // Filter the results based on the client's preferences.
+        for player in self.search_results.clone() {
+            // Remove this player if they don't have a similar name.
+            if name != String::default() {
+                // Check if we're searching by last name. The client sends the last name query with a space at the beginning.
+                let by_last_name = name.chars().nth(0).unwrap() == ' ';
+
+                // Next, correct the search query string to remove any spaces.
+                let search_name = name.trim().to_owned();
+
+                // Split the player's full name into first and last halves.
+                let name_split: Vec<&str> = player.name.split(' ').collect();
+
+                let my_name = if by_last_name {
+                    name_split[1]
+                } else {
+                    name_split[0]
+                };
+
+                // If this player's name doesn't have a match, they're not relevant to this search.
+                if !my_name.contains(&search_name) {
+                    self.search_results
+                        .retain(|p| p.content_id != player.content_id);
+                    continue;
+                }
+            }
+
+            // Remove this player if they don't fall into this level range.
+            if player.classjob_level < minimum_level as u8
+                || player.classjob_level > maximum_level as u8
+            {
+                self.search_results
+                    .retain(|p| p.content_id != player.content_id);
+                continue;
+            }
+
+            // Remove this player if they don't have at least one or more of these OnlineStatuses, but also allow OnlineStatus::Online a free pass (if the client searches for no OnlineStatuses, that's the only one sent).
+            if !search_onlinestatus_masks.is_empty()
+                && search_onlinestatus_masks[0] != OnlineStatus::Online
+            {
+                use std::collections::HashSet;
+
+                // Build `HashSet`s out of the two OnlineStatusMasks, and check if there are any matches.
+                let search_onlinestatus_masks: HashSet<&OnlineStatus> =
+                    HashSet::from_iter(search_onlinestatus_masks.iter());
+                let player_masks = player.online_status_mask.mask();
+                let player_masks: HashSet<&OnlineStatus> = HashSet::from_iter(player_masks.iter());
+
+                // If there are no overlapping OnlineStatuses, this player isn't relevant.
+                if search_onlinestatus_masks
+                    .intersection(&player_masks)
+                    .count()
+                    == 0
+                {
+                    self.search_results
+                        .retain(|p| p.content_id != player.content_id);
+                    continue;
+                }
+            }
+
+            // Remove this player if they aren't a member of any of the specified companies (it's not a strict search).
+            if grand_companies != SearchUIGrandCompanies::NONE {
+                let player_gc = SearchUIGrandCompanies::from(&player.grand_company);
+
+                if !grand_companies.intersects(player_gc) {
+                    self.search_results
+                        .retain(|p| p.content_id != player.content_id);
+                    continue;
+                }
+            }
+
+            // Remove this player if their Social UI languages don't match what the client is looking for (but allow for any matches, it's not a strict search).
+            // Client languages are not considered in this check, only Social UI languages.
+            if !languages.intersects(player.social_ui_languages) {
+                self.search_results
+                    .retain(|p| p.content_id != player.content_id);
+                continue;
+            }
+
+            // If all other search conditions succeed, filter by area. This one is last instead of 4th, because there currently isn't a good condition to check against. The location check *always* happens if name, classjob and level all pass. You can't search for no areas, essentially.
+            let mut game_data = self.gamedata.lock();
+
+            // If the player is in an invalid zone somehow, or isn't in a region being searched for, they're not relevant.
+            let Some(player_region) = game_data.get_territory_placenamezone_data(player.zone_id)
+            else {
+                tracing::error!(
+                    "search_players: Player was likely in an invalid zone, zone id is {}, and we weren't able to get PlaceNameZone data. Skipping them for this search condition.",
+                    player.zone_id
+                );
+                continue;
+            };
+
+            if !areas.contains(&&player_region) {
+                self.search_results
+                    .retain(|p| p.content_id != player.content_id);
+            }
+        }
+
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::SearchPlayersResult {
             num_results: self.search_results.len() as u32,
         });
         self.send_ipc_self(ipc).await;
-    }
-
-    pub async fn do_search_results(&mut self, request: SocialListRequest) {
-        //tracing::info!("{:#?}", request);
-        let mut to_send = Vec::<PlayerEntry>::new();
-        // If we have more than 10 results, take 10 and get ready to send them.
-        if self.search_results.len() > 10 {
-            for _ in 0..10 {
-                let item = self.search_results.pop().unwrap();
-                if item.content_id != self.player_data.character.content_id as u64 {
-                    to_send.push(item);
-                }
-            }
-        } else {
-            for _ in 0..self.search_results.len() {
-                let item = self.search_results.pop().unwrap();
-                if item.content_id != self.player_data.character.content_id as u64 {
-                    to_send.push(item);
-                }
-            }
-        }
-
-        let next_index = to_send.len();
-
-        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::SocialList(SocialList {
-            community_id: 0,
-            next_index: if self.search_results.len() >= 10 {
-                (self.search_index + 10) as u16
-            } else {
-                0
-            }, // TODO: this is probably wrong
-            current_index: self.search_index as u16,
-            request_type: SocialListRequestType::SearchResults,
-            sequence: request.sequence,
-            entries: to_send,
-        }));
-
-        self.send_ipc_self(ipc).await;
-
-        if !self.search_results.is_empty() {
-            self.search_index += next_index;
-        } else {
-            self.search_index = 0;
-        }
     }
 
     pub async fn invite_character_result(
