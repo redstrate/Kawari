@@ -23,8 +23,9 @@ mod queue_duties;
 pub use queue_duties::{ContentRegistrationFlags, QueueDuties};
 
 use crate::ipc::zone::{
-    InviteReply, InviteType, OnlineStatusMask, SearchInfo, SearchUIGrandCompanies,
-    SocialListUILanguages, StrategyBoard, StrategyBoardUpdate, WaymarkPreset,
+    InviteReply, InviteType, OnlineStatusMask, SearchInfo, SearchUIClassJobMask,
+    SearchUIGrandCompanies, SocialListUILanguages, StrategyBoard, StrategyBoardUpdate,
+    WaymarkPreset,
 };
 
 use crate::ipc::zone::black_list::RequestBlacklist;
@@ -327,7 +328,7 @@ pub enum ClientZoneIpcData {
     },
     SearchPlayers {
         /// The classjobs to filter by.
-        classjobs: u64,
+        classjobs: SearchUIClassJobMask,
         /// The minimum level to filter by.
         minimum_level: u16,
         /// The maximum level to filter by.
@@ -350,7 +351,7 @@ pub enum ClientZoneIpcData {
         #[bw(map = write_string)]
         name: String,
         /// Unknown, but has data in it on retail. Doesn't appear to be a timestamp, sequence value, or ObjectId.
-        unk3: u32,
+        unk: u32,
     },
     EditSearchInfo(SearchInfo),
     RequestOwnSearchInfo {

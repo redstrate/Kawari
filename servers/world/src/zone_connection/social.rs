@@ -8,9 +8,9 @@ use kawari::{
         zone::{
             ActorControlCategory, InviteReply, InviteType, InviteUpdateType, OnlineStatus,
             OnlineStatusMask, PartyMemberEntry, PartyUpdateStatus, PlayerEntry,
-            SearchUIGrandCompanies, ServerZoneIpcData, ServerZoneIpcSegment, SocialList,
-            SocialListRequestType, SocialListUILanguages, StrategyBoard, StrategyBoardUpdate,
-            WaymarkPlacementMode, WaymarkPosition, WaymarkPreset,
+            SearchUIClassJobMask, SearchUIGrandCompanies, ServerZoneIpcData, ServerZoneIpcSegment,
+            SocialList, SocialListRequestType, SocialListUILanguages, StrategyBoard,
+            StrategyBoardUpdate, WaymarkPlacementMode, WaymarkPosition, WaymarkPreset,
         },
     },
 };
@@ -477,7 +477,7 @@ impl ZoneConnection {
     /// Searches for online players.
     pub async fn search_players(
         &mut self,
-        _classjobs: u64,
+        classjobs: SearchUIClassJobMask,
         minimum_level: u16,
         maximum_level: u16,
         grand_companies: SearchUIGrandCompanies,
@@ -486,6 +486,8 @@ impl ZoneConnection {
         areas: [u16; 50],
         name: String,
     ) {
+        use std::collections::HashSet;
+
         // First, grab up to 200 online players.
         {
             let mut db = self.database.lock();
@@ -497,6 +499,9 @@ impl ZoneConnection {
 
         // The Online Status portion of the client's search, broken into individual OnlineStatuses.
         let search_onlinestatus_masks = online_status.mask();
+
+        // The classjob portion of the client's search, broken into individual SearchUIClassJobs.
+        let search_classjobs = classjobs.mask();
 
         // Reorganize the areas so that none are zeroes. Zero indicates this entry isn't being searched for.
         let areas: Vec<_> = areas.iter().filter(|&zone| *zone != 0).collect();
@@ -529,6 +534,26 @@ impl ZoneConnection {
                 }
             }
 
+            // Remove this player if they don't meet the classjob search criteria.
+            if !search_classjobs.is_empty() {
+                let search_classjobs: HashSet<&u8> = HashSet::from_iter(search_classjobs.iter());
+
+                // Since this type is likely not used anywhere else, we have to convert the player's classjob_id to something we can work with, unlike OnlineStatusMask.
+                let mut player_classjobs = SearchUIClassJobMask::default();
+
+                // Once we have their classjob_id as a SearchUIClassJob, set it in the imaginary mask and then make a `HashSet` out of it.
+                player_classjobs.set_classjob(player.classjob_id - 1); // The id minus 1 because classjob ids start at 1, not 0, so we need to account for this.
+                let player_classjobs = player_classjobs.mask();
+                let player_classjobs = HashSet::from_iter(player_classjobs.iter());
+
+                // Finally, compare our two HashSets and check for a lack of intersections. If so, remove this player.
+                if search_classjobs.intersection(&player_classjobs).count() == 0 {
+                    self.search_results
+                        .retain(|p| p.content_id != player.content_id);
+                    continue;
+                }
+            }
+
             // Remove this player if they don't fall into this level range.
             if player.classjob_level < minimum_level as u8
                 || player.classjob_level > maximum_level as u8
@@ -542,8 +567,6 @@ impl ZoneConnection {
             if !search_onlinestatus_masks.is_empty()
                 && search_onlinestatus_masks[0] != OnlineStatus::Online
             {
-                use std::collections::HashSet;
-
                 // Build `HashSet`s out of the two OnlineStatusMasks, and check if there are any matches.
                 let search_onlinestatus_masks: HashSet<&OnlineStatus> =
                     HashSet::from_iter(search_onlinestatus_masks.iter());
