@@ -10,7 +10,7 @@ use crate::common::value_to_flag_byte_index_value;
 #[brw(little)]
 #[brw(repr = u8)]
 #[repr(u8)]
-#[derive(Clone, Debug, Default, EnumIter, Eq, PartialEq, FromRepr, Copy)]
+#[derive(Clone, Copy, Debug, Default, EnumIter, Eq, FromRepr, Hash, PartialEq)]
 #[cfg_attr(
     feature = "server",
     derive(diesel::expression::AsExpression, diesel::deserialize::FromSqlRow)

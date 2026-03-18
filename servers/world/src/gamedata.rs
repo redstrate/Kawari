@@ -970,6 +970,12 @@ impl GameData {
         row.Map().into_u16().copied()
     }
 
+    /// Returns the PlaceNameZone column value on the TerritoryType sheet. Used for determining if a zone is located in a certain region in the world.
+    pub fn get_territory_placenamezone_data(&mut self, zone_id: u16) -> Option<u16> {
+        let row = self.territory_type_sheet.row(zone_id.into())?;
+        row.PlaceNameZone().into_u16().copied()
+    }
+
     /// Returns the entrance ID for this content finder condition.
     pub fn get_content_entrance_id(&mut self, content_finder_id: u16) -> Option<u32> {
         let config = get_config();

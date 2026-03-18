@@ -1,6 +1,6 @@
 use crate::{
     common::{read_string, write_string},
-    ipc::zone::{OnlineStatusMask, SocialListUILanguages},
+    ipc::zone::{GrandCompany, OnlineStatusMask, SocialListUILanguages},
 };
 use binrw::binrw;
 use bitflags::bitflags;
@@ -28,6 +28,7 @@ pub struct SearchUIGrandCompanies(u8);
 
 bitflags! {
     impl SearchUIGrandCompanies: u8 {
+        const INVALID = 0; // This should never show up on searches, as the client searching for no companies uses NONE. This is included so we can start from a blank slate while processing search results.
         const MAELSTROM = 2;
         const ADDERS = 4;
         const FLAMES = 8;
@@ -37,7 +38,7 @@ bitflags! {
 
 impl Default for SearchUIGrandCompanies {
     fn default() -> Self {
-        SearchUIGrandCompanies::NONE
+        SearchUIGrandCompanies::INVALID
     }
 }
 
@@ -49,5 +50,20 @@ impl std::fmt::Debug for SearchUIGrandCompanies {
         }
 
         bitflags::parser::to_writer(self, f)
+    }
+}
+
+impl From<&GrandCompany> for SearchUIGrandCompanies {
+    fn from(gc: &GrandCompany) -> Self {
+        let mut new_info = SearchUIGrandCompanies::default();
+
+        match gc {
+            GrandCompany::Adders => new_info.set(SearchUIGrandCompanies::ADDERS, true),
+            GrandCompany::Flames => new_info.set(SearchUIGrandCompanies::FLAMES, true),
+            GrandCompany::Maelstrom => new_info.set(SearchUIGrandCompanies::MAELSTROM, true),
+            _ => {}
+        }
+
+        new_info
     }
 }
