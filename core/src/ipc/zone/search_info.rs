@@ -139,7 +139,7 @@ mod tests {
 
     #[test]
     fn read_searchui_classjob_lancer() {
-        // Lancer's classjob is is 3
+        // Lancer's classjob id is 3
         let mask: [u8; 8] = [8, 0, 0, 0, 0, 0, 0, 0];
         assert_eq!(SearchUIClassJobMask::from(mask).mask(), vec![3]);
     }
