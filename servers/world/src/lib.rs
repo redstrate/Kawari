@@ -29,7 +29,7 @@ mod status_effects;
 pub use status_effects::StatusEffects;
 
 mod server;
-pub use server::server_main_loop;
+pub use server::{Party, server_main_loop};
 
 mod custom_ipc_connection;
 pub use custom_ipc_connection::CustomIpcConnection;
@@ -127,3 +127,4 @@ define_sql_array!(ClassLevels, u16, CLASSJOB_ARRAY_SIZE);
 define_sql_array!(ClassExperience, i32, CLASSJOB_ARRAY_SIZE);
 define_sql_array!(ActiveQuests, PersistentQuest);
 define_sql_array!(FavoriteAetherytes, u16);
+define_sql_array!(PartyMembers, i64, 8);

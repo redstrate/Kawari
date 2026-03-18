@@ -19,6 +19,7 @@ pub struct NetworkState {
     pub clients: HashMap<ClientId, (ClientHandle, ClientState)>,
     pub chat_clients: HashMap<ClientId, (ClientHandle, ClientState)>,
     pub parties: HashMap<u64, Party>,
+    pub commit_parties: bool,
 }
 
 #[derive(Debug, PartialEq)]

@@ -483,7 +483,13 @@ impl std::fmt::Debug for HandlerId {
 /// Not to be confused with physis::Language.
 #[binrw]
 #[brw(repr = u8)]
-#[derive(Clone, Copy, Debug, Default)]
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, Default, FromRepr)]
+#[cfg_attr(
+    feature = "server",
+    derive(diesel::expression::AsExpression, diesel::deserialize::FromSqlRow)
+)]
+#[cfg_attr(feature = "server", diesel(sql_type = diesel::sql_types::Integer))]
 pub enum ClientLanguage {
     /// Japanese language.
     #[default]
@@ -497,6 +503,30 @@ pub enum ClientLanguage {
     // TODO: what about client languages in other regions?
     /// Seen when a player in the social list is offline (possibly uncached or on another world?).
     OfflineInvalid = 255,
+}
+
+#[cfg(feature = "server")]
+impl diesel::serialize::ToSql<diesel::sql_types::Integer, diesel::sqlite::Sqlite>
+    for ClientLanguage
+{
+    fn to_sql<'b>(
+        &'b self,
+        out: &mut diesel::serialize::Output<'b, '_, diesel::sqlite::Sqlite>,
+    ) -> diesel::serialize::Result {
+        out.set_value((*self as u8) as i32);
+        Ok(diesel::serialize::IsNull::No)
+    }
+}
+
+#[cfg(feature = "server")]
+impl diesel::deserialize::FromSql<diesel::sql_types::Integer, diesel::sqlite::Sqlite>
+    for ClientLanguage
+{
+    fn from_sql(
+        mut integer: <diesel::sqlite::Sqlite as diesel::backend::Backend>::RawValue<'_>,
+    ) -> diesel::deserialize::Result<Self> {
+        Ok(ClientLanguage::from_repr(integer.read_integer() as u8).unwrap())
+    }
 }
 
 // NOTE: When adding a new container type, make sure to add it to InventoryIterator!

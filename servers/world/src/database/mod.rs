@@ -1,5 +1,8 @@
 mod models;
-use kawari::ipc::zone::{GameMasterRank, OnlineStatus};
+use std::collections::HashMap;
+
+use kawari::config::get_config;
+use kawari::ipc::zone::{GameMasterRank, OnlineStatus, SocialListUIFlags, SocialListUILanguages};
 pub use models::{
     AetherCurrent, Aetheryte, Character, ClassJob, Companion, Content, Friends, Mentor, Quest,
     SearchInfo, Unlock, Volatile,
@@ -11,9 +14,10 @@ use diesel::prelude::*;
 use diesel::{Connection, QueryDsl, RunQueryDsl, SqliteConnection};
 
 use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
-use kawari::common::{BasicCharacterData, WORLD_NAME, determine_initial_homepoint};
+use kawari::common::{BasicCharacterData, ClientLanguage, WORLD_NAME, determine_initial_homepoint};
 
-use crate::{CharaMake, ClassLevels, ClientSelectData, GameData, RemakeMode};
+use crate::database::models::Party;
+use crate::{CharaMake, ClassLevels, ClientSelectData, GameData, PartyMembers, RemakeMode};
 use crate::{PlayerData, inventory::Inventory};
 use kawari::{
     common::ObjectId,
@@ -154,13 +158,19 @@ impl WorldDatabase {
             .unwrap();
     }
 
+    pub fn commit_search_info(&mut self, data: &PlayerData) {
+        use models::*;
+
+        data.search_info
+            .save_changes::<SearchInfo>(&mut self.connection)
+            .unwrap();
+    }
+
     /// Commit the dynamic player data back to the database
     pub fn commit_player_data(&mut self, data: &PlayerData) {
         use models::*;
 
-        data.volatile
-            .save_changes::<Volatile>(&mut self.connection)
-            .unwrap();
+        self.commit_volatile(data);
 
         let inventory = Inventory {
             content_id: data.character.content_id,
@@ -173,9 +183,7 @@ impl WorldDatabase {
         data.character
             .save_changes::<Character>(&mut self.connection)
             .unwrap();
-        data.classjob
-            .save_changes::<ClassJob>(&mut self.connection)
-            .unwrap();
+        self.commit_classjob(data);
         data.unlock
             .save_changes::<Unlock>(&mut self.connection)
             .unwrap();
@@ -197,9 +205,32 @@ impl WorldDatabase {
         data.mentor
             .save_changes::<Mentor>(&mut self.connection)
             .unwrap();
-        data.search_info
-            .save_changes::<SearchInfo>(&mut self.connection)
+        self.commit_search_info(data);
+    }
+
+    pub fn commit_parties(&mut self, parties: HashMap<u64, crate::server::Party>) {
+        // Delete all existing parties
+        diesel::delete(schema::party::dsl::party)
+            .execute(&mut self.connection)
             .unwrap();
+
+        for (id, party) in parties {
+            let leader = party
+                .members
+                .iter()
+                .find(|x| x.actor_id == party.leader_id)
+                .unwrap();
+
+            let party = Party {
+                id: id as i64,
+                leader_content_id: leader.content_id as i64,
+                members: PartyMembers(party.members.iter().map(|x| x.content_id as i64).collect()),
+            };
+            diesel::insert_into(schema::party::dsl::party)
+                .values(party)
+                .execute(&mut self.connection)
+                .unwrap();
+        }
     }
 
     pub fn find_actor_id(&mut self, for_content_id: u64) -> u32 {
@@ -464,6 +495,7 @@ impl WorldDatabase {
         let search_info = SearchInfo {
             content_id: content_id as i64,
             online_status: OnlineStatus::NewAdventurer, // because you're a novice :-)
+            selected_languages: SocialListUILanguages::ENGLISH,
             ..Default::default()
         };
         diesel::insert_into(schema::search_info::table)
@@ -704,7 +736,11 @@ impl WorldDatabase {
             .unwrap_or_default()
     }
 
-    pub fn find_online_players(&mut self, for_content_id: i64) -> Vec<PlayerEntry> {
+    pub fn find_online_players(
+        &mut self,
+        game_data: &mut GameData,
+        for_content_id: i64,
+    ) -> Vec<PlayerEntry> {
         let mut online_players = Vec::<PlayerEntry>::new();
 
         use schema::volatile::dsl::*;
@@ -713,8 +749,6 @@ impl WorldDatabase {
             .select(schema::volatile::dsl::content_id)
             .load(&mut self.connection)
             .unwrap();
-
-        use schema::character::dsl::*;
 
         for id in online_content_ids {
             // Don't add ourselves to these results.
@@ -728,27 +762,7 @@ impl WorldDatabase {
                 break;
             }
 
-            online_players.push(PlayerEntry {
-                content_id: id as u64,
-                zone_id: volatile
-                    .select(zone_id)
-                    .filter(schema::volatile::dsl::content_id.eq(id))
-                    .first::<i32>(&mut self.connection)
-                    .unwrap_or_default() as u16,
-                name: character
-                    .select(name)
-                    .filter(schema::character::dsl::content_id.eq(id))
-                    .first::<String>(&mut self.connection)
-                    .unwrap(),
-                online_status_mask: OnlineStatusMask::from(
-                    volatile
-                        .select(online_status_mask)
-                        .filter(schema::volatile::dsl::content_id.eq(id))
-                        .first::<i64>(&mut self.connection)
-                        .unwrap_or_default(),
-                ),
-                ..Default::default()
-            });
+            online_players.push(self.get_player_entry(game_data, id));
         }
 
         online_players
@@ -783,11 +797,12 @@ impl WorldDatabase {
             .unwrap();
     }
 
-    pub fn find_friend_list(&mut self, for_content_id: i64) -> Vec<PlayerEntry> {
+    pub fn find_friend_list(
+        &mut self,
+        game_data: &mut GameData,
+        for_content_id: i64,
+    ) -> Vec<PlayerEntry> {
         let mut friend_entries = Vec::<PlayerEntry>::new();
-
-        use schema::character::dsl::*;
-        use schema::volatile::dsl::*;
 
         let friend_content_ids = self.get_friend_content_ids(for_content_id);
 
@@ -798,26 +813,50 @@ impl WorldDatabase {
         }
 
         for id in friend_content_ids {
-            let online = volatile
-                .select(is_online)
-                .filter(schema::volatile::dsl::content_id.eq(id))
+            friend_entries.push(self.get_player_entry(game_data, id));
+        }
+        friend_entries
+    }
+
+    pub fn get_player_entry(
+        &mut self,
+        game_data: &mut GameData,
+        for_content_id: i64,
+    ) -> PlayerEntry {
+        let online;
+        let online_status_mask;
+        let zone_id;
+        let client_language;
+        let social_ui_languages;
+        let has_search_comment;
+        let classjob_id;
+        let classjob_level;
+        {
+            online = schema::volatile::dsl::volatile
+                .select(schema::volatile::dsl::is_online)
+                .filter(schema::volatile::dsl::content_id.eq(for_content_id))
                 .first::<bool>(&mut self.connection)
                 .unwrap();
-            let z_id = if online {
-                volatile
+            client_language = schema::volatile::dsl::volatile
+                .select(schema::volatile::dsl::client_language)
+                .filter(schema::volatile::dsl::content_id.eq(for_content_id))
+                .first::<ClientLanguage>(&mut self.connection)
+                .unwrap();
+            zone_id = if online {
+                schema::volatile::dsl::volatile
                     .select(schema::volatile::dsl::zone_id)
-                    .filter(schema::volatile::dsl::content_id.eq(id))
+                    .filter(schema::volatile::dsl::content_id.eq(for_content_id))
                     .first::<i32>(&mut self.connection)
                     .unwrap_or_default() as u16
             } else {
                 0
             };
 
-            let osm = if online {
+            online_status_mask = if online {
                 OnlineStatusMask::from(
-                    volatile
+                    schema::volatile::dsl::volatile
                         .select(schema::volatile::dsl::online_status_mask)
-                        .filter(schema::volatile::dsl::content_id.eq(id))
+                        .filter(schema::volatile::dsl::content_id.eq(for_content_id))
                         .first::<i64>(&mut self.connection)
                         .unwrap_or_default(),
                 )
@@ -825,35 +864,101 @@ impl WorldDatabase {
                 OnlineStatusMask::default()
             };
 
-            friend_entries.push(PlayerEntry {
-                content_id: id as u64,
-                zone_id: z_id,
-                name: character
-                    .select(name)
-                    .filter(schema::character::dsl::content_id.eq(id))
-                    .first::<String>(&mut self.connection)
-                    .unwrap(),
-                online_status_mask: osm,
-                unk2: [
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    if self.friend_request_is_pending(id) {
-                        48
-                    } else {
-                        0
-                    }, // TODO: this is a bitfield in CS we should support
-                    0,
-                ],
-                ..Default::default()
-            });
+            social_ui_languages = schema::search_info::dsl::search_info
+                .select(schema::search_info::dsl::selected_languages)
+                .filter(schema::search_info::dsl::content_id.eq(for_content_id))
+                .first::<SocialListUILanguages>(&mut self.connection)
+                .unwrap();
+            has_search_comment = !schema::search_info::dsl::search_info
+                .select(schema::search_info::dsl::comment)
+                .filter(schema::search_info::dsl::content_id.eq(for_content_id))
+                .first::<String>(&mut self.connection)
+                .unwrap_or_default()
+                .is_empty();
+
+            classjob_id = schema::classjob::dsl::classjob
+                .select(schema::classjob::dsl::current_class)
+                .filter(schema::classjob::dsl::content_id.eq(for_content_id))
+                .first::<i32>(&mut self.connection)
+                .unwrap() as u8;
+
+            let index = game_data.classjob_exp_indexes[classjob_id as usize];
+
+            classjob_level = schema::classjob::dsl::classjob
+                .select(schema::classjob::dsl::levels)
+                .filter(schema::classjob::dsl::content_id.eq(for_content_id))
+                .first::<ClassLevels>(&mut self.connection)
+                .unwrap()
+                .0[index as usize] as u8;
         }
-        friend_entries
+
+        let character_name;
+        {
+            use schema::character::dsl::*;
+
+            character_name = character
+                .select(name)
+                .filter(content_id.eq(for_content_id))
+                .first::<String>(&mut self.connection)
+                .unwrap();
+        }
+
+        let config = get_config();
+
+        PlayerEntry {
+            content_id: for_content_id as u64,
+            current_world_id: config.world.world_id,
+            ui_flags: SocialListUIFlags::ENABLE_CONTEXT_MENU,
+            unk2: [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                if self.friend_request_is_pending(for_content_id) {
+                    48
+                } else {
+                    0
+                }, // TODO: this is a bitfield in CS we should support
+                0,
+            ],
+            zone_id,
+            client_language,
+            social_ui_languages,
+            has_search_comment,
+            online_status_mask,
+            classjob_id,
+            classjob_level,
+            home_world_id: config.world.world_id,
+            name: character_name,
+            ..Default::default()
+        }
+    }
+
+    pub fn get_party_entries(
+        &mut self,
+        game_data: &mut GameData,
+        party_id: i64,
+    ) -> Vec<PlayerEntry> {
+        let found_party;
+        {
+            use schema::party::dsl::*;
+
+            found_party = party
+                .filter(id.eq(party_id))
+                .first::<Party>(&mut self.connection)
+                .unwrap();
+        }
+
+        let mut entries = Vec::new();
+        for member in &found_party.members.0 {
+            entries.push(self.get_player_entry(game_data, *member));
+        }
+
+        entries
     }
 
     pub fn add_to_friend_list(&mut self, fwen_content_id: i64, my_content_id: i64) {

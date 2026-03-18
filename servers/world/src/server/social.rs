@@ -14,10 +14,9 @@ use crate::{
 use kawari::{
     common::{CharacterMode, ObjectId, ObjectTypeId, Position},
     ipc::zone::{
-        ActorControlCategory, OnlineStatus, OnlineStatusMask, PartyMemberEntry,
-        PartyMemberPositions, PartyUpdateStatus, PlayerEntry, ServerZoneIpcData,
-        ServerZoneIpcSegment, SocialListRequestType, SocialListUIFlags, WaymarkPlacementMode,
-        WaymarkPosition, WaymarkPositions, WaymarkPreset,
+        ActorControlCategory, PartyMemberEntry, PartyMemberPositions, PartyUpdateStatus,
+        ServerZoneIpcData, ServerZoneIpcSegment, WaymarkPlacementMode, WaymarkPosition,
+        WaymarkPositions, WaymarkPreset,
     },
 };
 
@@ -52,7 +51,7 @@ pub const NUM_TARGET_SIGNS: usize = 17;
 #[derive(Clone, Debug, Default)]
 pub struct Party {
     pub members: Vec<PartyMember>,
-    leader_id: ObjectId,
+    pub leader_id: ObjectId,
     pub chatchannel_id: u32, // There's no reason to store a full u64/ChatChannel here, as it's created properly in the chat connection!
     pub stratboard_realtime_host: Option<u64>, // Only one player can send a board or host real-time sharing at a time
     pub target_signs: [ObjectTypeId; NUM_TARGET_SIGNS], // NOTE: We deviate from retail here, which seems to have per-instance lists of marked targets, and instead just have one per party for simplicity.
@@ -105,6 +104,7 @@ impl Party {
         }
         None
     }
+
     pub fn get_member_by_actor_id(&self, actor_id: ObjectId) -> Option<PartyMember> {
         for member in &self.members {
             if member.actor_id == actor_id {
@@ -113,6 +113,7 @@ impl Party {
         }
         None
     }
+
     pub fn get_member_by_actor_id_mut(&mut self, actor_id: ObjectId) -> Option<&mut PartyMember> {
         for (index, member) in self.members.iter().enumerate() {
             if member.actor_id == actor_id {
@@ -595,115 +596,6 @@ pub fn handle_social_messages(
 
             true
         }
-        ToServer::RequestSocialList(from_id, from_actor_id, from_party_id, request) => {
-            let mut network = network.lock();
-            let data = data.lock();
-            let mut entries = vec![PlayerEntry::default(); 10];
-
-            match &request.request_type {
-                SocialListRequestType::Party => {
-                    if *from_party_id != 0 {
-                        let leader_actor_id = network.parties[from_party_id].leader_id;
-                        let mut index: usize = 0;
-                        for member in &network.parties[from_party_id].members {
-                            // The internal party list can and will contain invalid entries representing empty slots, so skip them.
-                            if !member.is_valid() {
-                                continue;
-                            }
-
-                            if !member.is_online() {
-                                entries[index].content_id = member.content_id;
-                                entries[index].name = member.name.clone();
-                                entries[index].current_world_id = 65535; // This doesn't seem to matter, but retail does it.
-                                entries[index].ui_flags = SocialListUIFlags::ENABLE_CONTEXT_MENU;
-                                entries[index].home_world_id = member.world_id;
-                                index += 1;
-                                continue;
-                            }
-
-                            let Some(instance) = data.find_actor_instance(member.actor_id) else {
-                                // TOOD: This situation might be panic-worthy? Reality should have broken, or an invalid party member slipped past the earlier check if this trips.
-                                tracing::error!(
-                                    "Unable to find this actor in any instance, what happened? {} {}",
-                                    member.actor_id,
-                                    member.name.clone()
-                                );
-                                continue;
-                            };
-
-                            for (id, actor) in &instance.actors {
-                                if *id == member.actor_id {
-                                    let Some(spawn) = actor.get_player_spawn() else {
-                                        panic!(
-                                            "Why are we trying to get the PlayerSpawn of an NPC?"
-                                        );
-                                    };
-                                    let mut online_status_mask = OnlineStatusMask::default();
-                                    online_status_mask.set_status(OnlineStatus::Online);
-                                    online_status_mask.set_status(OnlineStatus::PartyMember);
-                                    if member.actor_id == leader_actor_id {
-                                        online_status_mask.set_status(OnlineStatus::PartyLeader);
-                                    }
-                                    entries[index].online_status_mask = online_status_mask;
-                                    entries[index].classjob_id = spawn.common.class_job;
-                                    entries[index].classjob_level = spawn.common.level;
-                                    entries[index].zone_id = instance.zone.id;
-
-                                    entries[index].content_id = spawn.content_id;
-                                    entries[index].home_world_id = member.world_id;
-                                    entries[index].current_world_id = spawn.current_world_id;
-                                    entries[index].name = spawn.common.name.clone();
-                                    entries[index].ui_flags =
-                                        SocialListUIFlags::ENABLE_CONTEXT_MENU;
-
-                                    index += 1;
-                                    break;
-                                }
-                            }
-                        }
-                    } else {
-                        let Some(instance) = data.find_actor_instance(*from_actor_id) else {
-                            return true;
-                        };
-
-                        for (id, actor) in &instance.actors {
-                            if *id == *from_actor_id {
-                                let Some(spawn) = actor.get_player_spawn() else {
-                                    panic!("Why are we trying to get the PlayerSpawn of an NPC?");
-                                };
-
-                                // TODO: Probably start with a cached status from elsewhere?
-                                let mut online_status_mask = OnlineStatusMask::default();
-                                online_status_mask.set_status(OnlineStatus::Online);
-
-                                entries[0].content_id = spawn.content_id;
-                                entries[0].current_world_id = spawn.home_world_id;
-                                entries[0].home_world_id = spawn.home_world_id;
-                                entries[0].name = spawn.common.name.clone();
-                                entries[0].ui_flags = SocialListUIFlags::ENABLE_CONTEXT_MENU;
-                                entries[0].online_status_mask = online_status_mask;
-                                entries[0].classjob_id = spawn.common.class_job;
-                                entries[0].classjob_level = spawn.common.level;
-                                entries[0].zone_id = instance.zone.id;
-                                break;
-                            }
-                        }
-                    }
-                }
-                _ => {
-                    tracing::warn!(
-                        "SocialListRequestType was {:#?}! This is not yet implemented!",
-                        &request.request_type
-                    );
-                }
-            }
-
-            let msg =
-                FromServer::SocialListResponse(request.request_type, request.sequence, entries);
-            network.send_to(*from_id, msg, DestinationNetwork::ZoneClients);
-
-            true
-        }
         ToServer::AddPartyMember(party_id, leader_actor_id, new_member_content_id) => {
             let mut network = network.lock();
             let data = data.lock();
@@ -725,7 +617,8 @@ pub fn handle_social_messages(
             // This client is creating a party.
             if party_id == 0 {
                 // TODO: We should probably generate these differently so there are no potential collisions.
-                party_id = fastrand::u64(..);
+                // NOTE: we store i64 in the database, hence why its chosen here.
+                party_id = fastrand::i64(..) as u64;
                 let chatchannel_id = fastrand::u32(..);
                 let mut party = Party {
                     chatchannel_id,
@@ -760,6 +653,7 @@ pub fn handle_social_messages(
                 }
 
                 network.parties.entry(party_id).or_insert(party);
+                network.commit_parties = true;
             }
 
             if let Some(party) = network.parties.get(&party_id) {
@@ -889,6 +783,7 @@ pub fn handle_social_messages(
 
                 network.to_remove.append(&mut to_remove);
                 network.parties.get_mut(&party_id).unwrap().members = party; // Now we can give the clone back after all that nonsense
+                network.commit_parties = true;
             } else {
                 tracing::error!("AddPartyMember: Party id wasn't in the hashmap! What happened?");
             }
@@ -1079,6 +974,8 @@ pub fn handle_social_messages(
                 network.parties.remove(party_id);
             }
 
+            network.commit_parties = true;
+
             true
         }
         ToServer::PartyDisband(party_id, execute_account_id, execute_content_id, execute_name) => {
@@ -1108,6 +1005,7 @@ pub fn handle_social_messages(
 
             // We don't need to keep track of this party anymore.
             network.parties.remove(party_id);
+            network.commit_parties = true;
 
             true
         }
@@ -1193,6 +1091,8 @@ pub fn handle_social_messages(
                 network.parties.remove(party_id);
             }
 
+            network.commit_parties = true;
+
             true
         }
         ToServer::PartyMemberOffline(
@@ -1243,6 +1143,7 @@ pub fn handle_social_messages(
                 // If nobody in the party is online, disband it.
                 // Retail keeps it around for ~2 hours or so if everyone is offline, but there's no point doing that.
                 network.parties.remove(party_id);
+                network.commit_parties = true;
             }
 
             true

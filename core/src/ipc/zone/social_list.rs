@@ -9,7 +9,7 @@ use super::online_status::OnlineStatusMask;
 
 #[binrw]
 #[brw(repr = u8)]
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Copy, Default, PartialEq)]
 pub enum SocialListRequestType {
     #[default]
     Party = 0x1,
@@ -35,6 +35,11 @@ pub struct SocialListRequest {
 /// Not to be confused with physis::Language.
 #[binrw]
 #[derive(Clone, Copy, Eq, PartialEq)]
+#[cfg_attr(
+    feature = "server",
+    derive(diesel::expression::AsExpression, diesel::deserialize::FromSqlRow)
+)]
+#[cfg_attr(feature = "server", diesel(sql_type = diesel::sql_types::Integer))]
 pub struct SocialListUILanguages(u8);
 
 bitflags! {
@@ -55,6 +60,30 @@ impl Default for SocialListUILanguages {
 impl std::fmt::Debug for SocialListUILanguages {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         bitflags::parser::to_writer(self, f)
+    }
+}
+
+#[cfg(feature = "server")]
+impl diesel::serialize::ToSql<diesel::sql_types::Integer, diesel::sqlite::Sqlite>
+    for SocialListUILanguages
+{
+    fn to_sql<'b>(
+        &'b self,
+        out: &mut diesel::serialize::Output<'b, '_, diesel::sqlite::Sqlite>,
+    ) -> diesel::serialize::Result {
+        out.set_value(self.0 as i32);
+        Ok(diesel::serialize::IsNull::No)
+    }
+}
+
+#[cfg(feature = "server")]
+impl diesel::deserialize::FromSql<diesel::sql_types::Integer, diesel::sqlite::Sqlite>
+    for SocialListUILanguages
+{
+    fn from_sql(
+        mut integer: <diesel::sqlite::Sqlite as diesel::backend::Backend>::RawValue<'_>,
+    ) -> diesel::deserialize::Result<Self> {
+        Ok(SocialListUILanguages(integer.read_integer() as u8))
     }
 }
 

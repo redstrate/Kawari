@@ -16,7 +16,7 @@ use crate::{
     lua::{KawariLua, LuaTask},
 };
 use kawari::{
-    common::{ClientLanguage, HandlerId, ObjectId, Position, timestamp_secs},
+    common::{HandlerId, ObjectId, Position, timestamp_secs},
     config::WorldConfig,
     ipc::zone::{
         ClientTriggerCommand, ClientZoneIpcSegment, Condition, Conditions,
@@ -151,7 +151,6 @@ pub struct ZoneConnection {
     pub current_instance_id: Option<u16>,
 
     pub conditions: Conditions,
-    pub client_language: ClientLanguage,
 
     /// List of queued tasks from the server.
     pub queued_tasks: Vec<LuaTask>,

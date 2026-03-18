@@ -4,8 +4,8 @@ use std::time::{Instant, SystemTime};
 use axum::Router;
 use axum::routing::get;
 use kawari::common::{
-    ClientLanguage, ContainerType, DirectorEvent, DirectorTrigger, DutyOption, HandlerId,
-    HandlerType, ItemOperationKind, ObjectId, ObjectTypeId, ObjectTypeKind, PlayerStateFlags1,
+    ContainerType, DirectorEvent, DirectorTrigger, DutyOption, HandlerId, HandlerType,
+    ItemOperationKind, ObjectId, ObjectTypeId, ObjectTypeKind, PlayerStateFlags1,
     PlayerStateFlags2, PlayerStateFlags3, Position, calculate_max_level,
 };
 use kawari::config::{FilesystemConfig, get_config};
@@ -16,7 +16,7 @@ use kawari::ipc::chat::{ChatChannel, ClientChatIpcData};
 use kawari::ipc::zone::{
     ActorControlCategory, Conditions, ContentFinderUserAction, EventType, InviteType, MapEffects,
     MarketBoardItem, OnlineStatus, OnlineStatusMask, PlayerSetup, SceneFlags, SearchInfo,
-    SocialListRequestType, SocialListUILanguages, TrustContent, TrustInformation,
+    SocialListRequestType, TrustContent, TrustInformation,
 };
 
 use kawari::ipc::zone::{
@@ -142,7 +142,6 @@ async fn initial_setup(
                     obsfucation_data: ObsfucationData::default(),
                     queued_content: None,
                     conditions: Conditions::default(),
-                    client_language: ClientLanguage::English,
                     queued_tasks: Vec::new(),
                     old_zone_id: 0,
                     old_position: Position::default(),
@@ -1335,48 +1334,24 @@ async fn process_packet(
                                 .await;
                         }
                         ClientZoneIpcData::SocialListRequest(request) => {
-                            match request.request_type {
-                                // That's the global server's department.
-                                SocialListRequestType::Party => {
-                                    connection
-                                        .handle
-                                        .send(ToServer::RequestSocialList(
-                                            connection.id,
-                                            connection.player_data.character.actor_id,
-                                            connection.party_id,
-                                            request.clone(),
-                                        ))
-                                        .await;
-                                }
-                                SocialListRequestType::Friends => {
-                                    // We have to refresh manually here as the friend list doesn't have a convenient search & result opcode pair like searching does.
-                                    connection.refresh_friend_list().await;
-                                    connection
-                                        .send_social_list(
-                                            request.request_type,
-                                            request.sequence,
-                                            None,
-                                            None,
-                                        )
-                                        .await;
-                                }
-                                SocialListRequestType::SearchResults => {
-                                    connection
-                                        .send_social_list(
-                                            request.request_type,
-                                            request.sequence,
-                                            None,
-                                            None,
-                                        )
-                                        .await;
-                                }
-                                _ => {
-                                    tracing::warn!(
-                                        "SocialListRequestType was {:#?}! This is not yet implemented!",
-                                        &request.request_type
-                                    );
-                                }
+                            if request.request_type == SocialListRequestType::Friends {
+                                // We have to refresh manually here as the friend list doesn't have a convenient search & result opcode pair like searching does.
+                                connection.refresh_friend_list().await;
                             }
+                            let entries = if request.request_type == SocialListRequestType::Party {
+                                Some(connection.party_member_entries())
+                            } else {
+                                None
+                            };
+
+                            connection
+                                .send_social_list(
+                                    request.request_type,
+                                    request.sequence,
+                                    entries,
+                                    None,
+                                )
+                                .await;
                         }
                         ClientZoneIpcData::UpdatePositionHandler {
                             position,
@@ -2161,7 +2136,7 @@ async fn process_packet(
                             tracing::info!("Setting the free company greeting is unimplemented");
                         }
                         ClientZoneIpcData::SetClientLanguage { language } => {
-                            connection.client_language = *language;
+                            connection.player_data.volatile.client_language = *language;
                         }
                         ClientZoneIpcData::RequestCharaInfoFromContentIds { .. } => {
                             tracing::info!(
@@ -2381,6 +2356,12 @@ async fn process_packet(
                                 .unwrap_or(OnlineStatus::Online); // TODO: unsure if this makes sense?
                             connection.player_data.search_info.comment =
                                 search_info.comment.clone();
+                            connection.player_data.search_info.selected_languages =
+                                search_info.selected_languages;
+                            {
+                                let mut database = connection.database.lock();
+                                database.commit_search_info(&connection.player_data);
+                            }
                             connection.update_online_status().await;
                         }
                         ClientZoneIpcData::RequestOwnSearchInfo { .. } => {
@@ -2390,7 +2371,10 @@ async fn process_packet(
                                         connection.player_data.search_info.online_status,
                                     ),
                                     comment: connection.player_data.search_info.comment.clone(),
-                                    selected_languages: SocialListUILanguages::ENGLISH,
+                                    selected_languages: connection
+                                        .player_data
+                                        .search_info
+                                        .selected_languages,
                                     ..Default::default()
                                 },
                             ));
@@ -2665,7 +2649,6 @@ async fn process_server_msg(
             FromServer::PartyInvite(sender_account_id, sender_content_id, sender_name) => connection.received_party_invite(sender_account_id, sender_content_id, sender_name).await,
             FromServer::InvitationResult(sender_account_id, sender_content_id, sender_name, invite_type, invite_reply) => connection.received_invitation_response(sender_account_id, sender_content_id, sender_name, invite_type, invite_reply).await,
             FromServer::InvitationReplyResult(sender_account_id, sender_name, invite_type, invite_reply) => connection.send_invite_reply_result(sender_account_id, sender_name, invite_type, invite_reply).await,
-            FromServer::SocialListResponse(request_type, sequence, entries) => connection.send_social_list(request_type, sequence, Some(entries), None).await,
             FromServer::PartyUpdate(targets, update_status, party_info) => connection.send_party_update(targets, update_status, party_info).await,
             FromServer::CharacterAlreadyInParty() => connection.send_notice("That player is already in a party. You are seeing this message because Kawari doesn't yet send information correctly in a way that your game will display the error on its own.").await,
             FromServer::RejoinPartyAfterDisconnect(party_id) => {
@@ -2739,6 +2722,10 @@ async fn process_server_msg(
                 connection.send_ipc_self(ipc).await;
             }
             FromServer::FriendInvite(sender_account_id, sender_content_id, sender_name) => connection.received_friend_invite(sender_account_id, sender_content_id, sender_name).await,
+            FromServer::CommitParties(parties) => {
+                let mut database = connection.database.lock();
+                database.commit_parties(parties);
+            }
             _ => { tracing::error!("Zone connection {:#?} received a FromServer message we don't care about: {:#?}, ensure you're using the right client network or that you've implemented a handler for it if we actually care about it!", client_handle.id, msg); }
         }
     }

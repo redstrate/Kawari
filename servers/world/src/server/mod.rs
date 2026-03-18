@@ -55,6 +55,7 @@ mod effect;
 mod instance;
 mod network;
 mod social;
+pub use social::Party;
 mod zone;
 
 #[derive(Default, Debug, Clone)]
@@ -2501,6 +2502,23 @@ pub async fn server_main_loop(
 
             for remove_id in network.to_remove_chat.clone() {
                 network.chat_clients.remove(&remove_id);
+            }
+        }
+
+        // Commit parties back to database as necessary
+        {
+            let mut network = network.lock();
+
+            // This may seem weird, but currently only the database connection exists on the ZoneConnection side. So we hijack the first client to do our dirty work.
+            if network.commit_parties && !network.clients.is_empty() {
+                let parties = network.parties.clone();
+                let client_id = network.clients.keys().copied().collect::<Vec<ClientId>>()[0];
+                network.send_to(
+                    client_id,
+                    FromServer::CommitParties(parties),
+                    DestinationNetwork::ZoneClients,
+                );
+                network.commit_parties = false;
             }
         }
     }

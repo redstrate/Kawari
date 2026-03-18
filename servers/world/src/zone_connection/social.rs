@@ -233,6 +233,22 @@ impl ZoneConnection {
         self.update_online_status().await;
     }
 
+    pub fn party_member_entries(&self) -> Vec<PlayerEntry> {
+        let mut entries = Vec::new();
+
+        let mut database = self.database.lock();
+        let mut game_data = self.gamedata.lock();
+        if self.party_id != 0 {
+            entries = database.get_party_entries(&mut game_data, self.party_id as i64);
+        } else {
+            entries.push(
+                database.get_player_entry(&mut game_data, self.player_data.character.content_id),
+            );
+        }
+
+        entries
+    }
+
     pub async fn send_social_list(
         &mut self,
         request_type: SocialListRequestType,
@@ -488,11 +504,11 @@ impl ZoneConnection {
     ) {
         {
             let mut db = self.database.lock();
-            self.search_results = db.find_online_players(self.player_data.character.content_id);
+            let mut game_data = self.gamedata.lock();
+            self.search_results =
+                db.find_online_players(&mut game_data, self.player_data.character.content_id);
             self.search_index = 0;
         }
-
-        //tracing::info!("{:#?}", self.search_results);
 
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::SearchPlayersResult {
             num_results: self.search_results.len() as u32,
@@ -563,12 +579,11 @@ impl ZoneConnection {
     }
 
     pub async fn refresh_friend_list(&mut self) {
-        // This should always be the case when a pending friend list request has begun.
-        // if !self.friend_results.is_empty() {
         let mut db = self.database.lock();
-        self.friend_results = db.find_friend_list(self.player_data.character.content_id);
+        let mut game_data = self.gamedata.lock();
+        self.friend_results =
+            db.find_friend_list(&mut game_data, self.player_data.character.content_id);
         self.friend_index = 0;
-        //}
     }
 
     pub fn add_to_friend_list(&mut self, friend_content_id: u64) {

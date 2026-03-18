@@ -1,6 +1,6 @@
 use diesel::prelude::*;
 use kawari::{
-    common::{EquipDisplayFlag, ObjectId, Position},
+    common::{ClientLanguage, EquipDisplayFlag, ObjectId, Position},
     constants::{
         ACTIVE_HELP_BITMASK_SIZE, ADVENTURE_BITMASK_SIZE, AETHER_CURRENT_BITMASK_SIZE,
         AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE, AETHERYTE_UNLOCK_BITMASK_SIZE,
@@ -13,12 +13,12 @@ use kawari::{
         SPECIAL_CONTENT_ARRAY_SIZE, TITLE_UNLOCK_BITMASK_SIZE, TRIAL_ARRAY_SIZE,
         TRIPLE_TRIAD_CARDS_BITMASK_SIZE, UNLOCK_BITMASK_SIZE,
     },
-    ipc::zone::{GameMasterRank, OnlineStatus},
+    ipc::zone::{GameMasterRank, OnlineStatus, SocialListUILanguages},
 };
 
 use crate::{
     ActiveQuests, Bitmask, CharaMake, ClassExperience, ClassLevels, FavoriteAetherytes,
-    QuestBitmask,
+    PartyMembers, QuestBitmask,
 };
 
 #[derive(Insertable, Identifiable, Queryable, Selectable, AsChangeset, Debug, Default, Clone)]
@@ -148,6 +148,7 @@ pub struct Volatile {
     pub title: i32,
     pub is_online: bool,
     pub online_status_mask: i64,
+    pub client_language: ClientLanguage,
 }
 
 #[derive(
@@ -322,6 +323,7 @@ pub struct SearchInfo {
     pub content_id: i64,
     pub online_status: OnlineStatus,
     pub comment: String,
+    pub selected_languages: SocialListUILanguages,
 }
 
 #[derive(
@@ -345,4 +347,14 @@ pub struct Friends {
     pub group_icon: i32,
     pub invite_time: String,
     pub is_pending: bool,
+}
+
+#[derive(Insertable, Queryable, Selectable, AsChangeset, Debug, Default, Clone)]
+#[diesel(table_name = super::schema::party)]
+#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+#[diesel(primary_key(id))]
+pub struct Party {
+    pub id: i64,
+    pub leader_content_id: i64,
+    pub members: PartyMembers,
 }

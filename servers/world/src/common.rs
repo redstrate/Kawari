@@ -1,11 +1,14 @@
-use std::sync::{
-    Arc,
-    atomic::{AtomicUsize, Ordering},
+use std::{
+    collections::HashMap,
+    sync::{
+        Arc,
+        atomic::{AtomicUsize, Ordering},
+    },
 };
 
 use tokio::sync::mpsc::Sender;
 
-use crate::{StatusEffects, lua::LuaTask, zone_connection::BaseParameters};
+use crate::{StatusEffects, lua::LuaTask, server::Party, zone_connection::BaseParameters};
 use kawari::{
     common::{
         CharacterMode, JumpState, MoveAnimationState, MoveAnimationType, ObjectId, ObjectTypeId,
@@ -18,9 +21,9 @@ use kawari::{
         zone::{
             ActionRequest, ActorControlCategory, ClientTrigger, Conditions, Config, InviteReply,
             InviteType, NpcSpawn, ObjectSpawn, OnlineStatus, PartyMemberEntry,
-            PartyMemberPositions, PartyUpdateStatus, PlayerEntry, PlayerSpawn,
-            ServerZoneIpcSegment, SocialListRequest, SocialListRequestType, StrategyBoard,
-            StrategyBoardUpdate, WaymarkPlacementMode, WaymarkPosition, WaymarkPreset,
+            PartyMemberPositions, PartyUpdateStatus, PlayerSpawn, ServerZoneIpcSegment,
+            StrategyBoard, StrategyBoardUpdate, WaymarkPlacementMode, WaymarkPosition,
+            WaymarkPreset,
         },
     },
 };
@@ -143,8 +146,6 @@ pub enum FromServer {
     InvitationReplyResult(u64, String, InviteType, InviteReply),
     /// A chat message from the client's party has been received.
     PartyMessageSent(PartyMessage),
-    /// The client who requested a social list update needs to be informed.
-    SocialListResponse(SocialListRequestType, u8, Vec<PlayerEntry>),
     /// Members of this party need to be informed of an update.
     PartyUpdate(
         PartyUpdateTargets,
@@ -198,6 +199,8 @@ pub enum FromServer {
     PartyMemberPositionsUpdate(PartyMemberPositions),
     /// Inform the client that they've received a friend request.
     FriendInvite(u64, u64, String),
+    /// Use this connections's database to commit the party list for the server.
+    CommitParties(HashMap<u64, Party>),
 }
 
 #[derive(Debug, Clone)]
@@ -301,8 +304,6 @@ pub enum ToServer {
     AddPartyMember(u64, ObjectId, u64),
     /// The client sent a message to their party.
     PartyMessageSent(ObjectId, SendPartyMessage),
-    /// The client is requesting a social list update.
-    RequestSocialList(ClientId, ObjectId, u64, SocialListRequest),
     /// The client is designating another player in the party as leader.
     PartyChangeLeader(u64, u64, u64, String, u64, String),
     /// The client is removing another player from the party.
