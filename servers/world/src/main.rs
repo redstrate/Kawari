@@ -531,11 +531,6 @@ async fn process_packet(
                             // Mark the player as online for total player counts, player searches, etc.
                             {
                                 connection.player_data.volatile.is_online = true;
-                                // Set the database's copy of the online status mask to a sane default.
-                                let mut new_status_mask = OnlineStatusMask::default();
-                                new_status_mask.set_status(OnlineStatus::Online);
-                                connection.player_data.volatile.online_status_mask =
-                                    i64::from(new_status_mask);
                                 let mut database = connection.database.lock();
                                 database.commit_volatile(&connection.player_data);
                             }

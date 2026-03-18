@@ -147,7 +147,6 @@ pub struct Volatile {
     pub display_flags: EquipDisplayFlag,
     pub title: i32,
     pub is_online: bool,
-    pub online_status_mask: i64,
     pub client_language: ClientLanguage,
 }
 

@@ -430,19 +430,8 @@ impl ZoneConnection {
 
     /// Determine the online status mask, with party/novice/mentor status.
     fn get_online_status_mask(&self) -> OnlineStatusMask {
-        let mut new_status_mask = OnlineStatusMask::default();
-        new_status_mask.set_status(OnlineStatus::Online);
-
-        if self.party_id != 0 {
-            if self.is_party_leader {
-                new_status_mask.set_status(OnlineStatus::PartyLeader);
-            }
-            new_status_mask.set_status(OnlineStatus::PartyMember);
-        }
-
-        new_status_mask.set_status(self.player_data.search_info.online_status);
-
-        new_status_mask
+        let mut database = self.database.lock();
+        database.determine_online_status_mask(self.player_data.character.content_id)
     }
 
     /// Grabs the correct online status, taking into account the priority of each icon.
@@ -470,8 +459,9 @@ impl ZoneConnection {
 
     /// Updates the online status not just on yourself but also informing other players.
     pub async fn update_online_status(&mut self) {
+        // TODO: re-review this now that OnlineStatusMask can be calculated independently from any ZoneConnection
+
         let online_status_mask = self.get_online_status_mask();
-        self.player_data.volatile.online_status_mask = i64::from(online_status_mask);
 
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::SetOnlineStatus(online_status_mask));
         self.send_ipc_self(ipc).await;
@@ -482,12 +472,6 @@ impl ZoneConnection {
                 self.get_actual_online_status(),
             ))
             .await;
-
-        // Commit the OnlineStatusMask back to the db so it can be used in SocialLists.
-        {
-            let mut db = self.database.lock();
-            db.commit_volatile(&self.player_data);
-        }
     }
 
     /// Searches for online players.

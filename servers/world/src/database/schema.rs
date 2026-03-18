@@ -64,7 +64,6 @@ diesel::table! {
         display_flags -> Integer,
         title -> Integer,
         is_online -> Bool,
-        online_status_mask -> BigInt,
         client_language -> Integer,
     }
 }

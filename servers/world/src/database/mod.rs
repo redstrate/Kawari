@@ -818,6 +818,44 @@ impl WorldDatabase {
         friend_entries
     }
 
+    /// Determine the online status mask, with party/novice/mentor status.
+    pub fn determine_online_status_mask(&mut self, for_content_id: i64) -> OnlineStatusMask {
+        let mut new_status_mask = OnlineStatusMask::default();
+
+        if schema::volatile::dsl::volatile
+            .select(schema::volatile::dsl::is_online)
+            .filter(schema::volatile::dsl::content_id.eq(for_content_id))
+            .first::<bool>(&mut self.connection)
+            .unwrap_or_default()
+        {
+            new_status_mask.set_status(OnlineStatus::Online);
+        }
+
+        let parties: Vec<Party> = schema::party::dsl::party
+            .load(&mut self.connection)
+            .unwrap();
+        for party in parties {
+            if party.members.0.contains(&for_content_id) {
+                if party.leader_content_id == for_content_id {
+                    new_status_mask.set_status(OnlineStatus::PartyLeader);
+                }
+                new_status_mask.set_status(OnlineStatus::PartyMember);
+                break;
+            }
+        }
+
+        // And of course, add the user's chosen status'
+        new_status_mask.set_status(
+            schema::search_info::dsl::search_info
+                .select(schema::search_info::dsl::online_status)
+                .filter(schema::search_info::dsl::content_id.eq(for_content_id))
+                .first::<OnlineStatus>(&mut self.connection)
+                .unwrap(),
+        );
+
+        new_status_mask
+    }
+
     pub fn get_player_entry(
         &mut self,
         game_data: &mut GameData,
@@ -832,11 +870,9 @@ impl WorldDatabase {
         let classjob_id;
         let classjob_level;
         {
-            online = schema::volatile::dsl::volatile
-                .select(schema::volatile::dsl::is_online)
-                .filter(schema::volatile::dsl::content_id.eq(for_content_id))
-                .first::<bool>(&mut self.connection)
-                .unwrap();
+            online_status_mask = self.determine_online_status_mask(for_content_id);
+
+            online = online_status_mask.has_status(OnlineStatus::Online);
             client_language = schema::volatile::dsl::volatile
                 .select(schema::volatile::dsl::client_language)
                 .filter(schema::volatile::dsl::content_id.eq(for_content_id))
@@ -850,18 +886,6 @@ impl WorldDatabase {
                     .unwrap_or_default() as u16
             } else {
                 0
-            };
-
-            online_status_mask = if online {
-                OnlineStatusMask::from(
-                    schema::volatile::dsl::volatile
-                        .select(schema::volatile::dsl::online_status_mask)
-                        .filter(schema::volatile::dsl::content_id.eq(for_content_id))
-                        .first::<i64>(&mut self.connection)
-                        .unwrap_or_default(),
-                )
-            } else {
-                OnlineStatusMask::default()
             };
 
             social_ui_languages = schema::search_info::dsl::search_info
@@ -1007,11 +1031,6 @@ impl WorldDatabase {
         // We expect these to be "offline" as the initial state elsewhere for things like the online player count and friend lists to function correctly.
         diesel::update(volatile)
             .set(is_online.eq(false))
-            .execute(&mut self.connection)
-            .unwrap();
-
-        diesel::update(volatile)
-            .set(online_status_mask.eq(0))
             .execute(&mut self.connection)
             .unwrap();
     }
