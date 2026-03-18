@@ -824,6 +824,7 @@ impl WorldDatabase {
     pub fn determine_online_status_mask(&mut self, for_content_id: i64) -> OnlineStatusMask {
         let mut new_status_mask = OnlineStatusMask::default();
 
+        // Only apply online-related statuses if they're actually online.
         if schema::volatile::dsl::volatile
             .select(schema::volatile::dsl::is_online)
             .filter(schema::volatile::dsl::content_id.eq(for_content_id))
@@ -831,29 +832,29 @@ impl WorldDatabase {
             .unwrap_or_default()
         {
             new_status_mask.set_status(OnlineStatus::Online);
-        }
 
-        let parties: Vec<Party> = schema::party::dsl::party
-            .load(&mut self.connection)
-            .unwrap();
-        for party in parties {
-            if party.members.0.contains(&for_content_id) {
-                if party.leader_content_id == for_content_id {
-                    new_status_mask.set_status(OnlineStatus::PartyLeader);
+            let parties: Vec<Party> = schema::party::dsl::party
+                .load(&mut self.connection)
+                .unwrap();
+            for party in parties {
+                if party.members.0.contains(&for_content_id) {
+                    if party.leader_content_id == for_content_id {
+                        new_status_mask.set_status(OnlineStatus::PartyLeader);
+                    }
+                    new_status_mask.set_status(OnlineStatus::PartyMember);
+                    break;
                 }
-                new_status_mask.set_status(OnlineStatus::PartyMember);
-                break;
             }
-        }
 
-        // And of course, add the user's chosen status'
-        new_status_mask.set_status(
-            schema::search_info::dsl::search_info
-                .select(schema::search_info::dsl::online_status)
-                .filter(schema::search_info::dsl::content_id.eq(for_content_id))
-                .first::<OnlineStatus>(&mut self.connection)
-                .unwrap(),
-        );
+            // And of course, add the user's chosen status
+            new_status_mask.set_status(
+                schema::search_info::dsl::search_info
+                    .select(schema::search_info::dsl::online_status)
+                    .filter(schema::search_info::dsl::content_id.eq(for_content_id))
+                    .first::<OnlineStatus>(&mut self.connection)
+                    .unwrap(),
+            );
+        }
 
         new_status_mask
     }
@@ -941,20 +942,27 @@ impl WorldDatabase {
                 .unwrap_or_default()
                 .is_empty();
 
-            classjob_id = schema::classjob::dsl::classjob
-                .select(schema::classjob::dsl::current_class)
-                .filter(schema::classjob::dsl::content_id.eq(for_content_id))
-                .first::<i32>(&mut self.connection)
-                .unwrap() as u8;
+            classjob_id = if online {
+                schema::classjob::dsl::classjob
+                    .select(schema::classjob::dsl::current_class)
+                    .filter(schema::classjob::dsl::content_id.eq(for_content_id))
+                    .first::<i32>(&mut self.connection)
+                    .unwrap() as u8
+            } else {
+                0
+            };
 
-            let index = game_data.classjob_exp_indexes[classjob_id as usize];
-
-            classjob_level = schema::classjob::dsl::classjob
-                .select(schema::classjob::dsl::levels)
-                .filter(schema::classjob::dsl::content_id.eq(for_content_id))
-                .first::<ClassLevels>(&mut self.connection)
-                .unwrap()
-                .0[index as usize] as u8;
+            classjob_level = if online {
+                let index = game_data.classjob_exp_indexes[classjob_id as usize];
+                schema::classjob::dsl::classjob
+                    .select(schema::classjob::dsl::levels)
+                    .filter(schema::classjob::dsl::content_id.eq(for_content_id))
+                    .first::<ClassLevels>(&mut self.connection)
+                    .unwrap()
+                    .0[index as usize] as u8
+            } else {
+                0
+            };
         }
 
         let character_name;
@@ -972,7 +980,7 @@ impl WorldDatabase {
 
         PlayerEntry {
             content_id: for_content_id as u64,
-            current_world_id: config.world.world_id,
+            current_world_id: if online { config.world.world_id } else { 0 },
             ui_flags: SocialListUIFlags::ENABLE_CONTEXT_MENU,
             unk2: [
                 0,
