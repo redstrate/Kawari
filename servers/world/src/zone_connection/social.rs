@@ -509,7 +509,7 @@ impl ZoneConnection {
                 // Check if we're searching by last name. The client sends the last name query with a space at the beginning.
                 let by_last_name = name.chars().nth(0).unwrap() == ' ';
 
-                // Next, correct the search query string to remove any spaces. If it fails for some reason, just give up and say no results found.
+                // Next, correct the search query string to remove any spaces.
                 let search_name = name.trim().to_owned();
 
                 // Split the player's full name into first and last halves.
