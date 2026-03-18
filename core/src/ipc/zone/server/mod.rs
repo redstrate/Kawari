@@ -92,8 +92,8 @@ pub use free_company::FcHierarchy;
 
 mod actor_move;
 use crate::common::{
-    DeepDungeonRoomFlag, HandlerId, LandData, ObjectTypeId, Position, read_packed_position,
-    write_packed_position,
+    CustomizeData, DeepDungeonRoomFlag, HandlerId, LandData, ObjectTypeId, Position,
+    read_packed_position, write_packed_position,
 };
 use crate::constants::{
     AVAILABLE_CLASSJOBS, COMPLETED_LEVEQUEST_BITMASK_SIZE, COMPLETED_QUEST_BITMASK_SIZE,
@@ -995,6 +995,7 @@ pub enum ServerZoneIpcData {
         unk2: [u8; 160], // also seems empty
         classjob_levels: [(u16, u16); AVAILABLE_CLASSJOBS],
     },
+    SetPlayerCustomizeData(CustomizeData),
 }
 
 #[cfg(test)]

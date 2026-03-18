@@ -575,6 +575,10 @@ ServerZoneIpcType:
     comment: Used when the player requests someone else's search info.
     opcode: 419
     size: 424
+  - name: SetPlayerCustomizeData
+    comment: Unknown purpose.
+    opcode: 937
+    size: 26
 ClientZoneIpcType:
   - name: InitRequest
     comment: Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)
