@@ -2,7 +2,9 @@ mod models;
 use std::collections::HashMap;
 
 use kawari::config::get_config;
-use kawari::ipc::zone::{GameMasterRank, OnlineStatus, SocialListUIFlags, SocialListUILanguages};
+use kawari::ipc::zone::{
+    GameMasterRank, OnlineStatus, ServerZoneIpcData, SocialListUIFlags, SocialListUILanguages,
+};
 pub use models::{
     AetherCurrent, Aetheryte, Character, ClassJob, Companion, Content, Friends, Mentor, Quest,
     SearchInfo, Unlock, Volatile,
@@ -853,6 +855,46 @@ impl WorldDatabase {
         );
 
         new_status_mask
+    }
+
+    pub fn get_search_info(
+        &mut self,
+        game_data: &mut GameData,
+        for_content_id: i64,
+    ) -> ServerZoneIpcData {
+        let config = get_config();
+
+        let comment = schema::search_info::dsl::search_info
+            .select(schema::search_info::dsl::comment)
+            .filter(schema::search_info::dsl::content_id.eq(for_content_id))
+            .first::<String>(&mut self.connection)
+            .unwrap_or_default();
+
+        let levels = schema::classjob::dsl::classjob
+            .select(schema::classjob::dsl::levels)
+            .filter(schema::classjob::dsl::content_id.eq(for_content_id))
+            .first::<ClassLevels>(&mut self.connection)
+            .unwrap();
+
+        // TODO: remove hardcoded 42 here please
+        let mut classjob_levels = [(0u16, 0u16); 42];
+        for (i, (index, level)) in classjob_levels.iter_mut().enumerate() {
+            *index = i as u16 + 1;
+
+            let exp_index = game_data.classjob_exp_indexes[i + 1];
+            if exp_index != -1 {
+                *level = levels.0[exp_index as usize];
+            }
+        }
+
+        ServerZoneIpcData::OtherSearchInfo {
+            content_id: for_content_id as u64,
+            unk1: [0; 26],
+            world_id: config.world.world_id,
+            comment,
+            unk2: [0; 160],
+            classjob_levels,
+        }
     }
 
     pub fn get_player_entry(

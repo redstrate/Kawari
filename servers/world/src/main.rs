@@ -2312,8 +2312,17 @@ async fn process_packet(
                                 ))
                                 .await;
                         }
-                        ClientZoneIpcData::RequestSearchInfo { .. } => {
-                            tracing::info!("Requesting search info is unimplemented");
+                        ClientZoneIpcData::RequestSearchInfo { content_id, .. } => {
+                            let search_info;
+                            {
+                                let mut database = connection.database.lock();
+                                let mut game_data = connection.gamedata.lock();
+                                search_info =
+                                    database.get_search_info(&mut game_data, *content_id as i64);
+                            }
+
+                            let ipc = ServerZoneIpcSegment::new(search_info);
+                            connection.send_ipc_self(ipc).await;
                         }
                         ClientZoneIpcData::RequestAdventurerPlate { .. } => {
                             tracing::info!("Requesting adventurer plates is unimplemented");

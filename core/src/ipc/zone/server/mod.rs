@@ -982,6 +982,18 @@ pub enum ServerZoneIpcData {
         name: String,
         unk2: [u8; 272],
     },
+    OtherSearchInfo {
+        content_id: u64,
+        unk1: [u8; 26], // seems empty but not 100%
+        world_id: u16,
+        #[brw(pad_size_to = 60)]
+        #[br(count = 60)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        comment: String,
+        unk2: [u8; 160], // also seems empty
+        classjob_levels: [(u16, u16); 42],
+    },
 }
 
 #[cfg(test)]
