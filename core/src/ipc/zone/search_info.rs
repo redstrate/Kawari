@@ -70,6 +70,7 @@ impl From<&GrandCompany> for SearchUIGrandCompanies {
     }
 }
 
+// These are intentionally classjob_id - 1 since they're used as bitflags.
 #[binrw]
 #[brw(repr = u8)]
 #[derive(Clone, Copy, Debug, Default, EnumIter, Eq, FromRepr, Hash, PartialEq)]
