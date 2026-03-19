@@ -9,7 +9,7 @@ use kawari::common::{
     PlayerStateFlags2, PlayerStateFlags3, Position, calculate_max_level,
 };
 use kawari::config::{FilesystemConfig, get_config};
-use kawari_world::inventory::{Item, Storage, get_next_free_slot};
+use kawari_world::inventory::{EquipSlot, Item, Storage, get_next_free_slot};
 
 use kawari::ipc::chat::{ChatChannel, ClientChatIpcData};
 
@@ -1631,9 +1631,9 @@ async fn process_packet(
                             // This is annoying, basically if we change weapons the client expects the *server* to also equip the relevant job crystal if available.
                             // The client DOES not send us an ItemOperation for this, but in turn we don't have to inform them about the update.
                             if (action.src_storage_id == ContainerType::Equipped
-                                && action.src_container_index == 0)
+                                && action.src_container_index == EquipSlot::MainHand as u16)
                                 || (action.dst_storage_id == ContainerType::Equipped
-                                    && action.dst_container_index == 0)
+                                    && action.dst_container_index == EquipSlot::MainHand as u16)
                             {
                                 tracing::info!("Changing class based on weapon...");
 
@@ -1666,15 +1666,18 @@ async fn process_packet(
                                     tracing::info!(
                                         "*We* are unequipping the soul crystal based on client behavior..."
                                     );
-                                    connection.player_data.inventory.unequip_equipment(13);
+                                    connection
+                                        .player_data
+                                        .inventory
+                                        .unequip_equipment(EquipSlot::SoulCrystal as u16);
                                 }
                             }
 
                             // If the soul crystal is changed, ensure we update accordingly.
                             if (action.src_storage_id == ContainerType::Equipped
-                                && action.src_container_index == 13)
+                                && action.src_container_index == EquipSlot::SoulCrystal as u16)
                                 || (action.dst_storage_id == ContainerType::Equipped
-                                    && action.dst_container_index == 13)
+                                    && action.dst_container_index == EquipSlot::SoulCrystal as u16)
                             {
                                 let soul_crystal =
                                     connection.player_data.inventory.equipped.soul_crystal;
@@ -1692,7 +1695,7 @@ async fn process_packet(
                             }
 
                             // This is also something done client-side.
-                            connection.remove_incompatible_armor().await;
+                            connection.remove_incompatible_armor(action).await;
 
                             // If the client modified their equipped items, we have to process that
                             if action.src_storage_id == ContainerType::Equipped

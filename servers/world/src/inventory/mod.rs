@@ -11,7 +11,7 @@ mod buyback;
 pub use buyback::BuyBackList;
 
 mod equipped;
-pub use equipped::EquippedStorage;
+pub use equipped::{EQUIP_RESTRICTED, EquipSlot, EquippedStorage};
 
 mod generic;
 pub use generic::GenericStorage;
@@ -528,6 +528,7 @@ impl Inventory {
             &destination_info.container,
             destination_info.index,
         );
-        self.equipped.get_slot_mut(slot).quantity = 0;
+
+        *self.equipped.get_slot_mut(slot) = Item::default();
     }
 }
