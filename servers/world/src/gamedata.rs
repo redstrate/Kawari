@@ -103,6 +103,8 @@ pub struct ItemInfo {
     pub price_low: u32,
     /// The item's equip category.
     pub equip_category: u8,
+    /// The item's equip restrictions.
+    pub equip_restrictions: ItemEquipRestrictions,
     /// The item's primary model id.
     pub primary_model_id: u64,
     /// The item's sub model id.
@@ -123,6 +125,18 @@ pub struct ItemInfo {
 pub enum ItemInfoQuery {
     ById(u32),
     ByName(String),
+}
+
+/// Struct detailing what slots, if any, this item blocks from equipping. Accessories are not considered here since they never block other items.
+#[derive(Clone, Debug, Default)]
+pub struct ItemEquipRestrictions {
+    pub main_hand: i8,
+    pub off_hand: i8,
+    pub head: i8,
+    pub body: i8,
+    pub hands: i8,
+    pub legs: i8,
+    pub feet: i8,
 }
 
 #[derive(Debug)]
@@ -336,6 +350,9 @@ impl GameData {
                 base_param_values: matched_row
                     .BaseParamValue()
                     .map(|x| x.into_i16().copied().unwrap()),
+                equip_restrictions: self
+                    .get_equipslot_restrictions(*matched_row.EquipSlotCategory().into_u8().unwrap())
+                    .unwrap(),
             };
 
             return Some(item_info);
@@ -522,6 +539,23 @@ impl GameData {
         }
 
         None
+    }
+
+    // Returns information on what item slots, if any, this equipslot configuration blocks.
+    // For example, a two-handed weapon (MainHand = 1, OffHand = -1) will always block an off-hand from being equipped.
+    fn get_equipslot_restrictions(&mut self, equipslot_id: u8) -> Option<ItemEquipRestrictions> {
+        let sheet = EquipSlotCategorySheet::read_from(&mut self.resource, Language::None).ok()?;
+        let row = sheet.row(equipslot_id as u32)?;
+
+        Some(ItemEquipRestrictions {
+            main_hand: *row.MainHand().into_i8()?,
+            off_hand: *row.OffHand().into_i8()?,
+            head: *row.Head().into_i8()?,
+            body: *row.Body().into_i8()?,
+            hands: *row.Gloves().into_i8()?,
+            legs: *row.Legs().into_i8()?,
+            feet: *row.Feet().into_i8()?,
+        })
     }
 
     pub fn get_casttime(&mut self, action_id: u32) -> Option<u16> {

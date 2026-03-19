@@ -804,15 +804,20 @@ async fn process_packet(
                                 connection.send_ipc_self(ipc).await;
                             }
 
+                            let level;
+                            {
+                                let mut game_data = connection.gamedata.lock();
+
+                                level = connection
+                                    .player_data
+                                    .inventory
+                                    .equipped
+                                    .calculate_item_level(&mut game_data)
+                                    as u32;
+                            }
+
                             connection
-                                .actor_control_self(ActorControlCategory::SetItemLevel {
-                                    level: connection
-                                        .player_data
-                                        .inventory
-                                        .equipped
-                                        .calculate_item_level()
-                                        as u32,
-                                })
+                                .actor_control_self(ActorControlCategory::SetItemLevel { level })
                                 .await;
 
                             connection
