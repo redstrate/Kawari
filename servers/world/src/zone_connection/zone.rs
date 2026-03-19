@@ -201,10 +201,19 @@ impl ZoneConnection {
             self.send_ipc_self(ipc).await;
         }
 
-        self.actor_control_self(ActorControlCategory::SetItemLevel {
-            level: self.player_data.inventory.equipped.calculate_item_level() as u32,
-        })
-        .await;
+        let level;
+        {
+            let mut game_data = self.gamedata.lock();
+
+            level = self
+                .player_data
+                .inventory
+                .equipped
+                .calculate_item_level(&mut game_data) as u32;
+        }
+
+        self.actor_control_self(ActorControlCategory::SetItemLevel { level })
+            .await;
 
         // send some weird thing to make the zone load correctly
         if !bound_by_duty {

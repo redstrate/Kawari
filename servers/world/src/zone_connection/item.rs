@@ -200,10 +200,20 @@ impl ZoneConnection {
 
         // TODO: get a capture of another player equipping stuff to see if we get this as well, but it seems unlikely.
         if self.player_data.character.actor_id == actor_id {
-            self.actor_control_self(ActorControlCategory::SetItemLevel {
-                level: self.player_data.inventory.equipped.calculate_item_level() as u32,
-            })
-            .await;
+            let level;
+            {
+                let mut game_data = self.gamedata.lock();
+
+                level = self
+                    .player_data
+                    .inventory
+                    .equipped
+                    .calculate_item_level(&mut game_data) as u32;
+            }
+
+            self.actor_control_self(ActorControlCategory::SetItemLevel { level })
+                .await;
+
             // This seems to be pattern/crest related, it's seen when (un)equipping stuff.
             self.actor_control_self(ActorControlCategory::Unknown {
                 category: 57,
