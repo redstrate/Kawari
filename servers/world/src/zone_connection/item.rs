@@ -2,15 +2,17 @@
 
 use crate::{
     ItemInfoQuery, ToServer, ZoneConnection,
-    inventory::{Item, Storage},
+    inventory::{EQUIP_RESTRICTED, EquipSlot, Item, Storage},
 };
 use kawari::{
     common::{ContainerType, ItemOperationKind, ObjectId},
     ipc::zone::{
-        ActorControlCategory, ContainerInfo, CurrencyInfo, Equip, ItemInfo, ServerZoneIpcData,
-        ServerZoneIpcSegment,
+        ActorControlCategory, ContainerInfo, CurrencyInfo, Equip, ItemInfo, ItemOperation,
+        ServerZoneIpcData, ServerZoneIpcSegment,
     },
 };
+
+use strum::IntoEnumIterator;
 
 impl ZoneConnection {
     /// Inform other clients (including yourself) that you changed your equipped model ids.
@@ -377,21 +379,62 @@ impl ZoneConnection {
     }
 
     /// Removes armor that's incompatible with your current class.
-    pub async fn remove_incompatible_armor(&mut self) {
+    pub async fn remove_incompatible_armor(&mut self, action: &ItemOperation) {
         // NOTE: This has to match client behavior exactly! As this happens client-side.
 
         let mut game_data = self.gamedata.lock();
 
-        for slot in 0..self.player_data.inventory.equipped.max_slots() as u16 {
-            let item = self.player_data.inventory.equipped.get_slot(slot);
+        // First remove incompatible classjob gear.
+        for slot in EquipSlot::iter() {
+            let item = self.player_data.inventory.equipped.get_slot(slot as u16);
             if item.quantity > 0 {
                 let classjob_category = game_data.get_item_classjobcategory(item.id);
                 let classjobs = game_data.get_applicable_classjobs(classjob_category as u16);
                 if !classjobs.contains(&(self.player_data.classjob.current_class as u8)) {
                     tracing::info!(
-                        "Unequipping item in slot {slot} because its incompatible with the current class."
+                        "Unequipping item in slot {slot:#?} because it's incompatible with the current class."
                     );
-                    self.player_data.inventory.unequip_equipment(slot);
+                    self.player_data.inventory.unequip_equipment(slot as u16);
+                }
+            }
+        }
+
+        // Then unequip slots that are restricted by any body armor.
+        let body_item = self
+            .player_data
+            .inventory
+            .equipped
+            .get_slot(EquipSlot::Body as u16);
+        if body_item.quantity > 0
+            && let Some(body_item_info) = game_data.get_item_info(ItemInfoQuery::ById(body_item.id))
+        {
+            let body_restrictions = [
+                (EquipSlot::Head, body_item_info.equip_restrictions.head),
+                (EquipSlot::Hands, body_item_info.equip_restrictions.hands),
+                (EquipSlot::Legs, body_item_info.equip_restrictions.legs),
+                (EquipSlot::Feet, body_item_info.equip_restrictions.feet),
+            ];
+            for (slot, restriction) in body_restrictions {
+                if action.dst_storage_id == ContainerType::Equipped
+                    && restriction == EQUIP_RESTRICTED
+                {
+                    // If body was equipped, remove this restricted gear.
+                    if action.dst_container_index == EquipSlot::Body as u16 {
+                        tracing::info!(
+                            "Unequipping item in slot {slot:#?} because it's incompatible with the current body armor."
+                        );
+                        self.player_data.inventory.unequip_equipment(slot as u16);
+                    }
+                    // Otherwise, we're equipping into a restricted slot, so remove the body instead and exit the loop.
+                    else if action.dst_container_index == slot as u16 {
+                        tracing::info!(
+                            "Unequipping item in slot Body because it's incompatible with the current {slot:#?} armor."
+                        );
+                        self.player_data
+                            .inventory
+                            .unequip_equipment(EquipSlot::Body as u16);
+                        break;
+                    }
                 }
             }
         }
