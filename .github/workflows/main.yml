@@ -97,7 +97,6 @@ jobs:
         name: Kawari-${{ runner.os }}
         path: |
           LICENSE
-          USAGE.md
           README.md
           kawari-admin*
           kawari-frontier*
