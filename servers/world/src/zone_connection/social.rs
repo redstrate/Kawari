@@ -128,12 +128,13 @@ impl ZoneConnection {
         update_status: PartyUpdateStatus,
         party_info: Option<(u64, u32, ObjectId, Vec<PartyMemberEntry>)>,
     ) {
+        let mut member_count = 0;
         if let Some((party_id, chatchannel_id, leader_actor_id, mut party_list)) = party_info {
             if self.party_id == 0 {
                 self.party_id = party_id;
             }
 
-            let member_count = party_list.len() as u8;
+            member_count = party_list.len() as u8;
 
             let Some(leader_index) = party_list
                 .iter()
@@ -191,7 +192,7 @@ impl ZoneConnection {
             // If there's no data, then we're the one who left.
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PartyList {
                 members: vec![PartyMemberEntry::default(); PartyMemberEntry::NUM_ENTRIES],
-                member_count: 0,
+                member_count,
                 leader_index: 0,
                 party_id: 0,
                 party_chatchannel: ChatChannel {
@@ -218,9 +219,13 @@ impl ZoneConnection {
             update_status,
             execute_name: targets.execute_name,
             target_name: targets.target_name,
-            unk1: 0,
-            unk2: 0,
-            unk3: 0,
+            unk1: 1,
+            unk2: if update_status == PartyUpdateStatus::ReadyCheckResponse {
+                0
+            } else {
+                2 // TODO: figure out what the other values of unk2 mean
+            },
+            unk3: member_count,
         });
 
         self.send_ipc_self(ipc).await;

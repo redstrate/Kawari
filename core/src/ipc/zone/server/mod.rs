@@ -531,13 +531,15 @@ pub enum ServerZoneIpcData {
         #[brw(pad_after = 6)] // empty
         sender_name: String,
     },
+    /// This opcode informs the client about members leaving, joining, going offline, if the party is disbanding, and even handles ready checking directly within it. When a ready check is initiated, the target_content_id field is treated differently and used to keep track of the party's votes. While further information can be found below on the unk2 field, most of this process is described in more detail in party_misc.rs, on the ReadyCheckReply struct.
     PartyUpdate {
         execute_account_id: u64,
         target_account_id: u64,
         execute_content_id: u64,
         target_content_id: u64,
         unk1: u8, // TODO: Usually 1? What is this?
-        unk2: u8, // TODO: Usually 1? What is this?
+        /// This field seems to control what "mode" the target_content_id field operates in. During ready checks, this field is set to zero, and 2 otherwise. It's unclear at this time what 2 represents. When this field is set to zero, the client seems to treat the target_content_id as a pseudo-array of 8 bytes that indicate the party's yes or no votes for ready checks.
+        unk2: u8,
         update_status: PartyUpdateStatus,
         unk3: u8, // TODO: Usually 2? What is this?
         #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]

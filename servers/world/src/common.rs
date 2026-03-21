@@ -21,9 +21,9 @@ use kawari::{
         zone::{
             ActionRequest, ActorControlCategory, ClientTrigger, Conditions, Config, InviteReply,
             InviteType, NpcSpawn, ObjectSpawn, OnlineStatus, PartyMemberEntry,
-            PartyMemberPositions, PartyUpdateStatus, PlayerSpawn, ServerZoneIpcSegment,
-            StrategyBoard, StrategyBoardUpdate, WaymarkPlacementMode, WaymarkPosition,
-            WaymarkPreset,
+            PartyMemberPositions, PartyUpdateStatus, PlayerSpawn, ReadyCheckReply,
+            ServerZoneIpcSegment, StrategyBoard, StrategyBoardUpdate, WaymarkPlacementMode,
+            WaymarkPosition, WaymarkPreset,
         },
     },
 };
@@ -372,6 +372,10 @@ pub enum ToServer {
     BroadcastActorControl(ObjectId, ActorControlCategory),
     /// The client invited another player to be friends.
     InvitePlayerToFriendList(ObjectId, u64, String),
+    /// The client initiated a ready check for their party.
+    ReadyCheckInitiated(Option<u64>, ObjectId, u64, u64, String),
+    /// The client responded to an on-going ready check in their party.
+    ReadyCheckResponse(Option<u64>, ObjectId, u64, u64, String, ReadyCheckReply),
 }
 
 #[derive(Clone, Debug)]
