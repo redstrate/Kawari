@@ -337,6 +337,12 @@ async fn client_chat_loop(
                                             ClientChatIpcData::GetChannelList { unk } => {
                                                 tracing::info!("GetChannelList: {:#?} from {}", unk, connection.actor_id);
                                             }
+                                            ClientChatIpcData::SendCWLinkshellMessage(_data) => {
+                                                tracing::info!("Chatting in CWLSes is unimplemented");
+                                            }
+                                            ClientChatIpcData::SendAllianceMessage(_data) => {
+                                                tracing::info!("Chatting in alliances is unimplemented");
+                                            }
                                             ClientChatIpcData::Unknown { unk } => {
                                                 tracing::warn!("Unknown Chat packet {:?} recieved ({} bytes), this should be handled!", data.header.op_code, unk.len());
                                             }
@@ -2636,6 +2642,12 @@ async fn process_packet(
                         }
                         ClientZoneIpcData::SetFriendGroupIcon { .. } => {
                             tracing::warn!("Setting friend group icons is unimplemented");
+                        }
+                        ClientZoneIpcData::CreateLocalLinkshellRequest { .. } => {
+                            tracing::warn!("Creating local linkshells is unimplemented");
+                        }
+                        ClientZoneIpcData::CrossworldLinkshellMemberListRequest { .. } => {
+                            tracing::warn!("Requesting member lists for CWLSes is unimplemented");
                         }
                     }
                 }

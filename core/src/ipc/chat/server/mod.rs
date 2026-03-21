@@ -2,15 +2,22 @@ use binrw::binrw;
 use kawari_core_macro::opcode_data;
 
 use crate::{
+    ipc::chat::SendCWLinkshellMessage,
     opcodes::ServerChatIpcType,
     packet::{IpcSegment, ServerIpcSegmentHeader},
 };
+
+mod alliance_message;
+pub use alliance_message::{AllianceMessage, AllianceMessageEcho};
 
 mod tell_message;
 pub use tell_message::{TellMessage, TellNotFoundError};
 
 mod party_message;
 pub use party_message::PartyMessage;
+
+mod cwlinkshell_message;
+pub use cwlinkshell_message::CWLinkshellMessage;
 
 pub type ServerChatIpcSegment =
     IpcSegment<ServerIpcSegmentHeader<ServerChatIpcType>, ServerChatIpcType, ServerChatIpcData>;
@@ -38,6 +45,10 @@ pub enum ServerChatIpcData {
     GetChannelListResponse {
         unk: [u8; 768],
     },
+    CWLinkshellMessageEcho(SendCWLinkshellMessage),
+    CWLinkshellMessage(CWLinkshellMessage),
+    AllianceMessage(AllianceMessage),
+    AllianceMessageEcho(AllianceMessageEcho),
 }
 
 #[cfg(test)]

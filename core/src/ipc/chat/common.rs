@@ -5,11 +5,12 @@ use binrw::binrw;
 #[derive(Clone, Copy, Debug, Default)]
 pub enum ChatChannelType {
     #[default]
-    CWLinkshellOrNone = 0,
+    None = 0,
     Party = 1,
     Linkshell = 2,
     FreeCompany = 3,
-    NoviceNetwork = 4,
+    NoviceNetwork = 4, // TODO: Is there a type 5? It's unclear at the moment, but alliance seems to piggyback off the party chat?
+    CWLinkshell = 6,
 
     // These technically don't belong here, but if we ever internally represent zone connection chats with ChatChannels (e.g. for multiple worlds, or maybe routing zone chat based on the channel number maybe being a zone id?), these are good to have. These only directly show up as u16s in zone connection chat messages.
     Say = 10,
