@@ -114,15 +114,18 @@ pub struct PartyMemberPositions {
     pub positions: [MemberPosition; PartyMemberEntry::NUM_ENTRIES],
 }
 
+/// Values used to bitwise-OR into the ready check "content id". The ready check feature re-uses the target_content_id field of PartyUpdate as a pseudo-array of party members. Each party member's index directly corresponds to (ReadyCheckReply as u64) << (8 * party_member_index). In other words, each byte in the u64 target content id is reused for each party member (little endian). For each vote, the server sends a newly updated target content id reflecting the current status of all voters, via PartyUpdate.
 #[binrw]
 #[brw(repr = u8)]
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
-/// Content ids (yes, really) used in the target content id field of a PartyUpdate packet, indicating the response to a ready check.
-// TODO: It's possible these may change based on the number of party members, or that this isn't entirely correct. This is currently still under research.
 pub enum ReadyCheckReply {
+    /// If the player hasn't answered yet, their response is set to this value.
     #[default]
-    Yes = 257,
-    No = 513,
+    Unanswered = 0,
+    /// If the player has answered that they're ready, this will be the value sent.
+    Yes = 1,
+    /// Otherwise if the player isn't ready, or times out by not answering at all, this will be selected. The client will actually auto-answer and send the response to the server when the timeout expires, so the server doesn't need to do any special timing on its side.
+    No = 2,
 }
 
 #[cfg(test)]

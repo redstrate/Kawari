@@ -20,8 +20,8 @@ use kawari::ipc::zone::{
 };
 
 use kawari::ipc::zone::{
-    Blacklist, BlacklistedCharacter, ClientTriggerCommand, ClientZoneIpcData, ServerZoneIpcData,
-    ServerZoneIpcSegment,
+    Blacklist, BlacklistedCharacter, ClientTriggerCommand, ClientZoneIpcData, ReadyCheckReply,
+    ServerZoneIpcData, ServerZoneIpcSegment,
 };
 
 use kawari::common::{CharacterMode, NETWORK_TIMEOUT, RECEIVE_BUFFER_SIZE};
@@ -2484,10 +2484,54 @@ async fn process_packet(
                             );
                         }
                         ClientZoneIpcData::InitiateReadyCheck { .. } => {
-                            tracing::info!("Initiating ready checks is unimplemented");
+                            // TODO: Remove this `let party_id` in an upcoming party refactor, this is temporary
+                            let party_id = if connection.party_id != 0 {
+                                Some(connection.party_id)
+                            } else {
+                                None
+                            };
+
+                            connection
+                                .handle
+                                .send(ToServer::ReadyCheckInitiated(
+                                    party_id,
+                                    connection.player_data.character.actor_id,
+                                    connection.player_data.character.service_account_id as u64,
+                                    connection.player_data.character.content_id as u64,
+                                    connection.player_data.character.name.clone(),
+                                ))
+                                .await;
                         }
-                        ClientZoneIpcData::ReadyCheckResponse { response: _ } => {
-                            tracing::info!("Replying to ready checks is unimplemented");
+                        ClientZoneIpcData::ReadyCheckResponse { response } => {
+                            // TODO: Remove this `let party_id` in an upcoming party refactor, this is temporary
+                            let party_id = if connection.party_id != 0 {
+                                Some(connection.party_id)
+                            } else {
+                                None
+                            };
+
+                            // As usual, another client value that doesn't match up with values we respond with...
+                            let response = match response {
+                                1 => ReadyCheckReply::Yes,
+                                _ => ReadyCheckReply::No, // This opcode should only ever give us 1 or 0, but it doesn't hurt to guard against bad inputs.
+                            };
+
+                            tracing::info!(
+                                "client {} replied to ready check with {response:#?}",
+                                connection.player_data.character.actor_id
+                            );
+
+                            connection
+                                .handle
+                                .send(ToServer::ReadyCheckResponse(
+                                    party_id,
+                                    connection.player_data.character.actor_id,
+                                    connection.player_data.character.service_account_id as u64,
+                                    connection.player_data.character.content_id as u64,
+                                    connection.player_data.character.name.clone(),
+                                    response,
+                                ))
+                                .await;
                         }
                         ClientZoneIpcData::RequestMarketBoardItems { sequence, .. } => {
                             // TODO: placeholder, of course

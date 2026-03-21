@@ -15,8 +15,8 @@ use kawari::{
     common::{CharacterMode, ObjectId, ObjectTypeId, Position},
     ipc::zone::{
         ActorControlCategory, PartyMemberEntry, PartyMemberPositions, PartyUpdateStatus,
-        ServerZoneIpcData, ServerZoneIpcSegment, WaymarkPlacementMode, WaymarkPosition,
-        WaymarkPositions, WaymarkPreset,
+        ReadyCheckReply, ServerZoneIpcData, ServerZoneIpcSegment, WaymarkPlacementMode,
+        WaymarkPosition, WaymarkPositions, WaymarkPreset,
     },
 };
 
@@ -32,6 +32,8 @@ pub struct PartyMember {
     pub position: Position,
     /// If this party member is riding pillion, we need to store who the driver is.
     pub pillion_driver_id: ObjectId,
+    /// If a ready check is underway, we need to store this member's response.
+    pub ready_check_reply: ReadyCheckReply,
 }
 
 impl PartyMember {
@@ -56,6 +58,7 @@ pub struct Party {
     pub stratboard_realtime_host: Option<u64>, // Only one player can send a board or host real-time sharing at a time
     pub target_signs: [ObjectTypeId; NUM_TARGET_SIGNS], // NOTE: We deviate from retail here, which seems to have per-instance lists of marked targets, and instead just have one per party for simplicity.
     pub waymarks: HashMap<i32, WaymarkPositions>, // TODO: If/when we ever get unique instance identifiers, use those instead of the zone id.
+    pub readycheck_host: Option<ObjectId>, // Only one ready check can be undertaken at a time.
 }
 
 impl Party {
@@ -1414,6 +1417,134 @@ pub fn handle_social_messages(
                 DestinationNetwork::ZoneClients,
             );
 
+            true
+        }
+        ToServer::ReadyCheckInitiated(
+            party_id,
+            from_actor_id,
+            execute_account_id,
+            execute_content_id,
+            execute_name,
+        ) => {
+            let Some(party_id) = party_id else {
+                return true;
+            };
+
+            let mut network = network.lock();
+            let Some(party) = network.parties.get_mut(party_id) else {
+                return true;
+            };
+
+            // Don't allow multiple ready checks at once.
+            if party.readycheck_host.is_some() {
+                return true;
+            }
+
+            // Set the initial ready check state.
+            party.readycheck_host = Some(*from_actor_id);
+
+            for member in &mut party.members {
+                if member.actor_id == *from_actor_id {
+                    member.ready_check_reply = ReadyCheckReply::Yes; // The ready check initiator's vote is always set to Yes.
+                } else {
+                    member.ready_check_reply = ReadyCheckReply::Unanswered;
+                }
+            }
+
+            let data = data.lock();
+            let party_list = build_party_list(party, &data);
+
+            let msg = FromServer::PartyUpdate(
+                PartyUpdateTargets {
+                    execute_account_id: *execute_account_id,
+                    execute_content_id: *execute_content_id,
+                    execute_name: execute_name.clone(),
+                    ..Default::default()
+                },
+                PartyUpdateStatus::ReadyCheckInitiated,
+                Some((*party_id, party.chatchannel_id, party.leader_id, party_list)),
+            );
+
+            network.send_to_party(*party_id, None, msg, DestinationNetwork::ZoneClients);
+            true
+        }
+        ToServer::ReadyCheckResponse(
+            party_id,
+            from_actor_id,
+            execute_account_id,
+            execute_content_id,
+            execute_name,
+            response,
+        ) => {
+            let Some(party_id) = party_id else {
+                return true;
+            };
+
+            let mut network = network.lock();
+            let Some(party) = network.parties.get_mut(party_id) else {
+                return true;
+            };
+
+            // Don't proceed if no ready check is underway.
+            let Some(readycheck_host) = party.readycheck_host else {
+                return true;
+            };
+
+            let mut starter_index = usize::MAX;
+
+            // Record both the party member's vote and store the ready check starter's member index so we can use it directly after this.
+            for (index, member) in party.members.iter_mut().enumerate() {
+                if member.actor_id == *from_actor_id {
+                    member.ready_check_reply = *response;
+                }
+                // We don't cache the index of the starter because it's possible someone could leave the party during the entire voting process, which would produce undefined results.
+                if member.actor_id == readycheck_host {
+                    starter_index = index;
+                }
+            }
+
+            assert!(starter_index != usize::MAX);
+
+            // The actual ready check calculation. See party_misc.rs or the PartyUpdate struct for a more detailed explanation.
+            // The short version is that we treat an 8 byte u64 as a pseudo-array to place member votes into, and send that back to the party members in the target_content_id field of PartyUpdate.
+            // The initial accumulator state has to include the initiator's vote along with whoever responds first, since the actual initiation does not. Upon initiation, before anyone has responded, the target_content_id field is sent as 0 in PartyUpdateStatus::ReadyCheckInitiated.
+            let mut accumulator =
+                (party.members[starter_index].ready_check_reply as u64) << (8 * starter_index);
+            for (index, member) in party.members.iter().enumerate() {
+                if index == starter_index {
+                    continue;
+                }
+
+                accumulator |= (member.ready_check_reply as u64) << (8 * index);
+            }
+
+            // Next, tally up how many members have voted, and if everyone has voted, either manually or being forced to auto-vote by timeout, indicate that there is no longer a ready check host, and send the final results.
+            let voters_count = party
+                .members
+                .iter()
+                .filter(|m| m.ready_check_reply != ReadyCheckReply::Unanswered)
+                .count();
+
+            if voters_count == party.members.len() {
+                party.readycheck_host = None;
+            }
+
+            let data = data.lock();
+            let party_list = build_party_list(party, &data);
+
+            let msg = FromServer::PartyUpdate(
+                PartyUpdateTargets {
+                    execute_account_id: *execute_account_id,
+                    execute_content_id: *execute_content_id,
+                    execute_name: execute_name.clone(),
+                    target_content_id: accumulator,
+                    ..Default::default()
+                },
+                PartyUpdateStatus::ReadyCheckResponse,
+                Some((*party_id, party.chatchannel_id, party.leader_id, party_list)),
+            );
+
+            network.send_to_party(*party_id, None, msg, DestinationNetwork::ZoneClients);
             true
         }
         _ => false,
