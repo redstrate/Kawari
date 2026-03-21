@@ -579,6 +579,14 @@ ServerZoneIpcType:
     comment: Unknown purpose.
     opcode: 937
     size: 26
+  - name: CrossworldLinkshellsEx
+    comment: Sent in response to the client opening the Crossworld Linkshell menu. It has additional information the login list does not.
+    opcode: 832
+    size: 520
+  - name: CrossworldLinkshellMemberList
+    comment: Sent in response to CrossworldLinkshellMemberList. Sends the member list of this CWLS.
+    opcode: 900
+    size: 464
 ClientZoneIpcType:
   - name: InitRequest
     comment: Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)
@@ -713,8 +721,8 @@ ClientZoneIpcType:
     opcode: 849
     size: 8
   - name: RequestCrossworldLinkshells
-    comment: Seems to happen when opening the Cross-world Linkshells window. Weird that it can do this, considering it's sent on login?
-    opcode: 883
+    comment: Seems to happen when opening the Cross-world Linkshells window. This requests the extended version of the list, CrossworldLinkshellsEx.
+    opcode: 884
     size: 8
   - name: SearchFellowships
     comment: Seems to happen when opening the Fellowship Finder.
@@ -844,6 +852,14 @@ ClientZoneIpcType:
     comment: When the client assigns a friend group icon to someone on their friend list.
     opcode: 872
     size: 16
+  - name: CreateLocalLinkshellRequest
+    comment: The client requests the creation of a local linkshell.
+    opcode: 732
+    size: 40
+  - name: CrossworldLinkshellMemberListRequest
+    comment: The client requests the member list for this cross-world linkshell.
+    opcode: 213
+    size: 16
 ServerLobbyIpcType:
   - name: NackReply
     comment: Sent by the server to indicate an lobby error occured.
@@ -908,7 +924,7 @@ ServerChatIpcType:
     opcode: 100
     size: 1080
   - name: PartyMessage
-    comment: Sent by the server in response to a client sending a private message to their party.
+    comment: Sent by the server in response to a client sending a private message to their party or a local linkshell.
     opcode: 101
     size: 1088
   - name: TellNotFoundError
@@ -927,19 +943,43 @@ ServerChatIpcType:
     comment: Sent by the server in response to GetChannelList, presumably.
     opcode: 105
     size: 768
+  - name: AllianceMessage
+    comment: Sent by the client when sending a message to their alliance.
+    opcode: 108
+    size: 1056
+  - name: AllianceMessageEcho
+    comment: Sent in response to SendAllianceMessage. It just echoes back the message the client sent. Unknown purpose.
+    opcode: 109
+    size: 1032
+  - name: CWLinkshellMessageEcho
+    comment: Sent in response to SendCWLinkshellMessage. It just echoes back the message the client sent. Unknown purpose.
+    opcode: 113
+    size: 1040
+  - name: CWLinkshellMessage
+    comment: Sent by the server in response to a client sending a private message to the specified crossworld linkshell.
+    opcode: 114
+    size: 1096
 ClientChatIpcType:
   - name: SendTellMessage
     comment: Sent by the client when sending a private message to another client.
     opcode: 100
     size: 1080
   - name: SendPartyMessage
-    comment: Sent by the client when sending a message to party chat.
+    comment: Sent by the client when sending a message to party chat or a local linkshell.
     opcode: 101
     size: 1032
   - name: GetChannelList
     comment: Sent by the client, but its purpose is unknown at this time.
     opcode: 104
     size: 8
+  - name: SendAllianceMessage
+    comment: Sent by the client when sending a message to their alliance.
+    opcode: 107
+    size: 1032
+  - name: SendCWLinkshellMessage
+    comment: Sent by the client when sending a message to a cross-world linkshell.
+    opcode: 109
+    size: 1040
 CustomIpcType:
   - name: RequestCreateCharacter
     comment: Request the world server to create a character

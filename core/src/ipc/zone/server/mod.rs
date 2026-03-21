@@ -135,7 +135,9 @@ mod marketboard;
 pub use marketboard::MarketBoardItem;
 
 mod linkshell;
-pub use linkshell::LinkshellEntry;
+pub use linkshell::{
+    CWLSMemberListEntry, CrossworldLinkshell, CrossworldLinkshellEx, LinkshellEntry,
+};
 
 use crate::common::{
     CHAR_NAME_MAX_LENGTH, ContainerType, ItemOperationKind, ObjectId, read_string, write_string,
@@ -418,8 +420,10 @@ pub enum ServerZoneIpcData {
         status_effects: [StatusEffect; 30],
     },
     CrossworldLinkshells {
-        // TODO: fill this out, each entry is 57 bytes probably
-        unk1: [u8; 456],
+        #[brw(pad_before = 8)] // Seems to be empty/zeroes
+        #[br(count = CrossworldLinkshell::COUNT)]
+        #[brw(pad_size_to = CrossworldLinkshell::COUNT * CrossworldLinkshell::SIZE)]
+        linkshells: Vec<CrossworldLinkshell>,
     },
     SetSearchInfo(SearchInfo),
     Blacklist(Blacklist),
@@ -998,6 +1002,20 @@ pub enum ServerZoneIpcData {
         classjob_levels: [(u16, u16); AVAILABLE_CLASSJOBS],
     },
     SetPlayerCustomizeData(CustomizeData),
+    CrossworldLinkshellsEx {
+        #[brw(pad_before = 8)] // Seems to be empty/zeroes
+        #[br(count = CrossworldLinkshellEx::COUNT)]
+        #[brw(pad_size_to = CrossworldLinkshellEx::COUNT * CrossworldLinkshellEx::SIZE)]
+        linkshells: Vec<CrossworldLinkshellEx>,
+    },
+    CrossworldLinkshellMemberList {
+        linkshell_id: u64,
+        #[brw(pad_after = 6)] // Seems to be empty/zeroes
+        sequence: u16,
+        #[br(count = CWLSMemberListEntry::COUNT)]
+        #[brw(pad_size_to = CWLSMemberListEntry::COUNT * CWLSMemberListEntry::SIZE)]
+        linkshells: Vec<CWLSMemberListEntry>,
+    },
 }
 
 #[cfg(test)]

@@ -418,6 +418,23 @@ pub enum ClientZoneIpcData {
         #[bw(pad_size_to = 130)]
         unk: Vec<u8>,
     },
+    CreateLocalLinkshellRequest {
+        unk1: u16,
+        unk2: u16,
+        #[brw(pad_after = 1)] // Seems to be empty/zeroes
+        unk3: u16,
+        #[brw(pad_size_to = 20)]
+        #[br(count = 20)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        name: String,
+        unk4: [u8; 13], // Unknown data, likely garbage since several other client opcodes have been discovered to leave garbage behind around name strings
+    },
+    CrossworldLinkshellMemberListRequest {
+        linkshell_id: u64,
+        #[brw(pad_after = 6)] // Seems to be empty/zeroes
+        sequence: u16,
+    },
     SetFriendGroupIcon(FriendGroupIconInfo),
 }
 

@@ -1,11 +1,17 @@
 use binrw::binrw;
 use kawari_core_macro::opcode_data;
 
+mod send_alliance_message;
+pub use send_alliance_message::SendAllianceMessage;
+
 mod send_tell_message;
 pub use send_tell_message::SendTellMessage;
 
 mod send_party_message;
 pub use send_party_message::SendPartyMessage;
+
+mod send_cwlinkshell_message;
+pub use send_cwlinkshell_message::SendCWLinkshellMessage;
 
 use crate::{
     opcodes::ClientChatIpcType,
@@ -23,6 +29,8 @@ pub enum ClientChatIpcData {
     SendTellMessage(SendTellMessage),
     SendPartyMessage(SendPartyMessage),
     GetChannelList { unk: [u8; 8] },
+    SendCWLinkshellMessage(SendCWLinkshellMessage),
+    SendAllianceMessage(SendAllianceMessage),
 }
 
 #[cfg(test)]
