@@ -49,7 +49,10 @@ use tokio::task::JoinHandle;
 
 use kawari::common::INVENTORY_ACTION_ACK_GENERAL;
 
-fn spawn_main_loop(game_data: Arc<Mutex<GameData>>) -> (ServerHandle, JoinHandle<()>) {
+fn spawn_main_loop(
+    game_data: Arc<Mutex<GameData>>,
+    database: Arc<Mutex<WorldDatabase>>,
+) -> (ServerHandle, JoinHandle<()>) {
     let (send, recv) = channel(64);
 
     let handle = ServerHandle {
@@ -64,7 +67,12 @@ fn spawn_main_loop(game_data: Arc<Mutex<GameData>>) -> (ServerHandle, JoinHandle
             let game_data_mutex = game_data.lock();
             game_data_new = game_data_mutex.clone();
         }
-        let res = server_main_loop(game_data_new, recv).await;
+        let parties;
+        {
+            let mut database = database.lock();
+            parties = database.get_parties();
+        }
+        let res = server_main_loop(game_data_new, parties, recv).await;
         match res {
             Ok(()) => {}
             Err(err) => {
@@ -2924,7 +2932,7 @@ async fn main() {
         database.do_cleanup_tasks();
     }
 
-    let (handle, _) = spawn_main_loop(game_data.clone());
+    let (handle, _) = spawn_main_loop(game_data.clone(), database.clone());
 
     // This is a static healthcheck meant for the Kawari Toolbox plugin.
     let app = Router::new().route("/healthcheck", get(root));

@@ -55,7 +55,7 @@ mod effect;
 mod instance;
 mod network;
 mod social;
-pub use social::Party;
+pub use social::{Party, PartyMember};
 mod zone;
 
 #[derive(Default, Debug, Clone)]
@@ -1004,10 +1004,14 @@ fn server_logic_tick(
 
 pub async fn server_main_loop(
     game_data: GameData,
+    parties: HashMap<u64, Party>,
     mut recv: Receiver<ToServer>,
 ) -> Result<(), std::io::Error> {
     let data = Arc::new(Mutex::new(WorldServer::default()));
-    let network = Arc::new(Mutex::new(NetworkState::default()));
+    let network = Arc::new(Mutex::new(NetworkState {
+        parties,
+        ..Default::default()
+    }));
     let game_data = Arc::new(Mutex::new(game_data));
     let lua = Arc::new(Mutex::new(KawariLua::new()));
 

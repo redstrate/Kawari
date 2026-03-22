@@ -19,6 +19,7 @@ use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
 use kawari::common::{BasicCharacterData, ClientLanguage, WORLD_NAME, determine_initial_homepoint};
 
 use crate::database::models::Party;
+use crate::server::PartyMember;
 use crate::{CharaMake, ClassLevels, ClientSelectData, GameData, PartyMembers, RemakeMode};
 use crate::{PlayerData, inventory::Inventory};
 use kawari::{
@@ -233,6 +234,55 @@ impl WorldDatabase {
                 .values(party)
                 .execute(&mut self.connection)
                 .unwrap();
+        }
+    }
+
+    pub fn get_parties(&mut self) -> HashMap<u64, crate::server::Party> {
+        let mut parties = HashMap::new();
+
+        use schema::party::dsl::*;
+        if let Ok(flat_parties) = party
+            .select(models::Party::as_select())
+            .load(&mut self.connection)
+        {
+            for p_party in flat_parties {
+                parties.insert(
+                    p_party.id as u64,
+                    crate::server::Party {
+                        members: p_party
+                            .members
+                            .0
+                            .into_iter()
+                            .map(|content_id| self.find_party_member(content_id as u64))
+                            .collect(),
+                        leader_id: ObjectId(self.find_actor_id(p_party.leader_content_id as u64)),
+                        ..Default::default()
+                    },
+                );
+            }
+        }
+
+        parties
+    }
+
+    pub fn find_party_member(&mut self, for_content_id: u64) -> PartyMember {
+        use schema::character::dsl::*;
+
+        let found_character = character
+            .filter(content_id.eq(for_content_id as i64))
+            .select(models::Character::as_select())
+            .first::<Character>(&mut self.connection)
+            .unwrap();
+
+        let config = get_config();
+
+        PartyMember {
+            actor_id: found_character.actor_id,
+            content_id: for_content_id,
+            world_id: config.world.world_id,
+            account_id: found_character.service_account_id as u64,
+            name: found_character.name,
+            ..Default::default()
         }
     }
 
