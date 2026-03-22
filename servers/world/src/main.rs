@@ -1317,6 +1317,22 @@ async fn process_packet(
                                     );
                                     connection.send_ipc_self(ipc).await;
                                 }
+                                ClientTriggerCommand::ToggleNoviceStatus { .. } => {
+                                    if connection.player_data.search_info.online_status
+                                        != OnlineStatus::NewAdventurer
+                                    {
+                                        connection.player_data.search_info.online_status =
+                                            OnlineStatus::NewAdventurer;
+                                    } else {
+                                        connection.player_data.search_info.online_status =
+                                            OnlineStatus::Online;
+                                    }
+                                    {
+                                        let mut database = connection.database.lock();
+                                        database.commit_search_info(&connection.player_data);
+                                    }
+                                    connection.update_online_status().await;
+                                }
                                 _ => {
                                     // inform the server of our trigger, it will handle sending it to other clients
                                     connection

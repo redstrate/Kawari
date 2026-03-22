@@ -306,6 +306,10 @@ pub enum ClientTriggerCommand {
         id: u32, // not specific to a class/job
     },
 
+    /// Sent whenever the client uses the /nastatus command.
+    #[brw(magic = 2100u32)]
+    ToggleNoviceStatus {},
+
     /// Sent whenever the client requests to duel another player.
     #[brw(magic = 2200u32)]
     RequestDuel {
