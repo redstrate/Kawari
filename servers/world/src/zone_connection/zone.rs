@@ -185,10 +185,6 @@ impl ZoneConnection {
                 flags |= InitZoneFlags::ENABLE_FLYING;
             }
 
-            if config.tweaks.hide_world_name {
-                flags |= InitZoneFlags::HIDE_SERVER;
-            }
-
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InitZone(InitZone {
                 territory_type: new_zone_id,
                 weather_id: weather_id as u8,

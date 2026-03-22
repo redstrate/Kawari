@@ -27,8 +27,8 @@ bitflags! {
         // TODO: I think this is for resetting the content finder queue info? This is set when returning from a duty.
         const UNK2 = 0x004;
 
-        /// Hides the server information in the status bar.
-        const HIDE_SERVER = 0x008;
+        /// Hides the server information in the status bar and disables some social commands that only work in a World.
+        const CROSS_WORLD = 0x008;
 
         /// Allows flying on your mount. This only works if you completed A Realm Reborn.
         const ENABLE_FLYING = 0x010;

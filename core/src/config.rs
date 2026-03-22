@@ -664,10 +664,6 @@ impl FilesystemConfig {
 /// Configuration for various tweaks.
 #[derive(Serialize, Deserialize)]
 pub struct TweaksConfig {
-    /// Whether to hide the world name in-game, defaults to true to prevent confusion with retail.
-    #[serde(default = "TweaksConfig::default_hide_world_name")]
-    pub hide_world_name: bool,
-
     /// If true, always the player to skip cutscenes marked as unskippable.
     #[serde(default)]
     pub always_allow_skipping: bool,
@@ -680,7 +676,6 @@ pub struct TweaksConfig {
 impl Default for TweaksConfig {
     fn default() -> Self {
         Self {
-            hide_world_name: Self::default_hide_world_name(),
             always_allow_skipping: false,
             enforce_validity_checks: Self::default_enforce_validity_checks(),
         }
@@ -688,10 +683,6 @@ impl Default for TweaksConfig {
 }
 
 impl TweaksConfig {
-    fn default_hide_world_name() -> bool {
-        true
-    }
-
     fn default_enforce_validity_checks() -> bool {
         true
     }
