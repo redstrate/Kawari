@@ -256,6 +256,7 @@ impl WorldDatabase {
                             .map(|content_id| self.find_party_member(content_id as u64))
                             .collect(),
                         leader_id: ObjectId(self.find_actor_id(p_party.leader_content_id as u64)),
+                        chatchannel_id: fastrand::u32(..),
                         ..Default::default()
                     },
                 );
