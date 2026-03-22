@@ -325,22 +325,13 @@ pub struct SearchInfo {
     pub selected_languages: SocialListUILanguages,
 }
 
-#[derive(
-    Insertable,
-    Identifiable,
-    Queryable,
-    Selectable,
-    Associations,
-    AsChangeset,
-    Debug,
-    Default,
-    Clone,
-)]
+#[derive(Insertable, Identifiable, Queryable, Selectable, AsChangeset, Debug, Default, Clone)]
 #[diesel(table_name = super::schema::friends)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
-#[diesel(belongs_to(Character, foreign_key = content_id))]
-#[diesel(primary_key(content_id))]
+#[diesel(primary_key(id))]
 pub struct Friends {
+    // Fake ID because diesel doesn't support tables without primary IDs
+    pub id: i64,
     pub content_id: i64,
     pub friend_content_id: i64,
     pub group_icon: i32,

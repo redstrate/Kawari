@@ -169,7 +169,8 @@ diesel::table! {
 diesel::joinable!(search_info -> character (content_id));
 
 diesel::table! {
-    friends (content_id) {
+    friends (id) {
+        id -> BigInt,
         content_id -> BigInt,
         friend_content_id -> BigInt,
         group_icon -> Integer,
@@ -177,8 +178,6 @@ diesel::table! {
         is_pending -> Bool,
     }
 }
-
-diesel::joinable!(friends -> character (content_id));
 
 diesel::table! {
     party (id) {
@@ -202,5 +201,4 @@ diesel::allow_tables_to_appear_in_same_query!(
     unlock,
     mentor,
     search_info,
-    friends,
 );

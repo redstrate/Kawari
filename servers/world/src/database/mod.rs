@@ -1099,6 +1099,7 @@ impl WorldDatabase {
             .unwrap();
 
         let friend = Friends {
+            id: fastrand::i64(..),
             content_id: my_content_id,
             friend_content_id: fwen_content_id,
             group_icon: 0,
