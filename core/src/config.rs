@@ -39,7 +39,7 @@ impl AdminConfig {
     }
 
     fn default_port() -> u16 {
-        5800
+        21057
     }
 }
 
@@ -84,7 +84,7 @@ impl FrontierConfig {
     }
 
     fn default_port() -> u16 {
-        5857
+        21058
     }
 
     fn default_worlds_open() -> bool {
@@ -96,7 +96,7 @@ impl FrontierConfig {
     }
 
     fn default_server_name() -> String {
-        "http://frontier.ffxiv.localhost".to_string()
+        format!("http://frontier.ffxiv.localhost:{}", Self::default_port())
     }
 }
 
@@ -133,7 +133,7 @@ impl LobbyConfig {
     }
 
     fn default_port() -> u16 {
-        7000
+        21059
     }
 
     fn default_server_name() -> String {
@@ -181,11 +181,14 @@ impl LoginConfig {
     }
 
     fn default_port() -> u16 {
-        6700
+        21060
     }
 
     fn default_server_name() -> String {
-        "http://ffxiv-login.square.localhost".to_string()
+        format!(
+            "http://ffxiv-login.square.localhost:{}",
+            Self::default_port()
+        )
     }
 
     fn default_enable_registration() -> bool {
@@ -201,10 +204,6 @@ pub struct PatchConfig {
 
     #[serde(default = "default_listen_address")]
     pub listen_address: String,
-    /// Publicly accessible URL to download patches from.
-    /// For example, "patch-dl.ffxiv.localhost". Patch files must be served so they're accessible as: "http://patch-dl.ffxiv.localhost/game/ex4/somepatchfilename.patch"
-    #[serde(default = "PatchConfig::default_patch_dl_url")]
-    pub patch_dl_url: String,
 
     /// Location of the patches directory on disk. Must be setup like so:
     /// ```ignore
@@ -216,11 +215,8 @@ pub struct PatchConfig {
     #[serde(default = "PatchConfig::default_patches_location")]
     pub patches_location: String,
 
-    #[serde(default = "PatchConfig::default_game_server_name")]
-    pub game_server_name: String,
-
-    #[serde(default = "PatchConfig::default_boot_server_name")]
-    pub boot_server_name: String,
+    #[serde(default = "PatchConfig::default_server_name")]
+    pub server_name: String,
 
     #[serde(default = "PatchConfig::default_supported_platforms")]
     pub supported_platforms: Vec<String>,
@@ -231,10 +227,8 @@ impl Default for PatchConfig {
         Self {
             port: Self::default_port(),
             listen_address: default_listen_address(),
-            patch_dl_url: Self::default_patch_dl_url(),
             patches_location: Self::default_patches_location(),
-            boot_server_name: Self::default_boot_server_name(),
-            game_server_name: Self::default_game_server_name(),
+            server_name: Self::default_server_name(),
             supported_platforms: Self::default_supported_platforms(),
         }
     }
@@ -250,23 +244,15 @@ impl PatchConfig {
     }
 
     fn default_port() -> u16 {
-        6900
-    }
-
-    fn default_patch_dl_url() -> String {
-        "http://patch-dl.ffxiv.localhost".to_string()
+        21061
     }
 
     fn default_patches_location() -> String {
         "patches".to_string()
     }
 
-    fn default_boot_server_name() -> String {
-        "http://patch-bootver.ffxiv.localhost".to_string()
-    }
-
-    fn default_game_server_name() -> String {
-        "http://patch-gamever.ffxiv.localhost".to_string()
+    fn default_server_name() -> String {
+        format!("http://patch.ffxiv.localhost:{}", Self::default_port())
     }
 
     fn default_supported_platforms() -> Vec<String> {
@@ -318,11 +304,11 @@ impl WebConfig {
     }
 
     fn default_port() -> u16 {
-        5801
+        21062
     }
 
     fn default_server_name() -> String {
-        "http://ffxiv.localhost".to_string()
+        format!("http://ffxiv.localhost:{}", Self::default_port())
     }
 
     fn default_runs_on_localhost() -> bool {
@@ -404,11 +390,11 @@ impl Default for WorldConfig {
 
 impl WorldConfig {
     fn default_port() -> u16 {
-        7100
+        21063
     }
 
     fn default_healthcheck_port() -> u16 {
-        5807
+        21064
     }
 
     fn default_server_name() -> String {
@@ -513,11 +499,11 @@ impl LauncherConfig {
     }
 
     fn default_port() -> u16 {
-        5802
+        21065
     }
 
     fn default_server_name() -> String {
-        "http://launcher.ffxiv.localhost".to_string()
+        format!("http://launcher.ffxiv.localhost:{}", Self::default_port())
     }
 }
 
@@ -550,7 +536,7 @@ impl SaveDataBankConfig {
     }
 
     fn default_port() -> u16 {
-        5803
+        21066
     }
 }
 
@@ -587,11 +573,11 @@ impl DataCenterTravelConfig {
     }
 
     fn default_port() -> u16 {
-        5860
+        21067
     }
 
     fn default_server_name() -> String {
-        "http://dctravel.ffxiv.localhost".to_string()
+        format!("http://dctravel.ffxiv.localhost:{}", Self::default_port())
     }
 }
 

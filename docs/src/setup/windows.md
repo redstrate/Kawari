@@ -17,13 +17,13 @@ Download the [latest build for Windows from xiv.zone](https://xiv.zone/distrib/k
 
 Place the `oodle-network-shared.dll` from the Oodle zip you downloaded next to the Kawari executables.
 
-## Reverse proxy setup
-
-{{#include reverse_proxy.md}}
-
 ## Configuration
 
 {{#include configuration.md}}
+
+## Hosts setup
+
+{{#include hosts.md}}
 
 ## Running
 

@@ -25,15 +25,13 @@ Or else, with Docker:
 docker build -t kawari .
 ```
 
-## Reverse proxy setup
-
-{{#include reverse_proxy.md}}
-
-If you get a "permission denied" error starting Caddy, you must either start Caddy with elevated privileges (`sudo`) or set the `CAP_NET_BIND_SERVICE` capability. See [here](https://caddyserver.com/docs/quick-starts/caddyfile) for more information on how to do this.
-
 ## Configuration
 
 {{#include configuration.md}}
+
+## Hosts setup
+
+{{#include hosts.md}}
 
 ## Running
 

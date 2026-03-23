@@ -13,3 +13,4 @@ tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 axum = { workspace = true }
 physis = { workspace = true }
+tower-http = { workspace = true }

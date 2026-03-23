@@ -48,8 +48,8 @@ async fn launcher_config() -> String {
 
     let environment = setup_default_environment();
     let template = environment.get_template("launchertweaks.toml").unwrap();
-    let game_patch_server = strip_out_protocol(&config.patch.game_server_name);
-    let boot_patch_server = strip_out_protocol(&config.patch.boot_server_name);
+    let game_patch_server = strip_out_protocol(&config.patch.server_name);
+    let boot_patch_server = strip_out_protocol(&config.patch.server_name);
 
     template
             .render(context! { launcher_url => config.launcher.server_name, game_patch_server, boot_patch_server, lobby_port => config.lobby.port, lobby_host => config.lobby.server_name })
@@ -63,8 +63,8 @@ async fn auto_config() -> String {
     let template = environment.get_template("autoconfig.json").unwrap();
     template
         .render(context! {
-            game_patch_server => config.patch.game_server_name,
-            boot_patch_server => config.patch.boot_server_name,
+            game_patch_server => config.patch.server_name,
+            boot_patch_server => config.patch.server_name,
             login_server => config.login.server_name,
             lobby_server => config.lobby.server_name,
             lobby_port => config.lobby.port,

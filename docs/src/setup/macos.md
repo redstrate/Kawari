@@ -20,7 +20,7 @@ Make sure you hit Allow, or else the servers will refuse to function. If you mis
 ## Ports
 
 By default, macOS uses ports that may conflict with the default set of Kawari ports. Until we change our default ports, if you see a server panic with "Address already in use" that means you need to change that server's port.
-    
+
 ## Compiling
 
 We can't provide macOS binaries for a variety of reasons (a lacking system linker and security) so [compiling Kawari](source.md) is the only option for now.

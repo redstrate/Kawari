@@ -11,6 +11,7 @@ use kawari::constants::{SUPPORTED_BOOT_VERSION, SUPPORTED_EXPAC_VERSIONS, SUPPOR
 use kawari_patch::list_patch_files;
 use physis::Version;
 use physis::patchlist::{PatchEntry, PatchList, PatchListType};
+use tower_http::services::ServeDir;
 
 const BOUNDARY_ID: &str = "477D80B1_38BC_41d4_8B48_5273ADB89CAC";
 const BOOT_ID: &str = "2b5cbc63";
@@ -119,7 +120,8 @@ async fn verify_session(
                 let metadata = file.metadata().unwrap();
 
                 send_patches.push(PatchEntry {
-                    url: format!("{}/game/{}.patch", config.patch.patch_dl_url, patch).to_string(),
+                    url: format!("{}/download/game/{}.patch", config.patch.server_name, patch)
+                        .to_string(),
                     version: patch_str.to_string(),
                     hash_block_size: 0,
                     length: metadata.len() as i64,
@@ -154,8 +156,8 @@ async fn verify_session(
 
                     send_patches.push(PatchEntry {
                         url: format!(
-                            "{}/{expansion_name}/{}.patch",
-                            config.patch.patch_dl_url, patch
+                            "{}/download/{expansion_name}/{}.patch",
+                            config.patch.server_name, patch
                         )
                         .to_string(),
                         version: patch_str.to_string(),
@@ -263,7 +265,8 @@ async fn verify_boot(
                 let metadata = file.metadata().unwrap();
 
                 send_patches.push(PatchEntry {
-                    url: format!("{}/boot/{}.patch", config.patch.patch_dl_url, patch).to_string(),
+                    url: format!("{}/download/boot/{}.patch", config.patch.server_name, patch)
+                        .to_string(),
                     version: patch_str.to_string(),
                     hash_block_size: 0,
                     length: metadata.len() as i64,
@@ -308,6 +311,8 @@ async fn fallback(uri: Uri) -> (StatusCode, String) {
 async fn main() {
     tracing_subscriber::fmt::init();
 
+    let config = get_config();
+
     let app = Router::new()
         .route(
             "/http/{platform}/{channel}/{game_version}/{sid}",
@@ -317,9 +322,8 @@ async fn main() {
             "/http/{platform}/{channel}/{boot_version}/",
             get(verify_boot),
         )
+        .nest_service("/download", ServeDir::new(&config.patch.patches_location))
         .fallback(fallback);
-
-    let config = get_config();
 
     let addr = config.patch.get_socketaddr();
     tracing::info!("Server started on {addr}");
