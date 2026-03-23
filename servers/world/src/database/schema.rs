@@ -187,6 +187,25 @@ diesel::table! {
     }
 }
 
+diesel::table! {
+    linkshells (id) {
+        id -> BigInt,
+        name -> Text,
+        creation_time -> BigInt,
+        is_crossworld -> Bool
+    }
+}
+
+diesel::table! {
+    linkshell_members (id) {
+        id -> BigInt,
+        content_id -> BigInt,
+        linkshell_id -> BigInt,
+        invite_time -> BigInt,
+        rank -> Integer,
+    }
+}
+
 diesel::allow_tables_to_appear_in_same_query!(
     character,
     classjob,

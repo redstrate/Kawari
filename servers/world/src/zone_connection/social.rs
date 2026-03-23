@@ -6,14 +6,43 @@ use kawari::{
     ipc::{
         chat::{ChatChannel, ChatChannelType},
         zone::{
-            ActorControlCategory, InviteReply, InviteType, InviteUpdateType, OnlineStatus,
-            OnlineStatusMask, PartyMemberEntry, PartyUpdateStatus, PlayerEntry,
-            SearchUIClassJobMask, SearchUIGrandCompanies, ServerZoneIpcData, ServerZoneIpcSegment,
-            SocialList, SocialListRequestType, SocialListUILanguages, StrategyBoard,
-            StrategyBoardUpdate, WaymarkPlacementMode, WaymarkPosition, WaymarkPreset,
+            ActorControlCategory, CWLSMemberListEntry, CrossworldLinkshell, CrossworldLinkshellEx,
+            InviteReply, InviteType, InviteUpdateType, OnlineStatus, OnlineStatusMask,
+            PartyMemberEntry, PartyUpdateStatus, PlayerEntry, SearchUIClassJobMask,
+            SearchUIGrandCompanies, ServerZoneIpcData, ServerZoneIpcSegment, SocialList,
+            SocialListRequestType, SocialListUILanguages, StrategyBoard, StrategyBoardUpdate,
+            WaymarkPlacementMode, WaymarkPosition, WaymarkPreset,
         },
     },
 };
+
+fn fetch_entries<T>(
+    next_index: &mut u16,
+    data: &mut Vec<T>,
+    increment_by: usize,
+    state: &mut usize,
+) -> Vec<T>
+where
+    T: Clone + std::default::Default,
+{
+    let mut ret: Vec<T>;
+    if data.len() > increment_by {
+        *next_index += increment_by as u16;
+        ret = data.drain(0..increment_by).collect();
+    } else {
+        *next_index = 0;
+        ret = std::mem::take(data);
+        ret.resize(increment_by, T::default());
+    }
+
+    if !data.is_empty() {
+        *state += increment_by;
+    } else {
+        *state = 0;
+    }
+
+    ret
+}
 
 impl ZoneConnection {
     pub async fn received_party_invite(
@@ -278,6 +307,7 @@ impl ZoneConnection {
             }
         }
 
+        // TODO: Use the new generic version of fetch_entries above after testing these for regressions. Works fine with cwls lists though.
         match request_type {
             SocialListRequestType::Friends => {
                 current_index = self.friend_index as u16;
@@ -653,11 +683,15 @@ impl ZoneConnection {
     }
 
     pub async fn refresh_friend_list(&mut self) {
-        let mut db = self.database.lock();
-        let mut game_data = self.gamedata.lock();
-        self.friend_results =
-            db.find_friend_list(&mut game_data, self.player_data.character.content_id);
-        self.friend_index = 0;
+        // Only refresh if we ran out of results from a prior run.
+        if self.friend_results.is_empty() {
+            let mut db = self.database.lock();
+            let mut game_data = self.gamedata.lock();
+            self.friend_results =
+                db.find_friend_list(&mut game_data, self.player_data.character.content_id);
+
+            self.friend_index = 0;
+        }
     }
 
     pub fn add_to_friend_list(&mut self, friend_content_id: u64) {
@@ -687,5 +721,114 @@ impl ZoneConnection {
         self.send_ipc_self(ipc).await;
 
         self.add_to_friend_list(sender_content_id);
+    }
+
+    /// Update or refresh our ls/cwls info.
+    pub async fn init_linkshells(&mut self) {
+        {
+            let mut db = self.database.lock();
+            self.cwls_memberships = db.find_linkshells(self.player_data.character.content_id);
+        }
+        // TODO: local shells
+
+        // Don't bother the server if we're not in any linkshells.
+        if let Some(cwls_memberships) = &self.cwls_memberships {
+            self.handle
+                .send(ToServer::SetLinkshells(
+                    self.player_data.character.actor_id,
+                    Some(
+                        cwls_memberships
+                            .iter()
+                            .map(|m| (m.ids.linkshell_id, m.common.rank))
+                            .collect(),
+                    ),
+                    None,
+                ))
+                .await;
+        }
+    }
+
+    // TODO: Extend to support locals too
+    pub async fn set_linkshell_chatchannels(&mut self, cwls_channels: Vec<u32>) {
+        if let Some(cwls_memberships) = &mut self.cwls_memberships {
+            for channel_info in cwls_memberships.iter_mut().zip(cwls_channels) {
+                channel_info.0.ids.linkshell_chat_id.channel_number = channel_info.1;
+
+                // Unfortunately, we can't let the chat connection decide these without pointlessly bothering the global server state
+                channel_info.0.ids.linkshell_chat_id.world_id = 10008;
+                channel_info.0.ids.linkshell_chat_id.channel_type = ChatChannelType::CWLinkshell;
+            }
+        }
+    }
+
+    // TODO: Where else is this sent, if anywhere?
+    pub async fn send_crossworld_linkshells(&mut self, detailed: bool) {
+        if detailed {
+            // Send a more detailed report about all of the client's cross-world linkshells. Sent when the client opens the CWLS menu. It contains extra information about when the CWLS was founded.
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::CrossworldLinkshellsEx {
+                linkshells: if let Some(cwls_memberships) = &self.cwls_memberships {
+                    cwls_memberships.clone()
+                } else {
+                    vec![CrossworldLinkshellEx::default(); CrossworldLinkshellEx::COUNT]
+                },
+            });
+
+            self.send_ipc_self(ipc).await;
+        } else {
+            // Send a (very slightly) less detailed "overview" of cross-world linkshells on login and possibly elsewhere. Probably used so the client can chat without having to open the actual cwls menu.
+            let mut cwlses = vec![CrossworldLinkshell::default(); CrossworldLinkshell::COUNT];
+
+            if let Some(cwls_memberships) = &self.cwls_memberships {
+                // Our cache stores the extended version, so we need to translate it back.
+                for cwls in cwlses.iter_mut().zip(cwls_memberships.iter()) {
+                    cwls.0.common.name = cwls.1.common.name.clone();
+                    cwls.0.ids.linkshell_id = cwls.1.ids.linkshell_id;
+                    cwls.0.common.rank = cwls.1.common.rank;
+                    cwls.0.ids.linkshell_chat_id = cwls.1.ids.linkshell_chat_id;
+                }
+            }
+
+            tracing::error!("sending these cwlses to client {:#?}", cwlses);
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::CrossworldLinkshells {
+                linkshells: cwlses,
+            });
+            self.send_ipc_self(ipc).await;
+        }
+    }
+
+    // TODO: Likely extend this for local LSes too
+    pub async fn send_cwlinkshell_members(&mut self, linkshell_id: u64, sequence: u16) {
+        // Only refresh and reset state if our list is empty.
+        if self.cwls_results.is_empty() {
+            let mut db = self.database.lock();
+            let mut gamedata = self.gamedata.lock();
+            if let Some(cwls_results) = db.find_linkshell_members(linkshell_id, &mut gamedata) {
+                self.cwls_results = cwls_results;
+            } else {
+                // If we somehow are told about an empty linkshell, ensure we can at least provide a blank member list so the client doesn't experience oddities beyond that.
+                self.cwls_results = vec![CWLSMemberListEntry::default(); 8];
+            }
+            self.cwls_index = 0;
+        }
+
+        let current_index = self.cwls_index as u16;
+        let mut next_index = self.cwls_index as u16;
+
+        let members = fetch_entries(
+            &mut next_index,
+            &mut self.cwls_results,
+            CWLSMemberListEntry::COUNT,
+            &mut self.cwls_index,
+        );
+
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::CrossworldLinkshellMemberList {
+            next_index,
+            current_index,
+            linkshell_id,
+            sequence,
+            members,
+        });
+
+        self.send_ipc_self(ipc).await;
     }
 }

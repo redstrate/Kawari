@@ -14,9 +14,10 @@ use crate::{
 use kawari::{
     common::{CharacterMode, ObjectId, ObjectTypeId, Position},
     ipc::zone::{
-        ActorControlCategory, PartyMemberEntry, PartyMemberPositions, PartyUpdateStatus,
-        ReadyCheckReply, ServerZoneIpcData, ServerZoneIpcSegment, WaymarkPlacementMode,
-        WaymarkPosition, WaymarkPositions, WaymarkPreset,
+        ActorControlCategory, CWLSPermissionRank, CrossworldLinkshellEx, PartyMemberEntry,
+        PartyMemberPositions, PartyUpdateStatus, ReadyCheckReply, ServerZoneIpcData,
+        ServerZoneIpcSegment, WaymarkPlacementMode, WaymarkPosition, WaymarkPositions,
+        WaymarkPreset,
     },
 };
 
@@ -378,6 +379,28 @@ pub fn update_party_position(
                 spawn.common.position = position;
             }
         }
+    }
+}
+
+/// A minimal struct representing a linkshell member.
+#[derive(Debug, Default, Clone)]
+pub struct LinkshellMember {
+    /// The member's actor id.
+    pub actor_id: ObjectId,
+    /// The member's rank in the LS.
+    pub rank: CWLSPermissionRank,
+}
+
+/// A minimal struct representing a linkshell. As far as the global server cares, we only need to keep track of its chatchannel_id, online members, and their permissions. The HashMap it's stored in keeps track of its 64-bit id.
+#[derive(Debug, Default, Clone)]
+pub struct Linkshell {
+    pub members: Vec<LinkshellMember>,
+    pub channel_number: u32,
+}
+
+impl Linkshell {
+    pub fn remove_member_by_actor_id(&mut self, actor_id: ObjectId) {
+        self.members.retain(|m| m.actor_id != actor_id);
     }
 }
 
@@ -1542,6 +1565,47 @@ pub fn handle_social_messages(
             );
 
             network.send_to_party(*party_id, None, msg, DestinationNetwork::ZoneClients);
+            true
+        }
+
+        ToServer::SetLinkshells(from_actor_id, crossworld_shells, _local_shells) => {
+            let mut network = network.lock();
+            let mut cwlses = vec![0; CrossworldLinkshellEx::COUNT];
+            let locals = vec![0; CrossworldLinkshellEx::COUNT];
+
+            if let Some(crossworld_shells) = crossworld_shells {
+                for (index, (shell, rank)) in crossworld_shells.iter().enumerate() {
+                    if *shell != 0 {
+                        let mut linkshell;
+                        {
+                            linkshell = network.linkshells.entry(*shell).or_default().clone();
+                        }
+                        linkshell.members.push(LinkshellMember {
+                            actor_id: *from_actor_id,
+                            rank: *rank,
+                        });
+                        if linkshell.channel_number == 0 {
+                            linkshell.channel_number = network.next_ls_channel_number();
+                        }
+                        cwlses[index] = linkshell.channel_number;
+                        *network.linkshells.get_mut(shell).unwrap() = linkshell;
+                    }
+                }
+            }
+
+            // TODO: Local LSes not supported yet
+
+            // Inform the chat connection their zone connection belongs to these LSes.
+            let msg = FromServer::SetLinkshellChatChannels(cwlses, locals);
+
+            // We send this to *both* of its connections because the client may have requested a linkshell list at some point, and that all happens on the zone connection. The chat connection uses the ids for filtering bad requests.
+            network.send_to_by_actor_id(
+                *from_actor_id,
+                msg.clone(),
+                DestinationNetwork::ZoneClients,
+            );
+            network.send_to_by_actor_id(*from_actor_id, msg, DestinationNetwork::ChatClients);
+
             true
         }
         _ => false,

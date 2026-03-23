@@ -348,3 +348,27 @@ pub struct Party {
     pub leader_content_id: i64,
     pub members: PartyMembers,
 }
+
+#[derive(Insertable, Queryable, Selectable, AsChangeset, Debug, Default, Clone)]
+#[diesel(table_name = super::schema::linkshells)]
+#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+#[diesel(primary_key(id))]
+pub struct Linkshells {
+    pub id: i64,
+    pub name: String,
+    pub creation_time: i64,
+    pub is_crossworld: bool,
+}
+
+#[derive(Insertable, Identifiable, Queryable, Selectable, AsChangeset, Debug, Default, Clone)]
+#[diesel(table_name = super::schema::linkshell_members)]
+#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+#[diesel(primary_key(id))]
+pub struct LinkshellMembers {
+    // Fake ID because diesel doesn't support tables without primary IDs
+    pub id: i64,
+    pub content_id: i64,
+    pub linkshell_id: i64,
+    pub invite_time: i64,
+    pub rank: i32,
+}

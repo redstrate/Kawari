@@ -55,7 +55,7 @@ mod effect;
 mod instance;
 mod network;
 mod social;
-pub use social::{Party, PartyMember};
+pub use social::{Linkshell, Party, PartyMember};
 mod zone;
 
 #[derive(Default, Debug, Clone)]
@@ -1005,11 +1005,13 @@ fn server_logic_tick(
 pub async fn server_main_loop(
     game_data: GameData,
     parties: HashMap<u64, Party>,
+    linkshells: HashMap<u64, Linkshell>,
     mut recv: Receiver<ToServer>,
 ) -> Result<(), std::io::Error> {
     let data = Arc::new(Mutex::new(WorldServer::default()));
     let network = Arc::new(Mutex::new(NetworkState {
         parties,
+        linkshells,
         ..Default::default()
     }));
     let game_data = Arc::new(Mutex::new(game_data));
@@ -2132,6 +2134,11 @@ pub async fn server_main_loop(
                         FromServer::ChatDisconnected(),
                         DestinationNetwork::ChatClients,
                     );
+
+                    // Remove them from any relevant linkshells.
+                    network.linkshells.iter_mut().for_each(|(_, linkshell)| {
+                        linkshell.remove_member_by_actor_id(from_actor_id)
+                    });
                 }
                 ToServer::ActorSummonsMinion(from_actor_id, minion_id) => {
                     let mut network = network.lock();

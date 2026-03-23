@@ -2,10 +2,14 @@ use super::common::ClientId;
 use crate::{MessageInfo, ServerHandle};
 use kawari::common::{ObjectId, timestamp_secs};
 use kawari::config::WorldConfig;
-use kawari::ipc::chat::{
-    ChatChannel, ChatChannelType, ClientChatIpcSegment, PartyMessage, ServerChatIpcData,
-    ServerChatIpcSegment, TellMessage, TellNotFoundError,
+use kawari::ipc::{
+    chat::{
+        CWLinkshellMessage, ChatChannel, ChatChannelType, ClientChatIpcSegment, PartyMessage,
+        ServerChatIpcData, ServerChatIpcSegment, TellMessage, TellNotFoundError,
+    },
+    zone::CrossworldLinkshellEx,
 };
+
 use kawari::opcodes::ServerChatIpcType;
 use kawari::packet::IpcSegmentHeader;
 use kawari::packet::{
@@ -25,6 +29,8 @@ pub struct ChatConnection {
     pub last_keep_alive: Instant,
     pub handle: ServerHandle,
     pub party_chatchannel: ChatChannel,
+    pub cwls_chatchannels: [ChatChannel; CrossworldLinkshellEx::COUNT],
+    pub local_ls_chatchannels: [ChatChannel; CrossworldLinkshellEx::COUNT],
 }
 
 impl ChatConnection {
@@ -140,8 +146,19 @@ impl ChatConnection {
             .await;
         }
 
+        // Do some initial setup to prepare all of our chatchannels. Our chat connection mainly acts as a filter between the client's chat connection and our global server state. The global state will eventually fill in our channel numbers as needed.
         self.party_chatchannel.world_id = self.config.world_id;
         self.party_chatchannel.channel_type = ChatChannelType::Party;
+
+        for linkshell in self.cwls_chatchannels.iter_mut() {
+            linkshell.world_id = 10008; // This seems to always be used for CWLSes.
+            linkshell.channel_type = ChatChannelType::CWLinkshell;
+        }
+
+        for linkshell in self.local_ls_chatchannels.iter_mut() {
+            linkshell.world_id = self.config.world_id;
+            linkshell.channel_type = ChatChannelType::Linkshell
+        }
     }
 
     pub async fn tell_message_received(&mut self, message_info: MessageInfo) {
@@ -163,10 +180,57 @@ impl ChatConnection {
     }
 
     pub async fn party_message_received(&mut self, message_info: PartyMessage) {
+        if message_info.party_chatchannel != self.party_chatchannel {
+            tracing::error!(
+                "party_message_received: We received a message not destined for our party! What happened? Discarding message. The destination chatchannel was {:#?}",
+                message_info.party_chatchannel
+            );
+            return;
+        }
+
         let sender_actor_id = message_info.sender_actor_id;
         let ipc = ServerChatIpcSegment::new(ServerChatIpcData::PartyMessage(message_info));
 
         self.send_ipc(ipc, sender_actor_id).await;
+    }
+
+    pub async fn cwls_message_received(&mut self, message_info: CWLinkshellMessage) {
+        if !self
+            .cwls_chatchannels
+            .contains(&message_info.cwls_chatchannel)
+        {
+            tracing::error!(
+                "cwls_message_received: We received a message not destined for one of our linkshells, what happened? Discarding message. The destination linkshell was {:#?}",
+                message_info.cwls_chatchannel
+            );
+            return;
+        }
+
+        let sender_actor_id = message_info.sender_actor_id;
+        let ipc = ServerChatIpcSegment::new(ServerChatIpcData::CWLinkshellMessage(message_info));
+
+        self.send_ipc(ipc, sender_actor_id).await;
+    }
+
+    pub async fn set_linkshell_chatchannels(&mut self, cwlses: Vec<u32>, locals: Vec<u32>) {
+        if (cwlses.len() > self.cwls_chatchannels.len())
+            || (locals.len() > self.local_ls_chatchannels.len())
+        {
+            tracing::error!(
+                "set_linkshell_chatchannels: cwlses ({}) or locals ({})vecs had too many entries! What happened?",
+                cwlses.len(),
+                locals.len()
+            );
+            return;
+        }
+
+        for (index, ls) in cwlses.iter().enumerate() {
+            self.cwls_chatchannels[index].channel_number = *ls;
+        }
+
+        for (index, ls) in locals.iter().enumerate() {
+            self.local_ls_chatchannels[index].channel_number = *ls;
+        }
     }
 
     pub async fn set_party_chatchannel(&mut self, party_channel_number: u32) {

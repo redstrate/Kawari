@@ -136,7 +136,8 @@ pub use marketboard::MarketBoardItem;
 
 mod linkshell;
 pub use linkshell::{
-    CWLSMemberListEntry, CrossworldLinkshell, CrossworldLinkshellEx, LinkshellEntry,
+    CWLSMemberListEntry, CWLSPermissionRank, CrossworldLinkshell, CrossworldLinkshellEx,
+    LinkshellEntry,
 };
 
 mod spawn_treasure;
@@ -1013,11 +1014,13 @@ pub enum ServerZoneIpcData {
     },
     CrossworldLinkshellMemberList {
         linkshell_id: u64,
-        #[brw(pad_after = 6)] // Seems to be empty/zeroes
+        #[brw(pad_after = 2)] // Seems to be empty/zeroes
         sequence: u16,
+        next_index: u16,
+        current_index: u16,
         #[br(count = CWLSMemberListEntry::COUNT)]
         #[brw(pad_size_to = CWLSMemberListEntry::COUNT * CWLSMemberListEntry::SIZE)]
-        linkshells: Vec<CWLSMemberListEntry>,
+        members: Vec<CWLSMemberListEntry>,
     },
     SpawnTreasure(SpawnTreasure),
     OpenedTreasure {

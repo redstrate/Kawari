@@ -19,8 +19,9 @@ use kawari::{
     common::{HandlerId, ObjectId, Position, timestamp_secs},
     config::WorldConfig,
     ipc::zone::{
-        ClientTriggerCommand, ClientZoneIpcSegment, Condition, Conditions,
-        ContentRegistrationFlags, PlayerEntry, ServerZoneIpcData, ServerZoneIpcSegment,
+        CWLSMemberListEntry, ClientTriggerCommand, ClientZoneIpcSegment, Condition, Conditions,
+        ContentRegistrationFlags, CrossworldLinkshellEx, PlayerEntry, ServerZoneIpcData,
+        ServerZoneIpcSegment,
     },
     opcodes::ServerZoneIpcType,
     packet::{
@@ -173,6 +174,12 @@ pub struct ZoneConnection {
     pub friend_results: Vec<PlayerEntry>,
     /// The friend list's current sequence value. Increases by 10 every time the client requests more results.
     pub friend_index: usize,
+    /// CWLS member results sent when the player opens the CWLS menu or picks a different linkshell in the same menu.
+    pub cwls_results: Vec<CWLSMemberListEntry>,
+    /// CWLS member index. Increases by 8 every time the client requests more results.
+    pub cwls_index: usize,
+    // A cache of our client's cwlses. TODO: is there a better way to do this..?
+    pub cwls_memberships: Option<Vec<CrossworldLinkshellEx>>,
 }
 
 impl ZoneConnection {

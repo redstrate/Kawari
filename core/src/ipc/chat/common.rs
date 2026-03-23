@@ -2,7 +2,7 @@ use binrw::binrw;
 
 #[binrw]
 #[brw(repr = u16)]
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub enum ChatChannelType {
     #[default]
     None = 0,
@@ -20,7 +20,7 @@ pub enum ChatChannelType {
 }
 
 #[binrw]
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct ChatChannel {
     pub channel_number: u32,
     pub channel_type: ChatChannelType,

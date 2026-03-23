@@ -16,11 +16,12 @@ use kawari::{
     },
     ipc::{
         chat::{
-            ChatChannelType, PartyMessage, SendPartyMessage, SendTellMessage, TellNotFoundError,
+            CWLinkshellMessage, ChatChannelType, PartyMessage, SendCWLinkshellMessage,
+            SendPartyMessage, SendTellMessage, TellNotFoundError,
         },
         zone::{
-            ActionRequest, ActorControlCategory, ClientTrigger, Conditions, Config, InviteReply,
-            InviteType, NpcSpawn, ObjectSpawn, OnlineStatus, PartyMemberEntry,
+            ActionRequest, ActorControlCategory, CWLSPermissionRank, ClientTrigger, Conditions,
+            Config, InviteReply, InviteType, NpcSpawn, ObjectSpawn, OnlineStatus, PartyMemberEntry,
             PartyMemberPositions, PartyUpdateStatus, PlayerSpawn, ReadyCheckReply,
             ServerZoneIpcSegment, SpawnTreasure, StrategyBoard, StrategyBoardUpdate,
             WaymarkPlacementMode, WaymarkPosition, WaymarkPreset,
@@ -203,6 +204,10 @@ pub enum FromServer {
     CommitParties(HashMap<u64, Party>),
     /// Treasure was spawned.
     TreasureSpawn(SpawnTreasure),
+    /// A chat message from one of the client's cwlses has been received.
+    CWLSMessageSent(CWLinkshellMessage),
+    /// Inform the zone and chat connections about their linkshell channels.
+    SetLinkshellChatChannels(Vec<u32>, Vec<u32>),
 }
 
 #[derive(Debug, Clone)]
@@ -380,6 +385,14 @@ pub enum ToServer {
     ReadyCheckResponse(Option<u64>, ObjectId, u64, u64, String, ReadyCheckReply),
     /// Removes action cooldowns for this player.
     RemoveCooldowns(ObjectId),
+    /// The client's zone connection wishes to inform its chat connection about any linkshells the player belongs to.
+    SetLinkshells(
+        ObjectId,
+        Option<Vec<(u64, CWLSPermissionRank)>>,
+        Option<Vec<u64>>,
+    ),
+    /// The client sent a message to a cross-world linkshell.
+    CWLSMessageSent(ObjectId, SendCWLinkshellMessage),
 }
 
 #[derive(Clone, Debug)]
