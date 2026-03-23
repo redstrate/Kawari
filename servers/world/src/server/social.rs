@@ -324,9 +324,6 @@ pub fn send_party_positions(network: &mut NetworkState) {
     // TODO: Can this outer loop be done without cloning?
     for (party_id, party) in &network.parties.clone() {
         if party.get_online_member_count() < 1 {
-            tracing::error!(
-                "Encountered a party with zero online members, id {party_id}. How did this happen, when we auto-disband such parties?"
-            );
             continue;
         }
 
