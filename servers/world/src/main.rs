@@ -14,9 +14,9 @@ use kawari_world::inventory::{EquipSlot, Item, Storage, get_next_free_slot};
 use kawari::ipc::chat::{ChatChannel, ClientChatIpcData};
 
 use kawari::ipc::zone::{
-    ActorControlCategory, Conditions, ContentFinderUserAction, EventType, InviteType, MapEffects,
-    MarketBoardItem, OnlineStatus, OnlineStatusMask, PlayerSetup, SceneFlags, SearchInfo,
-    SocialListRequestType, TrustContent, TrustInformation,
+    ActorControlCategory, Conditions, ContentFinderUserAction, CrossworldLinkshellEx, EventType,
+    InviteType, MapEffects, MarketBoardItem, OnlineStatus, OnlineStatusMask, PlayerSetup,
+    SceneFlags, SearchInfo, SocialListRequestType, TrustContent, TrustInformation,
 };
 
 use kawari::ipc::zone::{
@@ -68,11 +68,13 @@ fn spawn_main_loop(
             game_data_new = game_data_mutex.clone();
         }
         let parties;
+        let linkshells;
         {
             let mut database = database.lock();
             parties = database.get_parties();
+            linkshells = database.find_all_linkshells();
         }
-        let res = server_main_loop(game_data_new, parties, recv).await;
+        let res = server_main_loop(game_data_new, parties, linkshells, recv).await;
         match res {
             Ok(()) => {}
             Err(err) => {
@@ -171,6 +173,9 @@ async fn initial_setup(
                     search_index: 0,
                     friend_results: Vec::new(),
                     friend_index: 0,
+                    cwls_results: Vec::new(),
+                    cwls_index: 0,
+                    cwls_memberships: None,
                 };
 
                 // Handle setup before passing off control to the zone connection.
@@ -218,6 +223,8 @@ async fn initial_setup(
                     socket,
                     handle,
                     party_chatchannel: ChatChannel::default(),
+                    cwls_chatchannels: [ChatChannel::default(); CrossworldLinkshellEx::COUNT],
+                    local_ls_chatchannels: [ChatChannel::default(); CrossworldLinkshellEx::COUNT],
                 };
 
                 // Handle setup before passing off control to the chat connection.
@@ -246,7 +253,7 @@ async fn initial_setup(
     }
 }
 
-// TODO: Is there a sensible we can reuse the other ClientData type so we don't need 2?
+// TODO: Is there a sensible way we can reuse the other ClientData type so we don't need 2?
 struct ClientChatData {
     /// Socket for data recieved from the global server
     recv: Receiver<FromServer>,
@@ -340,13 +347,21 @@ async fn client_chat_loop(
                                                 connection.handle.send(ToServer::TellMessageSent(connection.id, connection.actor_id, data.clone())).await;
                                             }
                                             ClientChatIpcData::SendPartyMessage(data) => {
-                                                connection.handle.send(ToServer::PartyMessageSent(connection.actor_id, data.clone())).await;
+                                                if data.chatchannel == connection.party_chatchannel {
+                                                    connection.handle.send(ToServer::PartyMessageSent(connection.actor_id, data.clone())).await;
+                                                } else {
+                                                    tracing::error!("The client tried to send a party message to an invalid ChatChannel: {:#?}, while ours is {:#?}", data.chatchannel, connection.party_chatchannel);
+                                                }
                                             }
                                             ClientChatIpcData::GetChannelList { unk } => {
                                                 tracing::info!("GetChannelList: {:#?} from {}", unk, connection.actor_id);
                                             }
-                                            ClientChatIpcData::SendCWLinkshellMessage(_data) => {
-                                                tracing::info!("Chatting in CWLSes is unimplemented");
+                                            ClientChatIpcData::SendCWLinkshellMessage(data) => {
+                                                if connection.cwls_chatchannels.contains(&data.chatchannel) {
+                                                    connection.handle.send(ToServer::CWLSMessageSent(connection.actor_id, data.clone())).await;
+                                                } else {
+                                                    tracing::error!("The client tried to send a party message to an invalid ChatChannel: {:#?}, while ours are {:#?}", data.chatchannel, connection.cwls_chatchannels);
+                                                }
                                             }
                                             ClientChatIpcData::SendAllianceMessage(_data) => {
                                                 tracing::info!("Chatting in alliances is unimplemented");
@@ -382,6 +397,8 @@ async fn client_chat_loop(
                     }
                     FromServer::SetPartyChatChannel(channel_id) => connection.set_party_chatchannel(channel_id).await,
                     FromServer::PartyMessageSent(message_info) => connection.party_message_received(message_info).await,
+                    FromServer::SetLinkshellChatChannels(cwls, local) => connection.set_linkshell_chatchannels(cwls, local).await,
+                    FromServer::CWLSMessageSent(message_info) => connection.cwls_message_received(message_info).await,
                     _ => tracing::error!("ChatConnection {:#?} received a FromServer message we don't care about: {:#?}, ensure you're using the right client network or that you've implemented a handler for it if we actually care about it!", client_handle.id, msg),
                 },
                 None => break,
@@ -848,6 +865,7 @@ async fn process_packet(
                                 .await;
 
                             //connection.remind_pending_invites().await;
+                            connection.init_linkshells().await;
 
                             // Send login message
                             connection.send_notice(&config.world.login_message).await;
@@ -2144,7 +2162,7 @@ async fn process_packet(
                             tracing::info!("Fellowships is unimplemented");
                         }
                         ClientZoneIpcData::RequestCrossworldLinkshells { .. } => {
-                            tracing::info!("Linkshells is unimplemented");
+                            connection.send_crossworld_linkshells(true).await;
                         }
                         ClientZoneIpcData::SearchFellowships { .. } => {
                             tracing::info!("Fellowships is unimplemented");
@@ -2668,8 +2686,13 @@ async fn process_packet(
                         ClientZoneIpcData::CreateLocalLinkshellRequest { .. } => {
                             tracing::warn!("Creating local linkshells is unimplemented");
                         }
-                        ClientZoneIpcData::CrossworldLinkshellMemberListRequest { .. } => {
-                            tracing::warn!("Requesting member lists for CWLSes is unimplemented");
+                        ClientZoneIpcData::CrossworldLinkshellMemberListRequest {
+                            linkshell_id,
+                            sequence,
+                        } => {
+                            connection
+                                .send_cwlinkshell_members(*linkshell_id, *sequence)
+                                .await;
                         }
                         ClientZoneIpcData::OpenTreasure { .. } => {
                             tracing::warn!("Opening treasure chests is unimplemented");
@@ -2827,6 +2850,11 @@ async fn process_server_msg(
                 database.commit_parties(parties);
             }
             FromServer::TreasureSpawn(treasure) => connection.spawn_treasure(treasure).await,
+            FromServer::SetLinkshellChatChannels(cwlses, _locals) => {
+                // TODO: There might be a better way to do this. We need the chatchannels to be set *before* sending the "overview" or chat will break.
+                connection.set_linkshell_chatchannels(cwlses).await;
+                connection.send_crossworld_linkshells(false).await;
+            }
             _ => { tracing::error!("Zone connection {:#?} received a FromServer message we don't care about: {:#?}, ensure you're using the right client network or that you've implemented a handler for it if we actually care about it!", client_handle.id, msg); }
         }
     }

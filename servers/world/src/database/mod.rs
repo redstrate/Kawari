@@ -26,7 +26,10 @@ use kawari::{
     common::ObjectId,
     constants::AVAILABLE_CLASSJOBS,
     ipc::lobby::{CharacterDetails, CharacterFlag},
-    ipc::zone::{OnlineStatusMask, PlayerEntry},
+    ipc::zone::{
+        CWLSMemberListEntry, CWLSPermissionRank, CrossworldLinkshellEx, OnlineStatusMask,
+        PlayerEntry,
+    },
 };
 
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
@@ -1125,6 +1128,129 @@ impl WorldDatabase {
         .unwrap();
     }
 
+    /// Returns a HashMap of linkshells for the global server state. NOTE: It does not fill in the members or chatchannel ids, and this is intentional! The global server waits for members to log in and inform it that they belong to a given set linkshells, and the chatchannel ids are decided by the global server itself.
+    pub fn find_all_linkshells(&mut self) -> HashMap<u64, crate::server::Linkshell> {
+        use schema::linkshells::dsl::*;
+
+        let mut found_linkshells = HashMap::new();
+
+        if let Ok(flat_linkshells) = linkshells
+            .select(models::Linkshells::as_select())
+            .load(&mut self.connection)
+        {
+            for linkshell in flat_linkshells {
+                found_linkshells.insert(linkshell.id as u64, crate::server::Linkshell::default());
+            }
+        }
+
+        found_linkshells
+    }
+
+    /// Returns a list of linkshells that the given content id is a member of.
+    pub fn find_linkshells(&mut self, for_content_id: i64) -> Option<Vec<CrossworldLinkshellEx>> {
+        let memberships: Vec<_>;
+        {
+            use schema::linkshell_members::dsl::*;
+
+            memberships = linkshell_members
+                .filter(content_id.eq(for_content_id))
+                .load::<models::LinkshellMembers>(&mut self.connection)
+                .unwrap_or_default();
+        }
+
+        let mut shell_info = Vec::new();
+        {
+            use schema::linkshells::dsl::*;
+
+            for membership in &memberships {
+                if let Ok(info) = linkshells
+                    .filter(id.eq(membership.linkshell_id))
+                    .select(models::Linkshells::as_select())
+                    .first(&mut self.connection)
+                {
+                    shell_info.push(info);
+                }
+            }
+        }
+
+        assert!(memberships.len() == shell_info.len());
+
+        if !memberships.is_empty() && !shell_info.is_empty() {
+            let mut ret = vec![CrossworldLinkshellEx::default(); CrossworldLinkshellEx::COUNT];
+
+            for (index, shell) in ret.iter_mut().enumerate() {
+                if index >= memberships.len() {
+                    break;
+                }
+
+                shell.common.name = shell_info[index].name.clone();
+                let rank = CWLSPermissionRank::from_repr(memberships[index].rank as u8);
+                shell.common.rank = if let Some(rank) = rank {
+                    rank
+                } else {
+                    CWLSPermissionRank::Invitee
+                };
+                shell.ids.linkshell_id = shell_info[index].id as u64;
+                shell.creation_time = shell_info[index].creation_time as u32;
+            }
+
+            return Some(ret);
+        }
+
+        None
+    }
+
+    /// Returns a list of all members in the given linkshell.
+    // TODO: We can likely just reuse this for local LSes too and "downscale" info they don't need in the zone connection
+    pub fn find_linkshell_members(
+        &mut self,
+        for_linkshell_id: u64,
+        game_data: &mut GameData,
+    ) -> Option<Vec<CWLSMemberListEntry>> {
+        use schema::linkshell_members::dsl::*;
+
+        let mut members = Vec::new();
+        let config = get_config();
+
+        if let Ok(lsmembers) = linkshell_members
+            .select(models::LinkshellMembers::as_select())
+            .load(&mut self.connection)
+        {
+            let for_linkshell_id = for_linkshell_id as i64;
+            for member in lsmembers {
+                if member.linkshell_id == for_linkshell_id {
+                    let player_info = self.get_player_entry(game_data, member.content_id);
+                    let is_online = player_info.online_status_mask != OnlineStatusMask::default();
+                    // If something goes wrong converting their rank, set it to least privileges as a precaution.
+                    let member_rank =
+                        if let Some(db_rank) = CWLSPermissionRank::from_repr(member.rank as u8) {
+                            db_rank
+                        } else {
+                            CWLSPermissionRank::Invitee
+                        };
+                    members.push(CWLSMemberListEntry {
+                        content_id: member.content_id as u64,
+                        unk_timestamp: member.invite_time as u32,
+                        home_world_id: config.world.world_id,
+                        current_world_id: config.world.world_id,
+                        name: player_info.name.clone(),
+                        is_online,
+                        zone_id: if is_online { player_info.zone_id } else { 0 },
+                        rank: member_rank,
+                        unk2: 1,
+                        ..Default::default()
+                    });
+                }
+            }
+        }
+
+        if members.is_empty() {
+            return None;
+        }
+
+        Some(members)
+    }
+
     pub fn do_cleanup_tasks(&mut self) {
         use schema::volatile::dsl::*;
 
@@ -1140,4 +1266,9 @@ impl WorldDatabase {
 #[declare_sql_function]
 extern "SQL" {
     fn datetime() -> diesel::sql_types::Text;
+}
+
+#[declare_sql_function]
+extern "SQL" {
+    fn unixepoch() -> diesel::sql_types::BigInt;
 }

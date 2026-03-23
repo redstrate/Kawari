@@ -7,10 +7,13 @@ use crate::{
         ClientState, WorldServer,
         actor::NetworkedActor,
         instance::Instance,
-        social::{Party, get_party_id_from_actor_id},
+        social::{Linkshell, Party, get_party_id_from_actor_id},
     },
 };
-use kawari::{common::ObjectId, ipc::zone::ActorControlCategory};
+use kawari::{
+    common::ObjectId,
+    ipc::zone::{ActorControlCategory, CWLSPermissionRank},
+};
 
 #[derive(Default, Debug)]
 pub struct NetworkState {
@@ -19,16 +22,22 @@ pub struct NetworkState {
     pub clients: HashMap<ClientId, (ClientHandle, ClientState)>,
     pub chat_clients: HashMap<ClientId, (ClientHandle, ClientState)>,
     pub parties: HashMap<u64, Party>,
+    pub linkshells: HashMap<u64, Linkshell>,
     pub commit_parties: bool,
+    pub next_ls_channel_number: u32, // TODO: find a more sensible place for this, and make it atomic? Does it need to be atomic at all? Only the network should be editing this
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum DestinationNetwork {
     ZoneClients,
     ChatClients,
 }
 
 impl NetworkState {
+    pub fn next_ls_channel_number(&mut self) -> u32 {
+        self.next_ls_channel_number += 1;
+        self.next_ls_channel_number
+    }
     /// Creates a `FromServer` message that will spawn `actor`.
     pub fn spawn_existing_actor_message(
         client_state: &mut ClientState,
@@ -381,5 +390,35 @@ impl NetworkState {
             .filter(|x| x.1.0.actor_id == actor_id)
             .last()
             .map(|x| x.1)
+    }
+
+    pub fn send_to_linkshell(
+        &mut self,
+        linkshell_id: u64,
+        from: Option<ObjectId>,
+        message: FromServer,
+        destination: DestinationNetwork,
+    ) {
+        let Some(linkshell) = self.linkshells.get(&linkshell_id) else {
+            return;
+        };
+
+        for member in linkshell.members.clone() {
+            // Optionally skip the sender
+            if let Some(from) = from
+                && from == member.actor_id
+            {
+                continue;
+            }
+
+            // If they're still pending, don't let them see chat messages.
+            if let FromServer::CWLSMessageSent(_) = message
+                && member.rank == CWLSPermissionRank::Invitee
+            {
+                continue;
+            }
+
+            self.send_to_by_actor_id(member.actor_id, message.clone(), destination);
+        }
     }
 }
