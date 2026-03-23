@@ -93,6 +93,10 @@ pub enum ActorControlCategory {
         classjob_id: u32,
     },
 
+    /// Shows that this enemy was defeated in the log, and probably other stuff.
+    #[brw(magic = 6u32)]
+    Defeated { id1: ObjectId, id2: ObjectId },
+
     /// Only shows the floating message, it doesn't actually update your EXP!
     #[brw(magic = 7u32)]
     EXPFloatingMessage {
