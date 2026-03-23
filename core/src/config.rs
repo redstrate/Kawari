@@ -276,11 +276,6 @@ pub struct WebConfig {
     /// Public-facing domain of the server.
     #[serde(default = "WebConfig::default_server_name")]
     pub server_name: String,
-
-    /// Our configuration assumes you're only running and connecting on the same machine, so it's on by default.
-    /// If true the site provides documentation for setting up a hosts file.
-    #[serde(default = "WebConfig::default_runs_on_localhost")]
-    pub runs_on_localhost: bool,
 }
 
 impl Default for WebConfig {
@@ -289,7 +284,6 @@ impl Default for WebConfig {
             port: Self::default_port(),
             listen_address: default_listen_address(),
             server_name: Self::default_server_name(),
-            runs_on_localhost: Self::default_runs_on_localhost(),
         }
     }
 }
@@ -309,10 +303,6 @@ impl WebConfig {
 
     fn default_server_name() -> String {
         format!("http://ffxiv.localhost:{}", Self::default_port())
-    }
-
-    fn default_runs_on_localhost() -> bool {
-        true
     }
 }
 
