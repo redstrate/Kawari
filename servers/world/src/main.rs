@@ -532,6 +532,8 @@ async fn process_packet(
                             // Send inventory
                             connection.send_inventory().await;
 
+                            connection.ensure_valid_zone().await;
+
                             // set equip display flags
                             connection
                                 .actor_control_self(ActorControlCategory::SetEquipDisplayFlags {

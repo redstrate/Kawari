@@ -1491,6 +1491,30 @@ impl GameData {
 
         row.CooldownGroup().into_u8().copied().unwrap()
     }
+
+    /// Checks if this zone is associated with a ContentFinderCondition.
+    pub fn is_zone_associated_with_content(&mut self, zone_id: u16) -> bool {
+        let Some(row) = self.territory_type_sheet.row(zone_id.into()) else {
+            return false;
+        };
+        row.ContentFinderCondition()
+            .into_u16()
+            .copied()
+            .unwrap_or_default()
+            != 0
+    }
+
+    /// Checks if this zone is valid.
+    pub fn is_zone_valid(&mut self, zone_id: u16) -> bool {
+        let Some(row) = self.territory_type_sheet.row(zone_id.into()) else {
+            return false;
+        };
+        !row.Bg()
+            .into_string()
+            .cloned()
+            .unwrap_or_default()
+            .is_empty()
+    }
 }
 
 impl mlua::UserData for GameData {

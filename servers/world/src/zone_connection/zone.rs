@@ -433,4 +433,25 @@ impl ZoneConnection {
             ))
             .await;
     }
+
+    /// Ensure the player is placed in a valid zone, and if they aren't they are teleported back to their homepoint.
+    pub async fn ensure_valid_zone(&mut self) {
+        let zone_id = self.player_data.volatile.zone_id;
+
+        // If the player isn't in a valid zone, or in instanced content (both crash the game) then we need to reset them.
+        let should_reset;
+        {
+            let mut game_data = self.gamedata.lock();
+            should_reset = !game_data.is_zone_valid(zone_id as u16)
+                || game_data.is_zone_associated_with_content(zone_id as u16);
+        }
+        if should_reset {
+            // TODO: teleport them to their homepoint instead
+            self.player_data.volatile.zone_id = 132;
+            self.player_data.volatile.position = Position::default();
+
+            self.send_notice("Moved you to a safe area to prevent a crash!")
+                .await;
+        }
+    }
 }
