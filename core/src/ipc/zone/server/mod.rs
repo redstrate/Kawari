@@ -1056,6 +1056,12 @@ pub enum ServerZoneIpcData {
         unk1: u32,
         unk2: u32,
     },
+    FirstAttack {
+        unk1: u32,
+        unk2: u32,
+        combat_tagger: ObjectId,
+        unk3: u32,
+    },
 }
 
 #[cfg(test)]

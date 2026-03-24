@@ -61,6 +61,14 @@ pub enum ActorControlCategory {
         unk_flag: u32,
     },
 
+    /// Sets auto-attack mode of this entity.
+    #[brw(magic = 1u32)]
+    SetAutoAttack {
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        auto_attack: bool,
+    },
+
     /// Sets the character mode, such as for mounts.
     #[brw(magic = 2u32)]
     SetMode {
@@ -138,7 +146,12 @@ pub enum ActorControlCategory {
     CancelCast {},
 
     #[brw(magic = 17u32)]
-    Cooldown { unk1: u32, unk2: u32, unk3: u32 },
+    Cooldown {
+        unk1: u32,
+        /// Index in the Action Excel sheet.
+        action_id: u32,
+        unk3: u32,
+    },
 
     #[brw(magic = 20u32)]
     GainEffect {
@@ -447,6 +460,15 @@ pub enum ActorControlCategory {
     PlayActionTimeline {
         /// See the ActionTimeline Excel sheet.
         timeline_id: u32,
+    },
+
+    /// Seen for giant clams.
+    #[brw(magic = 409u32)]
+    SetSharedGroupTimelineState {
+        unk1: u32,
+        unk2: u32,
+        unk3: u32,
+        unk4: u32,
     },
 
     /// Plays an animation for a SharedGroup object.

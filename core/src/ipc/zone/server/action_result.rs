@@ -69,6 +69,9 @@ pub enum EffectKind {
     },
     #[brw(magic = 4u8)]
     Heal { unk1: [u8; 5], amount: u16 },
+    /// Seen while attacking giant clams.
+    #[brw(magic = 7u8)]
+    Invincible {},
     /// Seen during Head Graze.
     #[brw(magic = 8u8)]
     InterruptAction {},
