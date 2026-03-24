@@ -436,6 +436,11 @@ pub enum ClientZoneIpcData {
         sequence: u16,
     },
     SetFriendGroupIcon(FriendGroupIconInfo),
+    OpenTreasure {
+        /// Object ID of the treasure that this player is opening.
+        #[brw(pad_after = 4)] // empty
+        entity_id: ObjectId,
+    },
 }
 
 #[cfg(test)]

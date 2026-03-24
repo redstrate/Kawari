@@ -587,6 +587,15 @@ ServerZoneIpcType:
     comment: Sent in response to CrossworldLinkshellMemberList. Sends the member list of this CWLS.
     opcode: 900
     size: 464
+  - name: SpawnTreasure
+    opcode: 328
+    size: 112
+  - name: OpenedTreasure
+    opcode: 767
+    size: 24
+  - name: TreasureFadeOut
+    opcode: 989
+    size: 8
 ClientZoneIpcType:
   - name: InitRequest
     comment: Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)
@@ -860,6 +869,9 @@ ClientZoneIpcType:
     comment: The client requests the member list for this cross-world linkshell.
     opcode: 213
     size: 16
+  - name: OpenTreasure
+    opcode: 657
+    size: 8
 ServerLobbyIpcType:
   - name: NackReply
     comment: Sent by the server to indicate an lobby error occured.

@@ -2657,13 +2657,6 @@ async fn process_packet(
                                 });
                             connection.send_ipc_self(ipc).await;
                         }
-                        ClientZoneIpcData::Unknown { unk } => {
-                            tracing::warn!(
-                                "Unknown Zone packet {:?} recieved ({} bytes), this should be handled!",
-                                data.header.op_code,
-                                unk.len()
-                            );
-                        }
                         ClientZoneIpcData::SetFriendGroupIcon { .. } => {
                             tracing::warn!("Setting friend group icons is unimplemented");
                         }
@@ -2672,6 +2665,16 @@ async fn process_packet(
                         }
                         ClientZoneIpcData::CrossworldLinkshellMemberListRequest { .. } => {
                             tracing::warn!("Requesting member lists for CWLSes is unimplemented");
+                        }
+                        ClientZoneIpcData::OpenTreasure { .. } => {
+                            tracing::warn!("Opening treasure chests is unimplemented");
+                        }
+                        ClientZoneIpcData::Unknown { unk } => {
+                            tracing::warn!(
+                                "Unknown Zone packet {:?} recieved ({} bytes), this should be handled!",
+                                data.header.op_code,
+                                unk.len()
+                            );
                         }
                     }
                 }
