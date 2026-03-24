@@ -15,6 +15,7 @@
 - [GM Commands](gm_commands.md)
 - [Debug Commands](debug_commands.md)
 - [Tips](tips.md)
+- [Patching](patching.md)
 
 # Extending Kawari
 - [Extensibility](extensibility.md)
