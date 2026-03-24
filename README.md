@@ -4,7 +4,7 @@ Modern server emulator for FFXIV. Updates for on the project can be found [on my
 
 ![](.github/main.png)
 
-Kawari currently supports patch **7.45h1** (2026.03.07.0000.0000). We only support the Global Windows client.
+Kawari currently supports patch **7.45h2** (2026.03.17.0000.0000). We only support the Global Windows client.
 
 To get started, there is a guide to [running Kawari in our documentation](https://docs.xiv.zone/kawari/setup/overview.html).
 
