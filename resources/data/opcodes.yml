@@ -881,7 +881,7 @@ ClientZoneIpcType:
     opcode: 292
     size: 16
   - name: OpenTreasure
-    comment: ""
+    comment: Unknown purpose.
     opcode: 493
     size: 8
 ServerLobbyIpcType:
