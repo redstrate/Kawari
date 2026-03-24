@@ -22,7 +22,7 @@ members = [
 resolver = "3"
 
 [workspace.package]
-version = "7.45.1"
+version = "7.45.2"
 edition = "2024"
 
 [workspace.lints.clippy]
