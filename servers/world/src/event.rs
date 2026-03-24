@@ -10,8 +10,8 @@ use kawari::{
 
 use crate::{
     CraftingEventHandler, FishingEventHandler, GameData, GatheringEventHandler,
-    GimmickAccessorEventHandler, InclusionShopEventHandler, LuaEventHandler, ShopEventHandler,
-    ZoneConnection,
+    GimmickAccessorEventHandler, InclusionShopEventHandler, InstanceContentEventHandler,
+    LuaEventHandler, ShopEventHandler, ZoneConnection,
 };
 
 use super::lua::LuaPlayer;
@@ -187,8 +187,7 @@ pub fn dispatch_event(
             generic_lua_event("events/generic/GimmickPathMove.lua")
         }
         HandlerType::HousingAethernet => generic_lua_event("events/generic/HousingAethernet.lua"),
-        // TODO: do we need Generic here?
-        HandlerType::InstanceContent => generic_lua_event("content/Generic.lua"),
+        HandlerType::InstanceContent => Some(Box::new(InstanceContentEventHandler::new())),
         _ => None,
     }
 }

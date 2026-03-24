@@ -437,7 +437,7 @@ impl LuaPlayer {
         self.queued_tasks.push(LuaTask::FinishQuest { id });
     }
 
-    fn commence_duty(&mut self, director_id: u32) {
+    pub fn commence_duty(&mut self, director_id: u32) {
         self.queued_tasks
             .push(LuaTask::CommenceDuty { director_id });
     }

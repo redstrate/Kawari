@@ -18,3 +18,6 @@ pub use gathering::*;
 
 mod crafting;
 pub use crafting::*;
+
+mod instance_content;
+pub use instance_content::*;
