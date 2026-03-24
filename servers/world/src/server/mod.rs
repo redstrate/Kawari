@@ -1413,6 +1413,22 @@ pub async fn server_main_loop(
                                 DestinationNetwork::ZoneClients,
                             );
                         }
+                        ClientTriggerCommand::SetSoftTarget {} => {
+                            let msg = FromServer::ActorControlTarget(
+                                from_actor_id,
+                                trigger.target,
+                                ActorControlCategory::SetSoftTarget {},
+                            );
+
+                            let mut network = network.lock();
+                            let data = data.lock();
+                            network.send_in_range(
+                                from_actor_id,
+                                &data,
+                                msg,
+                                DestinationNetwork::ZoneClients,
+                            );
+                        }
                         ClientTriggerCommand::ChangePose { unk1, pose } => {
                             let msg = FromServer::ActorControl(
                                 from_actor_id,

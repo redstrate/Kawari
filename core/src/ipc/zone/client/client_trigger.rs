@@ -38,6 +38,10 @@ pub enum ClientTriggerCommand {
         actor_type: u32,
     },
 
+    /// The player looks or stops looking at an actor using the soft targetting system.
+    #[brw(magic = 4u32)]
+    SetSoftTarget {},
+
     /// The client is trying to dismount their current mount.
     #[brw(magic = 101u32)]
     Dismount { sequence: u32 },
@@ -383,8 +387,10 @@ pub enum ClientTriggerCommand {
 #[binrw]
 #[derive(Debug, Clone)]
 pub struct ClientTrigger {
-    #[brw(pad_size_to = 32)] // take into account categories without params
+    #[brw(pad_size_to = 20)] // take into account categories without params
     pub trigger: ClientTriggerCommand,
+    #[brw(pad_before = 4)] // empty
+    pub target: ObjectTypeId,
 }
 
 impl Default for ClientTrigger {
@@ -394,6 +400,7 @@ impl Default for ClientTrigger {
                 actor_id: ObjectId::default(),
                 actor_type: 0,
             },
+            target: ObjectTypeId::default(),
         }
     }
 }

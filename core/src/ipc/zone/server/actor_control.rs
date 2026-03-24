@@ -214,6 +214,9 @@ pub enum ActorControlCategory {
     #[brw(magic = 50u32)]
     SetTarget {},
 
+    #[brw(magic = 58u32)]
+    SetSoftTarget {},
+
     // Calls into many inventory-related functions, haven't looked too far yet.
     #[brw(magic = 84u32)]
     UnkInventoryRelated {
