@@ -77,6 +77,9 @@ pub enum LuaDirectorTask {
         line_id: u32,
         place_name: u32,
     },
+    SpawnTreasure {
+        id: u32,
+    },
 }
 
 // TODO: Maybe collapse into DirectorData?
@@ -174,6 +177,10 @@ impl UserData for LuaDirector {
                 Ok(())
             },
         );
+        methods.add_method_mut("spawn_treasure", |_, this, id: u32| {
+            this.tasks.push(LuaDirectorTask::SpawnTreasure { id });
+            Ok(())
+        });
     }
 }
 
@@ -620,6 +627,18 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                     );
                 } else {
                     tracing::warn!("Failed to find bnpc {bnpc_id} for SpawnBoss, it won't spawn!");
+                }
+            }
+            LuaDirectorTask::SpawnTreasure { id } => {
+                if let Some(mut treasure) = instance.zone.get_treasure(*id as u8) {
+                    treasure.handler_id = director_id;
+
+                    let actor_id = ObjectId(fastrand::u32(..));
+                    instance.insert_treasure(actor_id, treasure);
+                } else {
+                    tracing::warn!(
+                        "Failed to find treasure {id} for SpawnTreasure, it won't spawn!"
+                    );
                 }
             }
         }

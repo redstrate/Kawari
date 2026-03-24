@@ -93,7 +93,7 @@ pub use free_company::FcHierarchy;
 mod actor_move;
 use crate::common::{
     CustomizeData, DeepDungeonRoomFlag, HandlerId, LandData, ObjectTypeId, Position,
-    read_packed_position, read_quantized_rotation, write_packed_position, write_quantized_rotation,
+    read_packed_position, write_packed_position,
 };
 use crate::constants::{
     AVAILABLE_CLASSJOBS, COMPLETED_LEVEQUEST_BITMASK_SIZE, COMPLETED_QUEST_BITMASK_SIZE,
@@ -138,6 +138,9 @@ mod linkshell;
 pub use linkshell::{
     CWLSMemberListEntry, CrossworldLinkshell, CrossworldLinkshellEx, LinkshellEntry,
 };
+
+mod spawn_treasure;
+pub use spawn_treasure::SpawnTreasure;
 
 use crate::common::{
     CHAR_NAME_MAX_LENGTH, ContainerType, ItemOperationKind, ObjectId, read_string, write_string,
@@ -1016,34 +1019,7 @@ pub enum ServerZoneIpcData {
         #[brw(pad_size_to = CWLSMemberListEntry::COUNT * CWLSMemberListEntry::SIZE)]
         linkshells: Vec<CWLSMemberListEntry>,
     },
-    SpawnTreasure {
-        /// Index into the Treasure Excel sheet.
-        base_id: u32,
-        /// This entity's ID.
-        entity_id: ObjectId,
-        /// Game object instance ID in the level.
-        layout_id: u32,
-        #[br(map = read_quantized_rotation)]
-        #[bw(map = write_quantized_rotation)]
-        rotation: f32,
-        spawn_index: u8,
-        item_count: u8,
-        event_state: u8,
-        coffer_kind: u8,
-        #[brw(pad_after = 1)] // empty?
-        visibility: u8,
-        countdown_time: f32,
-        countdown_start_time: f32,
-        claim_time: f32,
-        handler_id: HandlerId,
-        exported_sg_row_id: u32,
-        #[brw(pad_after = 1)] // empty?
-        targetable: u8,
-        #[br(map = read_packed_position)]
-        #[bw(map = write_packed_position)]
-        position: Position,
-        lootable_item_ids: [u32; 16],
-    },
+    SpawnTreasure(SpawnTreasure),
     OpenedTreasure {
         unk1: u32,
         unk2: u32,

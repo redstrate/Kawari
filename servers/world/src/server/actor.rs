@@ -6,7 +6,7 @@ use crate::{
 };
 use kawari::{
     common::{DistanceRange, ObjectId, Position, Timeline},
-    ipc::zone::{CommonSpawn, Conditions, NpcSpawn, ObjectSpawn, PlayerSpawn},
+    ipc::zone::{CommonSpawn, Conditions, NpcSpawn, ObjectSpawn, PlayerSpawn, SpawnTreasure},
 };
 
 #[derive(Debug, Clone, PartialEq)]
@@ -54,6 +54,9 @@ pub enum NetworkedActor {
     Object {
         object: ObjectSpawn,
     },
+    Treasure {
+        treasure: SpawnTreasure,
+    },
 }
 
 impl NetworkedActor {
@@ -61,7 +64,7 @@ impl NetworkedActor {
         match &self {
             NetworkedActor::Player { spawn, .. } => &spawn.common,
             NetworkedActor::Npc { spawn, .. } => &spawn.common,
-            NetworkedActor::Object { .. } => unreachable!(),
+            _ => unreachable!(),
         }
     }
 
@@ -69,7 +72,7 @@ impl NetworkedActor {
         match self {
             NetworkedActor::Player { spawn, .. } => &mut spawn.common,
             NetworkedActor::Npc { spawn, .. } => &mut spawn.common,
-            NetworkedActor::Object { .. } => unreachable!(),
+            _ => unreachable!(),
         }
     }
 
@@ -92,6 +95,7 @@ impl NetworkedActor {
             NetworkedActor::Player { spawn, .. } => spawn.common.position,
             NetworkedActor::Npc { spawn, .. } => spawn.common.position,
             NetworkedActor::Object { object } => object.position,
+            NetworkedActor::Treasure { treasure } => treasure.position,
         }
     }
 

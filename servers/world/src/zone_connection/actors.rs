@@ -10,7 +10,7 @@ use kawari::{
     ipc::zone::{
         ActorControl, ActorControlCategory, ActorControlSelf, ActorControlTarget, ActorMove,
         CommonSpawn, Config, DisplayFlag, ObjectKind, ObjectSpawn, PlayerSpawn, PlayerSubKind,
-        ServerZoneIpcData, ServerZoneIpcSegment, Warp,
+        ServerZoneIpcData, ServerZoneIpcSegment, SpawnTreasure, Warp,
     },
 };
 
@@ -277,5 +277,11 @@ impl ZoneConnection {
                 arg,
             ))
             .await;
+    }
+
+    pub async fn spawn_treasure(&mut self, spawn: SpawnTreasure) {
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::SpawnTreasure(spawn.clone()));
+
+        self.send_ipc_from(spawn.entity_id, ipc).await;
     }
 }

@@ -2824,6 +2824,7 @@ async fn process_server_msg(
                 let mut database = connection.database.lock();
                 database.commit_parties(parties);
             }
+            FromServer::TreasureSpawn(treasure) => connection.spawn_treasure(treasure).await,
             _ => { tracing::error!("Zone connection {:#?} received a FromServer message we don't care about: {:#?}, ensure you're using the right client network or that you've implemented a handler for it if we actually care about it!", client_handle.id, msg); }
         }
     }

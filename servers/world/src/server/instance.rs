@@ -19,7 +19,7 @@ use crate::{
 use kawari::{
     common::{DistanceRange, ENTRANCE_CIRCLE_IDS, ObjectId, Position},
     config::{FilesystemConfig, get_config},
-    ipc::zone::{ActionRequest, Conditions, NpcSpawn, ObjectSpawn, PlayerSpawn},
+    ipc::zone::{ActionRequest, Conditions, NpcSpawn, ObjectSpawn, PlayerSpawn, SpawnTreasure},
 };
 use parking_lot::Mutex;
 
@@ -246,6 +246,11 @@ impl Instance {
     pub fn insert_object(&mut self, actor_id: ObjectId, object: ObjectSpawn) {
         self.actors
             .insert(actor_id, NetworkedActor::Object { object });
+    }
+
+    pub fn insert_treasure(&mut self, actor_id: ObjectId, treasure: SpawnTreasure) {
+        self.actors
+            .insert(actor_id, NetworkedActor::Treasure { treasure });
     }
 
     /// Inserts a new task into the queue, with a set `duration` and given `data`.

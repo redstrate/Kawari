@@ -22,8 +22,8 @@ use kawari::{
             ActionRequest, ActorControlCategory, ClientTrigger, Conditions, Config, InviteReply,
             InviteType, NpcSpawn, ObjectSpawn, OnlineStatus, PartyMemberEntry,
             PartyMemberPositions, PartyUpdateStatus, PlayerSpawn, ReadyCheckReply,
-            ServerZoneIpcSegment, StrategyBoard, StrategyBoardUpdate, WaymarkPlacementMode,
-            WaymarkPosition, WaymarkPreset,
+            ServerZoneIpcSegment, SpawnTreasure, StrategyBoard, StrategyBoardUpdate,
+            WaymarkPlacementMode, WaymarkPosition, WaymarkPreset,
         },
     },
 };
@@ -201,6 +201,8 @@ pub enum FromServer {
     FriendInvite(u64, u64, String),
     /// Use this connections's database to commit the party list for the server.
     CommitParties(HashMap<u64, Party>),
+    /// Treasure was spawned.
+    TreasureSpawn(SpawnTreasure),
 }
 
 #[derive(Debug, Clone)]

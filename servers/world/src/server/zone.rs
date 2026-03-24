@@ -29,7 +29,7 @@ use kawari::{
     config::get_config,
     ipc::zone::{
         ActorControlCategory, BattleNpcSubKind, CommonSpawn, Conditions, DisplayFlag, NpcSpawn,
-        ObjectKind, ObjectSpawn,
+        ObjectKind, ObjectSpawn, SpawnTreasure,
     },
 };
 
@@ -89,6 +89,7 @@ pub struct Zone {
     dropin_layers: Vec<DropInLayer>,
     cached_objects: HashMap<u32, ObjectSpawn>,
     cached_npcs: HashMap<u32, NpcSpawn>,
+    cached_treasure: HashMap<u8, SpawnTreasure>,
 }
 
 impl Zone {
@@ -485,6 +486,24 @@ impl Zone {
                             object_spawns.push(spawn);
                         }
                     }
+
+                    if let LayerEntryData::Treasure(treasure) = &object.data {
+                        self.cached_treasure.insert(
+                            treasure.base_id,
+                            SpawnTreasure {
+                                base_id: treasure.base_id as u32,
+                                entity_id: ObjectId(fastrand::u32(..)),
+                                layout_id: object.instance_id,
+                                rotation: euler_to_direction(object.transform.rotation),
+                                position: Position {
+                                    x: object.transform.translation[0],
+                                    y: object.transform.translation[1],
+                                    z: object.transform.translation[2],
+                                },
+                                ..Default::default()
+                            },
+                        );
+                    }
                 }
             }
         }
@@ -520,6 +539,11 @@ impl Zone {
     /// Returns an NpcSpawn for the given instance ID.
     pub fn get_battle_npc(&self, instance_id: u32) -> Option<NpcSpawn> {
         self.cached_npcs.get(&instance_id).cloned()
+    }
+
+    /// Returns an SpawnTreasure for the given base ID.
+    pub fn get_treasure(&self, base_id: u8) -> Option<SpawnTreasure> {
+        self.cached_treasure.get(&base_id).cloned()
     }
 
     /// Returns a list of battle NPCs to spawn.

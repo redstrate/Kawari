@@ -96,6 +96,8 @@ local chopper_defeated
 function onSetup(director)
     coral_color = math.random(0, 2)
 
+    director:spawn_treasure(98)
+
     beginSequence0(director)
 end
 

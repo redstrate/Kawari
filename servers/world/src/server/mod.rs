@@ -1286,11 +1286,7 @@ pub async fn server_main_loop(
                             .iter_mut()
                             .find(|actor| *actor.0 == actor_id)
                         {
-                            let common = match spawn {
-                                NetworkedActor::Player { spawn, .. } => &mut spawn.common,
-                                NetworkedActor::Npc { spawn, .. } => &mut spawn.common,
-                                NetworkedActor::Object { .. } => unreachable!(),
-                            };
+                            let common = spawn.get_common_spawn_mut();
                             moved = common.position != position;
                             common.position = position;
                             common.rotation = rotation;

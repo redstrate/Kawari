@@ -38,7 +38,9 @@ impl NetworkState {
         let spawn_index = (match actor {
             NetworkedActor::Player { .. } => client_state.actor_allocator.reserve(object_id),
             NetworkedActor::Npc { .. } => client_state.actor_allocator.reserve(object_id),
-            NetworkedActor::Object { .. } => client_state.object_allocator.reserve(object_id),
+            NetworkedActor::Object { .. } | NetworkedActor::Treasure { .. } => {
+                client_state.object_allocator.reserve(object_id)
+            }
         })?;
 
         let msg = match actor {
@@ -56,6 +58,11 @@ impl NetworkState {
                 let mut object = *object;
                 object.spawn_index = spawn_index;
                 FromServer::ObjectSpawn(object)
+            }
+            NetworkedActor::Treasure { treasure } => {
+                let mut treasure = treasure.clone();
+                treasure.spawn_index = spawn_index;
+                FromServer::TreasureSpawn(treasure)
             }
         };
 
