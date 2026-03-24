@@ -238,6 +238,7 @@ impl Instance {
                 inside_instance_exit: false,
                 parameters: BaseParameters::default(),
                 dueling_opponent_id: ObjectId::default(),
+                remove_cooldowns: false,
             },
         );
     }

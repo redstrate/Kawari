@@ -35,6 +35,8 @@ pub enum NetworkedActor {
         inside_instance_exit: bool,
         parameters: BaseParameters,
         dueling_opponent_id: ObjectId,
+        /// Whether or not cooldowns should be cheatily removed.
+        remove_cooldowns: bool,
     },
     Npc {
         state: NpcState,

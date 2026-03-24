@@ -10,7 +10,7 @@ use crate::{
     inventory::{CrystalKind, CurrencyKind},
 };
 use kawari::{
-    common::HandlerType,
+    common::{HandlerType, WORLD_NAME},
     config::{FilesystemConfig, get_config},
     ipc::zone::{
         DamageElement, DamageKind, DamageType, EventType, GameMasterRank, SceneFlags,
@@ -45,6 +45,12 @@ impl KawariLua {
         Self::register_enum::<DamageKind>(&mut lua, "DAMAGE_KIND");
         Self::register_enum::<DamageType>(&mut lua, "DAMAGE_TYPE");
         Self::register_enum::<DamageElement>(&mut lua, "DAMAGE_ELEMENT");
+
+        let config = get_config();
+        lua.globals()
+            .set("WORLD_ID", config.world.world_id)
+            .unwrap();
+        lua.globals().set("WORLD_NAME", WORLD_NAME).unwrap();
 
         // Load Global.lua
         let file_name = FilesystemConfig::locate_script_file("Global.lua");

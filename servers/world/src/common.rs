@@ -376,6 +376,8 @@ pub enum ToServer {
     ReadyCheckInitiated(Option<u64>, ObjectId, u64, u64, String),
     /// The client responded to an on-going ready check in their party.
     ReadyCheckResponse(Option<u64>, ObjectId, u64, u64, String, ReadyCheckReply),
+    /// Removes action cooldowns for this player.
+    RemoveCooldowns(ObjectId),
 }
 
 #[derive(Clone, Debug)]

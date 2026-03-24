@@ -145,12 +145,24 @@ pub enum ActorControlCategory {
     #[brw(magic = 15u32)]
     CancelCast {},
 
-    #[brw(magic = 17u32)]
-    Cooldown {
+    /// Sets the current value of the cooldown timer.
+    #[brw(magic = 16u32)]
+    SetCooldownTimer {
+        /// This corresponds to (CooldownGroup - 1) from the Action sheet.
+        cooldown_group: u32,
         unk1: u32,
+        unk2: u32,
+    },
+
+    /// Sets the upper bound of the cooldown timer. *Only* has an effect if the cooldown timer is actually running.
+    #[brw(magic = 17u32)]
+    SetCooldownTimerMax {
+        /// This corresponds to (CooldownGroup - 1) from the Action sheet.
+        cooldown_group: u32,
         /// Index in the Action Excel sheet.
         action_id: u32,
-        unk3: u32,
+        /// 10 * milliseconds value.
+        milliseconds: u32,
     },
 
     #[brw(magic = 20u32)]

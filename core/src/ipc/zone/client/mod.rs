@@ -213,6 +213,16 @@ pub enum ClientZoneIpcData {
         #[bw(map = write_string)]
         unk1: String,
     },
+    GMCommandName2 {
+        command: u32,
+        arg0: i32,
+        arg1: i32,
+        #[brw(pad_size_to = 28)]
+        #[br(count = 28)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        data: String,
+    },
     RequestBlacklist(RequestBlacklist),
     RequestFellowships {
         unk: [u8; 8],

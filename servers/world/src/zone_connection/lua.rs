@@ -494,14 +494,14 @@ impl ZoneConnection {
                         }
                     }
                 }
-                LuaTask::ToggleCutsceneSeen { id } => {
-                    self.toggle_cutscene_seen(*id).await;
+                LuaTask::ToggleCutsceneSeen { id, value } => {
+                    self.toggle_cutscene_seen(*id, *value).await;
                 }
                 LuaTask::ToggleCutsceneSeenAll {} => {
                     let max_cutscene_seen_id = CUTSCENE_SEEN_BITMASK_SIZE as u32 * 8;
 
                     for i in 0..max_cutscene_seen_id {
-                        self.toggle_cutscene_seen(i).await;
+                        self.toggle_cutscene_seen(i, true).await;
                     }
                 }
                 LuaTask::ToggleMinion { id } => {
@@ -784,6 +784,20 @@ impl ZoneConnection {
                             *pop_range_id,
                         ))
                         .await;
+                }
+                LuaTask::RemoveCooldowns {} => {
+                    self.handle
+                        .send(ToServer::RemoveCooldowns(
+                            self.player_data.character.actor_id,
+                        ))
+                        .await;
+                }
+                LuaTask::ToggleHowTo { value, id } => {
+                    if *value {
+                        self.player_data.unlock.seen_active_help.clear(*id);
+                    } else {
+                        self.player_data.unlock.seen_active_help.set(*id);
+                    }
                 }
             }
         }

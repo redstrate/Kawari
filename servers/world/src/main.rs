@@ -1585,6 +1585,9 @@ async fn process_packet(
                                 .run_gm_command(*command, *arg0, *arg1, *arg2, *arg3, lua_player)
                                 .await;
                         }
+                        ClientZoneIpcData::GMCommandName2 { data, .. } => {
+                            tracing::info!("GM Command Test: {data}");
+                        }
                         ClientZoneIpcData::ZoneJump {
                             exit_box, position, ..
                         } => {

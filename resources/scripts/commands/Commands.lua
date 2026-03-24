@@ -17,6 +17,7 @@ GM_ICON = 18
 GM_SET_HP = 100
 GM_SET_MP = 101
 GM_EXP = 104
+GM_GET_REST = 108
 GM_ORCHESTRION = 116
 GM_GIVE_ITEM = 200
 GM_GIL = 201
@@ -28,41 +29,50 @@ GM_QUEST_INCOMPLETE = 303
 GM_QUEST_SEQUENCE = 304
 GM_QUEST_INSPECT = 305
 GM_AETHERYTE = 350
+GM_CUTFLG = 356
 GM_INSPECT = 422
+GM_HOWTO = 500
 GM_WIREFRAME = 550
 GM_TERRITORY = 600
 GM_TERRITORY_INFO = 605
+GM_WORLD = 609
+GM_IMMEDIATELY_ACTION = 612
 
-registerGMCommand(GM_SET_POS,           GM_DIR.."SetPos.lua")
-registerGMCommand(GM_SET_LEVEL,         GM_DIR.."SetLevel.lua")
-registerGMCommand(GM_SET_RACE,          GM_DIR.."SetRace.lua")
-registerGMCommand(GM_SET_TRIBE,         GM_DIR.."SetTribe.lua")
-registerGMCommand(GM_SET_SEX,           GM_DIR.."SetSex.lua")
-registerGMCommand(GM_CHANGE_WEATHER,    GM_DIR.."ChangeWeather.lua")
-registerGMCommand(GM_SPEED,             GM_DIR.."SetSpeed.lua")
-registerGMCommand(GM_INVISIBILITY,      GM_DIR.."ToggleInvisibility.lua")
-registerGMCommand(GM_KILL,              GM_DIR.."Kill.lua")
-registerGMCommand(GM_ICON,              GM_DIR.."Icon.lua")
-registerGMCommand(GM_SET_HP,            GM_DIR.."SetHP.lua")
-registerGMCommand(GM_SET_MP,            GM_DIR.."SetMP.lua")
+registerGMCommand(GM_SET_POS,            GM_DIR.."SetPos.lua")
+registerGMCommand(GM_SET_LEVEL,          GM_DIR.."SetLevel.lua")
+registerGMCommand(GM_SET_RACE,           GM_DIR.."SetRace.lua")
+registerGMCommand(GM_SET_TRIBE,          GM_DIR.."SetTribe.lua")
+registerGMCommand(GM_SET_SEX,            GM_DIR.."SetSex.lua")
+registerGMCommand(GM_CHANGE_WEATHER,     GM_DIR.."ChangeWeather.lua")
+registerGMCommand(GM_SPEED,              GM_DIR.."SetSpeed.lua")
+registerGMCommand(GM_INVISIBILITY,       GM_DIR.."ToggleInvisibility.lua")
+registerGMCommand(GM_KILL,               GM_DIR.."Kill.lua")
+registerGMCommand(GM_ICON,               GM_DIR.."Icon.lua")
+registerGMCommand(GM_SET_HP,             GM_DIR.."SetHP.lua")
+registerGMCommand(GM_SET_MP,             GM_DIR.."SetMP.lua")
 -- TODO: Implement the GMInspect IPC opcode, it's completely different than the normal GMCommand opcode
 --registerGMCommand(GM_INSPECT,           GM_DIR.."InspectPlayer.lua")
-registerGMCommand(GM_EXP,               GM_DIR.."Exp.lua")
-registerGMCommand(GM_ORCHESTRION,       GM_DIR.."Orchestrion.lua")
-registerGMCommand(GM_GIVE_ITEM,         GM_DIR.."GiveItem.lua")
-registerGMCommand(GM_GIL,               GM_DIR.."Gil.lua")
-registerGMCommand(GM_COLLECT,           GM_DIR.."Collect.lua")
-registerGMCommand(GM_QUEST_ACCEPT,      GM_DIR.."QuestAccept.lua")
-registerGMCommand(GM_QUEST_CANCEL,      GM_DIR.."QuestCancel.lua")
-registerGMCommand(GM_QUEST_COMPLETE,    GM_DIR.."QuestComplete.lua")
-registerGMCommand(GM_QUEST_INCOMPLETE,  GM_DIR.."QuestIncomplete.lua")
-registerGMCommand(GM_QUEST_SEQUENCE,    GM_DIR.."QuestSequence.lua")
-registerGMCommand(GM_QUEST_INSPECT,     GM_DIR.."QuestInspect.lua")
-registerGMCommand(GM_COLLECT,           GM_DIR.."Collect.lua")
-registerGMCommand(GM_AETHERYTE,         GM_DIR.."UnlockAetheryte.lua")
-registerGMCommand(GM_WIREFRAME,         GM_DIR.."ToggleWireframe.lua")
-registerGMCommand(GM_TERRITORY,         GM_DIR.."ChangeTerritory.lua")
-registerGMCommand(GM_TERRITORY_INFO,    GM_DIR.."TerritoryInfo.lua")
+registerGMCommand(GM_EXP,                GM_DIR.."Exp.lua")
+registerGMCommand(GM_GET_REST,           GM_DIR.."GetRest.lua")
+registerGMCommand(GM_ORCHESTRION,        GM_DIR.."Orchestrion.lua")
+registerGMCommand(GM_GIVE_ITEM,          GM_DIR.."GiveItem.lua")
+registerGMCommand(GM_GIL,                GM_DIR.."Gil.lua")
+registerGMCommand(GM_COLLECT,            GM_DIR.."Collect.lua")
+registerGMCommand(GM_QUEST_ACCEPT,       GM_DIR.."QuestAccept.lua")
+registerGMCommand(GM_QUEST_CANCEL,       GM_DIR.."QuestCancel.lua")
+registerGMCommand(GM_QUEST_COMPLETE,     GM_DIR.."QuestComplete.lua")
+registerGMCommand(GM_QUEST_INCOMPLETE,   GM_DIR.."QuestIncomplete.lua")
+registerGMCommand(GM_QUEST_SEQUENCE,     GM_DIR.."QuestSequence.lua")
+registerGMCommand(GM_QUEST_INSPECT,      GM_DIR.."QuestInspect.lua")
+registerGMCommand(GM_COLLECT,            GM_DIR.."Collect.lua")
+registerGMCommand(GM_HOWTO,              GM_DIR.."HowTo.lua")
+registerGMCommand(GM_AETHERYTE,          GM_DIR.."UnlockAetheryte.lua")
+registerGMCommand(GM_CUTFLG,             GM_DIR.."CutsceneFlag.lua")
+registerGMCommand(GM_WIREFRAME,          GM_DIR.."ToggleWireframe.lua")
+registerGMCommand(GM_TERRITORY,          GM_DIR.."ChangeTerritory.lua")
+registerGMCommand(GM_TERRITORY_INFO,     GM_DIR.."TerritoryInfo.lua")
+registerGMCommand(GM_WORLD,              GM_DIR.."World.lua")
+registerGMCommand(GM_IMMEDIATELY_ACTION, GM_DIR.."ImmediatelyAction.lua")
 
 -- Debug commands
 -- Please keep these in alphabetical order!

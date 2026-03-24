@@ -821,6 +821,7 @@ pub fn handle_zone_messages(
                 inside_instance_exit: false,
                 parameters: BaseParameters::default(),
                 dueling_opponent_id: ObjectId::default(),
+                remove_cooldowns: false,
             };
 
             true

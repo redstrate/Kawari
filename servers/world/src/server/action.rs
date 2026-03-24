@@ -305,6 +305,40 @@ pub fn execute_action(
     let mut network = network.lock();
     let msg = FromServer::NewTasks(lua_player.queued_tasks);
     network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
+
+    // Update cooldowns, currently only for the GM command
+    {
+        let data = data.lock();
+
+        let Some(instance) = data.find_actor_instance(from_actor_id) else {
+            return;
+        };
+
+        let Some(actor) = instance.find_actor(from_actor_id) else {
+            return;
+        };
+
+        let NetworkedActor::Player {
+            remove_cooldowns, ..
+        } = actor
+        else {
+            return;
+        };
+
+        if *remove_cooldowns {
+            let mut game_data = game_data.lock();
+            let cooldown_group = game_data.get_action_cooldown_group(request.action_key) as u32 - 1;
+            network.send_to_by_actor_id(
+                from_actor_id,
+                FromServer::ActorControlSelf(ActorControlCategory::SetCooldownTimer {
+                    cooldown_group,
+                    unk1: 0,
+                    unk2: 0,
+                }),
+                DestinationNetwork::ZoneClients,
+            );
+        }
+    }
 }
 
 /// Executes an action from an enemy.

@@ -724,6 +724,10 @@ ClientZoneIpcType:
     comment: Sent by the client when they send a GM command. This can only be sent by the client if they are sent a GM rank.
     opcode: 396
     size: 52
+  - name: GMCommandName2
+    comment: Sent by the client when they send a GM command. This can only be sent by the client if they are sent a GM rank. Seen in //gm buddy_name.
+    opcode: 558
+    size: 40
   - name: RequestBlacklist
     comment: Seems to happen when opening the Blacklist window.
     opcode: 642

@@ -35,4 +35,4 @@ These special debug commands start with `!` and are custom to Kawari.
 | `!toggleminion <id>` | Toggles the unlock status of the specified minion ID. |
 | `!toggleaethercurrent <id>` | Toggles the unlock status of the specified Aether Current ID. |
 | `!toggleaethercurrentcompflgset <id>` | Toggles the unlock status of the specified AetherCurrentCompFlgSet ID. |
-| `!togglecutsceneseen <id>` | Toggles the seen status of the specified Cutscene ID. |
+| `!toggleallcutscene` | Marks all cutscenes as seen. |

@@ -365,8 +365,9 @@ impl LuaPlayer {
         self.queued_tasks.push(LuaTask::ToggleAdventureAll {});
     }
 
-    fn toggle_cutscene_seen(&mut self, id: u32) {
-        self.queued_tasks.push(LuaTask::ToggleCutsceneSeen { id });
+    fn toggle_cutscene_seen(&mut self, id: u32, value: bool) {
+        self.queued_tasks
+            .push(LuaTask::ToggleCutsceneSeen { id, value });
     }
 
     fn toggle_cutscene_seen_all(&mut self) {
@@ -575,6 +576,14 @@ impl LuaPlayer {
             territory_id,
             pop_range_id,
         });
+    }
+
+    fn remove_cooldowns(&mut self) {
+        self.queued_tasks.push(LuaTask::RemoveCooldowns {});
+    }
+
+    fn toggle_howto(&mut self, value: bool, id: u32) {
+        self.queued_tasks.push(LuaTask::ToggleHowTo { value, id });
     }
 }
 
@@ -832,10 +841,13 @@ impl UserData for LuaPlayer {
             this.toggle_adventure_all();
             Ok(())
         });
-        methods.add_method_mut("toggle_cutscene_seen", |_, this, id: u32| {
-            this.toggle_cutscene_seen(id);
-            Ok(())
-        });
+        methods.add_method_mut(
+            "toggle_cutscene_seen",
+            |_, this, (id, value): (u32, bool)| {
+                this.toggle_cutscene_seen(id, value);
+                Ok(())
+            },
+        );
         methods.add_method_mut("toggle_cutscene_seen_all", |_, this, _: ()| {
             this.toggle_cutscene_seen_all();
             Ok(())
@@ -994,6 +1006,14 @@ impl UserData for LuaPlayer {
                 Ok(())
             },
         );
+        methods.add_method_mut("remove_cooldowns", |_, this, _: ()| {
+            this.remove_cooldowns();
+            Ok(())
+        });
+        methods.add_method_mut("toggle_howto", |_, this, (value, id): (bool, u32)| {
+            this.toggle_howto(value, id);
+            Ok(())
+        });
     }
 
     fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
@@ -1022,5 +1042,8 @@ impl UserData for LuaPlayer {
         });
         fields.add_field_method_get("content", |_, this| Ok(this.content_data));
         fields.add_field_method_get("parameters", |_, this| Ok(this.base_parameters.clone()));
+        fields.add_field_method_get("rested_exp", |_, this| {
+            Ok(this.player_data.classjob.rested_exp)
+        });
     }
 }

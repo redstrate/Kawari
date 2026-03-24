@@ -129,6 +129,7 @@ pub enum LuaTask {
     ToggleAdventureAll {},
     ToggleCutsceneSeen {
         id: u32,
+        value: bool,
     },
     ToggleCutsceneSeenAll {},
     ToggleMinion {
@@ -211,5 +212,10 @@ pub enum LuaTask {
     WarpPopRange {
         territory_id: u16,
         pop_range_id: u32,
+    },
+    RemoveCooldowns {},
+    ToggleHowTo {
+        value: bool,
+        id: u32,
     },
 }

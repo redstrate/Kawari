@@ -128,12 +128,16 @@ impl ZoneConnection {
         .await;
     }
 
-    pub async fn toggle_cutscene_seen(&mut self, cutscene_id: u32) {
-        let should_unlock = self.player_data.unlock.cutscene_seen.toggle(cutscene_id);
+    pub async fn toggle_cutscene_seen(&mut self, cutscene_id: u32, value: bool) {
+        if value {
+            self.player_data.unlock.cutscene_seen.set(cutscene_id);
+        } else {
+            self.player_data.unlock.cutscene_seen.clear(cutscene_id);
+        }
 
         self.actor_control_self(ActorControlCategory::ToggleCutsceneSeen {
             id: cutscene_id,
-            unlocked: should_unlock,
+            unlocked: value,
         })
         .await;
     }

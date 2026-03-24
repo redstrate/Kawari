@@ -2471,6 +2471,26 @@ pub async fn server_main_loop(
                     let data = data.lock();
                     network.send_ac_in_range(&data, from_actor_id, actor_control);
                 }
+                ToServer::RemoveCooldowns(actor_id) => {
+                    let mut data = data.lock();
+
+                    let Some(instance) = data.find_actor_instance_mut(actor_id) else {
+                        continue;
+                    };
+
+                    let Some(actor) = instance.find_actor_mut(actor_id) else {
+                        continue;
+                    };
+
+                    let NetworkedActor::Player {
+                        remove_cooldowns, ..
+                    } = actor
+                    else {
+                        continue;
+                    };
+
+                    *remove_cooldowns = true;
+                }
                 ToServer::FatalError(err) => return Err(err),
                 _ => {
                     tracing::error!("Received a ToServer message we don't handle yet: {msg:#?}");

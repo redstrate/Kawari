@@ -1485,6 +1485,12 @@ impl GameData {
             row.Piety().into_u16().copied().unwrap(),
         ]
     }
+
+    pub fn get_action_cooldown_group(&mut self, id: u32) -> u8 {
+        let row = self.action_sheet.row(id).unwrap();
+
+        row.CooldownGroup().into_u8().copied().unwrap()
+    }
 }
 
 impl mlua::UserData for GameData {
