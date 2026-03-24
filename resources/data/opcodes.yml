@@ -588,19 +588,19 @@ ServerZoneIpcType:
     opcode: 307
     size: 464
   - name: SpawnTreasure
-    comment: ""
+    comment: Unknown purpose.
     opcode: 141
     size: 112
   - name: OpenedTreasure
-    comment: ""
+    comment: Unknown purpose.
     opcode: 148
     size: 24
   - name: TreasureFadeOut
-    comment: ""
+    comment: Unknown purpose.
     opcode: 761
     size: 8
   - name: FirstAttack
-    comment: ""
+    comment: Unknown purpose.
     opcode: 335
     size: 16
 ClientZoneIpcType:
