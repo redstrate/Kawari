@@ -9,6 +9,18 @@ pub enum DirectorEvent {
     /// Shows "Duty Commenced", and starts the clock ticking down. `arg` is the number of seconds the duty should last.
     #[brw(magic = 0x40000001u32)]
     DutyCommence,
+    /// `arg` is unknown.
+    #[brw(magic = 0x40000002u32)]
+    DutyCompletedFlyText,
+    /// `arg` is unknown.
+    #[brw(magic = 0x40000003u32)]
+    DutyCompleted,
+    /// `arg` is unknown.
+    #[brw(magic = 0x40000005u32)]
+    PartyWipe,
+    /// `arg` is unknown.
+    #[brw(magic = 0x40000006u32)]
+    DutyRecommence,
     /// Seems to be in response to the Sync trigger. Arg seems to always be 1.
     #[brw(magic = 0x80000000u32)]
     SyncResponse,
