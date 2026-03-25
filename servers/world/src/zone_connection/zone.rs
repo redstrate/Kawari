@@ -284,25 +284,34 @@ impl ZoneConnection {
                         .find_content_for_content_finder_id(content_finder_condition_id)
                         .unwrap()
                 } else {
-                    tracing::warn!("Failed to find content ID for {content_finder_condition_id}?");
+                    // There is no content associated with FATE directors.
+                    if director_type != HandlerType::Fate {
+                        tracing::warn!(
+                            "Failed to find content ID for {content_finder_condition_id}?"
+                        );
+                    }
                     0xFFFF
                 };
 
                 // TODO: this needs to be networked
                 let needs_sync = {
-                    if self
-                        .content_settings
-                        .unwrap_or_default()
-                        .contains(ContentRegistrationFlags::UNRESTRICTED_PARTY)
-                    {
-                        self.content_settings
-                            .unwrap_or_default()
-                            .contains(ContentRegistrationFlags::LEVEL_SYNC)
+                    if director_type == HandlerType::Fate {
+                        false
                     } else {
-                        !self
+                        if self
                             .content_settings
                             .unwrap_or_default()
-                            .contains(ContentRegistrationFlags::EXPLORER_MODE)
+                            .contains(ContentRegistrationFlags::UNRESTRICTED_PARTY)
+                        {
+                            self.content_settings
+                                .unwrap_or_default()
+                                .contains(ContentRegistrationFlags::LEVEL_SYNC)
+                        } else {
+                            !self
+                                .content_settings
+                                .unwrap_or_default()
+                                .contains(ContentRegistrationFlags::EXPLORER_MODE)
+                        }
                     }
                 };
 
@@ -319,7 +328,6 @@ impl ZoneConnection {
 
                     if current_level > synced_level {
                         self.synced_level = Some(synced_level as u8);
-                        tracing::warn!("SET SYNCED LEVEL TO {synced_level}");
                     }
                 }
 

@@ -390,8 +390,7 @@ impl HandlerType {
     /// Determine the correct handler for use in this zone.
     pub fn from_intended_use(intended_use: TerritoryIntendedUse) -> Option<Self> {
         match intended_use {
-            // TODO: needs proper handling
-            //TerritoryIntendedUse::OpenWorld => Some(Self::Fate),
+            TerritoryIntendedUse::OpenWorld => Some(Self::Fate),
             TerritoryIntendedUse::Dungeon => Some(Self::InstanceContent),
             TerritoryIntendedUse::VariantDungeon => Some(Self::InstanceContent),
             TerritoryIntendedUse::DeepDungeon => Some(Self::InstanceContent),
