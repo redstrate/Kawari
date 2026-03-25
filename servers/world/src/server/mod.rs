@@ -1439,13 +1439,22 @@ pub async fn server_main_loop(
                             );
 
                             let mut network = network.lock();
-                            let data = data.lock();
+                            let mut data = data.lock();
                             network.send_in_range(
                                 from_actor_id,
                                 &data,
                                 msg,
                                 DestinationNetwork::ZoneClients,
                             );
+
+                            // Update data for respawns
+                            {
+                                if let Some(instance) = data.find_actor_instance_mut(from_actor_id)
+                                    && let Some(actor) = instance.find_actor_mut(from_actor_id)
+                                        && let NetworkedActor::Player { spawn, .. } = actor {
+                                            spawn.pose = *pose as u8;
+                                        }
+                            }
                         }
                         ClientTriggerCommand::ReapplyPose { unk1, pose } => {
                             let msg = FromServer::ActorControl(
@@ -1457,13 +1466,22 @@ pub async fn server_main_loop(
                             );
 
                             let mut network = network.lock();
-                            let data = data.lock();
+                            let mut data = data.lock();
                             network.send_in_range(
                                 from_actor_id,
                                 &data,
                                 msg,
                                 DestinationNetwork::ZoneClients,
                             );
+
+                            // Update data for respawns
+                            {
+                                if let Some(instance) = data.find_actor_instance_mut(from_actor_id)
+                                    && let Some(actor) = instance.find_actor_mut(from_actor_id)
+                                        && let NetworkedActor::Player { spawn, .. } = actor {
+                                            spawn.pose = *pose as u8;
+                                        }
+                            }
                         }
                         ClientTriggerCommand::Emote { emote, hide_text } => {
                             let msg = FromServer::ActorControlTarget(

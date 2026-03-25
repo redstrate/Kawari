@@ -22,6 +22,7 @@ pub struct PlayerSpawn {
     pub u4: u8,
     pub online_status: OnlineStatus,
 
+    /// The pose this character is in.
     pub pose: u8,
     pub u5a: u8,
     pub u5b: u8,
