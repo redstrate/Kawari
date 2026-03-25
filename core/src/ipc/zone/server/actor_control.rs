@@ -726,6 +726,103 @@ pub enum ActorControlCategory {
         unk4: u32,
     },
 
+    #[brw(magic = 2351u32)]
+    FateNpc {
+        actor_id: ObjectId,
+        unk2: u32,
+        unk3: u32,
+        unk4: u32,
+    },
+
+    #[brw(magic = 2352u32)]
+    UnkFate2 {
+        unk1: u32,
+        unk2: u32,
+        unk3: u32,
+        unk4: u32,
+    },
+
+    #[brw(magic = 2353u32)]
+    FateInit {
+        /// Index into the FATE Excel sheet.
+        fate_id: u32,
+        unk2: u32,
+    },
+
+    #[brw(magic = 2354u32)]
+    UnkFate4 {
+        unk1: u32,
+        unk2: u32,
+        unk3: u32,
+        unk4: u32,
+    },
+
+    #[brw(magic = 2355u32)]
+    UnkFate5 {
+        unk1: u32,
+        unk2: u32,
+        unk3: u32,
+        unk4: u32,
+    },
+
+    #[brw(magic = 2363u32)]
+    UnkFate6 {
+        unk1: u32,
+        unk2: u32,
+        unk3: u32,
+        unk4: u32,
+    },
+
+    #[brw(magic = 2364u32)]
+    UnkFate7 {
+        /// Index into the FATE Excel sheet.
+        fate_id: u32,
+        unk2: u32,
+        unk3: u32,
+        unk4: u32,
+    },
+
+    #[brw(magic = 2365u32)]
+    UnkFate8 {
+        unk1: u32,
+        unk2: u32,
+        unk3: u32,
+        unk4: u32,
+    },
+
+    #[brw(magic = 2366u32)]
+    FateProgress {
+        /// Index into the FATE Excel sheet.
+        fate_id: u32,
+        /// From 0-100 assumedly?
+        progress: u32,
+    },
+
+    #[brw(magic = 2367u32)]
+    UnkFate10 {
+        unk1: u32,
+        unk2: u32,
+        unk3: u32,
+        unk4: u32,
+    },
+
+    #[brw(magic = 2369u32)]
+    UnkFate11 {
+        unk1: u32,
+        unk2: u32,
+        unk3: u32,
+        unk4: u32,
+    },
+
+    #[brw(magic = 2370u32)]
+    UnkFate12 {
+        /// Index into the FATE Excel sheet.
+        fate_id: u32,
+        unk2: u32,
+        unk3: u32,
+        unk4: u32,
+    },
+
     #[doc(hidden)]
     Unknown {
         category: u32,

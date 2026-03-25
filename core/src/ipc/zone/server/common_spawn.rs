@@ -207,6 +207,7 @@ pub struct CommonSpawn {
     /// Refers to the original game object ID associated with this character.
     pub layout_id: u32,
     pub companion_owner_id: u32,
+    /// Which director spawned and is managing this actor, if any.
     pub handler_id: HandlerId,
     pub owner_id: ObjectId,
     pub tether_id: ObjectId,
@@ -216,7 +217,8 @@ pub struct CommonSpawn {
     pub hp: u32,
     /// Initial display flags for this character.
     pub display_flags: DisplayFlag,
-    pub fate_id: u16, // assumed
+    /// Index into the FATE sheet.
+    pub fate_id: u16,
     /// Their current MP.
     pub mp: u16,
     /// Their maximum MP.
