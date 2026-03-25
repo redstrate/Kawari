@@ -12,12 +12,12 @@ use crate::{
     },
 };
 use kawari::{
-    common::{CharacterMode, ObjectId, ObjectTypeId, Position},
+    common::{CharacterMode, LogMessageType, ObjectId, ObjectTypeId, Position},
     ipc::zone::{
-        ActorControlCategory, CWLSPermissionRank, CrossworldLinkshellEx, PartyMemberEntry,
-        PartyMemberPositions, PartyUpdateStatus, ReadyCheckReply, ServerZoneIpcData,
-        ServerZoneIpcSegment, WaymarkPlacementMode, WaymarkPosition, WaymarkPositions,
-        WaymarkPreset,
+        ActorControlCategory, CWLSPermissionRank, CrossworldLinkshellEx, InviteType,
+        PartyMemberEntry, PartyMemberPositions, PartyUpdateStatus, ReadyCheckReply,
+        ServerZoneIpcData, ServerZoneIpcSegment, WaymarkPlacementMode, WaymarkPosition,
+        WaymarkPositions, WaymarkPreset,
     },
 };
 
@@ -419,7 +419,7 @@ pub fn handle_social_messages(
             // First pull up some info about the sender, as invite packets require it
             let Some(sender_instance) = data.find_actor_instance(*from_actor_id) else {
                 tracing::error!(
-                    "ToServer::InvitePlayerToParty: Unable to find the sender! What happened?"
+                    "ToServer::InvitePlayerToFriendList: Unable to find the sender! What happened?"
                 );
                 return true;
             };
@@ -445,6 +445,8 @@ pub fn handle_social_messages(
             assert!(sender_content_id != 0);
 
             let mut recipient_actor_id = ObjectId::default();
+            let mut recipient_content_id = 0;
+            let mut recipient_world_id = 0;
 
             // Second, look up the recipient by name, since that and their content id are all we're given by the sending client.
             // Since we don't implement multiple worlds, the world id isn't useful for anything here.
@@ -454,6 +456,8 @@ pub fn handle_social_messages(
                         && (spawn.content_id == *content_id || spawn.common.name == *character_name)
                     {
                         recipient_actor_id = *id;
+                        recipient_content_id = spawn.content_id;
+                        recipient_world_id = spawn.home_world_id;
                         break 'outer;
                     }
                 }
@@ -461,7 +465,18 @@ pub fn handle_social_messages(
 
             assert!(recipient_actor_id != ObjectId::default());
 
+            // TODO: Don't send the invite if the prospective friend has been sent an invite already? There's a specific LogMessage for it, but it's unclear who enforces it: do we do that, or does the client? Even if we do enforce it though, the zone connection should be able to handle that without bothering us in the global server state by checking the database.
             let msg = FromServer::FriendInvite(sender_account_id, sender_content_id, sender_name);
+            network.send_to_by_actor_id(recipient_actor_id, msg, DestinationNetwork::ZoneClients);
+
+            // Inform the sender of the invite they just sent.
+            let msg = FromServer::InviteCharacterResult(
+                recipient_content_id,
+                LogMessageType::Default,
+                recipient_world_id,
+                InviteType::FriendList,
+                character_name.clone(),
+            );
             network.send_to_by_actor_id(recipient_actor_id, msg, DestinationNetwork::ZoneClients);
 
             true
@@ -500,6 +515,8 @@ pub fn handle_social_messages(
             assert!(sender_content_id != 0);
 
             let mut recipient_actor_id = ObjectId::default();
+            let mut recipient_content_id = 0;
+            let mut recipient_world_id = 0;
 
             // Second, look up the recipient by name, since that and their content id are all we're given by the sending client.
             // Since we don't implement multiple worlds, the world id isn't useful for anything here.
@@ -509,6 +526,8 @@ pub fn handle_social_messages(
                         && (spawn.content_id == *content_id || spawn.common.name == *character_name)
                     {
                         recipient_actor_id = *id;
+                        recipient_content_id = *content_id;
+                        recipient_world_id = spawn.home_world_id;
                         break 'outer;
                     }
                 }
@@ -526,6 +545,7 @@ pub fn handle_social_messages(
                 }
             }
 
+            let mut log_message = LogMessageType::PlayerAlreadyInAnotherParty;
             if !already_in_party {
                 // Finally, if the recipient is online, fetch their handle from the network and send them the message!
                 if recipient_actor_id.is_valid() {
@@ -539,21 +559,29 @@ pub fn handle_social_messages(
                             );
                             if handle.send(msg.clone()).is_err() {
                                 to_remove.push(*id);
+                            } else {
+                                log_message = LogMessageType::Default;
                             }
                             break;
                         }
                     }
                     network.to_remove.append(&mut to_remove);
                 } else {
-                    // TODO: Else, if the recipient is offline, inform the sender.
+                    log_message = LogMessageType::UnableToPerformPlayerOffline;
                     tracing::error!(
                         "InvitePlayerToParty: The recipient is offline! What happened?"
                     );
                 }
-            } else {
-                let msg = FromServer::CharacterAlreadyInParty();
-                network.send_to_by_actor_id(*from_actor_id, msg, DestinationNetwork::ZoneClients);
             }
+
+            let msg = FromServer::InviteCharacterResult(
+                recipient_content_id,
+                log_message,
+                recipient_world_id,
+                InviteType::Party,
+                character_name.clone(),
+            );
+            network.send_to_by_actor_id(*from_actor_id, msg, DestinationNetwork::ZoneClients);
 
             true
         }
