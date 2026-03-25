@@ -451,6 +451,19 @@ pub enum ClientZoneIpcData {
         #[brw(pad_after = 4)] // empty
         entity_id: ObjectId,
     },
+    CrossRealmListingsRequest1 {
+        unk1: u32,
+        unk2: u32,
+        max_results: u32,
+        unk3: [u8; 44],
+    },
+    CrossRealmListingsRequest2 {
+        unk1: [u8; 40],
+    },
+    ViewCrossRealmListing {
+        #[brw(pad_after = 8)] // empty
+        listing_id: u64,
+    },
 }
 
 #[cfg(test)]

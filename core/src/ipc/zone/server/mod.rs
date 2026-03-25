@@ -143,6 +143,9 @@ pub use linkshell::{
 mod spawn_treasure;
 pub use spawn_treasure::SpawnTreasure;
 
+mod cross_realm_listing;
+pub use cross_realm_listing::{CrossRealmListing, CrossRealmListings};
+
 use crate::common::{
     CHAR_NAME_MAX_LENGTH, ContainerType, ItemOperationKind, ObjectId, read_string, write_string,
 };
@@ -1055,6 +1058,14 @@ pub enum ServerZoneIpcData {
         unk3: u32,
         unk4: u32,
         unk5: u32,
+    },
+    CrossRealmListings(CrossRealmListings),
+    CrossRealmListingsOverview {
+        unk: [u8; 48],
+    },
+    CrossRealmListingInformation {
+        listing_id: u64,
+        unk: [u8; 456],
     },
 }
 

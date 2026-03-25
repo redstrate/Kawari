@@ -607,6 +607,18 @@ ServerZoneIpcType:
     comment: Seen while fates were initializing.
     opcode: 432
     size: 24
+  - name: CrossRealmListings
+    comment: Sent to fill out the Party Finder.
+    opcode: 810
+    size: 1616
+  - name: CrossRealmListingsOverview
+    comment: Sent to fill out the information for Party Finder tabs and other overview information.
+    opcode: 800
+    size: 48
+  - name: CrossRealmListingInformation
+    comment: Sent in response to ViewCrossRealmListing
+    opcode: 735
+    size: 464
 ClientZoneIpcType:
   - name: InitRequest
     comment: Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)
@@ -888,6 +900,18 @@ ClientZoneIpcType:
     comment: Unknown purpose.
     opcode: 493
     size: 8
+  - name: CrossRealmListingsRequest1
+    comment: Seen while opening the Party Finder.
+    opcode: 610
+    size: 56
+  - name: CrossRealmListingsRequest2
+    comment: Seen while opening the Party Finder.
+    opcode: 686
+    size: 40
+  - name: ViewCrossRealmListing
+    comment: Seen while viewing information for a specific Party Finder listing.
+    opcode: 810
+    size: 16
 ServerLobbyIpcType:
   - name: NackReply
     comment: Sent by the server to indicate an lobby error occured.

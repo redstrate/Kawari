@@ -14,9 +14,10 @@ use kawari_world::inventory::{EquipSlot, Item, Storage, get_next_free_slot};
 use kawari::ipc::chat::{ChatChannel, ClientChatIpcData};
 
 use kawari::ipc::zone::{
-    ActorControlCategory, Conditions, ContentFinderUserAction, CrossworldLinkshellEx, EventType,
-    InviteType, MapEffects, MarketBoardItem, OnlineStatus, OnlineStatusMask, PlayerSetup,
-    SceneFlags, SearchInfo, SocialListRequestType, TrustContent, TrustInformation,
+    ActorControlCategory, Conditions, ContentFinderUserAction, CrossRealmListing,
+    CrossRealmListings, CrossworldLinkshellEx, EventType, InviteType, MapEffects, MarketBoardItem,
+    OnlineStatus, OnlineStatusMask, PlayerSetup, SceneFlags, SearchInfo, SocialListRequestType,
+    TrustContent, TrustInformation,
 };
 
 use kawari::ipc::zone::{
@@ -2686,6 +2687,75 @@ async fn process_packet(
                         }
                         ClientZoneIpcData::OpenTreasure { .. } => {
                             tracing::warn!("Opening treasure chests is unimplemented");
+                        }
+                        ClientZoneIpcData::CrossRealmListingsRequest1 { max_results, .. } => {
+                            let results_aligned = max_results.div_ceil(4) * 4; // each packet holds 4
+                            let required_packets = results_aligned / 4;
+                            for i in 0..required_packets {
+                                let ipc = ServerZoneIpcSegment::new(
+                                    ServerZoneIpcData::CrossRealmListings(CrossRealmListings {
+                                        unk10: 0,
+                                        unk11: 0xFFFFFFFF,
+                                        unk12: 0xFFFFFFFF,
+                                        segment_index: if i + 1 == required_packets {
+                                            0
+                                        } else {
+                                            i + 1
+                                        },
+                                        entries: vec![
+                                            CrossRealmListing {
+                                                listing_id: 1,
+                                                account_id: 1,
+                                                content_id: 1,
+                                                category: 1,
+                                                duty: 1,
+                                                duty_type: 1,
+                                                world_id: 1,
+                                                objective: 1,
+                                                beginners_welcome: 1,
+                                                duty_finder_settings: 1,
+                                                loot_rule: 1,
+                                                last_patch_hotfix_timestamp: 1,
+                                                time_left: 1,
+                                                avg_item_lv: 1,
+                                                home_world_id: 1,
+                                                client_language: 1,
+                                                total_slots: 1,
+                                                slots_filled: 1,
+                                                join_condition_flags: 1,
+                                                is_alliance: 1,
+                                                number_of_parties: 1,
+                                                slot_flags: [1; 8],
+                                                jobs_present: [1; 8],
+                                                bad_padding: Vec::new(),
+                                                recruiter_name: "Test Listing".to_string(),
+                                                comment: "Riduculous Ties".to_string(),
+                                                bad_padding2: Vec::new(),
+                                            };
+                                            4
+                                        ],
+                                    }),
+                                );
+                                connection.send_ipc_self(ipc).await;
+                            }
+
+                            // send overview
+                            let ipc = ServerZoneIpcSegment::new(
+                                ServerZoneIpcData::CrossRealmListingsOverview { unk: [0; 48] },
+                            );
+                            connection.send_ipc_self(ipc).await;
+                        }
+                        ClientZoneIpcData::CrossRealmListingsRequest2 { .. } => {
+                            // NOTE: not sure what we need from here
+                        }
+                        ClientZoneIpcData::ViewCrossRealmListing { listing_id } => {
+                            let ipc = ServerZoneIpcSegment::new(
+                                ServerZoneIpcData::CrossRealmListingInformation {
+                                    listing_id: *listing_id,
+                                    unk: [0; 456],
+                                },
+                            );
+                            connection.send_ipc_self(ipc).await;
                         }
                         ClientZoneIpcData::Unknown { unk } => {
                             tracing::warn!(
