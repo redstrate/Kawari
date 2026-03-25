@@ -429,6 +429,10 @@ pub enum ActorControlCategory {
         hide_text: bool,
     },
 
+    /// Interrupts the currently playing emote.
+    #[brw(magic = 291u32)]
+    InterruptEmote {},
+
     /// Generic catch-all for crafting/gathering actions.
     #[brw(magic = 300u32)]
     LiveEvent {

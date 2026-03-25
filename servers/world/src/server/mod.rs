@@ -1329,6 +1329,15 @@ pub async fn server_main_loop(
                                     position,
                                 );
                             }
+
+                            // Interrupt any playing emotes.
+                            // Yes this happens greedily but it shouldn't make a difference.?
+                            let mut network = network.lock();
+                            network.send_ac_in_range_inclusive(
+                                &data,
+                                actor_id,
+                                ActorControlCategory::InterruptEmote {},
+                            );
                         }
                     }
                 }
@@ -1465,14 +1474,10 @@ pub async fn server_main_loop(
                                 DestinationNetwork::ZoneClients,
                             );
                         }
-                        ClientTriggerCommand::Emote {
-                            emote,
-                            hide_text,
-                            target,
-                        } => {
+                        ClientTriggerCommand::Emote { emote, hide_text } => {
                             let msg = FromServer::ActorControlTarget(
                                 from_actor_id,
-                                *target,
+                                trigger.target,
                                 ActorControlCategory::Emote {
                                     emote: *emote,
                                     hide_text: *hide_text,
