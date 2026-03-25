@@ -383,7 +383,7 @@ pub fn update_party_position(
 }
 
 /// A minimal struct representing a linkshell member.
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, PartialEq)]
 pub struct LinkshellMember {
     /// The member's actor id.
     pub actor_id: ObjectId,
@@ -1596,7 +1596,12 @@ pub fn handle_social_messages(
             true
         }
 
-        ToServer::SetLinkshells(from_actor_id, crossworld_shells, _local_shells) => {
+        ToServer::SetLinkshells(
+            from_actor_id,
+            crossworld_shells,
+            _local_shells,
+            need_to_send_linkshells,
+        ) => {
             let mut network = network.lock();
             let mut cwlses = vec![0; CrossworldLinkshellEx::COUNT];
             let locals = vec![0; CrossworldLinkshellEx::COUNT];
@@ -1608,10 +1613,17 @@ pub fn handle_social_messages(
                         {
                             linkshell = network.linkshells.entry(*shell).or_default().clone();
                         }
-                        linkshell.members.push(LinkshellMember {
+                        let member = LinkshellMember {
                             actor_id: *from_actor_id,
                             rank: *rank,
-                        });
+                        };
+
+                        if !linkshell.members.contains(&member) {
+                            linkshell.members.push(LinkshellMember {
+                                actor_id: *from_actor_id,
+                                rank: *rank,
+                            });
+                        }
                         if linkshell.channel_number == 0 {
                             linkshell.channel_number = network.next_ls_channel_number();
                         }
@@ -1624,7 +1636,8 @@ pub fn handle_social_messages(
             // TODO: Local LSes not supported yet
 
             // Inform the chat connection their zone connection belongs to these LSes.
-            let msg = FromServer::SetLinkshellChatChannels(cwlses, locals);
+            let msg =
+                FromServer::SetLinkshellChatChannels(cwlses, locals, *need_to_send_linkshells);
 
             // We send this to *both* of its connections because the client may have requested a linkshell list at some point, and that all happens on the zone connection. The chat connection uses the ids for filtering bad requests.
             network.send_to_by_actor_id(

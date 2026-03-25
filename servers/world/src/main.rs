@@ -396,7 +396,7 @@ async fn client_chat_loop(
                     }
                     FromServer::SetPartyChatChannel(channel_id) => connection.set_party_chatchannel(channel_id).await,
                     FromServer::PartyMessageSent(message_info) => connection.party_message_received(message_info).await,
-                    FromServer::SetLinkshellChatChannels(cwls, local) => connection.set_linkshell_chatchannels(cwls, local).await,
+                    FromServer::SetLinkshellChatChannels(cwls, local, _) => connection.set_linkshell_chatchannels(cwls, local).await,
                     FromServer::CWLSMessageSent(message_info) => connection.cwls_message_received(message_info).await,
                     _ => tracing::error!("ChatConnection {:#?} received a FromServer message we don't care about: {:#?}, ensure you're using the right client network or that you've implemented a handler for it if we actually care about it!", client_handle.id, msg),
                 },
@@ -2751,6 +2751,14 @@ async fn process_packet(
                             );
                             connection.send_ipc_self(ipc).await;
                         }
+                        ClientZoneIpcData::CheckCWLinkshellNameAvailability { name, .. } => {
+                            connection
+                                .check_cwlinkshell_name_availability(name.clone())
+                                .await;
+                        }
+                        ClientZoneIpcData::CreateNewCrossworldLinkshell { name } => {
+                            connection.create_crossworld_linkshell(name.clone()).await;
+                        }
                         ClientZoneIpcData::Unknown { unk } => {
                             tracing::warn!(
                                 "Unknown Zone packet {:?} recieved ({} bytes), this should be handled!",
@@ -3098,10 +3106,12 @@ async fn process_server_msg(
                 database.commit_parties(parties);
             }
             FromServer::TreasureSpawn(treasure) => connection.spawn_treasure(treasure).await,
-            FromServer::SetLinkshellChatChannels(cwlses, _locals) => {
+            FromServer::SetLinkshellChatChannels(cwlses, _locals, need_to_send_linkshells) => {
                 // TODO: There might be a better way to do this. We need the chatchannels to be set *before* sending the "overview" or chat will break.
                 connection.set_linkshell_chatchannels(cwlses).await;
-                connection.send_crossworld_linkshells(false).await;
+                if need_to_send_linkshells {
+                    connection.send_crossworld_linkshells(false).await;
+                }
             }
             _ => {
                 tracing::error!(

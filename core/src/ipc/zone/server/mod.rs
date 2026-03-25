@@ -136,8 +136,8 @@ pub use marketboard::MarketBoardItem;
 
 mod linkshell;
 pub use linkshell::{
-    CWLSMemberListEntry, CWLSPermissionRank, CrossworldLinkshell, CrossworldLinkshellEx,
-    LinkshellEntry,
+    CWLSCommon, CWLSCommonIdentifiers, CWLSMemberListEntry, CWLSNameAvailability,
+    CWLSPermissionRank, CrossworldLinkshell, CrossworldLinkshellEx, LinkshellEntry,
 };
 
 mod spawn_treasure;
@@ -1055,6 +1055,26 @@ pub enum ServerZoneIpcData {
     CrossRealmListingInformation {
         listing_id: u64,
         unk: [u8; 456],
+    },
+    CWLinkshellNameAvailability {
+        unk1: u8, // TODO: What is this? Seems to be always 1.
+        /// If the desired name was available or not.
+        result: CWLSNameAvailability,
+        /// The desired name.
+        #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+        #[br(count = CHAR_NAME_MAX_LENGTH)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        #[brw(pad_after = 6)]
+        name: String,
+    },
+    NewCrossworldLinkshell {
+        /// The CWLS's id number and ChatChannel information.
+        ids: CWLSCommonIdentifiers,
+        unk_timestamp1: u32, // Unknown 32-bit Unix timestamp, likely the cwls's creation time.
+        unk_timestamp2: u32, // Seems to be the same timestamp repeated? Might be the member's join time?
+        /// The member's rank in the cross-world linkshell, and the linkshell's name.
+        common: CWLSCommon,
     },
 }
 
