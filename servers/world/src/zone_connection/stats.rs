@@ -266,7 +266,7 @@ impl ZoneConnection {
 
     pub async fn finish_changing_class(&mut self) {
         // Play the VFX!
-        self.actor_control_self(ActorControlCategory::ClassJobChangeVFX {
+        self.broadcast_actor_control(ActorControlCategory::ClassJobChangeVFX {
             classjob_id: self.player_data.classjob.current_class as u32,
         })
         .await;
