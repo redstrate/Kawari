@@ -2238,16 +2238,6 @@ async fn process_packet(
                                 }
                                 _ => todo!(),
                             }
-
-                            // Inform the client about the invite they just sent.
-                            connection
-                                .invite_character_result(
-                                    *invite_type,
-                                    *content_id,
-                                    *world_id,
-                                    character_name.clone(),
-                                )
-                                .await;
                         }
                         ClientZoneIpcData::InviteReply {
                             sender_content_id,
@@ -2743,37 +2733,160 @@ async fn process_server_msg(
         match msg {
             FromServer::Message(msg) => connection.send_message(msg).await,
             FromServer::ActorSpawn(actor, spawn) => connection.spawn_actor(actor, spawn).await,
-            FromServer::ActorMove(actor_id, position, rotation, anim_type, anim_state, jump_state) => connection.set_actor_position(actor_id, position, rotation, anim_type, anim_state, jump_state).await,
-            FromServer::DeleteActor(object_id, spawn_index) => connection.delete_actor(object_id, spawn_index).await,
+            FromServer::ActorMove(
+                actor_id,
+                position,
+                rotation,
+                anim_type,
+                anim_state,
+                jump_state,
+            ) => {
+                connection
+                    .set_actor_position(
+                        actor_id, position, rotation, anim_type, anim_state, jump_state,
+                    )
+                    .await
+            }
+            FromServer::DeleteActor(object_id, spawn_index) => {
+                connection.delete_actor(object_id, spawn_index).await
+            }
             FromServer::DeleteObject(spawn_index) => connection.delete_object(spawn_index).await,
-            FromServer::ActorControl(actor_id, actor_control) => connection.actor_control(actor_id, actor_control).await,
-            FromServer::ActorControlTarget(actor_id, target, actor_control) => connection.actor_control_target(actor_id, target, actor_control).await,
-            FromServer::ActorControlSelf(actor_control) => connection.actor_control_self(actor_control).await,
+            FromServer::ActorControl(actor_id, actor_control) => {
+                connection.actor_control(actor_id, actor_control).await
+            }
+            FromServer::ActorControlTarget(actor_id, target, actor_control) => {
+                connection
+                    .actor_control_target(actor_id, target, actor_control)
+                    .await
+            }
+            FromServer::ActorControlSelf(actor_control) => {
+                connection.actor_control_self(actor_control).await
+            }
             FromServer::ActorSummonsMinion(minion_id) => {
-                connection.handle.send(ToServer::ActorSummonsMinion(connection.player_data.character.actor_id, minion_id)).await;
+                connection
+                    .handle
+                    .send(ToServer::ActorSummonsMinion(
+                        connection.player_data.character.actor_id,
+                        minion_id,
+                    ))
+                    .await;
                 connection.active_minion = minion_id;
             }
             FromServer::ActorDespawnsMinion() => {
-                connection.handle.send(ToServer::ActorDespawnsMinion(connection.player_data.character.actor_id)).await;
+                connection
+                    .handle
+                    .send(ToServer::ActorDespawnsMinion(
+                        connection.player_data.character.actor_id,
+                    ))
+                    .await;
                 connection.active_minion = 0;
             }
-            FromServer::UpdateConfig(actor_id, config) => connection.update_config(actor_id, config).await,
-            FromServer::ActorEquip(actor_id, main_weapon_id, sub_weapon_id, model_ids) => connection.update_equip(actor_id, main_weapon_id, sub_weapon_id, model_ids).await,
-            FromServer::LoseEffect(effect_id, effect_param, effect_source_actor_id) => connection.lose_effect(effect_id, effect_param, effect_source_actor_id).await,
+            FromServer::UpdateConfig(actor_id, config) => {
+                connection.update_config(actor_id, config).await
+            }
+            FromServer::ActorEquip(actor_id, main_weapon_id, sub_weapon_id, model_ids) => {
+                connection
+                    .update_equip(actor_id, main_weapon_id, sub_weapon_id, model_ids)
+                    .await
+            }
+            FromServer::LoseEffect(effect_id, effect_param, effect_source_actor_id) => {
+                connection
+                    .lose_effect(effect_id, effect_param, effect_source_actor_id)
+                    .await
+            }
             FromServer::Conditions(conditions) => {
                 connection.conditions = conditions;
                 connection.send_conditions().await;
-            },
-            FromServer::ChangeZone(zone_id, content_finder_condition_id, weather_id, position, rotation, lua_zone, initial_login, director_vars) => {
-                connection.handle_zone_change(zone_id, content_finder_condition_id, weather_id, position, rotation, initial_login, director_vars, &lua_zone, &mut lua_player.content_data).await;
+            }
+            FromServer::ChangeZone(
+                zone_id,
+                content_finder_condition_id,
+                weather_id,
+                position,
+                rotation,
+                lua_zone,
+                initial_login,
+                director_vars,
+            ) => {
+                connection
+                    .handle_zone_change(
+                        zone_id,
+                        content_finder_condition_id,
+                        weather_id,
+                        position,
+                        rotation,
+                        initial_login,
+                        director_vars,
+                        &lua_zone,
+                        &mut lua_player.content_data,
+                    )
+                    .await;
                 lua_player.zone_data = lua_zone;
-            },
-            FromServer::NewPosition(position, rotation, fade_out) => connection.set_player_position(position, rotation, fade_out).await,
-            FromServer::PartyInvite(sender_account_id, sender_content_id, sender_name) => connection.received_party_invite(sender_account_id, sender_content_id, sender_name).await,
-            FromServer::InvitationResult(sender_account_id, sender_content_id, sender_name, invite_type, invite_reply) => connection.received_invitation_response(sender_account_id, sender_content_id, sender_name, invite_type, invite_reply).await,
-            FromServer::InvitationReplyResult(sender_account_id, sender_name, invite_type, invite_reply) => connection.send_invite_reply_result(sender_account_id, sender_name, invite_type, invite_reply).await,
-            FromServer::PartyUpdate(targets, update_status, party_info) => connection.send_party_update(targets, update_status, party_info).await,
-            FromServer::CharacterAlreadyInParty() => connection.send_notice("That player is already in a party. You are seeing this message because Kawari doesn't yet send information correctly in a way that your game will display the error on its own.").await,
+            }
+            FromServer::NewPosition(position, rotation, fade_out) => {
+                connection
+                    .set_player_position(position, rotation, fade_out)
+                    .await
+            }
+            FromServer::PartyInvite(sender_account_id, sender_content_id, sender_name) => {
+                connection
+                    .received_party_invite(sender_account_id, sender_content_id, sender_name)
+                    .await
+            }
+            FromServer::InvitationResult(
+                sender_account_id,
+                sender_content_id,
+                sender_name,
+                invite_type,
+                invite_reply,
+            ) => {
+                connection
+                    .received_invitation_response(
+                        sender_account_id,
+                        sender_content_id,
+                        sender_name,
+                        invite_type,
+                        invite_reply,
+                    )
+                    .await
+            }
+            FromServer::InvitationReplyResult(
+                sender_account_id,
+                sender_name,
+                invite_type,
+                invite_reply,
+            ) => {
+                connection
+                    .send_invite_reply_result(
+                        sender_account_id,
+                        sender_name,
+                        invite_type,
+                        invite_reply,
+                    )
+                    .await
+            }
+            FromServer::PartyUpdate(targets, update_status, party_info) => {
+                connection
+                    .send_party_update(targets, update_status, party_info)
+                    .await
+            }
+            FromServer::InviteCharacterResult(
+                content_id,
+                message_id,
+                world_id,
+                invite_type,
+                character_name,
+            ) => {
+                connection
+                    .invite_character_result(
+                        content_id,
+                        message_id,
+                        world_id,
+                        invite_type,
+                        character_name.clone(),
+                    )
+                    .await
+            }
             FromServer::RejoinPartyAfterDisconnect(party_id) => {
                 connection.party_id = party_id;
                 connection.rejoining_party = true;
@@ -2782,39 +2895,79 @@ async fn process_server_msg(
                 connection.send_ipc_from(from_actor_id, ipc).await;
             }
             FromServer::NewTasks(mut tasks) => connection.queued_tasks.append(&mut tasks),
-            FromServer::NewStatusEffects(status_effects) => lua_player.status_effects = status_effects,
+            FromServer::NewStatusEffects(status_effects) => {
+                lua_player.status_effects = status_effects
+            }
             FromServer::ObjectSpawn(object) => connection.spawn_object(object).await,
-            FromServer::LocationDiscovered(map_id, map_part_id) => connection.discover_location(map_id, map_part_id).await,
-            FromServer::StrategyBoardShared(content_id, board_data) => connection.received_strategy_board(content_id, board_data).await,
-            FromServer::StrategyBoardSharedAck(content_id) => connection.strategy_board_ack(content_id).await,
-            FromServer::StrategyBoardRealtimeUpdate(update_data) => connection.strategy_board_updated(update_data).await,
-            FromServer::StrategyBoardRealtimeFinished() => connection.strategy_board_realtime_finished().await,
-            FromServer::WaymarkUpdated(id, placement_mode, position, zone_id) => connection.waymark_updated(id, placement_mode, position, zone_id).await,
-            FromServer::WaymarkPreset(data, zone_id) => connection.waymark_preset(data, zone_id).await,
+            FromServer::LocationDiscovered(map_id, map_part_id) => {
+                connection.discover_location(map_id, map_part_id).await
+            }
+            FromServer::StrategyBoardShared(content_id, board_data) => {
+                connection
+                    .received_strategy_board(content_id, board_data)
+                    .await
+            }
+            FromServer::StrategyBoardSharedAck(content_id) => {
+                connection.strategy_board_ack(content_id).await
+            }
+            FromServer::StrategyBoardRealtimeUpdate(update_data) => {
+                connection.strategy_board_updated(update_data).await
+            }
+            FromServer::StrategyBoardRealtimeFinished() => {
+                connection.strategy_board_realtime_finished().await
+            }
+            FromServer::WaymarkUpdated(id, placement_mode, position, zone_id) => {
+                connection
+                    .waymark_updated(id, placement_mode, position, zone_id)
+                    .await
+            }
+            FromServer::WaymarkPreset(data, zone_id) => {
+                connection.waymark_preset(data, zone_id).await
+            }
             FromServer::EnteredInstanceEntranceRange(arg) => {
                 tracing::info!("Showing leave duty dialog...");
 
-                let object = ObjectTypeId { object_id: connection.player_data.character.actor_id, object_type: ObjectTypeKind::None };
+                let object = ObjectTypeId {
+                    object_id: connection.player_data.character.actor_id,
+                    object_type: ObjectTypeKind::None,
+                };
                 let handler_id = HandlerId::new(HandlerType::GimmickRect, 1).0;
 
-                connection.start_event(object, handler_id, EventType::WithinRange, arg, events).await;
+                connection
+                    .start_event(object, handler_id, EventType::WithinRange, arg, events)
+                    .await;
 
-                connection.event_scene(&events.last().unwrap().1, 2, SceneFlags::NO_DEFAULT_CAMERA | SceneFlags::HIDE_HOTBAR, Vec::new()).await;
+                connection
+                    .event_scene(
+                        &events.last().unwrap().1,
+                        2,
+                        SceneFlags::NO_DEFAULT_CAMERA | SceneFlags::HIDE_HOTBAR,
+                        Vec::new(),
+                    )
+                    .await;
             }
             FromServer::IncrementRestedExp() => connection.add_rested_exp_seconds(10).await,
-            FromServer::Countdown(account_id, content_id, name, starter_actor_id, duration) => connection.start_countdown(account_id, content_id, name, starter_actor_id, duration).await,
-            FromServer::TargetSignToggled(sign_id, from_actor_id, target_actor) => connection.target_sign_toggled(sign_id, from_actor_id, target_actor).await,
+            FromServer::Countdown(account_id, content_id, name, starter_actor_id, duration) => {
+                connection
+                    .start_countdown(account_id, content_id, name, starter_actor_id, duration)
+                    .await
+            }
+            FromServer::TargetSignToggled(sign_id, from_actor_id, target_actor) => {
+                connection
+                    .target_sign_toggled(sign_id, from_actor_id, target_actor)
+                    .await
+            }
             FromServer::LeaveContent() => {
                 connection
-                .handle
-                .send(ToServer::LeaveContent(
-                    connection.id,
-                    connection.player_data.character.actor_id,
-                    connection.old_zone_id,
-                    connection.old_position,
-                    connection.old_rotation,
-                ))
-                .await;
+                    .handle
+                    .send(ToServer::LeaveContent(
+                        connection.id,
+                        connection.player_data.character.actor_id,
+                        connection.old_zone_id,
+                        connection.old_position,
+                        connection.old_rotation,
+                    ))
+                    .await;
             }
             FromServer::FinishEvent() => {
                 connection.event_finish(events).await;
@@ -2824,27 +2977,58 @@ async fn process_server_msg(
 
                 let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::LogMessage {
                     handler_id: HandlerId(handler_id),
-                                                    message_type: 1127,
-                                                    params_count: 0,
-                                                    item_id: 0,
-                                                    item_quantity: 0,
+                    message_type: 1127,
+                    params_count: 0,
+                    item_id: 0,
+                    item_quantity: 0,
                 });
                 connection.send_ipc_self(ipc).await;
 
-                connection.event_scene(&events.last().unwrap().1, 4, SceneFlags::NO_DEFAULT_CAMERA, vec![271, 0, 0]).await;
+                connection
+                    .event_scene(
+                        &events.last().unwrap().1,
+                        4,
+                        SceneFlags::NO_DEFAULT_CAMERA,
+                        vec![271, 0, 0],
+                    )
+                    .await;
             }
             FromServer::ActorDismounted(from_actor_id) => {
                 // SetMode seems unnecessary (the dismount sequence works without it) but it's included for accuracy.
-                connection.set_character_mode(CharacterMode::Normal, 0).await;
-                connection.actor_control(from_actor_id, ActorControlCategory::PlayDismountAnimation { unk1: 0, unk2: 0, unk3: 0 } ).await;
+                connection
+                    .set_character_mode(CharacterMode::Normal, 0)
+                    .await;
+                connection
+                    .actor_control(
+                        from_actor_id,
+                        ActorControlCategory::PlayDismountAnimation {
+                            unk1: 0,
+                            unk2: 0,
+                            unk3: 0,
+                        },
+                    )
+                    .await;
 
-                connection.actor_control(from_actor_id, ActorControlCategory::RidePillion { target_actor_id: ObjectId::default(), target_seat_index: 0}).await;
+                connection
+                    .actor_control(
+                        from_actor_id,
+                        ActorControlCategory::RidePillion {
+                            target_actor_id: ObjectId::default(),
+                            target_seat_index: 0,
+                        },
+                    )
+                    .await;
             }
             FromServer::PartyMemberPositionsUpdate(positions) => {
-                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PartyMemberPositions(positions));
+                let ipc =
+                    ServerZoneIpcSegment::new(ServerZoneIpcData::PartyMemberPositions(positions));
                 connection.send_ipc_self(ipc).await;
             }
-            FromServer::FriendInvite(sender_account_id, sender_content_id, sender_name) => connection.received_friend_invite(sender_account_id, sender_content_id, sender_name).await,
+            FromServer::FriendInvite(sender_account_id, sender_content_id, sender_name) => {
+                connection
+                    .received_friend_invite(sender_account_id, sender_content_id, sender_name)
+                    .await
+            }
             FromServer::CommitParties(parties) => {
                 let mut database = connection.database.lock();
                 database.commit_parties(parties);
@@ -2855,7 +3039,13 @@ async fn process_server_msg(
                 connection.set_linkshell_chatchannels(cwlses).await;
                 connection.send_crossworld_linkshells(false).await;
             }
-            _ => { tracing::error!("Zone connection {:#?} received a FromServer message we don't care about: {:#?}, ensure you're using the right client network or that you've implemented a handler for it if we actually care about it!", client_handle.id, msg); }
+            _ => {
+                tracing::error!(
+                    "Zone connection {:#?} received a FromServer message we don't care about: {:#?}, ensure you're using the right client network or that you've implemented a handler for it if we actually care about it!",
+                    client_handle.id,
+                    msg
+                );
+            }
         }
     }
 }

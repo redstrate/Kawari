@@ -11,8 +11,8 @@ use tokio::sync::mpsc::Sender;
 use crate::{StatusEffects, lua::LuaTask, server::Party, zone_connection::BaseParameters};
 use kawari::{
     common::{
-        CharacterMode, JumpState, MoveAnimationState, MoveAnimationType, ObjectId, ObjectTypeId,
-        Position,
+        CharacterMode, JumpState, LogMessageType, MoveAnimationState, MoveAnimationType, ObjectId,
+        ObjectTypeId, Position,
     },
     ipc::{
         chat::{
@@ -153,9 +153,8 @@ pub enum FromServer {
         PartyUpdateStatus,
         Option<(u64, u32, ObjectId, Vec<PartyMemberEntry>)>,
     ),
-    /// The character the client invited is already in a party.
-    // TODO: This is actually incorrect behaviour, we need to research more how the client "knows" another player is already in a party since the server doesn't seem to intervene.
-    CharacterAlreadyInParty(),
+    /// Inform the client of the result of a social invite they have sent.
+    InviteCharacterResult(u64, LogMessageType, u16, InviteType, String),
     /// Inform the client they were in a party, and request that they inform us of their return.
     RejoinPartyAfterDisconnect(u64),
     /// Send an arbitrary IPC segment to the client.

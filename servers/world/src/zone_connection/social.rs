@@ -2,7 +2,7 @@
 
 use crate::{ToServer, ZoneConnection, common::PartyUpdateTargets};
 use kawari::{
-    common::{ObjectId, ObjectTypeId, timestamp_secs},
+    common::{LogMessageType, ObjectId, ObjectTypeId, timestamp_secs},
     ipc::{
         chat::{ChatChannel, ChatChannelType},
         zone::{
@@ -666,16 +666,18 @@ impl ZoneConnection {
 
     pub async fn invite_character_result(
         &mut self,
-        invite_type: InviteType,
         content_id: u64,
+        message_id: LogMessageType,
         world_id: u16,
+        invite_type: InviteType,
         character_name: String,
     ) {
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InviteCharacterResult {
             content_id,
+            message_id,
             world_id,
             invite_type,
-            unk2: 1,
+            unk1: 1,
             character_name,
         });
 

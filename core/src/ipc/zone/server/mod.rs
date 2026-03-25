@@ -92,8 +92,8 @@ pub use free_company::FcHierarchy;
 
 mod actor_move;
 use crate::common::{
-    CustomizeData, DeepDungeonRoomFlag, HandlerId, LandData, ObjectTypeId, Position,
-    read_packed_position, write_packed_position,
+    CustomizeData, DeepDungeonRoomFlag, HandlerId, LandData, LogMessageType, ObjectTypeId,
+    Position, read_packed_position, write_packed_position,
 };
 use crate::constants::{
     AVAILABLE_CLASSJOBS, COMPLETED_LEVEQUEST_BITMASK_SIZE, COMPLETED_QUEST_BITMASK_SIZE,
@@ -498,11 +498,17 @@ pub enum ServerZoneIpcData {
         info: Vec<CharaInfoFromContentIdsData>,
     },
     InviteCharacterResult {
+        /// The invited character's content id.
         content_id: u64,
-        #[brw(pad_before = 4)]
+        /// The pre-defined LogMessage to display. 0 seems to indicate no errors, and the client will display a default message such as "You invite <name> to a party."
+        message_id: LogMessageType,
+        #[brw(pad_before = 2)]
+        /// The invited character's home world id.
         world_id: u16,
+        /// The type of social invite that was sent.
         invite_type: InviteType,
-        unk2: u8, // TODO: What is this?
+        unk1: u8, // TODO: What is this?
+        /// The invited character's name.
         #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
         #[br(count = CHAR_NAME_MAX_LENGTH)]
         #[br(map = read_string)]

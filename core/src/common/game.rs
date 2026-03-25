@@ -679,11 +679,20 @@ pub enum ItemOperationKind {
 }
 
 // TODO: Where should this be moved to...?
-#[repr(u32)]
+// TODO: Is this actually only a u16 in all the places it would be used?
+#[binrw]
+#[derive(Clone, Copy, Debug, Default, FromRepr, PartialEq)]
+#[brw(repr = u16)]
+#[repr(u16)]
 pub enum LogMessageType {
+    #[default]
+    Default = 0,
+    PlayerAlreadyFriend = 0x138, // That player is already a friend or has been sent a request. TODO: unclear if this one is sent by the server or the client keeps track of that itself
+    PlayerAlreadyInAnotherParty = 0x146, // That player is already in another party.
     ItemBought = 0x697,
     ItemSold = 0x698,
     ItemBoughtBack = 0x699,
+    UnableToPerformPlayerOffline = 0x1617, // Unable to perform that action. That player is offline.
 }
 
 /// Names for rows in the Excel sheet of the same name.

@@ -328,7 +328,7 @@ ServerZoneIpcType:
     opcode: 976
     size: 568
   - name: InviteCharacterResult
-    comment: Sent by the server to inform the client about their own new invite to another character.
+    comment: Sent by the server to inform the client about their own new invite to another character. This can display a pre-defined log message if anything goes wrong, like the recipient going offline.
     opcode: 844
     size: 48
   - name: InviteUpdate
