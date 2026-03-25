@@ -206,6 +206,13 @@ impl ChatHandler {
                     let fate_id = fate_id.parse().unwrap();
 
                     connection
+                        .actor_control_self(ActorControlCategory::CreateFateContext {
+                            fate_id,
+                            is_bonus: 0,
+                        })
+                        .await;
+
+                    connection
                         .send_ipc_self(ServerZoneIpcSegment::new(ServerZoneIpcData::UnkFate {
                             fate_id,
                             unk1: 0,

@@ -766,6 +766,14 @@ pub enum ActorControlCategory {
         unk4: u32,
     },
 
+    /// Creates the FateContext on the client.
+    #[brw(magic = 2356u32)]
+    CreateFateContext {
+        fate_id: u32,
+        /// Controls the IsBonus field in some way.
+        is_bonus: u32,
+    },
+
     #[brw(magic = 2359u32)]
     SetupMotivationNpc {
         /// Index into the FATE Excel sheet.
