@@ -6,8 +6,11 @@ use crate::{
     inventory::{Item, Storage},
 };
 use kawari::{
-    common::{ERR_INVENTORY_ADD_FAILED, ITEM_CONDITION_MAX},
-    ipc::zone::{ActorControlCategory, Condition, Conditions, GameMasterRank, SendChatMessage},
+    common::{ERR_INVENTORY_ADD_FAILED, FateState, ITEM_CONDITION_MAX},
+    ipc::zone::{
+        ActorControlCategory, Condition, Conditions, GameMasterRank, SendChatMessage,
+        ServerZoneIpcData, ServerZoneIpcSegment,
+    },
 };
 
 use super::ZoneConnection;
@@ -172,6 +175,12 @@ impl ChatHandler {
                             .unwrap_or_default()
                             .parse()
                             .unwrap_or_default(),
+                        param5: parts
+                            .get(6)
+                            .cloned()
+                            .unwrap_or_default()
+                            .parse()
+                            .unwrap_or_default(),
                     })
                     .await;
 
@@ -187,6 +196,34 @@ impl ChatHandler {
                             connection.player_data.character.actor_id,
                             mount_id,
                         ))
+                        .await;
+                }
+
+                true
+            }
+            "!fate" => {
+                if let Some((_, fate_id)) = chat_message.message.split_once(' ') {
+                    let fate_id = fate_id.parse().unwrap();
+
+                    connection
+                        .send_ipc_self(ServerZoneIpcSegment::new(ServerZoneIpcData::UnkFate {
+                            fate_id,
+                            unk1: 0,
+                            unk2: 1774393044,
+                            unk3: 0,
+                            unk4: 900,
+                            unk5: 0,
+                        }))
+                        .await;
+
+                    connection
+                        .actor_control_self(ActorControlCategory::FateInit {
+                            fate_id,
+                            fate_state: FateState::Running,
+                        })
+                        .await;
+                    connection
+                        .actor_control_self(ActorControlCategory::UnkFate12 { fate_id })
                         .await;
                 }
 

@@ -223,6 +223,7 @@ impl ZoneConnection {
                 param2: 0,
                 param3: 0,
                 param4: 0,
+                param5: 0,
             })
             .await;
         }

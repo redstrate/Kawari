@@ -1167,6 +1167,18 @@ impl std::fmt::Debug for DeepDungeonRoomFlag {
     }
 }
 
+#[binrw]
+#[brw(little)]
+#[brw(repr = u32)]
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum FateState {
+    Preparing = 0x3,
+    Running = 0x4,
+    Ending = 0x5,
+    Ended = 0x7,
+    Failed = 0x8,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -603,6 +603,10 @@ ServerZoneIpcType:
     comment: Unknown purpose.
     opcode: 335
     size: 16
+  - name: UnkFate
+    comment: Seen while fates were initializing.
+    opcode: 432
+    size: 24
 ClientZoneIpcType:
   - name: InitRequest
     comment: Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)

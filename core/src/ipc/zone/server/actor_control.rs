@@ -2,8 +2,8 @@ use binrw::binrw;
 use strum_macros::IntoStaticStr;
 
 use crate::common::{
-    CharacterMode, DirectorEvent, EquipDisplayFlag, HandlerId, InvisibilityFlags, ObjectId,
-    ObjectTypeId, read_bool_from, read_packed_float, write_bool_as, write_packed_float,
+    CharacterMode, DirectorEvent, EquipDisplayFlag, FateState, HandlerId, InvisibilityFlags,
+    ObjectId, ObjectTypeId, read_bool_from, read_packed_float, write_bool_as, write_packed_float,
 };
 use crate::ipc::zone::online_status::OnlineStatus;
 
@@ -746,7 +746,8 @@ pub enum ActorControlCategory {
     FateInit {
         /// Index into the FATE Excel sheet.
         fate_id: u32,
-        unk2: u32,
+        /// What state this FATE is in.
+        fate_state: FateState,
     },
 
     #[brw(magic = 2354u32)]
@@ -765,6 +766,17 @@ pub enum ActorControlCategory {
         unk4: u32,
     },
 
+    #[brw(magic = 2359u32)]
+    SetupMotivationNpc {
+        /// Index into the FATE Excel sheet.
+        fate_id: u32,
+        motivation_npc: ObjectId,
+        /// Divided by 1000.0 for map coordinates.
+        position_x: u32,
+        position_y: u32,
+        position_z: u32,
+    },
+
     #[brw(magic = 2363u32)]
     UnkFate6 {
         unk1: u32,
@@ -773,6 +785,7 @@ pub enum ActorControlCategory {
         unk4: u32,
     },
 
+    /// Sets progress and other fields too. Unsure why this is used sometimes instead of FateProgress?
     #[brw(magic = 2364u32)]
     UnkFate7 {
         /// Index into the FATE Excel sheet.
@@ -814,13 +827,11 @@ pub enum ActorControlCategory {
         unk4: u32,
     },
 
+    /// Sets something for all objects bound to this FATE...
     #[brw(magic = 2370u32)]
     UnkFate12 {
         /// Index into the FATE Excel sheet.
         fate_id: u32,
-        unk2: u32,
-        unk3: u32,
-        unk4: u32,
     },
 
     #[doc(hidden)]
@@ -830,6 +841,7 @@ pub enum ActorControlCategory {
         param2: u32,
         param3: u32,
         param4: u32,
+        param5: u32,
     },
 }
 
@@ -841,6 +853,7 @@ impl Default for ActorControlCategory {
             param2: 0,
             param3: 0,
             param4: 0,
+            param5: 0,
         }
     }
 }
@@ -848,24 +861,22 @@ impl Default for ActorControlCategory {
 #[binrw]
 #[derive(Debug, Clone, Default)]
 pub struct ActorControl {
-    #[brw(pad_after = 4)]
-    #[brw(pad_size_to = 20)] // take into account categories without params
+    #[brw(pad_size_to = 24)] // take into account categories without params
     pub category: ActorControlCategory,
 }
 
 #[binrw]
 #[derive(Debug, Clone, Default)]
 pub struct ActorControlSelf {
-    #[brw(pad_after = 12)]
-    #[brw(pad_size_to = 20)] // take into account categories without params
+    #[brw(pad_after = 8)]
+    #[brw(pad_size_to = 24)] // take into account categories without params
     pub category: ActorControlCategory,
 }
 
 #[binrw]
 #[derive(Debug, Clone, Default)]
 pub struct ActorControlTarget {
-    #[brw(pad_after = 4)]
-    #[brw(pad_size_to = 20)] // take into account categories without params
+    #[brw(pad_size_to = 24)] // take into account categories without params
     pub category: ActorControlCategory,
     pub target: ObjectTypeId,
 }

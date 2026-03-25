@@ -295,23 +295,19 @@ impl ZoneConnection {
 
                 // TODO: this needs to be networked
                 let needs_sync = {
-                    if director_type == HandlerType::Fate {
-                        false
+                    if self
+                        .content_settings
+                        .unwrap_or_default()
+                        .contains(ContentRegistrationFlags::UNRESTRICTED_PARTY)
+                    {
+                        self.content_settings
+                            .unwrap_or_default()
+                            .contains(ContentRegistrationFlags::LEVEL_SYNC)
                     } else {
-                        if self
+                        !self
                             .content_settings
                             .unwrap_or_default()
-                            .contains(ContentRegistrationFlags::UNRESTRICTED_PARTY)
-                        {
-                            self.content_settings
-                                .unwrap_or_default()
-                                .contains(ContentRegistrationFlags::LEVEL_SYNC)
-                        } else {
-                            !self
-                                .content_settings
-                                .unwrap_or_default()
-                                .contains(ContentRegistrationFlags::EXPLORER_MODE)
-                        }
+                            .contains(ContentRegistrationFlags::EXPLORER_MODE)
                     }
                 };
 
@@ -348,6 +344,7 @@ impl ZoneConnection {
                     .content_settings
                     .unwrap_or_default()
                     .contains(ContentRegistrationFlags::EXPLORER_MODE)
+                    && director_type != HandlerType::Fate
                 {
                     1
                 } else {
@@ -362,17 +359,21 @@ impl ZoneConnection {
                 })
                 .await;
 
-                if let Some(director_vars) = director_vars {
-                    self.send_ipc_self(director_vars).await;
-                }
+                if director_type != HandlerType::Fate {
+                    if let Some(director_vars) = director_vars {
+                        self.send_ipc_self(director_vars).await;
+                    }
 
-                self.send_ipc_self(ServerZoneIpcSegment::new(ServerZoneIpcData::UnkDirector1 {
-                    unk: [
-                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 0, 0, 0,
-                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    ],
-                }))
-                .await;
+                    self.send_ipc_self(ServerZoneIpcSegment::new(
+                        ServerZoneIpcData::UnkDirector1 {
+                            unk: [
+                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255,
+                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                            ],
+                        },
+                    ))
+                    .await;
+                }
 
                 self.content_handler_id = director_id;
             } else {
