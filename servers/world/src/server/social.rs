@@ -477,7 +477,7 @@ pub fn handle_social_messages(
                 InviteType::FriendList,
                 character_name.clone(),
             );
-            network.send_to_by_actor_id(recipient_actor_id, msg, DestinationNetwork::ZoneClients);
+            network.send_to_by_actor_id(*from_actor_id, msg, DestinationNetwork::ZoneClients);
 
             true
         }
