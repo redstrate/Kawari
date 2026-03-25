@@ -165,8 +165,7 @@ impl ZoneConnection {
 
     /// Spawn the player actor. The client will handle replacing the existing one, if it exists.
     pub async fn respawn_player(&mut self, start_invisible: bool) -> PlayerSpawn {
-        let common =
-            self.get_player_common_spawn(self.exit_position, self.exit_rotation, start_invisible);
+        let common = self.get_player_common_spawn(start_invisible);
         let config = get_config();
 
         let spawn = PlayerSpawn {
@@ -196,12 +195,7 @@ impl ZoneConnection {
         self.send_ipc_from(actor_id, ipc).await;
     }
 
-    fn get_player_common_spawn(
-        &self,
-        exit_position: Option<Position>,
-        exit_rotation: Option<f32>,
-        start_invisible: bool,
-    ) -> CommonSpawn {
+    fn get_player_common_spawn(&self, start_invisible: bool) -> CommonSpawn {
         let inventory = &self.player_data.inventory;
 
         let mut database = self.database.lock();
@@ -240,8 +234,8 @@ impl ZoneConnection {
             main_weapon_model: inventory.get_main_weapon_id(&mut game_data),
             sec_weapon_model: inventory.get_sub_weapon_id(&mut game_data),
             models: inventory.get_model_ids(&mut game_data),
-            position: exit_position.unwrap_or_default(),
-            rotation: exit_rotation.unwrap_or(0.0),
+            position: self.player_data.volatile.position,
+            rotation: self.player_data.volatile.rotation as f32,
             voice: chara_make.voice_id as u8,
             active_minion: self.active_minion as u16,
             handler_id: self.content_handler_id,

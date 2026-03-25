@@ -146,8 +146,6 @@ async fn initial_setup(
                     database: database.clone(),
                     lua: lua.clone(),
                     gamedata: game_data.clone(),
-                    exit_position: None,
-                    exit_rotation: None,
                     last_keep_alive: Instant::now(),
                     gracefully_logged_out: false,
                     obsfucation_data: ObsfucationData::default(),
@@ -925,10 +923,6 @@ async fn process_packet(
                             }
 
                             connection.send_stats().await;
-
-                            // wipe any exit position so it isn't accidentally reused
-                            connection.exit_position = None;
-                            connection.exit_rotation = None;
                         }
                         ClientZoneIpcData::ClientTrigger(trigger) => {
                             match trigger.trigger {

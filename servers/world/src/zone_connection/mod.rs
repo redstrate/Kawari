@@ -126,8 +126,6 @@ pub struct ZoneConnection {
     pub lua: Arc<Mutex<KawariLua>>,
     pub gamedata: Arc<Mutex<GameData>>,
 
-    pub exit_position: Option<Position>,
-    pub exit_rotation: Option<f32>,
     pub teleport_reason: TeleportReason,
     pub active_minion: u32,
     /// The player's party id number, used for networking party-related events

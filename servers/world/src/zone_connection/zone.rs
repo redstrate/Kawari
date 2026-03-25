@@ -91,9 +91,6 @@ impl ZoneConnection {
             db.commit_volatile(&self.player_data);
         }
 
-        self.exit_position = Some(exit_position);
-        self.exit_rotation = Some(exit_rotation);
-
         // Generate obsfucation-related keys if needed.
         if self.config.enable_packet_obsfucation {
             let seed1 = fastrand::u8(..);
