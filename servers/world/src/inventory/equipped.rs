@@ -66,7 +66,7 @@ impl EquippedStorage {
 
         // Next, calculate additional item levels based off main hand and body equipment restrictions.
         if let Some(main_hand_info) =
-            game_data.get_item_info(ItemInfoQuery::ById(self.main_hand.id))
+            game_data.get_item_info(ItemInfoQuery::ById(self.main_hand.item_id))
         {
             // If our main hand weapon is two-handed (i.e. restricts off-hands from being equipped), it counts one additional time.
             if main_hand_info.equip_restrictions.off_hand == EQUIP_RESTRICTED {
@@ -74,7 +74,7 @@ impl EquippedStorage {
             }
         }
 
-        if let Some(body_info) = game_data.get_item_info(ItemInfoQuery::ById(self.body.id)) {
+        if let Some(body_info) = game_data.get_item_info(ItemInfoQuery::ById(self.body.item_id)) {
             let body_restrictions = [
                 body_info.equip_restrictions.head,
                 body_info.equip_restrictions.hands,

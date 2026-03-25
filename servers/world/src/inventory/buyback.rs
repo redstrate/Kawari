@@ -54,11 +54,11 @@ impl BuyBackList {
         let shop_buyback_items = self.list.get(&shop_id).unwrap();
         if !shop_buyback_items.is_empty() {
             for item in shop_buyback_items {
-                params[offset] = item.id;
+                params[offset] = item.item_id;
                 params[offset + 1] = item.quantity;
                 params[offset + 2] = item.price_low;
                 params[offset + 5] = shop_id;
-                params[offset + 8] = 0x7530_0000; // TODO: What is this? It's not static either, it can change if items have melds or a crafter signature, so right now it's unknown.
+                params[offset + 8] = item.condition as u32;
                 // TODO: Fill in the rest of the information as it becomes known
                 offset += BUYBACK_PARAM_COUNT;
             }

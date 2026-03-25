@@ -70,8 +70,8 @@ impl ChatHandler {
 
                             let slot = connection.player_data.inventory.equipped.get_slot_mut(slot);
 
-                            slot.id = item_info.id;
-                            slot.glamour_catalog_id = 0;
+                            slot.item_id = item_info.id;
+                            slot.glamour_id = 0;
                             slot.quantity = 1;
                             slot.condition = ITEM_CONDITION_MAX;
                         }
@@ -95,7 +95,10 @@ impl ChatHandler {
                             result = connection
                                 .player_data
                                 .inventory
-                                .add_in_next_free_slot(Item::new(&item_info, 1));
+                                .add_in_next_free_slot(Item {
+                                    quantity: 1,
+                                    ..item_info.into()
+                                });
                         }
                     }
 

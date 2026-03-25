@@ -19,7 +19,7 @@ use kawari::{
         ORNAMENT_BITMASK_SIZE, TRIPLE_TRIAD_CARDS_BITMASK_SIZE,
     },
     ipc::zone::{
-        ActorControlCategory, ActorControlSelf, ClientTriggerCommand, ServerZoneIpcData,
+        ActorControlCategory, ActorControlSelf, ClientTriggerCommand, ItemInfo, ServerZoneIpcData,
         ServerZoneIpcSegment,
     },
 };
@@ -94,10 +94,10 @@ impl ZoneConnection {
                     })
                     .await;
 
-                    if let Some(id) = soul_crystal_id {
+                    if let Some(item_id) = soul_crystal_id {
                         let soul_crystal = Item {
                             quantity: 1,
-                            id,
+                            item_id,
                             ..Default::default()
                         };
 
@@ -189,15 +189,14 @@ impl ZoneConnection {
                     if *send_client_update {
                         let slot = *slot;
 
-                        let ipc =
-                            ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateInventorySlot {
+                        let ipc = ServerZoneIpcSegment::new(
+                            ServerZoneIpcData::UpdateInventorySlot(ItemInfo {
                                 sequence: self.player_data.item_sequence,
-                                dst_storage_id: ContainerType::Currency,
-                                dst_container_index: CurrencyStorage::get_slot_for_id(*id),
-                                dst_stack: slot.quantity,
-                                dst_catalog_id: slot.id,
-                                unk1: 1966080000,
-                            });
+                                container: ContainerType::Currency,
+                                slot: CurrencyStorage::get_slot_for_id(*id),
+                                ..slot.into()
+                            }),
+                        );
                         self.send_ipc_self(ipc).await;
                     }
                 }
@@ -217,15 +216,14 @@ impl ZoneConnection {
                     if *send_client_update {
                         let slot = *slot;
 
-                        let ipc =
-                            ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateInventorySlot {
+                        let ipc = ServerZoneIpcSegment::new(
+                            ServerZoneIpcData::UpdateInventorySlot(ItemInfo {
                                 sequence: self.player_data.item_sequence,
-                                dst_storage_id: ContainerType::Currency,
-                                dst_container_index: CrystalsStorage::get_slot_for_id(*id),
-                                dst_stack: slot.quantity,
-                                dst_catalog_id: slot.id,
-                                unk1: 1966080000,
-                            });
+                                container: ContainerType::Currency,
+                                slot: CrystalsStorage::get_slot_for_id(*id),
+                                ..slot.into()
+                            }),
+                        );
                         self.send_ipc_self(ipc).await;
                     }
                 }
@@ -716,7 +714,7 @@ impl ZoneConnection {
                             .inventory
                             .get_item_mut(dst_container_type, dst_container_index as u16);
 
-                        dst_slot.glamour_catalog_id = src_slot.id;
+                        dst_slot.glamour_id = src_slot.item_id;
 
                         // The client needs to be informed about the new glamoured item, but this is extreme...
                         self.send_inventory().await;
@@ -734,7 +732,7 @@ impl ZoneConnection {
                             .inventory
                             .get_item_mut(dst_container_type, dst_container_index as u16);
 
-                        dst_slot.glamour_catalog_id = 0;
+                        dst_slot.glamour_id = 0;
 
                         // The client needs to be informed about the new glamoured item, but this is extreme...
                         self.send_inventory().await;

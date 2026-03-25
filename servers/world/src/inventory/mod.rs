@@ -61,6 +61,7 @@ pub struct Inventory {
     pub armoury_soul_crystal: GenericStorage<MAX_NORMAL_STORAGE>,
     pub currency: CurrencyStorage,
     pub crystals: CrystalsStorage,
+    pub key_items: GenericStorage<MAX_NORMAL_STORAGE>,
 }
 
 impl Default for Inventory {
@@ -88,6 +89,7 @@ impl Default for Inventory {
             armoury_soul_crystal: GenericStorage::new(ContainerType::ArmorySoulCrystal),
             currency: CurrencyStorage::default(),
             crystals: CrystalsStorage::default(),
+            key_items: GenericStorage::new(ContainerType::KeyItems),
         }
     }
 }
@@ -289,7 +291,9 @@ impl Inventory {
         if item.stack_size > 1 {
             for page in &mut self.pages {
                 for (slot_index, slot) in page.slots.iter_mut().enumerate() {
-                    if slot.id == item.id && slot.quantity + item.quantity <= item.stack_size {
+                    if slot.item_id == item.item_id
+                        && slot.quantity + item.quantity <= item.stack_size
+                    {
                         slot.quantity += item.quantity;
                         return Some(ItemDestinationInfo {
                             container: page.kind,
@@ -349,6 +353,7 @@ impl Inventory {
             ContainerType::ArmoryRing => &mut self.armoury_rings,
             ContainerType::ArmorySoulCrystal => &mut self.armoury_soul_crystal,
             ContainerType::ArmoryWeapon => &mut self.armoury_main_hand,
+            ContainerType::KeyItems => &mut self.key_items,
             _ => unimplemented!(),
         }
     }
@@ -374,6 +379,7 @@ impl Inventory {
             ContainerType::ArmoryRing => &self.armoury_rings,
             ContainerType::ArmorySoulCrystal => &self.armoury_soul_crystal,
             ContainerType::ArmoryWeapon => &self.armoury_main_hand,
+            ContainerType::KeyItems => &self.key_items,
             _ => unimplemented!(),
         }
     }
@@ -438,13 +444,20 @@ impl Inventory {
                 continue;
             }
 
-            if let Some(info) = data.get_item_info(ItemInfoQuery::ById(item.id)) {
-                item.item_level = info.item_level;
-                item.stack_size = info.stack_size;
-                item.price_low = info.price_low;
-                item.base_param_ids = info.base_param_ids;
-                item.base_param_values = info.base_param_values;
-                // TODO: There will be much more in the future.
+            if let Some(info) = data.get_item_info(ItemInfoQuery::ById(item.item_id)) {
+                *item = Item {
+                    quantity: item.quantity,
+                    item_id: item.item_id,
+                    crafter_content_id: item.crafter_content_id,
+                    item_flags: item.item_flags,
+                    condition: item.condition,
+                    spiritbond_or_collectability: item.spiritbond_or_collectability,
+                    glamour_id: item.glamour_id,
+                    materia: item.materia,
+                    materia_grades: item.materia_grades,
+                    stains: item.stains,
+                    ..info.into()
+                };
             }
         }
     }
@@ -466,6 +479,7 @@ impl Inventory {
         Self::prepare_items_in_container(&mut inventory.armoury_necklace, data);
         Self::prepare_items_in_container(&mut inventory.armoury_bracelet, data);
         Self::prepare_items_in_container(&mut inventory.armoury_rings, data);
+        Self::prepare_items_in_container(&mut inventory.key_items, data);
         // Skip soul crystals
     }
 
@@ -474,14 +488,14 @@ impl Inventory {
         // NOTE: This has to match client behavior exactly! See ItemOperation code for more details.
 
         // If we already have it equipped, do nothing.
-        if self.equipped.soul_crystal.id == id && self.equipped.soul_crystal.quantity > 0 {
+        if self.equipped.soul_crystal.item_id == id && self.equipped.soul_crystal.quantity > 0 {
             return;
         }
 
         for i in 0..self.armoury_soul_crystal.max_slots() as u16 {
             // Find the soul crystal in the Armoury Chest.
             let armoury_slot = self.armoury_soul_crystal.get_slot(i);
-            if armoury_slot.id == id && armoury_slot.quantity > 0 {
+            if armoury_slot.item_id == id && armoury_slot.quantity > 0 {
                 // Perform the swap.
                 let operation = ItemOperation {
                     operation_type: ItemOperationKind::Exchange,
@@ -505,7 +519,7 @@ impl Inventory {
         for i in 0..self.armoury_soul_crystal.max_slots() as u16 {
             // Find the soul crystal in the Armoury Chest.
             let armoury_slot = self.armoury_soul_crystal.get_slot(i);
-            if armoury_slot.id == id && armoury_slot.quantity > 0 {
+            if armoury_slot.item_id == id && armoury_slot.quantity > 0 {
                 return true;
             }
         }

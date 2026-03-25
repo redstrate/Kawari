@@ -51,6 +51,8 @@ use kawari::common::{BASE_STAT, CustomizeData, timestamp_secs};
 use kawari::common::{InstanceContentType, get_aether_current_comp_flg_set_to_screenimage};
 use kawari::config::get_config;
 
+use crate::inventory::Item;
+
 /// Convenient methods built on top of Physis to access data relevant to the server
 #[derive(Clone)]
 pub struct GameData {
@@ -92,7 +94,7 @@ pub struct Attributes {
 
 /// Struct detailing various information about an item, pulled from the Items sheet.
 #[derive(Debug, Default, Clone)]
-pub struct ItemInfo {
+pub struct ItemRow {
     /// The item's textual name.
     pub name: String,
     /// The item's id number.
@@ -119,6 +121,20 @@ pub struct ItemInfo {
     /// Stat modifier stuff
     pub base_param_ids: [u8; 6],
     pub base_param_values: [i16; 6],
+}
+
+impl From<ItemRow> for Item {
+    fn from(val: ItemRow) -> Self {
+        Item {
+            item_id: val.id,
+            item_level: val.item_level,
+            stack_size: val.stack_size,
+            price_low: val.price_low,
+            base_param_ids: val.base_param_ids,
+            base_param_values: val.base_param_values,
+            ..Default::default()
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -309,7 +325,7 @@ impl GameData {
     }
 
     /// Gets various information from the Item sheet.
-    pub fn get_item_info(&mut self, query: ItemInfoQuery) -> Option<ItemInfo> {
+    pub fn get_item_info(&mut self, query: ItemInfoQuery) -> Option<ItemRow> {
         let mut result = None;
         match query {
             ItemInfoQuery::ById(ref query_item_id) => {
@@ -333,7 +349,7 @@ impl GameData {
         }
 
         if let Some((matched_row, item_id)) = result {
-            let item_info = ItemInfo {
+            let item_info = ItemRow {
                 id: item_id,
                 name: matched_row.Name().into_string().unwrap().clone(),
                 price_mid: *matched_row.PriceMid().into_u32().unwrap(),
@@ -640,7 +656,7 @@ impl GameData {
     }
 
     /// Gets the item and its cost from the specified shop.
-    pub fn get_gilshop_item(&mut self, gilshop_id: u32, index: u16) -> Option<ItemInfo> {
+    pub fn get_gilshop_item(&mut self, gilshop_id: u32, index: u16) -> Option<ItemRow> {
         let sheet = GilShopItemSheet::read_from(&mut self.resource, Language::None).ok()?;
         let row = sheet.subrow(gilshop_id, index)?;
         let item_id = row.Item().into_i32()?;
@@ -649,7 +665,7 @@ impl GameData {
     }
 
     /// Gets the item and its cost from the specified SpecialShop.
-    pub fn get_specialshop_item(&mut self, gilshop_id: u32, index: u16) -> Option<ItemInfo> {
+    pub fn get_specialshop_item(&mut self, gilshop_id: u32, index: u16) -> Option<ItemRow> {
         let config = get_config();
         let sheet =
             SpecialShopSheet::read_from(&mut self.resource, config.world.language()).ok()?;

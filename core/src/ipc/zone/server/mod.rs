@@ -407,18 +407,7 @@ pub enum ServerZoneIpcData {
         /// Set to zero if only one item was obtained (stackable or not)
         item_quantity: u32,
     },
-    UpdateInventorySlot {
-        /// Starts from zero and increases by one for each of these packets during this gameplay session
-        sequence: u32,
-        #[brw(pad_before = 4)]
-        dst_storage_id: ContainerType,
-        dst_container_index: u16,
-        dst_stack: u32,
-        dst_catalog_id: u32,
-        #[brw(pad_before = 12, pad_after = 28)]
-        /// Always 0x7530_0000, this number appears elsewhere in buybacks so it's probably flags, but what they mean is completely unknown for now
-        unk1: u32,
-    },
+    UpdateInventorySlot(ItemInfo),
     EffectResult(EffectResult),
     ContentFinderCommencing {
         unk1: [u8; 24],

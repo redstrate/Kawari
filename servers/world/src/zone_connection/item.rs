@@ -54,7 +54,7 @@ impl ZoneConnection {
                 // currencies
                 let mut send_currency = async |slot: u16, item: &Item| {
                     // skip telling the client what they don't have
-                    if item.quantity == 0 || item.id == 0 {
+                    if item.quantity == 0 || item.item_id == 0 {
                         return;
                     }
 
@@ -63,7 +63,7 @@ impl ZoneConnection {
                             sequence: sequence as u32,
                             container: container_type,
                             quantity: item.quantity,
-                            catalog_id: item.id,
+                            catalog_id: item.item_id,
                             slot,
                             ..Default::default()
                         },
@@ -80,7 +80,7 @@ impl ZoneConnection {
                 // items
                 let mut send_slot = async |slot: u16, item: &Item| {
                     // skip telling the client what they don't have
-                    if item.quantity == 0 || item.id == 0 {
+                    if item.quantity == 0 || item.item_id == 0 {
                         return;
                     }
 
@@ -88,11 +88,7 @@ impl ZoneConnection {
                         sequence: sequence as u32,
                         container: container_type,
                         slot,
-                        quantity: item.quantity,
-                        catalog_id: item.id,
-                        condition: item.condition,
-                        glamour_catalog_id: item.glamour_catalog_id,
-                        ..Default::default()
+                        ..(*item).into()
                     }));
                     self.send_ipc_self(ipc).await;
 
@@ -146,7 +142,7 @@ impl ZoneConnection {
         let mut num_items = 0;
 
         let mut send_slot = async |slot_index: u16, item: &Item| {
-            if item.quantity == 0 || item.id == 0 {
+            if item.quantity == 0 || item.item_id == 0 {
                 return;
             }
 
@@ -154,11 +150,7 @@ impl ZoneConnection {
                 sequence: self.player_data.item_sequence,
                 container: ContainerType::Equipped,
                 slot: slot_index,
-                quantity: item.quantity,
-                catalog_id: item.id,
-                condition: item.condition,
-                glamour_catalog_id: item.glamour_catalog_id,
-                ..Default::default()
+                ..(*item).into()
             }));
             self.send_ipc_self(ipc).await;
 
@@ -286,27 +278,23 @@ impl ZoneConnection {
 
         // Then inform the client of the updated slots, we have to do this since this is caused server-side.
         {
-            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateInventorySlot {
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateInventorySlot(ItemInfo {
                 sequence: self.player_data.item_sequence,
-                dst_storage_id: src_container,
-                dst_container_index: src_index,
-                dst_stack: dst_item.quantity,
-                dst_catalog_id: dst_item.id,
-                unk1: 1966080000,
-            });
+                container: src_container,
+                slot: src_index,
+                ..dst_item.into()
+            }));
             self.send_ipc_self(ipc).await;
             self.player_data.item_sequence += 1;
         }
 
         {
-            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateInventorySlot {
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateInventorySlot(ItemInfo {
                 sequence: self.player_data.item_sequence,
-                dst_storage_id: dst_container,
-                dst_container_index: dst_index,
-                dst_stack: src_item.quantity,
-                dst_catalog_id: src_item.id,
-                unk1: 1966080000,
-            });
+                container: dst_container,
+                slot: dst_index,
+                ..src_item.into()
+            }));
             self.send_ipc_self(ipc).await;
             self.player_data.item_sequence += 1;
         }
@@ -324,13 +312,13 @@ impl ZoneConnection {
             src_storage_id: src_container,
             src_container_index: src_index,
             src_stack: src_item.quantity,
-            src_catalog_id: src_item.id,
+            src_catalog_id: src_item.item_id,
 
             dst_actor_id: self.player_data.character.actor_id,
             dst_storage_id: dst_container,
             dst_container_index: dst_index,
             dst_stack: dst_item.quantity,
-            dst_catalog_id: dst_item.id,
+            dst_catalog_id: dst_item.item_id,
 
             dummy_container: ContainerType::Equipped,
         });
@@ -344,7 +332,7 @@ impl ZoneConnection {
         {
             let mut game_data = self.gamedata.lock();
 
-            let weapon = self.player_data.inventory.equipped.main_hand.id;
+            let weapon = self.player_data.inventory.equipped.main_hand.item_id;
             let item_info = game_data
                 .get_item_info(ItemInfoQuery::ById(weapon))
                 .unwrap();
@@ -366,7 +354,7 @@ impl ZoneConnection {
             let classjob_id;
             {
                 let mut game_data = self.gamedata.lock();
-                classjob_id = game_data.get_applicable_classjob(soul_crystal.id);
+                classjob_id = game_data.get_applicable_classjob(soul_crystal.item_id);
             }
 
             if let Some(classjob_id) = classjob_id {
@@ -389,7 +377,7 @@ impl ZoneConnection {
         for slot in EquipSlot::iter() {
             let item = self.player_data.inventory.equipped.get_slot(slot as u16);
             if item.quantity > 0 {
-                let classjob_category = game_data.get_item_classjobcategory(item.id);
+                let classjob_category = game_data.get_item_classjobcategory(item.item_id);
                 let classjobs = game_data.get_applicable_classjobs(classjob_category as u16);
                 if !classjobs.contains(&(self.player_data.classjob.current_class as u8)) {
                     tracing::info!(
@@ -407,7 +395,8 @@ impl ZoneConnection {
             .equipped
             .get_slot(EquipSlot::Body as u16);
         if body_item.quantity > 0
-            && let Some(body_item_info) = game_data.get_item_info(ItemInfoQuery::ById(body_item.id))
+            && let Some(body_item_info) =
+                game_data.get_item_info(ItemInfoQuery::ById(body_item.item_id))
         {
             let body_restrictions = [
                 (EquipSlot::Head, body_item_info.equip_restrictions.head),

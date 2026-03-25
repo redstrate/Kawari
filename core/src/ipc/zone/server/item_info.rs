@@ -6,23 +6,37 @@ use crate::common::ContainerType;
 #[brw(little)]
 #[derive(Debug, Clone, Default)]
 pub struct ItemInfo {
+    /// Starts from zero and increases by one for each of these packets during this gameplay session
+    #[brw(pad_after = 4)] // unused
     pub sequence: u32,
-    pub unk1: u32,
+    /// What container this item is placed in.
     pub container: ContainerType,
+    /// What slot in the container this item is placed in.
     pub slot: u16,
+    /// How many of this item occupies it's slot.
     pub quantity: u32,
-    pub catalog_id: u32,
-    pub reserved_flag: u32,
-    pub signature_id: u64,
-    pub hq_flag: u8,
-    pub unk2: u8,
+    /// Index into the Item Excel sheet.
+    #[brw(pad_after = 4)] // unused
+    pub item_id: u32,
+    /// The player who crafted this item.
+    pub crafter_content_id: u64,
+    #[brw(pad_after = 1)] // unused
+    /// Unknown flags.
+    pub item_flags: u8,
+    /// The condition of this item from 0 to 30000.
     pub condition: u16,
-    pub spirit_bond: u16,
-    pub stain: u16,
-    pub glamour_catalog_id: u32,
+    #[brw(pad_after = 2)] // unused
+    /// Spiritbond or collectability stat.
+    pub spiritbond_or_collectability: u16,
+    /// If not zero, what Item this is glamoured to.
+    pub glamour_id: u32,
+    /// The materia melded into this item.
     pub materia: [u16; 5],
-    #[brw(pad_before = 6)]
-    pub unk3: u32,
+    /// The grade of said materia.
+    pub materia_grades: [u8; 5],
+    #[brw(pad_after = 3)] // unused
+    /// Dye information?
+    pub stains: [u8; 2],
 }
 
 #[cfg(test)]
@@ -45,19 +59,17 @@ mod tests {
 
         let item_info = ItemInfo::read_le(&mut buffer).unwrap();
         assert_eq!(item_info.sequence, 4);
-        assert_eq!(item_info.unk1, 0);
         assert_eq!(item_info.container, ContainerType::Equipped);
         assert_eq!(item_info.slot, 11);
         assert_eq!(item_info.quantity, 1);
-        assert_eq!(item_info.catalog_id, 4426);
-        assert_eq!(item_info.reserved_flag, 0);
-        assert_eq!(item_info.signature_id, 0);
-        assert_eq!(item_info.hq_flag, 0);
-        assert_eq!(item_info.unk2, 0);
+        assert_eq!(item_info.item_id, 4426);
+        assert_eq!(item_info.crafter_content_id, 0);
+        assert_eq!(item_info.item_flags, 0);
         assert_eq!(item_info.condition, 30000);
-        assert_eq!(item_info.spirit_bond, 0);
-        assert_eq!(item_info.stain, 0);
-        assert_eq!(item_info.glamour_catalog_id, 0);
-        assert_eq!(item_info.unk3, 0);
+        assert_eq!(item_info.spiritbond_or_collectability, 0);
+        assert_eq!(item_info.glamour_id, 0);
+        assert_eq!(item_info.materia, [0; 5]);
+        assert_eq!(item_info.materia_grades, [0; 5]);
+        assert_eq!(item_info.stains, [0; 2]);
     }
 }

@@ -1,4 +1,4 @@
-use crate::ItemInfo;
+use crate::ItemRow;
 
 use serde::{Deserialize, Serialize};
 use strum_macros::{Display, EnumIter, FromRepr};
@@ -75,56 +75,56 @@ impl Default for CurrencyStorage {
     fn default() -> Self {
         Self {
             gil: Item::new(
-                &ItemInfo {
+                &ItemRow {
                     id: CurrencyKind::Gil as u32,
                     ..Default::default()
                 },
                 0,
             ),
             flame_seal: Item::new(
-                &ItemInfo {
+                &ItemRow {
                     id: CurrencyKind::FlameSeal as u32,
                     ..Default::default()
                 },
                 0,
             ),
             wolf_mark: Item::new(
-                &ItemInfo {
+                &ItemRow {
                     id: CurrencyKind::WolfMark as u32,
                     ..Default::default()
                 },
                 0,
             ),
             tomestone_poetics: Item::new(
-                &ItemInfo {
+                &ItemRow {
                     id: CurrencyKind::TomestonePoetics as u32,
                     ..Default::default()
                 },
                 0,
             ),
             tomestone_mathematics: Item::new(
-                &ItemInfo {
+                &ItemRow {
                     id: CurrencyKind::TomestoneMaths as u32,
                     ..Default::default()
                 },
                 0,
             ),
             allied_seal: Item::new(
-                &ItemInfo {
+                &ItemRow {
                     id: CurrencyKind::AlliedSeal as u32,
                     ..Default::default()
                 },
                 0,
             ),
             mgp: Item::new(
-                &ItemInfo {
+                &ItemRow {
                     id: CurrencyKind::MGP as u32,
                     ..Default::default()
                 },
                 0,
             ),
             tomestone_heliometry: Item::new(
-                &ItemInfo {
+                &ItemRow {
                     id: CurrencyKind::TomestoneHelio as u32,
                     ..Default::default()
                 },

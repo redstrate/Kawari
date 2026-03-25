@@ -35,7 +35,7 @@ impl UserData for Inventory {
 impl UserData for Item {
     fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
         fields.add_field_method_get("quantity", |_, this| Ok(this.quantity));
-        fields.add_field_method_get("id", |_, this| Ok(this.id));
+        fields.add_field_method_get("id", |_, this| Ok(this.item_id));
         fields.add_field_method_get("condition", |_, this| Ok(this.condition));
         fields.add_field_method_get("glamour_catalog_id", |_, this| Ok(this.condition));
     }

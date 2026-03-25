@@ -183,9 +183,9 @@ impl WorldDatabase {
                     }
                     *target.get_slot_mut(item.slot as u16) = Item {
                         quantity: item.quantity,
-                        id: item.id,
+                        item_id: item.id,
                         condition: item.condition,
-                        glamour_catalog_id: item.glamour_id,
+                        glamour_id: item.glamour_id,
                         ..Default::default()
                     };
                 }

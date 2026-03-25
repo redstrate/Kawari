@@ -4,7 +4,7 @@ use kawari::{
         ContainerType, ERR_INVENTORY_ADD_FAILED, HandlerId, INVENTORY_ACTION_ACK_SHOP,
         ItemOperationKind, LogMessageType, ObjectTypeId,
     },
-    ipc::zone::{ItemOperation, SceneFlags, ServerZoneIpcData, ServerZoneIpcSegment},
+    ipc::zone::{ItemInfo, ItemOperation, SceneFlags, ServerZoneIpcData, ServerZoneIpcSegment},
 };
 
 use crate::{
@@ -91,7 +91,7 @@ impl ShopEventHandler {
 
         // TODO: port from LuaPlayer
         // Queue up the item restoration, but we're not going to send an entire inventory update to the client.
-        lua_player.add_item(bb_item.id, item_dst_info.quantity, false);
+        lua_player.add_item(bb_item.item_id, item_dst_info.quantity, false);
 
         // Queue up the player's adjusted gil, but we're not going to send an entire inventory update to the client.
         let cost = item_dst_info.quantity * bb_item.price_low;
@@ -99,31 +99,29 @@ impl ShopEventHandler {
         lua_player.modify_currency(CurrencyKind::Gil, -(cost as i32), false);
 
         let shop_packets_to_send = [
-            ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateInventorySlot {
+            ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateInventorySlot(ItemInfo {
                 sequence: connection.player_data.shop_sequence,
-                dst_storage_id: ContainerType::Currency,
-                dst_container_index: 0,
-                dst_stack: new_gil,
-                dst_catalog_id: CurrencyKind::Gil as u32,
-                unk1: 0x7530_0000,
-            }),
+                container: ContainerType::Currency,
+                slot: 0,
+                quantity: new_gil,
+                item_id: CurrencyKind::Gil as u32,
+                ..Default::default()
+            })),
             ServerZoneIpcSegment::new(ServerZoneIpcData::InventoryActionAck {
                 sequence: u32::MAX,
                 action_type: INVENTORY_ACTION_ACK_SHOP as u16,
             }),
-            ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateInventorySlot {
+            ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateInventorySlot(ItemInfo {
                 sequence: connection.player_data.shop_sequence,
-                dst_storage_id: item_dst_info.container,
-                dst_container_index: item_dst_info.index,
-                dst_stack: item_dst_info.quantity,
-                dst_catalog_id: bb_item.id,
-                unk1: 0x7530_0000,
-            }),
+                container: item_dst_info.container,
+                slot: item_dst_info.index,
+                ..bb_item.into()
+            })),
             ServerZoneIpcSegment::new(ServerZoneIpcData::ShopLogMessage {
                 handler_id: HandlerId(shop_id),
                 message_type: LogMessageType::ItemBoughtBack as u32,
                 params_count: 3,
-                item_id: bb_item.id,
+                item_id: bb_item.item_id,
                 item_quantity: item_dst_info.quantity,
                 total_sale_cost: item_dst_info.quantity * bb_item.price_low,
             }),
@@ -236,7 +234,7 @@ impl ShopEventHandler {
                     .inventory
                     .get_item(storage, index as u16);
                 let mut game_data = connection.gamedata.lock();
-                result = game_data.get_item_info(ItemInfoQuery::ById(item.id));
+                result = game_data.get_item_info(ItemInfoQuery::ById(item.item_id));
                 quantity = item.quantity;
             }
 
@@ -358,19 +356,19 @@ impl ShopEventHandler {
 
     pub async fn send_gilshop_item_update(
         connection: &mut ZoneConnection,
-        dst_storage_id: ContainerType,
-        dst_container_index: u16,
-        dst_stack: u32,
-        dst_catalog_id: u32,
+        container: ContainerType,
+        slot: u16,
+        quantity: u32,
+        item_id: u32,
     ) {
-        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateInventorySlot {
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateInventorySlot(ItemInfo {
             sequence: connection.player_data.shop_sequence,
-            dst_storage_id,
-            dst_container_index,
-            dst_stack,
-            dst_catalog_id,
-            unk1: 0x7530_0000,
-        });
+            container,
+            slot,
+            quantity,
+            item_id,
+            ..Default::default()
+        }));
         connection.send_ipc_self(ipc).await;
         connection.player_data.shop_sequence += 1;
     }
