@@ -15,6 +15,7 @@ use icarus::ContentFinderCondition::ContentFinderConditionSheet;
 use icarus::CraftAction::CraftActionSheet;
 use icarus::CustomTalk::CustomTalkSheet;
 use icarus::EObj::EObjSheet;
+use icarus::Emote::EmoteSheet;
 use icarus::EquipSlotCategory::EquipSlotCategorySheet;
 use icarus::FateShop::FateShopSheet;
 use icarus::FittingShopCategoryItem::FittingShopCategoryItemSheet;
@@ -1530,6 +1531,15 @@ impl GameData {
             .cloned()
             .unwrap_or_default()
             .is_empty()
+    }
+
+    /// Returns the emote mode (if any), really only relevant for persistent/loopable emotes.
+    pub fn get_emote_mode(&mut self, emote_id: u32) -> Option<u8> {
+        let config = get_config();
+        let sheet = EmoteSheet::read_from(&mut self.resource, config.world.language()).ok()?;
+        let row = sheet.row(emote_id)?;
+
+        row.EmoteMode().into_u8().copied().filter(|x| *x != 0)
     }
 }
 

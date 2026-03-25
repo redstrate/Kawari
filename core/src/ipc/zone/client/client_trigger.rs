@@ -192,9 +192,13 @@ pub enum ClientTriggerCommand {
         hide_text: bool,
     },
 
-    /// The player interrupts their emote.
-    #[brw(magic = 503u32)]
+    /// The player interrupts their normal emote.
+    #[brw(magic = 502u32)]
     EmoteInterrupted {},
+
+    /// The player interrupts their looping emote.
+    #[brw(magic = 503u32)]
+    LoopingEmoteInterrupted {},
 
     /// The player explicitly changed their pose.
     #[brw(magic = 505u32)]

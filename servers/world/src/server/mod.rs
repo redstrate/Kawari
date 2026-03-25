@@ -1329,15 +1329,6 @@ pub async fn server_main_loop(
                                     position,
                                 );
                             }
-
-                            // Interrupt any playing emotes.
-                            // Yes this happens greedily but it shouldn't make a difference.?
-                            let mut network = network.lock();
-                            network.send_ac_in_range_inclusive(
-                                &data,
-                                actor_id,
-                                ActorControlCategory::InterruptEmote {},
-                            );
                         }
                     }
                 }
@@ -1485,13 +1476,32 @@ pub async fn server_main_loop(
                             );
 
                             let mut network = network.lock();
-                            let data = data.lock();
+                            let mut data = data.lock();
                             network.send_in_range(
                                 from_actor_id,
                                 &data,
                                 msg,
                                 DestinationNetwork::ZoneClients,
                             );
+
+                            // setup persistence if looping
+                            let emote_mode;
+                            {
+                                let mut game_data = game_data.lock();
+                                emote_mode = game_data.get_emote_mode(*emote);
+                            }
+
+                            if let Some(mode) = emote_mode
+                                && let Some(instance) = data.find_actor_instance_mut(from_actor_id)
+                            {
+                                set_character_mode(
+                                    instance,
+                                    &mut network,
+                                    from_actor_id,
+                                    CharacterMode::EmoteLoop,
+                                    mode,
+                                );
+                            }
                         }
                         ClientTriggerCommand::ToggleWeapon { shown, unk_flag } => {
                             let msg = FromServer::ActorControl(
@@ -1997,6 +2007,30 @@ pub async fn server_main_loop(
                                 &data,
                                 *id,
                                 ActorControlCategory::SetBattle { battle: false },
+                            );
+                        }
+                        ClientTriggerCommand::EmoteInterrupted {} => {
+                            let data = data.lock();
+                            let mut network = network.lock();
+                            network.send_ac_in_range_inclusive(
+                                &data,
+                                from_actor_id,
+                                ActorControlCategory::InterruptEmote {},
+                            );
+                        }
+                        ClientTriggerCommand::LoopingEmoteInterrupted {} => {
+                            let mut data = data.lock();
+                            let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
+                                continue;
+                            };
+
+                            let mut network = network.lock();
+                            set_character_mode(
+                                instance,
+                                &mut network,
+                                from_actor_id,
+                                CharacterMode::Normal,
+                                0,
                             );
                         }
                         _ => tracing::warn!("Server doesn't know what to do with {:#?}", trigger),
