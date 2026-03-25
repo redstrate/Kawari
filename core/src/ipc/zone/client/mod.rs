@@ -433,12 +433,12 @@ pub enum ClientZoneIpcData {
         unk2: u16,
         #[brw(pad_after = 1)] // Seems to be empty/zeroes
         unk3: u16,
-        #[brw(pad_size_to = 20)]
-        #[br(count = 20)]
+        #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+        #[br(count = CHAR_NAME_MAX_LENGTH)]
         #[br(map = read_string)]
         #[bw(map = write_string)]
         name: String,
-        unk4: [u8; 13], // Unknown data, likely garbage since several other client opcodes have been discovered to leave garbage behind around name strings
+        unk4: [u8; 1],
     },
     CrossworldLinkshellMemberListRequest {
         linkshell_id: u64,
@@ -463,6 +463,23 @@ pub enum ClientZoneIpcData {
     ViewCrossRealmListing {
         #[brw(pad_after = 8)] // empty
         listing_id: u64,
+    },
+    CheckCWLinkshellNameAvailability {
+        unk1: u8, // TODO: What is this? Seems to be always 1?
+        #[bw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+        #[br(count = CHAR_NAME_MAX_LENGTH)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        name: String,
+        unk2: [u8; 7], // Unknown data, likely garbage since several other client opcodes have been discovered to leave garbage behind around name strings*/
+    },
+    CreateNewCrossworldLinkshell {
+        /// The name of the cross-world linkshell.
+        #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+        #[br(count = CHAR_NAME_MAX_LENGTH)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        name: String,
     },
 }
 

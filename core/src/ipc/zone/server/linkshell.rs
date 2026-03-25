@@ -25,7 +25,7 @@ impl LinkshellEntry {
 
 /// Represents one member entry in the CWLSMemberList.
 #[binrw]
-#[derive(Debug, Default, Clone)]
+#[derive(Clone, Debug, Default)]
 pub struct CWLSMemberListEntry {
     pub content_id: u64,
     pub unk_timestamp: u32, // Possibly when this member joined, or last had their rank changed?
@@ -70,7 +70,7 @@ pub enum CWLSPermissionRank {
 
 /// Represents the CWLS's id number and ChatChannel. This was added to help reduce copy paste in CrossworldLinkshell & CrossworldLinkshellEx.
 #[binrw]
-#[derive(Debug, Default, Clone)]
+#[derive(Clone, Debug, Default)]
 pub struct CWLSCommonIdentifiers {
     pub linkshell_id: u64,
     pub linkshell_chat_id: ChatChannel,
@@ -78,7 +78,7 @@ pub struct CWLSCommonIdentifiers {
 
 /// Represents the CWLS's name & permission rank info. This was added to help reduce copy paste in CrossworldLinkshell & CrossworldLinkshellEx.
 #[binrw]
-#[derive(Debug, Default, Clone)]
+#[derive(Clone, Debug, Default)]
 pub struct CWLSCommon {
     /// The client's rank in the CWLS.
     pub rank: CWLSPermissionRank,
@@ -93,7 +93,7 @@ pub struct CWLSCommon {
 
 /// Represents data of a single CWLS. This version is used on login.
 #[binrw]
-#[derive(Debug, Default, Clone)]
+#[derive(Clone, Debug, Default)]
 pub struct CrossworldLinkshell {
     pub ids: CWLSCommonIdentifiers,
     /// The client's name and rank in the CWLS.
@@ -107,7 +107,7 @@ impl CrossworldLinkshell {
 
 /// Represents data of a single CWLS. This extended version is used when the CWLS menu is opened.
 #[binrw]
-#[derive(Debug, Default, Clone)]
+#[derive(Clone, Debug, Default)]
 pub struct CrossworldLinkshellEx {
     pub ids: CWLSCommonIdentifiers,
     /// A 32-bit Unix timestmap indicating when this CWLS was created.
@@ -120,4 +120,14 @@ pub struct CrossworldLinkshellEx {
 impl CrossworldLinkshellEx {
     pub const SIZE: usize = 64;
     pub const COUNT: usize = 8;
+}
+
+/// The result sent back to the client when they ask if a CWLS's name is available for use.
+#[binrw]
+#[brw(repr = u8)]
+#[derive(Clone, Debug, Default, PartialEq)]
+pub enum CWLSNameAvailability {
+    #[default]
+    Available = 0,
+    NotAvailable = 1,
 }

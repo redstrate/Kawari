@@ -6,12 +6,12 @@ use kawari::{
     ipc::{
         chat::{ChatChannel, ChatChannelType},
         zone::{
-            ActorControlCategory, CWLSMemberListEntry, CrossworldLinkshell, CrossworldLinkshellEx,
-            InviteReply, InviteType, InviteUpdateType, OnlineStatus, OnlineStatusMask,
-            PartyMemberEntry, PartyUpdateStatus, PlayerEntry, SearchUIClassJobMask,
-            SearchUIGrandCompanies, ServerZoneIpcData, ServerZoneIpcSegment, SocialList,
-            SocialListRequestType, SocialListUILanguages, StrategyBoard, StrategyBoardUpdate,
-            WaymarkPlacementMode, WaymarkPosition, WaymarkPreset,
+            ActorControlCategory, CWLSMemberListEntry, CWLSPermissionRank, CrossworldLinkshell,
+            CrossworldLinkshellEx, InviteReply, InviteType, InviteUpdateType, OnlineStatus,
+            OnlineStatusMask, PartyMemberEntry, PartyUpdateStatus, PlayerEntry,
+            SearchUIClassJobMask, SearchUIGrandCompanies, ServerZoneIpcData, ServerZoneIpcSegment,
+            SocialList, SocialListRequestType, SocialListUILanguages, StrategyBoard,
+            StrategyBoardUpdate, WaymarkPlacementMode, WaymarkPosition, WaymarkPreset,
         },
     },
 };
@@ -745,6 +745,7 @@ impl ZoneConnection {
                             .collect(),
                     ),
                     None,
+                    true,
                 ))
                 .await;
         }
@@ -832,5 +833,76 @@ impl ZoneConnection {
         });
 
         self.send_ipc_self(ipc).await;
+    }
+
+    pub async fn check_cwlinkshell_name_availability(&mut self, name: String) {
+        let result;
+        {
+            let mut db = self.database.lock();
+            result = db.linkshell_name_available(name.clone());
+        }
+
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::CWLinkshellNameAvailability {
+            result,
+            name,
+            unk1: 1,
+        });
+
+        self.send_ipc_self(ipc).await;
+    }
+
+    /// Creates a new cross-world linkshell and then informs both the global server & the client about it.
+    pub async fn create_crossworld_linkshell(&mut self, name: String) {
+        let mut cwlses = vec![(0, CWLSPermissionRank::Invitee); CrossworldLinkshellEx::COUNT];
+        {
+            let info;
+            {
+                let mut db = self.database.lock();
+                info =
+                    db.create_linkshell(self.player_data.character.content_id, name.clone(), true);
+            }
+
+            // If LS creation is successful, prepare some info for both the client and the global server state.
+            if let Some(info) = info {
+                if let Some(cwls_memberships) = &mut self.cwls_memberships {
+                    let mut found_empty_slot = false;
+                    for (index, linkshell) in cwls_memberships.iter_mut().enumerate() {
+                        // Fill the first empty slot on our side with the new linkshell's info.
+                        if !found_empty_slot && linkshell.ids.linkshell_id == 0 {
+                            *linkshell = info.clone();
+                            found_empty_slot = true;
+                        }
+
+                        // Fill in the global server's copy of the info.
+                        cwlses[index] = (linkshell.ids.linkshell_id, linkshell.common.rank);
+                    }
+                } else {
+                    // Otherwise, even if we didn't have any linkshells before, we do now.
+                    let mut new_memberships =
+                        vec![CrossworldLinkshellEx::default(); CrossworldLinkshellEx::COUNT];
+                    new_memberships[0] = info.clone();
+                    cwlses[0] = (info.ids.linkshell_id, info.common.rank);
+                    self.cwls_memberships = Some(new_memberships);
+                }
+
+                self.handle
+                    .send(ToServer::SetLinkshells(
+                        self.player_data.character.actor_id,
+                        Some(cwlses),
+                        None, // TODO: local linkshells
+                        false,
+                    ))
+                    .await;
+
+                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::NewCrossworldLinkshell {
+                    ids: info.ids.clone(),
+                    unk_timestamp1: info.creation_time,
+                    unk_timestamp2: info.creation_time,
+                    common: info.common.clone(),
+                });
+
+                self.send_ipc_self(ipc).await;
+            }
+        }
     }
 }

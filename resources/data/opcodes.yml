@@ -619,6 +619,14 @@ ServerZoneIpcType:
     comment: Sent in response to ViewCrossRealmListing
     opcode: 735
     size: 464
+  - name: CWLinkshellNameAvailability
+    comment: The server responds to CheckCWLinkshellNameAvailability, informing the client if the desired name was available or not.
+    opcode: 906
+    size: 40
+  - name: NewCrossworldLinkshell
+    comment: The server responds to NewCrossworldLinkshellInfoRequest, providing some information on the newly created/joined cwls.
+    opcode: 855
+    size: 64
 ClientZoneIpcType:
   - name: InitRequest
     comment: Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)
@@ -912,6 +920,14 @@ ClientZoneIpcType:
     comment: Seen while viewing information for a specific Party Finder listing.
     opcode: 810
     size: 16
+  - name: CheckCWLinkshellNameAvailability
+    comment: The client requests if this name is available for use with a new cross-world linkshell.
+    opcode: 591
+    size: 40
+  - name: CreateNewCrossworldLinkshell
+    comment: The client requests for the server to commence with creating the new cross-world linkshell after confirming its name's availability.
+    opcode: 587
+    size: 32
 ServerLobbyIpcType:
   - name: NackReply
     comment: Sent by the server to indicate an lobby error occured.

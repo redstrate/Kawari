@@ -206,7 +206,7 @@ pub enum FromServer {
     /// A chat message from one of the client's cwlses has been received.
     CWLSMessageSent(CWLinkshellMessage),
     /// Inform the zone and chat connections about their linkshell channels.
-    SetLinkshellChatChannels(Vec<u32>, Vec<u32>),
+    SetLinkshellChatChannels(Vec<u32>, Vec<u32>, bool),
 }
 
 #[derive(Debug, Clone)]
@@ -389,6 +389,7 @@ pub enum ToServer {
         ObjectId,
         Option<Vec<(u64, CWLSPermissionRank)>>,
         Option<Vec<u64>>,
+        bool,
     ),
     /// The client sent a message to a cross-world linkshell.
     CWLSMessageSent(ObjectId, SendCWLinkshellMessage),

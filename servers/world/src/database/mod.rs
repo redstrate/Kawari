@@ -6,8 +6,8 @@ use kawari::ipc::zone::{
     GameMasterRank, OnlineStatus, ServerZoneIpcData, SocialListUIFlags, SocialListUILanguages,
 };
 pub use models::{
-    AetherCurrent, Aetheryte, Character, ClassJob, Companion, Content, Friends, Mentor, Quest,
-    SearchInfo, Unlock, Volatile,
+    AetherCurrent, Aetheryte, Character, ClassJob, Companion, Content, Friends, LinkshellMembers,
+    Mentor, Quest, SearchInfo, Unlock, Volatile,
 };
 
 mod schema;
@@ -27,8 +27,8 @@ use kawari::{
     constants::AVAILABLE_CLASSJOBS,
     ipc::lobby::{CharacterDetails, CharacterFlag},
     ipc::zone::{
-        CWLSMemberListEntry, CWLSPermissionRank, CrossworldLinkshellEx, OnlineStatusMask,
-        PlayerEntry,
+        CWLSCommon, CWLSCommonIdentifiers, CWLSMemberListEntry, CWLSNameAvailability,
+        CWLSPermissionRank, CrossworldLinkshellEx, OnlineStatusMask, PlayerEntry,
     },
 };
 
@@ -1249,6 +1249,151 @@ impl WorldDatabase {
         }
 
         Some(members)
+    }
+
+    pub fn add_member_to_linkshell(
+        &mut self,
+        for_linkshell_id: i64,
+        for_content_id: i64,
+        their_rank: CWLSPermissionRank,
+        their_invite_time: i64,
+    ) -> bool {
+        use schema::linkshell_members::dsl::*;
+
+        let already_member = linkshell_members
+            .select(content_id)
+            .filter(content_id.eq(for_content_id))
+            .filter(linkshell_id.eq(for_linkshell_id))
+            .first::<i64>(&mut self.connection);
+
+        // If they're not in this linkshell, add them.
+        if already_member.is_err() {
+            let next_id = if let Ok(highest) = linkshell_members
+                .select(id)
+                .order(id.desc())
+                .first::<i64>(&mut self.connection)
+            {
+                highest + 1
+            } else {
+                1 // Start from a safe default if there are no members.
+            };
+            let new_member = LinkshellMembers {
+                id: next_id,
+                content_id: for_content_id,
+                linkshell_id: for_linkshell_id,
+                invite_time: their_invite_time,
+                rank: their_rank as i32,
+            };
+
+            let result = diesel::insert_into(linkshell_members)
+                .values(new_member)
+                .execute(&mut self.connection);
+
+            match result {
+                Ok(_) => {
+                    return true;
+                }
+
+                Err(err) => {
+                    tracing::warn!(
+                        "Failed to add member to linkshell due to the following error: {err:#?}"
+                    );
+                    return false;
+                }
+            }
+        } else {
+            tracing::warn!(
+                "This character {for_content_id} is already in this linkshell {for_content_id}!"
+            );
+        }
+
+        false
+    }
+
+    pub fn linkshell_name_available(&mut self, desired_name: String) -> CWLSNameAvailability {
+        // Linkshell names must be: between 3 and 20 characters in length, may contain punctuation, not contain double spaces/underscores, not contain a space at the start or end of the name, and the name may not consist solely of punctuation.
+        // TODO: Should we bother enforcing the other rules if a player somehow bypassed the client-side limitations?
+        use schema::linkshells::dsl::*;
+
+        if desired_name.len() >= 3 && desired_name.len() <= 20 {
+            let already_exists = linkshells
+                .select(name)
+                .filter(name.eq(desired_name.clone()))
+                .first::<String>(&mut self.connection);
+
+            if already_exists.is_err() {
+                return CWLSNameAvailability::Available;
+            }
+        }
+        CWLSNameAvailability::NotAvailable
+    }
+
+    pub fn create_linkshell(
+        &mut self,
+        from_content_id: i64,
+        ls_name: String,
+        is_crossworld_ls: bool,
+    ) -> Option<CrossworldLinkshellEx> {
+        use schema::linkshells::dsl::*;
+
+        // Only allow creation if this LS doesn't exist already. Probably a bit redundant with how the order of events goes, but never hurts.
+        if self.linkshell_name_available(ls_name.clone()) == CWLSNameAvailability::Available {
+            let ls_creation_time = diesel::select(unixepoch())
+                .get_result::<i64>(&mut self.connection)
+                .unwrap_or_default();
+
+            let next_id = if let Ok(highest) = linkshells
+                .select(id)
+                .order(id.desc())
+                .first::<i64>(&mut self.connection)
+            {
+                highest + 1
+            } else {
+                1 // Start from a safe default if there are no linkshells at all on the server.
+            };
+
+            let linkshell = models::Linkshells {
+                id: next_id,
+                name: ls_name.clone(),
+                creation_time: ls_creation_time,
+                is_crossworld: is_crossworld_ls,
+            };
+
+            let result = diesel::insert_into(linkshells)
+                .values(linkshell)
+                .execute(&mut self.connection);
+
+            match result {
+                Ok(_) => {
+                    let rank = CWLSPermissionRank::Master;
+                    if self.add_member_to_linkshell(
+                        next_id,
+                        from_content_id,
+                        rank,
+                        ls_creation_time,
+                    ) {
+                        return Some(CrossworldLinkshellEx {
+                            ids: CWLSCommonIdentifiers {
+                                linkshell_id: next_id as u64,
+                                ..Default::default()
+                            },
+                            creation_time: ls_creation_time as u32,
+                            common: CWLSCommon {
+                                rank,
+                                name: ls_name.clone(),
+                            },
+                        });
+                    }
+                }
+                Err(err) => tracing::error!(
+                    "Failed to create the linkshell because of the following error: {err:#?}"
+                ),
+            }
+        } else {
+            tracing::warn!("The linkshell name {ls_name} already exists!");
+        }
+
+        None
     }
 
     pub fn do_cleanup_tasks(&mut self) {
