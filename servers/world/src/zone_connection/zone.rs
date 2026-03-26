@@ -373,9 +373,9 @@ impl ZoneConnection {
                         },
                     ))
                     .await;
-                }
 
-                self.content_handler_id = director_id;
+                    self.content_handler_id = director_id;
+                }
             } else {
                 tracing::warn!("{intended_use} does not have a known director type yet?");
             }
