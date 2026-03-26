@@ -1649,6 +1649,81 @@ pub fn handle_social_messages(
 
             true
         }
+        ToServer::DisbandLinkshell(linkshell_id) => {
+            let mut network = network.lock();
+
+            let Some(linkshell) = network.linkshells.get(linkshell_id) else {
+                return true;
+            };
+
+            let msg = FromServer::LinkshellDisbanded(*linkshell_id, linkshell.channel_number);
+
+            // Tell both zone and chat connections about the linkshell's disbandment first to avoid issues.
+            network.send_to_linkshell(
+                *linkshell_id,
+                None,
+                msg.clone(),
+                DestinationNetwork::ZoneClients,
+            );
+            network.send_to_linkshell(*linkshell_id, None, msg, DestinationNetwork::ChatClients);
+
+            // Now update our state.
+            network.linkshells.remove(linkshell_id);
+
+            true
+        }
+        ToServer::LeaveLinkshell(from_actor_id, from_content_id, from_name, linkshell_id) => {
+            let mut network = network.lock();
+
+            {
+                let Some(linkshell) = network.linkshells.get(linkshell_id) else {
+                    return true;
+                };
+
+                let mut rank = CWLSPermissionRank::Invitee;
+                for member in &linkshell.members {
+                    if member.actor_id == *from_actor_id {
+                        rank = member.rank;
+                        break;
+                    }
+                }
+
+                let msg = FromServer::LinkshellLeft(
+                    *from_actor_id,
+                    *from_content_id,
+                    from_name.clone(),
+                    rank,
+                    *linkshell_id,
+                    linkshell.channel_number,
+                );
+
+                // Tell both zone and chat connections about the member's departure first to avoid issues.
+                network.send_to_linkshell(
+                    *linkshell_id,
+                    None,
+                    msg.clone(),
+                    DestinationNetwork::ZoneClients,
+                );
+                network.send_to_linkshell(
+                    *linkshell_id,
+                    None,
+                    msg,
+                    DestinationNetwork::ChatClients,
+                );
+            }
+
+            // Now update our state by removing the leaving member, and removing the linkshell from our list if nobody is online.
+            network
+                .linkshells
+                .entry(*linkshell_id)
+                .and_modify(|ls| ls.members.retain(|m| m.actor_id != *from_actor_id));
+
+            // TODO: Need to test more if removing the list is okay, ToServer::SetLinkshells *should* re-instate a linkshell if one of its members comes back online after this point
+            if network.linkshells[linkshell_id].members.is_empty() {
+                network.linkshells.remove(linkshell_id);
+            }
+            true
+        }
         _ => false,
     }
 }

@@ -851,6 +851,8 @@ impl ZoneConnection {
         self.send_ipc_self(ipc).await;
     }
 
+    // TODO: For all of these linkshell-related functions, make a helper function to handle updating cwls_memberships and sending ToServer::SetLinkshells as much as possible
+
     /// Creates a new cross-world linkshell and then informs both the global server & the client about it.
     pub async fn create_crossworld_linkshell(&mut self, name: String) {
         let mut cwlses = vec![(0, CWLSPermissionRank::Invitee); CrossworldLinkshellEx::COUNT];
@@ -904,5 +906,124 @@ impl ZoneConnection {
                 self.send_ipc_self(ipc).await;
             }
         }
+    }
+
+    // TODO: I think this and crossworld_linkshell_disbanded can be combined, need to consider it
+    pub async fn disband_linkshell(&mut self, linkshell_id: u64) {
+        if let Some(cwls_memberships) = &self.cwls_memberships {
+            for linkshell in cwls_memberships {
+                if linkshell.ids.linkshell_id == linkshell_id {
+                    if linkshell.common.rank == CWLSPermissionRank::Master {
+                        {
+                            let mut db = self.database.lock();
+                            db.remove_linkshell(linkshell_id);
+                        }
+                        self.handle
+                            .send(ToServer::DisbandLinkshell(linkshell_id))
+                            .await;
+                    } else {
+                        tracing::warn!(
+                            "Client {} tried to disband linkshell {} with permission_rank {:#?}! Rejecting request!",
+                            self.player_data.character.content_id,
+                            linkshell_id,
+                            linkshell.common.rank
+                        );
+                    }
+
+                    break;
+                }
+            }
+        }
+    }
+
+    pub async fn crossworld_linkshell_disbanded(&mut self, linkshell_id: u64) {
+        let mut cwlses = vec![(0, CWLSPermissionRank::Invitee); 8];
+        if let Some(cwls_memberships) = &mut self.cwls_memberships {
+            let mut disbanded_name = String::default();
+            for (index, cwls) in cwls_memberships.iter_mut().enumerate() {
+                if cwls.ids.linkshell_id == linkshell_id {
+                    disbanded_name = cwls.common.name.clone();
+                    *cwls = CrossworldLinkshellEx::default();
+                }
+
+                cwlses[index] = (cwls.ids.linkshell_id, cwls.common.rank);
+            }
+
+            // If we're no longer in any cross-world Linkshells
+            if cwlses.iter().filter(|&linkshell| linkshell.0 == 0).count() == 8 {
+                self.cwls_memberships = None;
+            }
+
+            // Inform the client.
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::CrossworldLinkshellDisbanded {
+                linkshell_id,
+                name: disbanded_name.to_string(),
+            });
+
+            self.send_ipc_self(ipc).await;
+        }
+
+        // Tell the global state about our remaining memberships.
+        self.handle
+            .send(ToServer::SetLinkshells(
+                self.player_data.character.actor_id,
+                Some(cwlses),
+                None,
+                false,
+            ))
+            .await;
+    }
+
+    pub async fn leave_linkshell(
+        &mut self,
+        from_actor_id: ObjectId,
+        from_content_id: u64,
+        from_name: String,
+        from_rank: CWLSPermissionRank,
+        linkshell_id: u64,
+    ) {
+        // If we're the one leaving, then remove ourself from the LS.
+        if from_actor_id == self.player_data.character.actor_id {
+            {
+                let mut db = self.database.lock();
+                db.remove_member_from_linkshell(
+                    self.player_data.character.content_id,
+                    linkshell_id,
+                );
+            }
+
+            let mut cwlses = vec![(0, CWLSPermissionRank::Invitee); 8];
+            if let Some(cwls_memberships) = &mut self.cwls_memberships {
+                for (index, cwls) in cwls_memberships.iter_mut().enumerate() {
+                    if cwls.ids.linkshell_id == linkshell_id {
+                        *cwls = CrossworldLinkshellEx::default();
+                        break;
+                    }
+
+                    cwlses[index] = (cwls.ids.linkshell_id, cwls.common.rank);
+                }
+            }
+
+            // Tell the global state about our remaining memberships.
+            self.handle
+                .send(ToServer::SetLinkshells(
+                    self.player_data.character.actor_id,
+                    Some(cwlses),
+                    None,
+                    false,
+                ))
+                .await;
+        }
+
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::CrossworldLinkshellMemberLeft {
+            linkshell_id,
+            content_id: from_content_id,
+            content_id_repeated: from_content_id,
+            home_world_id: self.config.world_id,
+            permission_rank: from_rank,
+            character_name: from_name.clone(),
+        });
+
+        self.send_ipc_self(ipc).await;
     }
 }

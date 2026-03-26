@@ -674,6 +674,21 @@ impl WorldDatabase {
                 .unwrap();
         }
 
+        // Since linkshell management is a little more complex than just deleting all rows with this content id, we do it the slightly slower way. We want orphaned linkshells with zero members to auto-disband.
+        // TODO: Implement the ToServer protocol for CustomIpcConnection so we can notify the global server about this character's departures from their linkshells
+        if let Some(linkshells) = self.find_linkshells(for_content_id as i64) {
+            for linkshell_entry in linkshells {
+                if linkshell_entry.is_empty() {
+                    continue;
+                }
+
+                self.remove_member_from_linkshell(
+                    for_content_id as i64,
+                    linkshell_entry.ids.linkshell_id,
+                );
+            }
+        }
+
         // NOTE: The character table should always be last!
         {
             use schema::character::dsl::*;
@@ -1200,6 +1215,63 @@ impl WorldDatabase {
         None
     }
 
+    /// Removes all of a linkshell's members, and then removes the linkshell.
+    pub fn remove_linkshell(&mut self, for_linkshell_id: u64) {
+        use schema::linkshell_members::dsl::*;
+        use schema::linkshells::dsl::*;
+
+        let for_linkshell_id = for_linkshell_id as i64;
+        if let Ok(linkshell) = linkshells
+            .select(models::Linkshells::as_select())
+            .filter(schema::linkshells::id.eq(for_linkshell_id))
+            .load(&mut self.connection)
+            && !linkshell.is_empty()
+        {
+            if let Ok(_) = diesel::delete(
+                linkshell_members
+                    .filter(schema::linkshell_members::linkshell_id.eq(for_linkshell_id)),
+            )
+            .execute(&mut self.connection)
+                && let Ok(_) =
+                    diesel::delete(linkshells.filter(schema::linkshells::id.eq(for_linkshell_id)))
+                        .execute(&mut self.connection)
+            {
+                tracing::info!("Linkshell {for_linkshell_id} deleted!");
+            }
+        } else {
+            tracing::warn!(
+                "Got a request to delete non-existent linkshell {for_linkshell_id}, what happened?",
+            );
+        }
+    }
+
+    pub fn remove_member_from_linkshell(&mut self, for_content_id: i64, for_linkshell_id: u64) {
+        let for_linkshell_id = for_linkshell_id as i64;
+
+        use schema::linkshell_members::dsl::*;
+        if diesel::delete(
+            linkshell_members
+                .filter(content_id.eq(for_content_id))
+                .filter(linkshell_id.eq(for_linkshell_id)),
+        )
+        .execute(&mut self.connection)
+        .is_ok()
+        {
+            tracing::info!("Player {for_content_id} removed from linkshell {for_linkshell_id}!");
+            if let Ok(members) = linkshell_members
+                .select(models::LinkshellMembers::as_select())
+                .filter(linkshell_id.eq(for_linkshell_id))
+                .load(&mut self.connection)
+                && members.is_empty()
+            {
+                tracing::info!(
+                    "Linkshell {for_linkshell_id} has no members left! Auto-disbanding now."
+                );
+                self.remove_linkshell(for_linkshell_id as u64);
+            }
+        }
+    }
+
     /// Returns a list of all members in the given linkshell.
     // TODO: We can likely just reuse this for local LSes too and "downscale" info they don't need in the zone connection
     pub fn find_linkshell_members(
@@ -1296,7 +1368,7 @@ impl WorldDatabase {
 
                 Err(err) => {
                     tracing::warn!(
-                        "Failed to add member to linkshell due to the following error: {err:#?}"
+                        "Failed to add member to linkshell {for_linkshell_id:#?} due to the following error: {err:#?}"
                     );
                     return false;
                 }
@@ -1397,14 +1469,37 @@ impl WorldDatabase {
     }
 
     pub fn do_cleanup_tasks(&mut self) {
-        use schema::volatile::dsl::*;
-
         // Ensure the most volatile aspects of the db are reset to a clean state.
         // We expect these to be "offline" as the initial state elsewhere for things like the online player count and friend lists to function correctly.
-        diesel::update(volatile)
-            .set(is_online.eq(false))
-            .execute(&mut self.connection)
-            .unwrap();
+        {
+            use schema::volatile::dsl::*;
+
+            diesel::update(volatile)
+                .set(is_online.eq(false))
+                .execute(&mut self.connection)
+                .unwrap();
+        }
+
+        // Clean up orphaned linkshells with no members that were missed somehow. This should theoretically not happen without manual database edits.
+        {
+            use schema::linkshell_members::dsl::*;
+
+            for (orphaned_linkshell_id, _) in self.find_all_linkshells() {
+                if let Ok(members) = linkshell_members
+                    .select(models::LinkshellMembers::as_select())
+                    .filter(linkshell_id.eq(orphaned_linkshell_id as i64))
+                    .load(&mut self.connection)
+                    && members.is_empty()
+                {
+                    tracing::info!(
+                        "Found orphaned linkshell {orphaned_linkshell_id} with zero members, cleaning it up now."
+                    );
+                    self.remove_linkshell(orphaned_linkshell_id);
+                }
+            }
+
+            // TODO: Auto-promote new owners in linkshells that don't have owners, which should theoretically not happen without manual database edits.
+        }
     }
 }
 

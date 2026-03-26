@@ -635,6 +635,14 @@ ServerZoneIpcType:
     comment: Seen after a sequence of RetainerInfo packets.
     opcode: 863
     size: 24
+  - name: CrossworldLinkshellDisbanded
+    comment: The server informs the client that the linkshell has been disbanded.
+    opcode: 519
+    size: 40
+  - name: CrossworldLinkshellMemberLeft
+    comment: The server informs the client that a member in the linkshell has left (including themself if it was them).
+    opcode: 694
+    size: 64
 ClientZoneIpcType:
   - name: InitRequest
     comment: Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)
@@ -936,6 +944,14 @@ ClientZoneIpcType:
     comment: The client requests for the server to commence with creating the new cross-world linkshell after confirming its name's availability.
     opcode: 587
     size: 32
+  - name: DisbandCrossworldLinkshell
+    comment: The client requests the deletion of a cross-world linkshell.
+    opcode: 421
+    size: 8
+  - name: LeaveCrossworldLinkshell
+    comment: The client requests to leave a cross-world linkshell. Masters cannot do this, they first have to appoint a new Master or disband the linkshell entirely.
+    opcode: 357
+    size: 8
 ServerLobbyIpcType:
   - name: NackReply
     comment: Sent by the server to indicate an lobby error occured.

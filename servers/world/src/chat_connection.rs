@@ -233,6 +233,38 @@ impl ChatConnection {
         }
     }
 
+    pub async fn linkshell_disbanded(&mut self, channel_number: u32) {
+        for linkshell in self.cwls_chatchannels.iter_mut() {
+            if linkshell.channel_number == channel_number {
+                linkshell.channel_number = 0;
+                return;
+            }
+        }
+
+        for linkshell in self.local_ls_chatchannels.iter_mut() {
+            if linkshell.channel_number == channel_number {
+                linkshell.channel_number = 0;
+                break;
+            }
+        }
+    }
+
+    pub async fn linkshell_left(&mut self, from_actor_id: ObjectId, channel_number: u32) {
+        for linkshell in self.cwls_chatchannels.iter_mut() {
+            if linkshell.channel_number == channel_number && self.actor_id == from_actor_id {
+                linkshell.channel_number = 0;
+                return;
+            }
+        }
+
+        for linkshell in self.local_ls_chatchannels.iter_mut() {
+            if linkshell.channel_number == channel_number && self.actor_id == from_actor_id {
+                linkshell.channel_number = 0;
+                break;
+            }
+        }
+    }
+
     pub async fn set_party_chatchannel(&mut self, party_channel_number: u32) {
         self.party_chatchannel.channel_number = party_channel_number;
     }

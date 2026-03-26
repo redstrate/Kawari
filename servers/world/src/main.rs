@@ -398,6 +398,8 @@ async fn client_chat_loop(
                     FromServer::PartyMessageSent(message_info) => connection.party_message_received(message_info).await,
                     FromServer::SetLinkshellChatChannels(cwls, local, _) => connection.set_linkshell_chatchannels(cwls, local).await,
                     FromServer::CWLSMessageSent(message_info) => connection.cwls_message_received(message_info).await,
+                    FromServer::LinkshellDisbanded(_, channel_id) => connection.linkshell_disbanded(channel_id).await,
+                    FromServer::LinkshellLeft(from_actor_id, _, _, _, _, channel_id) => connection.linkshell_left(from_actor_id, channel_id).await,
                     _ => tracing::error!("ChatConnection {:#?} received a FromServer message we don't care about: {:#?}, ensure you're using the right client network or that you've implemented a handler for it if we actually care about it!", client_handle.id, msg),
                 },
                 None => break,
@@ -2796,6 +2798,20 @@ async fn process_packet(
                         ClientZoneIpcData::CreateNewCrossworldLinkshell { name } => {
                             connection.create_crossworld_linkshell(name.clone()).await;
                         }
+                        ClientZoneIpcData::LeaveCrossworldLinkshell { linkshell_id } => {
+                            connection
+                                .handle
+                                .send(ToServer::LeaveLinkshell(
+                                    connection.player_data.character.actor_id,
+                                    connection.player_data.character.content_id as u64,
+                                    connection.player_data.character.name.clone(),
+                                    *linkshell_id,
+                                ))
+                                .await;
+                        }
+                        ClientZoneIpcData::DisbandCrossworldLinkshell { linkshell_id } => {
+                            connection.disband_linkshell(*linkshell_id).await;
+                        }
                         ClientZoneIpcData::Unknown { unk } => {
                             tracing::warn!(
                                 "Unknown Zone packet {:?} recieved ({} bytes), this should be handled!",
@@ -3150,6 +3166,29 @@ async fn process_server_msg(
                     connection.send_crossworld_linkshells(false).await;
                 }
             }
+            FromServer::LinkshellDisbanded(linkshell_id, _) => {
+                connection
+                    .crossworld_linkshell_disbanded(linkshell_id)
+                    .await;
+            }
+            FromServer::LinkshellLeft(
+                from_actor_id,
+                from_content_id,
+                from_name,
+                rank,
+                linkshell_id,
+                _,
+            ) => {
+                connection
+                    .leave_linkshell(
+                        from_actor_id,
+                        from_content_id,
+                        from_name.clone(),
+                        rank,
+                        linkshell_id,
+                    )
+                    .await
+            }
             _ => {
                 tracing::error!(
                     "Zone connection {:#?} received a FromServer message we don't care about: {:#?}, ensure you're using the right client network or that you've implemented a handler for it if we actually care about it!",
@@ -3181,7 +3220,7 @@ async fn client_loop(
         .send(ToServer::NewClient(client_handle.clone()))
         .await;
 
-    // This is living outside of ZoneConnetion (which is weird)
+    // This is living outside of ZoneConnection (which is weird)
     // because we need the functions in EventHandler to mutate it.
     // Of course, Rust's mutability rules disallow that.
     let mut events: Vec<(Box<dyn EventHandler>, Event)> = Vec::new();
