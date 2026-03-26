@@ -207,6 +207,10 @@ pub enum FromServer {
     CWLSMessageSent(CWLinkshellMessage),
     /// Inform the zone and chat connections about their linkshell channels.
     SetLinkshellChatChannels(Vec<u32>, Vec<u32>, bool),
+    /// Inform the client that one of their linkshells has been disbanded.
+    LinkshellDisbanded(u64, u32),
+    /// Inform the client that a member left one of their linkshells.
+    LinkshellLeft(ObjectId, u64, String, CWLSPermissionRank, u64, u32),
 }
 
 #[derive(Debug, Clone)]
@@ -393,6 +397,10 @@ pub enum ToServer {
     ),
     /// The client sent a message to a cross-world linkshell.
     CWLSMessageSent(ObjectId, SendCWLinkshellMessage),
+    /// The client disbanded their linkshell, and online members need to be informed.
+    DisbandLinkshell(u64),
+    /// The client left a linkshell, and online members need to be informed.
+    LeaveLinkshell(ObjectId, u64, String, u64),
 }
 
 #[derive(Clone, Debug)]

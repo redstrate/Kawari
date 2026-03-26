@@ -120,6 +120,11 @@ pub struct CrossworldLinkshellEx {
 impl CrossworldLinkshellEx {
     pub const SIZE: usize = 64;
     pub const COUNT: usize = 8;
+
+    pub fn is_empty(&self) -> bool {
+        // We don't consider the ChatChannel because there are valid use-cases on Kawari where it's not set to a valid channel, particularly in the database or when zone/chat connections are gathering their initial info.
+        self.ids.linkshell_id == 0 && self.common.name == String::default()
+    }
 }
 
 /// The result sent back to the client when they ask if a CWLS's name is available for use.

@@ -1113,6 +1113,35 @@ pub enum ServerZoneIpcData {
         unk4: u32,
         unk5: u32,
     },
+    CrossworldLinkshellDisbanded {
+        // The linkshell's id.
+        linkshell_id: u64,
+        /// The linkshell's name.
+        #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+        #[br(count = CHAR_NAME_MAX_LENGTH)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        name: String,
+    },
+    CrossworldLinkshellMemberLeft {
+        /// The linkshell this player is leaving.
+        linkshell_id: u64,
+        /// The leaving player's content id.
+        content_id: u64,
+        /// Their content id repeated for some unknown reason.
+        content_id_repeated: u64,
+        /// Their home world id.
+        home_world_id: u16,
+        #[brw(pad_after = 1)]
+        permission_rank: CWLSPermissionRank,
+        /// Their name.
+        #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+        #[br(count = CHAR_NAME_MAX_LENGTH)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        #[brw(pad_after = 4)]
+        character_name: String,
+    },
 }
 
 #[cfg(test)]

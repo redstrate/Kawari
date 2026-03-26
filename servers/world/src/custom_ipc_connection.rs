@@ -15,6 +15,7 @@ use parking_lot::Mutex;
 use tokio::net::TcpStream;
 
 /// Represents a single connection between an instance of the world server and the lobby server.
+// TODO: Implement the ToServer protocol for CustomIpcConnection so we can notify the global server about some things that happen outside of the world server (e.g., deleted characters need to tell the global state that they're not in those linkshells anymore so online players can be told, and so that a new leader can be promoted if needed)
 pub struct CustomIpcConnection {
     pub socket: TcpStream,
     pub state: ConnectionState,

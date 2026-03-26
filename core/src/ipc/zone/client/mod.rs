@@ -481,6 +481,14 @@ pub enum ClientZoneIpcData {
         #[bw(map = write_string)]
         name: String,
     },
+    DisbandCrossworldLinkshell {
+        /// The id of the linkshell to delete.
+        linkshell_id: u64,
+    },
+    LeaveCrossworldLinkshell {
+        /// The id of the linkshell to leave.
+        linkshell_id: u64,
+    },
 }
 
 #[cfg(test)]
