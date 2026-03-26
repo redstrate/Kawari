@@ -11,6 +11,9 @@ pub struct Timeline {
     pub timeline_always_plays: bool,
     /// The timeline points.
     pub timepoints: Vec<Timepoint>,
+    /// A series of actions (to play in sequence) on death.
+    #[serde(default)]
+    pub on_death: Vec<TimepointData>,
 }
 
 impl Timeline {
@@ -67,6 +70,7 @@ mod tests {
             Timeline {
                 autoattack_action_id: 872,
                 timeline_always_plays: false,
+                on_death: Vec::default(),
                 timepoints: vec![Timepoint {
                     time: 20,
                     data: TimepointData::Action { action_id: 872 }

@@ -18,5 +18,12 @@
             "time": 24,
             "comment": "Close mouth"
         }
+    ],
+    "on_death": [
+        {
+            "type": "timeline_state",
+            "states": [2, 3, 4],
+            "comment": "Death animation (turns its light off)"
+        }
     ]
 }
