@@ -34,8 +34,8 @@ use kawari::{
     common::{
         CharacterMode, DEAD_DESPAWN_TIME, ENEMY_AUTO_ATTACK_RATE, HandlerId, HandlerType,
         InvisibilityFlags, JumpState, MAX_SPAWNED_ACTORS, MAX_SPAWNED_OBJECTS, MoveAnimationState,
-        MoveAnimationType, ObjectId, ObjectTypeId, ObjectTypeKind, Position, TerritoryIntendedUse,
-        TimepointData,
+        MoveAnimationType, ObjectId, ObjectTypeId, ObjectTypeKind, Position,
+        SharedGroupTimelineState, TerritoryIntendedUse, TimepointData,
     },
     config::{FilesystemConfig, get_config},
     ipc::zone::{
@@ -260,6 +260,46 @@ fn set_character_mode(
     );
 }
 
+fn set_shared_group_timeline_state(
+    instance: &mut Instance,
+    network: &mut NetworkState,
+    from_actor_id: ObjectId,
+    timelines: &[u32],
+) {
+    let mut state = SharedGroupTimelineState::NONE;
+    for timeline in timelines {
+        state.toggle(match timeline {
+            1 => SharedGroupTimelineState::TIMELINE_1,
+            2 => SharedGroupTimelineState::TIMELINE_2,
+            3 => SharedGroupTimelineState::TIMELINE_3,
+            4 => SharedGroupTimelineState::TIMELINE_4,
+            5 => SharedGroupTimelineState::TIMELINE_5,
+            6 => SharedGroupTimelineState::TIMELINE_6,
+            _ => unimplemented!(),
+        });
+    }
+
+    // Update internal data model for new spawns
+    {
+        let Some(actor) = instance.find_actor_mut(from_actor_id) else {
+            return;
+        };
+
+        let NetworkedActor::Object { object } = actor else {
+            return;
+        };
+
+        object.args1 = state.bits();
+    }
+
+    // Inform actors
+    network.send_ac_in_range_inclusive_instance(
+        instance,
+        from_actor_id,
+        ActorControlCategory::SetSharedGroupTimelineState { state },
+    );
+}
+
 fn server_logic_tick(
     data: Arc<Mutex<WorldServer>>,
     network: Arc<Mutex<NetworkState>>,
@@ -341,6 +381,7 @@ fn server_logic_tick(
 
                 let mut newly_acquired_targets = Vec::new();
                 let mut new_action_requests = Vec::new();
+                let mut new_timeline_states = Vec::new();
 
                 // mut pass
                 for (id, actor) in &mut instance.actors {
@@ -437,18 +478,22 @@ fn server_logic_tick(
                             if path.is_empty() {
                                 reset_target = true;
                             }
+                        }
 
-                            // Only update the timeline on exact second marks
-                            if !reset_target && (*timeline_position % 2) == 0 {
-                                // NOTE: the "+ 1" is a hack to ensure the last timepoint is always counted
-                                let timeline_position_seconds = *timeline_position / 2;
-                                let real_timeline_position = timeline_position_seconds as f32
-                                    % (timeline.duration() as f32 + 0.5);
-                                if let Some(timepoint) =
-                                    timeline.point_at(real_timeline_position as i32)
-                                {
-                                    match &timepoint.data {
-                                        TimepointData::Action { action_id, .. } => {
+                        // Only update the timeline on exact second marks
+                        if (*timeline_position % 2) == 0 {
+                            // TODO: something worth thinking about is whether to simplify timeline_always_play, and have it always play anyway but skip Action points?
+
+                            // NOTE: the "+ 0.5" is a hack to ensure the last timepoint is always counted
+                            let timeline_position_seconds = *timeline_position / 2;
+                            let real_timeline_position = timeline_position_seconds as f32
+                                % (timeline.duration() as f32 + 0.5);
+                            if let Some(timepoint) =
+                                timeline.point_at(real_timeline_position as i32)
+                            {
+                                match &timepoint.data {
+                                    TimepointData::Action { action_id, .. } => {
+                                        if let Some(current_target) = current_target {
                                             let cast_time = 2.7; // TODO: grab from excel data
                                             let request = ActionRequest {
                                                 action_key: *action_id,
@@ -468,8 +513,17 @@ fn server_logic_tick(
                                             new_action_requests.push((*id, request, cast_time));
                                         }
                                     }
+                                    TimepointData::TimelineState { states } => {
+                                        // Find the event object bound to our gimmick.
+                                        let gimmick_id = spawn.gimmick_id;
+                                        new_timeline_states.push((gimmick_id, states.clone()));
+                                    }
                                 }
+                            }
 
+                            if let Some(current_target) = current_target
+                                && timeline.autoattack_action_id != 0
+                            {
                                 // Schedule any pending auto-attacks:
                                 let should_auto_attack = (timeline_position_seconds
                                     % (ENEMY_AUTO_ATTACK_RATE + 1))
@@ -567,6 +621,17 @@ fn server_logic_tick(
                                 request: request.clone(),
                             },
                         );
+                    }
+                }
+
+                for (gimmick_id, states) in new_timeline_states {
+                    let actor_id;
+                    {
+                        actor_id = instance.find_object_by_bind_layout_id(gimmick_id);
+                    }
+                    if let Some(actor_id) = actor_id {
+                        let mut network = network.lock();
+                        set_shared_group_timeline_state(instance, &mut network, actor_id, &states);
                     }
                 }
 

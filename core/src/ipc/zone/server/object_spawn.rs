@@ -33,8 +33,8 @@ pub struct ObjectSpawn {
     /// If set to 0, then `radius` is used.
     pub bind_layout_id: u32,
     /// Radius of the hitbox(?)
+    #[brw(pad_after = 2)] // padding for alignment, not read by the client
     pub radius: f32,
-    pub shared_group_timeline_state: u16,
     /// The rotation to create the object, in radians.
     #[br(map = read_quantized_rotation)]
     #[bw(map = write_quantized_rotation)]
@@ -42,11 +42,11 @@ pub struct ObjectSpawn {
     /// The FATE to associate with.
     pub fate_id: u16,
     /// Controls the visibility of the object.
+    #[brw(pad_after = 5)] // padding for alignment, and then an unused u32
     pub visibility: InvisibilityFlags,
-    pub args1: u8,
+    /// For EventObjs, this is the default SharedGroupTimelineState.
+    pub args1: u32,
     pub args2: u32,
-    pub args3: u32,
-    pub unk1: u32,
     /// The position to create the object at.
     pub position: Position,
 }

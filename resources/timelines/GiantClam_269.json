@@ -1,0 +1,22 @@
+{
+    "autoattack_action_id": 0,
+    "timeline_always_plays": true,
+    "timepoints": [
+        {
+            "data": {
+                "type": "timeline_state",
+                "states": [1, 3, 5]
+            },
+            "time": 12,
+            "comment": "Open mouth"
+        },
+        {
+            "data": {
+                "type": "timeline_state",
+                "states": [2, 3]
+            },
+            "time": 24,
+            "comment": "Close mouth"
+        }
+    ]
+}

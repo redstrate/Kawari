@@ -7,6 +7,8 @@ use serde::{Deserialize, Serialize};
 pub struct Timeline {
     /// Which action is used for the auto-attack. Index into the Action Excel sheet.
     pub autoattack_action_id: u32,
+    /// Whether the timeline always plays.
+    pub timeline_always_plays: bool,
     /// The timeline points.
     pub timepoints: Vec<Timepoint>,
 }
@@ -45,6 +47,9 @@ pub enum TimepointData {
         /// Index into the Action Excel sheet.
         action_id: u32,
     },
+    /// Animates timelines for the gimmick this actor is bound to, such as Giant Clams.
+    #[serde(rename = "timeline_state")]
+    TimelineState { states: Vec<u32> },
 }
 
 #[cfg(test)]
@@ -61,6 +66,7 @@ mod tests {
             timeline,
             Timeline {
                 autoattack_action_id: 872,
+                timeline_always_plays: false,
                 timepoints: vec![Timepoint {
                     time: 20,
                     data: TimepointData::Action { action_id: 872 }

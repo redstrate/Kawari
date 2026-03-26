@@ -3,7 +3,8 @@ use strum_macros::IntoStaticStr;
 
 use crate::common::{
     CharacterMode, DirectorEvent, EquipDisplayFlag, FateState, HandlerId, InvisibilityFlags,
-    ObjectId, ObjectTypeId, read_bool_from, read_packed_float, write_bool_as, write_packed_float,
+    ObjectId, ObjectTypeId, SharedGroupTimelineState, read_bool_from, read_packed_float,
+    write_bool_as, write_packed_float,
 };
 use crate::ipc::zone::online_status::OnlineStatus;
 
@@ -484,10 +485,8 @@ pub enum ActorControlCategory {
     /// Seen for giant clams.
     #[brw(magic = 409u32)]
     SetSharedGroupTimelineState {
-        unk1: u32,
-        unk2: u32,
-        unk3: u32,
-        unk4: u32,
+        state: SharedGroupTimelineState,
+        // NOTE: There is another u32 in here, but I don't believe it's read by the client. And it looks like nonsense...
     },
 
     /// Plays an animation for a SharedGroup object.

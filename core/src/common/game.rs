@@ -1179,6 +1179,41 @@ pub enum FateState {
     Failed = 0x8,
 }
 
+// TODO: not 100% certain this correponds to specific timelines indices...
+#[binrw]
+#[derive(Clone, Copy, Eq, PartialEq)]
+pub struct SharedGroupTimelineState(u32);
+
+bitflags! {
+    impl SharedGroupTimelineState: u32 {
+        const NONE = 0x0;
+        /// Plays the first timeline.
+        const TIMELINE_1 = 0x1;
+        /// Plays the second timeline.
+        const TIMELINE_2 = 0x2;
+        /// Plays the third timeline.
+        const TIMELINE_3 = 0x4;
+        /// Plays the fourth timeline.
+        const TIMELINE_4 = 0x8;
+        /// Plays the fifth timeline.
+        const TIMELINE_5 = 0x10;
+        /// Plays the sixth timeline.
+        const TIMELINE_6 = 0x20;
+    }
+}
+
+impl Default for SharedGroupTimelineState {
+    fn default() -> Self {
+        Self::NONE
+    }
+}
+
+impl std::fmt::Debug for SharedGroupTimelineState {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        bitflags::parser::to_writer(self, f)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

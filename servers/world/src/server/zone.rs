@@ -518,7 +518,7 @@ impl Zone {
                         entity_id: ObjectId(fastrand::u32(..)),
                         layout_id: object.instance_id,
                         radius: 1.0,
-                        args3: 50334724, // TODO: what is this value? it varies between nodes, and I *believe* it has to be about grouping.
+                        args1: 50334724, // TODO: what is this value? it varies between nodes, and I *believe* it has to be about grouping.
                         position: object.position,
                         ..Default::default()
                     };
