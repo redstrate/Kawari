@@ -366,9 +366,9 @@ pub enum ClientTriggerCommand {
     #[brw(magic = 3201u32)]
     BeginLoading {},
 
-    /// The client opens the Mogpendium.
+    /// The client opens the Mogpendium or interacts with the Retainer Bell.
     #[brw(magic = 9003u32)]
-    OpenMogpendium { unk1: u32, unk2: u32 },
+    OpenUnk1 { unk1: u32, unk2: u32 },
 
     /// The client tells us how far in the distance we should see actors.
     #[brw(magic = 9005u32)]

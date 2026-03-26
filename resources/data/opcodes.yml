@@ -627,6 +627,14 @@ ServerZoneIpcType:
     comment: The server responds to NewCrossworldLinkshellInfoRequest, providing some information on the newly created/joined cwls.
     opcode: 855
     size: 64
+  - name: RetainerInfo
+    comment: Sent when the client requests retainer information through the bell.
+    opcode: 646
+    size: 80
+  - name: RetainerInfoEnd
+    comment: Seen after a sequence of RetainerInfo packets.
+    opcode: 863
+    size: 24
 ClientZoneIpcType:
   - name: InitRequest
     comment: Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)

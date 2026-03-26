@@ -1076,6 +1076,43 @@ pub enum ServerZoneIpcData {
         /// The member's rank in the cross-world linkshell, and the linkshell's name.
         common: CWLSCommon,
     },
+    RetainerInfo {
+        sequence: u32,
+        unk2: u32,
+        /// Unique ID for this retainer.
+        retainer_id: u64,
+        index: u8,
+        #[brw(pad_after = 2)] // appears empty
+        /// How many of their inventory slots are filled.
+        item_count: u8,
+        /// The amount of gil in their possession.
+        gil: u32,
+        unk55: u8,
+        unk56: u8,
+        classjob_id: u8,
+        level: u8,
+        unk7: u32,
+        unk8: u32,
+        unk9: u32,
+        /// If set to zero, it shows "contract suspended".
+        unk10: u32,
+        unk11: u8,
+        /// The name of this retainer.
+        #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+        #[br(count = CHAR_NAME_MAX_LENGTH)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        #[brw(pad_after = 3)]
+        name: String,
+    },
+    RetainerInfoEnd {
+        sequence: u32,
+        unk1: u32,
+        unk2: u32,
+        unk3: u32,
+        unk4: u32,
+        unk5: u32,
+    },
 }
 
 #[cfg(test)]

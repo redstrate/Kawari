@@ -1356,6 +1356,43 @@ async fn process_packet(
                                     }
                                     connection.update_online_status().await;
                                 }
+                                ClientTriggerCommand::OpenUnk1 { .. } => {
+                                    for i in 0..10 {
+                                        let ipc = ServerZoneIpcSegment::new(
+                                            ServerZoneIpcData::RetainerInfo {
+                                                sequence: 1,
+                                                unk2: 0,
+                                                retainer_id: 1 + i as u64,
+                                                index: i,
+                                                item_count: 174,
+                                                gil: 144492,
+                                                unk55: 0,
+                                                unk56: 2,
+                                                classjob_id: 26,
+                                                level: 33,
+                                                unk7: 0,
+                                                unk8: 0,
+                                                unk9: 0,
+                                                unk10: 1,
+                                                unk11: 0,
+                                                name: "Test Retainer".to_string(),
+                                            },
+                                        );
+                                        connection.send_ipc_self(ipc).await;
+                                    }
+
+                                    let ipc = ServerZoneIpcSegment::new(
+                                        ServerZoneIpcData::RetainerInfoEnd {
+                                            sequence: 1,
+                                            unk1: 66826,
+                                            unk2: 0,
+                                            unk3: 4294967295,
+                                            unk4: 4294967295,
+                                            unk5: 65535,
+                                        },
+                                    );
+                                    connection.send_ipc_self(ipc).await;
+                                }
                                 _ => {
                                     // inform the server of our trigger, it will handle sending it to other clients
                                     connection
