@@ -28,9 +28,9 @@ impl Timeline {
         duration
     }
 
-    /// Returns the point at this time, if any.
-    pub fn point_at(&self, point: i32) -> Option<&Timepoint> {
-        self.timepoints.iter().find(|x| x.time == point)
+    /// Returns all points happening at the specified time, if any.
+    pub fn points_at(&self, point: i32) -> Vec<&Timepoint> {
+        self.timepoints.iter().filter(|x| x.time == point).collect()
     }
 }
 
@@ -53,6 +53,9 @@ pub enum TimepointData {
     /// Animates timelines for the gimmick this actor is bound to, such as Giant Clams.
     #[serde(rename = "timeline_state")]
     TimelineState { states: Vec<u32> },
+    /// Changes the invulnerability state of this NPC.
+    #[serde(rename = "invulnerability")]
+    Invulnerability { invulnerable: bool },
 }
 
 #[cfg(test)]

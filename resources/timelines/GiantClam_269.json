@@ -12,11 +12,25 @@
         },
         {
             "data": {
+                "type": "invulnerability",
+                "invulnerable": false
+            },
+            "time": 12
+        },
+        {
+            "data": {
                 "type": "timeline_state",
                 "states": [2, 3]
             },
             "time": 24,
             "comment": "Close mouth"
+        },
+        {
+            "data": {
+                "type": "invulnerability",
+                "invulnerable": true
+            },
+            "time": 24
         }
     ],
     "on_death": [

@@ -204,6 +204,7 @@ impl Instance {
                 timeline,
                 timeline_position: 0,
                 newly_hated_actor: None,
+                currently_invulnerable: false,
             },
         );
     }

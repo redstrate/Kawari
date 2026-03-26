@@ -395,6 +395,7 @@ fn server_logic_tick(
                         timeline_position,
                         timeline,
                         newly_hated_actor,
+                        currently_invulnerable,
                         ..
                     } = actor
                         && *state != NpcState::Dead
@@ -488,9 +489,7 @@ fn server_logic_tick(
                             let timeline_position_seconds = *timeline_position / 2;
                             let real_timeline_position = timeline_position_seconds as f32
                                 % (timeline.duration() as f32 + 0.5);
-                            if let Some(timepoint) =
-                                timeline.point_at(real_timeline_position as i32)
-                            {
+                            for timepoint in timeline.points_at(real_timeline_position as i32) {
                                 match &timepoint.data {
                                     TimepointData::Action { action_id, .. } => {
                                         if let Some(current_target) = current_target {
@@ -517,6 +516,9 @@ fn server_logic_tick(
                                         // Find the event object bound to our gimmick.
                                         let gimmick_id = spawn.gimmick_id;
                                         new_timeline_states.push((gimmick_id, states.clone()));
+                                    }
+                                    TimepointData::Invulnerability { invulnerable } => {
+                                        *currently_invulnerable = *invulnerable;
                                     }
                                 }
                             }

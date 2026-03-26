@@ -50,6 +50,8 @@ pub enum NetworkedActor {
         timeline_position: i64,
         /// Used for aggros outside of the server logic loop (such as regular attacks.)
         newly_hated_actor: Option<ObjectId>,
+        /// Whether this NPC is currently invulnerable to all attacks.
+        currently_invulnerable: bool,
     },
     Object {
         object: ObjectSpawn,

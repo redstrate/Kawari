@@ -139,7 +139,7 @@ pub fn execute_action(
     }
 
     // tell them the action results
-    if let Some(effects_builder) = effects_builder {
+    if let Some(mut effects_builder) = effects_builder {
         // Update our internal data model to their new HP
         {
             let mut data = data.lock();
@@ -159,6 +159,31 @@ pub fn execute_action(
                 } = actor
                 {
                     *newly_hated_actor = Some(from_actor_id);
+                }
+            }
+
+            // Handle invulnerability
+            {
+                let Some(actor) = instance.find_actor_mut(request.target.object_id) else {
+                    return;
+                };
+
+                if let NetworkedActor::Npc {
+                    currently_invulnerable,
+                    ..
+                } = actor
+                    && *currently_invulnerable
+                {
+                    effects_builder.effects = effects_builder
+                        .effects
+                        .iter()
+                        .map(|effect| match effect.kind {
+                            EffectKind::Damage { .. } => ActionEffect {
+                                kind: EffectKind::Invincible {},
+                            },
+                            _ => *effect,
+                        })
+                        .collect();
                 }
             }
 
