@@ -1165,6 +1165,27 @@ pub enum ServerZoneIpcData {
         #[brw(pad_after = 4)] // Seems to be empty/zeroes
         new_linkshell_name: String,
     },
+    CrossworldLinkshellMemberRank {
+        /// The linkshell this action is taking place on.
+        linkshell_id: u64,
+        /// The initiator's content id.
+        execute_content_id: u64,
+        /// The target's content id.
+        target_content_id: u64,
+        /// The target's home world id.
+        home_world_id: u16,
+        unk1: u8, // Always 1?
+        /// The rank assigned to the target.
+        #[brw(pad_after = 1)] // Seems to be empty/zeroes
+        permission_rank: CWLSPermissionRank,
+        /// The target's name.
+        #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+        #[br(count = CHAR_NAME_MAX_LENGTH)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        #[brw(pad_after = 3)] // Seems to be empty/zeroes
+        target_name: String,
+    },
 }
 
 #[cfg(test)]

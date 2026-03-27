@@ -1738,6 +1738,27 @@ pub fn handle_social_messages(
 
             true
         }
+        ToServer::SetLinkshellRank(
+            linkshell_id,
+            from_content_id,
+            target_content_id,
+            rank,
+            target_name,
+        ) => {
+            let mut network = network.lock();
+
+            let msg = FromServer::LinkshellRankChanged(
+                *linkshell_id,
+                *from_content_id,
+                *target_content_id,
+                *rank,
+                target_name.clone(),
+            );
+
+            network.send_to_linkshell(*linkshell_id, None, msg, DestinationNetwork::ZoneClients);
+
+            true
+        }
         _ => false,
     }
 }

@@ -300,6 +300,24 @@ impl WorldDatabase {
             .unwrap_or_default() as u32
     }
 
+    pub fn find_character_name(&mut self, for_content_id: u64) -> Option<String> {
+        use schema::character::dsl::*;
+
+        match character
+            .filter(content_id.eq(for_content_id as i64))
+            .select(name)
+            .first::<String>(&mut self.connection)
+        {
+            Ok(my_name) => Some(my_name),
+            Err(err) => {
+                tracing::warn!(
+                    "Unable to find {for_content_id}'s name in the database due to the following error: {err:#?}!"
+                );
+                None
+            }
+        }
+    }
+
     pub fn get_character_list(
         &mut self,
         for_service_account_id: u64,
@@ -1245,7 +1263,20 @@ impl WorldDatabase {
         }
     }
 
-    pub fn remove_member_from_linkshell(&mut self, for_content_id: i64, for_linkshell_id: u64) {
+    pub fn remove_member_from_linkshell(
+        &mut self,
+        for_content_id: i64,
+        for_linkshell_id: u64,
+    ) -> Option<u64> {
+        if !self.is_in_linkshell(for_content_id as u64, for_linkshell_id) {
+            return None;
+        }
+        let was_master = self.has_linkshell_permissions(
+            for_content_id as u64,
+            for_linkshell_id,
+            CWLSPermissionRank::Master,
+        );
+
         let for_linkshell_id = for_linkshell_id as i64;
 
         use schema::linkshell_members::dsl::*;
@@ -1268,8 +1299,28 @@ impl WorldDatabase {
                     "Linkshell {for_linkshell_id} has no members left! Auto-disbanding now."
                 );
                 self.remove_linkshell(for_linkshell_id as u64);
+            } else if was_master {
+                // Else, if the leaving member was the owner, promote the oldest member, so as not to leave the LS orphaned.
+                if let Ok(oldest_member) = linkshell_members
+                    .select(content_id)
+                    .filter(linkshell_id.eq(for_linkshell_id))
+                    .order(invite_time.asc())
+                    .first::<i64>(&mut self.connection)
+                    && let Ok(_) = diesel::update(linkshell_members)
+                        .filter(content_id.eq(oldest_member))
+                        .filter(linkshell_id.eq(for_linkshell_id))
+                        .set(rank.eq(CWLSPermissionRank::Master as i32))
+                        .execute(&mut self.connection)
+                {
+                    tracing::info!(
+                        "Due to leaving, the previous Master {for_content_id} of linkshell {for_linkshell_id} has designated {oldest_member} as the new Master!"
+                    );
+                    return Some(oldest_member as u64);
+                }
             }
         }
+
+        None
     }
 
     /// Returns a list of all members in the given linkshell.
@@ -1382,6 +1433,7 @@ impl WorldDatabase {
         false
     }
 
+    /// Returns availability information for a desired linkshell name.
     pub fn linkshell_name_available(&mut self, desired_name: String) -> CWLSNameAvailability {
         // Linkshell names must be: between 3 and 20 characters in length, may contain punctuation, not contain double spaces/underscores, not contain a space at the start or end of the name, and the name may not consist solely of punctuation.
         // TODO: Should we bother enforcing the other rules if a player somehow bypassed the client-side limitations?
@@ -1398,6 +1450,92 @@ impl WorldDatabase {
             }
         }
         CWLSNameAvailability::NotAvailable
+    }
+
+    /// Returns this player's linkshell membership status.
+    pub fn is_in_linkshell(&mut self, for_content_id: u64, for_linkshell_id: u64) -> bool {
+        use schema::linkshell_members::dsl::*;
+
+        linkshell_members
+            .select(content_id)
+            .filter(content_id.eq(for_content_id as i64))
+            .filter(linkshell_id.eq(for_linkshell_id as i64))
+            .first::<i64>(&mut self.connection)
+            .is_ok()
+    }
+
+    /// Returns true if this player's rank is Leader or Master.
+    pub fn has_linkshell_permissions(
+        &mut self,
+        for_content_id: u64,
+        for_linkshell_id: u64,
+        required_rank: CWLSPermissionRank,
+    ) -> bool {
+        use schema::linkshell_members::dsl::*;
+
+        if self.is_in_linkshell(for_content_id, for_linkshell_id)
+            && let Ok(my_rank) = linkshell_members
+                .select(rank)
+                .filter(content_id.eq(for_content_id as i64))
+                .filter(linkshell_id.eq(for_linkshell_id as i64))
+                .first::<i32>(&mut self.connection)
+            && let Some(my_rank) = CWLSPermissionRank::from_repr(my_rank as u8)
+        {
+            // Master has Leader's permissions and more, so >= is fine.
+            return my_rank >= required_rank;
+        }
+
+        false
+    }
+
+    /// Sets this member's rank in the LS.
+    pub fn set_linkshell_rank(
+        &mut self,
+        from_content_id: u64,
+        for_content_id: u64,
+        for_linkshell_id: u64,
+        new_rank: CWLSPermissionRank,
+    ) {
+        use schema::linkshell_members::dsl::*;
+
+        if self.is_in_linkshell(from_content_id, for_linkshell_id)
+            && self.is_in_linkshell(for_content_id, for_linkshell_id)
+        {
+            match diesel::update(linkshell_members)
+                .filter(content_id.eq(for_content_id as i64))
+                .filter(linkshell_id.eq(for_linkshell_id as i64))
+                .set(rank.eq(new_rank as i32))
+                .execute(&mut self.connection)
+            {
+                Ok(_) => {
+                    // If the Master is designating a new Master, demote the old Master to Member
+                    if new_rank == CWLSPermissionRank::Master {
+                        match diesel::update(linkshell_members)
+                            .filter(content_id.eq(from_content_id as i64))
+                            .filter(linkshell_id.eq(for_linkshell_id as i64))
+                            .set(rank.eq(CWLSPermissionRank::Member as i32))
+                            .execute(&mut self.connection)
+                        {
+                            Ok(_) => {
+                                tracing::info!(
+                                    "The previous Master {from_content_id} of linkshell {for_linkshell_id} has designated {for_content_id} as the new Master!"
+                                );
+                            }
+                            Err(err) => tracing::warn!(
+                                "The previous Master {from_content_id} could not be demoted due to the following error: {err:#?}!"
+                            ),
+                        }
+                    } else {
+                        tracing::info!(
+                            "{for_content_id}'s rank in linkshell {for_linkshell_id} is now {new_rank:#?}!"
+                        );
+                    }
+                }
+                Err(err) => tracing::warn!(
+                    "Unable to set rank for member {for_content_id} in linkshell {for_linkshell_id} because of the following error: {err:#?}!"
+                ),
+            }
+        }
     }
 
     pub fn create_linkshell(

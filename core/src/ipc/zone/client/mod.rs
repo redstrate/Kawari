@@ -23,9 +23,9 @@ mod queue_duties;
 pub use queue_duties::{ContentRegistrationFlags, QueueDuties};
 
 use crate::ipc::zone::{
-    InviteReply, InviteType, OnlineStatusMask, SearchInfo, SearchUIClassJobMask,
-    SearchUIGrandCompanies, SocialListUILanguages, StrategyBoard, StrategyBoardUpdate,
-    WaymarkPreset,
+    CWLSPermissionRank, InviteReply, InviteType, OnlineStatusMask, SearchInfo,
+    SearchUIClassJobMask, SearchUIGrandCompanies, SocialListUILanguages, StrategyBoard,
+    StrategyBoardUpdate, WaymarkPreset,
 };
 
 use crate::ipc::zone::black_list::RequestBlacklist;
@@ -498,6 +498,16 @@ pub enum ClientZoneIpcData {
         #[br(map = read_string)]
         #[bw(map = write_string)]
         name: String,
+    },
+    SetCWLSMemberRank {
+        /// The id of the linkshell to promote a member in.
+        linkshell_id: u64,
+        /// The content id of the member to promote.
+        content_id: u64,
+        /// The rank to assign to this member.
+        #[brw(pad_after = 3)] // Seems to be empty/zeroes
+        rank: CWLSPermissionRank,
+        unk: [u8; 4], // Contains unknown data, possibly garbage. Doesn't seem to be a timestamp, actor id, or anything recognisable at this time, and the server doesn't echo it back.
     },
 }
 

@@ -791,7 +791,6 @@ impl ZoneConnection {
                 }
             }
 
-            tracing::error!("sending these cwlses to client {:#?}", cwlses);
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::CrossworldLinkshells {
                 linkshells: cwlses,
             });
@@ -988,9 +987,10 @@ impl ZoneConnection {
     ) {
         // If we're the one leaving, then remove ourself from the LS.
         if from_actor_id == self.player_data.character.actor_id {
+            let possible_successor;
             {
                 let mut db = self.database.lock();
-                db.remove_member_from_linkshell(
+                possible_successor = db.remove_member_from_linkshell(
                     self.player_data.character.content_id,
                     linkshell_id,
                 );
@@ -1017,6 +1017,28 @@ impl ZoneConnection {
                     false,
                 ))
                 .await;
+            // If we were the Master of this linkshell, we need to tell whoever is online that a new Master has been selected.
+            if let Some(possible_successor) = possible_successor {
+                let target_name;
+                {
+                    let mut db = self.database.lock();
+
+                    let Some(found_name) = db.find_character_name(possible_successor) else {
+                        return;
+                    };
+
+                    target_name = found_name;
+                }
+                self.handle
+                    .send(ToServer::SetLinkshellRank(
+                        linkshell_id,
+                        self.player_data.character.content_id as u64,
+                        possible_successor,
+                        CWLSPermissionRank::Master,
+                        target_name.clone(),
+                    ))
+                    .await;
+            }
         }
 
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::CrossworldLinkshellMemberLeft {
@@ -1107,5 +1129,102 @@ impl ZoneConnection {
 
             self.send_ipc_self(ipc).await;
         }
+    }
+
+    pub async fn set_linkshell_rank(
+        &mut self,
+        linkshell_id: u64,
+        content_id: u64,
+        new_rank: CWLSPermissionRank,
+    ) {
+        let our_content_id = self.player_data.character.content_id as u64;
+
+        // First ensure our client has the proper permissions to do this. And, if they do, set whoever's rank and inform everyone.
+        {
+            let mut db = self.database.lock();
+
+            let has_leader_perms = db.has_linkshell_permissions(
+                our_content_id,
+                linkshell_id,
+                CWLSPermissionRank::Leader,
+            );
+            let has_master_perms = db.has_linkshell_permissions(
+                our_content_id,
+                linkshell_id,
+                CWLSPermissionRank::Leader,
+            );
+
+            // Leaders can resign, so they're allowed to change their own rank. A Master can only resign by leaving the linkshell, so that is handled elsewhere.
+            if our_content_id == content_id && has_leader_perms && !has_master_perms {
+                db.set_linkshell_rank(
+                    our_content_id,
+                    our_content_id,
+                    linkshell_id,
+                    CWLSPermissionRank::Member, // Don't allow privilege escalation if the client is doing naughty things. The only permitted rank when targeting oneself is Member, and that happens when a Leader is resigning.
+                );
+            }
+            // Otherwise, if this player is targeting another, they need Master permissions to do so.
+            else if our_content_id != content_id && has_master_perms {
+                db.set_linkshell_rank(our_content_id, content_id, linkshell_id, new_rank);
+            } else {
+                tracing::warn!(
+                    "Client {content_id} attempted to set the rank for another member in linkshell {linkshell_id}, but doesn't have permission! Rejecting request!"
+                );
+                return;
+            }
+        }
+
+        let target_name;
+        {
+            let mut db = self.database.lock();
+
+            let Some(found_name) = db.find_character_name(content_id) else {
+                return;
+            };
+
+            target_name = found_name;
+        }
+
+        self.handle
+            .send(ToServer::SetLinkshellRank(
+                linkshell_id,
+                our_content_id,
+                content_id,
+                new_rank,
+                target_name.clone(),
+            ))
+            .await;
+    }
+
+    pub async fn linkshell_rank_set(
+        &mut self,
+        linkshell_id: u64,
+        execute_content_id: u64,
+        target_content_id: u64,
+        permission_rank: CWLSPermissionRank,
+        target_name: String,
+    ) {
+        if target_content_id == (self.player_data.character.content_id as u64)
+            && let Some(cwls_memberships) = &mut self.cwls_memberships
+        {
+            for cwls in cwls_memberships {
+                if cwls.ids.linkshell_id == linkshell_id {
+                    cwls.common.rank = permission_rank;
+                    break;
+                }
+            }
+        }
+
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::CrossworldLinkshellMemberRank {
+            linkshell_id,
+            execute_content_id,
+            target_content_id,
+            home_world_id: self.config.world_id,
+            unk1: 1,
+            permission_rank,
+            target_name: target_name.clone(),
+        });
+
+        self.send_ipc_self(ipc).await;
     }
 }
