@@ -105,10 +105,10 @@ pub fn send_effects_list(
         classjob_id: spawn.common.class_job,
         level: spawn.common.level,
         unk1: spawn.common.level,
-        curr_hp: spawn.common.hp,
-        max_hp: spawn.common.max_hp,
-        curr_mp: spawn.common.mp,
-        max_mp: spawn.common.max_mp,
+        curr_hp: spawn.common.health_points,
+        max_hp: spawn.common.max_health_points,
+        curr_mp: spawn.common.resource_points,
+        max_mp: spawn.common.max_resource_points,
         ..Default::default()
     }));
 

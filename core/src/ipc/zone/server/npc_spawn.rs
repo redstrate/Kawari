@@ -1,8 +1,8 @@
 use binrw::binrw;
 
-use crate::ipc::zone::online_status::OnlineStatus;
+use crate::common::{read_bool_from, write_bool_as};
 
-use super::{CommonSpawn, GameMasterRank};
+use super::CommonSpawn;
 
 #[binrw]
 #[brw(little)]
@@ -10,15 +10,15 @@ use super::{CommonSpawn, GameMasterRank};
 pub struct NpcSpawn {
     /// Refers to a Game Object ID in the zone, usually an LGB that this enemy is "attached" to.
     pub gimmick_id: u32,
-    pub u1b: u8,
-    pub u2b: u8,
-    pub gm_rank: GameMasterRank, // FIXME: lol really? what does an NPC need GM rank privileges for?
-    pub u3b: u8,
+    /// At least filled for Quests, where this is the originating Event NPC layout ID if it turned into a Battle NPC.
+    pub enpc_id: u32,
 
     // TODO: turn this into an enum at some point!
-    pub aggression_mode: u8,
-    pub online_status: OnlineStatus,
-    pub u5a: u8,
+    pub character_data_flags: u8,
+    pub character_data_icon: u8,
+    #[br(map = read_bool_from::<u8>)]
+    #[bw(map = write_bool_as::<u8>)]
+    pub unk_a: bool,
     /// How many other BNpcs can be linked in this family.
     pub max_links: u8,
     /// If not zero, specifies which family this BNpc is linked to.
@@ -26,10 +26,20 @@ pub struct NpcSpawn {
     /// How far the link family can be apart.
     pub link_range: u8,
     pub u5d: u8,
-    pub u5e: u8,
+    #[br(map = read_bool_from::<u8>)]
+    #[bw(map = write_bool_as::<u8>)]
+    pub unk_f: bool,
 
+    /// Other spawn data such as appearance and equipped items.
     pub common: CommonSpawn,
-    pub padding: [u8; 14],
+    // The following fields modify stuff in ModelContainer.
+    pub unk288: u8,
+    pub unk289: u8,
+    pub unk28a: u8,
+    pub unk28b: u8,
+    pub unk28c: u8,
+    #[brw(pad_after = 2)] // i think is empty, not read by the client
+    pub unk28d: u8,
 }
 
 #[cfg(test)]
@@ -55,17 +65,17 @@ mod tests {
         let mut buffer = Cursor::new(&buffer);
 
         let npc_spawn = NpcSpawn::read_le(&mut buffer).unwrap();
-        assert_eq!(npc_spawn.common.max_hp, 973);
-        assert_eq!(npc_spawn.common.hp, 973);
-        assert_eq!(npc_spawn.common.mp, 10000);
-        assert_eq!(npc_spawn.common.max_mp, 10000);
+        assert_eq!(npc_spawn.common.max_health_points, 973);
+        assert_eq!(npc_spawn.common.health_points, 973);
+        assert_eq!(npc_spawn.common.resource_points, 10000);
+        assert_eq!(npc_spawn.common.max_resource_points, 10000);
         //assert_eq!(npc_spawn.common.display_flags, DisplayFlag::NONE);
         assert_eq!(npc_spawn.common.position.x, 4.883462);
         assert_eq!(npc_spawn.common.position.y, 40.04264);
         assert_eq!(npc_spawn.common.position.z, 11.821917);
         assert_eq!(npc_spawn.common.model_chara, 411);
-        assert_eq!(npc_spawn.common.npc_base, 13498);
-        assert_eq!(npc_spawn.common.npc_name, 10261);
+        assert_eq!(npc_spawn.common.base_id, 13498);
+        assert_eq!(npc_spawn.common.name_id, 10261);
         assert_eq!(npc_spawn.common.spawn_index, 12);
         assert_eq!(npc_spawn.common.mode, CharacterMode::Normal);
         assert_eq!(npc_spawn.common.mode_arg, 0);
@@ -74,11 +84,11 @@ mod tests {
             ObjectKind::BattleNpc(BattleNpcSubKind::Pet)
         );
         assert_eq!(npc_spawn.common.battalion, 0);
-        assert_eq!(npc_spawn.aggression_mode, 1); // passive
-        assert!(!npc_spawn.common.tether_id.is_valid());
+        assert_eq!(npc_spawn.character_data_flags, 1); // passive
+        assert!(!npc_spawn.common.tether_target_id.is_valid());
         assert_eq!(npc_spawn.common.handler_id, HandlerId(0));
         assert_eq!(npc_spawn.common.layout_id, 0);
-        assert_eq!(npc_spawn.online_status, OnlineStatus::Offline);
+        assert_eq!(npc_spawn.character_data_icon, 0);
         assert_eq!(npc_spawn.common.name, "カーバンクル");
     }
 
@@ -91,17 +101,17 @@ mod tests {
         let mut buffer = Cursor::new(&buffer);
 
         let npc_spawn = NpcSpawn::read_le(&mut buffer).unwrap();
-        assert_eq!(npc_spawn.common.max_hp, 91);
-        assert_eq!(npc_spawn.common.hp, 91);
-        assert_eq!(npc_spawn.common.mp, 0);
-        assert_eq!(npc_spawn.common.max_mp, 0);
+        assert_eq!(npc_spawn.common.max_health_points, 91);
+        assert_eq!(npc_spawn.common.health_points, 91);
+        assert_eq!(npc_spawn.common.resource_points, 0);
+        assert_eq!(npc_spawn.common.max_resource_points, 0);
         assert_eq!(npc_spawn.common.display_flags, DisplayFlag::NONE);
         assert_eq!(npc_spawn.common.position.x, 61.169727);
         assert_eq!(npc_spawn.common.position.y, 64.56608);
         assert_eq!(npc_spawn.common.position.z, -168.08115);
         assert_eq!(npc_spawn.common.model_chara, 297);
-        assert_eq!(npc_spawn.common.npc_base, 118);
-        assert_eq!(npc_spawn.common.npc_name, 405);
+        assert_eq!(npc_spawn.common.base_id, 118);
+        assert_eq!(npc_spawn.common.name_id, 405);
         assert_eq!(npc_spawn.common.spawn_index, 18);
         assert_eq!(npc_spawn.common.mode, CharacterMode::Normal);
         assert_eq!(npc_spawn.common.mode_arg, 0);
@@ -112,10 +122,10 @@ mod tests {
         assert_eq!(npc_spawn.common.battalion, 4);
         assert!(!npc_spawn.common.owner_id.is_valid());
         assert_eq!(npc_spawn.common.handler_id, HandlerId(0));
-        assert!(!npc_spawn.common.tether_id.is_valid());
+        assert!(!npc_spawn.common.tether_target_id.is_valid());
         assert_eq!(npc_spawn.common.layout_id, 3929856);
-        assert_eq!(npc_spawn.aggression_mode, 1); // passive
-        assert_eq!(npc_spawn.online_status, OnlineStatus::Offline);
+        assert_eq!(npc_spawn.character_data_flags, 1); // passive
+        assert_eq!(npc_spawn.character_data_icon, 0);
         assert_eq!(npc_spawn.common.name, "タイニー・マンドラゴ");
     }
 }

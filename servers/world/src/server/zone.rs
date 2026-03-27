@@ -570,15 +570,15 @@ impl Zone {
 
                     let spawn = NpcSpawn {
                         gimmick_id,
-                        aggression_mode,
+                        character_data_flags: aggression_mode,
                         max_links,
                         link_family,
                         link_range,
                         common: CommonSpawn {
-                            npc_base: base_id,
-                            npc_name: name_id,
-                            max_hp: hp,
-                            hp,
+                            base_id,
+                            name_id,
+                            max_health_points: hp,
+                            health_points: hp,
                             model_chara,
                             object_kind: ObjectKind::BattleNpc(BattleNpcSubKind::Enemy),
                             battalion,

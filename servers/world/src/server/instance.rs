@@ -180,7 +180,7 @@ impl Instance {
                     .file_name()
                     .to_str()
                     .unwrap_or_default()
-                    .ends_with(&format!("_{}.json", spawn.common.npc_base))
+                    .ends_with(&format!("_{}.json", spawn.common.base_id))
                 {
                     continue;
                 }

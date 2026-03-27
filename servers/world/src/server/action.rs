@@ -194,8 +194,9 @@ pub fn execute_action(
                             return;
                         };
                         let common_spawn = actor.get_common_spawn_mut();
-                        if common_spawn.npc_name != STRIKING_DUMMY_NAME_ID {
-                            common_spawn.hp = common_spawn.hp.saturating_sub(*amount as u32);
+                        if common_spawn.name_id != STRIKING_DUMMY_NAME_ID {
+                            common_spawn.health_points =
+                                common_spawn.health_points.saturating_sub(*amount as u32);
                         }
                     }
                     EffectKind::InterruptAction {} => {
@@ -303,9 +304,9 @@ pub fn execute_action(
                 unk1: 1,
                 unk2: 776386,
                 target_id: request.target.object_id,
-                current_hp: common_spawn.hp,
-                max_hp: common_spawn.max_hp,
-                current_mp: common_spawn.mp,
+                current_hp: common_spawn.health_points,
+                max_hp: common_spawn.max_health_points,
+                current_mp: common_spawn.resource_points,
                 unk3: 0,
                 class_id: common_spawn.class_job,
                 shield: 0,
@@ -412,7 +413,8 @@ pub fn execute_enemy_action(
 
             for effect in &effects_builder.effects {
                 if let EffectKind::Damage { amount, .. } = effect.kind {
-                    common_spawn.hp = common_spawn.hp.saturating_sub(amount as u32);
+                    common_spawn.health_points =
+                        common_spawn.health_points.saturating_sub(amount as u32);
                 }
             }
         }
@@ -507,9 +509,9 @@ pub fn execute_enemy_action(
                 unk1: 1,
                 unk2: 776386,
                 target_id: request.target.object_id,
-                current_hp: common_spawn.hp,
-                max_hp: common_spawn.max_hp,
-                current_mp: common_spawn.mp,
+                current_hp: common_spawn.health_points,
+                max_hp: common_spawn.max_health_points,
+                current_mp: common_spawn.resource_points,
                 unk3: 0,
                 class_id: common_spawn.class_job,
                 shield: 0,
@@ -802,8 +804,8 @@ pub fn update_actor_hp_mp(
 
         {
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateHpMpTp {
-                hp: common_spawn.hp,
-                mp: common_spawn.max_mp,
+                hp: common_spawn.health_points,
+                mp: common_spawn.resource_points,
                 unk: 0,
             });
             let mut network = network.lock();
@@ -815,7 +817,7 @@ pub fn update_actor_hp_mp(
             );
         }
 
-        if common_spawn.hp == 0 {
+        if common_spawn.health_points == 0 {
             send_kill_actor = true;
         }
     }

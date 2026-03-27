@@ -1214,6 +1214,16 @@ impl std::fmt::Debug for SharedGroupTimelineState {
     }
 }
 
+/// For Free Company crests.
+#[binrw]
+#[derive(Debug, Clone, Copy, Default)]
+pub struct CrestData {
+    pub charge: u8,
+    pub unk1: [u8; 3],
+    pub ordinary_tincturies: u8,
+    pub unk2: [u8; 3],
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

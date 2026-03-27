@@ -8,29 +8,33 @@ use super::{CommonSpawn, GameMasterRank};
 #[brw(little)]
 #[derive(Debug, Clone, Default)]
 pub struct PlayerSpawn {
+    /// The account ID of the player.
     pub account_id: u64,
+    /// The content ID of the player.
     pub content_id: u64,
 
     /// Index into the Title Excel sheet.
     pub title_id: u16,
     pub timeline_base_override: u16,
+    /// The World this player is currently spawned in.
     pub current_world_id: u16,
+    /// The World this player originates from.
     pub home_world_id: u16,
 
+    /// What GM rank this player has.
     pub gm_rank: GameMasterRank,
     pub u3c: u8,
     pub u4: u8,
+    /// The current online status of this player.
     pub online_status: OnlineStatus,
 
     /// The pose this character is in.
     pub pose: u8,
-    pub u5a: u8,
+    pub u5a: u16,
     pub u5b: u8,
-    pub u5c: u8,
 
+    /// Other spawn data such as appearance and equipped items.
     pub common: CommonSpawn,
-
-    pub padding: [u8; 6],
 }
 
 #[cfg(test)]
@@ -57,16 +61,15 @@ mod tests {
         let player_spawn = PlayerSpawn::read_le(&mut buffer).unwrap();
         assert_eq!(player_spawn.current_world_id, 0x4F);
         assert_eq!(player_spawn.home_world_id, 0x4F);
-        assert_eq!(player_spawn.common.hp, 159);
-        assert_eq!(player_spawn.common.max_hp, 159);
-        assert_eq!(player_spawn.common.mp, 10000);
-        assert_eq!(player_spawn.common.max_mp, 10000);
+        assert_eq!(player_spawn.common.health_points, 159);
+        assert_eq!(player_spawn.common.max_health_points, 159);
+        assert_eq!(player_spawn.common.resource_points, 10000);
+        assert_eq!(player_spawn.common.max_resource_points, 10000);
         assert_eq!(player_spawn.common.mode, CharacterMode::Normal);
         assert_eq!(player_spawn.common.mode_arg, 0);
         assert_eq!(player_spawn.common.spawn_index, 0);
         assert_eq!(player_spawn.common.level, 1);
         assert_eq!(player_spawn.common.class_job, 1); // adventurer
-        assert_eq!(player_spawn.common.scale, 36);
         assert_eq!(player_spawn.common.position.x, 40.360653);
         assert_eq!(player_spawn.common.position.y, 4.0);
         assert_eq!(player_spawn.common.position.z, -152.85175);

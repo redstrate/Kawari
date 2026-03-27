@@ -2,9 +2,9 @@ use binrw::binrw;
 use strum_macros::{Display, EnumIter, FromRepr};
 
 use crate::common::{
-    CHAR_NAME_MAX_LENGTH, CharacterMode, CustomizeData, EquipDisplayFlag, HandlerId, ObjectId,
-    ObjectTypeId, Position, read_quantized_rotation, read_string, write_quantized_rotation,
-    write_string,
+    CHAR_NAME_MAX_LENGTH, CharacterMode, CrestData, CustomizeData, EquipDisplayFlag, HandlerId,
+    ObjectId, ObjectTypeId, Position, read_quantized_rotation, read_string,
+    write_quantized_rotation, write_string,
 };
 use bitflags::bitflags;
 
@@ -190,39 +190,43 @@ impl Default for DisplayFlag {
 pub struct CommonSpawn {
     /// Initial target for this character.
     pub target_id: ObjectTypeId,
-    /// FC Crest data.
-    pub fc_data: u64,
+    /// Free Company Crest data.
+    pub crest_data: CrestData,
     /// Model ID for their main weapon.
     pub main_weapon_model: u64,
     /// Model ID for their secondary weapon.
     pub sec_weapon_model: u64,
     /// Model ID for their craft weapon.
     pub craft_tool_model: u64,
-
-    pub u14: u64,
+    /// Unknown purpose, but seen filled with enemy data that a Player has aggro'd. Also seen for Quests that spawn an enemy the player must fight (filled on the enemy's CommonSpawn.)
+    pub combat_tagger_id: ObjectTypeId,
     /// See BNpcBase/ENpcBase Excel sheet.
-    pub npc_base: u32,
+    pub base_id: u32,
     /// See BNpcName/ENpcResident Excel sheet.
-    pub npc_name: u32,
+    pub name_id: u32,
     /// Refers to the original game object ID associated with this character.
     pub layout_id: u32,
+    /// Unknown purpose.
     pub companion_owner_id: u32,
     /// Which director spawned and is managing this actor, if any.
     pub handler_id: HandlerId,
+    /// Unknown purpose.
     pub owner_id: ObjectId,
-    pub tether_id: ObjectId,
+    /// Unknown purpose.
+    pub tether_target_id: ObjectId,
     /// Their maximum HP.
-    pub max_hp: u32,
+    pub max_health_points: u32,
     /// Their current HP.
-    pub hp: u32,
+    pub health_points: u32,
     /// Initial display flags for this character.
     pub display_flags: DisplayFlag,
     /// Index into the FATE sheet.
     pub fate_id: u16,
-    /// Their current MP.
-    pub mp: u16,
-    /// Their maximum MP.
-    pub max_mp: u16,
+    /// Their current MP/CP etc.
+    pub resource_points: u16,
+    /// Their maximum MP/CP etc.
+    pub max_resource_points: u16,
+    /// Unknown purpose.
     pub unk: u16,
     /// See ModelChara Excel sheet.
     pub model_chara: u16,
@@ -230,15 +234,17 @@ pub struct CommonSpawn {
     #[br(map = read_quantized_rotation)]
     #[bw(map = write_quantized_rotation)]
     pub rotation: f32,
+    /// Index into the Mount Excel sheet.
     pub current_mount: u16,
-    pub active_minion: u16, // assumed
-    pub u23: u8,            // assumed
-    pub u24: u8,            // assumed
-    pub u25: u8,            // assumed
-    pub u26: u8,            // assumed
-    pub u27: u8,            // assumed
-    pub u28: u8,            // assumed
-    /// Unique for each actor, and is used to eventually free them.
+    /// Index into the Companion Excel sheet.
+    pub active_minion: u16,
+    /// Unknown purpose.
+    pub follow_mount_id: u16,
+    /// Unknown purpose.
+    pub ornament_id: u16,
+    /// Unknown purpose.
+    pub tether_id: u16,
+    /// Unique for each actor, and is used to eventually free them from the allocator.
     pub spawn_index: u8,
     /// What mode this actor should initially be in.
     pub mode: CharacterMode,
@@ -248,29 +254,53 @@ pub struct CommonSpawn {
     pub object_kind: ObjectKind,
     /// The character's voice.
     pub voice: u8,
-    pub unk27: u8,
+    /// For the Free Company crest.
+    pub crest_bitfield: u8,
     /// See Battalion Excel sheet.
     pub battalion: u8,
     /// The level of this character.
     pub level: u8,
     /// See ClassJob Excel sheet.
     pub class_job: u8,
-    pub unk28: u8,
-    pub unk29: u8,
+    /// Unknown purpose.
+    pub event_state: u8,
+    /// Unknown purpose.
+    pub unk79: u8,
+    /// Unknown purpose.
+    pub combat_tag_type: u8,
+    /// Unknown purpose.
     pub mount_head: u8,
+    /// Unknown purpose.
     pub mount_body: u8,
+    /// Unknown purpose.
     pub mount_feet: u8,
+    /// Unknown purpose.
     pub mount_color: u8,
-    pub scale: u8,
-    pub element_data: [u8; 6],
-    pub padding2: [u8; 3],
+    /// Unknown purpose.
+    pub status_loop_vfx_id: u8,
+    /// Unknown purpose.
+    pub foray_urank: u8,
+    /// Unknown purpose.
+    pub foray_element: u8,
+    /// Unknown purpose.
+    pub model_scale_id: u8,
+    /// Unknown purpose.
+    pub model_state: u8,
+    /// Unknown purpose.
+    pub model_attribute_flags: u8,
+    /// Unknown purpose.
+    #[brw(pad_after = 2)] // probably empty, not read by the client
+    pub animation_state: u8,
     /// Their status effects.
     pub status_effects: [StatusEffect; 30],
     /// Their initial position.
     pub position: Position,
     /// Equipment model IDs if humanoid.
     pub models: [u32; 10],
-    pub unknown6_58: [u8; 14],
+    /// Unknown purpose.
+    pub model_stain_ids: [u8; 10],
+    /// Unknown purpose.
+    pub glasses_ids: [u16; 2],
     /// Their name, for non-player characters this is the usually the original Japanese name.
     #[br(count = CHAR_NAME_MAX_LENGTH)]
     #[bw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
@@ -282,6 +312,7 @@ pub struct CommonSpawn {
     /// Their short Free Company tag.
     #[br(count = 6)]
     #[bw(pad_size_to = 6)]
+    #[brw(pad_after = 6)] // i think is empty?
     #[br(map = read_string)]
     #[bw(map = write_string)]
     pub fc_tag: String,

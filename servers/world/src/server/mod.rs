@@ -429,7 +429,7 @@ fn server_logic_tick(
                         // 1 means passive
                         if current_target.is_none()
                             && *state == NpcState::Wander
-                            && spawn.aggression_mode != 1
+                            && spawn.character_data_flags != 1
                         {
                             // find a player if in range
                             for (target_id, position) in &players {
@@ -980,17 +980,24 @@ fn server_logic_tick(
             for (id, actor) in &mut instance.actors {
                 if let NetworkedActor::Player { spawn, .. } = actor {
                     let mut updated = false;
-                    if spawn.common.hp != spawn.common.max_hp {
-                        let amount = (spawn.common.max_hp as f32 * 0.10).round() as u32;
-                        spawn.common.hp =
-                            u32::clamp(spawn.common.hp + amount, 0, spawn.common.max_hp);
+                    if spawn.common.health_points != spawn.common.max_health_points {
+                        let amount = (spawn.common.max_health_points as f32 * 0.10).round() as u32;
+                        spawn.common.health_points = u32::clamp(
+                            spawn.common.health_points + amount,
+                            0,
+                            spawn.common.max_health_points,
+                        );
                         updated = true;
                     }
 
-                    if spawn.common.mp != spawn.common.max_mp {
-                        let amount = (spawn.common.max_mp as f32 * 0.10).round() as u16;
-                        spawn.common.mp =
-                            u16::clamp(spawn.common.mp + amount, 0, spawn.common.max_mp);
+                    if spawn.common.resource_points != spawn.common.max_resource_points {
+                        let amount =
+                            (spawn.common.max_resource_points as f32 * 0.10).round() as u16;
+                        spawn.common.resource_points = u16::clamp(
+                            spawn.common.resource_points + amount,
+                            0,
+                            spawn.common.max_resource_points,
+                        );
                         updated = true;
                     }
 
@@ -2148,14 +2155,14 @@ pub async fn server_main_loop(
                         }
 
                         npc_spawn = NpcSpawn {
-                            aggression_mode: 1,
+                            character_data_flags: 1,
                             common: CommonSpawn {
-                                hp: 91,
-                                max_hp: 91,
-                                mp: 100,
-                                max_mp: 100,
-                                npc_base: id,
-                                npc_name: 405,
+                                health_points: 91,
+                                max_health_points: 91,
+                                resource_points: 100,
+                                max_resource_points: 100,
+                                base_id: id,
+                                name_id: 405,
                                 object_kind: ObjectKind::BattleNpc(BattleNpcSubKind::Enemy),
                                 level: 1,
                                 battalion: 4,
@@ -2188,7 +2195,7 @@ pub async fn server_main_loop(
                         };
 
                         npc_spawn = NpcSpawn {
-                            aggression_mode: 1,
+                            character_data_flags: 1,
                             common: spawn.common.clone(),
                             ..Default::default()
                         };
@@ -2473,7 +2480,7 @@ pub async fn server_main_loop(
                         continue;
                     };
 
-                    actor.get_common_spawn_mut().hp = hp;
+                    actor.get_common_spawn_mut().health_points = hp;
 
                     update_actor_hp_mp(network.clone(), instance, from_actor_id);
                 }
@@ -2487,7 +2494,7 @@ pub async fn server_main_loop(
                         continue;
                     };
 
-                    actor.get_common_spawn_mut().mp = mp;
+                    actor.get_common_spawn_mut().resource_points = mp;
 
                     update_actor_hp_mp(network.clone(), instance, from_actor_id);
                 }
@@ -2504,8 +2511,8 @@ pub async fn server_main_loop(
                         };
 
                         actor.get_common_spawn_mut().level = level;
-                        actor.get_common_spawn_mut().max_hp = new_parameters.hp;
-                        actor.get_common_spawn_mut().max_mp = new_parameters.mp as u16;
+                        actor.get_common_spawn_mut().max_health_points = new_parameters.hp;
+                        actor.get_common_spawn_mut().max_resource_points = new_parameters.mp as u16;
                         actor.get_common_spawn_mut().class_job = class_job;
 
                         if let NetworkedActor::Player { parameters, .. } = actor {
