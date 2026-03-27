@@ -489,6 +489,16 @@ pub enum ClientZoneIpcData {
         /// The id of the linkshell to leave.
         linkshell_id: u64,
     },
+    RenameCrossworldLinkshell {
+        /// The id of the linkshell to rename.
+        linkshell_id: u64,
+        /// The desired name.
+        #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+        #[br(count = CHAR_NAME_MAX_LENGTH)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        name: String,
+    },
 }
 
 #[cfg(test)]

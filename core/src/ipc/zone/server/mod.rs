@@ -1132,15 +1132,38 @@ pub enum ServerZoneIpcData {
         content_id_repeated: u64,
         /// Their home world id.
         home_world_id: u16,
-        #[brw(pad_after = 1)]
+        #[brw(pad_after = 1)] // Seems to be empty/zeroes
         permission_rank: CWLSPermissionRank,
         /// Their name.
         #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
         #[br(count = CHAR_NAME_MAX_LENGTH)]
         #[br(map = read_string)]
         #[bw(map = write_string)]
-        #[brw(pad_after = 4)]
+        #[brw(pad_after = 4)] // Seems to be empty/zeroes
         character_name: String,
+    },
+    CrossworldLinkshellRenamed {
+        /// The linkshell this player is renaming.
+        linkshell_id: u64,
+        /// The content id of the character renaming this LS.
+        content_id: u64,
+        /// Their home world id.
+        home_world_id: u16,
+        unk1: u8, // Always 1?
+        unk2: u8, // TODO: This might just be padding, or part of a u16?
+        /// Their name.
+        #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+        #[br(count = CHAR_NAME_MAX_LENGTH)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        character_name: String,
+        /// The linkshell's new name.
+        #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+        #[br(count = CHAR_NAME_MAX_LENGTH)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        #[brw(pad_after = 4)] // Seems to be empty/zeroes
+        new_linkshell_name: String,
     },
 }
 

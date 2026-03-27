@@ -860,8 +860,12 @@ impl ZoneConnection {
             let info;
             {
                 let mut db = self.database.lock();
-                info =
-                    db.create_linkshell(self.player_data.character.content_id, name.clone(), true);
+                info = db.create_linkshell(
+                    None,
+                    self.player_data.character.content_id,
+                    name.clone(),
+                    true,
+                );
             }
 
             // If LS creation is successful, prepare some info for both the client and the global server state.
@@ -1025,5 +1029,83 @@ impl ZoneConnection {
         });
 
         self.send_ipc_self(ipc).await;
+    }
+
+    pub async fn rename_linkshell(&mut self, linkshell_id: u64, name: String) {
+        if let Some(cwls_memberships) = &mut self.cwls_memberships {
+            let mut has_permission = false;
+            for cwls in cwls_memberships.iter_mut() {
+                if cwls.ids.linkshell_id == linkshell_id
+                    && cwls.common.rank == CWLSPermissionRank::Master
+                {
+                    has_permission = true;
+                    break;
+                }
+            }
+
+            if !has_permission {
+                tracing::warn!(
+                    "Client {} attempted to rename linkshell {} without permissions! Rejecting request!",
+                    self.player_data.character.content_id,
+                    linkshell_id
+                );
+                return;
+            }
+
+            // Otherwise, rename this linkshell.
+            let result;
+            {
+                let mut db = self.database.lock();
+                // is_crossworld_ls doesn't matter, we're renaming here
+                result = db.create_linkshell(
+                    Some(linkshell_id),
+                    self.player_data.character.content_id,
+                    name.clone(),
+                    false,
+                );
+            }
+
+            // Then tell the global server state so it can inform online members and have them display a notification in-game.
+            if result.is_some() {
+                self.handle
+                    .send(ToServer::RenameLinkshell(
+                        self.player_data.character.content_id as u64,
+                        self.player_data.character.name.clone(),
+                        linkshell_id,
+                        name,
+                    ))
+                    .await;
+            }
+        }
+    }
+
+    pub async fn linkshell_renamed(
+        &mut self,
+        from_content_id: u64,
+        from_name: String,
+        linkshell_id: u64,
+        linkshell_name: String,
+    ) {
+        // TODO: get rid of cwls_memberships, it's causing a bunch of headaches
+        if let Some(cwls_memberships) = &mut self.cwls_memberships {
+            for cwls in cwls_memberships.iter_mut() {
+                if cwls.ids.linkshell_id == linkshell_id {
+                    cwls.common.name = linkshell_name.clone();
+                    break;
+                }
+            }
+
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::CrossworldLinkshellRenamed {
+                linkshell_id,
+                content_id: from_content_id,
+                home_world_id: self.config.world_id,
+                unk1: 1,
+                unk2: 0,
+                character_name: from_name.clone(),
+                new_linkshell_name: linkshell_name.clone(),
+            });
+
+            self.send_ipc_self(ipc).await;
+        }
     }
 }

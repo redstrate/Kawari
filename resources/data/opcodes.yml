@@ -643,6 +643,10 @@ ServerZoneIpcType:
     comment: The server informs the client that a member in the linkshell has left (including themself if it was them).
     opcode: 694
     size: 64
+  - name: CrossworldLinkshellRenamed
+    comment: The server informs the client that the linkshell has been renamed.
+    opcode: 234
+    size: 88
 ClientZoneIpcType:
   - name: InitRequest
     comment: Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)
@@ -952,6 +956,11 @@ ClientZoneIpcType:
     comment: The client requests to leave a cross-world linkshell. Masters cannot do this, they first have to appoint a new Master or disband the linkshell entirely.
     opcode: 357
     size: 8
+  - name: RenameCrossworldLinkshell
+    comment: The client requests to rename a cross-world linkshell. Only Masters can do this.
+    opcode: 190
+    size: 40
+
 ServerLobbyIpcType:
   - name: NackReply
     comment: Sent by the server to indicate an lobby error occured.

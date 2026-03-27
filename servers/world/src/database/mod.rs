@@ -1402,14 +1402,17 @@ impl WorldDatabase {
 
     pub fn create_linkshell(
         &mut self,
+        for_linkshell_id: Option<u64>,
         from_content_id: i64,
         ls_name: String,
         is_crossworld_ls: bool,
     ) -> Option<CrossworldLinkshellEx> {
         use schema::linkshells::dsl::*;
 
+        let name_available = self.linkshell_name_available(ls_name.clone());
+
         // Only allow creation if this LS doesn't exist already. Probably a bit redundant with how the order of events goes, but never hurts.
-        if self.linkshell_name_available(ls_name.clone()) == CWLSNameAvailability::Available {
+        if name_available == CWLSNameAvailability::Available && for_linkshell_id.is_none() {
             let ls_creation_time = diesel::select(unixepoch())
                 .get_result::<i64>(&mut self.connection)
                 .unwrap_or_default();
@@ -1461,8 +1464,25 @@ impl WorldDatabase {
                     "Failed to create the linkshell because of the following error: {err:#?}"
                 ),
             }
-        } else {
-            tracing::warn!("The linkshell name {ls_name} already exists!");
+        } else if name_available == CWLSNameAvailability::Available
+            && let Some(for_linkshell_id) = for_linkshell_id
+        {
+            let for_linkshell_id = for_linkshell_id as i64;
+
+            match diesel::update(linkshells)
+                .filter(id.eq(for_linkshell_id))
+                .set(name.eq(ls_name.clone()))
+                .execute(&mut self.connection)
+            {
+                Ok(_) => {
+                    tracing::info!("Linkshell {for_linkshell_id} renamed to {ls_name}!");
+
+                    return Some(CrossworldLinkshellEx::default());
+                }
+                Err(err) => tracing::warn!(
+                    "Unable to rename linkshell {for_linkshell_id} because of the following error: {err:#?}!"
+                ),
+            }
         }
 
         None
