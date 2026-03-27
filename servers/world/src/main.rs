@@ -2819,6 +2819,11 @@ async fn process_packet(
                                 unk.len()
                             );
                         }
+                        ClientZoneIpcData::RenameCrossworldLinkshell { linkshell_id, name } => {
+                            connection
+                                .rename_linkshell(*linkshell_id, name.clone())
+                                .await;
+                        }
                     }
                 }
                 SegmentData::KeepAliveRequest { id, timestamp } => {
@@ -3187,6 +3192,16 @@ async fn process_server_msg(
                         rank,
                         linkshell_id,
                     )
+                    .await
+            }
+            FromServer::LinkshellRenamed(
+                from_content_id,
+                from_name,
+                linkshell_id,
+                linkshell_name,
+            ) => {
+                connection
+                    .linkshell_renamed(from_content_id, from_name, linkshell_id, linkshell_name)
                     .await
             }
             _ => {

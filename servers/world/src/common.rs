@@ -211,6 +211,8 @@ pub enum FromServer {
     LinkshellDisbanded(u64, u32),
     /// Inform the client that a member left one of their linkshells.
     LinkshellLeft(ObjectId, u64, String, CWLSPermissionRank, u64, u32),
+    /// Inform the client that an owner of one of their linkshells has renamed it.
+    LinkshellRenamed(u64, String, u64, String),
 }
 
 #[derive(Debug, Clone)]
@@ -401,6 +403,8 @@ pub enum ToServer {
     DisbandLinkshell(u64),
     /// The client left a linkshell, and online members need to be informed.
     LeaveLinkshell(ObjectId, u64, String, u64),
+    /// The client renamed their linkshell.
+    RenameLinkshell(u64, String, u64, String),
 }
 
 #[derive(Clone, Debug)]

@@ -1724,6 +1724,20 @@ pub fn handle_social_messages(
             }
             true
         }
+        ToServer::RenameLinkshell(from_content_id, from_name, linkshell_id, linkshell_name) => {
+            let mut network = network.lock();
+
+            let msg = FromServer::LinkshellRenamed(
+                *from_content_id,
+                from_name.clone(),
+                *linkshell_id,
+                linkshell_name.clone(),
+            );
+
+            network.send_to_linkshell(*linkshell_id, None, msg, DestinationNetwork::ZoneClients);
+
+            true
+        }
         _ => false,
     }
 }
