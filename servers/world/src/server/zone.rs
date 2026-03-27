@@ -29,7 +29,7 @@ use kawari::{
     config::get_config,
     ipc::zone::{
         ActorControlCategory, BattleNpcSubKind, CharacterDataFlag, CommonSpawn, Conditions,
-        DisplayFlag, NpcSpawn, ObjectKind, ObjectSpawn, SpawnTreasure,
+        DisplayFlag, ObjectKind, SpawnNpc, SpawnObject, SpawnTreasure,
     },
 };
 
@@ -87,8 +87,8 @@ pub struct Zone {
     cached_npc_base_ids: HashMap<u32, u32>,
     pub map_ranges: Vec<MapRange>,
     dropin_layers: Vec<DropInLayer>,
-    cached_objects: HashMap<u32, ObjectSpawn>,
-    cached_npcs: HashMap<u32, NpcSpawn>,
+    cached_objects: HashMap<u32, SpawnObject>,
+    cached_npcs: HashMap<u32, SpawnNpc>,
     cached_treasure: HashMap<u8, SpawnTreasure>,
 }
 
@@ -426,7 +426,7 @@ impl Zone {
         &mut self,
         game_data: &mut GameData,
         explorer_mode: bool,
-    ) -> Vec<ObjectSpawn> {
+    ) -> Vec<SpawnObject> {
         let mut object_spawns = Vec::new();
 
         for layer_group in &self.layer_groups {
@@ -463,7 +463,7 @@ impl Zone {
                             eobj.parent_data.base_id
                         };
 
-                        let spawn = ObjectSpawn {
+                        let spawn = SpawnObject {
                             kind: ObjectKind::EventObj,
                             base_id,
                             unselectable,
@@ -512,7 +512,7 @@ impl Zone {
         for layer in &self.dropin_layers {
             for object in &layer.objects {
                 if let DropInObjectData::GatheringPoint { base_id } = object.data {
-                    let spawn = ObjectSpawn {
+                    let spawn = SpawnObject {
                         kind: ObjectKind::GatheringPoint,
                         base_id,
                         entity_id: ObjectId(fastrand::u32(..)),
@@ -531,13 +531,13 @@ impl Zone {
         object_spawns
     }
 
-    /// Returns an ObjectSpawn for the given base ID.
-    pub fn get_event_object(&self, base_id: u32) -> Option<ObjectSpawn> {
+    /// Returns an SpawnObject for the given base ID.
+    pub fn get_event_object(&self, base_id: u32) -> Option<SpawnObject> {
         self.cached_objects.get(&base_id).cloned()
     }
 
-    /// Returns an NpcSpawn for the given instance ID.
-    pub fn get_battle_npc(&self, instance_id: u32) -> Option<NpcSpawn> {
+    /// Returns an SpawnNpc for the given instance ID.
+    pub fn get_battle_npc(&self, instance_id: u32) -> Option<SpawnNpc> {
         self.cached_npcs.get(&instance_id).cloned()
     }
 
@@ -547,7 +547,7 @@ impl Zone {
     }
 
     /// Returns a list of battle NPCs to spawn.
-    pub fn get_npcs(&mut self, game_data: &mut GameData) -> Vec<NpcSpawn> {
+    pub fn get_npcs(&mut self, game_data: &mut GameData) -> Vec<SpawnNpc> {
         let mut npc_spawns = Vec::new();
 
         // Only dropins are checked for battle npcs, because they strip that from retail LGBs.
@@ -569,7 +569,7 @@ impl Zone {
                 {
                     let (model_chara, battalion, customize) = game_data.find_bnpc(base_id).unwrap();
 
-                    let spawn = NpcSpawn {
+                    let spawn = SpawnNpc {
                         gimmick_id,
                         character_data_flags: if hostile {
                             CharacterDataFlag::HOSTILE

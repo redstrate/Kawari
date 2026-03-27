@@ -160,7 +160,7 @@ where
 pub fn scramble_packet(opcode_name: &str, base_key: u8, opcode_based_key: i32, data: &mut [u8]) {
     unsafe {
         match opcode_name {
-            "PlayerSpawn" => {
+            "SpawnPlayer" => {
                 // Content ID
                 unscramble_add::<u64>(data, 24, base_key as u64);
                 // Current World ID
@@ -182,7 +182,7 @@ pub fn scramble_packet(opcode_name: &str, base_key: u8, opcode_based_key: i32, d
                     unscramble_xor::<u32>(data, offset, int_key_to_use);
                 }
             }
-            "NpcSpawn" => {
+            "SpawnNpc" => {
                 // BNPC Base ID
                 unscramble_add::<u32>(data, 80, base_key as u32);
                 // BNPC Name ID

@@ -54,7 +54,7 @@ pub enum DropInObjectData {
         hostile: bool,
         /// The icon for this NPC.
         character_data_icon: u8,
-        /// Gimmick ID, see `gimmick_id` in `NpcSpawn`.
+        /// Gimmick ID, see `gimmick_id` in `SpawnNpc`.
         gimmick_id: u32,
         /// How many other BNpcs can be linked in this family.
         max_links: u8,

@@ -41,7 +41,7 @@ use kawari::{
     ipc::zone::{
         ActionKind, ActionRequest, ActorControlCategory, BattleNpcSubKind, CharacterDataFlag,
         ClientTriggerCommand, CommonSpawn, Condition, Conditions, EnmityList, Hater, HaterList,
-        NpcSpawn, ObjectKind, PlayerEnmity, ServerZoneIpcData, ServerZoneIpcSegment, WaymarkPreset,
+        ObjectKind, PlayerEnmity, ServerZoneIpcData, ServerZoneIpcSegment, SpawnNpc, WaymarkPreset,
     },
 };
 
@@ -2155,7 +2155,7 @@ pub async fn server_main_loop(
                             (model_chara, _, _) = game_data.find_bnpc(id).unwrap();
                         }
 
-                        npc_spawn = NpcSpawn {
+                        npc_spawn = SpawnNpc {
                             common: CommonSpawn {
                                 health_points: 91,
                                 max_health_points: 91,
@@ -2194,7 +2194,7 @@ pub async fn server_main_loop(
                             continue;
                         };
 
-                        npc_spawn = NpcSpawn {
+                        npc_spawn = SpawnNpc {
                             common: spawn.common.clone(),
                             ..Default::default()
                         };

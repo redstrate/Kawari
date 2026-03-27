@@ -19,7 +19,7 @@ ServerZoneIpcType:
     comment: Updates class-specific information, like your currently synced level.
     opcode: 161
     size: 16
-  - name: PlayerSpawn
+  - name: SpawnPlayer
     comment: Used to spawn players actors in.
     opcode: 265
     size: 664
@@ -63,7 +63,7 @@ ServerZoneIpcType:
     comment: Sent by the server in response to SocialListRequest.
     opcode: 426
     size: 1136
-  - name: NpcSpawn
+  - name: SpawnNpc
     comment: Used to spawn friendly or battle NPCs.
     opcode: 808
     size: 656
@@ -199,7 +199,7 @@ ServerZoneIpcType:
     comment: Show a dialog that the duty finder content was found.
     opcode: 436
     size: 40
-  - name: ObjectSpawn
+  - name: SpawnObject
     comment: Used to spawn objects in.
     opcode: 622
     size: 64

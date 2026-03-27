@@ -21,10 +21,10 @@ use kawari::{
         },
         zone::{
             ActionRequest, ActorControlCategory, CWLSPermissionRank, ClientTrigger, Conditions,
-            Config, InviteReply, InviteType, NpcSpawn, ObjectSpawn, OnlineStatus, PartyMemberEntry,
-            PartyMemberPositions, PartyUpdateStatus, PlayerSpawn, ReadyCheckReply,
-            ServerZoneIpcSegment, SpawnTreasure, StrategyBoard, StrategyBoardUpdate,
-            WaymarkPlacementMode, WaymarkPosition, WaymarkPreset,
+            Config, InviteReply, InviteType, OnlineStatus, PartyMemberEntry, PartyMemberPositions,
+            PartyUpdateStatus, ReadyCheckReply, ServerZoneIpcSegment, SpawnNpc, SpawnObject,
+            SpawnPlayer, SpawnTreasure, StrategyBoard, StrategyBoardUpdate, WaymarkPlacementMode,
+            WaymarkPosition, WaymarkPreset,
         },
     },
 };
@@ -45,9 +45,9 @@ impl std::fmt::Debug for ClientId {
 #[derive(Clone, Debug)]
 pub enum SpawnKind {
     /// A player's spawn data is contained within.
-    Player(PlayerSpawn),
+    Player(SpawnPlayer),
     /// An NPC's spawn data is contained within.
-    Npc(NpcSpawn),
+    Npc(SpawnNpc),
 }
 
 /// A type encapsulating party update sender and recipient info.
@@ -164,7 +164,7 @@ pub enum FromServer {
     /// New copy of the status effects list, for use in Lua scripting.
     NewStatusEffects(StatusEffects),
     /// An event object was spawned.
-    ObjectSpawn(ObjectSpawn),
+    SpawnObject(SpawnObject),
     /// Inform the client about the location they discovered, so their map can be revealed.
     LocationDiscovered(u32, u32),
     /// Inform the client that a member of their party has shared a strategy board.
@@ -266,7 +266,7 @@ pub enum ToServer {
     ClientTrigger(ClientId, ObjectId, ClientTrigger),
     /// The connection loaded into a zone.
     // TODO: the connection should not be in charge and telling the global server what zone they just loaded in! but this will work for now
-    ZoneLoaded(ClientId, ObjectId, PlayerSpawn),
+    ZoneLoaded(ClientId, ObjectId, SpawnPlayer),
     /// The connection wants to enter a new zone.
     // TODO: temporary as this is only used for commands and those aren't run on global server state yet
     ChangeZone(ClientId, ObjectId, u16, Option<Position>, Option<f32>),

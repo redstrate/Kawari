@@ -5,7 +5,7 @@ use strum_macros::{EnumIter, FromRepr};
 use crate::common::value_to_flag_byte_index_value;
 
 // See https://github.com/aers/FFXIVClientStructs/blob/28d9f0f77fdf388f596ba65768c7d6441e962d06/FFXIVClientStructs/FFXIV/Client/UI/Info/InfoProxyCommonList.cs#L86
-// TODO: This entire enum seems to be used as both literal values (e.g. in PlayerSpawn, where a single byte indicates status) and shift values as a u64 for the SocialList (possibly other places too).
+// TODO: This entire enum seems to be used as both literal values (e.g. in SpawnPlayer, where a single byte indicates status) and shift values as a u64 for the SocialList (possibly other places too).
 #[binrw]
 #[brw(little)]
 #[brw(repr = u8)]

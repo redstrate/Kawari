@@ -19,7 +19,7 @@ use crate::{
 use kawari::{
     common::{DistanceRange, ENTRANCE_CIRCLE_IDS, ObjectId, Position},
     config::{FilesystemConfig, get_config},
-    ipc::zone::{ActionRequest, Conditions, NpcSpawn, ObjectSpawn, PlayerSpawn, SpawnTreasure},
+    ipc::zone::{ActionRequest, Conditions, SpawnNpc, SpawnObject, SpawnPlayer, SpawnTreasure},
 };
 use parking_lot::Mutex;
 
@@ -151,7 +151,7 @@ impl Instance {
         self.actors.get_mut(&id)
     }
 
-    pub fn insert_npc(&mut self, id: ObjectId, spawn: NpcSpawn) {
+    pub fn insert_npc(&mut self, id: ObjectId, spawn: SpawnNpc) {
         // Load drop-ins
         let mut timeline = serde_json::from_str(
             &std::fs::read_to_string(FilesystemConfig::locate_timeline_file("Default.json"))
@@ -230,7 +230,7 @@ impl Instance {
         self.actors.insert(
             actor_id,
             NetworkedActor::Player {
-                spawn: PlayerSpawn::default(),
+                spawn: SpawnPlayer::default(),
                 status_effects: StatusEffects::default(),
                 teleport_query: TeleportQuery::default(),
                 distance_range: DistanceRange::Normal,
@@ -244,7 +244,7 @@ impl Instance {
         );
     }
 
-    pub fn insert_object(&mut self, actor_id: ObjectId, object: ObjectSpawn) {
+    pub fn insert_object(&mut self, actor_id: ObjectId, object: SpawnObject) {
         self.actors
             .insert(actor_id, NetworkedActor::Object { object });
     }

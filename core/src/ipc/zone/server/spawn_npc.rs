@@ -32,7 +32,7 @@ impl std::fmt::Debug for CharacterDataFlag {
 #[binrw]
 #[brw(little)]
 #[derive(Debug, Clone, Default)]
-pub struct NpcSpawn {
+pub struct SpawnNpc {
     /// Refers to a Game Object ID in the zone, usually an LGB that this enemy is "attached" to.
     pub gimmick_id: u32,
     /// At least filled for Quests, where this is the originating Event NPC layout ID if it turned into a Battle NPC.
@@ -97,7 +97,7 @@ mod tests {
         let buffer = read(d).unwrap();
         let mut buffer = Cursor::new(&buffer);
 
-        let npc_spawn = NpcSpawn::read_le(&mut buffer).unwrap();
+        let npc_spawn = SpawnNpc::read_le(&mut buffer).unwrap();
         assert_eq!(npc_spawn.common.max_health_points, 973);
         assert_eq!(npc_spawn.common.health_points, 973);
         assert_eq!(npc_spawn.common.resource_points, 10000);
@@ -136,7 +136,7 @@ mod tests {
         let buffer = read(d).unwrap();
         let mut buffer = Cursor::new(&buffer);
 
-        let npc_spawn = NpcSpawn::read_le(&mut buffer).unwrap();
+        let npc_spawn = SpawnNpc::read_le(&mut buffer).unwrap();
         assert_eq!(npc_spawn.common.max_health_points, 91);
         assert_eq!(npc_spawn.common.health_points, 91);
         assert_eq!(npc_spawn.common.resource_points, 0);

@@ -9,8 +9,8 @@ use kawari::{
     config::get_config,
     ipc::zone::{
         ActorControl, ActorControlCategory, ActorControlSelf, ActorControlTarget, ActorMove,
-        CommonSpawn, Config, DisplayFlag, ObjectKind, ObjectSpawn, PlayerSpawn, PlayerSubKind,
-        ServerZoneIpcData, ServerZoneIpcSegment, SpawnTreasure, Warp,
+        CommonSpawn, Config, DisplayFlag, ObjectKind, PlayerSubKind, ServerZoneIpcData,
+        ServerZoneIpcSegment, SpawnObject, SpawnPlayer, SpawnTreasure, Warp,
     },
 };
 
@@ -89,9 +89,9 @@ impl ZoneConnection {
 
         let ipc = match spawn {
             SpawnKind::Player(spawn) => {
-                ServerZoneIpcSegment::new(ServerZoneIpcData::PlayerSpawn(spawn))
+                ServerZoneIpcSegment::new(ServerZoneIpcData::SpawnPlayer(spawn))
             }
-            SpawnKind::Npc(spawn) => ServerZoneIpcSegment::new(ServerZoneIpcData::NpcSpawn(spawn)),
+            SpawnKind::Npc(spawn) => ServerZoneIpcSegment::new(ServerZoneIpcData::SpawnNpc(spawn)),
         };
         self.send_ipc_from(actor_id, ipc).await;
     }
@@ -164,11 +164,11 @@ impl ZoneConnection {
     }
 
     /// Spawn the player actor. The client will handle replacing the existing one, if it exists.
-    pub async fn respawn_player(&mut self, start_invisible: bool) -> PlayerSpawn {
+    pub async fn respawn_player(&mut self, start_invisible: bool) -> SpawnPlayer {
         let common = self.get_player_common_spawn(start_invisible);
         let config = get_config();
 
-        let spawn = PlayerSpawn {
+        let spawn = SpawnPlayer {
             account_id: self.player_data.character.service_account_id as u64,
             content_id: self.player_data.character.content_id as u64,
             current_world_id: config.world.world_id,
@@ -182,7 +182,7 @@ impl ZoneConnection {
 
         // send player spawn
         {
-            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PlayerSpawn(spawn.clone()));
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::SpawnPlayer(spawn.clone()));
             self.send_ipc_self(ipc).await;
         }
 
@@ -256,8 +256,8 @@ impl ZoneConnection {
             .await;
     }
 
-    pub async fn spawn_object(&mut self, spawn: ObjectSpawn) {
-        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ObjectSpawn(spawn));
+    pub async fn spawn_object(&mut self, spawn: SpawnObject) {
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::SpawnObject(spawn));
 
         self.send_ipc_from(spawn.entity_id, ipc).await;
     }

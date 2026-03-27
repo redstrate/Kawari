@@ -7,7 +7,7 @@ use super::{CommonSpawn, GameMasterRank};
 #[binrw]
 #[brw(little)]
 #[derive(Debug, Clone, Default)]
-pub struct PlayerSpawn {
+pub struct SpawnPlayer {
     /// The account ID of the player.
     pub account_id: u64,
     /// The content ID of the player.
@@ -58,7 +58,7 @@ mod tests {
         let buffer = read(d).unwrap();
         let mut buffer = Cursor::new(&buffer);
 
-        let player_spawn = PlayerSpawn::read_le(&mut buffer).unwrap();
+        let player_spawn = SpawnPlayer::read_le(&mut buffer).unwrap();
         assert_eq!(player_spawn.current_world_id, 0x4F);
         assert_eq!(player_spawn.home_world_id, 0x4F);
         assert_eq!(player_spawn.common.health_points, 159);

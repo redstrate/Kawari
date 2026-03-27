@@ -2180,7 +2180,7 @@ async fn process_packet(
                         }
                         ClientZoneIpcData::RequestBlacklist(request) => {
                             // TODO: Actually implement this beyond simply sending a blank list
-                            // NOTE: Failing to respond to this request means PlayerSpawn will not work and other players will be invisible, have their chat ignored and possibly other issues by the client! Beware!
+                            // NOTE: Failing to respond to this request means SpawnPlayer will not work and other players will be invisible, have their chat ignored and possibly other issues by the client! Beware!
                             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Blacklist(
                                 Blacklist {
                                     data: vec![
@@ -3023,7 +3023,7 @@ async fn process_server_msg(
             FromServer::NewStatusEffects(status_effects) => {
                 lua_player.status_effects = status_effects
             }
-            FromServer::ObjectSpawn(object) => connection.spawn_object(object).await,
+            FromServer::SpawnObject(object) => connection.spawn_object(object).await,
             FromServer::LocationDiscovered(map_id, map_part_id) => {
                 connection.discover_location(map_id, map_part_id).await
             }

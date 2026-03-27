@@ -431,7 +431,7 @@ pub fn handle_social_messages(
             for (id, actor) in &sender_instance.actors {
                 if id == from_actor_id {
                     let Some(spawn) = actor.get_player_spawn() else {
-                        panic!("Why are we trying to get the PlayerSpawn of an NPC?");
+                        panic!("Why are we trying to get the SpawnPlayer of an NPC?");
                     };
 
                     sender_name = spawn.common.name.clone();
@@ -501,7 +501,7 @@ pub fn handle_social_messages(
             for (id, actor) in &sender_instance.actors {
                 if id == from_actor_id {
                     let Some(spawn) = actor.get_player_spawn() else {
-                        panic!("Why are we trying to get the PlayerSpawn of an NPC?");
+                        panic!("Why are we trying to get the SpawnPlayer of an NPC?");
                     };
 
                     sender_name = spawn.common.name.clone();

@@ -11,7 +11,7 @@ use crate::{
 #[binrw]
 #[brw(little)]
 #[derive(Debug, Copy, Clone, Default)]
-pub struct ObjectSpawn {
+pub struct SpawnObject {
     /// The object's spawn index. Note that this is a completely separate index from actors.
     pub spawn_index: u8,
     /// What kind of object this is.
@@ -52,10 +52,10 @@ pub struct ObjectSpawn {
 }
 
 #[cfg(feature = "server")]
-impl mlua::UserData for ObjectSpawn {}
+impl mlua::UserData for SpawnObject {}
 
 #[cfg(feature = "server")]
-impl mlua::FromLua for ObjectSpawn {
+impl mlua::FromLua for SpawnObject {
     fn from_lua(value: mlua::Value, _: &mlua::Lua) -> mlua::Result<Self> {
         match value {
             mlua::Value::UserData(ud) => Ok(*ud.borrow::<Self>()?),

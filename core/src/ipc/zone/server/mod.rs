@@ -7,8 +7,8 @@ pub use super::social_list::{SocialList, SocialListUIFlags, SocialListUILanguage
 mod chara_info;
 use chara_info::CharaInfoFromContentIdsData;
 
-mod player_spawn;
-pub use player_spawn::PlayerSpawn;
+mod spawn_player;
+pub use spawn_player::SpawnPlayer;
 
 mod status_effect;
 pub use status_effect::StatusEffect;
@@ -30,8 +30,8 @@ pub use actor_control::{
 mod init_zone;
 pub use init_zone::{InitZone, InitZoneFlags};
 
-mod npc_spawn;
-pub use npc_spawn::{CharacterDataFlag, NpcSpawn};
+mod spawn_npc;
+pub use spawn_npc::{CharacterDataFlag, SpawnNpc};
 
 mod common_spawn;
 pub use common_spawn::{
@@ -72,8 +72,8 @@ pub use currency_info::CurrencyInfo;
 
 pub use super::config::Config;
 
-mod object_spawn;
-pub use object_spawn::ObjectSpawn;
+mod spawn_object;
+pub use spawn_object::SpawnObject;
 
 mod quest_active_list;
 pub use quest_active_list::{ActiveQuest, QuestActiveList};
@@ -182,7 +182,7 @@ pub enum ServerZoneIpcData {
     PlayerStats(PlayerStats),
     PlayerSetup(PlayerSetup),
     UpdateClassInfo(UpdateClassInfo),
-    PlayerSpawn(PlayerSpawn),
+    SpawnPlayer(SpawnPlayer),
     LogOutComplete {
         // TODO: guessed
         unk: [u8; 8],
@@ -207,7 +207,7 @@ pub enum ServerZoneIpcData {
     ActorControl(ActorControl),
     ActorMove(ActorMove),
     SocialList(SocialList),
-    NpcSpawn(NpcSpawn),
+    SpawnNpc(SpawnNpc),
     StatusEffectList(StatusEffectList),
     WeatherId(WeatherChange),
     UpdateItem(ItemInfo),
@@ -359,7 +359,7 @@ pub enum ServerZoneIpcData {
         content_id: u16,
         unk2: [u8; 10],
     },
-    ObjectSpawn(ObjectSpawn),
+    SpawnObject(SpawnObject),
     ActorGauge {
         classjob_id: u8,
         data: [u8; 15],

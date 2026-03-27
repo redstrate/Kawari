@@ -66,7 +66,7 @@ impl NetworkState {
             NetworkedActor::Object { object } => {
                 let mut object = *object;
                 object.spawn_index = spawn_index;
-                FromServer::ObjectSpawn(object)
+                FromServer::SpawnObject(object)
             }
             NetworkedActor::Treasure { treasure } => {
                 let mut treasure = treasure.clone();

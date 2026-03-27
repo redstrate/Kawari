@@ -6,7 +6,7 @@ use crate::{
 };
 use kawari::{
     common::{DistanceRange, ObjectId, Position, Timeline},
-    ipc::zone::{CommonSpawn, Conditions, NpcSpawn, ObjectSpawn, PlayerSpawn, SpawnTreasure},
+    ipc::zone::{CommonSpawn, Conditions, SpawnNpc, SpawnObject, SpawnPlayer, SpawnTreasure},
 };
 
 #[derive(Debug, Clone, PartialEq)]
@@ -22,7 +22,7 @@ pub enum NpcState {
 #[derive(Debug, Clone)]
 pub enum NetworkedActor {
     Player {
-        spawn: PlayerSpawn,
+        spawn: SpawnPlayer,
         // TODO: of course, Npcs will need status effects as well!
         status_effects: StatusEffects,
         teleport_query: TeleportQuery,
@@ -44,7 +44,7 @@ pub enum NetworkedActor {
         current_path_lerp: f32,
         current_target: Option<ObjectId>,
         last_position: Option<Position>,
-        spawn: NpcSpawn,
+        spawn: SpawnNpc,
         timeline: Timeline,
         /// In half-seconds (the current server logic tick.)
         timeline_position: i64,
@@ -54,7 +54,7 @@ pub enum NetworkedActor {
         currently_invulnerable: bool,
     },
     Object {
-        object: ObjectSpawn,
+        object: SpawnObject,
     },
     Treasure {
         treasure: SpawnTreasure,
@@ -78,14 +78,14 @@ impl NetworkedActor {
         }
     }
 
-    pub fn get_player_spawn(&self) -> Option<&PlayerSpawn> {
+    pub fn get_player_spawn(&self) -> Option<&SpawnPlayer> {
         match &self {
             NetworkedActor::Player { spawn, .. } => Some(spawn),
             _ => None,
         }
     }
 
-    pub fn get_npc_spawn(&self) -> Option<&NpcSpawn> {
+    pub fn get_npc_spawn(&self) -> Option<&SpawnNpc> {
         match &self {
             NetworkedActor::Npc { spawn, .. } => Some(spawn),
             _ => None,
