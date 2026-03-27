@@ -220,7 +220,7 @@ impl ZoneConnection {
         .await;
     }
 
-    pub async fn initialize(&mut self, actor_id: u32) {
+    pub async fn initialize(&mut self, actor_id: ObjectId) {
         self.player_data.item_sequence = 0;
         self.player_data.shop_sequence = 0;
 

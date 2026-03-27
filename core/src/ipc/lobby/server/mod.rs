@@ -20,7 +20,7 @@ pub use dist_retainer_info::{DistRetainerInfo, RetainerInfo};
 pub use nack_reply::NackReply;
 
 use crate::{
-    common::{read_string, write_string},
+    common::{ObjectId, read_string, write_string},
     opcodes::ServerLobbyIpcType,
     packet::{IpcSegment, ServerlessIpcSegmentHeader},
 };
@@ -51,7 +51,7 @@ pub enum ServerLobbyIpcData {
     },
     GameLoginReply {
         sequence: u64,
-        actor_id: u32,
+        actor_id: ObjectId,
         #[brw(pad_before = 4)]
         content_id: u64,
         #[brw(pad_before = 4)]

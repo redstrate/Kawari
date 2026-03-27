@@ -5,7 +5,7 @@ use crate::{
     CharaMake, GameData, WorldDatabase,
     inventory::{Inventory, Item, Storage},
 };
-use kawari::common::{CustomizeData, ObjectId};
+use kawari::common::CustomizeData;
 
 pub enum ImportError {
     CharacterExists,
@@ -160,7 +160,7 @@ impl WorldDatabase {
             game_data,
         );
 
-        let mut player_data = self.find_player_data(ObjectId(actor_id), game_data);
+        let mut player_data = self.find_player_data(actor_id, game_data);
 
         // import jobs
         for classjob in &character.classjob_levels {

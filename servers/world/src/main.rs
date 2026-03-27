@@ -183,7 +183,7 @@ async fn initial_setup(
                     match &segment.data {
                         SegmentData::Setup { actor_id } => {
                             // for some reason they send a string representation
-                            let actor_id = actor_id.parse::<u32>().unwrap();
+                            let actor_id = ObjectId(actor_id.parse::<u32>().unwrap());
 
                             // initialize player data if it doesn't exist
                             if !connection.player_data.character.actor_id.is_valid() {
@@ -191,8 +191,8 @@ async fn initial_setup(
                                 {
                                     let mut game_data = connection.gamedata.lock();
                                     let mut database = connection.database.lock();
-                                    player_data = database
-                                        .find_player_data(ObjectId(actor_id), &mut game_data);
+                                    player_data =
+                                        database.find_player_data(actor_id, &mut game_data);
                                 }
                                 connection.player_data = player_data;
                             }
