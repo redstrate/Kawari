@@ -1,8 +1,33 @@
 use binrw::binrw;
+use bitflags::bitflags;
 
 use crate::common::{read_bool_from, write_bool_as};
 
 use super::CommonSpawn;
+
+#[binrw]
+#[derive(Clone, Copy, Eq, PartialEq)]
+pub struct CharacterDataFlag(u8);
+
+bitflags! {
+    impl CharacterDataFlag: u8 {
+        const NONE = 0x0;
+        /// If set, this marks the enemy as "hostile" including changing the nameplate icon.
+        const HOSTILE = 0x2;
+    }
+}
+
+impl Default for CharacterDataFlag {
+    fn default() -> Self {
+        Self::NONE
+    }
+}
+
+impl std::fmt::Debug for CharacterDataFlag {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        bitflags::parser::to_writer(self, f)
+    }
+}
 
 #[binrw]
 #[brw(little)]
@@ -13,8 +38,16 @@ pub struct NpcSpawn {
     /// At least filled for Quests, where this is the originating Event NPC layout ID if it turned into a Battle NPC.
     pub enpc_id: u32,
 
-    // TODO: turn this into an enum at some point!
-    pub character_data_flags: u8,
+    pub character_data_flags: CharacterDataFlag,
+    /// Roughly correlates to mob difficulty, supposedly:
+    /// 0 = grey alien icon
+    /// 1 = spiky blue icon of some sort
+    /// 2 = blue spiky but more triangular, like it has horns
+    /// 3 = squircle with three dots inside it
+    /// 4 = same squircle but with thin, tiny horns
+    /// 5 = same as 4
+    /// 6 = triangle but only with two circles and what looks like closed eyes
+    /// 7 = super big horns
     pub character_data_icon: u8,
     #[br(map = read_bool_from::<u8>)]
     #[bw(map = write_bool_as::<u8>)]
@@ -84,7 +117,10 @@ mod tests {
             ObjectKind::BattleNpc(BattleNpcSubKind::Pet)
         );
         assert_eq!(npc_spawn.common.battalion, 0);
-        assert_eq!(npc_spawn.character_data_flags, 1); // passive
+        assert_eq!(
+            npc_spawn.character_data_flags,
+            CharacterDataFlag::from_bits_retain(0x1)
+        );
         assert!(!npc_spawn.common.tether_target_id.is_valid());
         assert_eq!(npc_spawn.common.handler_id, HandlerId(0));
         assert_eq!(npc_spawn.common.layout_id, 0);
@@ -124,7 +160,10 @@ mod tests {
         assert_eq!(npc_spawn.common.handler_id, HandlerId(0));
         assert!(!npc_spawn.common.tether_target_id.is_valid());
         assert_eq!(npc_spawn.common.layout_id, 3929856);
-        assert_eq!(npc_spawn.character_data_flags, 1); // passive
+        assert_eq!(
+            npc_spawn.character_data_flags,
+            CharacterDataFlag::from_bits_retain(0x1)
+        );
         assert_eq!(npc_spawn.character_data_icon, 0);
         assert_eq!(npc_spawn.common.name, "タイニー・マンドラゴ");
     }

@@ -50,8 +50,10 @@ pub enum DropInObjectData {
         level: u32,
         /// If true, this NPC does not spawn automatically.
         nonpop: bool,
-        /// The aggression mode of this NPC. See `aggression_mdoe` in `NpcSpawn`.
-        aggression_mode: u8,
+        /// Whether this NPC is hostile or not.
+        hostile: bool,
+        /// The icon for this NPC.
+        character_data_icon: u8,
         /// Gimmick ID, see `gimmick_id` in `NpcSpawn`.
         gimmick_id: u32,
         /// How many other BNpcs can be linked in this family.

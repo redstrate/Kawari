@@ -6,7 +6,8 @@
             "objects": [
                 {
                     "data": {
-                        "aggression_mode": 1,
+                        "hostile": false,
+                        "character_data_icon": 0,
                         "base_id": 901,
                         "gimmick_id": 2280263,
                         "hp": 44,
@@ -28,7 +29,8 @@
                 },
                 {
                     "data": {
-                        "aggression_mode": 1,
+                        "hostile": false,
+                        "character_data_icon": 0,
                         "base_id": 901,
                         "gimmick_id": 2280262,
                         "hp": 44,
@@ -50,7 +52,8 @@
                 },
                 {
                     "data": {
-                        "aggression_mode": 1,
+                        "hostile": false,
+                        "character_data_icon": 0,
                         "base_id": 901,
                         "gimmick_id": 2280261,
                         "hp": 44,
@@ -72,7 +75,8 @@
                 },
                 {
                     "data": {
-                        "aggression_mode": 1,
+                        "hostile": false,
+                        "character_data_icon": 0,
                         "base_id": 901,
                         "gimmick_id": 2280260,
                         "hp": 44,
@@ -94,7 +98,8 @@
                 },
                 {
                     "data": {
-                        "aggression_mode": 1,
+                        "hostile": false,
+                        "character_data_icon": 0,
                         "base_id": 901,
                         "gimmick_id": 4295664,
                         "hp": 44,
@@ -116,7 +121,8 @@
                 },
                 {
                     "data": {
-                        "aggression_mode": 1,
+                        "hostile": false,
+                        "character_data_icon": 0,
                         "base_id": 901,
                         "gimmick_id": 4295663,
                         "hp": 44,
@@ -138,7 +144,8 @@
                 },
                 {
                     "data": {
-                        "aggression_mode": 1,
+                        "hostile": false,
+                        "character_data_icon": 0,
                         "base_id": 901,
                         "gimmick_id": 4295661,
                         "hp": 44,
@@ -160,7 +167,8 @@
                 },
                 {
                     "data": {
-                        "aggression_mode": 1,
+                        "hostile": false,
+                        "character_data_icon": 0,
                         "base_id": 901,
                         "gimmick_id": 4295658,
                         "hp": 44,
@@ -182,7 +190,8 @@
                 },
                 {
                     "data": {
-                        "aggression_mode": 1,
+                        "hostile": false,
+                        "character_data_icon": 0,
                         "base_id": 901,
                         "gimmick_id": 4295662,
                         "hp": 44,

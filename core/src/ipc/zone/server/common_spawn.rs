@@ -210,7 +210,7 @@ pub struct CommonSpawn {
     pub companion_owner_id: u32,
     /// Which director spawned and is managing this actor, if any.
     pub handler_id: HandlerId,
-    /// Unknown purpose.
+    /// Seen set for Carbuncles to their owner player's object id at least.
     pub owner_id: ObjectId,
     /// Unknown purpose.
     pub tether_target_id: ObjectId,

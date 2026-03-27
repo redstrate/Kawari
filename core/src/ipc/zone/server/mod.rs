@@ -31,7 +31,7 @@ mod init_zone;
 pub use init_zone::{InitZone, InitZoneFlags};
 
 mod npc_spawn;
-pub use npc_spawn::NpcSpawn;
+pub use npc_spawn::{CharacterDataFlag, NpcSpawn};
 
 mod common_spawn;
 pub use common_spawn::{

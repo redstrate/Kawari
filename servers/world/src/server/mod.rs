@@ -39,9 +39,9 @@ use kawari::{
     },
     config::{FilesystemConfig, get_config},
     ipc::zone::{
-        ActionKind, ActionRequest, ActorControlCategory, BattleNpcSubKind, ClientTriggerCommand,
-        CommonSpawn, Condition, Conditions, EnmityList, Hater, HaterList, NpcSpawn, ObjectKind,
-        PlayerEnmity, ServerZoneIpcData, ServerZoneIpcSegment, WaymarkPreset,
+        ActionKind, ActionRequest, ActorControlCategory, BattleNpcSubKind, CharacterDataFlag,
+        ClientTriggerCommand, CommonSpawn, Condition, Conditions, EnmityList, Hater, HaterList,
+        NpcSpawn, ObjectKind, PlayerEnmity, ServerZoneIpcData, ServerZoneIpcSegment, WaymarkPreset,
     },
 };
 
@@ -426,10 +426,11 @@ fn server_logic_tick(
                             newly_acquired_targets.push(*id);
                         }
 
-                        // 1 means passive
                         if current_target.is_none()
                             && *state == NpcState::Wander
-                            && spawn.character_data_flags != 1
+                            && spawn
+                                .character_data_flags
+                                .contains(CharacterDataFlag::HOSTILE)
                         {
                             // find a player if in range
                             for (target_id, position) in &players {
@@ -2155,7 +2156,6 @@ pub async fn server_main_loop(
                         }
 
                         npc_spawn = NpcSpawn {
-                            character_data_flags: 1,
                             common: CommonSpawn {
                                 health_points: 91,
                                 max_health_points: 91,
@@ -2195,7 +2195,6 @@ pub async fn server_main_loop(
                         };
 
                         npc_spawn = NpcSpawn {
-                            character_data_flags: 1,
                             common: spawn.common.clone(),
                             ..Default::default()
                         };

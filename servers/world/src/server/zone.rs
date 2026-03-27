@@ -28,8 +28,8 @@ use kawari::{
     },
     config::get_config,
     ipc::zone::{
-        ActorControlCategory, BattleNpcSubKind, CommonSpawn, Conditions, DisplayFlag, NpcSpawn,
-        ObjectKind, ObjectSpawn, SpawnTreasure,
+        ActorControlCategory, BattleNpcSubKind, CharacterDataFlag, CommonSpawn, Conditions,
+        DisplayFlag, NpcSpawn, ObjectKind, ObjectSpawn, SpawnTreasure,
     },
 };
 
@@ -559,7 +559,8 @@ impl Zone {
                     hp,
                     level,
                     nonpop,
-                    aggression_mode,
+                    hostile,
+                    character_data_icon,
                     gimmick_id,
                     max_links,
                     link_family,
@@ -570,7 +571,12 @@ impl Zone {
 
                     let spawn = NpcSpawn {
                         gimmick_id,
-                        character_data_flags: aggression_mode,
+                        character_data_flags: if hostile {
+                            CharacterDataFlag::HOSTILE
+                        } else {
+                            CharacterDataFlag::NONE
+                        },
+                        character_data_icon,
                         max_links,
                         link_family,
                         link_range,
