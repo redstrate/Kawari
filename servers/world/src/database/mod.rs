@@ -258,7 +258,7 @@ impl WorldDatabase {
                             .into_iter()
                             .map(|content_id| self.find_party_member(content_id as u64))
                             .collect(),
-                        leader_id: ObjectId(self.find_actor_id(p_party.leader_content_id as u64)),
+                        leader_id: self.find_actor_id(p_party.leader_content_id as u64),
                         chatchannel_id: fastrand::u32(..),
                         ..Default::default()
                     },
@@ -290,14 +290,22 @@ impl WorldDatabase {
         }
     }
 
-    pub fn find_actor_id(&mut self, for_content_id: u64) -> u32 {
+    pub fn find_actor_id(&mut self, for_content_id: u64) -> ObjectId {
         use schema::character::dsl::*;
 
-        character
+        match character
             .filter(content_id.eq(for_content_id as i64))
             .select(actor_id)
             .first::<i64>(&mut self.connection)
-            .unwrap_or_default() as u32
+        {
+            Ok(my_actor_id) => ObjectId(my_actor_id as u32),
+            Err(err) => {
+                tracing::warn!(
+                    "Unable to find {for_content_id}'s actor id in the database due to the following error {err:#?}!"
+                );
+                ObjectId::default()
+            }
+        }
     }
 
     pub fn get_character_list(
@@ -397,8 +405,8 @@ impl WorldDatabase {
         fastrand::u32(..)
     }
 
-    fn generate_actor_id() -> u32 {
-        fastrand::u32(..)
+    fn generate_actor_id() -> ObjectId {
+        ObjectId(fastrand::u32(..))
     }
 
     /// Gives (content_id, actor_id)
@@ -411,7 +419,7 @@ impl WorldDatabase {
         zone_id: u16,
         inventory: Inventory,
         game_data: &mut GameData,
-    ) -> (u64, u32) {
+    ) -> (u64, ObjectId) {
         use models::*;
 
         let content_id = Self::generate_content_id();
@@ -432,7 +440,7 @@ impl WorldDatabase {
         let character = Character {
             content_id: content_id as i64,
             service_account_id: service_account_id as i64,
-            actor_id: ObjectId(actor_id),
+            actor_id,
             gm_rank: GameMasterRank::Debug,
             name: name.to_string(),
             time_played_minutes: 0,

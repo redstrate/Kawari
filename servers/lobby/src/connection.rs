@@ -4,7 +4,7 @@ use physis::blowfish::LobbyBlowfish;
 use tokio::net::TcpStream;
 
 use kawari::{
-    common::{GAME_SERVICE, WORLD_NAME},
+    common::{GAME_SERVICE, ObjectId, WORLD_NAME},
     config::get_config,
     constants::SUPPORTED_EXPAC_VERSIONS,
     ipc::lobby::{DistRetainerInfo, NackReply},
@@ -372,7 +372,7 @@ impl LobbyConnection {
     }
 
     /// Send the host information for the world server to the client.
-    pub async fn send_enter_world(&mut self, sequence: u64, content_id: u64, actor_id: u32) {
+    pub async fn send_enter_world(&mut self, sequence: u64, content_id: u64, actor_id: ObjectId) {
         let config = get_config();
 
         let enter_world = ServerLobbyIpcData::GameLoginReply {
@@ -523,7 +523,7 @@ impl LobbyConnection {
                         unk2: 0x1,
                         action: LobbyCharacterActionKind::Create,
                         details: CharacterDetails {
-                            player_id: our_actor_id as u64, // TODO: not correct
+                            player_id: our_actor_id.0 as u64, // TODO: not correct
                             content_id: our_content_id,
                             character_name: character_action.name.clone(),
                             origin_server_name: WORLD_NAME.to_string(),

@@ -269,7 +269,7 @@ pub enum ClientTriggerCommand {
     /// When a player requests an NPC (or player?) to a Triple Triad match.
     #[brw(magic = 815u32)]
     TripleTriadChallenge {
-        actor_id: u32, // probably
+        actor_id: ObjectId, // probably
     },
 
     /// When a player requests to abandon their instanced content.

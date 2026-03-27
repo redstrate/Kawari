@@ -1,13 +1,13 @@
 use binrw::binrw;
 
-use crate::common::{MESSAGE_MAX_LENGTH, Position, read_string, write_string};
+use crate::common::{MESSAGE_MAX_LENGTH, ObjectId, Position, read_string, write_string};
 use crate::ipc::chat::ChatChannelType;
 
 #[binrw]
 #[derive(Clone, Debug, Default)]
 pub struct SendChatMessage {
     #[brw(pad_before = 4)] // empty
-    pub actor_id: u32,
+    pub actor_id: ObjectId,
 
     pub pos: Position,
     pub rotation: f32,

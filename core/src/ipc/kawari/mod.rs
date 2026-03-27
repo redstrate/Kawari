@@ -2,7 +2,9 @@ use binrw::binrw;
 use kawari_core_macro::opcode_data;
 
 use crate::{
-    common::{CHAR_NAME_MAX_LENGTH, read_bool_from, read_string, write_bool_as, write_string},
+    common::{
+        CHAR_NAME_MAX_LENGTH, ObjectId, read_bool_from, read_string, write_bool_as, write_string,
+    },
     ipc::lobby::CharacterDetails,
     opcodes::CustomIpcType,
     packet::{IpcSegment, ServerlessIpcSegmentHeader},
@@ -30,14 +32,14 @@ pub enum CustomIpcData {
         chara_make_json: String,
     },
     CharacterCreated {
-        actor_id: u32,
+        actor_id: ObjectId,
         content_id: u64,
     },
     GetActorId {
         content_id: u64,
     },
     ActorIdFound {
-        actor_id: u32,
+        actor_id: ObjectId,
     },
     CheckNameIsAvailable {
         #[bw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
