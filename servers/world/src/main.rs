@@ -2812,17 +2812,27 @@ async fn process_packet(
                         ClientZoneIpcData::DisbandCrossworldLinkshell { linkshell_id } => {
                             connection.disband_linkshell(*linkshell_id).await;
                         }
+                        ClientZoneIpcData::RenameCrossworldLinkshell { linkshell_id, name } => {
+                            connection
+                                .rename_linkshell(*linkshell_id, name.clone())
+                                .await;
+                        }
+                        ClientZoneIpcData::SetCWLSMemberRank {
+                            linkshell_id,
+                            content_id,
+                            rank,
+                            ..
+                        } => {
+                            connection
+                                .set_linkshell_rank(*linkshell_id, *content_id, *rank)
+                                .await;
+                        }
                         ClientZoneIpcData::Unknown { unk } => {
                             tracing::warn!(
                                 "Unknown Zone packet {:?} recieved ({} bytes), this should be handled!",
                                 data.header.op_code,
                                 unk.len()
                             );
-                        }
-                        ClientZoneIpcData::RenameCrossworldLinkshell { linkshell_id, name } => {
-                            connection
-                                .rename_linkshell(*linkshell_id, name.clone())
-                                .await;
                         }
                     }
                 }
@@ -3203,6 +3213,23 @@ async fn process_server_msg(
                 connection
                     .linkshell_renamed(from_content_id, from_name, linkshell_id, linkshell_name)
                     .await
+            }
+            FromServer::LinkshellRankChanged(
+                linkshell_id,
+                from_content_id,
+                target_content_id,
+                rank,
+                target_name,
+            ) => {
+                connection
+                    .linkshell_rank_set(
+                        linkshell_id,
+                        from_content_id,
+                        target_content_id,
+                        rank,
+                        target_name,
+                    )
+                    .await;
             }
             _ => {
                 tracing::error!(

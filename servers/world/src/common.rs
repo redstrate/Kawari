@@ -213,6 +213,8 @@ pub enum FromServer {
     LinkshellLeft(ObjectId, u64, String, CWLSPermissionRank, u64, u32),
     /// Inform the client that an owner of one of their linkshells has renamed it.
     LinkshellRenamed(u64, String, u64, String),
+    /// Inform the client that a member of one of their linkshells had their rank changed.
+    LinkshellRankChanged(u64, u64, u64, CWLSPermissionRank, String),
 }
 
 #[derive(Debug, Clone)]
@@ -405,6 +407,8 @@ pub enum ToServer {
     LeaveLinkshell(ObjectId, u64, String, u64),
     /// The client renamed their linkshell.
     RenameLinkshell(u64, String, u64, String),
+    /// The client changed the rank of a member in their linkshell.
+    SetLinkshellRank(u64, u64, u64, CWLSPermissionRank, String),
 }
 
 #[derive(Clone, Debug)]

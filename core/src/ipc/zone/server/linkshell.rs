@@ -55,7 +55,7 @@ impl CWLSMemberListEntry {
 #[binrw]
 #[brw(repr = u8)]
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, Default, FromRepr, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, FromRepr, PartialEq, PartialOrd)]
 pub enum CWLSPermissionRank {
     #[default]
     /// The player has been invited but has yet to answer the invitation.
