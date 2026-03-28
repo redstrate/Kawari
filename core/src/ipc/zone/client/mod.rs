@@ -23,8 +23,8 @@ mod queue_duties;
 pub use queue_duties::{ContentRegistrationFlags, QueueDuties};
 
 use crate::ipc::zone::{
-    CWLSPermissionRank, InviteReply, InviteType, OnlineStatusMask, SearchInfo,
-    SearchUIClassJobMask, SearchUIGrandCompanies, SocialListUILanguages, StrategyBoard,
+    CWLSPermissionRank, InviteReply, InviteType, LinkshellInviteResponse, OnlineStatusMask,
+    SearchInfo, SearchUIClassJobMask, SearchUIGrandCompanies, SocialListUILanguages, StrategyBoard,
     StrategyBoardUpdate, WaymarkPreset,
 };
 
@@ -514,6 +514,17 @@ pub enum ClientZoneIpcData {
         linkshell_id: u64,
         /// The target member's content id.
         content_id: u64,
+    },
+    InviteCharacterToCWLS {
+        linkshell_id: u64,
+        #[brw(pad_after = 8)] // Seems to be empty/zeroes
+        content_id: u64,
+    },
+    LinkshellInviteReply {
+        linkshell_id: u64,
+        #[brw(pad_after = 7)]
+        // Seems to be empty/zeroes, but it's unclear if the response is larger than 1 byte
+        response: LinkshellInviteResponse,
     },
 }
 

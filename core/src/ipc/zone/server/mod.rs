@@ -135,10 +135,7 @@ mod marketboard;
 pub use marketboard::MarketBoardItem;
 
 mod linkshell;
-pub use linkshell::{
-    CWLSCommon, CWLSCommonIdentifiers, CWLSLeaveReason, CWLSMemberListEntry, CWLSNameAvailability,
-    CWLSPermissionRank, CrossworldLinkshell, CrossworldLinkshellEx, LinkshellEntry,
-};
+pub use linkshell::*;
 
 mod spawn_treasure;
 pub use spawn_treasure::SpawnTreasure;
@@ -1185,6 +1182,32 @@ pub enum ServerZoneIpcData {
         #[br(map = read_string)]
         #[bw(map = write_string)]
         #[brw(pad_after = 3)] // Seems to be empty/zeroes
+        target_name: String,
+    },
+    CrossworldLinkshellInvite(CrossworldLinkshellInvite),
+    /// This one is sent to the joining player.
+    CrossworldLinkshellJoinedSelf {
+        common_ids: CWLSCommonIdentifiers,
+        #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+        #[br(count = CHAR_NAME_MAX_LENGTH)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        linkshell_name: String,
+    },
+    /// This one is sent to everyone else, not to the joining player.
+    CrossworldLinkshellJoined2 {
+        /// The linkshell being joined.
+        linkshell_id: u64,
+        /// The joining player's content id.
+        content_id: u64,
+        /// The joining player's home world id.
+        home_world_id: u16,
+        unk1: u8, // Yet another always 1?
+        #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+        #[br(count = CHAR_NAME_MAX_LENGTH)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        #[brw(pad_after = 5)]
         target_name: String,
     },
 }

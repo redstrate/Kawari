@@ -1759,6 +1759,54 @@ pub fn handle_social_messages(
 
             true
         }
+        ToServer::SendLinkshellInvite(target_actor_id, invite_info) => {
+            let mut network = network.lock();
+
+            let msg = FromServer::LinkshellInviteReceived(invite_info.clone());
+
+            network.send_to_by_actor_id(*target_actor_id, msg, DestinationNetwork::ZoneClients);
+
+            true
+        }
+        ToServer::AcceptedLinkshellInvite(
+            from_actor_id,
+            linkshell_id,
+            from_content_id,
+            from_name,
+            linkshell_name,
+        ) => {
+            let mut network = network.lock();
+
+            let channel_number;
+            {
+                let Some(linkshell) = network.linkshells.get_mut(linkshell_id) else {
+                    return true;
+                };
+
+                channel_number = linkshell.channel_number;
+                if !linkshell
+                    .members
+                    .iter()
+                    .any(|m| m.actor_id == *from_actor_id)
+                {
+                    linkshell.members.push(LinkshellMember {
+                        actor_id: *from_actor_id,
+                        rank: CWLSPermissionRank::Member,
+                    });
+                }
+            }
+            let msg = FromServer::LinkshellInviteAccepted(
+                *linkshell_id,
+                *from_content_id,
+                from_name.clone(),
+                linkshell_name.clone(),
+                channel_number,
+            );
+
+            network.send_to_linkshell(*linkshell_id, None, msg, DestinationNetwork::ZoneClients);
+
+            true
+        }
         _ => false,
     }
 }

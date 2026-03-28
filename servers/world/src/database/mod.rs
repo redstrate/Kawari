@@ -1241,6 +1241,21 @@ impl WorldDatabase {
         None
     }
 
+    pub fn find_linkshell_name(&mut self, for_linkshell_id: u64) -> Option<String> {
+        use schema::linkshells::dsl::*;
+
+        if let Ok(ls_name) = linkshells
+            .select(name)
+            .filter(id.eq(for_linkshell_id as i64))
+            .first::<String>(&mut self.connection)
+        {
+            return Some(ls_name);
+        }
+
+        tracing::warn!("Unable to find linkshell name for {for_linkshell_id}!?");
+        None
+    }
+
     /// Removes all of a linkshell's members, and then removes the linkshell.
     pub fn remove_linkshell(&mut self, for_linkshell_id: u64) {
         use schema::linkshell_members::dsl::*;
@@ -1387,7 +1402,6 @@ impl WorldDatabase {
         for_linkshell_id: i64,
         for_content_id: i64,
         their_rank: CWLSPermissionRank,
-        their_invite_time: i64,
     ) -> bool {
         use schema::linkshell_members::dsl::*;
 
@@ -1408,11 +1422,16 @@ impl WorldDatabase {
             } else {
                 1 // Start from a safe default if there are no members.
             };
+
+            let ls_invite_time = diesel::select(unixepoch())
+                .get_result::<i64>(&mut self.connection)
+                .unwrap_or_default();
+
             let new_member = LinkshellMembers {
                 id: next_id,
                 content_id: for_content_id,
                 linkshell_id: for_linkshell_id,
-                invite_time: their_invite_time,
+                invite_time: ls_invite_time,
                 rank: their_rank as i32,
             };
 
@@ -1587,12 +1606,7 @@ impl WorldDatabase {
             match result {
                 Ok(_) => {
                     let rank = CWLSPermissionRank::Master;
-                    if self.add_member_to_linkshell(
-                        next_id,
-                        from_content_id,
-                        rank,
-                        ls_creation_time,
-                    ) {
+                    if self.add_member_to_linkshell(next_id, from_content_id, rank) {
                         return Some(CrossworldLinkshellEx {
                             ids: CWLSCommonIdentifiers {
                                 linkshell_id: next_id as u64,

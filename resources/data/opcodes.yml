@@ -651,6 +651,18 @@ ServerZoneIpcType:
     comment: The server informs the client that a member in the linkshell has had their rank changed.
     opcode: 129
     size: 64
+  - name: CrossworldLinkshellInvite
+    comment: The server informs the client about an invitation to a cross-world linkshell.
+    opcode: 462
+    size: 128
+  - name: CrossworldLinkshellJoinedSelf
+    comment: The server informs the client about the linkshell they just joined.
+    opcode: 712
+    size: 48
+  - name: CrossworldLinkshellJoined2
+    comment: The server informs the rest of the linkshell about the member that just joined.
+    opcode: 996
+    size: 56
 ClientZoneIpcType:
   - name: InitRequest
     comment: Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)
@@ -971,6 +983,14 @@ ClientZoneIpcType:
   - name: RemoveCWLSMember
     comment: The client kicks a member from one of their cross-world Linkshells. Only Leaders and Masters can do this.
     opcode: 993
+    size: 16
+  - name: InviteCharacterToCWLS
+    comment: The client invites another character to join their cross-world linkshell. Only Leaders and Masters can do this.
+    opcode: 305
+    size: 24
+  - name: LinkshellInviteReply
+    comment: The client invites another character to join their cross-world linkshell.
+    opcode: 807
     size: 16
 ServerLobbyIpcType:
   - name: NackReply
