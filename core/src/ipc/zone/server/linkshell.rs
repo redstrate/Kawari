@@ -155,3 +155,40 @@ pub enum CWLSLeaveReason {
     /// This player was kicked while their rank was invitee.
     InviteWithdrawn = 4,
 }
+
+#[binrw]
+#[derive(Clone, Debug, Default)]
+pub struct CrossworldLinkshellInvite {
+    pub linkshell_id: u64,
+    pub execute_content_id: u64,
+    pub target_content_id: u64,
+    pub execute_world_id: u16,
+    pub target_world_id: u16,
+    pub unk1: u8, // Always 1?
+    pub unk2: u8, // Always 1?
+    #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+    #[br(count = CHAR_NAME_MAX_LENGTH)]
+    #[br(map = read_string)]
+    #[bw(map = write_string)]
+    pub linkshell_name: String,
+    #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+    #[br(count = CHAR_NAME_MAX_LENGTH)]
+    #[br(map = read_string)]
+    #[bw(map = write_string)]
+    pub execute_name: String,
+    #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+    #[br(count = CHAR_NAME_MAX_LENGTH)]
+    #[br(map = read_string)]
+    #[bw(map = write_string)]
+    #[brw(pad_after = 2)] // Seems to be empty/zeroes
+    pub target_name: String,
+}
+
+#[binrw]
+#[brw(repr = u8)]
+#[derive(Clone, Debug, Default, PartialEq)]
+pub enum LinkshellInviteResponse {
+    #[default]
+    Declined = 1,
+    Accepted = 2,
+}

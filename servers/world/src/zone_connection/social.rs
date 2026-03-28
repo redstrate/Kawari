@@ -6,9 +6,10 @@ use kawari::{
     ipc::{
         chat::{ChatChannel, ChatChannelType},
         zone::{
-            ActorControlCategory, CWLSLeaveReason, CWLSMemberListEntry, CWLSPermissionRank,
-            CrossworldLinkshell, CrossworldLinkshellEx, InviteReply, InviteType, InviteUpdateType,
-            OnlineStatus, OnlineStatusMask, PartyMemberEntry, PartyUpdateStatus, PlayerEntry,
+            ActorControlCategory, CWLSCommonIdentifiers, CWLSLeaveReason, CWLSMemberListEntry,
+            CWLSPermissionRank, CrossworldLinkshell, CrossworldLinkshellEx,
+            CrossworldLinkshellInvite, InviteReply, InviteType, InviteUpdateType, OnlineStatus,
+            OnlineStatusMask, PartyMemberEntry, PartyUpdateStatus, PlayerEntry,
             SearchUIClassJobMask, SearchUIGrandCompanies, ServerZoneIpcData, ServerZoneIpcSegment,
             SocialList, SocialListRequestType, SocialListUILanguages, StrategyBoard,
             StrategyBoardUpdate, WaymarkPlacementMode, WaymarkPosition, WaymarkPreset,
@@ -851,6 +852,144 @@ impl ZoneConnection {
     }
 
     // TODO: For all of these linkshell-related functions, make a helper function to handle updating cwls_memberships and sending ToServer::SetLinkshells as much as possible
+
+    pub async fn invite_to_linkshell(&mut self, target_content_id: u64, linkshell_id: u64) {
+        let successful_invite;
+        let target_actor_id;
+        let target_name;
+        let linkshell_name;
+        let has_permission;
+        {
+            let mut db = self.database.lock();
+
+            has_permission = db.has_linkshell_permissions(
+                self.player_data.character.content_id as u64,
+                linkshell_id,
+                CWLSPermissionRank::Leader,
+            );
+            if !has_permission {
+                tracing::warn!(
+                    "{} tried to invite {} to linkshell {linkshell_id} without invite permissions! Rejecting request!",
+                    self.player_data.character.content_id as u64,
+                    target_content_id
+                );
+                return;
+            }
+            successful_invite = db.add_member_to_linkshell(
+                linkshell_id as i64,
+                target_content_id as i64,
+                CWLSPermissionRank::Invitee,
+            );
+            target_actor_id = db.find_actor_id(target_content_id);
+            target_name = db.find_character_name(target_content_id);
+            linkshell_name = db.find_linkshell_name(linkshell_id);
+        }
+
+        // Only send the invite if all of our info gathering was successful.
+        if successful_invite
+            && target_actor_id != ObjectId::default()
+            && let Some(target_name) = target_name
+            && let Some(linkshell_name) = linkshell_name
+        {
+            let ipc = CrossworldLinkshellInvite {
+                linkshell_id,
+                execute_content_id: self.player_data.character.content_id as u64,
+                target_content_id,
+                execute_world_id: self.config.world_id,
+                target_world_id: self.config.world_id,
+                unk1: 1,
+                unk2: 1,
+                linkshell_name: linkshell_name.clone(),
+                execute_name: self.player_data.character.name.clone(),
+                target_name: target_name.clone(),
+            };
+
+            self.handle
+                .send(ToServer::SendLinkshellInvite(target_actor_id, ipc))
+                .await;
+        }
+    }
+
+    pub async fn received_linkshell_invite(&mut self, invite_info: CrossworldLinkshellInvite) {
+        let ipc =
+            ServerZoneIpcSegment::new(ServerZoneIpcData::CrossworldLinkshellInvite(invite_info));
+
+        self.send_ipc_self(ipc).await;
+    }
+
+    pub async fn accepted_linkshell_invite(&mut self, linkshell_id: u64) {
+        let linkshell_name;
+        {
+            // Here we bypass permission checks because there's not really a whole lot we can do about that as an invitee.
+            let mut db = self.database.lock();
+            db.set_linkshell_rank(
+                self.player_data.character.content_id as u64,
+                self.player_data.character.content_id as u64,
+                linkshell_id,
+                CWLSPermissionRank::Member,
+            );
+            linkshell_name = db.find_linkshell_name(linkshell_id);
+        }
+
+        if let Some(linkshell_name) = linkshell_name {
+            self.handle
+                .send(ToServer::AcceptedLinkshellInvite(
+                    self.player_data.character.actor_id,
+                    linkshell_id,
+                    self.player_data.character.content_id as u64,
+                    self.player_data.character.name.clone(),
+                    linkshell_name.clone(),
+                ))
+                .await;
+        }
+    }
+
+    pub async fn member_joined_linkshell(
+        &mut self,
+        linkshell_id: u64,
+        content_id: u64,
+        target_name: String,
+        linkshell_name: String,
+        channel_number: u32,
+    ) {
+        if content_id != self.player_data.character.content_id as u64 {
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::CrossworldLinkshellJoined2 {
+                linkshell_id,
+                content_id,
+                home_world_id: self.config.world_id,
+                unk1: 1,
+                target_name: target_name.clone(),
+            });
+
+            self.send_ipc_self(ipc).await;
+        } else {
+            // TODO: remove this temporary workaround, it's ugly
+            let linkshell_chat_id = ChatChannel {
+                channel_type: kawari::ipc::chat::ChatChannelType::CWLinkshell,
+                world_id: 10008,
+                channel_number,
+            };
+
+            if let Some(cwls_memberships) = &mut self.cwls_memberships {
+                for cwls in cwls_memberships.iter_mut() {
+                    if cwls.ids.linkshell_id == linkshell_id {
+                        cwls.ids.linkshell_chat_id = linkshell_chat_id;
+                        break;
+                    }
+                }
+            }
+
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::CrossworldLinkshellJoinedSelf {
+                common_ids: CWLSCommonIdentifiers {
+                    linkshell_id,
+                    linkshell_chat_id,
+                },
+                linkshell_name: linkshell_name.clone(),
+            });
+
+            self.send_ipc_self(ipc).await;
+        }
+    }
 
     /// Creates a new cross-world linkshell and then informs both the global server & the client about it.
     pub async fn create_crossworld_linkshell(&mut self, name: String) {

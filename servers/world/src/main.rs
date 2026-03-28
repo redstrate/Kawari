@@ -15,9 +15,9 @@ use kawari::ipc::chat::{ChatChannel, ClientChatIpcData};
 
 use kawari::ipc::zone::{
     ActorControlCategory, CWLSLeaveReason, Conditions, ContentFinderUserAction, CrossRealmListing,
-    CrossRealmListings, CrossworldLinkshellEx, EventType, InviteType, MapEffects, MarketBoardItem,
-    OnlineStatus, OnlineStatusMask, PlayerSetup, SceneFlags, SearchInfo, SocialListRequestType,
-    TrustContent, TrustInformation,
+    CrossRealmListings, CrossworldLinkshellEx, EventType, InviteType, LinkshellInviteResponse,
+    MapEffects, MarketBoardItem, OnlineStatus, OnlineStatusMask, PlayerSetup, SceneFlags,
+    SearchInfo, SocialListRequestType, TrustContent, TrustInformation,
 };
 
 use kawari::ipc::zone::{
@@ -2837,6 +2837,31 @@ async fn process_packet(
                                 )
                                 .await;
                         }
+                        ClientZoneIpcData::InviteCharacterToCWLS {
+                            linkshell_id,
+                            content_id,
+                        } => {
+                            connection
+                                .invite_to_linkshell(*content_id, *linkshell_id)
+                                .await;
+                        }
+                        ClientZoneIpcData::LinkshellInviteReply {
+                            linkshell_id,
+                            response,
+                        } => match response {
+                            LinkshellInviteResponse::Accepted => {
+                                connection.accepted_linkshell_invite(*linkshell_id).await
+                            }
+                            LinkshellInviteResponse::Declined => {
+                                connection
+                                    .remove_linkshell_member(
+                                        *linkshell_id,
+                                        connection.player_data.character.content_id as u64,
+                                        CWLSLeaveReason::DeclinedInvite,
+                                    )
+                                    .await
+                            }
+                        },
                         ClientZoneIpcData::Unknown { unk } => {
                             tracing::warn!(
                                 "Unknown Zone packet {:?} recieved ({} bytes), this should be handled!",
@@ -3239,6 +3264,26 @@ async fn process_server_msg(
                         target_content_id,
                         rank,
                         target_name,
+                    )
+                    .await;
+            }
+            FromServer::LinkshellInviteReceived(invite) => {
+                connection.received_linkshell_invite(invite).await;
+            }
+            FromServer::LinkshellInviteAccepted(
+                linkshell_id,
+                from_content_id,
+                from_name,
+                linkshell_name,
+                channel_number,
+            ) => {
+                connection
+                    .member_joined_linkshell(
+                        linkshell_id,
+                        from_content_id,
+                        from_name.clone(),
+                        linkshell_name.clone(),
+                        channel_number,
                     )
                     .await;
             }

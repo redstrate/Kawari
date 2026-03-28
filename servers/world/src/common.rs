@@ -21,10 +21,11 @@ use kawari::{
         },
         zone::{
             ActionRequest, ActorControlCategory, CWLSLeaveReason, CWLSPermissionRank,
-            ClientTrigger, Conditions, Config, InviteReply, InviteType, OnlineStatus,
-            PartyMemberEntry, PartyMemberPositions, PartyUpdateStatus, ReadyCheckReply,
-            ServerZoneIpcSegment, SpawnNpc, SpawnObject, SpawnPlayer, SpawnTreasure, StrategyBoard,
-            StrategyBoardUpdate, WaymarkPlacementMode, WaymarkPosition, WaymarkPreset,
+            ClientTrigger, Conditions, Config, CrossworldLinkshellInvite, InviteReply, InviteType,
+            OnlineStatus, PartyMemberEntry, PartyMemberPositions, PartyUpdateStatus,
+            ReadyCheckReply, ServerZoneIpcSegment, SpawnNpc, SpawnObject, SpawnPlayer,
+            SpawnTreasure, StrategyBoard, StrategyBoardUpdate, WaymarkPlacementMode,
+            WaymarkPosition, WaymarkPreset,
         },
     },
 };
@@ -215,6 +216,10 @@ pub enum FromServer {
     LinkshellRenamed(u64, String, u64, String),
     /// Inform the client that a member of one of their linkshells had their rank changed.
     LinkshellRankChanged(u64, u64, u64, CWLSPermissionRank, String),
+    /// Inform the client that they have received a new cross-world linkshell invitation.
+    LinkshellInviteReceived(CrossworldLinkshellInvite),
+    /// Inform the client that someone has joined their linkshell.
+    LinkshellInviteAccepted(u64, u64, String, String, u32),
 }
 
 #[derive(Debug, Clone)]
@@ -409,6 +414,10 @@ pub enum ToServer {
     RenameLinkshell(u64, String, u64, String),
     /// The client changed the rank of a member in their linkshell.
     SetLinkshellRank(u64, u64, u64, CWLSPermissionRank, String),
+    /// The client invited another character to join their linkshell.
+    SendLinkshellInvite(ObjectId, CrossworldLinkshellInvite),
+    /// The client accepted an invite to a linkshell.
+    AcceptedLinkshellInvite(ObjectId, u64, u64, String, String),
 }
 
 #[derive(Clone, Debug)]
