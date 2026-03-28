@@ -6,9 +6,9 @@ use kawari::{
     ipc::{
         chat::{ChatChannel, ChatChannelType},
         zone::{
-            ActorControlCategory, CWLSMemberListEntry, CWLSPermissionRank, CrossworldLinkshell,
-            CrossworldLinkshellEx, InviteReply, InviteType, InviteUpdateType, OnlineStatus,
-            OnlineStatusMask, PartyMemberEntry, PartyUpdateStatus, PlayerEntry,
+            ActorControlCategory, CWLSLeaveReason, CWLSMemberListEntry, CWLSPermissionRank,
+            CrossworldLinkshell, CrossworldLinkshellEx, InviteReply, InviteType, InviteUpdateType,
+            OnlineStatus, OnlineStatusMask, PartyMemberEntry, PartyUpdateStatus, PlayerEntry,
             SearchUIClassJobMask, SearchUIGrandCompanies, ServerZoneIpcData, ServerZoneIpcSegment,
             SocialList, SocialListRequestType, SocialListUILanguages, StrategyBoard,
             StrategyBoardUpdate, WaymarkPlacementMode, WaymarkPosition, WaymarkPreset,
@@ -977,16 +977,65 @@ impl ZoneConnection {
             .await;
     }
 
-    pub async fn leave_linkshell(
+    pub async fn remove_linkshell_member(
         &mut self,
-        from_actor_id: ObjectId,
-        from_content_id: u64,
-        from_name: String,
-        from_rank: CWLSPermissionRank,
+        linkshell_id: u64,
+        target_content_id: u64,
+        reason_for_leaving: CWLSLeaveReason,
+    ) {
+        let target_actor_id;
+        let target_name;
+        {
+            let mut db = self.database.lock();
+
+            // If we're kicking someone, check permissions first.
+            let has_permission = db.has_linkshell_permissions(
+                self.player_data.character.content_id as u64,
+                linkshell_id,
+                CWLSPermissionRank::Leader,
+            );
+            if target_content_id != (self.player_data.character.content_id as u64)
+                && !has_permission
+            {
+                tracing::warn!(
+                    "Player {} tried to kick {} from linkshell {}, but did not have permission to do so! Rejecting request!",
+                    self.player_data.character.content_id as u64,
+                    target_content_id,
+                    linkshell_id
+                );
+                return;
+            }
+
+            target_actor_id = db.find_actor_id(target_content_id);
+            target_name = db.find_character_name(target_content_id);
+        }
+
+        if let Some(target_name) = target_name
+            && target_actor_id.is_valid()
+        {
+            self.handle
+                .send(ToServer::LeaveLinkshell(
+                    target_actor_id,
+                    self.player_data.character.content_id as u64,
+                    target_content_id,
+                    target_name,
+                    reason_for_leaving,
+                    linkshell_id,
+                ))
+                .await;
+        }
+    }
+
+    pub async fn member_left_linkshell(
+        &mut self,
+        execute_content_id: u64,
+        target_content_id: u64,
+        target_name: String,
+        reason_for_leaving: CWLSLeaveReason,
         linkshell_id: u64,
     ) {
         // If we're the one leaving, then remove ourself from the LS.
-        if from_actor_id == self.player_data.character.actor_id {
+        if target_content_id == (self.player_data.character.content_id as u64) {
             let possible_successor;
             {
                 let mut db = self.database.lock();
@@ -1043,11 +1092,12 @@ impl ZoneConnection {
 
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::CrossworldLinkshellMemberLeft {
             linkshell_id,
-            content_id: from_content_id,
-            content_id_repeated: from_content_id,
-            home_world_id: self.config.world_id,
-            permission_rank: from_rank,
-            character_name: from_name.clone(),
+            execute_content_id,
+            target_content_id,
+            target_homeworld_id: self.config.world_id,
+            unk1: 1,
+            reason_for_leaving,
+            character_name: target_name.clone(),
         });
 
         self.send_ipc_self(ipc).await;

@@ -509,6 +509,12 @@ pub enum ClientZoneIpcData {
         rank: CWLSPermissionRank,
         unk: [u8; 4], // Contains unknown data, possibly garbage. Doesn't seem to be a timestamp, actor id, or anything recognisable at this time, and the server doesn't echo it back.
     },
+    RemoveCWLSMember {
+        /// The linkshell to remove this member from.
+        linkshell_id: u64,
+        /// The target member's content id.
+        content_id: u64,
+    },
 }
 
 #[cfg(test)]

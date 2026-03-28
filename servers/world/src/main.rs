@@ -14,7 +14,7 @@ use kawari_world::inventory::{EquipSlot, Item, Storage, get_next_free_slot};
 use kawari::ipc::chat::{ChatChannel, ClientChatIpcData};
 
 use kawari::ipc::zone::{
-    ActorControlCategory, Conditions, ContentFinderUserAction, CrossRealmListing,
+    ActorControlCategory, CWLSLeaveReason, Conditions, ContentFinderUserAction, CrossRealmListing,
     CrossRealmListings, CrossworldLinkshellEx, EventType, InviteType, MapEffects, MarketBoardItem,
     OnlineStatus, OnlineStatusMask, PlayerSetup, SceneFlags, SearchInfo, SocialListRequestType,
     TrustContent, TrustInformation,
@@ -399,7 +399,7 @@ async fn client_chat_loop(
                     FromServer::SetLinkshellChatChannels(cwls, local, _) => connection.set_linkshell_chatchannels(cwls, local).await,
                     FromServer::CWLSMessageSent(message_info) => connection.cwls_message_received(message_info).await,
                     FromServer::LinkshellDisbanded(_, channel_id) => connection.linkshell_disbanded(channel_id).await,
-                    FromServer::LinkshellLeft(from_actor_id, _, _, _, _, channel_id) => connection.linkshell_left(from_actor_id, channel_id).await,
+                    FromServer::LinkshellLeft(from_actor_id, _, _, _, _, _, channel_id) => connection.linkshell_left(from_actor_id, channel_id).await,
                     _ => tracing::error!("ChatConnection {:#?} received a FromServer message we don't care about: {:#?}, ensure you're using the right client network or that you've implemented a handler for it if we actually care about it!", client_handle.id, msg),
                 },
                 None => break,
@@ -2800,13 +2800,11 @@ async fn process_packet(
                         }
                         ClientZoneIpcData::LeaveCrossworldLinkshell { linkshell_id } => {
                             connection
-                                .handle
-                                .send(ToServer::LeaveLinkshell(
-                                    connection.player_data.character.actor_id,
-                                    connection.player_data.character.content_id as u64,
-                                    connection.player_data.character.name.clone(),
+                                .remove_linkshell_member(
                                     *linkshell_id,
-                                ))
+                                    connection.player_data.character.content_id as u64,
+                                    CWLSLeaveReason::Leaving,
+                                )
                                 .await;
                         }
                         ClientZoneIpcData::DisbandCrossworldLinkshell { linkshell_id } => {
@@ -2825,6 +2823,18 @@ async fn process_packet(
                         } => {
                             connection
                                 .set_linkshell_rank(*linkshell_id, *content_id, *rank)
+                                .await;
+                        }
+                        ClientZoneIpcData::RemoveCWLSMember {
+                            linkshell_id,
+                            content_id,
+                        } => {
+                            connection
+                                .remove_linkshell_member(
+                                    *linkshell_id,
+                                    *content_id,
+                                    CWLSLeaveReason::Kicked,
+                                )
                                 .await;
                         }
                         ClientZoneIpcData::Unknown { unk } => {
@@ -3187,19 +3197,20 @@ async fn process_server_msg(
                     .await;
             }
             FromServer::LinkshellLeft(
-                from_actor_id,
-                from_content_id,
-                from_name,
-                rank,
+                _,
+                execute_content_id,
+                target_content_id,
+                target_name,
+                reason_for_leaving,
                 linkshell_id,
                 _,
             ) => {
                 connection
-                    .leave_linkshell(
-                        from_actor_id,
-                        from_content_id,
-                        from_name.clone(),
-                        rank,
+                    .member_left_linkshell(
+                        execute_content_id,
+                        target_content_id,
+                        target_name.clone(),
+                        reason_for_leaving,
                         linkshell_id,
                     )
                     .await

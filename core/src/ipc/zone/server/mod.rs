@@ -136,7 +136,7 @@ pub use marketboard::MarketBoardItem;
 
 mod linkshell;
 pub use linkshell::{
-    CWLSCommon, CWLSCommonIdentifiers, CWLSMemberListEntry, CWLSNameAvailability,
+    CWLSCommon, CWLSCommonIdentifiers, CWLSLeaveReason, CWLSMemberListEntry, CWLSNameAvailability,
     CWLSPermissionRank, CrossworldLinkshell, CrossworldLinkshellEx, LinkshellEntry,
 };
 
@@ -1126,14 +1126,15 @@ pub enum ServerZoneIpcData {
     CrossworldLinkshellMemberLeft {
         /// The linkshell this player is leaving.
         linkshell_id: u64,
-        /// The leaving player's content id.
-        content_id: u64,
-        /// Their content id repeated for some unknown reason.
-        content_id_repeated: u64,
+        /// The initiator's content id.
+        execute_content_id: u64,
+        /// The target's content id.
+        target_content_id: u64,
         /// Their home world id.
-        home_world_id: u16,
-        #[brw(pad_after = 1)] // Seems to be empty/zeroes
-        permission_rank: CWLSPermissionRank,
+        target_homeworld_id: u16,
+        unk1: u8, // Always 1? Changing it does seemingly nothing.
+        /// The target's reason for leaving.
+        reason_for_leaving: CWLSLeaveReason,
         /// Their name.
         #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
         #[br(count = CHAR_NAME_MAX_LENGTH)]

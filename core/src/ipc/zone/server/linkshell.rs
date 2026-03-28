@@ -136,3 +136,22 @@ pub enum CWLSNameAvailability {
     Available = 0,
     NotAvailable = 1,
 }
+
+/// The reason this player is leaving the linkshell.
+// TODO: This might actually just be a bitfield?
+#[binrw]
+#[brw(repr = u8)]
+#[derive(Copy, Clone, Debug, Default, PartialEq, FromRepr)]
+pub enum CWLSLeaveReason {
+    /// This player is departing of their own volition.
+    #[default]
+    Leaving = 0,
+    /// This player has been kicked.
+    Kicked = 1,
+    /// Unknown, also treated as kicked.
+    KickedUnk = 2,
+    /// This player declined an invite to the linkshell.
+    DeclinedInvite = 3,
+    /// This player was kicked while their rank was invitee.
+    InviteWithdrawn = 4,
+}
