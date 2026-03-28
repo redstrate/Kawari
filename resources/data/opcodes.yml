@@ -968,6 +968,10 @@ ClientZoneIpcType:
     comment: The client promotes a member in their linkshell to a higher rank. Only Masters can do this if the target is another player, and only Leaders can target themselves to resign. Masters resign when they leave the linkshell.
     opcode: 661
     size: 24
+  - name: RemoveCWLSMember
+    comment: The client kicks a member from one of their cross-world Linkshells. Only Leaders and Masters can do this.
+    opcode: 993
+    size: 16
 ServerLobbyIpcType:
   - name: NackReply
     comment: Sent by the server to indicate an lobby error occured.

@@ -20,11 +20,11 @@ use kawari::{
             SendPartyMessage, SendTellMessage, TellNotFoundError,
         },
         zone::{
-            ActionRequest, ActorControlCategory, CWLSPermissionRank, ClientTrigger, Conditions,
-            Config, InviteReply, InviteType, OnlineStatus, PartyMemberEntry, PartyMemberPositions,
-            PartyUpdateStatus, ReadyCheckReply, ServerZoneIpcSegment, SpawnNpc, SpawnObject,
-            SpawnPlayer, SpawnTreasure, StrategyBoard, StrategyBoardUpdate, WaymarkPlacementMode,
-            WaymarkPosition, WaymarkPreset,
+            ActionRequest, ActorControlCategory, CWLSLeaveReason, CWLSPermissionRank,
+            ClientTrigger, Conditions, Config, InviteReply, InviteType, OnlineStatus,
+            PartyMemberEntry, PartyMemberPositions, PartyUpdateStatus, ReadyCheckReply,
+            ServerZoneIpcSegment, SpawnNpc, SpawnObject, SpawnPlayer, SpawnTreasure, StrategyBoard,
+            StrategyBoardUpdate, WaymarkPlacementMode, WaymarkPosition, WaymarkPreset,
         },
     },
 };
@@ -210,7 +210,7 @@ pub enum FromServer {
     /// Inform the client that one of their linkshells has been disbanded.
     LinkshellDisbanded(u64, u32),
     /// Inform the client that a member left one of their linkshells.
-    LinkshellLeft(ObjectId, u64, String, CWLSPermissionRank, u64, u32),
+    LinkshellLeft(ObjectId, u64, u64, String, CWLSLeaveReason, u64, u32),
     /// Inform the client that an owner of one of their linkshells has renamed it.
     LinkshellRenamed(u64, String, u64, String),
     /// Inform the client that a member of one of their linkshells had their rank changed.
@@ -404,7 +404,7 @@ pub enum ToServer {
     /// The client disbanded their linkshell, and online members need to be informed.
     DisbandLinkshell(u64),
     /// The client left a linkshell, and online members need to be informed.
-    LeaveLinkshell(ObjectId, u64, String, u64),
+    LeaveLinkshell(ObjectId, u64, u64, String, CWLSLeaveReason, u64),
     /// The client renamed their linkshell.
     RenameLinkshell(u64, String, u64, String),
     /// The client changed the rank of a member in their linkshell.

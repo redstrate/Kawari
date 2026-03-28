@@ -1672,7 +1672,14 @@ pub fn handle_social_messages(
 
             true
         }
-        ToServer::LeaveLinkshell(from_actor_id, from_content_id, from_name, linkshell_id) => {
+        ToServer::LeaveLinkshell(
+            target_actor_id,
+            execute_content_id,
+            target_content_id,
+            from_name,
+            reason_for_leaving,
+            linkshell_id,
+        ) => {
             let mut network = network.lock();
 
             {
@@ -1680,19 +1687,12 @@ pub fn handle_social_messages(
                     return true;
                 };
 
-                let mut rank = CWLSPermissionRank::Invitee;
-                for member in &linkshell.members {
-                    if member.actor_id == *from_actor_id {
-                        rank = member.rank;
-                        break;
-                    }
-                }
-
                 let msg = FromServer::LinkshellLeft(
-                    *from_actor_id,
-                    *from_content_id,
+                    *target_actor_id,
+                    *execute_content_id,
+                    *target_content_id,
                     from_name.clone(),
-                    rank,
+                    *reason_for_leaving,
                     *linkshell_id,
                     linkshell.channel_number,
                 );
@@ -1716,7 +1716,7 @@ pub fn handle_social_messages(
             network
                 .linkshells
                 .entry(*linkshell_id)
-                .and_modify(|ls| ls.members.retain(|m| m.actor_id != *from_actor_id));
+                .and_modify(|ls| ls.members.retain(|m| m.actor_id != *target_actor_id));
 
             // TODO: Need to test more if removing the list is okay, ToServer::SetLinkshells *should* re-instate a linkshell if one of its members comes back online after this point
             if network.linkshells[linkshell_id].members.is_empty() {
