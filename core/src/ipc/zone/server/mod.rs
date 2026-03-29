@@ -143,6 +143,9 @@ pub use spawn_treasure::SpawnTreasure;
 mod cross_realm_listing;
 pub use cross_realm_listing::{CrossRealmListing, CrossRealmListings};
 
+mod mail;
+pub use mail::{LetterPreview, SentItemInfo};
+
 use crate::common::{
     CHAR_NAME_MAX_LENGTH, ContainerType, ItemOperationKind, ObjectId, read_bool_from, read_string,
     write_bool_as, write_string,
@@ -1233,6 +1236,12 @@ pub enum ServerZoneIpcData {
         #[bw(map = write_bool_as::<u8>)]
         #[brw(pad_after = 4)] // Seemingly empty/zeroes, setting it does nothing noticeable
         has_support_message: bool,
+    },
+    MailboxPreview {
+        /// The letters sent on this iteration. This is part of a series of exchanges like all the other lists in FF14.
+        letters: [LetterPreview; 5],
+        /// This has sequence information but it's not understood yet.
+        unk: [u8; 4],
     },
 }
 
