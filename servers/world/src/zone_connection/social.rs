@@ -1423,6 +1423,7 @@ impl ZoneConnection {
             letters_sent_back: 0,
             attachments_counter: 0,
             mail_counter: 0,
+            friend_counter: 0,
             reward_counter: 0,
             system_counter: 0,
             has_gm_mail: false,

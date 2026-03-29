@@ -1216,8 +1216,10 @@ pub enum ServerZoneIpcData {
         letters_sent_back: i32,
         /// The amount of letters sent by friends that have attachments.
         attachments_counter: u16,
-        /// The total amount of mail, displayed as a small white envelope in the server info bar (caps at 99 in the bar). Also displayed by the delivery moogle when they inform the player how many letters they have (caps at 255 in the moogle's dialog).
-        mail_counter: u16,
+        /// The total amount of new mail, displayed as a small white envelope in the server info bar (caps at 99 in the bar). Also displayed by the delivery moogle when they inform the player how many letters they have (caps at 255 in the moogle's dialog).
+        mail_counter: u8,
+        /// The amount of mail from friends the player has in their mailbox.
+        friend_counter: u8,
         /// The amount of reward mail the player has in their mailbox. Reward mail is mail sent by the system that has cash shop items, etc., attached.
         reward_counter: u8,
         /// The amount of system mail from GMs the player in their mailbox.
