@@ -527,7 +527,7 @@ pub enum ClientZoneIpcData {
         response: LinkshellInviteResponse,
     },
     RequestMailbox {
-        // Seems to contain nothing but zeroes
+        // Unknown data, but the first byte appears to be an index value (think SocialLists) and the 2nd byte appears to be the inbox to request (1 = friends, 2 = rewards, 3 = system?).
         unk: [u8; 8],
     },
 }
