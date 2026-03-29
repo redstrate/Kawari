@@ -3179,6 +3179,7 @@ async fn process_server_msg(
                 connection
                     .set_character_mode(CharacterMode::Normal, 0)
                     .await;
+                connection.player_data.volatile.current_mount = 0;
                 connection
                     .actor_control(
                         from_actor_id,
@@ -3292,6 +3293,9 @@ async fn process_server_msg(
                         channel_number,
                     )
                     .await;
+            }
+            FromServer::SetCurrentMount(current_mount) => {
+                connection.player_data.volatile.current_mount = current_mount as i32;
             }
             _ => {
                 tracing::error!(

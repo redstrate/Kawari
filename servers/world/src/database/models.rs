@@ -148,6 +148,7 @@ pub struct Volatile {
     pub title: i32,
     pub is_online: bool,
     pub client_language: ClientLanguage,
+    pub current_mount: i32,
 }
 
 #[derive(
