@@ -526,6 +526,10 @@ pub enum ClientZoneIpcData {
         // Seems to be empty/zeroes, but it's unclear if the response is larger than 1 byte
         response: LinkshellInviteResponse,
     },
+    RequestMailbox {
+        // Seems to contain nothing but zeroes
+        unk: [u8; 8],
+    },
 }
 
 #[cfg(test)]
