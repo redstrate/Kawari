@@ -1239,7 +1239,9 @@ pub enum ServerZoneIpcData {
     },
     MailboxPreview {
         /// The letters sent on this iteration. This is part of a series of exchanges like all the other lists in FF14.
-        letters: [LetterPreview; 5],
+        #[brw(pad_size_to = LetterPreview::SIZE * LetterPreview::COUNT)]
+        #[br(count = LetterPreview::COUNT)]
+        letters: Vec<LetterPreview>,
         /// This has sequence information but it's not understood yet.
         unk: [u8; 4],
     },

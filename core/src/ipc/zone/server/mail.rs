@@ -3,7 +3,7 @@ use binrw::binrw;
 use crate::ipc::zone::server::{CHAR_NAME_MAX_LENGTH, read_string, write_string};
 
 #[binrw]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct LetterPreview {
     /// The sender's content id.
     pub sender_content_id: u64,
@@ -27,8 +27,13 @@ pub struct LetterPreview {
     pub message: String,
 }
 
+impl LetterPreview {
+    pub const COUNT: usize = 5;
+    pub const SIZE: usize = 232;
+}
+
 #[binrw]
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Default)]
 pub struct SentItemInfo {
     /// Index into the Items Excel sheet.
     pub item_id: u32,
