@@ -351,6 +351,19 @@ pub enum ActorControlCategory {
         aetheryte_id: u32,
     },
 
+    /// The player is offered a teleport by someone in their party.
+    #[brw(magic = 204u32)]
+    TeleportOffered {
+        /// If the player is inelligible for this teleport, it'll be set to true.
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        inelligible_for_teleport: bool,
+        /// The destination aetheryte.
+        aetheryte_id: u32,
+        /// The party member who offered the teleport. It only affects the name of the offerer, getting it wrong shows either the wrong name or no name at all.
+        party_member_index: u32,
+    },
+
     /// Used for things like the water pads in Gold Saucer.
     #[brw(magic = 220u32)]
     ExecuteGimmickJump {

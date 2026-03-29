@@ -82,6 +82,14 @@ pub enum ClientTriggerCommand {
         // TODO: fill out the rest
     },
 
+    /// The player answers a teleport offer sent by someone in their party.
+    #[brw(magic = 203u32)]
+    TeleportOfferReply {
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        decline_teleport: bool,
+    },
+
     /// Examine menu option on characters.
     #[brw(magic = 300u32)]
     ExamineCharacter { target_actor_id: ObjectId },
