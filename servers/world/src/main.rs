@@ -865,7 +865,7 @@ async fn process_packet(
                                 ))
                                 .await;
 
-                            //connection.remind_pending_invites().await;
+                            connection.inform_about_mailbox().await;
                             connection.init_linkshells().await;
 
                             // Send login message
@@ -2862,6 +2862,12 @@ async fn process_packet(
                                     .await
                             }
                         },
+                        ClientZoneIpcData::RequestMailbox { .. } => {
+                            tracing::info!("Requesting mail is unimplemented");
+                        }
+                        ClientZoneIpcData::SendLetter { .. } => {
+                            tracing::info!("Sending letters is unimplemented");
+                        }
                         ClientZoneIpcData::Unknown { unk } => {
                             tracing::warn!(
                                 "Unknown Zone packet {:?} recieved ({} bytes), this should be handled!",

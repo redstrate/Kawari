@@ -1416,4 +1416,20 @@ impl ZoneConnection {
 
         self.send_ipc_self(ipc).await;
     }
+
+    pub async fn inform_about_mailbox(&mut self) {
+        // TODO: Actually gather mail info from the database
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::MailboxStatus {
+            letters_sent_back: 0,
+            attachments_counter: 0,
+            mail_counter: 0,
+            friend_counter: 0,
+            reward_counter: 0,
+            system_counter: 0,
+            has_gm_mail: false,
+            has_support_message: false,
+        });
+
+        self.send_ipc_self(ipc).await;
+    }
 }

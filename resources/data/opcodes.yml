@@ -663,6 +663,14 @@ ServerZoneIpcType:
     comment: The server informs the rest of the linkshell about the member that just joined.
     opcode: 996
     size: 56
+  - name: MailboxStatus
+    comment: Upon login, the server informs the client of how many letters they have in their mailbox, along with any that are from support/GMs.
+    opcode: 119
+    size: 16
+  - name: MailboxPreview
+    comment: The server sends the client previews of letters they have received.
+    opcode: 240
+    size: 1164
 ClientZoneIpcType:
   - name: InitRequest
     comment: Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)
@@ -992,6 +1000,14 @@ ClientZoneIpcType:
     comment: The client invites another character to join their cross-world linkshell.
     opcode: 807
     size: 16
+  - name: RequestMailbox
+    comment: The client requests the contents of their mailbox from the server.
+    opcode: 247
+    size: 8
+  - name: SendLetter
+    comment: The client sends a letter to a friend.
+    opcode: 221
+    size: 688
 ServerLobbyIpcType:
   - name: NackReply
     comment: Sent by the server to indicate an lobby error occured.

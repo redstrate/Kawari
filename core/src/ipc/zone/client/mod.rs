@@ -19,6 +19,9 @@ pub use crate::ipc::zone::client::item_operation::ItemOperation;
 mod event_return_handler;
 pub use crate::ipc::zone::client::event_return_handler::EventReturnHandler;
 
+mod mail;
+pub use mail::MailItemInfo;
+
 mod queue_duties;
 pub use queue_duties::{ContentRegistrationFlags, QueueDuties};
 
@@ -525,6 +528,23 @@ pub enum ClientZoneIpcData {
         #[brw(pad_after = 7)]
         // Seems to be empty/zeroes, but it's unclear if the response is larger than 1 byte
         response: LinkshellInviteResponse,
+    },
+    RequestMailbox {
+        // This has sequence information, and seemingly for what tab the client wants previews for, but it's currently unknown. More research is needed.
+        unk: [u8; 8],
+    },
+    SendLetter {
+        /// The recipient's content id.
+        recipient_content_id: u64,
+        /// The items attached to the letter, if any. Gil must always be the last item!
+        attached_items: [MailItemInfo; 6],
+        /// The message to send. In-game it's only 200 characters, but it's larger than 201 bytes due to non-English languages consuming more bytes per character.
+        #[brw(pad_size_to = 601)]
+        #[br(count = 600)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        #[brw(pad_after = 7)] // Seems to just be padding/garbage
+        message: String,
     },
 }
 
