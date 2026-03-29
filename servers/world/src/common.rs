@@ -220,6 +220,8 @@ pub enum FromServer {
     LinkshellInviteReceived(CrossworldLinkshellInvite),
     /// Inform the client that someone has joined their linkshell.
     LinkshellInviteAccepted(u64, u64, String, String, u32),
+    /// Inform the zone connection about their current mount's model id. Helps persist mounts across zone transitions and through log-outs.
+    SetCurrentMount(u16),
 }
 
 #[derive(Debug, Clone)]

@@ -100,6 +100,13 @@ pub fn execute_action(
         let common = actor.get_common_spawn_mut();
 
         common.current_mount = request.action_key as u16;
+        common.mode = CharacterMode::Mounted;
+
+        {
+            let mut network = network.lock();
+            let msg = FromServer::SetCurrentMount(common.current_mount);
+            network.send_to_by_actor_id(from_actor_id, msg, DestinationNetwork::ZoneClients);
+        }
     }
 
     let effects_builder;

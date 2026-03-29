@@ -239,6 +239,13 @@ impl ZoneConnection {
             voice: chara_make.voice_id as u8,
             active_minion: self.active_minion as u16,
             handler_id: self.content_handler_id,
+            // TODO: Dismount if entering a duty? Towns are probably fine to leave alone.
+            current_mount: self.player_data.volatile.current_mount as u16,
+            mode: if self.player_data.volatile.current_mount != 0 {
+                CharacterMode::Mounted
+            } else {
+                CharacterMode::default()
+            },
             ..Default::default()
         }
     }
