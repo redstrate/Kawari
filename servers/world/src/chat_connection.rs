@@ -11,8 +11,8 @@ use kawari::{
     ipc::{
         chat::{
             CWLinkshellMessage, ChatChannel, ChatChannelType, ClientChatIpcSegment, PartyMessage,
-            SendPartyMessage, SendTellMessage, ServerChatIpcData, ServerChatIpcSegment,
-            TellMessage, TellNotFoundError,
+            SendCWLinkshellMessage, SendPartyMessage, SendTellMessage, ServerChatIpcData,
+            ServerChatIpcSegment, TellMessage, TellNotFoundError,
         },
         zone::{CrossworldLinkshellEx, OnlineStatus},
     },
@@ -273,6 +273,30 @@ impl ChatConnection {
             tracing::error!(
                 "party_message_received: We received a message not destined for our party! What happened? Discarding message. The destination chatchannel was {:#?}",
                 message_info.party_chatchannel
+            );
+        }
+    }
+
+    // TODO: Probably see if we can have one generic function for both cwls and lcls
+    pub async fn send_linkshell_message(&mut self, message_data: &SendCWLinkshellMessage) {
+        if self.chatchannels.cwls.contains(&message_data.chatchannel) {
+            self.handle
+                .send(ToServer::CWLSMessageSent(CWLinkshellMessage {
+                    cwls_chatchannel: message_data.chatchannel,
+                    sender_account_id: self.player_data.account_id,
+                    sender_content_id: self.player_data.content_id,
+                    sender_home_world_id: self.config.world_id,
+                    sender_current_world_id: self.config.world_id,
+                    sender_actor_id: self.player_data.actor_id,
+                    sender_name: self.player_data.name.clone(),
+                    message: message_data.message.clone(),
+                }))
+                .await;
+        } else {
+            tracing::error!(
+                "The client tried to send a linkshell message to an invalid ChatChannel: {:#?}, while ours are {:#?}",
+                message_data.chatchannel,
+                self.chatchannels.cwls
             );
         }
     }

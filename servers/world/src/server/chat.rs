@@ -9,7 +9,6 @@ use crate::{
         network::{DestinationNetwork, NetworkState},
     },
 };
-use kawari::ipc::chat::CWLinkshellMessage;
 
 /// Process chat-related messages.
 pub fn handle_chat_messages(
@@ -74,52 +73,26 @@ pub fn handle_chat_messages(
 
             true
         }
-        ToServer::CWLSMessageSent(from_actor_id, message_info) => {
+        ToServer::CWLSMessageSent(linkshell_message) => {
             let mut network = network.lock();
-            let data = data.lock();
 
-            let Some(instance) = data.find_actor_instance(*from_actor_id) else {
+            // Find the linkshell id from the chatchannel id.
+            // TODO: This may not be 100% necessary in an upcoming refactor, time will tell.
+            let Some(id) = network.linkshells.iter().find_map(|(key, val)| {
+                (val.channel_number == linkshell_message.cwls_chatchannel.channel_number)
+                    .then_some(key)
+            }) else {
                 return true;
             };
 
-            let Some(sender_actor) = instance.find_actor(*from_actor_id) else {
-                return true;
-            };
+            let linkshell_id = *id;
 
-            let Some(sender) = sender_actor.get_player_spawn() else {
-                return true;
-            };
-
-            let cwls_message = CWLinkshellMessage {
-                cwls_chatchannel: message_info.chatchannel,
-                sender_account_id: sender.account_id,
-                sender_content_id: sender.content_id,
-                sender_home_world_id: sender.home_world_id,
-                sender_current_world_id: sender.current_world_id,
-                sender_actor_id: *from_actor_id,
-                sender_name: sender.common.name.clone(),
-                message: message_info.message.clone(),
-            };
-
-            let mut linkshell_id = None;
-
-            // We need some info about the destination LS since the chat connection doesn't provide it.
-            for (id, linkshell) in &network.linkshells {
-                if linkshell.channel_number == message_info.chatchannel.channel_number {
-                    linkshell_id = Some(*id);
-                    break;
-                }
-            }
-
-            let Some(linkshell_id) = linkshell_id else {
-                return true;
-            };
-
-            let msg = FromServer::CWLSMessageSent(cwls_message);
+            let from_actor_id = linkshell_message.sender_actor_id;
+            let msg = FromServer::CWLSMessageReceived(linkshell_message.clone());
 
             network.send_to_linkshell(
                 linkshell_id,
-                Some(*from_actor_id),
+                Some(from_actor_id),
                 msg,
                 DestinationNetwork::ChatClients,
             );
