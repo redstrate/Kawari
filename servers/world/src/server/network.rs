@@ -412,7 +412,7 @@ impl NetworkState {
             }
 
             // If they're still pending, don't let them see chat messages.
-            if let FromServer::CWLSMessageSent(_) = message
+            if let FromServer::CWLSMessageReceived(_) = message
                 && member.rank == CWLSPermissionRank::Invitee
             {
                 continue;

@@ -15,9 +15,7 @@ use kawari::{
         ObjectTypeId, Position,
     },
     ipc::{
-        chat::{
-            CWLinkshellMessage, ChatChannelType, PartyMessage, SendCWLinkshellMessage, TellMessage,
-        },
+        chat::{CWLinkshellMessage, ChatChannelType, PartyMessage, TellMessage},
         zone::{
             ActionRequest, ActorControlCategory, CWLSLeaveReason, CWLSPermissionRank,
             ClientTrigger, Conditions, Config, CrossworldLinkshellInvite, InviteReply, InviteType,
@@ -202,7 +200,7 @@ pub enum FromServer {
     /// Treasure was spawned.
     TreasureSpawn(SpawnTreasure),
     /// A chat message from one of the client's cwlses has been received.
-    CWLSMessageSent(CWLinkshellMessage),
+    CWLSMessageReceived(CWLinkshellMessage),
     /// Inform the zone and chat connections about their linkshell channels.
     SetLinkshellChatChannels(Vec<u32>, Vec<u32>, bool),
     /// Inform the client that one of their linkshells has been disbanded.
@@ -404,7 +402,7 @@ pub enum ToServer {
         bool,
     ),
     /// The client sent a message to a cross-world linkshell.
-    CWLSMessageSent(ObjectId, SendCWLinkshellMessage),
+    CWLSMessageSent(CWLinkshellMessage),
     /// The client disbanded their linkshell, and online members need to be informed.
     DisbandLinkshell(u64),
     /// The client left a linkshell, and online members need to be informed.

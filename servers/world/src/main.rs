@@ -394,11 +394,7 @@ async fn client_chat_loop(
                                                 tracing::info!("GetChannelList: {:#?} from {}", unk, connection.player_data.actor_id);
                                             }
                                             ClientChatIpcData::SendCWLinkshellMessage(data) => {
-                                                if connection.chatchannels.cwls.contains(&data.chatchannel) {
-                                                    connection.handle.send(ToServer::CWLSMessageSent(connection.player_data.actor_id, data.clone())).await;
-                                                } else {
-                                                    tracing::error!("The client tried to send a party message to an invalid ChatChannel: {:#?}, while ours are {:#?}", data.chatchannel, connection.chatchannels.cwls);
-                                                }
+                                                connection.send_linkshell_message(data).await;
                                             }
                                             ClientChatIpcData::SendAllianceMessage(_data) => {
                                                 tracing::info!("Chatting in alliances is unimplemented");
@@ -434,7 +430,7 @@ async fn client_chat_loop(
                     FromServer::SetPartyChatChannel(channel_id) => connection.set_party_chatchannel(channel_id).await,
                     FromServer::PartyMessageReceived(message_data) => connection.party_message_received(message_data).await,
                     FromServer::SetLinkshellChatChannels(cwls, local, _) => connection.set_linkshell_chatchannels(cwls, local).await,
-                    FromServer::CWLSMessageSent(message_info) => connection.cwls_message_received(message_info).await,
+                    FromServer::CWLSMessageReceived(message_info) => connection.cwls_message_received(message_info).await,
                     FromServer::LinkshellDisbanded(_, channel_id) => connection.linkshell_disbanded(channel_id).await,
                     FromServer::LinkshellLeft(from_actor_id, _, _, _, _, _, channel_id) => connection.linkshell_left(from_actor_id, channel_id).await,
                     _ => tracing::error!("ChatConnection {:#?} received a FromServer message we don't care about: {:#?}, ensure you're using the right client network or that you've implemented a handler for it if we actually care about it!", client_handle.id, msg),
