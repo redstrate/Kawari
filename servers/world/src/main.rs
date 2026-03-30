@@ -35,8 +35,8 @@ use kawari_world::{
     ObsfucationData, TeleportReason, ZoneConnection,
 };
 use kawari_world::{
-    ClientHandle, ClientId, FromServer, MessageInfo, PlayerData, ServerHandle, ToServer,
-    WorldDatabase, server_main_loop,
+    ChatPlayerData, ClientHandle, ClientId, FromServer, MessageInfo, PlayerData, ServerHandle,
+    ToServer, WorldDatabase, server_main_loop,
 };
 
 use mlua::Function;
@@ -179,11 +179,20 @@ async fn initial_setup(
 
                 // Handle setup before passing off control to the zone connection.
                 let segments = connection.parse_packet(&buf[..n]);
+                let mut zone_ready = false;
+
                 for segment in segments {
                     match &segment.data {
                         SegmentData::Setup { actor_id } => {
                             // for some reason they send a string representation
-                            let actor_id = ObjectId(actor_id.parse::<u32>().unwrap());
+                            let Ok(actor_id) = actor_id.parse::<u32>() else {
+                                tracing::error!(
+                                    "ZoneConnection: Client sent us an invalid actor id string in Setup! Closing connection!"
+                                );
+                                break;
+                            };
+
+                            let actor_id = ObjectId(actor_id);
 
                             // initialize player data if it doesn't exist
                             if !connection.player_data.character.actor_id.is_valid() {
@@ -199,13 +208,17 @@ async fn initial_setup(
 
                             // collect actor data
                             connection.initialize(actor_id).await;
+                            zone_ready = true;
                         }
                         _ => panic!(
                             "initial_setup: The zone connection type must start with a Setup segment! What happened? Received: {segment:#?}"
                         ),
                     }
                 }
-                spawn_client(connection);
+
+                if zone_ready {
+                    spawn_client(connection);
+                }
             } else if header.connection_type == ConnectionType::Chat {
                 let state = ConnectionState::Zone {
                     clientbound_oodle: OodleNetwork::new(),
@@ -214,12 +227,13 @@ async fn initial_setup(
                 };
 
                 let mut connection = ChatConnection {
-                    config: get_config().world,
-                    id,
-                    actor_id: ObjectId::default(),
-                    state,
-                    last_keep_alive: Instant::now(),
                     socket,
+                    id,
+                    state,
+                    database: database.clone(),
+                    player_data: ChatPlayerData::default(),
+                    config: get_config().world,
+                    last_keep_alive: Instant::now(),
                     handle,
                     party_chatchannel: ChatChannel::default(),
                     cwls_chatchannels: [ChatChannel::default(); CrossworldLinkshellEx::COUNT],
@@ -228,20 +242,50 @@ async fn initial_setup(
 
                 // Handle setup before passing off control to the chat connection.
                 let segments = connection.parse_packet(&buf[..n]);
+                let mut chat_ready = false;
+
                 for segment in segments {
                     match &segment.data {
                         SegmentData::Setup { actor_id } => {
                             // for some reason they send a string representation
-                            let actor_id = actor_id.parse::<u32>().unwrap();
-                            connection.actor_id = ObjectId(actor_id);
-                            connection.initialize().await;
+                            let Ok(actor_id) = actor_id.parse::<u32>() else {
+                                tracing::error!(
+                                    "ChatConnection: Client sent us an invalid actor id string in Setup! Closing connection!"
+                                );
+                                break;
+                            };
+
+                            if !connection.player_data.actor_id.is_valid() {
+                                connection.player_data.actor_id = ObjectId(actor_id);
+
+                                {
+                                    let mut game_data = game_data.lock();
+                                    let mut database = connection.database.lock();
+                                    let player_data = database.find_player_data(
+                                        connection.player_data.actor_id,
+                                        &mut game_data,
+                                    );
+
+                                    connection.player_data.account_id =
+                                        player_data.character.service_account_id as u64;
+                                    connection.player_data.content_id =
+                                        player_data.character.content_id as u64;
+                                    connection.player_data.name =
+                                        player_data.character.name.clone();
+                                }
+
+                                connection.initialize().await;
+                                chat_ready = true;
+                            }
                         }
                         _ => panic!(
                             "initial_setup: The chat connection type must start with a Setup segment! What happened? Received: {segment:#?}"
                         ),
                     }
                 }
-                spawn_chat_connection(connection);
+                if chat_ready {
+                    spawn_chat_connection(connection);
+                }
             } else {
                 tracing::error!("Connection type is None! How did this happen?");
             }
@@ -264,7 +308,7 @@ fn spawn_chat_connection(connection: ChatConnection) {
     let (send, recv) = channel(64);
 
     let id = &connection.id.clone();
-    let actor_id = &connection.actor_id.clone();
+    let actor_id = &connection.player_data.actor_id.clone();
 
     let data = ClientChatData { recv, connection };
 
@@ -343,21 +387,21 @@ async fn client_chat_loop(
                                     SegmentData::Ipc(data) => {
                                         match &data.data {
                                             ClientChatIpcData::SendTellMessage(data) => {
-                                                connection.handle.send(ToServer::TellMessageSent(connection.id, connection.actor_id, data.clone())).await;
+                                                connection.handle.send(ToServer::TellMessageSent(connection.id, connection.player_data.actor_id, data.clone())).await;
                                             }
                                             ClientChatIpcData::SendPartyMessage(data) => {
                                                 if data.chatchannel == connection.party_chatchannel {
-                                                    connection.handle.send(ToServer::PartyMessageSent(connection.actor_id, data.clone())).await;
+                                                    connection.handle.send(ToServer::PartyMessageSent(connection.player_data.actor_id, data.clone())).await;
                                                 } else {
                                                     tracing::error!("The client tried to send a party message to an invalid ChatChannel: {:#?}, while ours is {:#?}", data.chatchannel, connection.party_chatchannel);
                                                 }
                                             }
                                             ClientChatIpcData::GetChannelList { unk } => {
-                                                tracing::info!("GetChannelList: {:#?} from {}", unk, connection.actor_id);
+                                                tracing::info!("GetChannelList: {:#?} from {}", unk, connection.player_data.actor_id);
                                             }
                                             ClientChatIpcData::SendCWLinkshellMessage(data) => {
                                                 if connection.cwls_chatchannels.contains(&data.chatchannel) {
-                                                    connection.handle.send(ToServer::CWLSMessageSent(connection.actor_id, data.clone())).await;
+                                                    connection.handle.send(ToServer::CWLSMessageSent(connection.player_data.actor_id, data.clone())).await;
                                                 } else {
                                                     tracing::error!("The client tried to send a party message to an invalid ChatChannel: {:#?}, while ours are {:#?}", data.chatchannel, connection.cwls_chatchannels);
                                                 }

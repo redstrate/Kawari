@@ -1,36 +1,50 @@
-use super::common::ClientId;
-use crate::{MessageInfo, ServerHandle};
-use kawari::common::{ObjectId, timestamp_secs};
-use kawari::config::WorldConfig;
-use kawari::ipc::{
-    chat::{
-        CWLinkshellMessage, ChatChannel, ChatChannelType, ClientChatIpcSegment, PartyMessage,
-        ServerChatIpcData, ServerChatIpcSegment, TellMessage, TellNotFoundError,
-    },
-    zone::CrossworldLinkshellEx,
-};
+use std::{sync::Arc, time::Instant};
 
-use kawari::opcodes::ServerChatIpcType;
-use kawari::packet::IpcSegmentHeader;
-use kawari::packet::{
-    CompressionType, ConnectionState, ConnectionType, PacketSegment, SegmentData, SegmentType,
-    ServerIpcSegmentHeader, parse_packet, send_keep_alive, send_packet,
-};
-use std::time::Instant;
+use parking_lot::Mutex;
 use tokio::net::TcpStream;
+
+use super::common::ClientId;
+use crate::{MessageInfo, ServerHandle, WorldDatabase};
+use kawari::{
+    common::{ObjectId, timestamp_secs},
+    config::WorldConfig,
+    ipc::{
+        chat::{
+            CWLinkshellMessage, ChatChannel, ChatChannelType, ClientChatIpcSegment, PartyMessage,
+            ServerChatIpcData, ServerChatIpcSegment, TellMessage, TellNotFoundError,
+        },
+        zone::CrossworldLinkshellEx,
+    },
+    opcodes::ServerChatIpcType,
+    packet::{
+        CompressionType, ConnectionState, ConnectionType, IpcSegmentHeader, PacketSegment,
+        SegmentData, SegmentType, ServerIpcSegmentHeader, parse_packet, send_keep_alive,
+        send_packet,
+    },
+};
 
 /// Represents a single connection between an instance of the client and chat portion of the world server.
 pub struct ChatConnection {
     pub socket: TcpStream,
     pub id: ClientId,
     pub state: ConnectionState,
-    pub actor_id: ObjectId,
+    pub database: Arc<Mutex<WorldDatabase>>,
+    pub player_data: ChatPlayerData,
     pub config: WorldConfig,
     pub last_keep_alive: Instant,
     pub handle: ServerHandle,
     pub party_chatchannel: ChatChannel,
     pub cwls_chatchannels: [ChatChannel; CrossworldLinkshellEx::COUNT],
     pub local_ls_chatchannels: [ChatChannel; CrossworldLinkshellEx::COUNT],
+}
+
+/// Miniature version of the ZoneConnection's PlayerData. We cache a few things so the global server doesn't have to constantly look it up on our behalf when we send messages.
+#[derive(Default)]
+pub struct ChatPlayerData {
+    pub actor_id: ObjectId,
+    pub account_id: u64,
+    pub content_id: u64,
+    pub name: String,
 }
 
 impl ChatConnection {
@@ -41,19 +55,19 @@ impl ChatConnection {
     /// Sends an IPC segment to the player, where the source actor is also the player.
     pub async fn send_ipc_self(&mut self, ipc: ServerChatIpcSegment) {
         // This is meant to protect against stack-smashing in nested futures
-        Box::pin(self.send_ipc_from(self.actor_id, ipc)).await;
+        Box::pin(self.send_ipc_from(self.player_data.actor_id, ipc)).await;
     }
 
     /// Sends an IPC segment to the player, where the source actor can be specified.
     pub async fn send_ipc_from(&mut self, source_actor: ObjectId, ipc: ServerChatIpcSegment) {
         let segment = PacketSegment {
             source_actor,
-            target_actor: self.actor_id,
+            target_actor: self.player_data.actor_id,
             segment_type: SegmentType::Ipc,
             data: SegmentData::Ipc(ipc),
         };
 
-        // Ditt from above
+        // Ditto from above
         Box::pin(self.send_segment(segment)).await;
     }
 
@@ -75,6 +89,11 @@ impl ChatConnection {
 
     pub async fn initialize(&mut self) {
         {
+            tracing::info!(
+                "Client {} is initializing chat session...",
+                self.player_data.actor_id
+            );
+
             // We have to send the client a keep alive!
             let response = PacketSegment::<ServerChatIpcSegment> {
                 segment_type: SegmentType::KeepAliveRequest,
@@ -99,7 +118,7 @@ impl ChatConnection {
             let response = PacketSegment::<ServerChatIpcSegment> {
                 segment_type: SegmentType::Initialize,
                 data: SegmentData::Initialize {
-                    actor_id: self.actor_id,
+                    actor_id: self.player_data.actor_id,
                     timestamp: timestamp_secs(),
                 },
                 ..Default::default()
@@ -123,8 +142,8 @@ impl ChatConnection {
             let response = PacketSegment::<ServerChatIpcSegment> {
                 segment_type: SegmentType::Ipc,
                 data: SegmentData::Ipc(ipc),
-                source_actor: self.actor_id,
-                target_actor: self.actor_id,
+                source_actor: self.player_data.actor_id,
+                target_actor: self.player_data.actor_id,
             };
             send_packet(
                 &mut self.socket,
@@ -241,14 +260,18 @@ impl ChatConnection {
 
     pub async fn linkshell_left(&mut self, from_actor_id: ObjectId, channel_number: u32) {
         for linkshell in self.cwls_chatchannels.iter_mut() {
-            if linkshell.channel_number == channel_number && self.actor_id == from_actor_id {
+            if linkshell.channel_number == channel_number
+                && self.player_data.actor_id == from_actor_id
+            {
                 linkshell.channel_number = 0;
                 return;
             }
         }
 
         for linkshell in self.local_ls_chatchannels.iter_mut() {
-            if linkshell.channel_number == channel_number && self.actor_id == from_actor_id {
+            if linkshell.channel_number == channel_number
+                && self.player_data.actor_id == from_actor_id
+            {
                 linkshell.channel_number = 0;
                 break;
             }

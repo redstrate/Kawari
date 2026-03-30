@@ -200,7 +200,7 @@ impl ZoneConnection {
             data: SegmentData::Ipc(ipc),
         };
 
-        // Ditt from above
+        // Ditto from above
         Box::pin(self.send_segment(segment)).await;
     }
 
