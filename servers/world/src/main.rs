@@ -384,8 +384,8 @@ async fn client_chat_loop(
                                     }
                                     SegmentData::Ipc(data) => {
                                         match &data.data {
-                                            ClientChatIpcData::SendTellMessage(data) => {
-                                                connection.handle.send(ToServer::TellMessageSent(connection.id, connection.player_data.actor_id, data.clone())).await;
+                                            ClientChatIpcData::SendTellMessage(tell_data) => {
+                                                connection.send_tell_message(tell_data).await;
                                             }
                                             ClientChatIpcData::SendPartyMessage(data) => {
                                                 if data.chatchannel == connection.chatchannels.party {
@@ -430,8 +430,7 @@ async fn client_chat_loop(
 
             msg = internal_recv.recv() => match msg {
                 Some(msg) => match msg {
-                    FromServer::TellMessageSent(message_info) => connection.tell_message_received(message_info).await,
-                    FromServer::TellRecipientNotFound(error_info) => connection.tell_recipient_not_found(error_info).await,
+                    FromServer::TellMessageReceived(from_actor_id, message_info) => connection.tell_message_received(from_actor_id, message_info.clone()).await,
                     FromServer::ChatDisconnected() => {
                         tracing::info!("ChatConnection {:#?} received shutdown, disconnecting!", connection.id);
                         break;

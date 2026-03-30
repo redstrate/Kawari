@@ -4,16 +4,17 @@ use parking_lot::Mutex;
 use tokio::net::TcpStream;
 
 use super::common::ClientId;
-use crate::{MessageInfo, ServerHandle, WorldDatabase};
+use crate::{ServerHandle, ToServer, WorldDatabase, database::Character};
 use kawari::{
     common::{ObjectId, timestamp_secs},
     config::WorldConfig,
     ipc::{
         chat::{
             CWLinkshellMessage, ChatChannel, ChatChannelType, ClientChatIpcSegment, PartyMessage,
-            ServerChatIpcData, ServerChatIpcSegment, TellMessage, TellNotFoundError,
+            SendTellMessage, ServerChatIpcData, ServerChatIpcSegment, TellMessage,
+            TellNotFoundError,
         },
-        zone::CrossworldLinkshellEx,
+        zone::{CrossworldLinkshellEx, OnlineStatus},
     },
     opcodes::ServerChatIpcType,
     packet::{
@@ -179,22 +180,64 @@ impl ChatConnection {
         }
     }
 
-    pub async fn tell_message_received(&mut self, message_info: MessageInfo) {
-        let ipc = ServerChatIpcSegment::new(ServerChatIpcData::TellMessage(TellMessage {
-            sender_account_id: message_info.sender_account_id,
-            sender_world_id: message_info.sender_world_id,
-            sender_name: message_info.sender_name,
-            message: message_info.message,
-            ..Default::default()
-        }));
+    pub async fn send_tell_message(&mut self, tell_data: &SendTellMessage) {
+        // Start with the assumption that the recipient doesn't exist or is offline.
+        let mut recipient_ids = Character::default();
+        let mut recipient_is_online = false;
+        {
+            let mut db = self.database.lock();
 
-        self.send_ipc_from(message_info.sender_actor_id, ipc).await;
-    }
+            // Tells only give us the recipient's name which isn't very helpful, so we need further info.
+            if let Some(recipient_id) =
+                db.find_character_ids(None, Some(tell_data.recipient_name.clone()))
+            {
+                recipient_ids = recipient_id;
+                let mask = db.determine_online_status_mask(recipient_ids.content_id);
+                recipient_is_online = mask.has_status(OnlineStatus::Online);
+            }
+        }
 
-    pub async fn tell_recipient_not_found(&mut self, error_info: TellNotFoundError) {
-        let ipc = ServerChatIpcSegment::new(ServerChatIpcData::TellNotFoundError(error_info));
+        // Next, if they do exist and are online, tell the server where to send the message.
+        if recipient_is_online && recipient_ids.actor_id != ObjectId::default() {
+            self.handle
+                .send(ToServer::TellMessageSent(
+                    self.player_data.actor_id,
+                    recipient_ids.actor_id,
+                    TellMessage {
+                        sender_account_id: self.player_data.account_id,
+                        sender_content_id: self.player_data.content_id,
+                        sender_world_id: self.config.world_id,
+                        sender_name: self.player_data.name.clone(),
+                        message: tell_data.message.clone(),
+                        ..Default::default()
+                    },
+                ))
+                .await;
+
+            // Quit early, everything after is error handling.
+            return;
+        }
+
+        let ipc =
+            ServerChatIpcSegment::new(ServerChatIpcData::TellNotFoundError(TellNotFoundError {
+                recipient_account_id: recipient_ids.service_account_id as u64,
+                sender_account_id: self.player_data.account_id,
+                recipient_world_id: self.config.world_id,
+                recipient_name: tell_data.recipient_name.clone(),
+                unk: 0x68, // No clue what this is, but it's often seen when receiving a tell error.
+            }));
 
         self.send_ipc_self(ipc).await;
+    }
+
+    pub async fn tell_message_received(
+        &mut self,
+        sender_actor_id: ObjectId,
+        message_info: TellMessage,
+    ) {
+        let ipc = ServerChatIpcSegment::new(ServerChatIpcData::TellMessage(message_info));
+
+        self.send_ipc_from(sender_actor_id, ipc).await;
     }
 
     pub async fn party_message_received(&mut self, message_info: PartyMessage) {
