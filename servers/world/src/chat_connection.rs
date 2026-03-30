@@ -11,8 +11,8 @@ use kawari::{
     ipc::{
         chat::{
             CWLinkshellMessage, ChatChannel, ChatChannelType, ClientChatIpcSegment, PartyMessage,
-            SendTellMessage, ServerChatIpcData, ServerChatIpcSegment, TellMessage,
-            TellNotFoundError,
+            SendPartyMessage, SendTellMessage, ServerChatIpcData, ServerChatIpcSegment,
+            TellMessage, TellNotFoundError,
         },
         zone::{CrossworldLinkshellEx, OnlineStatus},
     },
@@ -240,19 +240,41 @@ impl ChatConnection {
         self.send_ipc_from(sender_actor_id, ipc).await;
     }
 
+    pub async fn send_party_message(&mut self, message_data: &SendPartyMessage) {
+        if message_data.chatchannel == self.chatchannels.party {
+            let party_message = PartyMessage {
+                party_chatchannel: self.chatchannels.party,
+                sender_account_id: self.player_data.account_id,
+                sender_content_id: self.player_data.content_id,
+                sender_actor_id: self.player_data.actor_id,
+                sender_world_id: self.config.world_id,
+                sender_name: self.player_data.name.clone(),
+                message: message_data.message.clone(),
+            };
+            self.handle
+                .send(ToServer::PartyMessageSent(party_message))
+                .await;
+        } else {
+            tracing::error!(
+                "The client tried to send a party message to an invalid ChatChannel: {:#?}, while ours is {:#?}",
+                message_data.chatchannel,
+                self.chatchannels.party
+            );
+        }
+    }
+
     pub async fn party_message_received(&mut self, message_info: PartyMessage) {
-        if message_info.party_chatchannel != self.chatchannels.party {
+        if message_info.party_chatchannel == self.chatchannels.party {
+            let sender_actor_id = message_info.sender_actor_id;
+            let ipc = ServerChatIpcSegment::new(ServerChatIpcData::PartyMessage(message_info));
+
+            self.send_ipc_from(sender_actor_id, ipc).await;
+        } else {
             tracing::error!(
                 "party_message_received: We received a message not destined for our party! What happened? Discarding message. The destination chatchannel was {:#?}",
                 message_info.party_chatchannel
             );
-            return;
         }
-
-        let sender_actor_id = message_info.sender_actor_id;
-        let ipc = ServerChatIpcSegment::new(ServerChatIpcData::PartyMessage(message_info));
-
-        self.send_ipc_from(sender_actor_id, ipc).await;
     }
 
     pub async fn cwls_message_received(&mut self, message_info: CWLinkshellMessage) {
