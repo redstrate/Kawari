@@ -17,7 +17,7 @@ use kawari::{
     ipc::{
         chat::{
             CWLinkshellMessage, ChatChannelType, PartyMessage, SendCWLinkshellMessage,
-            SendPartyMessage, SendTellMessage, TellNotFoundError,
+            SendPartyMessage, TellMessage,
         },
         zone::{
             ActionRequest, ActorControlCategory, CWLSLeaveReason, CWLSPermissionRank,
@@ -133,9 +133,7 @@ pub enum FromServer {
     /// The returned position and rotation from ToServer::MoveToPopRange.
     NewPosition(Position, f32, bool),
     /// We need to inform the recipent about the direct message they're receiving.
-    TellMessageSent(MessageInfo),
-    /// We need to inform the sender that the recipient was not found or is offline.
-    TellRecipientNotFound(TellNotFoundError),
+    TellMessageReceived(ObjectId, TellMessage),
     /// We need to tell our chat connection that our zone connection has disconnected.
     ChatDisconnected(),
     /// Inform the chat connection that its zone connection has joined a party.
@@ -315,8 +313,8 @@ pub enum ToServer {
     ActorDespawnsMinion(ObjectId),
     /// Move the player's actor to the specified pop range.
     MoveToPopRange(ClientId, ObjectId, u32, bool),
-    /// The connection sent a direct message to another client.
-    TellMessageSent(ClientId, ObjectId, SendTellMessage),
+    /// The connection sent a direct message to another client. This needs the sender's actor id too for purposes of `send_ipc_from`.
+    TellMessageSent(ObjectId, ObjectId, TellMessage),
     /// The client invited another player to join their party.
     InvitePlayerToParty(ObjectId, u64, String),
     /// The client replied to another player's invite.

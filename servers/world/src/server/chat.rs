@@ -3,17 +3,14 @@ use std::sync::Arc;
 use parking_lot::Mutex;
 
 use crate::{
-    FromServer, MessageInfo, ToServer,
+    FromServer, ToServer,
     server::{
         WorldServer,
         network::{DestinationNetwork, NetworkState},
         social::PartyMember,
     },
 };
-use kawari::{
-    common::ObjectId,
-    ipc::chat::{CWLinkshellMessage, PartyMessage, TellNotFoundError},
-};
+use kawari::ipc::chat::{CWLinkshellMessage, PartyMessage};
 
 /// Process chat-related messages.
 pub fn handle_chat_messages(
@@ -27,7 +24,7 @@ pub fn handle_chat_messages(
 
             let data = data.lock();
 
-            // First pull up some info about the sender, as tell packets require it
+            // First grab the sender's instance, since zone chat operates in the same zone as the sender.
             let Some(sender_instance) = data.find_actor_instance(*from_actor_id) else {
                 panic!("Client is somehow not in an instance yet?!");
             };
@@ -41,85 +38,14 @@ pub fn handle_chat_messages(
 
             true
         }
-        ToServer::TellMessageSent(from_id, from_actor_id, message_info) => {
-            // TODO: Maybe this can be simplified with fewer loops?
-
+        ToServer::TellMessageSent(from_actor_id, recipient_actor_id, message_data) => {
             let mut network = network.lock();
-            let data = data.lock();
 
-            // First pull up some info about the sender, as tell packets require it
-            let Some(sender_instance) = data.find_actor_instance(*from_actor_id) else {
-                panic!("ToServer::TellMessageSent: Unable to find the sender! What happened?");
-            };
-
-            let mut sender_name = "".to_string();
-            let mut sender_world_id = 0;
-            let mut sender_account_id = 0;
-
-            for (id, actor) in &sender_instance.actors {
-                if *id == *from_actor_id {
-                    let Some(spawn) = actor.get_player_spawn() else {
-                        panic!("Why are we trying to get the SpawnPlayer of an NPC?");
-                    };
-
-                    sender_name = spawn.common.name.clone();
-                    sender_world_id = spawn.home_world_id;
-                    sender_account_id = spawn.account_id;
-                    break;
-                }
-            }
-
-            // If the sender wasn't found in the instance we already found them to be in, reality has apparently broken
-            assert!(sender_world_id != 0);
-
-            let mut recipient_actor_id = ObjectId::default();
-
-            // Second, look up the recipient by name, since that and their world id are all we're given by the sending client.
-            // Since we don't implement multiple worlds, the world id isn't useful for anything here.
-            'outer: for instance in &data.instances {
-                for (id, actor) in &instance.actors {
-                    let Some(spawn) = actor.get_player_spawn() else {
-                        continue;
-                    };
-
-                    if spawn.common.name == message_info.recipient_name {
-                        recipient_actor_id = *id;
-                        break 'outer;
-                    }
-                }
-            }
-
-            // Next, if the recipient is online, fetch their handle from the network and send them the message!
-            if recipient_actor_id.is_valid() {
-                let message_info = MessageInfo {
-                    sender_actor_id: *from_actor_id,
-                    sender_account_id,
-                    sender_name: sender_name.clone(),
-                    sender_world_id,
-                    message: message_info.message.clone(),
-                    ..Default::default()
-                };
-
-                network.send_to_by_actor_id(
-                    recipient_actor_id,
-                    FromServer::TellMessageSent(message_info),
-                    DestinationNetwork::ChatClients,
-                );
-            } else {
-                // Else, if the recipient is offline, inform the sender.
-                let response = TellNotFoundError {
-                    sender_account_id,
-                    recipient_world_id: sender_world_id, // It doesn't matter if it's the sender's, since we don't implement multiple worlds.
-                    recipient_name: message_info.recipient_name.clone(),
-                    ..Default::default()
-                };
-
-                network.send_to(
-                    *from_id,
-                    FromServer::TellRecipientNotFound(response),
-                    DestinationNetwork::ChatClients,
-                );
-            }
+            network.send_to_by_actor_id(
+                *recipient_actor_id,
+                FromServer::TellMessageReceived(*from_actor_id, message_data.clone()),
+                DestinationNetwork::ChatClients,
+            );
 
             true
         }

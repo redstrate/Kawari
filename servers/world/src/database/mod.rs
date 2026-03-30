@@ -308,6 +308,7 @@ impl WorldDatabase {
         }
     }
 
+    // TODO: Get rid of this in the linkshell refactor since find_character_ids exists and is more useful
     pub fn find_character_name(&mut self, for_content_id: u64) -> Option<String> {
         use schema::character::dsl::*;
 
@@ -324,6 +325,33 @@ impl WorldDatabase {
                 None
             }
         }
+    }
+
+    /// Returns a row from the Character table, searching either with a content id or a character's name. When sending tells, the ChatConnection is only given a name from the game client, so it needs to pull data in this fashion.
+    // TODO: What's a better name for this function?
+    pub fn find_character_ids(
+        &mut self,
+        for_content_id: Option<u64>,
+        for_name: Option<String>,
+    ) -> Option<Character> {
+        use schema::character::dsl::*;
+        if let Some(for_content_id) = for_content_id
+            && let Ok(data) = character
+                .filter(content_id.eq(for_content_id as i64))
+                .select(Character::as_select())
+                .first(&mut self.connection)
+        {
+            return Some(data);
+        } else if let Some(for_name) = for_name
+            && let Ok(data) = character
+                .filter(name.eq(for_name))
+                .select(Character::as_select())
+                .first(&mut self.connection)
+        {
+            return Some(data);
+        }
+
+        None
     }
 
     pub fn get_character_list(
