@@ -2,7 +2,7 @@ mod chat_handler;
 pub use chat_handler::ChatHandler;
 
 mod chat_connection;
-pub use chat_connection::{ChatConnection, ChatPlayerData};
+pub use chat_connection::{ChatConnection, ChatConnectionChannels, ChatPlayerData};
 
 mod zone_connection;
 use diesel::backend::Backend;

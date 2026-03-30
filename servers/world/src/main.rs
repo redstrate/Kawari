@@ -11,13 +11,13 @@ use kawari::common::{
 use kawari::config::{FilesystemConfig, get_config};
 use kawari_world::inventory::{EquipSlot, Item, Storage, get_next_free_slot};
 
-use kawari::ipc::chat::{ChatChannel, ClientChatIpcData};
+use kawari::ipc::chat::ClientChatIpcData;
 
 use kawari::ipc::zone::{
     ActorControlCategory, CWLSLeaveReason, Conditions, ContentFinderUserAction, CrossRealmListing,
-    CrossRealmListings, CrossworldLinkshellEx, EventType, InviteType, LinkshellInviteResponse,
-    MapEffects, MarketBoardItem, OnlineStatus, OnlineStatusMask, PlayerSetup, SceneFlags,
-    SearchInfo, SocialListRequestType, TrustContent, TrustInformation,
+    CrossRealmListings, EventType, InviteType, LinkshellInviteResponse, MapEffects,
+    MarketBoardItem, OnlineStatus, OnlineStatusMask, PlayerSetup, SceneFlags, SearchInfo,
+    SocialListRequestType, TrustContent, TrustInformation,
 };
 
 use kawari::ipc::zone::{
@@ -35,8 +35,8 @@ use kawari_world::{
     ObsfucationData, TeleportReason, ZoneConnection,
 };
 use kawari_world::{
-    ChatPlayerData, ClientHandle, ClientId, FromServer, MessageInfo, PlayerData, ServerHandle,
-    ToServer, WorldDatabase, server_main_loop,
+    ChatConnectionChannels, ChatPlayerData, ClientHandle, ClientId, FromServer, MessageInfo,
+    PlayerData, ServerHandle, ToServer, WorldDatabase, server_main_loop,
 };
 
 use mlua::Function;
@@ -235,9 +235,7 @@ async fn initial_setup(
                     config: get_config().world,
                     last_keep_alive: Instant::now(),
                     handle,
-                    party_chatchannel: ChatChannel::default(),
-                    cwls_chatchannels: [ChatChannel::default(); CrossworldLinkshellEx::COUNT],
-                    local_ls_chatchannels: [ChatChannel::default(); CrossworldLinkshellEx::COUNT],
+                    chatchannels: ChatConnectionChannels::default(),
                 };
 
                 // Handle setup before passing off control to the chat connection.
@@ -390,20 +388,20 @@ async fn client_chat_loop(
                                                 connection.handle.send(ToServer::TellMessageSent(connection.id, connection.player_data.actor_id, data.clone())).await;
                                             }
                                             ClientChatIpcData::SendPartyMessage(data) => {
-                                                if data.chatchannel == connection.party_chatchannel {
+                                                if data.chatchannel == connection.chatchannels.party {
                                                     connection.handle.send(ToServer::PartyMessageSent(connection.player_data.actor_id, data.clone())).await;
                                                 } else {
-                                                    tracing::error!("The client tried to send a party message to an invalid ChatChannel: {:#?}, while ours is {:#?}", data.chatchannel, connection.party_chatchannel);
+                                                    tracing::error!("The client tried to send a party message to an invalid ChatChannel: {:#?}, while ours is {:#?}", data.chatchannel, connection.chatchannels.party);
                                                 }
                                             }
                                             ClientChatIpcData::GetChannelList { unk } => {
                                                 tracing::info!("GetChannelList: {:#?} from {}", unk, connection.player_data.actor_id);
                                             }
                                             ClientChatIpcData::SendCWLinkshellMessage(data) => {
-                                                if connection.cwls_chatchannels.contains(&data.chatchannel) {
+                                                if connection.chatchannels.cwls.contains(&data.chatchannel) {
                                                     connection.handle.send(ToServer::CWLSMessageSent(connection.player_data.actor_id, data.clone())).await;
                                                 } else {
-                                                    tracing::error!("The client tried to send a party message to an invalid ChatChannel: {:#?}, while ours are {:#?}", data.chatchannel, connection.cwls_chatchannels);
+                                                    tracing::error!("The client tried to send a party message to an invalid ChatChannel: {:#?}, while ours are {:#?}", data.chatchannel, connection.chatchannels.cwls);
                                                 }
                                             }
                                             ClientChatIpcData::SendAllianceMessage(_data) => {

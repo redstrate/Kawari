@@ -33,9 +33,7 @@ pub struct ChatConnection {
     pub config: WorldConfig,
     pub last_keep_alive: Instant,
     pub handle: ServerHandle,
-    pub party_chatchannel: ChatChannel,
-    pub cwls_chatchannels: [ChatChannel; CrossworldLinkshellEx::COUNT],
-    pub local_ls_chatchannels: [ChatChannel; CrossworldLinkshellEx::COUNT],
+    pub chatchannels: ChatConnectionChannels,
 }
 
 /// Miniature version of the ZoneConnection's PlayerData. We cache a few things so the global server doesn't have to constantly look it up on our behalf when we send messages.
@@ -45,6 +43,17 @@ pub struct ChatPlayerData {
     pub account_id: u64,
     pub content_id: u64,
     pub name: String,
+}
+
+/// Holds all of the ChatConnection's ChatChannels.
+#[derive(Default)]
+pub struct ChatConnectionChannels {
+    ///The party's ChatChannel.
+    pub party: ChatChannel,
+    /// Cross-world linkshells' ChatChannels.
+    pub cwls: [ChatChannel; CrossworldLinkshellEx::COUNT],
+    /// Local-world linkshells' ChatChannels.
+    pub lwls: [ChatChannel; CrossworldLinkshellEx::COUNT],
 }
 
 impl ChatConnection {
@@ -156,15 +165,15 @@ impl ChatConnection {
         }
 
         // Do some initial setup to prepare all of our chatchannels. Our chat connection mainly acts as a filter between the client's chat connection and our global server state. The global state will eventually fill in our channel numbers as needed.
-        self.party_chatchannel.world_id = self.config.world_id;
-        self.party_chatchannel.channel_type = ChatChannelType::Party;
+        self.chatchannels.party.world_id = self.config.world_id;
+        self.chatchannels.party.channel_type = ChatChannelType::Party;
 
-        for linkshell in self.cwls_chatchannels.iter_mut() {
+        for linkshell in self.chatchannels.cwls.iter_mut() {
             linkshell.world_id = 10008; // This seems to always be used for CWLSes.
             linkshell.channel_type = ChatChannelType::CWLinkshell;
         }
 
-        for linkshell in self.local_ls_chatchannels.iter_mut() {
+        for linkshell in self.chatchannels.lwls.iter_mut() {
             linkshell.world_id = self.config.world_id;
             linkshell.channel_type = ChatChannelType::Linkshell
         }
@@ -189,7 +198,7 @@ impl ChatConnection {
     }
 
     pub async fn party_message_received(&mut self, message_info: PartyMessage) {
-        if message_info.party_chatchannel != self.party_chatchannel {
+        if message_info.party_chatchannel != self.chatchannels.party {
             tracing::error!(
                 "party_message_received: We received a message not destined for our party! What happened? Discarding message. The destination chatchannel was {:#?}",
                 message_info.party_chatchannel
@@ -205,7 +214,8 @@ impl ChatConnection {
 
     pub async fn cwls_message_received(&mut self, message_info: CWLinkshellMessage) {
         if !self
-            .cwls_chatchannels
+            .chatchannels
+            .cwls
             .contains(&message_info.cwls_chatchannel)
         {
             tracing::error!(
@@ -222,8 +232,8 @@ impl ChatConnection {
     }
 
     pub async fn set_linkshell_chatchannels(&mut self, cwlses: Vec<u32>, locals: Vec<u32>) {
-        if (cwlses.len() > self.cwls_chatchannels.len())
-            || (locals.len() > self.local_ls_chatchannels.len())
+        if (cwlses.len() > self.chatchannels.cwls.len())
+            || (locals.len() > self.chatchannels.lwls.len())
         {
             tracing::error!(
                 "set_linkshell_chatchannels: cwlses ({}) or locals ({})vecs had too many entries! What happened?",
@@ -234,23 +244,23 @@ impl ChatConnection {
         }
 
         for (index, ls) in cwlses.iter().enumerate() {
-            self.cwls_chatchannels[index].channel_number = *ls;
+            self.chatchannels.cwls[index].channel_number = *ls;
         }
 
         for (index, ls) in locals.iter().enumerate() {
-            self.local_ls_chatchannels[index].channel_number = *ls;
+            self.chatchannels.lwls[index].channel_number = *ls;
         }
     }
 
     pub async fn linkshell_disbanded(&mut self, channel_number: u32) {
-        for linkshell in self.cwls_chatchannels.iter_mut() {
+        for linkshell in self.chatchannels.cwls.iter_mut() {
             if linkshell.channel_number == channel_number {
                 linkshell.channel_number = 0;
                 return;
             }
         }
 
-        for linkshell in self.local_ls_chatchannels.iter_mut() {
+        for linkshell in self.chatchannels.lwls.iter_mut() {
             if linkshell.channel_number == channel_number {
                 linkshell.channel_number = 0;
                 break;
@@ -259,7 +269,7 @@ impl ChatConnection {
     }
 
     pub async fn linkshell_left(&mut self, from_actor_id: ObjectId, channel_number: u32) {
-        for linkshell in self.cwls_chatchannels.iter_mut() {
+        for linkshell in self.chatchannels.cwls.iter_mut() {
             if linkshell.channel_number == channel_number
                 && self.player_data.actor_id == from_actor_id
             {
@@ -268,7 +278,7 @@ impl ChatConnection {
             }
         }
 
-        for linkshell in self.local_ls_chatchannels.iter_mut() {
+        for linkshell in self.chatchannels.lwls.iter_mut() {
             if linkshell.channel_number == channel_number
                 && self.player_data.actor_id == from_actor_id
             {
@@ -279,7 +289,7 @@ impl ChatConnection {
     }
 
     pub async fn set_party_chatchannel(&mut self, party_channel_number: u32) {
-        self.party_chatchannel.channel_number = party_channel_number;
+        self.chatchannels.party.channel_number = party_channel_number;
     }
 
     pub async fn send_keep_alive(&mut self, id: u32, timestamp: u32) {
