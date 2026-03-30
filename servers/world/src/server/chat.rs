@@ -7,10 +7,9 @@ use crate::{
     server::{
         WorldServer,
         network::{DestinationNetwork, NetworkState},
-        social::PartyMember,
     },
 };
-use kawari::ipc::chat::{CWLinkshellMessage, PartyMessage};
+use kawari::ipc::chat::CWLinkshellMessage;
 
 /// Process chat-related messages.
 pub fn handle_chat_messages(
@@ -49,41 +48,26 @@ pub fn handle_chat_messages(
 
             true
         }
-        ToServer::PartyMessageSent(from_actor_id, message_info) => {
+        ToServer::PartyMessageSent(party_message) => {
             let mut network = network.lock();
 
-            let mut sender = PartyMember::default();
-            let mut party_id = 0;
-
-            // We need some info about the sender since our chat connection doesn't provide it.
-            for (id, party) in &network.parties {
-                if party.chatchannel_id == message_info.chatchannel.channel_number {
-                    party_id = *id;
-                    for member in &party.members {
-                        if member.actor_id == *from_actor_id {
-                            sender = member.clone();
-                        }
-                    }
-                }
-            }
-
-            assert!(party_id != 0 && sender.actor_id.is_valid());
-
-            let party_message = PartyMessage {
-                party_chatchannel: message_info.chatchannel,
-                sender_account_id: sender.account_id,
-                sender_content_id: sender.content_id,
-                sender_world_id: sender.world_id,
-                sender_actor_id: sender.actor_id,
-                sender_name: sender.name.clone(),
-                message: message_info.message.clone(),
+            // Find the party id from the chatchannel id. The ChatConnection isn't privy to the party id and has no need for it.
+            let Some(id) = network.parties.iter().find_map(|(key, val)| {
+                (val.chatchannel_id == party_message.party_chatchannel.channel_number)
+                    .then_some(key)
+            }) else {
+                return true;
             };
-            let msg = FromServer::PartyMessageSent(party_message);
 
-            // Skip the original sender to avoid echoing messages
+            let party_id = *id;
+
+            let from_actor_id = party_message.sender_actor_id;
+            let msg = FromServer::PartyMessageReceived(party_message.clone());
+
+            // Skip the sender to avoid echoing messages
             network.send_to_party(
                 party_id,
-                Some(*from_actor_id),
+                Some(from_actor_id),
                 msg,
                 DestinationNetwork::ChatClients,
             );

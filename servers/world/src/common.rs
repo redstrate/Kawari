@@ -16,8 +16,7 @@ use kawari::{
     },
     ipc::{
         chat::{
-            CWLinkshellMessage, ChatChannelType, PartyMessage, SendCWLinkshellMessage,
-            SendPartyMessage, TellMessage,
+            CWLinkshellMessage, ChatChannelType, PartyMessage, SendCWLinkshellMessage, TellMessage,
         },
         zone::{
             ActionRequest, ActorControlCategory, CWLSLeaveReason, CWLSPermissionRank,
@@ -145,7 +144,7 @@ pub enum FromServer {
     /// The client who received the invite also needs to be informed.
     InvitationReplyResult(u64, String, InviteType, InviteReply),
     /// A chat message from the client's party has been received.
-    PartyMessageSent(PartyMessage),
+    PartyMessageReceived(PartyMessage),
     /// Members of this party need to be informed of an update.
     PartyUpdate(
         PartyUpdateTargets,
@@ -322,7 +321,7 @@ pub enum ToServer {
     /// The party leader is adding a member to their party.
     AddPartyMember(u64, ObjectId, u64),
     /// The client sent a message to their party.
-    PartyMessageSent(ObjectId, SendPartyMessage),
+    PartyMessageSent(PartyMessage),
     /// The client is designating another player in the party as leader.
     PartyChangeLeader(u64, u64, u64, String, u64, String),
     /// The client is removing another player from the party.

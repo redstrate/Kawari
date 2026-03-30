@@ -388,11 +388,7 @@ async fn client_chat_loop(
                                                 connection.send_tell_message(tell_data).await;
                                             }
                                             ClientChatIpcData::SendPartyMessage(data) => {
-                                                if data.chatchannel == connection.chatchannels.party {
-                                                    connection.handle.send(ToServer::PartyMessageSent(connection.player_data.actor_id, data.clone())).await;
-                                                } else {
-                                                    tracing::error!("The client tried to send a party message to an invalid ChatChannel: {:#?}, while ours is {:#?}", data.chatchannel, connection.chatchannels.party);
-                                                }
+                                                connection.send_party_message(data).await;
                                             }
                                             ClientChatIpcData::GetChannelList { unk } => {
                                                 tracing::info!("GetChannelList: {:#?} from {}", unk, connection.player_data.actor_id);
@@ -436,7 +432,7 @@ async fn client_chat_loop(
                         break;
                     }
                     FromServer::SetPartyChatChannel(channel_id) => connection.set_party_chatchannel(channel_id).await,
-                    FromServer::PartyMessageSent(message_info) => connection.party_message_received(message_info).await,
+                    FromServer::PartyMessageReceived(message_data) => connection.party_message_received(message_data).await,
                     FromServer::SetLinkshellChatChannels(cwls, local, _) => connection.set_linkshell_chatchannels(cwls, local).await,
                     FromServer::CWLSMessageSent(message_info) => connection.cwls_message_received(message_info).await,
                     FromServer::LinkshellDisbanded(_, channel_id) => connection.linkshell_disbanded(channel_id).await,
