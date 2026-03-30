@@ -40,36 +40,26 @@ impl ChatConnection {
 
     /// Sends an IPC segment to the player, where the source actor is also the player.
     pub async fn send_ipc_self(&mut self, ipc: ServerChatIpcSegment) {
-        let segment = PacketSegment {
-            source_actor: self.actor_id,
-            target_actor: self.actor_id,
-            segment_type: SegmentType::Ipc,
-            data: SegmentData::Ipc(ipc),
-        };
-
-        send_packet(
-            &mut self.socket,
-            &mut self.state,
-            ConnectionType::Chat,
-            if self.config.enable_packet_compression {
-                CompressionType::Oodle
-            } else {
-                CompressionType::Uncompressed
-            },
-            &[segment],
-        )
-        .await;
+        // This is meant to protect against stack-smashing in nested futures
+        Box::pin(self.send_ipc_from(self.actor_id, ipc)).await;
     }
 
-    pub async fn send_ipc(&mut self, ipc: ServerChatIpcSegment, from_actor_id: ObjectId) {
+    /// Sends an IPC segment to the player, where the source actor can be specified.
+    pub async fn send_ipc_from(&mut self, source_actor: ObjectId, ipc: ServerChatIpcSegment) {
         let segment = PacketSegment {
-            source_actor: from_actor_id,
+            source_actor,
             target_actor: self.actor_id,
             segment_type: SegmentType::Ipc,
             data: SegmentData::Ipc(ipc),
         };
 
-        send_packet(
+        // Ditt from above
+        Box::pin(self.send_segment(segment)).await;
+    }
+
+    pub async fn send_segment(&mut self, segment: PacketSegment<ServerChatIpcSegment>) {
+        // Ditto as above
+        Box::pin(send_packet(
             &mut self.socket,
             &mut self.state,
             ConnectionType::Chat,
@@ -79,7 +69,7 @@ impl ChatConnection {
                 CompressionType::Uncompressed
             },
             &[segment],
-        )
+        ))
         .await;
     }
 
@@ -170,7 +160,7 @@ impl ChatConnection {
             ..Default::default()
         }));
 
-        self.send_ipc(ipc, message_info.sender_actor_id).await;
+        self.send_ipc_from(message_info.sender_actor_id, ipc).await;
     }
 
     pub async fn tell_recipient_not_found(&mut self, error_info: TellNotFoundError) {
@@ -191,7 +181,7 @@ impl ChatConnection {
         let sender_actor_id = message_info.sender_actor_id;
         let ipc = ServerChatIpcSegment::new(ServerChatIpcData::PartyMessage(message_info));
 
-        self.send_ipc(ipc, sender_actor_id).await;
+        self.send_ipc_from(sender_actor_id, ipc).await;
     }
 
     pub async fn cwls_message_received(&mut self, message_info: CWLinkshellMessage) {
@@ -209,7 +199,7 @@ impl ChatConnection {
         let sender_actor_id = message_info.sender_actor_id;
         let ipc = ServerChatIpcSegment::new(ServerChatIpcData::CWLinkshellMessage(message_info));
 
-        self.send_ipc(ipc, sender_actor_id).await;
+        self.send_ipc_from(sender_actor_id, ipc).await;
     }
 
     pub async fn set_linkshell_chatchannels(&mut self, cwlses: Vec<u32>, locals: Vec<u32>) {
