@@ -29,7 +29,7 @@ pub fn handle_chat_messages(
 
             // First pull up some info about the sender, as tell packets require it
             let Some(sender_instance) = data.find_actor_instance(*from_actor_id) else {
-                panic!("Client is somehow not an instance yet?!");
+                panic!("Client is somehow not in an instance yet?!");
             };
 
             network.send_to_instance(
