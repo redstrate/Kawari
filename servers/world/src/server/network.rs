@@ -7,13 +7,10 @@ use crate::{
         ClientState, WorldServer,
         actor::NetworkedActor,
         instance::Instance,
-        social::{Linkshell, Party, get_party_id_from_actor_id},
+        social::{Party, get_party_id_from_actor_id},
     },
 };
-use kawari::{
-    common::ObjectId,
-    ipc::zone::{ActorControlCategory, CWLSPermissionRank},
-};
+use kawari::{common::ObjectId, ipc::zone::ActorControlCategory};
 
 #[derive(Default, Debug)]
 pub struct NetworkState {
@@ -22,9 +19,8 @@ pub struct NetworkState {
     pub clients: HashMap<ClientId, (ClientHandle, ClientState)>,
     pub chat_clients: HashMap<ClientId, (ClientHandle, ClientState)>,
     pub parties: HashMap<u64, Party>,
-    pub linkshells: HashMap<u64, Linkshell>,
+    pub linkshells: HashMap<u64, Vec<ObjectId>>,
     pub commit_parties: bool,
-    pub next_ls_channel_number: u32, // TODO: find a more sensible place for this, and make it atomic? Does it need to be atomic at all? Only the network should be editing this
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -34,10 +30,6 @@ pub enum DestinationNetwork {
 }
 
 impl NetworkState {
-    pub fn next_ls_channel_number(&mut self) -> u32 {
-        self.next_ls_channel_number += 1;
-        self.next_ls_channel_number
-    }
     /// Creates a `FromServer` message that will spawn `actor`.
     pub fn spawn_existing_actor_message(
         client_state: &mut ClientState,
@@ -403,22 +395,15 @@ impl NetworkState {
             return;
         };
 
-        for member in linkshell.members.clone() {
+        for member in linkshell.clone() {
             // Optionally skip the sender
             if let Some(from) = from
-                && from == member.actor_id
+                && from == member
             {
                 continue;
             }
 
-            // If they're still pending, don't let them see chat messages.
-            if let FromServer::CWLSMessageReceived(_) = message
-                && member.rank == CWLSPermissionRank::Invitee
-            {
-                continue;
-            }
-
-            self.send_to_by_actor_id(member.actor_id, message.clone(), destination);
+            self.send_to_by_actor_id(member, message.clone(), destination);
         }
     }
 }

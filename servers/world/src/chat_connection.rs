@@ -176,7 +176,7 @@ impl ChatConnection {
 
         for linkshell in self.chatchannels.lwls.iter_mut() {
             linkshell.world_id = self.config.world_id;
-            linkshell.channel_type = ChatChannelType::Linkshell
+            linkshell.channel_type = ChatChannelType::Linkshell;
         }
     }
 
@@ -314,65 +314,27 @@ impl ChatConnection {
             return;
         }
 
+        // TODO: Filter messages if our rank is Invitee
         let sender_actor_id = message_info.sender_actor_id;
         let ipc = ServerChatIpcSegment::new(ServerChatIpcData::CWLinkshellMessage(message_info));
 
         self.send_ipc_from(sender_actor_id, ipc).await;
     }
 
-    pub async fn set_linkshell_chatchannels(&mut self, cwlses: Vec<u32>, locals: Vec<u32>) {
-        if (cwlses.len() > self.chatchannels.cwls.len())
-            || (locals.len() > self.chatchannels.lwls.len())
+    pub async fn refresh_chatchannels(&mut self) {
+        let linkshells;
         {
-            tracing::error!(
-                "set_linkshell_chatchannels: cwlses ({}) or locals ({})vecs had too many entries! What happened?",
-                cwlses.len(),
-                locals.len()
-            );
-            return;
+            let mut db = self.database.lock();
+            linkshells = db.find_linkshells(self.player_data.content_id as i64);
         }
 
-        for (index, ls) in cwlses.iter().enumerate() {
-            self.chatchannels.cwls[index].channel_number = *ls;
-        }
-
-        for (index, ls) in locals.iter().enumerate() {
-            self.chatchannels.lwls[index].channel_number = *ls;
-        }
-    }
-
-    pub async fn linkshell_disbanded(&mut self, channel_number: u32) {
-        for linkshell in self.chatchannels.cwls.iter_mut() {
-            if linkshell.channel_number == channel_number {
-                linkshell.channel_number = 0;
-                return;
-            }
-        }
-
-        for linkshell in self.chatchannels.lwls.iter_mut() {
-            if linkshell.channel_number == channel_number {
-                linkshell.channel_number = 0;
-                break;
-            }
-        }
-    }
-
-    pub async fn linkshell_left(&mut self, from_actor_id: ObjectId, channel_number: u32) {
-        for linkshell in self.chatchannels.cwls.iter_mut() {
-            if linkshell.channel_number == channel_number
-                && self.player_data.actor_id == from_actor_id
-            {
-                linkshell.channel_number = 0;
-                return;
-            }
-        }
-
-        for linkshell in self.chatchannels.lwls.iter_mut() {
-            if linkshell.channel_number == channel_number
-                && self.player_data.actor_id == from_actor_id
-            {
-                linkshell.channel_number = 0;
-                break;
+        if let Some(linkshells) = linkshells {
+            // TODO: local shells
+            for (index, shell) in linkshells.iter().enumerate() {
+                if index >= self.chatchannels.cwls.len() {
+                    break;
+                }
+                self.chatchannels.cwls[index].channel_number = shell.ids.linkshell_id as u32;
             }
         }
     }

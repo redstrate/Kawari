@@ -204,9 +204,9 @@ pub enum FromServer {
     /// Inform the zone and chat connections about their linkshell channels.
     SetLinkshellChatChannels(Vec<u32>, Vec<u32>, bool),
     /// Inform the client that one of their linkshells has been disbanded.
-    LinkshellDisbanded(u64, u32),
+    LinkshellDisbanded(u64, String),
     /// Inform the client that a member left one of their linkshells.
-    LinkshellLeft(ObjectId, u64, u64, String, CWLSLeaveReason, u64, u32),
+    LinkshellLeft(ObjectId, u64, u64, String, CWLSLeaveReason, u64),
     /// Inform the client that an owner of one of their linkshells has renamed it.
     LinkshellRenamed(u64, String, u64, String),
     /// Inform the client that a member of one of their linkshells had their rank changed.
@@ -214,9 +214,11 @@ pub enum FromServer {
     /// Inform the client that they have received a new cross-world linkshell invitation.
     LinkshellInviteReceived(CrossworldLinkshellInvite),
     /// Inform the client that someone has joined their linkshell.
-    LinkshellInviteAccepted(u64, u64, String, String, u32),
+    LinkshellInviteAccepted(u64, u64, String, String),
     /// Inform the zone connection about their current mount's model id. Helps persist mounts across zone transitions and through log-outs.
     SetCurrentMount(u16),
+    /// Inform the chat connection that it needs to refresh its non-party ChatChannels due to some event necessitating it.
+    MustRefreshChatChannels(),
 }
 
 #[derive(Debug, Clone)]
@@ -395,16 +397,11 @@ pub enum ToServer {
     /// Removes action cooldowns for this player.
     RemoveCooldowns(ObjectId),
     /// The client's zone connection wishes to inform its chat connection about any linkshells the player belongs to.
-    SetLinkshells(
-        ObjectId,
-        Option<Vec<(u64, CWLSPermissionRank)>>,
-        Option<Vec<u64>>,
-        bool,
-    ),
+    SetLinkshells(ObjectId, Vec<u64>),
     /// The client sent a message to a cross-world linkshell.
     CWLSMessageSent(CWLinkshellMessage),
     /// The client disbanded their linkshell, and online members need to be informed.
-    DisbandLinkshell(u64),
+    DisbandLinkshell(u64, String),
     /// The client left a linkshell, and online members need to be informed.
     LeaveLinkshell(ObjectId, u64, u64, String, CWLSLeaveReason, u64),
     /// The client renamed their linkshell.

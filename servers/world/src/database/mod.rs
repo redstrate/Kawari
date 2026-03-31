@@ -25,6 +25,7 @@ use crate::{PlayerData, inventory::Inventory};
 use kawari::{
     common::ObjectId,
     constants::AVAILABLE_CLASSJOBS,
+    ipc::chat::{ChatChannel, ChatChannelType},
     ipc::lobby::{CharacterDetails, CharacterFlag},
     ipc::zone::{
         CWLSCommon, CWLSCommonIdentifiers, CWLSMemberListEntry, CWLSNameAvailability,
@@ -304,25 +305,6 @@ impl WorldDatabase {
                     "Unable to find {for_content_id}'s actor id in the database due to the following error {err:#?}!"
                 );
                 ObjectId::default()
-            }
-        }
-    }
-
-    // TODO: Get rid of this in the linkshell refactor since find_character_ids exists and is more useful
-    pub fn find_character_name(&mut self, for_content_id: u64) -> Option<String> {
-        use schema::character::dsl::*;
-
-        match character
-            .filter(content_id.eq(for_content_id as i64))
-            .select(name)
-            .first::<String>(&mut self.connection)
-        {
-            Ok(my_name) => Some(my_name),
-            Err(err) => {
-                tracing::warn!(
-                    "Unable to find {for_content_id}'s name in the database due to the following error: {err:#?}!"
-                );
-                None
             }
         }
     }
@@ -1198,7 +1180,7 @@ impl WorldDatabase {
     }
 
     /// Returns a HashMap of linkshells for the global server state. NOTE: It does not fill in the members or chatchannel ids, and this is intentional! The global server waits for members to log in and inform it that they belong to a given set linkshells, and the chatchannel ids are decided by the global server itself.
-    pub fn find_all_linkshells(&mut self) -> HashMap<u64, crate::server::Linkshell> {
+    pub fn find_all_linkshells(&mut self) -> HashMap<u64, Vec<ObjectId>> {
         use schema::linkshells::dsl::*;
 
         let mut found_linkshells = HashMap::new();
@@ -1208,7 +1190,7 @@ impl WorldDatabase {
             .load(&mut self.connection)
         {
             for linkshell in flat_linkshells {
-                found_linkshells.insert(linkshell.id as u64, crate::server::Linkshell::default());
+                found_linkshells.insert(linkshell.id as u64, Vec::new());
             }
         }
 
@@ -1260,6 +1242,11 @@ impl WorldDatabase {
                     CWLSPermissionRank::Invitee
                 };
                 shell.ids.linkshell_id = shell_info[index].id as u64;
+                shell.ids.linkshell_chat_id = ChatChannel {
+                    world_id: 10008,
+                    channel_type: ChatChannelType::CWLinkshell,
+                    channel_number: shell_info[index].id as u32,
+                };
                 shell.creation_time = shell_info[index].creation_time as u32;
             }
 
@@ -1322,11 +1309,9 @@ impl WorldDatabase {
         if !self.is_in_linkshell(for_content_id as u64, for_linkshell_id) {
             return None;
         }
-        let was_master = self.has_linkshell_permissions(
-            for_content_id as u64,
-            for_linkshell_id,
-            CWLSPermissionRank::Master,
-        );
+
+        let their_rank =
+            self.find_linkshell_permissions(for_content_id as u64, for_linkshell_id)?;
 
         let for_linkshell_id = for_linkshell_id as i64;
 
@@ -1350,7 +1335,7 @@ impl WorldDatabase {
                     "Linkshell {for_linkshell_id} has no members left! Auto-disbanding now."
                 );
                 self.remove_linkshell(for_linkshell_id as u64);
-            } else if was_master {
+            } else if their_rank == CWLSPermissionRank::Master {
                 // Else, if the leaving member was the owner, promote the oldest member, so as not to leave the LS orphaned.
                 if let Ok(oldest_member) = linkshell_members
                     .select(content_id)
@@ -1519,13 +1504,12 @@ impl WorldDatabase {
             .is_ok()
     }
 
-    /// Returns true if this player's rank is Leader or Master.
-    pub fn has_linkshell_permissions(
+    /// Returns this player's rank in the given linkshell.
+    pub fn find_linkshell_permissions(
         &mut self,
         for_content_id: u64,
         for_linkshell_id: u64,
-        required_rank: CWLSPermissionRank,
-    ) -> bool {
+    ) -> Option<CWLSPermissionRank> {
         use schema::linkshell_members::dsl::*;
 
         if self.is_in_linkshell(for_content_id, for_linkshell_id)
@@ -1536,11 +1520,10 @@ impl WorldDatabase {
                 .first::<i32>(&mut self.connection)
             && let Some(my_rank) = CWLSPermissionRank::from_repr(my_rank as u8)
         {
-            // Master has Leader's permissions and more, so >= is fine.
-            return my_rank >= required_rank;
+            return Some(my_rank);
         }
 
-        false
+        None
     }
 
     /// Sets this member's rank in the LS.
@@ -1638,7 +1621,11 @@ impl WorldDatabase {
                         return Some(CrossworldLinkshellEx {
                             ids: CWLSCommonIdentifiers {
                                 linkshell_id: next_id as u64,
-                                ..Default::default()
+                                linkshell_chat_id: ChatChannel {
+                                    world_id: 10008,
+                                    channel_type: ChatChannelType::CWLinkshell,
+                                    channel_number: next_id as u32,
+                                },
                             },
                             creation_time: ls_creation_time as u32,
                             common: CWLSCommon {

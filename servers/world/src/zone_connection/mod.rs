@@ -20,8 +20,7 @@ use kawari::{
     config::WorldConfig,
     ipc::zone::{
         CWLSMemberListEntry, ClientTriggerCommand, ClientZoneIpcSegment, Condition, Conditions,
-        ContentRegistrationFlags, CrossworldLinkshellEx, PlayerEntry, ServerZoneIpcData,
-        ServerZoneIpcSegment,
+        ContentRegistrationFlags, PlayerEntry, ServerZoneIpcData, ServerZoneIpcSegment,
     },
     opcodes::ServerZoneIpcType,
     packet::{
@@ -176,8 +175,6 @@ pub struct ZoneConnection {
     pub cwls_results: Vec<CWLSMemberListEntry>,
     /// CWLS member index. Increases by 8 every time the client requests more results.
     pub cwls_index: usize,
-    // A cache of our client's cwlses. TODO: is there a better way to do this..?
-    pub cwls_memberships: Option<Vec<CrossworldLinkshellEx>>,
 }
 
 impl ZoneConnection {

@@ -671,6 +671,10 @@ ServerZoneIpcType:
     comment: The server sends the client previews of letters they have received.
     opcode: 240
     size: 1164
+  - name: ShowLinkshellError
+    comment: The server sends the client an error message due to something going wrong with a linkshell.
+    opcode: 190
+    size: 24
 ClientZoneIpcType:
   - name: InitRequest
     comment: Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)

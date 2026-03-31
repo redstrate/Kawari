@@ -1245,6 +1245,14 @@ pub enum ServerZoneIpcData {
         /// This has sequence information but it's not understood yet.
         unk: [u8; 4],
     },
+    ShowLinkshellError {
+        /// The LogMessage sheet row index to display to the client.
+        #[brw(pad_after = 2)] // Seems to be empty/zeroes
+        log_message: u16,
+        /// Unknown. Has data and doesn't appear to be a timestamp, actor id, or content id.
+        #[brw(pad_after = 16)] // Seems to be empty/zeroes
+        unk: u32,
+    },
 }
 
 #[cfg(test)]

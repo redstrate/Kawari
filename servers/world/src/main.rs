@@ -175,7 +175,6 @@ async fn initial_setup(
                     friend_index: 0,
                     cwls_results: Vec::new(),
                     cwls_index: 0,
-                    cwls_memberships: None,
                 };
 
                 // Handle setup before passing off control to the zone connection.
@@ -430,10 +429,8 @@ async fn client_chat_loop(
                     }
                     FromServer::SetPartyChatChannel(channel_id) => connection.set_party_chatchannel(channel_id).await,
                     FromServer::PartyMessageReceived(message_data) => connection.party_message_received(message_data).await,
-                    FromServer::SetLinkshellChatChannels(cwls, local, _) => connection.set_linkshell_chatchannels(cwls, local).await,
+                    FromServer::MustRefreshChatChannels() => connection.refresh_chatchannels().await,
                     FromServer::CWLSMessageReceived(message_info) => connection.cwls_message_received(message_info).await,
-                    FromServer::LinkshellDisbanded(_, channel_id) => connection.linkshell_disbanded(channel_id).await,
-                    FromServer::LinkshellLeft(from_actor_id, _, _, _, _, _, channel_id) => connection.linkshell_left(from_actor_id, channel_id).await,
                     _ => tracing::error!("ChatConnection {:#?} received a FromServer message we don't care about: {:#?}, ensure you're using the right client network or that you've implemented a handler for it if we actually care about it!", client_handle.id, msg),
                 },
                 None => break,
@@ -901,6 +898,7 @@ async fn process_packet(
 
                             connection.inform_about_mailbox().await;
                             connection.init_linkshells().await;
+                            connection.send_crossworld_linkshells(false).await;
 
                             // Send login message
                             connection.send_notice(&config.world.login_message).await;
@@ -3250,16 +3248,9 @@ async fn process_server_msg(
                 database.commit_parties(parties);
             }
             FromServer::TreasureSpawn(treasure) => connection.spawn_treasure(treasure).await,
-            FromServer::SetLinkshellChatChannels(cwlses, _locals, need_to_send_linkshells) => {
-                // TODO: There might be a better way to do this. We need the chatchannels to be set *before* sending the "overview" or chat will break.
-                connection.set_linkshell_chatchannels(cwlses).await;
-                if need_to_send_linkshells {
-                    connection.send_crossworld_linkshells(false).await;
-                }
-            }
-            FromServer::LinkshellDisbanded(linkshell_id, _) => {
+            FromServer::LinkshellDisbanded(linkshell_id, linkshell_name) => {
                 connection
-                    .crossworld_linkshell_disbanded(linkshell_id)
+                    .crossworld_linkshell_disbanded(linkshell_id, linkshell_name)
                     .await;
             }
             FromServer::LinkshellLeft(
@@ -3269,7 +3260,6 @@ async fn process_server_msg(
                 target_name,
                 reason_for_leaving,
                 linkshell_id,
-                _,
             ) => {
                 connection
                     .member_left_linkshell(
@@ -3316,7 +3306,6 @@ async fn process_server_msg(
                 from_content_id,
                 from_name,
                 linkshell_name,
-                channel_number,
             ) => {
                 connection
                     .member_joined_linkshell(
@@ -3324,7 +3313,6 @@ async fn process_server_msg(
                         from_content_id,
                         from_name.clone(),
                         linkshell_name.clone(),
-                        channel_number,
                     )
                     .await;
             }
