@@ -14,10 +14,9 @@ use crate::{
 use kawari::{
     common::{CharacterMode, LogMessageType, ObjectId, ObjectTypeId, Position},
     ipc::zone::{
-        ActorControlCategory, CWLSPermissionRank, CrossworldLinkshellEx, InviteType,
-        PartyMemberEntry, PartyMemberPositions, PartyUpdateStatus, ReadyCheckReply,
-        ServerZoneIpcData, ServerZoneIpcSegment, WaymarkPlacementMode, WaymarkPosition,
-        WaymarkPositions, WaymarkPreset,
+        ActorControlCategory, InviteType, PartyMemberEntry, PartyMemberPositions,
+        PartyUpdateStatus, ReadyCheckReply, ServerZoneIpcData, ServerZoneIpcSegment,
+        WaymarkPlacementMode, WaymarkPosition, WaymarkPositions, WaymarkPreset,
     },
 };
 
@@ -379,28 +378,6 @@ pub fn update_party_position(
                 spawn.common.position = position;
             }
         }
-    }
-}
-
-/// A minimal struct representing a linkshell member.
-#[derive(Debug, Default, Clone, PartialEq)]
-pub struct LinkshellMember {
-    /// The member's actor id.
-    pub actor_id: ObjectId,
-    /// The member's rank in the LS.
-    pub rank: CWLSPermissionRank,
-}
-
-/// A minimal struct representing a linkshell. As far as the global server cares, we only need to keep track of its chatchannel_id, online members, and their permissions. The HashMap it's stored in keeps track of its 64-bit id.
-#[derive(Debug, Default, Clone)]
-pub struct Linkshell {
-    pub members: Vec<LinkshellMember>,
-    pub channel_number: u32,
-}
-
-impl Linkshell {
-    pub fn remove_member_by_actor_id(&mut self, actor_id: ObjectId) {
-        self.members.retain(|m| m.actor_id != actor_id);
     }
 }
 
@@ -1596,67 +1573,35 @@ pub fn handle_social_messages(
             true
         }
 
-        ToServer::SetLinkshells(
-            from_actor_id,
-            crossworld_shells,
-            _local_shells,
-            need_to_send_linkshells,
-        ) => {
+        ToServer::SetLinkshells(from_actor_id, linkshells) => {
             let mut network = network.lock();
-            let mut cwlses = vec![0; CrossworldLinkshellEx::COUNT];
-            let locals = vec![0; CrossworldLinkshellEx::COUNT];
 
-            if let Some(crossworld_shells) = crossworld_shells {
-                for (index, (shell, rank)) in crossworld_shells.iter().enumerate() {
-                    if *shell != 0 {
-                        let mut linkshell;
-                        {
-                            linkshell = network.linkshells.entry(*shell).or_default().clone();
-                        }
-                        let member = LinkshellMember {
-                            actor_id: *from_actor_id,
-                            rank: *rank,
-                        };
+            for linkshell_id in linkshells {
+                // Just in case, skip this id if we're given a vec that contains entries with "no linkshell" (id 0).
+                if *linkshell_id == 0 {
+                    continue;
+                }
 
-                        if !linkshell.members.contains(&member) {
-                            linkshell.members.push(LinkshellMember {
-                                actor_id: *from_actor_id,
-                                rank: *rank,
-                            });
-                        }
-                        if linkshell.channel_number == 0 {
-                            linkshell.channel_number = network.next_ls_channel_number();
-                        }
-                        cwlses[index] = linkshell.channel_number;
-                        *network.linkshells.get_mut(shell).unwrap() = linkshell;
-                    }
+                let shell = network.linkshells.entry(*linkshell_id).or_default();
+                if !shell.contains(from_actor_id) {
+                    shell.push(*from_actor_id);
                 }
             }
 
-            // TODO: Local LSes not supported yet
-
-            // Inform the chat connection their zone connection belongs to these LSes.
-            let msg =
-                FromServer::SetLinkshellChatChannels(cwlses, locals, *need_to_send_linkshells);
-
-            // We send this to *both* of its connections because the client may have requested a linkshell list at some point, and that all happens on the zone connection. The chat connection uses the ids for filtering bad requests.
-            network.send_to_by_actor_id(
-                *from_actor_id,
-                msg.clone(),
-                DestinationNetwork::ZoneClients,
-            );
+            // Tell the chat connection it's time to refresh its info.
+            let msg = FromServer::MustRefreshChatChannels();
             network.send_to_by_actor_id(*from_actor_id, msg, DestinationNetwork::ChatClients);
 
             true
         }
-        ToServer::DisbandLinkshell(linkshell_id) => {
+        ToServer::DisbandLinkshell(linkshell_id, linkshell_name) => {
             let mut network = network.lock();
 
-            let Some(linkshell) = network.linkshells.get(linkshell_id) else {
+            if !network.linkshells.contains_key(linkshell_id) {
                 return true;
             };
 
-            let msg = FromServer::LinkshellDisbanded(*linkshell_id, linkshell.channel_number);
+            let msg = FromServer::LinkshellDisbanded(*linkshell_id, linkshell_name.clone());
 
             // Tell both zone and chat connections about the linkshell's disbandment first to avoid issues.
             network.send_to_linkshell(
@@ -1665,6 +1610,8 @@ pub fn handle_social_messages(
                 msg.clone(),
                 DestinationNetwork::ZoneClients,
             );
+
+            let msg = FromServer::MustRefreshChatChannels();
             network.send_to_linkshell(*linkshell_id, None, msg, DestinationNetwork::ChatClients);
 
             // Now update our state.
@@ -1683,7 +1630,7 @@ pub fn handle_social_messages(
             let mut network = network.lock();
 
             {
-                let Some(linkshell) = network.linkshells.get(linkshell_id) else {
+                if !network.linkshells.contains_key(linkshell_id) {
                     return true;
                 };
 
@@ -1694,7 +1641,6 @@ pub fn handle_social_messages(
                     from_name.clone(),
                     *reason_for_leaving,
                     *linkshell_id,
-                    linkshell.channel_number,
                 );
 
                 // Tell both zone and chat connections about the member's departure first to avoid issues.
@@ -1704,24 +1650,17 @@ pub fn handle_social_messages(
                     msg.clone(),
                     DestinationNetwork::ZoneClients,
                 );
-                network.send_to_linkshell(
-                    *linkshell_id,
-                    None,
-                    msg,
-                    DestinationNetwork::ChatClients,
-                );
+
+                let msg = FromServer::MustRefreshChatChannels();
+                network.send_to_by_actor_id(*target_actor_id, msg, DestinationNetwork::ChatClients);
             }
 
             // Now update our state by removing the leaving member, and removing the linkshell from our list if nobody is online.
             network
                 .linkshells
                 .entry(*linkshell_id)
-                .and_modify(|ls| ls.members.retain(|m| m.actor_id != *target_actor_id));
-
-            // TODO: Need to test more if removing the list is okay, ToServer::SetLinkshells *should* re-instate a linkshell if one of its members comes back online after this point
-            if network.linkshells[linkshell_id].members.is_empty() {
-                network.linkshells.remove(linkshell_id);
-            }
+                .and_modify(|ls| ls.retain(|m| *m != *target_actor_id));
+            network.linkshells.retain(|_, shell| !shell.is_empty());
             true
         }
         ToServer::RenameLinkshell(from_content_id, from_name, linkshell_id, linkshell_name) => {
@@ -1761,10 +1700,22 @@ pub fn handle_social_messages(
         }
         ToServer::SendLinkshellInvite(target_actor_id, invite_info) => {
             let mut network = network.lock();
+            {
+                let Some(linkshell) = network.linkshells.get_mut(&invite_info.linkshell_id) else {
+                    return true;
+                };
+
+                if !linkshell.contains(target_actor_id) {
+                    linkshell.push(*target_actor_id);
+                }
+            }
 
             let msg = FromServer::LinkshellInviteReceived(invite_info.clone());
-
             network.send_to_by_actor_id(*target_actor_id, msg, DestinationNetwork::ZoneClients);
+
+            // Refresh due to now being part of this LS. The client does block chat messages as an invitee, but we can do better and just not send them the packets at all.
+            let msg = FromServer::MustRefreshChatChannels();
+            network.send_to_by_actor_id(*target_actor_id, msg, DestinationNetwork::ChatClients);
 
             true
         }
@@ -1777,22 +1728,13 @@ pub fn handle_social_messages(
         ) => {
             let mut network = network.lock();
 
-            let channel_number;
             {
                 let Some(linkshell) = network.linkshells.get_mut(linkshell_id) else {
                     return true;
                 };
 
-                channel_number = linkshell.channel_number;
-                if !linkshell
-                    .members
-                    .iter()
-                    .any(|m| m.actor_id == *from_actor_id)
-                {
-                    linkshell.members.push(LinkshellMember {
-                        actor_id: *from_actor_id,
-                        rank: CWLSPermissionRank::Member,
-                    });
+                if !linkshell.contains(from_actor_id) {
+                    linkshell.push(*from_actor_id);
                 }
             }
             let msg = FromServer::LinkshellInviteAccepted(
@@ -1800,10 +1742,13 @@ pub fn handle_social_messages(
                 *from_content_id,
                 from_name.clone(),
                 linkshell_name.clone(),
-                channel_number,
             );
 
             network.send_to_linkshell(*linkshell_id, None, msg, DestinationNetwork::ZoneClients);
+
+            // Refresh due to member rank changing from Invitee to Member
+            let msg = FromServer::MustRefreshChatChannels();
+            network.send_to_by_actor_id(*from_actor_id, msg, DestinationNetwork::ChatClients);
 
             true
         }

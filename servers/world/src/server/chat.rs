@@ -76,16 +76,7 @@ pub fn handle_chat_messages(
         ToServer::CWLSMessageSent(linkshell_message) => {
             let mut network = network.lock();
 
-            // Find the linkshell id from the chatchannel id.
-            // TODO: This may not be 100% necessary in an upcoming refactor, time will tell.
-            let Some(id) = network.linkshells.iter().find_map(|(key, val)| {
-                (val.channel_number == linkshell_message.cwls_chatchannel.channel_number)
-                    .then_some(key)
-            }) else {
-                return true;
-            };
-
-            let linkshell_id = *id;
+            let linkshell_id = linkshell_message.cwls_chatchannel.channel_number as u64;
 
             let from_actor_id = linkshell_message.sender_actor_id;
             let msg = FromServer::CWLSMessageReceived(linkshell_message.clone());
