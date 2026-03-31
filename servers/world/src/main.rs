@@ -2291,7 +2291,7 @@ async fn process_packet(
                                         .await;
                                 }
                                 InviteType::FriendList => {
-                                    connection.add_to_friend_list(*content_id);
+                                    connection.add_to_friend_list(*content_id, 32);
 
                                     connection
                                         .handle

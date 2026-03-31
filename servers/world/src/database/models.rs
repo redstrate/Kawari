@@ -336,8 +336,8 @@ pub struct Friends {
     pub content_id: i64,
     pub friend_content_id: i64,
     pub group_icon: i32,
-    pub invite_time: String,
-    pub is_pending: bool,
+    pub invite_time: i64,
+    pub is_pending: i32,
 }
 
 #[derive(Insertable, Queryable, Selectable, AsChangeset, Debug, Default, Clone)]

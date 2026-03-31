@@ -175,8 +175,8 @@ diesel::table! {
         content_id -> BigInt,
         friend_content_id -> BigInt,
         group_icon -> Integer,
-        invite_time -> Text,
-        is_pending -> Bool,
+        invite_time -> BigInt,
+        is_pending -> Integer,
     }
 }
 

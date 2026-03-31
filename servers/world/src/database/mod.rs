@@ -885,22 +885,31 @@ impl WorldDatabase {
             .unwrap_or_default()
     }
 
-    fn friend_request_is_pending(&mut self, for_content_id: i64) -> bool {
+    // TODO: Fix the HACK below.
+    // HACK: For the moment we don't support this bitfield "unk2" in SocialList, and for the friend list to work correctly, we need to set a flag of 32 for the invite sender (waiting for friend approval) while the invitee needs 48 (waiting for approval + "accepted" (16) which makes no sense, since the invitee has yet to respond, but it's what the client wants).
+    fn friend_request_pending_status(&mut self, for_content_id: i64) -> u8 {
         use schema::friends::dsl::*;
         friends
             .filter(friend_content_id.eq(for_content_id))
             .select(is_pending)
-            .first::<bool>(&mut self.connection)
-            .unwrap_or_default()
+            .first::<i32>(&mut self.connection)
+            .unwrap_or_default() as u8
     }
 
     pub fn accept_friend(&mut self, for_content_id: i64, for_friend_content_id: i64) {
         use schema::friends::dsl::*;
 
+        // Update both ends of the invitation since they're mutual friends now.
         diesel::update(friends)
             .filter(content_id.eq(for_content_id))
             .filter(friend_content_id.eq(for_friend_content_id))
-            .set(is_pending.eq(false))
+            .set(is_pending.eq(16)) // 16 indicates the friend invite sequence is over and the client should display them as a friend
+            .execute(&mut self.connection)
+            .unwrap();
+        diesel::update(friends)
+            .filter(content_id.eq(for_friend_content_id))
+            .filter(friend_content_id.eq(for_content_id))
+            .set(is_pending.eq(16)) // 16 indicates the friend invite sequence is over and the client should display them as a friend
             .execute(&mut self.connection)
             .unwrap();
     }
@@ -920,9 +929,23 @@ impl WorldDatabase {
         }
 
         for id in friend_content_ids {
-            friend_entries.push(self.get_player_entry(game_data, id));
+            let mut friend_entry = self.get_player_entry(game_data, id);
+            friend_entry.timestamp = self.get_friend_timestamp(for_content_id, id);
+            friend_entries.push(friend_entry);
         }
         friend_entries
+    }
+
+    fn get_friend_timestamp(&mut self, for_content_id: i64, for_friend_content_id: i64) -> u32 {
+        use schema::friends::dsl::*;
+
+        let time = friends
+            .select(invite_time)
+            .filter(content_id.eq(for_content_id))
+            .filter(friend_content_id.eq(for_friend_content_id))
+            .first::<i64>(&mut self.connection)
+            .unwrap_or_default();
+        time as u32
     }
 
     /// Determine the online status mask, with party/novice/mentor status.
@@ -1096,11 +1119,7 @@ impl WorldDatabase {
                 0,
                 0,
                 0,
-                if self.friend_request_is_pending(for_content_id) {
-                    48
-                } else {
-                    0
-                }, // TODO: this is a bitfield in CS we should support
+                self.friend_request_pending_status(for_content_id), // TODO: this is a bitfield in CS we should support
                 0,
             ],
             zone_id,
@@ -1139,7 +1158,8 @@ impl WorldDatabase {
         entries
     }
 
-    pub fn add_to_friend_list(&mut self, fwen_content_id: i64, my_content_id: i64) {
+    // TODO: Fix this `pending` parameter, it's some sort of bitmask (search this file for HACK for further details)
+    pub fn add_to_friend_list(&mut self, fwen_content_id: i64, my_content_id: i64, pending: i32) {
         if my_content_id == fwen_content_id {
             tracing::error!(
                 "Player with content id {my_content_id} attempted to add themselves to their friend list. Ignoring request."
@@ -1148,8 +1168,8 @@ impl WorldDatabase {
         }
 
         use schema::friends::dsl::*;
-        let time = diesel::select(datetime())
-            .get_result::<String>(&mut self.connection)
+        let time = diesel::select(unixepoch())
+            .get_result::<i64>(&mut self.connection)
             .unwrap();
 
         let friend = Friends {
@@ -1158,7 +1178,7 @@ impl WorldDatabase {
             friend_content_id: fwen_content_id,
             group_icon: 0,
             invite_time: time,
-            is_pending: true,
+            is_pending: pending,
         };
 
         diesel::insert_into(friends)
@@ -1179,7 +1199,7 @@ impl WorldDatabase {
         .unwrap();
     }
 
-    /// Returns a HashMap of linkshells for the global server state. NOTE: It does not fill in the members or chatchannel ids, and this is intentional! The global server waits for members to log in and inform it that they belong to a given set linkshells, and the chatchannel ids are decided by the global server itself.
+    /// Returns a HashMap of linkshells for the global server state. NOTE: It does not fill in the members or chatchannel ids, and this is intentional! The global server waits for members to log in and inform it that they belong to a given set of linkshells.
     pub fn find_all_linkshells(&mut self) -> HashMap<u64, Vec<ObjectId>> {
         use schema::linkshells::dsl::*;
 
