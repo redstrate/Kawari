@@ -121,32 +121,47 @@ bitflags! {
 #[binrw]
 #[derive(Debug, Clone, Default)]
 pub struct PlayerEntry {
+    /// This player's content id.
     pub content_id: u64,
-    pub unk1: [u8; 6],
+    /// A 32-bit Unix timestamp that likely changes meanings depending on the SocialList type being sent. For friend lists it indicates when they became friends with the client who requested the list.
+    pub timestamp: u32,
+    pub unk1: [u8; 2], // Unknown if these are ever used
     #[brw(pad_after = 8)]
+    /// The current world they're on.
     pub current_world_id: u16,
     pub unk2: [u8; 10],
     pub ui_flags: SocialListUIFlags,
     #[brw(pad_after = 2)]
+    /// Their current zone id.
     pub zone_id: u16,
+    /// Their Grand Company.
     pub grand_company: GrandCompany,
+    /// Their client language: this is different than the languages used for queueing and player searching.
     pub client_language: ClientLanguage,
+    /// The languages this player prefers to queue or otherwise interact with.
     pub social_ui_languages: SocialListUILanguages,
+    /// If the player has a clickable search comment or not (speech bubble with "..." in it).
     #[br(map = read_bool_from::<u8>)]
     #[bw(map = write_bool_as::<u8>)]
     pub has_search_comment: bool,
+    /// A mask indicating their online status: if they're in a party, in a duty, and so on.
     #[brw(pad_before = 4)]
     pub online_status_mask: OnlineStatusMask,
+    /// Their current class/job.
     #[brw(pad_after = 1)]
     pub classjob_id: u8,
+    /// Their current class/job's level.
     #[brw(pad_after = 7)]
     pub classjob_level: u8,
+    /// The world they're originally from.
     pub home_world_id: u16,
+    /// Their name.
     #[br(count = CHAR_NAME_MAX_LENGTH)]
     #[bw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
     #[br(map = read_string)]
     #[bw(map = write_string)]
     pub name: String,
+    /// Their free company tag, if any. The client will automatically display Voyager/Wanderer/Traveller in its place if they're from another world or datacenter.
     #[brw(pad_after = 6)]
     #[br(count = 6)]
     #[bw(pad_size_to = 6)]

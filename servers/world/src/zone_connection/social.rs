@@ -697,11 +697,12 @@ impl ZoneConnection {
         }
     }
 
-    pub fn add_to_friend_list(&mut self, friend_content_id: u64) {
+    pub fn add_to_friend_list(&mut self, friend_content_id: u64, pending: i32) {
         let mut db = self.database.lock();
         db.add_to_friend_list(
             friend_content_id as i64,
             self.player_data.character.content_id,
+            pending,
         );
     }
 
@@ -723,7 +724,7 @@ impl ZoneConnection {
         });
         self.send_ipc_self(ipc).await;
 
-        self.add_to_friend_list(sender_content_id);
+        self.add_to_friend_list(sender_content_id, 48);
     }
 
     async fn get_linkshells(&mut self) -> Option<Vec<CrossworldLinkshellEx>> {
