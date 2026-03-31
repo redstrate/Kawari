@@ -11,7 +11,7 @@ mod buyback;
 pub use buyback::BuyBackList;
 
 mod equipped;
-pub use equipped::{EQUIP_RESTRICTED, EquipSlot, EquippedStorage};
+pub use equipped::{EQUIP_RESTRICTED, EquippedStorage};
 
 mod generic;
 pub use generic::GenericStorage;

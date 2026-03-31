@@ -1,4 +1,5 @@
 use parking_lot::Mutex;
+use physis::TerritoryIntendedUse;
 use std::{
     collections::{HashMap, VecDeque},
     env::consts::EXE_SUFFIX,
@@ -35,7 +36,7 @@ use kawari::{
         CharacterMode, DEAD_DESPAWN_TIME, ENEMY_AUTO_ATTACK_RATE, HandlerId, HandlerType,
         InvisibilityFlags, JumpState, MAX_SPAWNED_ACTORS, MAX_SPAWNED_OBJECTS, MoveAnimationState,
         MoveAnimationType, ObjectId, ObjectTypeId, ObjectTypeKind, Position,
-        SharedGroupTimelineState, TerritoryIntendedUse, TimepointData,
+        SharedGroupTimelineState, TimepointData,
     },
     config::{FilesystemConfig, get_config},
     ipc::zone::{

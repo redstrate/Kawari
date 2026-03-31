@@ -4,6 +4,7 @@ use std::{collections::HashMap, time::Duration};
 
 use binrw::binrw;
 use bitflags::bitflags;
+use physis::TerritoryIntendedUse;
 use serde::{Deserialize, Serialize};
 use strum_macros::{Display, EnumIter, FromRepr};
 
@@ -692,115 +693,6 @@ pub enum LogMessageType {
     ItemSold = 0x698,
     ItemBoughtBack = 0x699,
     UnableToPerformPlayerOffline = 0x1617, // Unable to perform that action. That player is offline.
-}
-
-/// Names for rows in the Excel sheet of the same name.
-/// See <https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Client/Enums/TerritoryIntendedUse.cs>.
-#[repr(u8)]
-#[derive(FromRepr, Display, Clone, Copy, PartialEq)]
-pub enum TerritoryIntendedUse {
-    /// Towns such as Limsa Lominsa.
-    Town = 0,
-    /// Open world zones such as everything out of towns.
-    OpenWorld = 1,
-    /// Inn rooms.
-    Inn = 2,
-    /// Dungeon zones and other misc duties like Air Force One.
-    Dungeon = 3,
-    /// Variant dungeons like The Sil'dihn Subterrane.
-    VariantDungeon = 4,
-    /// Jail zones like Mordion Gaol.
-    Jail = 5,
-    /// Copies of Towns that are only during the opening.
-    OpeningArea = 6,
-    /// Rarely seen "lobby zones", such as the Phantom Village for Occult Crescent.
-    LobbyArea = 7,
-    /// Zones used in Alliance Raids.
-    AllianceRaid = 8,
-    /// Used for (pre-Endwalker?) quest battles.
-    OpenWorldInstanceBattle = 9,
-    /// Trial battles.
-    Trial = 10,
-    Unk100 = 11,
-    Unk110 = 12,
-    HousingOutdoor = 13,
-    HousingIndoor = 14,
-    SoloOverworldInstance = 15,
-    /// Fighting arenas for raids like.
-    Raid1 = 16,
-    /// Seen in at least AAC Heavyweight M1 (Savage)
-    Raid2 = 17,
-    /// Zones used for Frontline PvP.
-    Frontline = 18,
-    Unk120 = 19,
-    ChocoboRacing = 20,
-    /// Used for the only Ishgard Restoration zone, the Firamament.
-    IshgardRestoration = 21,
-    /// The Sanctum of the Twelve zone used for weddings.
-    Wedding = 22,
-    /// Gold Saucer zones.
-    GoldSaucer = 23,
-    /// ???
-    ExploratoryMissions = 26,
-    /// Used for the Hall of Novice tutorials.
-    HallOfTheNovice = 27,
-    /// Zones used for Crystalline Conflict PvP.
-    CrystallineConflict = 28,
-    /// Used for events like Solo Duties.
-    SoloDuty = 29,
-    /// The barracks zones of grand companies.
-    FreeCompanyGarrison = 30,
-    /// Zones used for Deep Dugeons, e.g. Palace of the Dead.
-    DeepDungeon = 31,
-    /// Used for zones only accessible seasonally, like Starlight Halls.
-    Seasonal = 32,
-    /// Treasure dungeons like Vault Oneiron.
-    TreasureDungeon = 33,
-    /// ???
-    SeasonalInstancedArea = 34,
-    /// ???
-    TripleTriadBattleHall = 35,
-    /// Used for raids like The Cloud of Darkness (Chaotic).
-    ChaoticRaid = 36,
-    /// ???
-    CrystallineConflictCustomMatch = 37,
-    /// Used in Rival Wings content.
-    RivalWings = 39,
-    /// Also used for Starlight Halls(?)
-    PrivateEventArea = 40,
-    /// Eureka zones.
-    Eureka = 41,
-    Unk2 = 42,
-    Unk3 = 43,
-    /// Leap of Faith zones.
-    LeapOfFaith = 44,
-    /// ???
-    MaskedCarnival = 45,
-    /// Zones used for Ocean Fishing.
-    OceanFishing = 46,
-    Unk7 = 47,
-    Unk8 = 48,
-    /// Island Sanctuary zones.
-    IslandSanctuary = 49,
-    Unk10 = 50,
-    /// Used in the Triple Triad Invitational Parlor duty.
-    TripleTriadInvitationalParlor = 51,
-    Unk12 = 52,
-    Unk13 = 53,
-    Unk14 = 54,
-    Unk15 = 55,
-    Elysion = 56,
-    /// Criterion Dungeons zones.
-    CriterionDungeon = 57,
-    /// Savage Criterion Dungeons zones.
-    SavageCriterionDungeon = 58,
-    /// Bean containment zones.
-    Blunderville = 59,
-    /// Cosmic Exploration zones.
-    CosmicExploration = 60,
-    /// Occult Crescent zones.
-    OccultCrescent = 61,
-    Unk22 = 62,
 }
 
 /// Names for rows in the Excel sheet of the same name.

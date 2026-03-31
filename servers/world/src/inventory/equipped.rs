@@ -1,11 +1,10 @@
+use physis::equipment::EquipSlot;
 use serde::{Deserialize, Serialize};
+use strum::{EnumCount, IntoEnumIterator};
 
 use super::{Item, Storage};
 
 use crate::{GameData, ItemInfoQuery};
-
-use strum::{EnumCount, IntoEnumIterator};
-use strum_macros::{EnumCount as EnumCountMacro, EnumIter, FromRepr};
 
 #[derive(Default, Clone, Copy, Deserialize, Serialize, Debug)]
 pub struct EquippedStorage {
@@ -25,25 +24,6 @@ pub struct EquippedStorage {
     pub soul_crystal: Item,
 }
 
-#[repr(u16)]
-#[derive(Clone, Copy, Debug, EnumCountMacro, EnumIter, FromRepr, PartialEq)]
-pub enum EquipSlot {
-    MainHand = 0,
-    OffHand = 1,
-    Head = 2,
-    Body = 3,
-    Hands = 4,
-    Belt = 5,
-    Legs = 6,
-    Feet = 7,
-    Ears = 8,
-    Neck = 9,
-    Wrists = 10,
-    RightRing = 11,
-    LeftRing = 12,
-    SoulCrystal = 13,
-}
-
 // On the EquipSlotCategory sheet, -1 means that item slot can't be equipped while another item restricts it.
 pub const EQUIP_RESTRICTED: i8 = -1;
 
@@ -56,7 +36,7 @@ impl EquippedStorage {
 
         // First, sum up the item levels of all item slots regardless of restrictions.
         for index in EquipSlot::iter() {
-            if index == EquipSlot::Belt || index == EquipSlot::SoulCrystal {
+            if index == EquipSlot::Waist || index == EquipSlot::SoulCrystal {
                 continue;
             }
 
@@ -110,7 +90,7 @@ impl Storage for EquippedStorage {
             EquipSlot::Head => &mut self.head,
             EquipSlot::Body => &mut self.body,
             EquipSlot::Hands => &mut self.hands,
-            EquipSlot::Belt => &mut self.belt,
+            EquipSlot::Waist => &mut self.belt,
             EquipSlot::Legs => &mut self.legs,
             EquipSlot::Feet => &mut self.feet,
             EquipSlot::Ears => &mut self.ears,
@@ -133,7 +113,7 @@ impl Storage for EquippedStorage {
             EquipSlot::Head => &self.head,
             EquipSlot::Body => &self.body,
             EquipSlot::Hands => &self.hands,
-            EquipSlot::Belt => &self.belt,
+            EquipSlot::Waist => &self.belt,
             EquipSlot::Legs => &self.legs,
             EquipSlot::Feet => &self.feet,
             EquipSlot::Ears => &self.ears,

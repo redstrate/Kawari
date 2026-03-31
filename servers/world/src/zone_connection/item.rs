@@ -2,7 +2,7 @@
 
 use crate::{
     ItemInfoQuery, ToServer, ZoneConnection,
-    inventory::{EQUIP_RESTRICTED, EquipSlot, Item, Storage},
+    inventory::{EQUIP_RESTRICTED, Item, Storage},
 };
 use kawari::{
     common::{ContainerType, ItemOperationKind, ObjectId},
@@ -12,6 +12,7 @@ use kawari::{
     },
 };
 
+use physis::equipment::EquipSlot;
 use strum::IntoEnumIterator;
 
 impl ZoneConnection {

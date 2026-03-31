@@ -9,7 +9,8 @@ use kawari::common::{
     PlayerStateFlags2, PlayerStateFlags3, Position, calculate_max_level,
 };
 use kawari::config::{FilesystemConfig, get_config};
-use kawari_world::inventory::{EquipSlot, Item, Storage, get_next_free_slot};
+use kawari_world::inventory::{Item, Storage, get_next_free_slot};
+use physis::equipment::EquipSlot;
 
 use kawari::ipc::chat::ClientChatIpcData;
 

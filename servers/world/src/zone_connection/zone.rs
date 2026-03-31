@@ -6,7 +6,7 @@ use crate::{
     lua::{LuaContent, LuaZone},
 };
 use kawari::{
-    common::{HandlerId, HandlerType, Position, TerritoryIntendedUse, timestamp_secs},
+    common::{HandlerId, HandlerType, Position, timestamp_secs},
     config::get_config,
     constants::OBFUSCATION_ENABLED_MODE,
     ipc::zone::{
@@ -15,6 +15,7 @@ use kawari::{
     },
     packet::{ConnectionState, PacketSegment, ScramblerKeyGenerator, SegmentData, SegmentType},
 };
+use physis::TerritoryIntendedUse;
 
 impl ZoneConnection {
     /// Request the global server state to change our zone.
