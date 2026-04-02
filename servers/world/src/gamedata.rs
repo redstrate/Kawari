@@ -1521,6 +1521,18 @@ impl GameData {
             != 0
     }
 
+    /// Tells us if this item belongs to the Seasonal Miscellany or Miscellany categories.
+    pub fn item_is_misc(&mut self, id: u32) -> bool {
+        let Some(row) = self.item_sheet.row(id) else {
+            return false;
+        };
+
+        let is_seasonal_misc = row.ItemUICategory().into_u8().copied().unwrap_or_default() == 85;
+        let is_misc = row.ItemUICategory().into_u8().copied().unwrap_or_default() == 61;
+
+        is_seasonal_misc || is_misc
+    }
+
     /// Checks if this zone is valid.
     pub fn is_zone_valid(&mut self, zone_id: u16) -> bool {
         let Some(row) = self.territory_type_sheet.row(zone_id.into()) else {

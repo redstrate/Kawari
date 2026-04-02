@@ -228,6 +228,23 @@ pub fn execute_action(
                 let mut effects = [ActionEffect::default(); 8];
                 effects[..effects_builder.effects.len()].copy_from_slice(&effects_builder.effects);
 
+                let action_animation_id;
+                {
+                    let mut game_data = game_data.lock();
+
+                    // TODO: Not sure if this is correct in every item situation
+                    // If the action is an item being used, the animation id doesn't necessarily match the action id.
+                    action_animation_id = if request.action_kind == ActionKind::Item
+                        && let Some((action_type, _, _)) =
+                            game_data.lookup_item_action_data(request.action_key)
+                    {
+                        action_type
+                    } else {
+                        // Otherwise, just assume the animation id is the action key for now.
+                        request.action_key as u16
+                    };
+                }
+
                 let ipc =
                     ServerZoneIpcSegment::new(ServerZoneIpcData::ActionResult(ActionResult {
                         main_target: request.target,
@@ -235,7 +252,7 @@ pub fn execute_action(
                         action_id: request.action_key,
                         animation_lock_time: 0.6,
                         rotation: common_spawn.rotation,
-                        action_animation_id: request.action_key as u16, // assuming action id == animation id
+                        action_animation_id,
                         flag: 1,
                         effect_count: effects_builder.effects.len() as u8,
                         effects,
@@ -593,11 +610,12 @@ pub fn execute_item_action(
 
     let key = request.action_key;
     let (action_type, action_data, additional_data);
-
+    let is_misc;
     {
         let mut gamedata = game_data.lock();
         (action_type, action_data, additional_data) =
             gamedata.lookup_item_action_data(key).unwrap_or_default();
+        is_misc = gamedata.item_is_misc(key);
     }
 
     // FIXME: we should check if this data is valid instead of silently returning zeroes
@@ -615,6 +633,7 @@ pub fn execute_item_action(
                 action_type,
                 action_data,
                 additional_data,
+                is_misc,
             )) {
                 Ok((action_script, arg)) => {
                     lua.0
