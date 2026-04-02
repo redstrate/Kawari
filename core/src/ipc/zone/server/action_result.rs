@@ -103,6 +103,8 @@ pub enum EffectKind {
         unk: [u8; 3], // empty?
         effect_id: u16,
     },
+    #[brw(magic = 59u8)]
+    PlayVFX { unk: [u8; 5], effect_id: u16 },
     /// Unknown effect (that should be added!)
     Unknown { magic: u8, unk: [u8; 7] },
 }

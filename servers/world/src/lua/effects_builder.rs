@@ -79,6 +79,15 @@ impl UserData for EffectsBuilder {
             });
             Ok(())
         });
+        methods.add_method_mut("play_vfx", |_, this, effect_id: u16| {
+            this.effects.push(ActionEffect {
+                kind: EffectKind::PlayVFX {
+                    unk: [0; 5],
+                    effect_id,
+                },
+            });
+            Ok(())
+        });
     }
 }
 
