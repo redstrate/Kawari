@@ -295,6 +295,13 @@ pub enum ClientTriggerCommand {
         ward_index: u32,
     },
 
+    /// The client has requested an apartment building's residents list from either an apartment building entrance or an apartment's front door.
+    #[brw(magic = 1125u32)]
+    RequestApartmentList {
+        /// The desired starting index of apartments.
+        starting_index: u32,
+    },
+
     /// The client requests to repair and item at a mender.
     #[brw(magic = 1600u32)]
     RepairItem { unk1: u32, unk2: u32, unk3: u32 },
