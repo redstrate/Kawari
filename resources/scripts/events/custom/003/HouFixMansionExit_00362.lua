@@ -1,4 +1,4 @@
--- Apartment Building Exit, the front door in every apartment lobby
+-- Apartment Building Exit and Apartment Exit, the front door in every apartment lobby and every apartment proper
 
 -- TODO
 -- Ensure the player returns to a housing ward safely. For now we are unable to do this, so we send them back to the corresponding city-state's aetheryte plaza. See below for futher details.
