@@ -8,7 +8,7 @@
 SCENE_EXIT_PROMPT = 00000 -- "Leave the estate hall?" prompt
 
 function onTalk(target, player)
-    player:play_scene(SCENE_MENU, HIDE_HOTBAR, {})
+    player:play_scene(SCENE_EXIT_PROMPT, HIDE_HOTBAR, {})
 end
 
 function onReturn(scene, results, player)
