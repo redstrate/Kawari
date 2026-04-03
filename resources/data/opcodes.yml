@@ -675,6 +675,10 @@ ServerZoneIpcType:
     comment: The server sends the client an error message due to something going wrong with a linkshell.
     opcode: 190
     size: 24
+  - name: UnkHousingRelated2
+    comment: The server sends the client currently unknown information about the housing interior they're entering.
+    opcode: 389
+    size: 56
 ClientZoneIpcType:
   - name: InitRequest
     comment: Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)
