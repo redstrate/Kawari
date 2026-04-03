@@ -107,6 +107,9 @@ pub use server_notice::{ServerNoticeFlags, ServerNoticeMessage};
 mod quest_tracker;
 pub use quest_tracker::{QuestTracker, TrackedQuest};
 
+mod apartment_list;
+pub use apartment_list::{ApartmentList, ApartmentListEntry};
+
 mod house_list;
 pub use house_list::{House, HouseList};
 
@@ -1256,6 +1259,7 @@ pub enum ServerZoneIpcData {
     UnkHousingRelated2 {
         unk: [u8; 56],
     },
+    ApartmentList(ApartmentList),
 }
 
 #[cfg(test)]

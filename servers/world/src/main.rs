@@ -1427,6 +1427,9 @@ async fn process_packet(
                                     );
                                     connection.send_ipc_self(ipc).await;
                                 }
+                                ClientTriggerCommand::RequestApartmentList { starting_index } => {
+                                    connection.send_apartment_list(starting_index).await;
+                                }
                                 _ => {
                                     // inform the server of our trigger, it will handle sending it to other clients
                                     connection

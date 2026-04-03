@@ -19,8 +19,9 @@ use kawari::{
     common::{HandlerId, ObjectId, Position, timestamp_secs},
     config::WorldConfig,
     ipc::zone::{
-        CWLSMemberListEntry, ClientTriggerCommand, ClientZoneIpcSegment, Condition, Conditions,
-        ContentRegistrationFlags, PlayerEntry, ServerZoneIpcData, ServerZoneIpcSegment,
+        ApartmentList, ApartmentListEntry, CWLSMemberListEntry, ClientTriggerCommand,
+        ClientZoneIpcSegment, Condition, Conditions, ContentRegistrationFlags, PlayerEntry,
+        ServerZoneIpcData, ServerZoneIpcSegment,
     },
     opcodes::ServerZoneIpcType,
     packet::{
@@ -389,5 +390,19 @@ impl ZoneConnection {
 
             self.send_ipc_self(ipc).await;
         }
+    }
+
+    // TODO: break this out into its own housing file eventually
+    pub async fn send_apartment_list(&mut self, starting_index: u32) {
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ApartmentList(ApartmentList {
+            content_id: self.player_data.character.content_id as u64,
+            flags: 128,
+            ward_id: 0,
+            zone_id: self.player_data.volatile.zone_id as u16, // TODO: Apartment lists can be requested from apartments themselves, so this wouldn't make sense there!
+            world_id: self.config.world_id,
+            list_index: starting_index,
+            apartments: vec![ApartmentListEntry::default(); ApartmentListEntry::COUNT],
+        }));
+        self.send_ipc_self(ipc).await;
     }
 }
