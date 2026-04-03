@@ -25,6 +25,8 @@ function onReturn(scene, results, player)
 
         -- Finish the event and decide where to go
         player:finish_event()
+        player:send_message("Due to housing being in extremely early stages, you will now be moved to the nearest city-state instead of the relevant FC house.")
+
         local destination = INTERIORS_TO_TOWN[player.zone.id]
         if destination ~= nil then
             player:warp_aetheryte(destination)
