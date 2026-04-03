@@ -256,6 +256,24 @@ impl ZoneConnection {
             }
         }
 
+        if lua_zone.intended_use == TerritoryIntendedUse::HousingIndoor as u8 {
+            // Bare minimum stuff to make housing interiors load, hardly anything is known about these for now
+            self.send_ipc_self(ServerZoneIpcSegment::new(
+                ServerZoneIpcData::UnkHousingRelated2 { unk: [0; 56] },
+            ))
+            .await;
+
+            self.send_ipc_self(ServerZoneIpcSegment::new(
+                ServerZoneIpcData::UnkHousingRelated {
+                    unk1: [0; 9], // Slight hack for now: these need to be something other than 0xFF or housing items can't spawn via plugins
+                    index: 0,
+                    count: 1,
+                    unk2: [0xFF; 2135], // Slight hack for now: if it's all zeroes, plugins like housingpos won't be able to arbitrarily spawn client-side-only housing items
+                },
+            ))
+            .await;
+        }
+
         self.conditions
             .toggle_condition(Condition::BoundByDuty, bound_by_duty);
         self.conditions

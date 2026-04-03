@@ -1253,6 +1253,9 @@ pub enum ServerZoneIpcData {
         #[brw(pad_after = 16)] // Seems to be empty/zeroes
         unk: u32,
     },
+    UnkHousingRelated2 {
+        unk: [u8; 56],
+    },
 }
 
 #[cfg(test)]
