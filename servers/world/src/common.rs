@@ -219,6 +219,8 @@ pub enum FromServer {
     SetCurrentMount(u16),
     /// Inform the chat connection that it needs to refresh its non-party ChatChannels due to some event necessitating it.
     MustRefreshChatChannels(),
+    /// Inform the client that a friend removal has taken place.
+    FriendRemoved(u64, String),
 }
 
 #[derive(Debug, Clone)]
@@ -412,6 +414,8 @@ pub enum ToServer {
     SendLinkshellInvite(ObjectId, CrossworldLinkshellInvite),
     /// The client accepted an invite to a linkshell.
     AcceptedLinkshellInvite(ObjectId, u64, u64, String, String),
+    /// The client removes a player from their friend list.
+    FriendRemoved(ObjectId, u64, String, ObjectId, u64, String),
 }
 
 #[derive(Clone, Debug)]

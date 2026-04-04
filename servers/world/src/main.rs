@@ -2903,6 +2903,13 @@ async fn process_packet(
                         ClientZoneIpcData::SendLetter { .. } => {
                             tracing::info!("Sending letters is unimplemented");
                         }
+                        ClientZoneIpcData::RemoveFriend {
+                            content_id, name, ..
+                        } => {
+                            connection
+                                .remove_from_friend_list(*content_id, name.clone())
+                                .await;
+                        }
                         ClientZoneIpcData::Unknown { unk } => {
                             tracing::warn!(
                                 "Unknown Zone packet {:?} recieved ({} bytes), this should be handled!",
@@ -3321,6 +3328,11 @@ async fn process_server_msg(
             }
             FromServer::SetCurrentMount(current_mount) => {
                 connection.player_data.volatile.current_mount = current_mount as i32;
+            }
+            FromServer::FriendRemoved(their_content_id, their_name) => {
+                connection
+                    .friend_removed(their_content_id, their_name)
+                    .await;
             }
             _ => {
                 tracing::error!(

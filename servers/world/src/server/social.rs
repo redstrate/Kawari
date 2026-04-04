@@ -1752,6 +1752,24 @@ pub fn handle_social_messages(
 
             true
         }
+        ToServer::FriendRemoved(
+            from_actor_id,
+            from_content_id,
+            from_name,
+            their_actor_id,
+            their_content_id,
+            their_name,
+        ) => {
+            let mut network = network.lock();
+            // Inform both of them about the removal.
+            let msg = FromServer::FriendRemoved(*their_content_id, their_name.clone());
+            network.send_to_by_actor_id(*from_actor_id, msg, DestinationNetwork::ZoneClients);
+
+            let msg = FromServer::FriendRemoved(*from_content_id, from_name.clone());
+            network.send_to_by_actor_id(*their_actor_id, msg, DestinationNetwork::ZoneClients);
+
+            true
+        }
         _ => false,
     }
 }

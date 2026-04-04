@@ -546,6 +546,16 @@ pub enum ClientZoneIpcData {
         #[brw(pad_after = 7)] // Seems to just be padding/garbage
         message: String,
     },
+    RemoveFriend {
+        content_id: u64,
+        home_world_id: u16,
+        #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+        #[br(count = CHAR_NAME_MAX_LENGTH)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        #[brw(pad_after = 6)] // Seems to just be padding/garbage
+        name: String,
+    },
 }
 
 #[cfg(test)]

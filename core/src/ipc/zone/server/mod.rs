@@ -1260,6 +1260,17 @@ pub enum ServerZoneIpcData {
         unk: [u8; 56],
     },
     ApartmentList(ApartmentList),
+    FriendRemoved {
+        #[brw(pad_after = 4)] // Seems to be empty/zeroes
+        content_id: u64,
+        unk1: u8, // Always 1?
+        #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+        #[br(count = CHAR_NAME_MAX_LENGTH)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        #[brw(pad_after = 3)] // Seems to be empty/zeroes
+        name: String,
+    },
 }
 
 #[cfg(test)]
