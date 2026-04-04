@@ -683,6 +683,10 @@ ServerZoneIpcType:
     comment: The server sends the client a list of apartments in the current apartment building.
     opcode: 576
     size: 1584
+  - name: FriendRemoved
+    comment: The server informs the client about the result of their RemoveFriend request.
+    opcode: 569
+    size: 48
 ClientZoneIpcType:
   - name: InitRequest
     comment: Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)
@@ -1020,6 +1024,10 @@ ClientZoneIpcType:
     comment: The client sends a letter to a friend.
     opcode: 221
     size: 688
+  - name: RemoveFriend
+    comment: The client removes a player from their friend list.
+    opcode: 203
+    size: 48
 ServerLobbyIpcType:
   - name: NackReply
     comment: Sent by the server to indicate an lobby error occured.

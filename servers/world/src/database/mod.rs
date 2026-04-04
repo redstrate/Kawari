@@ -1187,13 +1187,20 @@ impl WorldDatabase {
             .unwrap();
     }
 
-    pub fn remove_from_friend_list(&mut self, fwen_content_id: i64, my_content_id: i64) {
+    pub fn remove_from_friend_list(&mut self, their_content_id: i64, my_content_id: i64) {
         use schema::friends::dsl::*;
 
         diesel::delete(
             friends
                 .filter(content_id.eq(my_content_id))
-                .filter(friend_content_id.eq(fwen_content_id)),
+                .filter(friend_content_id.eq(their_content_id)),
+        )
+        .execute(&mut self.connection)
+        .unwrap();
+        diesel::delete(
+            friends
+                .filter(content_id.eq(their_content_id))
+                .filter(friend_content_id.eq(my_content_id)),
         )
         .execute(&mut self.connection)
         .unwrap();
