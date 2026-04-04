@@ -57,19 +57,19 @@ axum = { version = "0.8", features = ["json", "tokio", "http1", "form", "query",
 axum-extra = { version = "0.12", features = ["cookie"], default-features = false }
 
 # Async runtime
-tokio = { version = "1.50", features = ["macros", "rt", "rt-multi-thread", "io-util", "process", "net"], default-features = false }
+tokio = { version = "1.51", features = ["macros", "rt", "rt-multi-thread", "io-util", "process", "net"], default-features = false }
 
 # Used for all kinds of RNG
-fastrand = { version = "2.3", features = ["std"], default-features = false }
+fastrand = { version = "2.4", features = ["std"], default-features = false }
 
 # HTML templates used in the web servers
-minijinja = { version = "2.18", features = ["serde", "loader", "multi_template"], default-features = false }
+minijinja = { version = "2.19", features = ["serde", "loader", "multi_template"], default-features = false }
 
 # For server-side scripting
 mlua = { version = "0.11", features = ["lua54", "vendored", "send", "async", "serialize", "userdata-wrappers"], default-features = false }
 
 # For character backup decompression
-zip = { version = "8.4", features = ["deflate", "lzma", "bzip2"], default-features = false }
+zip = { version = "8.5", features = ["deflate", "lzma", "bzip2"], default-features = false }
 
 # For inter-server HTTP communication
 ureq = { version = "3.3", default-features = false }
