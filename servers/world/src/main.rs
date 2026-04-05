@@ -16,9 +16,9 @@ use kawari::ipc::chat::ClientChatIpcData;
 
 use kawari::ipc::zone::{
     ActorControlCategory, CWLSLeaveReason, Conditions, ContentFinderUserAction, CrossRealmListing,
-    CrossRealmListings, EventType, InviteType, LinkshellInviteResponse, MapEffects,
-    MarketBoardItem, OnlineStatus, OnlineStatusMask, PlayerSetup, SceneFlags, SearchInfo,
-    SocialListRequestType, TrustContent, TrustInformation,
+    CrossRealmListings, EventType, LinkshellInviteResponse, MapEffects, MarketBoardItem,
+    OnlineStatus, OnlineStatusMask, PlayerSetup, SceneFlags, SearchInfo, SocialListRequestType,
+    TrustContent, TrustInformation,
 };
 
 use kawari::ipc::zone::{
@@ -2270,97 +2270,45 @@ async fn process_packet(
                         }
                         ClientZoneIpcData::InviteCharacter {
                             content_id,
-                            world_id,
-                            invite_type,
-                            character_name,
-                        } => {
-                            tracing::info!(
-                                "Client invited a character! {:#?} {:#?} {:#?} {:#?} {:#?}",
-                                content_id,
-                                world_id,
-                                invite_type,
-                                character_name,
-                                data.data
-                            );
-                            match invite_type {
-                                InviteType::Party => {
-                                    connection
-                                        .handle
-                                        .send(ToServer::InvitePlayerToParty(
-                                            connection.player_data.character.actor_id,
-                                            *content_id,
-                                            character_name.clone(),
-                                        ))
-                                        .await;
-                                }
-                                InviteType::FriendList => {
-                                    connection.add_to_friend_list(*content_id, 32);
-
-                                    connection
-                                        .handle
-                                        .send(ToServer::InvitePlayerToFriendList(
-                                            connection.player_data.character.actor_id,
-                                            *content_id,
-                                            character_name.clone(),
-                                        ))
-                                        .await
-                                }
-                                _ => todo!(),
-                            }
-                        }
-                        ClientZoneIpcData::InviteReply {
-                            sender_content_id,
-                            sender_world_id,
-                            invite_type,
-                            response,
-                        } => {
-                            tracing::info!(
-                                "Client replied to invite: {:#?} {:#?} {:#?} {:#?}",
-                                sender_content_id,
-                                sender_world_id,
-                                invite_type,
-                                response
-                            );
-                            connection
-                                .handle
-                                .send(ToServer::InvitationResponse(
-                                    connection.id,
-                                    connection.player_data.character.service_account_id as u64,
-                                    connection.player_data.character.content_id as u64,
-                                    connection.player_data.character.name.clone(),
-                                    *sender_content_id,
-                                    *invite_type,
-                                    *response,
-                                ))
-                                .await;
-                        }
-                        ClientZoneIpcData::InviteReply2 {
-                            sender_content_id,
-                            sender_world_id,
-                            response,
                             invite_type,
                             character_name,
                             ..
                         } => {
                             tracing::info!(
-                                "Client replied to friend invite: {:#?} {:#?} {:#?} {:#?}",
-                                sender_content_id,
-                                sender_world_id,
+                                "Client invited a character! {:#?} {:#?} {:#?} {:#?}",
+                                content_id,
+                                invite_type,
+                                character_name,
+                                data.data
+                            );
+                            connection
+                                .send_social_invite(
+                                    *content_id,
+                                    *invite_type,
+                                    character_name.clone(),
+                                )
+                                .await;
+                        }
+                        ClientZoneIpcData::InviteReply {
+                            inviter_content_id,
+                            invite_type,
+                            response,
+                            ..
+                        }
+                        | ClientZoneIpcData::InviteReply2 {
+                            inviter_content_id,
+                            response,
+                            invite_type,
+                            ..
+                        } => {
+                            tracing::info!(
+                                "Client replied to invite: {:#?} {:#?} {:#?}",
+                                inviter_content_id,
                                 invite_type,
                                 response
                             );
-                            // TODO: all of these are sort of wrong?
                             connection
-                                .handle
-                                .send(ToServer::InvitationResponse(
-                                    connection.id,
-                                    connection.player_data.character.service_account_id as u64,
-                                    connection.player_data.character.content_id as u64,
-                                    character_name.clone(),
-                                    *sender_content_id,
-                                    *invite_type,
-                                    *response,
-                                ))
+                                .invite_reply(*inviter_content_id, *invite_type, *response)
                                 .await;
                         }
                         ClientZoneIpcData::PartyDisband { .. } => {
@@ -3051,10 +2999,20 @@ async fn process_server_msg(
                     .set_player_position(position, rotation, fade_out)
                     .await
             }
-            FromServer::PartyInvite(sender_account_id, sender_content_id, sender_name) => {
+            FromServer::SocialInvite(
+                sender_account_id,
+                sender_content_id,
+                sender_name,
+                invite_type,
+            ) => {
                 connection
-                    .received_party_invite(sender_account_id, sender_content_id, sender_name)
-                    .await
+                    .received_social_invite(
+                        sender_account_id,
+                        sender_content_id,
+                        sender_name,
+                        invite_type,
+                    )
+                    .await;
             }
             FromServer::InvitationResult(
                 sender_account_id,
@@ -3096,7 +3054,6 @@ async fn process_server_msg(
             FromServer::InviteCharacterResult(
                 content_id,
                 message_id,
-                world_id,
                 invite_type,
                 character_name,
             ) => {
@@ -3104,7 +3061,6 @@ async fn process_server_msg(
                     .invite_character_result(
                         content_id,
                         message_id,
-                        world_id,
                         invite_type,
                         character_name.clone(),
                     )
@@ -3247,11 +3203,6 @@ async fn process_server_msg(
                 let ipc =
                     ServerZoneIpcSegment::new(ServerZoneIpcData::PartyMemberPositions(positions));
                 connection.send_ipc_self(ipc).await;
-            }
-            FromServer::FriendInvite(sender_account_id, sender_content_id, sender_name) => {
-                connection
-                    .received_friend_invite(sender_account_id, sender_content_id, sender_name)
-                    .await
             }
             FromServer::CommitParties(parties) => {
                 let mut database = connection.database.lock();

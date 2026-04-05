@@ -313,15 +313,15 @@ pub enum ClientZoneIpcData {
         character_name: String,
     },
     InviteReply {
-        sender_content_id: u64, // The inviter's content_id
-        sender_world_id: u16,   // The current world id
+        inviter_content_id: u64,
+        inviter_world_id: u16, // The current world id
         invite_type: InviteType,
         #[brw(pad_after = 4)] // empty
         response: InviteReply,
     },
     InviteReply2 {
-        sender_content_id: u64, // The inviter's content_id
-        sender_world_id: u16,   // The current world id
+        inviter_content_id: u64, // The inviter's content_id
+        inviter_world_id: u16,   // The current world id
         unk1: u8,
         invite_type: InviteType,
         response: InviteReply,
@@ -330,7 +330,7 @@ pub enum ClientZoneIpcData {
         #[br(count = CHAR_NAME_MAX_LENGTH)]
         #[br(map = read_string)]
         #[bw(map = write_string)]
-        character_name: String,
+        inviter_character_name: String,
     },
     RequestSearchInfo {
         content_id: u64,

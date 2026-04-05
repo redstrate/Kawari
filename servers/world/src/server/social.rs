@@ -388,239 +388,122 @@ pub fn handle_social_messages(
     msg: &ToServer,
 ) -> bool {
     match msg {
-        ToServer::InvitePlayerToFriendList(from_actor_id, content_id, character_name) => {
-            // TODO: Return an error when the target player's already in a party or offline somehow
+        ToServer::InvitePlayerTo(
+            from_actor_id,
+            from_account_id,
+            from_content_id,
+            from_name,
+            recipient_actor_id,
+            recipient_content_id,
+            recipient_character_name,
+            invite_type,
+        ) => {
+            let mut log_message = LogMessageType::Default;
             let mut network = network.lock();
-            let data = data.lock();
 
-            // First pull up some info about the sender, as invite packets require it
-            let Some(sender_instance) = data.find_actor_instance(*from_actor_id) else {
-                tracing::error!(
-                    "ToServer::InvitePlayerToFriendList: Unable to find the sender! What happened?"
-                );
-                return true;
-            };
-
-            let mut sender_name = "".to_string();
-            let mut sender_account_id = 0;
-            let mut sender_content_id = 0;
-
-            for (id, actor) in &sender_instance.actors {
-                if id == from_actor_id {
-                    let Some(spawn) = actor.get_player_spawn() else {
-                        panic!("Why are we trying to get the SpawnPlayer of an NPC?");
-                    };
-
-                    sender_name = spawn.common.name.clone();
-                    sender_account_id = spawn.account_id;
-                    sender_content_id = spawn.content_id;
-                    break;
-                }
+            let is_online;
+            {
+                let data = data.lock();
+                is_online = data.find_actor_instance(*recipient_actor_id).is_some();
             }
 
-            // If the sender wasn't found in the instance we already found them to be in, reality has apparently broken
-            assert!(sender_content_id != 0);
-
-            let mut recipient_actor_id = ObjectId::default();
-            let mut recipient_content_id = 0;
-            let mut recipient_world_id = 0;
-
-            // Second, look up the recipient by name, since that and their content id are all we're given by the sending client.
-            // Since we don't implement multiple worlds, the world id isn't useful for anything here.
-            'outer: for instance in &data.instances {
-                for (id, actor) in &instance.actors {
-                    if let NetworkedActor::Player { spawn, .. } = actor
-                        && (spawn.content_id == *content_id || spawn.common.name == *character_name)
-                    {
-                        recipient_actor_id = *id;
-                        recipient_content_id = spawn.content_id;
-                        recipient_world_id = spawn.home_world_id;
-                        break 'outer;
+            // The client seems to enforce offline friend list requests itself, but we'll still block it.
+            if !is_online {
+                log_message = LogMessageType::UnableToPerformPlayerOffline;
+            } else {
+                match invite_type {
+                    InviteType::FriendList => {}
+                    InviteType::Party => {
+                        if network
+                            .parties
+                            .iter()
+                            .filter(|(_, party)| {
+                                party
+                                    .members
+                                    .iter()
+                                    .any(|m| m.actor_id == *recipient_actor_id)
+                            })
+                            .count()
+                            > 0
+                        {
+                            log_message = LogMessageType::PlayerAlreadyInAnotherParty;
+                        }
+                    }
+                    _ => {
+                        tracing::warn!(
+                            "Unsupported invite type {:#?} sent to ToServer::InvitePlayerTo!",
+                            *invite_type
+                        );
+                        return true;
                     }
                 }
             }
 
-            assert!(recipient_actor_id != ObjectId::default());
-
-            // TODO: Don't send the invite if the prospective friend has been sent an invite already? There's a specific LogMessage for it, but it's unclear who enforces it: do we do that, or does the client? Even if we do enforce it though, the zone connection should be able to handle that without bothering us in the global server state by checking the database.
-            let msg = FromServer::FriendInvite(sender_account_id, sender_content_id, sender_name);
-            network.send_to_by_actor_id(recipient_actor_id, msg, DestinationNetwork::ZoneClients);
+            // If all is well, send the invite to the recipient.
+            if log_message == LogMessageType::Default {
+                let msg = FromServer::SocialInvite(
+                    *from_account_id,
+                    *from_content_id,
+                    from_name.clone(),
+                    *invite_type,
+                );
+                network.send_to_by_actor_id(
+                    *recipient_actor_id,
+                    msg,
+                    DestinationNetwork::ZoneClients,
+                );
+            }
 
             // Inform the sender of the invite they just sent.
             let msg = FromServer::InviteCharacterResult(
-                recipient_content_id,
-                LogMessageType::Default,
-                recipient_world_id,
-                InviteType::FriendList,
-                character_name.clone(),
-            );
-            network.send_to_by_actor_id(*from_actor_id, msg, DestinationNetwork::ZoneClients);
-
-            true
-        }
-        ToServer::InvitePlayerToParty(from_actor_id, content_id, character_name) => {
-            // TODO: Return an error when the target player's already in a party or offline somehow
-            let mut network = network.lock();
-            let data = data.lock();
-
-            // First pull up some info about the sender, as invite packets require it
-            let Some(sender_instance) = data.find_actor_instance(*from_actor_id) else {
-                tracing::error!(
-                    "ToServer::InvitePlayerToParty: Unable to find the sender! What happened?"
-                );
-                return true;
-            };
-
-            let mut sender_name = "".to_string();
-            let mut sender_account_id = 0;
-            let mut sender_content_id = 0;
-
-            for (id, actor) in &sender_instance.actors {
-                if id == from_actor_id {
-                    let Some(spawn) = actor.get_player_spawn() else {
-                        panic!("Why are we trying to get the SpawnPlayer of an NPC?");
-                    };
-
-                    sender_name = spawn.common.name.clone();
-                    sender_account_id = spawn.account_id;
-                    sender_content_id = spawn.content_id;
-                    break;
-                }
-            }
-
-            // If the sender wasn't found in the instance we already found them to be in, reality has apparently broken
-            assert!(sender_content_id != 0);
-
-            let mut recipient_actor_id = ObjectId::default();
-            let mut recipient_content_id = 0;
-            let mut recipient_world_id = 0;
-
-            // Second, look up the recipient by name, since that and their content id are all we're given by the sending client.
-            // Since we don't implement multiple worlds, the world id isn't useful for anything here.
-            'outer: for instance in &data.instances {
-                for (id, actor) in &instance.actors {
-                    if let NetworkedActor::Player { spawn, .. } = actor
-                        && (spawn.content_id == *content_id || spawn.common.name == *character_name)
-                    {
-                        recipient_actor_id = *id;
-                        recipient_content_id = *content_id;
-                        recipient_world_id = spawn.home_world_id;
-                        break 'outer;
-                    }
-                }
-            }
-
-            let mut already_in_party = false;
-
-            // Next, see if the recipient is already in a party, and let the sender know if they are...
-            'outer: for party in network.parties.values() {
-                for member in &party.members {
-                    if member.actor_id == recipient_actor_id {
-                        already_in_party = true;
-                        break 'outer;
-                    }
-                }
-            }
-
-            let mut log_message = LogMessageType::PlayerAlreadyInAnotherParty;
-            if !already_in_party {
-                // Finally, if the recipient is online, fetch their handle from the network and send them the message!
-                if recipient_actor_id.is_valid() {
-                    let mut to_remove = Vec::new();
-                    for (id, (handle, _)) in &mut network.clients {
-                        if handle.actor_id == recipient_actor_id {
-                            let msg = FromServer::PartyInvite(
-                                sender_account_id,
-                                sender_content_id,
-                                sender_name,
-                            );
-                            if handle.send(msg.clone()).is_err() {
-                                to_remove.push(*id);
-                            } else {
-                                log_message = LogMessageType::Default;
-                            }
-                            break;
-                        }
-                    }
-                    network.to_remove.append(&mut to_remove);
-                } else {
-                    log_message = LogMessageType::UnableToPerformPlayerOffline;
-                    tracing::error!(
-                        "InvitePlayerToParty: The recipient is offline! What happened?"
-                    );
-                }
-            }
-
-            let msg = FromServer::InviteCharacterResult(
-                recipient_content_id,
+                *recipient_content_id,
                 log_message,
-                recipient_world_id,
-                InviteType::Party,
-                character_name.clone(),
+                *invite_type,
+                recipient_character_name.clone(),
             );
             network.send_to_by_actor_id(*from_actor_id, msg, DestinationNetwork::ZoneClients);
 
             true
         }
         ToServer::InvitationResponse(
-            from_id,
+            from_actor_id,
             from_account_id,
             from_content_id,
             from_name,
-            sender_content_id,
+            inviter_actor_id,
+            inviter_content_id,
+            inviter_name,
             invite_type,
             response,
         ) => {
             let mut network = network.lock();
-            let data = data.lock();
 
-            // Look up the invite sender and tell them the response.
-            let mut recipient_actor_id = ObjectId::default();
+            // TODO: Tell the inviter the invitee has gone offline, if applicable? Does this make sense, and does retail do this? Need to investigate.
+            // Tell the invite sender about the invitee's response.
+            network.send_to_by_actor_id(
+                *inviter_actor_id,
+                FromServer::InvitationResult(
+                    *from_account_id,
+                    *from_content_id,
+                    from_name.clone(),
+                    *invite_type,
+                    *response,
+                ),
+                DestinationNetwork::ZoneClients,
+            );
 
-            // Second, look up the recipient (the original invite sender) by content id, since that is all we're given by the sending client.
-            'outer: for instance in &data.instances {
-                for (id, actor) in &instance.actors {
-                    let Some(spawn) = actor.get_player_spawn() else {
-                        continue;
-                    };
-                    if spawn.content_id == *sender_content_id {
-                        recipient_actor_id = *id;
-                        break 'outer;
-                    }
-                }
-            }
-
-            if recipient_actor_id.is_valid() {
-                let mut to_remove = Vec::new();
-                for (id, (handle, _)) in &mut network.clients {
-                    // Tell the invite sender about the invite result
-                    if handle.actor_id == recipient_actor_id && recipient_actor_id.is_valid() {
-                        let msg = FromServer::InvitationResult(
-                            *from_account_id,
-                            *from_content_id,
-                            from_name.clone(),
-                            *invite_type,
-                            *response,
-                        );
-                        if handle.send(msg.clone()).is_err() {
-                            to_remove.push(*id);
-                        }
-                    }
-                    // Tell the client who just responded to the sender's invite to wait for further instructions
-                    if *id == *from_id {
-                        let msg = FromServer::InvitationReplyResult(
-                            *from_content_id,
-                            from_name.clone(),
-                            *invite_type,
-                            *response,
-                        );
-                        if handle.send(msg.clone()).is_err() {
-                            to_remove.push(*id);
-                        }
-                    }
-                }
-                network.to_remove.append(&mut to_remove);
-            }
+            // TODO: Send errors back to the invitee if the inviter is offline? Need a capture of this. It's likely that padding in InviteReplyResult is mistaken for a LogMessageType field, similar to InviteCharacterResult.
+            // Tell the invitee about their own reply to the inviter.
+            network.send_to_by_actor_id(
+                *from_actor_id,
+                FromServer::InvitationReplyResult(
+                    *inviter_content_id,
+                    inviter_name.clone(),
+                    *invite_type,
+                    *response,
+                ),
+                DestinationNetwork::ZoneClients,
+            );
 
             true
         }
