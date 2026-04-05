@@ -238,16 +238,18 @@ impl ZoneConnection {
                     quantity,
                     send_client_update,
                 } => {
-                    let item_info;
+                    let new_item: Option<Item>;
                     {
                         let mut game_data = self.gamedata.lock();
-                        item_info = game_data.get_item_info(ItemInfoQuery::ById(*id));
+                        new_item = game_data
+                            .get_item_info(ItemInfoQuery::ById(*id))
+                            .map(|x| Item::new(&x, *quantity));
                     }
-                    if let Some(item_info) = item_info {
+                    if let Some(new_item) = new_item {
                         if self
                             .player_data
                             .inventory
-                            .add_in_next_free_slot(Item::new(&item_info, *quantity))
+                            .add_in_next_free_slot(new_item)
                             .is_some()
                         {
                             if *send_client_update {

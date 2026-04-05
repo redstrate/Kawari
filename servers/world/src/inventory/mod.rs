@@ -102,7 +102,7 @@ impl Inventory {
             ClassJobSheet::read_from(&mut game_data.resource, config.world.language()).unwrap();
         let row = sheet.row(classjob_id as u32).unwrap();
 
-        let main_hand_id = *row.ItemStartingWeaponMainHand().into_i32().unwrap() as u32;
+        let main_hand_id = row.ItemStartingWeaponMainHand() as u32;
         self.equipped.main_hand = Item::new(
             &game_data
                 .get_item_info(ItemInfoQuery::ById(main_hand_id))
@@ -152,17 +152,17 @@ impl Inventory {
 
         let ids = if gender == 0 {
             [
-                *row.RSEMBody().into_i32().unwrap() as u32,
-                *row.RSEMHands().into_i32().unwrap() as u32,
-                *row.RSEMLegs().into_i32().unwrap() as u32,
-                *row.RSEMFeet().into_i32().unwrap() as u32,
+                row.RSEMBody() as u32,
+                row.RSEMHands() as u32,
+                row.RSEMLegs() as u32,
+                row.RSEMFeet() as u32,
             ]
         } else {
             [
-                *row.RSEFBody().into_i32().unwrap() as u32,
-                *row.RSEFHands().into_i32().unwrap() as u32,
-                *row.RSEFLegs().into_i32().unwrap() as u32,
-                *row.RSEFFeet().into_i32().unwrap() as u32,
+                row.RSEFBody() as u32,
+                row.RSEFHands() as u32,
+                row.RSEFLegs() as u32,
+                row.RSEFFeet() as u32,
             ]
         };
 

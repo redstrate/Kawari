@@ -1,5 +1,3 @@
-use crate::ItemRow;
-
 use serde::{Deserialize, Serialize};
 use strum_macros::{Display, EnumIter, FromRepr};
 
@@ -74,62 +72,38 @@ impl CurrencyStorage {
 impl Default for CurrencyStorage {
     fn default() -> Self {
         Self {
-            gil: Item::new(
-                &ItemRow {
-                    id: CurrencyKind::Gil as u32,
-                    ..Default::default()
-                },
-                0,
-            ),
-            flame_seal: Item::new(
-                &ItemRow {
-                    id: CurrencyKind::FlameSeal as u32,
-                    ..Default::default()
-                },
-                0,
-            ),
-            wolf_mark: Item::new(
-                &ItemRow {
-                    id: CurrencyKind::WolfMark as u32,
-                    ..Default::default()
-                },
-                0,
-            ),
-            tomestone_poetics: Item::new(
-                &ItemRow {
-                    id: CurrencyKind::TomestonePoetics as u32,
-                    ..Default::default()
-                },
-                0,
-            ),
-            tomestone_mathematics: Item::new(
-                &ItemRow {
-                    id: CurrencyKind::TomestoneMaths as u32,
-                    ..Default::default()
-                },
-                0,
-            ),
-            allied_seal: Item::new(
-                &ItemRow {
-                    id: CurrencyKind::AlliedSeal as u32,
-                    ..Default::default()
-                },
-                0,
-            ),
-            mgp: Item::new(
-                &ItemRow {
-                    id: CurrencyKind::MGP as u32,
-                    ..Default::default()
-                },
-                0,
-            ),
-            tomestone_heliometry: Item::new(
-                &ItemRow {
-                    id: CurrencyKind::TomestoneHelio as u32,
-                    ..Default::default()
-                },
-                0,
-            ),
+            gil: Item {
+                item_id: CurrencyKind::Gil as u32,
+                ..Default::default()
+            },
+            flame_seal: Item {
+                item_id: CurrencyKind::FlameSeal as u32,
+                ..Default::default()
+            },
+            wolf_mark: Item {
+                item_id: CurrencyKind::WolfMark as u32,
+                ..Default::default()
+            },
+            tomestone_poetics: Item {
+                item_id: CurrencyKind::TomestonePoetics as u32,
+                ..Default::default()
+            },
+            tomestone_mathematics: Item {
+                item_id: CurrencyKind::TomestoneMaths as u32,
+                ..Default::default()
+            },
+            allied_seal: Item {
+                item_id: CurrencyKind::AlliedSeal as u32,
+                ..Default::default()
+            },
+            mgp: Item {
+                item_id: CurrencyKind::MGP as u32,
+                ..Default::default()
+            },
+            tomestone_heliometry: Item {
+                item_id: CurrencyKind::TomestoneHelio as u32,
+                ..Default::default()
+            },
             dummy: Item::default(),
         }
     }

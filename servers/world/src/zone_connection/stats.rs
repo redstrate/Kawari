@@ -1,10 +1,7 @@
 //! Managing statistics, including your classjob and other related information.
 
-use crate::{
-    GameData, ToServer, ZoneConnection,
-    gamedata::{Attributes, BaseParam, ParamGrow},
-    inventory::Storage,
-};
+use crate::{GameData, ToServer, ZoneConnection, gamedata::Attributes, inventory::Storage};
+use icarus::ParamGrow::ParamGrowRow;
 use kawari::{
     common::{BASE_STAT, MAXIMUM_RESTED_EXP, ObjectId},
     ipc::zone::{
@@ -182,18 +179,18 @@ impl BaseParameters {
         }
     }
 
-    pub fn calculate_based_on_level(&mut self, param_grow: &ParamGrow) {
-        self.strength += param_grow.level_modifier as u32;
-        self.dexterity += param_grow.level_modifier as u32;
-        self.vitality += param_grow.level_modifier as u32;
-        self.intelligence += param_grow.level_modifier as u32;
-        self.mind += param_grow.level_modifier as u32;
-        self.piety += param_grow.level_modifier as u32;
+    pub fn calculate_based_on_level(&mut self, param_grow: &ParamGrowRow) {
+        self.strength += param_grow.LevelModifier() as u32;
+        self.dexterity += param_grow.LevelModifier() as u32;
+        self.vitality += param_grow.LevelModifier() as u32;
+        self.intelligence += param_grow.LevelModifier() as u32;
+        self.mind += param_grow.LevelModifier() as u32;
+        self.piety += param_grow.LevelModifier() as u32;
 
-        self.hp = (param_grow.hp_modifier as u32).wrapping_add(
+        self.hp = (param_grow.HpModifier() as u32).wrapping_add(
             ((self.vitality.wrapping_sub(BASE_STAT as u32)) as f32 * 20.25).round() as u32,
         );
-        self.mp = param_grow.mp_modifier as u32;
+        self.mp = param_grow.MpModifier() as u32;
     }
 
     pub fn calculate_potencies(&mut self) {
@@ -293,18 +290,15 @@ impl ZoneConnection {
     fn calculate_stat_across_all_items(
         &self,
         base_params: &mut BaseParameters,
-        item_level_sync: Option<u16>,
+        item_level_attributes: Option<&[u16]>,
     ) {
         for i in 0..self.player_data.inventory.equipped.max_slots() {
             let slot = self.player_data.inventory.equipped.get_slot(i as u16);
             if slot.quantity > 0 {
-                let mut gamedata = self.gamedata.lock();
-                let item_level_attributes =
-                    gamedata.get_item_level_attributes(item_level_sync.unwrap_or_default());
                 for (i, param_id) in slot.base_param_ids.iter().enumerate() {
                     if *param_id != 0 {
                         // Make sure to cap attributes when ilvl syncing:
-                        if item_level_sync.is_some() {
+                        if let Some(item_level_attributes) = item_level_attributes {
                             let attribute_cap = item_level_attributes[i];
                             *base_params.get_mut(*param_id) +=
                                 (slot.base_param_values[i].min(attribute_cap as i16)) as u32; // TODO: is there ever negative values?
@@ -317,57 +311,47 @@ impl ZoneConnection {
         }
     }
 
-    // TODO: use for materia melds
-    fn _get_equip_slot_percent(param: &BaseParam, equip_category: u8) -> u16 {
-        match equip_category {
-            1 => param.one_hand_weapon_percent,
-            2 => param.off_hand_percent,
-            3 => param.head_percent,
-            4 => param.chest_percent,
-            5 => param.hands_percent,
-            6 => param.waist_percent,
-            7 => param.legs_percent,
-            8 => param.feet_percent,
-            9 => param.earring_percent,
-            10 => param.necklace_percent,
-            11 => param.bracelet_percent,
-            12 => param.ring_percent,
-            13 => param.two_hand_weapon_percent,
-            14 => param.under_armor_percent,
-            _ => unreachable!(),
-        }
-    }
-
     pub fn base_parameters(&self) -> BaseParameters {
-        let attributes;
-        let param_grow;
+        let mut game_data = self.gamedata.lock();
+
+        let attributes = game_data
+            .get_racial_base_attributes(self.player_data.subrace)
+            .expect("Failed to read racial attributes");
+
+        let level = self
+            .synced_level
+            .map(|x| x as u16)
+            .unwrap_or(self.current_level(&game_data));
+
         let item_level_sync;
-
         {
-            let mut game_data = self.gamedata.lock();
-
-            attributes = game_data
-                .get_racial_base_attributes(self.player_data.subrace)
-                .expect("Failed to read racial attributes");
-
-            let level = self
-                .synced_level
-                .map(|x| x as u16)
-                .unwrap_or(self.current_level(&game_data));
-
-            param_grow = game_data
+            let param_grow = game_data
                 .get_param_grow(level as u32)
                 .expect("Failed to read param grow");
 
             if self.synced_level.is_some() {
-                item_level_sync = Some(param_grow.item_level_sync);
+                item_level_sync = Some(param_grow.ItemLevelSync());
             } else {
                 item_level_sync = None;
             }
         }
 
+        let item_level_attributes =
+            game_data.get_item_level_attributes(item_level_sync.unwrap_or_default());
+
+        let param_grow = game_data
+            .get_param_grow(level as u32)
+            .expect("Failed to read param grow");
+
         let mut base_parameters = BaseParameters::from_attributes(&attributes);
-        self.calculate_stat_across_all_items(&mut base_parameters, item_level_sync);
+        self.calculate_stat_across_all_items(
+            &mut base_parameters,
+            if item_level_sync.is_some() {
+                Some(&item_level_attributes)
+            } else {
+                None
+            },
+        );
         base_parameters.calculate_based_on_level(&param_grow);
         base_parameters.calculate_potencies();
 

@@ -684,7 +684,7 @@ dependencies = [
 [[package]]
 name = "icarus"
 version = "0.0.0"
-source = "git+https://github.com/redstrate/Icarus?branch=ver%2F2025.12.09.0000.0000#ab78cfff94458f84e34746403155a3e8c9a09432"
+source = "git+https://github.com/redstrate/Icarus?branch=ver%2F2026.01.21.0000.0000#02c0c292c2f43b609fd5e1b5c0049ecfc7882069"
 dependencies = [
  "physis",
 ]

@@ -6,7 +6,7 @@ use crate::{
     inventory::{Item, Storage},
 };
 use kawari::{
-    common::{ERR_INVENTORY_ADD_FAILED, FateState, ITEM_CONDITION_MAX},
+    common::{ERR_INVENTORY_ADD_FAILED, FateState},
     ipc::zone::{
         ActorControlCategory, Condition, Conditions, GameMasterRank, SendChatMessage,
         ServerZoneIpcData, ServerZoneIpcSegment,
@@ -64,16 +64,12 @@ impl ChatHandler {
                         if let Some(item_info) =
                             gamedata.get_item_info(ItemInfoQuery::ByName(name.to_string()))
                         {
-                            let slot = gamedata
-                                .get_equipslot_category(item_info.equip_category)
-                                .unwrap();
-
-                            let slot = connection.player_data.inventory.equipped.get_slot_mut(slot);
-
-                            slot.item_id = item_info.id;
-                            slot.glamour_id = 0;
-                            slot.quantity = 1;
-                            slot.condition = ITEM_CONDITION_MAX;
+                            let slot = connection
+                                .player_data
+                                .inventory
+                                .equipped
+                                .get_slot_mut(item_info.equip_category as u16);
+                            *slot = Item::new(&item_info, 1);
                         }
                     }
 
@@ -95,10 +91,7 @@ impl ChatHandler {
                             result = connection
                                 .player_data
                                 .inventory
-                                .add_in_next_free_slot(Item {
-                                    quantity: 1,
-                                    ..item_info.into()
-                                });
+                                .add_in_next_free_slot(Item::new(&item_info, 1));
                         }
                     }
 

@@ -89,3 +89,9 @@ impl From<Item> for ItemInfo {
         }
     }
 }
+
+impl From<ItemRow> for Item {
+    fn from(value: ItemRow) -> Self {
+        Self::new(&value, 0)
+    }
+}

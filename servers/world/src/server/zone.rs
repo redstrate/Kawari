@@ -104,11 +104,11 @@ impl Zone {
             return zone;
         };
 
-        zone.intended_use = *row.TerritoryIntendedUse().into_u8().unwrap();
-        zone.map_id = *row.Map().into_u16().unwrap();
+        zone.intended_use = row.TerritoryIntendedUse();
+        zone.map_id = row.Map();
 
         // e.g. ffxiv/fst_f1/fld/f1f3/level/f1f3
-        let bg_path = row.Bg().into_string().unwrap();
+        let bg_path = row.Bg();
         if bg_path.is_empty() {
             tracing::warn!("Invalid zone id {id}, allowing anyway...");
             return zone;
@@ -249,14 +249,14 @@ impl Zone {
                                 if let Some(gimmick_rect_info) =
                                     game_data.get_gimmick_rect_info(eobj_data & 0xFFFF)
                                     && let Some(target_pop_range) =
-                                        zone.find_pop_range(gimmick_rect_info.params[1])
+                                        zone.find_pop_range(gimmick_rect_info.Params()[1])
                                 {
-                                    let gimmick_jump_type = gimmick_rect_info.params[0];
-                                    let target_event_range = gimmick_rect_info.layout_id;
-                                    let sgb_animation_id = gimmick_rect_info.params[2];
+                                    let gimmick_jump_type = gimmick_rect_info.Params()[0];
+                                    let target_event_range = gimmick_rect_info.LayoutID();
+                                    let sgb_animation_id = gimmick_rect_info.Params()[2];
 
                                     // 8 seems to indicate a jumping pad
-                                    if gimmick_rect_info.trigger_in == 8 {
+                                    if gimmick_rect_info.TriggerIn() == 8 {
                                         let map_gimmick = MapGimmick::Jump {
                                             to_position: Position {
                                                 x: target_pop_range.0.transform.translation[0],
@@ -277,7 +277,7 @@ impl Zone {
                                     } else {
                                         tracing::warn!(
                                             "Unsupported Gimmick trigger {}",
-                                            gimmick_rect_info.trigger_in
+                                            gimmick_rect_info.TriggerIn()
                                         );
                                     }
                                 } else {
@@ -290,7 +290,7 @@ impl Zone {
                         } else if let LayerEntryData::EventRange(_) = &object.data
                             && let Some(gimmick_rect_info) =
                                 game_data.lookup_gimmick_rect(object.instance_id)
-                            && gimmick_rect_info.trigger_in == 1
+                            && gimmick_rect_info.TriggerIn() == 1
                         {
                             let map_gimmick = MapGimmick::Generic {};
 
