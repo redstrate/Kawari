@@ -46,43 +46,43 @@ where
 }
 
 impl ZoneConnection {
-    pub async fn received_party_invite(
-        &mut self,
-        sender_account_id: u64,
-        sender_content_id: u64,
-        sender_name: String,
-    ) {
-        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InviteUpdate {
-            sender_account_id,
-            sender_content_id,
-            expiration_timestamp: timestamp_secs() + 300, // usually the packet's timestamp + 300, TODO: we might want to keep a timer going somewhere to inform the original sender if it expires due to timeout, does retail do that?
-            world_id: self.config.world_id,
-            invite_type: InviteType::Party,
-            update_type: InviteUpdateType::NewInvite,
-            unk1: 1,
-            sender_name,
-        });
-        self.send_ipc_self(ipc).await;
-    }
-
     pub async fn send_invite_update(
         &mut self,
         from_account_id: u64,
         from_content_id: u64,
-        from_name: String,
+        expiration_timestamp: u32,
         invite_type: InviteType,
-        response: InviteReply,
+        update_kind: Option<InviteUpdateType>,
+        from_name: String,
+        response: Option<InviteReply>,
     ) {
-        let update_type = match response {
-            InviteReply::Accepted => InviteUpdateType::InviteAccepted,
-            InviteReply::Declined => InviteUpdateType::InviteDeclined,
-            InviteReply::Cancelled => InviteUpdateType::InviteCancelled,
-        };
+        if update_kind.is_some() && response.is_some() {
+            tracing::error!(
+                "Invalid state for send_invite_update: update_type and response cannot both be Some!"
+            );
+            return;
+        }
+
+        let update_type;
+        if let Some(response) = response {
+            update_type = match response {
+                InviteReply::Accepted => InviteUpdateType::InviteAccepted,
+                InviteReply::Declined => InviteUpdateType::InviteDeclined,
+                InviteReply::Cancelled => InviteUpdateType::InviteCancelled,
+            };
+        } else if let Some(kind) = update_kind {
+            update_type = kind;
+        } else {
+            tracing::error!(
+                "Invalid state for send_invite_update: update_type and response cannot both be None!"
+            );
+            return;
+        }
 
         let response = ServerZoneIpcSegment::new(ServerZoneIpcData::InviteUpdate {
             sender_content_id: from_content_id,
             sender_account_id: from_account_id,
-            expiration_timestamp: 0,
+            expiration_timestamp,
             world_id: self.config.world_id,
             invite_type,
             update_type,
@@ -90,6 +90,37 @@ impl ZoneConnection {
             sender_name: from_name,
         });
         self.send_ipc_self(response).await;
+    }
+
+    pub async fn invite_reply(
+        &mut self,
+        inviter_content_id: u64,
+        invite_type: InviteType,
+        response: InviteReply,
+    ) {
+        let inviter_info;
+        {
+            let mut db = self.database.lock();
+            inviter_info = db.find_character_ids(Some(inviter_content_id), None);
+        }
+
+        if let Some(inviter_info) = inviter_info {
+            self.handle
+                .send(ToServer::InvitationResponse(
+                    self.player_data.character.actor_id,
+                    self.player_data.character.service_account_id as u64,
+                    self.player_data.character.content_id as u64,
+                    self.player_data.character.name.clone(),
+                    inviter_info.actor_id,
+                    inviter_content_id,
+                    inviter_info.name.clone(),
+                    invite_type,
+                    response,
+                ))
+                .await;
+        } else {
+            tracing::warn!("invite_reply: Unable to find {inviter_content_id}'s character info!")
+        }
     }
 
     /// The player received an invitation response from another player.
@@ -121,7 +152,7 @@ impl ZoneConnection {
                         from_content_id as i64,
                     );
                 } else {
-                    // We do nothing further than this and the invite update, because the inviter's client doesn't display anything on-screen when the invitee declined a friend request.
+                    // We do nothing further than this and the invite update, because the inviter's client doesn't display anything on-screen when the invitee declines a friend request.
                     let mut db = self.database.lock();
                     db.remove_from_friend_list(
                         from_content_id as i64,
@@ -135,9 +166,11 @@ impl ZoneConnection {
         self.send_invite_update(
             from_account_id,
             from_content_id,
-            from_name,
+            0,
             invite_type,
-            response,
+            None,
+            from_name,
+            Some(response),
         )
         .await;
     }
@@ -678,14 +711,13 @@ impl ZoneConnection {
         &mut self,
         content_id: u64,
         message_id: LogMessageType,
-        world_id: u16,
         invite_type: InviteType,
         character_name: String,
     ) {
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InviteCharacterResult {
             content_id,
             message_id,
-            world_id,
+            world_id: self.config.world_id,
             invite_type,
             unk1: 1,
             character_name,
@@ -715,25 +747,76 @@ impl ZoneConnection {
         );
     }
 
-    pub async fn received_friend_invite(
+    pub async fn send_social_invite(
+        &mut self,
+        content_id: u64,
+        invite_type: InviteType,
+        character_name: String,
+    ) {
+        let recipient_info;
+        {
+            let mut db = self.database.lock();
+            let character_name = if content_id == 0 {
+                Some(character_name.clone())
+            } else {
+                None
+            };
+            let content_id = if content_id != 0 {
+                Some(content_id)
+            } else {
+                None
+            };
+            recipient_info = db.find_character_ids(content_id, character_name);
+        }
+
+        let Some(recipient_info) = recipient_info else {
+            tracing::warn!(
+                "send_social_invite: Unable to find character details for {content_id}!"
+            );
+            return;
+        };
+
+        if invite_type == InviteType::FriendList {
+            self.add_to_friend_list(recipient_info.content_id as u64, 32);
+        }
+
+        self.handle
+            .send(ToServer::InvitePlayerTo(
+                self.player_data.character.actor_id,
+                self.player_data.character.service_account_id as u64,
+                self.player_data.character.content_id as u64,
+                self.player_data.character.name.clone(),
+                recipient_info.actor_id,
+                recipient_info.content_id as u64,
+                character_name.clone(),
+                invite_type,
+            ))
+            .await;
+    }
+
+    pub async fn received_social_invite(
         &mut self,
         sender_account_id: u64,
         sender_content_id: u64,
         sender_name: String,
+        invite_type: InviteType,
     ) {
-        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InviteUpdate {
+        let mut expiration_timestamp = timestamp_secs() + 300;
+        if invite_type == InviteType::FriendList {
+            expiration_timestamp = 0;
+            self.add_to_friend_list(sender_content_id, 48);
+        }
+
+        self.send_invite_update(
             sender_account_id,
             sender_content_id,
-            expiration_timestamp: 0,
-            world_id: self.config.world_id,
-            invite_type: InviteType::FriendList,
-            update_type: InviteUpdateType::NewInvite,
-            unk1: 1,
-            sender_name,
-        });
-        self.send_ipc_self(ipc).await;
-
-        self.add_to_friend_list(sender_content_id, 48);
+            expiration_timestamp,
+            invite_type,
+            Some(InviteUpdateType::NewInvite),
+            sender_name.clone(),
+            None,
+        )
+        .await;
     }
 
     async fn get_linkshells(&mut self) -> Option<Vec<CrossworldLinkshellEx>> {

@@ -135,8 +135,8 @@ pub enum FromServer {
     ChatDisconnected(),
     /// Inform the chat connection that its zone connection has joined a party.
     SetPartyChatChannel(u32),
-    /// Inform the client that they've received a party invite.
-    PartyInvite(u64, u64, String),
+    /// Inform the client that they've received a social invite (party, friends list, free company). Other social features have their own dedicated opcodes and FromServer responses.
+    SocialInvite(u64, u64, String, InviteType),
     /// Inform the client about the results of an invite sent to another player.
     InvitationResult(u64, u64, String, InviteType, InviteReply),
     /// The client who received the invite also needs to be informed.
@@ -150,7 +150,7 @@ pub enum FromServer {
         Option<(u64, u32, ObjectId, Vec<PartyMemberEntry>)>,
     ),
     /// Inform the client of the result of a social invite they have sent.
-    InviteCharacterResult(u64, LogMessageType, u16, InviteType, String),
+    InviteCharacterResult(u64, LogMessageType, InviteType, String),
     /// Inform the client they were in a party, and request that they inform us of their return.
     RejoinPartyAfterDisconnect(u64),
     /// Send an arbitrary IPC segment to the client.
@@ -193,8 +193,6 @@ pub enum FromServer {
     ActorDismounted(ObjectId),
     /// Inform the client of the whereabouts of their party members.
     PartyMemberPositionsUpdate(PartyMemberPositions),
-    /// Inform the client that they've received a friend request.
-    FriendInvite(u64, u64, String),
     /// Use this connections's database to commit the party list for the server.
     CommitParties(HashMap<u64, Party>),
     /// Treasure was spawned.
@@ -316,10 +314,29 @@ pub enum ToServer {
     MoveToPopRange(ClientId, ObjectId, u32, bool),
     /// The connection sent a direct message to another client. This needs the sender's actor id too for purposes of `send_ipc_from`.
     TellMessageSent(ObjectId, ObjectId, TellMessage),
-    /// The client invited another player to join their party.
-    InvitePlayerToParty(ObjectId, u64, String),
+    /// The client invited another player to join their party, friend list, or free company.
+    InvitePlayerTo(
+        ObjectId,
+        u64,
+        u64,
+        String,
+        ObjectId,
+        u64,
+        String,
+        InviteType,
+    ),
     /// The client replied to another player's invite.
-    InvitationResponse(ClientId, u64, u64, String, u64, InviteType, InviteReply),
+    InvitationResponse(
+        ObjectId,
+        u64,
+        u64,
+        String,
+        ObjectId,
+        u64,
+        String,
+        InviteType,
+        InviteReply,
+    ),
     /// The party leader is adding a member to their party.
     AddPartyMember(u64, ObjectId, u64),
     /// The client sent a message to their party.
@@ -390,8 +407,6 @@ pub enum ToServer {
     SetCharacterMode(ObjectId, CharacterMode, u8),
     /// Broadcasts an actor control to other players.
     BroadcastActorControl(ObjectId, ActorControlCategory),
-    /// The client invited another player to be friends.
-    InvitePlayerToFriendList(ObjectId, u64, String),
     /// The client initiated a ready check for their party.
     ReadyCheckInitiated(Option<u64>, ObjectId, u64, u64, String),
     /// The client responded to an on-going ready check in their party.
