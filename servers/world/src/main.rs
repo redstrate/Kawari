@@ -950,6 +950,7 @@ async fn process_packet(
                                         .send(ToServer::PartyMemberReturned(
                                             connection.player_data.character.actor_id,
                                             connection.player_data.volatile.zone_id,
+                                            connection.party_id,
                                         ))
                                         .await;
                                     connection.rejoining_party = false;
