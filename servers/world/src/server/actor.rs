@@ -101,6 +101,15 @@ impl NetworkedActor {
         }
     }
 
+    pub fn rotation(&self) -> f32 {
+        match &self {
+            NetworkedActor::Player { spawn, .. } => spawn.common.rotation,
+            NetworkedActor::Npc { spawn, .. } => spawn.common.rotation,
+            NetworkedActor::Object { object } => object.rotation,
+            NetworkedActor::Treasure { treasure } => treasure.rotation,
+        }
+    }
+
     pub fn in_range_of(&self, other: &NetworkedActor) -> bool {
         // This only makes sense for players
         if let NetworkedActor::Player { distance_range, .. } = self {

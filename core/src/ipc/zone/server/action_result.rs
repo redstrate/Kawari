@@ -47,6 +47,7 @@ pub enum EffectKind {
     /// The attack missed.
     #[brw(magic = 1u8)]
     Miss,
+    /// Do damage!
     #[brw(magic = 3u8)]
     Damage {
         damage_kind: DamageKind,
@@ -67,6 +68,7 @@ pub enum EffectKind {
         unk4: u8,
         amount: u16,
     },
+    /// Heals for a specified amount.
     #[brw(magic = 4u8)]
     Heal { unk1: [u8; 5], amount: u16 },
     /// Seen while attacking giant clams.
@@ -75,6 +77,7 @@ pub enum EffectKind {
     /// Seen during Head Graze.
     #[brw(magic = 8u8)]
     InterruptAction {},
+    /// Begins a combo?
     #[brw(magic = 27u8)]
     BeginCombo,
     /// Seen during sprint.
@@ -103,8 +106,12 @@ pub enum EffectKind {
         unk: [u8; 3], // empty?
         effect_id: u16,
     },
+    /// Play this VFX.
     #[brw(magic = 59u8)]
     PlayVFX { unk: [u8; 5], effect_id: u16 },
+    /// Seen in the Summon Carbuncle action.
+    #[brw(magic = 62u8)]
+    SummonPet { unk: [u8; 7] },
     /// Unknown effect (that should be added!)
     Unknown { magic: u8, unk: [u8; 7] },
 }

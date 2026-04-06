@@ -21,8 +21,9 @@ use crate::{
 use kawari::{
     common::{CharacterMode, DEAD_FADE_OUT_TIME, ObjectId, STRIKING_DUMMY_NAME_ID, TimepointData},
     ipc::zone::{
-        ActionEffect, ActionKind, ActionRequest, ActionResult, ActorControlCategory, EffectEntry,
-        EffectKind, EffectResult, ServerZoneIpcData, ServerZoneIpcSegment,
+        ActionEffect, ActionKind, ActionRequest, ActionResult, ActorControlCategory,
+        BattleNpcSubKind, CommonSpawn, EffectEntry, EffectKind, EffectResult, ObjectKind,
+        ServerZoneIpcData, ServerZoneIpcSegment, SpawnNpc,
     },
 };
 
@@ -210,6 +211,32 @@ pub fn execute_action(
                         // TODO: this could cancel more than just casting, so we need to be more specific eventually
                         // TODO: also cancel the cast visually
                         instance.cancel_actor_tasks(request.target.object_id);
+                    }
+                    EffectKind::SummonPet { .. } => {
+                        let Some(actor) = instance.find_actor(from_actor_id) else {
+                            return;
+                        };
+
+                        instance.insert_npc(
+                            ObjectId(fastrand::u32(..)),
+                            SpawnNpc {
+                                common: CommonSpawn {
+                                    base_id: 13498, // TODO: hardcoded
+                                    name_id: 10261,
+                                    pet_id: 23, // TODO: also hardcoded
+                                    owner_id: from_actor_id,
+                                    max_health_points: 10, // TODO
+                                    health_points: 100,
+                                    model_chara: 411, // TODO: hardcoded
+                                    object_kind: ObjectKind::BattleNpc(BattleNpcSubKind::Pet),
+                                    level: actor.get_common_spawn().level,
+                                    position: actor.position(),
+                                    rotation: actor.rotation(),
+                                    ..Default::default()
+                                },
+                                ..Default::default()
+                            },
+                        );
                     }
                     _ => {}
                 }

@@ -88,6 +88,14 @@ impl UserData for EffectsBuilder {
             });
             Ok(())
         });
+        methods.add_method_mut("summon_pet", |_, this, _: ()| {
+            this.effects.push(ActionEffect {
+                kind: EffectKind::SummonPet {
+                    unk: [0, 0, 0, 0, 128, 157, 0],
+                },
+            });
+            Ok(())
+        });
     }
 }
 

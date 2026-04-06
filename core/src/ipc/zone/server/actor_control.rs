@@ -399,9 +399,10 @@ pub enum ActorControlCategory {
         id: u32, // Index to BuddyEquip sheet
     },
 
+    /// Sets up "pets" like carbuncles.
     #[brw(magic = 260u32)]
     SetPetParameters {
-        /// If set to 0, hides the pet hotbar.
+        /// Index into the Pet Excel sheet. If set to 0, hides the pet hotbar.
         pet_id: u32,
         unk2: u32,
         unk3: u32,

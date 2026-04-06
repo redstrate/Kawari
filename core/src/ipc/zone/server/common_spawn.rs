@@ -206,11 +206,11 @@ pub struct CommonSpawn {
     pub name_id: u32,
     /// Refers to the original game object ID associated with this character.
     pub layout_id: u32,
-    /// Unknown purpose.
-    pub companion_owner_id: u32,
+    /// Index into the Pet Excel sheet. Seems only relevant for Carbuncles and other "pets".
+    pub pet_id: u32,
     /// Which director spawned and is managing this actor, if any.
     pub handler_id: HandlerId,
-    /// Seen set for Carbuncles to their owner player's object id at least.
+    /// Seen set to the player owners of Carbuncles and Chocobos.
     pub owner_id: ObjectId,
     /// Unknown purpose.
     pub tether_target_id: ObjectId,
