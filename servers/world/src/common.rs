@@ -356,7 +356,7 @@ pub enum ToServer {
     /// The client went offline and we need to inform other party members.
     PartyMemberOffline(u64, u64, u64, ObjectId, String),
     /// The client returned online and we need to inform other party members.
-    PartyMemberReturned(ObjectId, i32),
+    PartyMemberReturned(ObjectId, i32, u64),
     /// The client is requesting to join the following content.
     JoinContent(ClientId, ObjectId, u16),
     /// The c lient is requesting to leave their current content, the connection is in charge of keeping track of the old position.

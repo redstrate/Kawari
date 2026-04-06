@@ -1053,32 +1053,43 @@ pub fn handle_social_messages(
             } else {
                 // If nobody in the party is online, disband it.
                 // Retail keeps it around for ~2 hours or so if everyone is offline, but there's no point doing that.
+                // TODO: If we care about parties persisting through everyone being offline, so that instanced content for example can be fully restored, then we should instead either keep it in the global state regardless, or only push this party for removal *after* writing to the db. It should be fairly simple to do with something like a "to_remove_parties" vec that we process in mod.rs. If we do end up implementing this idea, then ToServer::PartyMemberReturned should also be updated to recreate the party in the global server state since currently it has no logic to do so.
                 network.parties.remove(party_id);
                 network.commit_parties = true;
             }
 
             true
         }
-        ToServer::PartyMemberReturned(execute_actor_id, zone_id) => {
+        ToServer::PartyMemberReturned(execute_actor_id, zone_id, party_id) => {
             let mut network = network.lock();
-            let data = data.lock();
 
-            let mut member = PartyMember::default();
-            let mut party_id = 0;
-            let mut party = Party::default();
+            let Some(party) = network.parties.get_mut(party_id) else {
+                return true;
+            };
 
-            'outer: for (id, my_party) in &mut network.parties.iter() {
-                for my_member in &my_party.members {
-                    if my_member.actor_id == *execute_actor_id {
-                        member = my_member.clone();
-                        party_id = *id;
-                        party = my_party.clone();
-                        break 'outer;
-                    }
-                }
+            let member;
+            {
+                let Some(my_member) = party
+                    .members
+                    .iter()
+                    .find(|m| m.actor_id == *execute_actor_id)
+                else {
+                    return true;
+                };
+
+                member = my_member.clone();
             }
 
-            let party_list = build_party_list(&party, &data);
+            if party.get_online_member_count() == 1 {
+                party.auto_promote_member();
+            }
+
+            let party_list;
+            {
+                let data = data.lock();
+                party_list = build_party_list(party, &data);
+            }
+
             let msg = FromServer::PartyUpdate(
                 PartyUpdateTargets {
                     execute_account_id: member.account_id,
@@ -1087,14 +1098,15 @@ pub fn handle_social_messages(
                     ..Default::default()
                 },
                 PartyUpdateStatus::MemberReturned,
-                Some((party_id, party.chatchannel_id, party.leader_id, party_list)),
+                Some((*party_id, party.chatchannel_id, party.leader_id, party_list)),
             );
 
-            network.send_to_party(party_id, None, msg, DestinationNetwork::ZoneClients);
+            network.send_to_party(*party_id, None, msg, DestinationNetwork::ZoneClients);
 
             // Next, inform the player about the party's target markers/signs, and waymarks.
-            send_party_target_signs(&mut network, party_id, *execute_actor_id);
-            send_party_waymarks(&mut network, party_id, *execute_actor_id, *zone_id);
+            send_party_target_signs(&mut network, *party_id, *execute_actor_id);
+            send_party_waymarks(&mut network, *party_id, *execute_actor_id, *zone_id);
+            network.commit_parties = true; // We might've changed leaders here, so commit the new changes.
 
             true
         }
