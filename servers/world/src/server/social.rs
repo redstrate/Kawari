@@ -1080,6 +1080,7 @@ pub fn handle_social_messages(
                 member = my_member.clone();
             }
 
+            // If the returning player is the only one online, promote them to ensure we can have someone manage their party and so that the ZoneConnection won't reject our update.
             if party.get_online_member_count() == 1 {
                 party.auto_promote_member();
             }
