@@ -184,7 +184,16 @@ impl ChatHandler {
             }
             "!mount" => {
                 if let Some((_, mount)) = chat_message.message.split_once(' ') {
-                    let mount_id = mount.parse::<u16>().unwrap();
+                    let mount_id = match mount.parse::<u16>() {
+                        Ok(id) => id,
+                        Err(_) => {
+                            let mut gamedata = connection.gamedata.lock();
+                            gamedata
+                                .get_mount_id_from_name(mount.to_string())
+                                .unwrap_or(1) // Fallback to a company chocobo otherwise
+                        }
+                    };
+
                     connection
                         .handle
                         .send(ToServer::DebugMount(

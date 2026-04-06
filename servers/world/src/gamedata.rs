@@ -1417,6 +1417,22 @@ impl GameData {
         }
         None
     }
+
+    pub fn get_mount_id_from_name(&mut self, mount_name: String) -> Option<u16> {
+        let config = get_config();
+        let sheet = MountSheet::read_from(&mut self.resource, config.world.language()).ok()?;
+        for (id, row) in sheet.into_iter().flatten_subrows() {
+            if row
+                .Singular()
+                .to_lowercase()
+                .contains(&mount_name.to_lowercase())
+            {
+                return Some(id as u16);
+            }
+        }
+
+        None
+    }
 }
 
 impl mlua::UserData for GameData {
