@@ -1,13 +1,14 @@
 use std::{
     collections::{HashMap, VecDeque},
+    f32::consts::PI,
     sync::Arc,
     time::Duration,
 };
 
 use kawari::{
     common::{
-        ENEMY_AUTO_ATTACK_RATE, JumpState, MoveAnimationState, MoveAnimationType, ObjectId,
-        ObjectTypeId, ObjectTypeKind, Position, TimepointData,
+        ENEMY_AUTO_ATTACK_RATE, JumpState, MINIMUM_PATHFINDING_DISTANCE, MoveAnimationState,
+        MoveAnimationType, ObjectId, ObjectTypeId, ObjectTypeKind, Position, TimepointData,
     },
     ipc::zone::{
         ActionKind, ActionRequest, ActorControlCategory, CharacterDataFlag, ServerZoneIpcData,
@@ -52,32 +53,9 @@ pub fn npc_behavior(
                 last_position,
                 ..
             } = actor
-                && (current_target.is_some())
+                && current_target.is_some()
             {
                 let current_target = current_target.unwrap();
-                let needs_repath = current_path.is_empty();
-                if !needs_repath {
-                    // follow current path
-                    let next_position = Position {
-                        x: current_path[0][0],
-                        y: current_path[0][1],
-                        z: current_path[0][2],
-                    };
-                    let current_position = last_position.unwrap_or(spawn.common.position);
-
-                    let dir_x = current_position.x - next_position.x;
-                    let dir_z = current_position.z - next_position.z;
-                    let rotation = f32::atan2(-dir_z, dir_x).to_degrees();
-
-                    actor_moves.push(FromServer::ActorMove(
-                        *id,
-                        Position::lerp(current_position, next_position, *current_path_lerp),
-                        rotation,
-                        MoveAnimationType::RUNNING,
-                        MoveAnimationState::None,
-                        JumpState::NoneOrFalling,
-                    ));
-                }
 
                 let target_pos;
                 if let Some(target_actor) = instance.find_actor(current_target) {
@@ -87,7 +65,54 @@ pub fn npc_behavior(
                     target_pos = last_position.unwrap_or(spawn.common.position);
                 }
 
+                let distance = Position::distance(spawn.common.position, target_pos);
+
+                let rotate = |from_pos: Position, to_pos: Position| {
+                    let rotation = f32::atan2(to_pos.x - from_pos.x, to_pos.z - from_pos.z);
+                    if rotation >= PI { -PI } else { rotation }
+                };
+
+                let position;
+                let rotation;
+                // If we are in distance, rotate towards target
+                if distance <= MINIMUM_PATHFINDING_DISTANCE {
+                    position = Some(spawn.common.position);
+                    rotation = Some(rotate(spawn.common.position, target_pos));
+                } else if !current_path.is_empty() {
+                    // otherwise, Follow current path
+                    let next_position = Position {
+                        x: current_path[0][0],
+                        y: current_path[0][1],
+                        z: current_path[0][2],
+                    };
+
+                    let current_position = last_position.unwrap_or(spawn.common.position);
+
+                    position = Some(Position::lerp(
+                        current_position,
+                        next_position,
+                        *current_path_lerp,
+                    ));
+                    rotation = Some(rotate(current_position, next_position));
+                } else {
+                    position = None;
+                    rotation = None;
+                }
+
                 target_actor_pos.insert(current_target, target_pos);
+
+                if let Some(position) = position
+                    && let Some(rotation) = rotation
+                {
+                    actor_moves.push(FromServer::ActorMove(
+                        *id,
+                        position,
+                        rotation,
+                        MoveAnimationType::RUNNING,
+                        MoveAnimationState::None,
+                        JumpState::NoneOrFalling,
+                    ));
+                }
             }
         }
 
@@ -146,6 +171,7 @@ pub fn npc_behavior(
                     {
                         // find a player if in range
                         for (target_id, position) in &players {
+                            // TODO: hardcoded sensing range
                             if Position::distance(*position, spawn.common.position) < 15.0 {
                                 *state = NpcState::Hate;
                                 *current_target = Some(*target_id);
@@ -167,17 +193,20 @@ pub fn npc_behavior(
                     let current_position = last_position.unwrap_or(spawn.common.position);
                     let distance = Position::distance(current_position, next_position);
 
-                    // TODO: this doesn't work like it should
-                    *current_path_lerp += (10.0 / distance).clamp(0.0, 1.0);
+                    *current_path_lerp =
+                        f32::clamp(*current_path_lerp + (2.0 / distance), 0.0, 1.0);
                 }
 
                 let mut reset_target = false;
+                let can_take_action; // FIXME: this is kind of stupid because enemies can do ranged attacks, etc.
                 if let Some(current_target) = current_target
                     && target_actor_pos.contains_key(current_target)
                 {
                     let target_pos = target_actor_pos[current_target];
                     let distance = Position::distance(spawn.common.position, target_pos);
-                    let needs_repath = current_path.is_empty() && distance > 10.0; // TODO: confirm distance this in retail
+                    let needs_repath =
+                        current_path.is_empty() && distance > MINIMUM_PATHFINDING_DISTANCE;
+                    can_take_action = distance <= MINIMUM_PATHFINDING_DISTANCE;
 
                     let current_pos = spawn.common.position;
                     let path: VecDeque<[f32; 3]> = instance
@@ -196,6 +225,8 @@ pub fn npc_behavior(
                     if path.is_empty() {
                         reset_target = true;
                     }
+                } else {
+                    can_take_action = false;
                 }
 
                 // Only update the timeline on exact second marks
@@ -209,7 +240,7 @@ pub fn npc_behavior(
                     for timepoint in timeline.points_at(real_timeline_position as i32) {
                         match &timepoint.data {
                             TimepointData::Action { action_id, .. } => {
-                                if spawn.common.target_id.object_id.is_valid() {
+                                if spawn.common.target_id.object_id.is_valid() && can_take_action {
                                     let cast_time = 2.7; // TODO: grab from excel data
                                     let request = ActionRequest {
                                         action_key: *action_id,
@@ -239,6 +270,7 @@ pub fn npc_behavior(
 
                     if spawn.common.target_id.object_id.is_valid()
                         && timeline.autoattack_action_id != 0
+                        && can_take_action
                     {
                         // Schedule any pending auto-attacks:
                         let should_auto_attack = (timeline_position_seconds

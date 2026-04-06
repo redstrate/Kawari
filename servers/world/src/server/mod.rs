@@ -39,7 +39,9 @@ use kawari::{
     },
     config::{FilesystemConfig, get_config},
     ipc::zone::{
-        ActionKind, ActionRequest, ActorControlCategory, BattleNpcSubKind, CharacterDataFlag, ClientTriggerCommand, CommonSpawn, Condition, Conditions, EnmityList, Hater, HaterList, ObjectKind, PlayerEnmity, ServerZoneIpcData, ServerZoneIpcSegment, SpawnNpc, WaymarkPreset
+        ActionKind, ActionRequest, ActorControlCategory, BattleNpcSubKind, CharacterDataFlag,
+        ClientTriggerCommand, CommonSpawn, Condition, Conditions, EnmityList, Hater, HaterList,
+        ObjectKind, PlayerEnmity, ServerZoneIpcData, ServerZoneIpcSegment, SpawnNpc, WaymarkPreset,
     },
 };
 
