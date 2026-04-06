@@ -402,7 +402,8 @@ pub enum ActorControlCategory {
     /// Also seen during Carbuncle spawning.
     #[brw(magic = 257u32)]
     SetupPet {
-        unk1: u32,
+        /// The owner's actor ID.
+        owner_id: ObjectId,
         /// Index into the Pet Excel sheet. If set to 0, hides the pet hotbar.
         pet_id: u32,
         /// The object ID of the pet.

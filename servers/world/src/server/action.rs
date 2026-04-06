@@ -241,7 +241,7 @@ pub fn execute_action(
                                     name_id: 10261,
                                     pet_id,
                                     owner_id: from_actor_id,
-                                    max_health_points: 10, // TODO
+                                    max_health_points: 100, // TODO
                                     health_points: 100,
                                     model_chara: 411, // TODO: hardcoded
                                     object_kind: ObjectKind::BattleNpc(BattleNpcSubKind::Pet),
@@ -257,7 +257,7 @@ pub fn execute_action(
                         network.send_to_by_actor_id(
                             from_actor_id,
                             FromServer::ActorControlSelf(ActorControlCategory::SetupPet {
-                                unk1: 277797782,
+                                owner_id: from_actor_id,
                                 pet_id,
                                 pet_actor_id,
                                 unk2: 1,
