@@ -356,7 +356,7 @@ impl ZoneConnection {
                         order = game_data.find_mount_order(*id).unwrap_or(0);
                     }
 
-                    let should_unlock = self.player_data.unlock.mounts.toggle(*id);
+                    let should_unlock = self.player_data.unlock.mounts.toggle(order as u32);
 
                     self.actor_control_self(ActorControlCategory::ToggleMountUnlock {
                         order: order as u32,
