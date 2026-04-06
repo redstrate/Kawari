@@ -39,9 +39,7 @@ use kawari::{
     },
     config::{FilesystemConfig, get_config},
     ipc::zone::{
-        ActionKind, ActionRequest, ActorControlCategory, BattleNpcSubKind, ClientTriggerCommand,
-        CommonSpawn, Condition, Conditions, EnmityList, Hater, HaterList, ObjectKind, PlayerEnmity,
-        ServerZoneIpcData, ServerZoneIpcSegment, SpawnNpc, WaymarkPreset,
+        ActionKind, ActionRequest, ActorControlCategory, BattleNpcSubKind, CharacterDataFlag, ClientTriggerCommand, CommonSpawn, Condition, Conditions, EnmityList, Hater, HaterList, ObjectKind, PlayerEnmity, ServerZoneIpcData, ServerZoneIpcSegment, SpawnNpc, WaymarkPreset
     },
 };
 
@@ -1791,9 +1789,10 @@ pub async fn server_main_loop(
                         }
 
                         npc_spawn = SpawnNpc {
+                            character_data_flags: CharacterDataFlag::HOSTILE,
                             common: CommonSpawn {
-                                health_points: 91,
-                                max_health_points: 91,
+                                health_points: 1500,
+                                max_health_points: 1500,
                                 resource_points: 100,
                                 max_resource_points: 100,
                                 base_id: id,
