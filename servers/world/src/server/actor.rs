@@ -13,10 +13,25 @@ use kawari::{
 pub enum NpcState {
     /// Wanders in random directions.
     Wander,
+    /// Follows its owner NPC.
+    Follow,
     /// Actively targetting another actor.
     Hate,
     /// DEAD!
     Dead,
+}
+
+impl NpcState {
+    /// Determines the natural state of this NPC.
+    ///
+    /// For example, normal NPCs should wander after resetting agro. Pets need to follow their owners instead.
+    pub fn natural_state_of(spawn: &SpawnNpc) -> Self {
+        if spawn.common.owner_id.is_valid() {
+            Self::Follow
+        } else {
+            Self::Wander
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -40,9 +55,9 @@ pub enum NetworkedActor {
     },
     Npc {
         state: NpcState,
-        current_path: VecDeque<[f32; 3]>,
-        current_path_lerp: f32,
-        current_target: Option<ObjectId>,
+        navmesh_path: VecDeque<[f32; 3]>,
+        navmesh_path_lerp: f32,
+        navmesh_target: Option<ObjectId>,
         last_position: Option<Position>,
         spawn: SpawnNpc,
         timeline: Timeline,

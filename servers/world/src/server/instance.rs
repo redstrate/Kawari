@@ -195,10 +195,10 @@ impl Instance {
         self.actors.insert(
             id,
             NetworkedActor::Npc {
-                state: NpcState::Wander,
-                current_path: VecDeque::default(),
-                current_path_lerp: 0.0,
-                current_target: None,
+                state: NpcState::natural_state_of(&spawn),
+                navmesh_path: VecDeque::default(),
+                navmesh_path_lerp: 0.0,
+                navmesh_target: None,
                 last_position: None,
                 spawn,
                 timeline,
