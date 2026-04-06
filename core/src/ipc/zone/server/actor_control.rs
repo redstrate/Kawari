@@ -399,6 +399,18 @@ pub enum ActorControlCategory {
         id: u32, // Index to BuddyEquip sheet
     },
 
+    /// Also seen during Carbuncle spawning.
+    #[brw(magic = 257u32)]
+    SetupPet {
+        unk1: u32,
+        /// Index into the Pet Excel sheet. If set to 0, hides the pet hotbar.
+        pet_id: u32,
+        /// The object ID of the pet.
+        pet_actor_id: ObjectId,
+        unk2: u32,
+        unk3: u32,
+    },
+
     /// Sets up "pets" like carbuncles.
     #[brw(magic = 260u32)]
     SetPetParameters {

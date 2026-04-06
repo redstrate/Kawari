@@ -217,13 +217,29 @@ pub fn execute_action(
                             return;
                         };
 
+                        let pet_id = 23; // TODO: hardcoded
+
+                        let mut network = network.lock();
+                        network.send_to_by_actor_id(
+                            from_actor_id,
+                            FromServer::ActorControlSelf(ActorControlCategory::SetPetParameters {
+                                pet_id,
+                                unk2: 2,
+                                unk3: 5,
+                                unk4: 7,
+                            }),
+                            DestinationNetwork::ZoneClients,
+                        );
+
+                        let pet_actor_id = ObjectId(fastrand::u32(..));
+
                         instance.insert_npc(
-                            ObjectId(fastrand::u32(..)),
+                            pet_actor_id,
                             SpawnNpc {
                                 common: CommonSpawn {
                                     base_id: 13498, // TODO: hardcoded
                                     name_id: 10261,
-                                    pet_id: 23, // TODO: also hardcoded
+                                    pet_id,
                                     owner_id: from_actor_id,
                                     max_health_points: 10, // TODO
                                     health_points: 100,
@@ -236,6 +252,18 @@ pub fn execute_action(
                                 },
                                 ..Default::default()
                             },
+                        );
+
+                        network.send_to_by_actor_id(
+                            from_actor_id,
+                            FromServer::ActorControlSelf(ActorControlCategory::SetupPet {
+                                unk1: 277797782,
+                                pet_id,
+                                pet_actor_id,
+                                unk2: 1,
+                                unk3: 1,
+                            }),
+                            DestinationNetwork::ZoneClients,
                         );
                     }
                     _ => {}

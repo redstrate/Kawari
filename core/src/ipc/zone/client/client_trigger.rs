@@ -306,6 +306,13 @@ pub enum ClientTriggerCommand {
     #[brw(magic = 1600u32)]
     RepairItem { unk1: u32, unk2: u32, unk3: u32 },
 
+    /// The client is performing a pet action.
+    #[brw(magic = 1800u32)]
+    PetAction {
+        /// Index into the PetAction Excel sheet.
+        action_id: u32,
+    },
+
     /// The client opens the General tab in the Gold Saucer window.
     #[brw(magic = 1850u32)]
     OpenGoldSaucerGeneralTab {},
