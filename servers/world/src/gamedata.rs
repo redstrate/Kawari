@@ -8,6 +8,7 @@ use icarus::AetheryteSystemDefine::AetheryteSystemDefineSheet;
 use icarus::BNpcBase::BNpcBaseSheet;
 use icarus::BNpcCustomize::BNpcCustomizeSheet;
 use icarus::BaseParam::{BaseParamRow, BaseParamSheet};
+use icarus::Battalion::BattalionSheet;
 use icarus::ClassJob::ClassJobSheet;
 use icarus::ClassJobCategory::ClassJobCategorySheet;
 use icarus::ContentDirectorManagedSG::ContentDirectorManagedSGSheet;
@@ -77,6 +78,7 @@ pub struct GameData {
     pub gimmick_rect_sheet: GimmickRectSheet,
     pub base_param_sheet: BaseParamSheet,
     pub classjob_sheet: ClassJobSheet,
+    pub battalion_sheet: BattalionSheet,
 }
 
 impl Default for GameData {
@@ -277,6 +279,10 @@ impl GameData {
                 .ok()
                 .unwrap();
 
+        let battalion_sheet = BattalionSheet::read_from(&mut resource_resolver, Language::None)
+            .ok()
+            .unwrap();
+
         Self {
             resource: resource_resolver,
             item_sheet,
@@ -298,6 +304,7 @@ impl GameData {
             gimmick_rect_sheet,
             base_param_sheet,
             classjob_sheet,
+            battalion_sheet,
         }
     }
 
@@ -1477,6 +1484,30 @@ impl GameData {
         }
 
         None
+    }
+
+    /// Returns the list of battalions that should be considered an enemy to this battalion.
+    pub fn get_battalion_enemies(&mut self, battalion_id: u32) -> Vec<bool> {
+        // TODO: will change to IsEnemyTo in the future
+
+        let row = self.battalion_sheet.row(battalion_id).unwrap();
+        vec![
+            row.Unknown0(),
+            row.Unknown1(),
+            row.Unknown2(),
+            row.Unknown3(),
+            row.Unknown4(),
+            row.Unknown5(),
+            row.Unknown6(),
+            row.Unknown7(),
+            row.Unknown8(),
+            row.Unknown9(),
+            row.Unknown10(),
+            row.Unknown11(),
+            row.Unknown12(),
+            row.Unknown13(),
+            row.Unknown14(),
+        ]
     }
 }
 

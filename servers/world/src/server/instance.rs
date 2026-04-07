@@ -214,11 +214,22 @@ impl Instance {
         ObjectId(fastrand::u32(..))
     }
 
-    pub fn find_all_players(&self) -> Vec<(ObjectId, Position)> {
+    /// Finds all (alive) players and NPCs. Returns their ids, positions and battalions.
+    pub fn find_possible_enemies(&self) -> Vec<(ObjectId, Position, u8)> {
         self.actors
             .iter()
-            .filter(|(_, y)| matches!(y, NetworkedActor::Player { .. }))
-            .map(|(x, y)| (*x, y.get_common_spawn().position))
+            .filter(|(_, y)| {
+                matches!(y, NetworkedActor::Player { .. })
+                    || matches!(y, NetworkedActor::Npc { .. })
+            })
+            .filter(|(_, y)| y.get_common_spawn().health_points > 0)
+            .map(|(x, y)| {
+                (
+                    *x,
+                    y.get_common_spawn().position,
+                    y.get_common_spawn().battalion,
+                )
+            })
             .collect()
     }
 

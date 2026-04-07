@@ -898,7 +898,7 @@ pub fn update_actor_hp_mp(
             );
         }
 
-        if common_spawn.health_points == 0 {
+        if common_spawn.health_points == 0 && common_spawn.mode != CharacterMode::Dead {
             send_kill_actor = true;
         }
     }

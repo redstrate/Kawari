@@ -305,6 +305,7 @@ fn server_logic_tick(
     data: Arc<Mutex<WorldServer>>,
     network: Arc<Mutex<NetworkState>>,
     lua: Arc<Mutex<KawariLua>>,
+    gamedata: Arc<Mutex<GameData>>,
 ) {
     let mut actors_to_update_hp_mp = Vec::new();
 
@@ -322,7 +323,13 @@ fn server_logic_tick(
 
         for instance in &mut data.instances {
             let mut haters = HashMap::new();
-            npc_behavior::npc_behavior(network.clone(), lua.clone(), instance, &mut haters);
+            npc_behavior::npc_behavior(
+                network.clone(),
+                lua.clone(),
+                gamedata.clone(),
+                instance,
+                &mut haters,
+            );
 
             let mut actors_now_gimmick_jumping = Vec::new();
             let mut actors_now_inside_instance_exits = Vec::new();
@@ -615,6 +622,14 @@ fn server_logic_tick(
             // NOTE: I know this isn't retail accurate
             for (id, actor) in &mut instance.actors {
                 if let NetworkedActor::Player { spawn, .. } = actor {
+                    let in_combat = haters.contains_key(id);
+                    let is_dead = spawn.common.health_points == 0;
+
+                    // Don't heal people who are in combat or dead, please.
+                    if in_combat || is_dead {
+                        continue;
+                    }
+
                     let mut updated = false;
                     if spawn.common.health_points != spawn.common.max_health_points {
                         let amount = (spawn.common.max_health_points as f32 * 0.10).round() as u32;
@@ -747,7 +762,12 @@ pub async fn server_main_loop(
                 interval.tick().await;
 
                 // Execute general server logic
-                server_logic_tick(data.clone(), network.clone(), lua.clone());
+                server_logic_tick(
+                    data.clone(),
+                    network.clone(),
+                    lua.clone(),
+                    game_data.clone(),
+                );
 
                 // Execute list of queued tasks
                 {

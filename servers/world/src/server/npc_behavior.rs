@@ -18,7 +18,7 @@ use kawari::{
 use parking_lot::Mutex;
 
 use crate::{
-    ClientId, FromServer,
+    ClientId, FromServer, GameData,
     lua::KawariLua,
     server::{
         action::execute_enemy_action,
@@ -33,13 +33,14 @@ use crate::{
 pub fn npc_behavior(
     network: Arc<Mutex<NetworkState>>,
     lua: Arc<Mutex<KawariLua>>,
+    gamedata: Arc<Mutex<GameData>>,
     instance: &mut Instance,
     haters: &mut HashMap<ObjectId, Vec<ObjectId>>,
 ) {
     // Only pathfind if there's navmesh data available.
     if instance.navmesh.is_available() {
         let mut actor_moves = Vec::new();
-        let players = instance.find_all_players();
+        let enemies = instance.find_possible_enemies();
 
         let mut target_actor_pos = HashMap::new();
 
@@ -169,8 +170,16 @@ pub fn npc_behavior(
                             .character_data_flags
                             .contains(CharacterDataFlag::HOSTILE)
                     {
+                        let mut game_data = gamedata.lock();
+                        let possible_enemies =
+                            game_data.get_battalion_enemies(spawn.common.battalion as u32);
+
                         // find a player if in range
-                        for (target_id, position) in &players {
+                        for (target_id, position, battalion) in &enemies {
+                            if !possible_enemies[*battalion as usize] {
+                                continue;
+                            }
+
                             // TODO: hardcoded sensing range
                             if Position::distance(*position, spawn.common.position) < 15.0 {
                                 *state = NpcState::Hate;
@@ -199,31 +208,36 @@ pub fn npc_behavior(
 
                 let mut reset_target = false;
                 let can_take_action; // FIXME: this is kind of stupid because enemies can do ranged attacks, etc.
-                if let Some(current_target) = current_target
-                    && target_actor_pos.contains_key(current_target)
-                {
-                    let target_pos = target_actor_pos[current_target];
-                    let distance = Position::distance(spawn.common.position, target_pos);
-                    let needs_repath =
-                        current_path.is_empty() && distance > MINIMUM_PATHFINDING_DISTANCE;
-                    can_take_action = distance <= MINIMUM_PATHFINDING_DISTANCE;
+                if let Some(current_target) = current_target {
+                    // Check if the enemy is still valid
+                    reset_target = !enemies.iter().any(|(id, _, _)| *id == *current_target);
 
-                    let current_pos = spawn.common.position;
-                    let path: VecDeque<[f32; 3]> = instance
-                        .navmesh
-                        .calculate_path(
-                            [current_pos.x, current_pos.y, current_pos.z],
-                            [target_pos.x, target_pos.y, target_pos.z],
-                        )
-                        .into();
+                    if !reset_target && target_actor_pos.contains_key(current_target) {
+                        let target_pos = target_actor_pos[current_target];
+                        let distance = Position::distance(spawn.common.position, target_pos);
+                        let needs_repath =
+                            current_path.is_empty() && distance > MINIMUM_PATHFINDING_DISTANCE;
+                        can_take_action = distance <= MINIMUM_PATHFINDING_DISTANCE;
 
-                    if needs_repath {
-                        *current_path = path.clone();
-                    }
+                        let current_pos = spawn.common.position;
+                        let path: VecDeque<[f32; 3]> = instance
+                            .navmesh
+                            .calculate_path(
+                                [current_pos.x, current_pos.y, current_pos.z],
+                                [target_pos.x, target_pos.y, target_pos.z],
+                            )
+                            .into();
 
-                    // Drop the current target if we can't path to them
-                    if path.is_empty() {
-                        reset_target = true;
+                        if needs_repath {
+                            *current_path = path.clone();
+                        }
+
+                        // Drop the current target if we can't path to them too
+                        if path.is_empty() {
+                            reset_target = true;
+                        }
+                    } else {
+                        can_take_action = false;
                     }
                 } else {
                     can_take_action = false;
@@ -297,6 +311,7 @@ pub fn npc_behavior(
                 if reset_target {
                     *current_target = None;
                     *state = NpcState::natural_state_of(spawn);
+                    spawn.common.target_id = ObjectTypeId::default();
                 }
 
                 // update common spawn
