@@ -33,7 +33,7 @@ use kawari::packet::{ConnectionState, ConnectionType, SegmentData, parse_packet_
 use kawari_world::lua::{KawariLua, KawariLuaState, LuaPlayer};
 use kawari_world::{
     ChatConnection, ChatHandler, CustomIpcConnection, Event, EventHandler, GameData,
-    ObsfucationData, TeleportReason, ZoneConnection,
+    ObsfucationData, Roulette, TeleportReason, ZoneConnection,
 };
 use kawari_world::{
     ChatConnectionChannels, ChatPlayerData, ClientHandle, ClientId, FromServer, MessageInfo,
@@ -1985,8 +1985,20 @@ async fn process_packet(
                                 .register_for_content(queue_duties.content_ids)
                                 .await;
                         }
-                        ClientZoneIpcData::QueueRoulette { .. } => {
-                            tracing::warn!("Queueing for roulettes is not implemented!");
+                        ClientZoneIpcData::QueueRoulette { roulette_id, .. } => {
+                            let Some(roulette) = Roulette::from_repr(*roulette_id) else {
+                                tracing::warn!("Unknown roulette ID: {roulette_id}");
+                                continue;
+                            };
+
+                            let duty_id;
+                            {
+                                let mut game_data = connection.gamedata.lock();
+                                // TODO: take into account whether these duties are unlocked
+                                duty_id = game_data.pick_roulette_duty(roulette) as u16;
+                            }
+
+                            connection.register_for_content([duty_id, 0, 0, 0, 0]).await;
                         }
                         ClientZoneIpcData::ContentFinderAction { action, .. } => {
                             if *action == ContentFinderUserAction::Accepted {

@@ -52,6 +52,7 @@ use physis::resource::{Resource, ResourceResolver, SqPackResource, UnpackedResou
 use kawari::common::{CustomizeData, timestamp_secs};
 use kawari::common::{InstanceContentType, get_aether_current_comp_flg_set_to_screenimage};
 use kawari::config::get_config;
+use strum::FromRepr;
 
 /// Convenient methods built on top of Physis to access data relevant to the server
 #[derive(Clone)]
@@ -183,6 +184,24 @@ impl Modifiers {
 
         (value as f32 * (modifier as f32 / 100.0)).floor() as u32
     }
+}
+
+#[repr(u8)]
+#[derive(FromRepr)]
+pub enum Roulette {
+    Leveling = 1,
+    HighLevel = 2,
+    MSQ = 3,
+    GuildHest = 4,
+    Expert = 5,
+    Trial = 6,
+    DailyFrontline = 7,
+    LevelCap = 8,
+    Mentor = 9,
+    Alliance = 15,
+    NormalRaid = 17,
+    CrystallineConflictCasual = 40,
+    CrystallineConflictRanked = 41,
 }
 
 impl GameData {
@@ -1508,6 +1527,37 @@ impl GameData {
             row.Unknown13(),
             row.Unknown14(),
         ]
+    }
+
+    /// Returns a ContentFinderCondition for a given roulette.
+    pub fn pick_roulette_duty(&mut self, roulette: Roulette) -> u32 {
+        let config = get_config();
+        let content_finder_sheet =
+            ContentFinderConditionSheet::read_from(&mut self.resource, config.world.language())
+                .unwrap();
+
+        let rows: Vec<u32> = content_finder_sheet
+            .into_iter()
+            .flatten_subrows()
+            .filter(|(_, row)| match roulette {
+                Roulette::Leveling => row.LevelingRoulette(),
+                Roulette::HighLevel => row.HighLevelRoulette(),
+                Roulette::MSQ => row.MSQRoulette(),
+                Roulette::GuildHest => row.GuildHestRoulette(),
+                Roulette::Expert => row.ExpertRoulette(),
+                Roulette::Trial => row.TrialRoulette(),
+                Roulette::DailyFrontline => row.DailyFrontlineChallenge(),
+                Roulette::LevelCap => row.LevelCapRoulette(),
+                Roulette::Mentor => row.MentorRoulette(),
+                Roulette::Alliance => row.AllianceRoulette(),
+                Roulette::NormalRaid => row.NormalRaidRoulette(),
+                Roulette::CrystallineConflictCasual => row.Unknown27(), // NOTE: Will be CrystallineConflictCasualRoulette in the future
+                Roulette::CrystallineConflictRanked => row.Unknown28(), // NOTE: Will be CrystallineConflictRankedRoulette in the future
+            })
+            .map(|(id, _)| id)
+            .collect();
+
+        fastrand::choice(rows).unwrap()
     }
 }
 
