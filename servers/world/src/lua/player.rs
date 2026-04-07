@@ -575,6 +575,10 @@ impl LuaPlayer {
     fn toggle_howto(&mut self, value: bool, id: u32) {
         self.queued_tasks.push(LuaTask::ToggleHowTo { value, id });
     }
+
+    fn send_mailbox_status(&mut self) {
+        self.queued_tasks.push(LuaTask::SendMailboxStatus {});
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -1002,6 +1006,10 @@ impl UserData for LuaPlayer {
         });
         methods.add_method_mut("toggle_howto", |_, this, (value, id): (bool, u32)| {
             this.toggle_howto(value, id);
+            Ok(())
+        });
+        methods.add_method_mut("send_mailbox_status", |_, this, _: ()| {
+            this.send_mailbox_status();
             Ok(())
         });
     }

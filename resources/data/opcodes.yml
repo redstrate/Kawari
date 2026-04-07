@@ -670,7 +670,7 @@ ServerZoneIpcType:
   - name: MailboxPreview
     comment: The server sends the client previews of letters they have received.
     opcode: 240
-    size: 1164
+    size: 1168
   - name: ShowLinkshellError
     comment: The server sends the client an error message due to something going wrong with a linkshell.
     opcode: 190
@@ -687,6 +687,14 @@ ServerZoneIpcType:
     comment: The server informs the client about the result of their RemoveFriend request.
     opcode: 569
     size: 48
+  - name: Letter
+    comment: The server sends the full contents of a letter to the client.
+    opcode: 337
+    size: 616
+  - name: LetterUpdate
+    comment: The server informs the client about a letter being sent or deleted.
+    opcode: 696
+    size: 144
 ClientZoneIpcType:
   - name: InitRequest
     comment: Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)
@@ -1028,6 +1036,18 @@ ClientZoneIpcType:
     comment: The client removes a player from their friend list.
     opcode: 203
     size: 48
+  - name: ViewLetter
+    comment: The client opens a letter in their mailbox.
+    opcode: 372
+    size: 16
+  - name: DeleteLetter
+    comment: The client deletes a letter in their mailbox.
+    opcode: 870
+    size: 16
+  - name: RewardDeliveryRequest
+    comment: The client requests that any pending reward letters be sent to them.
+    opcode: 633
+    size: 8
 ServerLobbyIpcType:
   - name: NackReply
     comment: Sent by the server to indicate an lobby error occured.

@@ -373,3 +373,19 @@ pub struct LinkshellMembers {
     pub invite_time: i64,
     pub rank: i32,
 }
+
+#[derive(Insertable, Identifiable, Queryable, Selectable, AsChangeset, Debug, Default, Clone)]
+#[diesel(table_name = super::schema::mail)]
+#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+#[diesel(primary_key(id))]
+pub struct Mail {
+    // Fake ID because diesel doesn't support tables without primary IDs
+    pub id: i64,
+    pub kind: i32,
+    pub read: bool,
+    pub timestamp: i64,
+    pub recipient_content_id: i64,
+    pub sender_content_id: i64,
+    pub message: String,
+    pub attached_items: String,
+}

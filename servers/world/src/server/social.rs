@@ -1666,6 +1666,16 @@ pub fn handle_social_messages(
 
             true
         }
+        ToServer::SendLetterTo(recipient_actor_id) => {
+            let mut network = network.lock();
+            network.send_to_by_actor_id(
+                *recipient_actor_id,
+                FromServer::NewLetterArrived(),
+                DestinationNetwork::ZoneClients,
+            );
+
+            true
+        }
         _ => false,
     }
 }

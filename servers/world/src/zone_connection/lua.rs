@@ -799,6 +799,9 @@ impl ZoneConnection {
                         self.player_data.unlock.seen_active_help.set(*id);
                     }
                 }
+                LuaTask::SendMailboxStatus {} => {
+                    self.send_mailbox_status().await;
+                }
             }
         }
         player.queued_tasks.clear();

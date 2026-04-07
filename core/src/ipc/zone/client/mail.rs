@@ -14,3 +14,7 @@ pub struct MailItemInfo {
     /// Where it can be found in that container.
     pub src_container_index: u16,
 }
+
+impl MailItemInfo {
+    pub const COUNT: usize = 6;
+}

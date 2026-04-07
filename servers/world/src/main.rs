@@ -175,6 +175,8 @@ async fn initial_setup(
                     friend_index: 0,
                     cwls_results: Vec::new(),
                     cwls_index: 0,
+                    mail_results: Vec::new(),
+                    mail_index: 0,
                 };
 
                 // Handle setup before passing off control to the zone connection.
@@ -896,7 +898,7 @@ async fn process_packet(
                                 ))
                                 .await;
 
-                            connection.inform_about_mailbox().await;
+                            connection.send_mailbox_status().await;
                             connection.init_linkshells().await;
                             connection.send_crossworld_linkshells(false).await;
 
@@ -2858,11 +2860,40 @@ async fn process_packet(
                                     .await
                             }
                         },
-                        ClientZoneIpcData::RequestMailbox { .. } => {
-                            tracing::info!("Requesting mail is unimplemented");
+                        ClientZoneIpcData::RequestMailbox { unk1, .. } => {
+                            connection.send_letter_previews(*unk1).await;
                         }
-                        ClientZoneIpcData::SendLetter { .. } => {
-                            tracing::info!("Sending letters is unimplemented");
+                        ClientZoneIpcData::SendLetter {
+                            recipient_content_id,
+                            attached_items,
+                            message,
+                        } => {
+                            connection
+                                .send_letter(
+                                    *recipient_content_id,
+                                    *attached_items,
+                                    message.clone(),
+                                )
+                                .await;
+                        }
+                        ClientZoneIpcData::ViewLetter {
+                            sender_content_id,
+                            timestamp,
+                            ..
+                        } => {
+                            connection.view_letter(*sender_content_id, *timestamp).await;
+                        }
+                        ClientZoneIpcData::DeleteLetter {
+                            sender_content_id,
+                            timestamp,
+                            ..
+                        } => {
+                            connection
+                                .delete_letter(*sender_content_id, *timestamp)
+                                .await;
+                        }
+                        ClientZoneIpcData::RewardDeliveryRequest { .. } => {
+                            tracing::info!("Requesting reward delivery items is unimplemented");
                         }
                         ClientZoneIpcData::RemoveFriend {
                             content_id, name, ..
@@ -3298,9 +3329,13 @@ async fn process_server_msg(
                     .friend_removed(their_content_id, their_name)
                     .await;
             }
+            FromServer::NewLetterArrived() => {
+                // TODO: We probably also need to check if the client is in the mail window and send them an update? Need a capture to see if this happens.
+                connection.send_mailbox_status().await;
+            }
             _ => {
                 tracing::error!(
-                    "Zone connection {:#?} received a FromServer message we don't care about: {:#?}, ensure you're using the right client network or that you've implemented a handler for it if we actually care about it!",
+                    "ZoneConnection {:#?} received a FromServer message we don't care about: {:#?}, ensure you're using the right client network or that you've implemented a handler for it if we actually care about it!",
                     client_handle.id,
                     msg
                 );
