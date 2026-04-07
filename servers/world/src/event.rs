@@ -135,6 +135,7 @@ pub fn dispatch_event(
                 generic_lua_event("events/generic/AethernetShard.lua")
             }
         }
+        HandlerType::DefaultTalk => generic_lua_event("events/generic/DefaultTalk.lua"),
         HandlerType::Craft => Some(Box::new(CraftingEventHandler::new())),
         HandlerType::GuildLeveAssignment => generic_lua_event("events/generic/Levemete.lua"),
         HandlerType::CustomTalk => {
