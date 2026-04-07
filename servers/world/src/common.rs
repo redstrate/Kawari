@@ -219,6 +219,8 @@ pub enum FromServer {
     MustRefreshChatChannels(),
     /// Inform the client that a friend removal has taken place.
     FriendRemoved(u64, String),
+    /// Inform the client that a new letter has arrived in their mailbox.
+    NewLetterArrived(),
 }
 
 #[derive(Debug, Clone)]
@@ -431,6 +433,8 @@ pub enum ToServer {
     AcceptedLinkshellInvite(ObjectId, u64, u64, String, String),
     /// The client removes a player from their friend list.
     FriendRemoved(ObjectId, u64, String, ObjectId, u64, String),
+    /// The client sends a letter to a friend.
+    SendLetterTo(ObjectId),
 }
 
 #[derive(Clone, Debug)]

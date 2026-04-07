@@ -8,11 +8,13 @@ use kawari::{
         zone::{
             ActorControlCategory, CWLSCommonIdentifiers, CWLSLeaveReason, CWLSMemberListEntry,
             CWLSPermissionRank, CrossworldLinkshell, CrossworldLinkshellEx,
-            CrossworldLinkshellInvite, InviteReply, InviteType, InviteUpdateType, OnlineStatus,
-            OnlineStatusMask, PartyMemberEntry, PartyUpdateStatus, PlayerEntry,
-            SearchUIClassJobMask, SearchUIGrandCompanies, ServerZoneIpcData, ServerZoneIpcSegment,
-            SocialList, SocialListRequestType, SocialListUILanguages, StrategyBoard,
-            StrategyBoardUpdate, WaymarkPlacementMode, WaymarkPosition, WaymarkPreset,
+            CrossworldLinkshellInvite, InviteReply, InviteType, InviteUpdateType, LetterPreview,
+            MAX_ATTACHMENTS, MAX_FRIEND_LETTERS, MAX_MAIL, MAX_REWARD_LETTERS, MAX_SYSTEM_LETTERS,
+            MailItemInfo, OnlineStatus, OnlineStatusMask, PartyMemberEntry, PartyUpdateStatus,
+            PlayerEntry, SearchUIClassJobMask, SearchUIGrandCompanies, ServerZoneIpcData,
+            ServerZoneIpcSegment, SocialList, SocialListRequestType, SocialListUILanguages,
+            StrategyBoard, StrategyBoardUpdate, WaymarkPlacementMode, WaymarkPosition,
+            WaymarkPreset,
         },
     },
 };
@@ -1441,20 +1443,171 @@ impl ZoneConnection {
         self.send_ipc_self(ipc).await;
     }
 
-    pub async fn inform_about_mailbox(&mut self) {
-        // TODO: Actually gather mail info from the database
+    pub async fn send_mailbox_status(&mut self) {
+        let mut unread_counter = 0;
+        let mut friend_counter = 0;
+        let mut reward_counter = 0;
+        let mut system_counter = 0;
+        let mut attachments_counter = 0;
+        let total_mail;
+        let mut has_gm_mail = false;
+        {
+            use kawari::ipc::zone::LetterType;
+
+            let mut db = self.database.lock();
+            let letters = db.find_letter_previews(self.player_data.character.content_id as u64);
+            total_mail = letters.len();
+            for letter in letters {
+                match letter.mail_type {
+                    LetterType::Player => friend_counter += 1,
+                    LetterType::Reward => reward_counter += 1,
+                    LetterType::GM => {
+                        system_counter += 1;
+                        if !letter.read {
+                            has_gm_mail = true;
+                        }
+                    }
+                }
+                if !letter.read {
+                    unread_counter += 1;
+                }
+
+                attachments_counter += letter
+                    .attached_items
+                    .iter()
+                    .filter(|i| i.item_id != 0)
+                    .count() as u16;
+            }
+        }
+        use std::cmp;
+
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::MailboxStatus {
-            letters_sent_back: 0,
-            attachments_counter: 0,
-            mail_counter: 0,
-            friend_counter: 0,
-            reward_counter: 0,
-            system_counter: 0,
-            has_gm_mail: false,
-            has_support_message: false,
+            letters_sent_back: if total_mail > MAX_MAIL {
+                (total_mail - MAX_MAIL) as i32
+            } else {
+                0
+            },
+            attachments_counter: cmp::min(attachments_counter, MAX_ATTACHMENTS),
+            unread_counter,
+            friend_counter: cmp::min(friend_counter, MAX_FRIEND_LETTERS),
+            reward_counter: cmp::min(reward_counter, MAX_REWARD_LETTERS),
+            system_counter: cmp::min(system_counter, MAX_SYSTEM_LETTERS),
+            has_gm_mail,
+            has_support_message: false, // TODO: We're unlikely to implement this due to the support desk requiring external game modifications...
         });
 
         self.send_ipc_self(ipc).await;
+    }
+
+    pub async fn send_letter_previews(&mut self, unk1: u8) {
+        // Only refresh and reset state if our list is empty.
+        if self.mail_results.is_empty() {
+            let mut db = self.database.lock();
+            self.mail_results =
+                db.find_letter_previews(self.player_data.character.content_id as u64);
+            self.mail_index = 0;
+        }
+
+        let current_index = self.mail_index as u16;
+        let mut next_index = self.mail_index as u16;
+
+        let letters = fetch_entries(
+            &mut next_index,
+            &mut self.mail_results,
+            LetterPreview::COUNT,
+            &mut self.mail_index,
+        );
+
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::MailboxPreview {
+            letters,
+            next_index: next_index as u8,
+            current_index: current_index as u8,
+            unk: unk1,
+        });
+
+        self.send_ipc_self(ipc).await;
+    }
+
+    pub async fn send_letter(
+        &mut self,
+        recipient_content_id: u64,
+        _attached_items: [MailItemInfo; MailItemInfo::COUNT],
+        message: String,
+    ) {
+        let is_online;
+        let recipient_info;
+        {
+            let mut db = self.database.lock();
+            let osm = db.determine_online_status_mask(recipient_content_id as i64);
+            is_online = osm.has_status(OnlineStatus::Online);
+
+            // TODO: Process attached_items into this GenericStorage, and then send a full inventory update to the client if anything is actually sent, because sending letters actually does take items out of your inventory and sends the recipient an exact copy of it.
+            let items = crate::inventory::GenericStorage::<{ MailItemInfo::COUNT }>::default();
+            db.add_letter_to_mailbox(
+                self.player_data.character.content_id as u64,
+                recipient_content_id,
+                kawari::ipc::zone::LetterType::Player,
+                message,
+                items,
+            );
+
+            recipient_info = db.find_character_ids(Some(recipient_content_id), None);
+        }
+
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::LetterUpdate {
+            unk_result: 0xDD, // TODO: What does this 0xDD mean?
+            unk1: 0,
+            sender_content_id: 0,
+            timestamp: 0,
+            unk2: [0; 124],
+        });
+
+        self.send_ipc_self(ipc).await;
+
+        if is_online && let Some(recipient_info) = recipient_info {
+            self.handle
+                .send(ToServer::SendLetterTo(recipient_info.actor_id))
+                .await;
+        }
+    }
+
+    pub async fn view_letter(&mut self, sender_content_id: u64, timestamp: u32) {
+        let letter;
+        {
+            let mut db = self.database.lock();
+            letter = db.find_letter(
+                self.player_data.character.content_id as u64,
+                sender_content_id,
+                timestamp,
+            );
+        }
+
+        if let Some(letter) = letter {
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Letter(letter));
+            self.send_ipc_self(ipc).await;
+        }
+    }
+
+    pub async fn delete_letter(&mut self, sender_content_id: u64, timestamp: u32) {
+        {
+            let mut db = self.database.lock();
+            db.remove_letter(
+                self.player_data.character.content_id as u64,
+                sender_content_id,
+                timestamp,
+            );
+        }
+
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::LetterUpdate {
+            unk_result: 0x366, // TODO: What does this 0x366 mean? Without it, the client refuses to acknowledge the letter was deleted.
+            unk1: 0,
+            sender_content_id,
+            timestamp,
+            unk2: [0; 124],
+        });
+        self.send_ipc_self(ipc).await;
+
+        self.send_mailbox_status().await;
     }
 
     pub async fn remove_from_friend_list(&mut self, their_content_id: u64, their_name: String) {

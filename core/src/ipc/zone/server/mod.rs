@@ -147,7 +147,10 @@ mod cross_realm_listing;
 pub use cross_realm_listing::{CrossRealmListing, CrossRealmListings};
 
 mod mail;
-pub use mail::{LetterPreview, SentItemInfo};
+pub use mail::{
+    LETTER_MSG_MAX_LENGTH, Letter, LetterPreview, LetterType, MAX_ATTACHMENTS, MAX_FRIEND_LETTERS,
+    MAX_MAIL, MAX_REWARD_LETTERS, MAX_SYSTEM_LETTERS, PREVIEW_MSG_MAX_LENGTH, SentItemInfo,
+};
 
 use crate::common::{
     CHAR_NAME_MAX_LENGTH, ContainerType, ItemOperationKind, ObjectId, read_bool_from, read_string,
@@ -1218,12 +1221,12 @@ pub enum ServerZoneIpcData {
         target_name: String,
     },
     MailboxStatus {
-        /// The amount of letters still pending when the player's mailbox is full.
+        /// The amount of letters still pending when the player's mailbox is full. Also affects the Delivery Moogle NPC's dialogue (caps at i32::MAX, making this an i32).
         letters_sent_back: i32,
-        /// The amount of letters sent by friends that have attachments.
+        /// The amount of items sent by friends that have yet to be taken from letters.
         attachments_counter: u16,
-        /// The total amount of new mail, displayed as a small white envelope in the server info bar (caps at 99 in the bar). Also displayed by the delivery moogle when they inform the player how many letters they have (caps at 255 in the moogle's dialog).
-        mail_counter: u8,
+        /// The total amount of new mail, displayed as a small white envelope in the server info bar (caps at 99 in the bar). Also mentioned by the Delivery Moogle when they inform the player how many letters they have.
+        unread_counter: u8,
         /// The amount of mail from friends the player has in their mailbox.
         friend_counter: u8,
         /// The amount of reward mail the player has in their mailbox. Reward mail is mail sent by the system that has cash shop items, etc., attached.
@@ -1245,8 +1248,23 @@ pub enum ServerZoneIpcData {
         #[brw(pad_size_to = LetterPreview::SIZE * LetterPreview::COUNT)]
         #[br(count = LetterPreview::COUNT)]
         letters: Vec<LetterPreview>,
-        /// This has sequence information but it's not understood yet.
-        unk: [u8; 4],
+        /// The next batch of 5 letters' index, if applicable. If there are no more letters, it's set to zero.
+        next_index: u8,
+        /// The current batch of 5 letters' index.
+        current_index: u8,
+        #[brw(pad_after = 5)] // Probably just padding, it was observed as all 0s.
+        unk: u8,
+    },
+    Letter(Letter),
+    LetterUpdate {
+        /// Seems to be a result or mode value. When a letter is sent successfully, this will be 0xDD. When a letter is deleted successfully, it will contain 0x366. Completely unknown purpose, as it doesn't seem to be a timestamp, actor id, or LogMessageType.
+        unk_result: u32,
+        unk1: u32, // Probably just padding, seems to always be 0.
+        /// When deleting a letter, the sender's content id. When sending a letter, zeroes.
+        sender_content_id: u64,
+        /// When deleting a letter, the letter's timestamp. When sending a letter, zeroes.
+        timestamp: u32,
+        unk2: [u8; 124], // Unknown, seems to be nothing but padding.
     },
     ShowLinkshellError {
         /// The LogMessage sheet row index to display to the client.

@@ -207,6 +207,19 @@ diesel::table! {
     }
 }
 
+diesel::table! {
+    mail (id) {
+        id -> BigInt,
+        kind -> Integer,
+        read -> Bool,
+        timestamp -> BigInt,
+        recipient_content_id -> BigInt,
+        sender_content_id -> BigInt,
+        message -> Text,
+        attached_items -> Text,
+    }
+}
+
 diesel::allow_tables_to_appear_in_same_query!(
     character,
     classjob,

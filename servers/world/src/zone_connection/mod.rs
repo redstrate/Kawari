@@ -20,8 +20,8 @@ use kawari::{
     config::WorldConfig,
     ipc::zone::{
         ApartmentList, ApartmentListEntry, CWLSMemberListEntry, ClientTriggerCommand,
-        ClientZoneIpcSegment, Condition, Conditions, ContentRegistrationFlags, PlayerEntry,
-        ServerZoneIpcData, ServerZoneIpcSegment,
+        ClientZoneIpcSegment, Condition, Conditions, ContentRegistrationFlags, LetterPreview,
+        PlayerEntry, ServerZoneIpcData, ServerZoneIpcSegment,
     },
     opcodes::ServerZoneIpcType,
     packet::{
@@ -176,6 +176,10 @@ pub struct ZoneConnection {
     pub cwls_results: Vec<CWLSMemberListEntry>,
     /// CWLS member index. Increases by 8 every time the client requests more results.
     pub cwls_index: usize,
+    /// The player's Moogle Delivery Service previews. Used to populate the Moogle Delivery Service window when interacting with a Delivery Moogle or a Letter Box.
+    pub mail_results: Vec<LetterPreview>,
+    /// The current index into the mailbox previews. Increases by 5 every time the clint requests more previews.
+    pub mail_index: usize,
 }
 
 impl ZoneConnection {

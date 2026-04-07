@@ -530,21 +530,41 @@ pub enum ClientZoneIpcData {
         response: LinkshellInviteResponse,
     },
     RequestMailbox {
-        // This has sequence information, and seemingly for what tab the client wants previews for, but it's currently unknown. More research is needed.
-        unk: [u8; 8],
+        /// The current index in the sequence. This increments by 5 for every request, until the mailbox's entire contents has been sent (up to 100 letters for player mail, 20 for item rewards, and 10 for GM letters).
+        current_index: u8,
+        unk1: u8,      // Probably just padding
+        unk2: u16, // Observed as 0x98DA at the beginning of a RequestMailbox <-> MailboxPreview exchange. No idea what it means.
+        unk3: [u8; 4], // Probably just padding
     },
     SendLetter {
         /// The recipient's content id.
         recipient_content_id: u64,
         /// The items attached to the letter, if any. Gil must always be the last item!
         attached_items: [MailItemInfo; 6],
-        /// The message to send. In-game it's only 200 characters, but it's larger than 201 bytes due to non-English languages consuming more bytes per character.
+        /// The message to send. In-game it's only 200 characters, but it's larger than 201 bytes due to multi-byte characters.
         #[brw(pad_size_to = 601)]
         #[br(count = 600)]
         #[br(map = read_string)]
         #[bw(map = write_string)]
         #[brw(pad_after = 7)] // Seems to just be padding/garbage
         message: String,
+    },
+    ViewLetter {
+        /// The sender's content id.
+        sender_content_id: u64,
+        /// The time the letter was sent.
+        timestamp: u32,
+        unk: u32, // Always 1?
+    },
+    DeleteLetter {
+        /// The sender of the letter to delete.
+        sender_content_id: u64,
+        /// The timestamp of the letter to delete.
+        timestamp: u32,
+        unk: u32, // Probably just padding
+    },
+    RewardDeliveryRequest {
+        unk: [u8; 8],
     },
     RemoveFriend {
         content_id: u64,

@@ -218,4 +218,5 @@ pub enum LuaTask {
         value: bool,
         id: u32,
     },
+    SendMailboxStatus {},
 }
