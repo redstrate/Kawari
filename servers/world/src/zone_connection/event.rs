@@ -108,7 +108,6 @@ impl ZoneConnection {
 
         if let Some(handler) = handler {
             let condition = handler.condition();
-            dbg!(condition);
             let character_mode = handler.character_mode();
 
             self.conditions.toggle_condition(condition, true);
