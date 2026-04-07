@@ -39,6 +39,10 @@ pub struct Item {
     pub base_param_ids: [u8; 6],
     #[serde(skip)]
     pub base_param_values: [i16; 6],
+    #[serde(skip)]
+    pub defense: u16,
+    #[serde(skip)]
+    pub magic_defense: u16,
 }
 
 impl Item {
@@ -52,6 +56,8 @@ impl Item {
             price_low: item_info.price_low,
             base_param_ids: item_info.base_param_ids,
             base_param_values: item_info.base_param_values,
+            defense: item_info.defense,
+            magic_defense: item_info.magic_defense,
             ..Default::default()
         }
     }

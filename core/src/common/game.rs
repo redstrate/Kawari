@@ -71,9 +71,6 @@ pub const DEAD_DESPAWN_TIME: Duration = Duration::from_secs(2);
 /// Maximum number of seconds until rested EXP is full. This is 7 days.
 pub const MAXIMUM_RESTED_EXP: i32 = 604800;
 
-/// The base stat before racial and other modifiers.
-pub const BASE_STAT: i8 = 20;
-
 /// Number of seconds between an enemy's auto attacks. No idea how close this is to retail.
 pub const ENEMY_AUTO_ATTACK_RATE: i64 = 3;
 

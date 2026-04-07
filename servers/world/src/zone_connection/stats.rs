@@ -1,9 +1,13 @@
 //! Managing statistics, including your classjob and other related information.
 
-use crate::{GameData, ToServer, ZoneConnection, gamedata::Attributes, inventory::Storage};
+use crate::{
+    GameData, ToServer, ZoneConnection,
+    gamedata::{Attributes, Modifiers},
+    inventory::{EquippedStorage, Storage},
+};
 use icarus::ParamGrow::ParamGrowRow;
 use kawari::{
-    common::{BASE_STAT, MAXIMUM_RESTED_EXP, ObjectId},
+    common::{MAXIMUM_RESTED_EXP, ObjectId},
     ipc::zone::{
         ActorControlCategory, PlayerStats, ServerZoneIpcData, ServerZoneIpcSegment, UpdateClassInfo,
     },
@@ -88,18 +92,18 @@ pub struct BaseParameters {
     pub perception: u32,
 }
 
-impl BaseParameters {
-    pub fn from_attributes(attributes: &Attributes) -> Self {
-        Self {
-            strength: attributes.strength,
-            dexterity: attributes.dexterity,
-            vitality: attributes.vitality,
-            intelligence: attributes.intelligence,
-            mind: attributes.mind,
-            ..Default::default()
-        }
-    }
+// TODO: is there some way to calculate these values from Excel alone? This is going to be a pain to update in the future.
+// Taken from AkhMorning: https://www.akhmorning.com/allagan-studies/modifiers/levelmods/
+const LEVEL_MAIN: [u32; 101] = [
+    20, // for "level 0"
+    20, 21, 22, 24, 67, 27, 29, 31, 33, 35, 36, 38, 41, 44, 46, 49, 52, 54, 57, 60, 63, 67, 71, 74,
+    78, 81, 85, 89, 92, 97, 101, 106, 110, 115, 119, 124, 128, 134, 139, 144, 150, 155, 161, 166,
+    171, 177, 183, 189, 196, 202, 204, 205, 207, 209, 210, 212, 214, 215, 217, 218, 224, 228, 236,
+    244, 252, 260, 268, 276, 284, 292, 296, 300, 305, 310, 315, 320, 325, 330, 335, 340, 345, 350,
+    355, 360, 365, 370, 375, 380, 385, 390, 395, 400, 405, 410, 415, 420, 425, 430, 435, 440,
+];
 
+impl BaseParameters {
     pub fn get_mut(&mut self, index: u8) -> &mut u32 {
         match index {
             1 => &mut self.strength,
@@ -179,40 +183,97 @@ impl BaseParameters {
         }
     }
 
-    pub fn calculate_based_on_level(&mut self, param_grow: &ParamGrowRow) {
-        self.strength += param_grow.LevelModifier() as u32;
-        self.dexterity += param_grow.LevelModifier() as u32;
-        self.vitality += param_grow.LevelModifier() as u32;
-        self.intelligence += param_grow.LevelModifier() as u32;
-        self.mind += param_grow.LevelModifier() as u32;
-        self.piety += param_grow.LevelModifier() as u32;
+    /// Calculates a set of attributes based on the level and class modifiers.
+    pub fn calculate_based_on_level(
+        &mut self,
+        attributes: &Attributes,
+        level: u32,
+        param_grow: &ParamGrowRow,
+        modifiers: &Modifiers,
+    ) {
+        self.strength = modifiers
+            .apply_to(1, LEVEL_MAIN[level as usize])
+            .saturating_add_signed(attributes.strength as i32);
+        self.dexterity = modifiers
+            .apply_to(2, LEVEL_MAIN[level as usize])
+            .saturating_add_signed(attributes.dexterity as i32);
+        self.vitality = modifiers
+            .apply_to(3, LEVEL_MAIN[level as usize])
+            .saturating_add_signed(attributes.vitality as i32);
+        self.intelligence = modifiers
+            .apply_to(4, LEVEL_MAIN[level as usize])
+            .saturating_add_signed(attributes.intelligence as i32);
+        self.mind = modifiers
+            .apply_to(5, LEVEL_MAIN[level as usize])
+            .saturating_add_signed(attributes.mind as i32);
+        self.piety = modifiers
+            .apply_to(6, LEVEL_MAIN[level as usize])
+            .saturating_add_signed(attributes.piety as i32);
 
-        self.hp = (param_grow.HpModifier() as u32).wrapping_add(
-            ((self.vitality.wrapping_sub(BASE_STAT as u32)) as f32 * 20.25).round() as u32,
-        );
+        self.spell_speed = param_grow.BaseSpeed() as u32;
+        self.tenacity = param_grow.BaseSpeed() as u32;
+        self.attack_power = *self.get_mut(4); // TODO: don't hardcode PrimaryStat
+        self.skill_speed = self.tenacity;
+
+        // This is fixed and isn't modified by any items in retail, so it's safe to be set here.
         self.mp = param_grow.MpModifier() as u32;
     }
 
-    pub fn calculate_potencies(&mut self) {
-        // TODO: wrong but we need some scaling
+    // This should be called after item stat calculations.
+    pub fn calculate_potencies(&mut self, _level: u32, param_grow: &ParamGrowRow) {
         self.physical_damage = self.strength;
-        self.magic_damage = self.intelligence;
+        self.attack_magic_potency = self.intelligence;
         self.healing_magic_potency = self.mind;
+
+        let factor = 20.25; // FIXME: This is wrong, but whatever for now.
+        self.hp = (param_grow.HpModifier() as u32)
+            .wrapping_add((self.vitality as f32 * factor).round() as u32);
     }
 
+    /// Calculates amount of physical damage to apply based on potency.
     fn calc_physical_damage(&self, potency: u32) -> u16 {
         let normalized_potency = potency as f32 / 100.0;
         (normalized_potency * self.physical_damage as f32).floor() as u16
     }
 
+    /// Calculates amount of magic damage to apply based on potency.
     fn calc_magical_damage(&self, potency: u32) -> u16 {
         let normalized_potency = potency as f32 / 100.0;
-        (normalized_potency * self.magic_damage as f32).floor() as u16
+        (normalized_potency * self.attack_magic_potency as f32).floor() as u16
     }
 
+    /// Calculates amount of healing to apply based on potency.
     fn calc_heal_amount(&self, potency: u32) -> u16 {
         let normalized_potency = potency as f32 / 100.0;
         (normalized_potency * self.healing_magic_potency as f32).floor() as u16
+    }
+
+    /// Iterates over the given equipped items and calculates defense, along with any stat bonuses.
+    pub fn calculate_stat_across_all_items(
+        &mut self,
+        equipped: &EquippedStorage,
+        item_level_attributes: Option<&[u16]>,
+    ) {
+        for i in 0..equipped.max_slots() {
+            let slot = equipped.get_slot(i as u16);
+            if slot.quantity > 0 {
+                self.defense += slot.defense as u32;
+                self.magic_defense += slot.magic_defense as u32;
+
+                for (i, param_id) in slot.base_param_ids.iter().enumerate() {
+                    if *param_id != 0 {
+                        // Make sure to cap attributes when ilvl syncing:
+                        let value = if let Some(item_level_attributes) = item_level_attributes {
+                            let attribute_cap = item_level_attributes[i];
+                            (slot.base_param_values[i].min(attribute_cap as i16)) as u32 // TODO: is there ever negative values?
+                        } else {
+                            slot.base_param_values[i] as u32 // TODO: is there ever negative values?
+                        };
+                        *self.get_mut(*param_id) += value;
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -287,32 +348,12 @@ impl ZoneConnection {
         }
     }
 
-    fn calculate_stat_across_all_items(
-        &self,
-        base_params: &mut BaseParameters,
-        item_level_attributes: Option<&[u16]>,
-    ) {
-        for i in 0..self.player_data.inventory.equipped.max_slots() {
-            let slot = self.player_data.inventory.equipped.get_slot(i as u16);
-            if slot.quantity > 0 {
-                for (i, param_id) in slot.base_param_ids.iter().enumerate() {
-                    if *param_id != 0 {
-                        // Make sure to cap attributes when ilvl syncing:
-                        if let Some(item_level_attributes) = item_level_attributes {
-                            let attribute_cap = item_level_attributes[i];
-                            *base_params.get_mut(*param_id) +=
-                                (slot.base_param_values[i].min(attribute_cap as i16)) as u32; // TODO: is there ever negative values?
-                        } else {
-                            *base_params.get_mut(*param_id) += slot.base_param_values[i] as u32; // TODO: is there ever negative values?
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     pub fn base_parameters(&self) -> BaseParameters {
         let mut game_data = self.gamedata.lock();
+
+        let modifiers = game_data
+            .get_class_job_modifiers(self.player_data.classjob.current_class as u32)
+            .expect("Failed to read param grow");
 
         let attributes = game_data
             .get_racial_base_attributes(self.player_data.subrace)
@@ -343,31 +384,28 @@ impl ZoneConnection {
             .get_param_grow(level as u32)
             .expect("Failed to read param grow");
 
-        let mut base_parameters = BaseParameters::from_attributes(&attributes);
-        self.calculate_stat_across_all_items(
-            &mut base_parameters,
+        let mut base_parameters = BaseParameters::default();
+        base_parameters.calculate_based_on_level(
+            &attributes,
+            level as u32,
+            &param_grow,
+            &modifiers,
+        );
+        base_parameters.calculate_stat_across_all_items(
+            &self.player_data.inventory.equipped,
             if item_level_sync.is_some() {
                 Some(&item_level_attributes)
             } else {
                 None
             },
         );
-        base_parameters.calculate_based_on_level(&param_grow);
-        base_parameters.calculate_potencies();
+        base_parameters.calculate_potencies(level as u32, &param_grow);
 
         base_parameters
     }
 
     pub async fn send_stats(&mut self) {
         let base_parameters = self.base_parameters();
-        let attributes;
-        {
-            let mut game_data = self.gamedata.lock();
-
-            attributes = game_data
-                .get_racial_base_attributes(self.player_data.subrace)
-                .expect("Failed to read racial attributes");
-        }
 
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PlayerStats(PlayerStats {
             strength: base_parameters.strength,
@@ -400,12 +438,13 @@ impl ZoneConnection {
             control: base_parameters.control,
             gathering: base_parameters.gathering,
             perception: base_parameters.perception,
-            base_strength: attributes.strength,
-            base_dexterity: attributes.dexterity,
-            base_vitality: attributes.vitality,
-            base_intelligence: attributes.intelligence,
-            base_mind: attributes.mind,
-            base_piety: attributes.piety,
+            ..Default::default() // TODO: restore these
+                                 // base_strength: attributes.strength,
+                                 // base_dexterity: attributes.dexterity,
+                                 // base_vitality: attributes.vitality,
+                                 // base_intelligence: attributes.intelligence,
+                                 // base_mind: attributes.mind,
+                                 // base_piety: attributes.piety,
         }));
         self.send_ipc_self(ipc).await;
 

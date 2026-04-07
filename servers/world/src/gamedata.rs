@@ -48,7 +48,7 @@ use icarus::{Tribe::TribeSheet, Warp::WarpSheet};
 use physis::Language;
 use physis::resource::{Resource, ResourceResolver, SqPackResource, UnpackedResource};
 
-use kawari::common::{BASE_STAT, CustomizeData, timestamp_secs};
+use kawari::common::{CustomizeData, timestamp_secs};
 use kawari::common::{InstanceContentType, get_aether_current_comp_flg_set_to_screenimage};
 use kawari::config::get_config;
 
@@ -76,6 +76,7 @@ pub struct GameData {
     pub item_level_sheet: ItemLevelSheet,
     pub gimmick_rect_sheet: GimmickRectSheet,
     pub base_param_sheet: BaseParamSheet,
+    pub classjob_sheet: ClassJobSheet,
 }
 
 impl Default for GameData {
@@ -84,13 +85,14 @@ impl Default for GameData {
     }
 }
 
+#[derive(Debug)]
 pub struct Attributes {
-    pub strength: u32,
-    pub dexterity: u32,
-    pub vitality: u32,
-    pub intelligence: u32,
-    pub mind: u32,
-    pub piety: u32,
+    pub strength: i8,
+    pub dexterity: i8,
+    pub vitality: i8,
+    pub intelligence: i8,
+    pub mind: i8,
+    pub piety: i8,
 }
 
 /// Struct detailing various information about an item, pulled from the Items sheet.
@@ -122,6 +124,11 @@ pub struct ItemRow {
     /// Stat modifier stuff
     pub base_param_ids: [u8; 6],
     pub base_param_values: [i16; 6],
+
+    /// Physical defense.
+    pub defense: u16,
+    /// Magic defense;
+    pub magic_defense: u16,
 }
 
 #[derive(Debug)]
@@ -146,6 +153,34 @@ pub struct ItemEquipRestrictions {
 pub struct Recipe {
     pub id: u32,
     pub item_id: i32,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct Modifiers {
+    pub hp: u16,
+    pub mp: u16,
+    pub strength: u16,
+    pub vitality: u16,
+    pub dexterity: u16,
+    pub intelligence: u16,
+    pub mind: u16,
+    pub piety: u16,
+}
+
+impl Modifiers {
+    pub fn apply_to(&self, index: u8, value: u32) -> u32 {
+        let modifier = match index {
+            1 => self.strength,
+            2 => self.dexterity,
+            3 => self.vitality,
+            4 => self.intelligence,
+            5 => self.mind,
+            6 => self.piety,
+            _ => return value,
+        };
+
+        (value as f32 * (modifier as f32 / 100.0)).floor() as u32
+    }
 }
 
 impl GameData {
@@ -178,9 +213,10 @@ impl GameData {
 
         let mut classjob_exp_indexes = Vec::new();
 
-        let sheet = ClassJobSheet::read_from(&mut resource_resolver, config.world.language())
-            .expect("Failed to read ClassJobSheet, does the Excel files exist?");
-        for (_, row) in sheet.into_iter().flatten_subrows() {
+        let classjob_sheet =
+            ClassJobSheet::read_from(&mut resource_resolver, config.world.language())
+                .expect("Failed to read ClassJobSheet, does the Excel files exist?");
+        for (_, row) in classjob_sheet.into_iter().flatten_subrows() {
             classjob_exp_indexes.push(row.ExpArrayIndex());
         }
 
@@ -261,14 +297,13 @@ impl GameData {
             item_level_sheet,
             gimmick_rect_sheet,
             base_param_sheet,
+            classjob_sheet,
         }
     }
 
     /// Gets the starting city-state from a given class/job id.
     pub fn get_citystate(&mut self, classjob_id: u16) -> Option<u8> {
-        let config = get_config();
-        let sheet = ClassJobSheet::read_from(&mut self.resource, config.world.language()).ok()?;
-        let row = sheet.row(classjob_id as u32)?;
+        let row = self.classjob_sheet.row(classjob_id as u32)?;
 
         Some(row.StartingTown())
     }
@@ -277,12 +312,12 @@ impl GameData {
         let row = self.tribe_sheet.row(tribe_id as u32)?;
 
         Some(Attributes {
-            strength: (BASE_STAT + row.STR()) as u32,
-            dexterity: (BASE_STAT + row.DEX()) as u32,
-            vitality: (BASE_STAT + row.VIT()) as u32,
-            intelligence: (BASE_STAT + row.INT()) as u32,
-            mind: (BASE_STAT + row.MND()) as u32,
-            piety: (BASE_STAT + row.PIE()) as u32,
+            strength: row.STR(),
+            dexterity: row.DEX(),
+            vitality: row.VIT(),
+            intelligence: row.INT(),
+            mind: row.MND(),
+            piety: row.PIE(),
         })
     }
 
@@ -324,6 +359,8 @@ impl GameData {
                 classjob_category: matched_row.ClassJobCategory(),
                 base_param_ids: matched_row.BaseParam(),
                 base_param_values: matched_row.BaseParamValue(),
+                defense: matched_row.DefensePhys(),
+                magic_defense: matched_row.DefenseMag(),
                 equip_restrictions: self
                     .get_equipslot_restrictions(matched_row.EquipSlotCategory())
                     .unwrap(),
@@ -597,9 +634,7 @@ impl GameData {
 
     /// Gets the job index for a given class.
     pub fn get_job_index(&mut self, classjob_id: u16) -> Option<u8> {
-        let config = get_config();
-        let sheet = ClassJobSheet::read_from(&mut self.resource, config.world.language()).ok()?;
-        let row = sheet.row(classjob_id as u32)?;
+        let row = self.classjob_sheet.row(classjob_id as u32)?;
 
         Some(row.JobIndex())
     }
@@ -1091,9 +1126,7 @@ impl GameData {
 
     /// Gets the soul crystal item ID for the classjob, if applicable.
     pub fn get_soul_crystal_item_id(&mut self, classjob_id: u16) -> Option<u32> {
-        let config = get_config();
-        let sheet = ClassJobSheet::read_from(&mut self.resource, config.world.language()).ok()?;
-        let row = sheet.row(classjob_id as u32)?;
+        let row = self.classjob_sheet.row(classjob_id as u32)?;
 
         let item_id = row.ItemSoulCrystal();
         if item_id != 0 {
@@ -1104,9 +1137,7 @@ impl GameData {
 
     /// Gets the starting level for the classjob.
     pub fn get_starting_level(&mut self, classjob_id: u16) -> Option<u8> {
-        let config = get_config();
-        let sheet = ClassJobSheet::read_from(&mut self.resource, config.world.language()).ok()?;
-        let row = sheet.row(classjob_id as u32)?;
+        let row = self.classjob_sheet.row(classjob_id as u32)?;
 
         Some(row.StartingLevel())
     }
@@ -1121,11 +1152,25 @@ impl GameData {
         self.param_grow_sheet.row(level)
     }
 
+    /// Returns the ParamGrow for this level.
+    pub fn get_class_job_modifiers(&mut self, classjob_id: u32) -> Option<Modifiers> {
+        let row = self.classjob_sheet.row(classjob_id)?;
+
+        Some(Modifiers {
+            hp: row.ModifierHitPoints(),
+            mp: row.ModifierManaPoints(),
+            strength: row.ModifierStrength(),
+            vitality: row.ModifierVitality(),
+            dexterity: row.ModifierDexterity(),
+            intelligence: row.ModifierIntelligence(),
+            mind: row.ModifierMind(),
+            piety: row.ModifierPiety(),
+        })
+    }
+
     /// Gets the classjob ID associated with this soul crystal item ID.
     pub fn get_applicable_classjob(&mut self, soul_crystal_id: u32) -> Option<u32> {
-        let config = get_config();
-        let sheet = ClassJobSheet::read_from(&mut self.resource, config.world.language()).ok()?;
-        for (id, row) in sheet.into_iter().flatten_subrows() {
+        for (id, row) in self.classjob_sheet.into_iter().flatten_subrows() {
             if row.ItemSoulCrystal() == soul_crystal_id {
                 return Some(id);
             }
