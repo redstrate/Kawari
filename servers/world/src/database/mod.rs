@@ -1742,6 +1742,7 @@ impl WorldDatabase {
         let Ok(all_mail) = mail
             .select(models::Mail::as_select())
             .filter(recipient_content_id.eq(for_content_id as i64))
+            .order(timestamp.desc())
             .load(&mut self.connection)
         else {
             return vec![LetterPreview::default(); LetterPreview::COUNT];

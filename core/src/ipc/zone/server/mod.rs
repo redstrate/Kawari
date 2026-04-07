@@ -1225,7 +1225,7 @@ pub enum ServerZoneIpcData {
         letters_sent_back: i32,
         /// The amount of items sent by friends that have yet to be taken from letters.
         attachments_counter: u16,
-        /// The total amount of new mail, displayed as a small white envelope in the server info bar (caps at 99 in the bar). Also mentioned by the Delivery Moogle when they inform the player how many letters they have.
+        /// The total amount of new mail, displayed as a small white envelope in the server info bar (caps at 99 in the bar). Also mentioned by the Delivery Moogle when they inform the player about how many letters they have.
         unread_counter: u8,
         /// The amount of mail from friends the player has in their mailbox.
         friend_counter: u8,
