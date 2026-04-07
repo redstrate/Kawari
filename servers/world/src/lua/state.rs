@@ -13,7 +13,7 @@ use kawari::{
     common::{HandlerType, WORLD_NAME},
     config::{FilesystemConfig, get_config},
     ipc::zone::{
-        DamageElement, DamageKind, DamageType, EventType, GameMasterRank, SceneFlags,
+        Condition, DamageElement, DamageKind, DamageType, EventType, GameMasterRank, SceneFlags,
         ServerNoticeFlags,
     },
 };
@@ -45,6 +45,7 @@ impl KawariLua {
         Self::register_enum::<DamageKind>(&mut lua, "DAMAGE_KIND");
         Self::register_enum::<DamageType>(&mut lua, "DAMAGE_TYPE");
         Self::register_enum::<DamageElement>(&mut lua, "DAMAGE_ELEMENT");
+        Self::register_enum::<Condition>(&mut lua, "CONDITION");
 
         let config = get_config();
         lua.globals()

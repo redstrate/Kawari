@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use parking_lot::Mutex;
 
 use kawari::{
-    common::{HandlerId, HandlerType, ObjectTypeId},
+    common::{CharacterMode, HandlerId, HandlerType, ObjectTypeId},
     ipc::zone::{Condition, EventType},
 };
 
@@ -56,6 +56,16 @@ pub trait EventHandler: std::fmt::Debug + Send + Sync {
         results: &[i32],
         player: &mut LuaPlayer,
     ) {
+    }
+
+    /// Condition to set (or unset) for this handler.
+    fn condition(&self) -> Condition {
+        Condition::OccupiedInQuestEvent
+    }
+
+    /// CharacterMode to set (or unset) for this handler.
+    fn character_mode(&self) -> CharacterMode {
+        CharacterMode::Normal
     }
 }
 

@@ -8,10 +8,7 @@ use physis::TerritoryIntendedUse;
 use serde::{Deserialize, Serialize};
 use strum_macros::{Display, EnumIter, FromRepr};
 
-use crate::{
-    constants::BASE_INVENTORY_ACTION,
-    ipc::zone::{Condition, ContentRegistrationFlags},
-};
+use crate::{constants::BASE_INVENTORY_ACTION, ipc::zone::ContentRegistrationFlags};
 
 /// Maxmimum length of a character's name.
 pub const CHAR_NAME_MAX_LENGTH: usize = 32;
@@ -411,27 +408,6 @@ impl HandlerType {
             // TODO: needs proper handling
             //TerritoryIntendedUse::GoldSaucer => Some(Self::GoldSaucer),
             _ => None,
-        }
-    }
-
-    /// Condition to set (or unset) for this handler.
-    pub fn condition(&self) -> Condition {
-        match self {
-            Self::GatheringPoint => Condition::ExecutingGatheringAction,
-            Self::Fishing => Condition::Fishing,
-            Self::EventGimmickPathMove => Condition::OccupiedInEvent,
-            Self::GimmickRect => Condition::OccupiedInEvent,
-            Self::Craft => Condition::ExecutingCraftingAction,
-            _ => Condition::OccupiedInQuestEvent,
-        }
-    }
-
-    /// CharacterMode to set (or unset) for this handler.
-    pub fn character_mode(&self) -> CharacterMode {
-        match self {
-            Self::GatheringPoint | Self::Fishing => CharacterMode::Gathering,
-            Self::Craft => CharacterMode::Crafting,
-            _ => CharacterMode::Normal,
         }
     }
 }

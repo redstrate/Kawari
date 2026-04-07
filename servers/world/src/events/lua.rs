@@ -4,6 +4,7 @@ use async_trait::async_trait;
 use kawari::{
     common::{HandlerId, HandlerType, ObjectTypeId},
     config::FilesystemConfig,
+    ipc::zone::Condition,
 };
 use mlua::{Function, Lua};
 use parking_lot::Mutex;
@@ -204,5 +205,13 @@ impl EventHandler for LuaEventHandler {
                 err
             );
         }
+    }
+
+    fn condition(&self) -> Condition {
+        self.lua
+            .0
+            .globals()
+            .get("CONDITION")
+            .unwrap_or(Condition::OccupiedInQuestEvent)
     }
 }

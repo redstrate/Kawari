@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use kawari::{
-    common::ObjectTypeId,
-    ipc::zone::{ActorControlCategory, SceneFlags},
+    common::{CharacterMode, ObjectTypeId},
+    ipc::zone::{ActorControlCategory, Condition, SceneFlags},
 };
 
 use crate::{Event, EventHandler, ItemInfoQuery, ZoneConnection, inventory::Item, lua::LuaPlayer};
@@ -236,5 +236,13 @@ impl EventHandler for GatheringEventHandler {
                 33024,
             ],
         );
+    }
+
+    fn condition(&self) -> Condition {
+        Condition::ExecutingGatheringAction
+    }
+
+    fn character_mode(&self) -> CharacterMode {
+        CharacterMode::Gathering
     }
 }

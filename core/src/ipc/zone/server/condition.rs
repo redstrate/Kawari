@@ -1,12 +1,13 @@
 use binrw::binrw;
-use strum::IntoEnumIterator;
-use strum_macros::{EnumIter, EnumString};
+use strum::{FromRepr, IntoEnumIterator};
+use strum_macros::{Display, EnumIter, EnumString};
 
 use crate::common::value_to_flag_byte_index_value;
 
 // These names are derived from https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Client/Game/Conditions.cs
 #[repr(u32)]
-#[derive(Debug, PartialEq, EnumIter, Clone, Copy, EnumString)]
+#[derive(Debug, PartialEq, EnumIter, Clone, Copy, EnumString, FromRepr, Display)]
+#[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 pub enum Condition {
     Occupied = 0,
     InCombat = 1,
@@ -83,6 +84,23 @@ pub enum Condition {
     Unknown99 = 69,
     Unknown101 = 70,
     PilotingMech = 71,
+}
+
+#[cfg(feature = "server")]
+impl mlua::IntoLua for Condition {
+    fn into_lua(self, _: &mlua::Lua) -> mlua::Result<mlua::Value> {
+        Ok(mlua::Value::Integer(self as i64))
+    }
+}
+
+#[cfg(feature = "server")]
+impl mlua::FromLua for Condition {
+    fn from_lua(value: mlua::Value, _: &mlua::Lua) -> mlua::Result<Self> {
+        match value {
+            mlua::Value::Integer(integer) => Ok(Self::from_repr(integer as u32).unwrap()),
+            _ => Err(mlua::Error::UserDataTypeMismatch),
+        }
+    }
 }
 
 #[binrw]

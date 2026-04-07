@@ -1,5 +1,8 @@
 use async_trait::async_trait;
-use kawari::ipc::zone::{ActorControlCategory, LiveEventType, SceneFlags};
+use kawari::{
+    common::CharacterMode,
+    ipc::zone::{ActorControlCategory, Condition, LiveEventType, SceneFlags},
+};
 
 use crate::{Event, EventHandler, ItemInfoQuery, ZoneConnection, inventory::Item, lua::LuaPlayer};
 
@@ -115,5 +118,13 @@ impl EventHandler for CraftingEventHandler {
             // Manually quit
             player.finish_event();
         }
+    }
+
+    fn condition(&self) -> Condition {
+        Condition::ExecutingCraftingAction
+    }
+
+    fn character_mode(&self) -> CharacterMode {
+        CharacterMode::Crafting
     }
 }

@@ -103,18 +103,19 @@ impl ZoneConnection {
             self.send_ipc_self(ipc).await;
         }
 
-        let condition = HandlerId(event_id).handler_type().condition();
-        let character_mode = HandlerId(event_id).handler_type().character_mode();
-
-        self.conditions.toggle_condition(condition, true);
-        self.send_conditions().await;
-
-        self.set_character_mode(character_mode, 0).await;
-
         // call into the event dispatcher, get the event
         let handler = dispatch_event(HandlerId(event_id), self.gamedata.clone());
 
         if let Some(handler) = handler {
+            let condition = handler.condition();
+            dbg!(condition);
+            let character_mode = handler.character_mode();
+
+            self.conditions.toggle_condition(condition, true);
+            self.send_conditions().await;
+
+            self.set_character_mode(character_mode, 0).await;
+
             events.push((
                 handler,
                 Event {

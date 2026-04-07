@@ -1,5 +1,7 @@
 -- Generic handler for GimmickPathMove events
 
+CONDITION = CONDITION_OCCUPIED_IN_EVENT
+
 -- TODO: Do any of the sheets contain any of this info so we don't have to hardcode it?
 -- The first value is the ClientPath object on the client-side.
 -- The fourth value is the speed.
