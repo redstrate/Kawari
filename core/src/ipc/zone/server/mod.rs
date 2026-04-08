@@ -114,7 +114,7 @@ mod house_list;
 pub use house_list::{House, HouseList};
 
 mod housing_ward;
-pub use housing_ward::HousingWardMenuSummaryItem;
+pub use housing_ward::{HousingWardInfo, HousingWardSummaryItem};
 
 mod trust_information;
 pub use trust_information::{TrustContent, TrustInformation};
@@ -612,17 +612,7 @@ pub enum ServerZoneIpcData {
     },
     QuestTracker(QuestTracker),
     HouseList(HouseList),
-    HousingWardInfo {
-        #[brw(pad_before = 2)]
-        ward_index: u16,
-        /// The territory/zone id shifted left by 16 bits and then ORed with the ward number. (could also just be split into two u16s I suppose ^^, was following sapphire at this point)
-        land_set_id: u32,
-        #[br(count = 60)]
-        #[bw(pad_size_to = 60 * HousingWardMenuSummaryItem::SIZE)]
-        house_summaries: Vec<HousingWardMenuSummaryItem>,
-        #[brw(pad_after = 4)]
-        terminator: u32,
-    },
+    HousingWardInfo(HousingWardInfo),
     SupportDeskNotification {
         unk1: [u8; 16],
     },
