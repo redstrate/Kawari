@@ -278,8 +278,8 @@ pub struct CommonSpawn {
     pub mount_color: u8,
     /// Unknown purpose.
     pub status_loop_vfx_id: u8,
-    /// Unknown purpose.
-    pub foray_urank: u8,
+    /// Unknown purpose, seems to be used in at least Bozja to signify the rank of enemies.
+    pub foray_rank: u8,
     /// Unknown purpose.
     pub foray_element: u8,
     /// Unknown purpose.

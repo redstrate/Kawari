@@ -697,7 +697,7 @@ impl GameData {
     }
 
     /// Grabs needed BattleNPC information such as their name, model id and more.
-    pub fn find_bnpc(&mut self, id: u32) -> Option<(u16, u8, CustomizeData)> {
+    pub fn find_bnpc(&mut self, id: u32) -> Option<(u16, u8, CustomizeData, u8)> {
         let bnpc_row = self.bnpc_base_sheet.row(id)?;
         let model_row_id = bnpc_row.ModelChara();
         let customize_row_id = bnpc_row.BNpcCustomize();
@@ -732,7 +732,12 @@ impl GameData {
             face_paint_color: customize_row.FacePaintColor(),
         };
 
-        Some((model_row_id, bnpc_row.Battalion(), customize))
+        Some((
+            model_row_id,
+            bnpc_row.Battalion(),
+            customize,
+            bnpc_row.Rank(),
+        ))
     }
 
     /// Gets the content type for the given InstanceContent.

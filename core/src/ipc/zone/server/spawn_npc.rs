@@ -38,8 +38,10 @@ pub struct SpawnNpc {
     /// At least filled for Quests, where this is the originating Event NPC layout ID if it turned into a Battle NPC.
     pub enpc_id: u32,
 
+    /// Misc flags about for this NPC.
     pub character_data_flags: CharacterDataFlag,
-    /// Roughly correlates to mob difficulty, supposedly:
+
+    /// Roughly correlates to mob difficulty and rank, supposedly:
     /// 0 = grey alien icon
     /// 1 = spiky blue icon of some sort
     /// 2 = blue spiky but more triangular, like it has horns
@@ -49,15 +51,24 @@ pub struct SpawnNpc {
     /// 6 = triangle but only with two circles and what looks like closed eyes
     /// 7 = super big horns
     pub character_data_icon: u8,
+
+    /// This is probably *not* what this actually means, but I have seen this false for:
+    /// - BNpcs that don't follow regular HP scaling like striking dummies, elite marks
+    /// - Bosses and dungeon enemies
+    /// They then have a customized, unusual HP value regardless of their own level. Let me know if this assumption is incorrect.
     #[br(map = read_bool_from::<u8>)]
     #[bw(map = write_bool_as::<u8>)]
-    pub unk_a: bool,
+    pub normal_scaling: bool,
+
     /// How many other BNpcs can be linked in this family.
     pub max_links: u8,
+
     /// If not zero, specifies which family this BNpc is linked to.
     pub link_family: u8,
+
     /// How far the link family can be apart.
     pub link_range: u8,
+
     pub u5d: u8,
     #[br(map = read_bool_from::<u8>)]
     #[bw(map = write_bool_as::<u8>)]

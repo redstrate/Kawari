@@ -7,7 +7,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1038,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -30,7 +29,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1038,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -53,7 +51,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1038,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -76,7 +73,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1037,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -99,7 +95,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1037,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -122,7 +117,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1037,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -145,7 +139,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1037,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -168,7 +161,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1037,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -191,7 +183,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1037,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -214,7 +205,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1038,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -237,7 +227,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1038,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -260,7 +249,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1038,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -283,7 +271,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 942,
                         "gimmick_id": 0,
                         "hp": 80,
@@ -306,7 +293,6 @@
                 {
                     "data": {
                         "hostile": false,
-                        "character_data_icon": 0,
                         "base_id": 269,
                         "gimmick_id": 4208408,
                         "hp": 319,
@@ -329,7 +315,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1039,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -352,7 +337,6 @@
                 {
                     "data": {
                         "hostile": false,
-                        "character_data_icon": 0,
                         "base_id": 269,
                         "gimmick_id": 4208409,
                         "hp": 319,
@@ -375,7 +359,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1039,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -398,7 +381,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1039,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -421,7 +403,6 @@
                 {
                     "data": {
                         "hostile": false,
-                        "character_data_icon": 0,
                         "base_id": 269,
                         "gimmick_id": 4208412,
                         "hp": 319,
@@ -444,7 +425,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1038,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -467,7 +447,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 942,
                         "gimmick_id": 0,
                         "hp": 24,
@@ -490,7 +469,6 @@
                 {
                     "data": {
                         "hostile": false,
-                        "character_data_icon": 0,
                         "base_id": 269,
                         "gimmick_id": 4208410,
                         "hp": 319,
@@ -513,7 +491,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1039,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -536,7 +513,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1040,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -559,7 +535,6 @@
                 {
                     "data": {
                         "hostile": false,
-                        "character_data_icon": 0,
                         "base_id": 269,
                         "gimmick_id": 4208411,
                         "hp": 319,
@@ -582,7 +557,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 942,
                         "gimmick_id": 0,
                         "hp": 24,
@@ -605,7 +579,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 942,
                         "gimmick_id": 0,
                         "hp": 24,
@@ -628,7 +601,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 942,
                         "gimmick_id": 0,
                         "hp": 24,
@@ -651,7 +623,6 @@
                 {
                     "data": {
                         "hostile": false,
-                        "character_data_icon": 0,
                         "base_id": 269,
                         "gimmick_id": 4208413,
                         "hp": 319,
@@ -674,7 +645,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 942,
                         "gimmick_id": 0,
                         "hp": 24,
@@ -697,7 +667,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 942,
                         "gimmick_id": 0,
                         "hp": 24,
@@ -720,7 +689,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 942,
                         "gimmick_id": 0,
                         "hp": 24,
@@ -743,7 +711,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 982,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -766,7 +733,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1065,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -789,7 +755,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1065,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -812,7 +777,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 411,
                         "gimmick_id": 0,
                         "hp": 3828,
@@ -835,7 +799,6 @@
                 {
                     "data": {
                         "hostile": false,
-                        "character_data_icon": 0,
                         "base_id": 1436,
                         "gimmick_id": 0,
                         "hp": 1320,
@@ -858,7 +821,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1006,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -881,7 +843,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1006,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -904,7 +865,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 413,
                         "gimmick_id": 0,
                         "hp": 4785,
@@ -927,7 +887,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1319,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -950,7 +909,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1323,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -973,7 +931,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1321,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -996,7 +953,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1320,
                         "gimmick_id": 0,
                         "hp": 994,
@@ -1019,7 +975,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1034,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -1042,7 +997,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1066,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -1065,7 +1019,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1036,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -1088,7 +1041,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1322,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -1111,7 +1063,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 981,
                         "gimmick_id": 0,
                         "hp": 994,
@@ -1134,7 +1085,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1036,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -1157,7 +1107,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1318,
                         "gimmick_id": 0,
                         "hp": 994,
@@ -1180,7 +1129,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1036,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -1203,7 +1151,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1035,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -1226,7 +1173,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1069,
                         "gimmick_id": 0,
                         "hp": 994,
@@ -1249,7 +1195,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 983,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -1272,7 +1217,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1066,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -1295,7 +1239,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 984,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -1318,7 +1261,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 985,
                         "gimmick_id": 0,
                         "hp": 994,
@@ -1341,7 +1283,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 983,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -1364,7 +1305,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 983,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -1387,7 +1327,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 983,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -1410,7 +1349,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 987,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -1433,7 +1371,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 988,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -1456,7 +1393,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 982,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -1479,7 +1415,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1036,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -1502,7 +1437,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 412,
                         "gimmick_id": 0,
                         "hp": 1811,
@@ -1525,7 +1459,6 @@
                 {
                     "data": {
                         "hostile": false,
-                        "character_data_icon": 0,
                         "base_id": 1436,
                         "gimmick_id": 0,
                         "hp": 1320,
@@ -1548,7 +1481,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1006,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -1571,7 +1503,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1006,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -1594,7 +1525,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 416,
                         "gimmick_id": 0,
                         "hp": 4785,
@@ -1617,7 +1547,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 415,
                         "gimmick_id": 0,
                         "hp": 269,
@@ -1640,7 +1569,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 414,
                         "gimmick_id": 0,
                         "hp": 269,
@@ -1663,7 +1591,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 414,
                         "gimmick_id": 0,
                         "hp": 269,
@@ -1686,7 +1613,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 414,
                         "gimmick_id": 0,
                         "hp": 269,
@@ -1709,7 +1635,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1036,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -1732,7 +1657,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1065,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -1755,7 +1679,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 983,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -1778,7 +1701,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 982,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -1801,7 +1723,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1035,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -1824,7 +1745,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1036,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -1847,7 +1767,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 985,
                         "gimmick_id": 0,
                         "hp": 994,
@@ -1870,7 +1789,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 987,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -1893,7 +1811,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1065,
                         "gimmick_id": 0,
                         "hp": 319,
@@ -1916,7 +1833,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 981,
                         "gimmick_id": 0,
                         "hp": 994,
@@ -1939,7 +1855,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1033,
                         "gimmick_id": 0,
                         "hp": 994,
@@ -1962,7 +1877,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 985,
                         "gimmick_id": 0,
                         "hp": 994,
@@ -1985,7 +1899,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 981,
                         "gimmick_id": 0,
                         "hp": 994,
@@ -2008,7 +1921,6 @@
                 {
                     "data": {
                         "hostile": false,
-                        "character_data_icon": 0,
                         "base_id": 1436,
                         "gimmick_id": 0,
                         "hp": 1320,
@@ -2031,7 +1943,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1033,
                         "gimmick_id": 0,
                         "hp": 994,
@@ -2054,7 +1965,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 1034,
                         "gimmick_id": 0,
                         "hp": 905,
@@ -2077,7 +1987,6 @@
                 {
                     "data": {
                         "hostile": false,
-                        "character_data_icon": 0,
                         "base_id": 2281,
                         "gimmick_id": 0,
                         "hp": 4785,
@@ -2100,7 +2009,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 417,
                         "gimmick_id": 0,
                         "hp": 5869,
@@ -2123,7 +2031,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 418,
                         "gimmick_id": 0,
                         "hp": 315,
@@ -2146,7 +2053,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 418,
                         "gimmick_id": 0,
                         "hp": 315,
@@ -2169,7 +2075,6 @@
                 {
                     "data": {
                         "hostile": true,
-                        "character_data_icon": 0,
                         "base_id": 418,
                         "gimmick_id": 0,
                         "hp": 315,

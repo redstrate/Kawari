@@ -1807,7 +1807,7 @@ pub async fn server_main_loop(
                         let model_chara;
                         {
                             let mut game_data = game_data.lock();
-                            (model_chara, _, _) = game_data.find_bnpc(id).unwrap();
+                            (model_chara, _, _, _) = game_data.find_bnpc(id).unwrap();
                         }
 
                         npc_spawn = SpawnNpc {

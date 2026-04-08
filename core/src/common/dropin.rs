@@ -44,16 +44,14 @@ pub enum DropInObjectData {
         base_id: u32,
         /// Index into the BNpcName sheet.
         name_id: u32,
-        /// HP of this NPC.
-        hp: u32,
+        /// If set, overrides the normal HP scaling.
+        hp: Option<u32>,
         /// Level of this NPC.
         level: u32,
         /// If true, this NPC does not spawn automatically.
         nonpop: bool,
         /// Whether this NPC is hostile or not.
         hostile: bool,
-        /// The icon for this NPC.
-        character_data_icon: u8,
         /// Gimmick ID, see `gimmick_id` in `SpawnNpc`.
         gimmick_id: u32,
         /// How many other BNpcs can be linked in this family.

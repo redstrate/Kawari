@@ -573,14 +573,42 @@ impl Zone {
                     level,
                     nonpop,
                     hostile,
-                    character_data_icon,
                     gimmick_id,
                     max_links,
                     link_family,
                     link_range,
                 } = object.data
                 {
-                    let (model_chara, battalion, customize) = game_data.find_bnpc(base_id).unwrap();
+                    let (model_chara, battalion, customize, rank) =
+                        game_data.find_bnpc(base_id).unwrap();
+
+                    let usable_hp;
+                    if let Some(hp) = hp {
+                        usable_hp = hp;
+                    } else {
+                        let modifiers = game_data
+                            .get_class_job_modifiers(0)
+                            .expect("Failed to read param grow");
+
+                        let attributes = game_data
+                            .get_racial_base_attributes(0)
+                            .expect("Failed to read racial attributes");
+
+                        let param_grow = game_data
+                            .get_param_grow(level)
+                            .expect("Failed to read param grow");
+
+                        let mut base_parameters = BaseParameters::default();
+                        base_parameters.calculate_based_on_level(
+                            &attributes,
+                            level,
+                            &param_grow,
+                            &modifiers,
+                        );
+                        base_parameters.calculate_potencies(level, &param_grow);
+
+                        usable_hp = base_parameters.hp;
+                    }
 
                     let spawn = SpawnNpc {
                         gimmick_id,
@@ -589,15 +617,15 @@ impl Zone {
                         } else {
                             CharacterDataFlag::NONE
                         },
-                        character_data_icon,
+                        character_data_icon: rank,
                         max_links,
                         link_family,
                         link_range,
                         common: CommonSpawn {
                             base_id,
                             name_id,
-                            max_health_points: hp,
-                            health_points: hp,
+                            max_health_points: usable_hp,
+                            health_points: usable_hp,
                             model_chara,
                             object_kind: ObjectKind::BattleNpc(BattleNpcSubKind::Enemy),
                             battalion,
