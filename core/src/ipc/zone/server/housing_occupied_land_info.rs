@@ -5,6 +5,7 @@ use crate::{
     ipc::zone::{HousingAppealTag, PlotSize},
 };
 
+/// Represents an occupied housing plot
 #[binrw]
 #[derive(Debug, Default, Clone)]
 pub struct HousingOccupiedLandInfo {

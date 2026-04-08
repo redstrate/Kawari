@@ -698,15 +698,15 @@ ServerZoneIpcType:
   - name: HousingOccupiedLandInfo
     comment: Contains owner information of an occupied housing plot. This packet is sent when clicking a placard of an occupied plot, when clicking an occupied plot in the house list, or when viewing FC estate information.
     opcode: 709
-    size: 312
+    size: 280
   - name: HousingVacantLandInfo
     comment: Contains lottery information of a vacant housing plot. This packet is sent when clicking the placard of a vacant plot.
-    opcode: 822
+    opcode: 720
     size: 40
   - name: HousingEstateGreeting
     comment: Contains the greeting text for a specific housing plot. This packet is sent when hovering the greeting text bubble in the house list.
     opcode: 604
-    size: 240
+    size: 208
 ClientZoneIpcType:
   - name: InitRequest
     comment: Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)
