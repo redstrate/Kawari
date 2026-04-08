@@ -90,6 +90,7 @@ pub struct Zone {
     cached_objects: HashMap<u32, SpawnObject>,
     cached_npcs: HashMap<u32, SpawnNpc>,
     cached_treasure: HashMap<u8, SpawnTreasure>,
+    layer_set: i32,
 }
 
 impl Zone {
@@ -145,12 +146,16 @@ impl Zone {
             }
 
             for layer_set in &lvb.sections[0].layer_sets.layer_sets {
-                // FIXME: this is wrong. I think there might be multiple, separate navimeshes in really big zones but I'm not sure yet.
-                zone.navimesh_path = layer_set
-                    .nvm_path
-                    .value
-                    .replace("/server/data/", "")
-                    .to_string();
+                if layer_set.territory_type_id == id {
+                    zone.layer_set = layer_set.id;
+                    zone.navimesh_path = layer_set
+                        .nvm_path
+                        .value
+                        .replace("/server/data/", "")
+                        .to_string();
+
+                    break;
+                }
             }
 
             let mut search_dirs: Vec<String> = get_config()
@@ -187,6 +192,10 @@ impl Zone {
         for layer_group in &zone.layer_groups {
             for chunk in &layer_group.chunks {
                 for layer in &chunk.layers {
+                    if !layer.header.has_layer_set(zone.layer_set as u32) {
+                        continue;
+                    }
+
                     for object in &layer.objects {
                         if let LayerEntryData::EventNPC(npc) = &object.data {
                             zone.cached_npc_base_ids
@@ -239,6 +248,10 @@ impl Zone {
 
                     // Second pass for eobjs
                     for object in &layer.objects {
+                        if !layer.header.has_layer_set(zone.layer_set as u32) {
+                            continue;
+                        }
+
                         if let LayerEntryData::EventObject(eobj) = &object.data {
                             let eobj_data = game_data.get_eobj_data(eobj.parent_data.base_id);
                             let event_type = HandlerType::from_repr(eobj_data >> 16);
@@ -776,7 +789,9 @@ pub fn change_zone_warp_to_entrance(
         });
         exit_rotation = Some(euler_to_direction(destination_object.transform.rotation));
     } else {
-        tracing::warn!("Failed to find instanced content entrance for {destination_zone_id}?!");
+        tracing::warn!(
+            "Failed to find instanced content entrance for {destination_zone_id}?! This is a bug in Kawari, please report it!"
+        );
         exit_position = None;
         exit_rotation = None;
     }
