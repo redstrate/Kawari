@@ -978,10 +978,13 @@ impl std::fmt::Debug for DutyOption {
 /// Land ID used for housing.
 // TODO: bring in useful structure data from FFXIVClientStructs!
 #[binrw]
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct LandId {
+    /// Plot Index
     pub id: u16,
+    /// Ward Index
     pub ward: u16,
+    /// Housing District, Mist = 339, Lavender = 340, Goblet = 341, Shirogane = 641, Empyreum = 979
     pub territory_type_id: u16,
     pub world_id: u16,
 }
