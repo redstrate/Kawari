@@ -2895,6 +2895,15 @@ async fn process_packet(
                         ClientZoneIpcData::RewardDeliveryRequest { .. } => {
                             tracing::info!("Requesting reward delivery items is unimplemented");
                         }
+                        ClientZoneIpcData::TakeLetterAttachments {
+                            sender_content_id,
+                            timestamp,
+                            ..
+                        } => {
+                            connection
+                                .take_attachments_from_letter(*sender_content_id, *timestamp)
+                                .await;
+                        }
                         ClientZoneIpcData::RemoveFriend {
                             content_id, name, ..
                         } => {

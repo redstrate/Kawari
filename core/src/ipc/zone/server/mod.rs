@@ -148,8 +148,9 @@ pub use cross_realm_listing::{CrossRealmListing, CrossRealmListings};
 
 mod mail;
 pub use mail::{
-    LETTER_MSG_MAX_LENGTH, Letter, LetterPreview, LetterType, MAX_ATTACHMENTS, MAX_FRIEND_LETTERS,
-    MAX_MAIL, MAX_REWARD_LETTERS, MAX_SYSTEM_LETTERS, PREVIEW_MSG_MAX_LENGTH, SentItemInfo,
+    AttachedItemInfo, LETTER_MSG_MAX_LENGTH, Letter, LetterPreview, LetterType, MAX_ATTACHMENTS,
+    MAX_FRIEND_LETTERS, MAX_MAIL, MAX_MAIL_ATTACHMENTS_STORAGE, MAX_REWARD_LETTERS,
+    MAX_SYSTEM_LETTERS, PREVIEW_MSG_MAX_LENGTH,
 };
 
 use crate::common::{
@@ -1257,14 +1258,15 @@ pub enum ServerZoneIpcData {
     },
     Letter(Letter),
     LetterUpdate {
-        /// Seems to be a result or mode value. When a letter is sent successfully, this will be 0xDD. When a letter is deleted successfully, it will contain 0x366. Completely unknown purpose, as it doesn't seem to be a timestamp, actor id, or LogMessageType.
+        /// Seems to be a result or mode value. When a letter is sent successfully, this will be 0xDD. When a letter is deleted successfully, it will contain 0x366. When attachments are taken, it will contain 0x24E. Completely unknown purpose, as it doesn't seem to be a timestamp, actor id, or LogMessageType.
         unk_result: u32,
         unk1: u32, // Probably just padding, seems to always be 0.
         /// When deleting a letter, the sender's content id. When sending a letter, zeroes.
         sender_content_id: u64,
         /// When deleting a letter, the letter's timestamp. When sending a letter, zeroes.
         timestamp: u32,
-        unk2: [u8; 124], // Unknown, seems to be nothing but padding.
+        updated_items: [AttachedItemInfo; MAX_MAIL_ATTACHMENTS_STORAGE],
+        unk2: [u8; 4], // Unknown, seems to be nothing but padding.
     },
     ShowLinkshellError {
         /// The LogMessage sheet row index to display to the client.

@@ -3,7 +3,7 @@ use binrw::binrw;
 use crate::ipc::zone::client::ContainerType;
 
 #[binrw]
-#[derive(Copy, Clone, Default, Debug)]
+#[derive(Clone, Copy, Default, Debug)]
 pub struct MailItemInfo {
     /// Index into the Items Excel sheet.
     pub item_id: u32,
@@ -15,6 +15,9 @@ pub struct MailItemInfo {
     pub src_container_index: u16,
 }
 
-impl MailItemInfo {
-    pub const COUNT: usize = 6;
+#[binrw]
+#[derive(Clone, Copy, Default, Debug)]
+pub struct TakeAttachmentsInfo {
+    pub item_id: u32,
+    pub item_quantity: u32,
 }

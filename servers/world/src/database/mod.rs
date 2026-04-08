@@ -21,16 +21,20 @@ use kawari::common::{BasicCharacterData, ClientLanguage, WORLD_NAME, determine_i
 use crate::database::models::Party;
 use crate::server::PartyMember;
 use crate::{CharaMake, ClassLevels, ClientSelectData, GameData, PartyMembers, RemakeMode};
-use crate::{PlayerData, inventory::Inventory};
+use crate::{
+    PlayerData,
+    inventory::{GenericStorage, Inventory},
+};
 use kawari::{
     common::ObjectId,
     constants::AVAILABLE_CLASSJOBS,
     ipc::chat::{ChatChannel, ChatChannelType},
     ipc::lobby::{CharacterDetails, CharacterFlag},
     ipc::zone::{
-        CWLSCommon, CWLSCommonIdentifiers, CWLSMemberListEntry, CWLSNameAvailability,
-        CWLSPermissionRank, CrossworldLinkshellEx, LETTER_MSG_MAX_LENGTH, LetterPreview,
-        LetterType, OnlineStatusMask, PREVIEW_MSG_MAX_LENGTH, PlayerEntry,
+        AttachedItemInfo, CWLSCommon, CWLSCommonIdentifiers, CWLSMemberListEntry,
+        CWLSNameAvailability, CWLSPermissionRank, CrossworldLinkshellEx, LETTER_MSG_MAX_LENGTH,
+        Letter, LetterPreview, LetterType, MAX_MAIL_ATTACHMENTS_STORAGE, OnlineStatusMask,
+        PREVIEW_MSG_MAX_LENGTH, PlayerEntry,
     },
 };
 
@@ -1700,7 +1704,7 @@ impl WorldDatabase {
         their_content_id: u64,
         letter_kind: kawari::ipc::zone::LetterType,
         letter_message: String,
-        attachments: crate::inventory::GenericStorage<6>,
+        attachments: crate::inventory::GenericStorage<MAX_MAIL_ATTACHMENTS_STORAGE>,
     ) {
         use schema::mail::dsl::*;
 
@@ -1776,7 +1780,7 @@ impl WorldDatabase {
                 serde_json::from_str(&letter.attached_items).unwrap_or_default();
             // Since letter previews don't use full Items, we need to "downscale" to what the client is expecting.
             for (index, item) in attachments.slots.iter().enumerate() {
-                preview.attached_items[index] = kawari::ipc::zone::SentItemInfo {
+                preview.attached_items[index] = AttachedItemInfo {
                     item_id: item.item_id,
                     item_quantity: item.quantity,
                     ..Default::default()
@@ -1794,7 +1798,6 @@ impl WorldDatabase {
         their_content_id: u64,
         the_timestamp: u32,
     ) -> Option<kawari::ipc::zone::Letter> {
-        use kawari::ipc::zone::Letter;
         use schema::mail::dsl::*;
 
         let Ok(the_mail) = mail
@@ -1828,6 +1831,48 @@ impl WorldDatabase {
         };
 
         Some(the_letter)
+    }
+
+    pub fn find_letter_attachments(
+        &mut self,
+        for_content_id: u64,
+        their_content_id: u64,
+        the_timestamp: u32,
+    ) -> Option<GenericStorage<MAX_MAIL_ATTACHMENTS_STORAGE>> {
+        use schema::mail::dsl::*;
+
+        if let Ok(the_items) = mail
+            .select(attached_items)
+            .filter(recipient_content_id.eq(for_content_id as i64))
+            .filter(sender_content_id.eq(their_content_id as i64))
+            .filter(timestamp.eq(the_timestamp as i64))
+            .first::<String>(&mut self.connection)
+            && let Ok(the_attachments) = serde_json::from_str(&the_items)
+        {
+            return Some(the_attachments);
+        }
+
+        None
+    }
+
+    pub fn set_letter_attachments(
+        &mut self,
+        for_content_id: u64,
+        their_content_id: u64,
+        the_timestamp: u32,
+        the_attachments: GenericStorage<MAX_MAIL_ATTACHMENTS_STORAGE>,
+    ) {
+        use schema::mail::dsl::*;
+        let the_items = serde_json::to_string(&the_attachments).unwrap();
+
+        diesel::update(
+            mail.filter(recipient_content_id.eq(for_content_id as i64))
+                .filter(sender_content_id.eq(their_content_id as i64))
+                .filter(timestamp.eq(the_timestamp as i64)),
+        )
+        .set(attached_items.eq(the_items))
+        .execute(&mut self.connection)
+        .unwrap();
     }
 
     /// Deletes a letter sent by `their_content_id` at a specific `timestamp`.

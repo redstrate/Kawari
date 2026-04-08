@@ -26,6 +26,9 @@ pub const MAX_REWARD_LETTERS: u8 = 20;
 /// The player's mailbox can hold 10 system letters (mail from GMs).
 pub const MAX_SYSTEM_LETTERS: u8 = 10;
 
+/// The maximum amount of attachments a letter may contain.
+pub const MAX_MAIL_ATTACHMENTS_STORAGE: usize = 6;
+
 #[binrw]
 #[derive(Clone, Debug, Default)]
 pub struct LetterPreview {
@@ -34,7 +37,7 @@ pub struct LetterPreview {
     /// The time at which this letter was sent.
     pub timestamp: u32,
     /// Items attached to this letter, if any.
-    pub attached_items: [SentItemInfo; 6],
+    pub attached_items: [AttachedItemInfo; MAX_MAIL_ATTACHMENTS_STORAGE],
     /// If the letter has been read or not.
     #[br(map = read_bool_from::<u8>)]
     #[bw(map = write_bool_as::<u8>)]
@@ -63,8 +66,8 @@ impl LetterPreview {
 }
 
 #[binrw]
-#[derive(Copy, Clone, Debug, Default)]
-pub struct SentItemInfo {
+#[derive(Clone, Copy, Debug, Default)]
+pub struct AttachedItemInfo {
     /// Index into the Items Excel sheet.
     pub item_id: u32,
     /// The quantity of this item.
@@ -74,7 +77,7 @@ pub struct SentItemInfo {
 
 #[binrw]
 #[brw(repr = u8)]
-#[derive(Copy, Clone, Debug, Default, FromRepr)]
+#[derive(Clone, Copy, Debug, Default, FromRepr)]
 pub enum LetterType {
     /// This letter was sent by a player.
     #[default]

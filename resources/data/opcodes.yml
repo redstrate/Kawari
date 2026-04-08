@@ -1048,6 +1048,10 @@ ClientZoneIpcType:
     comment: The client requests that any pending reward letters be sent to them.
     opcode: 633
     size: 8
+  - name: TakeLetterAttachments
+    comment: The client requests that any attachments in this letter be given to them.
+    opcode: 590
+    size: 64
 ServerLobbyIpcType:
   - name: NackReply
     comment: Sent by the server to indicate an lobby error occured.
