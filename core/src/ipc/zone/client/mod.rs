@@ -20,15 +20,16 @@ mod event_return_handler;
 pub use crate::ipc::zone::client::event_return_handler::EventReturnHandler;
 
 mod mail;
-pub use mail::MailItemInfo;
+pub use mail::{MailItemInfo, TakeAttachmentsInfo};
 
 mod queue_duties;
 pub use queue_duties::{ContentRegistrationFlags, QueueDuties};
 
 use crate::ipc::zone::{
-    CWLSPermissionRank, InviteReply, InviteType, LinkshellInviteResponse, OnlineStatusMask,
-    SearchInfo, SearchUIClassJobMask, SearchUIGrandCompanies, SocialListUILanguages, StrategyBoard,
-    StrategyBoardUpdate, WaymarkPreset,
+    CWLSPermissionRank, InviteReply, InviteType, LETTER_MSG_MAX_LENGTH, LinkshellInviteResponse,
+    MAX_MAIL_ATTACHMENTS_STORAGE, OnlineStatusMask, SearchInfo, SearchUIClassJobMask,
+    SearchUIGrandCompanies, SocialListUILanguages, StrategyBoard, StrategyBoardUpdate,
+    WaymarkPreset,
 };
 
 use crate::ipc::zone::black_list::RequestBlacklist;
@@ -540,10 +541,10 @@ pub enum ClientZoneIpcData {
         /// The recipient's content id.
         recipient_content_id: u64,
         /// The items attached to the letter, if any. Gil must always be the last item!
-        attached_items: [MailItemInfo; 6],
+        attached_items: [MailItemInfo; MAX_MAIL_ATTACHMENTS_STORAGE],
         /// The message to send. In-game it's only 200 characters, but it's larger than 201 bytes due to multi-byte characters.
-        #[brw(pad_size_to = 601)]
-        #[br(count = 600)]
+        #[brw(pad_size_to = LETTER_MSG_MAX_LENGTH)]
+        #[br(count = LETTER_MSG_MAX_LENGTH)]
         #[br(map = read_string)]
         #[bw(map = write_string)]
         #[brw(pad_after = 7)] // Seems to just be padding/garbage
@@ -565,6 +566,12 @@ pub enum ClientZoneIpcData {
     },
     RewardDeliveryRequest {
         unk: [u8; 8],
+    },
+    TakeLetterAttachments {
+        sender_content_id: u64,
+        timestamp: u32,
+        items_taken: [TakeAttachmentsInfo; MAX_MAIL_ATTACHMENTS_STORAGE],
+        unk: [u8; 4],
     },
     RemoveFriend {
         content_id: u64,

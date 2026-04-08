@@ -670,6 +670,7 @@ pub enum LogMessageType {
     ItemBoughtBack = 0x699,
     UnableToPerformPlayerOffline = 0x1617, // Unable to perform that action. That player is offline.
     PlayerAlreadyInYourCWLS = 0x242e,      // Player is already a cross-world linkshell member.
+    UnableToAcceptAttachmentInventoryFull = 0x17B, // Unable to accept attachment. Inventory is full.
 }
 
 /// Names for rows in the Excel sheet of the same name.
