@@ -116,6 +116,9 @@ pub use house_list::{House, HouseList};
 mod housing_ward;
 pub use housing_ward::{HousingWardInfo, HousingWardSummaryItem};
 
+mod housing_occupied_land_info;
+pub use housing_occupied_land_info::HousingOccupiedLandInfo;
+
 mod trust_information;
 pub use trust_information::{TrustContent, TrustInformation};
 
@@ -613,6 +616,7 @@ pub enum ServerZoneIpcData {
     QuestTracker(QuestTracker),
     HouseList(HouseList),
     HousingWardInfo(HousingWardInfo),
+    HousingOccupiedLandInfo(HousingOccupiedLandInfo),
     SupportDeskNotification {
         unk1: [u8; 16],
     },
