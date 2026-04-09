@@ -2,13 +2,13 @@ use crate::models::*;
 use diesel::prelude::*;
 use diesel::{Connection, SqliteConnection};
 use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
-use kawari::constants::MAX_EXPANSION;
 use serde::Serialize;
 
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
 
 pub struct LoginDatabase {
     connection: SqliteConnection,
+    num_expansions: usize,
 }
 
 #[derive(Debug, PartialEq)]
@@ -16,12 +16,6 @@ pub enum LoginError {
     WrongUsername,
     WrongPassword,
     InternalError,
-}
-
-impl Default for LoginDatabase {
-    fn default() -> Self {
-        Self::new()
-    }
 }
 
 #[derive(Serialize)]
@@ -32,12 +26,15 @@ pub struct SessionInformation {
 
 impl LoginDatabase {
     /// Creates a new connection to the database, and creates tables as needed.
-    pub fn new() -> Self {
+    pub fn new(num_expansions: usize) -> Self {
         let mut connection =
             SqliteConnection::establish("login.db").expect("Failed to open database!");
         Self::create_tables(&mut connection);
 
-        Self { connection }
+        Self {
+            connection,
+            num_expansions,
+        }
     }
 
     /// Creates a new connection to a database, but in memory. Only meant for our own testing.
@@ -47,7 +44,10 @@ impl LoginDatabase {
             SqliteConnection::establish(":memory:").expect("Failed to open database!");
         Self::create_tables(&mut connection);
 
-        Self { connection }
+        Self {
+            connection,
+            num_expansions: kawari::constants::MAX_EXPANSION,
+        }
     }
 
     /// Setups up the initial database schema.
@@ -97,7 +97,7 @@ impl LoginDatabase {
                 .values(&ServiceAccount {
                     id: Self::generate_account_id() as i64,
                     user_id: user_id as i64,
-                    max_ex: MAX_EXPANSION as i32,
+                    max_ex: self.num_expansions as i32,
                 })
                 .execute(&mut self.connection)
                 .unwrap();

@@ -843,6 +843,7 @@ dependencies = [
  "libsqlite3-sys",
  "minijinja",
  "parking_lot",
+ "physis",
  "serde",
  "serde_json",
  "tokio",

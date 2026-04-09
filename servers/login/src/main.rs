@@ -16,6 +16,7 @@ use kawari::web_static_dir;
 use kawari_login::{LoginDatabase, LoginError};
 use minijinja::{Environment, context, path_loader};
 use parking_lot::Mutex;
+use physis::resource::SqPackResource;
 use serde::{Deserialize, Serialize};
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::services::ServeDir;
@@ -521,8 +522,13 @@ async fn revoke_sid(
 async fn main() {
     tracing_subscriber::fmt::init();
 
+    let config = get_config();
+
+    let sqpack_resource = SqPackResource::from_existing(&config.filesystem.game_path);
+    let num_expansions = sqpack_resource.repositories.len() - 1; // Base game is always one
+
     let state = LoginServerState {
-        database: Arc::new(Mutex::new(LoginDatabase::new())),
+        database: Arc::new(Mutex::new(LoginDatabase::new(num_expansions))),
     };
 
     let cors = CorsLayer::new().allow_origin(Any);
@@ -557,8 +563,6 @@ async fn main() {
         .with_state(state)
         .nest_service("/static", ServeDir::new(web_static_dir!("")))
         .layer(cors);
-
-    let config = get_config();
 
     let addr = config.login.get_socketaddr();
     tracing::info!("Server started on {addr}");

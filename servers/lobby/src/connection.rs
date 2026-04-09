@@ -89,8 +89,8 @@ fn do_game_version_check(
 
 /// Validates most of the information sent by the client before doing the actual versioning and sizing checks.
 fn validate_client_version_string(client_version_str: &str) -> Option<VersionCheckData> {
-    // We assume the client has at least ex1 & ex2.
-    const VER_PARTS_MIN_LEN: usize = 3;
+    // We assume the client has at least the base game.
+    const VER_PARTS_MIN_LEN: usize = 1;
 
     // The exe section is divided into name, file size, and sha1 hash.
     const EXE_VERIFICATION_INFO_PARTS: usize = 3;
@@ -103,9 +103,7 @@ fn validate_client_version_string(client_version_str: &str) -> Option<VersionChe
     // If the client is claiming they don't even have ex1 & ex2, it's probably malformed, or an outdated client anyway?
     if parts.len() < VER_PARTS_MIN_LEN {
         tracing::error!(
-            "Client's version string is malformed, it's reporting {} expansion(s), expected at least {}! Rejecting session!",
-            parts.len() - 1,
-            VER_PARTS_MIN_LEN - 1
+            "Client's version string is malformed, it's not even reporting the base game version! Rejecting session!"
         );
         return None;
     }
@@ -151,21 +149,23 @@ fn validate_client_version_string(client_version_str: &str) -> Option<VersionChe
         // We don't check this for validity (length or otherwise) here since it'll be verified later when the actual SHA-1 hashing is done.
         version_data.game_exe_sha1_hash = exe_verification_info[2].to_string();
 
-        // The remaining parts between '+'s are expansion version strings
-        for expansion_ver_str in parts[1..].iter() {
-            if expansion_ver_str.len() != EXPANSION_VERSION_STR_LEN {
-                tracing::error!(
-                    "Client's version string is malformed, an expansion's version string is the incorrect length! Got {}, expected {}, string was {}",
-                    expansion_ver_str.len(),
-                    EXPANSION_VERSION_STR_LEN,
-                    expansion_ver_str
-                );
-                return None;
-            }
+        if parts.len() > 2 {
+            // The remaining parts between '+'s are expansion version strings
+            for expansion_ver_str in parts[1..].iter() {
+                if expansion_ver_str.len() != EXPANSION_VERSION_STR_LEN {
+                    tracing::error!(
+                        "Client's version string is malformed, an expansion's version string is the incorrect length! Got {}, expected {}, string was {}",
+                        expansion_ver_str.len(),
+                        EXPANSION_VERSION_STR_LEN,
+                        expansion_ver_str
+                    );
+                    return None;
+                }
 
-            version_data
-                .expansion_pack_versions
-                .push(expansion_ver_str.to_string());
+                version_data
+                    .expansion_pack_versions
+                    .push(expansion_ver_str.to_string());
+            }
         }
     }
 
@@ -765,14 +765,14 @@ mod tests {
         let full_dt_str: &str = &format!("{hw_stb_shb_ew_str}+{REST_EX_STR}");
 
         // Test valid cases first, starting with HW + StB only, and adding one expansion per test.
+        assert!(validate_client_version_string(BASE_STR).is_some());
+        assert!(validate_client_version_string(hw_str).is_some());
         assert!(validate_client_version_string(hw_stb_str).is_some());
         assert!(validate_client_version_string(hw_stb_shb_str).is_some());
         assert!(validate_client_version_string(hw_stb_shb_ew_str).is_some());
         assert!(validate_client_version_string(full_dt_str).is_some());
 
         // Next, ensure cases that don't provide enough expansions, no expansions at all, or are otherwise obviously malformed in some way, fail.
-        assert!(validate_client_version_string(BASE_STR).is_none());
-        assert!(validate_client_version_string(hw_str).is_none());
         assert!(validate_client_version_string(INVALID_EXE_SIZE_STR).is_none());
         assert!(validate_client_version_string(INVALID_EXE_NAME_STR).is_none());
     }
