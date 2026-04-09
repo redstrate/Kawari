@@ -122,6 +122,9 @@ pub use housing_occupied_land_info::HousingOccupiedLandInfo;
 mod housing_vacant_land_info;
 pub use housing_vacant_land_info::HousingVacantLandInfo;
 
+mod housing_estate_greeting;
+pub use housing_estate_greeting::HousingEstateGreeting;
+
 mod trust_information;
 pub use trust_information::{TrustContent, TrustInformation};
 
@@ -621,6 +624,7 @@ pub enum ServerZoneIpcData {
     HousingWardInfo(HousingWardInfo),
     HousingOccupiedLandInfo(HousingOccupiedLandInfo),
     HousingVacantLandInfo(HousingVacantLandInfo),
+    HousingEstateGreeting(HousingEstateGreeting),
     SupportDeskNotification {
         unk1: [u8; 16],
     },
