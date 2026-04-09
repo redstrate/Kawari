@@ -1,3 +1,4 @@
+use bstr::BString;
 use std::str::FromStr;
 
 use crate::{
@@ -8,8 +9,8 @@ use crate::{
 use kawari::{
     common::{ERR_INVENTORY_ADD_FAILED, FateState},
     ipc::zone::{
-        ActorControlCategory, Condition, Conditions, GameMasterRank, SendChatMessage,
-        ServerZoneIpcData, ServerZoneIpcSegment,
+        ActorControlCategory, Condition, Conditions, GameMasterRank, ServerZoneIpcData,
+        ServerZoneIpcSegment,
     },
 };
 
@@ -21,7 +22,7 @@ impl ChatHandler {
     /// Returns true if the command is handled, otherwise false.
     pub async fn handle_chat_message(
         connection: &mut ZoneConnection,
-        chat_message: &SendChatMessage,
+        chat_message: &BString, // TODO: Replace this with an SEString
         events: &mut Vec<(Box<dyn EventHandler>, Event)>,
     ) -> bool {
         if connection.player_data.character.gm_rank == GameMasterRank::NormalUser {
@@ -29,10 +30,14 @@ impl ChatHandler {
             return true;
         }
 
-        let parts: Vec<&str> = chat_message.message.split(' ').collect();
+        // TODO: Ensure the message has no SEString macros (e.g. auto-translate phrases)?
+        let chat_message = chat_message.to_string();
+
+        let parts: Vec<&str> = chat_message.split(' ').collect();
+
         match parts[0] {
             "!spawnmonster" => {
-                if let Some((_, id)) = chat_message.message.split_once(' ')
+                if let Some((_, id)) = chat_message.split_once(' ')
                     && let Ok(id) = id.parse::<u32>()
                 {
                     connection
@@ -57,7 +62,7 @@ impl ChatHandler {
                 true
             }
             "!equip" => {
-                if let Some((_, name)) = chat_message.message.split_once(' ') {
+                if let Some((_, name)) = chat_message.split_once(' ') {
                     {
                         let mut gamedata = connection.gamedata.lock();
 
@@ -80,7 +85,7 @@ impl ChatHandler {
                 true
             }
             "!item" => {
-                if let Some((_, name)) = chat_message.message.split_once(' ') {
+                if let Some((_, name)) = chat_message.split_once(' ') {
                     let mut result = None;
                     {
                         let mut gamedata = connection.gamedata.lock();
@@ -118,7 +123,7 @@ impl ChatHandler {
                 true
             }
             "!condition" => {
-                if let Some((_, condition_name)) = chat_message.message.split_once(' ') {
+                if let Some((_, condition_name)) = chat_message.split_once(' ') {
                     if let Ok(condition) = Condition::from_str(condition_name) {
                         connection.conditions.set_condition(condition);
                         connection.send_conditions().await;
@@ -142,7 +147,7 @@ impl ChatHandler {
                 true
             }
             "!acs" => {
-                let parts: Vec<&str> = chat_message.message.split(' ').collect();
+                let parts: Vec<&str> = chat_message.split(' ').collect();
 
                 connection
                     .actor_control_self(ActorControlCategory::Unknown {
@@ -183,7 +188,7 @@ impl ChatHandler {
                 true
             }
             "!mount" => {
-                if let Some((_, mount)) = chat_message.message.split_once(' ') {
+                if let Some((_, mount)) = chat_message.split_once(' ') {
                     let mount_id = match mount.parse::<u16>() {
                         Ok(id) => id,
                         Err(_) => {
@@ -207,7 +212,7 @@ impl ChatHandler {
                 true
             }
             "!fate" => {
-                if let Some((_, fate_id)) = chat_message.message.split_once(' ') {
+                if let Some((_, fate_id)) = chat_message.split_once(' ') {
                     let fate_id = fate_id.parse().unwrap();
 
                     connection

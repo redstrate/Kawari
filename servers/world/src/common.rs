@@ -29,6 +29,8 @@ use kawari::{
 
 use super::lua::LuaZone;
 
+use bstr::BString;
+
 #[derive(Copy, Clone, Default, Eq, PartialEq, Hash)]
 pub struct ClientId(usize);
 
@@ -76,7 +78,7 @@ pub struct MessageInfo {
     /// The channel the message is intended for (say, shout, yell, custom emote (/em)).
     pub channel: ChatChannelType,
     /// The chat message itself.
-    pub message: String,
+    pub message: BString,
 }
 
 #[derive(Clone, Debug)]

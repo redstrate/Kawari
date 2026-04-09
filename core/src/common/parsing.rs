@@ -1,6 +1,6 @@
 //! Specialized, but overall generic functions for mapping values to bytes should go here.
 
-use std::ffi::{CStr, CString};
+use bstr::{BString, ByteSlice};
 
 use crate::common::Position;
 
@@ -13,30 +13,36 @@ pub(crate) fn write_bool_as<T: std::convert::From<u8>>(x: &bool) -> T {
 }
 
 pub(crate) fn read_string(byte_stream: Vec<u8>) -> String {
-    // TODO: This can surely be made better, but it seems to satisfy some strange edge cases. If there are even more found, then we should probably rewrite this function altogether.
-    let Ok(result) = CStr::from_bytes_until_nul(&byte_stream) else {
-        if let Ok(str) = String::from_utf8(byte_stream.clone()) {
-            return str.trim_matches(char::from(0)).to_string(); // trim \0 from the end of strings
-        } else {
-            tracing::error!(
-                "Found an edge-case where both CStr::from_bytes_until_nul and String::from_utf8 failed: {:#?}",
-                byte_stream.clone()
-            );
-            return String::default();
-        }
-    };
-
-    let Ok(result) = result.to_str().to_owned() else {
-        tracing::error!("Unable to make this CStr an owned string, what happened?");
-        return String::default();
-    };
-
-    result.to_string()
+    read_sestring(byte_stream).to_string()
 }
 
 pub(crate) fn write_string(str: &String) -> Vec<u8> {
-    let c_string = CString::new(&**str).unwrap();
-    c_string.as_bytes_with_nul().to_vec()
+    write_sestring(&BString::from(str.to_owned()))
+}
+
+// TODO: Write an actual SEString parser to replace or wrap usage of BString
+// TODO: In the future, maybe expand this to call an internal function that decides from a boolean whether to do SEString parsing or not so we can pass through regular strings as-is (i.e. have read_string call read_sestring(byte_stream, false)).
+pub(crate) fn read_sestring(byte_stream: Vec<u8>) -> BString {
+    let mut byte_stream = byte_stream;
+    byte_stream.push(0); // Guard against streams that don't have a null terminator
+
+    // Find the index of the null terminator.
+    let index = byte_stream.iter().position(|b| *b == 0x00).unwrap();
+
+    BString::from(&byte_stream[..index])
+}
+
+pub(crate) fn write_sestring(str: &BString) -> Vec<u8> {
+    let mut byte_stream: Vec<u8> = str.bytes().collect();
+
+    let index = byte_stream.iter().position(|b| *b == 0x00);
+
+    // If this string doesn't have a null terminator for some reason, add our own.
+    if index.is_none() {
+        byte_stream.push(0);
+    }
+
+    byte_stream
 }
 
 /// Converts a quantized rotation to degrees in f32
@@ -131,6 +137,7 @@ mod tests {
             crate::common::read_string(MALFORMED_SECOND_EXAMPLE.to_vec()),
             "Edda Miller".to_string()
         );
+        // TODO: Maybe add SEString tests that can display some printable form of auto-translate phrases after parsing
     }
 
     #[test]
