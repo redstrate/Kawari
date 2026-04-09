@@ -4,6 +4,7 @@ use crate::common::{
     CHAR_NAME_MAX_LENGTH, ClientLanguage, read_bool_from, read_string, write_bool_as, write_string,
 };
 use bitflags::bitflags;
+use strum_macros::FromRepr;
 
 use super::online_status::OnlineStatusMask;
 
@@ -90,13 +91,47 @@ impl diesel::deserialize::FromSql<diesel::sql_types::Integer, diesel::sqlite::Sq
 /// Which Grand Company the player is currently associated with.
 #[binrw]
 #[brw(repr = u8)]
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default, FromRepr, PartialEq)]
+#[cfg_attr(
+    feature = "server",
+    derive(diesel::expression::AsExpression, diesel::deserialize::FromSqlRow)
+)]
+#[cfg_attr(feature = "server", diesel(sql_type = diesel::sql_types::Integer))]
 pub enum GrandCompany {
     #[default]
     None = 0,
     Maelstrom = 1,
     Adders = 2,
     Flames = 3,
+}
+
+#[cfg(feature = "server")]
+impl mlua::IntoLua for GrandCompany {
+    fn into_lua(self, _: &mlua::Lua) -> mlua::Result<mlua::Value> {
+        Ok(mlua::Value::Integer(self as i64))
+    }
+}
+
+#[cfg(feature = "server")]
+impl diesel::serialize::ToSql<diesel::sql_types::Integer, diesel::sqlite::Sqlite> for GrandCompany {
+    fn to_sql<'b>(
+        &'b self,
+        out: &mut diesel::serialize::Output<'b, '_, diesel::sqlite::Sqlite>,
+    ) -> diesel::serialize::Result {
+        out.set_value(*self as i32);
+        Ok(diesel::serialize::IsNull::No)
+    }
+}
+
+#[cfg(feature = "server")]
+impl diesel::deserialize::FromSql<diesel::sql_types::Integer, diesel::sqlite::Sqlite>
+    for GrandCompany
+{
+    fn from_sql(
+        mut integer: <diesel::sqlite::Sqlite as diesel::backend::Backend>::RawValue<'_>,
+    ) -> diesel::deserialize::Result<Self> {
+        Ok(GrandCompany::from_repr(integer.read_integer() as usize).unwrap())
+    }
 }
 
 // TODO: This seems to actually be entirely wrong, or at least reused for friend group icons in the context of the friend list, we need to rethink this eventully

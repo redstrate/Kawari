@@ -220,6 +220,16 @@ diesel::table! {
     }
 }
 
+diesel::table! {
+    grand_company (content_id) {
+        content_id -> BigInt,
+        active_company -> Integer,
+        company_ranks -> Text,
+    }
+}
+
+diesel::joinable!(grand_company -> character (content_id));
+
 diesel::allow_tables_to_appear_in_same_query!(
     character,
     classjob,
@@ -234,4 +244,5 @@ diesel::allow_tables_to_appear_in_same_query!(
     unlock,
     mentor,
     search_info,
+    grand_company,
 );

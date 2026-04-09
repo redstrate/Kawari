@@ -901,6 +901,7 @@ async fn process_packet(
                             connection.send_mailbox_status().await;
                             connection.init_linkshells().await;
                             connection.send_crossworld_linkshells(false).await;
+                            connection.send_grand_company_info().await;
 
                             // Send login message
                             connection.send_notice(&config.world.login_message).await;

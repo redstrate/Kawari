@@ -128,3 +128,4 @@ define_sql_array!(ClassExperience, i32, CLASSJOB_ARRAY_SIZE);
 define_sql_array!(ActiveQuests, PersistentQuest);
 define_sql_array!(FavoriteAetherytes, u16);
 define_sql_array!(PartyMembers, i64, 8);
+define_sql_array!(GrandCompanyRanks, u8, 3);

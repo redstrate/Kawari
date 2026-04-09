@@ -6,8 +6,8 @@ use kawari::ipc::zone::{
     GameMasterRank, OnlineStatus, ServerZoneIpcData, SocialListUIFlags, SocialListUILanguages,
 };
 pub use models::{
-    AetherCurrent, Aetheryte, Character, ClassJob, Companion, Content, Friends, LinkshellMembers,
-    Mentor, Quest, SearchInfo, Unlock, Volatile,
+    AetherCurrent, Aetheryte, Character, ClassJob, Companion, Content, Friends, GrandCompany,
+    LinkshellMembers, Mentor, Quest, SearchInfo, Unlock, Volatile,
 };
 
 mod schema;
@@ -129,6 +129,10 @@ impl WorldDatabase {
                 .select(SearchInfo::as_select())
                 .first(&mut self.connection)
                 .unwrap();
+            let grand_company = GrandCompany::belonging_to(&found_character)
+                .select(GrandCompany::as_select())
+                .first(&mut self.connection)
+                .unwrap();
 
             player_data = PlayerData {
                 character: found_character,
@@ -145,6 +149,7 @@ impl WorldDatabase {
                 quest,
                 mentor,
                 search_info,
+                grand_company,
                 ..Default::default()
             };
         }
@@ -219,6 +224,9 @@ impl WorldDatabase {
             .save_changes::<Mentor>(&mut self.connection)
             .unwrap();
         self.commit_search_info(data);
+        data.grand_company
+            .save_changes::<GrandCompany>(&mut self.connection)
+            .unwrap();
     }
 
     pub fn commit_parties(&mut self, parties: HashMap<u64, crate::server::Party>) {
@@ -711,6 +719,13 @@ impl WorldDatabase {
 
             // Next, delete the user's friend list.
             diesel::delete(friends.filter(content_id.eq(for_content_id as i64)))
+                .execute(&mut self.connection)
+                .unwrap();
+        }
+
+        {
+            use schema::grand_company::dsl::*;
+            diesel::delete(grand_company.filter(content_id.eq(for_content_id as i64)))
                 .execute(&mut self.connection)
                 .unwrap();
         }

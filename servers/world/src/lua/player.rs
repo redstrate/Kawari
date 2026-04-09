@@ -11,7 +11,7 @@ use crate::{
 use kawari::{
     common::{HandlerId, ObjectTypeId, ObjectTypeKind, Position, adjust_quest_id},
     ipc::zone::{
-        ActorControlCategory, ActorControlSelf, EventType, OnlineStatus, SceneFlags,
+        ActorControlCategory, ActorControlSelf, EventType, GrandCompany, OnlineStatus, SceneFlags,
         ServerNoticeFlags, ServerNoticeMessage, ServerZoneIpcData, ServerZoneIpcSegment, Warp,
     },
     packet::PacketSegment,
@@ -579,6 +579,15 @@ impl LuaPlayer {
     fn send_mailbox_status(&mut self) {
         self.queued_tasks.push(LuaTask::SendMailboxStatus {});
     }
+
+    fn set_grand_company(&mut self, company: GrandCompany) {
+        self.queued_tasks.push(LuaTask::SetGrandCompany { company });
+    }
+
+    fn set_grand_company_rank(&mut self, rank: u8) {
+        self.queued_tasks
+            .push(LuaTask::SetGrandCompanyRank { rank });
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -1012,6 +1021,14 @@ impl UserData for LuaPlayer {
             this.send_mailbox_status();
             Ok(())
         });
+        methods.add_method_mut("set_grand_company", |_, this, company: u8| {
+            this.set_grand_company(GrandCompany::from_repr(company as usize).unwrap_or_default());
+            Ok(())
+        });
+        methods.add_method_mut("set_grand_company_rank", |_, this, rank: u8| {
+            this.set_grand_company_rank(rank);
+            Ok(())
+        });
     }
 
     fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
@@ -1042,6 +1059,9 @@ impl UserData for LuaPlayer {
         fields.add_field_method_get("parameters", |_, this| Ok(this.base_parameters.clone()));
         fields.add_field_method_get("rested_exp", |_, this| {
             Ok(this.player_data.classjob.rested_exp)
+        });
+        fields.add_field_method_get("active_grand_company", |_, this| {
+            Ok(this.player_data.grand_company.active_company)
         });
     }
 }
