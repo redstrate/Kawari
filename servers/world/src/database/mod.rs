@@ -6,8 +6,8 @@ use kawari::ipc::zone::{
     GameMasterRank, OnlineStatus, ServerZoneIpcData, SocialListUIFlags, SocialListUILanguages,
 };
 pub use models::{
-    AetherCurrent, Aetheryte, Character, ClassJob, Companion, Content, Friends, LinkshellMembers,
-    Mentor, Quest, SearchInfo, Unlock, Volatile,
+    AetherCurrent, Aetheryte, Character, ClassJob, Companion, Content, Friends, GrandCompany,
+    LinkshellMembers, Mentor, Quest, SearchInfo, Unlock, Volatile,
 };
 
 mod schema;
@@ -20,7 +20,10 @@ use kawari::common::{BasicCharacterData, ClientLanguage, WORLD_NAME, determine_i
 
 use crate::database::models::Party;
 use crate::server::PartyMember;
-use crate::{CharaMake, ClassLevels, ClientSelectData, GameData, PartyMembers, RemakeMode};
+
+use crate::{
+    CharaMake, ClassLevels, ClientSelectData, GameData, GrandCompanyRanks, PartyMembers, RemakeMode,
+};
 use crate::{
     PlayerData,
     inventory::{GenericStorage, Inventory},
@@ -32,9 +35,9 @@ use kawari::{
     ipc::lobby::{CharacterDetails, CharacterFlag},
     ipc::zone::{
         AttachedItemInfo, CWLSCommon, CWLSCommonIdentifiers, CWLSMemberListEntry,
-        CWLSNameAvailability, CWLSPermissionRank, CrossworldLinkshellEx, LETTER_MSG_MAX_LENGTH,
-        Letter, LetterPreview, LetterType, MAX_MAIL_ATTACHMENTS_STORAGE, OnlineStatusMask,
-        PREVIEW_MSG_MAX_LENGTH, PlayerEntry,
+        CWLSNameAvailability, CWLSPermissionRank, CrossworldLinkshellEx,
+        GrandCompany as IpcGrandCompany, LETTER_MSG_MAX_LENGTH, Letter, LetterPreview, LetterType,
+        MAX_MAIL_ATTACHMENTS_STORAGE, OnlineStatusMask, PREVIEW_MSG_MAX_LENGTH, PlayerEntry,
     },
 };
 
@@ -129,6 +132,10 @@ impl WorldDatabase {
                 .select(SearchInfo::as_select())
                 .first(&mut self.connection)
                 .unwrap();
+            let grand_company = GrandCompany::belonging_to(&found_character)
+                .select(GrandCompany::as_select())
+                .first(&mut self.connection)
+                .unwrap();
 
             player_data = PlayerData {
                 character: found_character,
@@ -145,6 +152,7 @@ impl WorldDatabase {
                 quest,
                 mentor,
                 search_info,
+                grand_company,
                 ..Default::default()
             };
         }
@@ -219,6 +227,9 @@ impl WorldDatabase {
             .save_changes::<Mentor>(&mut self.connection)
             .unwrap();
         self.commit_search_info(data);
+        data.grand_company
+            .save_changes::<GrandCompany>(&mut self.connection)
+            .unwrap();
     }
 
     pub fn commit_parties(&mut self, parties: HashMap<u64, crate::server::Party>) {
@@ -600,6 +611,15 @@ impl WorldDatabase {
             .values(search_info)
             .execute(&mut self.connection)
             .unwrap();
+        let grand_company = GrandCompany {
+            content_id: content_id as i64,
+            active_company: IpcGrandCompany::None,
+            company_ranks: GrandCompanyRanks::default(),
+        };
+        diesel::insert_into(schema::grand_company::table)
+            .values(grand_company)
+            .execute(&mut self.connection)
+            .unwrap();
 
         (content_id as u64, actor_id)
     }
@@ -711,6 +731,13 @@ impl WorldDatabase {
 
             // Next, delete the user's friend list.
             diesel::delete(friends.filter(content_id.eq(for_content_id as i64)))
+                .execute(&mut self.connection)
+                .unwrap();
+        }
+
+        {
+            use schema::grand_company::dsl::*;
+            diesel::delete(grand_company.filter(content_id.eq(for_content_id as i64)))
                 .execute(&mut self.connection)
                 .unwrap();
         }

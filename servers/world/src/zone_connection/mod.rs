@@ -10,8 +10,8 @@ use tokio::net::TcpStream;
 use crate::{
     Content, GameData, Recipe, Unlock,
     database::{
-        AetherCurrent, Aetheryte, Character, ClassJob, Companion, Friends, Mentor, Quest,
-        SearchInfo, Volatile,
+        AetherCurrent, Aetheryte, Character, ClassJob, Companion, Friends, GrandCompany, Mentor,
+        Quest, SearchInfo, Volatile,
     },
     lua::{KawariLua, LuaTask},
 };
@@ -20,8 +20,9 @@ use kawari::{
     config::WorldConfig,
     ipc::zone::{
         ApartmentList, ApartmentListEntry, CWLSMemberListEntry, ClientTriggerCommand,
-        ClientZoneIpcSegment, Condition, Conditions, ContentRegistrationFlags, LetterPreview,
-        PlayerEntry, ServerZoneIpcData, ServerZoneIpcSegment,
+        ClientZoneIpcSegment, Condition, Conditions, ContentRegistrationFlags,
+        GrandCompany as IpcGrandCompany, LetterPreview, PlayerEntry, ServerZoneIpcData,
+        ServerZoneIpcSegment,
     },
     opcodes::ServerZoneIpcType,
     packet::{
@@ -101,6 +102,7 @@ pub struct PlayerData {
     pub quest: Quest,
     pub saw_inn_wakeup: bool,
     pub friends: Friends,
+    pub grand_company: GrandCompany,
 }
 
 /// Various obsfucation-related bits like the seeds and keys for this connection.
@@ -408,5 +410,40 @@ impl ZoneConnection {
             apartments: vec![ApartmentListEntry::default(); ApartmentListEntry::COUNT],
         }));
         self.send_ipc_self(ipc).await;
+    }
+
+    pub async fn send_grand_company_info(&mut self) {
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::GrandCompanyInfo {
+            active_company_id: self.player_data.grand_company.active_company as u8,
+            maelstrom_rank: self.grand_company_rank(IpcGrandCompany::Maelstrom).unwrap(),
+            twin_adder_rank: self.grand_company_rank(IpcGrandCompany::Adders).unwrap(),
+            immortal_flames_rank: self.grand_company_rank(IpcGrandCompany::Flames).unwrap(),
+        });
+        self.send_ipc_self(ipc).await;
+    }
+
+    pub fn grand_company_rank(&self, company: IpcGrandCompany) -> Option<u8> {
+        if company != IpcGrandCompany::None {
+            let company_index = company as usize - 1;
+            return Some(self.player_data.grand_company.company_ranks.0[company_index]);
+        }
+
+        None
+    }
+
+    pub fn set_grand_company_rank(&mut self, rank: u8) {
+        if self.player_data.grand_company.active_company != IpcGrandCompany::None {
+            let company_index = self.player_data.grand_company.active_company as usize - 1;
+            self.player_data.grand_company.company_ranks.0[company_index] = rank;
+        }
+    }
+
+    pub fn set_grand_company(&mut self, company: IpcGrandCompany) {
+        self.player_data.grand_company.active_company = company;
+
+        // If the player has no grand company after the above, this is a no-op.
+        if self.grand_company_rank(company).unwrap_or_default() == 0 {
+            self.set_grand_company_rank(1);
+        }
     }
 }

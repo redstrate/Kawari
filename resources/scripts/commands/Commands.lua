@@ -28,6 +28,8 @@ GM_QUEST_COMPLETE = 302
 GM_QUEST_INCOMPLETE = 303
 GM_QUEST_SEQUENCE = 304
 GM_QUEST_INSPECT = 305
+GM_GC = 340
+GM_GCRANK = 341
 GM_AETHERYTE = 350
 GM_CUTFLG = 356
 GM_INSPECT = 422
@@ -64,6 +66,8 @@ registerGMCommand(GM_QUEST_COMPLETE,     GM_DIR.."QuestComplete.lua")
 registerGMCommand(GM_QUEST_INCOMPLETE,   GM_DIR.."QuestIncomplete.lua")
 registerGMCommand(GM_QUEST_SEQUENCE,     GM_DIR.."QuestSequence.lua")
 registerGMCommand(GM_QUEST_INSPECT,      GM_DIR.."QuestInspect.lua")
+registerGMCommand(GM_GC,                 GM_DIR.."SetGrandCompany.lua")
+registerGMCommand(GM_GCRANK,             GM_DIR.."SetGrandCompanyRank.lua")
 registerGMCommand(GM_COLLECT,            GM_DIR.."Collect.lua")
 registerGMCommand(GM_HOWTO,              GM_DIR.."HowTo.lua")
 registerGMCommand(GM_AETHERYTE,          GM_DIR.."UnlockAetheryte.lua")

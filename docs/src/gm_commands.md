@@ -21,6 +21,8 @@ These are commands already built-in into the FFXIV client. Normally only availab
 | `//gm fittingshop_ui displayid` | Lists the listed available items under Latest Trends. |
 | `//gm fittingshop_ui displayid set <list of ids>` | Sets which items are available under Latest Trends locally. Corresponds to the DisplayId column in the FittingShopCategoryItem Excel sheet. |
 | `//gm fittingshop_ui reset` | Resets the available items under Latest Trends back to the list sent by the server. |
+| `//gm gc <company id>` | Sets your currently active grand company. If it isn't unlocked, its rank will be set to 1 automatically. 0 = None, 1 = Maelstrom, 2 = Adders, 3 = Flames. |
+| `//gm gcrank <rank>` | Sets your currently active grand company's rank. `rank` must be between 1 and 11 as of Dawntrail. |
 | `//gm getpos` | Returns your current position. |
 | `//gm gil <amount>` | Adds the specified amount of gil to the player. |
 | `//gm hp <amount>` | Sets your current HP to the amount specified. |

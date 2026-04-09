@@ -4,7 +4,7 @@ use crate::{
 };
 use kawari::{
     common::Position,
-    ipc::zone::{EventType, SceneFlags, ServerZoneIpcSegment},
+    ipc::zone::{EventType, GrandCompany, SceneFlags, ServerZoneIpcSegment},
     packet::PacketSegment,
 };
 
@@ -219,4 +219,10 @@ pub enum LuaTask {
         id: u32,
     },
     SendMailboxStatus {},
+    SetGrandCompany {
+        company: GrandCompany,
+    },
+    SetGrandCompanyRank {
+        rank: u8,
+    },
 }

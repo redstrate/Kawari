@@ -802,6 +802,14 @@ impl ZoneConnection {
                 LuaTask::SendMailboxStatus {} => {
                     self.send_mailbox_status().await;
                 }
+                LuaTask::SetGrandCompany { company } => {
+                    self.set_grand_company(*company);
+                    self.send_grand_company_info().await;
+                }
+                LuaTask::SetGrandCompanyRank { rank } => {
+                    self.set_grand_company_rank(*rank);
+                    self.send_grand_company_info().await;
+                }
             }
         }
         player.queued_tasks.clear();
