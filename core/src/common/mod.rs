@@ -27,6 +27,8 @@ pub use dropin::*;
 mod timeline;
 pub use timeline::{Timeline, Timepoint, TimepointData};
 
+use crate::constants::{GRIDANIA_POS_START, LIMSA_POS_START, ULDAH_POS_START};
+
 /// Get the number of seconds since UNIX epoch.
 pub fn timestamp_secs() -> u32 {
     SystemTime::now()
@@ -69,6 +71,19 @@ pub fn determine_initial_homepoint(citystate_id: u8) -> u8 {
         2 => 2,
         // Ul'dah
         3 => 9,
+        _ => panic!("This is not a valid city-state id!"),
+    }
+}
+
+/// Gets the pop range for a given city-state id.
+pub fn determine_initial_pop_range(citystate_id: u8) -> u32 {
+    match citystate_id {
+        // Limsa
+        1 => LIMSA_POS_START as u32,
+        // Gridania
+        2 => GRIDANIA_POS_START as u32,
+        // Ul'dah
+        3 => ULDAH_POS_START as u32,
         _ => panic!("This is not a valid city-state id!"),
     }
 }

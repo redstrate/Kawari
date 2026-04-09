@@ -34,8 +34,8 @@ use crate::{
 use kawari::{
     common::{
         CharacterMode, DEAD_DESPAWN_TIME, HandlerId, HandlerType, InvisibilityFlags,
-        MAX_SPAWNED_ACTORS, MAX_SPAWNED_OBJECTS, ObjectId, ObjectTypeId, ObjectTypeKind,
-        SharedGroupTimelineState,
+        MAX_SPAWNED_ACTORS, MAX_SPAWNED_OBJECTS, ObjectId, ObjectTypeId, ObjectTypeKind, Position,
+        SharedGroupTimelineState, determine_initial_pop_range, euler_to_direction,
     },
     config::{FilesystemConfig, get_config},
     ipc::zone::{
@@ -962,7 +962,14 @@ pub async fn server_main_loop(
                         .chat_clients
                         .insert(handle.id, (handle, ClientState::default()));
                 }
-                ToServer::ReadySpawnPlayer(from_id, from_actor_id, zone_id, position, rotation) => {
+                ToServer::ReadySpawnPlayer(
+                    from_id,
+                    from_actor_id,
+                    zone_id,
+                    position,
+                    rotation,
+                    city_state_opening,
+                ) => {
                     tracing::info!("Player {from_id:?} is now spawning into {zone_id}....");
 
                     let mut network = network.lock();
@@ -983,13 +990,38 @@ pub async fn server_main_loop(
                             .as_ref()
                             .map(|director| director.build_var_segment());
 
+                        let exit_position;
+                        let exit_rotation;
+                        if let Some(city_state) = city_state_opening {
+                            // If spawning for the initial opening, we need to spawn them at this pop range *as soon as possible*
+                            // The reason being is that this helps loading times and the initial camera rotation.
+                            // Doing it in the opening Lua script happens far too late, as EnterTerritoryEvent will only be fired after InitZone is sent.
+                            if let Some((object, _)) = target_instance
+                                .zone
+                                .find_pop_range(determine_initial_pop_range(city_state))
+                            {
+                                exit_position = Position {
+                                    x: object.transform.translation[0],
+                                    y: object.transform.translation[1],
+                                    z: object.transform.translation[2],
+                                };
+                                exit_rotation = euler_to_direction(object.transform.rotation);
+                            } else {
+                                exit_position = position;
+                                exit_rotation = rotation;
+                            }
+                        } else {
+                            exit_position = position;
+                            exit_rotation = rotation;
+                        }
+
                         // tell the client to load into the zone
                         let msg = FromServer::ChangeZone(
                             zone_id,
                             target_instance.content_finder_condition_id,
                             target_instance.weather_id,
-                            position,
-                            rotation,
+                            exit_position,
+                            exit_rotation,
                             target_instance.zone.to_lua_zone(target_instance.weather_id),
                             true, // since this is initial login
                             director_vars,

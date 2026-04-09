@@ -5,16 +5,9 @@
 -- Scene 20 is the "where are you going?!" message
 -- Scene 30 is for removing the initial starting borders
 
--- We have to hardcode the pop range, because SqEx no longer provides this is in the Opening sheet.
--- For future reference, this is located in the QST_OP_ENPC_001 layer.
-POS_START = 2213211
-
 function onEnterTerritory(player)
     if not player:has_seen_cutscene(OPENING_CUTSCENE) then
         player:play_scene(0, INITIAL_CUTSCENE_FLAGS, {0})
-
-        -- Move the player into the starting position
-        player:move_to_pop_range(POS_START)
     else
         -- We have to play *some* scene for it to load.
         player:play_scene(40, NO_DEFAULT_CAMERA | HIDE_HOTBAR, {2, 0})

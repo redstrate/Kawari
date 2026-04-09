@@ -895,6 +895,11 @@ async fn process_packet(
                                     connection.player_data.volatile.zone_id as u16,
                                     connection.player_data.volatile.position,
                                     connection.player_data.volatile.rotation as f32,
+                                    if connection.player_data.unlock.cutscene_seen.contains(2) {
+                                        None
+                                    } else {
+                                        Some(connection.player_data.city_state)
+                                    }, // If seen the opening cutscene
                                 ))
                                 .await;
 

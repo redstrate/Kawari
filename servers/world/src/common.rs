@@ -307,7 +307,7 @@ pub enum ToServer {
     /// Warp with the specified aetheryte id.
     WarpAetheryte(ClientId, ObjectId, u32, bool),
     /// Ready to spawn the player (this happens during initrequest)
-    ReadySpawnPlayer(ClientId, ObjectId, u16, Position, f32),
+    ReadySpawnPlayer(ClientId, ObjectId, u16, Position, f32, Option<u8>),
     /// Ready to send the ZoneIn ACS
     ZoneIn(ClientId, ObjectId, bool),
     /// We need to summon a player's minion, and tell other clients
