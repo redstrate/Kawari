@@ -925,6 +925,16 @@ impl UserData for LuaPlayer {
             this.finish_quest(quest_id);
             Ok(())
         });
+        methods.add_method_mut("has_quest", |_, this, quest_id: u16| {
+            Ok(this
+                .player_data
+                .quest
+                .active
+                .0
+                .iter()
+                .any(|quest| quest.id == quest_id)
+                || this.player_data.quest.completed.contains(quest_id as u32))
+        });
         methods.add_method_mut("has_seen_cutscene", |_, this, cutscene_id: u32| {
             Ok(this.player_data.unlock.cutscene_seen.contains(cutscene_id))
         });
@@ -1063,5 +1073,6 @@ impl UserData for LuaPlayer {
         fields.add_field_method_get("active_grand_company", |_, this| {
             Ok(this.player_data.grand_company.active_company)
         });
+        fields.add_field_method_get("city_state", |_, this| Ok(this.player_data.city_state));
     }
 }
