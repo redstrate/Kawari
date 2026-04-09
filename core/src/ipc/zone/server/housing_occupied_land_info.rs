@@ -14,7 +14,7 @@ pub struct HousingOccupiedLandInfo {
     /// Can be either a character ID or an FC ID
     pub owner_id: u64,
 
-    pub unk1: u8,
+    pub unk1: u32,
 
     /// This seems to represent the icon on the ward map
     /// (Yellow house) No visitors = 0, (Blue house) Visitors allowed = 1, (Mallet) Plot claimed, no estate built = 2
@@ -25,11 +25,13 @@ pub struct HousingOccupiedLandInfo {
     /// This is very likely to be the `AvailabilityType`, but it is always `0` (Unavailable) for occupied plots
     pub unk2: u8,
 
-    #[brw(pad_size_to = 23)]
-    #[br(count = 23)]
+    #[brw(pad_size_to = 21)]
+    #[br(count = 21)]
     #[br(map = read_string)]
     #[bw(map = write_string)]
     pub estate_name: String,
+
+    pub unk3: u16,
 
     #[brw(pad_size_to = 193)]
     #[br(count = 193)]
@@ -51,7 +53,7 @@ pub struct HousingOccupiedLandInfo {
     #[bw(map = write_string)]
     pub fc_tag: String,
 
-    pub unk3: u8,
+    pub unk4: u8,
 
     pub tags: [HousingAppealTag; 3],
 }
