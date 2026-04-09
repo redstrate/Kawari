@@ -20,6 +20,7 @@ use crate::{
 };
 use kawari::{
     common::{CharacterMode, DEAD_FADE_OUT_TIME, ObjectId, STRIKING_DUMMY_NAME_ID, TimepointData},
+    config::FilesystemConfig,
     ipc::zone::{
         ActionEffect, ActionKind, ActionRequest, ActionResult, ActorControlCategory,
         BattleNpcSubKind, CommonSpawn, EffectEntry, EffectKind, EffectResult, ObjectKind,
@@ -693,7 +694,7 @@ pub fn execute_item_action(
                 Ok((action_script, arg)) => {
                     lua.0
                         .load(
-                            std::fs::read(&action_script)
+                            std::fs::read(FilesystemConfig::locate_script_file(&action_script))
                                 .expect("Failed to locate scripts directory!"),
                         )
                         .set_name("@".to_string() + &action_script)
