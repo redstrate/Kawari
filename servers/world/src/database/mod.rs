@@ -20,7 +20,10 @@ use kawari::common::{BasicCharacterData, ClientLanguage, WORLD_NAME, determine_i
 
 use crate::database::models::Party;
 use crate::server::PartyMember;
-use crate::{CharaMake, ClassLevels, ClientSelectData, GameData, PartyMembers, RemakeMode};
+
+use crate::{
+    CharaMake, ClassLevels, ClientSelectData, GameData, GrandCompanyRanks, PartyMembers, RemakeMode,
+};
 use crate::{
     PlayerData,
     inventory::{GenericStorage, Inventory},
@@ -32,9 +35,9 @@ use kawari::{
     ipc::lobby::{CharacterDetails, CharacterFlag},
     ipc::zone::{
         AttachedItemInfo, CWLSCommon, CWLSCommonIdentifiers, CWLSMemberListEntry,
-        CWLSNameAvailability, CWLSPermissionRank, CrossworldLinkshellEx, LETTER_MSG_MAX_LENGTH,
-        Letter, LetterPreview, LetterType, MAX_MAIL_ATTACHMENTS_STORAGE, OnlineStatusMask,
-        PREVIEW_MSG_MAX_LENGTH, PlayerEntry,
+        CWLSNameAvailability, CWLSPermissionRank, CrossworldLinkshellEx,
+        GrandCompany as IpcGrandCompany, LETTER_MSG_MAX_LENGTH, Letter, LetterPreview, LetterType,
+        MAX_MAIL_ATTACHMENTS_STORAGE, OnlineStatusMask, PREVIEW_MSG_MAX_LENGTH, PlayerEntry,
     },
 };
 
@@ -606,6 +609,15 @@ impl WorldDatabase {
         };
         diesel::insert_into(schema::search_info::table)
             .values(search_info)
+            .execute(&mut self.connection)
+            .unwrap();
+        let grand_company = GrandCompany {
+            content_id: content_id as i64,
+            active_company: IpcGrandCompany::None,
+            company_ranks: GrandCompanyRanks::default(),
+        };
+        diesel::insert_into(schema::grand_company::table)
+            .values(grand_company)
             .execute(&mut self.connection)
             .unwrap();
 
