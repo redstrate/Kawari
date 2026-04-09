@@ -8,6 +8,7 @@ use crate::{
 use icarus::ParamGrow::ParamGrowRow;
 use kawari::{
     common::{MAXIMUM_RESTED_EXP, ObjectId},
+    constants::LEVEL_MAIN,
     ipc::zone::{
         ActorControlCategory, PlayerStats, ServerZoneIpcData, ServerZoneIpcSegment, UpdateClassInfo,
     },
@@ -91,17 +92,6 @@ pub struct BaseParameters {
     pub gathering: u32,
     pub perception: u32,
 }
-
-// TODO: is there some way to calculate these values from Excel alone? This is going to be a pain to update in the future.
-// Taken from AkhMorning: https://www.akhmorning.com/allagan-studies/modifiers/levelmods/
-const LEVEL_MAIN: [u32; 101] = [
-    20, // for "level 0"
-    20, 21, 22, 24, 67, 27, 29, 31, 33, 35, 36, 38, 41, 44, 46, 49, 52, 54, 57, 60, 63, 67, 71, 74,
-    78, 81, 85, 89, 92, 97, 101, 106, 110, 115, 119, 124, 128, 134, 139, 144, 150, 155, 161, 166,
-    171, 177, 183, 189, 196, 202, 204, 205, 207, 209, 210, 212, 214, 215, 217, 218, 224, 228, 236,
-    244, 252, 260, 268, 276, 284, 292, 296, 300, 305, 310, 315, 320, 325, 330, 335, 340, 345, 350,
-    355, 360, 365, 370, 375, 380, 385, 390, 395, 400, 405, 410, 415, 420, 425, 430, 435, 440,
-];
 
 impl BaseParameters {
     pub fn get_mut(&mut self, index: u8) -> &mut u32 {
@@ -191,23 +181,24 @@ impl BaseParameters {
         param_grow: &ParamGrowRow,
         modifiers: &Modifiers,
     ) {
+        // TODO: Is there any way to extrapolate LEVEL_MAIN from Excel? How does AkhMorning do it?
         self.strength = modifiers
-            .apply_to(1, LEVEL_MAIN[level as usize])
+            .apply_to(1, LEVEL_MAIN[level as usize - 1])
             .saturating_add_signed(attributes.strength as i32);
         self.dexterity = modifiers
-            .apply_to(2, LEVEL_MAIN[level as usize])
+            .apply_to(2, LEVEL_MAIN[level as usize - 1])
             .saturating_add_signed(attributes.dexterity as i32);
         self.vitality = modifiers
-            .apply_to(3, LEVEL_MAIN[level as usize])
+            .apply_to(3, LEVEL_MAIN[level as usize - 1])
             .saturating_add_signed(attributes.vitality as i32);
         self.intelligence = modifiers
-            .apply_to(4, LEVEL_MAIN[level as usize])
+            .apply_to(4, LEVEL_MAIN[level as usize - 1])
             .saturating_add_signed(attributes.intelligence as i32);
         self.mind = modifiers
-            .apply_to(5, LEVEL_MAIN[level as usize])
+            .apply_to(5, LEVEL_MAIN[level as usize - 1])
             .saturating_add_signed(attributes.mind as i32);
         self.piety = modifiers
-            .apply_to(6, LEVEL_MAIN[level as usize])
+            .apply_to(6, LEVEL_MAIN[level as usize - 1])
             .saturating_add_signed(attributes.piety as i32);
 
         self.spell_speed = param_grow.BaseSpeed() as u32;
