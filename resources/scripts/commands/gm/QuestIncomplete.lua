@@ -10,7 +10,7 @@ function onCommand(args, player)
         player:incomplete_quest(id2)
         printf(player, "All quests incompleted!", id)
     else
-        player:incomplete_quest(id)
+        player:incomplete_quest(65536 + id)
         printf(player, "Quest "..id.." incompleted!", id)
     end
 end

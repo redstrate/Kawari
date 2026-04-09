@@ -10,7 +10,7 @@ function onCommand(args, player)
         player:finish_quest(id2)
         printf(player, "All quests completed!", id)
     else
-        player:finish_quest(id)
+        player:finish_quest(65536 + id)
         printf(player, "Quest "..id.." completed!", id)
     end
 end
