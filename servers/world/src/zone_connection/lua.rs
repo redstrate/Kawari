@@ -29,7 +29,7 @@ impl ZoneConnection {
         &mut self,
         player: &mut LuaPlayer,
         events: &mut Vec<(Box<dyn EventHandler>, Event)>,
-    ) {
+    ) -> bool {
         // First, send zone-related segments
         for segment in &player.zone_data.queued_segments {
             let mut edited_segment = segment.clone();
@@ -820,8 +820,10 @@ impl ZoneConnection {
             // To handle PreHandler's & others nesting, which is probably not going to scale.
             self.event_finish(events).await;
 
-            Box::pin(self.process_lua_player(player, events)).await;
+            return true;
         }
+
+        false
     }
 
     /// Reloads Global.lua

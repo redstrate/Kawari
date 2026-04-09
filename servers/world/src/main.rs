@@ -2937,7 +2937,10 @@ async fn process_packet(
 
         // Process any queued packets from scripts and whatnot
         lua_player.queued_tasks.append(&mut connection.queued_tasks);
-        connection.process_lua_player(lua_player, events).await;
+        if connection.process_lua_player(lua_player, events).await {
+            // If requested to run again (currently relevant for finishing events) then do so.
+            connection.process_lua_player(lua_player, events).await;
+        }
 
         // update lua player
         lua_player.player_data = connection.player_data.clone();
