@@ -177,6 +177,7 @@ async fn initial_setup(
                     cwls_index: 0,
                     mail_results: Vec::new(),
                     mail_index: 0,
+                    spawned_in: false,
                 };
 
                 // Handle setup before passing off control to the zone connection.
@@ -1488,27 +1489,29 @@ async fn process_packet(
                             anim_state,
                             jump_state,
                         } => {
-                            connection.player_data.volatile.rotation = *rotation as f64;
-                            connection.player_data.volatile.position = *position;
+                            if connection.spawned_in {
+                                connection.player_data.volatile.rotation = *rotation as f64;
+                                connection.player_data.volatile.position = *position;
 
-                            let party_id = if connection.party_id != 0 {
-                                Some(connection.party_id)
-                            } else {
-                                None
-                            };
+                                let party_id = if connection.party_id != 0 {
+                                    Some(connection.party_id)
+                                } else {
+                                    None
+                                };
 
-                            connection
-                                .handle
-                                .send(ToServer::ActorMoved(
-                                    connection.player_data.character.actor_id,
-                                    *position,
-                                    *rotation,
-                                    *anim_type,
-                                    *anim_state,
-                                    *jump_state,
-                                    party_id,
-                                ))
-                                .await;
+                                connection
+                                    .handle
+                                    .send(ToServer::ActorMoved(
+                                        connection.player_data.character.actor_id,
+                                        *position,
+                                        *rotation,
+                                        *anim_type,
+                                        *anim_state,
+                                        *jump_state,
+                                        party_id,
+                                    ))
+                                    .await;
+                            }
                         }
                         ClientZoneIpcData::LogOut { .. } => {
                             connection.gracefully_logged_out = true;

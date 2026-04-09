@@ -182,6 +182,8 @@ pub struct ZoneConnection {
     pub mail_results: Vec<LetterPreview>,
     /// The current index into the mailbox previews. Increases by 5 every time the clint requests more previews.
     pub mail_index: usize,
+    /// Whether the player is spawned in or not.
+    pub spawned_in: bool,
 }
 
 impl ZoneConnection {

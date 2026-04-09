@@ -186,6 +186,8 @@ impl ZoneConnection {
             self.send_ipc_self(ipc).await;
         }
 
+        self.spawned_in = true;
+
         spawn
     }
 

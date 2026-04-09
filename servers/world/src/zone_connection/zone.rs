@@ -50,6 +50,8 @@ impl ZoneConnection {
         lua_zone: &LuaZone,
         lua_content: &mut LuaContent,
     ) {
+        self.spawned_in = false;
+
         let bound_by_duty = content_finder_condition_id != 0;
 
         // fade in?
