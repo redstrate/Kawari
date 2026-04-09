@@ -10,7 +10,6 @@ use icarus::BNpcCustomize::BNpcCustomizeSheet;
 use icarus::BaseParam::{BaseParamRow, BaseParamSheet};
 use icarus::Battalion::BattalionSheet;
 use icarus::ClassJob::ClassJobSheet;
-use icarus::ClassJobCategory::ClassJobCategorySheet;
 use icarus::ContentDirectorManagedSG::ContentDirectorManagedSGSheet;
 use icarus::ContentFinderCondition::ContentFinderConditionSheet;
 use icarus::CraftAction::CraftActionSheet;
@@ -1016,140 +1015,24 @@ impl GameData {
     /// Returns the list of applicable classjob IDs based on the ClassJobCategory.
     pub fn get_applicable_classjobs(&mut self, classjob_category_id: u16) -> Vec<u8> {
         let config = get_config();
-        let sheet =
-            ClassJobCategorySheet::read_from(&mut self.resource, config.world.language()).unwrap();
+
+        let exh = self
+            .resource
+            .read_excel_sheet_header("ClassJobCategory")
+            .unwrap();
+        let sheet = self
+            .resource
+            .read_excel_sheet(&exh, "ClassJobCategory", config.world.language())
+            .unwrap();
+
+        let mut classjobs = Vec::new();
         let row = sheet.row(classjob_category_id as u32).unwrap();
 
-        // TODO: find a better way to write this
-        let mut classjobs = Vec::new();
-        if row.ADV() {
-            classjobs.push(0);
-        }
-        if row.GLA() {
-            classjobs.push(1);
-        }
-        if row.PGL() {
-            classjobs.push(2);
-        }
-        if row.MRD() {
-            classjobs.push(3);
-        }
-        if row.LNC() {
-            classjobs.push(4);
-        }
-        if row.ARC() {
-            classjobs.push(5);
-        }
-        if row.CNJ() {
-            classjobs.push(6);
-        }
-        if row.THM() {
-            classjobs.push(7);
-        }
-        if row.CRP() {
-            classjobs.push(8);
-        }
-        if row.BSM() {
-            classjobs.push(9);
-        }
-        if row.ARM() {
-            classjobs.push(10);
-        }
-        if row.GSM() {
-            classjobs.push(11);
-        }
-        if row.LTW() {
-            classjobs.push(12);
-        }
-        if row.WVR() {
-            classjobs.push(13);
-        }
-        if row.ALC() {
-            classjobs.push(14);
-        }
-        if row.CUL() {
-            classjobs.push(15);
-        }
-        if row.MIN() {
-            classjobs.push(16);
-        }
-        if row.BTN() {
-            classjobs.push(17);
-        }
-        if row.FSH() {
-            classjobs.push(18);
-        }
-        if row.PLD() {
-            classjobs.push(19);
-        }
-        if row.MNK() {
-            classjobs.push(20);
-        }
-        if row.WAR() {
-            classjobs.push(21);
-        }
-        if row.DRG() {
-            classjobs.push(22);
-        }
-        if row.BRD() {
-            classjobs.push(23);
-        }
-        if row.WHM() {
-            classjobs.push(24);
-        }
-        if row.BLM() {
-            classjobs.push(25);
-        }
-        if row.ACN() {
-            classjobs.push(26);
-        }
-        if row.SMN() {
-            classjobs.push(27);
-        }
-        if row.SCH() {
-            classjobs.push(28);
-        }
-        if row.ROG() {
-            classjobs.push(29);
-        }
-        if row.NIN() {
-            classjobs.push(30);
-        }
-        if row.MCH() {
-            classjobs.push(31);
-        }
-        if row.DRK() {
-            classjobs.push(32);
-        }
-        if row.AST() {
-            classjobs.push(33);
-        }
-        if row.SAM() {
-            classjobs.push(34);
-        }
-        if row.RDM() {
-            classjobs.push(35);
-        }
-        if row.BLU() {
-            classjobs.push(36);
-        }
-        if row.GNB() {
-            classjobs.push(37);
-        }
-        if row.DNC() {
-            classjobs.push(38);
-        }
-        if row.RPR() {
-            classjobs.push(39);
-        }
-        if row.SGE() {
-            classjobs.push(40);
-        }
-        if row.VPR() {
-            classjobs.push(41);
-        }
-        if row.PCT() {
-            classjobs.push(42);
+        let applicable_classes = &row.columns[1..]; // First column is the label e.g. "Disciple of War"
+        for (i, applicable) in applicable_classes.iter().enumerate() {
+            if applicable.into_bool().copied().unwrap_or_default() {
+                classjobs.push(i as u8);
+            }
         }
 
         classjobs
