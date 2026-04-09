@@ -100,7 +100,7 @@ pub enum TenantType {
 pub enum AvailabilityType {
     /// Plot does not participate in current lottery cycle.
     #[default]
-    Unavailable = 0,
+    Unavailable = 3,
 
     /// Plot is available for bidding.
     Available = 1,
