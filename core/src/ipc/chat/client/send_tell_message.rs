@@ -1,6 +1,10 @@
 use binrw::binrw;
+use bstr::BString;
 
-use crate::common::{CHAR_NAME_MAX_LENGTH, MESSAGE_MAX_LENGTH, read_string, write_string};
+use crate::common::{
+    CHAR_NAME_MAX_LENGTH, MESSAGE_MAX_LENGTH, read_sestring, read_string, write_sestring,
+    write_string,
+};
 
 #[binrw]
 #[derive(Clone, Debug, Default)]
@@ -20,8 +24,8 @@ pub struct SendTellMessage {
 
     #[br(count = MESSAGE_MAX_LENGTH)]
     #[bw(pad_size_to = MESSAGE_MAX_LENGTH)]
-    #[br(map = read_string)]
-    #[bw(map = write_string)]
+    #[br(map = read_sestring)]
+    #[bw(map = write_sestring)]
     #[brw(pad_after = 5)]
-    pub message: String,
+    pub message: BString, // NOTE: This is a BString due to the fact that SEString macros can appear in its contents.
 }

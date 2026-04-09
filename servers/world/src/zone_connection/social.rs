@@ -1,4 +1,5 @@
 //! The party system and other social features.
+use bstr::BString;
 
 use crate::{
     ItemInfoQuery, ToServer, ZoneConnection,
@@ -1555,7 +1556,7 @@ impl ZoneConnection {
         &mut self,
         recipient_content_id: u64,
         attached_items: [MailItemInfo; MAX_MAIL_ATTACHMENTS_STORAGE],
-        message: String,
+        message: BString,
     ) {
         let is_online;
         let recipient_info;

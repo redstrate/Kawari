@@ -1540,8 +1540,13 @@ async fn process_packet(
 
                             let mut handled = false;
                             let command_trigger: char = '!';
-                            if chat_message.message.starts_with(command_trigger) {
-                                let parts: Vec<&str> = chat_message.message.split(' ').collect();
+                            if chat_message
+                                .message
+                                .to_string()
+                                .starts_with(command_trigger)
+                            {
+                                let msg = chat_message.message.to_string();
+                                let parts: Vec<&str> = msg.split(' ').collect();
                                 let command_name = &parts[0][1..];
 
                                 {
@@ -1625,7 +1630,7 @@ async fn process_packet(
                                 if !handled {
                                     handled = ChatHandler::handle_chat_message(
                                         connection,
-                                        chat_message,
+                                        &chat_message.message,
                                         events,
                                     )
                                     .await;

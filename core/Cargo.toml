@@ -34,6 +34,7 @@ strum_macros = { workspace = true }
 tokio = { workspace = true, optional = true }
 mlua = { workspace = true, optional = true }
 diesel = { workspace = true, optional = true }
+bstr = { workspace = true }
 
 # Used for managing our insane amount of opcodes.
 kawari-core-macro = { path = "macro" }

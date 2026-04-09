@@ -1,7 +1,9 @@
 use binrw::binrw;
+use bstr::BString;
 
 use crate::common::{
-    CHAR_NAME_MAX_LENGTH, MESSAGE_MAX_LENGTH, ObjectId, read_string, write_string,
+    CHAR_NAME_MAX_LENGTH, MESSAGE_MAX_LENGTH, ObjectId, read_sestring, read_string, write_sestring,
+    write_string,
 };
 
 use crate::ipc::chat::ChatChannelType;
@@ -25,7 +27,7 @@ pub struct ChatMessage {
 
     #[br(count = MESSAGE_MAX_LENGTH)]
     #[bw(pad_size_to = MESSAGE_MAX_LENGTH)]
-    #[br(map = read_string)]
-    #[bw(map = write_string)]
-    pub message: String,
+    #[br(map = read_sestring)]
+    #[bw(map = write_sestring)]
+    pub message: BString, // NOTE: This is a BString due to the fact that SEString macros can appear in its contents.
 }

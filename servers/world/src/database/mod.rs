@@ -1,4 +1,5 @@
 mod models;
+use bstr::BString;
 use std::collections::HashMap;
 
 use kawari::config::get_config;
@@ -1730,7 +1731,7 @@ impl WorldDatabase {
         my_content_id: u64,
         their_content_id: u64,
         letter_kind: kawari::ipc::zone::LetterType,
-        letter_message: String,
+        letter_message: BString,
         attachments: crate::inventory::GenericStorage<MAX_MAIL_ATTACHMENTS_STORAGE>,
     ) {
         use schema::mail::dsl::*;
@@ -1749,6 +1750,10 @@ impl WorldDatabase {
             .get_result::<i64>(&mut self.connection)
             .unwrap();
 
+        // Before inserting the message, truncate it to the max length just in case.
+        let mut letter_message = letter_message;
+        letter_message.truncate(LETTER_MSG_MAX_LENGTH);
+
         let letter = models::Mail {
             id: next_id,
             kind: letter_kind as i32,
@@ -1756,7 +1761,7 @@ impl WorldDatabase {
             timestamp: time,
             recipient_content_id: their_content_id as i64,
             sender_content_id: my_content_id as i64,
-            message: letter_message.clone(),
+            message: serde_json::to_string(&letter_message).unwrap(),
             attached_items: serde_json::to_string(&attachments).unwrap(),
         };
 
@@ -1799,9 +1804,10 @@ impl WorldDatabase {
             };
 
             // Adjust the preview message to be no longer than PREVIEW_MSG_MAX_LENGTH bytes.
-            preview.message = letter.message.clone();
-            let boundary = preview.message.floor_char_boundary(PREVIEW_MSG_MAX_LENGTH);
-            preview.message = (preview.message[..boundary]).to_string();
+            let full_message: BString =
+                serde_json::from_str(&letter.message.clone()).unwrap_or_default();
+            preview.message = full_message;
+            preview.message.truncate(PREVIEW_MSG_MAX_LENGTH);
 
             let attachments: crate::inventory::GenericStorage<6> =
                 serde_json::from_str(&letter.attached_items).unwrap_or_default();
@@ -1846,10 +1852,10 @@ impl WorldDatabase {
             .execute(&mut self.connection)
             .unwrap();
 
-        // The message body can be no longer than LETTER_MSG_MAX_LENGTH bytes.
-        let mut the_message = the_mail.message.clone();
-        let boundary = the_message.floor_char_boundary(LETTER_MSG_MAX_LENGTH);
-        the_message = (the_message[..boundary]).to_string();
+        // The message body can be no longer than LETTER_MSG_MAX_LENGTH bytes. This is probably redundant due to insertion handling this, but if manual db edits are done, this should catch any issues.
+        let mut the_message: BString =
+            serde_json::from_str(&the_mail.message.clone()).unwrap_or_default();
+        the_message.truncate(LETTER_MSG_MAX_LENGTH);
 
         let the_letter = Letter {
             sender_content_id: the_mail.sender_content_id as u64,
