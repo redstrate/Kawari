@@ -1,4 +1,4 @@
--- Mother Miounne in New Gridania
+-- Baderon in Limsa Lominsa
 
 -- Scenes
 SCENE_00000 = 00000 -- Greeting based on quest completion

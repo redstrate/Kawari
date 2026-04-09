@@ -1,4 +1,4 @@
--- Mother Miounne in New Gridania
+-- Momodi in Ul'dah
 
 -- Scenes
 SCENE_00000 = 00000 -- Greeting based on quest completion
