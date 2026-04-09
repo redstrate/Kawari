@@ -164,11 +164,20 @@ impl WorldDatabase {
         player_data
     }
 
-    pub fn commit_classjob(&mut self, data: &PlayerData) {
+    /// Saves the classjob and inventory tables to the database. This is always done in lockstep as your current classjob and equipped inventory are closely related.
+    pub fn commit_classjob_and_inventory(&mut self, data: &PlayerData) {
         use models::*;
 
         data.classjob
             .save_changes::<ClassJob>(&mut self.connection)
+            .unwrap();
+
+        let inventory = Inventory {
+            content_id: data.character.content_id,
+            contents: serde_json::to_string(&data.inventory).unwrap(),
+        };
+        inventory
+            .save_changes::<Inventory>(&mut self.connection)
             .unwrap();
     }
 
@@ -193,19 +202,10 @@ impl WorldDatabase {
         use models::*;
 
         self.commit_volatile(data);
-
-        let inventory = Inventory {
-            content_id: data.character.content_id,
-            contents: serde_json::to_string(&data.inventory).unwrap(),
-        };
-        inventory
-            .save_changes::<Inventory>(&mut self.connection)
-            .unwrap();
-
         data.character
             .save_changes::<Character>(&mut self.connection)
             .unwrap();
-        self.commit_classjob(data);
+        self.commit_classjob_and_inventory(data);
         data.unlock
             .save_changes::<Unlock>(&mut self.connection)
             .unwrap();

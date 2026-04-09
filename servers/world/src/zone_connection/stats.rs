@@ -335,7 +335,7 @@ impl ZoneConnection {
         // Commit back our classjob data after changing. Done here so it gets picked up by any paths that change classjob.
         {
             let mut db = self.database.lock();
-            db.commit_classjob(&self.player_data);
+            db.commit_classjob_and_inventory(&self.player_data);
         }
     }
 
