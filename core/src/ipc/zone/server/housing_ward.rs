@@ -19,7 +19,7 @@ pub struct HousingWardInfo {
     pub tenant_type: TenantType,
 
     #[brw(pad_after = 1)]
-    terminator: u32,
+    pub terminator: u32,
 }
 
 #[binrw]
