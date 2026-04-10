@@ -10,13 +10,13 @@ These are commands already built-in into the FFXIV client. Normally only availab
 | `//gm achievementDump` | Dumps information about the client-side achivement list. |
 | `//gm aetheryte <on/off> <id/all>` | Unlock an Aetheryte. |
 | `//gm blacklist status` | Unknown purpose, looks like it just prints out your blacklist. |
+| `//gm call <name>` | Teleports this player to you. |
 | `//gm charadir` | Opens Windows Explorer to your character user directory. |
 | `//gm chr_info <pc/bnpc/enpc/enpc_lively>` | Returns the internal entity IDs for your player character. |
 | `//gm collect <amount>` | Subtracts `amount` gil from the targeted player (yourself only for now). |
 | `//gm cutflg <complete/incomplete> <id>` | Toggles the seen status of the specified Cutscene ID. |
 | `//gm cutsceneflag <complete/incomplete> <id>` | Identical to `//gm cutflg`. |
 | `//gm dc_region` | Useless, but returns the DC for the World you set in the config. |
-| `//gm howto <on/off> <id>` | Toggles the read status of an Active Help entry. |
 | `//gm exp <amount>` | Adds the specified amount of EXP to the current class/job. |
 | `//gm fittingshop_ui displayid` | Lists the listed available items under Latest Trends. |
 | `//gm fittingshop_ui displayid set <list of ids>` | Sets which items are available under Latest Trends locally. Corresponds to the DisplayId column in the FittingShopCategoryItem Excel sheet. |
@@ -25,10 +25,12 @@ These are commands already built-in into the FFXIV client. Normally only availab
 | `//gm gcrank <rank>` | Sets your currently active grand company's rank. `rank` must be between 1 and 11 as of Dawntrail. |
 | `//gm getpos` | Returns your current position. |
 | `//gm gil <amount>` | Adds the specified amount of gil to the player. |
+| `//gm howto <on/off> <id>` | Toggles the read status of an Active Help entry. |
 | `//gm hp <amount>` | Sets your current HP to the amount specified. |
 | `//gm icon <id>` | Sets your online status to the given ID. |
 | `//gm item <id>` | Gives yourself an item. This can only place a single item in the first page of your inventory currently. |
 | `//gm immediatelyaction 1` | Removes action cooldowns. There is no way to turn this off without logging out. |
+| `//gm jump <name>` | Teleports to this player. |
 | `//gm kill` | Kills the selected player, but only affects you for now. |
 | `//gm lv <level>` | Sets your current level. |
 | `//gm mp <amount>` | Sets your current MP to the amount specified. |

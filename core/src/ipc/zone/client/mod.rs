@@ -213,11 +213,14 @@ pub enum ClientZoneIpcData {
         arg1: i32,
         arg2: i32,
         arg3: i32,
-        #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
-        #[br(count = CHAR_NAME_MAX_LENGTH)]
+        /// Originating World ID of the caller.
+        world_id: u16,
+        /// Name passed to the command.
+        #[brw(pad_size_to = 30)]
+        #[br(count = 30)]
         #[br(map = read_string)]
         #[bw(map = write_string)]
-        unk1: String,
+        name: String,
     },
     GMCommandName2 {
         command: u32,

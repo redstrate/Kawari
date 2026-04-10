@@ -1,7 +1,7 @@
 required_rank = GM_RANK_DEBUG
 command_sender = "[questsequence] "
 
-function onCommand(args, player)
+function onCommand(player, args, name)
     local id <const> = args[1]
     local sequence <const> = args[2]
 

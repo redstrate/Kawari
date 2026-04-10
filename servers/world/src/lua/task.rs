@@ -225,4 +225,10 @@ pub enum LuaTask {
     SetGrandCompanyRank {
         rank: u8,
     },
+    Jump {
+        name: String,
+    },
+    Call {
+        name: String,
+    },
 }

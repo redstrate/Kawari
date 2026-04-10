@@ -1,7 +1,7 @@
 required_rank = GM_RANK_DEBUG
 command_sender = "[unlock] "
 
-function onCommand(args, player)
+function onCommand(player, args, name)
     local argc = #args
 
     local usage = "\nThis command teaches the user an action, emote, etc.\nUsage: !useaction <id/all>"

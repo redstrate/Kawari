@@ -1,7 +1,7 @@
 required_rank = GM_RANK_DEBUG
 command_sender = "[toggleadventure] "
 
-function onCommand(args, player)
+function onCommand(player, args, name)
     local argc = #args
     if argc ~= 1 then
         printf(player, "Incorrect arguments given!")

@@ -740,12 +740,15 @@ fn begin_change_zone<'a>(
     game_data: &mut GameData,
     destination_zone_id: u16,
     actor_id: ObjectId,
-) -> Option<&'a mut Instance> {
+) -> Option<(&'a mut Instance, bool)> {
+    let mut needs_init_zone = false;
+
     // inform the players in this zone that this actor left
     if let Some(current_instance) = data.find_actor_instance_mut(actor_id) {
         // HACK: This is to prevent actors from disappearing when warping within the same zone.
         if current_instance.zone.id != destination_zone_id {
             network.remove_actor(current_instance, actor_id);
+            needs_init_zone = true;
         }
     }
 
@@ -755,7 +758,7 @@ fn begin_change_zone<'a>(
         // Insert an empty actor that will be filled later
         target_instance.insert_empty_actor(actor_id);
 
-        return Some(target_instance);
+        return Some((target_instance, needs_init_zone));
     }
 
     None
@@ -771,7 +774,7 @@ fn change_zone_warp_to_pop_range(
     actor_id: ObjectId,
     from_id: ClientId,
 ) {
-    let target_instance =
+    let (target_instance, needs_init_zone) =
         begin_change_zone(data, network, game_data, destination_zone_id, actor_id).unwrap();
 
     let exit_position;
@@ -793,7 +796,7 @@ fn change_zone_warp_to_pop_range(
     do_change_zone(
         network,
         target_instance,
-        destination_zone_id,
+        needs_init_zone,
         exit_position,
         exit_rotation,
         from_id,
@@ -804,7 +807,7 @@ fn change_zone_warp_to_pop_range(
 pub fn change_zone_warp_to_entrance(
     network: &mut NetworkState,
     target_instance: &Instance,
-    destination_zone_id: u16,
+    needs_init_zone: bool,
     from_id: ClientId,
 ) {
     let exit_position;
@@ -818,7 +821,7 @@ pub fn change_zone_warp_to_entrance(
         exit_rotation = Some(euler_to_direction(destination_object.transform.rotation));
     } else {
         tracing::warn!(
-            "Failed to find instanced content entrance for {destination_zone_id}?! This is a bug in Kawari, please report it!"
+            "Failed to find instanced content entrance?! This is a bug in Kawari, please report it!"
         );
         exit_position = None;
         exit_rotation = None;
@@ -827,9 +830,45 @@ pub fn change_zone_warp_to_entrance(
     do_change_zone(
         network,
         target_instance,
-        destination_zone_id,
+        needs_init_zone,
         exit_position,
         exit_rotation,
+        from_id,
+    );
+}
+
+/// Teleports one player to another.
+pub fn change_zone_to_player(
+    network: &mut NetworkState,
+    data: &mut WorldServer,
+    game_data: &mut GameData,
+    from_id: ClientId,
+    to_actor_id: ObjectId,
+) {
+    let destination_zone_id;
+    {
+        let Some(target_instance) = data.find_actor_instance(to_actor_id) else {
+            return;
+        };
+
+        destination_zone_id = target_instance.zone.id;
+    }
+
+    let from_actor_id = network.clients.get(&from_id).unwrap().0.actor_id;
+
+    let (target_instance, needs_init_zone) =
+        begin_change_zone(data, network, game_data, destination_zone_id, from_actor_id).unwrap();
+
+    let Some(target_actor) = target_instance.find_actor(to_actor_id) else {
+        return;
+    };
+
+    do_change_zone(
+        network,
+        target_instance,
+        needs_init_zone,
+        Some(target_actor.position()),
+        Some(target_actor.rotation()),
         from_id,
     );
 }
@@ -838,33 +877,45 @@ pub fn change_zone_warp_to_entrance(
 fn do_change_zone(
     network: &mut NetworkState,
     target_instance: &Instance,
-    destination_zone_id: u16,
+    needs_init_zone: bool,
     exit_position: Option<Position>,
     exit_rotation: Option<f32>,
     from_id: ClientId,
 ) {
-    // Clear spawn pools
-    let state = network.get_state_mut(from_id).unwrap();
-    state.actor_allocator.clear();
-    state.object_allocator.clear();
+    if needs_init_zone {
+        // Clear spawn pools
+        let state = network.get_state_mut(from_id).unwrap();
+        state.actor_allocator.clear();
+        state.object_allocator.clear();
 
-    let director_vars = target_instance
-        .director
-        .as_ref()
-        .map(|director| director.build_var_segment());
+        let director_vars = target_instance
+            .director
+            .as_ref()
+            .map(|director| director.build_var_segment());
 
-    // now that we have all of the data needed, inform the connection of where they need to be
-    let msg = FromServer::ChangeZone(
-        destination_zone_id,
-        target_instance.content_finder_condition_id,
-        target_instance.weather_id,
-        exit_position.unwrap_or_default(),
-        exit_rotation.unwrap_or_default(),
-        target_instance.zone.to_lua_zone(target_instance.weather_id),
-        false,
-        director_vars,
-    );
-    network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
+        // now that we have all of the data needed, inform the connection of where they need to be
+        let msg = FromServer::ChangeZone(
+            target_instance.zone.id,
+            target_instance.content_finder_condition_id,
+            target_instance.weather_id,
+            exit_position.unwrap_or_default(),
+            exit_rotation.unwrap_or_default(),
+            target_instance.zone.to_lua_zone(target_instance.weather_id),
+            false,
+            director_vars,
+        );
+        network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
+    } else {
+        network.send_to(
+            from_id,
+            FromServer::NewPosition(
+                exit_position.unwrap_or_default(),
+                exit_rotation.unwrap_or_default(),
+                true,
+            ),
+            DestinationNetwork::ZoneClients,
+        );
+    }
 }
 
 /// Process zone-related messages.
@@ -906,13 +957,13 @@ pub fn handle_zone_messages(
             let mut network = network.lock();
             let mut game_data = game_data.lock();
 
-            let target_instance =
+            let (target_instance, needs_init_zone) =
                 begin_change_zone(&mut data, &mut network, &mut game_data, *zone_id, *actor_id)
                     .unwrap();
             do_change_zone(
                 &mut network,
                 target_instance,
-                *zone_id,
+                needs_init_zone,
                 *new_position,
                 *new_rotation,
                 *from_id,

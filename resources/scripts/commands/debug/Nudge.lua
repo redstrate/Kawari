@@ -3,7 +3,7 @@
 required_rank = GM_RANK_DEBUG
 command_sender = "[nudge] "
 
-function onCommand(args, player)
+function onCommand(player, args, name)
     local argc = #args
     local pos = player.position
     local angle = player.rotation + (math.pi / 2)

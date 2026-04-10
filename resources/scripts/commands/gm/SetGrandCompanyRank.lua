@@ -1,7 +1,7 @@
 required_rank = GM_RANK_DEBUG
 command_sender = "[gcrank] "
 
-function onCommand(args, player)
+function onCommand(player, args, name)
     local rank = tonumber(args[1])
     local MAX_RANK <const> = 11 -- As of Dawntrail, the max rank in a GC is 11, or Captain.
 

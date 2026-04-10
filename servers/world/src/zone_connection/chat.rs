@@ -46,6 +46,7 @@ impl ZoneConnection {
         arg1: i32,
         arg2: i32,
         arg3: i32,
+        name: String,
         lua_player: &mut LuaPlayer,
     ) {
         let lua = self.lua.lock();
@@ -54,7 +55,7 @@ impl ZoneConnection {
         if let Some(command_script) = state.gm_command_scripts.get(&command) {
             let file_name = FilesystemConfig::locate_script_file(command_script);
 
-            let mut run_script = || -> mlua::Result<()> {
+            let run_script = || -> mlua::Result<()> {
                 lua.0.scope(|scope| {
                     let connection_data = scope
                     .create_userdata_ref_mut(lua_player)?;
@@ -82,7 +83,7 @@ impl ZoneConnection {
                     if self.player_data.character.gm_rank as u8 >= required_rank? {
                         let func: Function =
                         lua.0.globals().get("onCommand")?;
-                        func.call::<()>(([arg0, arg1, arg2, arg3], connection_data))?;
+                        func.call::<()>((connection_data, [arg0, arg1, arg2, arg3], name))?;
 
                         /* `command_sender` is an optional variable scripts can define to identify themselves in print messages.
                          * It's okay if this global isn't set. We also don't care what its value is, just that it exists.

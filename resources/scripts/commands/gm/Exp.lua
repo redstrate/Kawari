@@ -1,7 +1,7 @@
 required_rank = GM_RANK_DEBUG
 command_sender = "[exp] "
 
-function onCommand(args, player)
+function onCommand(player, args, name)
     local amount = args[1]
 
     player:add_exp(amount)

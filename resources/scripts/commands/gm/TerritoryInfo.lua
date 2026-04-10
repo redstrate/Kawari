@@ -1,7 +1,7 @@
 required_rank = GM_RANK_DEBUG
 command_sender = "[teri_info] "
 
-function onCommand(args, player)
+function onCommand(player, args, name)
     local teri_info = "Territory Info for zone "..player.zone.id..":"
     local current_weather = "Current weather: "..player.zone.weather_id
     local internal_name = "Internal name: "..player.zone.internal_name

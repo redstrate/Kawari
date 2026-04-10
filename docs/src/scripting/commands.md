@@ -37,7 +37,7 @@ The logic script behind the command is the same for both kinds. You are given an
 ```lua
 command_sender = "[teri] "
 
-function onCommand(args, player)
+function onCommand(player, args, name)
     local id = args[1]
 
     player:change_territory(id)

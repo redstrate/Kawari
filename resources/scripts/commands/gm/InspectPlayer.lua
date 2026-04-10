@@ -5,7 +5,7 @@ function getItemCondition(condition)
     return (condition / 30000) * 100
 end
 
-function onCommand(args, player)
+function onCommand(player, args, name)
     local info = "\z
         --- Info for player ---\n\z
         Current region: %s\n\z

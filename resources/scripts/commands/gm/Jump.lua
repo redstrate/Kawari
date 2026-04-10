@@ -1,6 +1,6 @@
 required_rank = GM_RANK_DEBUG
-command_sender = "[kill] "
+command_sender = "[jump] "
 
 function onCommand(player, args, name)
-    player:kill()
+    player:jump(name)
 end

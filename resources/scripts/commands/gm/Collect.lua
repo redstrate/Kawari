@@ -1,7 +1,7 @@
 required_rank = GM_RANK_DEBUG
 command_sender = "[collect] "
 
-function onCommand(args, player)
+function onCommand(player, args, name)
     local amount = tonumber(args[1])
     if player.gil >= amount then
         player:modify_currency(CURRENCY_GIL, -amount)

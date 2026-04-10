@@ -1,7 +1,7 @@
 required_rank = GM_RANK_DEBUG
 command_sender = "[setsex] "
 
-function onCommand(args, player)
+function onCommand(player, args, name)
     local sex = args[1]
 
     player:set_sex(sex)

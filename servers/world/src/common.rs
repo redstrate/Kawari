@@ -437,6 +437,10 @@ pub enum ToServer {
     FriendRemoved(ObjectId, u64, String, ObjectId, u64, String),
     /// The client sends a letter to a friend.
     SendLetterTo(ObjectId),
+    /// Teleport to this player.
+    Jump(ClientId, String),
+    /// Teleport the player to this one.
+    Call(ObjectId, String),
 }
 
 #[derive(Clone, Debug)]

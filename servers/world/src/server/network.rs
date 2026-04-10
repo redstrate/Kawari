@@ -406,4 +406,13 @@ impl NetworkState {
             self.send_to_by_actor_id(member, message.clone(), destination);
         }
     }
+
+    /// Returns the `ClientId` for `actor_id`.
+    pub fn find_by_actor(&self, actor_id: ObjectId) -> Option<ClientId> {
+        self.clients
+            .iter()
+            .filter(|x| x.1.0.actor_id == actor_id)
+            .last()
+            .map(|x| *x.0)
+    }
 }

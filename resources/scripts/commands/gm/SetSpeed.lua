@@ -1,7 +1,7 @@
 required_rank = GM_RANK_DEBUG
 command_sender = "[setspeed] "
 
-function onCommand(args, player)
+function onCommand(player, args, name)
     local SPEED_MAX = 10 -- Arbitrary, but it's more or less unplayable even at this amount
     local speed_multiplier = args[1]
 

@@ -1,7 +1,7 @@
 required_rank = GM_RANK_DEBUG
 command_sender = "[orchestrion] "
 
-function onCommand(args, player)
+function onCommand(player, args, name)
     local on_arg = args[1]
     local on = nil
 

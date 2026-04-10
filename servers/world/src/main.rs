@@ -1606,7 +1606,7 @@ async fn process_packet(
                                                         }
                                                         let func: Function =
                                                         lua.0.globals().get("onCommand")?;
-                                                        func.call::<()>((func_args, connection_data))?;
+                                                        func.call::<()>((connection_data, func_args, String::default()))?;
 
                                                         /* `command_sender` is an optional variable scripts can define to identify themselves in print messages.
                                                          * It's okay if this global isn't set. We also don't care what its value is, just that it exists.
@@ -1676,7 +1676,15 @@ async fn process_packet(
                             ..
                         } => {
                             connection
-                                .run_gm_command(*command, *arg0, *arg1, *arg2, *arg3, lua_player)
+                                .run_gm_command(
+                                    *command,
+                                    *arg0,
+                                    *arg1,
+                                    *arg2,
+                                    *arg3,
+                                    String::default(),
+                                    lua_player,
+                                )
                                 .await;
                         }
                         ClientZoneIpcData::GMCommandName {
@@ -1685,10 +1693,19 @@ async fn process_packet(
                             arg1,
                             arg2,
                             arg3,
+                            name,
                             ..
                         } => {
                             connection
-                                .run_gm_command(*command, *arg0, *arg1, *arg2, *arg3, lua_player)
+                                .run_gm_command(
+                                    *command,
+                                    *arg0,
+                                    *arg1,
+                                    *arg2,
+                                    *arg3,
+                                    name.clone(),
+                                    lua_player,
+                                )
                                 .await;
                         }
                         ClientZoneIpcData::GMCommandName2 { data, .. } => {

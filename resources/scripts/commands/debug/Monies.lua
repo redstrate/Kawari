@@ -1,7 +1,7 @@
 required_rank = GM_RANK_DEBUG
 command_sender = "[monies] "
 
-function onCommand(args, player)
+function onCommand(player, args, name)
     local amount = 9999999
 
     player:modify_currency(CURRENCY_GIL, amount)

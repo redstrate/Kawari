@@ -1,7 +1,7 @@
 required_rank = GM_RANK_DEBUG
 command_sender = "[gc] "
 
-function onCommand(args, player)
+function onCommand(player, args, name)
     local company = tonumber(args[1])
 
     if company ~= nil and company >= 0 and company <= 3 then

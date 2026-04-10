@@ -810,6 +810,19 @@ impl ZoneConnection {
                     self.set_grand_company_rank(*rank);
                     self.send_grand_company_info().await;
                 }
+                LuaTask::Jump { name } => {
+                    self.handle
+                        .send(ToServer::Jump(self.id, name.clone()))
+                        .await;
+                }
+                LuaTask::Call { name } => {
+                    self.handle
+                        .send(ToServer::Call(
+                            self.player_data.character.actor_id,
+                            name.clone(),
+                        ))
+                        .await;
+                }
             }
         }
         player.queued_tasks.clear();

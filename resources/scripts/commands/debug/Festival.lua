@@ -3,7 +3,7 @@
 required_rank = GM_RANK_DEBUG
 command_sender = "[festival] "
 
-function onCommand(args, player)
+function onCommand(player, args, name)
     local usage = "\nUsage: !festival <id1> <id2> <id3> <id4>"
 
     local id1 = args[1]

@@ -1,7 +1,7 @@
 required_rank = GM_RANK_DEBUG
 command_sender = "[howto] "
 
-function onCommand(args, player)
+function onCommand(player, args, name)
     local on <const> = ~args[1] & 1  -- The client sends 1 for off and 0 for on, so we need to invert this for the rust side to work properly.
     local id <const> = args[2]
 

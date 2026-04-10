@@ -1,7 +1,7 @@
 required_rank = GM_RANK_DEBUG
 command_sender = "[settribe] "
 
-function onCommand(args, player)
+function onCommand(player, args, name)
     local tribe = args[1]
 
     player:set_tribe(tribe)

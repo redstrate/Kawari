@@ -10,6 +10,7 @@ GM_SET_RACE = 2
 GM_SET_TRIBE = 3
 GM_SET_SEX = 4
 GM_CHANGE_WEATHER = 6
+GM_CALL = 7
 GM_SPEED = 9
 GM_INVISIBILITY = 13
 GM_KILL = 14
@@ -37,6 +38,7 @@ GM_HOWTO = 500
 GM_WIREFRAME = 550
 GM_TERRITORY = 600
 GM_TERRITORY_INFO = 605
+GM_JUMP = 606
 GM_WORLD = 609
 GM_IMMEDIATELY_ACTION = 612
 
@@ -46,6 +48,7 @@ registerGMCommand(GM_SET_RACE,           GM_DIR.."SetRace.lua")
 registerGMCommand(GM_SET_TRIBE,          GM_DIR.."SetTribe.lua")
 registerGMCommand(GM_SET_SEX,            GM_DIR.."SetSex.lua")
 registerGMCommand(GM_CHANGE_WEATHER,     GM_DIR.."ChangeWeather.lua")
+registerGMCommand(GM_CALL,               GM_DIR.."Call.lua")
 registerGMCommand(GM_SPEED,              GM_DIR.."SetSpeed.lua")
 registerGMCommand(GM_INVISIBILITY,       GM_DIR.."ToggleInvisibility.lua")
 registerGMCommand(GM_KILL,               GM_DIR.."Kill.lua")
@@ -75,6 +78,7 @@ registerGMCommand(GM_CUTFLG,             GM_DIR.."CutsceneFlag.lua")
 registerGMCommand(GM_WIREFRAME,          GM_DIR.."ToggleWireframe.lua")
 registerGMCommand(GM_TERRITORY,          GM_DIR.."ChangeTerritory.lua")
 registerGMCommand(GM_TERRITORY_INFO,     GM_DIR.."TerritoryInfo.lua")
+registerGMCommand(GM_JUMP,               GM_DIR.."Jump.lua")
 registerGMCommand(GM_WORLD,              GM_DIR.."World.lua")
 registerGMCommand(GM_IMMEDIATELY_ACTION, GM_DIR.."ImmediatelyAction.lua")
 

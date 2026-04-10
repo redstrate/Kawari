@@ -30,7 +30,9 @@ use crate::{
             update_party_waymarks,
         },
         social::handle_social_messages,
-        zone::{MapGimmick, change_zone_warp_to_entrance, handle_zone_messages},
+        zone::{
+            MapGimmick, change_zone_to_player, change_zone_warp_to_entrance, handle_zone_messages,
+        },
     },
 };
 use kawari::{
@@ -93,6 +95,7 @@ impl WorldServer {
             .iter()
             .any(|x| x.zone.id == zone_id && x.content_finder_condition_id == 0)
         {
+            tracing::info!("Creating new instance for {zone_id}!");
             self.instances.push(Instance::new(zone_id, game_data));
         }
     }
@@ -200,6 +203,20 @@ impl WorldServer {
         self.instances.push(instance);
 
         self.instances.last_mut()
+    }
+
+    fn find_actor_by_name(&self, name: &str) -> ObjectId {
+        for instance in &self.instances {
+            for (id, actor) in &instance.actors {
+                if let Some(spawn) = actor.get_player_spawn()
+                    && spawn.common.name == name
+                {
+                    return *id;
+                }
+            }
+        }
+
+        ObjectId::default()
     }
 }
 
@@ -2047,7 +2064,7 @@ pub async fn server_main_loop(
                                 change_zone_warp_to_entrance(
                                     &mut network,
                                     target_instance,
-                                    zone_id,
+                                    true, // TODO: this shouldn't be hardcoded
                                     *client_id,
                                 );
                             }
@@ -2338,6 +2355,37 @@ pub async fn server_main_loop(
                     };
 
                     *remove_cooldowns = true;
+                }
+                ToServer::Jump(from_id, name) => {
+                    let mut data = data.lock();
+                    let mut network = network.lock();
+                    let mut game_data = game_data.lock();
+
+                    let to_actor_id = data.find_actor_by_name(&name);
+
+                    change_zone_to_player(
+                        &mut network,
+                        &mut data,
+                        &mut game_data,
+                        from_id,
+                        to_actor_id,
+                    );
+                }
+                ToServer::Call(from_actor_id, name) => {
+                    let mut data = data.lock();
+                    let mut network = network.lock();
+                    let mut game_data = game_data.lock();
+
+                    let actor_id = data.find_actor_by_name(&name);
+                    if let Some(client_id) = network.find_by_actor(actor_id) {
+                        change_zone_to_player(
+                            &mut network,
+                            &mut data,
+                            &mut game_data,
+                            client_id,
+                            from_actor_id,
+                        );
+                    }
                 }
                 ToServer::FatalError(err) => return Err(err),
                 _ => {

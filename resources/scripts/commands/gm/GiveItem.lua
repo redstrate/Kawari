@@ -1,7 +1,7 @@
 required_rank = GM_RANK_DEBUG
 command_sender = "[item] "
 
-function onCommand(args, player)
+function onCommand(player, args, name)
     local id <const> = args[1]
     local quantity = args[2]
     if quantity == 0 then

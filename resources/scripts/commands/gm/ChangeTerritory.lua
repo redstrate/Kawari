@@ -1,7 +1,7 @@
 required_rank = GM_RANK_DEBUG
 command_sender = "[teri] "
 
-function onCommand(args, player)
+function onCommand(player, args, name)
     local id = args[1]
 
     player:change_territory(id)

@@ -588,6 +588,14 @@ impl LuaPlayer {
         self.queued_tasks
             .push(LuaTask::SetGrandCompanyRank { rank });
     }
+
+    fn jump(&mut self, name: String) {
+        self.queued_tasks.push(LuaTask::Jump { name });
+    }
+
+    fn call(&mut self, name: String) {
+        self.queued_tasks.push(LuaTask::Call { name });
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -1037,6 +1045,14 @@ impl UserData for LuaPlayer {
         });
         methods.add_method_mut("set_grand_company_rank", |_, this, rank: u8| {
             this.set_grand_company_rank(rank);
+            Ok(())
+        });
+        methods.add_method_mut("jump", |_, this, name: String| {
+            this.jump(name);
+            Ok(())
+        });
+        methods.add_method_mut("call", |_, this, name: String| {
+            this.call(name);
             Ok(())
         });
     }
