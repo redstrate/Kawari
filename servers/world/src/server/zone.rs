@@ -342,6 +342,10 @@ impl Zone {
         // TODO: also check position!
         for layer_group in &self.layer_groups {
             for layer in &layer_group.chunks[0].layers {
+                if !layer.header.has_layer_set(self.layer_set as u32) {
+                    continue;
+                }
+
                 for object in &layer.objects {
                     if let LayerEntryData::ExitRange(exit_range) = &object.data
                         && object.instance_id == instance_id
@@ -362,6 +366,10 @@ impl Zone {
         // TODO: also check position!
         for layer_group in &self.layer_groups {
             for layer in &layer_group.chunks[0].layers {
+                if !layer.header.has_layer_set(self.layer_set as u32) {
+                    continue;
+                }
+
                 for object in &layer.objects {
                     if let LayerEntryData::PopRange(pop_range) = &object.data
                         && object.instance_id == instance_id
@@ -394,6 +402,10 @@ impl Zone {
         let mut bound_id = None;
         for layer_group in &self.layer_groups {
             for layer in &layer_group.chunks[0].layers {
+                if !layer.header.has_layer_set(self.layer_set as u32) {
+                    continue;
+                }
+
                 for object in &layer.objects {
                     if let LayerEntryData::EventObject(eobj) = &object.data
                         && eobj.parent_data.base_id == base_id
@@ -405,11 +417,13 @@ impl Zone {
             }
         }
 
-        bound_id?;
-
         // Then find the linked instance object, which is usually a SGB.
         for layer_group in &self.layer_groups {
             for layer in &layer_group.chunks[0].layers {
+                if !layer.header.has_layer_set(self.layer_set as u32) {
+                    continue;
+                }
+
                 for object in &layer.objects {
                     if object.instance_id == bound_id.unwrap() {
                         return Some(object);
@@ -444,6 +458,10 @@ impl Zone {
 
         for layer_group in &self.layer_groups {
             for layer in &layer_group.chunks[0].layers {
+                if !layer.header.has_layer_set(self.layer_set as u32) {
+                    continue;
+                }
+
                 for object in &layer.objects {
                     if let LayerEntryData::EventObject(eobj) = &object.data {
                         // Don't spawn blocking doors, e.g. the ones in the Ul'dah opening. Unsure if there are legitimate uses of this?
