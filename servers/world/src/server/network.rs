@@ -7,7 +7,7 @@ use crate::{
         ClientState, WorldServer,
         actor::NetworkedActor,
         instance::Instance,
-        social::{Party, get_party_id_from_actor_id},
+        party::{Party, get_party_id_from_actor_id},
     },
 };
 use kawari::{common::ObjectId, ipc::zone::ActorControlCategory};
