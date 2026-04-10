@@ -105,4 +105,4 @@ registerCommand("toggletripletriadcard",            DBG_DIR.."ToggleTripleTriadC
 registerCommand("unlock",                           DBG_DIR.."Unlock.lua")
 registerCommand("unlockbuddyequip",                 DBG_DIR.."UnlockBuddyEquip.lua")
 registerCommand("unlockcontent",                    DBG_DIR.."UnlockContent.lua")
-
+registerCommand("skipintro",                        DBG_DIR.."SkipIntro.lua")
