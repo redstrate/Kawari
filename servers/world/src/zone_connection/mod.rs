@@ -437,6 +437,10 @@ impl ZoneConnection {
         if self.player_data.grand_company.active_company != IpcGrandCompany::None {
             let company_index = self.player_data.grand_company.active_company as usize - 1;
             self.player_data.grand_company.company_ranks.0[company_index] = rank;
+            {
+                let mut db = self.database.lock();
+                db.commit_grand_companies(&self.player_data);
+            }
         }
     }
 
@@ -446,6 +450,11 @@ impl ZoneConnection {
         // If the player has no grand company after the above, this is a no-op.
         if self.grand_company_rank(company).unwrap_or_default() == 0 {
             self.set_grand_company_rank(1);
+        }
+
+        {
+            let mut db = self.database.lock();
+            db.commit_grand_companies(&self.player_data);
         }
     }
 }

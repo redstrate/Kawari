@@ -1010,7 +1010,9 @@ pub enum ServerZoneIpcData {
         #[br(map = read_string)]
         #[bw(map = write_string)]
         comment: String,
-        unk2: [u8; 160], // also seems empty
+        unk2: [u8; 157], // also seems empty
+        grand_company_rank: u8,
+        unk3: [u8; 2], // probably also empty
         classjob_levels: [(u16, u16); AVAILABLE_CLASSJOBS],
     },
     SetPlayerCustomizeData(CustomizeData),
