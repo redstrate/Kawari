@@ -48,6 +48,9 @@ pub const EOBJ_SHORTCUT: u32 = 2000700;
 /// EObj ID for the "shortcut" used for explorer mode.
 pub const EOBJ_SHORTCUT_EXPLORER_MODE: u32 = 2011343;
 
+/// EObj ID for the "exit" object seen in instanced content.
+pub const EOBJ_EXIT: u32 = 2000139;
+
 /// Time until a dead actor fades away. Estimated from retail.
 pub const DEAD_FADE_OUT_TIME: Duration = Duration::from_secs(8);
 

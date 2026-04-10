@@ -22,8 +22,9 @@ use crate::{
 };
 use kawari::{
     common::{
-        DistanceRange, DropIn, DropInLayer, DropInObjectData, ENTRANCE_CIRCLE_IDS, EOBJ_SHORTCUT,
-        EOBJ_SHORTCUT_EXPLORER_MODE, HandlerType, ObjectId, Position, euler_to_direction,
+        DistanceRange, DropIn, DropInLayer, DropInObjectData, ENTRANCE_CIRCLE_IDS, EOBJ_EXIT,
+        EOBJ_SHORTCUT, EOBJ_SHORTCUT_EXPLORER_MODE, HandlerType, InvisibilityFlags, ObjectId,
+        Position, euler_to_direction,
     },
     config::get_config,
     ipc::zone::{
@@ -478,10 +479,22 @@ impl Zone {
                             eobj.parent_data.base_id
                         };
 
+                        // Hide shortcuts and exits, these will be spawned by the director.
+                        let visibility = if eobj.parent_data.base_id == EOBJ_SHORTCUT
+                            || eobj.parent_data.base_id == EOBJ_EXIT
+                        {
+                            InvisibilityFlags::UNK1
+                                | InvisibilityFlags::UNK2
+                                | InvisibilityFlags::UNK3
+                        } else {
+                            InvisibilityFlags::VISIBLE
+                        };
+
                         let spawn = SpawnObject {
                             kind: ObjectKind::EventObj,
                             base_id,
                             unselectable,
+                            visibility,
                             entity_id: ObjectId(fastrand::u32(..)),
                             layout_id: object.instance_id,
                             bind_layout_id: eobj.bound_instance_id,
