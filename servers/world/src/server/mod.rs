@@ -22,12 +22,14 @@ use crate::{
         director::{DirectorData, director_tick, handle_director_messages},
         effect::{handle_effect_messages, remove_effect, send_effects_list},
         instance::{Instance, NavmeshGenerationStep, QueuedTaskData},
+        linkshell::handle_linkshell_messages,
         network::{DestinationNetwork, NetworkState},
-        social::{
-            NUM_TARGET_SIGNS, get_party_id_from_actor_id, handle_social_messages,
+        party::{
+            NUM_TARGET_SIGNS, get_party_id_from_actor_id, handle_party_messages,
             send_party_positions, update_party_position, update_party_waymark,
             update_party_waymarks,
         },
+        social::handle_social_messages,
         zone::{MapGimmick, change_zone_warp_to_entrance, handle_zone_messages},
     },
 };
@@ -53,10 +55,12 @@ mod chat;
 mod director;
 mod effect;
 mod instance;
+mod linkshell;
 mod network;
-mod social;
-pub use social::{Party, PartyMember};
+mod party;
+pub use party::{Party, PartyMember};
 mod npc_behavior;
+mod social;
 mod zone;
 
 #[derive(Default, Debug, Clone)]
@@ -899,6 +903,8 @@ pub async fn server_main_loop(
         handled |= handle_action_messages(data.clone(), game_data.clone(), &msg);
         handled |= handle_effect_messages(data.clone(), network.clone(), lua.clone(), &msg);
         handled |= handle_director_messages(data.clone(), &msg);
+        handled |= handle_party_messages(data.clone(), network.clone(), &msg);
+        handled |= handle_linkshell_messages(network.clone(), &msg);
 
         if !handled {
             match msg {
