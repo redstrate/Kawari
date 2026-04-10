@@ -197,6 +197,14 @@ impl WorldDatabase {
             .unwrap();
     }
 
+    pub fn commit_grand_companies(&mut self, data: &PlayerData) {
+        use models::*;
+
+        data.grand_company
+            .save_changes::<GrandCompany>(&mut self.connection)
+            .unwrap();
+    }
+
     /// Commit the dynamic player data back to the database
     pub fn commit_player_data(&mut self, data: &PlayerData) {
         use models::*;
@@ -1051,12 +1059,25 @@ impl WorldDatabase {
             }
         }
 
+        let grand_company_rank = if let Ok(gc_info) = schema::grand_company::dsl::grand_company
+            .select(models::GrandCompany::as_select())
+            .filter(schema::grand_company::dsl::content_id.eq(for_content_id))
+            .first::<models::GrandCompany>(&mut self.connection)
+            && gc_info.active_company != IpcGrandCompany::None
+        {
+            gc_info.company_ranks.0[gc_info.active_company as usize - 1]
+        } else {
+            0
+        };
+
         ServerZoneIpcData::OtherSearchInfo {
             content_id: for_content_id as u64,
             unk1: [0; 26],
             world_id: config.world.world_id,
             comment,
-            unk2: [0; 160],
+            unk2: [0; 157],
+            grand_company_rank,
+            unk3: [0; 2],
             classjob_levels,
         }
     }
@@ -1074,6 +1095,7 @@ impl WorldDatabase {
         let has_search_comment;
         let classjob_id;
         let classjob_level;
+        let grand_company;
         {
             online_status_mask = self.determine_online_status_mask(for_content_id);
 
@@ -1126,6 +1148,16 @@ impl WorldDatabase {
             } else {
                 0
             };
+
+            grand_company = if online {
+                schema::grand_company::dsl::grand_company
+                    .select(schema::grand_company::dsl::active_company)
+                    .filter(schema::grand_company::dsl::content_id.eq(for_content_id))
+                    .first::<IpcGrandCompany>(&mut self.connection)
+                    .unwrap_or_default()
+            } else {
+                IpcGrandCompany::None
+            };
         }
 
         let character_name;
@@ -1166,6 +1198,7 @@ impl WorldDatabase {
             classjob_level,
             home_world_id: config.world.world_id,
             name: character_name,
+            grand_company,
             ..Default::default()
         }
     }
