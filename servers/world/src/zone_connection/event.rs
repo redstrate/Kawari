@@ -155,6 +155,9 @@ impl ZoneConnection {
 
             self.event_handler_id = old_event_handler_id;
 
+            // We have to send this again to ensure the client doesn't get stuck.
+            self.send_conditions().await;
+
             false
         }
     }
