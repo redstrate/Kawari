@@ -38,7 +38,7 @@ use super::{
     inventory::{BuyBackList, Inventory},
 };
 
-mod actors;
+mod actor;
 mod chat;
 mod effect;
 mod event;
