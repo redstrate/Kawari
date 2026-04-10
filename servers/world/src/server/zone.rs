@@ -22,9 +22,8 @@ use crate::{
 };
 use kawari::{
     common::{
-        BOSS_WALL_IDS, DistanceRange, DropIn, DropInLayer, DropInObjectData, ENTRANCE_CIRCLE_IDS,
-        EOBJ_DOOR, EOBJ_SHORTCUT, EOBJ_SHORTCUT_EXPLORER_MODE, HandlerType, InvisibilityFlags,
-        ObjectId, Position, euler_to_direction,
+        DistanceRange, DropIn, DropInLayer, DropInObjectData, ENTRANCE_CIRCLE_IDS, EOBJ_SHORTCUT,
+        EOBJ_SHORTCUT_EXPLORER_MODE, HandlerType, ObjectId, Position, euler_to_direction,
     },
     config::get_config,
     ipc::zone::{
@@ -464,21 +463,6 @@ impl Zone {
 
                 for object in &layer.objects {
                     if let LayerEntryData::EventObject(eobj) = &object.data {
-                        // Don't spawn blocking doors, e.g. the ones in the Ul'dah opening. Unsure if there are legitimate uses of this?
-                        if eobj.parent_data.base_id == EOBJ_DOOR {
-                            continue;
-                        }
-
-                        // Ensure boss walls are spawned in a non-blocking state.
-                        // TODO: maybe this should be handled by the director?
-                        let visibility = if BOSS_WALL_IDS.contains(&eobj.parent_data.base_id) {
-                            InvisibilityFlags::UNK1
-                                | InvisibilityFlags::UNK2
-                                | InvisibilityFlags::UNK3
-                        } else {
-                            InvisibilityFlags::VISIBLE
-                        };
-
                         let unselectable = if let Some(event_type) = HandlerType::from_repr(
                             game_data.get_eobj_data(eobj.parent_data.base_id) >> 16,
                         ) {
@@ -502,7 +486,6 @@ impl Zone {
                             layout_id: object.instance_id,
                             bind_layout_id: eobj.bound_instance_id,
                             radius: 1.0,
-                            visibility,
                             rotation: euler_to_direction(object.transform.rotation),
                             position: Position {
                                 x: object.transform.translation[0],
