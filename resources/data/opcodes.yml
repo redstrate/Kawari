@@ -707,6 +707,10 @@ ServerZoneIpcType:
     comment: Contains the greeting text for a specific housing plot. This packet is sent when hovering the greeting text bubble in the house list.
     opcode: 604
     size: 208
+  - name: NpcYell
+    comment: Seen during Gold Saucer GATE announcements.
+    opcode: 556
+    size: 32
 ClientZoneIpcType:
   - name: InitRequest
     comment: Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)

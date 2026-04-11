@@ -7,7 +7,7 @@ use crate::{
     inventory::{Item, Storage},
 };
 use kawari::{
-    common::{ERR_INVENTORY_ADD_FAILED, FateState},
+    common::{ERR_INVENTORY_ADD_FAILED, FateState, ObjectTypeId},
     ipc::zone::{
         ActorControlCategory, Condition, Conditions, GameMasterRank, ServerZoneIpcData,
         ServerZoneIpcSegment,
@@ -241,6 +241,33 @@ impl ChatHandler {
                         .await;
                     connection
                         .actor_control_self(ActorControlCategory::UnkFate12 { fate_id })
+                        .await;
+                }
+
+                true
+            }
+            "!yell" => {
+                if let Some((_, npc_yell_id)) = chat_message.split_once(' ') {
+                    let npc_yell_id = npc_yell_id.parse().unwrap();
+
+                    let name_id;
+                    {
+                        let mut game_data = connection.gamedata.lock();
+                        name_id = game_data
+                            .get_npc_yell_name_id(npc_yell_id)
+                            .unwrap_or_default();
+                    }
+
+                    connection
+                        .send_ipc_self(ServerZoneIpcSegment::new(ServerZoneIpcData::NpcYell {
+                            object_id: ObjectTypeId::default(),
+                            name_id,
+                            npc_yell_id,
+                            param1: 0,
+                            param2: 0,
+                            param3: 0,
+                            param4: 0,
+                        }))
                         .await;
                 }
 

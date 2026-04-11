@@ -31,6 +31,7 @@ use icarus::Item::ItemSheet;
 use icarus::ItemAction::ItemActionSheet;
 use icarus::ItemLevel::ItemLevelSheet;
 use icarus::Mount::MountSheet;
+use icarus::NpcYell::NpcYellSheet;
 use icarus::OnlineStatus::OnlineStatusSheet;
 use icarus::Opening::OpeningSheet;
 use icarus::ParamGrow::{ParamGrowRow, ParamGrowSheet};
@@ -1446,6 +1447,15 @@ impl GameData {
             .collect();
 
         fastrand::choice(rows).unwrap()
+    }
+
+    /// Returns the name ID for a given NpcYell.
+    pub fn get_npc_yell_name_id(&mut self, npc_yell_id: u32) -> Option<u32> {
+        let config = get_config();
+        let sheet = NpcYellSheet::read_from(&mut self.resource, config.world.language()).ok()?;
+        let row = sheet.row(npc_yell_id)?;
+
+        Some(row.Unknown0()) // NOTE: will be Name in the future
     }
 }
 

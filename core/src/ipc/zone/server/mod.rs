@@ -1296,6 +1296,22 @@ pub enum ServerZoneIpcData {
         #[brw(pad_after = 3)] // Seems to be empty/zeroes
         name: String,
     },
+    NpcYell {
+        /// Unknown purpose.
+        object_id: ObjectTypeId,
+        /// Index into ENpcResident Excel sheet.
+        name_id: u32,
+        /// Index into the NpcYell Excel sheet.
+        npc_yell_id: u32,
+        /// First generic parameter.
+        param1: u32,
+        /// Second generic parameter.
+        param2: u32,
+        /// Third generic parameter.
+        param3: u32,
+        /// Fourth generic parameter.
+        param4: u32,
+    },
 }
 
 #[cfg(test)]
