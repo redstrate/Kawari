@@ -1724,6 +1724,7 @@ async fn process_packet(
                                     connection.id,
                                     connection.player_data.character.actor_id,
                                     *exit_box,
+                                    None,
                                 ))
                                 .await;
                         }
@@ -2965,9 +2966,17 @@ async fn process_packet(
                             position,
                         } => {
                             match action {
-                                0xD1 => { // Underwater portal
-                                    // TODO: This uses param1 somehow. It doesn't appear to be a poprange or exit box. If it's an index into a sheet, I have no idea which.
-                                    // TODO: The ActorSetPos for underwater portals uses warp_type: WarpType::InstanceContent, param4 = 15, hide_character = 2, unk1 = 4.
+                                0xD1 => {
+                                    // Underwater portal
+                                    connection
+                                        .handle
+                                        .send(ToServer::EnterZoneJump(
+                                            connection.id,
+                                            connection.player_data.character.actor_id,
+                                            *param1,
+                                            Some((WarpType::InstanceContent, 15, 2, 4)),
+                                        ))
+                                        .await;
                                 }
                                 0x25F => {
                                     // Surfacing from diving

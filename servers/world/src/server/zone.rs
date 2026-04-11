@@ -832,6 +832,9 @@ pub fn change_zone_warp_to_pop_range(
     actor_id: ObjectId,
     from_id: ClientId,
     warp_type: WarpType,
+    param4: u8,
+    hide_character: u8,
+    unk1: u8,
 ) {
     let (target_instance, needs_init_zone) = begin_change_zone(
         data,
@@ -840,9 +843,9 @@ pub fn change_zone_warp_to_pop_range(
         destination_zone_id,
         actor_id,
         warp_type,
-        0,
-        0,
-        0,
+        param4,
+        hide_character,
+        unk1,
     )
     .unwrap();
 
@@ -1085,12 +1088,12 @@ pub fn handle_zone_messages(
 
             true
         }
-        ToServer::EnterZoneJump(from_id, actor_id, exitbox_id) => {
+        ToServer::EnterZoneJump(from_id, actor_id, exitbox_id, warp_type_info) => {
             let mut data = data.lock();
             let mut network = network.lock();
 
             // first, find the zone jump in the current zone
-            let destination_zone_id;
+            let mut destination_zone_id;
             let destination_instance_id;
             if let Some(current_instance) = data.find_actor_instance(*actor_id) {
                 let Some((_, new_exit_box)) = current_instance.zone.find_exit_box(*exitbox_id)
@@ -1099,11 +1102,27 @@ pub fn handle_zone_messages(
                     return true;
                 };
                 destination_zone_id = new_exit_box.territory_type;
+
+                // Seen when attempting to enter underwater portals in Ruby Sea
+                if new_exit_box.territory_type == 0
+                    && new_exit_box.zone_id == 0
+                    && new_exit_box.exit_type == physis::layer::ExitType::Unk
+                {
+                    destination_zone_id = current_instance.zone.id;
+                }
+
                 destination_instance_id = new_exit_box.destination_instance_id;
             } else {
                 tracing::warn!("Actor isn't in the instance it was expected in. This is a bug!");
                 return true;
             }
+
+            let (warp_type, param4, hide_character, unk1) =
+                if let Some((w_type, param, hide, unk)) = warp_type_info {
+                    (*w_type, *param, *hide, *unk)
+                } else {
+                    (WarpType::Normal, 0, 0, 0)
+                };
 
             let mut game_data = game_data.lock();
             change_zone_warp_to_pop_range(
@@ -1114,7 +1133,10 @@ pub fn handle_zone_messages(
                 destination_instance_id,
                 *actor_id,
                 *from_id,
-                WarpType::Normal,
+                warp_type,
+                param4,
+                hide_character,
+                unk1,
             );
 
             true
@@ -1138,6 +1160,9 @@ pub fn handle_zone_messages(
                 *actor_id,
                 *from_id,
                 WarpType::Normal,
+                0,
+                0,
+                0,
             );
 
             true
@@ -1161,6 +1186,9 @@ pub fn handle_zone_messages(
                 *actor_id,
                 *from_id,
                 WarpType::Normal,
+                0,
+                0,
+                0,
             );
 
             true
@@ -1179,6 +1207,9 @@ pub fn handle_zone_messages(
                 *from_actor_id,
                 *from_id,
                 WarpType::Normal,
+                0,
+                0,
+                0,
             );
 
             true
@@ -1254,6 +1285,9 @@ pub fn handle_zone_messages(
                 } else {
                     WarpType::None
                 },
+                0,
+                0,
+                0,
             );
 
             true
