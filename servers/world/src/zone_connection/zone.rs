@@ -11,7 +11,7 @@ use kawari::{
     constants::OBFUSCATION_ENABLED_MODE,
     ipc::zone::{
         ActorControlCategory, Condition, ContentRegistrationFlags, House, HouseList, InitZone,
-        InitZoneFlags, ServerZoneIpcData, ServerZoneIpcSegment, Warp, WeatherChange,
+        InitZoneFlags, ServerZoneIpcData, ServerZoneIpcSegment, WeatherChange,
     },
     packet::{ConnectionState, PacketSegment, ScramblerKeyGenerator, SegmentData, SegmentType},
 };
@@ -54,39 +54,9 @@ impl ZoneConnection {
 
         let bound_by_duty = content_finder_condition_id != 0;
 
-        // fade in?
-        {
-            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PrepareZoning {
-                log_message: 0,
-                target_zone: self.player_data.volatile.zone_id as u16,
-                animation: 0,
-                param4: 0,
-                hide_character: 0,
-                fade_out: 1,
-                param_7: 1,
-                fade_out_time: 1,
-                unk1: 8,
-                unk2: 0,
-            });
-            self.send_ipc_self(ipc).await;
-        }
-
-        // If we are already in the same zone, we can do a Warp instead!
-        if self.player_data.volatile.zone_id as u16 == new_zone_id && !initial_login {
-            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Warp(Warp {
-                dir: exit_rotation,
-                position: exit_position,
-                warp_type: 4, // for teleporting
-                ..Default::default()
-            }));
-            self.send_ipc_self(ipc).await;
-            return;
-        }
-
-        self.player_data.volatile.zone_id = new_zone_id as i32;
-
         // Commit back our zone id and other volatile info on zone change.
         {
+            self.player_data.volatile.zone_id = new_zone_id as i32;
             self.player_data.volatile.position = exit_position;
             self.player_data.volatile.rotation = exit_rotation as f64;
 

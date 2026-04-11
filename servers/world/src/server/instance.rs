@@ -19,7 +19,10 @@ use crate::{
 use kawari::{
     common::{DistanceRange, ENTRANCE_CIRCLE_IDS, ObjectId, Position},
     config::{FilesystemConfig, get_config},
-    ipc::zone::{ActionRequest, Conditions, SpawnNpc, SpawnObject, SpawnPlayer, SpawnTreasure},
+    ipc::zone::{
+        ActionRequest, Conditions, ServerZoneIpcSegment, SpawnNpc, SpawnObject, SpawnPlayer,
+        SpawnTreasure,
+    },
 };
 use parking_lot::Mutex;
 
@@ -34,7 +37,7 @@ pub enum NavmeshGenerationStep {
     Started(String),
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub enum QueuedTaskData {
     CastAction {
         request: ActionRequest,
@@ -68,14 +71,26 @@ pub enum QueuedTaskData {
         id: u32,
         place_name: u32,
     },
+    /// Generically send a packet segment, only used for `do_change_zone`. Don't abuse this as a generic task, you almost certainly want to create a new variant.
+    PacketSegment {
+        segment: ServerZoneIpcSegment,
+    },
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct QueuedTask {
     pub point: Instant,
     pub from_id: ClientId,
     pub from_actor_id: ObjectId,
     pub data: QueuedTaskData,
+}
+
+impl PartialEq for QueuedTask {
+    fn eq(&self, other: &Self) -> bool {
+        self.point == other.point
+            && self.from_id == other.from_id
+            && self.from_actor_id == other.from_actor_id
+    }
 }
 
 #[derive(Default, Debug)]

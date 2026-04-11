@@ -1,10 +1,10 @@
-use std::{collections::HashMap, sync::Arc, time::Duration};
+use std::{collections::HashMap, sync::Arc};
 
 use parking_lot::Mutex;
 use physis::{
     layer::{
         ExitRangeInstanceObject, InstanceObject, LayerEntryData, PopRangeInstanceObject,
-        Transformation, TriggerBoxShape,
+        TriggerBoxShape,
     },
     lgb::Lgb,
     lvb::Lvb,
@@ -15,7 +15,7 @@ use crate::{
     lua::LuaZone,
     server::{
         NetworkedActor, WorldServer,
-        instance::Instance,
+        instance::{Instance, QueuedTaskData},
         network::{DestinationNetwork, NetworkState},
     },
     zone_connection::{BaseParameters, TeleportQuery},
@@ -24,12 +24,13 @@ use kawari::{
     common::{
         DistanceRange, DropIn, DropInLayer, DropInObjectData, ENTRANCE_CIRCLE_IDS, EOBJ_EXIT,
         EOBJ_SHORTCUT, EOBJ_SHORTCUT_EXPLORER_MODE, HandlerType, InvisibilityFlags, ObjectId,
-        Position, euler_to_direction,
+        Position, WARP_DELAY, euler_to_direction,
     },
     config::get_config,
     ipc::zone::{
-        ActorControlCategory, BattleNpcSubKind, CharacterDataFlag, CommonSpawn, Conditions,
-        DisplayFlag, ObjectKind, SpawnNpc, SpawnObject, SpawnTreasure,
+        ActorControlCategory, ActorSetPos, BattleNpcSubKind, CharacterDataFlag, CommonSpawn,
+        Conditions, DisplayFlag, ObjectKind, ServerZoneIpcData, ServerZoneIpcSegment, SpawnNpc,
+        SpawnObject, SpawnTreasure, WarpType,
     },
 };
 
@@ -48,6 +49,9 @@ pub enum MapGimmick {
         /// The EObj's instance ID to play the animation for.
         eobj_instance_id: u32,
     },
+    /// Unsure of what to call these, but these are "exit lines" like as seen in the overworld but go to another poprange in the same zone.
+    /// Used heavily in instanced content.
+    FakeExit { exit_pop_range_id: u32 },
 }
 
 /// Simpler form of a MapRange object designed for collision detection.
@@ -303,15 +307,28 @@ impl Zone {
                         } else if let LayerEntryData::EventRange(_) = &object.data
                             && let Some(gimmick_rect_info) =
                                 game_data.lookup_gimmick_rect(object.instance_id)
-                            && (gimmick_rect_info.TriggerIn() == 1
-                                || gimmick_rect_info.TriggerIn() == 18)
-                        // FIXME: 1 is seen for cutscene triggers in Sastasha, while 18 is seen for Variant Dungeon routes in A Merchant's Tale. We should make this less "generic".
                         {
-                            let map_gimmick = MapGimmick::Generic {};
+                            let mut map_gimmick = None;
+                            match gimmick_rect_info.TriggerIn() {
+                                1 | 18 => {
+                                    // FIXME: 1 is seen for cutscene triggers in Sastasha, while 18 is seen for Variant Dungeon routes in A Merchant's Tale. We should make this less "generic".
+                                    map_gimmick = Some(MapGimmick::Generic {});
+                                }
+                                6 => {
+                                    // Seen for same-zone "exit ranges" like the one in the beginning of Sycrus Tower
+                                    map_gimmick = Some(MapGimmick::FakeExit {
+                                        exit_pop_range_id: gimmick_rect_info.Params()[0],
+                                    });
+                                }
+                                _ => tracing::warn!(
+                                    "Unknown GimmickRect type: {}",
+                                    gimmick_rect_info.TriggerIn()
+                                ),
+                            }
 
                             for map_range in &mut zone.map_ranges {
                                 if map_range.instance_id == object.instance_id {
-                                    map_range.gimmick = Some(map_gimmick);
+                                    map_range.gimmick = map_gimmick;
                                     break;
                                 }
                             }
@@ -756,8 +773,28 @@ fn begin_change_zone<'a>(
     game_data: &mut GameData,
     destination_zone_id: u16,
     actor_id: ObjectId,
+    warp_type: WarpType,
 ) -> Option<(&'a mut Instance, bool)> {
     let mut needs_init_zone = false;
+
+    let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PrepareZoning {
+        target_zone: destination_zone_id,
+        warp_type,
+        fade_out_time: 1,
+        log_message: 0,
+        animation: 0,
+        param4: 0,
+        hide_character: 0,
+        param_7: 0,
+        unk1: 0,
+        unk2: 0,
+    });
+
+    network.send_to_by_actor_id(
+        actor_id,
+        FromServer::PacketSegment(ipc, actor_id),
+        DestinationNetwork::ZoneClients,
+    );
 
     // inform the players in this zone that this actor left
     if let Some(current_instance) = data.find_actor_instance_mut(actor_id) {
@@ -781,7 +818,7 @@ fn begin_change_zone<'a>(
 }
 
 /// Sends the needed information to ZoneConnection for a zone change.
-fn change_zone_warp_to_pop_range(
+pub fn change_zone_warp_to_pop_range(
     data: &mut WorldServer,
     network: &mut NetworkState,
     game_data: &mut GameData,
@@ -789,9 +826,17 @@ fn change_zone_warp_to_pop_range(
     destination_instance_id: u32,
     actor_id: ObjectId,
     from_id: ClientId,
+    warp_type: WarpType,
 ) {
-    let (target_instance, needs_init_zone) =
-        begin_change_zone(data, network, game_data, destination_zone_id, actor_id).unwrap();
+    let (target_instance, needs_init_zone) = begin_change_zone(
+        data,
+        network,
+        game_data,
+        destination_zone_id,
+        actor_id,
+        warp_type,
+    )
+    .unwrap();
 
     let exit_position;
     let exit_rotation;
@@ -816,13 +861,14 @@ fn change_zone_warp_to_pop_range(
         exit_position,
         exit_rotation,
         from_id,
+        warp_type,
     );
 }
 
 /// Sends the needed information to ZoneConnection for a zone change.
 pub fn change_zone_warp_to_entrance(
     network: &mut NetworkState,
-    target_instance: &Instance,
+    target_instance: &mut Instance,
     needs_init_zone: bool,
     from_id: ClientId,
 ) {
@@ -850,6 +896,7 @@ pub fn change_zone_warp_to_entrance(
         exit_position,
         exit_rotation,
         from_id,
+        WarpType::Normal,
     );
 }
 
@@ -872,8 +919,15 @@ pub fn change_zone_to_player(
 
     let from_actor_id = network.clients.get(&from_id).unwrap().0.actor_id;
 
-    let (target_instance, needs_init_zone) =
-        begin_change_zone(data, network, game_data, destination_zone_id, from_actor_id).unwrap();
+    let (target_instance, needs_init_zone) = begin_change_zone(
+        data,
+        network,
+        game_data,
+        destination_zone_id,
+        from_actor_id,
+        WarpType::Normal,
+    )
+    .unwrap();
 
     let Some(target_actor) = target_instance.find_actor(to_actor_id) else {
         return;
@@ -886,21 +940,25 @@ pub fn change_zone_to_player(
         Some(target_actor.position()),
         Some(target_actor.rotation()),
         from_id,
+        WarpType::Normal,
     );
 }
 
 /// Sends the needed information to ZoneConnection for a zone change.
 fn do_change_zone(
     network: &mut NetworkState,
-    target_instance: &Instance,
+    target_instance: &mut Instance,
     needs_init_zone: bool,
     exit_position: Option<Position>,
     exit_rotation: Option<f32>,
     from_id: ClientId,
+    warp_type: WarpType,
 ) {
+    let actor_id = network.clients.get(&from_id).unwrap().0.actor_id;
+    let state = network.get_state_mut(from_id).unwrap();
+
     if needs_init_zone {
         // Clear spawn pools
-        let state = network.get_state_mut(from_id).unwrap();
         state.actor_allocator.clear();
         state.object_allocator.clear();
 
@@ -922,14 +980,19 @@ fn do_change_zone(
         );
         network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
     } else {
-        network.send_to(
+        // We want to delay sending this to give time for the client to fade out.
+        let segment = ServerZoneIpcSegment::new(ServerZoneIpcData::ActorSetPos(ActorSetPos {
+            position: exit_position.unwrap_or_default(),
+            rotation: exit_rotation.unwrap_or_default(),
+            warp_type,
+            warp_type_arg: 2, // unknown
+            ..Default::default()
+        }));
+        target_instance.insert_task(
             from_id,
-            FromServer::NewPosition(
-                exit_position.unwrap_or_default(),
-                exit_rotation.unwrap_or_default(),
-                true,
-            ),
-            DestinationNetwork::ZoneClients,
+            actor_id,
+            WARP_DELAY,
+            QueuedTaskData::PacketSegment { segment },
         );
     }
 }
@@ -973,9 +1036,15 @@ pub fn handle_zone_messages(
             let mut network = network.lock();
             let mut game_data = game_data.lock();
 
-            let (target_instance, needs_init_zone) =
-                begin_change_zone(&mut data, &mut network, &mut game_data, *zone_id, *actor_id)
-                    .unwrap();
+            let (target_instance, needs_init_zone) = begin_change_zone(
+                &mut data,
+                &mut network,
+                &mut game_data,
+                *zone_id,
+                *actor_id,
+                WarpType::Normal,
+            )
+            .unwrap();
             do_change_zone(
                 &mut network,
                 target_instance,
@@ -983,6 +1052,7 @@ pub fn handle_zone_messages(
                 *new_position,
                 *new_rotation,
                 *from_id,
+                WarpType::Normal,
             );
 
             true
@@ -1016,6 +1086,7 @@ pub fn handle_zone_messages(
                 destination_instance_id,
                 *actor_id,
                 *from_id,
+                WarpType::Normal,
             );
 
             true
@@ -1038,6 +1109,7 @@ pub fn handle_zone_messages(
                 destination_instance_id,
                 *actor_id,
                 *from_id,
+                WarpType::Normal,
             );
 
             true
@@ -1060,6 +1132,7 @@ pub fn handle_zone_messages(
                 destination_instance_id,
                 *actor_id,
                 *from_id,
+                WarpType::Normal,
             );
 
             true
@@ -1077,6 +1150,7 @@ pub fn handle_zone_messages(
                 *pop_range_id,
                 *from_actor_id,
                 *from_id,
+                WarpType::Normal,
             );
 
             true
@@ -1126,59 +1200,33 @@ pub fn handle_zone_messages(
             true
         }
         ToServer::MoveToPopRange(from_id, from_actor_id, id, fade_out) => {
-            let send_new_position = |from_id: ClientId,
-                                     network: Arc<Mutex<NetworkState>>,
-                                     transform: Transformation,
-                                     fade_out: bool| {
-                let mut network = network.lock();
-                let trans = transform.translation;
-
-                let msg = FromServer::NewPosition(
-                    Position {
-                        x: trans[0],
-                        y: trans[1],
-                        z: trans[2],
-                    },
-                    euler_to_direction(transform.rotation),
-                    fade_out,
-                );
-
-                // send new position to the client
-                network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
-            };
-
-            let transform;
+            let zone_id;
             {
-                let mut data = data.lock();
-                let instance = data.find_actor_instance_mut(*from_actor_id);
+                let data = data.lock();
+                let Some(instance) = data.find_actor_instance(*from_actor_id) else {
+                    return false;
+                };
 
-                if let Some(instance) = instance {
-                    if let Some(pop_range) = instance.zone.find_pop_range(*id) {
-                        transform = pop_range.0.transform;
-                    } else {
-                        tracing::warn!("Failed to find pop range for {id}!");
-                        return true;
-                    }
+                zone_id = instance.zone.id;
+            }
+
+            let mut data = data.lock();
+            let mut network = network.lock();
+            let mut game_data = game_data.lock();
+            change_zone_warp_to_pop_range(
+                &mut data,
+                &mut network,
+                &mut game_data,
+                zone_id,
+                *id,
+                *from_actor_id,
+                *from_id,
+                if *fade_out {
+                    WarpType::Normal
                 } else {
-                    tracing::warn!("Failed to find instance for actor?!");
-                    return true;
-                }
-            }
-
-            // If fading out, we need to delay the actual warp ever so slightly.
-            // Otherwise it actually happens before the screen fades out.
-            if *fade_out {
-                let network = network.clone();
-                let from_id = *from_id;
-                tokio::task::spawn(async move {
-                    let mut interval = tokio::time::interval(Duration::from_millis(1000));
-                    interval.tick().await;
-                    interval.tick().await;
-                    send_new_position(from_id, network, transform, true);
-                });
-            } else {
-                send_new_position(*from_id, network, transform, *fade_out);
-            }
+                    WarpType::None
+                },
+            );
 
             true
         }

@@ -11,8 +11,9 @@ use crate::{
 use kawari::{
     common::{HandlerId, ObjectTypeId, ObjectTypeKind, Position, adjust_quest_id},
     ipc::zone::{
-        ActorControlCategory, ActorControlSelf, EventType, GrandCompany, OnlineStatus, SceneFlags,
-        ServerNoticeFlags, ServerNoticeMessage, ServerZoneIpcData, ServerZoneIpcSegment, Warp,
+        ActorControlCategory, ActorControlSelf, ActorSetPos, EventType, GrandCompany, OnlineStatus,
+        SceneFlags, ServerNoticeFlags, ServerNoticeMessage, ServerZoneIpcData,
+        ServerZoneIpcSegment,
     },
     packet::PacketSegment,
 };
@@ -85,8 +86,8 @@ impl LuaPlayer {
     }
 
     fn set_position(&mut self, position: Position, rotation: f32) {
-        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Warp(Warp {
-            dir: rotation,
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActorSetPos(ActorSetPos {
+            rotation,
             position,
             ..Default::default()
         }));

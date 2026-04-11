@@ -31,7 +31,7 @@ ServerZoneIpcType:
     comment: Informs the client that the server-side log out preparations are complete, and it's safe to disconnect.
     opcode: 798
     size: 8
-  - name: Warp
+  - name: ActorSetPos
     comment: Teleport to another position in the current zone.
     opcode: 133
     size: 24

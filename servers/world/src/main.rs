@@ -3081,11 +3081,6 @@ async fn process_server_msg(
                     .await;
                 lua_player.zone_data = lua_zone;
             }
-            FromServer::NewPosition(position, rotation, fade_out) => {
-                connection
-                    .set_player_position(position, rotation, fade_out)
-                    .await
-            }
             FromServer::SocialInvite(
                 sender_account_id,
                 sender_content_id,

@@ -31,7 +31,8 @@ use crate::{
         },
         social::handle_social_messages,
         zone::{
-            MapGimmick, change_zone_to_player, change_zone_warp_to_entrance, handle_zone_messages,
+            MapGimmick, change_zone_to_player, change_zone_warp_to_entrance,
+            change_zone_warp_to_pop_range, handle_zone_messages,
         },
     },
 };
@@ -45,7 +46,8 @@ use kawari::{
     ipc::zone::{
         ActionKind, ActionRequest, ActorControlCategory, BattleNpcSubKind, CharacterDataFlag,
         ClientTriggerCommand, CommonSpawn, Condition, Conditions, EnmityList, Hater, HaterList,
-        ObjectKind, PlayerEnmity, ServerZoneIpcData, ServerZoneIpcSegment, SpawnNpc, WaymarkPreset,
+        ObjectKind, PlayerEnmity, ServerZoneIpcData, ServerZoneIpcSegment, SpawnNpc, WarpType,
+        WaymarkPreset,
     },
 };
 
@@ -329,6 +331,7 @@ fn server_logic_tick(
     gamedata: Arc<Mutex<GameData>>,
 ) {
     let mut actors_to_update_hp_mp = Vec::new();
+    let mut actors_to_fake_zone_jump = Vec::new();
 
     {
         let mut data = data.lock();
@@ -480,6 +483,13 @@ fn server_logic_tick(
                                             //self.to_remove.push(id);
                                         }
                                     }
+                                }
+                                MapGimmick::FakeExit { exit_pop_range_id } => {
+                                    actors_to_fake_zone_jump.push((
+                                        *id,
+                                        *exit_pop_range_id,
+                                        instance.zone.id,
+                                    ));
                                 }
                             }
                         }
@@ -746,6 +756,23 @@ fn server_logic_tick(
         let instance = data.find_actor_instance_mut(id).unwrap();
         update_actor_hp_mp(network.clone(), instance, id);
     }
+
+    for (id, exit_pop_range_id, zone_id) in actors_to_fake_zone_jump {
+        let mut game_data = gamedata.lock();
+        let mut data = data.lock();
+        let mut network = network.lock();
+        let from_id = network.find_by_actor(id).unwrap();
+        change_zone_warp_to_pop_range(
+            &mut data,
+            &mut network,
+            &mut game_data,
+            zone_id,
+            exit_pop_range_id,
+            id,
+            from_id,
+            WarpType::InstanceContent,
+        );
+    }
 }
 
 pub async fn server_main_loop(
@@ -903,6 +930,14 @@ pub async fn server_main_loop(
                                 {
                                     director.seal_boss_wall(*id, *place_name);
                                 }
+                            }
+                            QueuedTaskData::PacketSegment { segment } => {
+                                let mut network = network.lock();
+                                network.send_to(
+                                    task.from_id,
+                                    FromServer::PacketSegment(segment.clone(), task.from_actor_id),
+                                    DestinationNetwork::ZoneClients,
+                                );
                             }
                         }
                     }

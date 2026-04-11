@@ -129,8 +129,6 @@ pub enum FromServer {
         bool,
         Option<ServerZoneIpcSegment>,
     ),
-    /// The returned position and rotation from ToServer::MoveToPopRange.
-    NewPosition(Position, f32, bool),
     /// We need to inform the recipent about the direct message they're receiving.
     TellMessageReceived(ObjectId, TellMessage),
     /// We need to tell our chat connection that our zone connection has disconnected.

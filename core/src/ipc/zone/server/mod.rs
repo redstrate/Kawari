@@ -61,8 +61,8 @@ pub use action_result::{
     ActionEffect, ActionResult, DamageElement, DamageKind, DamageType, EffectKind,
 };
 
-mod warp;
-pub use warp::Warp;
+mod actor_set_pos;
+pub use actor_set_pos::{ActorSetPos, WarpType};
 
 mod equip;
 pub use equip::Equip;
@@ -204,7 +204,7 @@ pub enum ServerZoneIpcData {
         // TODO: guessed
         unk: [u8; 8],
     },
-    Warp(Warp),
+    ActorSetPos(ActorSetPos),
     ServerNoticeMessage(ServerNoticeMessage),
     LinkShellInformation {
         unk: [u8; 456],
@@ -215,7 +215,8 @@ pub enum ServerZoneIpcData {
         animation: u16,
         param4: u8,
         hide_character: u8,
-        fade_out: u8,
+        /// Must match what is used in ActorSetPos (if applicable) otherwise weird stuff like EnterTerritoryEvent is sent by the client again.
+        warp_type: WarpType,
         param_7: u8,
         fade_out_time: u8,
         unk1: u8,

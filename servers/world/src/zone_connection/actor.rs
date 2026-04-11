@@ -10,26 +10,11 @@ use kawari::{
     ipc::zone::{
         ActorControl, ActorControlCategory, ActorControlSelf, ActorControlTarget, ActorMove,
         CommonSpawn, Config, DisplayFlag, ObjectKind, PlayerSubKind, ServerZoneIpcData,
-        ServerZoneIpcSegment, SpawnObject, SpawnPlayer, SpawnTreasure, Warp,
+        ServerZoneIpcSegment, SpawnObject, SpawnPlayer, SpawnTreasure,
     },
 };
 
 impl ZoneConnection {
-    /// Sets the player new position and rotation. Must be a location within the current zone.
-    pub async fn set_player_position(&mut self, position: Position, rotation: f32, fade_out: bool) {
-        // set pos
-        {
-            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Warp(Warp {
-                position,
-                dir: rotation,
-                warp_type: if fade_out { 1 } else { 0 },
-                warp_type_arg: if fade_out { 2 } else { 0 },
-                ..Default::default()
-            }));
-            self.send_ipc_self(ipc).await;
-        }
-    }
-
     pub async fn set_actor_position(
         &mut self,
         actor_id: ObjectId,

@@ -69,6 +69,9 @@ pub const STRIKING_DUMMY_NAME_ID: u32 = 541;
 /// Distance between a pathfinding NPC and it's target. If the distance grows farther than this, the enemy will move closer.
 pub const MINIMUM_PATHFINDING_DISTANCE: f32 = 5.0;
 
+/// The delay from PrepareZoning to an ActorSetPos being sent by the server.
+pub const WARP_DELAY: Duration = Duration::from_secs(2);
+
 #[binrw]
 #[brw(repr(u32))]
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]

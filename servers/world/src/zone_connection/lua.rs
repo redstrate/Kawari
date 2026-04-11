@@ -366,23 +366,6 @@ impl ZoneConnection {
                     .await;
                 }
                 LuaTask::MoveToPopRange { id, fade_out } => {
-                    // Fade out the screen if requested.
-                    if *fade_out {
-                        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PrepareZoning {
-                            log_message: 0,
-                            target_zone: self.player_data.volatile.zone_id as u16,
-                            animation: 0,
-                            param4: 0,
-                            hide_character: 0,
-                            fade_out: 1,
-                            param_7: 1,
-                            fade_out_time: 1,
-                            unk1: 0,
-                            unk2: 0,
-                        });
-                        self.send_ipc_self(ipc).await;
-                    }
-
                     self.handle
                         .send(ToServer::MoveToPopRange(
                             self.id,
