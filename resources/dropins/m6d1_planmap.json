@@ -1,0 +1,32 @@
+{
+    "appends": "bg/ex5/07_mid_m6/dun/m6d1/level/planmap.lgb",
+    "layers": [
+        {
+            "name": "LVD_route_fellow_01",
+            "objects": [
+                {
+                    "data": {
+                        "base_id": 19135,
+                        "gimmick_id": 0,
+                        "hostile": false,
+                        "hp": 188300,
+                        "level": 100,
+                        "link_family": 0,
+                        "link_range": 20,
+                        "max_links": 0,
+                        "name_id": 14359,
+                        "nonpop": true,
+                        "type": "battle_npc"
+                    },
+                    "instance_id": 12109841,
+                    "position": {
+                        "x": -651.1129150390625,
+                        "y": 1.0330779552459717,
+                        "z": 808.33349609375
+                    },
+                    "rotation": 1.699916124343872
+                }
+            ]
+        }
+    ]
+}
