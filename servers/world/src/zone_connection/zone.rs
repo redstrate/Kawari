@@ -11,7 +11,7 @@ use kawari::{
     constants::OBFUSCATION_ENABLED_MODE,
     ipc::zone::{
         ActorControlCategory, Condition, ContentRegistrationFlags, House, HouseList, InitZone,
-        InitZoneFlags, ServerZoneIpcData, ServerZoneIpcSegment, WeatherChange,
+        InitZoneFlags, ServerZoneIpcData, ServerZoneIpcSegment, WarpType, WeatherChange,
     },
     packet::{ConnectionState, PacketSegment, ScramblerKeyGenerator, SegmentData, SegmentType},
 };
@@ -24,6 +24,7 @@ impl ZoneConnection {
         new_zone_id: u16,
         new_position: Option<Position>,
         new_rotation: Option<f32>,
+        warp_type_info: Option<(WarpType, u8, u8, u8)>,
     ) {
         self.teleport_reason = TeleportReason::NotSpecified;
         self.handle
@@ -33,6 +34,7 @@ impl ZoneConnection {
                 new_zone_id,
                 new_position,
                 new_rotation,
+                warp_type_info,
             ))
             .await;
     }

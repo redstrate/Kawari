@@ -21,7 +21,7 @@ use kawari::{
             ClientTrigger, Conditions, Config, CrossworldLinkshellInvite, InviteReply, InviteType,
             OnlineStatus, PartyMemberEntry, PartyMemberPositions, PartyUpdateStatus,
             ReadyCheckReply, ServerZoneIpcSegment, SpawnNpc, SpawnObject, SpawnPlayer,
-            SpawnTreasure, StrategyBoard, StrategyBoardUpdate, WaymarkPlacementMode,
+            SpawnTreasure, StrategyBoard, StrategyBoardUpdate, WarpType, WaymarkPlacementMode,
             WaymarkPosition, WaymarkPreset,
         },
     },
@@ -278,8 +278,15 @@ pub enum ToServer {
     // TODO: the connection should not be in charge and telling the global server what zone they just loaded in! but this will work for now
     ZoneLoaded(ClientId, ObjectId, SpawnPlayer),
     /// The connection wants to enter a new zone.
-    // TODO: temporary as this is only used for commands and those aren't run on global server state yet
-    ChangeZone(ClientId, ObjectId, u16, Option<Position>, Option<f32>),
+    // TODO: temporary as this is only used for commands (and diving/surfacing due to this being the least intrusive way to do this currently) and those aren't run on global server state yet
+    ChangeZone(
+        ClientId,
+        ObjectId,
+        u16,
+        Option<Position>,
+        Option<f32>,
+        Option<(WarpType, u8, u8, u8)>,
+    ),
     /// The player walks through a zone change line.
     EnterZoneJump(ClientId, ObjectId, u32),
     /// The connection disconnected.
