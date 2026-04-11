@@ -276,7 +276,7 @@ impl ZoneConnection {
                         .unwrap()
                 } else {
                     // There is no content associated with FATE directors.
-                    if director_type != HandlerType::Fate {
+                    if director_type.requires_content_id() {
                         tracing::warn!(
                             "Failed to find content ID for {content_finder_condition_id}?"
                         );
@@ -337,7 +337,7 @@ impl ZoneConnection {
                     .content_settings
                     .unwrap_or_default()
                     .contains(ContentRegistrationFlags::EXPLORER_MODE)
-                    && director_type != HandlerType::Fate
+                    && director_type.requires_content_id()
                 {
                     1
                 } else {
@@ -352,7 +352,7 @@ impl ZoneConnection {
                 })
                 .await;
 
-                if director_type != HandlerType::Fate {
+                if director_type.requires_content_id() {
                     if let Some(director_vars) = director_vars {
                         self.send_ipc_self(director_vars).await;
                     }

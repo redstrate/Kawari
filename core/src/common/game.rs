@@ -401,10 +401,14 @@ impl HandlerType {
             TerritoryIntendedUse::CosmicExploration => Some(Self::MassivePcContent),
             TerritoryIntendedUse::OpenWorldInstanceBattle => Some(Self::QuestBattle),
             TerritoryIntendedUse::LeapOfFaith => Some(Self::PublicContent),
-            // TODO: needs proper handling
-            //TerritoryIntendedUse::GoldSaucer => Some(Self::GoldSaucer),
+            TerritoryIntendedUse::GoldSaucer => Some(Self::GoldSaucer),
             _ => None,
         }
+    }
+
+    /// Whether this handler type needs a ContentFinderCondition to function.
+    pub fn requires_content_id(&self) -> bool {
+        !matches!(self, HandlerType::Fate | HandlerType::GoldSaucer)
     }
 }
 
