@@ -1141,8 +1141,8 @@ async fn process_packet(
                                                     ActorControlCategory::DirectorEvent {
                                                         handler_id,
                                                         event: DirectorEvent::SyncResponse,
-                                                        arg: 1,
-                                                        unk1: 0,
+                                                        arg1: 1,
+                                                        arg2: 0,
                                                     },
                                                 )
                                                 .await;

@@ -261,8 +261,8 @@ pub enum ActorControlCategory {
     DirectorEvent {
         handler_id: HandlerId,
         event: DirectorEvent,
-        arg: u32,
-        unk1: u32, // not sure the meaning of this one, maybe just an extra arg?
+        arg1: u32,
+        arg2: u32,
     },
 
     #[brw(magic = 131u32)]

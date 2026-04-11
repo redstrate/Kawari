@@ -6,6 +6,10 @@ use binrw::binrw;
 #[binrw]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum DirectorEvent {
+    /// Shows the Variant Dungeon vote window, but probably used for other things.
+    /// For Variant Dungeons, the first `arg` is how many votes are needed and the second `arg` is what the NPC chose. Has no effect if there is no route associated with the duty (Another Merchant's Tale.)
+    #[brw(magic = 0x10000002u32)]
+    VariantVoteRoute,
     /// Shows "Duty Commenced", and starts the clock ticking down. `arg` is the number of seconds the duty should last.
     #[brw(magic = 0x40000001u32)]
     DutyCommence,
@@ -37,6 +41,10 @@ pub enum DirectorEvent {
 #[binrw]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum DirectorTrigger {
+    /// Seen when voting in a Variant Dungeon, but probably used for other things.
+    /// For Variant Dungeons, the first `arg` is the route chosen by this player.
+    #[brw(magic = 0x10000002u32)]
+    VariantVote,
     /// When the player finishes the cutscene, I think. `arg` is 174 for Sastasha, I don't know what that means.'
     #[brw(magic = 0x40000001u32)]
     FinishedCutscene,

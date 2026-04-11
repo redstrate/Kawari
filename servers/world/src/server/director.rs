@@ -80,6 +80,9 @@ pub enum LuaDirectorTask {
     SpawnTreasure {
         id: u32,
     },
+    VariantVoteRoute {
+        npc_route: u32,
+    },
 }
 
 // TODO: Maybe collapse into DirectorData?
@@ -179,6 +182,11 @@ impl UserData for LuaDirector {
         );
         methods.add_method_mut("spawn_treasure", |_, this, id: u32| {
             this.tasks.push(LuaDirectorTask::SpawnTreasure { id });
+            Ok(())
+        });
+        methods.add_method_mut("variant_vote_route", |_, this, npc_route: u32| {
+            this.tasks
+                .push(LuaDirectorTask::VariantVoteRoute { npc_route });
             Ok(())
         });
     }
@@ -575,8 +583,8 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                         category: ActorControlCategory::DirectorEvent {
                             handler_id: director_id,
                             event: DirectorEvent::SetBGM,
-                            arg: *id,
-                            unk1: 0,
+                            arg1: *id,
+                            arg2: 0,
                         },
                     },
                 ));
@@ -640,6 +648,26 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                         "Failed to find treasure {id} for SpawnTreasure, it won't spawn!"
                     );
                 }
+            }
+            LuaDirectorTask::VariantVoteRoute { npc_route } => {
+                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlSelf(
+                    ActorControlSelf {
+                        category: ActorControlCategory::DirectorEvent {
+                            handler_id: director_id,
+                            event: DirectorEvent::VariantVoteRoute,
+                            arg1: 1, // TODO: set to the number of players in the instance
+                            arg2: *npc_route,
+                        },
+                    },
+                ));
+
+                let mut network = network.lock();
+                network.send_to_instance(
+                    ObjectId::default(),
+                    instance,
+                    FromServer::PacketSegment(ipc, ObjectId::default()), // TODO: how do we just send it from the player?
+                    DestinationNetwork::ZoneClients,
+                );
             }
         }
     }

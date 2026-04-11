@@ -248,9 +248,9 @@ impl Zone {
 
                     // Second pass for eobjs
                     for object in &layer.objects {
-                        if !layer.header.has_layer_set(zone.layer_set as u32) {
-                            continue;
-                        }
+                        // if !layer.header.has_layer_set(zone.layer_set as u32) {
+                        //     continue;
+                        // }
 
                         if let LayerEntryData::EventObject(eobj) = &object.data {
                             let eobj_data = game_data.get_eobj_data(eobj.parent_data.base_id);
@@ -303,7 +303,9 @@ impl Zone {
                         } else if let LayerEntryData::EventRange(_) = &object.data
                             && let Some(gimmick_rect_info) =
                                 game_data.lookup_gimmick_rect(object.instance_id)
-                            && gimmick_rect_info.TriggerIn() == 1
+                            && (gimmick_rect_info.TriggerIn() == 1
+                                || gimmick_rect_info.TriggerIn() == 18)
+                        // FIXME: 1 is seen for cutscene triggers in Sastasha, while 18 is seen for Variant Dungeon routes in A Merchant's Tale. We should make this less "generic".
                         {
                             let map_gimmick = MapGimmick::Generic {};
 
