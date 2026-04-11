@@ -307,14 +307,16 @@ impl ZoneConnection {
                     let current_level;
                     {
                         let mut game_data = self.gamedata.lock();
-                        synced_level = game_data
-                            .find_content_synced_level(content_finder_condition_id)
-                            .unwrap() as u16;
+                        synced_level =
+                            game_data.find_content_synced_level(content_finder_condition_id);
                         current_level = self.current_level(&game_data);
                     }
 
-                    if current_level > synced_level {
-                        self.synced_level = Some(synced_level as u8);
+                    self.synced_level = None;
+                    if let Some(synced_level) = synced_level
+                        && current_level > synced_level as u16
+                    {
+                        self.synced_level = Some(synced_level);
                     }
                 }
 

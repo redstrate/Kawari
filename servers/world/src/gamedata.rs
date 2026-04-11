@@ -1313,7 +1313,7 @@ impl GameData {
                 .unwrap();
         let content_finder_row = content_finder_sheet.row(content_finder_row_id as u32)?;
 
-        Some(content_finder_row.ClassJobLevelSync())
+        Some(content_finder_row.ClassJobLevelSync()).filter(|x| *x != 0)
     }
 
     /// Returns the attributes for a given item level;

@@ -436,6 +436,8 @@ impl Zone {
             }
         }
 
+        bound_id?;
+
         // Then find the linked instance object, which is usually a SGB.
         for layer_group in &self.layer_groups {
             for layer in &layer_group.chunks[0].layers {

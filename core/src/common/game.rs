@@ -400,6 +400,7 @@ impl HandlerType {
             TerritoryIntendedUse::TreasureDungeon => Some(Self::InstanceContent),
             TerritoryIntendedUse::CosmicExploration => Some(Self::MassivePcContent),
             TerritoryIntendedUse::OpenWorldInstanceBattle => Some(Self::QuestBattle),
+            TerritoryIntendedUse::LeapOfFaith => Some(Self::PublicContent),
             // TODO: needs proper handling
             //TerritoryIntendedUse::GoldSaucer => Some(Self::GoldSaucer),
             _ => None,
