@@ -36,7 +36,7 @@ pub struct SpawnNpc {
     /// Refers to a Game Object ID in the zone, usually an LGB that this enemy is "attached" to.
     pub gimmick_id: u32,
     /// At least filled for Quests, where this is the originating Event NPC layout ID if it turned into a Battle NPC.
-    pub enpc_id: u32,
+    pub event_npc_instance_id: u32,
 
     /// Misc flags about for this NPC.
     pub character_data_flags: CharacterDataFlag,
