@@ -771,6 +771,9 @@ fn server_logic_tick(
             id,
             from_id,
             WarpType::InstanceContent,
+            0,
+            0,
+            0,
         );
     }
 }

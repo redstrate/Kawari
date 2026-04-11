@@ -288,7 +288,7 @@ pub enum ToServer {
         Option<(WarpType, u8, u8, u8)>,
     ),
     /// The player walks through a zone change line.
-    EnterZoneJump(ClientId, ObjectId, u32),
+    EnterZoneJump(ClientId, ObjectId, u32, Option<(WarpType, u8, u8, u8)>),
     /// The connection disconnected.
     Disconnected(ClientId, ObjectId),
     /// A fatal error occured.
