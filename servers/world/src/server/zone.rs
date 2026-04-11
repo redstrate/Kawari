@@ -776,6 +776,9 @@ fn begin_change_zone<'a>(
     destination_zone_id: u16,
     actor_id: ObjectId,
     warp_type: WarpType,
+    param4: u8,
+    hide_character: u8,
+    unk1: u8,
 ) -> Option<(&'a mut Instance, bool)> {
     let mut needs_init_zone = false;
 
@@ -785,10 +788,10 @@ fn begin_change_zone<'a>(
         fade_out_time: 1,
         log_message: 0,
         animation: 0,
-        param4: 0,
-        hide_character: 0,
+        param4,
+        hide_character,
         param_7: 0,
-        unk1: 0,
+        unk1,
         unk2: 0,
     });
 
@@ -837,6 +840,9 @@ pub fn change_zone_warp_to_pop_range(
         destination_zone_id,
         actor_id,
         warp_type,
+        0,
+        0,
+        0,
     )
     .unwrap();
 
@@ -928,6 +934,9 @@ pub fn change_zone_to_player(
         destination_zone_id,
         from_actor_id,
         WarpType::Normal,
+        0,
+        0,
+        0,
     )
     .unwrap();
 
@@ -1031,12 +1040,26 @@ pub fn handle_zone_messages(
 
             true
         }
-        ToServer::ChangeZone(from_id, actor_id, zone_id, new_position, new_rotation) => {
+        ToServer::ChangeZone(
+            from_id,
+            actor_id,
+            zone_id,
+            new_position,
+            new_rotation,
+            warp_type_info,
+        ) => {
             tracing::info!("{from_id:?} is requesting to go to zone {zone_id}");
 
             let mut data = data.lock();
             let mut network = network.lock();
             let mut game_data = game_data.lock();
+
+            let (warp_type, param4, hide_character, unk1) =
+                if let Some((w_type, param, hide, unk)) = warp_type_info {
+                    (*w_type, *param, *hide, *unk)
+                } else {
+                    (WarpType::Normal, 0, 0, 0)
+                };
 
             let (target_instance, needs_init_zone) = begin_change_zone(
                 &mut data,
@@ -1044,7 +1067,10 @@ pub fn handle_zone_messages(
                 &mut game_data,
                 *zone_id,
                 *actor_id,
-                WarpType::Normal,
+                warp_type,
+                param4,
+                hide_character,
+                unk1,
             )
             .unwrap();
             do_change_zone(
@@ -1054,7 +1080,7 @@ pub fn handle_zone_messages(
                 *new_position,
                 *new_rotation,
                 *from_id,
-                WarpType::Normal,
+                warp_type,
             );
 
             true

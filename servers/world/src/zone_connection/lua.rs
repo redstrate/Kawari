@@ -50,7 +50,7 @@ impl ZoneConnection {
                     exit_position,
                     exit_rotation,
                 } => {
-                    self.change_zone(*zone_id, *exit_position, *exit_rotation)
+                    self.change_zone(*zone_id, *exit_position, *exit_rotation, None)
                         .await
                 }
                 LuaTask::SetRemakeMode(remake_mode) => {

@@ -18,7 +18,7 @@ use kawari::ipc::zone::{
     ActorControlCategory, CWLSLeaveReason, Conditions, ContentFinderUserAction, CrossRealmListing,
     CrossRealmListings, EventType, LinkshellInviteResponse, MapEffects, MarketBoardItem,
     OnlineStatus, OnlineStatusMask, PlayerSetup, SceneFlags, SearchInfo, SocialListRequestType,
-    TrustContent, TrustInformation,
+    TrustContent, TrustInformation, WarpType,
 };
 
 use kawari::ipc::zone::{
@@ -2941,6 +2941,51 @@ async fn process_packet(
                             connection
                                 .remove_from_friend_list(*content_id, name.clone())
                                 .await;
+                        }
+                        ClientZoneIpcData::Dive {
+                            target_position,
+                            rotation,
+                            ..
+                        } => {
+                            connection
+                                .change_zone(
+                                    connection.player_data.volatile.zone_id as u16,
+                                    Some(*target_position),
+                                    Some(*rotation),
+                                    Some((WarpType::Dive, 218, 1, 6)),
+                                )
+                                .await;
+                        }
+                        ClientZoneIpcData::WorldInteraction {
+                            action,
+                            param1,
+                            param2,
+                            param3,
+                            param4,
+                            position,
+                        } => {
+                            match action {
+                                0xD1 => { // Underwater portal
+                                    // TODO: This uses param1 somehow. It doesn't appear to be a poprange or exit box. If it's an index into a sheet, I have no idea which.
+                                    // TODO: The ActorSetPos for underwater portals uses warp_type: WarpType::InstanceContent, param4 = 15, hide_character = 2, unk1 = 4.
+                                }
+                                0x25F => {
+                                    // Surfacing from diving
+                                    connection
+                                        .change_zone(
+                                            connection.player_data.volatile.zone_id as u16,
+                                            Some(*position),
+                                            Some(connection.player_data.volatile.rotation as f32),
+                                            Some((WarpType::Dive, 227, 1, 6)),
+                                        )
+                                        .await;
+                                }
+                                _ => {
+                                    tracing::info!(
+                                        "Client executed uninplemented world interaction {action} with params {param1} {param2} {param3} {param4}"
+                                    );
+                                }
+                            }
                         }
                         ClientZoneIpcData::Unknown { unk } => {
                             tracing::warn!(

@@ -588,6 +588,20 @@ pub enum ClientZoneIpcData {
         #[brw(pad_after = 6)] // Seems to just be padding/garbage
         name: String,
     },
+    Dive {
+        rotation: f32,
+        target_position: Position,
+        #[brw(pad_after = 4)]
+        original_position: Position,
+    },
+    WorldInteraction {
+        action: u32,
+        param1: u32,
+        param2: u32,
+        param3: u32,
+        param4: u32,
+        position: Position,
+    },
 }
 
 #[cfg(test)]

@@ -213,6 +213,7 @@ pub enum ServerZoneIpcData {
         log_message: u32,
         target_zone: u16,
         animation: u16,
+        /// This, in conjunction with unk1, seem to influence visual effects displayed during the zoning transition. For example, when diving, param4 is 218, and unk1 is 6 (with hide_character set to 1). When surfacing, param4 is 227, unk1 6, and hide_character 1. When going through an underwater portal, param4 is 15, unk1 is 4, and hide_character is 2.
         param4: u8,
         hide_character: u8,
         /// Must match what is used in ActorSetPos (if applicable) otherwise weird stuff like EnterTerritoryEvent is sent by the client again.

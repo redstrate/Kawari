@@ -1068,6 +1068,14 @@ ClientZoneIpcType:
     comment: The client requests that any attachments in this letter be given to them.
     opcode: 590
     size: 64
+  - name: Dive
+    comment: The client dives underwater.
+    opcode: 631
+    size: 32
+  - name: WorldInteraction
+    comment: The client interacts with the world in some way.
+    opcode: 296
+    size: 32
 ServerLobbyIpcType:
   - name: NackReply
     comment: Sent by the server to indicate an lobby error occured.

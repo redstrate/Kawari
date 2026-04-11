@@ -21,6 +21,8 @@ pub enum WarpType {
     /// Seen during Mt Gulg, assuming it applies to all instanced content.
     #[brw(magic = 25u8)]
     InstanceContent,
+    #[brw(magic = 26u8)]
+    Dive,
     #[brw(magic = 30u8)]
     Unk4,
     Unknown(u8),
