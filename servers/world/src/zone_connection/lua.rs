@@ -109,7 +109,7 @@ impl ZoneConnection {
                         self.player_data.inventory.add_in_slot(
                             soul_crystal,
                             &destination.container,
-                            destination.index,
+                            destination.slot,
                         );
                         self.send_inventory().await;
                     }

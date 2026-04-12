@@ -59,14 +59,7 @@ impl EventHandler for InclusionShopEventHandler {
                 .inventory
                 .add_in_next_free_slot(Item::new(&item_info, item_quantity))
         {
-            ShopEventHandler::send_gilshop_item_update(
-                connection,
-                add_result.container,
-                add_result.index,
-                add_result.quantity,
-                item_info.id,
-            )
-            .await;
+            ShopEventHandler::send_gilshop_item_update(connection, add_result).await;
 
             // TODO: ACS 854 is sent
             // TODO: itemobtainedlogmessage is sent

@@ -2,6 +2,7 @@ use icarus::{ClassJob::ClassJobSheet, Race::RaceSheet};
 use kawari::{
     common::{ContainerType, ItemOperationKind},
     config::get_config,
+    ipc::zone::ItemInfo,
 };
 use serde::{Deserialize, Serialize};
 
@@ -35,13 +36,6 @@ use crate::{GameData, ItemInfoQuery};
 
 const MAX_NORMAL_STORAGE: usize = 35;
 const MAX_LARGE_STORAGE: usize = 50;
-
-#[derive(Debug)]
-pub struct ItemDestinationInfo {
-    pub container: ContainerType,
-    pub index: u16,
-    pub quantity: u32,
-}
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Inventory {
@@ -271,15 +265,15 @@ impl Inventory {
         }
     }
 
-    fn add_in_empty_slot(&mut self, item: Item) -> Option<ItemDestinationInfo> {
+    fn add_in_empty_slot(&mut self, item: Item) -> Option<ItemInfo> {
         for page in &mut self.pages {
             for (slot_index, slot) in page.slots.iter_mut().enumerate() {
                 if slot.quantity == 0 {
                     slot.clone_from(&item);
-                    return Some(ItemDestinationInfo {
+                    return Some(ItemInfo {
+                        slot: slot_index as u16,
                         container: page.kind,
-                        index: slot_index as u16,
-                        quantity: item.quantity,
+                        ..(*slot).into()
                     });
                 }
             }
@@ -287,7 +281,7 @@ impl Inventory {
         None
     }
 
-    pub fn add_in_next_free_slot(&mut self, item: Item) -> Option<ItemDestinationInfo> {
+    pub fn add_in_next_free_slot(&mut self, item: Item) -> Option<ItemInfo> {
         if item.stack_size > 1 {
             for page in &mut self.pages {
                 for (slot_index, slot) in page.slots.iter_mut().enumerate() {
@@ -295,10 +289,10 @@ impl Inventory {
                         && slot.quantity + item.quantity <= item.stack_size
                     {
                         slot.quantity += item.quantity;
-                        return Some(ItemDestinationInfo {
+                        return Some(ItemInfo {
+                            slot: slot_index as u16,
                             container: page.kind,
-                            index: slot_index as u16,
-                            quantity: slot.quantity,
+                            ..(*slot).into()
                         });
                     }
                 }
@@ -309,16 +303,16 @@ impl Inventory {
         self.add_in_empty_slot(item)
     }
 
-    pub fn add_in_next_free_armory_slot(&self, equip_index: u16) -> Option<ItemDestinationInfo> {
+    pub fn add_in_next_free_armory_slot(&self, equip_index: u16) -> Option<ItemInfo> {
         let container_type = ContainerType::from_equip_slot(equip_index as u8);
 
         let container = self.get_container(container_type);
         for i in 0..container.max_slots() {
             if container.get_slot(i as u16).quantity == 0 {
-                return Some(ItemDestinationInfo {
+                return Some(ItemInfo {
+                    slot: i as u16,
                     container: container_type,
-                    index: i as u16,
-                    quantity: 0, // doesn't matter in our case'
+                    ..(*container.get_slot(i as u16)).into()
                 });
             }
         }
@@ -540,7 +534,7 @@ impl Inventory {
         self.add_in_slot(
             *self.equipped.get_slot(slot),
             &destination_info.container,
-            destination_info.index,
+            destination_info.slot,
         );
 
         *self.equipped.get_slot_mut(slot) = Item::default();

@@ -1,13 +1,14 @@
 use async_trait::async_trait;
 use kawari::{
     common::{
-        ContainerType, ERR_INVENTORY_ADD_FAILED, HandlerId, INVENTORY_ACTION_ACK_SHOP, LogMessageType, ObjectTypeId,
+        ContainerType, ERR_INVENTORY_ADD_FAILED, HandlerId, INVENTORY_ACTION_ACK_SHOP,
+        LogMessageType, ObjectTypeId,
     },
     ipc::zone::{ItemInfo, SceneFlags, ServerZoneIpcData, ServerZoneIpcSegment},
 };
 
 use crate::{
-    Event, EventHandler, ZoneConnection,
+    Event, EventHandler, ShopEventHandler, ZoneConnection,
     inventory::{CurrencyKind, Item},
     lua::LuaPlayer,
 };
@@ -66,12 +67,13 @@ impl SpecialShopEventHandler {
                     .add_in_next_free_slot(Item::new(&item_info, 1))
                 {
                     connection.player_data.inventory.currency.gil.quantity -= item_info.price_mid;
-                    Self::send_gilshop_item_update(
+                    ShopEventHandler::send_gilshop_item_update(
                         connection,
-                        ContainerType::Currency,
-                        0,
-                        connection.player_data.inventory.currency.gil.quantity,
-                        CurrencyKind::Gil as u32,
+                        ItemInfo {
+                            container: ContainerType::Currency,
+                            slot: CurrencyKind::Gil as u16,
+                            ..connection.player_data.inventory.currency.gil.into()
+                        },
                     )
                     .await;
 
@@ -79,14 +81,7 @@ impl SpecialShopEventHandler {
                         .send_inventory_ack(u32::MAX, INVENTORY_ACTION_ACK_SHOP as u16)
                         .await;
 
-                    Self::send_gilshop_item_update(
-                        connection,
-                        add_result.container,
-                        add_result.index,
-                        add_result.quantity,
-                        item_info.id,
-                    )
-                    .await;
+                    ShopEventHandler::send_gilshop_item_update(connection, add_result).await;
                     Self::send_gilshop_ack(
                         connection,
                         event.id,
@@ -144,25 +139,6 @@ impl SpecialShopEventHandler {
             total_sale_cost: item_quantity * price_per_item,
         });
         connection.send_ipc_self(ipc).await;
-    }
-
-    pub async fn send_gilshop_item_update(
-        connection: &mut ZoneConnection,
-        container: ContainerType,
-        slot: u16,
-        quantity: u32,
-        item_id: u32,
-    ) {
-        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateInventorySlot(ItemInfo {
-            sequence: connection.player_data.shop_sequence,
-            container,
-            slot,
-            quantity,
-            item_id,
-            ..Default::default()
-        }));
-        connection.send_ipc_self(ipc).await;
-        connection.player_data.shop_sequence += 1;
     }
 }
 

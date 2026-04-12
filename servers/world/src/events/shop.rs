@@ -111,12 +111,9 @@ impl ShopEventHandler {
                 sequence: u32::MAX,
                 action_type: INVENTORY_ACTION_ACK_SHOP as u16,
             }),
-            ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateInventorySlot(ItemInfo {
-                sequence: connection.player_data.shop_sequence,
-                container: item_dst_info.container,
-                slot: item_dst_info.index,
-                ..bb_item.into()
-            })),
+            ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateInventorySlot(
+                item_dst_info.clone(),
+            )),
             ServerZoneIpcSegment::new(ServerZoneIpcData::ShopLogMessage {
                 handler_id: HandlerId(shop_id),
                 message_type: LogMessageType::ItemBoughtBack as u32,
@@ -170,10 +167,11 @@ impl ShopEventHandler {
                             item_quantity * item_info.price_mid;
                         Self::send_gilshop_item_update(
                             connection,
-                            ContainerType::Currency,
-                            0,
-                            connection.player_data.inventory.currency.gil.quantity,
-                            CurrencyKind::Gil as u32,
+                            ItemInfo {
+                                container: ContainerType::Currency,
+                                slot: CurrencyKind::Gil as u16,
+                                ..connection.player_data.inventory.currency.gil.into()
+                            },
                         )
                         .await;
 
@@ -181,14 +179,7 @@ impl ShopEventHandler {
                             .send_inventory_ack(u32::MAX, INVENTORY_ACTION_ACK_SHOP as u16)
                             .await;
 
-                        Self::send_gilshop_item_update(
-                            connection,
-                            add_result.container,
-                            add_result.index,
-                            add_result.quantity,
-                            item_info.id,
-                        )
-                        .await;
+                        Self::send_gilshop_item_update(connection, add_result).await;
                         Self::send_gilshop_ack(
                             connection,
                             event.id,
@@ -249,13 +240,22 @@ impl ShopEventHandler {
                     quantity * item_info.price_low;
                 Self::send_gilshop_item_update(
                     connection,
-                    ContainerType::Currency,
-                    0,
-                    connection.player_data.inventory.currency.gil.quantity,
-                    CurrencyKind::Gil as u32,
+                    ItemInfo {
+                        container: ContainerType::Currency,
+                        slot: CurrencyKind::Gil as u16,
+                        ..connection.player_data.inventory.currency.gil.into()
+                    },
                 )
                 .await;
-                Self::send_gilshop_item_update(connection, storage, index as u16, 0, 0).await;
+                Self::send_gilshop_item_update(
+                    connection,
+                    ItemInfo {
+                        container: storage,
+                        slot: index as u16,
+                        ..Default::default()
+                    },
+                )
+                .await;
 
                 let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InventoryTransaction {
                     sequence: connection.player_data.item_sequence,
@@ -354,20 +354,10 @@ impl ShopEventHandler {
         connection.send_ipc_self(ipc).await;
     }
 
-    pub async fn send_gilshop_item_update(
-        connection: &mut ZoneConnection,
-        container: ContainerType,
-        slot: u16,
-        quantity: u32,
-        item_id: u32,
-    ) {
+    pub async fn send_gilshop_item_update(connection: &mut ZoneConnection, item_info: ItemInfo) {
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateInventorySlot(ItemInfo {
             sequence: connection.player_data.shop_sequence,
-            container,
-            slot,
-            quantity,
-            item_id,
-            ..Default::default()
+            ..item_info
         }));
         connection.send_ipc_self(ipc).await;
         connection.player_data.shop_sequence += 1;
