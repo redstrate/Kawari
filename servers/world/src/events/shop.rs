@@ -13,7 +13,7 @@ use crate::{
     lua::LuaPlayer,
 };
 
-/// For shop events.
+/// For gil shop events.
 #[derive(Debug)]
 pub struct ShopEventHandler;
 

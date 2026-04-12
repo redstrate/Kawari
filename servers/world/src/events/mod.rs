@@ -21,3 +21,6 @@ pub use crafting::*;
 
 mod instance_content;
 pub use instance_content::*;
+
+mod special_shop;
+pub use special_shop::*;
