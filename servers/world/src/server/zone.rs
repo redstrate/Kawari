@@ -779,7 +779,7 @@ fn begin_change_zone<'a>(
     param4: u8,
     hide_character: u8,
     unk1: u8,
-) -> Option<(&'a mut Instance, bool)> {
+) -> (&'a mut Instance, bool) {
     let mut needs_init_zone = false;
 
     let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PrepareZoning {
@@ -811,15 +811,11 @@ fn begin_change_zone<'a>(
     }
 
     // then find or create a new instance with the zone id
-    data.ensure_exists(destination_zone_id, game_data);
-    if let Some(target_instance) = data.find_instance_mut(destination_zone_id) {
-        // Insert an empty actor that will be filled later
-        target_instance.insert_empty_actor(actor_id);
+    let instance = data.ensure_exists(destination_zone_id, game_data);
+    // Insert an empty actor that will be filled later
+    instance.insert_empty_actor(actor_id);
 
-        return Some((target_instance, needs_init_zone));
-    }
-
-    None
+    (instance, needs_init_zone)
 }
 
 /// Sends the needed information to ZoneConnection for a zone change.
@@ -846,8 +842,7 @@ pub fn change_zone_warp_to_pop_range(
         param4,
         hide_character,
         unk1,
-    )
-    .unwrap();
+    );
 
     let exit_position;
     let exit_rotation;
@@ -940,8 +935,7 @@ pub fn change_zone_to_player(
         0,
         0,
         0,
-    )
-    .unwrap();
+    );
 
     let Some(target_actor) = target_instance.find_actor(to_actor_id) else {
         return;
@@ -1074,8 +1068,7 @@ pub fn handle_zone_messages(
                 param4,
                 hide_character,
                 unk1,
-            )
-            .unwrap();
+            );
             do_change_zone(
                 &mut network,
                 target_instance,

@@ -90,7 +90,7 @@ struct WorldServer {
 
 impl WorldServer {
     /// Ensures a public instance exists, and creates one if not found.
-    fn ensure_exists(&mut self, zone_id: u16, game_data: &mut GameData) {
+    fn ensure_exists(&mut self, zone_id: u16, game_data: &mut GameData) -> &mut Instance {
         // create a new instance if necessary
         if !self
             .instances
@@ -100,13 +100,11 @@ impl WorldServer {
             tracing::info!("Creating new instance for {zone_id}!");
             self.instances.push(Instance::new(zone_id, game_data));
         }
-    }
 
-    /// Finds a public instance associated with a zone, or None if it doesn't exist yet.
-    fn find_instance_mut(&mut self, zone_id: u16) -> Option<&mut Instance> {
         self.instances
             .iter_mut()
             .find(|x| x.zone.id == zone_id && x.content_finder_condition_id == 0)
+            .unwrap()
     }
 
     /// Finds the instance associated with an actor, or returns None if they are not found.
@@ -1037,61 +1035,58 @@ pub async fn server_main_loop(
                     let mut data = data.lock();
 
                     // create a new instance if necessary
+                    let instance;
                     {
                         let mut game_data = game_data.lock();
-                        data.ensure_exists(zone_id, &mut game_data);
+                        instance = data.ensure_exists(zone_id, &mut game_data);
                     }
 
-                    if let Some(target_instance) = data.find_instance_mut(zone_id) {
-                        target_instance.insert_empty_actor(from_actor_id);
+                    instance.insert_empty_actor(from_actor_id);
 
-                        // TODO: de-duplicate with other ChangeZone call-sites
-                        let director_vars = target_instance
-                            .director
-                            .as_ref()
-                            .map(|director| director.build_var_segment());
+                    // TODO: de-duplicate with other ChangeZone call-sites
+                    let director_vars = instance
+                        .director
+                        .as_ref()
+                        .map(|director| director.build_var_segment());
 
-                        let exit_position;
-                        let exit_rotation;
-                        if let Some(city_state) = city_state_opening {
-                            // If spawning for the initial opening, we need to spawn them at this pop range *as soon as possible*
-                            // The reason being is that this helps loading times and the initial camera rotation.
-                            // Doing it in the opening Lua script happens far too late, as EnterTerritoryEvent will only be fired after InitZone is sent.
-                            if let Some((object, _)) = target_instance
-                                .zone
-                                .find_pop_range(determine_initial_pop_range(city_state))
-                            {
-                                exit_position = Position {
-                                    x: object.transform.translation[0],
-                                    y: object.transform.translation[1],
-                                    z: object.transform.translation[2],
-                                };
-                                exit_rotation = euler_to_direction(object.transform.rotation);
-                            } else {
-                                exit_position = position;
-                                exit_rotation = rotation;
-                            }
+                    let exit_position;
+                    let exit_rotation;
+                    if let Some(city_state) = city_state_opening {
+                        // If spawning for the initial opening, we need to spawn them at this pop range *as soon as possible*
+                        // The reason being is that this helps loading times and the initial camera rotation.
+                        // Doing it in the opening Lua script happens far too late, as EnterTerritoryEvent will only be fired after InitZone is sent.
+                        if let Some((object, _)) = instance
+                            .zone
+                            .find_pop_range(determine_initial_pop_range(city_state))
+                        {
+                            exit_position = Position {
+                                x: object.transform.translation[0],
+                                y: object.transform.translation[1],
+                                z: object.transform.translation[2],
+                            };
+                            exit_rotation = euler_to_direction(object.transform.rotation);
                         } else {
                             exit_position = position;
                             exit_rotation = rotation;
                         }
-
-                        // tell the client to load into the zone
-                        let msg = FromServer::ChangeZone(
-                            zone_id,
-                            target_instance.content_finder_condition_id,
-                            target_instance.weather_id,
-                            exit_position,
-                            exit_rotation,
-                            target_instance.zone.to_lua_zone(target_instance.weather_id),
-                            true, // since this is initial login
-                            director_vars,
-                        );
-
-                        network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
                     } else {
-                        tracing::error!("Didn't find a target instance for this player!");
+                        exit_position = position;
+                        exit_rotation = rotation;
                     }
+
+                    // tell the client to load into the zone
+                    let msg = FromServer::ChangeZone(
+                        zone_id,
+                        instance.content_finder_condition_id,
+                        instance.weather_id,
+                        exit_position,
+                        exit_rotation,
+                        instance.zone.to_lua_zone(instance.weather_id),
+                        true, // since this is initial login
+                        director_vars,
+                    );
+
+                    network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
                 }
                 ToServer::ActorMoved(
                     actor_id,
@@ -2129,15 +2124,15 @@ pub async fn server_main_loop(
                     }
 
                     // create a new instance if necessary
+                    let instance;
                     {
                         let mut game_data = game_data.lock();
-                        data.ensure_exists(old_zone_id, &mut game_data);
+                        instance = data.ensure_exists(old_zone_id, &mut game_data);
                     }
 
-                    let target_instance = data.find_instance_mut(old_zone_id).unwrap();
-                    target_instance.insert_empty_actor(from_actor_id);
+                    instance.insert_empty_actor(from_actor_id);
 
-                    let director_vars = target_instance
+                    let director_vars = instance
                         .director
                         .as_ref()
                         .map(|director| director.build_var_segment());
@@ -2145,11 +2140,11 @@ pub async fn server_main_loop(
                     // tell the client to load into the zone
                     let msg = FromServer::ChangeZone(
                         old_zone_id,
-                        target_instance.content_finder_condition_id,
-                        target_instance.weather_id,
+                        instance.content_finder_condition_id,
+                        instance.weather_id,
                         old_position,
                         old_rotation,
-                        target_instance.zone.to_lua_zone(target_instance.weather_id),
+                        instance.zone.to_lua_zone(instance.weather_id),
                         false,
                         director_vars,
                     );
