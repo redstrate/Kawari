@@ -1,7 +1,7 @@
 use binrw::binrw;
 
 use crate::ipc::zone::{
-    HousingAppealTag,
+    HousingAppealTag, OnlineStatusMask,
     server::{CHAR_NAME_MAX_LENGTH, read_bool_from, read_string, write_bool_as, write_string},
 };
 
@@ -30,10 +30,14 @@ pub struct ApartmentList {
 #[binrw]
 #[derive(Clone, Debug, Default)]
 pub struct ApartmentListEntry {
+    /// The resident's online status.
+    pub resident_online_status_mask: OnlineStatusMask,
+    /// The resident's current zone id, if they're online.
+    pub resident_zone_id: u16,
+    pub unk: [u8; 2],
     /// If this resident allows visitors or not.
     #[br(map = read_bool_from::<u8>)]
     #[bw(map = write_bool_as::<u8>)]
-    #[brw(pad_before = 12)] // Seems to be empty/zeroes
     pub visitors_permitted: bool,
     /// The housing tags the resident has set for their apartment. It gives visitors an idea of what to expect when entering.
     pub housing_appeal: [HousingAppealTag; 3],
