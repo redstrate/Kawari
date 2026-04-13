@@ -10,9 +10,9 @@ use kawari::{
     config::get_config,
     constants::OBFUSCATION_ENABLED_MODE,
     ipc::zone::{
-        ActorControlCategory, Condition, ContentRegistrationFlags, FurnitureList, House, HouseList,
-        HousingInteriorDetails, InitZone, InitZoneFlags, ServerZoneIpcData, ServerZoneIpcSegment,
-        WarpType, WeatherChange,
+        ActorControlCategory, Condition, ContentRegistrationFlags, FurnitureList, House,
+        HouseExterior, HouseList, HouseStatus, HousingInteriorDetails, InitZone, InitZoneFlags,
+        PlotSize, ServerZoneIpcData, ServerZoneIpcSegment, WarpType, WeatherChange,
     },
     packet::{ConnectionState, PacketSegment, ScramblerKeyGenerator, SegmentData, SegmentType},
 };
@@ -205,19 +205,70 @@ impl ZoneConnection {
         }
 
         if lua_zone.intended_use == TerritoryIntendedUse::HousingOutdoor as u8 {
+            let mut houses = [House::default(); 30];
+
+            // First, populate the houses in this ward. Note that for now, we treat every ward the same.
+            // TODO: For now, we hardcode 3 prefab houses as demonstration units until we implement more of the system. One cottage, one house and one mansion, all set to be individually owned and locked. Plots 5, 6, and 12 were chosen due to their close proximity to each other.
+            // Glade house (Wood)
+            houses[4] = House {
+                plot_size: PlotSize::Medium,
+                status: HouseStatus::HouseBuilt,
+                flags: 0,
+                exterior: HouseExterior {
+                    roof: 1029,
+                    walls: 3589,
+                    windows: 2562,
+                    door: 514,
+                    ..Default::default()
+                },
+                ..Default::default()
+            };
+
+            // Hingan mansion (Mokuzo)
+            houses[5] = House {
+                plot_size: PlotSize::Large,
+                status: HouseStatus::HouseBuilt,
+                flags: 0,
+                exterior: HouseExterior {
+                    roof: 1081,
+                    walls: 3632,
+                    windows: 2579,
+                    door: 531,
+                    ..Default::default()
+                },
+                ..Default::default()
+            };
+
+            // Highland cottage (Wood)
+            houses[11] = House {
+                plot_size: PlotSize::Small,
+                status: HouseStatus::HouseBuilt,
+                flags: 0,
+                exterior: HouseExterior {
+                    roof: 1136,
+                    walls: 3687,
+                    windows: 2598,
+                    door: 550,
+                    ..Default::default()
+                },
+                ..Default::default()
+            };
+
             let config = get_config();
             self.send_ipc_self(ServerZoneIpcSegment::new(ServerZoneIpcData::HouseList(
                 HouseList {
                     land_id: 0,
                     ward: 0,
-                    territory_type_id: self.player_data.volatile.zone_id as u16,
+                    territory_type_id: lua_zone.zone_id,
                     world_id: config.world.world_id,
-                    subdivision: 0,
-                    houses: [House::default(); 30],
+                    subdivision: 257, // TODO: Figure out more about subdivisions
+                    houses,
                 },
             )))
             .await;
 
+            // Finally, populate the exterior furniture.
+            // TODO: Actually send some real furniture, once we can do that!
             for index in 0..8 {
                 self.send_ipc_self(ServerZoneIpcSegment::new(ServerZoneIpcData::FurnitureList(
                     FurnitureList {
