@@ -231,6 +231,16 @@ impl WorldServer {
 
         ObjectId::default()
     }
+
+    /// Removes instances without players in them, which wastes resources.
+    fn cleanup_dead_instances(&mut self) {
+        self.instances.retain(|instance| {
+            instance
+                .actors
+                .iter()
+                .any(|x| matches!(x.1, NetworkedActor::Player { .. }))
+        });
+    }
 }
 
 // TODO: move elsewhere...
@@ -348,6 +358,8 @@ fn server_logic_tick(
         let mut data = data.lock();
         let rested_exp_counter = data.rested_exp_counter;
         let party_positions_counter = data.party_positions_counter;
+
+        data.cleanup_dead_instances();
 
         // Send a periodic update to all parties about where their members are in the world.
         // TODO: On retail this is sent once every 5 seconds, so sending this at a slower interval would be more ideal.
