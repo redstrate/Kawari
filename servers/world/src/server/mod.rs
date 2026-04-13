@@ -121,7 +121,7 @@ impl WorldServer {
             .find(|instance| instance.actors.contains_key(&actor_id))
     }
 
-    fn create_new_instance(
+    fn create_instance_for_content(
         &mut self,
         zone_id: u16,
         content_finder_condition: u16,
@@ -2089,7 +2089,7 @@ pub async fn server_main_loop(
                         // then find or create a new instance with the zone id and content finder condition
                         let mut game_data = game_data.lock();
                         if let Some(target_instance) =
-                            data.create_new_instance(zone_id, content_id, &mut game_data)
+                            data.create_instance_for_content(zone_id, content_id, &mut game_data)
                         {
                             for (client_id, actor_id) in &actor_ids {
                                 target_instance.insert_empty_actor(*actor_id);
