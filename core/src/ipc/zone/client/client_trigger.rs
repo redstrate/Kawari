@@ -295,6 +295,10 @@ pub enum ClientTriggerCommand {
         ward_index: u32,
     },
 
+    /// The client requests to warp to the housing interior's front door.
+    #[brw(magic = 1122u32)]
+    HousingMoveToFrontDoor {},
+
     /// The client has requested an apartment building's residents list from either an apartment building entrance or an apartment's front door.
     #[brw(magic = 1125u32)]
     RequestApartmentList {

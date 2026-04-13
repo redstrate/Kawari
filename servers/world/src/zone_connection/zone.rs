@@ -6,12 +6,13 @@ use crate::{
     lua::{LuaContent, LuaZone},
 };
 use kawari::{
-    common::{HandlerId, HandlerType, Position, timestamp_secs},
+    common::{HandlerId, HandlerType, LandId, Position, timestamp_secs},
     config::get_config,
     constants::OBFUSCATION_ENABLED_MODE,
     ipc::zone::{
-        ActorControlCategory, Condition, ContentRegistrationFlags, House, HouseList, InitZone,
-        InitZoneFlags, ServerZoneIpcData, ServerZoneIpcSegment, WarpType, WeatherChange,
+        ActorControlCategory, Condition, ContentRegistrationFlags, FurnitureList, House, HouseList,
+        HousingInteriorDetails, InitZone, InitZoneFlags, ServerZoneIpcData, ServerZoneIpcSegment,
+        WarpType, WeatherChange,
     },
     packet::{ConnectionState, PacketSegment, ScramblerKeyGenerator, SegmentData, SegmentType},
 };
@@ -218,33 +219,40 @@ impl ZoneConnection {
             .await;
 
             for index in 0..8 {
-                self.send_ipc_self(ServerZoneIpcSegment::new(
-                    ServerZoneIpcData::UnkHousingRelated {
-                        unk1: [0xFF; 9],
-                        index,
+                self.send_ipc_self(ServerZoneIpcSegment::new(ServerZoneIpcData::FurnitureList(
+                    FurnitureList {
                         count: 8,
-                        unk2: [0; 2135],
+                        index,
+                        ..Default::default()
                     },
-                ))
+                )))
                 .await;
             }
         }
 
         if lua_zone.intended_use == TerritoryIntendedUse::HousingIndoor as u8 {
-            // Bare minimum stuff to make housing interiors load, hardly anything is known about these for now
+            let config = get_config();
+            // Bare minimum stuff to make housing interiors load
             self.send_ipc_self(ServerZoneIpcSegment::new(
-                ServerZoneIpcData::UnkHousingRelated2 { unk: [0; 56] },
+                ServerZoneIpcData::HousingInteriorDetails(HousingInteriorDetails::default()),
             ))
             .await;
 
-            self.send_ipc_self(ServerZoneIpcSegment::new(
-                ServerZoneIpcData::UnkHousingRelated {
-                    unk1: [0; 9], // Slight hack for now: these need to be something other than 0xFF or housing items can't spawn via plugins
-                    index: 0,
+            // The LandId is currently set so that plugins like HousingPos/Buildingway can plop stuff down
+            self.send_ipc_self(ServerZoneIpcSegment::new(ServerZoneIpcData::FurnitureList(
+                FurnitureList {
+                    land_id: LandId {
+                        id: 128,
+                        ward: 1,
+                        territory_type_id: lua_zone.zone_id,
+                        world_id: config.world.world_id,
+                    },
                     count: 1,
-                    unk2: [0xFF; 2135], // Slight hack for now: if it's all zeroes, plugins like housingpos won't be able to arbitrarily spawn client-side-only housing items
+                    index: 0,
+                    unk2: 100, // Indoors
+                    ..Default::default()
                 },
-            ))
+            )))
             .await;
         }
 
