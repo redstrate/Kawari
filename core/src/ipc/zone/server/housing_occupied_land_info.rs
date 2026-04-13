@@ -1,7 +1,7 @@
 use binrw::binrw;
 
 use crate::{
-    common::{LandId, read_string, write_string},
+    common::{HouseId, read_string, write_string},
     ipc::zone::{HousingAppealTag, PlotSize},
 };
 
@@ -9,7 +9,7 @@ use crate::{
 #[binrw]
 #[derive(Debug, Default, Clone)]
 pub struct HousingOccupiedLandInfo {
-    pub land_identifier: LandId,
+    pub id: HouseId,
 
     /// Can be either a character ID or an FC ID
     pub owner_id: u64,

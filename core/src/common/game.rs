@@ -975,25 +975,61 @@ impl std::fmt::Debug for DutyOption {
     }
 }
 
-/// Land ID used for housing.
-// TODO: bring in useful structure data from FFXIVClientStructs!
+/// Used for housing.
+/// See <https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Client/Game/HousingManager.cs>
 #[binrw]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct LandId {
-    /// Plot Index
-    pub id: u16,
-    /// Ward Index
-    pub ward: u16,
-    /// Housing District, Mist = 339, Lavender = 340, Goblet = 341, Shirogane = 641, Empyreum = 979
+pub struct HouseUnit {
+    #[br(temp)]
+    #[bw(calc = *apartment_division_plot_index | if *apartment_flag { 0x80 } else { 0 })]
+    value: u8,
+
+    /// If `apartment_flag` is true, represents the division this occupies.
+    /// If `apartment_flag` is false, represents the plot index this occupies.
+    #[br(calc = value & 0x7F)]
+    #[bw(ignore)]
+    pub apartment_division_plot_index: u8,
+    #[br(calc = value & 0x80 == 0x80)]
+    #[bw(ignore)]
+    pub apartment_flag: bool,
+}
+
+/// Used for housing.
+/// See <https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Client/Game/HousingManager.cs>
+#[binrw]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct HouseId {
+    /// The unit of this housing.
+    pub unit: HouseUnit,
+    /// Unknown data.
+    pub unk1: u8,
+    #[br(temp)]
+    #[bw(calc = *ward_index as u16 | (*room_number << 6))]
+    data: u16,
+    /// The ward this house occupies, starting from 0.
+    #[bw(ignore)]
+    #[br(calc = (data & 0x3F) as u8)]
+    pub ward_index: u8,
+    /// The room number for this housing, if applicable.
+    #[bw(ignore)]
+    #[br(calc = data >> 6)]
+    pub room_number: u16,
+    /// Index into the TerritoryType Excel sheet.
     pub territory_type_id: u16,
+    /// Index into the World Excel sheet.
     pub world_id: u16,
 }
 
-impl Default for LandId {
+impl Default for HouseId {
     fn default() -> Self {
         Self {
-            id: 0xFFFF,
-            ward: 0xFFFF,
+            unit: HouseUnit {
+                apartment_division_plot_index: 127,
+                apartment_flag: false,
+            },
+            unk1: 255,
+            ward_index: 0,
+            room_number: 0,
             territory_type_id: 0xFFFF,
             world_id: 0xFFFF,
         }
@@ -1004,7 +1040,7 @@ impl Default for LandId {
 #[binrw]
 #[derive(Debug, Clone, Copy, Default)]
 pub struct LandData {
-    pub id: LandId,
+    pub id: HouseId,
     pub flags: u32,
     pub unk1: u32,
 }
@@ -1105,6 +1141,10 @@ pub fn is_private_area(intended_use: TerritoryIntendedUse) -> bool {
 
 #[cfg(test)]
 mod tests {
+    use std::io::Cursor;
+
+    use binrw::BinWrite;
+
     use super::*;
 
     #[test]
@@ -1121,6 +1161,42 @@ mod tests {
                 | DutyOption::MINIMUM_ITEM_LEVEL
                 | DutyOption::SILENCE_ECHO
                 | DutyOption::UNK16
+        );
+    }
+
+    #[test]
+    fn test_housing_unit() {
+        let mut buffer = Cursor::new(Vec::new());
+
+        let unit = HouseUnit {
+            apartment_division_plot_index: 1,
+            apartment_flag: true,
+        };
+        unit.write_le(&mut buffer).unwrap();
+
+        assert_eq!(buffer.into_inner(), vec![0x81]);
+    }
+
+    #[test]
+    fn test_housing_id() {
+        let mut buffer = Cursor::new(Vec::new());
+
+        let unit = HouseId {
+            unit: HouseUnit {
+                apartment_division_plot_index: 1,
+                apartment_flag: true,
+            },
+            unk1: 0,
+            ward_index: 6,
+            room_number: 62,
+            territory_type_id: 340,
+            world_id: 63,
+        };
+        unit.write_le(&mut buffer).unwrap();
+
+        assert_eq!(
+            buffer.into_inner(),
+            vec![0x81, 0x00, 0x86, 0x0F, 0x54, 0x01, 0x3F, 0x00]
         );
     }
 }

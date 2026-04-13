@@ -1,11 +1,11 @@
-use crate::common::{LandId, Position};
+use crate::common::{HouseId, Position};
 use binrw::binrw;
 
 #[binrw]
 #[derive(Clone, Debug, Default)]
 pub struct FurnitureList {
     /// The LandId this list is for.
-    pub land_id: LandId,
+    pub id: HouseId,
     pub unk1: u8,
     /// The current `index` out of `count` packets to be sent.
     pub index: u8,

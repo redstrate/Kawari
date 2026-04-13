@@ -1,14 +1,14 @@
 use binrw::binrw;
 
 use crate::{
-    common::{LandId, read_string, write_string},
+    common::{HouseId, read_string, write_string},
     ipc::zone::{HousingAppealTag, HousingFlags, PurchaseType, TenantType},
 };
 
 #[binrw]
 #[derive(Debug, Clone, Default)]
 pub struct HousingWardInfo {
-    pub land_id: LandId,
+    pub id: HouseId,
 
     #[br(count = 60)]
     #[bw(pad_size_to = 60 * HousingWardSummaryItem::SIZE)]

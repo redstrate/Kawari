@@ -6,7 +6,7 @@ use crate::{
     lua::{LuaContent, LuaZone},
 };
 use kawari::{
-    common::{HandlerId, HandlerType, LandId, Position, timestamp_secs},
+    common::{HandlerId, HandlerType, HouseId, HouseUnit, Position, timestamp_secs},
     config::get_config,
     constants::OBFUSCATION_ENABLED_MODE,
     ipc::zone::{
@@ -292,9 +292,14 @@ impl ZoneConnection {
             // The LandId is currently set so that plugins like HousingPos/Buildingway can plop stuff down
             self.send_ipc_self(ServerZoneIpcSegment::new(ServerZoneIpcData::FurnitureList(
                 FurnitureList {
-                    land_id: LandId {
-                        id: 128,
-                        ward: 1,
+                    id: HouseId {
+                        unit: HouseUnit {
+                            apartment_division_plot_index: 0,
+                            apartment_flag: false,
+                        },
+                        unk1: 0,
+                        room_number: 0,
+                        ward_index: 1,
                         territory_type_id: lua_zone.zone_id,
                         world_id: config.world.world_id,
                     },
