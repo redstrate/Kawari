@@ -111,7 +111,7 @@ mod apartment_list;
 pub use apartment_list::{ApartmentList, ApartmentListEntry};
 
 mod house_list;
-pub use house_list::{House, HouseList};
+pub use house_list::{House, HouseExterior, HouseList, HouseStatus};
 
 mod housing_ward;
 pub use housing_ward::{HousingWardInfo, HousingWardSummaryItem};
