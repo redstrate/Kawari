@@ -495,10 +495,10 @@ ServerZoneIpcType:
     comment: Updates a map effect.
     opcode: 746
     size: 16
-  - name: UnkHousingRelated
-    comment: Unknown purpose.
+  - name: FurnitureList
+    comment: Sent by the server to inform the client about furniture (both indoor & outdoor) that exists in this ward or housing interior.
     opcode: 376
-    size: 2146
+    size: 2416
   - name: OwnedHousing
     comment: Sent to inform you of which housing you own/have access to.
     opcode: 404
@@ -675,8 +675,8 @@ ServerZoneIpcType:
     comment: The server sends the client an error message due to something going wrong with a linkshell.
     opcode: 190
     size: 24
-  - name: UnkHousingRelated2
-    comment: The server sends the client currently unknown information about the housing interior they're entering.
+  - name: HousingInteriorDetails
+    comment: The server sends the client exhaustive information (wall/floor textures, window models, etc.) about the housing interior they entered.
     opcode: 389
     size: 56
   - name: ApartmentList

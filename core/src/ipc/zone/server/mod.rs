@@ -116,6 +116,9 @@ pub use house_list::{House, HouseList};
 mod housing_ward;
 pub use housing_ward::{HousingWardInfo, HousingWardSummaryItem};
 
+mod housing_interior_furniture;
+pub use housing_interior_furniture::{Furniture, FurnitureList, HousingInteriorDetails};
+
 mod housing_occupied_land_info;
 pub use housing_occupied_land_info::HousingOccupiedLandInfo;
 
@@ -850,12 +853,7 @@ pub enum ServerZoneIpcData {
         index: u8,
         unk2: [u8; 7], // all padding
     },
-    UnkHousingRelated {
-        unk1: [u8; 9],
-        index: u8,
-        count: u8,
-        unk2: [u8; 2135],
-    },
+    FurnitureList(FurnitureList),
     OwnedHousing {
         #[brw(pad_after = 8)] // believe these are always empty?
         unk1: LandData,
@@ -1282,9 +1280,7 @@ pub enum ServerZoneIpcData {
         #[brw(pad_after = 16)] // Seems to be empty/zeroes
         unk: u32,
     },
-    UnkHousingRelated2 {
-        unk: [u8; 56],
-    },
+    HousingInteriorDetails(HousingInteriorDetails),
     ApartmentList(ApartmentList),
     FriendRemoved {
         #[brw(pad_after = 4)] // Seems to be empty/zeroes
