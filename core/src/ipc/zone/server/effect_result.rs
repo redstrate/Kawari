@@ -8,9 +8,12 @@ use crate::common::ObjectId;
 pub struct EffectEntry {
     pub index: u8,
     pub unk1: u8,
+    /// Index into the Status Excel sheet.
     pub id: u16,
+    /// Status-specific parameter.
     pub param: u16,
     pub unk2: u16,
+    /// How long the effect should last for.
     pub duration: f32,
     pub source_actor_id: ObjectId,
 }

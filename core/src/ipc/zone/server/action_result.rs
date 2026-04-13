@@ -84,15 +84,17 @@ pub enum EffectKind {
     #[brw(magic = 14u8)]
     GainEffect {
         unk1: u8,
-        unk2: u32,
+        unk2: u8,
+        /// Status-specific parameter.
+        param: u16,
+        unk3: u8,
+        /// Index into the Status Excel sheet.
         effect_id: u16,
 
         // NOTE: the following is for our internal usage, this is not an actual part of the packet
         // TODO: this shouldn't be here, instead we should maybe create a lua-specific struct for all of this information
         #[brw(ignore)]
         duration: f32,
-        #[brw(ignore)]
-        param: u16,
         #[brw(ignore)]
         source_actor_id: ObjectId,
     },
@@ -308,10 +310,11 @@ mod tests {
             action_result.effects[0].kind,
             EffectKind::GainEffect {
                 unk1: 0,
-                unk2: 7728,
+                unk2: 48,
+                unk3: 0,
                 effect_id: 50,
                 duration: 0.0,
-                param: 0,
+                param: 30,
                 source_actor_id: Default::default()
             }
         );

@@ -39,7 +39,8 @@ impl UserData for EffectsBuilder {
                 this.effects.push(ActionEffect {
                     kind: EffectKind::GainEffect {
                         unk1: 0,
-                        unk2: 7728,
+                        unk2: 0,
+                        unk3: 0,
                         effect_id,
                         duration,
                         param,
