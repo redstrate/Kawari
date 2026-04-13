@@ -1097,6 +1097,12 @@ pub struct CrestData {
     pub unk2: [u8; 3],
 }
 
+/// Returns whether or not new instances of this `TerritoryIntendedUse` should be "private" (i.e. no other players are allowed to enter.)
+pub fn is_private_area(intended_use: TerritoryIntendedUse) -> bool {
+    // TODO: Maybe this exists on the Excel sheet?
+    matches!(intended_use, TerritoryIntendedUse::Inn)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

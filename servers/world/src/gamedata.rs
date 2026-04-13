@@ -46,8 +46,8 @@ use icarus::TopicSelect::TopicSelectSheet;
 use icarus::WarpLogic::WarpLogicSheet;
 use icarus::WeatherRate::WeatherRateSheet;
 use icarus::{Tribe::TribeSheet, Warp::WarpSheet};
-use physis::Language;
 use physis::resource::{Resource, ResourceResolver, SqPackResource, UnpackedResource};
+use physis::{Language, TerritoryIntendedUse};
 
 use kawari::common::{CustomizeData, timestamp_secs};
 use kawari::common::{InstanceContentType, get_aether_current_comp_flg_set_to_screenimage};
@@ -1456,6 +1456,12 @@ impl GameData {
         let row = sheet.row(npc_yell_id)?;
 
         Some(row.Unknown0()) // NOTE: will be Name in the future
+    }
+
+    /// Returns the TerritoryIntendedUse for a given zone.
+    pub fn get_intended_use(&mut self, zone_id: u32) -> Option<TerritoryIntendedUse> {
+        let row = self.territory_type_sheet.row(zone_id)?;
+        TerritoryIntendedUse::from_repr(row.TerritoryIntendedUse())
     }
 }
 

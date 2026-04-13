@@ -40,7 +40,7 @@ use kawari::{
     common::{
         CharacterMode, DEAD_DESPAWN_TIME, HandlerId, HandlerType, InvisibilityFlags,
         MAX_SPAWNED_ACTORS, MAX_SPAWNED_OBJECTS, ObjectId, ObjectTypeId, ObjectTypeKind, Position,
-        SharedGroupTimelineState, determine_initial_pop_range, euler_to_direction,
+        SharedGroupTimelineState, determine_initial_pop_range, euler_to_direction, is_private_area,
     },
     config::{FilesystemConfig, get_config},
     ipc::zone::{
@@ -89,22 +89,35 @@ struct WorldServer {
 }
 
 impl WorldServer {
-    /// Ensures a public instance exists, and creates one if not found.
+    /// Ensures an instance exists, and creates one if not found.
     fn ensure_exists(&mut self, zone_id: u16, game_data: &mut GameData) -> &mut Instance {
-        // create a new instance if necessary
-        if !self
-            .instances
-            .iter()
-            .any(|x| x.zone.id == zone_id && x.content_finder_condition_id == 0)
-        {
-            tracing::info!("Creating new instance for {zone_id}!");
-            self.instances.push(Instance::new(zone_id, game_data));
+        let is_public_instance;
+        if let Some(intended_use) = game_data.get_intended_use(zone_id as u32) {
+            is_public_instance = !is_private_area(intended_use);
+        } else {
+            is_public_instance = true; // Fall back to assuming it's public I guess
         }
 
-        self.instances
-            .iter_mut()
-            .find(|x| x.zone.id == zone_id && x.content_finder_condition_id == 0)
-            .unwrap()
+        if is_public_instance {
+            // create a new instance if necessary
+            if !self
+                .instances
+                .iter()
+                .any(|x| x.zone.id == zone_id && x.content_finder_condition_id == 0)
+            {
+                tracing::info!("Creating new public instance for {zone_id}!");
+                self.instances.push(Instance::new(zone_id, game_data));
+            }
+
+            self.instances
+                .iter_mut()
+                .find(|x| x.zone.id == zone_id && x.content_finder_condition_id == 0)
+                .unwrap()
+        } else {
+            tracing::info!("Creating new private instance for {zone_id}!");
+            self.instances.push(Instance::new(zone_id, game_data));
+            self.instances.last_mut().unwrap()
+        }
     }
 
     /// Finds the instance associated with an actor, or returns None if they are not found.
