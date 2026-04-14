@@ -9,7 +9,6 @@ use physis::{
     },
     lgb::Lgb,
     lvb::Lvb,
-    sgb::Sgb,
 };
 
 use crate::{
@@ -26,13 +25,13 @@ use kawari::{
     common::{
         DistanceRange, DropIn, DropInLayer, DropInObjectData, ENTRANCE_CIRCLE_IDS, EOBJ_EXIT,
         EOBJ_SHORTCUT, EOBJ_SHORTCUT_EXPLORER_MODE, HandlerType, InvisibilityFlags, ObjectId,
-        Position, WARP_DELAY, euler_to_direction, internal_housing_name, internal_housing_row,
+        Position, WARP_DELAY, euler_to_direction, internal_housing_row,
     },
     config::get_config,
     ipc::zone::{
         ActorControlCategory, ActorSetPos, BattleNpcSubKind, CharacterDataFlag, CommonSpawn,
-        Conditions, DisplayFlag, ObjectKind, PlotSize, ServerZoneIpcData, ServerZoneIpcSegment,
-        SpawnNpc, SpawnObject, SpawnTreasure, WarpType,
+        Conditions, DisplayFlag, ObjectKind, ServerZoneIpcData, ServerZoneIpcSegment, SpawnNpc,
+        SpawnObject, SpawnTreasure, WarpType,
     },
 };
 
@@ -365,58 +364,24 @@ impl Zone {
         if zone.intended_use == TerritoryIntendedUse::HousingOutdoor as u8 {
             // 60 is the maximum number of plots
             for i in 0..60 {
-                let sgb_path = zone.plot_layout_sgb_path(game_data, i);
-                if let Ok(sgb) = game_data.resource.parsed::<Sgb>(&sgb_path) {
-                    let mut door_position = None;
-                    'outer: for group in &sgb.sections[0].layer_groups {
-                        for layer in &group.layers {
-                            for object in &layer.objects {
-                                // NOTE: Assuming the door is always instance ID 4, unsure.
-                                if let LayerEntryData::SharedGroup(sgb) = &object.data {
-                                    // Assuming the path is something like "f1h0_co_dor0000"
-                                    if sgb.asset_path.value.contains("dor") {
-                                        door_position = Some(object.transform.translation);
-                                        break 'outer;
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    if let Some(door_position) = door_position {
-                        let map_range_id = game_data
-                            .get_land_set_map_range(internal_housing_row(id).unwrap(), i)
-                            .unwrap();
-                        let map_ranges: Vec<&MapRange> = zone
-                            .map_ranges
-                            .iter()
-                            .filter(|x| x.instance_id == map_range_id)
-                            .collect();
-                        if map_ranges.is_empty() {
-                            tracing::warn!(
-                                "Failed to find map range for plot {i}! The entrance won't spawn!"
-                            );
-                        } else {
-                            let map_range = map_ranges.first().unwrap();
-
-                            let entrance_position = Position {
-                                x: map_range.position.x + door_position[0],
-                                y: map_range.position.y + door_position[1],
-                                z: map_range.position.z + door_position[2],
-                            };
-
-                            zone.cached_housing_plots
-                                .push(HousingPlot { entrance_position });
-                        }
-                    } else {
-                        tracing::warn!(
-                            "Failed to find door in {sgb_path}! The entrance won't spawn!"
-                        );
-                    }
-                } else {
+                let map_range_id = game_data
+                    .get_land_set_map_range(internal_housing_row(id).unwrap(), i)
+                    .unwrap();
+                let map_ranges: Vec<&MapRange> = zone
+                    .map_ranges
+                    .iter()
+                    .filter(|x| x.instance_id == map_range_id)
+                    .collect();
+                if map_ranges.is_empty() {
                     tracing::warn!(
-                        "Failed to load housing layout: {sgb_path}! The entrance won't spawn!"
+                        "Failed to find map range for plot {i}! The entrance won't spawn!"
                     );
+                } else {
+                    let map_range = map_ranges.first().unwrap();
+
+                    zone.cached_housing_plots.push(HousingPlot {
+                        entrance_position: map_range.position,
+                    });
                 }
             }
         }
@@ -655,9 +620,10 @@ impl Zone {
                 entity_id: ObjectId(fastrand::u32(..)),
                 radius: 1.0,
                 position: plot.entrance_position,
-                args2: u32::from_le_bytes([0, (i + 1) as u8, 0, 0]),
+                args2: u32::from_le_bytes([0, i as u8, 0, 0]),
                 ..Default::default()
             };
+            tracing::info!("Spawn for {i}: {spawn:#?}");
             object_spawns.push(spawn);
         }
 
@@ -851,25 +817,6 @@ impl Zone {
 
             if dsq > radius_sq { -1.0 } else { dsq }
         }
-    }
-
-    /// Resolves the layout SGB for a given plot index.
-    fn plot_layout_sgb_path(&self, game_data: &mut GameData, plot_index: usize) -> String {
-        let dyna_path = self
-            .bg_path
-            .replace(&format!("hou/{}", self.internal_name), "hou/dyna");
-        let housing_name = internal_housing_name(self.id).unwrap();
-        let plot_size = match game_data
-            .get_land_set_size(internal_housing_row(self.id).unwrap(), plot_index)
-            .unwrap()
-        {
-            PlotSize::Small => "s",
-            PlotSize::Medium => "m",
-            PlotSize::Large => "l",
-        };
-        let plot_index = plot_index + 1; // the SGBs start at 1
-
-        format!("{dyna_path}/house/{housing_name}_{plot_index}_{plot_size}_house.sgb")
     }
 }
 

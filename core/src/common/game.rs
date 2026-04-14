@@ -1139,14 +1139,6 @@ pub fn is_private_area(intended_use: TerritoryIntendedUse) -> bool {
     matches!(intended_use, TerritoryIntendedUse::Inn)
 }
 
-/// Returns the internal housing name used for certain game paths.
-pub fn internal_housing_name(zone_id: u16) -> Option<&'static str> {
-    match zone_id {
-        340 => Some("f1h0"),
-        _ => None,
-    }
-}
-
 /// Returns the internal housing row used for certain sheets.
 pub fn internal_housing_row(zone_id: u16) -> Option<u32> {
     match zone_id {
